@@ -24,13 +24,14 @@ describe("test the outgoing webhook action", () => {
       .reply(200, { foo: "bar" })
 
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .outgoingWebhook({
         requestMethod: RequestType.POST,
         url: "http://www.example.com",
         requestBody: JSON.stringify({ a: 1 }),
         headers: {},
       })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toEqual(true)
     expect(result.steps[0].outputs.httpStatus).toEqual(200)
@@ -39,13 +40,14 @@ describe("test the outgoing webhook action", () => {
 
   it("should return an error if something goes wrong in fetch", async () => {
     const result = await createAutomationBuilder(config)
+      .onAppAction()
       .outgoingWebhook({
         requestMethod: RequestType.GET,
         url: "www.invalid.com",
         requestBody: "",
         headers: {},
       })
-      .run()
+      .test({ fields: {} })
     expect(result.steps[0].outputs.success).toEqual(false)
   })
 })
