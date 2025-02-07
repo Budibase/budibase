@@ -7,7 +7,7 @@
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import { Icon } from "@budibase/bbui"
   import UpdateDatasourceModal from "@/components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
-  import DeleteConfirmationModal from "./DeleteConfirmationModal.svelte"
+  import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
 
   export let datasource
 
@@ -71,7 +71,10 @@
   {/if}
 </NavItem>
 <UpdateDatasourceModal {datasource} bind:this={editModal} />
-<DeleteConfirmationModal {datasource} bind:this={deleteConfirmationModal} />
+<DeleteDataConfirmModal
+  source={datasource}
+  bind:this={deleteConfirmationModal}
+/>
 
 <style>
   .datasource-icon {

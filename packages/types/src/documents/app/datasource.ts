@@ -57,3 +57,10 @@ export interface RestConfig {
   }
   dynamicVariables?: DynamicVariable[]
 }
+
+export enum SourceType {
+  DATASOURCE = "datasource",
+  QUERY = "query",
+  TABLE = "table",
+  VIEW = "view",
+}

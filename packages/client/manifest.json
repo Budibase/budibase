@@ -3089,12 +3089,6 @@
         "type": "tableConditions",
         "label": "Conditions",
         "key": "conditions"
-      },
-      {
-        "type": "text",
-        "label": "Format",
-        "key": "format",
-        "info": "Changing format will display values as text"
       }
     ]
   },
@@ -7691,8 +7685,7 @@
           {
             "type": "columns/grid",
             "key": "columns",
-            "resetOn": "table",
-            "nested": true
+            "resetOn": "table"
           }
         ]
       },
