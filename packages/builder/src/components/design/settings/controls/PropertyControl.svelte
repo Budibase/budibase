@@ -23,11 +23,12 @@
   export let info = null
   export let disableBindings = false
   export let wide
+  export let isolated = false
 
   let highlightType
 
   $: highlightedProp = $builderStore.highlightedSetting
-  $: allBindings = getAllBindings(bindings, componentBindings, nested)
+  $: allBindings = getAllBindings(bindings, componentBindings, nested, isolated)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
@@ -36,7 +37,10 @@
       highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
   }
 
-  const getAllBindings = (bindings, componentBindings, nested) => {
+  const getAllBindings = (bindings, componentBindings, nested, isolated) => {
+    if (isolated) {
+      bindings = []
+    }
     if (!nested) {
       return bindings
     }

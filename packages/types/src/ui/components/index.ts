@@ -25,6 +25,8 @@ export interface ComponentSetting {
   selectAllFields?: boolean
   resetOn?: string | string[]
   settings?: ComponentSetting[]
+  nested?: boolean
+  isolated?: boolean
   dependsOn?:
     | string
     | {
