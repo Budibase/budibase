@@ -19,7 +19,7 @@
 
   $: accentStyle = getAccentStyle(accentColor)
 
-  const getAccentStyle = color => {
+  const getAccentStyle = (color: string | null) => {
     if (!color) {
       return ""
     }
