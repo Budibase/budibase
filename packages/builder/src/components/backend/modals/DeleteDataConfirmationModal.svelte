@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { InlineAlert, Link, Input, notifications } from "@budibase/bbui"
+  import { Link, notifications } from "@budibase/bbui"
   import {
     appStore,
     datasources,
@@ -10,9 +10,11 @@
     viewsV2,
   } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { helpers, utils } from "@budibase/shared-core"
   import { SourceType } from "@budibase/types"
   import { goto, params } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import { get } from "svelte/store"
   import type { Table, ViewV2, View, Datasource, Query } from "@budibase/types"
 
   export let source: Table | ViewV2 | Datasource | Query | undefined
@@ -20,22 +22,16 @@
   let confirmDeleteDialog: any
   let affectedScreens: { text: string; url: string }[] = []
   let sourceType: SourceType | undefined = undefined
-  let viewsMessage: string = ""
-  let deleteSourceName: string | undefined
 
-  const getViewsMessage = () => {
-    if (!source || !("views" in source)) {
+  const getDatasourceQueries = () => {
+    if (sourceType !== SourceType.DATASOURCE) {
       return ""
     }
-    const views = Object.values(source?.views ?? [])
-    if (views.length < 1) {
-      return ""
-    }
-    if (views.length === 1) {
-      return ", including 1 view"
-    }
-
-    return `, including ${views.length} views`
+    const sourceId = getSourceID()
+    const queryList = get(queries).list.filter(
+      query => query.datasourceId === sourceId
+    )
+    return queryList
   }
 
   function getSourceID(): string {
@@ -49,8 +45,7 @@
   }
 
   export const show = async () => {
-    viewsMessage = getViewsMessage()
-    const usage = await screenStore.usageOfScreens(getSourceID())
+    const usage = await screenStore.usageInScreens(getSourceID())
     affectedScreens = processScreens(usage.screens)
     sourceType = usage.sourceType
     confirmDeleteDialog.show()
@@ -66,11 +61,7 @@
   }
 
   function hideDeleteDialog() {
-    deleteSourceName = ""
-  }
-
-  const autofillSourceName = () => {
-    deleteSourceName = source?.name
+    sourceType = undefined
   }
 
   async function deleteTable(table: Table & { datasourceId?: string }) {
@@ -95,15 +86,28 @@
 
   async function deleteView(view: ViewV2 | View) {
     try {
-      if ("version" in view && view.version === 2) {
+      if (helpers.views.isV2(view)) {
         await viewsV2.delete(view as ViewV2)
       } else {
         await views.delete(view as View)
       }
       notifications.success("View deleted")
     } catch (error) {
-      console.error(error)
       notifications.error("Error deleting view")
+    }
+  }
+
+  async function deleteDatasource(datasource: Datasource) {
+    try {
+      await datasources.delete(datasource)
+      notifications.success("Datasource deleted")
+      const isSelected =
+        get(datasources).selectedDatasourceId === datasource._id
+      if (isSelected) {
+        $goto("./datasource")
+      }
+    } catch (error) {
+      notifications.error("Error deleting datasource")
     }
   }
 
@@ -134,57 +138,71 @@
       case SourceType.QUERY:
         return await deleteQuery(source as Query)
       case SourceType.DATASOURCE:
+        return await deleteDatasource(source as Datasource)
+      default:
+        utils.unreachable(sourceType)
     }
+  }
+
+  function buildMessage(sourceType: string) {
+    if (!source) {
+      return ""
+    }
+    const screenCount = affectedScreens.length
+    let message = `Removing ${source?.name} `
+    let initialLength = message.length
+    if (sourceType === SourceType.TABLE) {
+      const views = "views" in source ? Object.values(source?.views ?? []) : []
+      message += `will delete its data${
+        views.length
+          ? `${screenCount ? "," : " and"} views (${views.length})`
+          : ""
+      }`
+    } else if (sourceType === SourceType.DATASOURCE) {
+      const queryList = getDatasourceQueries()
+      if (queryList.length) {
+        message += `will delete its queries (${queryList.length})`
+      }
+    }
+    if (screenCount) {
+      message +=
+        initialLength !== message.length
+          ? ", and break connected screens:"
+          : "will break connected screens:"
+    } else {
+      message += "."
+    }
+    return message.length !== initialLength ? message : ""
   }
 </script>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText={`Delete ${sourceType}`}
+  okText="Delete"
   onOk={deleteSource}
   onCancel={hideDeleteDialog}
-  title="Confirm Deletion"
-  disabled={deleteSourceName !== source?.name}
+  title={`Are you sure you want to delete this ${sourceType}?`}
 >
   <div class="content">
-    <p class="firstWarning">
-      Are you sure you wish to delete the {sourceType}
-      <span class="sourceNameLine">
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <b on:click={autofillSourceName} class="sourceName">{source?.name}</b>
-        <span>?</span>
-      </span>
-    </p>
-
-    <p class="secondWarning">
-      All {sourceType} data will be deleted{viewsMessage}.
-    </p>
-    <p class="thirdWarning">This action <b>cannot be undone</b>.</p>
-
-    {#if affectedScreens.length > 0}
-      <div class="affectedScreens">
-        <InlineAlert
-          header={`The following screens use this ${sourceType} and may no longer function as expected`}
-        >
-          <ul class="affectedScreensList">
-            {#each affectedScreens as item}
-              <li>
-                <Link quiet overBackground target="_blank" href={item.url}
-                  >{item.text}</Link
-                >
-              </li>
+    {#if sourceType}
+      <p class="warning">
+        {buildMessage(sourceType)}
+        {#if affectedScreens.length > 0}
+          <span class="screens">
+            {#each affectedScreens as item, idx}
+              <Link overBackground target="_blank" href={item.url}
+                >{item.text}{idx !== affectedScreens.length - 1
+                  ? ","
+                  : ""}</Link
+              >
             {/each}
-          </ul>
-        </InlineAlert>
-      </div>
+          </span>
+        {/if}
+      </p>
     {/if}
-    <p class="fourthWarning">
-      Please enter the "<b on:click={autofillSourceName} class="sourceName"
-        >{source?.name}</b
-      >" below to confirm.
+    <p class="warning">
+      <b>This action cannot be undone.</b>
     </p>
-    <Input bind:value={deleteSourceName} placeholder={source?.name} />
   </div>
 </ConfirmDialog>
 
@@ -194,61 +212,15 @@
     max-width: 320px;
   }
 
-  .firstWarning {
-    margin: 0 0 12px;
-    max-width: 100%;
-  }
-
-  .sourceNameLine {
-    display: inline-flex;
-    max-width: 100%;
-    vertical-align: bottom;
-  }
-
-  .sourceName {
-    flex-grow: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-  }
-
-  .secondWarning {
+  .warning {
     margin: 0;
     max-width: 100%;
   }
 
-  .thirdWarning {
-    margin: 0 0 12px;
-    max-width: 100%;
-  }
-
-  .affectedScreens {
-    margin: 18px 0;
-    max-width: 100%;
-    margin-bottom: 24px;
-  }
-
-  .affectedScreens :global(.spectrum-InLineAlert) {
-    max-width: 100%;
-  }
-
-  .affectedScreensList {
-    padding: 0;
-    margin-bottom: 0;
-  }
-
-  .affectedScreensList li {
-    display: block;
-    max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 4px;
-  }
-
-  .fourthWarning {
-    margin: 12px 0 6px;
-    max-width: 100%;
+  .screens {
+    display: flex;
+    flex-direction: row;
+    padding-bottom: var(--spacing-l);
+    gap: var(--spacing-xs);
   }
 </style>

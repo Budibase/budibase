@@ -1,23 +1,23 @@
-import { generateScreenID, DocumentType } from "../../db/utils"
+import { DocumentType, generateScreenID } from "../../db/utils"
 import {
-  events,
   context,
-  tenancy,
   db as dbCore,
+  events,
   roles,
+  tenancy,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
 import {
-  Plugin,
-  ScreenProps,
-  Screen,
-  UserCtx,
+  DeleteScreenResponse,
   FetchScreenResponse,
+  Plugin,
   SaveScreenRequest,
   SaveScreenResponse,
-  DeleteScreenResponse,
-  UsageOfScreensResponse,
+  Screen,
+  ScreenProps,
   ScreenUsage,
+  UsageInScreensResponse,
+  UserCtx,
 } from "@budibase/types"
 import { builderSocket } from "../../websockets"
 import sdk from "../../sdk"
@@ -137,7 +137,7 @@ function findPlugins(component: ScreenProps, foundPlugins: string[]) {
   component._children.forEach(child => findPlugins(child, foundPlugins))
 }
 
-export async function usage(ctx: UserCtx<void, UsageOfScreensResponse>) {
+export async function usage(ctx: UserCtx<void, UsageInScreensResponse>) {
   const sourceId = ctx.params.sourceId
   const sourceType = sdk.common.getSourceType(sourceId)
   const allScreens = await sdk.screens.fetch()

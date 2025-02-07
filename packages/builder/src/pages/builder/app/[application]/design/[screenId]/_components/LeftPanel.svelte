@@ -1,25 +1,60 @@
-<script>
+<script lang="ts">
   import ScreenList from "./ScreenList/index.svelte"
   import ComponentList from "./ComponentList/index.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
+  import { ActionButton } from "@budibase/bbui"
+  import StatePanel from "./StatePanel.svelte"
+  import BindingsPanel from "./BindingsPanel.svelte"
+  import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
+
+  const Tabs = {
+    Components: "Components",
+    Bindings: "Bindings",
+    State: "State",
+  }
+
+  let activeTab = Tabs.Components
 </script>
 
 <div class="panel" use:resizable>
   <div class="content">
     <ScreenList />
-    <ComponentList />
+    <div class="tabs">
+      {#each Object.values(Tabs) as tab}
+        <ActionButton
+          quiet
+          selected={activeTab === tab}
+          on:click={() => (activeTab = tab)}
+        >
+          <div class="tab-label">
+            {tab}
+            {#if tab !== Tabs.Components}
+              <div class="new">NEW</div>
+            {/if}
+          </div>
+        </ActionButton>
+      {/each}
+    </div>
+    {#if activeTab === Tabs.Components}
+      <ComponentList />
+    {:else if activeTab === Tabs.Bindings}
+      <BindingsPanel />
+    {:else if activeTab === Tabs.State}
+      <div class="tab-content"><StatePanel /></div>
+    {/if}
   </div>
   <div class="divider">
     <div class="dividerClickExtender" role="separator" use:resizableHandle />
   </div>
 </div>
+<ComponentKeyHandler />
 
 <style>
   .panel {
     display: flex;
-    min-width: 270px;
+    min-width: 310px;
     width: 310px;
     height: 100%;
   }
@@ -34,6 +69,34 @@
     position: relative;
   }
 
+  .tabs {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: var(--spacing-m) var(--spacing-l);
+    border-bottom: var(--border-light);
+  }
+  .tab-content {
+    flex: 1 1 auto;
+    height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--spacing-l);
+  }
+  .tab-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .new {
+    font-size: 8px;
+    background: var(--bb-indigo);
+    border-radius: 2px;
+    padding: 1px 3px;
+    color: white;
+    font-weight: bold;
+  }
+
   .divider {
     position: relative;
     height: 100%;
@@ -45,7 +108,6 @@
     background: var(--spectrum-global-color-gray-300);
     cursor: row-resize;
   }
-
   .dividerClickExtender {
     position: absolute;
     cursor: col-resize;

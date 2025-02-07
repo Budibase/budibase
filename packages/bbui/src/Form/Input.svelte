@@ -3,19 +3,19 @@
   import TextField from "./Core/TextField.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value: string | null = null
-  export let label: string | null = null
+  export let value: any = undefined
+  export let label: string | undefined = undefined
   export let labelPosition = "above"
-  export let placeholder: string | null = null
+  export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
   export let readonly = false
-  export let error = null
+  export let error: string | undefined = undefined
   export let updateOnChange = true
   export let quiet = false
-  export let autofocus: boolean | null = null
-  export let autocomplete: string | null = null
-  export let helpText = null
+  export let autofocus: boolean | undefined = undefined
+  export let autocomplete: boolean | undefined = undefined
+  export let helpText: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = (e: any) => {

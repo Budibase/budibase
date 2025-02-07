@@ -1,6 +1,6 @@
 import { roles } from "@budibase/backend-core"
 import { BASE_LAYOUT_PROP_IDS } from "./layouts"
-import { Screen, Table, Query, ViewV2 } from "@budibase/types"
+import { Screen, Table, Query, ViewV2, Component } from "@budibase/types"
 
 export function createHomeScreen(
   config: {
@@ -54,7 +54,7 @@ export function createHomeScreen(
   }
 }
 
-function heading(text: string) {
+function heading(text: string): Component {
   return {
     _id: "c1bff24cd821e41d18c894ac77a80ef99",
     _component: "@budibase/standard-components/heading",

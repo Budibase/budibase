@@ -3,12 +3,12 @@
   import FieldLabel from "./FieldLabel.svelte"
   import Icon from "../Icon/Icon.svelte"
 
-  export let id: string | null = null
-  export let label: string | null = null
-  export let labelPosition = "above"
-  export let error: string | null = null
-  export let helpText: string | null = null
-  export let tooltip = ""
+  export let id: string | undefined = undefined
+  export let label: string | undefined = undefined
+  export let labelPosition: string = "above"
+  export let error: string | undefined = undefined
+  export let helpText: string | undefined = undefined
+  export let tooltip: string | undefined = undefined
 </script>
 
 <div class="spectrum-Form-item" class:above={labelPosition === "above"}>

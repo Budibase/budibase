@@ -1,13 +1,10 @@
 <script lang="ts">
-  import {
-    default as AbsTooltip,
-    TooltipPosition,
-    TooltipType,
-  } from "../Tooltip/AbsTooltip.svelte"
+  import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
+  import { TooltipPosition, TooltipType } from "../constants"
 
   export let name: string = "Add"
+  export let size: "XS" | "S" | "M" | "L" | "XL" = "M"
   export let hidden: boolean = false
-  export let size = "M"
   export let hoverable: boolean = false
   export let disabled: boolean = false
   export let color: string | undefined = undefined
@@ -81,17 +78,6 @@
     color: var(--spectrum-global-color-gray-500) !important;
     pointer-events: none !important;
   }
-
-  .tooltip {
-    position: absolute;
-    pointer-events: none;
-    left: 50%;
-    bottom: calc(100% + 4px);
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 1;
-  }
-
   .spectrum-Icon--sizeXS {
     width: var(--spectrum-global-dimension-size-150);
     height: var(--spectrum-global-dimension-size-150);
