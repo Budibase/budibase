@@ -5,7 +5,7 @@
   import { get, derived, readable } from "svelte/store"
   import { featuresStore } from "stores"
   import { Grid } from "@budibase/frontend-core"
-  import { processStringSync } from "@budibase/string-templates"
+  // import { processStringSync } from "@budibase/string-templates"
 
   // table is actually any datasource, but called table for legacy compatibility
   export let table
