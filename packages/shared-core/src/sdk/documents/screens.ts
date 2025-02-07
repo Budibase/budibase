@@ -1,8 +1,8 @@
-import { Screen } from "@budibase/types"
+import { Screen, Component } from "@budibase/types"
 
 export function findInSettings(screen: Screen, toFind: string) {
   const foundIn: { setting: string; value: string }[] = []
-  function recurse(props: Record<string, any>, parentKey = "") {
+  function recurse(props: Component, parentKey = "") {
     for (const [key, value] of Object.entries(props)) {
       if (!value) {
         continue

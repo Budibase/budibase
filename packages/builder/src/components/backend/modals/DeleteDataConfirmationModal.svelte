@@ -10,7 +10,7 @@
     viewsV2,
   } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { helpers } from "@budibase/shared-core"
+  import { helpers, utils } from "@budibase/shared-core"
   import { SourceType } from "@budibase/types"
   import { goto, params } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
@@ -45,7 +45,7 @@
   }
 
   export const show = async () => {
-    const usage = await screenStore.usageOfScreens(getSourceID())
+    const usage = await screenStore.usageInScreens(getSourceID())
     affectedScreens = processScreens(usage.screens)
     sourceType = usage.sourceType
     confirmDeleteDialog.show()
@@ -93,7 +93,6 @@
       }
       notifications.success("View deleted")
     } catch (error) {
-      console.error(error)
       notifications.error("Error deleting view")
     }
   }
@@ -140,6 +139,8 @@
         return await deleteQuery(source as Query)
       case SourceType.DATASOURCE:
         return await deleteDatasource(source as Datasource)
+      default:
+        utils.unreachable(sourceType)
     }
   }
 
