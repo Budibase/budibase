@@ -11,7 +11,7 @@
 
   export let screens: ScreenUsage[] = []
   export let icon = "DeviceDesktop"
-  export let accentColor: string | undefined = undefined
+  export let accentColor: string | null | undefined = null
   export let showCount = false
   export let align = PopoverAlignment.Left
 
@@ -31,7 +31,7 @@
     <ActionButton
       {icon}
       quiet
-      selected={open || (showCount && screens.length)}
+      selected={open || !!(showCount && screens.length)}
       {accentColor}
       on:click={show}
     >

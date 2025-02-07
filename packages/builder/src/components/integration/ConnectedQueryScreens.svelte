@@ -19,7 +19,7 @@
   }
 
   onMount(async () => {
-    let response = await screenStore.usageOfScreens(sourceId)
+    let response = await screenStore.usageInScreens(sourceId)
     screens = response?.screens
   })
 </script>
