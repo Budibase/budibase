@@ -1,7 +1,7 @@
 import emitter from "../events/index"
 import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
-import { definitions } from "./triggerInfo"
+import { automations } from "@budibase/shared-core"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
@@ -26,7 +26,7 @@ import {
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
 
-export const TRIGGER_DEFINITIONS = definitions
+export const TRIGGER_DEFINITIONS = automations.triggers.definitions
 const JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: true,
@@ -273,8 +273,8 @@ async function checkTriggerFilters(
   }
 
   if (
-    trigger.stepId === definitions.ROW_UPDATED.stepId ||
-    trigger.stepId === definitions.ROW_SAVED.stepId
+    trigger.stepId === automations.triggers.definitions.ROW_UPDATED.stepId ||
+    trigger.stepId === automations.triggers.definitions.ROW_SAVED.stepId
   ) {
     const newRow = await automationUtils.cleanUpRow(tableId, event.row)
     return rowPassesFilters(newRow, filters)

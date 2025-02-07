@@ -190,7 +190,7 @@
                 <Icon name="DragHandle" size="XL" />
               </div>
               <Select
-                placeholder={null}
+                placeholder={false}
                 options={actionOptions}
                 bind:value={condition.action}
               />
@@ -227,7 +227,7 @@
                 on:change={e => (condition.newValue = e.detail)}
               />
               <Select
-                placeholder={null}
+                placeholder={false}
                 options={getOperatorOptions(condition)}
                 bind:value={condition.operator}
                 on:change={e => onOperatorChange(condition, e.detail)}
@@ -236,7 +236,7 @@
                 disabled={condition.noValue || condition.operator === "oneOf"}
                 options={valueTypeOptions}
                 bind:value={condition.valueType}
-                placeholder={null}
+                placeholder={false}
                 on:change={e => onValueTypeChange(condition, e.detail)}
               />
               {#if ["string", "number"].includes(condition.valueType)}

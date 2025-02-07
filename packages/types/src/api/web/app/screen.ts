@@ -21,7 +21,7 @@ export interface ScreenUsage {
   _id: string
 }
 
-export interface UsageOfScreensResponse {
+export interface UsageInScreensResponse {
   sourceType: SourceType
   screens: ScreenUsage[]
 }

@@ -8,7 +8,7 @@
   export let onOk = undefined
   export let onCancel = undefined
   export let warning = true
-  export let disabled
+  export let disabled = false
 
   let modal
 

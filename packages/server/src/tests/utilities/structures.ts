@@ -1,10 +1,5 @@
 import { roles, utils } from "@budibase/backend-core"
-import {
-  createHomeScreen,
-  createTableScreen,
-  createQueryScreen,
-  createViewScreen,
-} from "../../constants/screens"
+import { createHomeScreen } from "../../constants/screens"
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -40,11 +35,15 @@ import {
   WebhookActionType,
   BuiltinPermissionID,
   DeepPartial,
-  ViewV2,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
+export {
+  createTableScreen,
+  createQueryScreen,
+  createViewScreen,
+} from "../../constants/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -223,10 +222,8 @@ export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
         icon: "test",
         description: "test",
         type: AutomationStepType.TRIGGER,
+        inputs: {},
         id: "test",
-        inputs: {
-          fields: {},
-        },
         schema: {
           inputs: {
             properties: {},
@@ -242,88 +239,6 @@ export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
     appId: "appId",
   }
   return merge(baseAutomation, opts)
-}
-
-export function basicCronAutomation(appId: string, cron: string): Automation {
-  const automation: Automation = {
-    name: `Automation ${generator.guid()}`,
-    definition: {
-      trigger: {
-        stepId: AutomationTriggerStepId.CRON,
-        name: "test",
-        tagline: "test",
-        icon: "test",
-        description: "test",
-        type: AutomationStepType.TRIGGER,
-        id: "test",
-        inputs: {
-          cron,
-        },
-        schema: {
-          inputs: {
-            properties: {},
-          },
-          outputs: {
-            properties: {},
-          },
-        },
-      },
-      steps: [],
-    },
-    type: "automation",
-    appId,
-  }
-  return automation
-}
-
-export function serverLogAutomation(appId?: string): Automation {
-  return {
-    name: "My Automation",
-    screenId: "kasdkfldsafkl",
-    live: true,
-    uiTree: {},
-    definition: {
-      trigger: {
-        stepId: AutomationTriggerStepId.APP,
-        name: "test",
-        tagline: "test",
-        icon: "test",
-        description: "test",
-        type: AutomationStepType.TRIGGER,
-        id: "test",
-        inputs: { fields: {} },
-        schema: {
-          inputs: {
-            properties: {},
-          },
-          outputs: {
-            properties: {},
-          },
-        },
-      },
-      steps: [
-        {
-          stepId: AutomationActionStepId.SERVER_LOG,
-          name: "Backend log",
-          tagline: "Console log a value in the backend",
-          icon: "Monitoring",
-          description: "Logs the given text to the server (using console.log)",
-          internal: true,
-          features: {
-            LOOPING: true,
-          },
-          inputs: {
-            text: "log statement",
-          },
-          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
-          id: "y8lkZbeSe",
-          type: AutomationStepType.ACTION,
-        },
-      ],
-    },
-    type: "automation",
-    appId: appId!,
-  }
 }
 
 export function loopAutomation(
@@ -603,18 +518,6 @@ export function basicScreen(route = "/") {
     roleId: BUILTIN_ROLE_IDS.BASIC,
     route,
   })
-}
-
-export function tableScreen(datasourceName: string, table: Table) {
-  return createTableScreen(datasourceName, table)
-}
-
-export function viewScreen(datasourceName: string, view: ViewV2) {
-  return createViewScreen(datasourceName, view)
-}
-
-export function queryScreen(datasourceId: string, query: Query) {
-  return createQueryScreen(datasourceId, query)
 }
 
 export function powerScreen(route = "/") {
