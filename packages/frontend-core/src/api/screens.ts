@@ -2,14 +2,14 @@ import {
   DeleteScreenResponse,
   SaveScreenRequest,
   SaveScreenResponse,
-  UsageOfScreensResponse,
+  UsageInScreensResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface ScreenEndpoints {
   saveScreen: (screen: SaveScreenRequest) => Promise<SaveScreenResponse>
   deleteScreen: (id: string, rev: string) => Promise<DeleteScreenResponse>
-  usageOfScreens: (sourceId: string) => Promise<UsageOfScreensResponse>
+  usageInScreens: (sourceId: string) => Promise<UsageInScreensResponse>
 }
 
 export const buildScreenEndpoints = (API: BaseAPIClient): ScreenEndpoints => ({
@@ -35,7 +35,7 @@ export const buildScreenEndpoints = (API: BaseAPIClient): ScreenEndpoints => ({
     })
   },
 
-  usageOfScreens: async sourceId => {
+  usageInScreens: async sourceId => {
     return await API.post({
       url: `/api/screens/usage/${sourceId}`,
     })

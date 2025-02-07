@@ -17,7 +17,7 @@ import {
   ScreenProps,
   ScreenUsage,
   SourceType,
-  UsageOfScreensResponse,
+  UsageInScreensResponse,
   UserCtx,
 } from "@budibase/types"
 import { builderSocket } from "../../websockets"
@@ -138,7 +138,7 @@ function findPlugins(component: ScreenProps, foundPlugins: string[]) {
   component._children.forEach(child => findPlugins(child, foundPlugins))
 }
 
-export async function usage(ctx: UserCtx<void, UsageOfScreensResponse>) {
+export async function usage(ctx: UserCtx<void, UsageInScreensResponse>) {
   const sourceId = ctx.params.sourceId
   const sourceType = sdk.common.getSourceType(sourceId)
   const allScreens = await sdk.screens.fetch()
@@ -152,14 +152,8 @@ export async function usage(ctx: UserCtx<void, UsageOfScreensResponse>) {
       })
     }
   }
-  const isInternalTable =
-    sourceType === SourceType.TABLE &&
-    sdk.tables.isInternal({ tableId: sourceId })
-  const isInternalView =
-    sourceType === SourceType.VIEW && sdk.views.isInternal(sourceId)
   ctx.body = {
     sourceType,
-    internal: isInternalTable || isInternalView,
     screens: response,
   }
 }
