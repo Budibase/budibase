@@ -1,15 +1,19 @@
 <script lang="ts">
-  import { List, ListItem, ActionButton } from "@budibase/bbui"
+  import {
+    List,
+    ListItem,
+    ActionButton,
+    PopoverAlignment,
+  } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { appStore } from "@/stores/builder"
   import type { ScreenUsage } from "@budibase/types"
-  import { PopoverAlign } from "@budibase/types"
 
   export let screens: ScreenUsage[] = []
   export let icon = "DeviceDesktop"
   export let accentColor: string | undefined = undefined
   export let showCount = false
-  export let align = PopoverAlign.Left
+  export let align = PopoverAlignment.Left
 
   let popover: any
 
