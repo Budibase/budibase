@@ -93,11 +93,9 @@ const handleMouseDown = (e: MouseEvent) => {
 
 // Handle iframe clicks by detecting a loss of focus on the main window
 const handleBlur = () => {
-  if (document.activeElement?.tagName === "IFRAME") {
-    handleClick(
-      new MouseEvent("click", { relatedTarget: document.activeElement })
-    )
-  }
+  handleClick(
+    new MouseEvent("click", { relatedTarget: document.activeElement })
+  )
 }
 
 // Global singleton listeners for our events
