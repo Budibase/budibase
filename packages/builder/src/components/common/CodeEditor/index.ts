@@ -92,7 +92,7 @@ export const helpersToCompletion = (
   const helperSection = buildSectionHeader(type, sectionName, icon, 99)
 
   return Object.keys(helpers).flatMap(helperName => {
-    let helper = helpers[helperName]
+    const helper = helpers[helperName]
     return {
       label: helperName,
       info: (completion: BindingCompletion) => {
@@ -220,9 +220,9 @@ export const jsAutocomplete = (baseCompletions: BindingCompletion[]) => {
 export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
   async function coreCompletion(context: CompletionContext) {
     let jsBinding = context.matchBefore(/\bhelpers\.\w*/)
-    let options = baseCompletions || []
 
     if (jsBinding) {
+      let options = baseCompletions || []
       const match = jsBinding.text.match(/\bhelpers\.(?<helper>\w*)/)
       if (!match) {
         return null
@@ -234,6 +234,36 @@ export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
         to: jsBinding.from + match[0].length,
         filter: false,
         options: filtered,
+      }
+    } else {
+      const prefix = context.matchBefore(/\b\w+/)
+      if (prefix && "helpers.".startsWith(prefix.text)) {
+        return {
+          from: context.pos - prefix.text.length,
+          to: context.pos,
+          filter: false,
+          options: [
+            {
+              label: "helpers.",
+              detail: "Helpers utilities",
+              apply: (
+                view: any,
+                _completion: BindingCompletion,
+                from: number,
+                to: number
+              ) => {
+                insertBinding(
+                  view,
+                  from,
+                  to,
+                  "helpers.",
+                  EditorModes.JS,
+                  AutocompleteType.TEXT
+                )
+              },
+            },
+          ],
+        }
       }
     }
 
@@ -307,6 +337,7 @@ export function jsInsert(
 const enum AutocompleteType {
   BINDING,
   HELPER,
+  TEXT,
 }
 
 // Autocomplete apply behaviour
@@ -323,6 +354,7 @@ export const insertBinding = (
   if (mode.name == "javascript") {
     parsedInsert = jsInsert(view.state.doc?.toString(), from, to, text, {
       helper: type === AutocompleteType.HELPER,
+      disableWrapping: type === AutocompleteType.TEXT,
     })
   } else if (mode.name == "handlebars") {
     parsedInsert = hbInsert(view.state.doc?.toString(), from, to, text)
