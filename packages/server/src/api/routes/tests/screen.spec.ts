@@ -18,7 +18,6 @@ const {
   basicTable,
   viewV2,
   basicQuery,
-  basicDatasource,
 } = setup.structures
 
 describe("/screens", () => {
