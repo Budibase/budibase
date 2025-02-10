@@ -136,7 +136,7 @@ export const snippetAutoComplete = (snippets: Snippet[]) => {
       return null
     }
 
-    const word = context.matchBefore(/\w*/)
+    const word = context.matchBefore(/\b\w*/)
     if (!word || (word.from == word.to && !context.explicit)) {
       return null
     }
