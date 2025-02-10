@@ -115,7 +115,7 @@
     useSnippets?: boolean
   ) => {
     const completions: ((_: CompletionContext) => any)[] = [
-      jsAutocomplete([...bindingCompletions.filter(c => c.label)]),
+      jsAutocomplete([...bindingCompletions]),
       jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)]),
     ]
     if (useSnippets && snippets) {
