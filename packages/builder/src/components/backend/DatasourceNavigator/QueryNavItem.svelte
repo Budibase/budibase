@@ -6,19 +6,18 @@
   } from "@/helpers/data/utils"
   import { goto as gotoStore, isActive } from "@roxi/routify"
   import {
-    datasources,
     queries,
     userSelectedResourceMap,
     contextMenuStore,
   } from "@/stores/builder"
   import NavItem from "@/components/common/NavItem.svelte"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import { notifications, Icon } from "@budibase/bbui"
 
   export let datasource
   export let query
 
-  let confirmDeleteDialog
+  let confirmDeleteModal
 
   // goto won't work in the context menu callback if the store is called directly
   $: goto = $gotoStore
@@ -31,7 +30,7 @@
         keyBind: null,
         visible: true,
         disabled: false,
-        callback: confirmDeleteDialog.show,
+        callback: confirmDeleteModal.show,
       },
       {
         icon: "Duplicate",
@@ -49,20 +48,6 @@
         },
       },
     ]
-  }
-
-  async function deleteQuery() {
-    try {
-      // Go back to the datasource if we are deleting the active query
-      if ($queries.selectedQueryId === query._id) {
-        goto(`./datasource/${query.datasourceId}`)
-      }
-      await queries.delete(query)
-      await datasources.fetch()
-      notifications.success("Query deleted")
-    } catch (error) {
-      notifications.error("Error deleting query")
-    }
   }
 
   const openContextMenu = e => {
@@ -90,14 +75,7 @@
   <Icon size="S" hoverable name="MoreSmallList" on:click={openContextMenu} />
 </NavItem>
 
-<ConfirmDialog
-  bind:this={confirmDeleteDialog}
-  okText="Delete Query"
-  onOk={deleteQuery}
-  title="Confirm Deletion"
->
-  Are you sure you wish to delete this query? This action cannot be undone.
-</ConfirmDialog>
+<DeleteDataConfirmModal source={query} bind:this={confirmDeleteModal} />
 
 <style>
 </style>
