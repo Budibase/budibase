@@ -219,14 +219,20 @@ export const jsAutocomplete = (baseCompletions: BindingCompletion[]) => {
 
 export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
   async function coreCompletion(context: CompletionContext) {
-    let jsBinding = context.matchBefore(/\bhelpers\./)
+    let jsBinding = context.matchBefore(/\bhelpers\.\w*/)
     let options = baseCompletions || []
 
     if (jsBinding) {
+      const match = jsBinding.text.match(/\bhelpers\.(?<helper>\w*)/)
+      if (!match) {
+        return null
+      }
+      const query = match.groups?.["helper"] || ""
+      let filtered = bindingFilter(options, query)
       return {
-        from: jsBinding.from + (jsBinding.to - jsBinding.from),
+        from: jsBinding.from + match[0].length,
         filter: false,
-        options,
+        options: filtered,
       }
     }
 
