@@ -3,6 +3,7 @@ import { budibaseTempDir } from "../budibaseDir"
 import fs from "fs"
 import { join } from "path"
 import { objectStore } from "@budibase/backend-core"
+import stream from "stream"
 
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 const AUTOMATION_PATH = join(budibaseTempDir(), "automation")
@@ -58,7 +59,11 @@ async function getPluginImpl(path: string, plugin: Plugin) {
     pluginKey
   )
 
-  fs.writeFileSync(filename, pluginJs)
+  if (pluginJs instanceof stream.Readable) {
+    pluginJs.pipe(fs.createWriteStream(filename))
+  } else {
+    fs.writeFileSync(filename, pluginJs)
+  }
   fs.writeFileSync(metadataName, hash)
 
   return require(filename)
