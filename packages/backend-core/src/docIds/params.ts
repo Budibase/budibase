@@ -83,9 +83,13 @@ export function isViewId(id: string): boolean {
 /**
  * Check if a given ID is that of a datasource or datasource plus.
  */
-export const isDatasourceId = (id: string): boolean => {
+export function isDatasourceId(id: string): boolean {
   // this covers both datasources and datasource plus
   return !!id && id.startsWith(`${DocumentType.DATASOURCE}${SEPARATOR}`)
+}
+
+export function isQueryId(id: string): boolean {
+  return !!id && id.startsWith(`${DocumentType.QUERY}${SEPARATOR}`)
 }
 
 /**

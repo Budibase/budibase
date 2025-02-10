@@ -81,6 +81,14 @@ export function isView(view: any): view is ViewV2 {
   return view.id && docIds.isViewId(view.id) && view.version === 2
 }
 
+export function isInternal(viewId: string) {
+  if (!docIds.isViewId(viewId)) {
+    return false
+  }
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+  return !isExternalTableID(tableId)
+}
+
 function guardDuplicateCalculationFields(view: Omit<ViewV2, "id" | "version">) {
   const seen: Record<string, Record<CalculationType, boolean>> = {}
   const calculationFields = helpers.views.calculationFields(view)

@@ -10,9 +10,8 @@
   import { Icon, ActionButton, ActionMenu, MenuItem } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
-  import DeleteViewModal from "./DeleteViewModal.svelte"
   import EditTableModal from "@/components/backend/TableNavigator/TableNavItem/EditModal.svelte"
-  import DeleteTableModal from "@/components/backend/TableNavigator/TableNavItem/DeleteConfirmationModal.svelte"
+  import DeleteConfirmationModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import { UserAvatars } from "@budibase/frontend-core"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { TableNames } from "@/constants"
@@ -314,12 +313,12 @@
 
 {#if table && tableEditable}
   <EditTableModal {table} bind:this={editTableModal} />
-  <DeleteTableModal {table} bind:this={deleteTableModal} />
+  <DeleteConfirmationModal source={table} bind:this={deleteTableModal} />
 {/if}
 
 {#if editableView}
   <EditViewModal view={editableView} bind:this={editViewModal} />
-  <DeleteViewModal view={editableView} bind:this={deleteViewModal} />
+  <DeleteConfirmationModal source={editableView} bind:this={deleteViewModal} />
 {/if}
 
 <style>
