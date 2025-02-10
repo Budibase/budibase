@@ -49,6 +49,7 @@
     runtimeToReadableMap,
     toBindingsArray,
   } from "@/dataBinding"
+  import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
 
   export let queryId
 
@@ -502,9 +503,12 @@
             on:change={() => (query.flags.urlName = false)}
             on:save={saveQuery}
           />
-          <div class="access">
-            <Label>Access</Label>
-            <AccessLevelSelect {query} {saveId} />
+          <div class="controls">
+            <ConnectedQueryScreens sourceId={query._id} />
+            <div class="access">
+              <Label>Access</Label>
+              <AccessLevelSelect {query} {saveId} />
+            </div>
           </div>
         </div>
         <div class="url-block">
@@ -823,6 +827,12 @@
   .top-bar {
     display: flex;
     justify-content: space-between;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 
   .access {

@@ -1,25 +1,25 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/actionbutton/dist/index-vars.css"
   import Tooltip from "../Tooltip/Tooltip.svelte"
   import { fade } from "svelte/transition"
   import { hexToRGBA } from "../helpers"
 
-  export let quiet = false
-  export let selected = false
-  export let disabled = false
-  export let icon = ""
-  export let size = "M"
-  export let active = false
-  export let fullWidth = false
-  export let noPadding = false
-  export let tooltip = ""
-  export let accentColor = null
+  export let quiet: boolean = false
+  export let selected: boolean = false
+  export let disabled: boolean = false
+  export let icon: string = ""
+  export let size: "S" | "M" | "L" = "M"
+  export let active: boolean = false
+  export let fullWidth: boolean = false
+  export let noPadding: boolean = false
+  export let tooltip: string = ""
+  export let accentColor: string | null = null
 
   let showTooltip = false
 
   $: accentStyle = getAccentStyle(accentColor)
 
-  const getAccentStyle = color => {
+  const getAccentStyle = (color: string | null) => {
     if (!color) {
       return ""
     }
