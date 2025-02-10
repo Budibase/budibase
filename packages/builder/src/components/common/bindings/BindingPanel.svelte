@@ -23,6 +23,7 @@
     snippetAutoComplete,
     EditorModes,
     bindingsToCompletions,
+    jsHelperAutocomplete,
   } from "../CodeEditor"
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
@@ -114,10 +115,8 @@
     useSnippets?: boolean
   ) => {
     const completions: ((_: CompletionContext) => any)[] = [
-      jsAutocomplete([
-        ...bindingCompletions,
-        ...getHelperCompletions(EditorModes.JS),
-      ]),
+      jsAutocomplete([...bindingCompletions.filter(c => c.label)]),
+      jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)]),
     ]
     if (useSnippets && snippets) {
       completions.push(snippetAutoComplete(snippets))
