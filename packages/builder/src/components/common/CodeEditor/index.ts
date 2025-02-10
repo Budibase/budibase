@@ -217,6 +217,25 @@ export const jsAutocomplete = (baseCompletions: BindingCompletion[]) => {
   return coreCompletion
 }
 
+export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
+  async function coreCompletion(context: CompletionContext) {
+    let jsBinding = context.matchBefore(/\bhelpers\./)
+    let options = baseCompletions || []
+
+    if (jsBinding) {
+      return {
+        from: jsBinding.from + (jsBinding.to - jsBinding.from),
+        filter: false,
+        options,
+      }
+    }
+
+    return null
+  }
+
+  return coreCompletion
+}
+
 export const buildBindingInfoNode = (
   completion: BindingCompletion,
   binding: any
