@@ -246,7 +246,8 @@ export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
           options: [
             {
               label: "helpers.",
-              detail: "Helpers utilities",
+              type: "text",
+              simple: true,
               apply: (
                 view: EditorView,
                 _completion: BindingCompletion,

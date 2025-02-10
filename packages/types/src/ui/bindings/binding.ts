@@ -3,6 +3,7 @@ export interface BindingCompletion {
     name: string
   }
   label: string
+  simple?: boolean
 }
 
 export interface EnrichedBinding {
