@@ -199,6 +199,12 @@ class InMemoryQueue implements Partial<Queue> {
     return this as unknown as Queue
   }
 
+  off(event: string, callback: (...args: any[]) => void): Queue {
+    // @ts-expect-error - this callback can be one of many types
+    this._emitter.off(event, callback)
+    return this as unknown as Queue
+  }
+
   async count() {
     return this._messages.length
   }

@@ -34,9 +34,12 @@ export class ApplicationAPI extends TestAPI {
   }
 
   publish = async (
-    appId: string,
+    appId?: string,
     expectations?: Expectations
   ): Promise<PublishResponse> => {
+    if (!appId) {
+      appId = this.config.getAppId()
+    }
     return await this._post<PublishResponse>(
       `/api/applications/${appId}/publish`,
       {
