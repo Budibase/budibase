@@ -10,6 +10,7 @@
     closeBracketsKeymap,
     acceptCompletion,
     completionStatus,
+    CompletionContext,
   } from "@codemirror/autocomplete"
   import {
     lineNumbers,
@@ -44,11 +45,15 @@
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
-  import type { EditorMode } from "@budibase/types"
+  import type { BindingCompletion, EditorMode } from "@budibase/types"
 
   export let label: string | undefined = undefined
   // TODO: work out what best type fits this
-  export let completions: any[] = []
+  export let completions: ((context: CompletionContext) => Promise<{
+    from: number
+    filter: boolean
+    options: BindingCompletion[]
+  } | null>)[] = []
   export let mode: EditorMode = EditorModes.Handlebars
   export let value: string | null = ""
   export let placeholder: string | null = null
