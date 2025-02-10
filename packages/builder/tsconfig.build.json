@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
+    "target": "es2018",
     "allowJs": true
   },
   "include": ["./src/**/*"],
