@@ -130,8 +130,7 @@ export const snippetAutoComplete = (snippets: Snippet[]) => {
       return null
     }
 
-    let jsBinding = context.matchBefore(/\$\("[\s\w]*/)
-    if (jsBinding) {
+    if (context.matchBefore(/\$\("[\s\w]*/)) {
       // We are handing a js field completion
       return null
     }
@@ -227,6 +226,11 @@ export const jsAutocomplete = (baseCompletions: BindingCompletion[]) => {
 
 export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
   async function coreCompletion(context: CompletionContext) {
+    if (context.matchBefore(/\$\("[\s\w]*/)) {
+      // We are handing a js field completion
+      return null
+    }
+
     let jsBinding = context.matchBefore(/\bhelpers\.\w*/)
 
     if (jsBinding) {
