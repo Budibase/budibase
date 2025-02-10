@@ -51,7 +51,6 @@
   // TODO: work out what best type fits this
   export let completions: ((context: CompletionContext) => Promise<{
     from: number
-    filter: boolean
     options: BindingCompletion[]
   } | null>)[] = []
   export let mode: EditorMode = EditorModes.Handlebars

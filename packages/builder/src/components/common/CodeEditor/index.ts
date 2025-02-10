@@ -103,11 +103,11 @@ export const helpersToCompletion = (
       detail: "Function",
       apply: (
         view: any,
-        completion: BindingCompletion,
+        _completion: BindingCompletion,
         from: number,
         to: number
       ) => {
-        insertBinding(view, from, to, helperName, mode)
+        insertBinding(view, from, to, helperName, mode, AutocompleteType.HELPER)
       },
     }
   })
@@ -230,7 +230,8 @@ export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
       const query = match.groups?.["helper"] || ""
       let filtered = bindingFilter(options, query)
       return {
-        from: jsBinding.from + match[0].length,
+        from: jsBinding.from,
+        to: jsBinding.from + match[0].length,
         filter: false,
         options: filtered,
       }
@@ -243,7 +244,7 @@ export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
 }
 
 export const buildBindingInfoNode = (
-  completion: BindingCompletion,
+  _completion: BindingCompletion,
   binding: any
 ) => {
   if (!binding.valueHTML || binding.value == null) {
@@ -303,18 +304,26 @@ export function jsInsert(
   return parsedInsert
 }
 
+const enum AutocompleteType {
+  BINDING,
+  HELPER,
+}
+
 // Autocomplete apply behaviour
 export const insertBinding = (
   view: any,
   from: number,
   to: number,
   text: string,
-  mode: { name: "javascript" | "handlebars" }
+  mode: { name: "javascript" | "handlebars" },
+  type: AutocompleteType
 ) => {
   let parsedInsert
 
   if (mode.name == "javascript") {
-    parsedInsert = jsInsert(view.state.doc?.toString(), from, to, text)
+    parsedInsert = jsInsert(view.state.doc?.toString(), from, to, text, {
+      helper: type === AutocompleteType.HELPER,
+    })
   } else if (mode.name == "handlebars") {
     parsedInsert = hbInsert(view.state.doc?.toString(), from, to, text)
   } else {
@@ -412,7 +421,14 @@ export const bindingsToCompletions = (
               from: number,
               to: number
             ) => {
-              insertBinding(view, from, to, binding.readableBinding, mode)
+              insertBinding(
+                view,
+                from,
+                to,
+                binding.readableBinding,
+                mode,
+                AutocompleteType.BINDING
+              )
             },
           })
           return acc
