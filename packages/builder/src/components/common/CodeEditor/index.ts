@@ -7,7 +7,8 @@ import {
   Helper,
   Snippet,
 } from "@budibase/types"
-import { CompletionContext } from "@codemirror/autocomplete"
+import { CompletionContext, startCompletion } from "@codemirror/autocomplete"
+import { EditorView } from "@codemirror/view"
 
 export const EditorModes: EditorModesMap = {
   JS: {
@@ -102,7 +103,7 @@ export const helpersToCompletion = (
       section: helperSection,
       detail: "Function",
       apply: (
-        view: any,
+        view: EditorView,
         _completion: BindingCompletion,
         from: number,
         to: number
@@ -139,7 +140,7 @@ export const snippetAutoComplete = (snippets: Snippet[]) => {
         type: "text",
         simple: true,
         apply: (
-          view: any,
+          view: EditorView,
           completion: BindingCompletion,
           from: number,
           to: number
@@ -247,7 +248,7 @@ export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
               label: "helpers.",
               detail: "Helpers utilities",
               apply: (
-                view: any,
+                view: EditorView,
                 _completion: BindingCompletion,
                 from: number,
                 to: number
@@ -260,6 +261,9 @@ export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
                   EditorModes.JS,
                   AutocompleteType.TEXT
                 )
+
+                // Trigger again the completion, to chain it with the helpers completion
+                startCompletion(view)
               },
             },
           ],
@@ -342,7 +346,7 @@ const enum AutocompleteType {
 
 // Autocomplete apply behaviour
 export const insertBinding = (
-  view: any,
+  view: EditorView,
   from: number,
   to: number,
   text: string,
@@ -386,7 +390,7 @@ export const insertBinding = (
 }
 
 export const insertSnippet = (
-  view: any,
+  view: EditorView,
   from: number,
   to: number,
   text: string
@@ -448,8 +452,8 @@ export const bindingsToCompletions = (
             detail: displayType,
             section: bindingSectionHeader,
             apply: (
-              view: any,
-              completion: BindingCompletion,
+              view: EditorView,
+              _completion: BindingCompletion,
               from: number,
               to: number
             ) => {
