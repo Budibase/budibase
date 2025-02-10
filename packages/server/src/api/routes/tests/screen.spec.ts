@@ -8,6 +8,7 @@ import {
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
+import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 
 const {
   basicScreen,
@@ -17,7 +18,6 @@ const {
   basicTable,
   viewV2,
   basicQuery,
-  basicDatasource,
 } = setup.structures
 
 describe("/screens", () => {
@@ -225,7 +225,7 @@ describe("/screens", () => {
 
     it("should find datasource/query usage", async () => {
       const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
+        basicDatasourcePlus().datasource
       )
       const query = await config.api.query.save(basicQuery(datasource._id!))
       const screen = await config.api.screen.save(
