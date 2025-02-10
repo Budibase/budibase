@@ -129,6 +129,13 @@ export const snippetAutoComplete = (snippets: Snippet[]) => {
     if (!snippets?.length) {
       return null
     }
+
+    let jsBinding = context.matchBefore(/\$\("[\s\w]*/)
+    if (jsBinding) {
+      // We are handing a js field completion
+      return null
+    }
+
     const word = context.matchBefore(/\w*/)
     if (!word || (word.from == word.to && !context.explicit)) {
       return null
