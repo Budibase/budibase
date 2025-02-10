@@ -53,15 +53,6 @@ export const clearAllApps = async (
   })
 }
 
-export const clearAllAutomations = async (config: TestConfiguration) => {
-  const { automations } = await config.getAllAutomations()
-  for (let auto of automations) {
-    await context.doInAppContext(config.getAppId(), async () => {
-      await config.deleteAutomation(auto)
-    })
-  }
-}
-
 export const wipeDb = async () => {
   const couchInfo = db.getCouchInfo()
   const nano = Nano({

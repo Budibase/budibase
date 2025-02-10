@@ -5,6 +5,7 @@
   import { get, derived, readable } from "svelte/store"
   import { featuresStore } from "stores"
   import { Grid } from "@budibase/frontend-core"
+  // import { processStringSync } from "@budibase/string-templates"
 
   // table is actually any datasource, but called table for legacy compatibility
   export let table
@@ -42,6 +43,7 @@
   let gridContext
   let minHeight = 0
 
+  $: id = $component.id
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
   $: parsedColumns = getParsedColumns(columns)
@@ -65,7 +67,6 @@
     const clean = gridContext?.rows.actions.cleanRow || (x => x)
     const cleaned = rows.map(clean)
     const goldenRow = generateGoldenSample(cleaned)
-    const id = get(component).id
     return {
       // Not sure what this one is for...
       [id]: goldenRow,
@@ -104,6 +105,7 @@
         order: idx,
         conditions: column.conditions,
         visible: !!column.active,
+        // format: createFormatter(column),
       }
       if (column.width) {
         overrides[column.field].width = column.width
@@ -111,6 +113,13 @@
     })
     return overrides
   }
+
+  // const createFormatter = column => {
+  //   if (typeof column.format !== "string" || !column.format.trim().length) {
+  //     return null
+  //   }
+  //   return row => processStringSync(column.format, { [id]: row })
+  // }
 
   const enrichButtons = buttons => {
     if (!buttons?.length) {

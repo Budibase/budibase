@@ -13,7 +13,7 @@ import {
   HTTPError,
   db as dbCore,
 } from "@budibase/backend-core"
-import { definitions } from "../../../automations/triggerInfo"
+import { automations as sharedAutomations } from "@budibase/shared-core"
 import automations from "."
 
 export interface PersistedAutomation extends Automation {
@@ -202,7 +202,7 @@ export async function remove(automationId: string, rev: string) {
  * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
 async function checkForWebhooks({ oldAuto, newAuto }: any) {
-  const WH_STEP_ID = definitions.WEBHOOK.stepId
+  const WH_STEP_ID = sharedAutomations.triggers.definitions.WEBHOOK.stepId
 
   const appId = context.getAppId()
   if (!appId) {
