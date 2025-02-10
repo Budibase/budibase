@@ -11,6 +11,10 @@ export function isExternal(opts: { table?: Table; tableId?: string }): boolean {
   return false
 }
 
+export function isInternal(opts: { table?: Table; tableId?: string }): boolean {
+  return !isExternal(opts)
+}
+
 export function isTable(table: any): table is Table {
   return table._id && docIds.isTableId(table._id)
 }
