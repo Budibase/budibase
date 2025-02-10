@@ -1,7 +1,6 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { getQueue } from "../.."
-import { Job } from "bull"
+import { captureAutomationRuns } from "../utilities"
 
 describe("cron trigger", () => {
   const config = new TestConfiguration()
@@ -15,28 +14,19 @@ describe("cron trigger", () => {
   })
 
   it("should queue a Bull cron job", async () => {
-    const queue = getQueue()
-    expect(await queue.getCompletedCount()).toEqual(0)
-
-    const jobPromise = new Promise<Job>(resolve => {
-      queue.on("completed", async job => {
-        resolve(job)
-      })
-    })
-
     await createAutomationBuilder(config)
-      .cron({ cron: "* * * * *" })
+      .onCron({ cron: "* * * * *" })
       .serverLog({
         text: "Hello, world!",
       })
       .save()
 
-    await config.api.application.publish(config.getAppId())
+    const jobs = await captureAutomationRuns(() =>
+      config.api.application.publish()
+    )
+    expect(jobs).toHaveLength(1)
 
-    expect(await queue.getCompletedCount()).toEqual(1)
-
-    const job = await jobPromise
-    const repeat = job.opts?.repeat
+    const repeat = jobs[0].opts?.repeat
     if (!repeat || !("cron" in repeat)) {
       throw new Error("Expected cron repeat")
     }
@@ -45,7 +35,7 @@ describe("cron trigger", () => {
 
   it("should fail if the cron expression is invalid", async () => {
     await createAutomationBuilder(config)
-      .cron({ cron: "* * * * * *" })
+      .onCron({ cron: "* * * * * *" })
       .serverLog({
         text: "Hello, world!",
       })

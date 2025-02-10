@@ -39,6 +39,11 @@ import {
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
+export {
+  createTableScreen,
+  createQueryScreen,
+  createViewScreen,
+} from "../../constants/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -217,10 +222,8 @@ export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
         icon: "test",
         description: "test",
         type: AutomationStepType.TRIGGER,
+        inputs: {},
         id: "test",
-        inputs: {
-          fields: {},
-        },
         schema: {
           inputs: {
             properties: {},

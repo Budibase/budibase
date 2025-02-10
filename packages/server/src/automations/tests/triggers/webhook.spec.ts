@@ -11,8 +11,8 @@ describe("Branching automations", () => {
   let webhook: Webhook
 
   async function createWebhookAutomation() {
-    const automation = await createAutomationBuilder(config)
-      .webhook({ fields: { parameter: "string" } })
+    const { automation } = await createAutomationBuilder(config)
+      .onWebhook({ fields: { parameter: "string" } })
       .createRow({
         row: { tableId: table._id!, name: "{{ trigger.parameter }}" },
       })

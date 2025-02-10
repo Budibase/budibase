@@ -500,6 +500,13 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     })
   }
+
+  /**
+   * Provides a list of screens that are used by a given source ID (table, view, datasource, query)
+   */
+  async usageInScreens(sourceId: string) {
+    return API.usageInScreens(sourceId)
+  }
 }
 
 export const screenStore = new ScreenStore()
