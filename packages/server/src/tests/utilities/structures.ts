@@ -39,6 +39,11 @@ import {
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
+export {
+  createTableScreen,
+  createQueryScreen,
+  createViewScreen,
+} from "../../constants/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -483,6 +488,15 @@ export function basicDatasource(): { datasource: Datasource } {
       name: "Test",
       source: SourceName.POSTGRES,
       config: {},
+    },
+  }
+}
+
+export function basicDatasourcePlus(): { datasource: Datasource } {
+  return {
+    datasource: {
+      ...basicDatasource().datasource,
+      plus: true,
     },
   }
 }

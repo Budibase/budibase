@@ -16,7 +16,7 @@ export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
  * @param appId The ID of the app which is being created.
  * @return once promise completes app resources should be ready in object store.
  */
-export const createApp = async (appId: string) => {
+export const uploadAppFiles = async (appId: string) => {
   await updateClientLibrary(appId)
 }
 
@@ -25,7 +25,7 @@ export const createApp = async (appId: string) => {
  * @param appId The ID of the app which is being deleted.
  * @return once promise completes the app resources will be removed from object store.
  */
-export const deleteApp = async (appId: string) => {
+export const deleteAppFiles = async (appId: string) => {
   await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}/`)
 }
 
@@ -36,11 +36,11 @@ export const getComponentLibraryManifest = async (library: string) => {
   const appId = context.getAppId()
   const filename = "manifest.json"
 
-  if (env.isDev() || env.isTest()) {
+  if (env.USE_LOCAL_COMPONENT_LIBS) {
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)
 
-    if (shouldServeLocally(app.version) || env.isTest()) {
+    if (shouldServeLocally(app.version) || env.USE_LOCAL_COMPONENT_LIBS) {
       const paths = [
         join(TOP_LEVEL_PATH, "packages/client", filename),
         join(process.cwd(), "client", filename),
@@ -78,7 +78,7 @@ export const getComponentLibraryManifest = async (library: string) => {
     resp = await objectStore.retrieve(ObjectStoreBuckets.APPS, path)
   }
   if (typeof resp !== "string") {
-    resp = resp.toString("utf8")
+    resp = resp.toString()
   }
   return JSON.parse(resp)
 }

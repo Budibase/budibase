@@ -3,8 +3,16 @@ import { context } from "@budibase/backend-core"
 import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
 import emitter from "../../../events/index"
 import env from "../../../environment"
-import { AutomationActionStepId, Datasource } from "@budibase/types"
+import {
+  Automation,
+  AutomationActionStepId,
+  AutomationData,
+  Datasource,
+} from "@budibase/types"
 import { Knex } from "knex"
+import { getQueue } from "../.."
+import { Job } from "bull"
+import { helpers } from "@budibase/shared-core"
 
 let config: TestConfiguration
 
@@ -61,6 +69,56 @@ export async function runStep(
   } else {
     return run()
   }
+}
+
+/**
+ * Capture all automation runs that occur during the execution of a function.
+ * This function will wait for all messages to be processed before returning.
+ */
+export async function captureAllAutomationResults(
+  f: () => Promise<unknown>
+): Promise<Job<AutomationData>[]> {
+  const runs: Job<AutomationData>[] = []
+  const queue = getQueue()
+  let messagesReceived = 0
+
+  const completedListener = async (job: Job<AutomationData>) => {
+    runs.push(job)
+    messagesReceived--
+  }
+  const messageListener = async () => {
+    messagesReceived++
+  }
+  queue.on("message", messageListener)
+  queue.on("completed", completedListener)
+  try {
+    await f()
+    // Queue messages tend to be send asynchronously in API handlers, so there's
+    // no guarantee that awaiting this function will have queued anything yet.
+    // We wait here to make sure we're queued _after_ any existing async work.
+    await helpers.wait(100)
+  } finally {
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (messagesReceived > 0) {
+      await helpers.wait(50)
+    }
+    queue.off("completed", completedListener)
+    queue.off("message", messageListener)
+  }
+
+  return runs
+}
+
+export async function captureAutomationResults(
+  automation: Automation | string,
+  f: () => Promise<unknown>
+) {
+  const results = await captureAllAutomationResults(f)
+  return results.filter(
+    r =>
+      r.data.automation._id ===
+      (typeof automation === "string" ? automation : automation._id)
+  )
 }
 
 export async function saveTestQuery(
