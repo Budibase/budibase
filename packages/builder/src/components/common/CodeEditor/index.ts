@@ -137,17 +137,9 @@ export const snippetAutoComplete = (snippets: Snippet[]): BindingCompletion => {
     return {
       from: word.from,
       options: snippets.map(snippet => ({
+        section: buildSectionHeader("snippets", "Snippets", "Code", 100),
         label: `snippets.${snippet.name}`,
-        type: "text",
-        simple: true,
-        apply: (
-          view: EditorView,
-          completion: BindingCompletionOption,
-          from: number,
-          to: number
-        ) => {
-          insertSnippet(view, from, to, completion.label)
-        },
+        displayLabel: snippet.name,
       })),
     }
   }
@@ -239,6 +231,7 @@ export const jsHelperAutocomplete = (
     if (!word || (word.from == word.to && !context.explicit)) {
       return null
     }
+
     return {
       from: word.from,
       options: baseCompletions.map(helper => ({
