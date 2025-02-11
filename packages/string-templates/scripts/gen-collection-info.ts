@@ -7,18 +7,30 @@ import { marked } from "marked"
 import { join, dirname } from "path"
 
 const helpers = require("@budibase/handlebars-helpers")
-const doctrine = require("doctrine")
+import doctrine, { Annotation } from "doctrine"
 
-type HelperInfo = {
+type BudibaseAnnotation = Annotation & {
+  example?: string
   acceptsInline?: boolean
   acceptsBlock?: boolean
+}
+
+type Helper = {
+  args: string[]
+  numArgs: number
   example?: string
   description: string
-  tags?: any[]
+  requiresBlock?: boolean
+}
+
+type Manifest = {
+  [category: string]: {
+    [helper: string]: Helper
+  }
 }
 
 const FILENAME = join(__dirname, "..", "src", "manifest.json")
-const outputJSON: any = {}
+const outputJSON: Manifest = {}
 const ADDED_HELPERS = {
   date: {
     date: {
@@ -38,11 +50,11 @@ const ADDED_HELPERS = {
   },
 }
 
-function fixSpecialCases(name: string, obj: any) {
+function fixSpecialCases(name: string, obj: Helper) {
   const args = obj.args
   if (name === "ifNth") {
-    args[0] = "a"
-    args[1] = "b"
+    obj.args = ["a", "b", "options"]
+    obj.numArgs = 3
   }
   if (name === "eachIndex") {
     obj.description = "Iterates the array, listing an item and the index of it."
@@ -66,10 +78,10 @@ function lookForward(lines: string[], funcLines: string[], idx: number) {
   return true
 }
 
-function getCommentInfo(file: string, func: string): HelperInfo {
+function getCommentInfo(file: string, func: string): BudibaseAnnotation {
   const lines = file.split("\n")
   const funcLines = func.split("\n")
-  let comment = null
+  let comment: string | null = null
   for (let idx = 0; idx < lines.length; ++idx) {
     // from here work back until we have the comment
     if (lookForward(lines, funcLines, idx)) {
@@ -91,15 +103,9 @@ function getCommentInfo(file: string, func: string): HelperInfo {
     }
   }
   if (comment == null) {
-    return { description: "" }
+    return { description: "", tags: [] }
   }
-  const docs: {
-    acceptsInline?: boolean
-    acceptsBlock?: boolean
-    example: string
-    description: string
-    tags: any[]
-  } = doctrine.parse(comment, { unwrap: true })
+  const docs: BudibaseAnnotation = doctrine.parse(comment, { unwrap: true })
   // some hacky fixes
   docs.description = docs.description.replace(/\n/g, " ")
   docs.description = docs.description.replace(/[ ]{2,}/g, " ")
@@ -135,7 +141,7 @@ function run() {
       )}/lib/${collection}.js`,
       "utf8"
     )
-    const collectionInfo: any = {}
+    const collectionInfo: { [name: string]: Helper } = {}
     // collect information about helper
     let hbsHelperInfo = helpers[collection]()
     for (let entry of Object.entries(hbsHelperInfo)) {
@@ -154,11 +160,8 @@ function run() {
       const jsDocInfo = getCommentInfo(collectionFile, fnc)
       let args = jsDocInfo.tags
         .filter(tag => tag.title === "param")
-        .map(
-          tag =>
-            tag.description &&
-            tag.description.replace(/`/g, "").split(" ")[0].trim()
-        )
+        .filter(tag => tag.description)
+        .map(tag => tag.description!.replace(/`/g, "").split(" ")[0].trim())
       collectionInfo[name] = fixSpecialCases(name, {
         args,
         numArgs: args.length,
