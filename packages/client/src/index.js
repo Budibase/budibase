@@ -10,6 +10,7 @@ import {
   eventStore,
   hoverStore,
   stateStore,
+  routeStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 import { get } from "svelte/store"
@@ -108,6 +109,9 @@ const loadBudibase = async () => {
     } else if (type === "builder-state") {
       const [[key, value]] = Object.entries(data)
       stateStore.actions.setValue(key, value)
+    } else if (type === "builder-test-url") {
+      const { route, testValue } = data
+      routeStore.actions.setTestUrlParams(route, testValue)
     }
   }
 
