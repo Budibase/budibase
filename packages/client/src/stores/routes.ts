@@ -122,14 +122,13 @@ const createRouteStore = () => {
   const setTestUrlParams = (route: string, testValue: string) => {
     const routeSegments = route.split("/").slice(2)
     const testSegments = testValue.split("/")
-    const params: Record<string, string> = {}
 
+    const params: Record<string, string> = {}
     routeSegments.forEach((segment, index) => {
       if (segment.startsWith(":") && index < testSegments.length) {
         params[segment.slice(1)] = testSegments[index]
       }
     })
-
     store.update(state => ({ ...state, testUrlParams: params }))
   }
   return {
