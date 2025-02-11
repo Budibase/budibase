@@ -58,7 +58,7 @@ if (descriptions.length) {
           .executeQuery({ query: { queryId: null } })
           .test({ fields: {} })
 
-        expect(steps[0].outputs.response.message).toEqual("Invalid inputs")
+        expect(steps[0].outputs.response).toStartWith("Error:")
         expect(steps[0].outputs.success).toEqual(false)
       })
 
@@ -68,7 +68,7 @@ if (descriptions.length) {
           .executeQuery({ query: { queryId: "wrong_id" } })
           .test({ fields: {} })
 
-        expect(steps[0].outputs.response).toBeDefined()
+        expect(steps[0].outputs.response).toStartWith("Error:")
         expect(steps[0].outputs.success).toEqual(false)
       })
     }
