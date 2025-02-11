@@ -350,7 +350,7 @@ const insertBinding = (
 export const bindingsToCompletions = (
   bindings: any,
   mode: { name: "javascript" | "handlebars" }
-) => {
+): BindingCompletionOption[] => {
   const bindingByCategory = groupBy(bindings, "category")
   const categoryMeta = bindings?.reduce((acc: any, ele: any) => {
     acc[ele.category] = acc[ele.category] || {}
@@ -364,21 +364,22 @@ export const bindingsToCompletions = (
     return acc
   }, {})
 
-  const completions = Object.keys(bindingByCategory).reduce(
-    (comps: any, catKey: string) => {
-      const { icon, rank } = categoryMeta[catKey] || {}
+  const completions = Object.keys(bindingByCategory).reduce<
+    BindingCompletionOption[]
+  >((comps, catKey) => {
+    const { icon, rank } = categoryMeta[catKey] || {}
 
-      const bindingSectionHeader = buildSectionHeader(
-        // @ts-ignore something wrong with this - logically this should be dictionary
-        bindingByCategory.type,
-        catKey,
-        icon || "",
-        typeof rank == "number" ? rank : 1
-      )
+    const bindingSectionHeader = buildSectionHeader(
+      // @ts-ignore something wrong with this - logically this should be dictionary
+      bindingByCategory.type,
+      catKey,
+      icon || "",
+      typeof rank == "number" ? rank : 1
+    )
 
-      return [
-        ...comps,
-        ...bindingByCategory[catKey].reduce((acc, binding) => {
+    comps.push(
+      ...bindingByCategory[catKey].reduce<BindingCompletionOption[]>(
+        (acc, binding) => {
           let displayType = binding.fieldSchema?.type || binding.display?.type
           acc.push({
             label:
@@ -404,11 +405,13 @@ export const bindingsToCompletions = (
             },
           })
           return acc
-        }, []),
-      ]
-    },
-    []
-  )
+        },
+        []
+      )
+    )
+
+    return comps
+  }, [])
 
   return completions
 }
