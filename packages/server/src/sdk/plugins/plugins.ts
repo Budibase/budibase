@@ -18,7 +18,7 @@ export async function fetch(type?: PluginType): Promise<Plugin[]> {
     })
   )
   let plugins = response.rows.map((row: any) => row.doc) as Plugin[]
-  plugins = objectStore.enrichPluginURLs(plugins)
+  plugins = await objectStore.enrichPluginURLs(plugins)
   if (type) {
     return plugins.filter((plugin: Plugin) => plugin.schema?.type === type)
   } else {

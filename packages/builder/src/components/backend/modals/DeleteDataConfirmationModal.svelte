@@ -151,6 +151,8 @@
     const screenCount = affectedScreens.length
     let message = `Removing ${source?.name} `
     let initialLength = message.length
+    const hasChanged = () => message.length !== initialLength
+
     if (sourceType === SourceType.TABLE) {
       const views = "views" in source ? Object.values(source?.views ?? []) : []
       message += `will delete its data${
@@ -169,10 +171,10 @@
         initialLength !== message.length
           ? ", and break connected screens:"
           : "will break connected screens:"
-    } else {
+    } else if (hasChanged()) {
       message += "."
     }
-    return message.length !== initialLength ? message : ""
+    return hasChanged() ? message : ""
   }
 </script>
 

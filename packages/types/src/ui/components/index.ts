@@ -15,22 +15,29 @@ export interface ComponentDefinition {
   illegalChildren: string[]
 }
 
+export type DependsOnComponentSetting =
+  | string
+  | {
+      setting: string
+      value: string
+    }
+
 export interface ComponentSetting {
   key: string
   type: string
   label?: string
   section?: string
   name?: string
+  required?: boolean
   defaultValue?: any
   selectAllFields?: boolean
   resetOn?: string | string[]
   settings?: ComponentSetting[]
   nested?: boolean
-  isolated?: boolean
-  dependsOn?:
-    | string
-    | {
-        setting: string
-        value: string
-      }
+  dependsOn?: DependsOnComponentSetting
+  sectionDependsOn?: DependsOnComponentSetting
+  contextAccess?: {
+    global: boolean
+    self: boolean
+  }
 }
