@@ -7,7 +7,7 @@ import {
   Helper,
   Snippet,
 } from "@budibase/types"
-import { CompletionContext, startCompletion } from "@codemirror/autocomplete"
+import { CompletionContext } from "@codemirror/autocomplete"
 import { EditorView } from "@codemirror/view"
 import { BindingCompletion } from "@/types"
 
@@ -131,8 +131,7 @@ export const snippetAutoComplete = (snippets: Snippet[]): BindingCompletion => {
       return null
     }
 
-    if (context.matchBefore(/\$\("[\s\w]*/)) {
-      // We are handing a js field completion
+    if (wrappedAutocompleteMatch(context)) {
       return null
     }
 
@@ -201,11 +200,15 @@ export const hbAutocomplete = (
   return coreCompletion
 }
 
+function wrappedAutocompleteMatch(context: CompletionContext) {
+  return context.matchBefore(/\$\("[\s\w]*/)
+}
+
 export const jsAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
   function coreCompletion(context: CompletionContext) {
-    let jsBinding = context.matchBefore(/\$\("[\s\w]*/)
+    let jsBinding = wrappedAutocompleteMatch(context)
     let options = baseCompletions || []
 
     if (jsBinding) {
@@ -233,60 +236,25 @@ export const jsHelperAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
   function coreCompletion(context: CompletionContext) {
-    if (context.matchBefore(/\$\("[\s\w]*/)) {
-      // We are handing a js field completion
+    if (wrappedAutocompleteMatch(context)) {
       return null
     }
 
-    let jsBinding = context.matchBefore(/\bhelpers\.\w*/)
+    let jsBinding = context.matchBefore(/\b(\w+\.?).*/)
+    if (!jsBinding || !"helpers.".startsWith(jsBinding.text.split(".")[0])) {
+      return null
+    }
 
     if (jsBinding) {
       let options = baseCompletions || []
       const match = jsBinding.text.match(/\bhelpers\.(?<helper>\w*)/)
-      if (!match) {
-        return null
-      }
-      const query = match.groups?.["helper"] || ""
+      const query = match?.groups?.["helper"] || ""
       let filtered = bindingFilter(options, query)
       return {
         from: jsBinding.from,
-        to: jsBinding.from + match[0].length,
+        to: jsBinding.from + jsBinding.text.length,
         filter: false,
         options: filtered,
-      }
-    } else {
-      const prefix = context.matchBefore(/\b\w+/)
-      if (prefix && "helpers.".startsWith(prefix.text)) {
-        return {
-          from: context.pos - prefix.text.length,
-          to: context.pos,
-          filter: false,
-          options: [
-            {
-              label: "helpers.",
-              type: "text",
-              simple: true,
-              apply: (
-                view: EditorView,
-                _completion: BindingCompletionOption,
-                from: number,
-                to: number
-              ) => {
-                insertBinding(
-                  view,
-                  from,
-                  to,
-                  "helpers.",
-                  EditorModes.JS,
-                  AutocompleteType.TEXT
-                )
-
-                // Trigger again the completion, to chain it with the helpers completion
-                startCompletion(view)
-              },
-            },
-          ],
-        }
       }
     }
 
