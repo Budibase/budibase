@@ -357,25 +357,6 @@ export const insertBinding = (
   })
 }
 
-export const insertSnippet = (
-  view: EditorView,
-  from: number,
-  to: number,
-  text: string
-) => {
-  let cursorPos = from + text.length
-  view.dispatch({
-    changes: {
-      from,
-      to,
-      insert: text,
-    },
-    selection: {
-      anchor: cursorPos,
-    },
-  })
-}
-
 // TODO: typing in this function isn't great
 export const bindingsToCompletions = (
   bindings: any,
