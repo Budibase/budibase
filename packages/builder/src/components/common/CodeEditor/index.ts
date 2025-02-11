@@ -110,28 +110,13 @@ export const getHelperCompletions = (mode: {
 }
 
 export const snippetAutoComplete = (snippets: Snippet[]): BindingCompletion => {
-  return function myCompletions(context: CompletionContext) {
-    if (!snippets?.length) {
-      return null
-    }
-
-    if (wrappedAutocompleteMatch(context)) {
-      return null
-    }
-
-    const word = context.matchBefore(/\b\w*/)
-    if (!word || (word.from == word.to && !context.explicit)) {
-      return null
-    }
-    return {
-      from: word.from,
-      options: snippets.map(snippet => ({
-        section: buildSectionHeader("snippets", "Snippets", "Code", 100),
-        label: `snippets.${snippet.name}`,
-        displayLabel: snippet.name,
-      })),
-    }
-  }
+  return setAutocomplete(
+    snippets.map(snippet => ({
+      section: buildSectionHeader("snippets", "Snippets", "Code", 100),
+      label: `snippets.${snippet.name}`,
+      displayLabel: snippet.name,
+    }))
+  )
 }
 
 const bindingFilter = (options: BindingCompletionOption[], query: string) => {
@@ -211,27 +196,33 @@ export const jsAutocomplete = (
 export const jsHelperAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
-  function coreCompletion(context: CompletionContext) {
+  return setAutocomplete(
+    baseCompletions.map(helper => ({
+      section: helper.section,
+      displayLabel: helper.label,
+      label: `helpers.${helper.label}()`,
+    }))
+  )
+}
+
+function setAutocomplete(
+  options: BindingCompletionOption[]
+): BindingCompletion {
+  return function (context: CompletionContext) {
     if (wrappedAutocompleteMatch(context)) {
       return null
     }
 
-    const word = context.matchBefore(/\b\w*/)
+    const word = context.matchBefore(/\b\w*(\.\w*)?/)
     if (!word || (word.from == word.to && !context.explicit)) {
       return null
     }
 
     return {
       from: word.from,
-      options: baseCompletions.map(helper => ({
-        section: helper.section,
-        displayLabel: helper.label,
-        label: `helpers.${helper.label}()`,
-      })),
+      options,
     }
   }
-
-  return coreCompletion
 }
 
 const buildBindingInfoNode = (binding: {
