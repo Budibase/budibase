@@ -182,7 +182,7 @@ if (descriptions.length) {
               },
             })
 
-            await config.api.application.publish(config.getAppId())
+            await config.api.application.publish()
             const prodQuery = await config.api.query.getProd(query._id!)
 
             expect(prodQuery._id).toEqual(query._id)
