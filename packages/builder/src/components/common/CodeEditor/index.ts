@@ -1,15 +1,10 @@
 import { getManifest } from "@budibase/string-templates"
 import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
-import {
-  BindingCompletionOption,
-  EditorModesMap,
-  Helper,
-  Snippet,
-} from "@budibase/types"
+import { EditorModesMap, Helper, Snippet } from "@budibase/types"
 import { CompletionContext } from "@codemirror/autocomplete"
 import { EditorView } from "@codemirror/view"
-import { BindingCompletion } from "@/types"
+import { BindingCompletion, BindingCompletionOption } from "@/types"
 
 export const EditorModes: EditorModesMap = {
   JS: {

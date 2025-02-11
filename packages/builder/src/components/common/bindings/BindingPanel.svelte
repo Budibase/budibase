@@ -35,7 +35,6 @@
   import { BindingMode, SidePanel } from "@budibase/types"
   import type {
     EnrichedBinding,
-    BindingCompletionOption,
     Snippet,
     Helper,
     CaretPositionFn,
@@ -43,7 +42,7 @@
     JSONValue,
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
-  import type { BindingCompletion } from "@/types"
+  import type { BindingCompletion, BindingCompletionOption } from "@/types"
 
   const dispatch = createEventDispatcher()
 

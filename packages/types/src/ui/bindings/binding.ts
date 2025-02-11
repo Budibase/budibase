@@ -1,13 +1,3 @@
-export interface BindingCompletionOption {
-  section?: {
-    name: string
-  }
-  label: string
-  text?: string
-  simple?: boolean
-  apply?: any // TODO
-}
-
 export interface EnrichedBinding {
   runtimeBinding: string
   readableBinding: string
