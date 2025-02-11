@@ -15,9 +15,11 @@
   import ButtonActionEditor from "@/components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "@/dataBinding"
   import BarButtonList from "@/components/design/settings/controls/BarButtonList.svelte"
+  import URLVariableTestInput from "@/components/design/settings/controls/URLVariableTestInput.svelte"
 
   $: bindings = getBindableProperties($selectedScreen, null)
   $: screenSettings = getScreenSettings($selectedScreen)
+  let urlTestValue = ""
 
   let errors = {}
 
@@ -91,6 +93,14 @@
               value: "grid",
             },
           ],
+        },
+      },
+      {
+        key: "urlTest",
+        control: URLVariableTestInput,
+        props: {
+          baseRoute: screen.routing?.route,
+          testValue: urlTestValue,
         },
       },
     ]
