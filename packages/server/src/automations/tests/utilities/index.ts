@@ -1,7 +1,7 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import env from "../../../environment"
-import { AutomationData, Datasource } from "@budibase/types"
+import { Automation, AutomationData, Datasource } from "@budibase/types"
 import { Knex } from "knex"
 import { getQueue } from "../.."
 import { Job } from "bull"
@@ -38,7 +38,7 @@ export async function runInProd(fn: any) {
  * Capture all automation runs that occur during the execution of a function.
  * This function will wait for all messages to be processed before returning.
  */
-export async function captureAutomationRuns(
+export async function captureAllAutomationResults(
   f: () => Promise<unknown>
 ): Promise<Job<AutomationData>[]> {
   const runs: Job<AutomationData>[] = []
@@ -70,6 +70,18 @@ export async function captureAutomationRuns(
   }
 
   return runs
+}
+
+export async function captureAutomationResults(
+  automation: Automation | string,
+  f: () => Promise<unknown>
+) {
+  const results = await captureAllAutomationResults(f)
+  return results.filter(
+    r =>
+      r.data.automation._id ===
+      (typeof automation === "string" ? automation : automation._id)
+  )
 }
 
 export async function saveTestQuery(

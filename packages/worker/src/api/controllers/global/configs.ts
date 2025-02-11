@@ -322,27 +322,27 @@ export async function save(
   }
 }
 
-function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
+async function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
   if (!oidcLogos) {
     return
   }
-  oidcLogos.config = Object.keys(oidcLogos.config || {}).reduce(
-    (acc: any, key: string) => {
-      if (!key.endsWith("Etag")) {
-        const etag = oidcLogos.config[`${key}Etag`]
-        const objectStoreUrl = objectStore.getGlobalFileUrl(
-          oidcLogos.type,
-          key,
-          etag
-        )
-        acc[key] = objectStoreUrl
-      } else {
-        acc[key] = oidcLogos.config[key]
-      }
-      return acc
-    },
-    {}
-  )
+  const newConfig: Record<string, string> = {}
+  const keys = Object.keys(oidcLogos.config || {})
+
+  for (const key of keys) {
+    if (!key.endsWith("Etag")) {
+      const etag = oidcLogos.config[`${key}Etag`]
+      const objectStoreUrl = await objectStore.getGlobalFileUrl(
+        oidcLogos.type,
+        key,
+        etag
+      )
+      newConfig[key] = objectStoreUrl
+    } else {
+      newConfig[key] = oidcLogos.config[key]
+    }
+  }
+  oidcLogos.config = newConfig
 }
 
 export async function find(ctx: UserCtx<void, FindConfigResponse>) {
@@ -370,7 +370,7 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
 
 async function handleConfigType(type: ConfigType, config: Config) {
   if (type === ConfigType.OIDC_LOGOS) {
-    enrichOIDCLogos(config)
+    await enrichOIDCLogos(config)
   } else if (type === ConfigType.AI) {
     await handleAIConfig(config)
   }
@@ -396,7 +396,7 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
     const oidcCustomLogos = await configs.getOIDCLogosDoc()
 
     if (oidcCustomLogos) {
-      enrichOIDCLogos(oidcCustomLogos)
+      await enrichOIDCLogos(oidcCustomLogos)
     }
 
     if (!oidcConfig) {
@@ -427,7 +427,7 @@ export async function publicSettings(
 
     // enrich the logo url - empty url means deleted
     if (config.logoUrl && config.logoUrl !== "") {
-      config.logoUrl = objectStore.getGlobalFileUrl(
+      config.logoUrl = await objectStore.getGlobalFileUrl(
         "settings",
         "logoUrl",
         config.logoUrlEtag
@@ -437,7 +437,7 @@ export async function publicSettings(
     // enrich the favicon url - empty url means deleted
     const faviconUrl =
       branding.faviconUrl && branding.faviconUrl !== ""
-        ? objectStore.getGlobalFileUrl(
+        ? await objectStore.getGlobalFileUrl(
             "settings",
             "faviconUrl",
             branding.faviconUrlEtag
@@ -522,7 +522,7 @@ export async function upload(ctx: UserCtx<void, UploadConfigFileResponse>) {
 
   ctx.body = {
     message: "File has been uploaded and url stored to config.",
-    url: objectStore.getGlobalFileUrl(type, name, etag),
+    url: await objectStore.getGlobalFileUrl(type, name, etag),
   }
 }
 

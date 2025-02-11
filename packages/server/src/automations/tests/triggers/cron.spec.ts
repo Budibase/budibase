@@ -1,6 +1,6 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { captureAutomationRuns } from "../utilities"
+import { captureAutomationResults } from "../utilities"
 
 describe("cron trigger", () => {
   const config = new TestConfiguration()
@@ -14,14 +14,14 @@ describe("cron trigger", () => {
   })
 
   it("should queue a Bull cron job", async () => {
-    await createAutomationBuilder(config)
+    const { automation } = await createAutomationBuilder(config)
       .onCron({ cron: "* * * * *" })
       .serverLog({
         text: "Hello, world!",
       })
       .save()
 
-    const jobs = await captureAutomationRuns(() =>
+    const jobs = await captureAutomationResults(automation, () =>
       config.api.application.publish()
     )
     expect(jobs).toHaveLength(1)
