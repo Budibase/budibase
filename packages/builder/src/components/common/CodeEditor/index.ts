@@ -89,7 +89,7 @@ export const buildSectionHeader = (
 export const helpersToCompletion = (
   helpers: Record<string, Helper>,
   mode: { name: "javascript" | "handlebars" }
-) => {
+): BindingCompletionOption[] => {
   const { type, name: sectionName, icon } = SECTIONS.HB_HELPER
   const helperSection = buildSectionHeader(type, sectionName, icon, 99)
 
@@ -117,7 +117,7 @@ export const helpersToCompletion = (
 
 export const getHelperCompletions = (mode: {
   name: "javascript" | "handlebars"
-}) => {
+}): BindingCompletionOption[] => {
   // TODO: manifest needs to be properly typed
   const manifest: any = getManifest()
   return Object.keys(manifest).flatMap(key => {
@@ -161,19 +161,21 @@ export const snippetAutoComplete = (snippets: Snippet[]): BindingCompletion => {
 
 const bindingFilter = (options: BindingCompletionOption[], query: string) => {
   return options.filter(completion => {
-    const section_parsed = completion.section.name.toLowerCase()
+    const section_parsed = completion.section?.name.toLowerCase()
     const label_parsed = completion.label.toLowerCase()
     const query_parsed = query.toLowerCase()
 
     return (
-      section_parsed.includes(query_parsed) ||
+      section_parsed?.includes(query_parsed) ||
       label_parsed.includes(query_parsed)
     )
   })
 }
 
-export const hbAutocomplete = (baseCompletions: BindingCompletionOption[]) => {
-  async function coreCompletion(context: CompletionContext) {
+export const hbAutocomplete = (
+  baseCompletions: BindingCompletionOption[]
+): BindingCompletion => {
+  function coreCompletion(context: CompletionContext) {
     let bindingStart = context.matchBefore(EditorModes.Handlebars.match)
 
     let options = baseCompletions || []
@@ -202,7 +204,7 @@ export const hbAutocomplete = (baseCompletions: BindingCompletionOption[]) => {
 export const jsAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
-  async function coreCompletion(context: CompletionContext) {
+  function coreCompletion(context: CompletionContext) {
     let jsBinding = context.matchBefore(/\$\("[\s\w]*/)
     let options = baseCompletions || []
 
@@ -230,7 +232,7 @@ export const jsAutocomplete = (
 export const jsHelperAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
-  async function coreCompletion(context: CompletionContext) {
+  function coreCompletion(context: CompletionContext) {
     if (context.matchBefore(/\$\("[\s\w]*/)) {
       // We are handing a js field completion
       return null

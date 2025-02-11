@@ -1,9 +1,11 @@
 export interface BindingCompletionOption {
-  section: {
+  section?: {
     name: string
   }
   label: string
+  text?: string
   simple?: boolean
+  apply?: any // TODO
 }
 
 export interface EnrichedBinding {
