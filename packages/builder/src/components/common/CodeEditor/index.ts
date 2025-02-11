@@ -77,7 +77,7 @@ const helpersToCompletion = (
   helpers: Record<string, Helper>,
   mode: { name: "javascript" | "handlebars" }
 ): BindingCompletionOption[] => {
-  const helperSection = buildSectionHeader("helper", "Helper", "Code", 99)
+  const helperSection = buildSectionHeader("helper", "Helpers", "Code", 99)
 
   return Object.keys(helpers).flatMap(helperName => {
     const helper = helpers[helperName]
