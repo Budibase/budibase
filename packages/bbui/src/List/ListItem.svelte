@@ -1,15 +1,15 @@
-<script>
+<script lang="ts">
   import Icon from "../Icon/Icon.svelte"
   import StatusLight from "../StatusLight/StatusLight.svelte"
 
-  export let icon = null
-  export let iconColor = null
-  export let title = null
-  export let subtitle = null
-  export let url = null
-  export let hoverable = false
-  export let showArrow = false
-  export let selected = false
+  export let icon: string | undefined = undefined
+  export let iconColor: string | undefined = undefined
+  export let title: string | undefined = undefined
+  export let subtitle: string | undefined = undefined
+  export let url: string | undefined = undefined
+  export let hoverable: boolean = false
+  export let showArrow: boolean = false
+  export let selected: boolean = false
 </script>
 
 <a

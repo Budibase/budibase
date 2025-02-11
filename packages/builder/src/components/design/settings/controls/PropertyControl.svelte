@@ -26,6 +26,7 @@
   export let contextAccess = null
 
   let highlightType
+  let domElement
 
   $: highlightedProp = $builderStore.highlightedSetting
   $: allBindings = getAllBindings(
@@ -36,10 +37,9 @@
   )
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
-  $: if (value) {
-    highlightType =
-      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
-  }
+  $: isHighlighted = highlightedProp?.key === key
+  $: highlightType = isHighlighted ? `highlighted-${highlightedProp?.type}` : ""
+  $: highlightedProp && isHighlighted && scrollToElement(domElement)
 
   const getAllBindings = (
     bindings,
@@ -108,9 +108,17 @@
       ? defaultValue
       : enriched
   }
+
+  function scrollToElement(element) {
+    element?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    })
+  }
 </script>
 
 <div
+  bind:this={domElement}
   id={`${key}-prop-control-wrap`}
   class={`property-control ${highlightType}`}
   class:wide={!label || labelHidden || wide === true}
