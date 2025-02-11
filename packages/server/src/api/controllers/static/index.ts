@@ -221,7 +221,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         nonce: ctx.state.nonce,
       }
 
-      const { head, html, css } = AppComponent.render(appProps)
+      const { head, html, css } = AppComponent.render({ props: appProps })
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
         head,
