@@ -46,7 +46,7 @@
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
   import type { EditorMode } from "@budibase/types"
-  import { BindingCompletion } from "@/types"
+  import type { BindingCompletion } from "@/types"
 
   export let label: string | undefined = undefined
   // TODO: work out what best type fits this

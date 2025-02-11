@@ -43,7 +43,7 @@
     JSONValue,
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
-  import { BindingCompletion } from "@/types"
+  import type { BindingCompletion } from "@/types"
 
   const dispatch = createEventDispatcher()
 
