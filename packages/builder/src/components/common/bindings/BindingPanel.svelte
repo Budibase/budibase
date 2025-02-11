@@ -35,7 +35,7 @@
   import { BindingMode, SidePanel } from "@budibase/types"
   import type {
     EnrichedBinding,
-    BindingCompletion,
+    BindingCompletionOption,
     Snippet,
     Helper,
     CaretPositionFn,
@@ -100,7 +100,7 @@
     }
   }
 
-  const getHBSCompletions = (bindingCompletions: BindingCompletion[]) => {
+  const getHBSCompletions = (bindingCompletions: BindingCompletionOption[]) => {
     return [
       hbAutocomplete([
         ...bindingCompletions,
@@ -110,7 +110,7 @@
   }
 
   const getJSCompletions = (
-    bindingCompletions: BindingCompletion[],
+    bindingCompletions: BindingCompletionOption[],
     snippets: Snippet[] | null,
     useSnippets?: boolean
   ) => {

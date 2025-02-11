@@ -1,4 +1,4 @@
-export interface BindingCompletion {
+export interface BindingCompletionOption {
   section: {
     name: string
   }

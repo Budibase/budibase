@@ -45,13 +45,13 @@
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
-  import type { BindingCompletion, EditorMode } from "@budibase/types"
+  import type { BindingCompletionOption, EditorMode } from "@budibase/types"
 
   export let label: string | undefined = undefined
   // TODO: work out what best type fits this
   export let completions: ((context: CompletionContext) => Promise<{
     from: number
-    options: BindingCompletion[]
+    options: BindingCompletionOption[]
   } | null>)[] = []
   export let mode: EditorMode = EditorModes.Handlebars
   export let value: string | null = ""
