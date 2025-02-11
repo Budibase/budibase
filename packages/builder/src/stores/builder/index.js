@@ -17,9 +17,9 @@ import { deploymentStore } from "./deployments.js"
 import { contextMenuStore } from "./contextMenu.js"
 import { snippets } from "./snippets"
 import {
-  screenComponents,
+  screenComponentsList,
   screenComponentErrors,
-  findComponentsBySettingsType,
+  screenComponentErrorList,
 } from "./screenComponent"
 
 // Backend
@@ -72,9 +72,9 @@ export {
   snippets,
   rowActions,
   appPublished,
-  screenComponents,
+  screenComponentsList,
   screenComponentErrors,
-  findComponentsBySettingsType,
+  screenComponentErrorList,
 }
 
 export const reset = () => {
