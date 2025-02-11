@@ -6,12 +6,12 @@ export interface BudibaseAppProps {
   metaImage: string
   metaTitle: string
   metaDescription: string
-  clientLibPath: string | undefined
+  clientLibPath?: string
   usedPlugins: Plugin[]
-  appMigrating: boolean
-  showSkeletonLoader: boolean
-  hideDevTools: boolean
-  sideNav: boolean
-  hideFooter: boolean
-  nonce: string | undefined
+  appMigrating?: boolean
+  showSkeletonLoader?: boolean
+  hideDevTools?: boolean
+  sideNav?: boolean
+  hideFooter?: boolean
+  nonce?: string
 }

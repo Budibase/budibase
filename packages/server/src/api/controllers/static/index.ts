@@ -45,6 +45,7 @@ import {
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
+import { undefined } from "zod"
 
 export const toggleBetaUiFeature = async function (
   ctx: Ctx<void, ToggleBetaFeatureResponse>
@@ -199,7 +200,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
-      const appProps: BudibaseAppProps = {
+      const props: BudibaseAppProps = {
         title: branding?.platformTitle || `${appInfo.name}`,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
@@ -221,7 +222,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         nonce: ctx.state.nonce,
       }
 
-      const { head, html, css } = AppComponent.render({ props: appProps })
+      const { head, html, css } = AppComponent.render({ props })
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
         head,
@@ -237,9 +238,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     }
   } catch (error) {
     if (!env.isJest()) {
-      const { head, html, css } = AppComponent.render({
-        title: branding?.metaTitle,
-        metaTitle: branding?.metaTitle,
+      const props: BudibaseAppProps = {
+        usedPlugins: [],
+        title: branding?.metaTitle || "",
+        metaTitle: branding?.metaTitle || "",
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
@@ -248,7 +250,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding.faviconUrl !== ""
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
-      })
+      }
+      const { head, html, css } = AppComponent.render({ props })
 
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
