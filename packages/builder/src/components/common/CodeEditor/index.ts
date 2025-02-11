@@ -22,15 +22,7 @@ export const EditorModes: EditorModesMap = {
   },
 }
 
-export const SECTIONS = {
-  HB_HELPER: {
-    name: "Helper",
-    type: "helper",
-    icon: "Code",
-  },
-}
-
-export const buildHelperInfoNode = (completion: any, helper: Helper) => {
+const buildHelperInfoNode = (completion: any, helper: Helper) => {
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
 
@@ -62,7 +54,7 @@ const toSpectrumIcon = (name: string) => {
   </svg>`
 }
 
-export const buildSectionHeader = (
+const buildSectionHeader = (
   type: string,
   sectionName: string,
   icon: string,
@@ -81,12 +73,11 @@ export const buildSectionHeader = (
   }
 }
 
-export const helpersToCompletion = (
+const helpersToCompletion = (
   helpers: Record<string, Helper>,
   mode: { name: "javascript" | "handlebars" }
 ): BindingCompletionOption[] => {
-  const { type, name: sectionName, icon } = SECTIONS.HB_HELPER
-  const helperSection = buildSectionHeader(type, sectionName, icon, 99)
+  const helperSection = buildSectionHeader("helper", "Helper", "Code", 99)
 
   return Object.keys(helpers).flatMap(helperName => {
     const helper = helpers[helperName]
@@ -245,7 +236,7 @@ export const jsHelperAutocomplete = (
   return coreCompletion
 }
 
-export const buildBindingInfoNode = (
+const buildBindingInfoNode = (
   _completion: BindingCompletionOption,
   binding: any
 ) => {
@@ -313,7 +304,7 @@ const enum AutocompleteType {
 }
 
 // Autocomplete apply behaviour
-export const insertBinding = (
+const insertBinding = (
   view: EditorView,
   from: number,
   to: number,
