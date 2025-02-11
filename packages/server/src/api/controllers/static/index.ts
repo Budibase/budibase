@@ -25,6 +25,7 @@ import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 import {
   App,
+  BudibaseAppProps,
   Ctx,
   DocumentType,
   Feature,
@@ -191,9 +192,14 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
-      const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-
-      const { head, html, css } = AppComponent.render({
+      const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
+      /*
+       * Server rendering in svelte sadly does not support type checking, the .render function
+       * always will just expect "any" when typing - so it is pointless for us to type the
+       * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
+       * I've created a type which expects what the app will expect to receive.
+       */
+      const appProps: BudibaseAppProps = {
         title: branding?.platformTitle || `${appInfo.name}`,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
@@ -205,21 +211,17 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         metaDescription: branding?.metaDescription || "",
         metaTitle:
           branding?.metaTitle || `${appInfo.name} - built with Budibase`,
-        production: env.isProd(),
-        appId,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
         usedPlugins: plugins,
         favicon:
           branding.faviconUrl !== ""
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
-        logo:
-          config?.logoUrl !== ""
-            ? await objectStore.getGlobalFileUrl("settings", "logoUrl")
-            : "",
         appMigrating: needMigrations,
         nonce: ctx.state.nonce,
-      })
+      }
+
+      const { head, html, css } = AppComponent.render(appProps)
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
         head,
