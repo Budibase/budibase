@@ -22,7 +22,7 @@ export const EditorModes: EditorModesMap = {
   },
 }
 
-const buildHelperInfoNode = (completion: any, helper: Helper) => {
+const buildHelperInfoNode = (helper: Helper) => {
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
 
@@ -83,9 +83,7 @@ const helpersToCompletion = (
     const helper = helpers[helperName]
     return {
       label: helperName,
-      info: (completion: BindingCompletionOption) => {
-        return buildHelperInfoNode(completion, helper)
-      },
+      info: () => buildHelperInfoNode(helper),
       type: "helper",
       section: helperSection,
       detail: "Function",
@@ -236,10 +234,10 @@ export const jsHelperAutocomplete = (
   return coreCompletion
 }
 
-const buildBindingInfoNode = (
-  _completion: BindingCompletionOption,
-  binding: any
-) => {
+const buildBindingInfoNode = (binding: {
+  valueHTML: string
+  value: string | null
+}) => {
   if (!binding.valueHTML || binding.value == null) {
     return null
   }
@@ -385,9 +383,7 @@ export const bindingsToCompletions = (
           acc.push({
             label:
               binding.display?.name || binding.readableBinding || "NO NAME",
-            info: (completion: BindingCompletionOption) => {
-              return buildBindingInfoNode(completion, binding)
-            },
+            info: () => buildBindingInfoNode(binding),
             type: "binding",
             detail: displayType,
             section: bindingSectionHeader,
