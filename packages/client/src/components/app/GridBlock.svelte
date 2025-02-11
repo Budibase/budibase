@@ -47,8 +47,8 @@
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
   $: parsedColumns = getParsedColumns(columns)
-  $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
+  $: schemaOverrides = getSchemaOverrides(parsedColumns, $context)
   $: selectedRows = deriveSelectedRows(gridContext)
   $: styles = patchStyles($component.styles, minHeight)
   $: data = { selectedRows: $selectedRows }
@@ -97,24 +97,34 @@
     }))
   }
 
-  const getSchemaOverrides = columns => {
+  const getSchemaOverrides = (columns, context) => {
     let overrides = {}
     columns.forEach((column, idx) => {
       overrides[column.field] = {
         displayName: column.label,
         order: idx,
-        conditions: column.conditions,
         visible: !!column.active,
+        conditions: enrichConditions(column.conditions, context),
         format: createFormatter(column),
 
-        // Small hack to ensure we react to all changes when inside the builder
-        rand: Math.random(),
+        // Small hack to ensure we react to all changes, as our
+        // memoization cannot compare differences in functions
+        rand: column.conditions?.length ? Math.random() : null,
       }
       if (column.width) {
         overrides[column.field].width = column.width
       }
     })
     return overrides
+  }
+
+  const enrichConditions = (conditions, context) => {
+    return conditions?.map(condition => {
+      return {
+        ...condition,
+        referenceValue: processStringSync(condition.referenceValue, context),
+      }
+    })
   }
 
   const createFormatter = column => {

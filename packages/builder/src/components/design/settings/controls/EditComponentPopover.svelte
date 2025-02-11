@@ -1,13 +1,13 @@
 <script>
   import { Icon, Popover, Layout } from "@budibase/bbui"
-  import { componentStore } from "@/stores/builder"
+  import { componentStore, selectedScreen } from "@/stores/builder"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
   import ComponentSettingsSection from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import { getComponentBindableProperties } from "@/dataBinding"
 
   export let anchor
   export let componentInstance
-  export let componentBindings
   export let bindings
   export let parseSettings
 
@@ -28,6 +28,10 @@
   }
   $: componentDef = componentStore.getDefinition(componentInstance._component)
   $: parsedComponentDef = processComponentDefinitionSettings(componentDef)
+  $: componentBindings = getComponentBindableProperties(
+    $selectedScreen,
+    $componentStore.selectedComponentId
+  )
 
   const open = () => {
     isOpen = true
