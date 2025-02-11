@@ -10,7 +10,6 @@
     closeBracketsKeymap,
     acceptCompletion,
     completionStatus,
-    CompletionContext,
   } from "@codemirror/autocomplete"
   import {
     lineNumbers,
