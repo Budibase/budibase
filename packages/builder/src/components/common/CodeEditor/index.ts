@@ -155,7 +155,7 @@ export const snippetAutoComplete = (snippets: Snippet[]): BindingCompletion => {
 
 const bindingFilter = (options: BindingCompletionOption[], query: string) => {
   return options.filter(completion => {
-    const section_parsed = completion.section?.name.toLowerCase()
+    const section_parsed = completion.section?.toString().toLowerCase()
     const label_parsed = completion.label.toLowerCase()
     const query_parsed = query.toLowerCase()
 
@@ -235,25 +235,18 @@ export const jsHelperAutocomplete = (
       return null
     }
 
-    let jsBinding = context.matchBefore(/\b(\w+\.?).*/)
-    if (!jsBinding || !"helpers.".startsWith(jsBinding.text.split(".")[0])) {
+    const word = context.matchBefore(/\b\w*/)
+    if (!word || (word.from == word.to && !context.explicit)) {
       return null
     }
-
-    if (jsBinding) {
-      let options = baseCompletions || []
-      const match = jsBinding.text.match(/\bhelpers\.(?<helper>\w*)/)
-      const query = match?.groups?.["helper"] || ""
-      let filtered = bindingFilter(options, query)
-      return {
-        from: jsBinding.from,
-        to: jsBinding.from + jsBinding.text.length,
-        filter: false,
-        options: filtered,
-      }
+    return {
+      from: word.from,
+      options: baseCompletions.map(helper => ({
+        section: helper.section,
+        displayLabel: helper.label,
+        label: `helpers.${helper.label}()`,
+      })),
     }
-
-    return null
   }
 
   return coreCompletion
