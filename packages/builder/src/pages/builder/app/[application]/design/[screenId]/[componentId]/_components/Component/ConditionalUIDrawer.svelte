@@ -216,7 +216,7 @@
                       placeholder: definition.placeholder,
                     }}
                     nested={definition.nested}
-                    isolated={definition.isolated}
+                    contextAccess={definition.contextAccess}
                     {bindings}
                     {componentBindings}
                   />
