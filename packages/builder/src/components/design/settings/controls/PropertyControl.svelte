@@ -22,29 +22,59 @@
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
-  export let wide
-  export let isolated = false
+  export let wide = false
+  export let contextAccess = null
 
   let highlightType
 
   $: highlightedProp = $builderStore.highlightedSetting
-  $: allBindings = getAllBindings(bindings, componentBindings, nested, isolated)
+  $: allBindings = getAllBindings(
+    bindings,
+    componentBindings,
+    nested,
+    contextAccess
+  )
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
-
   $: if (value) {
     highlightType =
       highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
   }
 
-  const getAllBindings = (bindings, componentBindings, nested, isolated) => {
-    if (isolated) {
-      bindings = []
+  const getAllBindings = (
+    bindings,
+    componentBindings,
+    nested,
+    contextAccess
+  ) => {
+    // contextAccess is a bit of an escape hatch to get around how we render
+    // certain settings types by using a pseudo component definition, leading
+    // to problems with the nested flag
+    if (contextAccess != null) {
+      // Optionally include global bindings
+      let allBindings = contextAccess.global ? bindings : []
+
+      // Optionally include or exclude self (component) bindings.
+      // If this is a nested setting then we will already have our own context
+      // bindings mixed in, so if we don't want self context we need to filter
+      // them out.
+      if (contextAccess.self) {
+        return [...allBindings, ...componentBindings]
+      } else {
+        return allBindings.filter(binding => {
+          return !componentBindings.some(componentBinding => {
+            return componentBinding.runtimeBinding === binding.runtimeBinding
+          })
+        })
+      }
     }
-    if (!nested) {
+
+    // Otherwise just honour the normal nested flag
+    if (nested) {
+      return [...bindings, ...componentBindings]
+    } else {
       return bindings
     }
-    return [...(componentBindings || []), ...(bindings || [])]
   }
 
   // Handle a value change of any type
