@@ -9,6 +9,7 @@ import {
 } from "@budibase/types"
 import { CompletionContext, startCompletion } from "@codemirror/autocomplete"
 import { EditorView } from "@codemirror/view"
+import { BindingCompletion } from "@/types"
 
 export const EditorModes: EditorModesMap = {
   JS: {
@@ -124,7 +125,7 @@ export const getHelperCompletions = (mode: {
   })
 }
 
-export const snippetAutoComplete = (snippets: Snippet[]) => {
+export const snippetAutoComplete = (snippets: Snippet[]): BindingCompletion => {
   return function myCompletions(context: CompletionContext) {
     if (!snippets?.length) {
       return null
@@ -198,7 +199,9 @@ export const hbAutocomplete = (baseCompletions: BindingCompletionOption[]) => {
   return coreCompletion
 }
 
-export const jsAutocomplete = (baseCompletions: BindingCompletionOption[]) => {
+export const jsAutocomplete = (
+  baseCompletions: BindingCompletionOption[]
+): BindingCompletion => {
   async function coreCompletion(context: CompletionContext) {
     let jsBinding = context.matchBefore(/\$\("[\s\w]*/)
     let options = baseCompletions || []
@@ -226,7 +229,7 @@ export const jsAutocomplete = (baseCompletions: BindingCompletionOption[]) => {
 
 export const jsHelperAutocomplete = (
   baseCompletions: BindingCompletionOption[]
-) => {
+): BindingCompletion => {
   async function coreCompletion(context: CompletionContext) {
     if (context.matchBefore(/\$\("[\s\w]*/)) {
       // We are handing a js field completion

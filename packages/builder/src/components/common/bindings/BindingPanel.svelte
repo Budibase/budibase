@@ -43,7 +43,7 @@
     JSONValue,
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
-  import type { CompletionContext } from "@codemirror/autocomplete"
+  import { BindingCompletion } from "@/types"
 
   const dispatch = createEventDispatcher()
 
@@ -114,7 +114,7 @@
     snippets: Snippet[] | null,
     useSnippets?: boolean
   ) => {
-    const completions: ((_: CompletionContext) => any)[] = [
+    const completions: BindingCompletion[] = [
       jsAutocomplete([...bindingCompletions]),
       jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)]),
     ]
