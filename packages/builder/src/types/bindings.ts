@@ -1,7 +1,8 @@
-import { BindingCompletionOption } from "@budibase/types"
-import { CompletionContext } from "@codemirror/autocomplete"
+import { CompletionContext, Completion } from "@codemirror/autocomplete"
 
 export type BindingCompletion = (context: CompletionContext) => {
   from: number
-  options: BindingCompletionOption[]
+  options: Completion[]
 } | null
+
+export type BindingCompletionOption = Completion
