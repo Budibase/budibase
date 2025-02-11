@@ -2,7 +2,7 @@ import { getManifest } from "@budibase/string-templates"
 import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
 import {
-  BindingCompletion,
+  BindingCompletionOption,
   EditorModesMap,
   Helper,
   Snippet,
@@ -96,7 +96,7 @@ export const helpersToCompletion = (
     const helper = helpers[helperName]
     return {
       label: helperName,
-      info: (completion: BindingCompletion) => {
+      info: (completion: BindingCompletionOption) => {
         return buildHelperInfoNode(completion, helper)
       },
       type: "helper",
@@ -104,7 +104,7 @@ export const helpersToCompletion = (
       detail: "Function",
       apply: (
         view: EditorView,
-        _completion: BindingCompletion,
+        _completion: BindingCompletionOption,
         from: number,
         to: number
       ) => {
@@ -147,7 +147,7 @@ export const snippetAutoComplete = (snippets: Snippet[]) => {
         simple: true,
         apply: (
           view: EditorView,
-          completion: BindingCompletion,
+          completion: BindingCompletionOption,
           from: number,
           to: number
         ) => {
@@ -158,7 +158,7 @@ export const snippetAutoComplete = (snippets: Snippet[]) => {
   }
 }
 
-const bindingFilter = (options: BindingCompletion[], query: string) => {
+const bindingFilter = (options: BindingCompletionOption[], query: string) => {
   return options.filter(completion => {
     const section_parsed = completion.section.name.toLowerCase()
     const label_parsed = completion.label.toLowerCase()
@@ -171,7 +171,7 @@ const bindingFilter = (options: BindingCompletion[], query: string) => {
   })
 }
 
-export const hbAutocomplete = (baseCompletions: BindingCompletion[]) => {
+export const hbAutocomplete = (baseCompletions: BindingCompletionOption[]) => {
   async function coreCompletion(context: CompletionContext) {
     let bindingStart = context.matchBefore(EditorModes.Handlebars.match)
 
@@ -198,7 +198,7 @@ export const hbAutocomplete = (baseCompletions: BindingCompletion[]) => {
   return coreCompletion
 }
 
-export const jsAutocomplete = (baseCompletions: BindingCompletion[]) => {
+export const jsAutocomplete = (baseCompletions: BindingCompletionOption[]) => {
   async function coreCompletion(context: CompletionContext) {
     let jsBinding = context.matchBefore(/\$\("[\s\w]*/)
     let options = baseCompletions || []
@@ -224,7 +224,9 @@ export const jsAutocomplete = (baseCompletions: BindingCompletion[]) => {
   return coreCompletion
 }
 
-export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
+export const jsHelperAutocomplete = (
+  baseCompletions: BindingCompletionOption[]
+) => {
   async function coreCompletion(context: CompletionContext) {
     if (context.matchBefore(/\$\("[\s\w]*/)) {
       // We are handing a js field completion
@@ -261,7 +263,7 @@ export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
               simple: true,
               apply: (
                 view: EditorView,
-                _completion: BindingCompletion,
+                _completion: BindingCompletionOption,
                 from: number,
                 to: number
               ) => {
@@ -290,7 +292,7 @@ export const jsHelperAutocomplete = (baseCompletions: BindingCompletion[]) => {
 }
 
 export const buildBindingInfoNode = (
-  _completion: BindingCompletion,
+  _completion: BindingCompletionOption,
   binding: any
 ) => {
   if (!binding.valueHTML || binding.value == null) {
@@ -457,7 +459,7 @@ export const bindingsToCompletions = (
           acc.push({
             label:
               binding.display?.name || binding.readableBinding || "NO NAME",
-            info: (completion: BindingCompletion) => {
+            info: (completion: BindingCompletionOption) => {
               return buildBindingInfoNode(completion, binding)
             },
             type: "binding",
@@ -465,7 +467,7 @@ export const bindingsToCompletions = (
             section: bindingSectionHeader,
             apply: (
               view: EditorView,
-              _completion: BindingCompletion,
+              _completion: BindingCompletionOption,
               from: number,
               to: number
             ) => {
