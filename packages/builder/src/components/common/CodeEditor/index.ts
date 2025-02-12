@@ -198,7 +198,7 @@ export const jsHelperAutocomplete = (
 ): BindingCompletion => {
   return setAutocomplete(
     baseCompletions.map(helper => ({
-      section: helper.section,
+      ...helper,
       displayLabel: helper.label,
       label: `helpers.${helper.label}()`,
     }))
