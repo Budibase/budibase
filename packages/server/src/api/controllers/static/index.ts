@@ -45,7 +45,6 @@ import {
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
-import { undefined } from "zod"
 
 export const toggleBetaUiFeature = async function (
   ctx: Ctx<void, ToggleBetaFeatureResponse>
