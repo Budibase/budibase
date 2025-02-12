@@ -13744,11 +13744,6 @@ jake@^10.8.5:
     filelist "^1.0.1"
     minimatch "^3.0.4"
 
-jest-chain-transform@^0.0.8:
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/jest-chain-transform/-/jest-chain-transform-0.0.8.tgz#cbb4d3aef8d02678b1852968a9b0c861f75eef5a"
-  integrity sha512-AELTTzYJ34WrmQKAbxUGT+xqnAHu0/XJZhahYNGvBVUhnAayjm1QmT45DQjwEbQPQp7gn6CXzu6rZA03riwBuw==
-
 jest-changed-files@^29.7.0:
   version "29.7.0"
   resolved "https://registry.yarnpkg.com/jest-changed-files/-/jest-changed-files-29.7.0.tgz#1c06d07e77c78e1585d020424dedc10d6e17ac3a"
