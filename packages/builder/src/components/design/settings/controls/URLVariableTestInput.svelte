@@ -8,7 +8,7 @@
     TooltipPosition,
   } from "@budibase/bbui"
   import { previewStore, selectedScreen } from "@/stores/builder"
-  import { ComponentContext } from "@budibase/types"
+  import type { ComponentContext } from "@budibase/types"
 
   export let baseRoute = ""
 
@@ -65,7 +65,7 @@
   }
 
   const onVariableChange = (e: CustomEvent) => {
-    previewStore.updateUrl({ route: baseRoute, testValue: e.detail })
+    previewStore.setUrlTestData({ route: baseRoute, testValue: e.detail })
   }
 
   onMount(() => {
@@ -91,11 +91,7 @@
       <Input disabled={true} value={baseInput} />
     </div>
     <div class="variable-input">
-      <Input
-        value={testValue}
-        on:change={onVariableChange}
-        placeholder={`${placeholder}`}
-      />
+      <Input value={testValue} on:change={onVariableChange} {placeholder} />
     </div>
   </div>
 </div>
