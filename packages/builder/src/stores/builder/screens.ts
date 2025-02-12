@@ -9,7 +9,6 @@ import {
   componentStore,
   navigationStore,
   selectedComponent,
-  previewStore,
 } from "@/stores/builder"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
