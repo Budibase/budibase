@@ -424,7 +424,7 @@ export async function retrieveDirectory(bucketName: string, path: string) {
     stream.pipe(writeStream)
     writePromises.push(
       new Promise((resolve, reject) => {
-        stream.on("finish", resolve)
+        writeStream.on("finish", resolve)
         stream.on("error", reject)
         writeStream.on("error", reject)
       })
