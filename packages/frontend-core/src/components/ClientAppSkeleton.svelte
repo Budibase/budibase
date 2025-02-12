@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   export let sideNav = false
   export let hideDevTools = false
   export let hideFooter = false
