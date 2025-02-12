@@ -51,7 +51,6 @@ const ADDED_HELPERS = {
 }
 
 function fixSpecialCases(name: string, obj: Helper) {
-  const args = obj.args
   if (name === "ifNth") {
     obj.args = ["a", "b", "options"]
     obj.numArgs = 3
