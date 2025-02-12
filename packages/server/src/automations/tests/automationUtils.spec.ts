@@ -119,5 +119,31 @@ describe("automationUtils", () => {
         schema,
       })
     })
+
+    it("should be able to clean inputs with the utilities", () => {
+      // can't clean without a schema
+      let output = cleanInputValues({ a: "1" })
+      expect(output.a).toBe("1")
+      output = cleanInputValues(
+        { a: "1", b: "true", c: "false", d: 1, e: "help" },
+        {
+          properties: {
+            a: {
+              type: "number",
+            },
+            b: {
+              type: "boolean",
+            },
+            c: {
+              type: "boolean",
+            },
+          },
+        }
+      )
+      expect(output.a).toBe(1)
+      expect(output.b).toBe(true)
+      expect(output.c).toBe(false)
+      expect(output.d).toBe(1)
+    })
   })
 })
