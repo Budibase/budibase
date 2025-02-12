@@ -15,6 +15,7 @@ export interface AutomationDataEvent {
   oldRow?: Row
   user?: UserBindings
   timestamp?: number
+  fields?: Record<string, any>
 }
 
 export interface AutomationData {
