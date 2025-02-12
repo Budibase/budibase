@@ -21,7 +21,7 @@ import {
   tables,
   componentTreeNodesStore,
   builderStore,
-  screenComponents,
+  screenComponentsList,
 } from "@/stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "@/dataBinding"
 import {
@@ -426,7 +426,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     const componentName = getSequentialName(
-      get(screenComponents),
+      get(screenComponentsList),
       `New ${definition.friendlyName || definition.name}`,
       {
         getName: c => c._instanceName,

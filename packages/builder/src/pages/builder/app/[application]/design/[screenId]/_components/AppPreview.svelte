@@ -183,16 +183,6 @@
       toggleAddComponent()
     } else if (type === "highlight-setting") {
       builderStore.highlightSetting(data.setting, "error")
-
-      // Also scroll setting into view
-      const selector = `#${data.setting}-prop-control`
-      const element = document.querySelector(selector)?.parentElement
-      if (element) {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        })
-      }
     } else if (type === "eject-block") {
       const { id, definition } = data
       await componentStore.handleEjectBlock(id, definition)
