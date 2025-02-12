@@ -111,9 +111,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
       return
     }
 
-    // When we select a screen, we want to clear the url binding test value
-    previewStore.updateUrl({ route: screen.routing.route, testValue: "" })
-
     // Select new screen
     this.update(state => {
       state.selectedScreenId = screen._id
