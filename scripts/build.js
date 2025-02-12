@@ -7,7 +7,8 @@ const { cp, readdir, copyFile, mkdir } = require("node:fs/promises")
 const path = require("path")
 
 const { build } = require("esbuild")
-const { compile } = require("svelte/compiler")
+const { compile, preprocess } = require("svelte/compiler")
+const sveltePreprocess = require("svelte-preprocess")
 const { loadTsConfig } = require("load-tsconfig")
 
 const {
@@ -25,7 +26,14 @@ const svelteCompilePlugin = {
       const dir = path.dirname(args.path)
 
       try {
-        const { js } = compile(source, { css: "injected", generate: "ssr" })
+        const preprocessed = await preprocess(
+          source,
+          sveltePreprocess({ filename: args.path })
+        )
+        const { js } = compile(preprocessed.code, {
+          css: "injected",
+          generate: "ssr",
+        })
 
         return {
           // The code placed in the generated file
