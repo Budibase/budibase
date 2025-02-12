@@ -264,7 +264,9 @@ export class UserDB {
     const creatorsChange =
       (await isCreator(dbUser)) !== (await isCreator(user)) ? 1 : 0
     return UserDB.quotas.addUsers(change, creatorsChange, async () => {
-      await validateUniqueUser(email, tenantId)
+      if (!opts.isAccountHolder) {
+        await validateUniqueUser(email, tenantId)
+      }
 
       let builtUser = await UserDB.buildUser(user, opts, tenantId, dbUser)
       // don't allow a user to update its own roles/perms
@@ -569,6 +571,7 @@ export class UserDB {
       hashPassword: opts?.hashPassword,
       requirePassword: opts?.requirePassword,
       skipPasswordValidation: opts?.skipPasswordValidation,
+      isAccountHolder: true,
     })
   }
 
