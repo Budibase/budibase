@@ -32,6 +32,9 @@ const HELPERS = [
   }),
   // javascript helper
   new Helper(HelperFunctionNames.JS, processJS, false),
+  new Helper(HelperFunctionNames.DECODE_ID, value => {
+    return value
+  }),
   // this help is applied to all statements
   new Helper(
     HelperFunctionNames.ALL,
