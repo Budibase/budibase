@@ -9,6 +9,7 @@ import {
   componentStore,
   navigationStore,
   selectedComponent,
+  previewStore,
 } from "@/stores/builder"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
@@ -109,6 +110,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
     if (state.selectedScreenId === screen._id) {
       return
     }
+
+    // When we select a screen, we want to clear the url binding test value
+    previewStore.updateUrl({ route: screen.routing.route, testValue: "" })
 
     // Select new screen
     this.update(state => {

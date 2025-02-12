@@ -19,7 +19,6 @@
 
   $: bindings = getBindableProperties($selectedScreen, null)
   $: screenSettings = getScreenSettings($selectedScreen)
-  let urlTestValue = ""
 
   let errors = {}
 
@@ -100,7 +99,6 @@
         control: URLVariableTestInput,
         props: {
           baseRoute: screen.routing?.route,
-          testValue: urlTestValue,
         },
       },
     ]

@@ -1,37 +1,71 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte"
-  import { Input, Icon, Body, AbsTooltip } from "@budibase/bbui"
-  import { previewStore } from "@/stores/builder"
+  import {
+    Input,
+    Icon,
+    Body,
+    AbsTooltip,
+    TooltipPosition,
+  } from "@budibase/bbui"
+  import { previewStore, selectedScreen } from "@/stores/builder"
+  import { ComponentContext } from "@budibase/types"
 
   export let baseRoute = ""
-  export let testValue = ""
 
-  $: routeParams = baseRoute.match(/:[a-zA-Z]+/g) || []
-  $: placeholder = (() => {
-    // Helper function to extract the route parameters
-    // e.g /employees/:id/:name becomes /employees/1/John for the placeholder
-    if (!routeParams.length) return "Add test values"
-    const segments = baseRoute.split("/").slice(2)
-    let paramCount = 1
+  let testValue: string | undefined
+
+  $: placeholder = getPlaceholder(baseRoute)
+  $: baseInput = createBaseInput(baseRoute)
+  $: updateTestValueFromContext($previewStore.selectedComponentContext)
+  $: if ($selectedScreen) {
+    testValue = ""
+  }
+
+  const getPlaceholder = (route: string) => {
+    const trimmed = route.replace(/\/$/, "")
+    if (trimmed.startsWith("/:")) {
+      return "1"
+    }
+    const segments = trimmed.split("/").slice(2)
+    let count = 1
     return segments
-      .map(segment => {
-        if (segment.startsWith(":")) {
-          return paramCount++
-        }
-        return segment
-      })
+      .map(segment => (segment.startsWith(":") ? count++ : segment))
       .join("/")
-  })()
+  }
 
-  $: {
-    if ($previewStore.selectedComponentContext?.url?.testValue !== undefined) {
-      testValue = $previewStore.selectedComponentContext.url.testValue
+  // This function is needed to repopulate the test value from componentContext
+  // when a user navigates to another component and then back again
+  const updateTestValueFromContext = (context: ComponentContext | null) => {
+    if (context?.url && !testValue) {
+      const { wild, ...urlParams } = context.url
+      const queryParams = context.query
+      if (Object.values(urlParams).some(v => Boolean(v))) {
+        let value = baseRoute
+          .split("/")
+          .slice(2)
+          .map(segment =>
+            segment.startsWith(":")
+              ? urlParams[segment.slice(1)] || ""
+              : segment
+          )
+          .join("/")
+        const qs = new URLSearchParams(queryParams).toString()
+        if (qs) {
+          value += `?${qs}`
+        }
+        testValue = value
+      }
     }
   }
 
-  const onVariableChange = e => {
+  const createBaseInput = (baseRoute: string) => {
+    return baseRoute === "/" || baseRoute.split("/")[1]?.startsWith(":")
+      ? "/"
+      : `/${baseRoute.split("/")[1]}/`
+  }
+
+  const onVariableChange = (e: CustomEvent) => {
     previewStore.updateUrl({ route: baseRoute, testValue: e.detail })
-    previewStore.requestComponentContext()
   }
 
   onMount(() => {
@@ -43,8 +77,8 @@
   <div class="info">
     <Body size="XS">URL Variable Testing</Body>
     <AbsTooltip
-      text="Test how your screen behaves with different URL parameters. Enter values in the format shown in the placeholder."
-      position={"bottom"}
+      text="Test how your screen behaves with different URL parameters. Enter values in the format shown in the placeholder below."
+      position={TooltipPosition.Top}
       noWrap
     >
       <div class="icon">
@@ -54,7 +88,7 @@
   </div>
   <div class="url-test-container">
     <div class="base-input">
-      <Input disabled={true} value={`/${baseRoute.split("/")[1]}/`} />
+      <Input disabled={true} value={baseInput} />
     </div>
     <div class="variable-input">
       <Input
