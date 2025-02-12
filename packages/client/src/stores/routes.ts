@@ -120,15 +120,36 @@ const createRouteStore = () => {
     return `${base}#${relativeURL}`
   }
   const setTestUrlParams = (route: string, testValue: string) => {
-    const routeSegments = route.split("/").slice(2)
-    const testSegments = testValue.split("/")
+    if (route === "/") {
+      return
+    }
+
+    const [pathPart, queryPart] = testValue.split("?")
+    const routeSegments = route.split("/").filter(Boolean)
+
+    // If first segment is a parameter (e.g. /:foo), include it in processing
+    const startIndex = routeSegments[0]?.startsWith(":") ? 0 : 1
+    const segments = routeSegments.slice(startIndex)
+    const testSegments = pathPart.split("/")
 
     const params: Record<string, string> = {}
-    routeSegments.forEach((segment, index) => {
+    segments.forEach((segment, index) => {
       if (segment.startsWith(":") && index < testSegments.length) {
         params[segment.slice(1)] = testSegments[index]
       }
     })
+
+    const queryParams: Record<string, string> = {}
+    if (queryPart) {
+      queryPart.split("&").forEach(param => {
+        const [key, value] = param.split("=")
+        if (key && value) {
+          queryParams[key] = value
+        }
+      })
+    }
+
+    setQueryParams({ ...queryParams })
     store.update(state => ({ ...state, testUrlParams: params }))
   }
   return {
