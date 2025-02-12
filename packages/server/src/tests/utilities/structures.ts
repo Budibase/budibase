@@ -492,6 +492,15 @@ export function basicDatasource(): { datasource: Datasource } {
   }
 }
 
+export function basicDatasourcePlus(): { datasource: Datasource } {
+  return {
+    datasource: {
+      ...basicDatasource().datasource,
+      plus: true,
+    },
+  }
+}
+
 export function basicQuery(datasourceId: string): Query {
   return {
     datasourceId,
