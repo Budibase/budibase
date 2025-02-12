@@ -127,7 +127,7 @@ const createRouteStore = () => {
     const [pathPart, queryPart] = testValue.split("?")
     const routeSegments = route.split("/").filter(Boolean)
 
-    // If first segment is a parameter (e.g. /:foo), include it in processing
+    // If first segment happens to be a parameter (e.g. /:foo), include it
     const startIndex = routeSegments[0]?.startsWith(":") ? 0 : 1
     const segments = routeSegments.slice(startIndex)
     const testSegments = pathPart.split("/")
