@@ -1,14 +1,7 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { context } from "@budibase/backend-core"
-import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
-import emitter from "../../../events/index"
+import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import env from "../../../environment"
-import {
-  Automation,
-  AutomationActionStepId,
-  AutomationData,
-  Datasource,
-} from "@budibase/types"
+import { Automation, AutomationData, Datasource } from "@budibase/types"
 import { Knex } from "knex"
 import { getQueue } from "../.."
 import { Job } from "bull"
@@ -38,36 +31,6 @@ export async function runInProd(fn: any) {
   env._set("NODE_ENV", "jest")
   if (error) {
     throw error
-  }
-}
-
-export async function runStep(
-  config: TestConfiguration,
-  stepId: string,
-  inputs: any,
-  stepContext?: any
-) {
-  async function run() {
-    let step = await getAction(stepId as AutomationActionStepId)
-    expect(step).toBeDefined()
-    if (!step) {
-      throw new Error("No step found")
-    }
-    return step({
-      context: stepContext || {},
-      inputs,
-      appId: config ? config.getAppId() : "",
-      // don't really need an API key, mocked out usage quota, not being tested here
-      apiKey,
-      emitter,
-    })
-  }
-  if (config.appId) {
-    return context.doInContext(config?.appId, async () => {
-      return run()
-    })
-  } else {
-    return run()
   }
 }
 

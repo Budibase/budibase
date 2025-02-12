@@ -18,6 +18,7 @@
     "eslint-plugin-jest": "28.9.0",
     "eslint-plugin-local-rules": "3.0.2",
     "eslint-plugin-svelte": "2.46.1",
+    "svelte-preprocess": "^6.0.3",
     "husky": "^8.0.3",
     "kill-port": "^1.6.1",
     "lerna": "7.4.2",
