@@ -19,7 +19,7 @@ function generateResponse(to: string, from: string) {
   }
 }
 
-import * as setup from "../utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("test the outgoing webhook action", () => {
   const config = new TestConfiguration()
@@ -60,13 +60,14 @@ describe("test the outgoing webhook action", () => {
       ...invite,
     }
     let resp = generateResponse(inputs.to, inputs.from)
-    const res = await setup.runStep(
-      config,
-      setup.actions.SEND_EMAIL_SMTP.stepId,
-      inputs
-    )
-    expect(res.response).toEqual(resp)
-    expect(res.success).toEqual(true)
+
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(inputs)
+      .test({ fields: {} })
+
+    expect(steps[0].outputs.response).toEqual(resp)
+    expect(steps[0].outputs.success).toEqual(true)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledTimes(1)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith({
       to: "user1@example.com",
@@ -75,7 +76,11 @@ describe("test the outgoing webhook action", () => {
       contents: "testing",
       cc: "cc",
       bcc: "bcc",
-      invite,
+      invite: {
+        ...invite,
+        startTime: invite.startTime.toISOString(),
+        endTime: invite.endTime.toISOString(),
+      },
       automation: true,
       attachments: [
         { url: "attachment1", filename: "attachment1.txt" },
