@@ -1,7 +1,7 @@
 <script>
   import Provider from "./Provider.svelte"
   import { onMount, onDestroy } from "svelte"
-  import { themeStore } from "stores"
+  import { themeStore } from "@/stores"
 
   let width = window.innerWidth
   let height = window.innerHeight

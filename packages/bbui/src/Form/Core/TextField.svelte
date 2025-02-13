@@ -1,30 +1,31 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher, onMount, tick } from "svelte"
+  import type { UIEvent } from "@budibase/types"
 
-  export let value = null
-  export let placeholder = null
+  export let value: string | null = null
+  export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
   export let id = null
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let align
-  export let autofocus = false
-  export let autocomplete = null
+  export let align: "left" | "right" | "center" | undefined = undefined
+  export let autofocus: boolean | null = false
+  export let autocomplete: boolean | undefined
 
   const dispatch = createEventDispatcher()
 
-  let field
+  let field: any
   let focus = false
 
-  const updateValue = newValue => {
+  const updateValue = (newValue: any) => {
     if (readonly || disabled) {
       return
     }
     if (type === "number") {
-      const float = parseFloat(newValue)
+      const float = parseFloat(newValue as string)
       newValue = isNaN(float) ? null : float
     }
     dispatch("change", newValue)
@@ -37,40 +38,47 @@
     focus = true
   }
 
-  const onBlur = event => {
+  const onBlur = (event: UIEvent) => {
     if (readonly || disabled) {
       return
     }
     focus = false
-    updateValue(event.target.value)
+    updateValue(event?.target?.value)
   }
 
-  const onInput = event => {
+  const onInput = (event: UIEvent) => {
     if (readonly || !updateOnChange || disabled) {
       return
     }
-    updateValue(event.target.value)
+    updateValue(event.target?.value)
   }
 
-  const updateValueOnEnter = event => {
+  const updateValueOnEnter = (event: UIEvent) => {
     if (readonly || disabled) {
       return
     }
     if (event.key === "Enter") {
-      updateValue(event.target.value)
+      updateValue(event.target?.value)
     }
   }
 
-  const getInputMode = type => {
+  const getInputMode = (type: string) => {
     if (type === "bigint") {
       return "numeric"
     }
     return type === "number" ? "decimal" : "text"
   }
 
+  $: autocompleteValue =
+    typeof autocomplete === "boolean"
+      ? autocomplete
+        ? "on"
+        : "off"
+      : undefined
+
   onMount(async () => {
     if (disabled) return
-    focus = autofocus
+    focus = autofocus || false
     if (focus) {
       await tick()
       field.focus()
@@ -104,7 +112,7 @@
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align};` : ""}
     inputmode={getInputMode(type)}
-    {autocomplete}
+    autocomplete={autocompleteValue}
   />
 </div>
 

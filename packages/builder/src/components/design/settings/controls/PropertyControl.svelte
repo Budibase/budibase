@@ -5,7 +5,6 @@
     runtimeToReadableBinding,
   } from "@/dataBinding"
   import { builderStore } from "@/stores/builder"
-  import { onDestroy } from "svelte"
 
   export let label = ""
   export let labelHidden = false
@@ -26,16 +25,16 @@
   export let wide
 
   let highlightType
+  let domElement
 
   $: highlightedProp = $builderStore.highlightedSetting
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
-  $: if (!Array.isArray(value)) {
-    highlightType =
-      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
-  }
+  $: isHighlighted = highlightedProp?.key === key
+
+  $: highlightType = isHighlighted ? `highlighted-${highlightedProp?.type}` : ""
 
   const getAllBindings = (bindings, componentBindings, nested) => {
     if (!nested) {
@@ -76,14 +75,18 @@
       : enriched
   }
 
-  onDestroy(() => {
-    if (highlightedProp) {
-      builderStore.highlightSetting(null)
-    }
-  })
+  function scrollToElement(element) {
+    element?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    })
+  }
+
+  $: highlightedProp && isHighlighted && scrollToElement(domElement)
 </script>
 
 <div
+  bind:this={domElement}
   id={`${key}-prop-control-wrap`}
   class={`property-control ${highlightType}`}
   class:wide={!label || labelHidden || wide === true}
@@ -150,10 +153,10 @@
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-static-red-600);
-    margin-top: -3.5px;
-    margin-bottom: -3.5px;
-    padding-bottom: 3.5px;
-    padding-top: 3.5px;
+    margin-top: -4px;
+    margin-bottom: -4px;
+    padding-bottom: 4px;
+    padding-top: 4px;
   }
 
   .property-control.property-focus :global(input) {
@@ -172,7 +175,7 @@
   }
   .text {
     font-size: var(--spectrum-global-dimension-font-size-75);
-    color: var(--grey-6);
+    color: var(--spectrum-global-color-gray-700);
     grid-column: 2 / 2;
   }
 

@@ -54,7 +54,7 @@ export class PreviewStore extends BudiStore<PreviewState> {
     }))
   }
 
-  startDrag(component: any) {
+  async startDrag(component: string) {
     this.sendEvent("dragging-new-component", {
       dragging: true,
       component,
@@ -80,6 +80,10 @@ export class PreviewStore extends BudiStore<PreviewState> {
       ...state,
       selectedComponentContext: context,
     }))
+  }
+
+  updateState(data: Record<string, any>) {
+    this.sendEvent("builder-state", data)
   }
 
   requestComponentContext() {

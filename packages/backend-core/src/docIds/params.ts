@@ -8,6 +8,10 @@ import {
 import { getProdAppID } from "./conversions"
 import { DatabaseQueryOpts, VirtualDocumentType } from "@budibase/types"
 
+const EXTERNAL_TABLE_ID_REGEX = new RegExp(
+  `^${DocumentType.DATASOURCE_PLUS}_(.+)__(.+)$`
+)
+
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
  * is usually the case as most of our docs are top level e.g. tables, automations, users and so on.
@@ -64,6 +68,11 @@ export function getQueryIndex(viewName: ViewName) {
   return `database/${viewName}`
 }
 
+export const isExternalTableId = (id: string): boolean => {
+  const matches = id.match(EXTERNAL_TABLE_ID_REGEX)
+  return !!id && matches !== null
+}
+
 /**
  * Check if a given ID is that of a table.
  */
@@ -72,7 +81,7 @@ export const isTableId = (id: string): boolean => {
   return (
     !!id &&
     (id.startsWith(`${DocumentType.TABLE}${SEPARATOR}`) ||
-      id.startsWith(`${DocumentType.DATASOURCE_PLUS}${SEPARATOR}`))
+      isExternalTableId(id))
   )
 }
 
@@ -83,9 +92,13 @@ export function isViewId(id: string): boolean {
 /**
  * Check if a given ID is that of a datasource or datasource plus.
  */
-export const isDatasourceId = (id: string): boolean => {
+export function isDatasourceId(id: string): boolean {
   // this covers both datasources and datasource plus
   return !!id && id.startsWith(`${DocumentType.DATASOURCE}${SEPARATOR}`)
+}
+
+export function isQueryId(id: string): boolean {
+  return !!id && id.startsWith(`${DocumentType.QUERY}${SEPARATOR}`)
 }
 
 /**

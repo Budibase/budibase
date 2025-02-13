@@ -1,9 +1,24 @@
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { events, roles } from "@budibase/backend-core"
-import { Screen, Role, BuiltinPermissionID } from "@budibase/types"
+import {
+  Screen,
+  Role,
+  BuiltinPermissionID,
+  SourceType,
+  UsageInScreensResponse,
+} from "@budibase/types"
+import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 
-const { basicScreen } = setup.structures
+const {
+  basicScreen,
+  createTableScreen,
+  createViewScreen,
+  createQueryScreen,
+  basicTable,
+  viewV2,
+  basicQuery,
+} = setup.structures
 
 describe("/screens", () => {
   let config = setup.getConfig()
@@ -18,7 +33,7 @@ describe("/screens", () => {
 
   describe("fetch", () => {
     it("should be able to create a layout", async () => {
-      const screens = await config.api.screen.list({ status: 200 })
+      const screens = await config.api.screen.list()
       expect(screens.length).toEqual(1)
       expect(screens.some(s => s._id === screen._id)).toEqual(true)
     })
@@ -52,28 +67,22 @@ describe("/screens", () => {
         inherits: [role1._id!, role2._id!],
         permissionId: BuiltinPermissionID.WRITE,
       })
-      screen1 = await config.api.screen.save(
-        {
-          ...basicScreen(),
-          routing: {
-            roleId: role1._id!,
-            route: "/foo",
-            homeScreen: false,
-          },
+      screen1 = await config.api.screen.save({
+        ...basicScreen(),
+        routing: {
+          roleId: role1._id!,
+          route: "/foo",
+          homeScreen: false,
         },
-        { status: 200 }
-      )
-      screen2 = await config.api.screen.save(
-        {
-          ...basicScreen(),
-          routing: {
-            roleId: role2._id!,
-            route: "/bar",
-            homeScreen: false,
-          },
+      })
+      screen2 = await config.api.screen.save({
+        ...basicScreen(),
+        routing: {
+          roleId: role2._id!,
+          route: "/bar",
+          homeScreen: false,
         },
-        { status: 200 }
-      )
+      })
       // get into prod app
       await config.publish()
     })
@@ -81,10 +90,7 @@ describe("/screens", () => {
     async function checkScreens(roleId: string, screenIds: string[]) {
       await config.loginAsRole(roleId, async () => {
         const res = await config.api.application.getDefinition(
-          config.prodAppId!,
-          {
-            status: 200,
-          }
+          config.getProdAppId()
         )
         expect(res.screens.length).toEqual(screenIds.length)
         expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
@@ -114,10 +120,7 @@ describe("/screens", () => {
         },
         async () => {
           const res = await config.api.application.getDefinition(
-            config.prodAppId!,
-            {
-              status: 200,
-            }
+            config.prodAppId!
           )
           const screenIds = [screen._id!, screen1._id!]
           expect(res.screens.length).toEqual(screenIds.length)
@@ -134,9 +137,7 @@ describe("/screens", () => {
 
     it("should be able to create a screen", async () => {
       const screen = basicScreen()
-      const responseScreen = await config.api.screen.save(screen, {
-        status: 200,
-      })
+      const responseScreen = await config.api.screen.save(screen)
 
       expect(responseScreen._rev).toBeDefined()
       expect(responseScreen.name).toEqual(screen.name)
@@ -145,13 +146,13 @@ describe("/screens", () => {
 
     it("should be able to update a screen", async () => {
       const screen = basicScreen()
-      let responseScreen = await config.api.screen.save(screen, { status: 200 })
+      let responseScreen = await config.api.screen.save(screen)
       screen._id = responseScreen._id
       screen._rev = responseScreen._rev
       screen.name = "edit"
       jest.clearAllMocks()
 
-      responseScreen = await config.api.screen.save(screen, { status: 200 })
+      responseScreen = await config.api.screen.save(screen)
 
       expect(responseScreen._rev).toBeDefined()
       expect(responseScreen.name).toEqual(screen.name)
@@ -171,8 +172,7 @@ describe("/screens", () => {
     it("should be able to delete the screen", async () => {
       const response = await config.api.screen.destroy(
         screen._id!,
-        screen._rev!,
-        { status: 200 }
+        screen._rev!
       )
       expect(response.message).toBeDefined()
       expect(events.screen.deleted).toHaveBeenCalledTimes(1)
@@ -184,6 +184,59 @@ describe("/screens", () => {
         method: "DELETE",
         url: `/api/screens/${screen._id}/${screen._rev}`,
       })
+    })
+  })
+
+  describe("usage", () => {
+    beforeEach(async () => {
+      await config.init()
+      await config.api.screen.save(basicScreen())
+    })
+
+    function confirmScreen(usage: UsageInScreensResponse, screen: Screen) {
+      expect(usage.screens.length).toEqual(1)
+      expect(usage.screens[0].url).toEqual(screen.routing.route)
+      expect(usage.screens[0]._id).toEqual(screen._id!)
+    }
+
+    it("should find table usage", async () => {
+      const table = await config.api.table.save(basicTable())
+      const screen = await config.api.screen.save(
+        createTableScreen("BudibaseDB", table)
+      )
+      const usage = await config.api.screen.usage(table._id!)
+      expect(usage.sourceType).toEqual(SourceType.TABLE)
+      confirmScreen(usage, screen)
+    })
+
+    it("should find view usage", async () => {
+      const table = await config.api.table.save(basicTable())
+      const view = await config.api.viewV2.create(
+        viewV2.createRequest(table._id!),
+        { status: 201 }
+      )
+      const screen = await config.api.screen.save(
+        createViewScreen("BudibaseDB", view)
+      )
+      const usage = await config.api.screen.usage(view.id)
+      expect(usage.sourceType).toEqual(SourceType.VIEW)
+      confirmScreen(usage, screen)
+    })
+
+    it("should find datasource/query usage", async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasourcePlus().datasource
+      )
+      const query = await config.api.query.save(basicQuery(datasource._id!))
+      const screen = await config.api.screen.save(
+        createQueryScreen(datasource._id!, query)
+      )
+      const dsUsage = await config.api.screen.usage(datasource._id!)
+      expect(dsUsage.sourceType).toEqual(SourceType.DATASOURCE)
+      confirmScreen(dsUsage, screen)
+      const queryUsage = await config.api.screen.usage(query._id!)
+      expect(queryUsage.sourceType).toEqual(SourceType.QUERY)
+      confirmScreen(queryUsage, screen)
     })
   })
 })

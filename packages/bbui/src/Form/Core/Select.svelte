@@ -1,33 +1,44 @@
-<script>
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
+<script lang="ts">
   import { createEventDispatcher } from "svelte"
   import Picker from "./Picker.svelte"
+  import { PopoverAlignment } from "../../constants"
 
-  export let value = null
-  export let id = null
-  export let placeholder = "Choose an option"
-  export let disabled = false
-  export let options = []
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
-  export let getOptionIcon = () => null
-  export let getOptionColour = () => null
-  export let getOptionSubtitle = () => null
-  export let compare = null
+  export let value: V | null = null
+  export let id: string | undefined = undefined
+  export let placeholder: string | boolean = "Choose an option"
+  export let disabled: boolean = false
+  export let options: O[] = []
+  export let getOptionLabel = (option: O, _index?: number) => `${option}`
+  export let getOptionValue = (option: O, _index?: number) =>
+    option as unknown as V
+  export let getOptionIcon = (option: O, _index?: number) =>
+    option?.icon ?? undefined
+  export let getOptionColour = (option: O, _index?: number) =>
+    option?.colour ?? undefined
+  export let getOptionSubtitle = (option: O, _index?: number) =>
+    option?.subtitle ?? undefined
+  export let compare = (option: O, value: V) => option === value
   export let useOptionIconImage = false
-  export let isOptionEnabled
-  export let readonly = false
-  export let quiet = false
-  export let autoWidth = false
-  export let autocomplete = false
-  export let sort = false
-  export let align
-  export let footer = null
-  export let open = false
-  export let tag = null
-  export let searchTerm = null
-  export let loading
+  export let isOptionEnabled = (option: O, _index?: number) =>
+    option as unknown as boolean
+  export let readonly: boolean = false
+  export let quiet: boolean = false
+  export let autoWidth: boolean = false
+  export let autocomplete: boolean = false
+  export let sort: boolean = false
+  export let align: PopoverAlignment | undefined = PopoverAlignment.Left
+  export let footer: string | undefined = undefined
+  export let open: boolean = false
+  export let searchTerm: string | undefined = undefined
+  export let loading: boolean | undefined = undefined
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
+  export let customPopoverHeight: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -35,24 +46,28 @@
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
-  function compareOptionAndValue(option, value) {
+  function compareOptionAndValue(option: O, value: V) {
     return typeof compare === "function"
       ? compare(option, value)
       : option === value
   }
 
-  const getFieldAttribute = (getAttribute, value, options) => {
+  const getFieldAttribute = (getAttribute: any, value: V[], options: O[]) => {
     // Wait for options to load if there is a value but no options
     if (!options?.length) {
       return ""
     }
-    const index = options.findIndex((option, idx) =>
+    const index = options.findIndex((option: any, idx: number) =>
       compareOptionAndValue(getOptionValue(option, idx), value)
     )
     return index !== -1 ? getAttribute(options[index], index) : null
   }
 
-  const getFieldText = (value, options, placeholder) => {
+  const getFieldText = (
+    value: any,
+    options: any,
+    placeholder: boolean | string
+  ) => {
     if (value == null || value === "") {
       // Explicit false means use no placeholder and allow an empty fields
       if (placeholder === false) {
@@ -67,7 +82,7 @@
     )
   }
 
-  const selectOption = value => {
+  const selectOption = (value: V) => {
     dispatch("change", value)
     open = false
   }
@@ -98,14 +113,14 @@
   {isOptionEnabled}
   {autocomplete}
   {sort}
-  {tag}
   {onOptionMouseenter}
   {onOptionMouseleave}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false
-    ? null
+    ? undefined
     : placeholder || "Choose an option"}
   isOptionSelected={option => compareOptionAndValue(option, value)}
   onSelectOption={selectOption}
   {loading}
+  {customPopoverHeight}
 />

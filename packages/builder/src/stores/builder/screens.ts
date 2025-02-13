@@ -19,8 +19,8 @@ import {
   Screen,
   Component,
   SaveScreenResponse,
+  ComponentDefinition,
 } from "@budibase/types"
-import { ComponentDefinition } from "./components"
 
 interface ScreenState {
   screens: Screen[]
@@ -499,6 +499,13 @@ export class ScreenStore extends BudiStore<ScreenState> {
         screen,
       })
     })
+  }
+
+  /**
+   * Provides a list of screens that are used by a given source ID (table, view, datasource, query)
+   */
+  async usageInScreens(sourceId: string) {
+    return API.usageInScreens(sourceId)
   }
 }
 

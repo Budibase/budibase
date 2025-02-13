@@ -53,7 +53,7 @@
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
     "@budibase/types": "*",
-    "@codemirror/autocomplete": "^6.7.1",
+    "@codemirror/autocomplete": "6.9.0",
     "@codemirror/commands": "^6.2.4",
     "@codemirror/lang-javascript": "^6.1.8",
     "@codemirror/language": "^6.6.0",
@@ -81,7 +81,7 @@
     "shortid": "2.2.15",
     "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",
-    "svelte-portal": "1.0.0",
+    "svelte-portal": "^2.2.1",
     "yup": "^0.32.11"
   },
   "devDependencies": {

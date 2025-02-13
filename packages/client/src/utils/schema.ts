@@ -1,4 +1,4 @@
-import { API } from "api"
+import { API } from "@/api"
 import { DataFetchMap, DataFetchType } from "@budibase/frontend-core"
 import { FieldType, TableSchema } from "@budibase/types"
 
