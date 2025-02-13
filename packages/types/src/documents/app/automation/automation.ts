@@ -146,7 +146,7 @@ export interface Automation extends Document {
   }
 }
 
-interface BaseIOStructure {
+export interface BaseIOStructure {
   type?: AutomationIOType
   subtype?: AutomationIOType
   customType?: AutomationCustomIOType

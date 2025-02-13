@@ -557,7 +557,7 @@ class Orchestrator {
         const stepFn = await this.getStepFunctionality(step.stepId)
         const inputs = automationUtils.cleanInputValues(
           await processObject(cloneDeep(step.inputs), prepareContext(ctx)),
-          step.schema.inputs
+          step.schema.inputs.properties
         )
 
         const outputs = await stepFn({

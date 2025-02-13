@@ -1,3 +1,4 @@
+import { AutomationIOType } from "@budibase/types"
 import { cleanInputValues, substituteLoopStep } from "../automationUtils"
 
 describe("automationUtils", () => {
@@ -42,15 +43,12 @@ describe("automationUtils", () => {
         },
       }
       expect(
-        cleanInputValues(
-          {
-            row: {
-              relationship: `[{"_id": "ro_ta_users_us_3"}]`,
-            },
-            schema,
+        cleanInputValues({
+          row: {
+            relationship: `[{"_id": "ro_ta_users_us_3"}]`,
           },
-          schema
-        )
+          schema,
+        })
       ).toEqual({
         row: {
           relationship: [{ _id: "ro_ta_users_us_3" }],
@@ -75,15 +73,12 @@ describe("automationUtils", () => {
         },
       }
       expect(
-        cleanInputValues(
-          {
-            row: {
-              relationship: `ro_ta_users_us_3`,
-            },
-            schema,
+        cleanInputValues({
+          row: {
+            relationship: `ro_ta_users_us_3`,
           },
-          schema
-        )
+          schema,
+        })
       ).toEqual({
         row: {
           relationship: "ro_ta_users_us_3",
@@ -94,28 +89,27 @@ describe("automationUtils", () => {
 
     it("should be able to clean inputs with the utilities", () => {
       // can't clean without a schema
-      let output = cleanInputValues({ a: "1" })
-      expect(output.a).toBe("1")
-      output = cleanInputValues(
+      const one = cleanInputValues({ a: "1" })
+      expect(one.a).toBe("1")
+
+      const two = cleanInputValues(
         { a: "1", b: "true", c: "false", d: 1, e: "help" },
         {
-          properties: {
-            a: {
-              type: "number",
-            },
-            b: {
-              type: "boolean",
-            },
-            c: {
-              type: "boolean",
-            },
+          a: {
+            type: AutomationIOType.NUMBER,
+          },
+          b: {
+            type: AutomationIOType.BOOLEAN,
+          },
+          c: {
+            type: AutomationIOType.BOOLEAN,
           },
         }
       )
-      expect(output.a).toBe(1)
-      expect(output.b).toBe(true)
-      expect(output.c).toBe(false)
-      expect(output.d).toBe(1)
+      expect(two.a).toBe(1)
+      expect(two.b).toBe(true)
+      expect(two.c).toBe(false)
+      expect(two.d).toBe(1)
     })
   })
 })
