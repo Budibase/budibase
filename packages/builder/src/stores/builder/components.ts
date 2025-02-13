@@ -299,6 +299,8 @@ export class ComponentStore extends BudiStore<ComponentState> {
             component[setting.key] = fieldOptions[0]
             component.label = fieldOptions[0]
           }
+        } else if (setting.type === "icon") {
+          component[setting.key] = "ri-star-fill"
         } else if (useDefaultValues && setting.defaultValue !== undefined) {
           // Use default value where required
           component[setting.key] = setting.defaultValue
