@@ -62,8 +62,6 @@
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
-  import { encodeJSBinding } from "@budibase/string-templates"
-  import CodeEditorField from "@/components/common/bindings/CodeEditorField.svelte"
   import DrawerBindableCodeEditorField from "@/components/common/bindings/DrawerBindableCodeEditorField.svelte"
 
   export let automation
@@ -915,10 +913,7 @@
                   {bindings}
                   {schema}
                   panel={AutomationBindingPanel}
-                  on:change={e => {
-                    console.log("new val", e.detail)
-                    onChange({ [key]: e.detail })
-                  }}
+                  on:change={e => onChange({ [key]: e.detail })}
                   context={$memoContext}
                   value={inputData[key]}
                 />
