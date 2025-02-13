@@ -43,7 +43,7 @@
   } from "@codemirror/commands"
   import { setDiagnostics } from "@codemirror/lint"
   import type { Diagnostic } from "@codemirror/lint"
-  import { Compartment, EditorState } from "@codemirror/state"
+  import { Compartment, EditorState, Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
@@ -321,26 +321,10 @@
     return diagnostics
   }
 
-  // function getCompletions(): ((_: CompletionContext) => any)[] {
-  //   switch (mode.name) {
-  //     case "handlebars":
-  //       return [hbAutocomplete([...completions])]
-
-  //     case "javascript":
-  //       return [jsAutocomplete([...completions])]
-
-  //     case "text/html":
-  //       return []
-
-  //     default:
-  //       throw utils.unreachable(mode)
-  //   }
-  // }
-
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
   // TODO: work out type for base
-  const buildExtensions = (base: any[]) => {
+  const buildExtensions = (base: Extension[]) => {
     let complete = [...base]
 
     if (autocompleteEnabled) {
