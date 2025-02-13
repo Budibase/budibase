@@ -7,7 +7,7 @@ import {
 } from "../automations/utils"
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
-import { dataFilters, helpers, utils } from "@budibase/shared-core"
+import { dataFilters, helpers } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { automations } from "@budibase/shared-core"
@@ -24,15 +24,15 @@ import {
   AutomationStepStatus,
   BranchSearchFilters,
   BranchStep,
-  isLogicalSearchOperator,
   LoopStep,
   UserBindings,
-  isBasicSearchOperator,
   ContextEmitter,
   LoopStepType,
   AutomationTriggerResult,
   AutomationResults,
   AutomationStepResult,
+  isLogicalFilter,
+  Branch,
 } from "@budibase/types"
 import { AutomationContext } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -82,6 +82,41 @@ function getLoopIterable(loopStep: LoopStep): any[] {
   }
 
   return Array.isArray(input) ? input : [input]
+}
+
+async function branchMatches(ctx: AutomationContext, branch: Branch) {
+  const toFilter: Record<string, any> = {}
+
+  const recurseSearchFilters = (
+    filters: BranchSearchFilters
+  ): BranchSearchFilters => {
+    for (const filter of Object.values(filters)) {
+      if (!filter) {
+        continue
+      }
+
+      if (isLogicalFilter(filter)) {
+        filter.conditions = filter.conditions.map(condition =>
+          recurseSearchFilters(condition)
+        )
+      } else {
+        for (const [field, value] of Object.entries(filter)) {
+          toFilter[field] = processStringSync(field, prepareContext(ctx))
+          if (typeof value === "string" && findHBSBlocks(value).length > 0) {
+            filter[field] = processStringSync(value, prepareContext(ctx))
+          }
+        }
+      }
+    }
+
+    return filters
+  }
+
+  const result = dataFilters.runQuery(
+    [toFilter],
+    recurseSearchFilters(branch.condition)
+  )
+  return result.length > 0
 }
 
 function prepareContext(context: AutomationContext) {
@@ -434,14 +469,12 @@ class Orchestrator {
 
       ctx.loop = { currentItem }
       const loopedStepResult = await this.executeStep(ctx, stepToLoop)
-      items.push(loopedStepResult.outputs)
       ctx.loop = undefined
+      items.push(loopedStepResult.outputs)
     }
 
     return {
-      id: stepToLoop.id,
-      stepId: stepToLoop.stepId,
-      inputs: stepToLoop.inputs,
+      ...result,
       outputs: {
         success: true,
         status:
@@ -459,11 +492,7 @@ class Orchestrator {
     const { branches, children } = branchStep.inputs
 
     for (const branch of branches) {
-      const condition = await this.evaluateBranchCondition(
-        ctx,
-        branch.condition
-      )
-      if (condition) {
+      if (await branchMatches(ctx, branch)) {
         const steps = children?.[branch.id] || []
 
         return [
@@ -478,7 +507,6 @@ class Orchestrator {
               branchId: `${branch.id}`,
             },
           },
-          // A final +1 to accommodate the branch step itself
           ...(await this.executeSteps(ctx, steps)),
         ]
       }
@@ -494,52 +522,6 @@ class Orchestrator {
         outputs: { status: AutomationStatus.NO_CONDITION_MET },
       },
     ]
-  }
-
-  private async evaluateBranchCondition(
-    ctx: AutomationContext,
-    conditions: BranchSearchFilters
-  ): Promise<boolean> {
-    const toFilter: Record<string, any> = {}
-
-    const recurseSearchFilters = (
-      filters: BranchSearchFilters
-    ): BranchSearchFilters => {
-      for (const filterKey of Object.keys(
-        filters
-      ) as (keyof typeof filters)[]) {
-        if (!filters[filterKey]) {
-          continue
-        }
-
-        if (isLogicalSearchOperator(filterKey)) {
-          filters[filterKey].conditions = filters[filterKey].conditions.map(
-            condition => recurseSearchFilters(condition)
-          )
-        } else if (isBasicSearchOperator(filterKey)) {
-          for (const [field, value] of Object.entries(filters[filterKey])) {
-            const fromContext = processStringSync(field, prepareContext(ctx))
-            toFilter[field] = fromContext
-
-            if (typeof value === "string" && findHBSBlocks(value).length > 0) {
-              const processedVal = processStringSync(value, prepareContext(ctx))
-
-              filters[filterKey][field] = processedVal
-            }
-          }
-        } else {
-          // We want to types to complain if we extend BranchSearchFilters, but not to throw if the request comes with some extra data. It will just be ignored
-          utils.unreachable(filterKey, { doNotThrow: true })
-        }
-      }
-
-      return filters
-    }
-
-    const processedConditions = recurseSearchFilters(conditions)
-
-    const result = dataFilters.runQuery([toFilter], processedConditions)
-    return result.length > 0
   }
 
   private async executeStep(

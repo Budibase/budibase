@@ -82,6 +82,10 @@ type RangeFilter = Record<
 
 type LogicalFilter = { conditions: SearchFilters[] }
 
+export function isLogicalFilter(filter: any): filter is LogicalFilter {
+  return "conditions" in filter
+}
+
 export type AnySearchFilter = BasicFilter | ArrayFilter | RangeFilter
 
 export interface SearchFilters {
