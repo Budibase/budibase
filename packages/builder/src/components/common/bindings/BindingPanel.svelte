@@ -61,8 +61,8 @@
   let mode: BindingMode | null
   let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
-  let jsValue = initialValueJS ? value : null
-  let hbsValue = initialValueJS ? null : value
+  let jsValue: string | null = initialValueJS ? value : null
+  let hbsValue: string | null = initialValueJS ? null : value
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
   let targetMode: BindingMode | null = null
