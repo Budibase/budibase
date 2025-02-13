@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { devToolsStore } from "./devTools.js"
 import { eventStore } from "./events.js"
 
@@ -77,11 +77,12 @@ const createBuilderStore = () => {
         mode,
       })
     },
-    dropNewComponent: (component, parent, index) => {
+    dropNewComponent: (component, parent, index, props) => {
       eventStore.actions.dispatchEvent("drop-new-component", {
         component,
         parent,
         index,
+        props,
       })
     },
     setEditMode: enabled => {

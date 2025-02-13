@@ -53,7 +53,7 @@ export class PreviewStore extends BudiStore<PreviewState> {
     }))
   }
 
-  startDrag(component: any) {
+  async startDrag(component: string) {
     this.sendEvent("dragging-new-component", {
       dragging: true,
       component,
