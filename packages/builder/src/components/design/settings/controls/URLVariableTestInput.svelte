@@ -1,12 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import {
-    Input,
-    Icon,
-    Body,
-    AbsTooltip,
-    TooltipPosition,
-  } from "@budibase/bbui"
+  import { Input, Label } from "@budibase/bbui"
   import { previewStore, selectedScreen } from "@/stores/builder"
   import type { ComponentContext } from "@budibase/types"
 
@@ -14,6 +8,8 @@
 
   let testValue: string | undefined
 
+  $: routeParams = baseRoute.match(/:[a-zA-Z]+/g) || []
+  $: hasUrlParams = routeParams.length > 0
   $: placeholder = getPlaceholder(baseRoute)
   $: baseInput = createBaseInput(baseRoute)
   $: updateTestValueFromContext($previewStore.selectedComponentContext)
@@ -73,28 +69,21 @@
   })
 </script>
 
-<div class="url-test-section">
-  <div class="info">
-    <Body size="XS">URL Variable Testing</Body>
-    <AbsTooltip
-      text="Test how your screen behaves with different URL parameters. Enter values in the format shown in the placeholder below."
-      position={TooltipPosition.Top}
-      noWrap
-    >
-      <div class="icon">
-        <Icon name="InfoOutline" size="S" disabled hoverable />
+{#if hasUrlParams}
+  <div class="url-test-section">
+    <div class="info">
+      <Label size="M">Set temporary URL variables for design preview</Label>
+    </div>
+    <div class="url-test-container">
+      <div class="base-input">
+        <Input disabled={true} value={baseInput} />
       </div>
-    </AbsTooltip>
-  </div>
-  <div class="url-test-container">
-    <div class="base-input">
-      <Input disabled={true} value={baseInput} />
-    </div>
-    <div class="variable-input">
-      <Input value={testValue} on:change={onVariableChange} {placeholder} />
+      <div class="variable-input">
+        <Input value={testValue} on:change={onVariableChange} {placeholder} />
+      </div>
     </div>
   </div>
-</div>
+{/if}
 
 <style>
   .url-test-section {
@@ -115,7 +104,7 @@
   }
 
   .base-input {
-    width: 40%;
+    width: 98px;
     margin-right: -1px;
   }
 
