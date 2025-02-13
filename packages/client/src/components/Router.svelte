@@ -1,7 +1,7 @@
 <script>
   import { setContext, getContext, onMount } from "svelte"
   import Router, { querystring } from "svelte-spa-router"
-  import { routeStore, stateStore } from "stores"
+  import { routeStore, stateStore } from "@/stores"
   import Screen from "./Screen.svelte"
   import { get } from "svelte/store"
 
