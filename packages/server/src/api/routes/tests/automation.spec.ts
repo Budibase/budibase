@@ -13,6 +13,7 @@ import sdk from "../../../sdk"
 import {
   ConfigType,
   FieldType,
+  FilterCondition,
   isDidNotTriggerResponse,
   SettingsConfig,
   Table,
@@ -20,11 +21,8 @@ import {
 import { mocks } from "@budibase/backend-core/tests"
 import { removeDeprecated } from "../../../automations/utils"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import { automations } from "@budibase/shared-core"
 import { basicTable } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-
-const FilterConditions = automations.steps.filter.FilterConditions
 
 const MAX_RETRIES = 4
 const {
@@ -594,7 +592,7 @@ describe("/automations", () => {
               steps: [
                 {
                   inputs: {
-                    condition: FilterConditions.EQUAL,
+                    condition: FilterCondition.EQUAL,
                     field: "{{ trigger.row.City }}",
                     value: "{{ trigger.oldRow.City }}",
                   },
