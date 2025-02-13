@@ -21,20 +21,7 @@ const baseConfig: Config.InitialProjectOptions = {
   transform: {
     "^.+\\.ts?$": "@swc/jest",
     "^.+\\.js?$": "@swc/jest",
-    "^.+\\.svelte$": [
-      "jest-chain-transform", // https://github.com/svelteness/svelte-jester/issues/166
-      {
-        transformers: [
-          [
-            "svelte-jester",
-            {
-              preprocess: true,
-            },
-          ],
-          "@swc/jest",
-        ],
-      },
-    ],
+    "^.+\\.svelte?$": "<rootDir>/scripts/svelteTransformer.js",
   },
   transformIgnorePatterns: ["/node_modules/(?!svelte/).*"],
   moduleNameMapper: {

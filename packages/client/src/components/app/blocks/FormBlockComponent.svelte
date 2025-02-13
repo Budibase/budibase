@@ -1,5 +1,5 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
   import { FieldType } from "@budibase/types"
 
   export let field
