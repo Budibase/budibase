@@ -119,9 +119,10 @@
       useSnippets: boolean
     }
   ) => {
-    const completions: BindingCompletion[] = [
-      jsAutocomplete([...bindingCompletions]),
-    ]
+    const completions: BindingCompletion[] = []
+    if (bindingCompletions.length) {
+      completions.push(jsAutocomplete([...bindingCompletions]))
+    }
     if (config.useHelpers) {
       completions.push(
         jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)])
@@ -389,7 +390,7 @@
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing $ or use the menu on the right"}
-              jsBindingWrapping
+              jsBindingWrapping={bindingCompletions.length > 0}
             />
           {/key}
         {/if}
