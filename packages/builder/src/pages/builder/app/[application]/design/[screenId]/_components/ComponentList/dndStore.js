@@ -2,6 +2,7 @@ import { writable, get } from "svelte/store"
 import { findComponentParent, findComponentPath } from "@/helpers/components"
 import { selectedScreen, componentStore } from "@/stores/builder"
 import { DropPosition } from "@budibase/types"
+export { DropPosition } from "@budibase/types"
 
 const initialState = {
   source: null,

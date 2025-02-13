@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store"
 import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 import { eventStore } from "./events.js"
-import { DropPosition, PreviewDevice } from "@budibase/types"
+import { DropPosition, PingSource, PreviewDevice } from "@budibase/types"
 
 interface BuilderStore {
   inBuilder: boolean
@@ -81,34 +81,38 @@ const createBuilderStore = () => {
         selectComponent,
       })
     },
-    deleteComponent: id => {
+    deleteComponent: (id: string) => {
       eventStore.actions.dispatchEvent("delete-component", { id })
     },
     notifyLoaded: () => {
       eventStore.actions.dispatchEvent("preview-loaded")
     },
-    analyticsPing: async ({ embedded }) => {
+    analyticsPing: async ({ embedded }: { embedded: boolean }) => {
       try {
-        await API.analyticsPing({ source: "app", embedded })
+        await API.analyticsPing({ source: PingSource.APP, embedded })
       } catch (error) {
         // Do nothing
       }
     },
-    moveComponent: async (componentId, destinationComponentId, mode) => {
+    moveComponent: async (
+      componentId: string,
+      destinationComponentId: string,
+      mode: DropPosition
+    ) => {
       await eventStore.actions.dispatchEvent("move-component", {
         componentId,
         destinationComponentId,
         mode,
       })
     },
-    dropNewComponent: (component, parent, index) => {
+    dropNewComponent: (component: string, parent: string, index: number) => {
       eventStore.actions.dispatchEvent("drop-new-component", {
         component,
         parent,
         index,
       })
     },
-    setEditMode: enabled => {
+    setEditMode: (enabled: boolean) => {
       if (enabled === get(store).editMode) {
         return
       }
