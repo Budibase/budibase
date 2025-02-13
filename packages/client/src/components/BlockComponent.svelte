@@ -1,7 +1,7 @@
 <script>
   import { getContext, onDestroy } from "svelte"
   import { generate } from "shortid"
-  import { builderStore } from "../stores/builder.js"
+  import { builderStore } from "../stores/builder"
   import Component from "components/Component.svelte"
 
   export let type
