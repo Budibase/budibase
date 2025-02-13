@@ -91,7 +91,10 @@
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
   $: hbsCompletions = getHBSCompletions(bindingCompletions)
-  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, useSnippets)
+  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, {
+    useHelpers: allowHelpers,
+    useSnippets,
+  })
   $: {
     // Ensure a valid side panel option is always selected
     if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
@@ -111,13 +114,20 @@
   const getJSCompletions = (
     bindingCompletions: BindingCompletionOption[],
     snippets: Snippet[] | null,
-    useSnippets?: boolean
+    config: {
+      useHelpers: boolean
+      useSnippets: boolean
+    }
   ) => {
     const completions: BindingCompletion[] = [
       jsAutocomplete([...bindingCompletions]),
-      jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)]),
     ]
-    if (useSnippets && snippets) {
+    if (config.useHelpers) {
+      completions.push(
+        jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)])
+      )
+    }
+    if (config.useSnippets && snippets) {
       completions.push(snippetAutoComplete(snippets))
     }
     return completions
