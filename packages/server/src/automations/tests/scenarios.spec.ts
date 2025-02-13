@@ -407,7 +407,7 @@ if (descriptions.length) {
       client = ds.client!
     })
 
-    it.only("should query an external database for some data then insert than into an internal table", async () => {
+    it("should query an external database for some data then insert than into an internal table", async () => {
       const newTable = await config.api.table.save({
         ...basicTable(),
         name: "table",

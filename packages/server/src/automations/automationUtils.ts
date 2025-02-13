@@ -6,10 +6,10 @@ import {
 import sdk from "../sdk"
 import {
   AutomationAttachment,
+  BaseIOStructure,
+  FieldSchema,
   FieldType,
   Row,
-  LoopStepType,
-  LoopStepInputs,
 } from "@budibase/types"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
@@ -33,17 +33,15 @@ import path from "path"
  */
 export function cleanInputValues<T extends Record<string, any>>(
   inputs: T,
-  schema?: any
+  schema?: Partial<Record<keyof T, FieldSchema | BaseIOStructure>>
 ): T {
-  if (schema == null) {
-    return inputs
-  }
-  for (let inputKey of Object.keys(inputs)) {
+  const keys = Object.keys(inputs) as (keyof T)[]
+  for (let inputKey of keys) {
     let input = inputs[inputKey]
     if (typeof input !== "string") {
       continue
     }
-    let propSchema = schema.properties[inputKey]
+    let propSchema = schema?.[inputKey]
     if (!propSchema) {
       continue
     }
@@ -96,7 +94,7 @@ export function cleanInputValues<T extends Record<string, any>>(
  */
 export async function cleanUpRow(tableId: string, row: Row) {
   let table = await sdk.tables.getTable(tableId)
-  return cleanInputValues(row, { properties: table.schema })
+  return cleanInputValues(row, table.schema)
 }
 
 export function getError(err: any) {
