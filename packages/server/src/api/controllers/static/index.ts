@@ -340,7 +340,7 @@ export const getSignedUploadURL = async function (
     }
     try {
       let endpoint = datasource?.config?.endpoint
-      if (endpoint && !endpoint.startsWith("http")) {
+      if (endpoint && !utils.urlHasProtocol(endpoint)) {
         endpoint = `https://${endpoint}`
       }
       const s3 = new S3({
