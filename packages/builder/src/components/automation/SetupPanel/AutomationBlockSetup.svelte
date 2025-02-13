@@ -144,7 +144,6 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
-  // TODO: check if it inputData != newInputData (memo)
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -161,7 +160,6 @@
   }
 
   const setDefaultEnumValues = () => {
-    // TODO: Update this for memoisation
     for (const [key, value] of schemaProperties) {
       if (value.type === "string" && value.enum && inputData[key] == null) {
         inputData[key] = value.enum[0]
