@@ -2,6 +2,16 @@ export * from "./sidepanel"
 export * from "./codeEditor"
 export * from "./errors"
 
+export interface CustomComponent {
+  Component: any
+  schema: {
+    type: "component"
+    metadata: Record<string, any>
+    schema: ComponentDefinition
+  }
+  version: string
+}
+
 export interface ComponentDefinition {
   component: string
   name: string
@@ -13,6 +23,11 @@ export interface ComponentDefinition {
   legalDirectChildren: string[]
   requiredAncestors?: string[]
   illegalChildren: string[]
+  icon?: string
+  size?: {
+    width: number
+    height: number
+  }
 }
 
 export type DependsOnComponentSetting =

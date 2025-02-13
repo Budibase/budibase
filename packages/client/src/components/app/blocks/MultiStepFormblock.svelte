@@ -1,8 +1,8 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
   import { Helpers } from "@budibase/bbui"
   import { getContext, setContext } from "svelte"
-  import { builderStore } from "stores"
+  import { builderStore } from "@/stores"
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
   import { get, writable } from "svelte/store"
