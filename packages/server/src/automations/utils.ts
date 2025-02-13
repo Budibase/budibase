@@ -10,6 +10,7 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationJob,
+  AutomationResults,
   AutomationStepDefinition,
   AutomationTriggerDefinition,
   AutomationTriggerStepId,
@@ -261,9 +262,7 @@ export function isRecurring(automation: Automation) {
   )
 }
 
-export function isErrorInOutput(output: {
-  steps: { outputs?: { success: boolean } }[]
-}) {
+export function isErrorInOutput(output: AutomationResults) {
   let first = true,
     error = false
   for (let step of output.steps) {

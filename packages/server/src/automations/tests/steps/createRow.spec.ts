@@ -4,7 +4,7 @@ import {
 } from "../../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { Row, Table } from "@budibase/types"
+import { FilterCondition, Row, Table } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 async function uploadTestFile(filename: string) {
@@ -90,7 +90,7 @@ describe("test the create row action", () => {
       .createRow({ row: {} }, { stepName: "CreateRow" })
       .filter({
         field: "{{ stepsByName.CreateRow.success }}",
-        condition: "equal",
+        condition: FilterCondition.EQUAL,
         value: true,
       })
       .serverLog(
@@ -131,7 +131,7 @@ describe("test the create row action", () => {
       .createRow({ row: attachmentRow }, { stepName: "CreateRow" })
       .filter({
         field: "{{ stepsByName.CreateRow.success }}",
-        condition: "equal",
+        condition: FilterCondition.EQUAL,
         value: true,
       })
       .serverLog(

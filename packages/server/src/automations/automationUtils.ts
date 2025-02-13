@@ -32,7 +32,7 @@ import path from "path"
  * primitive types.
  */
 export function cleanInputValues<T extends Record<string, any>>(
-  inputs: any,
+  inputs: T,
   schema?: any
 ): T {
   if (schema == null) {
@@ -50,15 +50,18 @@ export function cleanInputValues<T extends Record<string, any>>(
     if (propSchema.type === "boolean") {
       let lcInput = input.toLowerCase()
       if (lcInput === "true") {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = true
       }
       if (lcInput === "false") {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = false
       }
     }
     if (propSchema.type === "number") {
       let floatInput = parseFloat(input)
       if (!isNaN(floatInput)) {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = floatInput
       }
     }
@@ -293,14 +296,4 @@ export function typecastForLooping(input: LoopStepInputs) {
     throw new Error("Unable to cast to correct type")
   }
   return input.binding
-}
-
-export function ensureMaxIterationsAsNumber(
-  value: number | string | undefined
-): number | undefined {
-  if (typeof value === "number") return value
-  if (typeof value === "string") {
-    return parseInt(value)
-  }
-  return undefined
 }
