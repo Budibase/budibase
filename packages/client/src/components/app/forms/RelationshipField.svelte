@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
@@ -7,21 +7,21 @@
 
   const { API } = getContext("sdk")
 
-  export let field
-  export let label
-  export let placeholder
-  export let disabled = false
-  export let readonly = false
-  export let validation
-  export let autocomplete = true
-  export let defaultValue
-  export let onChange
-  export let filter
-  export let datasourceType = "table"
-  export let primaryDisplay
-  export let span
-  export let helpText = null
-  export let type = FieldType.LINK
+  export let field: string | undefined = undefined
+  export let label: string | undefined = undefined
+  export let placeholder: string | undefined = undefined
+  export let disabled: boolean = false
+  export let readonly: boolean = false
+  export let validation: any
+  export let autocomplete: boolean = true
+  export let defaultValue: string | undefined = undefined
+  export let onChange: any
+  export let filter:
+  export let datasourceType: string = "table"
+  export let primaryDisplay: string | undefined = undefined
+  export let span: string | undefined = undefined
+  export let helpText: string | undefined = undefined
+  export let type: FieldType.LINK | FieldType.BB_REFERENCE = FieldType.LINK
 
   let fieldState
   let fieldApi
@@ -54,6 +54,7 @@
   $: primaryDisplay = primaryDisplay || tableDefinition?.primaryDisplay
 
   let optionsObj
+  const debouncedFetchRows = Utils.debounce(fetchRows, 250)
 
   $: {
     if (primaryDisplay && fieldState && !optionsObj) {
@@ -109,7 +110,7 @@
     }
   }
 
-  $: forceFetchRows(filter)
+  $: forceFetchRows(filter, defaultValue)
   $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
 
   const forceFetchRows = async () => {
@@ -119,7 +120,7 @@
     selectedValue = []
     debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
   }
-  const fetchRows = async (searchTerm, primaryDisplay, defaultVal) => {
+  async function fetchRows(searchTerm, primaryDisplay, defaultVal) {
     const allRowsFetched =
       $fetch.loaded &&
       !Object.keys($fetch.query?.string || {}).length &&
@@ -132,6 +133,9 @@
     if (defaultVal && !Array.isArray(defaultVal)) {
       defaultVal = defaultVal.split(",")
     }
+
+    const fetchMissing = (missingIds: string[])
+
     if (defaultVal && optionsObj && defaultVal.some(val => !optionsObj[val])) {
       await fetch.update({
         query: { oneOf: { _id: defaultVal } },
@@ -152,7 +156,6 @@
       ],
     })
   }
-  const debouncedFetchRows = Utils.debounce(fetchRows, 250)
 
   const flatten = values => {
     if (!values) {
