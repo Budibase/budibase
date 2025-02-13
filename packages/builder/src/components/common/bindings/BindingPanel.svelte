@@ -58,7 +58,7 @@
   export let placeholder = null
   export let showTabBar = true
 
-  let mode: BindingMode | null
+  let mode: BindingMode
   let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
   let jsValue: string | null = initialValueJS ? value : null
@@ -71,6 +71,7 @@
   let expressionError: string | undefined
   let evaluating = false
   let completions: BindingCompletion[] = []
+  let autocompleteOptions: BindingCompletionOption[] = []
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -89,59 +90,49 @@
     | null
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestEval(runtimeExpression, context, snippets)
-  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
-  $: {
-    if (mode === BindingMode.Text) {
-      completions = getHBSCompletions(bindingCompletions)
-    } else if (mode === BindingMode.JavaScript) {
-      completions = getJSCompletions(bindingCompletions, snippets, {
-        useHelpers: allowHelpers,
-        useSnippets,
-      })
-    } else {
-      completions = []
+  function getOptions(
+    mode: typeof editorMode,
+    bindings: EnrichedBinding[]
+  ): [BindingCompletionOption[], BindingCompletion[]] {
+    const autocompleteOptions = []
+    const completions = []
+
+    const bindingOptions = bindingsToCompletions(bindings, editorMode)
+    const helperOptions = getHelperCompletions(mode)
+
+    if (mode.name === "handlebars") {
+      autocompleteOptions.push(...bindingOptions)
+      autocompleteOptions.push(...helperOptions)
+
+      completions.push(hbAutocomplete(autocompleteOptions))
+    } else if (mode.name === "javascript") {
+      if (bindingOptions.length) {
+        completions.push(jsAutocomplete(bindingOptions))
+      }
+
+      if (allowHelpers) {
+        completions.push(jsHelperAutocomplete(helperOptions))
+      }
+      if (useSnippets && snippets?.length) {
+        completions.push(snippetAutoComplete(snippets))
+      }
     }
+
+    return [autocompleteOptions, completions]
   }
+
+  $: [autocompleteOptions, completions] = getOptions(
+    editorMode,
+    enrichedBindings
+  )
 
   $: {
     // Ensure a valid side panel option is always selected
     if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
       sidePanel = sidePanelOptions[0]
     }
-  }
-
-  const getHBSCompletions = (bindingCompletions: BindingCompletionOption[]) => {
-    return [
-      hbAutocomplete([
-        ...bindingCompletions,
-        ...getHelperCompletions(EditorModes.Handlebars),
-      ]),
-    ]
-  }
-
-  const getJSCompletions = (
-    bindingCompletions: BindingCompletionOption[],
-    snippets: Snippet[] | null,
-    config: {
-      useHelpers: boolean
-      useSnippets: boolean
-    }
-  ) => {
-    const completions: BindingCompletion[] = []
-    if (bindingCompletions.length) {
-      completions.push(jsAutocomplete([...bindingCompletions]))
-    }
-    if (config.useHelpers) {
-      completions.push(
-        jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)])
-      )
-    }
-    if (config.useSnippets && snippets) {
-      completions.push(snippetAutoComplete(snippets))
-    }
-    return completions
   }
 
   const getModeOptions = (allowHBS: boolean, allowJS: boolean) => {
@@ -223,7 +214,7 @@
     bindings: EnrichedBinding[],
     context: any,
     snippets: Snippet[] | null
-  ) => {
+  ): EnrichedBinding[] => {
     // Create a single big array to enrich in one go
     const bindingStrings = bindings.map(binding => {
       if (binding.runtimeBinding.startsWith('trim "')) {
@@ -300,7 +291,7 @@
     jsValue = null
     hbsValue = null
     updateValue(null)
-    mode = targetMode
+    mode = targetMode!
     targetMode = null
   }
 
@@ -400,7 +391,7 @@
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing $ or use the menu on the right"}
-              jsBindingWrapping={bindingCompletions.length > 0}
+              jsBindingWrapping={completions.length > 0}
             />
           {/key}
         {/if}
