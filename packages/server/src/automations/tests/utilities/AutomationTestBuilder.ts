@@ -15,6 +15,8 @@ import {
   isDidNotTriggerResponse,
   SearchFilters,
   TestAutomationRequest,
+  TriggerAutomationRequest,
+  TriggerAutomationResponse,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { automations } from "@budibase/shared-core"
@@ -206,6 +208,15 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
     response.steps.shift()
 
     return response
+  }
+
+  async trigger(
+    request: TriggerAutomationRequest
+  ): Promise<TriggerAutomationResponse> {
+    return await this.config.api.automation.trigger(
+      this.automation._id!,
+      request
+    )
   }
 }
 
