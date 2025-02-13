@@ -509,34 +509,18 @@ class Orchestrator {
 
     for (const branch of branches) {
       if (await branchMatches(ctx, branch)) {
-        const steps = children?.[branch.id] || []
-
         return [
-          {
-            id: step.id,
-            stepId: step.stepId,
-            inputs: step.inputs,
-            outputs: {
-              success: true,
-              branchName: branch.name,
-              status: `${branch.name} branch taken`,
-              branchId: `${branch.id}`,
-            },
-          },
-          ...(await this.executeSteps(ctx, steps)),
+          stepSuccess(step, {
+            branchName: branch.name,
+            status: `${branch.name} branch taken`,
+            branchId: `${branch.id}`,
+          }),
+          ...(await this.executeSteps(ctx, children?.[branch.id] || [])),
         ]
       }
     }
 
-    this.stopped = true
-    return [
-      {
-        id: step.id,
-        stepId: step.stepId,
-        inputs: step.inputs,
-        outputs: { success: false, status: AutomationStatus.NO_CONDITION_MET },
-      },
-    ]
+    return [stepFailure(step, { status: AutomationStatus.NO_CONDITION_MET })]
   }
 
   private async executeStep(
