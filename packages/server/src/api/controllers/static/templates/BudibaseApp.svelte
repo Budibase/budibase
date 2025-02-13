@@ -1,8 +1,9 @@
-<script lang="ts">
+<script>
   import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
-  import type { BudibaseAppProps } from "@budibase/types"
 
-  export let props: BudibaseAppProps
+  /** @type {BudibaseAppProps} this receives all the props in one structure, following
+   * the type from @budibase/types */
+  export let props
 </script>
 
 <svelte:head>

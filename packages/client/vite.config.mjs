@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       lib: {
-        entry: "src/index.js",
+        entry: "src/index.ts",
         formats: ["iife"],
         outDir: "dist",
         name: "budibase_client",
@@ -48,34 +48,6 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./manifest.json"),
         },
         {
-          find: "api",
-          replacement: path.resolve("./src/api"),
-        },
-        {
-          find: "components",
-          replacement: path.resolve("./src/components"),
-        },
-        {
-          find: "stores",
-          replacement: path.resolve("./src/stores"),
-        },
-        {
-          find: "utils",
-          replacement: path.resolve("./src/utils"),
-        },
-        {
-          find: "constants",
-          replacement: path.resolve("./src/constants"),
-        },
-        {
-          find: "@/constants",
-          replacement: path.resolve("./src/constants"),
-        },
-        {
-          find: "sdk",
-          replacement: path.resolve("./src/sdk"),
-        },
-        {
           find: "@budibase/types",
           replacement: path.resolve("../types/src"),
         },
@@ -86,6 +58,10 @@ export default defineConfig(({ mode }) => {
         {
           find: "@budibase/bbui",
           replacement: path.resolve("../bbui/src"),
+        },
+        {
+          find: "@",
+          replacement: path.resolve(__dirname, "src"),
         },
       ],
     },
