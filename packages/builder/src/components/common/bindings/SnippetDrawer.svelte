@@ -118,6 +118,7 @@
         allowHBS={false}
         allowJS
         allowSnippets={false}
+        allowHelpers={false}
         showTabBar={false}
         placeholder="return function(input) &#10100; ... &#10101;"
         value={code}
