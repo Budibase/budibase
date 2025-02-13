@@ -2,7 +2,12 @@ import { writable, get } from "svelte/store"
 import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 import { eventStore } from "./events.js"
-import { DropPosition, PingSource, PreviewDevice } from "@budibase/types"
+import {
+  ComponentDefinition,
+  DropPosition,
+  PingSource,
+  PreviewDevice,
+} from "@budibase/types"
 
 interface BuilderStore {
   inBuilder: boolean
@@ -15,9 +20,9 @@ interface BuilderStore {
   previewDevice: PreviewDevice
   navigation: string | null
   hiddenComponentIds: []
-  usedPlugins: string | null
+  usedPlugins: { name: string; hash: string }[] | null
   eventResolvers: {}
-  metadata: string | null
+  metadata: { componentId: string; step: number } | null
   snippets: string | null
   componentErrors: {}
   layout: null
@@ -121,18 +126,18 @@ const createBuilderStore = () => {
     requestAddComponent: () => {
       eventStore.actions.dispatchEvent("request-add-component")
     },
-    highlightSetting: setting => {
+    highlightSetting: (setting: string) => {
       eventStore.actions.dispatchEvent("highlight-setting", { setting })
     },
-    ejectBlock: (id, definition) => {
+    ejectBlock: (id: string, definition: ComponentDefinition) => {
       eventStore.actions.dispatchEvent("eject-block", { id, definition })
     },
-    updateUsedPlugin: (name, hash) => {
+    updateUsedPlugin: (name: string, hash: string) => {
       // Check if we used this plugin
       const used = get(store)?.usedPlugins?.find(x => x.name === name)
       if (used) {
         store.update(state => {
-          state.usedPlugins = state.usedPlugins.filter(x => x.name !== name)
+          state.usedPlugins = state.usedPlugins!.filter(x => x.name !== name)
           state.usedPlugins.push({
             ...used,
             hash,
@@ -144,13 +149,13 @@ const createBuilderStore = () => {
       // Notify the builder so we can reload component definitions
       eventStore.actions.dispatchEvent("reload-plugin")
     },
-    addParentComponent: (componentId: any, parentType: any) => {
+    addParentComponent: (componentId: string, parentType: string) => {
       eventStore.actions.dispatchEvent("add-parent-component", {
         componentId,
         parentType,
       })
     },
-    setMetadata: metadata => {
+    setMetadata: (metadata: { componentId: string; step: number }) => {
       store.update(state => ({
         ...state,
         metadata,
@@ -159,7 +164,7 @@ const createBuilderStore = () => {
   }
   return {
     ...store,
-    set: state => store.set({ ...initialState, ...state }),
+    set: (state: BuilderStore) => store.set({ ...initialState, ...state }),
     actions,
   }
 }
