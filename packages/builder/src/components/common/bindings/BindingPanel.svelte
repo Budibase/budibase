@@ -70,6 +70,7 @@
   let expressionLogs: Log[] | undefined
   let expressionError: string | undefined
   let evaluating = false
+  let completions: BindingCompletion[] = []
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -90,11 +91,20 @@
   $: requestEval(runtimeExpression, context, snippets)
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
-  $: hbsCompletions = getHBSCompletions(bindingCompletions)
-  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, {
-    useHelpers: allowHelpers,
-    useSnippets,
-  })
+
+  $: {
+    if (mode === BindingMode.Text) {
+      completions = getHBSCompletions(bindingCompletions)
+    } else if (mode === BindingMode.JavaScript) {
+      completions = getJSCompletions(bindingCompletions, snippets, {
+        useHelpers: allowHelpers,
+        useSnippets,
+      })
+    } else {
+      completions = []
+    }
+  }
+
   $: {
     // Ensure a valid side panel option is always selected
     if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
@@ -365,13 +375,13 @@
       {/if}
       <div class="editor">
         {#if mode === BindingMode.Text}
-          {#key hbsCompletions}
+          {#key completions}
             <CodeEditor
               value={hbsValue}
               on:change={onChangeHBSValue}
               bind:getCaretPosition
               bind:insertAtPos
-              completions={hbsCompletions}
+              {completions}
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing {{ or use the menu on the right"}
@@ -379,11 +389,11 @@
             />
           {/key}
         {:else if mode === BindingMode.JavaScript}
-          {#key jsCompletions}
+          {#key completions}
             <CodeEditor
               value={jsValue ? decodeJSBinding(jsValue) : jsValue}
               on:change={onChangeJSValue}
-              completions={jsCompletions}
+              {completions}
               mode={EditorModes.JS}
               bind:getCaretPosition
               bind:insertAtPos
