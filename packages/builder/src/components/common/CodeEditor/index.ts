@@ -83,6 +83,7 @@ const helpersToCompletion = (
     const helper = helpers[helperName]
     return {
       label: helperName,
+      args: helper.args,
       info: () => buildHelperInfoNode(helper),
       type: "helper",
       section: helperSection,
