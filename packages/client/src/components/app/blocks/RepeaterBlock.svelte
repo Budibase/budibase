@@ -1,7 +1,7 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
-  import Block from "components/Block.svelte"
-  import Placeholder from "components/app/Placeholder.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
+  import Block from "@/components/Block.svelte"
+  import Placeholder from "@/components/app/Placeholder.svelte"
   import { getContext } from "svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { get } from "svelte/store"

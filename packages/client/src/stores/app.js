@@ -1,4 +1,4 @@
-import { API } from "api"
+import { API } from "@/api"
 import { get, writable, derived } from "svelte/store"
 
 const initialState = {
