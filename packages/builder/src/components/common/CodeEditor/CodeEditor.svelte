@@ -45,10 +45,11 @@
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
   import type { EditorMode } from "@budibase/types"
+  import type { BindingCompletion } from "@/types"
 
   export let label: string | undefined = undefined
   // TODO: work out what best type fits this
-  export let completions: any[] = []
+  export let completions: BindingCompletion[] = []
   export let mode: EditorMode = EditorModes.Handlebars
   export let value: string | null = ""
   export let placeholder: string | null = null
