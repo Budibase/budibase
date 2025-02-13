@@ -10,7 +10,6 @@ import {
 import { S3, S3ClientConfig } from "@aws-sdk/client-s3"
 import csv from "csvtojson"
 import stream from "stream"
-import { NodeJsClient } from "@smithy/types"
 
 interface S3Config {
   region: string
@@ -159,7 +158,7 @@ const SCHEMA: Integration = {
 
 class S3Integration implements IntegrationBase {
   private readonly config: S3ClientConfig
-  private client: NodeJsClient<S3>
+  private client: S3
 
   constructor(config: S3Config) {
     this.config = {
@@ -176,7 +175,7 @@ class S3Integration implements IntegrationBase {
       delete this.config.endpoint
     }
 
-    this.client = new S3(this.config) as NodeJsClient<S3>
+    this.client = new S3(this.config)
   }
 
   async testConnection() {
@@ -263,7 +262,7 @@ class S3Integration implements IntegrationBase {
         .on("error", () => {
           csvError = true
         })
-      fileStream.on("finish", () => {
+      fileStream.on("end", () => {
         resolve(response)
       })
     }).catch(err => {
