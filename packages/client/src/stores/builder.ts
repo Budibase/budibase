@@ -2,9 +2,29 @@ import { writable, get } from "svelte/store"
 import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 import { eventStore } from "./events.js"
+import { PreviewDevice } from "@budibase/types"
+
+interface BuilderStore {
+  inBuilder: boolean
+  screen: string | null
+  selectedComponentId: string | null
+  editMode: boolean
+  previewId: string | null
+  theme: string | null
+  customTheme: string | null
+  previewDevice: PreviewDevice
+  navigation: string | null
+  hiddenComponentIds: []
+  usedPlugins: string | null
+  eventResolvers: {}
+  metadata: string | null
+  snippets: string | null
+  componentErrors: {}
+  layout: null
+}
 
 const createBuilderStore = () => {
-  const initialState = {
+  const initialState: BuilderStore = {
     inBuilder: false,
     screen: null,
     selectedComponentId: null,
@@ -26,7 +46,7 @@ const createBuilderStore = () => {
   }
   const store = writable(initialState)
   const actions = {
-    selectComponent: id => {
+    selectComponent: (id: string) => {
       if (id === get(store).selectedComponentId) {
         return
       }

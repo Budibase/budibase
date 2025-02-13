@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
+import { PreviewDevice } from "@budibase/types"
 
-type PreviewDevice = "desktop" | "tablet" | "mobile"
 type PreviewEventHandler = (name: string, payload?: any) => void
 type ComponentContext = Record<string, any>
 
