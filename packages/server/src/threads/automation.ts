@@ -11,7 +11,7 @@ import { dataFilters, helpers, utils } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { automations } from "@budibase/shared-core"
-import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
+import { MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
 import {
   Automation,
@@ -65,32 +65,23 @@ function matchesLoopFailureCondition(loopStep: LoopStep, currentItem: any) {
   return currentItem === loopStep.inputs.failure
 }
 
-function getLoopIterations(loopStep: LoopStep) {
-  const binding = loopStep.inputs.binding
-  if (!binding) {
-    return 0
-  }
-  try {
-    const json = typeof binding === "string" ? JSON.parse(binding) : binding
-    if (Array.isArray(json)) {
-      return json.length
-    }
-  } catch (err) {
-    // ignore error - wasn't able to parse
-  }
-  if (typeof binding === "string") {
-    return automationUtils.stringSplit(binding).length
-  }
-  return 0
-}
+function getLoopIterable(loopStep: LoopStep): any[] {
+  const option = loopStep.inputs.option
+  let input: any = loopStep.inputs.binding
 
-function getLoopMaxIterations(loopStep: LoopStep) {
-  const value = loopStep.inputs.iterations
-  if (typeof value === "number") return value
-  if (typeof value === "string") {
-    return parseInt(value)
+  if (option === LoopStepType.ARRAY && typeof input === "string") {
+    input = JSON.parse(input)
   }
-  return undefined
+
+  if (option === LoopStepType.STRING && Array.isArray(input)) {
+    input = input.join(",")
+  }
+
+  if (option === LoopStepType.STRING && typeof input === "string") {
+    input = automationUtils.stringSplit(input)
+  }
+
+  return Array.isArray(input) ? input : [input]
 }
 
 function prepareContext(context: AutomationContext) {
@@ -333,24 +324,26 @@ class Orchestrator {
 
               const step = steps[stepIndex]
               if (step.stepId === AutomationActionStepId.BRANCH) {
-                // stepIndex for current step context offset
-                // pathIdx relating to the full list of steps in the run
-                const [branchResult, ...branchStepResults] =
-                  await this.executeBranchStep(ctx, step)
+                const [result, ...childResults] = await this.executeBranchStep(
+                  ctx,
+                  step
+                )
 
-                stepOutputs.push(branchResult)
-                stepOutputs.push(...branchStepResults)
+                stepOutputs.push(result)
+                stepOutputs.push(...childResults)
 
                 stepIndex++
               } else if (step.stepId === AutomationActionStepId.LOOP) {
-                const output = await this.executeLoopStep(
-                  ctx,
-                  step,
-                  steps[stepIndex + 1]
-                )
+                const stepToLoop = steps[stepIndex + 1]
+                const result = await this.executeLoopStep(ctx, step, stepToLoop)
 
+                ctx.steps.push(result.outputs)
+                ctx.stepsById[stepToLoop.id] = result.outputs
+                ctx.stepsByName[stepToLoop.name || stepToLoop.id] =
+                  result.outputs
+
+                stepOutputs.push(result)
                 stepIndex += 2
-                stepOutputs.push(output)
               } else {
                 const result = await this.executeStep(ctx, step)
 
@@ -381,56 +374,81 @@ class Orchestrator {
     stepToLoop: AutomationStep
   ): Promise<AutomationStepResult> {
     await processObject(loopStep.inputs, prepareContext(ctx))
-    const maxIterations = getLoopMaxIterations(loopStep)
-    const items: AutomationStepResult[] = []
 
-    let status: AutomationStepStatus | undefined = undefined
-    let success = true
+    const result = {
+      id: loopStep.id,
+      stepId: loopStep.stepId,
+      inputs: loopStep.inputs,
+    }
 
-    let i = 0
-    for (; i < getLoopIterations(loopStep); i++) {
-      try {
-        loopStep.inputs.binding = automationUtils.typecastForLooping(
-          loopStep.inputs
-        )
-      } catch (err) {
-        break
+    const loopMaxIterations =
+      typeof loopStep.inputs.iterations === "string"
+        ? parseInt(loopStep.inputs.iterations)
+        : loopStep.inputs.iterations
+    const maxIterations = Math.min(
+      loopMaxIterations || env.AUTOMATION_MAX_ITERATIONS,
+      env.AUTOMATION_MAX_ITERATIONS
+    )
+
+    const items: Record<string, any>[] = []
+    let iterations = 0
+    let iterable: any[] = []
+    try {
+      iterable = getLoopIterable(loopStep)
+    } catch (err) {
+      return {
+        ...result,
+        outputs: {
+          success: false,
+          status: AutomationStepStatus.INCORRECT_TYPE,
+        },
+      }
+    }
+
+    for (; iterations < iterable.length; iterations++) {
+      const currentItem = iterable[iterations]
+
+      if (iterations === maxIterations) {
+        return {
+          ...result,
+          outputs: {
+            success: false,
+            iterations,
+            items,
+            status: AutomationStepStatus.MAX_ITERATIONS,
+          },
+        }
       }
 
-      if (
-        i === env.AUTOMATION_MAX_ITERATIONS ||
-        (loopStep.inputs.iterations && i === maxIterations)
-      ) {
-        status = AutomationStepStatus.MAX_ITERATIONS
-        break
-      }
-
-      const currentItem = this.getCurrentLoopItem(loopStep, i)
       if (matchesLoopFailureCondition(loopStep, currentItem)) {
-        status = AutomationStepStatus.FAILURE_CONDITION
-        success = false
-        break
+        return {
+          ...result,
+          outputs: {
+            success: false,
+            iterations,
+            items,
+            status: AutomationStepStatus.FAILURE_CONDITION,
+          },
+        }
       }
 
       ctx.loop = { currentItem }
-      items.push(await this.executeStep(ctx, stepToLoop))
+      const loopedStepResult = await this.executeStep(ctx, stepToLoop)
+      items.push(loopedStepResult.outputs)
       ctx.loop = undefined
     }
 
-    if (i === 0) {
-      status = AutomationStepStatus.NO_ITERATIONS
-    }
-
     return {
-      id: loopStep.id,
-      stepId: loopStep.stepId,
+      id: stepToLoop.id,
+      stepId: stepToLoop.stepId,
+      inputs: stepToLoop.inputs,
       outputs: {
-        success,
-        status,
-        iterations: i,
+        success: true,
+        status:
+          iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined,
+        iterations,
         items,
       },
-      inputs: loopStep.inputs,
     }
   }
 
@@ -573,6 +591,7 @@ class Orchestrator {
           outputs.result === false
         ) {
           this.stopped = true
+          ;(outputs as any).status = AutomationStatus.STOPPED
         }
 
         return {
@@ -583,18 +602,6 @@ class Orchestrator {
         }
       }
     )
-  }
-
-  private getCurrentLoopItem(loopStep: LoopStep, index: number): any {
-    if (
-      typeof loopStep.inputs.binding === "string" &&
-      loopStep.inputs.option === LoopStepType.STRING
-    ) {
-      return automationUtils.stringSplit(loopStep.inputs.binding)[index]
-    } else if (Array.isArray(loopStep.inputs.binding)) {
-      return loopStep.inputs.binding[index]
-    }
-    return null
   }
 }
 
