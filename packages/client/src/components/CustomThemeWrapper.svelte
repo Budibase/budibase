@@ -1,5 +1,5 @@
 <script>
-  import { themeStore } from "stores"
+  import { themeStore } from "@/stores"
   import { setContext } from "svelte"
   import { Context } from "@budibase/bbui"
 

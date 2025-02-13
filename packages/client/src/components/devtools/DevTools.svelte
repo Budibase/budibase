@@ -3,7 +3,7 @@
   import { Layout, Heading, Tabs, Tab, Icon } from "@budibase/bbui"
   import DevToolsStatsTab from "./DevToolsStatsTab.svelte"
   import DevToolsComponentTab from "./DevToolsComponentTab.svelte"
-  import { devToolsStore } from "stores"
+  import { devToolsStore } from "@/stores"
 
   const context = getContext("context")
 </script>
