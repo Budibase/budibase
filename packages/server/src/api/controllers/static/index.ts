@@ -339,10 +339,13 @@ export const getSignedUploadURL = async function (
       ctx.throw(400, "bucket and key values are required")
     }
     try {
+      let endpoint = datasource?.config?.endpoint
+      if (endpoint && !endpoint.startsWith("http")) {
+        endpoint = `https://${endpoint}`
+      }
       const s3 = new S3({
         region: awsRegion,
-        endpoint: datasource?.config?.endpoint || undefined,
-
+        endpoint: endpoint,
         credentials: {
           accessKeyId: datasource?.config?.accessKeyId as string,
           secretAccessKey: datasource?.config?.secretAccessKey as string,
@@ -350,8 +353,8 @@ export const getSignedUploadURL = async function (
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = await getSignedUrl(s3, new PutObjectCommand(params))
-      if (datasource?.config?.endpoint) {
-        publicUrl = `${datasource.config.endpoint}/${bucket}/${key}`
+      if (endpoint) {
+        publicUrl = `${endpoint}/${bucket}/${key}`
       } else {
         publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
       }
