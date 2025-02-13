@@ -1,10 +1,3 @@
-export interface BindingCompletion {
-  section: {
-    name: string
-  }
-  label: string
-}
-
 export interface EnrichedBinding {
   runtimeBinding: string
   readableBinding: string

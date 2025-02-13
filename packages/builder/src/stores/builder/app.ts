@@ -39,7 +39,7 @@ interface AppMetaState {
   appInstance: { _id: string } | null
   initialised: boolean
   hasAppPackage: boolean
-  usedPlugins: Plugin[] | null
+  usedPlugins: Plugin[]
   automations: AutomationSettings
   routes: { [key: string]: any }
   version?: string
@@ -76,7 +76,7 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
   appInstance: null,
   initialised: false,
   hasAppPackage: false,
-  usedPlugins: null,
+  usedPlugins: [],
   automations: {},
   routes: {},
 }
@@ -109,7 +109,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       appInstance: app.instance,
       revertableVersion: app.revertableVersion,
       upgradableVersion: app.upgradableVersion,
-      usedPlugins: app.usedPlugins || null,
+      usedPlugins: app.usedPlugins || [],
       icon: app.icon,
       features: {
         ...INITIAL_APP_META_STATE.features,
