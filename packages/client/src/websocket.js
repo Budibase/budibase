@@ -1,8 +1,4 @@
-import {
-  builderStore,
-  environmentStore,
-  notificationStore,
-} from "./stores/index.js"
+import { builderStore, environmentStore, notificationStore } from "@/stores"
 import { get } from "svelte/store"
 import { createWebsocket } from "@budibase/frontend-core"
 
