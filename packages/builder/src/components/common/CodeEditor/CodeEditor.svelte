@@ -2,6 +2,7 @@
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
+  import Handlebars from "handlebars"
 
   import {
     autocompletion,
@@ -40,16 +41,18 @@
     indentMore,
     indentLess,
   } from "@codemirror/commands"
+  import { setDiagnostics } from "@codemirror/lint"
+  import type { Diagnostic } from "@codemirror/lint"
   import { Compartment, EditorState } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
   import type { EditorMode } from "@budibase/types"
-  import type { BindingCompletion } from "@/types"
+  import type { BindingCompletion, BindingCompletionOption } from "@/types"
 
   export let label: string | undefined = undefined
-  // TODO: work out what best type fits this
   export let completions: BindingCompletion[] = []
+  export let options: BindingCompletionOption[] = []
   export let mode: EditorMode = EditorModes.Handlebars
   export let value: string | null = ""
   export let placeholder: string | null = null
@@ -245,6 +248,95 @@
     ]
   }
 
+  async function validateHbsTemplate(
+    editor: EditorView,
+    template: string,
+    helpers: Record<string, any[]>
+  ): Promise<Diagnostic[]> {
+    const diagnostics: Diagnostic[] = []
+
+    try {
+      const ast = Handlebars.parse(template)
+
+      function traverseNodes(nodes: any[]) {
+        nodes.forEach(node => {
+          if (
+            node.type === "MustacheStatement" &&
+            node.path.type === "PathExpression"
+          ) {
+            const helperName = node.path.original
+
+            const from =
+              editor.state.doc.line(node.loc.start.line).from +
+              node.loc.start.column
+            const to =
+              editor.state.doc.line(node.loc.end.line).from +
+              node.loc.end.column
+
+            if (!(helperName in helpers)) {
+              diagnostics.push({
+                from,
+                to,
+                severity: "warning",
+                message: `"${helperName}" handler does not exist.`,
+              })
+              return
+            }
+
+            const expectedParams = helpers[helperName]
+
+            if (expectedParams) {
+              const providedParams = node.params
+              if (providedParams.length !== expectedParams.length) {
+                diagnostics.push({
+                  from,
+                  to,
+                  severity: "error",
+                  message: `Helper "${helperName}" expects ${
+                    expectedParams.length
+                  } parameters (${expectedParams.join(", ")}), but got ${
+                    providedParams.length
+                  }.`,
+                })
+              }
+            }
+          }
+
+          if (node.program) {
+            traverseNodes(node.program.body)
+          }
+        })
+      }
+
+      traverseNodes(ast.body)
+    } catch (e: any) {
+      diagnostics.push({
+        from: 0,
+        to: template.length,
+        severity: "error",
+        message: `Syntax error: ${e.message}`,
+      })
+    }
+
+    return diagnostics
+  }
+
+  // function getCompletions(): ((_: CompletionContext) => any)[] {
+  //   switch (mode.name) {
+  //     case "handlebars":
+  //       return [hbAutocomplete([...completions])]
+
+  //     case "javascript":
+  //       return [jsAutocomplete([...completions])]
+
+  //     case "text/html":
+  //       return []
+
+  //     default:
+  //       throw utils.unreachable(mode)
+  //   }
+  // }
+
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
   // TODO: work out type for base
@@ -255,6 +347,7 @@
       complete.push(
         autocompletion({
           override: [...completions],
+          // override: [...completions.map(c => c.completionDelegate)],
           closeOnBlur: true,
           icons: false,
           optionClass: completion =>
@@ -340,6 +433,31 @@
     return complete
   }
 
+  function validate(
+    value: string | null,
+    editor: EditorView,
+    mode: EditorMode,
+    options: BindingCompletionOption[]
+  ) {
+    if (!value) {
+      return
+    }
+
+    const expectedHelpers: Record<string, any[]> = {}
+
+    for (const option of options) {
+      expectedHelpers[option.label] = option.args || []
+    }
+
+    if (mode === EditorModes.Handlebars) {
+      validateHbsTemplate(editor, value, expectedHelpers).then(diagnostics => {
+        editor?.dispatch(setDiagnostics(editor.state, diagnostics))
+      })
+    }
+  }
+
+  $: validate(value, editor, mode, options)
+
   const initEditor = () => {
     const baseExtensions = buildBaseExtensions()
 
@@ -366,7 +484,6 @@
     <Label size="S">{label}</Label>
   </div>
 {/if}
-
 <div class={`code-editor ${mode?.name || ""}`}>
   <div tabindex="-1" bind:this={textarea} />
 </div>

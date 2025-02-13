@@ -373,6 +373,7 @@
               bind:getCaretPosition
               bind:insertAtPos
               {completions}
+              options={autocompleteOptions}
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing {{ or use the menu on the right"}
