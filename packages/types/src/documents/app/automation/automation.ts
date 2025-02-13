@@ -176,6 +176,7 @@ export enum AutomationFeature {
 export enum AutomationStepStatus {
   NO_ITERATIONS = "no_iterations",
   MAX_ITERATIONS = "max_iterations_reached",
+  FAILURE_CONDITION = "failure_condition",
 }
 
 export enum AutomationStatus {
@@ -190,19 +191,27 @@ export enum AutomationStoppedReason {
   TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
 }
 
+export interface AutomationStepResult {
+  id: string
+  stepId: AutomationActionStepId
+  inputs: Record<string, any>
+  outputs: Record<string, any>
+  success?: boolean
+  message?: string
+}
+
+export interface AutomationTriggerResult {
+  id: string
+  stepId: AutomationTriggerStepId
+  inputs?: Record<string, any>
+  outputs: Record<string, any>
+}
+
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: AutomationTrigger
-  steps: {
-    stepId: AutomationTriggerStepId | AutomationActionStepId
-    inputs: {
-      [key: string]: any
-    }
-    outputs: {
-      [key: string]: any
-    }
-  }[]
+  trigger: AutomationTriggerResult
+  steps: [AutomationTriggerResult, ...AutomationStepResult[]]
 }
 
 export interface DidNotTriggerResponse {
@@ -236,6 +245,7 @@ export type ActionImplementation<TInputs, TOutputs> = (
     inputs: TInputs
   } & AutomationStepInputBase
 ) => Promise<TOutputs>
+
 export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number
