@@ -1,5 +1,5 @@
 <script>
-  import { screenStore, routeStore, builderStore } from "stores"
+  import { screenStore, routeStore, builderStore } from "@/stores"
   import { get } from "svelte/store"
   import Component from "./Component.svelte"
   import Provider from "./context/Provider.svelte"
