@@ -1,17 +1,13 @@
 import * as automation from "../../index"
-import * as triggers from "../../triggers"
-import { basicTable, loopAutomation } from "../../../tests/utilities/structures"
-import { context } from "@budibase/backend-core"
+import { basicTable } from "../../../tests/utilities/structures"
 import {
   Table,
   LoopStepType,
-  AutomationResults,
   ServerLogStepOutputs,
   CreateRowStepOutputs,
   FieldType,
 } from "@budibase/types"
 import * as loopUtils from "../../loopUtils"
-import { LoopInput } from "../../../definitions/automations"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
@@ -34,41 +30,46 @@ describe("Attempt to run a basic loop automation", () => {
     config.end()
   })
 
-  async function runLoop(loopOpts?: LoopInput): Promise<AutomationResults> {
-    const appId = config.getAppId()
-    return await context.doInAppContext(appId, async () => {
-      const params = { fields: { appId } }
-      const result = await triggers.externalTrigger(
-        loopAutomation(table._id!, loopOpts),
-        params,
-        { getResponses: true }
-      )
-      if ("outputs" in result && !result.outputs.success) {
-        throw new Error("Unable to proceed - failed to return anything.")
-      }
-      return result as AutomationResults
-    })
-  }
-
   it("attempt to run a basic loop", async () => {
-    const resp = await runLoop()
-    expect(resp.steps[2].outputs.iterations).toBe(1)
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .queryRows({
+        tableId: table._id!,
+      })
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ steps.1.rows }}",
+      })
+      .serverLog({ text: "log statement" })
+      .test({ fields: {} })
+
+    expect(result.steps[1].outputs.iterations).toBe(1)
   })
 
   it("test a loop with a string", async () => {
-    const resp = await runLoop({
-      option: LoopStepType.STRING,
-      binding: "a,b,c",
-    })
-    expect(resp.steps[2].outputs.iterations).toBe(3)
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .loop({
+        option: LoopStepType.STRING,
+        binding: "a,b,c",
+      })
+      .serverLog({ text: "log statement" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.iterations).toBe(3)
   })
 
   it("test a loop with a binding that returns an integer", async () => {
-    const resp = await runLoop({
-      option: LoopStepType.ARRAY,
-      binding: "{{ 1 }}",
-    })
-    expect(resp.steps[2].outputs.iterations).toBe(1)
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ 1 }}",
+      })
+      .serverLog({ text: "log statement" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.iterations).toBe(1)
   })
 
   it("should run an automation with a trigger, loop, and create row step", async () => {

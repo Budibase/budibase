@@ -15,6 +15,8 @@ import {
   isDidNotTriggerResponse,
   SearchFilters,
   TestAutomationRequest,
+  TriggerAutomationRequest,
+  TriggerAutomationResponse,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { automations } from "@budibase/shared-core"
@@ -143,13 +145,13 @@ class StepBuilder<
   TStep extends AutomationTriggerStepId
 > extends BranchStepBuilder<TStep> {
   private readonly config: TestConfiguration
-  private readonly trigger: AutomationTrigger
+  private readonly _trigger: AutomationTrigger
   private _name: string | undefined = undefined
 
   constructor(config: TestConfiguration, trigger: AutomationTrigger) {
     super()
     this.config = config
-    this.trigger = trigger
+    this._trigger = trigger
   }
 
   name(n: string): this {
@@ -163,7 +165,7 @@ class StepBuilder<
       name,
       definition: {
         steps: this.steps,
-        trigger: this.trigger,
+        trigger: this._trigger,
         stepNames: this.stepNames,
       },
       type: "automation",
@@ -179,6 +181,13 @@ class StepBuilder<
   async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
     const runner = await this.save()
     return await runner.test(triggerOutput)
+  }
+
+  async trigger(
+    request: TriggerAutomationRequest
+  ): Promise<TriggerAutomationResponse> {
+    const runner = await this.save()
+    return await runner.trigger(request)
   }
 }
 
@@ -206,6 +215,15 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
     response.steps.shift()
 
     return response
+  }
+
+  async trigger(
+    request: TriggerAutomationRequest
+  ): Promise<TriggerAutomationResponse> {
+    return await this.config.api.automation.trigger(
+      this.automation._id!,
+      request
+    )
   }
 }
 
