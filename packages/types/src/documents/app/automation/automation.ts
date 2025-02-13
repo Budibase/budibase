@@ -192,13 +192,20 @@ export enum AutomationStoppedReason {
   TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
 }
 
+export interface AutomationStepResultOutputs {
+  success: boolean
+  [key: string]: any
+}
+
+export interface AutomationStepResultInputs {
+  [key: string]: any
+}
+
 export interface AutomationStepResult {
   id: string
   stepId: AutomationActionStepId
-  inputs: Record<string, any>
-  outputs: Record<string, any>
-  success?: boolean
-  message?: string
+  inputs: AutomationStepResultInputs
+  outputs: AutomationStepResultOutputs
 }
 
 export interface AutomationTriggerResult {
