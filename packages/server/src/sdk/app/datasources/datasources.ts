@@ -119,23 +119,19 @@ export function areRESTVariablesValid(datasource: Datasource) {
 }
 
 export function checkDatasourceTypes(schema: Integration, config: any) {
-  try {
-    for (let key of Object.keys(config)) {
-      if (!schema.datasource?.[key]) {
-        continue
-      }
-      const type = schema.datasource[key].type
-      if (
-        type === DatasourceFieldType.NUMBER &&
-        typeof config[key] === "string"
-      ) {
-        config[key] = parseFloat(config[key])
-      }
+  for (let key of Object.keys(config)) {
+    if (!schema.datasource?.[key]) {
+      continue
     }
-    return config
-  } catch (err) {
-    console.log(err)
+    const type = schema.datasource[key].type
+    if (
+      type === DatasourceFieldType.NUMBER &&
+      typeof config[key] === "string"
+    ) {
+      config[key] = parseFloat(config[key])
+    }
   }
+  return config
 }
 
 async function enrichDatasourceWithValues(
