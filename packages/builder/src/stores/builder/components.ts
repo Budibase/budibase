@@ -11,6 +11,7 @@ import {
   findComponentParent,
   findAllMatchingComponents,
   makeComponentUnique,
+  findComponentType,
 } from "@/helpers/components"
 import { getComponentFieldOptions } from "@/helpers/formFields"
 import { selectedScreen } from "./screens"
@@ -263,14 +264,25 @@ export class ComponentStore extends BudiStore<ComponentState> {
             type: "table",
           }
         } else if (setting.type === "dataProvider") {
-          // Pick closest data provider where required
+          let providerId
+
+          // Pick closest parent data provider if one exists
           const path = findComponentPath(screen.props, treeId)
           const providers = path.filter((component: Component) =>
             component._component?.endsWith("/dataprovider")
           )
-          if (providers.length) {
-            const id = providers[providers.length - 1]?._id
-            component[setting.key] = `{{ literal ${safe(id)} }}`
+          providerId = providers[providers.length - 1]?._id
+
+          // If none in our direct path, select the first one the screen
+          if (!providerId) {
+            providerId = findComponentType(
+              screen.props,
+              "@budibase/standard-components/dataprovider"
+            )?._id
+          }
+
+          if (providerId) {
+            component[setting.key] = `{{ literal ${safe(providerId)} }}`
           }
         } else if (setting.type.startsWith("field/")) {
           // Autofill form field names
