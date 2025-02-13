@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store"
 import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 import { eventStore } from "./events.js"
-import { PreviewDevice } from "@budibase/types"
+import { DropPosition, PreviewDevice } from "@budibase/types"
 
 interface BuilderStore {
   inBuilder: boolean
@@ -58,19 +58,23 @@ const createBuilderStore = () => {
       devToolsStore.actions.setAllowSelection(false)
       eventStore.actions.dispatchEvent("select-component", { id })
     },
-    updateProp: (prop, value) => {
+    updateProp: (prop: string, value: any) => {
       eventStore.actions.dispatchEvent("update-prop", { prop, value })
     },
-    updateStyles: async (styles, id) => {
+    updateStyles: async (styles: Record<string, any>, id: string) => {
       await eventStore.actions.dispatchEvent("update-styles", {
         styles,
         id,
       })
     },
-    keyDown: (key, ctrlKey) => {
+    keyDown: (key: string, ctrlKey: boolean) => {
       eventStore.actions.dispatchEvent("key-down", { key, ctrlKey })
     },
-    duplicateComponent: (id, mode = "below", selectComponent = true) => {
+    duplicateComponent: (
+      id: string,
+      mode = DropPosition.BELOW,
+      selectComponent = true
+    ) => {
       eventStore.actions.dispatchEvent("duplicate-component", {
         id,
         mode,
@@ -136,7 +140,7 @@ const createBuilderStore = () => {
       // Notify the builder so we can reload component definitions
       eventStore.actions.dispatchEvent("reload-plugin")
     },
-    addParentComponent: (componentId, parentType) => {
+    addParentComponent: (componentId: any, parentType: any) => {
       eventStore.actions.dispatchEvent("add-parent-component", {
         componentId,
         parentType,
