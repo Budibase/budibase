@@ -7,11 +7,12 @@ import {
   DropPosition,
   PingSource,
   PreviewDevice,
+  Screen,
 } from "@budibase/types"
 
 interface BuilderStore {
   inBuilder: boolean
-  screen: string | null
+  screen: Screen | null
   selectedComponentId: string | null
   editMode: boolean
   previewId: string | null
@@ -25,7 +26,7 @@ interface BuilderStore {
   metadata: { componentId: string; step: number } | null
   snippets: string | null
   componentErrors: {}
-  layout: null
+  layout: any
 }
 
 const createBuilderStore = () => {
