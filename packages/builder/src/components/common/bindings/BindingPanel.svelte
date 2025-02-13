@@ -61,6 +61,8 @@
   let mode: BindingMode | null
   let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
+  let jsValue = initialValueJS ? value : null
+  let hbsValue = initialValueJS ? null : value
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
   let targetMode: BindingMode | null = null
@@ -68,10 +70,6 @@
   let expressionLogs: Log[] | undefined
   let expressionError: string | undefined
   let evaluating = false
-
-  // Ensure these values are not stale
-  $: jsValue = initialValueJS ? value : null
-  $: hbsValue = initialValueJS ? null : value
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)

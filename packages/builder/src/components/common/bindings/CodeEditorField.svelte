@@ -36,6 +36,7 @@
   export let context = null
   export let autofocusEditor = false
   export let placeholder = null
+  export let height = 180
 
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
@@ -131,7 +132,7 @@
   }
 </script>
 
-<div class="code-panel">
+<div class="code-panel" style="height:{height}px;">
   <div class="editor">
     {#key jsCompletions}
       <CodeEditor
@@ -154,7 +155,6 @@
 
 <style>
   .code-panel {
-    height: 100%;
     display: flex;
   }
 
