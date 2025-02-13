@@ -274,26 +274,3 @@ export function stringSplit(value: string | string[]) {
   }
   return value.split(",")
 }
-
-export function typecastForLooping(input: LoopStepInputs) {
-  if (!input || !input.binding) {
-    return null
-  }
-  try {
-    switch (input.option) {
-      case LoopStepType.ARRAY:
-        if (typeof input.binding === "string") {
-          return JSON.parse(input.binding)
-        }
-        break
-      case LoopStepType.STRING:
-        if (Array.isArray(input.binding)) {
-          return input.binding.join(",")
-        }
-        break
-    }
-  } catch (err) {
-    throw new Error("Unable to cast to correct type")
-  }
-  return input.binding
-}

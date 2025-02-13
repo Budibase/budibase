@@ -176,7 +176,8 @@ export enum AutomationFeature {
 export enum AutomationStepStatus {
   NO_ITERATIONS = "no_iterations",
   MAX_ITERATIONS = "max_iterations_reached",
-  FAILURE_CONDITION = "failure_condition",
+  FAILURE_CONDITION = "FAILURE_CONDITION_MET",
+  INCORRECT_TYPE = "INCORRECT_TYPE",
 }
 
 export enum AutomationStatus {

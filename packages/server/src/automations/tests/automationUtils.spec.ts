@@ -1,9 +1,4 @@
-import {
-  typecastForLooping,
-  cleanInputValues,
-  substituteLoopStep,
-} from "../automationUtils"
-import { LoopStepType } from "@budibase/types"
+import { cleanInputValues, substituteLoopStep } from "../automationUtils"
 
 describe("automationUtils", () => {
   describe("substituteLoopStep", () => {
@@ -27,29 +22,6 @@ describe("automationUtils", () => {
       ).toBe(
         `loop {{ step.2.currentItem._id }}loop loop{{ step.2.currentItem._id }}loop`
       )
-    })
-  })
-
-  describe("typeCastForLooping", () => {
-    it("should parse to correct type", () => {
-      expect(
-        typecastForLooping({ option: LoopStepType.ARRAY, binding: [1, 2, 3] })
-      ).toEqual([1, 2, 3])
-      expect(
-        typecastForLooping({ option: LoopStepType.ARRAY, binding: "[1,2,3]" })
-      ).toEqual([1, 2, 3])
-      expect(
-        typecastForLooping({ option: LoopStepType.STRING, binding: [1, 2, 3] })
-      ).toEqual("1,2,3")
-    })
-    it("should handle null values", () => {
-      // expect it to handle where the binding is null
-      expect(
-        typecastForLooping({ option: LoopStepType.ARRAY, binding: null })
-      ).toEqual(null)
-      expect(() =>
-        typecastForLooping({ option: LoopStepType.ARRAY, binding: "test" })
-      ).toThrow()
     })
   })
 
