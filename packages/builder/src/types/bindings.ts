@@ -12,6 +12,6 @@ export interface BindingCompletionOption extends Completion {
 export type CodeValidator = Record<
   string,
   {
-    arguments: any[]
+    arguments?: any[]
   }
 >

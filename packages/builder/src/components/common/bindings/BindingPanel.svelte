@@ -110,6 +110,12 @@
       }
       return validations
     }, {}),
+    ...helperOptions.reduce<CodeValidator>((validations, option) => {
+      validations[option.label] = {
+        arguments: option.args,
+      }
+      return validations
+    }, {}),
   }
 
   $: {
