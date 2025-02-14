@@ -13,18 +13,18 @@
     snippetAutoComplete,
     EditorModes,
     bindingsToCompletions,
+    jsHelperAutocomplete,
   } from "../CodeEditor"
   import { JsonFormatter } from "@budibase/frontend-core"
   import { licensing } from "@/stores/portal"
   import type {
     EnrichedBinding,
-    BindingCompletion,
     Snippet,
     CaretPositionFn,
     InsertAtPositionFn,
     JSONValue,
   } from "@budibase/types"
-  import type { CompletionContext } from "@codemirror/autocomplete"
+  import type { BindingCompletion, BindingCompletionOption } from "@/types"
   import { snippets } from "@/stores/builder"
 
   const dispatch = createEventDispatcher()
@@ -48,27 +48,31 @@
   $: enrichedBindings = enrichBindings(bindings, context, $snippets)
   $: editorMode = EditorModes.JS
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
-  $: jsCompletions = getJSCompletions(
-    bindingCompletions,
-    $snippets,
-    useSnippets
-  )
+  $: jsCompletions = getJSCompletions(bindingCompletions, $snippets, {
+    useHelpers: allowHelpers,
+    useSnippets,
+  })
 
   const getJSCompletions = (
-    bindingCompletions: BindingCompletion[],
+    bindingCompletions: BindingCompletionOption[],
     snippets: Snippet[] | null,
-    useSnippets?: boolean
+    config: {
+      useHelpers: boolean
+      useSnippets: boolean
+    }
   ) => {
-    const completions: ((_: CompletionContext) => any)[] = [
-      jsAutocomplete([
-        ...bindingCompletions,
-        ...(allowHelpers ? getHelperCompletions(EditorModes.JS) : []),
-      ]),
-    ]
-    if (useSnippets && snippets) {
+    const completions: BindingCompletion[] = []
+    if (bindingCompletions.length) {
+      completions.push(jsAutocomplete([...bindingCompletions]))
+    }
+    if (config.useHelpers) {
+      completions.push(
+        jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)])
+      )
+    }
+    if (config.useSnippets && snippets) {
       completions.push(snippetAutoComplete(snippets))
     }
-
     return completions
   }
 
