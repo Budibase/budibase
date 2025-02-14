@@ -70,8 +70,6 @@
   let expressionLogs: Log[] | undefined
   let expressionError: string | undefined
   let evaluating = false
-  let completions: BindingCompletion[] = []
-  let autocompleteOptions: BindingCompletionOption[] = []
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -92,41 +90,18 @@
   $: requestEval(runtimeExpression, context, snippets)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
-  function getOptions(
-    mode: typeof editorMode,
-    bindings: EnrichedBinding[]
-  ): [BindingCompletionOption[], BindingCompletion[]] {
-    const autocompleteOptions = []
-    const completions = []
+  $: bindingOptions = bindingsToCompletions(bindings, editorMode)
+  $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
+  $: snippetsOptions =
+    usingJS && useSnippets && snippets?.length ? snippets : []
 
-    const bindingOptions = bindingsToCompletions(bindings, editorMode)
-    const helperOptions = getHelperCompletions(mode)
-
-    if (mode.name === "handlebars") {
-      autocompleteOptions.push(...bindingOptions)
-      autocompleteOptions.push(...helperOptions)
-
-      completions.push(hbAutocomplete(autocompleteOptions))
-    } else if (mode.name === "javascript") {
-      if (bindingOptions.length) {
-        completions.push(jsAutocomplete(bindingOptions))
-      }
-
-      if (allowHelpers) {
-        completions.push(jsHelperAutocomplete(helperOptions))
-      }
-      if (useSnippets && snippets?.length) {
-        completions.push(snippetAutoComplete(snippets))
-      }
-    }
-
-    return [autocompleteOptions, completions]
-  }
-
-  $: [autocompleteOptions, completions] = getOptions(
-    editorMode,
-    enrichedBindings
-  )
+  $: completions = !usingJS
+    ? [hbAutocomplete([...bindingOptions, ...helperOptions])]
+    : [
+        jsAutocomplete(bindingOptions),
+        jsHelperAutocomplete(helperOptions),
+        snippetAutoComplete(snippetsOptions),
+      ]
 
   $: {
     // Ensure a valid side panel option is always selected
@@ -373,7 +348,6 @@
               bind:getCaretPosition
               bind:insertAtPos
               {completions}
-              options={autocompleteOptions}
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing {{ or use the menu on the right"}

@@ -137,9 +137,13 @@ export const hbAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
   function coreCompletion(context: CompletionContext) {
-    let bindingStart = context.matchBefore(EditorModes.Handlebars.match)
+    if (!baseCompletions.length) {
+      return null
+    }
 
-    let options = baseCompletions || []
+    const bindingStart = context.matchBefore(EditorModes.Handlebars.match)
+
+    const options = baseCompletions
 
     if (!bindingStart) {
       return null
@@ -150,7 +154,7 @@ export const hbAutocomplete = (
       return null
     }
     const query = bindingStart.text.replace(match[0], "")
-    let filtered = bindingFilter(options, query)
+    const filtered = bindingFilter(options, query)
 
     return {
       from: bindingStart.from + match[0].length,
@@ -170,8 +174,12 @@ export const jsAutocomplete = (
   baseCompletions: BindingCompletionOption[]
 ): BindingCompletion => {
   function coreCompletion(context: CompletionContext) {
-    let jsBinding = wrappedAutocompleteMatch(context)
-    let options = baseCompletions || []
+    if (!baseCompletions.length) {
+      return null
+    }
+
+    const jsBinding = wrappedAutocompleteMatch(context)
+    const options = baseCompletions
 
     if (jsBinding) {
       // Accommodate spaces
@@ -210,6 +218,10 @@ function setAutocomplete(
   options: BindingCompletionOption[]
 ): BindingCompletion {
   return function (context: CompletionContext) {
+    if (!options.length) {
+      return null
+    }
+
     if (wrappedAutocompleteMatch(context)) {
       return null
     }
