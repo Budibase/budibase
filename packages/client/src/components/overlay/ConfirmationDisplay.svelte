@@ -1,5 +1,5 @@
 <script>
-  import { confirmationStore } from "stores"
+  import { confirmationStore } from "@/stores"
   import { Modal, ModalContent } from "@budibase/bbui"
 </script>
 

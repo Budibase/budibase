@@ -1,4 +1,4 @@
-import { builderStore } from "stores"
+import { builderStore } from "@/stores"
 
 /**
  * Helper to build a CSS string from a style object.
