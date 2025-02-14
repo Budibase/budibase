@@ -1,9 +1,8 @@
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
-import { PreviewDevice } from "@budibase/types"
+import { PreviewDevice, ComponentContext } from "@budibase/types"
 
 type PreviewEventHandler = (name: string, payload?: any) => void
-type ComponentContext = Record<string, any>
 
 interface PreviewState {
   previewDevice: PreviewDevice
@@ -84,6 +83,10 @@ export class PreviewStore extends BudiStore<PreviewState> {
 
   updateState(data: Record<string, any>) {
     this.sendEvent("builder-state", data)
+  }
+
+  setUrlTestData(data: Record<string, any>) {
+    this.sendEvent("builder-url-test-data", data)
   }
 
   requestComponentContext() {
