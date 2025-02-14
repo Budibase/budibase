@@ -46,6 +46,8 @@
   let open: boolean
   let selectedValue: string[] | string
 
+  // need a cast version of this for reactivity, components below aren't typed
+  $: castSelectedValue = selectedValue as any
   $: multiselect =
     [FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
     fieldSchema?.relationshipType !== "one-to-many"
