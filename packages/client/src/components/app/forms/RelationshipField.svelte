@@ -186,7 +186,11 @@
       (selectedValue && !optionsObj[selectedValue as string])
     ) {
       await fetch.update({
-        query: { oneOf: { _id: Array.isArray(selectedValue) ? selectedValue : [selectedValue] }}
+        query: {
+          oneOf: {
+            _id: Array.isArray(selectedValue) ? selectedValue : [selectedValue],
+          },
+        },
       })
     }
 
