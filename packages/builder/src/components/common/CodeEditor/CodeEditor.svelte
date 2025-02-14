@@ -284,17 +284,19 @@
               return
             }
 
-            const config = validations[helperName]
+            const { arguments: expectedArguments = [] } =
+              validations[helperName]
 
             const providedParams = node.params
-            if (providedParams.length !== config.arguments.length) {
+
+            if (providedParams.length !== expectedArguments.length) {
               diagnostics.push({
                 from,
                 to,
                 severity: "error",
                 message: `Helper "${helperName}" expects ${
-                  config.arguments.length
-                } parameters (${config.arguments.join(", ")}), but got ${
+                  expectedArguments.length
+                } parameters (${expectedArguments.join(", ")}), but got ${
                   providedParams.length
                 }.`,
               })
