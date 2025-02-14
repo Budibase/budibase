@@ -1,20 +1,20 @@
-import { layoutStore } from "./layouts.js"
-import { appStore } from "./app.js"
+import { layoutStore } from "./layouts"
+import { appStore } from "./app"
 import { componentStore, selectedComponent } from "./components"
-import { navigationStore } from "./navigation.js"
-import { themeStore } from "./theme.js"
+import { navigationStore } from "./navigation"
+import { themeStore } from "./theme"
 import { screenStore, selectedScreen, sortedScreens } from "./screens"
-import { builderStore } from "./builder.js"
-import { hoverStore } from "./hover.js"
-import { previewStore } from "./preview.js"
+import { builderStore } from "./builder"
+import { hoverStore } from "./hover"
+import { previewStore } from "./preview"
 import {
   automationStore,
   selectedAutomation,
   automationHistoryStore,
-} from "./automations.js"
-import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
-import { deploymentStore } from "./deployments.js"
-import { contextMenuStore } from "./contextMenu.js"
+} from "./automations"
+import { userStore, userSelectedResourceMap, isOnlyUser } from "./users"
+import { deploymentStore } from "./deployments"
+import { contextMenuStore } from "./contextMenu"
 import { snippets } from "./snippets"
 import {
   screenComponentsList,
