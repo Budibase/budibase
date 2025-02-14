@@ -84,6 +84,7 @@ const helpersToCompletion = (
     return {
       label: helperName,
       args: helper.args,
+      requiresBlock: helper.requiresBlock,
       info: () => buildHelperInfoNode(helper),
       type: "helper",
       section: helperSection,

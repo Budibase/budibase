@@ -7,11 +7,13 @@ export type BindingCompletion = (context: CompletionContext) => {
 
 export interface BindingCompletionOption extends Completion {
   args?: any[]
+  requiresBlock?: boolean
 }
 
 export type CodeValidator = Record<
   string,
   {
     arguments?: any[]
+    requiresBlock?: boolean
   }
 >
