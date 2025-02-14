@@ -42,7 +42,7 @@
     JSONValue,
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
-  import type { BindingCompletion, BindingCompletionOption } from "@/types"
+  import type { CodeValidator } from "@/types"
 
   const dispatch = createEventDispatcher()
 
@@ -102,6 +102,15 @@
         jsHelperAutocomplete(helperOptions),
         snippetAutoComplete(snippetsOptions),
       ]
+
+  $: validations = {
+    ...bindingOptions.reduce<CodeValidator>((validations, option) => {
+      validations[option.label] = {
+        arguments: [],
+      }
+      return validations
+    }, {}),
+  }
 
   $: {
     // Ensure a valid side panel option is always selected
@@ -348,6 +357,7 @@
               bind:getCaretPosition
               bind:insertAtPos
               {completions}
+              {validations}
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing {{ or use the menu on the right"}
