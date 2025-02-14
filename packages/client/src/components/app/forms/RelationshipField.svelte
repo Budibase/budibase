@@ -4,36 +4,43 @@
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
+  import type { SearchFilter, RelationshipFieldMetadata, Table, Row } from "@budibase/types"
 
   const { API } = getContext("sdk")
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let placeholder: string | undefined = undefined
+  export let placeholder: any = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
   export let validation: any
   export let autocomplete: boolean = true
   export let defaultValue: string | undefined = undefined
   export let onChange: any
-  export let filter:
-  export let datasourceType: string = "table"
+  export let filter: SearchFilter[]
+  // not really obvious how to type this - some components pass other things here
+  // but it looks like the component data fetch should only work with tables
+  export let datasourceType: "table" = "table"
   export let primaryDisplay: string | undefined = undefined
-  export let span: string | undefined = undefined
+  export let span: number | undefined = undefined
   export let helpText: string | undefined = undefined
-  export let type: FieldType.LINK | FieldType.BB_REFERENCE = FieldType.LINK
+  export let type: FieldType.LINK | FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE = FieldType.LINK
 
-  let fieldState
-  let fieldApi
-  let fieldSchema
-  let tableDefinition
-  let searchTerm
-  let open
+  type RelationshipValue = { _id: string; [key: string]: any }
+  type OptionObj = Record<string, RelationshipValue>
+  type OptionsObjType = Record<string, OptionObj>
+
+  let fieldState: any
+  let fieldApi: any
+  let fieldSchema: RelationshipFieldMetadata | undefined
+  let tableDefinition: Table | null | undefined
+  let searchTerm: any
+  let open: boolean
 
   $: multiselect =
     [FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
     fieldSchema?.relationshipType !== "one-to-many"
-  $: linkedTableId = fieldSchema?.tableId
+  $: linkedTableId = fieldSchema?.tableId!
   $: fetch = fetchData({
     API,
     datasource: {
@@ -53,7 +60,7 @@
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: primaryDisplay = primaryDisplay || tableDefinition?.primaryDisplay
 
-  let optionsObj
+  let optionsObj: OptionsObjType = {}
   const debouncedFetchRows = Utils.debounce(fetchRows, 250)
 
   $: {
@@ -64,7 +71,7 @@
       if (!Array.isArray(valueAsSafeArray)) {
         valueAsSafeArray = [fieldState.value]
       }
-      optionsObj = valueAsSafeArray.reduce((accumulator, value) => {
+      optionsObj = valueAsSafeArray.reduce((accumulator: OptionObj, value: { _id: string, primaryDisplay: any }) => {
         // fieldState has to be an array of strings to be valid for an update
         // therefore we cannot guarantee value will be an object
         // https://linear.app/budibase/issue/BUDI-7577/refactor-the-relationshipfield-component-to-have-better-support-for
@@ -81,10 +88,10 @@
   }
 
   $: enrichedOptions = enrichOptions(optionsObj, $fetch.rows)
-  const enrichOptions = (optionsObj, fetchResults) => {
+  const enrichOptions = (optionsObj: OptionsObjType, fetchResults: Row[]) => {
     const result = (fetchResults || [])?.reduce((accumulator, row) => {
-      if (!accumulator[row._id]) {
-        accumulator[row._id] = row
+      if (!accumulator[row._id!]) {
+        accumulator[row._id!] = row
       }
       return accumulator
     }, optionsObj || {})
@@ -93,24 +100,24 @@
   }
   $: {
     // We don't want to reorder while the dropdown is open, to avoid UX jumps
-    if (!open) {
-      enrichedOptions = enrichedOptions.sort((a, b) => {
+    if (!open && primaryDisplay) {
+      enrichedOptions = enrichedOptions.sort((a: OptionObj, b: OptionObj) => {
         const selectedValues = flatten(fieldState?.value) || []
 
-        const aIsSelected = selectedValues.find(v => v === a._id)
-        const bIsSelected = selectedValues.find(v => v === b._id)
+        const aIsSelected = selectedValues.find((v: RelationshipValue) => v === a._id)
+        const bIsSelected = selectedValues.find((v: RelationshipValue) => v === b._id)
         if (aIsSelected && !bIsSelected) {
           return -1
         } else if (!aIsSelected && bIsSelected) {
           return 1
         }
 
-        return a[primaryDisplay] > b[primaryDisplay]
+        return (a[primaryDisplay] > b[primaryDisplay]) as unknown as number
       })
     }
   }
 
-  $: forceFetchRows(filter, defaultValue)
+  $: { if (filter || defaultValue) { forceFetchRows() } }
   $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
 
   const forceFetchRows = async () => {
@@ -120,7 +127,7 @@
     selectedValue = []
     debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
   }
-  async function fetchRows(searchTerm, primaryDisplay, defaultVal) {
+  async function fetchRows(searchTerm: any, primaryDisplay: string, defaultVal: string | string[]) {
     const allRowsFetched =
       $fetch.loaded &&
       !Object.keys($fetch.query?.string || {}).length &&
@@ -130,20 +137,17 @@
       return
     }
     // must be an array
-    if (defaultVal && !Array.isArray(defaultVal)) {
-      defaultVal = defaultVal.split(",")
-    }
+    const defaultValArray: string[] = !defaultVal ? [] : !Array.isArray(defaultVal) ? defaultVal.split(",") : defaultVal
 
-    const fetchMissing = (missingIds: string[])
-
-    if (defaultVal && optionsObj && defaultVal.some(val => !optionsObj[val])) {
+    if (defaultVal && optionsObj && defaultValArray.some(val => !optionsObj[val])) {
       await fetch.update({
-        query: { oneOf: { _id: defaultVal } },
+        query: { oneOf: { _id: defaultValArray } },
       })
     }
 
     // Ensure we match all filters, rather than any
-    const baseFilter = (filter || []).filter(x => x.operator !== "allOr")
+    // @ts-expect-error this doesn't fit types, but don't want to change it yet
+    const baseFilter: any = (filter || []).filter(x => x.operator !== "allOr")
     await fetch.update({
       filter: [
         ...baseFilter,
@@ -157,7 +161,7 @@
     })
   }
 
-  const flatten = values => {
+  const flatten = (values: any | any[]) => {
     if (!values) {
       return []
     }
@@ -165,17 +169,17 @@
     if (!Array.isArray(values)) {
       values = [values]
     }
-    values = values.map(value =>
+    values = values.map((value: any) =>
       typeof value === "object" ? value._id : value
     )
     return values
   }
 
-  const getDisplayName = row => {
-    return row?.[primaryDisplay] || "-"
+  const getDisplayName = (row: Row) => {
+    return row?.[primaryDisplay!] || "-"
   }
 
-  const handleChange = e => {
+  const handleChange = (e: any) => {
     let value = e.detail
     if (!multiselect) {
       value = value == null ? [] : [value]
@@ -229,7 +233,6 @@
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
       readonly={fieldState.readonly}
-      error={fieldState.error}
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}
       {placeholder}

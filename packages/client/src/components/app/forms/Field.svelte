@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { getContext, onDestroy } from "svelte"
   import { writable } from "svelte/store"
   import { Icon } from "@budibase/bbui"
@@ -6,33 +6,33 @@
   import Placeholder from "../Placeholder.svelte"
   import InnerForm from "./InnerForm.svelte"
 
-  export let label
-  export let field
-  export let fieldState
-  export let fieldApi
-  export let fieldSchema
-  export let defaultValue
-  export let type
+  export let label: string | undefined = undefined
+  export let field: string | undefined = undefined
+  export let fieldState: any
+  export let fieldApi: any
+  export let fieldSchema: any
+  export let defaultValue: string | undefined = undefined
+  export let type: any
   export let disabled = false
   export let readonly = false
-  export let validation
+  export let validation: any
   export let span = 6
-  export let helpText = null
+  export let helpText: string | undefined = undefined
 
   // Get contexts
-  const formContext = getContext("form")
-  const formStepContext = getContext("form-step")
-  const fieldGroupContext = getContext("field-group")
+  const formContext: any = getContext("form")
+  const formStepContext: any = getContext("form-step")
+  const fieldGroupContext: any = getContext("field-group")
   const { styleable, builderStore, Provider } = getContext("sdk")
-  const component = getContext("component")
+  const component: any = getContext("component")
 
   // Register field with form
   const formApi = formContext?.formApi
   const labelPos = fieldGroupContext?.labelPosition || "above"
 
-  let formField
+  let formField: any
   let touched = false
-  let labelNode
+  let labelNode: any
 
   // Memoize values required to register the field to avoid loops
   const formStep = formStepContext || writable(1)
@@ -65,7 +65,7 @@
   $: $component.editing && labelNode?.focus()
 
   // Update form properties in parent component on every store change
-  $: unsubscribe = formField?.subscribe(value => {
+  $: unsubscribe = formField?.subscribe((value: any) => {
     fieldState = value?.fieldState
     fieldApi = value?.fieldApi
     fieldSchema = value?.fieldSchema
@@ -74,7 +74,7 @@
   // Determine label class from position
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
-  const registerField = info => {
+  const registerField = (info: any) => {
     formField = formApi?.registerField(
       info.field,
       info.type,
@@ -86,8 +86,9 @@
     )
   }
 
-  const updateLabel = e => {
+  const updateLabel = (e: any) => {
     if (touched) {
+      // @ts-expect-error updateProp doesn't appear to exist, needs investigation
       builderStore.actions.updateProp("label", e.target.textContent)
     }
     touched = false
