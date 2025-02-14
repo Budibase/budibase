@@ -249,6 +249,18 @@
     ]
   }
 
+  function isMustacheStatement(
+    node: hbs.AST.Statement
+  ): node is hbs.AST.MustacheStatement {
+    return node.type === "MustacheStatement"
+  }
+
+  function isBlockStatement(
+    node: hbs.AST.Statement
+  ): node is hbs.AST.BlockStatement {
+    return node.type === "BlockStatement"
+  }
+
   async function validateHbsTemplate(
     editor: EditorView,
     template: string,
@@ -259,13 +271,13 @@
     try {
       const ast = Handlebars.parse(template)
 
-      function traverseNodes(nodes: any[]) {
+      function traverseNodes(nodes: hbs.AST.Statement[]) {
         nodes.forEach(node => {
           if (
-            node.type === "MustacheStatement" &&
+            isMustacheStatement(node) &&
             node.path.type === "PathExpression"
           ) {
-            const helperName = node.path.original
+            const helperName = (node.path as hbs.AST.PathExpression).original
 
             const from =
               editor.state.doc.line(node.loc.start.line).from +
@@ -303,7 +315,7 @@
             }
           }
 
-          if (node.program) {
+          if (isBlockStatement(node)) {
             traverseNodes(node.program.body)
           }
         })
@@ -332,7 +344,6 @@
       complete.push(
         autocompletion({
           override: [...completions],
-          // override: [...completions.map(c => c.completionDelegate)],
           closeOnBlur: true,
           icons: false,
           optionClass: completion =>
