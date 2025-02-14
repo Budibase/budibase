@@ -1,6 +1,6 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
-  import Placeholder from "components/app/Placeholder.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
+  import Placeholder from "@/components/app/Placeholder.svelte"
   import { getContext } from "svelte"
   import FormBlockComponent from "../FormBlockComponent.svelte"
 

@@ -1,6 +1,6 @@
 <script>
   import { Body, Layout, Heading, Button, Tabs, Tab } from "@budibase/bbui"
-  import { builderStore, devToolsStore, componentStore } from "stores"
+  import { builderStore, devToolsStore, componentStore } from "@/stores"
   import DevToolsStat from "./DevToolsStat.svelte"
   import DevToolsComponentSettingsTab from "./DevToolsComponentSettingsTab.svelte"
   import DevToolsComponentContextTab from "./DevToolsComponentContextTab.svelte"
