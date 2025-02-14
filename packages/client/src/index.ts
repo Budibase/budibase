@@ -47,7 +47,6 @@ declare global {
     // Data from builder
     "##BUDIBASE_APP_ID##"?: string
     "##BUDIBASE_IN_BUILDER##"?: true
-    "##BUDIBASE_PREVIEW_LAYOUT##"?: Layout
     "##BUDIBASE_PREVIEW_SCREEN##"?: Screen
     "##BUDIBASE_SELECTED_COMPONENT_ID##"?: string
     "##BUDIBASE_PREVIEW_ID##"?: number
@@ -114,7 +113,6 @@ const loadBudibase = async () => {
   builderStore.set({
     ...get(builderStore),
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
-    layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
     selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],
     previewId: window["##BUDIBASE_PREVIEW_ID##"],

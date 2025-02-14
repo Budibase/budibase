@@ -28,11 +28,9 @@ interface BuilderStore {
   navigation: AppNavigation | null
   hiddenComponentIds: string[]
   usedPlugins: Plugin[] | null
-  eventResolvers: {}
   metadata: { componentId: string; step: number } | null
   snippets: Snippet[] | null
   componentErrors: Record<string, UIComponentError[]>
-  layout: any
 }
 
 const createBuilderStore = () => {
@@ -48,13 +46,9 @@ const createBuilderStore = () => {
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,
-    eventResolvers: {},
     metadata: null,
     snippets: null,
     componentErrors: {},
-
-    // Legacy - allow the builder to specify a layout
-    layout: null,
   }
   const store = writable(initialState)
   const actions = {
