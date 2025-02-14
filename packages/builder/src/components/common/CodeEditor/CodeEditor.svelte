@@ -304,7 +304,7 @@
                 from,
                 to,
                 severity: "error",
-                message: `Helper "${helperName}" requires a body.`,
+                message: `Helper "${helperName}" requires a body:\n{{#${helperName} ...}} [body] {{/${helperName}}}`,
               })
               return
             }
