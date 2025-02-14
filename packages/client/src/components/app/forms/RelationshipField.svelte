@@ -4,7 +4,12 @@
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
-  import type { SearchFilter, RelationshipFieldMetadata, Table, Row } from "@budibase/types"
+  import type {
+    SearchFilter,
+    RelationshipFieldMetadata,
+    Table,
+    Row,
+  } from "@budibase/types"
 
   const { API } = getContext("sdk")
 
@@ -24,7 +29,10 @@
   export let primaryDisplay: string | undefined = undefined
   export let span: number | undefined = undefined
   export let helpText: string | undefined = undefined
-  export let type: FieldType.LINK | FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE = FieldType.LINK
+  export let type:
+    | FieldType.LINK
+    | FieldType.BB_REFERENCE
+    | FieldType.BB_REFERENCE_SINGLE = FieldType.LINK
 
   type RelationshipValue = { _id: string; [key: string]: any }
   type OptionObj = Record<string, RelationshipValue>
@@ -36,6 +44,7 @@
   let tableDefinition: Table | null | undefined
   let searchTerm: any
   let open: boolean
+  let selectedValue: string[] | string
 
   $: multiselect =
     [FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
@@ -71,19 +80,25 @@
       if (!Array.isArray(valueAsSafeArray)) {
         valueAsSafeArray = [fieldState.value]
       }
-      optionsObj = valueAsSafeArray.reduce((accumulator: OptionObj, value: { _id: string, primaryDisplay: any }) => {
-        // fieldState has to be an array of strings to be valid for an update
-        // therefore we cannot guarantee value will be an object
-        // https://linear.app/budibase/issue/BUDI-7577/refactor-the-relationshipfield-component-to-have-better-support-for
-        if (!value._id) {
+      optionsObj = valueAsSafeArray.reduce(
+        (
+          accumulator: OptionObj,
+          value: { _id: string; primaryDisplay: any }
+        ) => {
+          // fieldState has to be an array of strings to be valid for an update
+          // therefore we cannot guarantee value will be an object
+          // https://linear.app/budibase/issue/BUDI-7577/refactor-the-relationshipfield-component-to-have-better-support-for
+          if (!value._id) {
+            return accumulator
+          }
+          accumulator[value._id] = {
+            _id: value._id,
+            [primaryDisplay]: value.primaryDisplay,
+          }
           return accumulator
-        }
-        accumulator[value._id] = {
-          _id: value._id,
-          [primaryDisplay]: value.primaryDisplay,
-        }
-        return accumulator
-      }, {})
+        },
+        {}
+      )
     }
   }
 
@@ -104,8 +119,12 @@
       enrichedOptions = enrichedOptions.sort((a: OptionObj, b: OptionObj) => {
         const selectedValues = flatten(fieldState?.value) || []
 
-        const aIsSelected = selectedValues.find((v: RelationshipValue) => v === a._id)
-        const bIsSelected = selectedValues.find((v: RelationshipValue) => v === b._id)
+        const aIsSelected = selectedValues.find(
+          (v: RelationshipValue) => v === a._id
+        )
+        const bIsSelected = selectedValues.find(
+          (v: RelationshipValue) => v === b._id
+        )
         if (aIsSelected && !bIsSelected) {
           return -1
         } else if (!aIsSelected && bIsSelected) {
@@ -117,7 +136,11 @@
     }
   }
 
-  $: { if (filter || defaultValue) { forceFetchRows() } }
+  $: {
+    if (filter || defaultValue) {
+      forceFetchRows()
+    }
+  }
   $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
 
   const forceFetchRows = async () => {
@@ -127,7 +150,11 @@
     selectedValue = []
     debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
   }
-  async function fetchRows(searchTerm: any, primaryDisplay: string, defaultVal: string | string[]) {
+  async function fetchRows(
+    searchTerm: any,
+    primaryDisplay: string,
+    defaultVal: string | string[]
+  ) {
     const allRowsFetched =
       $fetch.loaded &&
       !Object.keys($fetch.query?.string || {}).length &&
@@ -137,11 +164,29 @@
       return
     }
     // must be an array
-    const defaultValArray: string[] = !defaultVal ? [] : !Array.isArray(defaultVal) ? defaultVal.split(",") : defaultVal
+    const defaultValArray: string[] = !defaultVal
+      ? []
+      : !Array.isArray(defaultVal)
+      ? defaultVal.split(",")
+      : defaultVal
 
-    if (defaultVal && optionsObj && defaultValArray.some(val => !optionsObj[val])) {
+    if (
+      defaultVal &&
+      optionsObj &&
+      defaultValArray.some(val => !optionsObj[val])
+    ) {
       await fetch.update({
         query: { oneOf: { _id: defaultValArray } },
+      })
+    }
+
+    if (
+      (Array.isArray(selectedValue) &&
+        selectedValue.some(val => !optionsObj[val])) ||
+      (selectedValue && !optionsObj[selectedValue as string])
+    ) {
+      await fetch.update({
+        query: { oneOf: { _id: Array.isArray(selectedValue) ? selectedValue : [selectedValue] }}
       })
     }
 
@@ -206,6 +251,10 @@
       fetch.nextPage()
     }
   }
+
+  const componentValue = () => {
+    return selectedValue as any
+  }
 </script>
 
 <Field
@@ -227,7 +276,7 @@
       this={component}
       options={enrichedOptions}
       {autocomplete}
-      value={selectedValue}
+      value={componentValue()}
       on:change={handleChange}
       on:loadMore={loadMore}
       id={fieldState.fieldId}
