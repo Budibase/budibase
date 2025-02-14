@@ -247,3 +247,7 @@ export function hasCircularStructure(json: any) {
   }
   return false
 }
+
+export function urlHasProtocol(url: string): boolean {
+  return !!url.match(/^.+:\/\/.+$/)
+}
