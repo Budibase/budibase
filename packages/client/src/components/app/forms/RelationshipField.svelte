@@ -23,8 +23,6 @@
   export let defaultValue: string | undefined = undefined
   export let onChange: any
   export let filter: SearchFilter[]
-  // not really obvious how to type this - some components pass other things here
-  // but it looks like the component data fetch should only work with tables
   export let datasourceType: "table" | "user" | "groupUser" = "table"
   export let primaryDisplay: string | undefined = undefined
   export let span: number | undefined = undefined
