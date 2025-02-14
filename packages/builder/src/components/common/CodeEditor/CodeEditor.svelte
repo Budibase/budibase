@@ -49,11 +49,11 @@
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
   import type { EditorMode } from "@budibase/types"
-  import type { BindingCompletion, BindingCompletionOption } from "@/types"
+  import type { BindingCompletion, CodeValidator } from "@/types"
 
   export let label: string | undefined = undefined
   export let completions: BindingCompletion[] = []
-  export let options: BindingCompletionOption[] = []
+  export let validations: CodeValidator | null = null
   export let mode: EditorMode = EditorModes.Handlebars
   export let value: string | null = ""
   export let placeholder: string | null = null
@@ -252,7 +252,7 @@
   async function validateHbsTemplate(
     editor: EditorView,
     template: string,
-    helpers: Record<string, any[]>
+    validations: CodeValidator
   ): Promise<Diagnostic[]> {
     const diagnostics: Diagnostic[] = []
 
@@ -274,7 +274,7 @@
               editor.state.doc.line(node.loc.end.line).from +
               node.loc.end.column
 
-            if (!(helperName in helpers)) {
+            if (!(helperName in validations)) {
               diagnostics.push({
                 from,
                 to,
@@ -284,22 +284,20 @@
               return
             }
 
-            const expectedParams = helpers[helperName]
+            const config = validations[helperName]
 
-            if (expectedParams) {
-              const providedParams = node.params
-              if (providedParams.length !== expectedParams.length) {
-                diagnostics.push({
-                  from,
-                  to,
-                  severity: "error",
-                  message: `Helper "${helperName}" expects ${
-                    expectedParams.length
-                  } parameters (${expectedParams.join(", ")}), but got ${
-                    providedParams.length
-                  }.`,
-                })
-              }
+            const providedParams = node.params
+            if (providedParams.length !== config.arguments.length) {
+              diagnostics.push({
+                from,
+                to,
+                severity: "error",
+                message: `Helper "${helperName}" expects ${
+                  config.arguments.length
+                } parameters (${config.arguments.join(", ")}), but got ${
+                  providedParams.length
+                }.`,
+              })
             }
           }
 
@@ -422,26 +420,20 @@
     value: string | null,
     editor: EditorView,
     mode: EditorMode,
-    options: BindingCompletionOption[]
+    validations: CodeValidator | null
   ) {
-    if (!value) {
+    if (!value || !validations) {
       return
     }
 
-    const expectedHelpers: Record<string, any[]> = {}
-
-    for (const option of options) {
-      expectedHelpers[option.label] = option.args || []
-    }
-
     if (mode === EditorModes.Handlebars) {
-      validateHbsTemplate(editor, value, expectedHelpers).then(diagnostics => {
+      validateHbsTemplate(editor, value, validations).then(diagnostics => {
         editor?.dispatch(setDiagnostics(editor.state, diagnostics))
       })
     }
   }
 
-  $: validate(value, editor, mode, options)
+  $: validate(value, editor, mode, validations)
 
   const initEditor = () => {
     const baseExtensions = buildBaseExtensions()

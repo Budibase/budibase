@@ -8,3 +8,10 @@ export type BindingCompletion = (context: CompletionContext) => {
 export interface BindingCompletionOption extends Completion {
   args?: any[]
 }
+
+export type CodeValidator = Record<
+  string,
+  {
+    arguments: any[]
+  }
+>
