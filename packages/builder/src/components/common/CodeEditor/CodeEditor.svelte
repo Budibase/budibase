@@ -296,8 +296,18 @@
               return
             }
 
-            const { arguments: expectedArguments = [] } =
+            const { arguments: expectedArguments = [], requiresBlock } =
               validations[helperName]
+
+            if (requiresBlock && !isBlockStatement(node)) {
+              diagnostics.push({
+                from,
+                to,
+                severity: "error",
+                message: `Helper "${helperName}" requires a body.`,
+              })
+              return
+            }
 
             const providedParams = node.params
 
