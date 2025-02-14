@@ -1455,7 +1455,8 @@
         "type": "icon",
         "label": "Icon",
         "key": "icon",
-        "required": true
+        "required": true,
+        "defaultValue": "ri-star-fill"
       },
       {
         "type": "select",

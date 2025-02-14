@@ -3,7 +3,7 @@
   // because it functions similarly to one
   import { getContext, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
-  import { featuresStore } from "stores"
+  import { featuresStore } from "@/stores"
   import { Grid } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
 

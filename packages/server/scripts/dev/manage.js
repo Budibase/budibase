@@ -46,6 +46,7 @@ async function init() {
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
     PASSWORD_MIN_LENGTH: "1",
+    OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
   }
 
   config = { ...config, ...existingConfig }
