@@ -18,7 +18,6 @@ import type { ActionTypes } from "@/constants"
 import { Readable } from "svelte/store"
 import {
   Screen,
-  Layout,
   Theme,
   AppCustomTheme,
   PreviewDevice,
@@ -57,13 +56,8 @@ declare global {
     "##BUDIBASE_PREVIEW_NAVIGATION##"?: AppNavigation
     "##BUDIBASE_HIDDEN_COMPONENT_IDS##"?: string[]
     "##BUDIBASE_USED_PLUGINS##"?: Plugin[]
-    "##BUDIBASE_LOCATION##"?: {
-      protocol: string
-      hostname: string
-      port: string
-    }
     "##BUDIBASE_SNIPPETS##"?: Snippet[]
-    "##BUDIBASE_COMPONENT_ERRORS##"?: Record<string, UIComponentError>[]
+    "##BUDIBASE_COMPONENT_ERRORS##"?: Record<string, UIComponentError[]>
     "##BUDIBASE_CUSTOM_COMPONENTS##"?: CustomComponent[]
 
     // Other flags
@@ -122,7 +116,6 @@ const loadBudibase = async () => {
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
-    location: window["##BUDIBASE_LOCATION##"],
     snippets: window["##BUDIBASE_SNIPPETS##"],
     componentErrors: window["##BUDIBASE_COMPONENT_ERRORS##"],
   })
