@@ -36,11 +36,6 @@ const createScreenStore = () => {
         activeScreen = Helpers.cloneDeep($builderStore.screen)
         screens = [activeScreen]
 
-        // Legacy - allow the builder to specify a layout
-        if ($builderStore.layout) {
-          activeLayout = $builderStore.layout
-        }
-
         // Attach meta
         const errors = $builderStore.componentErrors || {}
         const attachComponentMeta = component => {
