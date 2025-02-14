@@ -1,4 +1,5 @@
 <script lang="ts">
+  /* global hbs */
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
