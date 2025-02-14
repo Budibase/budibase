@@ -271,7 +271,13 @@
     try {
       const ast = Handlebars.parse(template)
 
-      function traverseNodes(nodes: hbs.AST.Statement[]) {
+      function traverseNodes(
+        nodes: hbs.AST.Statement[],
+        options?: {
+          ignoreMissing?: boolean
+        }
+      ) {
+        const ignoreMissing = options?.ignoreMissing || false
         nodes.forEach(node => {
           if (
             isMustacheStatement(node) &&
@@ -287,12 +293,14 @@
               node.loc.end.column
 
             if (!(helperName in validations)) {
-              diagnostics.push({
-                from,
-                to,
-                severity: "warning",
-                message: `"${helperName}" handler does not exist.`,
-              })
+              if (!ignoreMissing) {
+                diagnostics.push({
+                  from,
+                  to,
+                  severity: "warning",
+                  message: `"${helperName}" handler does not exist.`,
+                })
+              }
               return
             }
 
@@ -326,7 +334,7 @@
           }
 
           if (isBlockStatement(node)) {
-            traverseNodes(node.program.body)
+            traverseNodes(node.program.body, { ignoreMissing: true })
           }
         })
       }
