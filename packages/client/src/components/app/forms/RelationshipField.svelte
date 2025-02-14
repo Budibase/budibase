@@ -25,7 +25,7 @@
   export let filter: SearchFilter[]
   // not really obvious how to type this - some components pass other things here
   // but it looks like the component data fetch should only work with tables
-  export let datasourceType: "table" = "table"
+  export let datasourceType: "table" | "user" | "groupUser" = "table"
   export let primaryDisplay: string | undefined = undefined
   export let span: number | undefined = undefined
   export let helpText: string | undefined = undefined
@@ -55,7 +55,9 @@
   $: fetch = fetchData({
     API,
     datasource: {
-      type: datasourceType,
+      // typing here doesn't seem correct - we have the correct datasourceType options
+      // but when we configure the fetchData, it seems to think only "table" is valid
+      type: datasourceType as any,
       tableId: linkedTableId,
     },
     options: {
@@ -257,10 +259,6 @@
       fetch.nextPage()
     }
   }
-
-  const componentValue = () => {
-    return selectedValue as any
-  }
 </script>
 
 <Field
@@ -282,7 +280,7 @@
       this={component}
       options={enrichedOptions}
       {autocomplete}
-      value={componentValue()}
+      value={castSelectedValue}
       on:change={handleChange}
       on:loadMore={loadMore}
       id={fieldState.fieldId}
