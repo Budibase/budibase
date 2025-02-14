@@ -1,7 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { writable } from "svelte/store"
-  import { GridRowHeight, GridColumns } from "constants"
+  import { GridRowHeight, GridColumns } from "@/constants"
   import { memo } from "@budibase/frontend-core"
 
   export let onClick

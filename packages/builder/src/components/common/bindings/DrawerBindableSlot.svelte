@@ -174,7 +174,7 @@
   {:else}
     <slot />
   {/if}
-  {#if !disabled && type !== "formula" && !disabled && !attachmentTypes.includes(type)}
+  {#if !disabled && type !== "formula" && !attachmentTypes.includes(type)}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {

@@ -1,6 +1,6 @@
 <script>
   import { Helpers } from "@budibase/bbui"
-  import { notificationStore } from "stores"
+  import { notificationStore } from "@/stores"
 
   export let label
   export let value

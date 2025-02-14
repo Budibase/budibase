@@ -62,8 +62,7 @@
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
-  import { encodeJSBinding } from "@budibase/string-templates"
-  import CodeEditorField from "@/components/common/bindings/CodeEditorField.svelte"
+  import DrawerBindableCodeEditorField from "@/components/common/bindings/DrawerBindableCodeEditorField.svelte"
 
   export let automation
   export let block
@@ -144,7 +143,6 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
-  // TODO: check if it inputData != newInputData (memo)
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -161,7 +159,6 @@
   }
 
   const setDefaultEnumValues = () => {
-    // TODO: Update this for memoisation
     for (const [key, value] of schemaProperties) {
       if (value.type === "string" && value.enum && inputData[key] == null) {
         inputData[key] = value.enum[0]
@@ -910,32 +907,14 @@
               />
             {:else if value.customType === "code" && stepId === ActionStepID.EXECUTE_SCRIPT_V2}
               <div class="scriptv2-wrapper">
-                <DrawerBindableSlot
-                  title={"Edit Code"}
-                  panel={AutomationBindingPanel}
-                  type={"longform"}
-                  {schema}
-                  on:change={e => onChange({ [key]: e.detail })}
-                  value={inputData[key]}
+                <DrawerBindableCodeEditorField
                   {bindings}
-                  allowJS={true}
-                  allowHBS={false}
-                  updateOnChange={false}
+                  {schema}
+                  panel={AutomationBindingPanel}
+                  on:change={e => onChange({ [key]: e.detail })}
                   context={$memoContext}
-                >
-                  <div class="field-wrap code-editor">
-                    <CodeEditorField
-                      value={inputData[key]}
-                      {bindings}
-                      context={$memoContext}
-                      allowHBS={false}
-                      allowJS
-                      placeholder={"Add bindings by typing $"}
-                      on:blur={e =>
-                        onChange({ [key]: encodeJSBinding(e.detail) })}
-                    />
-                  </div>
-                </DrawerBindableSlot>
+                  value={inputData[key]}
+                />
               </div>
             {:else if value.customType === "code" && stepId === ActionStepID.EXECUTE_SCRIPT}
               <!-- DEPRECATED -->
@@ -1087,24 +1066,5 @@
   .js-binding-picker {
     flex: 3;
     margin-top: calc((var(--spacing-xl) * -1) + 1px);
-  }
-
-  .field-wrap :global(.cm-editor),
-  .field-wrap :global(.cm-scroller) {
-    border-radius: 4px;
-  }
-  .field-wrap {
-    box-sizing: border-box;
-    border: 1px solid var(--spectrum-global-color-gray-400);
-    border-radius: 4px;
-  }
-  .field-wrap.code-editor {
-    height: 180px;
-  }
-  .scriptv2-wrapper :global(.icon.slot-icon) {
-    top: 1px;
-    border-bottom-left-radius: var(--spectrum-alias-border-radius-regular);
-    border-right: 0px;
-    border-bottom: 1px solid var(--spectrum-alias-border-color);
   }
 </style>

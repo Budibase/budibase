@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store"
 import { push } from "svelte-spa-router"
-import { API } from "api"
+import { API } from "@/api"
 import { peekStore } from "./peek"
 import { builderStore } from "./builder"
 
@@ -119,7 +119,39 @@ const createRouteStore = () => {
     const base = window.location.href.split("#")[0]
     return `${base}#${relativeURL}`
   }
+  const setTestUrlParams = (route: string, testValue: string) => {
+    if (route === "/") {
+      return
+    }
 
+    const [pathPart, queryPart] = testValue.split("?")
+    const routeSegments = route.split("/").filter(Boolean)
+
+    // If first segment happens to be a parameter (e.g. /:foo), include it
+    const startIndex = routeSegments[0]?.startsWith(":") ? 0 : 1
+    const segments = routeSegments.slice(startIndex)
+    const testSegments = pathPart.split("/")
+
+    const params: Record<string, string> = {}
+    segments.forEach((segment, index) => {
+      if (segment.startsWith(":") && index < testSegments.length) {
+        params[segment.slice(1)] = testSegments[index]
+      }
+    })
+
+    const queryParams: Record<string, string> = {}
+    if (queryPart) {
+      queryPart.split("&").forEach(param => {
+        const [key, value] = param.split("=")
+        if (key && value) {
+          queryParams[key] = value
+        }
+      })
+    }
+
+    setQueryParams({ ...queryParams })
+    store.update(state => ({ ...state, testUrlParams: params }))
+  }
   return {
     subscribe: store.subscribe,
     actions: {
@@ -130,6 +162,7 @@ const createRouteStore = () => {
       setQueryParams,
       setActiveRoute,
       setRouterLoaded,
+      setTestUrlParams,
     },
   }
 }

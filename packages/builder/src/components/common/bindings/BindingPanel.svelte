@@ -23,6 +23,7 @@
     snippetAutoComplete,
     EditorModes,
     bindingsToCompletions,
+    jsHelperAutocomplete,
   } from "../CodeEditor"
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
@@ -34,7 +35,6 @@
   import { BindingMode, SidePanel } from "@budibase/types"
   import type {
     EnrichedBinding,
-    BindingCompletion,
     Snippet,
     Helper,
     CaretPositionFn,
@@ -42,7 +42,7 @@
     JSONValue,
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
-  import type { CompletionContext } from "@codemirror/autocomplete"
+  import type { BindingCompletion, BindingCompletionOption } from "@/types"
 
   const dispatch = createEventDispatcher()
 
@@ -61,6 +61,8 @@
   let mode: BindingMode | null
   let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
+  let jsValue: string | null = initialValueJS ? value : null
+  let hbsValue: string | null = initialValueJS ? null : value
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
   let targetMode: BindingMode | null = null
@@ -68,10 +70,6 @@
   let expressionLogs: Log[] | undefined
   let expressionError: string | undefined
   let evaluating = false
-
-  // Ensure these values are not stale
-  $: jsValue = initialValueJS ? value : null
-  $: hbsValue = initialValueJS ? null : value
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -93,7 +91,10 @@
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
   $: hbsCompletions = getHBSCompletions(bindingCompletions)
-  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, useSnippets)
+  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, {
+    useHelpers: allowHelpers,
+    useSnippets,
+  })
   $: {
     // Ensure a valid side panel option is always selected
     if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
@@ -101,7 +102,7 @@
     }
   }
 
-  const getHBSCompletions = (bindingCompletions: BindingCompletion[]) => {
+  const getHBSCompletions = (bindingCompletions: BindingCompletionOption[]) => {
     return [
       hbAutocomplete([
         ...bindingCompletions,
@@ -111,17 +112,23 @@
   }
 
   const getJSCompletions = (
-    bindingCompletions: BindingCompletion[],
+    bindingCompletions: BindingCompletionOption[],
     snippets: Snippet[] | null,
-    useSnippets?: boolean
+    config: {
+      useHelpers: boolean
+      useSnippets: boolean
+    }
   ) => {
-    const completions: ((_: CompletionContext) => any)[] = [
-      jsAutocomplete([
-        ...bindingCompletions,
-        ...getHelperCompletions(EditorModes.JS),
-      ]),
-    ]
-    if (useSnippets && snippets) {
+    const completions: BindingCompletion[] = []
+    if (bindingCompletions.length) {
+      completions.push(jsAutocomplete([...bindingCompletions]))
+    }
+    if (config.useHelpers) {
+      completions.push(
+        jsHelperAutocomplete([...getHelperCompletions(EditorModes.JS)])
+      )
+    }
+    if (config.useSnippets && snippets) {
       completions.push(snippetAutoComplete(snippets))
     }
     return completions
@@ -383,7 +390,7 @@
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing $ or use the menu on the right"}
-              jsBindingWrapping
+              jsBindingWrapping={bindingCompletions.length > 0}
             />
           {/key}
         {/if}

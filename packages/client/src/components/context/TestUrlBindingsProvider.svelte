@@ -3,6 +3,6 @@
   import { routeStore } from "@/stores"
 </script>
 
-<Provider key="query" data={$routeStore.queryParams}>
+<Provider key="url" data={$routeStore.testUrlParams}>
   <slot />
 </Provider>
