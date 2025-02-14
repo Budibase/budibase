@@ -18,19 +18,19 @@ import {
 
 interface BuilderStore {
   inBuilder: boolean
-  screen: Screen | null
-  selectedComponentId: string | null
+  screen?: Screen | null
+  selectedComponentId?: string | null
   editMode: boolean
-  previewId: string | null
-  theme: Theme | null
-  customTheme: AppCustomTheme | null
-  previewDevice: PreviewDevice
-  navigation: AppNavigation | null
-  hiddenComponentIds: string[]
-  usedPlugins: Plugin[] | null
+  previewId?: number | null
+  theme?: Theme | null
+  customTheme?: AppCustomTheme | null
+  previewDevice?: PreviewDevice
+  navigation?: AppNavigation | null
+  hiddenComponentIds?: string[]
+  usedPlugins?: Plugin[] | null
   metadata: { componentId: string; step: number } | null
-  snippets: Snippet[] | null
-  componentErrors: Record<string, UIComponentError[]>
+  snippets?: Snippet[] | null
+  componentErrors?: Record<string, UIComponentError[]>
 }
 
 const createBuilderStore = () => {
