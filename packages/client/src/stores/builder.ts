@@ -8,6 +8,12 @@ import {
   PingSource,
   PreviewDevice,
   Screen,
+  Theme,
+  AppCustomTheme,
+  AppNavigation,
+  Plugin,
+  Snippet,
+  UIComponentError,
 } from "@budibase/types"
 
 interface BuilderStore {
@@ -16,16 +22,16 @@ interface BuilderStore {
   selectedComponentId: string | null
   editMode: boolean
   previewId: string | null
-  theme: string | null
-  customTheme: string | null
+  theme: Theme | null
+  customTheme: AppCustomTheme | null
   previewDevice: PreviewDevice
-  navigation: string | null
-  hiddenComponentIds: []
-  usedPlugins: { name: string; hash: string }[] | null
+  navigation: AppNavigation | null
+  hiddenComponentIds: string[]
+  usedPlugins: Plugin[] | null
   eventResolvers: {}
   metadata: { componentId: string; step: number } | null
-  snippets: string | null
-  componentErrors: {}
+  snippets: Snippet[] | null
+  componentErrors: Record<string, UIComponentError[]>
   layout: any
 }
 
