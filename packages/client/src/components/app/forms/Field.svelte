@@ -88,7 +88,7 @@
 
   const updateLabel = (e: any) => {
     if (touched) {
-      // @ts-expect-error updateProp doesn't appear to exist, needs investigation
+      // @ts-expect-error and TODO updateProp isn't recognised - need builder TS conversion
       builderStore.actions.updateProp("label", e.target.textContent)
     }
     touched = false
