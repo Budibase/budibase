@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import { get } from "svelte/store"
-  import { builderStore } from "stores"
+  import { builderStore } from "@/stores"
 
   onMount(() => {
     if (get(builderStore).inBuilder) {

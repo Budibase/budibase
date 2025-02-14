@@ -1,26 +1,30 @@
-<script>
+<script lang="ts">
   import { onMount, onDestroy } from "svelte"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { dndIsDragging, hoverStore, builderStore } from "stores"
+  import { dndIsDragging, hoverStore, builderStore } from "@/stores"
 
   $: componentId = $hoverStore.hoveredComponentId
   $: selectedComponentId = $builderStore.selectedComponentId
   $: selected = componentId === selectedComponentId
 
-  const onMouseOver = e => {
+  const onMouseOver = (e: MouseEvent) => {
+    const target = e.target as HTMLElement
+
     // Ignore if dragging
     if (e.buttons > 0) {
       return
     }
 
     let newId
-    if (e.target.classList.contains("anchor")) {
+    if (target.classList.contains("anchor")) {
       // Handle resize anchors
-      newId = e.target.dataset.id
+      newId = target.dataset.id
     } else {
       // Handle normal components
-      const element = e.target.closest(".interactive.component:not(.root)")
-      newId = element?.dataset?.id
+      const element = target.closest(".interactive.component:not(.root)")
+      if (element instanceof HTMLElement) {
+        newId = element.dataset?.id
+      }
     }
 
     if (newId !== componentId) {
@@ -43,9 +47,11 @@
   })
 </script>
 
-<IndicatorSet
-  componentId={$dndIsDragging ? null : componentId}
-  color="var(--spectrum-global-color-static-blue-200)"
-  zIndex={selected ? 890 : 910}
-  allowResizeAnchors
-/>
+{#if !$dndIsDragging && componentId}
+  <IndicatorSet
+    {componentId}
+    color="var(--spectrum-global-color-static-blue-200)"
+    zIndex={selected ? 890 : 910}
+    allowResizeAnchors
+  />
+{/if}}
