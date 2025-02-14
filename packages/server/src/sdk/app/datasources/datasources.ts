@@ -120,7 +120,7 @@ export function areRESTVariablesValid(datasource: Datasource) {
 
 export function checkDatasourceTypes(schema: Integration, config: any) {
   for (let key of Object.keys(config)) {
-    if (!schema.datasource[key]) {
+    if (!schema.datasource?.[key]) {
       continue
     }
     const type = schema.datasource[key].type
@@ -149,7 +149,9 @@ async function enrichDatasourceWithValues(
   ) as Datasource
   processed.entities = entities
   const definition = await getDefinition(processed.source)
-  processed.config = checkDatasourceTypes(definition!, processed.config)
+  if (definition) {
+    processed.config = checkDatasourceTypes(definition, processed.config)
+  }
   return {
     datasource: processed,
     envVars: env as Record<string, string>,

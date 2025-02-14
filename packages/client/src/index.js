@@ -11,103 +11,29 @@ import {
   hoverStore,
   stateStore,
   routeStore,
-} from "@/stores"
+} from "./stores"
+import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 import { get } from "svelte/store"
-import { initWebsocket } from "@/websocket"
-import { APIClient } from "@budibase/frontend-core"
-import type { ActionTypes } from "@/constants"
-import { Readable } from "svelte/store"
-import {
-  Screen,
-  Theme,
-  AppCustomTheme,
-  PreviewDevice,
-  AppNavigation,
-  Plugin,
-  Snippet,
-  UIComponentError,
-  CustomComponent,
-} from "@budibase/types"
+import { initWebsocket } from "./websocket.js"
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
-// @ts-ignore
 import * as internal from "svelte/internal"
+
 window.svelte_internal = internal
 window.svelte = svelte
 
 // Initialise spectrum icons
-// eslint-disable-next-line local-rules/no-budibase-imports
-import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
 loadSpectrumIcons()
 
-// Extend global window scope
-declare global {
-  interface Window {
-    // Data from builder
-    "##BUDIBASE_APP_ID##"?: string
-    "##BUDIBASE_IN_BUILDER##"?: true
-    "##BUDIBASE_PREVIEW_SCREEN##"?: Screen
-    "##BUDIBASE_SELECTED_COMPONENT_ID##"?: string
-    "##BUDIBASE_PREVIEW_ID##"?: number
-    "##BUDIBASE_PREVIEW_THEME##"?: Theme
-    "##BUDIBASE_PREVIEW_CUSTOM_THEME##"?: AppCustomTheme
-    "##BUDIBASE_PREVIEW_DEVICE##"?: PreviewDevice
-    "##BUDIBASE_APP_EMBEDDED##"?: string // This is a bool wrapped in a string
-    "##BUDIBASE_PREVIEW_NAVIGATION##"?: AppNavigation
-    "##BUDIBASE_HIDDEN_COMPONENT_IDS##"?: string[]
-    "##BUDIBASE_USED_PLUGINS##"?: Plugin[]
-    "##BUDIBASE_SNIPPETS##"?: Snippet[]
-    "##BUDIBASE_COMPONENT_ERRORS##"?: Record<string, UIComponentError[]>
-    "##BUDIBASE_CUSTOM_COMPONENTS##"?: CustomComponent[]
-
-    // Other flags
-    MIGRATING_APP: boolean
-
-    // Client additions
-    handleBuilderRuntimeEvent: (type: string, data: any) => void
-    registerCustomComponent: typeof componentStore.actions.registerCustomComponent
-    loadBudibase: typeof loadBudibase
-    svelte: typeof svelte
-    svelte_internal: typeof internal
-  }
-}
-
-export interface SDK {
-  API: APIClient
-  styleable: any
-  Provider: any
-  ActionTypes: typeof ActionTypes
-  fetchDatasourceSchema: any
-  generateGoldenSample: any
-  builderStore: Readable<{
-    inBuilder: boolean
-  }> & {
-    actions: {
-      highlightSetting: (key: string) => void
-      addParentComponent: (
-        componentId: string,
-        fullAncestorType: string
-      ) => void
-    }
-  }
-}
-
-export type Component = Readable<{
-  id: string
-  styles: any
-  errorState: boolean
-}>
-
-export type Context = Readable<Record<string, any>>
-
-let app: ClientApp
+let app
 
 const loadBudibase = async () => {
   // Update builder store with any builder flags
   builderStore.set({
     ...get(builderStore),
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
+    layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
     selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],
     previewId: window["##BUDIBASE_PREVIEW_ID##"],
@@ -117,6 +43,7 @@ const loadBudibase = async () => {
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
+    location: window["##BUDIBASE_LOCATION##"],
     snippets: window["##BUDIBASE_SNIPPETS##"],
     componentErrors: window["##BUDIBASE_COMPONENT_ERRORS##"],
   })
@@ -155,7 +82,9 @@ const loadBudibase = async () => {
     } else if (type === "dragging-new-component") {
       const { dragging, component } = data
       if (dragging) {
-        dndStore.actions.startDraggingNewComponent(component)
+        const definition =
+          componentStore.actions.getComponentDefinition(component)
+        dndStore.actions.startDraggingNewComponent({ component, definition })
       } else {
         dndStore.actions.reset()
       }
