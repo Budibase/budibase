@@ -35,7 +35,7 @@
   export let allowSnippets = true
   export let context = null
   export let autofocusEditor = false
-  export let placeholder = null
+  export let placeholder: string | undefined
 
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
