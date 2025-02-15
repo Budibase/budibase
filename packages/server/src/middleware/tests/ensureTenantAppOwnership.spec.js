@@ -4,7 +4,6 @@ import { tenancy, utils } from "@budibase/backend-core"
 jest.mock("@budibase/backend-core", () => ({
   tenancy: {
     getTenantId: jest.fn(),
-    getTenantIDFromAppID: jest.fn(),
   },
   utils: {
     getAppIdFromCtx: jest.fn(),
@@ -12,7 +11,7 @@ jest.mock("@budibase/backend-core", () => ({
 }))
 
 class TestConfiguration {
-  constructor(appId = "app_123") {
+  constructor(appId = "tenant_1") {
     this.next = jest.fn()
     this.throw = jest.fn()
     this.middleware = ensureTenantAppOwnership
@@ -45,8 +44,7 @@ describe("Ensure Tenant Ownership Middleware", () => {
     config.afterEach()
   })
 
-  it("calls next() when tenant IDs match", async () => {
-    tenancy.getTenantIDFromAppID.mockReturnValue("tenant_1")
+  it("calls next() when appId matches tenant ID", async () => {
     tenancy.getTenantId.mockReturnValue("tenant_1")
 
     await config.executeMiddleware()
@@ -55,17 +53,13 @@ describe("Ensure Tenant Ownership Middleware", () => {
     expect(config.next).toHaveBeenCalled()
   })
 
-  it("throws 403 when tenant IDs do not match", async () => {
-    tenancy.getTenantIDFromAppID.mockReturnValue("tenant_2")
-    tenancy.getTenantId.mockReturnValue("tenant_1")
+  it("throws 403 when appId does not match tenant ID", async () => {
+    tenancy.getTenantId.mockReturnValue("tenant_2")
 
     await config.executeMiddleware()
 
     expect(utils.getAppIdFromCtx).toHaveBeenCalledWith(config.ctx)
-    expect(config.throw).toHaveBeenCalledWith(
-      403,
-      "Cannot export app from another tenant"
-    )
+    expect(config.throw).toHaveBeenCalledWith(403, "App does not belong to tenant")
   })
 
   it("throws 400 when appId is missing", async () => {

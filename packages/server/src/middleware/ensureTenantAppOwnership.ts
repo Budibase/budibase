@@ -6,10 +6,9 @@ async function ensureTenantAppOwnership(ctx: UserCtx, next: any) {
   if (!appId) {
     ctx.throw(400, "appId must be provided")
   }
-  const exportAppId = tenancy.getTenantIDFromAppID(appId)
   const tenantId = tenancy.getTenantId()
-  if (exportAppId !== tenantId) {
-    ctx.throw(403, `Cannot export app from another tenant`)
+  if (appId !== tenantId) {
+    ctx.throw(403, `App does not belong to tenant`)
   }
   await next()
 }
