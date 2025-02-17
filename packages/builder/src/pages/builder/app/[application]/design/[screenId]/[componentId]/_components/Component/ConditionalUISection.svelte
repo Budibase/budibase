@@ -64,7 +64,12 @@
     Show, hide and update components in response to conditions being met.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={() => save()}>Save</Button>
-  <ConditionalUIDrawer slot="body" bind:conditions={tempValue} {bindings} />
+  <ConditionalUIDrawer
+    slot="body"
+    bind:conditions={tempValue}
+    {bindings}
+    {componentBindings}
+  />
 </Drawer>
 
 <style>
