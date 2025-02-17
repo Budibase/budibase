@@ -31,7 +31,14 @@ import ActionDefinitions from "@/components/design/settings/controls/ButtonActio
 import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
 import { FIELDS, DB_TYPE_INTERNAL } from "@/constants/backend"
-import { FieldType, Screen, UIBinding } from "@budibase/types"
+import {
+  ComponentContext,
+  FieldType,
+  Screen,
+  UIActionType,
+  UIBinding,
+  UIBindingContext,
+} from "@budibase/types"
 
 const { ContextScopes } = Constants
 
@@ -183,11 +190,14 @@ export const readableToRuntimeMap = (
 /**
  * Utility to covert a map of runtime bindings to readable bindings
  */
-export const runtimeToReadableMap = (bindings, ctx) => {
+export const runtimeToReadableMap = (
+  bindings: UIBinding[],
+  ctx: Record<string, any>
+) => {
   if (!bindings || !ctx) {
     return {}
   }
-  return Object.keys(ctx).reduce((acc, key) => {
+  return Object.keys(ctx).reduce<Record<string, UIBinding>>((acc, key) => {
     acc[key] = runtimeToReadableBinding(bindings, ctx[key])
     return acc
   }, {})
@@ -196,7 +206,10 @@ export const runtimeToReadableMap = (bindings, ctx) => {
 /**
  * Gets the bindable properties exposed by a certain component.
  */
-export const getComponentBindableProperties = (asset, componentId) => {
+export const getComponentBindableProperties = (
+  asset: Screen,
+  componentId: string
+) => {
   if (!asset || !componentId) {
     return []
   }
@@ -224,15 +237,15 @@ export const getComponentBindableProperties = (asset, componentId) => {
  * in the component tree.
  */
 export const getAllComponentContexts = (
-  asset,
-  componentId,
-  type,
+  asset: Screen,
+  componentId: string,
+  type: UIBindingContext,
   options = { includeSelf: false }
-) => {
+): ComponentContext[] => {
   if (!asset || !componentId) {
     return []
   }
-  let map = {}
+  let map: Record<string, ComponentContext> = {}
   const componentPath = findComponentPath(asset.props, componentId)
   const componentPathIds = componentPath.map(component => component._id)
   const contextTreeLookupMap = buildContextTreeLookupMap(asset.props)
@@ -294,9 +307,9 @@ export const getAllComponentContexts = (
  * Gets all components available to this component that expose a certain action
  */
 export const getActionProviders = (
-  asset,
-  componentId,
-  actionType,
+  asset: Screen,
+  componentId: string,
+  actionType: UIActionType,
   options = { includeSelf: false }
 ) => {
   const contexts = getAllComponentContexts(asset, componentId, "action", {
@@ -328,7 +341,7 @@ export const getActionProviders = (
 /**
  * Gets a datasource object for a certain data provider component
  */
-export const getDatasourceForProvider = (asset, component) => {
+export const getDatasourceForProvider = (asset: screen, component) => {
   const settings = componentStore.getComponentSettings(component?._component)
 
   // If this component has a dataProvider setting, go up the stack and use it
@@ -368,7 +381,7 @@ export const getDatasourceForProvider = (asset, component) => {
 /**
  * Gets all bindable data properties from component data contexts.
  */
-const getContextBindings = (asset, componentId) => {
+const getContextBindings = (asset: Screen, componentId: string) => {
   // Get all available contexts for this component
   const componentContexts = getAllComponentContexts(asset, componentId)
 
@@ -383,7 +396,7 @@ const getContextBindings = (asset, componentId) => {
 /**
  * Generates a set of bindings for a given component context
  */
-const generateComponentContextBindings = (asset, componentContext) => {
+const generateComponentContextBindings = (asset: Screen, componentContext) => {
   const { component, definition, contexts } = componentContext
   if (!component || !definition || !contexts?.length) {
     return []
@@ -909,7 +922,7 @@ export const getSchemaForDatasourcePlus = (resourceId, options) => {
  * @param options options for generating the schema
  * @return {{schema: Object, table: Table}}
  */
-export const getSchemaForDatasource = (asset, datasource, options) => {
+export const getSchemaForDatasource = (asset: Screen, datasource, options) => {
   options = options || {}
   let schema, table
 

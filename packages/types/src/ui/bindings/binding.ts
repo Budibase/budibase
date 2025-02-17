@@ -19,7 +19,7 @@ export type InsertAtPositionFn = (_: {
 }) => void
 
 export interface UIBinding {
-  type: "context"
+  type: UIBindingContext
   tableId?: string
   fieldSchema?: {
     name: string
@@ -35,3 +35,7 @@ export interface UIBinding {
   icon?: string
   category?: string
 }
+
+export type UIBindingContext = "context" | "action"
+
+export type UIActionType = ""
