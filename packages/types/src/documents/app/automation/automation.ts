@@ -211,7 +211,7 @@ export interface AutomationStepResult {
 export interface AutomationTriggerResult {
   id: string
   stepId: AutomationTriggerStepId
-  inputs?: Record<string, any>
+  inputs?: Record<string, any> | null
   outputs: Record<string, any>
 }
 

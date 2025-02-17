@@ -312,13 +312,15 @@ class Orchestrator {
         const job = cloneDeep(this.job)
         delete job.data.event.appId
         delete job.data.event.metadata
-        if (!job.data.event.timestamp) {
+
+        if (this.isCron() && !job.data.event.timestamp) {
           job.data.event.timestamp = Date.now()
         }
 
         const trigger: AutomationTriggerResult = {
           id: job.data.automation.definition.trigger.id,
           stepId: job.data.automation.definition.trigger.stepId,
+          inputs: null,
           outputs: job.data.event,
         }
         const result: AutomationResults = { trigger, steps: [trigger] }
