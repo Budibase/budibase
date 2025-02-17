@@ -52,7 +52,11 @@ class InMemoryQueue implements Partial<Queue> {
   _opts?: QueueOptions
   _messages: JobMessage[]
   _queuedJobIds: Set<string>
-  _emitter: NodeJS.EventEmitter<{ message: [JobMessage]; completed: [Job] }>
+  _emitter: NodeJS.EventEmitter<{
+    message: [JobMessage]
+    completed: [Job]
+    removed: [JobMessage]
+  }>
   _runCount: number
   _addCount: number
 
@@ -83,6 +87,12 @@ class InMemoryQueue implements Partial<Queue> {
   async process(concurrencyOrFunc: number | any, func?: any) {
     func = typeof concurrencyOrFunc === "number" ? func : concurrencyOrFunc
     this._emitter.on("message", async message => {
+      // For the purpose of testing, don't trigger cron jobs immediately.
+      // Require the test to trigger them manually with timestamps.
+      if (message.opts?.repeat != null) {
+        return
+      }
+
       let resp = func(message)
 
       async function retryFunc(fnc: any) {
@@ -164,13 +174,14 @@ class InMemoryQueue implements Partial<Queue> {
    */
   async close() {}
 
-  /**
-   * This removes a cron which has been implemented, this is part of Bull API.
-   * @param cronJobId The cron which is to be removed.
-   */
-  async removeRepeatableByKey(cronJobId: string) {
-    // TODO: implement for testing
-    console.log(cronJobId)
+  async removeRepeatableByKey(id: string) {
+    for (const [idx, message] of this._messages.entries()) {
+      if (message.opts?.jobId?.toString() === id) {
+        this._messages.splice(idx, 1)
+        this._emitter.emit("removed", message)
+        return
+      }
+    }
   }
 
   async removeJobs(_pattern: string) {
@@ -214,7 +225,9 @@ class InMemoryQueue implements Partial<Queue> {
   }
 
   async getRepeatableJobs() {
-    return this._messages.map(job => jobToJobInformation(job as Job))
+    return this._messages
+      .filter(job => job.opts?.repeat != null)
+      .map(job => jobToJobInformation(job as Job))
   }
 }
 

@@ -65,6 +65,7 @@ export interface ClearAutomationLogResponse {
 
 export interface TriggerAutomationRequest {
   fields: Record<string, any>
+  timestamp?: number
   // time in seconds
   timeout: number
 }
