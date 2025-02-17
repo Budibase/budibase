@@ -490,7 +490,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     // Flatten the recursive component tree
     const components = findAllMatchingComponents(
       screen.props,
-      (x: Component) => x
+      (x: Component) => !!x
     )
 
     // Iterate over all components and run checks
