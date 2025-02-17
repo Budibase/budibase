@@ -48,6 +48,11 @@ export interface ComponentSetting {
   selectAllFields?: boolean
   resetOn?: string | string[]
   settings?: ComponentSetting[]
+  nested?: boolean
   dependsOn?: DependsOnComponentSetting
   sectionDependsOn?: DependsOnComponentSetting
+  contextAccess?: {
+    global: boolean
+    self: boolean
+  }
 }

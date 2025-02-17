@@ -22,25 +22,59 @@
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
-  export let wide
+  export let wide = false
+  export let contextAccess = null
 
   let highlightType
   let domElement
 
   $: highlightedProp = $builderStore.highlightedSetting
-  $: allBindings = getAllBindings(bindings, componentBindings, nested)
+  $: allBindings = getAllBindings(
+    bindings,
+    componentBindings,
+    nested,
+    contextAccess
+  )
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
-
   $: isHighlighted = highlightedProp?.key === key
-
   $: highlightType = isHighlighted ? `highlighted-${highlightedProp?.type}` : ""
+  $: highlightedProp && isHighlighted && scrollToElement(domElement)
 
-  const getAllBindings = (bindings, componentBindings, nested) => {
-    if (!nested) {
+  const getAllBindings = (
+    bindings,
+    componentBindings,
+    nested,
+    contextAccess
+  ) => {
+    // contextAccess is a bit of an escape hatch to get around how we render
+    // certain settings types by using a pseudo component definition, leading
+    // to problems with the nested flag
+    if (contextAccess != null) {
+      // Optionally include global bindings
+      let allBindings = contextAccess.global ? bindings : []
+
+      // Optionally include or exclude self (component) bindings.
+      // If this is a nested setting then we will already have our own context
+      // bindings mixed in, so if we don't want self context we need to filter
+      // them out.
+      if (contextAccess.self) {
+        return [...allBindings, ...componentBindings]
+      } else {
+        return allBindings.filter(binding => {
+          return !componentBindings.some(componentBinding => {
+            return componentBinding.runtimeBinding === binding.runtimeBinding
+          })
+        })
+      }
+    }
+
+    // Otherwise just honour the normal nested flag
+    if (nested) {
+      return [...bindings, ...componentBindings]
+    } else {
       return bindings
     }
-    return [...(componentBindings || []), ...(bindings || [])]
   }
 
   // Handle a value change of any type
@@ -81,8 +115,6 @@
       block: "center",
     })
   }
-
-  $: highlightedProp && isHighlighted && scrollToElement(domElement)
 </script>
 
 <div
