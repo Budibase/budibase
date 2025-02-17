@@ -345,17 +345,17 @@
 
   function validate(
     value: string | null,
-    editor: EditorView,
+    editor: EditorView | undefined,
     mode: EditorMode,
     validations: CodeValidator | null
   ) {
-    if (!value || !validations) {
+    if (!value || !validations || !editor) {
       return
     }
 
     if (mode === EditorModes.Handlebars) {
-      const diagnostics = validateHbsTemplate(editor, value, validations)
-      editor?.dispatch(setDiagnostics(editor.state, diagnostics))
+      const diagnostics = validateHbsTemplate(value, validations)
+      editor.dispatch(setDiagnostics(editor.state, diagnostics))
     }
   }
 
