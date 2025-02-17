@@ -3089,7 +3089,21 @@
       {
         "type": "tableConditions",
         "label": "Conditions",
-        "key": "conditions"
+        "key": "conditions",
+        "contextAccess": {
+          "global": true,
+          "self": false
+        }
+      },
+      {
+        "type": "text",
+        "label": "Format",
+        "key": "format",
+        "info": "Changing format will display values as text",
+        "contextAccess": {
+          "global": false,
+          "self": true
+        }
       }
     ]
   },
@@ -7686,7 +7700,8 @@
           {
             "type": "columns/grid",
             "key": "columns",
-            "resetOn": "table"
+            "resetOn": "table",
+            "nested": true
           }
         ]
       },
