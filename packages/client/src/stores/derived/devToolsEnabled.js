@@ -1,6 +1,6 @@
 import { derived } from "svelte/store"
 import { appStore } from "../app.js"
-import { builderStore } from "../builder.js"
+import { builderStore } from "../builder"
 
 export const devToolsEnabled = derived(
   [appStore, builderStore],
