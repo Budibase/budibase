@@ -72,6 +72,33 @@ describe("hbs validator", () => {
         },
       ])
     })
+
+    describe("expressions with whitespaces", () => {
+      const validators = {
+        [`field name`]: {},
+      }
+
+      it("validates expressions with whitespaces", () => {
+        const text = `{{ [field name] }}`
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toHaveLength(0)
+      })
+
+      it("throws if not wrapped between brackets", () => {
+        const text = `{{ field name }}`
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toEqual([
+          {
+            from: 0,
+            message: `"field" handler does not exist.`,
+            severity: "warning",
+            to: 16,
+          },
+        ])
+      })
+    })
   })
 
   describe("expressions with parameters", () => {
