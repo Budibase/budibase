@@ -63,6 +63,9 @@ export interface ComponentContext {
   type: ComponentContextType
   scope: ComponentContextScopes
   actions: any[]
+  url?: Record<string, any>
+  query?: string
+  state?: Record<string, any>
 }
 
 export type ComponentContextType = "context" | "action"
