@@ -305,9 +305,9 @@ const buildContextTree = (
  * Generates a lookup map of which context branch all components in a component
  * tree are inside.
  */
-export const buildContextTreeLookupMap = rootComponent => {
+export const buildContextTreeLookupMap = (rootComponent: Component) => {
   const tree = buildContextTree(rootComponent)
-  let map = {}
+  const map: Record<string, string> = {}
   Object.entries(tree).forEach(([branch, ids]) => {
     ids.forEach(id => {
       map[id] = branch
