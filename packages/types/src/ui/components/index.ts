@@ -65,7 +65,7 @@ export interface ComponentContext {
   actions: any[]
 }
 
-export type ComponentContextType = "action"
+export type ComponentContextType = "context" | "action"
 
 export const enum ComponentContextScopes {
   Local = "local",
