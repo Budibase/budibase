@@ -30,9 +30,9 @@ export const findComponentType = (rootComponent: Component, type: string) => {
  * Recursively searches for the parent component of a specific component ID
  */
 export const findComponentParent = (
-  rootComponent: Component,
-  id: string,
-  parentComponent: Component
+  rootComponent: Component | undefined,
+  id: string | undefined,
+  parentComponent: Component | null = null
 ): Component | null => {
   if (!rootComponent || !id) {
     return null
@@ -58,7 +58,7 @@ export const findComponentParent = (
  */
 export const findComponentPath = (
   rootComponent: Component,
-  id: string,
+  id: string | undefined,
   path: Component[] = []
 ): Component[] => {
   if (!rootComponent || !id) {
@@ -118,7 +118,7 @@ export const findAllComponents = (rootComponent: Component) => {
  */
 export const findClosestMatchingComponent = (
   rootComponent: Component,
-  componentId: string,
+  componentId: string | undefined,
   selector: (component: Component) => boolean
 ) => {
   if (!selector) {
