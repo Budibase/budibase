@@ -485,7 +485,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         (component: Component) => component._component.endsWith("/form")
       )
       const formSteps = findAllMatchingComponents(
-        parentForm!,
+        parentForm,
         (component: Component) => component._component.endsWith("/formstep")
       )
       extras.step = formSteps.length + 1
@@ -644,7 +644,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         nextId = nextId.replace("-navigation", "-screen")
       }
       this.update(state => {
-        state.selectedComponentId = nextId!
+        state.selectedComponentId = nextId ?? undefined
         return state
       })
     }
@@ -704,7 +704,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   }
 
   async paste(
-    targetComponent: Component | null,
+    targetComponent: Component,
     mode: string,
     targetScreen: Screen,
     selectComponent = true
@@ -727,7 +727,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Patch screen
     const patch = (screen: Screen) => {
       // Get up to date ref to target
-      targetComponent = findComponent(screen.props, targetComponent!._id!)
+      targetComponent = findComponent(screen.props, targetComponent!._id!)!
       if (!targetComponent) {
         return false
       }
@@ -789,7 +789,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         }
         const targetIndex = parent._children.findIndex(
           (component: Component) => {
-            return component._id === targetComponent!._id
+            return component._id === targetComponent._id
           }
         )
         const index = mode === "above" ? targetIndex : targetIndex + 1
