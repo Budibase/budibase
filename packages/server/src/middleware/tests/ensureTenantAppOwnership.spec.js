@@ -62,10 +62,7 @@ describe("Ensure Tenant Ownership Middleware", () => {
     await config.executeMiddleware()
 
     expect(utils.getAppIdFromCtx).toHaveBeenCalledWith(config.ctx)
-    expect(config.throw).toHaveBeenCalledWith(
-      403,
-      "Unauthorized",
-    )
+    expect(config.throw).toHaveBeenCalledWith(403, "Unauthorized")
   })
 
   it("throws 400 when appId is missing", async () => {
