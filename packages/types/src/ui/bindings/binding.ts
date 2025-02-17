@@ -19,6 +19,7 @@ export type InsertAtPositionFn = (_: {
 }) => void
 
 export interface UIBinding {
+  type: "context"
   tableId?: string
   fieldSchema?: {
     name: string
@@ -28,7 +29,9 @@ export interface UIBinding {
     prefixKeys?: string
   }
   component?: string
-  providerId: string
+  providerId?: string
   readableBinding?: string
   runtimeBinding?: string
+  icon?: string
+  category?: string
 }

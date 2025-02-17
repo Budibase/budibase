@@ -31,7 +31,7 @@ import ActionDefinitions from "@/components/design/settings/controls/ButtonActio
 import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
 import { FIELDS, DB_TYPE_INTERNAL } from "@/constants/backend"
-import { FieldType } from "@budibase/types"
+import { FieldType, Screen, UIBinding } from "@budibase/types"
 
 const { ContextScopes } = Constants
 
@@ -49,7 +49,7 @@ const UpdateReferenceAction = {
 /**
  * Gets all bindable data context fields and instance fields.
  */
-export const getBindableProperties = (asset, componentId) => {
+export const getBindableProperties = (asset: Screen, componentId: string) => {
   const contextBindings = getContextBindings(asset, componentId)
   const userBindings = getUserBindings()
   const urlBindings = getUrlBindings(asset)
@@ -138,15 +138,19 @@ export const getEnvironmentBindings = () => {
  * @param {string} prefix A contextual string prefix/path for a user readable binding
  * @return {object[]} An array containing readable/runtime binding objects
  */
-export const toBindingsArray = (valueMap, prefix, category) => {
+export const toBindingsArray = (
+  valueMap: Record<string, string>,
+  prefix: string,
+  category: string
+): UIBinding[] => {
   if (!valueMap) {
     return []
   }
-  return Object.keys(valueMap).reduce((acc, binding) => {
+  return Object.keys(valueMap).reduce<UIBinding[]>((acc, binding) => {
     if (!binding) {
       return acc
     }
-    let config = {
+    const config: UIBinding = {
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
@@ -163,11 +167,14 @@ export const toBindingsArray = (valueMap, prefix, category) => {
 /**
  * Utility to covert a map of readable bindings to runtime
  */
-export const readableToRuntimeMap = (bindings, ctx) => {
+export const readableToRuntimeMap = (
+  bindings: UIBinding[],
+  ctx: Record<string, any>
+) => {
   if (!bindings || !ctx) {
     return {}
   }
-  return Object.keys(ctx).reduce((acc, key) => {
+  return Object.keys(ctx).reduce<Record<string, UIBinding>>((acc, key) => {
     acc[key] = readableToRuntimeBinding(bindings, ctx[key])
     return acc
   }, {})
