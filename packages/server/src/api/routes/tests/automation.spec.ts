@@ -485,6 +485,36 @@ describe("/automations", () => {
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
+
+    it("can update an input field", async () => {
+      const { automation } = await createAutomationBuilder(config)
+        .onRowDeleted({ tableId: "tableId" })
+        .serverLog({ text: "test" })
+        .save()
+
+      automation.definition.trigger.inputs.tableId = "newTableId"
+      const { automation: updatedAutomation } =
+        await config.api.automation.update(automation)
+
+      expect(updatedAutomation.definition.trigger.inputs.tableId).toEqual(
+        "newTableId"
+      )
+    })
+
+    it("cannot update a readonly field", async () => {
+      const { automation } = await createAutomationBuilder(config)
+        .onRowAction({ tableId: "tableId" })
+        .serverLog({ text: "test" })
+        .save()
+
+      automation.definition.trigger.inputs.tableId = "newTableId"
+      await config.api.automation.update(automation, {
+        status: 400,
+        body: {
+          message: "Field tableId is readonly and it cannot be modified",
+        },
+      })
+    })
   })
 
   describe("fetch", () => {

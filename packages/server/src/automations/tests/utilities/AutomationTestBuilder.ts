@@ -63,6 +63,7 @@ class TriggerBuilder {
   onRowDeleted = this.trigger(AutomationTriggerStepId.ROW_DELETED)
   onWebhook = this.trigger(AutomationTriggerStepId.WEBHOOK)
   onCron = this.trigger(AutomationTriggerStepId.CRON)
+  onRowAction = this.trigger(AutomationTriggerStepId.ROW_ACTION)
 }
 
 class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
