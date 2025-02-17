@@ -105,7 +105,7 @@ export function validateHbsTemplate(
       from: 0,
       to: text.length,
       severity: "error",
-      message: `Syntax error: ${e.message}`,
+      message: `The handlebars code is not valid:\n${e.message}`,
     })
   }
 
