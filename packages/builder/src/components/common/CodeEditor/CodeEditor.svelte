@@ -1,9 +1,7 @@
 <script lang="ts">
-  /* global hbs */
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
-  import Handlebars from "handlebars"
 
   import {
     autocompletion,
@@ -43,7 +41,6 @@
     indentLess,
   } from "@codemirror/commands"
   import { setDiagnostics } from "@codemirror/lint"
-  import type { Diagnostic } from "@codemirror/lint"
   import { Compartment, EditorState } from "@codemirror/state"
   import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
@@ -51,6 +48,7 @@
   import { themeStore } from "@/stores/portal"
   import type { EditorMode } from "@budibase/types"
   import type { BindingCompletion, CodeValidator } from "@/types"
+  import { validateHbsTemplate } from "./validator/hbs"
 
   export let label: string | undefined = undefined
   export let completions: BindingCompletion[] = []
@@ -248,109 +246,6 @@
       EditorView.lineWrapping,
       themeConfig.of([...(isDark ? [oneDark] : [])]),
     ]
-  }
-
-  function isMustacheStatement(
-    node: hbs.AST.Statement
-  ): node is hbs.AST.MustacheStatement {
-    return node.type === "MustacheStatement"
-  }
-
-  function isBlockStatement(
-    node: hbs.AST.Statement
-  ): node is hbs.AST.BlockStatement {
-    return node.type === "BlockStatement"
-  }
-
-  async function validateHbsTemplate(
-    editor: EditorView,
-    template: string,
-    validations: CodeValidator
-  ): Promise<Diagnostic[]> {
-    const diagnostics: Diagnostic[] = []
-
-    try {
-      const ast = Handlebars.parse(template)
-
-      function traverseNodes(
-        nodes: hbs.AST.Statement[],
-        options?: {
-          ignoreMissing?: boolean
-        }
-      ) {
-        const ignoreMissing = options?.ignoreMissing || false
-        nodes.forEach(node => {
-          if (
-            isMustacheStatement(node) &&
-            node.path.type === "PathExpression"
-          ) {
-            const helperName = (node.path as hbs.AST.PathExpression).original
-
-            const from =
-              editor.state.doc.line(node.loc.start.line).from +
-              node.loc.start.column
-            const to =
-              editor.state.doc.line(node.loc.end.line).from +
-              node.loc.end.column
-
-            if (!(helperName in validations)) {
-              if (!ignoreMissing) {
-                diagnostics.push({
-                  from,
-                  to,
-                  severity: "warning",
-                  message: `"${helperName}" handler does not exist.`,
-                })
-              }
-              return
-            }
-
-            const { arguments: expectedArguments = [], requiresBlock } =
-              validations[helperName]
-
-            if (requiresBlock && !isBlockStatement(node)) {
-              diagnostics.push({
-                from,
-                to,
-                severity: "error",
-                message: `Helper "${helperName}" requires a body:\n{{#${helperName} ...}} [body] {{/${helperName}}}`,
-              })
-              return
-            }
-
-            const providedParams = node.params
-
-            if (providedParams.length !== expectedArguments.length) {
-              diagnostics.push({
-                from,
-                to,
-                severity: "error",
-                message: `Helper "${helperName}" expects ${
-                  expectedArguments.length
-                } parameters (${expectedArguments.join(", ")}), but got ${
-                  providedParams.length
-                }.`,
-              })
-            }
-          }
-
-          if (isBlockStatement(node)) {
-            traverseNodes(node.program.body, { ignoreMissing: true })
-          }
-        })
-      }
-
-      traverseNodes(ast.body)
-    } catch (e: any) {
-      diagnostics.push({
-        from: 0,
-        to: template.length,
-        severity: "error",
-        message: `Syntax error: ${e.message}`,
-      })
-    }
-
-    return diagnostics
   }
 
   // None of this is reactive, but it never has been, so we just assume most
