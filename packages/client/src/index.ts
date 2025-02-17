@@ -19,7 +19,6 @@ import type { ActionTypes } from "@/constants"
 import { Readable } from "svelte/store"
 import {
   Screen,
-  Layout,
   Theme,
   AppCustomTheme,
   PreviewDevice,
@@ -48,7 +47,6 @@ declare global {
     // Data from builder
     "##BUDIBASE_APP_ID##"?: string
     "##BUDIBASE_IN_BUILDER##"?: true
-    "##BUDIBASE_PREVIEW_LAYOUT##"?: Layout
     "##BUDIBASE_PREVIEW_SCREEN##"?: Screen
     "##BUDIBASE_SELECTED_COMPONENT_ID##"?: string
     "##BUDIBASE_PREVIEW_ID##"?: number
@@ -59,13 +57,8 @@ declare global {
     "##BUDIBASE_PREVIEW_NAVIGATION##"?: AppNavigation
     "##BUDIBASE_HIDDEN_COMPONENT_IDS##"?: string[]
     "##BUDIBASE_USED_PLUGINS##"?: Plugin[]
-    "##BUDIBASE_LOCATION##"?: {
-      protocol: string
-      hostname: string
-      port: string
-    }
     "##BUDIBASE_SNIPPETS##"?: Snippet[]
-    "##BUDIBASE_COMPONENT_ERRORS##"?: Record<string, UIComponentError>[]
+    "##BUDIBASE_COMPONENT_ERRORS##"?: Record<string, UIComponentError[]>
     "##BUDIBASE_CUSTOM_COMPONENTS##"?: CustomComponent[]
 
     // Other flags
@@ -115,7 +108,6 @@ const loadBudibase = async () => {
   builderStore.set({
     ...get(builderStore),
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
-    layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
     selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],
     previewId: window["##BUDIBASE_PREVIEW_ID##"],
@@ -125,7 +117,6 @@ const loadBudibase = async () => {
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
-    location: window["##BUDIBASE_LOCATION##"],
     snippets: window["##BUDIBASE_SNIPPETS##"],
     componentErrors: window["##BUDIBASE_COMPONENT_ERRORS##"],
   })
