@@ -1,7 +1,5 @@
 import {
-  AutomationStepResult,
   AutomationStepResultOutputs,
-  AutomationTriggerResult,
   AutomationTriggerResultOutputs,
   LoopStepType,
   UserBindings,
