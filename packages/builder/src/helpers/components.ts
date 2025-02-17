@@ -85,7 +85,7 @@ export const findComponentPath = (
  * a certain selector
  */
 export const findAllMatchingComponents = (
-  rootComponent: Component,
+  rootComponent: Component | null,
   selector: (component: Component) => boolean
 ) => {
   if (!rootComponent || !selector) {
