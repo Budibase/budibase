@@ -25,8 +25,8 @@ describe("Attempt to run a basic loop automation", () => {
     await config.api.row.save(table._id!, {})
   })
 
-  afterAll(() => {
-    automation.shutdown()
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 
