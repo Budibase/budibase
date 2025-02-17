@@ -1,6 +1,5 @@
 /* global hbs */
 import Handlebars from "handlebars"
-import { EditorView } from "@codemirror/view"
 import type { Diagnostic } from "@codemirror/lint"
 import { CodeValidator } from "@/types"
 
@@ -23,14 +22,20 @@ function isPathExpression(
 }
 
 export function validateHbsTemplate(
-  editor: EditorView,
-  template: string,
+  text: string,
   validations: CodeValidator
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = []
 
   try {
-    const ast = Handlebars.parse(template, {})
+    const ast = Handlebars.parse(text, {})
+
+    const lineOffsets: number[] = []
+    let offset = 0
+    for (const line of text.split("\n")) {
+      lineOffsets.push(offset)
+      offset += line.length + 1 // +1 for newline character
+    }
 
     function traverseNodes(
       nodes: hbs.AST.Statement[],
@@ -44,10 +49,8 @@ export function validateHbsTemplate(
           const helperName = node.path.original
 
           const from =
-            editor.state.doc.line(node.loc.start.line).from +
-            node.loc.start.column
-          const to =
-            editor.state.doc.line(node.loc.end.line).from + node.loc.end.column
+            lineOffsets[node.loc.start.line - 1] + node.loc.start.column
+          const to = lineOffsets[node.loc.end.line - 1] + node.loc.end.column
 
           if (!(helperName in validations)) {
             if (!ignoreMissing) {
@@ -100,7 +103,7 @@ export function validateHbsTemplate(
   } catch (e: any) {
     diagnostics.push({
       from: 0,
-      to: template.length,
+      to: text.length,
       severity: "error",
       message: `Syntax error: ${e.message}`,
     })
