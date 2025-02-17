@@ -1094,7 +1094,7 @@ const automationActions = (store: AutomationStore) => ({
   branchLeft: async (
     pathTo: Array<any>,
     automation: Automation,
-    block: AutomationStep
+    block: BranchStep
   ) => {
     const update = store.actions.shiftBranch(pathTo, block)
     if (update) {
@@ -1117,7 +1117,7 @@ const automationActions = (store: AutomationStore) => ({
   branchRight: async (
     pathTo: Array<BranchPath>,
     automation: Automation,
-    block: AutomationStep
+    block: BranchStep
   ) => {
     const update = store.actions.shiftBranch(pathTo, block, 1)
     if (update) {
@@ -1137,8 +1137,8 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Number} direction - the direction of the swap. Defaults to -1 for left, add 1 for right
    * @returns
    */
-  shiftBranch: (pathTo: Array<any>, block: AutomationStep, direction = -1) => {
-    let newBlock = cloneDeep(block) as BranchStep
+  shiftBranch: (pathTo: Array<any>, block: BranchStep, direction = -1) => {
+    let newBlock = cloneDeep(block)
     const branchPath = pathTo.at(-1)
     const targetIdx = branchPath.branchIdx
 
