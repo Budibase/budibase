@@ -28,6 +28,8 @@ export interface ComponentDefinition {
     width: number
     height: number
   }
+  context?: ComponentContext | ComponentContext[]
+  actions?: (string | any)[]
 }
 
 export type DependsOnComponentSetting =
@@ -55,4 +57,17 @@ export interface ComponentSetting {
     global: boolean
     self: boolean
   }
+}
+
+export interface ComponentContext {
+  type: ComponentContextType
+  scope: ComponentContextScopes
+  actions: any[]
+}
+
+export type ComponentContextType = "action"
+
+export const enum ComponentContextScopes {
+  Local = "local",
+  Global = "global",
 }
