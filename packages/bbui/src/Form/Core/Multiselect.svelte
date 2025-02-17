@@ -14,7 +14,7 @@
   export let sort = false
   export let autoWidth = false
   export let searchTerm = null
-  export let customPopoverHeight
+  export let customPopoverHeight = undefined
   export let open = false
   export let loading
   export let onOptionMouseenter = () => {}
