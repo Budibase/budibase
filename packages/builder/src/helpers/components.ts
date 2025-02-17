@@ -8,13 +8,14 @@ import {
 } from "@budibase/string-templates"
 import { capitalise } from "@/helpers"
 import { Constants } from "@budibase/frontend-core"
+import { ScreenProps } from "@budibase/types"
 
 const { ContextScopes } = Constants
 
 /**
  * Recursively searches for a specific component ID
  */
-export const findComponent = (rootComponent, id) => {
+export const findComponent = (rootComponent: ScreenProps, id: string) => {
   return searchComponentTree(rootComponent, comp => comp._id === id)
 }
 
