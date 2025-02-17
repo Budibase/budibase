@@ -2,6 +2,7 @@ import ensureTenantAppOwnership from "../ensureTenantAppOwnership"
 import { tenancy, utils } from "@budibase/backend-core"
 
 jest.mock("@budibase/backend-core", () => ({
+  ...jest.requireActual("@budibase/backend-core"),
   tenancy: {
     getTenantId: jest.fn(),
   },
@@ -53,16 +54,15 @@ describe("Ensure Tenant Ownership Middleware", () => {
     expect(config.next).toHaveBeenCalled()
   })
 
-  it("throws 403 when appId does not match tenant ID", async () => {
+  it("throws when tenant appId does not match tenant ID", async () => {
+    const appId = "app_dev_tenant3_fce449c4d75b4e4a9c7a6980d82a3e22"
+    utils.getAppIdFromCtx.mockResolvedValue(appId)
     tenancy.getTenantId.mockReturnValue("tenant_2")
 
     await config.executeMiddleware()
 
     expect(utils.getAppIdFromCtx).toHaveBeenCalledWith(config.ctx)
-    expect(config.throw).toHaveBeenCalledWith(
-      403,
-      "App does not belong to tenant"
-    )
+    expect(config.throw).toHaveBeenCalledWith(403, "Unauthorized")
   })
 
   it("throws 400 when appId is missing", async () => {

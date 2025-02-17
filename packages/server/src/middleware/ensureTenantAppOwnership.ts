@@ -1,4 +1,4 @@
-import { tenancy, utils } from "@budibase/backend-core"
+import { tenancy, utils, context } from "@budibase/backend-core"
 import { UserCtx } from "@budibase/types"
 
 async function ensureTenantAppOwnership(ctx: UserCtx, next: any) {
@@ -6,9 +6,12 @@ async function ensureTenantAppOwnership(ctx: UserCtx, next: any) {
   if (!appId) {
     ctx.throw(400, "appId must be provided")
   }
+
+  const appTenantId = context.getTenantIDFromAppID(appId)
   const tenantId = tenancy.getTenantId()
-  if (appId !== tenantId) {
-    ctx.throw(403, `App does not belong to tenant`)
+
+  if (appTenantId !== tenantId) {
+    ctx.throw(403, "Unauthorized")
   }
   await next()
 }
