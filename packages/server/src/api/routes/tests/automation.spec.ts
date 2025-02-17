@@ -519,11 +519,6 @@ describe("/automations", () => {
 
   describe("fetch", () => {
     it("return all the automations for an instance", async () => {
-      const fetchResponse = await config.api.automation.fetch()
-      for (const auto of fetchResponse.automations) {
-        await config.api.automation.delete(auto)
-      }
-
       const { automation: automation1 } = await config.api.automation.post(
         newAutomation()
       )
