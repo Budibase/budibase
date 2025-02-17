@@ -122,7 +122,10 @@
     return conditions?.map(condition => {
       return {
         ...condition,
-        referenceValue: processStringSync(condition.referenceValue, context),
+        referenceValue: processStringSync(
+          condition.referenceValue || "",
+          context
+        ),
       }
     })
   }
