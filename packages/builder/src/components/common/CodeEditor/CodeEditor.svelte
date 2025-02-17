@@ -354,9 +354,8 @@
     }
 
     if (mode === EditorModes.Handlebars) {
-      validateHbsTemplate(editor, value, validations).then(diagnostics => {
-        editor?.dispatch(setDiagnostics(editor.state, diagnostics))
-      })
+      const diagnostics = validateHbsTemplate(editor, value, validations)
+      editor?.dispatch(setDiagnostics(editor.state, diagnostics))
     }
   }
 

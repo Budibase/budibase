@@ -22,11 +22,11 @@ function isPathExpression(
   return node.type === "PathExpression"
 }
 
-export async function validateHbsTemplate(
+export function validateHbsTemplate(
   editor: EditorView,
   template: string,
   validations: CodeValidator
-): Promise<Diagnostic[]> {
+): Diagnostic[] {
   const diagnostics: Diagnostic[] = []
 
   try {
