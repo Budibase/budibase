@@ -136,7 +136,6 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
    * a JSON message as this is required by Bull.
    * @param repeat serves no purpose for the import queue.
    */
-  // add(name: string, data: T, opts?: JobOptions): Promise<Job<T>>;
   async add(data: T | string, optsOrT?: JobOptions | T) {
     if (typeof data === "string") {
       throw new Error("doesn't support named jobs")
