@@ -234,13 +234,6 @@ class Orchestrator {
     return this.job.data.event.appId!
   }
 
-  private async getMetadata(): Promise<AutomationMetadata> {
-    const id = generateAutomationMetadataID(this.automation._id!)
-    const db = context.getAppDB()
-    const doc = await db.tryGet<AutomationMetadata>(id)
-    return doc || { _id: id, errorCount: 0 }
-  }
-
   isCron(): boolean {
     return this.automation.definition.trigger.stepId === CRON_STEP_ID
   }
@@ -259,44 +252,47 @@ class Orchestrator {
     if (result) {
       setTriggerOutput(result, {
         success: false,
-        status: AutomationStatus.STOPPED,
+        status: AutomationStatus.STOPPED_ERROR,
       })
       await this.logResult(result)
     }
   }
 
   private async logResult(result: AutomationResults) {
-    try {
-      await storeLog(this.automation, result)
-    } catch (e: any) {
-      if (e.status === 413 && e.request?.data) {
-        // if content is too large we shouldn't log it
-        delete e.request.data
-        e.request.data = { message: "removed due to large size" }
-      }
-      logging.logAlert("Error writing automation log", e)
-    }
+    await storeLog(this.automation, result)
+  }
+
+  async getMetadata(): Promise<AutomationMetadata> {
+    const metadataId = generateAutomationMetadataID(this.automation._id!)
+    const db = context.getAppDB()
+    const metadata = await db.tryGet<AutomationMetadata>(metadataId)
+    return metadata || { _id: metadataId, errorCount: 0 }
   }
 
   async incrementErrorCount() {
-    for (let attempt = 0; attempt < 3; attempt++) {
+    const db = context.getAppDB()
+    let err: Error | undefined = undefined
+    for (let attempt = 0; attempt < 10; attempt++) {
       const metadata = await this.getMetadata()
       metadata.errorCount ||= 0
       metadata.errorCount++
 
-      const db = context.getAppDB()
       try {
         await db.put(metadata)
         return metadata.errorCount
-      } catch (err) {
-        logging.logAlertWithInfo(
-          "Failed to update error count in automation metadata",
-          db.name,
-          this.automation._id!,
-          err
-        )
+      } catch (error: any) {
+        err = error
+        await helpers.wait(1000 + Math.random() * 1000)
       }
     }
+
+    logging.logAlertWithInfo(
+      "Failed to update error count in automation metadata",
+      db.name,
+      this.automation._id!,
+      err
+    )
+    return undefined
   }
 
   private isProdApp(): boolean {
@@ -306,7 +302,7 @@ class Orchestrator {
   hasErrored(context: AutomationContext): boolean {
     const [_trigger, ...steps] = context.steps
     for (const step of steps) {
-      if (step.outputs?.success === false) {
+      if (step.success === false) {
         return true
       }
     }
@@ -374,7 +370,7 @@ class Orchestrator {
         }
 
         let errorCount = 0
-        if (isProdAppID(this.appId) && this.isCron() && this.hasErrored(ctx)) {
+        if (this.isProdApp() && this.isCron() && this.hasErrored(ctx)) {
           errorCount = (await this.incrementErrorCount()) || 0
         }
 
@@ -612,7 +608,7 @@ export async function executeInThread(
   })
 }
 
-export const removeStalled = async (job: Job) => {
+export const removeStalled = async (job: Job<AutomationData>) => {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
