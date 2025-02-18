@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { Input, Label } from "@budibase/bbui"
   import { previewStore, selectedScreen } from "@/stores/builder"
-  import type { AppContext, ComponentContext } from "@budibase/types"
+  import type { AppContext } from "@budibase/types"
 
   export let baseRoute = ""
 
