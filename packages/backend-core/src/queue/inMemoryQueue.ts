@@ -3,6 +3,7 @@ import { newid } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 import { helpers } from "@budibase/shared-core"
 import { Job, JobId, JobInformation } from "bull"
+import { cloneDeep } from "lodash"
 
 function jobToJobInformation(job: Job): JobInformation {
   let cron = ""
@@ -33,7 +34,7 @@ function jobToJobInformation(job: Job): JobInformation {
   }
 }
 
-interface JobMessage<T = any> extends Partial<Job<T>> {
+export interface TestQueueMessage<T = any> extends Partial<Job<T>> {
   id: string
   timestamp: number
   queue: Queue<T>
@@ -47,15 +48,15 @@ interface JobMessage<T = any> extends Partial<Job<T>> {
  * internally to register when messages are available to the consumers - in can
  * support many inputs and many consumers.
  */
-class InMemoryQueue implements Partial<Queue> {
+export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   _name: string
   _opts?: QueueOptions
-  _messages: JobMessage[]
+  _messages: TestQueueMessage<T>[]
   _queuedJobIds: Set<string>
   _emitter: NodeJS.EventEmitter<{
-    message: [JobMessage]
-    completed: [Job]
-    removed: [JobMessage]
+    message: [TestQueueMessage<T>]
+    completed: [Job<T>]
+    removed: [TestQueueMessage<T>]
   }>
   _runCount: number
   _addCount: number
@@ -86,10 +87,13 @@ class InMemoryQueue implements Partial<Queue> {
    */
   async process(concurrencyOrFunc: number | any, func?: any) {
     func = typeof concurrencyOrFunc === "number" ? func : concurrencyOrFunc
-    this._emitter.on("message", async message => {
+    this._emitter.on("message", async msg => {
+      const message = cloneDeep(msg)
+
+      const isManualTrigger = (message as any).manualTrigger === true
       // For the purpose of testing, don't trigger cron jobs immediately.
       // Require the test to trigger them manually with timestamps.
-      if (message.opts?.repeat != null) {
+      if (!isManualTrigger && message.opts?.repeat != null) {
         return
       }
 
@@ -107,7 +111,7 @@ class InMemoryQueue implements Partial<Queue> {
       if (resp.then != null) {
         try {
           await retryFunc(resp)
-          this._emitter.emit("completed", message as Job)
+          this._emitter.emit("completed", message as Job<T>)
         } catch (e: any) {
           console.error(e)
         }
@@ -124,7 +128,6 @@ class InMemoryQueue implements Partial<Queue> {
     return this as any
   }
 
-  // simply puts a message to the queue and emits to the queue for processing
   /**
    * Simple function to replicate the add message functionality of Bull, putting
    * a new message on the queue. This then emits an event which will be used to
@@ -133,7 +136,14 @@ class InMemoryQueue implements Partial<Queue> {
    * a JSON message as this is required by Bull.
    * @param repeat serves no purpose for the import queue.
    */
-  async add(data: any, opts?: JobOptions) {
+  // add(name: string, data: T, opts?: JobOptions): Promise<Job<T>>;
+  async add(data: T | string, optsOrT?: JobOptions | T) {
+    if (typeof data === "string") {
+      throw new Error("doesn't support named jobs")
+    }
+
+    const opts = optsOrT as JobOptions
+
     const jobId = opts?.jobId?.toString()
     if (jobId && this._queuedJobIds.has(jobId)) {
       console.log(`Ignoring already queued job ${jobId}`)
@@ -148,7 +158,7 @@ class InMemoryQueue implements Partial<Queue> {
     }
 
     const pushMessage = () => {
-      const message: JobMessage = {
+      const message: TestQueueMessage = {
         id: newid(),
         timestamp: Date.now(),
         queue: this as unknown as Queue,
@@ -176,7 +186,7 @@ class InMemoryQueue implements Partial<Queue> {
 
   async removeRepeatableByKey(id: string) {
     for (const [idx, message] of this._messages.entries()) {
-      if (message.opts?.jobId?.toString() === id) {
+      if (message.id === id) {
         this._messages.splice(idx, 1)
         this._emitter.emit("removed", message)
         return
@@ -202,6 +212,17 @@ class InMemoryQueue implements Partial<Queue> {
       }
     }
     return null
+  }
+
+  manualTrigger(id: JobId) {
+    for (const message of this._messages) {
+      if (message.id === id) {
+        const forceMessage = { ...message, manualTrigger: true }
+        this._emitter.emit("message", forceMessage)
+        return
+      }
+    }
+    throw new Error(`Job with id ${id} not found`)
   }
 
   on(event: string, callback: (...args: any[]) => void): Queue {
