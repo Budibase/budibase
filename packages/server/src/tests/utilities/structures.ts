@@ -39,6 +39,11 @@ import {
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
+export {
+  createTableScreen,
+  createQueryScreen,
+  createViewScreen,
+} from "../../constants/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -217,10 +222,8 @@ export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
         icon: "test",
         description: "test",
         type: AutomationStepType.TRIGGER,
+        inputs: {},
         id: "test",
-        inputs: {
-          fields: {},
-        },
         schema: {
           inputs: {
             properties: {},
@@ -236,88 +239,6 @@ export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
     appId: "appId",
   }
   return merge(baseAutomation, opts)
-}
-
-export function basicCronAutomation(appId: string, cron: string): Automation {
-  const automation: Automation = {
-    name: `Automation ${generator.guid()}`,
-    definition: {
-      trigger: {
-        stepId: AutomationTriggerStepId.CRON,
-        name: "test",
-        tagline: "test",
-        icon: "test",
-        description: "test",
-        type: AutomationStepType.TRIGGER,
-        id: "test",
-        inputs: {
-          cron,
-        },
-        schema: {
-          inputs: {
-            properties: {},
-          },
-          outputs: {
-            properties: {},
-          },
-        },
-      },
-      steps: [],
-    },
-    type: "automation",
-    appId,
-  }
-  return automation
-}
-
-export function serverLogAutomation(appId?: string): Automation {
-  return {
-    name: "My Automation",
-    screenId: "kasdkfldsafkl",
-    live: true,
-    uiTree: {},
-    definition: {
-      trigger: {
-        stepId: AutomationTriggerStepId.APP,
-        name: "test",
-        tagline: "test",
-        icon: "test",
-        description: "test",
-        type: AutomationStepType.TRIGGER,
-        id: "test",
-        inputs: { fields: {} },
-        schema: {
-          inputs: {
-            properties: {},
-          },
-          outputs: {
-            properties: {},
-          },
-        },
-      },
-      steps: [
-        {
-          stepId: AutomationActionStepId.SERVER_LOG,
-          name: "Backend log",
-          tagline: "Console log a value in the backend",
-          icon: "Monitoring",
-          description: "Logs the given text to the server (using console.log)",
-          internal: true,
-          features: {
-            LOOPING: true,
-          },
-          inputs: {
-            text: "log statement",
-          },
-          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
-          id: "y8lkZbeSe",
-          type: AutomationStepType.ACTION,
-        },
-      ],
-    },
-    type: "automation",
-    appId: appId!,
-  }
 }
 
 export function loopAutomation(
@@ -567,6 +488,15 @@ export function basicDatasource(): { datasource: Datasource } {
       name: "Test",
       source: SourceName.POSTGRES,
       config: {},
+    },
+  }
+}
+
+export function basicDatasourcePlus(): { datasource: Datasource } {
+  return {
+    datasource: {
+      ...basicDatasource().datasource,
+      plus: true,
     },
   }
 }

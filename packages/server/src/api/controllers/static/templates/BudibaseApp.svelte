@@ -1,23 +1,9 @@
 <script>
   import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
 
-  export let title = ""
-  export let favicon = ""
-
-  export let metaImage = ""
-  export let metaTitle = ""
-  export let metaDescription = ""
-
-  export let clientLibPath
-  export let usedPlugins
-  export let appMigrating
-
-  export let showSkeletonLoader = false
-  export let hideDevTools
-  export let sideNav
-  export let hideFooter
-
-  export let nonce
+  /** @type {BudibaseAppProps} this receives all the props in one structure, following
+   * the type from @budibase/types */
+  export let props
 </script>
 
 <svelte:head>
@@ -28,27 +14,27 @@
   />
 
   <!-- Primary Meta Tags -->
-  <meta name="title" content={metaTitle} />
-  <meta name="description" content={metaDescription} />
+  <meta name="title" content={props.metaTitle} />
+  <meta name="description" content={props.metaDescription} />
 
   <!-- Opengraph Meta Tags -->
   <meta property="og:site_name" content="Budibase" />
-  <meta property="og:title" content={metaTitle} />
-  <meta property="og:description" content={metaDescription} />
+  <meta property="og:title" content={props.metaTitle} />
+  <meta property="og:description" content={props.metaDescription} />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content={metaImage} />
+  <meta property="og:image" content={props.metaImage} />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:site" content="@budibase" />
-  <meta property="twitter:image" content={metaImage} />
-  <meta property="twitter:image:alt" content={metaTitle} />
-  <meta property="twitter:title" content={metaTitle} />
-  <meta property="twitter:description" content={metaDescription} />
+  <meta property="twitter:image" content={props.metaImage} />
+  <meta property="twitter:image:alt" content={props.metaTitle} />
+  <meta property="twitter:title" content={props.metaTitle} />
+  <meta property="twitter:description" content={props.metaDescription} />
 
-  <title>{title}</title>
-  {#if favicon !== ""}
-    <link rel="icon" type="image/png" href={favicon} />
+  <title>{props.title}</title>
+  {#if props.favicon !== ""}
+    <link rel="icon" type="image/png" href={props.favicon} />
   {:else}
     <link rel="icon" type="image/png" href="/builder/bblogo.png" />
   {/if}
@@ -105,11 +91,15 @@
 </svelte:head>
 
 <body id="app">
-  {#if showSkeletonLoader}
-    <ClientAppSkeleton {hideDevTools} {sideNav} {hideFooter} />
+  {#if props.showSkeletonLoader}
+    <ClientAppSkeleton
+      hideDevTools={props.hideDevTools}
+      sideNav={props.sideNav}
+      hideFooter={props.hideFooter}
+    />
   {/if}
   <div id="error">
-    {#if clientLibPath}
+    {#if props.clientLibPath}
       <h1>There was an error loading your app</h1>
       <h2>
         The Budibase client library could not be loaded. Try republishing your
@@ -120,24 +110,24 @@
       <p />
     {/if}
   </div>
-  <script type="application/javascript" {nonce}>
+  <script type="application/javascript" nonce={props.nonce}>
     window.INIT_TIME = Date.now()
   </script>
-  {#if appMigrating}
-    <script type="application/javascript" {nonce}>
+  {#if props.appMigrating}
+    <script type="application/javascript" nonce={props.nonce}>
       window.MIGRATING_APP = true
     </script>
   {/if}
-  <script type="application/javascript" src={clientLibPath}>
+  <script type="application/javascript" src={props.clientLibPath}>
   </script>
   <!-- Custom components need inserted after the core client library -->
   <!-- But before loadBudibase is called -->
-  {#if usedPlugins?.length}
-    {#each usedPlugins as plugin}
+  {#if props.usedPlugins?.length}
+    {#each props.usedPlugins as plugin}
       <script type="application/javascript" src={plugin.jsUrl}></script>
     {/each}
   {/if}
-  <script type="application/javascript" {nonce}>
+  <script type="application/javascript" nonce={props.nonce}>
     if (window.loadBudibase) {
       window.loadBudibase()
     } else {

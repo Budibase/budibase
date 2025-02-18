@@ -5,7 +5,6 @@
     runtimeToReadableBinding,
   } from "@/dataBinding"
   import { builderStore } from "@/stores/builder"
-  import { onDestroy } from "svelte"
 
   export let label = ""
   export let labelHidden = false
@@ -23,25 +22,59 @@
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
-  export let wide
+  export let wide = false
+  export let contextAccess = null
 
   let highlightType
+  let domElement
 
   $: highlightedProp = $builderStore.highlightedSetting
-  $: allBindings = getAllBindings(bindings, componentBindings, nested)
+  $: allBindings = getAllBindings(
+    bindings,
+    componentBindings,
+    nested,
+    contextAccess
+  )
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
+  $: isHighlighted = highlightedProp?.key === key
+  $: highlightType = isHighlighted ? `highlighted-${highlightedProp?.type}` : ""
+  $: highlightedProp && isHighlighted && scrollToElement(domElement)
 
-  $: if (!Array.isArray(value)) {
-    highlightType =
-      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
-  }
+  const getAllBindings = (
+    bindings,
+    componentBindings,
+    nested,
+    contextAccess
+  ) => {
+    // contextAccess is a bit of an escape hatch to get around how we render
+    // certain settings types by using a pseudo component definition, leading
+    // to problems with the nested flag
+    if (contextAccess != null) {
+      // Optionally include global bindings
+      let allBindings = contextAccess.global ? bindings : []
 
-  const getAllBindings = (bindings, componentBindings, nested) => {
-    if (!nested) {
+      // Optionally include or exclude self (component) bindings.
+      // If this is a nested setting then we will already have our own context
+      // bindings mixed in, so if we don't want self context we need to filter
+      // them out.
+      if (contextAccess.self) {
+        return [...allBindings, ...componentBindings]
+      } else {
+        return allBindings.filter(binding => {
+          return !componentBindings.some(componentBinding => {
+            return componentBinding.runtimeBinding === binding.runtimeBinding
+          })
+        })
+      }
+    }
+
+    // Otherwise just honour the normal nested flag
+    if (nested) {
+      return [...bindings, ...componentBindings]
+    } else {
       return bindings
     }
-    return [...(componentBindings || []), ...(bindings || [])]
   }
 
   // Handle a value change of any type
@@ -76,14 +109,16 @@
       : enriched
   }
 
-  onDestroy(() => {
-    if (highlightedProp) {
-      builderStore.highlightSetting(null)
-    }
-  })
+  function scrollToElement(element) {
+    element?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    })
+  }
 </script>
 
 <div
+  bind:this={domElement}
   id={`${key}-prop-control-wrap`}
   class={`property-control ${highlightType}`}
   class:wide={!label || labelHidden || wide === true}
@@ -150,10 +185,10 @@
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-static-red-600);
-    margin-top: -3.5px;
-    margin-bottom: -3.5px;
-    padding-bottom: 3.5px;
-    padding-top: 3.5px;
+    margin-top: -4px;
+    margin-bottom: -4px;
+    padding-bottom: 4px;
+    padding-top: 4px;
   }
 
   .property-control.property-focus :global(input) {
@@ -172,7 +207,7 @@
   }
   .text {
     font-size: var(--spectrum-global-dimension-font-size-75);
-    color: var(--grey-6);
+    color: var(--spectrum-global-color-gray-700);
     grid-column: 2 / 2;
   }
 

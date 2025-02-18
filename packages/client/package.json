@@ -5,7 +5,7 @@
   "module": "dist/budibase-client.js",
   "main": "dist/budibase-client.js",
   "type": "module",
-  "svelte": "src/index.js",
+  "svelte": "src/index.ts",
   "exports": {
     ".": {
       "import": "./dist/budibase-client.js",

@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
+import { API } from "@/api"
 import { FieldTypes } from "../constants"
 import { routeStore } from "./routes"
 

@@ -10,7 +10,7 @@ import {
   navigationStore,
   selectedComponent,
 } from "@/stores/builder"
-import { createHistoryStore } from "@/stores/builder/history"
+import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
@@ -19,8 +19,8 @@ import {
   Screen,
   Component,
   SaveScreenResponse,
+  ComponentDefinition,
 } from "@budibase/types"
-import { ComponentDefinition } from "./components"
 
 interface ScreenState {
   screens: Screen[]
@@ -33,9 +33,9 @@ export const initialScreenState: ScreenState = {
 
 // Review the nulls
 export class ScreenStore extends BudiStore<ScreenState> {
-  history: any
-  delete: any
-  save: any
+  history: HistoryStore<Screen>
+  delete: (screens: Screen) => Promise<void>
+  save: (screen: Screen) => Promise<Screen>
 
   constructor() {
     super(initialScreenState)
@@ -280,7 +280,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * supports deeply mutating the current doc rather than just appending data.
    */
   sequentialScreenPatch = Utils.sequential(
-    async (patchFn: (screen: Screen) => any, screenId: string) => {
+    async (
+      patchFn: (screen: Screen) => boolean,
+      screenId: string
+    ): Promise<Screen | void> => {
       const state = get(this.store)
       const screen = state.screens.find(screen => screen._id === screenId)
       if (!screen) {
@@ -361,10 +364,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * Any deleted screens will then have their routes/links purged
    *
    * Wrapped by {@link delete}
-   * @param {Screen | Screen[]} screens
+   * @param {Screen } screens
    */
-  async deleteScreen(screens: Screen | Screen[]) {
-    const screensToDelete = Array.isArray(screens) ? screens : [screens]
+  async deleteScreen(screen: Screen) {
+    const screensToDelete = [screen]
     // Build array of promises to speed up bulk deletions
     let promises: Promise<DeleteScreenResponse>[] = []
     let deleteUrls: string[] = []
@@ -496,6 +499,13 @@ export class ScreenStore extends BudiStore<ScreenState> {
         screen,
       })
     })
+  }
+
+  /**
+   * Provides a list of screens that are used by a given source ID (table, view, datasource, query)
+   */
+  async usageInScreens(sourceId: string) {
+    return API.usageInScreens(sourceId)
   }
 }
 

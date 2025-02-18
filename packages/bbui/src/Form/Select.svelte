@@ -1,44 +1,54 @@
-<script>
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
+<script lang="ts">
   import Field from "./Field.svelte"
   import Select from "./Core/Select.svelte"
   import { createEventDispatcher } from "svelte"
+  import { PopoverAlignment } from "../constants"
 
-  export let value = null
-  export let label = undefined
-  export let disabled = false
-  export let readonly = false
-  export let labelPosition = "above"
-  export let error = null
-  export let placeholder = "Choose an option"
-  export let options = []
-  export let getOptionLabel = option => extractProperty(option, "label")
-  export let getOptionValue = option => extractProperty(option, "value")
-  export let getOptionSubtitle = option => option?.subtitle
-  export let getOptionIcon = option => option?.icon
-  export let getOptionColour = option => option?.colour
+  export let value: V | undefined = undefined
+  export let label: string | undefined = undefined
+  export let disabled: boolean = false
+  export let readonly: boolean = false
+  export let labelPosition: string = "above"
+  export let error: string | undefined = undefined
+  export let placeholder: string | boolean = "Choose an option"
+  export let options: O[] = []
+  export let getOptionLabel = (option: O, _index?: number) =>
+    extractProperty(option, "label")
+  export let getOptionValue = (option: O, _index?: number) =>
+    extractProperty(option, "value")
+  export let getOptionSubtitle = (option: O, _index?: number) =>
+    option?.subtitle
+  export let getOptionIcon = (option: O, _index?: number) => option?.icon
+  export let getOptionColour = (option: O, _index?: number) => option?.colour
   export let useOptionIconImage = false
-  export let isOptionEnabled = undefined
-  export let quiet = false
-  export let autoWidth = false
-  export let sort = false
-  export let tooltip = ""
-  export let autocomplete = false
-  export let customPopoverHeight = undefined
-  export let align = undefined
-  export let footer = null
-  export let tag = null
-  export let helpText = null
-  export let compare = undefined
+  export let isOptionEnabled:
+    | ((_option: O, _index?: number) => boolean)
+    | undefined = undefined
+  export let quiet: boolean = false
+  export let autoWidth: boolean = false
+  export let sort: boolean = false
+  export let tooltip: string | undefined = undefined
+  export let autocomplete: boolean = false
+  export let customPopoverHeight: string | undefined = undefined
+  export let align: PopoverAlignment | undefined = PopoverAlignment.Left
+  export let footer: string | undefined = undefined
+  export let helpText: string | undefined = undefined
+  export let compare: any = undefined
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
 
   const dispatch = createEventDispatcher()
-  const onChange = e => {
+  const onChange = (e: CustomEvent<any>) => {
     value = e.detail
     dispatch("change", e.detail)
   }
 
-  const extractProperty = (value, property) => {
+  const extractProperty = (value: any, property: any) => {
     if (value && typeof value === "object") {
       return value[property]
     }
@@ -49,7 +59,6 @@
 <Field {helpText} {label} {labelPosition} {error} {tooltip}>
   <Select
     {quiet}
-    {error}
     {disabled}
     {readonly}
     {value}
@@ -68,7 +77,6 @@
     {isOptionEnabled}
     {autocomplete}
     {customPopoverHeight}
-    {tag}
     {compare}
     {onOptionMouseenter}
     {onOptionMouseleave}
