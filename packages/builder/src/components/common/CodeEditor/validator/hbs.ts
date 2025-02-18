@@ -99,7 +99,7 @@ export function validateHbsTemplate(
       })
     }
 
-    traverseNodes(ast.body, { ignoreMissing: true })
+    traverseNodes(ast.body)
   } catch (e: any) {
     diagnostics.push({
       from: 0,
