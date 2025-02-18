@@ -66,7 +66,7 @@ describe("cron trigger", () => {
     })
   })
 
-  it.only("should stop if the job fails more than 3 times", async () => {
+  it("should stop if the job fails more than 3 times", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onCron({ cron: "* * * * *" })
       .queryRows({
