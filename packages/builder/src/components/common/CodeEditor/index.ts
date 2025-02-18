@@ -353,7 +353,7 @@ const insertBinding = (
 
 // TODO: typing in this function isn't great
 export const bindingsToCompletions = (
-  bindings: any,
+  bindings: any[],
   mode: { name: "javascript" | "handlebars" }
 ): BindingCompletionOption[] => {
   const bindingByCategory = groupBy(bindings, "category")
@@ -403,7 +403,9 @@ export const bindingsToCompletions = (
                 view,
                 from,
                 to,
-                binding.readableBinding,
+                binding.readableBinding.includes(" ")
+                  ? `[${binding.readableBinding}]`
+                  : binding.readableBinding,
                 mode,
                 AutocompleteType.BINDING
               )
