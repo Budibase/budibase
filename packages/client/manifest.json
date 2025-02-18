@@ -7997,7 +7997,7 @@
     },
     "settings": [
       {
-        "type": "text",
+        "type": "text/multiline",
         "label": "Text",
         "key": "text"
       },
