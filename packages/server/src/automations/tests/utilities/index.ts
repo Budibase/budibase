@@ -120,19 +120,22 @@ export async function captureAutomationMessages(
  */
 export async function captureAllAutomationResults(
   f: () => Promise<unknown>
-): Promise<Job<AutomationData>[]> {
-  const runs: Job<AutomationData>[] = []
+): Promise<queue.TestQueueMessage<AutomationData>[]> {
+  const runs: queue.TestQueueMessage<AutomationData>[] = []
   const queue = getQueue()
   let messagesOutstanding = 0
 
-  const completedListener = async (job: Job<AutomationData>) => {
+  const completedListener = async (
+    job: queue.TestQueueMessage<AutomationData>
+  ) => {
     runs.push(job)
     messagesOutstanding--
   }
-  const messageListener = async (message: Job<AutomationData>) => {
+  const messageListener = async (
+    message: queue.TestQueueMessage<AutomationData>
+  ) => {
     // Don't count cron messages, as they don't get triggered automatically.
-    const isManualTrigger = (message as any).manualTrigger === true
-    if (!isManualTrigger && message.opts?.repeat != null) {
+    if (!message.manualTrigger && message.opts?.repeat != null) {
       return
     }
     messagesOutstanding++

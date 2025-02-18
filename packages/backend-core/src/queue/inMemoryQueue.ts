@@ -40,6 +40,7 @@ export interface TestQueueMessage<T = any> extends Partial<Job<T>> {
   queue: Queue<T>
   data: any
   opts?: JobOptions
+  manualTrigger?: boolean
 }
 
 /**
@@ -90,10 +91,9 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     this._emitter.on("message", async msg => {
       const message = cloneDeep(msg)
 
-      const isManualTrigger = (message as any).manualTrigger === true
       // For the purpose of testing, don't trigger cron jobs immediately.
       // Require the test to trigger them manually with timestamps.
-      if (!isManualTrigger && message.opts?.repeat != null) {
+      if (!message.manualTrigger && message.opts?.repeat != null) {
         return
       }
 
@@ -216,8 +216,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   manualTrigger(id: JobId) {
     for (const message of this._messages) {
       if (message.id === id) {
-        const forceMessage = { ...message, manualTrigger: true }
-        this._emitter.emit("message", forceMessage)
+        this._emitter.emit("message", { ...message, manualTrigger: true })
         return
       }
     }
