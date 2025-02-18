@@ -201,7 +201,7 @@ class Orchestrator {
         return metadata.errorCount
       } catch (error: any) {
         err = error
-        await helpers.wait(Math.random() * 10)
+        await helpers.wait(1000 + Math.random() * 1000)
       }
     }
 
