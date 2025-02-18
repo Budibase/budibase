@@ -9,7 +9,7 @@ import {
 import { automations } from "@budibase/pro"
 import { AutomationData, AutomationStatus } from "@budibase/types"
 import { MAX_AUTOMATION_RECURRING_ERRORS } from "../../../constants"
-import { Job } from "bull"
+import { queue } from "@budibase/backend-core"
 
 describe("cron trigger", () => {
   const config = new TestConfiguration()
@@ -80,7 +80,7 @@ describe("cron trigger", () => {
     )
 
     await config.withProdApp(async () => {
-      let results: Job<AutomationData>[] = []
+      let results: queue.TestQueueMessage<AutomationData>[] = []
       const removed = await captureAutomationRemovals(automation, async () => {
         results = await captureAutomationResults(automation, async () => {
           for (let i = 0; i < MAX_AUTOMATION_RECURRING_ERRORS; i++) {
