@@ -1048,6 +1048,7 @@
   },
   "text": {
     "name": "Paragraph",
+    "deprecated": true,
     "description": "A component for displaying paragraph text.",
     "icon": "TextParagraph",
     "illegalChildren": ["section"],
@@ -1171,6 +1172,7 @@
   },
   "heading": {
     "name": "Headline",
+    "deprecated": true,
     "icon": "TextBold",
     "description": "A component for displaying heading text",
     "illegalChildren": ["section"],
@@ -7984,5 +7986,27 @@
         }
       ]
     }
+  },
+  "textv2": {
+    "name": "Text",
+    "description": "A component for displaying text",
+    "icon": "TextParagraph",
+    "size": {
+      "width": 400,
+      "height": 24
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true
+      }
+    ]
   }
 }
