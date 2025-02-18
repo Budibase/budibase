@@ -181,17 +181,6 @@ class Orchestrator {
     await storeLog(automation, this.executionOutput)
   }
 
-  async checkIfShouldStop(): Promise<boolean> {
-    const metadata = await this.getMetadata()
-    if (!metadata.errorCount || !this.isCron()) {
-      return false
-    }
-    if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
-      return true
-    }
-    return false
-  }
-
   async getMetadata(): Promise<AutomationMetadata> {
     const metadataId = generateAutomationMetadataID(this.automation._id!)
     const db = context.getAppDB()
@@ -200,24 +189,29 @@ class Orchestrator {
   }
 
   async incrementErrorCount() {
-    for (let attempt = 0; attempt < 3; attempt++) {
+    const db = context.getAppDB()
+    let err: Error | undefined = undefined
+    for (let attempt = 0; attempt < 10; attempt++) {
       const metadata = await this.getMetadata()
       metadata.errorCount ||= 0
       metadata.errorCount++
 
-      const db = context.getAppDB()
       try {
         await db.put(metadata)
-        return
-      } catch (err) {
-        logging.logAlertWithInfo(
-          "Failed to update error count in automation metadata",
-          db.name,
-          this.automation._id!,
-          err
-        )
+        return metadata.errorCount
+      } catch (error: any) {
+        err = error
+        await helpers.wait(1000 + Math.random() * 1000)
       }
     }
+
+    logging.logAlertWithInfo(
+      "Failed to update error count in automation metadata",
+      db.name,
+      this.automation._id!,
+      err
+    )
+    return undefined
   }
 
   updateExecutionOutput(id: string, stepId: string, inputs: any, outputs: any) {
@@ -295,28 +289,22 @@ class Orchestrator {
           }
         )
 
-        try {
-          await storeLog(this.automation, this.executionOutput)
-        } catch (e: any) {
-          if (e.status === 413 && e.request?.data) {
-            // if content is too large we shouldn't log it
-            delete e.request.data
-            e.request.data = { message: "removed due to large size" }
-          }
-          logging.logAlert("Error writing automation log", e)
-        }
+        let errorCount = 0
         if (
           isProdAppID(this.appId) &&
           this.isCron() &&
           isErrorInOutput(this.executionOutput)
         ) {
-          await this.incrementErrorCount()
-          if (await this.checkIfShouldStop()) {
-            await this.stopCron("errors")
-            span?.addTags({ shouldStop: true })
-            return
-          }
+          errorCount = (await this.incrementErrorCount()) || 0
         }
+
+        if (errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
+          await this.stopCron("errors")
+          span?.addTags({ shouldStop: true })
+        } else {
+          await storeLog(this.automation, this.executionOutput)
+        }
+
         return this.executionOutput
       }
     )
@@ -743,7 +731,7 @@ export async function executeInThread(
   })) as AutomationResponse
 }
 
-export const removeStalled = async (job: Job) => {
+export const removeStalled = async (job: Job<AutomationData>) => {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
