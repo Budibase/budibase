@@ -220,10 +220,34 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
   async trigger(
     request: TriggerAutomationRequest
   ): Promise<TriggerAutomationResponse> {
-    return await this.config.api.automation.trigger(
-      this.automation._id!,
-      request
-    )
+    if (!this.config.prodAppId) {
+      throw new Error(
+        "Automations can only be triggered in a production app context, call config.api.application.publish()"
+      )
+    }
+    // Because you can only trigger automations in a production app context, we
+    // wrap the trigger call to make tests a bit cleaner. If you really want to
+    // test triggering an automation in a dev app context, you can use the
+    // automation API directly.
+    return await this.config.withProdApp(async () => {
+      try {
+        return await this.config.api.automation.trigger(
+          this.automation._id!,
+          request
+        )
+      } catch (e: any) {
+        if (e.cause.status === 404) {
+          throw new Error(
+            `Automation with ID ${
+              this.automation._id
+            } not found in app ${this.config.getAppId()}. You may have forgotten to call config.api.application.publish().`,
+            { cause: e }
+          )
+        } else {
+          throw e
+        }
+      }
+    })
   }
 }
 
