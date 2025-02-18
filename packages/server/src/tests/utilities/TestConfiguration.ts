@@ -262,11 +262,13 @@ export default class TestConfiguration {
   async withApp<R>(app: App | string, f: () => Promise<R>) {
     const oldAppId = this.appId
     this.appId = typeof app === "string" ? app : app.appId
-    try {
-      return await f()
-    } finally {
-      this.appId = oldAppId
-    }
+    return await context.doInAppContext(this.appId, async () => {
+      try {
+        return await f()
+      } finally {
+        this.appId = oldAppId
+      }
+    })
   }
 
   async withProdApp<R>(f: () => Promise<R>) {
