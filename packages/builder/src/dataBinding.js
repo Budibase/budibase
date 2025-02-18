@@ -1390,7 +1390,9 @@ const bindingReplacement = (
         } while (idx !== -1)
       }
     }
-    result = result.replace(boundValue, newBoundValue)
+    if (!boundValue.includes(" ")) {
+      result = result.replace(boundValue, newBoundValue)
+    }
   }
 
   // Re-encode to base64 if using JS
