@@ -241,9 +241,13 @@ class Orchestrator {
     return doc || { _id: id, errorCount: 0 }
   }
 
+  isCron(): boolean {
+    return this.automation.definition.trigger.stepId === CRON_STEP_ID
+  }
+
   async stopCron(reason: string, opts?: { result: AutomationResults }) {
     if (!this.isCron()) {
-      throw new Error("Not a cron automation")
+      return
     }
 
     const msg = `CRON disabled reason=${reason} - ${this.appId}/${this.automation._id}`
@@ -274,18 +278,25 @@ class Orchestrator {
     }
   }
 
-  private async shouldStop(metadata: AutomationMetadata): Promise<boolean> {
-    if (!metadata.errorCount || !this.isCron()) {
-      return false
-    }
-    if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
-      return true
-    }
-    return false
-  }
+  async incrementErrorCount() {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const metadata = await this.getMetadata()
+      metadata.errorCount ||= 0
+      metadata.errorCount++
 
-  private isCron(): boolean {
-    return this.automation.definition.trigger.stepId === CRON_STEP_ID
+      const db = context.getAppDB()
+      try {
+        await db.put(metadata)
+        return metadata.errorCount
+      } catch (err) {
+        logging.logAlertWithInfo(
+          "Failed to update error count in automation metadata",
+          db.name,
+          this.automation._id!,
+          err
+        )
+      }
+    }
   }
 
   private isProdApp(): boolean {
@@ -325,18 +336,6 @@ class Orchestrator {
         }
         const result: AutomationResults = { trigger, steps: [trigger] }
 
-        let metadata: AutomationMetadata | undefined = undefined
-
-        if (this.isProdApp() && this.isCron()) {
-          span?.addTags({ recurring: true })
-          metadata = await this.getMetadata()
-          if (await this.shouldStop(metadata)) {
-            await this.stopCron("errors")
-            span?.addTags({ shouldStop: true })
-            return result
-          }
-        }
-
         const ctx: AutomationContext = {
           trigger: trigger.outputs,
           steps: [trigger.outputs],
@@ -374,29 +373,18 @@ class Orchestrator {
           }
         }
 
-        await this.logResult(result)
-
-        if (
-          this.isProdApp() &&
-          this.isCron() &&
-          metadata &&
-          this.hasErrored(ctx)
-        ) {
-          metadata.errorCount ??= 0
-          metadata.errorCount++
-
-          const db = context.getAppDB()
-          try {
-            await db.put(metadata)
-          } catch (err) {
-            logging.logAlertWithInfo(
-              "Failed to write automation metadata",
-              db.name,
-              job.data.automation._id!,
-              err
-            )
-          }
+        let errorCount = 0
+        if (isProdAppID(this.appId) && this.isCron() && this.hasErrored(ctx)) {
+          errorCount = (await this.incrementErrorCount()) || 0
         }
+
+        if (errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
+          await this.stopCron("errors", { result })
+          span?.addTags({ shouldStop: true })
+        } else {
+          await this.logResult(result)
+        }
+
         return result
       }
     )

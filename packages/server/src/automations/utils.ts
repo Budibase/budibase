@@ -73,7 +73,7 @@ export async function processEvent(job: AutomationJob) {
 
       const task = async () => {
         try {
-          if (isCronTrigger(job.data.automation)) {
+          if (isCronTrigger(job.data.automation) && !job.data.event.timestamp) {
             // Requires the timestamp at run time
             job.data.event.timestamp = Date.now()
           }
