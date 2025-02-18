@@ -122,7 +122,7 @@
   .control.multiline :global(textarea) {
     min-height: 0 !important;
     field-sizing: content;
-    max-height: 102px;
+    max-height: 105px;
     padding: 6px 11px 6px 11px;
     height: auto;
     resize: none;
