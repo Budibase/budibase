@@ -15,7 +15,6 @@ import {
 import {
   AutomationTriggerStepId,
   AutomationEventType,
-  AutomationStepType,
   AutomationActionStepId,
   Automation,
   AutomationStep,
@@ -28,6 +27,11 @@ import {
   AutomationIOType,
   BranchPath,
   BlockDefinitions,
+  isBranchStep,
+  isTrigger,
+  isRowUpdateTrigger,
+  isRowSaveTrigger,
+  isAppTrigger,
   BranchStep,
 } from "@budibase/types"
 import { ActionStepID } from "@/constants/backend/automations"
@@ -295,8 +299,8 @@ const automationActions = (store: AutomationStore) => ({
         result = steps.slice(0, stepIdx + 1)
         return
       }
-      let last = result[result.length - 1] as BranchStep
-      if (last && "inputs" in last) {
+      let last = result[result.length - 1]
+      if (isBranchStep(last)) {
         if (Number.isInteger(branchIdx)) {
           const branchId = last.inputs.branches[branchIdx].id
           const children = last.inputs.children?.[branchId] || []
@@ -473,25 +477,28 @@ const automationActions = (store: AutomationStore) => ({
         },
       ]
 
-      if (block.stepId === AutomationActionStepId.BRANCH) {
-        const branches = block.inputs.branches
+      if (isBranchStep(block)) {
+        const branches = block.inputs?.branches || []
+        const children = block.inputs?.children || {}
 
         branches.forEach((branch, bIdx) => {
-          block.inputs?.children?.[branch.id].forEach((bBlock, sIdx, array) => {
-            const isBranch = bBlock.stepId === AutomationActionStepId.BRANCH
-            const hasBranches = isBranch && bBlock.inputs?.branches?.length > 0
-            const ended = array.length - 1 === sIdx && !hasBranches
-            treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
-          })
+          children[branch.id].forEach(
+            (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
+              const ended = array.length - 1 === sIdx && !branches.length
+              treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
+            }
+          )
         })
 
-        store.actions.registerBlock(
-          blockRefs,
-          block,
-          pathToCurrentNode,
-          terminating && !branches.length
-        )
+        terminating = terminating && !branches.length
       }
+
+      store.actions.registerBlock(
+        blockRefs,
+        block,
+        pathToCurrentNode,
+        terminating
+      )
     }
 
     // Traverse the entire tree.
@@ -576,7 +583,6 @@ const automationActions = (store: AutomationStore) => ({
           pathBlock.stepId === ActionStepID.LOOP &&
           pathBlock.blockToLoop in blocks
       }
-      const isTrigger = pathBlock.type === AutomationStepType.TRIGGER
 
       if (isLoopBlock && loopBlockCount == 0) {
         schema = {
@@ -587,17 +593,14 @@ const automationActions = (store: AutomationStore) => ({
         }
       }
 
-      const icon = isTrigger
+      const icon = isTrigger(pathBlock)
         ? pathBlock.icon
         : isLoopBlock
         ? "Reuse"
         : pathBlock.icon
 
-      if (blockIdx === 0 && isTrigger) {
-        if (
-          pathBlock.stepId === AutomationTriggerStepId.ROW_UPDATED ||
-          pathBlock.stepId === AutomationTriggerStepId.ROW_SAVED
-        ) {
+      if (blockIdx === 0 && isTrigger(pathBlock)) {
+        if (isRowUpdateTrigger(pathBlock) || isRowSaveTrigger(pathBlock)) {
           let table: any = get(tables).list.find(
             (table: Table) => table._id === pathBlock.inputs.tableId
           )
@@ -609,7 +612,7 @@ const automationActions = (store: AutomationStore) => ({
             }
           }
           delete schema.row
-        } else if (pathBlock.stepId === AutomationTriggerStepId.APP) {
+        } else if (isAppTrigger(pathBlock)) {
           schema = Object.fromEntries(
             Object.keys(pathBlock.inputs.fields || []).map(key => [
               key,
@@ -915,7 +918,11 @@ const automationActions = (store: AutomationStore) => ({
       ...newAutomation.definition.steps,
     ]
 
-    let cache: AutomationStep | AutomationTrigger | AutomationStep[]
+    let cache:
+      | AutomationStep
+      | AutomationTrigger
+      | AutomationStep[]
+      | undefined = undefined
 
     pathWay.forEach((path, pathIdx, array) => {
       const { stepIdx, branchIdx } = path
@@ -937,11 +944,10 @@ const automationActions = (store: AutomationStore) => ({
         }
         return
       }
-
       if (
         Number.isInteger(branchIdx) &&
         !Array.isArray(cache) &&
-        cache.stepId === AutomationActionStepId.BRANCH
+        isBranchStep(cache)
       ) {
         const branchId = cache.inputs.branches[branchIdx].id
         const children = cache.inputs.children?.[branchId] || []
