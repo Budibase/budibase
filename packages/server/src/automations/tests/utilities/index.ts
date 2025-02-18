@@ -6,6 +6,7 @@ import { Knex } from "knex"
 import { getQueue } from "../.."
 import { Job } from "bull"
 import { helpers } from "@budibase/shared-core"
+import { queue } from "@budibase/backend-core"
 
 let config: TestConfiguration
 
@@ -18,6 +19,17 @@ export function getConfig(): TestConfiguration {
 
 export function afterAll() {
   config.end()
+}
+
+export function getTestQueue(): queue.InMemoryQueue<AutomationData> {
+  return getQueue() as unknown as queue.InMemoryQueue<AutomationData>
+}
+
+export function triggerCron(message: Job<AutomationData>) {
+  if (!message.opts?.repeat || !("cron" in message.opts.repeat)) {
+    throw new Error("Expected cron message")
+  }
+  getTestQueue().manualTrigger(message.id)
 }
 
 export async function runInProd(fn: any) {
@@ -34,23 +46,99 @@ export async function runInProd(fn: any) {
   }
 }
 
+export async function captureAllAutomationRemovals(f: () => Promise<unknown>) {
+  const messages: Job<AutomationData>[] = []
+  const queue = getQueue()
+
+  const messageListener = async (message: Job<AutomationData>) => {
+    messages.push(message)
+  }
+
+  queue.on("removed", messageListener)
+  try {
+    await f()
+    // Queue messages tend to be send asynchronously in API handlers, so there's
+    // no guarantee that awaiting this function will have queued anything yet.
+    // We wait here to make sure we're queued _after_ any existing async work.
+    await helpers.wait(100)
+  } finally {
+    queue.off("removed", messageListener)
+  }
+
+  return messages
+}
+
+export async function captureAutomationRemovals(
+  automation: Automation | string,
+  f: () => Promise<unknown>
+) {
+  const messages = await captureAllAutomationRemovals(f)
+  return messages.filter(
+    m =>
+      m.data.automation._id ===
+      (typeof automation === "string" ? automation : automation._id)
+  )
+}
+
+export async function captureAllAutomationMessages(f: () => Promise<unknown>) {
+  const messages: Job<AutomationData>[] = []
+  const queue = getQueue()
+
+  const messageListener = async (message: Job<AutomationData>) => {
+    messages.push(message)
+  }
+
+  queue.on("message", messageListener)
+  try {
+    await f()
+    // Queue messages tend to be send asynchronously in API handlers, so there's
+    // no guarantee that awaiting this function will have queued anything yet.
+    // We wait here to make sure we're queued _after_ any existing async work.
+    await helpers.wait(100)
+  } finally {
+    queue.off("message", messageListener)
+  }
+
+  return messages
+}
+
+export async function captureAutomationMessages(
+  automation: Automation | string,
+  f: () => Promise<unknown>
+) {
+  const messages = await captureAllAutomationMessages(f)
+  return messages.filter(
+    m =>
+      m.data.automation._id ===
+      (typeof automation === "string" ? automation : automation._id)
+  )
+}
+
 /**
  * Capture all automation runs that occur during the execution of a function.
  * This function will wait for all messages to be processed before returning.
  */
 export async function captureAllAutomationResults(
   f: () => Promise<unknown>
-): Promise<Job<AutomationData>[]> {
-  const runs: Job<AutomationData>[] = []
+): Promise<queue.TestQueueMessage<AutomationData>[]> {
+  const runs: queue.TestQueueMessage<AutomationData>[] = []
   const queue = getQueue()
-  let messagesReceived = 0
+  let messagesOutstanding = 0
 
-  const completedListener = async (job: Job<AutomationData>) => {
+  const completedListener = async (
+    job: queue.TestQueueMessage<AutomationData>
+  ) => {
     runs.push(job)
-    messagesReceived--
+    messagesOutstanding--
   }
-  const messageListener = async () => {
-    messagesReceived++
+  const messageListener = async (
+    message: queue.TestQueueMessage<AutomationData>
+  ) => {
+    // Don't count cron messages, as they don't get triggered automatically.
+    if (!message.manualTrigger && message.opts?.repeat != null) {
+      return
+    }
+    messagesOutstanding++
   }
   queue.on("message", messageListener)
   queue.on("completed", completedListener)
@@ -61,9 +149,18 @@ export async function captureAllAutomationResults(
     // We wait here to make sure we're queued _after_ any existing async work.
     await helpers.wait(100)
   } finally {
+    const waitMax = 10000
+    let waited = 0
     // eslint-disable-next-line no-unmodified-loop-condition
-    while (messagesReceived > 0) {
+    while (messagesOutstanding > 0) {
       await helpers.wait(50)
+      waited += 50
+      if (waited > waitMax) {
+        // eslint-disable-next-line no-unsafe-finally
+        throw new Error(
+          `Timed out waiting for automation runs to complete. ${messagesOutstanding} messages waiting for completion.`
+        )
+      }
     }
     queue.off("completed", completedListener)
     queue.off("message", messageListener)
