@@ -43,7 +43,6 @@
     <EditComponentPopover
       {anchor}
       componentInstance={item}
-      {componentBindings}
       {bindings}
       on:change
       parseSettings={updatedNestedFlags}

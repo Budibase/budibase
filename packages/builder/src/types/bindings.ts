@@ -5,4 +5,15 @@ export type BindingCompletion = (context: CompletionContext) => {
   options: Completion[]
 } | null
 
-export type BindingCompletionOption = Completion
+export interface BindingCompletionOption extends Completion {
+  args?: any[]
+  requiresBlock?: boolean
+}
+
+export type CodeValidator = Record<
+  string,
+  {
+    arguments?: any[]
+    requiresBlock?: boolean
+  }
+>

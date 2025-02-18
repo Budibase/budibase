@@ -151,6 +151,7 @@
               propertyFocus={$builderStore.propertyFocus === setting.key}
               info={setting.info}
               disableBindings={setting.disableBindings}
+              contextAccess={setting.contextAccess}
               props={{
                 // Generic settings
                 placeholder: setting.placeholder || null,

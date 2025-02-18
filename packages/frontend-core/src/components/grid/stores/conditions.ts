@@ -31,7 +31,7 @@ export const deriveStores = (context: StoreContext): ConditionDerivedStore => {
   // Derive and memoize the cell conditions present in our columns so that we
   // only recompute condition metadata when absolutely necessary
   const conditions = derivedMemo(columns, $columns => {
-    let newConditions = []
+    let newConditions: UICondition[] = []
     for (let column of $columns) {
       for (let condition of column.conditions || []) {
         newConditions.push({
