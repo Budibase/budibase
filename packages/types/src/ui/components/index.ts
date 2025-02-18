@@ -58,17 +58,26 @@ export interface ComponentSetting {
     self: boolean
   }
 }
+interface ComponentAction {
+  type: string
+  suffix?: string
+}
+
+interface ComponentStaticContextValue {
+  label: string
+  key: string
+  type: string // technically this is a long list of options but there are too many to enumerate
+}
 
 export interface ComponentContext {
   type: ComponentContextType
-  scope: ComponentContextScopes
-  actions: any[]
-  url?: Record<string, any>
-  query?: string
-  state?: Record<string, any>
+  scope?: ComponentContextScopes
+  actions?: ComponentAction[]
+  suffix?: string
+  values?: ComponentStaticContextValue[]
 }
 
-export type ComponentContextType = "context" | "action"
+export type ComponentContextType = "action" | "static" | "schema" | "form"
 
 export const enum ComponentContextScopes {
   Local = "local",
