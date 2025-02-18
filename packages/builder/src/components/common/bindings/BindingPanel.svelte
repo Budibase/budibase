@@ -28,7 +28,7 @@
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
   import SnippetSidePanel from "./SnippetSidePanel.svelte"
-  import { BindingHelpers } from "./utils"
+  import { BindingHelpers, BindingType } from "./utils"
   import { capitalise } from "@/helpers"
   import { Utils, JsonFormatter } from "@budibase/frontend-core"
   import { licensing } from "@/stores/portal"
@@ -254,9 +254,14 @@
     { forceJS }: { forceJS?: boolean } = {}
   ) => {
     const js = usingJS || forceJS
+    const bindingType =
+      !js && binding.readableBinding.includes(" ")
+        ? BindingType.RUNTIME
+        : BindingType.READABLE
     bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, {
       js,
       dontDecode: undefined,
+      type: bindingType,
     })
   }
 

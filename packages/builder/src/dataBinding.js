@@ -1284,6 +1284,11 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
   if (!currentValue?.includes(from)) {
     return false
   }
+
+  if (convertTo.includes(" ")) {
+    return false
+  }
+
   // some cases we have the same binding for readable/runtime, specific logic for this
   const sameBindings = binding.runtimeBinding.includes(binding.readableBinding)
   const convertingToReadable = convertTo === "readableBinding"
@@ -1390,9 +1395,8 @@ const bindingReplacement = (
         } while (idx !== -1)
       }
     }
-    if (!boundValue.includes(" ")) {
-      result = result.replace(boundValue, newBoundValue)
-    }
+
+    result = result.replace(boundValue, newBoundValue)
   }
 
   // Re-encode to base64 if using JS
