@@ -230,7 +230,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   enrichEmptySettings(
     component: Component,
-    opts: { screen?: Screen; parent?: Component; useDefaultValues?: boolean }
+    opts: { screen?: Screen; parent?: string; useDefaultValues?: boolean }
   ) {
     if (!component?._component) {
       return
@@ -238,7 +238,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     const defaultDS = this.getDefaultDatasource()
     const settings = this.getComponentSettings(component._component)
     const { parent, screen, useDefaultValues } = opts || {}
-    const treeId = parent?._id || component._id
+    const treeId = parent || component._id
     if (!screen) {
       return
     }
@@ -423,7 +423,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   createInstance(
     componentType: string,
     presetProps?: Record<string, any>,
-    parent?: Component
+    parent?: string
   ): Component | null {
     const screen = get(selectedScreen)
     if (!screen) {
@@ -501,7 +501,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   async create(
     componentType: string,
     presetProps?: Record<string, any>,
-    parent?: Component,
+    parent?: string,
     index?: number
   ) {
     const state = get(this.store)
@@ -517,7 +517,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Insert in position if specified
     if (parent && index != null) {
       await screenStore.patch((screen: Screen) => {
-        let parentComponent = findComponent(screen.props, parent._id!)!
+        let parentComponent = findComponent(screen.props, parent)!
         if (!parentComponent._children?.length) {
           parentComponent._children = [componentInstance]
         } else {
