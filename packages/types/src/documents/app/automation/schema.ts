@@ -342,6 +342,36 @@ export type AutomationStep =
   | OpenAIStep
   | BranchStep
 
+export function isBranchStep(
+  step: AutomationStep | AutomationTrigger
+): step is BranchStep {
+  return step.stepId === AutomationActionStepId.BRANCH
+}
+
+export function isTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is AutomationTrigger {
+  return step.type === AutomationStepType.TRIGGER
+}
+
+export function isRowUpdateTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is RowUpdatedTrigger {
+  return step.stepId === AutomationTriggerStepId.ROW_UPDATED
+}
+
+export function isRowSaveTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is RowSavedTrigger {
+  return step.stepId === AutomationTriggerStepId.ROW_SAVED
+}
+
+export function isAppTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is AppActionTrigger {
+  return step.stepId === AutomationTriggerStepId.APP
+}
+
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs
