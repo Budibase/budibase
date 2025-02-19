@@ -25,7 +25,11 @@ export function validateJsTemplate(
       offset += line.length + 1 // +1 for newline character
     }
 
+    let hasReturnStatement = false
     walk(ast, {
+      ReturnStatement(node) {
+        hasReturnStatement = !!node.argument
+      },
       CallExpression(node) {
         const callee: any = node.callee
         if (
@@ -67,6 +71,15 @@ export function validateJsTemplate(
         }
       },
     })
+
+    if (!hasReturnStatement) {
+      diagnostics.push({
+        from: 0,
+        to: code.length,
+        severity: "error",
+        message: "Your code must return a value.",
+      })
+    }
   } catch (e: any) {
     diagnostics.push({
       from: 0,
