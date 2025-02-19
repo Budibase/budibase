@@ -31,8 +31,8 @@ describe("/api/global/email", () => {
   ) {
     let response, text
     try {
-      await helpers.withTimeout(20000, config.saveEtherealSmtpConfig())
-      await helpers.withTimeout(20000, config.saveSettingsConfig())
+      await helpers.withTimeout(20000, () => config.saveEtherealSmtpConfig())
+      await helpers.withTimeout(20000, () => config.saveSettingsConfig())
       let res
       if (attachments) {
         res = await config.api.emails
