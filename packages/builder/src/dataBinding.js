@@ -1285,7 +1285,7 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
     return false
   }
 
-  if (convertTo.includes(" ")) {
+  if (binding.readableBinding.includes(" ")) {
     return false
   }
 
