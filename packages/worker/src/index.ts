@@ -4,7 +4,7 @@ if (process.env.DD_APM_ENABLED) {
 
 // need to load environment first
 import env from "./environment"
-import Application from "koa"
+import Application, { Middleware } from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
 import { sdk as proSdk } from "@budibase/pro"
@@ -53,7 +53,7 @@ app.proxy = true
 app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
-app.use(async (ctx, next) => {
+const sessionMiddleware: Middleware = async (ctx, next) => {
   const redisClient = await new redis.Client(
     redis.utils.Databases.SESSIONS
   ).init()
@@ -70,7 +70,9 @@ app.use(async (ctx, next) => {
     },
     app
   )(ctx, next)
-})
+}
+
+app.use(sessionMiddleware)
 
 app.use(middleware.correlation)
 app.use(middleware.pino)
