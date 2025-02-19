@@ -6,8 +6,8 @@ import {
   ServerLogStepOutputs,
   CreateRowStepOutputs,
   FieldType,
+  FilterCondition,
 } from "@budibase/types"
-import * as loopUtils from "../../loopUtils"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
@@ -30,8 +30,8 @@ describe("Attempt to run a basic loop automation", () => {
     await config.api.row.save(table._id!, {})
   })
 
-  afterAll(() => {
-    automation.shutdown()
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 
@@ -535,97 +535,30 @@ describe("Attempt to run a basic loop automation", () => {
     expect(results.steps[2].outputs.rows).toHaveLength(0)
   })
 
-  describe("replaceFakeBindings", () => {
-    it("should replace loop bindings in nested objects", () => {
-      const originalStepInput = {
-        schema: {
-          name: {
-            type: "string",
-            constraints: {
-              type: "string",
-              length: { maximum: null },
-              presence: false,
-            },
-            name: "name",
-            display: { type: "Text" },
-          },
-        },
-        row: {
-          tableId: "ta_aaad4296e9f74b12b1b90ef7a84afcad",
-          name: "{{ loop.currentItem.pokemon }}",
-        },
-      }
+  describe("loop output", () => {
+    it("should not output anything if a filter stops the automation", async () => {
+      const results = await createAutomationBuilder(config)
+        .onAppAction()
+        .filter({
+          condition: FilterCondition.EQUAL,
+          field: "1",
+          value: "2",
+        })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .test({ fields: {} })
 
-      const loopStepNumber = 3
-
-      const result = loopUtils.replaceFakeBindings(
-        originalStepInput,
-        loopStepNumber
-      )
-
-      expect(result).toEqual({
-        schema: {
-          name: {
-            type: "string",
-            constraints: {
-              type: "string",
-              length: { maximum: null },
-              presence: false,
-            },
-            name: "name",
-            display: { type: "Text" },
-          },
-        },
-        row: {
-          tableId: "ta_aaad4296e9f74b12b1b90ef7a84afcad",
-          name: "{{ steps.3.currentItem.pokemon }}",
-        },
+      expect(results.steps.length).toBe(1)
+      expect(results.steps[0].outputs).toEqual({
+        comparisonValue: 2,
+        refValue: 1,
+        result: false,
+        success: true,
+        status: "stopped",
       })
-    })
-
-    it("should handle null values in nested objects", () => {
-      const originalStepInput = {
-        nullValue: null,
-        nestedNull: {
-          someKey: null,
-        },
-        validValue: "{{ loop.someValue }}",
-      }
-
-      const loopStepNumber = 2
-
-      const result = loopUtils.replaceFakeBindings(
-        originalStepInput,
-        loopStepNumber
-      )
-
-      expect(result).toEqual({
-        nullValue: null,
-        nestedNull: {
-          someKey: null,
-        },
-        validValue: "{{ steps.2.someValue }}",
-      })
-    })
-
-    it("should handle empty objects and arrays", () => {
-      const originalStepInput = {
-        emptyObject: {},
-        emptyArray: [],
-        nestedEmpty: {
-          emptyObj: {},
-          emptyArr: [],
-        },
-      }
-
-      const loopStepNumber = 1
-
-      const result = loopUtils.replaceFakeBindings(
-        originalStepInput,
-        loopStepNumber
-      )
-
-      expect(result).toEqual(originalStepInput)
     })
   })
 })

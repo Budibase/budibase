@@ -13,6 +13,7 @@ import sdk from "../../../sdk"
 import {
   ConfigType,
   FieldType,
+  FilterCondition,
   isDidNotTriggerResponse,
   SettingsConfig,
   Table,
@@ -20,11 +21,8 @@ import {
 import { mocks } from "@budibase/backend-core/tests"
 import { removeDeprecated } from "../../../automations/utils"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import { automations } from "@budibase/shared-core"
 import { basicTable } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-
-const FilterConditions = automations.steps.filter.FilterConditions
 
 const MAX_RETRIES = 4
 const {
@@ -487,15 +485,40 @@ describe("/automations", () => {
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
+
+    it("can update an input field", async () => {
+      const { automation } = await createAutomationBuilder(config)
+        .onRowDeleted({ tableId: "tableId" })
+        .serverLog({ text: "test" })
+        .save()
+
+      automation.definition.trigger.inputs.tableId = "newTableId"
+      const { automation: updatedAutomation } =
+        await config.api.automation.update(automation)
+
+      expect(updatedAutomation.definition.trigger.inputs.tableId).toEqual(
+        "newTableId"
+      )
+    })
+
+    it("cannot update a readonly field", async () => {
+      const { automation } = await createAutomationBuilder(config)
+        .onRowAction({ tableId: "tableId" })
+        .serverLog({ text: "test" })
+        .save()
+
+      automation.definition.trigger.inputs.tableId = "newTableId"
+      await config.api.automation.update(automation, {
+        status: 400,
+        body: {
+          message: "Field tableId is readonly and it cannot be modified",
+        },
+      })
+    })
   })
 
   describe("fetch", () => {
     it("return all the automations for an instance", async () => {
-      const fetchResponse = await config.api.automation.fetch()
-      for (const auto of fetchResponse.automations) {
-        await config.api.automation.delete(auto)
-      }
-
       const { automation: automation1 } = await config.api.automation.post(
         newAutomation()
       )
@@ -594,7 +617,7 @@ describe("/automations", () => {
               steps: [
                 {
                   inputs: {
-                    condition: FilterConditions.EQUAL,
+                    condition: FilterCondition.EQUAL,
                     field: "{{ trigger.row.City }}",
                     value: "{{ trigger.oldRow.City }}",
                   },

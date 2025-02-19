@@ -8,27 +8,32 @@ import {
 } from "@budibase/string-templates"
 import { capitalise } from "@/helpers"
 import { Constants } from "@budibase/frontend-core"
+import { Component, ComponentContext } from "@budibase/types"
 
 const { ContextScopes } = Constants
 
 /**
  * Recursively searches for a specific component ID
  */
-export const findComponent = (rootComponent, id) => {
+export const findComponent = (rootComponent: Component, id: string) => {
   return searchComponentTree(rootComponent, comp => comp._id === id)
 }
 
 /**
  * Recursively searches for a specific component type
  */
-export const findComponentType = (rootComponent, type) => {
+export const findComponentType = (rootComponent: Component, type: string) => {
   return searchComponentTree(rootComponent, comp => comp._component === type)
 }
 
 /**
  * Recursively searches for the parent component of a specific component ID
  */
-export const findComponentParent = (rootComponent, id, parentComponent) => {
+export const findComponentParent = (
+  rootComponent: Component | undefined,
+  id: string | undefined,
+  parentComponent: Component | null = null
+): Component | null => {
   if (!rootComponent || !id) {
     return null
   }
@@ -51,7 +56,11 @@ export const findComponentParent = (rootComponent, id, parentComponent) => {
  * Recursively searches for a specific component ID and records the component
  * path to this component
  */
-export const findComponentPath = (rootComponent, id, path = []) => {
+export const findComponentPath = (
+  rootComponent: Component,
+  id: string | undefined,
+  path: Component[] = []
+): Component[] => {
   if (!rootComponent || !id) {
     return []
   }
@@ -75,11 +84,14 @@ export const findComponentPath = (rootComponent, id, path = []) => {
  * Recurses through the component tree and finds all components which match
  * a certain selector
  */
-export const findAllMatchingComponents = (rootComponent, selector) => {
+export const findAllMatchingComponents = (
+  rootComponent: Component | null,
+  selector: (component: Component) => boolean
+) => {
   if (!rootComponent || !selector) {
     return []
   }
-  let components = []
+  let components: Component[] = []
   if (rootComponent._children) {
     rootComponent._children.forEach(child => {
       components = [
@@ -97,7 +109,7 @@ export const findAllMatchingComponents = (rootComponent, selector) => {
 /**
  * Recurses through the component tree and finds all components.
  */
-export const findAllComponents = rootComponent => {
+export const findAllComponents = (rootComponent: Component) => {
   return findAllMatchingComponents(rootComponent, () => true)
 }
 
@@ -105,9 +117,9 @@ export const findAllComponents = rootComponent => {
  * Finds the closest parent component which matches certain criteria
  */
 export const findClosestMatchingComponent = (
-  rootComponent,
-  componentId,
-  selector
+  rootComponent: Component,
+  componentId: string | undefined,
+  selector: (component: Component) => boolean
 ) => {
   if (!selector) {
     return null
@@ -125,7 +137,10 @@ export const findClosestMatchingComponent = (
  * Recurses through a component tree evaluating a matching function against
  * components until a match is found
  */
-const searchComponentTree = (rootComponent, matchComponent) => {
+const searchComponentTree = (
+  rootComponent: Component,
+  matchComponent: (component: Component) => boolean
+): Component | null => {
   if (!rootComponent || !matchComponent) {
     return null
   }
@@ -150,15 +165,18 @@ const searchComponentTree = (rootComponent, matchComponent) => {
  * This mutates the object in place.
  * @param component the component to randomise
  */
-export const makeComponentUnique = component => {
+export const makeComponentUnique = (component: Component) => {
   if (!component) {
     return
   }
 
   // Generate a full set of component ID replacements in this tree
-  const idReplacements = []
-  const generateIdReplacements = (component, replacements) => {
-    const oldId = component._id
+  const idReplacements: [string, string][] = []
+  const generateIdReplacements = (
+    component: Component,
+    replacements: [string, string][]
+  ) => {
+    const oldId = component._id!
     const newId = Helpers.uuid()
     replacements.push([oldId, newId])
     component._children?.forEach(x => generateIdReplacements(x, replacements))
@@ -182,9 +200,9 @@ export const makeComponentUnique = component => {
     let js = decodeJSBinding(sanitizedBinding)
     if (js != null) {
       // Replace ID inside JS binding
-      idReplacements.forEach(([oldId, newId]) => {
+      for (const [oldId, newId] of idReplacements) {
         js = js.replace(new RegExp(oldId, "g"), newId)
-      })
+      }
 
       // Create new valid JS binding
       let newBinding = encodeJSBinding(js)
@@ -204,7 +222,7 @@ export const makeComponentUnique = component => {
   return JSON.parse(definition)
 }
 
-export const getComponentText = component => {
+export const getComponentText = (component: Component) => {
   if (component == null) {
     return ""
   }
@@ -218,7 +236,7 @@ export const getComponentText = component => {
   return capitalise(type)
 }
 
-export const getComponentName = component => {
+export const getComponentName = (component: Component) => {
   if (component == null) {
     return ""
   }
@@ -229,9 +247,9 @@ export const getComponentName = component => {
 }
 
 // Gets all contexts exposed by a certain component type, including actions
-export const getComponentContexts = component => {
+export const getComponentContexts = (component: string) => {
   const def = componentStore.getDefinition(component)
-  let contexts = []
+  let contexts: ComponentContext[] = []
   if (def?.context) {
     contexts = Array.isArray(def.context) ? [...def.context] : [def.context]
   }
@@ -251,9 +269,9 @@ export const getComponentContexts = component => {
  * Recurses through the component tree and builds a tree of contexts provided
  * by components.
  */
-export const buildContextTree = (
-  rootComponent,
-  tree = { root: [] },
+const buildContextTree = (
+  rootComponent: Component,
+  tree: Record<string, string[]> = { root: [] },
   currentBranch = "root"
 ) => {
   // Sanity check
@@ -264,12 +282,12 @@ export const buildContextTree = (
   // Process this component's contexts
   const contexts = getComponentContexts(rootComponent._component)
   if (contexts.length) {
-    tree[currentBranch].push(rootComponent._id)
+    tree[currentBranch].push(rootComponent._id!)
 
     // If we provide local context, start a new branch for our children
     if (contexts.some(context => context.scope === ContextScopes.Local)) {
-      currentBranch = rootComponent._id
-      tree[rootComponent._id] = []
+      currentBranch = rootComponent._id!
+      tree[rootComponent._id!] = []
     }
   }
 
@@ -287,9 +305,9 @@ export const buildContextTree = (
  * Generates a lookup map of which context branch all components in a component
  * tree are inside.
  */
-export const buildContextTreeLookupMap = rootComponent => {
+export const buildContextTreeLookupMap = (rootComponent: Component) => {
   const tree = buildContextTree(rootComponent)
-  let map = {}
+  const map: Record<string, string> = {}
   Object.entries(tree).forEach(([branch, ids]) => {
     ids.forEach(id => {
       map[id] = branch
@@ -299,9 +317,9 @@ export const buildContextTreeLookupMap = rootComponent => {
 }
 
 // Get a flat list of ids for all descendants of a component
-export const getChildIdsForComponent = component => {
+export const getChildIdsForComponent = (component: Component): string[] => {
   return [
-    component._id,
+    component._id!,
     ...(component?._children ?? []).map(getChildIdsForComponent).flat(1),
   ]
 }
