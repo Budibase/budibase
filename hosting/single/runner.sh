@@ -98,7 +98,10 @@ fi
 
 # storage with blobfuse
 if [[ "${TARGETBUILD}" = "aas" ]]; then
-    if [[ ! -z "${STORAGE_ACCOUNT_NAME}" && ! -z "${STORAGE_ACCOUNT_KEY}" && ! -z "${STORAGE_CONTAINER_NAME}" ]]; then
+    if [[ -z "${STORAGE_ACCOUNT_NAME}" || -z "${STORAGE_ACCOUNT_KEY}" || -z "${STORAGE_CONTAINER_NAME}" ]]; then
+        echo "Error: STORAGE_ACCOUNT_NAME, STORAGE_ACCOUNT_KEY, and STORAGE_CONTAINER_NAME must be set for Azure Blob Storage."
+        exit 1
+    else
         mkdir /tmp/blobfuse
         echo "Mounting Azure Blob Storage to ${DATA_DIR}"
         blobfuse ${DATA_DIR} --tmp-path=/tmp/blobfuse --container-name=${STORAGE_CONTAINER_NAME} --account-name=${STORAGE_ACCOUNT_NAME} --account-key=${STORAGE_ACCOUNT_KEY} --file-cache-timeout-in-seconds=120 --log-level=LOG_DEBUG --log-path=/tmp/blobfuse.log
