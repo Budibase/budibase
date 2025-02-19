@@ -44,7 +44,7 @@
     "check:types": "yarn check:dependencies && lerna run --concurrency 2 check:types",
     "check:dependencies": "lerna run --concurrency 2 check:dependencies",
     "build:sdk": "lerna run --stream build:sdk",
-    "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
+    "deps:circular": "madge packages/server/src/* packages/worker/src/* packages/backend-core/src/* packages/cli/src/* --circular",
     "release": "lerna publish from-package --yes --force-publish --no-git-tag-version --no-push --no-git-reset",
     "restore": "yarn run clean && yarn && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
