@@ -20,6 +20,7 @@ import {
   cache,
   features,
 } from "@budibase/backend-core"
+import RedisStore from "koa-redis"
 
 db.init()
 import koaBody from "koa-body"
@@ -45,6 +46,7 @@ bootstrap()
 
 const app: Application = new Application()
 
+
 app.keys = ["secret", "key"]
 app.proxy = true
 
@@ -52,7 +54,20 @@ app.proxy = true
 app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
-app.use(koaSession(app))
+app.use(async (ctx, next) => {
+  const redisClient = await new redis.Client(redis.utils.Databases.SESSIONS).init()
+  return koaSession({
+    store: new RedisStore({ client: redisClient.getClient() }),
+    key: "koa:sess",
+    maxAge: 86400000, // one day
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    rolling: true,
+    renew: true,
+  }, app)(ctx, next)
+})
+
 app.use(middleware.correlation)
 app.use(middleware.pino)
 app.use(middleware.ip)
