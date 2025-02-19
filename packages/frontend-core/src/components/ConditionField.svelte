@@ -10,6 +10,7 @@
   export let drawerTitle
   export let toReadable
   export let toRuntime
+  export let evaluationContext = {}
 
   const dispatch = createEventDispatcher()
 
@@ -66,7 +67,6 @@
     >
       Confirm
     </Button>
-
     <svelte:component
       this={panel}
       slot="body"
@@ -76,6 +76,7 @@
       allowHBS
       on:change={drawerOnChange}
       {bindings}
+      context={evaluationContext}
     />
   </Drawer>
 

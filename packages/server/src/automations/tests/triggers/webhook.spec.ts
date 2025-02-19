@@ -12,7 +12,7 @@ describe("Branching automations", () => {
 
   async function createWebhookAutomation() {
     const { automation } = await createAutomationBuilder(config)
-      .onWebhook({ fields: { parameter: "string" } })
+      .onWebhook({ body: { parameter: "string" } })
       .createRow({
         row: { tableId: table._id!, name: "{{ trigger.parameter }}" },
       })

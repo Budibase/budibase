@@ -1,17 +1,10 @@
 <script>
   import { Input, Select, Button } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-
-  const dispatch = createEventDispatcher()
+  import { memo } from "@budibase/frontend-core"
+  import { generate } from "shortid"
 
   export let value = {}
-
-  $: fieldsArray = value
-    ? Object.entries(value).map(([name, type]) => ({
-        name,
-        type,
-      }))
-    : []
 
   const typeOptions = [
     {
@@ -36,16 +29,42 @@
     },
   ]
 
+  const dispatch = createEventDispatcher()
+  const memoValue = memo({ data: {} })
+
+  $: memoValue.set({ data: value })
+
+  $: fieldsArray = $memoValue.data
+    ? Object.entries($memoValue.data).map(([name, type]) => ({
+        name,
+        type,
+        id: generate(),
+      }))
+    : []
+
   function addField() {
-    const newValue = { ...value }
+    const newValue = { ...$memoValue.data }
     newValue[""] = "string"
-    dispatch("change", newValue)
+    fieldsArray = [...fieldsArray, { name: "", type: "string", id: generate() }]
   }
 
-  function removeField(name) {
-    const newValues = { ...value }
-    delete newValues[name]
-    dispatch("change", newValues)
+  function removeField(idx) {
+    const entries = [...fieldsArray]
+
+    // Remove empty field
+    if (!entries[idx]?.name) {
+      fieldsArray.splice(idx, 1)
+      fieldsArray = [...fieldsArray]
+      return
+    }
+
+    entries.splice(idx, 1)
+
+    const update = entries.reduce((newVals, current) => {
+      newVals[current.name.trim()] = current.type
+      return newVals
+    }, {})
+    dispatch("change", update)
   }
 
   const fieldNameChanged = originalName => e => {
@@ -57,11 +76,16 @@
     } else {
       entries = entries.filter(f => f.name !== originalName)
     }
-    value = entries.reduce((newVals, current) => {
-      newVals[current.name.trim()] = current.type
-      return newVals
-    }, {})
-    dispatch("change", value)
+
+    const update = entries
+      .filter(entry => entry.name)
+      .reduce((newVals, current) => {
+        newVals[current.name.trim()] = current.type
+        return newVals
+      }, {})
+    if (Object.keys(update).length) {
+      dispatch("change", update)
+    }
   }
 </script>
 
@@ -69,7 +93,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="root">
   <div class="spacer" />
-  {#each fieldsArray as field}
+  {#each fieldsArray as field, idx (field.id)}
     <div class="field">
       <Input
         value={field.name}
@@ -88,7 +112,9 @@
       />
       <i
         class="remove-field ri-delete-bin-line"
-        on:click={() => removeField(field.name)}
+        on:click={() => {
+          removeField(idx)
+        }}
       />
     </div>
   {/each}
@@ -114,5 +140,13 @@
     position: relative;
     align-items: center;
     gap: var(--spacing-m);
+  }
+
+  .remove-field {
+    cursor: pointer;
+  }
+
+  .remove-field:hover {
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

@@ -39,6 +39,7 @@
   export let allowJS = false
   export let actionButtonDisabled = false
   export let compare = (option, value) => option === value
+  export let context = null
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -132,6 +133,7 @@
           {allowJS}
           {allowHelpers}
           drawerLeft={bindingDrawerLeft}
+          {context}
         />
       {:else}
         <Input readonly={readOnly} bind:value={field.name} on:blur={changed} />
@@ -158,6 +160,7 @@
           {allowJS}
           {allowHelpers}
           drawerLeft={bindingDrawerLeft}
+          {context}
         />
       {:else}
         <Input
