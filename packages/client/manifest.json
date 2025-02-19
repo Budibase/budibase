@@ -756,7 +756,7 @@
       },
       {
         "section": true,
-        "name": "SomeRandomVal",
+        "name": "Button theming",
         "settings": [
           {
             "key": "buttonTheme",
