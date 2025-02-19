@@ -17,6 +17,12 @@
     buttonBorderRadius: "--spectrum-button-primary-m-border-radius",
   }
 
+  $: primaryColorValue = $selectedComponent && getCurrentValue("primaryColor")
+  $: primaryColorHoverValue =
+    $selectedComponent && getCurrentValue("primaryColorHover")
+  $: buttonBorderRadiusValue =
+    $selectedComponent && getCurrentValue("buttonBorderRadius")
+
   const getCurrentValue = property => {
     const cssVar = cssVarMap[property]
     return (
@@ -60,7 +66,7 @@
     <Label>Button roundness</Label>
     <ButtonRoundnessSelect
       customTheme={{
-        buttonBorderRadius: getCurrentValue("buttonBorderRadius"),
+        buttonBorderRadius: buttonBorderRadiusValue,
       }}
       on:change={e => update("buttonBorderRadius", e.detail)}
     />
@@ -69,7 +75,7 @@
     <PropertyControl
       label="Accent color"
       control={ColorPicker}
-      value={getCurrentValue("primaryColor")}
+      value={primaryColorValue}
       onChange={val => update("primaryColor", val)}
       props={{
         spectrumTheme: $themeStore.theme,
@@ -78,7 +84,7 @@
     <PropertyControl
       label="Hover"
       control={ColorPicker}
-      value={getCurrentValue("primaryColorHover")}
+      value={primaryColorHoverValue}
       onChange={val => update("primaryColorHover", val)}
       props={{
         spectrumTheme: $themeStore.theme,

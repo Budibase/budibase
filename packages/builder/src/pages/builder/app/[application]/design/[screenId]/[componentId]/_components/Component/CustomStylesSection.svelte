@@ -17,7 +17,7 @@
     runtimeToReadableBinding,
   } from "@/dataBinding"
   import { builderStore } from "@/stores/builder"
-
+  import ButtonTheme from "@/components/design/settings/controls/ButtonTheme.svelte"
   export let componentInstance
   export let componentDefinition
   export let iconTooltip
@@ -62,6 +62,12 @@
     <ActionButton on:click={openDrawer}>Edit custom CSS</ActionButton>
   </div>
 </DetailSummary>
+
+{#if componentInstance?._component === "@budibase/standard-components/button"}
+  <DetailSummary name="Button theme" collapsible={false}>
+    <ButtonTheme />
+  </DetailSummary>
+{/if}
 {#key componentInstance?._id}
   <Drawer bind:this={drawer} title="Custom CSS">
     <svelte:fragment slot="description">

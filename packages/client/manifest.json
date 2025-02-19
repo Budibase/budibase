@@ -753,17 +753,6 @@
         "type": "event",
         "label": "On click",
         "key": "onClick"
-      },
-      {
-        "section": true,
-        "name": "Button theming",
-        "settings": [
-          {
-            "key": "buttonTheme",
-            "type": "buttonTheme",
-            "nested": true
-          }
-        ]
       }
     ]
   },
