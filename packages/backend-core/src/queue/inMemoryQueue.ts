@@ -1,6 +1,6 @@
 import events from "events"
 import { newid } from "../utils"
-import { Queue, QueueOptions, JobOptions } from "./queue"
+import { Queue, QueueOptions, JobOptions } from "./constants"
 import { helpers } from "@budibase/shared-core"
 import { Job, JobId, JobInformation } from "bull"
 import { cloneDeep } from "lodash"

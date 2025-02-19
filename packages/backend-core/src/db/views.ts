@@ -1,6 +1,6 @@
 import { DeprecatedViews, StaticDatabases, ViewName } from "../constants"
 import { getGlobalDB } from "../context"
-import { doWithDB } from "./"
+import { doWithDB } from "./db"
 import {
   AllDocsResponse,
   Database,

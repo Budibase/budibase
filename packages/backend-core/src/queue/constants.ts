@@ -6,3 +6,5 @@ export enum JobQueue {
   APP_MIGRATION = "appMigration",
   DOC_WRITETHROUGH_QUEUE = "docWritethroughQueue",
 }
+
+export type { QueueOptions, Queue, JobOptions } from "bull"
