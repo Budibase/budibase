@@ -1,12 +1,5 @@
 import { prefixed, DocumentType } from "@budibase/types"
 
-export {
-  SEPARATOR,
-  UNICODE_MAX,
-  DocumentType,
-  InternalTable,
-} from "@budibase/types"
-
 /**
  * Can be used to create a few different forms of querying a view.
  */

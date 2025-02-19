@@ -1,6 +1,5 @@
 import {
   directCouchFind,
-  DocumentType,
   generateAppUserID,
   getGlobalUserParams,
   getProdAppID,
@@ -8,8 +7,6 @@ import {
   pagination,
   queryGlobalView,
   queryGlobalViewRaw,
-  SEPARATOR,
-  UNICODE_MAX,
   ViewName,
 } from "../db"
 import {
@@ -18,7 +15,10 @@ import {
   CouchFindOptions,
   DatabaseQueryOpts,
   SearchUsersRequest,
+  SEPARATOR,
   User,
+  UNICODE_MAX,
+  DocumentType,
 } from "@budibase/types"
 import * as context from "../context"
 import { getGlobalDB } from "../context"

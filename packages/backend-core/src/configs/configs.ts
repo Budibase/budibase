@@ -13,8 +13,9 @@ import {
   SettingsInnerConfig,
   SMTPConfig,
   SMTPInnerConfig,
+  SEPARATOR,
+  DocumentType,
 } from "@budibase/types"
-import { DocumentType, SEPARATOR } from "../constants"
 import { CacheKey, TTL, withCache } from "../cache"
 import * as context from "../context"
 import env from "../environment"

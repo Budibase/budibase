@@ -1,6 +1,6 @@
 import { generator } from "."
-import { App } from "@budibase/types"
-import { DEFAULT_TENANT_ID, DocumentType } from "../../../../src/constants"
+import { App, DocumentType } from "@budibase/types"
+import { DEFAULT_TENANT_ID } from "../../../../src/constants"
 
 export function app(id: string): App {
   return {

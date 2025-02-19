@@ -1,12 +1,13 @@
+import { ViewName } from "../constants"
+import { getProdAppID } from "./conversions"
 import {
+  DatabaseQueryOpts,
+  VirtualDocumentType,
   DocumentType,
   InternalTable,
-  SEPARATOR,
   UNICODE_MAX,
-  ViewName,
-} from "../constants"
-import { getProdAppID } from "./conversions"
-import { DatabaseQueryOpts, VirtualDocumentType } from "@budibase/types"
+  SEPARATOR,
+} from "@budibase/types"
 
 const EXTERNAL_TABLE_ID_REGEX = new RegExp(
   `^${DocumentType.DATASOURCE_PLUS}_(.+)__(.+)$`

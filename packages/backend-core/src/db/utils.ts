@@ -1,10 +1,10 @@
 import env from "../environment"
-import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
+import { DEFAULT_TENANT_ID } from "../constants"
 import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
 import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
-import { App, Database } from "@budibase/types"
+import { App, Database, SEPARATOR, DocumentType } from "@budibase/types"
 import { getStartEndKeyURL } from "../docIds"
 
 export * from "../docIds"

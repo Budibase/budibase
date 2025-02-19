@@ -4,13 +4,16 @@ import env from "../environment"
 import Context from "./Context"
 import * as conversions from "../docIds/conversions"
 import { getDB } from "../db/db"
+import { StaticDatabases, DEFAULT_TENANT_ID } from "../constants"
 import {
-  DocumentType,
+  Database,
+  IdentityContext,
+  Snippet,
+  App,
+  Table,
   SEPARATOR,
-  StaticDatabases,
-  DEFAULT_TENANT_ID,
-} from "../constants"
-import { Database, IdentityContext, Snippet, App, Table } from "@budibase/types"
+  DocumentType,
+} from "@budibase/types"
 import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null

@@ -1,9 +1,5 @@
-import {
-  APP_PREFIX,
-  DocumentType,
-  InternalTable,
-  SEPARATOR,
-} from "../constants"
+import { SEPARATOR, DocumentType, InternalTable } from "@budibase/types"
+import { APP_PREFIX } from "../constants"
 import { newid } from "./newid"
 
 /**

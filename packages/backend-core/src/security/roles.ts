@@ -1,11 +1,5 @@
 import semver from "semver"
-import {
-  prefixRoleID,
-  getRoleParams,
-  DocumentType,
-  SEPARATOR,
-  doWithDB,
-} from "../db"
+import { prefixRoleID, getRoleParams, doWithDB } from "../db"
 import { getAppDB } from "../context"
 import {
   Screen,
@@ -15,6 +9,8 @@ import {
   App,
   BuiltinPermissionID,
   PermissionLevel,
+  SEPARATOR,
+  DocumentType,
 } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { RoleColor, helpers } from "@budibase/shared-core"

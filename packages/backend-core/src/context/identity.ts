@@ -8,7 +8,7 @@ import {
   UserContext,
   Ctx,
 } from "@budibase/types"
-import * as context from "."
+import * as context from "./mainContext"
 
 export function getIdentity(): IdentityContext | undefined {
   return context.getIdentity()

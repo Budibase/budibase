@@ -8,7 +8,7 @@ import {
 import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
 import { buildMatcherRegex, matches } from "./matchers"
-import { queryGlobalView, SEPARATOR, ViewName } from "../db"
+import { queryGlobalView, ViewName } from "../db"
 import { doInTenant, getGlobalDB } from "../context"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
@@ -17,6 +17,7 @@ import {
   Ctx,
   EndpointMatcher,
   LoginMethod,
+  SEPARATOR,
   SessionCookie,
   User,
 } from "@budibase/types"
