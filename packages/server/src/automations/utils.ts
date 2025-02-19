@@ -18,6 +18,7 @@ import {
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
+import { JobId } from "bull"
 
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 let Runner: Thread
@@ -155,11 +156,11 @@ export async function disableAllCrons(appId: any) {
   return { count: results.length / 2 }
 }
 
-export async function disableCronById(jobId: number | string) {
-  const repeatJobs = await automationQueue.getRepeatableJobs()
-  for (let repeatJob of repeatJobs) {
-    if (repeatJob.id === jobId) {
-      await automationQueue.removeRepeatableByKey(repeatJob.key)
+export async function disableCronById(jobId: JobId) {
+  const jobs = await automationQueue.getRepeatableJobs()
+  for (const job of jobs) {
+    if (job.id === jobId) {
+      await automationQueue.removeRepeatableByKey(job.key)
     }
   }
   console.log(`jobId=${jobId} disabled`)
@@ -247,34 +248,4 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
  */
 export async function cleanupAutomations(appId: any) {
   await disableAllCrons(appId)
-}
-
-/**
- * Checks if the supplied automation is of a recurring type.
- * @param automation The automation to check.
- * @return if it is recurring (cron).
- */
-export function isRecurring(automation: Automation) {
-  return (
-    automation.definition.trigger.stepId ===
-    automations.triggers.definitions.CRON.stepId
-  )
-}
-
-export function isErrorInOutput(output: {
-  steps: { outputs?: { success: boolean } }[]
-}) {
-  let first = true,
-    error = false
-  for (let step of output.steps) {
-    // skip the trigger, its always successful if automation ran
-    if (first) {
-      first = false
-      continue
-    }
-    if (!step.outputs?.success) {
-      error = true
-    }
-  }
-  return error
 }
