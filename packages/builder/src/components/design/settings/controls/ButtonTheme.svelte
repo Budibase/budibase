@@ -71,7 +71,7 @@
 <Layout gap="XS">
   <div class="info">
     <Icon name="InfoOutline" size="S" />
-    <Body size="XS">These button settings override the global theme</Body>
+    <Body size="XS">These button settings override the screen theme</Body>
   </div>
 
   <Layout noPadding gap="XS">
