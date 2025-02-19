@@ -155,7 +155,17 @@ jobs:
     strategy:
       matrix:
         datasource:
-          [mssql, mysql, postgres, postgres_legacy, mongodb, mariadb, oracle, sqs, none]
+          [
+            mssql,
+            mysql,
+            postgres,
+            postgres_legacy,
+            mongodb,
+            mariadb,
+            oracle,
+            sqs,
+            none,
+          ]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -322,3 +332,20 @@ jobs:
           else
             echo "yarn.lock file is unchanged."
           fi
+
+  check-circular-dependencies:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: yarn
+      - run: yarn install
+      - run: yarn deps:circular
