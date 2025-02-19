@@ -1,5 +1,12 @@
 <script>
-  import { Label, Layout, ColorPicker, notifications } from "@budibase/bbui"
+  import {
+    Label,
+    Layout,
+    ColorPicker,
+    notifications,
+    Body,
+    Icon,
+  } from "@budibase/bbui"
   import {
     themeStore,
     componentStore,
@@ -62,6 +69,11 @@
 </script>
 
 <Layout gap="XS">
+  <div class="info">
+    <Icon name="InfoOutline" size="S" />
+    <Body size="XS">These button settings override the global theme</Body>
+  </div>
+
   <Layout noPadding gap="XS">
     <Label>Button roundness</Label>
     <ButtonRoundnessSelect
@@ -92,3 +104,17 @@
     />
   </Layout>
 </Layout>
+
+<style>
+  .info {
+    background-color: var(--background-alt);
+    padding: 12px;
+    display: flex;
+    border-radius: 4px;
+    gap: 4px;
+  }
+  .info :global(svg) {
+    margin-right: 5px;
+    color: var(--spectrum-global-color-gray-600);
+  }
+</style>
