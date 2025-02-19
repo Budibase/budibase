@@ -94,6 +94,7 @@ export function validateHbsTemplate(
         }
 
         if (isBlockStatement(node)) {
+          // TODO: feature flag
           traverseNodes(node.program.body, { ignoreMissing: true })
         }
       })
