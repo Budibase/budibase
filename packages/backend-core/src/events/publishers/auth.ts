@@ -10,7 +10,7 @@ import {
   SSOType,
   SSOUpdatedEvent,
 } from "@budibase/types"
-import { identification } from ".."
+import identification from "../identification"
 
 async function login(source: LoginSource, email: string) {
   const identity = await identification.getCurrentIdentity()

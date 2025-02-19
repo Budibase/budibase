@@ -18,7 +18,7 @@ import {
   SelectableDatabase,
   getRedisConnectionDetails,
 } from "./utils"
-import { logAlert } from "../logging"
+import { logAlert } from "../logging/alerts"
 import * as timers from "../timers"
 
 const RETRY_PERIOD_MS = 2000
