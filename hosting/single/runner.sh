@@ -19,7 +19,13 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 [[ -z "${SERVER_TOP_LEVEL_PATH}" ]] && export SERVER_TOP_LEVEL_PATH=/app
 #  export CUSTOM_DOMAIN=budi001.custom.com
 
-export DATA_DIR=${DATA_DIR:-/data}
+if [[ "${TARGETBUILD}" = "aas" ]]; then
+    export DATA_DIR="${DATA_DIR:-/home}"
+    WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
+else
+    export DATA_DIR=${DATA_DIR:-/data}
+fi
+
 mkdir -p ${DATA_DIR}
 # Mount NFS or GCP Filestore if env vars exist for it
 if [[ ! -z ${FILESHARE_IP} && ! -z ${FILESHARE_NAME} ]]; then
