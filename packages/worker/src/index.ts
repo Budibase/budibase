@@ -53,12 +53,13 @@ app.proxy = true
 app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
-const sessionMiddleware: Middleware = async (ctx, next) => {
+const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
   const redisClient = await new redis.Client(
     redis.utils.Databases.SESSIONS
   ).init()
   return koaSession(
     {
+      // @ts-ignore
       store: new RedisStore({ client: redisClient.getClient() }),
       key: "koa:sess",
       maxAge: 86400000, // one day
