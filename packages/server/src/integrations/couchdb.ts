@@ -62,12 +62,16 @@ const SCHEMA: Integration = {
           type: DatasourceFieldType.STRING,
           required: true,
         },
+        rev: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+        },
       },
     },
   },
 }
 
-class CouchDBIntegration implements IntegrationBase {
+export class CouchDBIntegration implements IntegrationBase {
   private readonly client: Database
 
   constructor(config: CouchDBConfig) {
@@ -82,7 +86,8 @@ class CouchDBIntegration implements IntegrationBase {
       connected: false,
     }
     try {
-      response.connected = await this.client.exists()
+      await this.client.allDocs({ limit: 1 })
+      response.connected = true
     } catch (e: any) {
       response.error = e.message as string
     }
@@ -99,13 +104,9 @@ class CouchDBIntegration implements IntegrationBase {
   }
 
   async read(query: { json: string | object }) {
-    const parsed = this.parse(query)
-    const params = {
-      include_docs: true,
-      ...parsed,
-    }
+    const params = { include_docs: true, ...this.parse(query) }
     const result = await this.client.allDocs(params)
-    return result.rows.map(row => row.doc)
+    return result.rows.map(row => row.doc!)
   }
 
   async update(query: { json: string | object }) {
@@ -121,8 +122,8 @@ class CouchDBIntegration implements IntegrationBase {
     return await this.client.get(query.id)
   }
 
-  async delete(query: { id: string }) {
-    return await this.client.remove(query.id)
+  async delete(query: { id: string; rev: string }) {
+    return await this.client.remove(query.id, query.rev)
   }
 }
 
