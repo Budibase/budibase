@@ -1,9 +1,5 @@
-import {
-  typecastForLooping,
-  cleanInputValues,
-  substituteLoopStep,
-} from "../automationUtils"
-import { LoopStepType } from "@budibase/types"
+import { AutomationIOType } from "@budibase/types"
+import { cleanInputValues, substituteLoopStep } from "../automationUtils"
 
 describe("automationUtils", () => {
   describe("substituteLoopStep", () => {
@@ -30,29 +26,6 @@ describe("automationUtils", () => {
     })
   })
 
-  describe("typeCastForLooping", () => {
-    it("should parse to correct type", () => {
-      expect(
-        typecastForLooping({ option: LoopStepType.ARRAY, binding: [1, 2, 3] })
-      ).toEqual([1, 2, 3])
-      expect(
-        typecastForLooping({ option: LoopStepType.ARRAY, binding: "[1,2,3]" })
-      ).toEqual([1, 2, 3])
-      expect(
-        typecastForLooping({ option: LoopStepType.STRING, binding: [1, 2, 3] })
-      ).toEqual("1,2,3")
-    })
-    it("should handle null values", () => {
-      // expect it to handle where the binding is null
-      expect(
-        typecastForLooping({ option: LoopStepType.ARRAY, binding: null })
-      ).toEqual(null)
-      expect(() =>
-        typecastForLooping({ option: LoopStepType.ARRAY, binding: "test" })
-      ).toThrow()
-    })
-  })
-
   describe("cleanInputValues", () => {
     it("should handle array relationship fields from read binding", () => {
       const schema = {
@@ -70,15 +43,12 @@ describe("automationUtils", () => {
         },
       }
       expect(
-        cleanInputValues(
-          {
-            row: {
-              relationship: `[{"_id": "ro_ta_users_us_3"}]`,
-            },
-            schema,
+        cleanInputValues({
+          row: {
+            relationship: `[{"_id": "ro_ta_users_us_3"}]`,
           },
-          schema
-        )
+          schema,
+        })
       ).toEqual({
         row: {
           relationship: [{ _id: "ro_ta_users_us_3" }],
@@ -103,15 +73,12 @@ describe("automationUtils", () => {
         },
       }
       expect(
-        cleanInputValues(
-          {
-            row: {
-              relationship: `ro_ta_users_us_3`,
-            },
-            schema,
+        cleanInputValues({
+          row: {
+            relationship: `ro_ta_users_us_3`,
           },
-          schema
-        )
+          schema,
+        })
       ).toEqual({
         row: {
           relationship: "ro_ta_users_us_3",
@@ -122,28 +89,27 @@ describe("automationUtils", () => {
 
     it("should be able to clean inputs with the utilities", () => {
       // can't clean without a schema
-      let output = cleanInputValues({ a: "1" })
-      expect(output.a).toBe("1")
-      output = cleanInputValues(
+      const one = cleanInputValues({ a: "1" })
+      expect(one.a).toBe("1")
+
+      const two = cleanInputValues(
         { a: "1", b: "true", c: "false", d: 1, e: "help" },
         {
-          properties: {
-            a: {
-              type: "number",
-            },
-            b: {
-              type: "boolean",
-            },
-            c: {
-              type: "boolean",
-            },
+          a: {
+            type: AutomationIOType.NUMBER,
+          },
+          b: {
+            type: AutomationIOType.BOOLEAN,
+          },
+          c: {
+            type: AutomationIOType.BOOLEAN,
           },
         }
       )
-      expect(output.a).toBe(1)
-      expect(output.b).toBe(true)
-      expect(output.c).toBe(false)
-      expect(output.d).toBe(1)
+      expect(two.a).toBe(1)
+      expect(two.b).toBe(true)
+      expect(two.c).toBe(false)
+      expect(two.d).toBe(1)
     })
   })
 })

@@ -146,7 +146,7 @@ export interface Automation extends Document {
   }
 }
 
-interface BaseIOStructure {
+export interface BaseIOStructure {
   type?: AutomationIOType
   subtype?: AutomationIOType
   customType?: AutomationCustomIOType
@@ -176,6 +176,8 @@ export enum AutomationFeature {
 export enum AutomationStepStatus {
   NO_ITERATIONS = "no_iterations",
   MAX_ITERATIONS = "max_iterations_reached",
+  FAILURE_CONDITION = "FAILURE_CONDITION_MET",
+  INCORRECT_TYPE = "INCORRECT_TYPE",
 }
 
 export enum AutomationStatus {
@@ -190,19 +192,37 @@ export enum AutomationStoppedReason {
   TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
 }
 
+export interface AutomationStepResultOutputs {
+  success: boolean
+  [key: string]: any
+}
+
+export interface AutomationStepResultInputs {
+  [key: string]: any
+}
+
+export interface AutomationStepResult {
+  id: string
+  stepId: AutomationActionStepId
+  inputs: AutomationStepResultInputs
+  outputs: AutomationStepResultOutputs
+}
+
+export type AutomationTriggerResultInputs = Record<string, any>
+export type AutomationTriggerResultOutputs = Record<string, any>
+
+export interface AutomationTriggerResult {
+  id: string
+  stepId: AutomationTriggerStepId
+  inputs?: AutomationTriggerResultInputs | null
+  outputs: AutomationTriggerResultOutputs
+}
+
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: AutomationTrigger
-  steps: {
-    stepId: AutomationTriggerStepId | AutomationActionStepId
-    inputs: {
-      [key: string]: any
-    }
-    outputs: {
-      [key: string]: any
-    }
-  }[]
+  trigger: AutomationTriggerResult
+  steps: [AutomationTriggerResult, ...AutomationStepResult[]]
 }
 
 export interface DidNotTriggerResponse {
@@ -236,6 +256,7 @@ export type ActionImplementation<TInputs, TOutputs> = (
     inputs: TInputs
   } & AutomationStepInputBase
 ) => Promise<TOutputs>
+
 export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number
