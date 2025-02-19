@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { Input, Label } from "@budibase/bbui"
   import { previewStore, selectedScreen } from "@/stores/builder"
-  import type { ComponentContext } from "@budibase/types"
+  import type { AppContext } from "@budibase/types"
 
   export let baseRoute = ""
 
@@ -31,7 +31,7 @@
 
   // This function is needed to repopulate the test value from componentContext
   // when a user navigates to another component and then back again
-  const updateTestValueFromContext = (context: ComponentContext | null) => {
+  const updateTestValueFromContext = (context: AppContext | null) => {
     if (context?.url && !testValue) {
       const { wild, ...urlParams } = context.url
       const queryParams = context.query
