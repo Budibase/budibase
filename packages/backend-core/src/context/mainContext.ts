@@ -266,9 +266,9 @@ export const getProdAppId = () => {
   return conversions.getProdAppID(appId)
 }
 
-export function doInEnvironmentContext(
+export function doInEnvironmentContext<T>(
   values: Record<string, string>,
-  task: any
+  task: () => T
 ) {
   if (!values) {
     throw new Error("Must supply environment variables.")
