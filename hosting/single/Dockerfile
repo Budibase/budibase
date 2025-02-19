@@ -1,5 +1,5 @@
 ARG BASEIMG=budibase/couchdb:v3.3.3-sqs-v2.1.1
-FROM node:20-slim as build
+FROM node:20-slim AS build
 
 # install node-gyp dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
@@ -34,7 +34,7 @@ COPY packages/worker/dist packages/worker/dist
 COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 
 
-FROM $BASEIMG as runner
+FROM $BASEIMG AS runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
@@ -67,6 +67,11 @@ RUN mkdir -p /var/log/nginx && \
 
 # setup minio
 WORKDIR /minio
+
+# a 2022 version of minio that supports gateway mode
+COPY scripts/resources/minio /minio
+
+# handles the installation of minio in non-aas environments
 COPY scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh
 
