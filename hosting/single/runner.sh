@@ -40,9 +40,9 @@ if [ -f "${DATA_DIR}/.env" ]; then
     # Read in the .env file and export the variables
     for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
 fi
-# randomise any unset environment variables
+# randomize the env vars if they are not set
 for ENV_VAR in "${ENV_VARS[@]}"; do
-    if [[ -z "${!ENV_VAR}" ]]; then
+    if [ -z "${!ENV_VAR+x}" ]; then
         eval "export $ENV_VAR=$(uuidgen | sed -e 's/-//g')"
     fi
 done
@@ -75,8 +75,6 @@ ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/redis
-mkdir -p ${DATA_DIR}/couch
-chown -R couchdb:couchdb ${DATA_DIR}/couch
 
 REDIS_CONFIG="/etc/redis/redis.conf"
 sed -i "s#DATA_DIR#${DATA_DIR}#g" "${REDIS_CONFIG}"
@@ -94,16 +92,16 @@ fi
 
 # only start minio if use s3 isn't passed
 if [[ -z "${USE_S3}" ]]; then
-    if [[ $TARGETBUILD == aas ]]; then
-        echo "Starting MinIO in Azure Gateway mode"
-        if [[ -z "${MINIO_AZURE_STORAGE_ACCOUNT}" || -z "${MINIO_AZURE_STORAGE_ACCESS_KEY}" ]]; then
-            echo "MINIO_AZURE_STORAGE_ACCOUNT and MINIO_AZURE_STORAGE_ACCESS_KEY must be set when deploying in Azure App Service mode"
-            exit 1
-        fi
-        /minio/minio gateway azure >/dev/stdout 2>&1 &
-    else
-        echo "Starting MinIO in standalone mode"
-        /minio/minio server --console-address ":9001" ${DATA_DIR}/minio >/dev/stdout 2>&1 &
+    /minio/minio server --console-address ":9001" ${DATA_DIR}/minio >/dev/stdout 2>&1 &
+fi
+
+# storage with blobfuse
+if [[ "${TARGETBUILD}" = "aas" ]]; then
+    if [[ ! -z "${STORAGE_ACCOUNT_NAME}" && ! -z "${STORAGE_ACCOUNT_KEY}" && ! -z "${STORAGE_CONTAINER_NAME}" ]]; then
+        mkdir /tmp/blobfuse
+        echo "Mounting Azure Blob Storage to ${DATA_DIR}"
+        blobfuse ${DATA_DIR} --tmp-path=/tmp/blobfuse --container-name=${STORAGE_CONTAINER_NAME} --account-name=${STORAGE_ACCOUNT_NAME} --account-key=${STORAGE_ACCOUNT_KEY} --file-cache-timeout-in-seconds=120 --log-level=LOG_DEBUG --log-path=/tmp/blobfuse.log
+        echo "Mounting result: $?"
     fi
 fi
 

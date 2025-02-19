@@ -68,10 +68,13 @@ RUN mkdir -p /var/log/nginx && \
 # setup minio
 WORKDIR /minio
 
-# a 2022 version of minio that supports gateway mode
-COPY scripts/resources/minio /minio
+# install blobfuse for aas build
+# works only in x86_64
+RUN apt-get install pkg-config libfuse-dev cmake libcurl4-gnutls-dev libgnutls28-dev uuid-dev libgcrypt20-dev libboost-all-dev gcc g++ fuse3 -y
+RUN wget https://github.com/Azure/azure-storage-fuse/releases/download/blobfuse2-2.2.0/blobfuse2-2.2.0-Debian-11.0.x86_64.deb
+RUN dpkg -i blobfuse2-2.2.0-Debian-11.0.x86_64.deb
 
-# handles the installation of minio in non-aas environments
+# handles the installation of minio
 COPY scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh
 
