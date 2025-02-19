@@ -31,7 +31,7 @@ import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
 import TableConditionEditor from "./controls/TableConditionEditor.svelte"
-
+import ButtonTheme from "./controls/ButtonTheme.svelte"
 const componentMap = {
   text: DrawerBindableInput,
   plainText: Input,
@@ -60,6 +60,7 @@ const componentMap = {
   stepConfiguration: FormStepConfiguration,
   formStepControls: FormStepControls,
   columns: ColumnEditor,
+  buttonTheme: ButtonTheme,
   "columns/basic": BasicColumnEditor,
   "columns/grid": GridColumnEditor,
   tableConditions: TableConditionEditor,
