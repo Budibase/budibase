@@ -2785,9 +2785,9 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "3.4.11"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.11.tgz#5ba5fe278ccd74efea4cc6762b36844e6256f9b3"
-  integrity sha512-EHBlgEciGKm1Qlm/z3gO9o8ujOISPKwhL8Dqsg8yhnOs/ngglMJArrlwQvFIEX5IMNfJ7eGqUxsgrkXOLevjrg==
+  version "3.4.12"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.12.tgz#60e630944de4e2de970a04179d8f0f57d48ce75e"
+  integrity sha512-msUBmcWxRDg+ugjZvd27XudERQqtQRdiARsO8MaDVTcp5ejIXgshEIVVshHOCj3hcbRblw9pXvBIMI53iTMUsA==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
     "@budibase/backend-core" "*"
@@ -6625,27 +6625,11 @@
   dependencies:
     "@types/koa" "*"
 
-"@types/koa-redis@^4.0.5":
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/@types/koa-redis/-/koa-redis-4.0.5.tgz#c535e38ad681782080b53f006104f7968ba1121f"
-  integrity sha512-xoEdyWDejkLkFVVf+N12euYakItlMicF/SHEDOOvndbteJvQ3AFGUHDDbQIrE2DGjH93LGweOZxXLAs8XfpY2Q==
-  dependencies:
-    "@types/koa-session" "*"
-    "@types/redis" "^2.8.0"
-
 "@types/koa-send@^4.1.6":
   version "4.1.6"
   resolved "https://registry.yarnpkg.com/@types/koa-send/-/koa-send-4.1.6.tgz#15d90e95e3ccce669a15b6a3c56c3a650a167cea"
   integrity sha512-vgnNGoOJkx7FrF0Jl6rbK1f8bBecqAchKpXtKuXzqIEdXTDO6dsSTjr+eZ5m7ltSjH4K/E7auNJEQCAd0McUPA==
   dependencies:
-    "@types/koa" "*"
-
-"@types/koa-session@*":
-  version "6.4.5"
-  resolved "https://registry.yarnpkg.com/@types/koa-session/-/koa-session-6.4.5.tgz#ac10bac507f4bb722fa6c55c33607b5c8769f779"
-  integrity sha512-Vc6+fslnPuMH2v9y80WYeo39UMo8mweuNNthKCwYU2ZE6l5vnRrzRU3BRvexKwsoI5sxsRl5CxDsBlLI8kY/XA==
-  dependencies:
-    "@types/cookies" "*"
     "@types/koa" "*"
 
 "@types/koa@*":
