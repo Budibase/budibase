@@ -49,6 +49,24 @@ describe("js validator", () => {
     ])
   })
 
+  it("checks that returns are at top level", () => {
+    const text = `
+    function call(){
+      return 1
+    }`
+    const validators = {}
+
+    const result = validateJsTemplate(text, validators)
+    expect(result).toEqual([
+      {
+        from: 0,
+        message: "Your code must return a value.",
+        severity: "error",
+        to: text.length,
+      },
+    ])
+  })
+
   describe("helpers", () => {
     const validators: CodeValidator = {
       helperFunction: {

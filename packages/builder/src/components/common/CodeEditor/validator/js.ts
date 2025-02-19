@@ -1,7 +1,6 @@
 import { Parser } from "acorn"
-import { simple as walk } from "acorn-walk"
+import * as walk from "acorn-walk"
 
-import { iifeWrapper } from "@budibase/string-templates"
 import type { Diagnostic } from "@codemirror/lint"
 import { CodeValidator } from "@/types"
 
@@ -12,13 +11,13 @@ export function validateJsTemplate(
   const diagnostics: Diagnostic[] = []
 
   try {
-    // const helperUsages = new RegExp(/\bhelpers\.(\w)+\b/).exec(code)
-    const ast = Parser.parse(iifeWrapper(code), {
+    const ast = Parser.parse(code, {
       ecmaVersion: "latest",
       locations: true,
+      allowReturnOutsideFunction: true,
     })
 
-    const lineOffsets: number[] = [0]
+    const lineOffsets: number[] = []
     let offset = 0
     for (const line of code.split("\n")) {
       lineOffsets.push(offset)
@@ -26,9 +25,18 @@ export function validateJsTemplate(
     }
 
     let hasReturnStatement = false
-    walk(ast, {
-      ReturnStatement(node) {
-        hasReturnStatement = !!node.argument
+    walk.ancestor(ast, {
+      ReturnStatement(node, _state, ancestors) {
+        if (
+          // it returns a value
+          node.argument &&
+          // and it is top level
+          ancestors.length === 2 &&
+          ancestors[0].type === "Program" &&
+          ancestors[1].type === "ReturnStatement"
+        ) {
+          hasReturnStatement = true
+        }
       },
       CallExpression(node) {
         const callee: any = node.callee
