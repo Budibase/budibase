@@ -14,13 +14,12 @@ COPY .yarnrc .
 COPY packages/server/package.json packages/server/package.json
 COPY packages/worker/package.json packages/worker/package.json
 
-
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
 RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
 RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
 RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 
-RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
+RUN jq 'del(.scripts.postinstall)' package.json >temp.json && mv temp.json package.json
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
 ARG TARGETPLATFORM
 RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production --frozen-lockfile
@@ -32,7 +31,6 @@ COPY packages/server/client packages/server/client
 COPY packages/server/builder packages/server/builder
 COPY packages/worker/dist packages/worker/dist
 COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
-
 
 FROM $BASEIMG AS runner
 ARG TARGETARCH
@@ -47,12 +45,12 @@ RUN apt-get update && \
   apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1
 
 # Install postgres client for pg_dump utils
-RUN apt install -y software-properties-common apt-transport-https ca-certificates gnupg \
-  && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
-  && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
-  && apt update -y \
-  && apt install postgresql-client-15 -y \
-  && apt remove software-properties-common apt-transport-https gpg -y
+RUN apt install -y software-properties-common apt-transport-https ca-certificates gnupg && \
+  curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg >/dev/null && \
+  echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list && \
+  apt update -y && \
+  apt install postgresql-client-15 -y && \
+  apt remove software-properties-common apt-transport-https gpg -y
 
 # We use pm2 in order to run multiple node processes in a single container
 RUN npm install --global pm2
@@ -69,10 +67,12 @@ RUN mkdir -p /var/log/nginx && \
 WORKDIR /minio
 
 # install blobfuse for aas build
-# works only in x86_64
-RUN apt-get install pkg-config libfuse-dev cmake libcurl4-gnutls-dev libgnutls28-dev uuid-dev libgcrypt20-dev libboost-all-dev gcc g++ fuse3 -y
-RUN wget https://github.com/Azure/azure-storage-fuse/releases/download/blobfuse2-2.2.0/blobfuse2-2.2.0-Debian-11.0.x86_64.deb
-RUN dpkg -i blobfuse2-2.2.0-Debian-11.0.x86_64.deb
+# works only for x86 in debian
+RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb
+RUN dpkg -i packages-microsoft-prod.deb
+RUN apt-get update -y
+RUN apt-get install libfuse3-dev fuse3 -y
+RUN apt-get install blobfuse2 -y
 
 # handles the installation of minio
 COPY scripts/install-minio.sh ./install.sh
@@ -102,7 +102,6 @@ COPY --from=build /app/node_modules /node_modules
 COPY --from=build /app/package.json /package.json
 COPY --from=build /app/packages/server /app
 COPY --from=build /app/packages/worker /worker
-
 
 EXPOSE 80
 EXPOSE 443

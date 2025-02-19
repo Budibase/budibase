@@ -75,6 +75,7 @@ ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/redis
+mkdir -p ${DATA_DIR}/couchdb
 
 REDIS_CONFIG="/etc/redis/redis.conf"
 sed -i "s#DATA_DIR#${DATA_DIR}#g" "${REDIS_CONFIG}"
