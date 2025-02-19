@@ -19,6 +19,7 @@
 
   export let conditions = []
   export let bindings = []
+  export let componentBindings = []
 
   const flipDurationMs = 150
   const actionOptions = [
@@ -55,6 +56,7 @@
   ]
 
   let dragDisabled = true
+
   $: settings = componentStore
     .getComponentSettings($selectedComponent?._component)
     ?.concat({
@@ -213,7 +215,10 @@
                       options: definition.options,
                       placeholder: definition.placeholder,
                     }}
+                    nested={definition.nested}
+                    contextAccess={definition.contextAccess}
                     {bindings}
+                    {componentBindings}
                   />
                 {:else}
                   <Select disabled placeholder=" " />
