@@ -1,6 +1,6 @@
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
-import { PreviewDevice, ComponentContext } from "@budibase/types"
+import { PreviewDevice, ComponentContext, AppContext } from "@budibase/types"
 
 type PreviewEventHandler = (name: string, payload?: any) => void
 
@@ -8,7 +8,7 @@ interface PreviewState {
   previewDevice: PreviewDevice
   previewEventHandler: PreviewEventHandler | null
   showPreview: boolean
-  selectedComponentContext: ComponentContext | null
+  selectedComponentContext: AppContext | null
 }
 
 const INITIAL_PREVIEW_STATE: PreviewState = {
