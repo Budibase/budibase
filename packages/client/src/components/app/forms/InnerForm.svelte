@@ -4,13 +4,13 @@
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
 
-  export let dataSource
+  export let dataSource = undefined
   export let disabled = false
   export let readonly = false
-  export let initialValues
-  export let size
-  export let schema
-  export let definition
+  export let initialValues = undefined
+  export let size = undefined
+  export let schema = undefined
+  export let definition = undefined
   export let disableSchemaValidation = false
   export let editAutoColumns = false
 
