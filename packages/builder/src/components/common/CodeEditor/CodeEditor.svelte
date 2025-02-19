@@ -40,16 +40,19 @@
     indentMore,
     indentLess,
   } from "@codemirror/commands"
+  import { setDiagnostics } from "@codemirror/lint"
   import { Compartment, EditorState } from "@codemirror/state"
+  import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
   import type { EditorMode } from "@budibase/types"
-  import type { BindingCompletion } from "@/types"
+  import type { BindingCompletion, CodeValidator } from "@/types"
+  import { validateHbsTemplate } from "./validator/hbs"
 
   export let label: string | undefined = undefined
-  // TODO: work out what best type fits this
   export let completions: BindingCompletion[] = []
+  export let validations: CodeValidator | null = null
   export let mode: EditorMode = EditorModes.Handlebars
   export let value: string | null = ""
   export let placeholder: string | null = null
@@ -248,7 +251,7 @@
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
   // TODO: work out type for base
-  const buildExtensions = (base: any[]) => {
+  const buildExtensions = (base: Extension[]) => {
     let complete = [...base]
 
     if (autocompleteEnabled) {
@@ -340,6 +343,24 @@
     return complete
   }
 
+  function validate(
+    value: string | null,
+    editor: EditorView | undefined,
+    mode: EditorMode,
+    validations: CodeValidator | null
+  ) {
+    if (!value || !validations || !editor) {
+      return
+    }
+
+    if (mode === EditorModes.Handlebars) {
+      const diagnostics = validateHbsTemplate(value, validations)
+      editor.dispatch(setDiagnostics(editor.state, diagnostics))
+    }
+  }
+
+  $: validate(value, editor, mode, validations)
+
   const initEditor = () => {
     const baseExtensions = buildBaseExtensions()
 
@@ -366,7 +387,6 @@
     <Label size="S">{label}</Label>
   </div>
 {/if}
-
 <div class={`code-editor ${mode?.name || ""}`}>
   <div tabindex="-1" bind:this={textarea} />
 </div>

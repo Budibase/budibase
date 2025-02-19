@@ -386,7 +386,7 @@
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     } else if (editableColumn.type === FieldType.FORMULA) {
       editableColumn.formulaType = "dynamic"
-      editableColumn.responseType = field.responseType || FIELDS.STRING.type
+      editableColumn.responseType = field?.responseType || FIELDS.STRING.type
     }
   }
 
