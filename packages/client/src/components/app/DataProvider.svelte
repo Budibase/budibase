@@ -2,9 +2,7 @@
   import { getContext } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, QueryUtils } from "@budibase/frontend-core"
-  import {
-    LogicalOperator,
-    EmptyFilterOption,
+  import type {
     TableSchema,
     SortOrder,
     SearchFilters,
@@ -12,7 +10,10 @@
     DataFetchDatasource,
     UserDatasource,
     GroupUserDatasource,
-    DataFetchOptions,
+    DataFetchOptions} from "@budibase/types";
+import {
+    LogicalOperator,
+    EmptyFilterOption
   } from "@budibase/types"
 
   type ProviderDatasource = Exclude<

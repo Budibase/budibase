@@ -3,7 +3,8 @@
   import { convertToJS } from "@budibase/string-templates"
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
   import { handlebarsCompletions } from "@/constants/completions"
-  import { BindingMode, EnrichedBinding, Helper } from "@budibase/types"
+  import type { EnrichedBinding, Helper } from "@budibase/types";
+import { BindingMode } from "@budibase/types"
 
   export let addHelper: (helper: Helper, js?: boolean) => void
   export let addBinding: (binding: EnrichedBinding) => void
