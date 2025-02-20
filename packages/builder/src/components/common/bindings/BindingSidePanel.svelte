@@ -7,7 +7,8 @@
   import { BindingMode } from "@budibase/types"
   import { EditorModes } from "../CodeEditor"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
-  import SnippetDrawer from "./SnippetDrawer.svelte"
+  import SnippetsSidePanelHeader from "./snippets/SidePanelHeader.svelte"
+  import SnippetsSidePanelContent from "./snippets/SidePanelContent.svelte"
 
   export let addHelper: (_helper: Helper, _js?: boolean) => void
   export let addBinding: (_binding: EnrichedBinding) => void
@@ -24,15 +25,13 @@
   let popover: Popover
   let popoverAnchor: HTMLElement | null
   let hoverTarget: {
-    type: "binding" | "helper" | "snippet"
+    type: "binding" | "helper"
     code: string
     description?: string
   } | null
   let helpers = handlebarsCompletions()
   let selectedCategory: string | null
   let hideTimeout: ReturnType<typeof setTimeout> | null
-  let snippetDrawer: SnippetDrawer
-  let editableSnippet: Snippet | null
 
   $: bindingIcons = bindings?.reduce<Record<string, string>>((acc, ele) => {
     if (ele.icon) {
@@ -47,13 +46,10 @@
   } as Record<string, string>
   $: categories = Object.entries(groupBy("category", bindings))
 
-  $: filteredSnippets = getFilteredSnippets(
-    mode,
-    allowSnippets,
-    snippets || [],
-    search
+  $: categoryNames = getCategoryNames(
+    categories,
+    allowSnippets && mode === BindingMode.JavaScript
   )
-  $: categoryNames = getCategoryNames(categories, filteredSnippets.length > 0)
   $: searchRgx = new RegExp(search, "ig")
   $: filteredCategories = categories
     .map(([name, categoryBindings]) => ({
@@ -81,26 +77,6 @@
     selectedCategory = null
   }
   $: onModeChange(mode)
-
-  const getFilteredSnippets = (
-    mode: BindingMode,
-    enableSnippets: boolean,
-    snippets: Snippet[],
-    search: string
-  ) => {
-    if (mode !== BindingMode.JavaScript) {
-      return []
-    }
-    if (!enableSnippets || !snippets.length) {
-      return []
-    }
-    if (!search?.length) {
-      return snippets
-    }
-    return snippets.filter(snippet =>
-      snippet.name.toLowerCase().includes(search.toLowerCase())
-    )
-  }
 
   const getHelperExample = (helper: Helper, js: boolean) => {
     let example = helper.example || ""
@@ -157,19 +133,6 @@
     popover.show()
   }
 
-  const showSnippetPopover = (snippet: Snippet, target: HTMLElement) => {
-    stopHidingPopover()
-    if (!snippet.code) {
-      return
-    }
-    popoverAnchor = target
-    hoverTarget = {
-      type: "snippet",
-      code: snippet.code,
-    }
-    popover.show()
-  }
-
   const hidePopover = () => {
     hideTimeout = setTimeout(() => {
       popover.hide()
@@ -195,18 +158,6 @@
     e.stopPropagation()
     searching = false
     search = ""
-  }
-
-  const createSnippet = () => {
-    editableSnippet = null
-    snippetDrawer.show()
-  }
-
-  const editSnippet = (e: Event, snippet: Snippet) => {
-    e.preventDefault()
-    e.stopPropagation()
-    editableSnippet = snippet
-    snippetDrawer.show()
   }
 </script>
 
@@ -262,15 +213,8 @@
         />
         {selectedCategory}
         {#if selectedCategory === "Snippets"}
-          <div class="add-snippet-button">
-            <Icon
-              size="S"
-              name="Add"
-              hoverable
-              newStyles
-              on:click={createSnippet}
-            />
-          </div>{/if}
+          <SnippetsSidePanelHeader />
+        {/if}
       </div>
     {/if}
 
@@ -389,42 +333,11 @@
       {/if}
 
       {#if selectedCategory === "Snippets" || search}
-        {#if filteredSnippets?.length}
-          <div class="sub-section">
-            <ul>
-              {#each filteredSnippets as snippet}
-                <li
-                  class="binding"
-                  on:mouseenter={e =>
-                    showSnippetPopover(snippet, e.currentTarget)}
-                  on:mouseleave={hidePopover}
-                  on:click={() => addSnippet(snippet)}
-                >
-                  <span class="binding__label">{snippet.name}</span>
-                  {#if search}
-                    <span class="binding__typeWrap">
-                      <span class="binding__type">snippet</span>
-                    </span>
-                  {:else}
-                    <Icon
-                      name="Edit"
-                      hoverable
-                      newStyles
-                      size="S"
-                      on:click={e => editSnippet(e, snippet)}
-                    />
-                  {/if}
-                </li>
-              {/each}
-            </ul>
-          </div>
-        {/if}
+        <SnippetsSidePanelContent {snippets} {addSnippet} {search} />
       {/if}
     {/if}
   </Layout>
 </div>
-
-<SnippetDrawer bind:this={snippetDrawer} snippet={editableSnippet} />
 
 <style>
   .binding-side-panel {
@@ -584,9 +497,5 @@
   .binding-popover.has-code :global(.cm-line),
   .binding-popover.has-code :global(.cm-content) {
     padding: 0;
-  }
-
-  .add-snippet-button {
-    margin-left: auto;
   }
 </style>
