@@ -74,6 +74,11 @@
     )
   })
 
+  function onModeChange(_mode: BindingMode) {
+    selectedCategory = null
+  }
+  $: onModeChange(mode)
+
   const getFilteredSnippets = (
     mode: BindingMode,
     enableSnippets: boolean,
