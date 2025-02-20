@@ -7,6 +7,7 @@
   import { BindingMode } from "@budibase/types"
   import { EditorModes } from "../CodeEditor"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
+  import SnippetDrawer from "./SnippetDrawer.svelte"
 
   export let addHelper: (_helper: Helper, _js?: boolean) => void
   export let addBinding: (_binding: EnrichedBinding) => void
@@ -30,6 +31,8 @@
   let helpers = handlebarsCompletions()
   let selectedCategory: string | null
   let hideTimeout: ReturnType<typeof setTimeout> | null
+  let snippetDrawer: SnippetDrawer
+  let editableSnippet: Snippet
 
   $: bindingIcons = bindings?.reduce<Record<string, string>>((acc, ele) => {
     if (ele.icon) {
@@ -192,6 +195,13 @@
     e.stopPropagation()
     searching = false
     search = ""
+  }
+
+  const editSnippet = (e: Event, snippet: Snippet) => {
+    e.preventDefault()
+    e.stopPropagation()
+    editableSnippet = snippet
+    snippetDrawer.show()
   }
 </script>
 
@@ -366,18 +376,29 @@
       {#if selectedCategory === "Snippets" || search}
         {#if filteredSnippets?.length}
           <div class="sub-section">
-            <ul class="helpers">
+            <ul>
               {#each filteredSnippets as snippet}
                 <li
                   class="binding"
                   on:mouseenter={e =>
                     showSnippetPopover(snippet, e.currentTarget)}
+                  on:mouseleave={hidePopover}
                   on:click={() => addSnippet(snippet)}
                 >
                   <span class="binding__label">{snippet.name}</span>
-                  <span class="binding__typeWrap">
-                    <span class="binding__type">snippet</span>
-                  </span>
+                  {#if search}
+                    <span class="binding__typeWrap">
+                      <span class="binding__type">snippet</span>
+                    </span>
+                  {:else}
+                    <Icon
+                      name="Edit"
+                      hoverable
+                      newStyles
+                      size="S"
+                      on:click={e => editSnippet(e, snippet)}
+                    />
+                  {/if}
                 </li>
               {/each}
             </ul>
@@ -387,6 +408,8 @@
     {/if}
   </Layout>
 </div>
+
+<SnippetDrawer bind:this={snippetDrawer} snippet={editableSnippet} />
 
 <style>
   .binding-side-panel {
@@ -452,6 +475,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+    justify-content: space-between;
   }
   li.binding .binding__typeWrap {
     flex: 1;
