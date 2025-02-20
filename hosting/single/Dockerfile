@@ -36,11 +36,11 @@ COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 
 FROM $BASEIMG AS runner
 ARG TARGETARCH
-ENV TARGETARCH $TARGETARCH
+ENV TARGETARCH=$TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
 # e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single
-ENV TARGETBUILD $TARGETBUILD
+ENV TARGETBUILD=$TARGETBUILD
 
 # install base dependencies
 RUN apt-get update && \
