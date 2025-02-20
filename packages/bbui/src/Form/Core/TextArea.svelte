@@ -13,6 +13,9 @@
     start: textarea.selectionStart,
     end: textarea.selectionEnd,
   })
+  export const clear = () => {
+    value = ""
+  }
   export let align = null
 
   let focus = false
@@ -21,6 +24,9 @@
   const onChange = event => {
     dispatch("change", event.target.value)
     focus = false
+  }
+  const onInput = event => {
+    dispatch("input", event.target.value)
   }
 
   const getStyleString = (attribute, value) => {
@@ -54,6 +60,8 @@
     {id}
     on:focus={() => (focus = true)}
     on:blur={onChange}
+    on:keydown
+    on:input={onInput}
   >{value || ""}</textarea>
 </div>
 

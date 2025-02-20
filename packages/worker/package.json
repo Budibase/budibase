@@ -70,6 +70,7 @@
     "lodash": "4.17.21",
     "node-fetch": "2.6.7",
     "nodemailer": "6.9.9",
+    "openai": "^4.85.2",
     "passport-google-oauth": "2.0.0",
     "passport-local": "1.0.0",
     "pouchdb": "7.3.0",

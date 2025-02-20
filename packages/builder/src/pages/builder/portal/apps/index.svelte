@@ -15,6 +15,7 @@
   import CreateAppModal from "@/components/start/CreateAppModal.svelte"
   import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
+  import MagicModal from "./Magic.svelte"
   import { sdk } from "@budibase/shared-core"
   import { automationStore, initialise } from "@/stores/builder"
   import { API } from "@/api"
@@ -35,7 +36,7 @@
   let template
   let creationModal
   let appLimitModal
-  let accountLockedModal
+  let accountLockedModal, magicModal
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
@@ -246,6 +247,7 @@
                   Import app
                 </Button>
               {/if}
+              <Button size="M" quiet secondary icon="MagicWand" on:click={magicModal.show()}>Magic</Button>
             </div>
           {/if}
           {#if $appsStore.apps.length > 1}
@@ -315,6 +317,9 @@
   bind:this={accountLockedModal}
   onConfirm={() =>
     isOwner ? $licensing.goToUpgradePage() : $licensing.goToPricingPage()}
+/>
+<MagicModal
+  bind:this={magicModal}
 />
 
 <style>

@@ -12,6 +12,7 @@ import tenantsRoutes from "./system/tenants"
 import statusRoutes from "./system/status"
 import selfRoutes from "./global/self"
 import licenseRoutes from "./global/license"
+import aiRoutes from "./global/ai"
 import accountRoutes from "./system/accounts"
 import restoreRoutes from "./system/restore"
 import systemLogRoutes from "./system/logs"
@@ -31,6 +32,7 @@ export const routes: Router[] = [
   statusRoutes,
   selfRoutes,
   licenseRoutes,
+  aiRoutes,
   pro.groups,
   pro.auditLogs,
   accountRoutes,

@@ -30,8 +30,10 @@ export async function fetch(status: AppStatus, user: ContextUser) {
     ...user,
     roles: user?.roles || {},
   }
-  const enrichedUser = await groups.enrichUserRolesFromGroups(completeUser)
-  apps = filterAppList(enrichedUser, apps)
+  if (!users.isAdminOrBuilder(completeUser)) {
+    const enrichedUser = await groups.enrichUserRolesFromGroups(completeUser)
+    apps = filterAppList(enrichedUser, apps)
+  }
 
   const appIds = apps
     .filter((app: any) => app.status === "development")

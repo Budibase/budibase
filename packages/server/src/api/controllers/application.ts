@@ -69,6 +69,7 @@ import {
   AddAppSampleDataResponse,
   UnpublishAppResponse,
   SetRevertableAppVersionResponse,
+  ContextUser,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -195,10 +196,10 @@ export const addSampleData = async (
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
-  ctx.body = await sdk.applications.fetch(
-    ctx.query.status as AppStatus,
-    ctx.user
-  )
+  const user = ctx.internal
+    ? ({ builder: { global: true } } as ContextUser)
+    : ctx.user
+  ctx.body = await sdk.applications.fetch(ctx.query.status as AppStatus, user)
 }
 
 export async function fetchAppDefinition(

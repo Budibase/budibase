@@ -28,6 +28,7 @@ const environment = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   // urls
   MINIO_URL: process.env.MINIO_URL,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
@@ -35,6 +36,7 @@ const environment = {
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   PLATFORM_URL: process.env.PLATFORM_URL,
   APPS_URL: process.env.APPS_URL,
+  SERVER_URL: process.env.SERVER_URL,
   // ports
   // prefer worker port to generic port
   PORT: process.env.WORKER_PORT || process.env.PORT,

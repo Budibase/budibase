@@ -2785,9 +2785,9 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "3.4.12"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.12.tgz#60e630944de4e2de970a04179d8f0f57d48ce75e"
-  integrity sha512-msUBmcWxRDg+ugjZvd27XudERQqtQRdiARsO8MaDVTcp5ejIXgshEIVVshHOCj3hcbRblw9pXvBIMI53iTMUsA==
+  version "3.4.13"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.13.tgz#3eb518b72113797ca5a8ea22d95003d8155a9a48"
+  integrity sha512-lzR6aJJumJexe2U54qA5KPczCQqwN/a/PCzffgXuJ0Ab4GPyeV/ic5e/kBky3g1JKGktu97E1Q5wmaFLiTLiwg==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
     "@budibase/backend-core" "*"
@@ -16748,6 +16748,19 @@ openai@4.59.0:
     formdata-node "^4.3.2"
     node-fetch "^2.6.7"
     qs "^6.10.3"
+
+openai@^4.85.2:
+  version "4.85.2"
+  resolved "https://registry.yarnpkg.com/openai/-/openai-4.85.2.tgz#370702c56cd61c17c44c8c02c6a48229d5299903"
+  integrity sha512-ZQg3Q+K4A6M9dLFh5W36paZkZBQO+VbxMNJ1gUSyHsGiEWuXahdn02ermqNV68LhWQxdJQaWUFRAYpW/suTPWQ==
+  dependencies:
+    "@types/node" "^18.11.18"
+    "@types/node-fetch" "^2.6.4"
+    abort-controller "^3.0.0"
+    agentkeepalive "^4.2.1"
+    form-data-encoder "1.7.2"
+    formdata-node "^4.3.2"
+    node-fetch "^2.6.7"
 
 openapi-response-validator@^9.2.0:
   version "9.3.1"

@@ -10,6 +10,7 @@
   export let disabled = false
   export let error = null
   export let getCaretPosition = null
+  export let clear = null
   export let height = null
   export let minHeight = null
   export let helpText = null
@@ -19,11 +20,16 @@
     value = e.detail
     dispatch("change", e.detail)
   }
+  const onInput = e => {
+    value = e.detail
+    dispatch("input", e.detail)
+  }
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>
   <TextArea
     bind:getCaretPosition
+    bind:clear
     {error}
     {disabled}
     {value}
@@ -31,5 +37,7 @@
     {height}
     {minHeight}
     on:change={onChange}
+    on:input={onInput}
+    on:keydown
   />
 </Field>
