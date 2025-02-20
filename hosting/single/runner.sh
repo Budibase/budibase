@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Starting runner.sh"
+echo "Starting runner.sh..."
 
 # set defaults for Docker-related variables
 export APP_PORT="${APP_PORT:-4001}"
@@ -96,7 +96,9 @@ if [[ -n "${REDIS_PASSWORD}" ]]; then
 else
     redis-server "${REDIS_CONFIG}" >/dev/stdout 2>&1 &
 fi
-/bbcouch-runner.sh &
+
+echo "Starting callback CouchDB runner..."
+./bbcouch-runner.sh &
 
 # only start minio if use s3 isn't passed
 if [[ -z "${USE_S3}" ]]; then
