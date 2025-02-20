@@ -19,14 +19,7 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 [[ -z "${SERVER_TOP_LEVEL_PATH}" ]] && export SERVER_TOP_LEVEL_PATH=/app
 #  export CUSTOM_DOMAIN=budi001.custom.com
 
-# Azure App Service customisations
-if [[ "${TARGETBUILD}" = "aas" ]]; then
-    export DATA_DIR="${DATA_DIR:-/home}"
-    WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
-    /etc/init.d/ssh start
-else
-    export DATA_DIR=${DATA_DIR:-/data}
-fi
+export DATA_DIR=${DATA_DIR:-/data}
 mkdir -p ${DATA_DIR}
 # Mount NFS or GCP Filestore if env vars exist for it
 if [[ ! -z ${FILESHARE_IP} && ! -z ${FILESHARE_NAME} ]]; then
@@ -42,8 +35,7 @@ if [ -f "${DATA_DIR}/.env" ]; then
     for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
 fi
 # randomise any unset environment variables
-for ENV_VAR in "${ENV_VARS[@]}"
-do
+for ENV_VAR in "${ENV_VARS[@]}"; do
     if [[ -z "${!ENV_VAR}" ]]; then
         eval "export $ENV_VAR=$(uuidgen | sed -e 's/-//g')"
     fi
@@ -58,17 +50,15 @@ fi
 
 if [ ! -f "${DATA_DIR}/.env" ]; then
     touch ${DATA_DIR}/.env
-    for ENV_VAR in "${ENV_VARS[@]}"
-    do
+    for ENV_VAR in "${ENV_VARS[@]}"; do
         temp=$(eval "echo \$$ENV_VAR")
-        echo "$ENV_VAR=$temp" >> ${DATA_DIR}/.env
+        echo "$ENV_VAR=$temp" >>${DATA_DIR}/.env
     done
-    for ENV_VAR in "${DOCKER_VARS[@]}"
-    do
+    for ENV_VAR in "${DOCKER_VARS[@]}"; do
         temp=$(eval "echo \$$ENV_VAR")
-        echo "$ENV_VAR=$temp" >> ${DATA_DIR}/.env
+        echo "$ENV_VAR=$temp" >>${DATA_DIR}/.env
     done
-    echo "COUCH_DB_URL=${COUCH_DB_URL}" >> ${DATA_DIR}/.env
+    echo "COUCH_DB_URL=${COUCH_DB_URL}" >>${DATA_DIR}/.env
 fi
 
 # Read in the .env file and export the variables
@@ -79,31 +69,42 @@ ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/redis
-chown -R couchdb:couchdb ${DATA_DIR}/couch
+#mkdir -p ${DATA_DIR}/couch
+#chown -R couchdb:couchdb ${DATA_DIR}/couch
 
 REDIS_CONFIG="/etc/redis/redis.conf"
 sed -i "s#DATA_DIR#${DATA_DIR}#g" "${REDIS_CONFIG}"
 
 if [[ -n "${USE_DEFAULT_REDIS_CONFIG}" ]]; then
-  REDIS_CONFIG=""
+    REDIS_CONFIG=""
 fi
 
 if [[ -n "${REDIS_PASSWORD}" ]]; then
-  redis-server "${REDIS_CONFIG}" --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
+    redis-server "${REDIS_CONFIG}" --requirepass $REDIS_PASSWORD >/dev/stdout 2>&1 &
 else
-  redis-server "${REDIS_CONFIG}" > /dev/stdout 2>&1 &
+    redis-server "${REDIS_CONFIG}" >/dev/stdout 2>&1 &
 fi
 /bbcouch-runner.sh &
 
 # only start minio if use s3 isn't passed
 if [[ -z "${USE_S3}" ]]; then
-  /minio/minio server --console-address ":9001" ${DATA_DIR}/minio > /dev/stdout 2>&1 &
+    if [[ $TARGETBUILD == aas ]]; then
+        echo "Starting MinIO in Azure Gateway mode"
+        if [[ -z "${AZURE_STORAGE_ACCOUNT}" || -z "${AZURE_STORAGE_KEY}" ]]; then
+            echo "AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_KEY must be set when deploying in Azure App Service mode"
+            exit 1
+        fi
+        /minio/minio gateway azure --console-address ":9001" >/dev/stdout 2>&1 &
+    else
+        echo "Starting MinIO in standalone mode"
+        /minio/minio server --console-address ":9001" ${DATA_DIR}/minio >/dev/stdout 2>&1 &
+    fi
 fi
 
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     # Add monthly cron job to renew certbot certificate
-    echo -n "* * 2 * * root exec /app/letsencrypt/certificate-renew.sh ${CUSTOM_DOMAIN}" >> /etc/cron.d/certificate-renew
+    echo -n "* * 2 * * root exec /app/letsencrypt/certificate-renew.sh ${CUSTOM_DOMAIN}" >>/etc/cron.d/certificate-renew
     chmod +x /etc/cron.d/certificate-renew
     # Request the certbot certificate
     /app/letsencrypt/certificate-request.sh ${CUSTOM_DOMAIN}
