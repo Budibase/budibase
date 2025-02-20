@@ -25,7 +25,11 @@ export APPS_URL="${APPS_URL:-http://127.0.0.1:4001}"
 export SERVER_TOP_LEVEL_PATH="${SERVER_TOP_LEVEL_PATH:-/app}"
 
 # set DATA_DIR and ensure the directory exists
-export DATA_DIR="${DATA_DIR:-/data}"
+if [[ ${TARGETBUILD} == "aas" ]]; then
+    export DATA_DIR="/home"
+else
+    export DATA_DIR="${DATA_DIR:-/data}"
+fi
 mkdir -p "${DATA_DIR}"
 
 # mount NFS or GCP Filestore if FILESHARE_IP and FILESHARE_NAME are set
@@ -81,8 +85,8 @@ ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/redis
-#mkdir -p ${DATA_DIR}/couch
-#chown -R couchdb:couchdb ${DATA_DIR}/couch
+mkdir -p ${DATA_DIR}/couch
+chown -R couchdb:couchdb ${DATA_DIR}/couch
 
 REDIS_CONFIG="/etc/redis/redis.conf"
 sed -i "s#DATA_DIR#${DATA_DIR}#g" "${REDIS_CONFIG}"
