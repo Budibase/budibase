@@ -8,6 +8,7 @@ export enum FeatureFlag {
 
 export const FeatureFlagDefaults = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
+  [FeatureFlag.VALIDATE_HBS_MISSING_EXPRESSIONS]: false,
 
   // Account-portal
   [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
