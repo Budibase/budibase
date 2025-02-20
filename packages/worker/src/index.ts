@@ -4,7 +4,7 @@ if (process.env.DD_APM_ENABLED) {
 
 // need to load environment first
 import env from "./environment"
-import Application, { Middleware } from "koa"
+import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
 import { sdk as proSdk } from "@budibase/pro"
@@ -20,7 +20,6 @@ import {
   cache,
   features,
 } from "@budibase/backend-core"
-import RedisStore from "koa-redis"
 
 db.init()
 import koaBody from "koa-body"
@@ -53,28 +52,7 @@ app.proxy = true
 app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
-const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
-  const redisClient = await new redis.Client(
-    redis.utils.Databases.SESSIONS
-  ).init()
-  return koaSession(
-    {
-      // @ts-ignore
-      store: new RedisStore({ client: redisClient.getClient() }),
-      key: "koa:sess",
-      maxAge: 86400000, // one day
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      rolling: true,
-      renew: true,
-    },
-    app
-  )(ctx, next)
-}
-
-app.use(sessionMiddleware)
-
+app.use(koaSession(app))
 app.use(middleware.correlation)
 app.use(middleware.pino)
 app.use(middleware.ip)
