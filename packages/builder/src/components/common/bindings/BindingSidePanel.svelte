@@ -10,6 +10,7 @@
   export let addBinding: (_binding: EnrichedBinding) => void
   export let addSnippet: (_snippet: Snippet) => void
   export let bindings: EnrichedBinding[]
+  export let snippets: Snippet[] | null
   export let mode: BindingMode
   export let allowHelpers: boolean
   export let allowSnippets: boolean
@@ -63,6 +64,28 @@
       (mode !== BindingMode.JavaScript || helper.allowsJs)
     )
   })
+
+  $: filteredSnippets = getFilteredSnippets(
+    allowSnippets,
+    snippets || [],
+    search
+  )
+
+  const getFilteredSnippets = (
+    enableSnippets: boolean,
+    snippets: Snippet[],
+    search: string
+  ) => {
+    if (!enableSnippets || !snippets.length) {
+      return []
+    }
+    if (!search?.length) {
+      return snippets
+    }
+    return snippets.filter(snippet =>
+      snippet.name.toLowerCase().includes(search.toLowerCase())
+    )
+  }
 
   const getHelperExample = (helper: Helper, js: boolean) => {
     let example = helper.example || ""
@@ -294,6 +317,29 @@
                   <span class="binding__label">{helper.displayText}</span>
                   <span class="binding__typeWrap">
                     <span class="binding__type">function</span>
+                  </span>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+      {/if}
+
+      {#if selectedCategory === "Snippets" || search}
+        {#if filteredSnippets?.length}
+          <div class="sub-section">
+            <ul class="helpers">
+              {#each filteredSnippets as helper}
+                <li
+                  class="binding"
+                  on:mouseenter={e =>
+                    showHelperPopover(helper, e.currentTarget)}
+                  on:mouseleave={hidePopover}
+                  on:click={() => addSnippet(helper)}
+                >
+                  <span class="binding__label">{helper.name}</span>
+                  <span class="binding__typeWrap">
+                    <span class="binding__type">snippet</span>
                   </span>
                 </li>
               {/each}

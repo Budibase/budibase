@@ -436,6 +436,7 @@
           addBinding={onSelectBinding}
           {addSnippet}
           {mode}
+          {snippets}
         />
       {:else if sidePanel === SidePanel.Evaluation}
         <EvaluationSidePanel
