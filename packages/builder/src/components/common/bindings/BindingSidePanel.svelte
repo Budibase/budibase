@@ -32,7 +32,7 @@
   let selectedCategory: string | null
   let hideTimeout: ReturnType<typeof setTimeout> | null
   let snippetDrawer: SnippetDrawer
-  let editableSnippet: Snippet
+  let editableSnippet: Snippet | null
 
   $: bindingIcons = bindings?.reduce<Record<string, string>>((acc, ele) => {
     if (ele.icon) {
@@ -197,6 +197,11 @@
     search = ""
   }
 
+  const createSnippet = () => {
+    editableSnippet = null
+    snippetDrawer.show()
+  }
+
   const editSnippet = (e: Event, snippet: Snippet) => {
     e.preventDefault()
     e.stopPropagation()
@@ -256,6 +261,16 @@
           on:click={() => (selectedCategory = null)}
         />
         {selectedCategory}
+        {#if selectedCategory === "Snippets"}
+          <div class="add-snippet-button">
+            <Icon
+              size="S"
+              name="Add"
+              hoverable
+              newStyles
+              on:click={createSnippet}
+            />
+          </div>{/if}
       </div>
     {/if}
 
@@ -569,5 +584,9 @@
   .binding-popover.has-code :global(.cm-line),
   .binding-popover.has-code :global(.cm-content) {
     padding: 0;
+  }
+
+  .add-snippet-button {
+    margin-left: auto;
   }
 </style>
