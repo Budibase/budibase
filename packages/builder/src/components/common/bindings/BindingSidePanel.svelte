@@ -3,14 +3,16 @@
   import { convertToJS } from "@budibase/string-templates"
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
   import { handlebarsCompletions } from "@/constants/completions"
-  import type { EnrichedBinding, Helper } from "@budibase/types"
+  import type { EnrichedBinding, Helper, Snippet } from "@budibase/types"
   import { BindingMode } from "@budibase/types"
 
   export let addHelper: (_helper: Helper, _js?: boolean) => void
   export let addBinding: (_binding: EnrichedBinding) => void
+  export let addSnippet: (_snippet: Snippet) => void
   export let bindings: EnrichedBinding[]
   export let mode: BindingMode
   export let allowHelpers: boolean
+  export let allowSnippets: boolean
   export let context = null
 
   let search = ""
@@ -35,6 +37,7 @@
   $: categoryIcons = {
     ...bindingIcons,
     Helpers: "MagicWand",
+    Snippets: "Code",
   } as Record<string, string>
   $: categories = Object.entries(groupBy("category", bindings))
   $: categoryNames = getCategoryNames(categories)
@@ -76,6 +79,9 @@
     const names = [...categories.map(cat => cat[0])]
     if (allowHelpers) {
       names.push("Helpers")
+    }
+    if (allowSnippets) {
+      names.push("Snippets")
     }
     return names
   }

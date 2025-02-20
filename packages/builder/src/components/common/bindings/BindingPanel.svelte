@@ -430,9 +430,11 @@
         <BindingSidePanel
           bindings={enrichedBindings}
           {allowHelpers}
+          {allowSnippets}
           {context}
           addHelper={onSelectHelper}
           addBinding={onSelectBinding}
+          {addSnippet}
           {mode}
         />
       {:else if sidePanel === SidePanel.Evaluation}
