@@ -23,6 +23,7 @@
     snippetAutoComplete,
     EditorModes,
     bindingsToCompletions,
+    jsHelperAutocomplete,
   } from "../CodeEditor"
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
@@ -34,7 +35,6 @@
   import { BindingMode, SidePanel } from "@budibase/types"
   import type {
     EnrichedBinding,
-    BindingCompletion,
     Snippet,
     Helper,
     CaretPositionFn,
@@ -42,7 +42,7 @@
     JSONValue,
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
-  import type { CompletionContext } from "@codemirror/autocomplete"
+  import type { CodeValidator } from "@/types"
 
   const dispatch = createEventDispatcher()
 
@@ -58,7 +58,7 @@
   export let placeholder = null
   export let showTabBar = true
 
-  let mode: BindingMode | null
+  let mode: BindingMode
   let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
   let jsValue: string | null = initialValueJS ? value : null
@@ -88,41 +88,42 @@
     | null
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestEval(runtimeExpression, context, snippets)
-  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
-  $: hbsCompletions = getHBSCompletions(bindingCompletions)
-  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, useSnippets)
+
+  $: bindingOptions = bindingsToCompletions(bindings, editorMode)
+  $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
+  $: snippetsOptions =
+    usingJS && useSnippets && snippets?.length ? snippets : []
+
+  $: completions = !usingJS
+    ? [hbAutocomplete([...bindingOptions, ...helperOptions])]
+    : [
+        jsAutocomplete(bindingOptions),
+        jsHelperAutocomplete(helperOptions),
+        snippetAutoComplete(snippetsOptions),
+      ]
+
+  $: validations = {
+    ...bindingOptions.reduce<CodeValidator>((validations, option) => {
+      validations[option.label] = {
+        arguments: [],
+      }
+      return validations
+    }, {}),
+    ...helperOptions.reduce<CodeValidator>((validations, option) => {
+      validations[option.label] = {
+        arguments: option.args,
+        requiresBlock: option.requiresBlock,
+      }
+      return validations
+    }, {}),
+  }
+
   $: {
     // Ensure a valid side panel option is always selected
     if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
       sidePanel = sidePanelOptions[0]
     }
-  }
-
-  const getHBSCompletions = (bindingCompletions: BindingCompletion[]) => {
-    return [
-      hbAutocomplete([
-        ...bindingCompletions,
-        ...getHelperCompletions(EditorModes.Handlebars),
-      ]),
-    ]
-  }
-
-  const getJSCompletions = (
-    bindingCompletions: BindingCompletion[],
-    snippets: Snippet[] | null,
-    useSnippets?: boolean
-  ) => {
-    const completions: ((_: CompletionContext) => any)[] = [
-      jsAutocomplete([
-        ...bindingCompletions,
-        ...getHelperCompletions(EditorModes.JS),
-      ]),
-    ]
-    if (useSnippets && snippets) {
-      completions.push(snippetAutoComplete(snippets))
-    }
-    return completions
   }
 
   const getModeOptions = (allowHBS: boolean, allowJS: boolean) => {
@@ -204,7 +205,7 @@
     bindings: EnrichedBinding[],
     context: any,
     snippets: Snippet[] | null
-  ) => {
+  ): EnrichedBinding[] => {
     // Create a single big array to enrich in one go
     const bindingStrings = bindings.map(binding => {
       if (binding.runtimeBinding.startsWith('trim "')) {
@@ -281,7 +282,7 @@
     jsValue = null
     hbsValue = null
     updateValue(null)
-    mode = targetMode
+    mode = targetMode!
     targetMode = null
   }
 
@@ -356,13 +357,14 @@
       {/if}
       <div class="editor">
         {#if mode === BindingMode.Text}
-          {#key hbsCompletions}
+          {#key completions}
             <CodeEditor
               value={hbsValue}
               on:change={onChangeHBSValue}
               bind:getCaretPosition
               bind:insertAtPos
-              completions={hbsCompletions}
+              {completions}
+              {validations}
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing {{ or use the menu on the right"}
@@ -370,18 +372,18 @@
             />
           {/key}
         {:else if mode === BindingMode.JavaScript}
-          {#key jsCompletions}
+          {#key completions}
             <CodeEditor
               value={jsValue ? decodeJSBinding(jsValue) : jsValue}
               on:change={onChangeJSValue}
-              completions={jsCompletions}
+              {completions}
               mode={EditorModes.JS}
               bind:getCaretPosition
               bind:insertAtPos
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing $ or use the menu on the right"}
-              jsBindingWrapping
+              jsBindingWrapping={completions.length > 0}
             />
           {/key}
         {/if}

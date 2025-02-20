@@ -112,10 +112,7 @@ export const EventPublishType = {
   ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
 }
 
-export const ContextScopes = {
-  Local: "local",
-  Global: "global",
-}
+export { ComponentContextScopes as ContextScopes } from "@budibase/types"
 
 export const TypeIconMap = {
   [FieldType.STRING]: "Text",

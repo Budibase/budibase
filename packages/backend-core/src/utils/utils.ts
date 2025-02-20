@@ -101,6 +101,11 @@ export async function getAppIdFromCtx(ctx: Ctx) {
     appId = confirmAppId(pathId)
   }
 
+  // look in queryParams
+  if (!appId && ctx.query?.appId) {
+    appId = confirmAppId(ctx.query?.appId as string)
+  }
+
   // lookup using custom url - prod apps only
   // filter out the builder preview path which collides with the prod app path
   // to ensure we don't load all apps excessively
@@ -246,4 +251,8 @@ export function hasCircularStructure(json: any) {
     }
   }
   return false
+}
+
+export function urlHasProtocol(url: string): boolean {
+  return !!url.match(/^.+:\/\/.+$/)
 }

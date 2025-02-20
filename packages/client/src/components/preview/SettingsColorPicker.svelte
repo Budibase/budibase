@@ -1,6 +1,6 @@
 <script>
   import { ColorPicker } from "@budibase/bbui"
-  import { builderStore } from "stores"
+  import { builderStore } from "@/stores"
 
   export let prop
   export let component

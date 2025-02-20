@@ -1,15 +1,14 @@
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
+import { PreviewDevice, ComponentContext, AppContext } from "@budibase/types"
 
-type PreviewDevice = "desktop" | "tablet" | "mobile"
 type PreviewEventHandler = (name: string, payload?: any) => void
-type ComponentContext = Record<string, any>
 
 interface PreviewState {
   previewDevice: PreviewDevice
   previewEventHandler: PreviewEventHandler | null
   showPreview: boolean
-  selectedComponentContext: ComponentContext | null
+  selectedComponentContext: AppContext | null
 }
 
 const INITIAL_PREVIEW_STATE: PreviewState = {
@@ -54,7 +53,7 @@ export class PreviewStore extends BudiStore<PreviewState> {
     }))
   }
 
-  startDrag(component: any) {
+  async startDrag(component: string) {
     this.sendEvent("dragging-new-component", {
       dragging: true,
       component,
@@ -84,6 +83,10 @@ export class PreviewStore extends BudiStore<PreviewState> {
 
   updateState(data: Record<string, any>) {
     this.sendEvent("builder-state", data)
+  }
+
+  setUrlTestData(data: Record<string, any>) {
+    this.sendEvent("builder-url-test-data", data)
   }
 
   requestComponentContext() {

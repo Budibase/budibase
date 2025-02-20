@@ -1,17 +1,13 @@
 import * as automation from "../../index"
-import * as triggers from "../../triggers"
-import { basicTable, loopAutomation } from "../../../tests/utilities/structures"
-import { context } from "@budibase/backend-core"
+import { basicTable } from "../../../tests/utilities/structures"
 import {
   Table,
   LoopStepType,
-  AutomationResults,
   ServerLogStepOutputs,
   CreateRowStepOutputs,
   FieldType,
+  FilterCondition,
 } from "@budibase/types"
-import * as loopUtils from "../../loopUtils"
-import { LoopInput } from "../../../definitions/automations"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
@@ -25,50 +21,60 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   beforeEach(async () => {
+    const { automations } = await config.api.automation.fetch()
+    for (const automation of automations) {
+      await config.api.automation.delete(automation)
+    }
+
     table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, {})
   })
 
-  afterAll(() => {
-    automation.shutdown()
+  afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 
-  async function runLoop(loopOpts?: LoopInput): Promise<AutomationResults> {
-    const appId = config.getAppId()
-    return await context.doInAppContext(appId, async () => {
-      const params = { fields: { appId } }
-      const result = await triggers.externalTrigger(
-        loopAutomation(table._id!, loopOpts),
-        params,
-        { getResponses: true }
-      )
-      if ("outputs" in result && !result.outputs.success) {
-        throw new Error("Unable to proceed - failed to return anything.")
-      }
-      return result as AutomationResults
-    })
-  }
-
   it("attempt to run a basic loop", async () => {
-    const resp = await runLoop()
-    expect(resp.steps[2].outputs.iterations).toBe(1)
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .queryRows({
+        tableId: table._id!,
+      })
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ steps.1.rows }}",
+      })
+      .serverLog({ text: "log statement" })
+      .test({ fields: {} })
+
+    expect(result.steps[1].outputs.iterations).toBe(1)
   })
 
   it("test a loop with a string", async () => {
-    const resp = await runLoop({
-      option: LoopStepType.STRING,
-      binding: "a,b,c",
-    })
-    expect(resp.steps[2].outputs.iterations).toBe(3)
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .loop({
+        option: LoopStepType.STRING,
+        binding: "a,b,c",
+      })
+      .serverLog({ text: "log statement" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.iterations).toBe(3)
   })
 
   it("test a loop with a binding that returns an integer", async () => {
-    const resp = await runLoop({
-      option: LoopStepType.ARRAY,
-      binding: "{{ 1 }}",
-    })
-    expect(resp.steps[2].outputs.iterations).toBe(1)
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ 1 }}",
+      })
+      .serverLog({ text: "log statement" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.iterations).toBe(1)
   })
 
   it("should run an automation with a trigger, loop, and create row step", async () => {
@@ -529,97 +535,30 @@ describe("Attempt to run a basic loop automation", () => {
     expect(results.steps[2].outputs.rows).toHaveLength(0)
   })
 
-  describe("replaceFakeBindings", () => {
-    it("should replace loop bindings in nested objects", () => {
-      const originalStepInput = {
-        schema: {
-          name: {
-            type: "string",
-            constraints: {
-              type: "string",
-              length: { maximum: null },
-              presence: false,
-            },
-            name: "name",
-            display: { type: "Text" },
-          },
-        },
-        row: {
-          tableId: "ta_aaad4296e9f74b12b1b90ef7a84afcad",
-          name: "{{ loop.currentItem.pokemon }}",
-        },
-      }
+  describe("loop output", () => {
+    it("should not output anything if a filter stops the automation", async () => {
+      const results = await createAutomationBuilder(config)
+        .onAppAction()
+        .filter({
+          condition: FilterCondition.EQUAL,
+          field: "1",
+          value: "2",
+        })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .test({ fields: {} })
 
-      const loopStepNumber = 3
-
-      const result = loopUtils.replaceFakeBindings(
-        originalStepInput,
-        loopStepNumber
-      )
-
-      expect(result).toEqual({
-        schema: {
-          name: {
-            type: "string",
-            constraints: {
-              type: "string",
-              length: { maximum: null },
-              presence: false,
-            },
-            name: "name",
-            display: { type: "Text" },
-          },
-        },
-        row: {
-          tableId: "ta_aaad4296e9f74b12b1b90ef7a84afcad",
-          name: "{{ steps.3.currentItem.pokemon }}",
-        },
+      expect(results.steps.length).toBe(1)
+      expect(results.steps[0].outputs).toEqual({
+        comparisonValue: 2,
+        refValue: 1,
+        result: false,
+        success: true,
+        status: "stopped",
       })
-    })
-
-    it("should handle null values in nested objects", () => {
-      const originalStepInput = {
-        nullValue: null,
-        nestedNull: {
-          someKey: null,
-        },
-        validValue: "{{ loop.someValue }}",
-      }
-
-      const loopStepNumber = 2
-
-      const result = loopUtils.replaceFakeBindings(
-        originalStepInput,
-        loopStepNumber
-      )
-
-      expect(result).toEqual({
-        nullValue: null,
-        nestedNull: {
-          someKey: null,
-        },
-        validValue: "{{ steps.2.someValue }}",
-      })
-    })
-
-    it("should handle empty objects and arrays", () => {
-      const originalStepInput = {
-        emptyObject: {},
-        emptyArray: [],
-        nestedEmpty: {
-          emptyObj: {},
-          emptyArr: [],
-        },
-      }
-
-      const loopStepNumber = 1
-
-      const result = loopUtils.replaceFakeBindings(
-        originalStepInput,
-        loopStepNumber
-      )
-
-      expect(result).toEqual(originalStepInput)
     })
   })
 })

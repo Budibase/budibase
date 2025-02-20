@@ -18,12 +18,14 @@ import {
   objectStore,
   utils,
 } from "@budibase/backend-core"
-import AWS from "aws-sdk"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 import {
   App,
+  BudibaseAppProps,
   Ctx,
   DocumentType,
   Feature,
@@ -128,9 +130,9 @@ export const uploadFile = async function (
       return {
         size: file.size,
         name: file.name,
-        url: objectStore.getAppFileUrl(s3Key),
+        url: await objectStore.getAppFileUrl(s3Key),
         extension,
-        key: response.Key,
+        key: response.Key!,
       }
     })
   )
@@ -190,9 +192,14 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
-      const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-
-      const { head, html, css } = AppComponent.render({
+      const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
+      /*
+       * Server rendering in svelte sadly does not support type checking, the .render function
+       * always will just expect "any" when typing - so it is pointless for us to type the
+       * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
+       * I've created a type which expects what the app will expect to receive.
+       */
+      const props: BudibaseAppProps = {
         title: branding?.platformTitle || `${appInfo.name}`,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
@@ -204,21 +211,17 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         metaDescription: branding?.metaDescription || "",
         metaTitle:
           branding?.metaTitle || `${appInfo.name} - built with Budibase`,
-        production: env.isProd(),
-        appId,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
         usedPlugins: plugins,
         favicon:
           branding.faviconUrl !== ""
-            ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
-            : "",
-        logo:
-          config?.logoUrl !== ""
-            ? objectStore.getGlobalFileUrl("settings", "logoUrl")
+            ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         appMigrating: needMigrations,
         nonce: ctx.state.nonce,
-      })
+      }
+
+      const { head, html, css } = AppComponent.render({ props })
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
         head,
@@ -234,18 +237,20 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     }
   } catch (error) {
     if (!env.isJest()) {
-      const { head, html, css } = AppComponent.render({
-        title: branding?.metaTitle,
-        metaTitle: branding?.metaTitle,
+      const props: BudibaseAppProps = {
+        usedPlugins: [],
+        title: branding?.metaTitle || "",
+        metaTitle: branding?.metaTitle || "",
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         favicon:
           branding.faviconUrl !== ""
-            ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
+            ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
-      })
+      }
+      const { head, html, css } = AppComponent.render({ props })
 
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
@@ -334,18 +339,22 @@ export const getSignedUploadURL = async function (
       ctx.throw(400, "bucket and key values are required")
     }
     try {
-      const s3 = new AWS.S3({
+      let endpoint = datasource?.config?.endpoint
+      if (endpoint && !utils.urlHasProtocol(endpoint)) {
+        endpoint = `https://${endpoint}`
+      }
+      const s3 = new S3({
         region: awsRegion,
-        endpoint: datasource?.config?.endpoint || undefined,
-        accessKeyId: datasource?.config?.accessKeyId as string,
-        secretAccessKey: datasource?.config?.secretAccessKey as string,
-        apiVersion: "2006-03-01",
-        signatureVersion: "v4",
+        endpoint: endpoint,
+        credentials: {
+          accessKeyId: datasource?.config?.accessKeyId as string,
+          secretAccessKey: datasource?.config?.secretAccessKey as string,
+        },
       })
       const params = { Bucket: bucket, Key: key }
-      signedUrl = s3.getSignedUrl("putObject", params)
-      if (datasource?.config?.endpoint) {
-        publicUrl = `${datasource.config.endpoint}/${bucket}/${key}`
+      signedUrl = await getSignedUrl(s3, new PutObjectCommand(params))
+      if (endpoint) {
+        publicUrl = `${endpoint}/${bucket}/${key}`
       } else {
         publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
       }

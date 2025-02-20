@@ -1,3 +1,5 @@
+// TODO: analise and fix all the undefined ! and ?
+
 import { get, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "@/api"
@@ -11,6 +13,7 @@ import {
   findComponentParent,
   findAllMatchingComponents,
   makeComponentUnique,
+  findComponentType,
 } from "@/helpers/components"
 import { getComponentFieldOptions } from "@/helpers/formFields"
 import { selectedScreen } from "./screens"
@@ -35,7 +38,7 @@ import { Utils } from "@budibase/frontend-core"
 import {
   ComponentDefinition,
   ComponentSetting,
-  Component as ComponentType,
+  Component,
   ComponentCondition,
   FieldType,
   Screen,
@@ -43,10 +46,6 @@ import {
 } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
 import { getSequentialName } from "@/helpers/duplicate"
-
-interface Component extends ComponentType {
-  _id: string
-}
 
 export interface ComponentState {
   components: Record<string, ComponentDefinition>
@@ -139,10 +138,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   /**
    * Retrieve the component definition object
-   * @param {string} componentType
-   * @example
-   * '@budibase/standard-components/container'
-   * @returns {object}
    */
   getDefinition(componentType: string) {
     if (!componentType) {
@@ -151,10 +146,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     return get(this.store).components[componentType]
   }
 
-  /**
-   *
-   * @returns {object}
-   */
   getDefaultDatasource() {
     // Ignore users table
     const validTables = get(tables).list.filter(x => x._id !== "ta_users")
@@ -188,10 +179,8 @@ export class ComponentStore extends BudiStore<ComponentState> {
   /**
    * Takes an enriched component instance and applies any required migration
    * logic
-   * @param {object} enrichedComponent
-   * @returns {object} migrated Component
    */
-  migrateSettings(enrichedComponent: Component) {
+  migrateSettings(enrichedComponent: Component | null) {
     const componentPrefix = "@budibase/standard-components"
     let migrated = false
 
@@ -230,25 +219,18 @@ export class ComponentStore extends BudiStore<ComponentState> {
     for (let setting of filterableTypes || []) {
       const isLegacy = Array.isArray(enrichedComponent[setting.key])
       if (isLegacy) {
-        const processedSetting = utils.processSearchFilters(
+        enrichedComponent[setting.key] = utils.processSearchFilters(
           enrichedComponent[setting.key]
         )
-        enrichedComponent[setting.key] = processedSetting
         migrated = true
       }
     }
     return migrated
   }
 
-  /**
-   *
-   * @param {object} component
-   * @param {object} opts
-   * @returns
-   */
   enrichEmptySettings(
     component: Component,
-    opts: { screen?: Screen; parent?: Component; useDefaultValues?: boolean }
+    opts: { screen?: Screen; parent?: string; useDefaultValues?: boolean }
   ) {
     if (!component?._component) {
       return
@@ -256,7 +238,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     const defaultDS = this.getDefaultDatasource()
     const settings = this.getComponentSettings(component._component)
     const { parent, screen, useDefaultValues } = opts || {}
-    const treeId = parent?._id || component._id
+    const treeId = parent || component._id
     if (!screen) {
       return
     }
@@ -280,14 +262,25 @@ export class ComponentStore extends BudiStore<ComponentState> {
             type: "table",
           }
         } else if (setting.type === "dataProvider") {
-          // Pick closest data provider where required
+          let providerId
+
+          // Pick closest parent data provider if one exists
           const path = findComponentPath(screen.props, treeId)
           const providers = path.filter((component: Component) =>
             component._component?.endsWith("/dataprovider")
           )
-          if (providers.length) {
-            const id = providers[providers.length - 1]?._id
-            component[setting.key] = `{{ literal ${safe(id)} }}`
+          providerId = providers[providers.length - 1]?._id
+
+          // If none in our direct path, select the first one the screen
+          if (!providerId) {
+            providerId = findComponentType(
+              screen.props,
+              "@budibase/standard-components/dataprovider"
+            )?._id
+          }
+
+          if (providerId) {
+            component[setting.key] = `{{ literal ${safe(providerId)} }}`
           }
         } else if (setting.type.startsWith("field/")) {
           // Autofill form field names
@@ -427,17 +420,10 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
   }
 
-  /**
-   *
-   * @param {string} componentName
-   * @param {object} presetProps
-   * @param {object} parent
-   * @returns
-   */
   createInstance(
     componentType: string,
-    presetProps: any,
-    parent: any
+    presetProps?: Record<string, any>,
+    parent?: string
   ): Component | null {
     const screen = get(selectedScreen)
     if (!screen) {
@@ -463,7 +449,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
       _id: Helpers.uuid(),
       _component: definition.component,
       _styles: {
-        normal: {},
+        normal: { ...presetProps?._styles?.normal },
         hover: {},
         active: {},
       },
@@ -512,19 +498,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
   }
 
-  /**
-   *
-   * @param {string} componentName
-   * @param {object} presetProps
-   * @param {object} parent
-   * @param {number} index
-   * @returns
-   */
   async create(
     componentType: string,
-    presetProps: any,
-    parent: Component,
-    index: number
+    presetProps?: Record<string, any>,
+    parent?: string,
+    index?: number
   ) {
     const state = get(this.store)
     const componentInstance = this.createInstance(
@@ -539,7 +517,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Insert in position if specified
     if (parent && index != null) {
       await screenStore.patch((screen: Screen) => {
-        let parentComponent = findComponent(screen.props, parent)
+        let parentComponent = findComponent(screen.props, parent)!
         if (!parentComponent._children?.length) {
           parentComponent._children = [componentInstance]
         } else {
@@ -558,7 +536,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         }
         const currentComponent = findComponent(
           screen.props,
-          selectedComponentId
+          selectedComponentId!
         )
         if (!currentComponent) {
           return false
@@ -601,7 +579,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
       return state
     })
 
-    componentTreeNodesStore.makeNodeVisible(componentInstance._id)
+    componentTreeNodesStore.makeNodeVisible(componentInstance._id!)
 
     // Log event
     analytics.captureEvent(Events.COMPONENT_CREATED, {
@@ -611,13 +589,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     return componentInstance
   }
 
-  /**
-   *
-   * @param {function} patchFn
-   * @param {string} componentId
-   * @param {string} screenId
-   * @returns
-   */
   async patch(
     patchFn: (component: Component, screen: Screen) => any,
     componentId?: string,
@@ -652,11 +623,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     await screenStore.patch(patchScreen, screenId)
   }
 
-  /**
-   *
-   * @param {object} component
-   * @returns
-   */
   async delete(component: Component) {
     if (!component) {
       return
@@ -665,7 +631,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Determine the next component to select, and select it before deletion
     // to avoid an intermediate state of no component selection
     const state = get(this.store)
-    let nextId = ""
+    let nextId: string | null = ""
     if (state.selectedComponentId === component._id) {
       nextId = this.getNext()
       if (!nextId) {
@@ -678,7 +644,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         nextId = nextId.replace("-navigation", "-screen")
       }
       this.update(state => {
-        state.selectedComponentId = nextId
+        state.selectedComponentId = nextId ?? undefined
         return state
       })
     }
@@ -686,18 +652,18 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Patch screen
     await screenStore.patch((screen: Screen) => {
       // Check component exists
-      component = findComponent(screen.props, component._id)
-      if (!component) {
+      const updatedComponent = findComponent(screen.props, component._id!)
+      if (!updatedComponent) {
         return false
       }
 
       // Check component has a valid parent
-      const parent = findComponentParent(screen.props, component._id)
+      const parent = findComponentParent(screen.props, updatedComponent._id)
       if (!parent) {
         return false
       }
-      parent._children = parent._children.filter(
-        (child: Component) => child._id !== component._id
+      parent._children = parent._children!.filter(
+        (child: Component) => child._id !== updatedComponent._id
       )
     }, null)
   }
@@ -737,13 +703,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
     })
   }
 
-  /**
-   *
-   * @param {object} targetComponent
-   * @param {string} mode
-   * @param {object} targetScreen
-   * @returns
-   */
   async paste(
     targetComponent: Component,
     mode: string,
@@ -768,7 +727,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Patch screen
     const patch = (screen: Screen) => {
       // Get up to date ref to target
-      targetComponent = findComponent(screen.props, targetComponent._id)
+      targetComponent = findComponent(screen.props, targetComponent!._id!)!
       if (!targetComponent) {
         return false
       }
@@ -782,7 +741,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
       if (!cut) {
         componentToPaste = makeComponentUnique(componentToPaste)
       }
-      newComponentId = componentToPaste._id
+      newComponentId = componentToPaste._id!
 
       // Strip grid position metadata if pasting into a new screen, but keep
       // alignment metadata
@@ -859,8 +818,8 @@ export class ComponentStore extends BudiStore<ComponentState> {
     if (!screen) {
       throw "A valid screen must be selected"
     }
-    const parent = findComponentParent(screen.props, componentId)
-    const index = parent?._children.findIndex(
+    const parent = findComponentParent(screen.props, componentId)!
+    const index = parent?._children?.findIndex(
       (x: Component) => x._id === componentId
     )
 
@@ -878,29 +837,29 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     // If we have siblings above us, choose the sibling or a descendant
-    if (index > 0) {
+    if (index !== undefined && index > 0) {
       // If sibling before us accepts children, and is not collapsed, select a descendant
-      const previousSibling = parent._children[index - 1]
+      const previousSibling = parent._children![index - 1]
       if (
         previousSibling._children?.length &&
-        componentTreeNodesStore.isNodeExpanded(previousSibling._id)
+        componentTreeNodesStore.isNodeExpanded(previousSibling._id!)
       ) {
         let target = previousSibling
         while (
           target._children?.length &&
-          componentTreeNodesStore.isNodeExpanded(target._id)
+          componentTreeNodesStore.isNodeExpanded(target._id!)
         ) {
           target = target._children[target._children.length - 1]
         }
-        return target._id
+        return target._id!
       }
 
       // Otherwise just select sibling
-      return previousSibling._id
+      return previousSibling._id!
     }
 
     // If no siblings above us, select the parent
-    return parent._id
+    return parent._id!
   }
 
   getNext() {
@@ -912,9 +871,9 @@ export class ComponentStore extends BudiStore<ComponentState> {
       throw "A valid screen must be selected"
     }
     const parent = findComponentParent(screen.props, componentId)
-    const index = parent?._children.findIndex(
+    const index = parent?._children?.findIndex(
       (x: Component) => x._id === componentId
-    )
+    )!
 
     // Check for screen and navigation component edge cases
     const screenComponentId = `${screen._id}-screen`
@@ -927,37 +886,38 @@ export class ComponentStore extends BudiStore<ComponentState> {
     if (
       component?._children?.length &&
       (state.selectedComponentId === navComponentId ||
-        componentTreeNodesStore.isNodeExpanded(component._id))
+        componentTreeNodesStore.isNodeExpanded(component._id!))
     ) {
-      return component._children[0]._id
+      return component._children[0]._id!
     } else if (!parent) {
       return null
     }
 
     // Otherwise select the next sibling if we have one
-    if (index < parent._children.length - 1) {
-      const nextSibling = parent._children[index + 1]
-      return nextSibling._id
+    if (index < parent._children!.length - 1) {
+      const nextSibling = parent._children![index + 1]
+      return nextSibling._id!
     }
 
     // Last child, select our parents next sibling
     let target = parent
     let targetParent = findComponentParent(screen.props, target._id)
-    let targetIndex = targetParent?._children.findIndex(
+    let targetIndex = targetParent?._children?.findIndex(
       (child: Component) => child._id === target._id
-    )
+    )!
     while (
       targetParent != null &&
-      targetIndex === targetParent._children?.length - 1
+      targetParent._children &&
+      targetIndex === targetParent._children.length - 1
     ) {
       target = targetParent
       targetParent = findComponentParent(screen.props, target._id)
-      targetIndex = targetParent?._children.findIndex(
+      targetIndex = targetParent?._children!.findIndex(
         (child: Component) => child._id === target._id
-      )
+      )!
     }
     if (targetParent) {
-      return targetParent._children[targetIndex + 1]._id
+      return targetParent._children![targetIndex + 1]._id!
     } else {
       return null
     }
@@ -989,16 +949,16 @@ export class ComponentStore extends BudiStore<ComponentState> {
       const parent = findComponentParent(screen.props, componentId)
 
       // Check we aren't right at the top of the tree
-      const index = parent?._children.findIndex(
+      const index = parent?._children?.findIndex(
         (x: Component) => x._id === componentId
-      )
+      )!
       if (!parent || (index === 0 && parent._id === screen.props._id)) {
         return
       }
 
       // Copy original component and remove it from the parent
-      const originalComponent = cloneDeep(parent._children[index])
-      parent._children = parent._children.filter(
+      const originalComponent = cloneDeep(parent._children![index])
+      parent._children = parent._children!.filter(
         (component: Component) => component._id !== componentId
       )
 
@@ -1010,9 +970,9 @@ export class ComponentStore extends BudiStore<ComponentState> {
         const definition = this.getDefinition(previousSibling._component)
         if (
           definition?.hasChildren &&
-          componentTreeNodesStore.isNodeExpanded(previousSibling._id)
+          componentTreeNodesStore.isNodeExpanded(previousSibling._id!)
         ) {
-          previousSibling._children.push(originalComponent)
+          previousSibling._children!.push(originalComponent)
         }
 
         // Otherwise just move component above sibling
@@ -1024,11 +984,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
       // If no siblings above us, go above the parent as long as it isn't
       // the screen
       else if (parent._id !== screen.props._id) {
-        const grandParent = findComponentParent(screen.props, parent._id)
-        const parentIndex = grandParent._children.findIndex(
+        const grandParent = findComponentParent(screen.props, parent._id)!
+        const parentIndex = grandParent._children!.findIndex(
           (child: Component) => child._id === parent._id
         )
-        grandParent._children.splice(parentIndex, 0, originalComponent)
+        grandParent._children!.splice(parentIndex, 0, originalComponent)
       }
     }, null)
   }
@@ -1067,9 +1027,9 @@ export class ComponentStore extends BudiStore<ComponentState> {
         const definition = this.getDefinition(nextSibling._component)
         if (
           definition?.hasChildren &&
-          componentTreeNodesStore.isNodeExpanded(nextSibling._id)
+          componentTreeNodesStore.isNodeExpanded(nextSibling._id!)
         ) {
-          nextSibling._children.splice(0, 0, originalComponent)
+          nextSibling._children!.splice(0, 0, originalComponent)
         }
 
         // Otherwise move below next sibling
@@ -1080,11 +1040,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
       // Last child, so move below our parent
       else {
-        const grandParent = findComponentParent(screen.props, parent._id)
-        const parentIndex = grandParent._children.findIndex(
+        const grandParent = findComponentParent(screen.props, parent._id)!
+        const parentIndex = grandParent._children!.findIndex(
           (child: Component) => child._id === parent._id
         )
-        grandParent._children.splice(parentIndex + 1, 0, originalComponent)
+        grandParent._children!.splice(parentIndex + 1, 0, originalComponent)
       }
     }, null)
   }
@@ -1101,6 +1061,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   async updateStyles(styles: Record<string, string>, id: string) {
     const patchFn = (component: Component) => {
+      delete component._placeholder
       component._styles.normal = {
         ...component._styles.normal,
         ...styles,
@@ -1231,7 +1192,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     // Create new parent instance
-    const newParentDefinition = this.createInstance(parentType, null, parent)
+    const newParentDefinition = this.createInstance(parentType)
     if (!newParentDefinition) {
       return
     }
@@ -1246,13 +1207,13 @@ export class ComponentStore extends BudiStore<ComponentState> {
       }
 
       // Replace component with parent
-      const index = oldParentDefinition._children.findIndex(
+      const index = oldParentDefinition._children!.findIndex(
         (component: Component) => component._id === componentId
       )
       if (index === -1) {
         return false
       }
-      oldParentDefinition._children[index] = {
+      oldParentDefinition._children![index] = {
         ...newParentDefinition,
         _children: [definition],
       }
@@ -1267,10 +1228,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   /**
    * Check if the components settings have been cached
-   * @param {string} componentType
-   * @example
-   * '@budibase/standard-components/container'
-   * @returns {boolean}
    */
   isCached(componentType: string) {
     const settings = get(this.store).settingsCache
@@ -1279,11 +1236,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
 
   /**
    * Cache component settings
-   * @param {string} componentType
-   * @param {object} definition
-   * @example
-   * '@budibase/standard-components/container'
-   * @returns {array} the settings
    */
   cacheSettings(componentType: string, definition: ComponentDefinition | null) {
     let settings: ComponentSetting[] = []
@@ -1313,12 +1265,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
   /**
    * Retrieve an array of the component settings.
    * These settings are cached because they cannot change at run time.
-   *
    * Searches a component's definition for a setting matching a certain predicate.
-   * @param {string} componentType
-   * @example
-   * '@budibase/standard-components/container'
-   * @returns {Array<object>}
    */
   getComponentSettings(componentType: string) {
     if (!componentType) {

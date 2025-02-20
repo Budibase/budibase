@@ -4,7 +4,7 @@ import {
 } from "../../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { Row, Table } from "@budibase/types"
+import { FilterCondition, Row, Table } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 async function uploadTestFile(filename: string) {
@@ -90,7 +90,7 @@ describe("test the create row action", () => {
       .createRow({ row: {} }, { stepName: "CreateRow" })
       .filter({
         field: "{{ stepsByName.CreateRow.success }}",
-        condition: "equal",
+        condition: FilterCondition.EQUAL,
         value: true,
       })
       .serverLog(
@@ -131,7 +131,7 @@ describe("test the create row action", () => {
       .createRow({ row: attachmentRow }, { stepName: "CreateRow" })
       .filter({
         field: "{{ stepsByName.CreateRow.success }}",
-        condition: "equal",
+        condition: FilterCondition.EQUAL,
         value: true,
       })
       .serverLog(
@@ -146,11 +146,12 @@ describe("test the create row action", () => {
     expect(result.steps[1].outputs.row.file_attachment[0]).toHaveProperty("key")
     let s3Key = result.steps[1].outputs.row.file_attachment[0].key
 
-    const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
+    const client = objectStore.ObjectStore()
 
-    const objectData = await client
-      .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
-      .promise()
+    const objectData = await client.headObject({
+      Bucket: objectStore.ObjectStoreBuckets.APPS,
+      Key: s3Key,
+    })
 
     expect(objectData).toBeDefined()
     expect(objectData.ContentLength).toBeGreaterThan(0)
@@ -217,11 +218,12 @@ describe("test the create row action", () => {
     )
     let s3Key = result.steps[1].outputs.row.single_file_attachment.key
 
-    const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
+    const client = objectStore.ObjectStore()
 
-    const objectData = await client
-      .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
-      .promise()
+    const objectData = await client.headObject({
+      Bucket: objectStore.ObjectStoreBuckets.APPS,
+      Key: s3Key,
+    })
 
     expect(objectData).toBeDefined()
     expect(objectData.ContentLength).toBeGreaterThan(0)
