@@ -27,7 +27,6 @@
   } from "../CodeEditor"
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
-  import SnippetSidePanel from "./SnippetSidePanel.svelte"
   import { BindingHelpers } from "./utils"
   import { capitalise } from "@/helpers"
   import { Utils, JsonFormatter } from "@budibase/frontend-core"
@@ -74,22 +73,15 @@
   const enum SidePanel {
     Bindings = "Bindings",
     Evaluation = "Evaluation",
-    Snippets = "Snippets",
   }
   const SidePanelIcons: Record<SidePanel, string> = {
     Bindings: "FlashOn",
     Evaluation: "Play",
-    Snippets: "Code",
   }
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
-  $: sidePanelOptions = getSidePanelOptions(
-    bindings,
-    context,
-    allowSnippets,
-    mode
-  )
+  $: sidePanelOptions = getSidePanelOptions(bindings, context)
   $: enrichedBindings = enrichBindings(bindings, context, snippets)
   $: usingJS = mode === BindingMode.JavaScript
   $: editorMode =
@@ -148,21 +140,13 @@
     return options
   }
 
-  const getSidePanelOptions = (
-    bindings: EnrichedBinding[],
-    context: any,
-    useSnippets: boolean,
-    mode: BindingMode | null
-  ) => {
+  const getSidePanelOptions = (bindings: EnrichedBinding[], context: any) => {
     let options = []
     if (bindings?.length) {
       options.push(SidePanel.Bindings)
     }
     if (context && Object.keys(context).length > 0) {
       options.push(SidePanel.Evaluation)
-    }
-    if (useSnippets && mode === BindingMode.JavaScript) {
-      options.push(SidePanel.Snippets)
     }
     return options
   }
@@ -446,8 +430,6 @@
           {evaluating}
           expression={editorValue ? editorValue : ""}
         />
-      {:else if sidePanel === SidePanel.Snippets}
-        <SnippetSidePanel {addSnippet} {snippets} />
       {/if}
     </div>
   </div>

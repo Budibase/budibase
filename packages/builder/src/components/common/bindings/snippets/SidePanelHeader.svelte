@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Icon, Tags, Tag } from "@budibase/bbui"
   import { licensing } from "@/stores/portal"
-  import SnippetDrawer from "../SnippetDrawer.svelte"
+  import SnippetDrawer from "./SnippetDrawer.svelte"
   import type { Snippet } from "@budibase/types"
 
   $: enableSnippets = !$licensing.isFreePlan
