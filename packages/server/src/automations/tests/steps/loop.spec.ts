@@ -7,7 +7,6 @@ import {
   CreateRowStepOutputs,
   FieldType,
   FilterCondition,
-  AutomationStatus,
   AutomationStepStatus,
 } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
