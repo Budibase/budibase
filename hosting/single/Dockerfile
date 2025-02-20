@@ -70,6 +70,7 @@ WORKDIR /minio
 
 # a 2022 version of minio that supports gateway mode
 COPY scripts/resources/minio /minio
+RUN chmod +x minio
 
 # handles the installation of minio in non-aas environments
 COPY scripts/install-minio.sh ./install.sh
