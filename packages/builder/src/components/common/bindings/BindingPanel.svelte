@@ -421,7 +421,7 @@
           {context}
           addHelper={onSelectHelper}
           addBinding={onSelectBinding}
-          mode={editorMode}
+          {mode}
         />
       {:else if sidePanel === SidePanel.Evaluation}
         <EvaluationSidePanel
