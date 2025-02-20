@@ -32,7 +32,7 @@
   import { capitalise } from "@/helpers"
   import { Utils, JsonFormatter } from "@budibase/frontend-core"
   import { licensing } from "@/stores/portal"
-  import { BindingMode, SidePanel } from "@budibase/types"
+  import { BindingMode } from "@budibase/types"
   import type {
     EnrichedBinding,
     Snippet,
@@ -70,6 +70,17 @@
   let expressionLogs: Log[] | undefined
   let expressionError: string | undefined
   let evaluating = false
+
+  const enum SidePanel {
+    Bindings = "Bindings",
+    Evaluation = "Evaluation",
+    Snippets = "Snippets",
+  }
+  const SidePanelIcons: Record<SidePanel, string> = {
+    Bindings: "FlashOn",
+    Evaluation: "Play",
+    Snippets: "Code",
+  }
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -342,14 +353,15 @@
             {/each}
           </div>
           <div class="side-tabs">
-            {#each sidePanelOptions as panel}
+            {#each sidePanelOptions as panelOption}
               <ActionButton
                 size="M"
                 quiet
-                selected={sidePanel === panel}
-                on:click={() => changeSidePanel(panel)}
+                selected={sidePanel === panelOption}
+                on:click={() => changeSidePanel(panelOption)}
+                tooltip={panelOption}
               >
-                <Icon name={panel} size="S" />
+                <Icon name={SidePanelIcons[panelOption]} size="S" />
               </ActionButton>
             {/each}
           </div>
