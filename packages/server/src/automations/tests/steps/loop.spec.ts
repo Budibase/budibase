@@ -7,6 +7,8 @@ import {
   CreateRowStepOutputs,
   FieldType,
   FilterCondition,
+  AutomationStatus,
+  AutomationStepStatus,
 } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -559,6 +561,26 @@ describe("Attempt to run a basic loop automation", () => {
         success: true,
         status: "stopped",
       })
+    })
+
+    it("should not fail if queryRows returns nothing", async () => {
+      const table = await config.api.table.save(basicTable())
+      const results = await createAutomationBuilder(config)
+        .onAppAction()
+        .queryRows({
+          tableId: table._id!,
+        })
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: "{{ steps.1.rows }}",
+        })
+        .serverLog({ text: "Message {{loop.currentItem}}" })
+        .test({ fields: {} })
+
+      expect(results.steps[1].outputs.success).toBe(true)
+      expect(results.steps[1].outputs.status).toBe(
+        AutomationStepStatus.NO_ITERATIONS
+      )
     })
   })
 })
