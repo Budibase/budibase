@@ -10,11 +10,9 @@
     DataFetchDatasource,
     UserDatasource,
     GroupUserDatasource,
-    DataFetchOptions} from "@budibase/types";
-import {
-    LogicalOperator,
-    EmptyFilterOption
+    DataFetchOptions,
   } from "@budibase/types"
+  import { LogicalOperator, EmptyFilterOption } from "@budibase/types"
 
   type ProviderDatasource = Exclude<
     DataFetchDatasource,

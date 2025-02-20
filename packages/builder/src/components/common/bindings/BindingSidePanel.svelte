@@ -6,8 +6,8 @@
   import type { EnrichedBinding, Helper } from "@budibase/types"
   import { BindingMode } from "@budibase/types"
 
-  export let addHelper: (helper: Helper, js?: boolean) => void
-  export let addBinding: (binding: EnrichedBinding) => void
+  export let addHelper: (_helper: Helper, _js?: boolean) => void
+  export let addBinding: (_binding: EnrichedBinding) => void
   export let bindings: EnrichedBinding[]
   export let mode: BindingMode
   export let allowHelpers: boolean
