@@ -21,7 +21,7 @@
   let popover: Popover
   let popoverAnchor: HTMLElement | null
   let hoverTarget: {
-    helper: boolean
+    type: "binding" | "helper" | "snippet"
     code: string
     description?: string
   } | null
@@ -119,22 +119,35 @@
     stopHidingPopover()
     popoverAnchor = target
     hoverTarget = {
-      helper: false,
+      type: "binding",
       code: binding.valueHTML,
     }
     popover.show()
   }
 
-  const showHelperPopover = (helper: any, target: HTMLElement) => {
+  const showHelperPopover = (helper: Helper, target: HTMLElement) => {
     stopHidingPopover()
     if (!helper.displayText && helper.description) {
       return
     }
     popoverAnchor = target
     hoverTarget = {
-      helper: true,
+      type: "helper",
       description: helper.description,
       code: getHelperExample(helper, mode === BindingMode.JavaScript),
+    }
+    popover.show()
+  }
+
+  const showSnippetPopover = (snippet: Snippet, target: HTMLElement) => {
+    stopHidingPopover()
+    if (!snippet.code) {
+      return
+    }
+    popoverAnchor = target
+    hoverTarget = {
+      type: "snippet",
+      code: snippet.code,
     }
     popover.show()
   }
@@ -329,15 +342,15 @@
         {#if filteredSnippets?.length}
           <div class="sub-section">
             <ul class="helpers">
-              {#each filteredSnippets as helper}
+              {#each filteredSnippets as snippet}
                 <li
                   class="binding"
                   on:mouseenter={e =>
-                    showHelperPopover(helper, e.currentTarget)}
+                    showSnippetPopover(snippet, e.currentTarget)}
                   on:mouseleave={hidePopover}
-                  on:click={() => addSnippet(helper)}
+                  on:click={() => addSnippet(snippet)}
                 >
-                  <span class="binding__label">{helper.name}</span>
+                  <span class="binding__label">{snippet.name}</span>
                   <span class="binding__typeWrap">
                     <span class="binding__type">snippet</span>
                   </span>
