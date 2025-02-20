@@ -5,6 +5,8 @@
   import { handlebarsCompletions } from "@/constants/completions"
   import type { EnrichedBinding, Helper, Snippet } from "@budibase/types"
   import { BindingMode } from "@budibase/types"
+  import { EditorModes } from "../CodeEditor"
+  import CodeEditor from "../CodeEditor/CodeEditor.svelte"
 
   export let addHelper: (_helper: Helper, _js?: boolean) => void
   export let addBinding: (_binding: EnrichedBinding) => void
@@ -41,7 +43,14 @@
     Snippets: "Code",
   } as Record<string, string>
   $: categories = Object.entries(groupBy("category", bindings))
-  $: categoryNames = getCategoryNames(categories)
+
+  $: filteredSnippets = getFilteredSnippets(
+    mode,
+    allowSnippets,
+    snippets || [],
+    search
+  )
+  $: categoryNames = getCategoryNames(categories, filteredSnippets.length > 0)
   $: searchRgx = new RegExp(search, "ig")
   $: filteredCategories = categories
     .map(([name, categoryBindings]) => ({
@@ -65,17 +74,15 @@
     )
   })
 
-  $: filteredSnippets = getFilteredSnippets(
-    allowSnippets,
-    snippets || [],
-    search
-  )
-
   const getFilteredSnippets = (
+    mode: BindingMode,
     enableSnippets: boolean,
     snippets: Snippet[],
     search: string
   ) => {
+    if (mode !== BindingMode.JavaScript) {
+      return []
+    }
     if (!enableSnippets || !snippets.length) {
       return []
     }
@@ -98,12 +105,15 @@
     return example || ""
   }
 
-  const getCategoryNames = (categories: [string, EnrichedBinding[]][]) => {
+  const getCategoryNames = (
+    categories: [string, EnrichedBinding[]][],
+    showSnippets: boolean
+  ) => {
     const names = [...categories.map(cat => cat[0])]
     if (allowHelpers) {
       names.push("Helpers")
     }
-    if (allowSnippets) {
+    if (showSnippets) {
       names.push("Snippets")
     }
     return names
@@ -192,7 +202,10 @@
     on:mouseenter={stopHidingPopover}
     on:mouseleave={hidePopover}
   >
-    <div class="binding-popover" class:helper={hoverTarget.helper}>
+    <div
+      class="binding-popover"
+      class:has-code={hoverTarget.type !== "binding"}
+    >
       {#if hoverTarget.description}
         <div>
           <!-- eslint-disable-next-line svelte/no-at-html-tags-->
@@ -200,8 +213,16 @@
         </div>
       {/if}
       {#if hoverTarget.code}
-        <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-        <pre>{@html hoverTarget.code}</pre>
+        {#if mode === BindingMode.JavaScript}
+          <CodeEditor
+            value={hoverTarget.code?.trim()}
+            mode={EditorModes.JS}
+            readonly
+          />
+        {:else if mode === BindingMode.Text}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          <pre>{@html hoverTarget.code}</pre>
+        {/if}
       {/if}
     </div>
   </Popover>
@@ -323,7 +344,6 @@
                   class="binding"
                   on:mouseenter={e =>
                     showHelperPopover(helper, e.currentTarget)}
-                  on:mouseleave={hidePopover}
                   on:click={() =>
                     addHelper(helper, mode === BindingMode.JavaScript)}
                 >
@@ -347,7 +367,6 @@
                   class="binding"
                   on:mouseenter={e =>
                     showSnippetPopover(snippet, e.currentTarget)}
-                  on:mouseleave={hidePopover}
                   on:click={() => addSnippet(snippet)}
                 >
                   <span class="binding__label">{snippet.name}</span>
@@ -503,7 +522,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
-  .binding-popover.helper pre {
+  .binding-popover.has-code pre {
     color: var(--spectrum-global-color-blue-700);
   }
   .binding-popover pre :global(span) {
@@ -515,7 +534,11 @@
     padding: 0;
     margin: 0;
   }
-  .binding-popover.helper :global(code) {
+  .binding-popover.has-code :global(code) {
     font-size: 12px;
+  }
+  .binding-popover.has-code :global(.cm-line),
+  .binding-popover.has-code :global(.cm-content) {
+    padding: 0;
   }
 </style>
