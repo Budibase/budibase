@@ -3,8 +3,8 @@
   import { convertToJS } from "@budibase/string-templates"
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
   import { handlebarsCompletions } from "@/constants/completions"
-  import type { EnrichedBinding, Helper } from "@budibase/types";
-import { BindingMode } from "@budibase/types"
+  import type { EnrichedBinding, Helper } from "@budibase/types"
+  import { BindingMode } from "@budibase/types"
 
   export let addHelper: (helper: Helper, js?: boolean) => void
   export let addBinding: (binding: EnrichedBinding) => void
@@ -279,7 +279,8 @@ import { BindingMode } from "@budibase/types"
               {#each filteredHelpers as helper}
                 <li
                   class="binding"
-                  on:mouseenter={e => showHelperPopover(helper, e.target)}
+                  on:mouseenter={e =>
+                    showHelperPopover(helper, e.currentTarget)}
                   on:mouseleave={hidePopover}
                   on:click={() =>
                     addHelper(helper, mode === BindingMode.JavaScript)}
