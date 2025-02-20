@@ -43,6 +43,8 @@
   import type { Log } from "@budibase/string-templates"
   import type { CodeValidator } from "@/types"
 
+  type SidePanel = "Bindings" | "Evaluation"
+
   const dispatch = createEventDispatcher()
 
   export let bindings: EnrichedBinding[] = []
@@ -70,16 +72,11 @@
   let expressionError: string | undefined
   let evaluating = false
 
-  const enum SidePanel {
-    Bindings = "Bindings",
-    Evaluation = "Evaluation",
-  }
   const SidePanelIcons: Record<SidePanel, string> = {
     Bindings: "FlashOn",
     Evaluation: "Play",
   }
 
-  $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
   $: sidePanelOptions = getSidePanelOptions(bindings, context)
   $: enrichedBindings = enrichBindings(bindings, context, snippets)
@@ -96,7 +93,9 @@
   $: bindingOptions = bindingsToCompletions(bindings, editorMode)
   $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
   $: snippetsOptions =
-    usingJS && useSnippets && snippets?.length ? snippets : []
+    usingJS && allowSnippets && !$licensing.isFreePlan && snippets?.length
+      ? snippets
+      : []
 
   $: completions = !usingJS
     ? [hbAutocomplete([...bindingOptions, ...helperOptions])]
@@ -141,12 +140,12 @@
   }
 
   const getSidePanelOptions = (bindings: EnrichedBinding[], context: any) => {
-    let options = []
+    let options: SidePanel[] = []
     if (bindings?.length) {
-      options.push(SidePanel.Bindings)
+      options.push("Bindings")
     }
     if (context && Object.keys(context).length > 0) {
-      options.push(SidePanel.Evaluation)
+      options.push("Evaluation")
     }
     return options
   }
@@ -410,7 +409,7 @@
       </div>
     </div>
     <div class="side" class:visible={!!sidePanel}>
-      {#if sidePanel === SidePanel.Bindings}
+      {#if sidePanel === "Bindings"}
         <BindingSidePanel
           bindings={enrichedBindings}
           {allowHelpers}
@@ -422,7 +421,7 @@
           {mode}
           {snippets}
         />
-      {:else if sidePanel === SidePanel.Evaluation}
+      {:else if sidePanel === "Evaluation"}
         <EvaluationSidePanel
           {expressionResult}
           {expressionError}
