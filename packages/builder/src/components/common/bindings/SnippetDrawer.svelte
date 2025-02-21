@@ -79,7 +79,7 @@
   }
 </script>
 
-<Drawer bind:this={drawer} forceModal>
+<Drawer bind:this={drawer}>
   <svelte:fragment slot="title">
     {#if snippet}
       {snippet.name}
