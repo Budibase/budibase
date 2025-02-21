@@ -4,8 +4,8 @@
   import { API } from "@/api"
 
   let modal, loading = false
-  let content = ""
   let value, clear
+  let content = []
 
   export function show() {
     modal.show()
@@ -15,27 +15,25 @@
     modal.hide()
   }
 
+  function addContent(element) {
+    content = [...content, element]
+  }
+
   async function prompt() {
     loading = true
     const response = await API.globalPrompt(value)
-    if (content.length) {
-      content += "<br/>"
-    }
-    content += response.message?.replaceAll("\n", "<br/>") || ""
+    addContent({ message: response.message?.replaceAll("\n", "<br/>") || "" })
     if (response.data.length) {
-      content += `<br/>The response contained ${response.data.length} rows.`
+      addContent({ data: response.data })
     }
-    content += "<br/>"
+    addContent({ newline: true })
     loading = false
   }
 
   async function handleKeyDown(event) {
     if (event.key === "Enter") {
       setTimeout(clear, 50)
-      if (content.length) {
-        content += "<br/>"
-      }
-      content += `<i style="color: #1473E6">${value}</i>`
+      addContent({ message: `<i style="color: #1473E6">${value}</i>` })
       await prompt()
     }
   }
@@ -53,7 +51,19 @@
     >Welcome to Budibase AI.</Body
     >
     <TextArea bind:clear size="S" on:input={(e) => {value = e.detail}} on:keydown={handleKeyDown} />
-    <Body size="S">{@html content}</Body>
+    <div>
+      {#each content as element}
+        {#if element.newline}
+          <br />
+        {/if}
+        {#if element.message}
+          <Body size="S">{@html element.message}</Body>
+        {/if}
+        {#if element.data}
+          <Body size="S">Response contained {element.data.length} rows.</Body>
+        {/if}
+      {/each}
+    </div>
     {#if loading}
       <div class="center">
         <Spinner size="24" />
