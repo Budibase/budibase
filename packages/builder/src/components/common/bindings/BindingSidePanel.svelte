@@ -642,4 +642,16 @@
     background-color: var(--spectrum-global-color-gray-50);
     cursor: pointer;
   }
+
+  /* Upgrade */
+  .upgrade {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .upgrade :global(p) {
+    text-align: center;
+    align-self: center;
+  }
 </style>
