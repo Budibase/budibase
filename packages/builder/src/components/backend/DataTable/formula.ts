@@ -1,4 +1,4 @@
-import { FieldType } from "@budibase/types"
+import { FieldType, Table, UIBinding } from "@budibase/types"
 import { FIELDS } from "@/constants/backend"
 import { tables } from "@/stores/builder"
 import { get as svelteGet } from "svelte/store"
@@ -21,8 +21,13 @@ export function getBindings({
   path = null,
   category = null,
   depth = 0,
+}: {
+  table: Table | undefined
+  path: string | null
+  category: string | null
+  depth: number
 }) {
-  let bindings = []
+  let bindings: UIBinding[] = []
   if (!table) {
     return bindings
   }
@@ -58,7 +63,7 @@ export function getBindings({
     }
     const field = Object.values(FIELDS).find(
       field => field.type === schema.type
-    )
+    )!
 
     const label = path == null ? column : `${path}.0.${column}`
     const binding = path == null ? `[${column}]` : `[${path}].0.[${column}]`

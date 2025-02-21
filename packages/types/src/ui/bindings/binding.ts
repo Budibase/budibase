@@ -28,7 +28,16 @@ export interface UIBinding {
     prefixKeys?: string
   }
   component?: string
-  providerId: string
+  providerId?: string
   readableBinding?: string
   runtimeBinding?: string
+  label?: string
+  path?: string
+  type: string
+  category?: string
+  description?: string
+  display: {
+    name: string
+    type: string
+  }
 }
