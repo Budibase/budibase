@@ -14,7 +14,7 @@
   import { getSequentialName } from "@/helpers/duplicate"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { ValidSnippetNameRegex } from "@budibase/shared-core"
-  import { Snippet } from "@budibase/types"
+  import type { Snippet } from "@budibase/types"
 
   export let snippet
 
