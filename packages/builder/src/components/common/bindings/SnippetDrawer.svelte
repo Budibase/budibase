@@ -16,7 +16,7 @@
   import { ValidSnippetNameRegex } from "@budibase/shared-core"
   import type { Snippet } from "@budibase/types"
 
-  export let snippet
+  export let snippet: Snippet | null
 
   export const show = () => drawer.show()
   export const hide = () => drawer.hide()
@@ -54,7 +54,9 @@
   const deleteSnippet = async () => {
     loading = true
     try {
-      await snippets.deleteSnippet(snippet.name)
+      if (snippet) {
+        await snippets.deleteSnippet(snippet.name)
+      }
       drawer.hide()
     } catch (error) {
       notifications.error("Error deleting snippet")
