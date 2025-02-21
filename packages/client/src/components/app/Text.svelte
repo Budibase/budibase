@@ -4,22 +4,30 @@
 
   export let text: string = ""
   export let color: string | undefined = undefined
+  export let align: "left" | "center" | "right" | "justify" = "left"
 
   const component = getContext("component")
   const { styleable } = getContext("sdk")
 
   // Add in certain settings to styles
-  $: styles = enrichStyles($component.styles, color)
+  $: styles = enrichStyles($component.styles, color, align)
 
-  const enrichStyles = (styles: any, color: string | undefined) => {
-    if (!color) {
-      return styles
+  const enrichStyles = (
+    styles: any,
+    colorStyle: typeof color,
+    alignStyle: typeof align
+  ) => {
+    let additions: Record<string, string> = {
+      "text-align": alignStyle,
+    }
+    if (colorStyle) {
+      additions.color = colorStyle
     }
     return {
       ...styles,
       normal: {
-        ...styles?.normal,
-        color,
+        ...styles.normal,
+        ...additions,
       },
     }
   }
@@ -30,4 +38,7 @@
 </div>
 
 <style>
+  div :global(img) {
+    max-width: 100%;
+  }
 </style>
