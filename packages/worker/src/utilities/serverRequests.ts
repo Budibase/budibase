@@ -6,7 +6,6 @@ import {
   FetchTablesResponse,
   FieldType,
   Row,
-  SearchFilters,
   SearchResponse,
   SearchRowRequest,
 } from "@budibase/types"
@@ -33,7 +32,13 @@ export async function getAppMetadata(): Promise<FetchAppsResponse> {
       ...headers(),
     }
   )
-  return await response.json()
+  const json = (await response.json()) as FetchAppsResponse
+  const names: string[] = []
+  return json.filter(app => {
+    const found = names.find(name => app.name === name)
+    names.push(app.name)
+    return !found
+  })
 }
 
 export async function getAppTables(

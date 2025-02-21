@@ -1,5 +1,5 @@
 <script>
-  import { Body, Modal, ModalContent, TextArea } from "@budibase/bbui"
+  import { Body, Modal, ModalContent, TextArea, Table } from "@budibase/bbui"
   import Spinner from "@/components/common/Spinner.svelte"
   import { API } from "@/api"
 
@@ -33,16 +33,33 @@
   async function handleKeyDown(event) {
     if (event.key === "Enter") {
       setTimeout(clear, 50)
-      addContent({ message: `<i style="color: #1473E6">${value}</i>` })
+      addContent({ user: true, message: `<i>${value}</i>` })
       await prompt()
     }
+  }
+
+  function dataSchema(data) {
+    if (!data || data.length === 0) {
+      return {}
+    }
+    const keys = Object.keys(data[0])
+    // assume all strings
+    const schema = {}
+    const ignored = ["_id", "_rev", "type", "createdAt", "updatedAt", "tableId"]
+    for (let key of keys) {
+      if (ignored.indexOf(key) !== -1) {
+        continue
+      }
+      schema[key] = { type: "string", name: key }
+    }
+    return schema
   }
 </script>
 
 <Modal bind:this={modal} on:hide={modal}>
   <ModalContent
     title="Lets do some magic"
-    size="S"
+    size="L"
     showCancelButton={false}
     showConfirmButton={false}
     showCloseIcon={true}
@@ -57,10 +74,17 @@
           <br />
         {/if}
         {#if element.message}
-          <Body size="S">{@html element.message}</Body>
+          <div class="message-container" class:user={element.user}>
+            <div class:user-border={element.user}>
+              <Body size="S">{@html element.message}</Body>
+            </div>
+          </div>
         {/if}
-        {#if element.data}
-          <Body size="S">Response contained {element.data.length} rows.</Body>
+        {#if element.data && element.data.length}
+          <Body size="S">Here's what I found:</Body>
+          <div class="table">
+            <Table compact data={element.data.filter(d => d.tableId === element.data[0].tableId)} schema={dataSchema(element.data)} />
+          </div>
         {/if}
       {/each}
     </div>
@@ -78,5 +102,23 @@
     align-items: center;
     justify-content: center;
     white-space: pre-line;
+  }
+  .user {
+    display: flex;
+    justify-content: end !important;
+  }
+  .message-container {
+    display: flex;
+    justify-content: start;
+  }
+  .user-border {
+    background-color: var(--grey-2);
+    border-radius: 10px;
+    padding: 8px;
+  }
+  .table {
+    width: 560px;
+    overflow-y: hidden;
+    overflow-x: auto;
   }
 </style>
