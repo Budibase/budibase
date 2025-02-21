@@ -84,6 +84,10 @@ export type ActionImplementations<T extends Hosting> = {
     ExecuteScriptStepInputs,
     ExecuteScriptStepOutputs
   >
+  [AutomationActionStepId.EXECUTE_SCRIPT_V2]: ActionImplementation<
+    ExecuteScriptStepInputs,
+    ExecuteScriptStepOutputs
+  >
   [AutomationActionStepId.FILTER]: ActionImplementation<
     FilterStepInputs,
     FilterStepOutputs
@@ -155,6 +159,7 @@ export interface AutomationStepSchemaBase {
   type: AutomationStepType
   internal?: boolean
   deprecated?: boolean
+  new?: boolean
   blockToLoop?: string
   schema: {
     inputs: InputOutputBlock
@@ -176,6 +181,8 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
     : T extends AutomationActionStepId.EXECUTE_QUERY
     ? ExecuteQueryStepInputs
     : T extends AutomationActionStepId.EXECUTE_SCRIPT
+    ? ExecuteScriptStepInputs
+    : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
     ? ExecuteScriptStepInputs
     : T extends AutomationActionStepId.FILTER
     ? FilterStepInputs
@@ -279,6 +286,9 @@ export type ExecuteQueryStep =
 export type ExecuteScriptStep =
   AutomationStepSchema<AutomationActionStepId.EXECUTE_SCRIPT>
 
+export type ExecuteScriptV2Step =
+  AutomationStepSchema<AutomationActionStepId.EXECUTE_SCRIPT_V2>
+
 export type FilterStep = AutomationStepSchema<AutomationActionStepId.FILTER>
 
 export type QueryRowsStep =
@@ -325,6 +335,7 @@ export type AutomationStep =
   | DeleteRowStep
   | ExecuteQueryStep
   | ExecuteScriptStep
+  | ExecuteScriptV2Step
   | FilterStep
   | QueryRowsStep
   | SendEmailSmtpStep
