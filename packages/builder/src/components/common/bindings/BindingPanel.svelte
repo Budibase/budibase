@@ -56,7 +56,7 @@
   export let context = null
   export let snippets: Snippet[] | null = null
   export let autofocusEditor = false
-  export let placeholder = null
+  export let placeholder: string | null = null
   export let showTabBar = true
 
   let mode: BindingMode

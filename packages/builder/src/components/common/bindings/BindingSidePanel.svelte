@@ -620,7 +620,6 @@
     padding-bottom: var(--spacing-l);
     display: flex;
     flex-direction: column;
-    /* gap: var(--spacing-s); */
   }
   .snippet {
     font-size: var(--font-size-s);

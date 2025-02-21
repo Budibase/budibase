@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Button,
     Drawer,
@@ -14,6 +14,7 @@
   import { getSequentialName } from "@/helpers/duplicate"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { ValidSnippetNameRegex } from "@budibase/shared-core"
+  import { Snippet } from "@budibase/types"
 
   export let snippet
 
@@ -22,11 +23,11 @@
 
   const firstCharNumberRegex = /^[0-9].*$/
 
-  let drawer
+  let drawer: Drawer
   let name = ""
   let code = ""
   let loading = false
-  let deleteConfirmationDialog
+  let deleteConfirmationDialog: ConfirmDialog
 
   $: defaultName = getSequentialName($snippets, "MySnippet", {
     getName: x => x.name,
@@ -40,11 +41,11 @@
   const saveSnippet = async () => {
     loading = true
     try {
-      const newSnippet = { name, code: rawJS }
+      const newSnippet: Snippet = { name, code: rawJS || "" }
       await snippets.saveSnippet(newSnippet)
       drawer.hide()
       notifications.success(`Snippet ${newSnippet.name} saved`)
-    } catch (error) {
+    } catch (error: any) {
       notifications.error(error.message || "Error saving snippet")
     }
     loading = false
@@ -61,7 +62,7 @@
     loading = false
   }
 
-  const validateName = (name, snippets) => {
+  const validateName = (name: string, snippets: Snippet[]) => {
     if (!name?.length) {
       return "Name is required"
     }
@@ -78,7 +79,7 @@
   }
 </script>
 
-<Drawer bind:this={drawer}>
+<Drawer bind:this={drawer} forceModal>
   <svelte:fragment slot="title">
     {#if snippet}
       {snippet.name}
@@ -108,7 +109,11 @@
         Delete
       </Button>
     {/if}
-    <Button cta on:click={saveSnippet} disabled={!code || loading || nameError}>
+    <Button
+      cta
+      on:click={saveSnippet}
+      disabled={!code || loading || !!nameError}
+    >
       Save
     </Button>
   </svelte:fragment>
@@ -124,9 +129,7 @@
         value={code}
         on:change={e => (code = e.detail)}
       >
-        <div slot="tabs">
-          <Input placeholder="Name" />
-        </div>
+        <Input placeholder="Name" />
       </BindingPanel>
     {/key}
   </svelte:fragment>
