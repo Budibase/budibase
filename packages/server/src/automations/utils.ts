@@ -40,39 +40,35 @@ function loggingArgs(job: AutomationJob) {
 }
 
 export async function processEvent(job: AutomationJob) {
-  return tracer.trace(
-    "processEvent",
-    { resource: "automation" },
-    async span => {
-      const appId = job.data.event.appId!
-      const automationId = job.data.automation._id!
+  return tracer.trace("processEvent", async span => {
+    const appId = job.data.event.appId!
+    const automationId = job.data.automation._id!
 
-      span?.addTags({
-        appId,
-        automationId,
-        job: {
-          id: job.id,
-          name: job.name,
-          attemptsMade: job.attemptsMade,
-          opts: {
-            attempts: job.opts.attempts,
-            priority: job.opts.priority,
-            delay: job.opts.delay,
-            repeat: job.opts.repeat,
-            backoff: job.opts.backoff,
-            lifo: job.opts.lifo,
-            timeout: job.opts.timeout,
-            jobId: job.opts.jobId,
-            removeOnComplete: job.opts.removeOnComplete,
-            removeOnFail: job.opts.removeOnFail,
-            stackTraceLimit: job.opts.stackTraceLimit,
-            preventParsingData: job.opts.preventParsingData,
-          },
-        },
-      })
+    span.addTags({
+      appId,
+      automationId,
+      job: {
+        id: job.id,
+        name: job.name,
+        attemptsMade: job.attemptsMade,
+        attempts: job.opts.attempts,
+        priority: job.opts.priority,
+        delay: job.opts.delay,
+        repeat: job.opts.repeat,
+        backoff: job.opts.backoff,
+        lifo: job.opts.lifo,
+        timeout: job.opts.timeout,
+        jobId: job.opts.jobId,
+        removeOnComplete: job.opts.removeOnComplete,
+        removeOnFail: job.opts.removeOnFail,
+        stackTraceLimit: job.opts.stackTraceLimit,
+        preventParsingData: job.opts.preventParsingData,
+      },
+    })
 
-      const task = async () => {
-        try {
+    const task = async () => {
+      try {
+        return await tracer.trace("task", async () => {
           if (isCronTrigger(job.data.automation) && !job.data.event.timestamp) {
             // Requires the timestamp at run time
             job.data.event.timestamp = Date.now()
@@ -81,25 +77,19 @@ export async function processEvent(job: AutomationJob) {
           console.log("automation running", ...loggingArgs(job))
 
           const runFn = () => Runner.run(job)
-          const result = await quotas.addAutomation(runFn, {
-            automationId,
-          })
+          const result = await quotas.addAutomation(runFn, { automationId })
           console.log("automation completed", ...loggingArgs(job))
           return result
-        } catch (err) {
-          span?.addTags({ error: true })
-          console.error(
-            `automation was unable to run`,
-            err,
-            ...loggingArgs(job)
-          )
-          return { err }
-        }
+        })
+      } catch (err) {
+        span.addTags({ error: true })
+        console.error(`automation was unable to run`, err, ...loggingArgs(job))
+        return { err }
       }
-
-      return await context.doInAutomationContext({ appId, automationId, task })
     }
-  )
+
+    return await context.doInAutomationContext({ appId, automationId, task })
+  })
 }
 
 export async function updateTestHistory(

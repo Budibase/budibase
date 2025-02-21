@@ -5,10 +5,10 @@ import {
   SqlQuery,
   Table,
   TableSourceType,
+  SEPARATOR,
 } from "@budibase/types"
 import { DEFAULT_BB_DATASOURCE_ID } from "../constants"
 import { Knex } from "knex"
-import { SEPARATOR } from "../db"
 import environment from "../environment"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
