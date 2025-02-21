@@ -1,31 +1,52 @@
 <script lang="ts">
   import groupBy from "lodash/fp/groupBy"
   import { convertToJS } from "@budibase/string-templates"
-  import { Input, Layout, Icon, Popover } from "@budibase/bbui"
+  import { licensing } from "@/stores/portal"
+  import {
+    Input,
+    Layout,
+    Icon,
+    Popover,
+    Tags,
+    Tag,
+    Body,
+    Button,
+  } from "@budibase/bbui"
   import { handlebarsCompletions } from "@/constants/completions"
-  import type { EnrichedBinding, Helper } from "@budibase/types"
+  import type { EnrichedBinding, Helper, Snippet } from "@budibase/types"
   import { BindingMode } from "@budibase/types"
+  import { EditorModes } from "../CodeEditor"
+  import CodeEditor from "../CodeEditor/CodeEditor.svelte"
+
+  import SnippetDrawer from "./SnippetDrawer.svelte"
+  import UpgradeButton from "@/pages/builder/portal/_components/UpgradeButton.svelte"
 
   export let addHelper: (_helper: Helper, _js?: boolean) => void
   export let addBinding: (_binding: EnrichedBinding) => void
+  export let addSnippet: (_snippet: Snippet) => void
   export let bindings: EnrichedBinding[]
+  export let snippets: Snippet[] | null
   export let mode: BindingMode
   export let allowHelpers: boolean
+  export let allowSnippets: boolean
   export let context = null
 
   let search = ""
   let searching = false
   let popover: Popover
-  let popoverAnchor: HTMLElement | null
+  let popoverAnchor: HTMLElement | undefined
   let hoverTarget: {
-    helper: boolean
+    type: "binding" | "helper" | "snippet"
     code: string
     description?: string
   } | null
   let helpers = handlebarsCompletions()
   let selectedCategory: string | null
   let hideTimeout: ReturnType<typeof setTimeout> | null
+  let editableSnippet: Snippet | null
+  let showSnippetDrawer = false
 
+  $: enableSnippets = !$licensing.isFreePlan
   $: bindingIcons = bindings?.reduce<Record<string, string>>((acc, ele) => {
     if (ele.icon) {
       acc[ele.category] = acc[ele.category] || ele.icon
@@ -35,9 +56,14 @@
   $: categoryIcons = {
     ...bindingIcons,
     Helpers: "MagicWand",
+    Snippets: "Code",
   } as Record<string, string>
   $: categories = Object.entries(groupBy("category", bindings))
-  $: categoryNames = getCategoryNames(categories)
+
+  $: categoryNames = getCategoryNames(
+    categories,
+    allowSnippets && mode === BindingMode.JavaScript
+  )
   $: searchRgx = new RegExp(search, "ig")
   $: filteredCategories = categories
     .map(([name, categoryBindings]) => ({
@@ -61,6 +87,17 @@
     )
   })
 
+  $: filteredSnippets = getFilteredSnippets(
+    enableSnippets,
+    snippets || [],
+    search
+  )
+
+  function onModeChange(_mode: BindingMode) {
+    selectedCategory = null
+  }
+  $: onModeChange(mode)
+
   const getHelperExample = (helper: Helper, js: boolean) => {
     let example = helper.example || ""
     if (js) {
@@ -72,10 +109,16 @@
     return example || ""
   }
 
-  const getCategoryNames = (categories: [string, EnrichedBinding[]][]) => {
+  const getCategoryNames = (
+    categories: [string, EnrichedBinding[]][],
+    showSnippets: boolean
+  ) => {
     const names = [...categories.map(cat => cat[0])]
     if (allowHelpers) {
       names.push("Helpers")
+    }
+    if (showSnippets) {
+      names.push("Snippets")
     }
     return names
   }
@@ -90,20 +133,20 @@
     stopHidingPopover()
     popoverAnchor = target
     hoverTarget = {
-      helper: false,
+      type: "binding",
       code: binding.valueHTML,
     }
     popover.show()
   }
 
-  const showHelperPopover = (helper: any, target: HTMLElement) => {
+  const showHelperPopover = (helper: Helper, target: HTMLElement) => {
     stopHidingPopover()
     if (!helper.displayText && helper.description) {
       return
     }
     popoverAnchor = target
     hoverTarget = {
-      helper: true,
+      type: "helper",
       description: helper.description,
       code: getHelperExample(helper, mode === BindingMode.JavaScript),
     }
@@ -113,7 +156,7 @@
   const hidePopover = () => {
     hideTimeout = setTimeout(() => {
       popover.hide()
-      popoverAnchor = null
+      popoverAnchor = undefined
       hoverTarget = null
       hideTimeout = null
     }, 100)
@@ -136,21 +179,66 @@
     searching = false
     search = ""
   }
+
+  const getFilteredSnippets = (
+    enableSnippets: boolean,
+    snippets: Snippet[],
+    search: string
+  ) => {
+    if (!enableSnippets || !snippets.length) {
+      return []
+    }
+    if (!search?.length) {
+      return snippets
+    }
+    return snippets.filter(snippet =>
+      snippet.name.toLowerCase().includes(search.toLowerCase())
+    )
+  }
+
+  const showSnippet = (snippet: Snippet, target: HTMLElement) => {
+    stopHidingPopover()
+    if (!snippet.code) {
+      return
+    }
+    popoverAnchor = target
+    hoverTarget = {
+      type: "snippet",
+      code: snippet.code,
+    }
+
+    popover.show()
+  }
+
+  const createSnippet = () => {
+    editableSnippet = null
+    showSnippetDrawer = true
+  }
+
+  const editSnippet = (e: Event, snippet: Snippet) => {
+    e.preventDefault()
+    e.stopPropagation()
+    editableSnippet = snippet
+    showSnippetDrawer = true
+  }
 </script>
 
-{#if popoverAnchor && hoverTarget}
-  <Popover
-    align="left-outside"
-    bind:this={popover}
-    anchor={popoverAnchor}
-    minWidth={0}
-    maxWidth={480}
-    maxHeight={480}
-    dismissible={false}
-    on:mouseenter={stopHidingPopover}
-    on:mouseleave={hidePopover}
-  >
-    <div class="binding-popover" class:helper={hoverTarget.helper}>
+<Popover
+  align="left-outside"
+  bind:this={popover}
+  anchor={popoverAnchor}
+  minWidth={0}
+  maxWidth={480}
+  maxHeight={480}
+  dismissible={false}
+  on:mouseenter={stopHidingPopover}
+  on:mouseleave={hidePopover}
+>
+  {#if hoverTarget}
+    <div
+      class="binding-popover"
+      class:has-code={hoverTarget.type !== "binding"}
+    >
       {#if hoverTarget.description}
         <div>
           <!-- eslint-disable-next-line svelte/no-at-html-tags-->
@@ -158,12 +246,20 @@
         </div>
       {/if}
       {#if hoverTarget.code}
-        <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-        <pre>{@html hoverTarget.code}</pre>
+        {#if mode === BindingMode.JavaScript}
+          <CodeEditor
+            value={hoverTarget.code?.trim()}
+            mode={EditorModes.JS}
+            readonly
+          />
+        {:else if mode === BindingMode.Text}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          <pre>{@html hoverTarget.code}</pre>
+        {/if}
       {/if}
     </div>
-  </Popover>
-{/if}
+  {/if}
+</Popover>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -178,6 +274,25 @@
           on:click={() => (selectedCategory = null)}
         />
         {selectedCategory}
+        {#if selectedCategory === "Snippets"}
+          {#if enableSnippets}
+            <div class="add-snippet-button">
+              <Icon
+                size="S"
+                name="Add"
+                hoverable
+                newStyles
+                on:click={createSnippet}
+              />
+            </div>
+          {:else}
+            <div class="title">
+              <Tags>
+                <Tag icon="LockClosed">Premium</Tag>
+              </Tags>
+            </div>
+          {/if}
+        {/if}
       </div>
     {/if}
 
@@ -281,7 +396,6 @@
                   class="binding"
                   on:mouseenter={e =>
                     showHelperPopover(helper, e.currentTarget)}
-                  on:mouseleave={hidePopover}
                   on:click={() =>
                     addHelper(helper, mode === BindingMode.JavaScript)}
                 >
@@ -295,9 +409,52 @@
           </div>
         {/if}
       {/if}
+
+      {#if selectedCategory === "Snippets" || search}
+        <div class="snippet-list">
+          {#if enableSnippets}
+            {#each filteredSnippets as snippet}
+              <li
+                class="snippet"
+                on:mouseenter={e => showSnippet(snippet, e.currentTarget)}
+                on:mouseleave={hidePopover}
+                on:click={() => addSnippet(snippet)}
+              >
+                {snippet.name}
+                <Icon
+                  name="Edit"
+                  hoverable
+                  newStyles
+                  size="S"
+                  on:click={e => editSnippet(e, snippet)}
+                />
+              </li>
+            {/each}
+          {:else if !search}
+            <div class="upgrade">
+              <Body size="S">
+                Snippets let you create reusable JS functions and values that
+                can all be managed in one place
+              </Body>
+              {#if enableSnippets}
+                <Button cta on:click={createSnippet}>Create snippet</Button>
+              {:else}
+                <UpgradeButton />
+              {/if}
+            </div>
+          {/if}
+        </div>
+      {/if}
     {/if}
   </Layout>
 </div>
+
+{#if showSnippetDrawer}
+  <SnippetDrawer
+    snippet={editableSnippet}
+    on:drawerHide={() => (showSnippetDrawer = false)}
+  />
+{/if}
 
 <style>
   .binding-side-panel {
@@ -363,6 +520,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+    justify-content: space-between;
   }
   li.binding .binding__typeWrap {
     flex: 1;
@@ -438,7 +596,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
-  .binding-popover.helper pre {
+  .binding-popover.has-code pre {
     color: var(--spectrum-global-color-blue-700);
   }
   .binding-popover pre :global(span) {
@@ -450,7 +608,50 @@
     padding: 0;
     margin: 0;
   }
-  .binding-popover.helper :global(code) {
+  .binding-popover.has-code :global(code) {
     font-size: 12px;
+  }
+  .binding-popover.has-code :global(.cm-line),
+  .binding-popover.has-code :global(.cm-content) {
+    padding: 0;
+  }
+
+  /* Snippets */
+  .add-snippet-button {
+    margin-left: auto;
+  }
+  .snippet-list {
+    padding: 0 var(--spacing-l);
+    padding-bottom: var(--spacing-l);
+    display: flex;
+    flex-direction: column;
+  }
+  .snippet {
+    font-size: var(--font-size-s);
+    padding: var(--spacing-m);
+    border-radius: 4px;
+    background-color: var(--spectrum-global-color-gray-200);
+    transition: background-color 130ms ease-out, color 130ms ease-out,
+      border-color 130ms ease-out;
+    word-wrap: break-word;
+    display: flex;
+    justify-content: space-between;
+  }
+  .snippet:hover {
+    color: var(--spectrum-global-color-gray-900);
+    background-color: var(--spectrum-global-color-gray-50);
+    cursor: pointer;
+  }
+
+  /* Upgrade */
+  .upgrade {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .upgrade :global(p) {
+    text-align: center;
+    align-self: center;
   }
 </style>
