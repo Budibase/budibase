@@ -49,6 +49,7 @@
   import type { EditorMode } from "@budibase/types"
   import type { BindingCompletion, CodeValidator } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
+  import { validateJsTemplate } from "./validator/js"
 
   export let label: string | undefined = undefined
   export let completions: BindingCompletion[] = []
@@ -355,6 +356,9 @@
 
     if (mode === EditorModes.Handlebars) {
       const diagnostics = validateHbsTemplate(value, validations)
+      editor.dispatch(setDiagnostics(editor.state, diagnostics))
+    } else if (mode === EditorModes.JS) {
+      const diagnostics = validateJsTemplate(value, validations)
       editor.dispatch(setDiagnostics(editor.state, diagnostics))
     }
   }
