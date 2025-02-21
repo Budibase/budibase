@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from "svelte"
-  import { UIComponentError } from "@budibase/types"
+  import type { UIComponentError } from "@budibase/types"
 
   export let error: UIComponentError | undefined
 

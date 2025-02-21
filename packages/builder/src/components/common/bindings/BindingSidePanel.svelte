@@ -1,32 +1,41 @@
-<script>
+<script lang="ts">
   import groupBy from "lodash/fp/groupBy"
   import { convertToJS } from "@budibase/string-templates"
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
   import { handlebarsCompletions } from "@/constants/completions"
+  import type { EnrichedBinding, Helper } from "@budibase/types"
+  import { BindingMode } from "@budibase/types"
 
-  export let addHelper
-  export let addBinding
-  export let bindings
-  export let mode
-  export let allowHelpers
+  export let addHelper: (_helper: Helper, _js?: boolean) => void
+  export let addBinding: (_binding: EnrichedBinding) => void
+  export let bindings: EnrichedBinding[]
+  export let mode: BindingMode
+  export let allowHelpers: boolean
   export let context = null
 
   let search = ""
   let searching = false
-  let popover
-  let popoverAnchor
-  let hoverTarget
+  let popover: Popover
+  let popoverAnchor: HTMLElement | null
+  let hoverTarget: {
+    helper: boolean
+    code: string
+    description?: string
+  } | null
   let helpers = handlebarsCompletions()
-  let selectedCategory
-  let hideTimeout
+  let selectedCategory: string | null
+  let hideTimeout: ReturnType<typeof setTimeout> | null
 
-  $: bindingIcons = bindings?.reduce((acc, ele) => {
+  $: bindingIcons = bindings?.reduce<Record<string, string>>((acc, ele) => {
     if (ele.icon) {
       acc[ele.category] = acc[ele.category] || ele.icon
     }
     return acc
   }, {})
-  $: categoryIcons = { ...bindingIcons, Helpers: "MagicWand" }
+  $: categoryIcons = {
+    ...bindingIcons,
+    Helpers: "MagicWand",
+  } as Record<string, string>
   $: categories = Object.entries(groupBy("category", bindings))
   $: categoryNames = getCategoryNames(categories)
   $: searchRgx = new RegExp(search, "ig")
@@ -48,11 +57,11 @@
       (!search ||
         helper.label.match(searchRgx) ||
         helper.description.match(searchRgx)) &&
-      (mode.name !== "javascript" || helper.allowsJs)
+      (mode !== BindingMode.JavaScript || helper.allowsJs)
     )
   })
 
-  const getHelperExample = (helper, js) => {
+  const getHelperExample = (helper: Helper, js: boolean) => {
     let example = helper.example || ""
     if (js) {
       example = convertToJS(example).split("\n")[0].split("= ")[1]
@@ -63,15 +72,18 @@
     return example || ""
   }
 
-  const getCategoryNames = categories => {
-    let names = [...categories.map(cat => cat[0])]
+  const getCategoryNames = (categories: [string, EnrichedBinding[]][]) => {
+    const names = [...categories.map(cat => cat[0])]
     if (allowHelpers) {
       names.push("Helpers")
     }
     return names
   }
 
-  const showBindingPopover = (binding, target) => {
+  const showBindingPopover = (
+    binding: EnrichedBinding,
+    target: HTMLElement
+  ) => {
     if (!context || !binding.value || binding.value === "") {
       return
     }
@@ -84,7 +96,7 @@
     popover.show()
   }
 
-  const showHelperPopover = (helper, target) => {
+  const showHelperPopover = (helper: any, target: HTMLElement) => {
     stopHidingPopover()
     if (!helper.displayText && helper.description) {
       return
@@ -93,7 +105,7 @@
     hoverTarget = {
       helper: true,
       description: helper.description,
-      code: getHelperExample(helper, mode.name === "javascript"),
+      code: getHelperExample(helper, mode === BindingMode.JavaScript),
     }
     popover.show()
   }
@@ -119,37 +131,39 @@
     search = ""
   }
 
-  const stopSearching = e => {
+  const stopSearching = (e: Event) => {
     e.stopPropagation()
     searching = false
     search = ""
   }
 </script>
 
-<Popover
-  align="left-outside"
-  bind:this={popover}
-  anchor={popoverAnchor}
-  minWidth={0}
-  maxWidth={480}
-  maxHeight={480}
-  dismissible={false}
-  on:mouseenter={stopHidingPopover}
-  on:mouseleave={hidePopover}
->
-  <div class="binding-popover" class:helper={hoverTarget.helper}>
-    {#if hoverTarget.description}
-      <div>
+{#if popoverAnchor && hoverTarget}
+  <Popover
+    align="left-outside"
+    bind:this={popover}
+    anchor={popoverAnchor}
+    minWidth={0}
+    maxWidth={480}
+    maxHeight={480}
+    dismissible={false}
+    on:mouseenter={stopHidingPopover}
+    on:mouseleave={hidePopover}
+  >
+    <div class="binding-popover" class:helper={hoverTarget.helper}>
+      {#if hoverTarget.description}
+        <div>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          {@html hoverTarget.description}
+        </div>
+      {/if}
+      {#if hoverTarget.code}
         <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-        {@html hoverTarget.description}
-      </div>
-    {/if}
-    {#if hoverTarget.code}
-      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-      <pre>{@html hoverTarget.code}</pre>
-    {/if}
-  </div>
-</Popover>
+        <pre>{@html hoverTarget.code}</pre>
+      {/if}
+    </div>
+  </Popover>
+{/if}
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -173,7 +187,7 @@
           <div class="search-input">
             <Input
               placeholder="Search for bindings"
-              autocomplete="off"
+              autocomplete={false}
               bind:value={search}
               autofocus
             />
@@ -230,7 +244,8 @@
               {#each category.bindings as binding}
                 <li
                   class="binding"
-                  on:mouseenter={e => showBindingPopover(binding, e.target)}
+                  on:mouseenter={e =>
+                    showBindingPopover(binding, e.currentTarget)}
                   on:mouseleave={hidePopover}
                   on:click={() => addBinding(binding)}
                 >
@@ -264,9 +279,11 @@
               {#each filteredHelpers as helper}
                 <li
                   class="binding"
-                  on:mouseenter={e => showHelperPopover(helper, e.target)}
+                  on:mouseenter={e =>
+                    showHelperPopover(helper, e.currentTarget)}
                   on:mouseleave={hidePopover}
-                  on:click={() => addHelper(helper, mode.name === "javascript")}
+                  on:click={() =>
+                    addHelper(helper, mode === BindingMode.JavaScript)}
                 >
                   <span class="binding__label">{helper.displayText}</span>
                   <span class="binding__typeWrap">

@@ -19,7 +19,8 @@
   import { PopoverAlignment } from "../constants"
 
   export let anchor: HTMLElement
-  export let align: PopoverAlignment = PopoverAlignment.Right
+  export let align: PopoverAlignment | `${PopoverAlignment}` =
+    PopoverAlignment.Right
   export let portalTarget: string | undefined = undefined
   export let minWidth: number | undefined = undefined
   export let maxWidth: number | undefined = undefined

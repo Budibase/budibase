@@ -94,6 +94,15 @@ export default [
         allowImportExportEverywhere: true,
       },
     },
+
+    plugins: {
+      ...config.plugins,
+      "@typescript-eslint": tseslint.plugin,
+    },
+    rules: {
+      ...config.rules,
+      "@typescript-eslint/consistent-type-imports": "error",
+    },
   })),
   ...tseslint.configs.strict.map(config => ({
     ...config,
