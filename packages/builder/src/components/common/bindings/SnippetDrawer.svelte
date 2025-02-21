@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte"
   import {
     Button,
     Drawer,
@@ -17,9 +18,6 @@
   import type { Snippet } from "@budibase/types"
 
   export let snippet: Snippet | null
-
-  export const show = () => drawer.show()
-  export const hide = () => drawer.hide()
 
   const firstCharNumberRegex = /^[0-9].*$/
 
@@ -79,9 +77,13 @@
     }
     return null
   }
+
+  onMount(() => {
+    drawer.show()
+  })
 </script>
 
-<Drawer bind:this={drawer}>
+<Drawer bind:this={drawer} on:drawerHide>
   <svelte:fragment slot="title">
     {#if snippet}
       {snippet.name}
