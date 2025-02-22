@@ -18,6 +18,7 @@
     Toggle,
     Divider,
     Icon,
+    CoreSelect,
   } from "@budibase/bbui"
 
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
@@ -48,7 +49,13 @@
     EditorModes,
   } from "@/components/common/CodeEditor"
   import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
+  import {
+    QueryUtils,
+    Utils,
+    search,
+    memo,
+    fetchData,
+  } from "@budibase/frontend-core"
   import { getSchemaForDatasourcePlus } from "@/dataBinding"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import { onMount, createEventDispatcher } from "svelte"
@@ -59,9 +66,12 @@
     AutomationStepType,
     AutomationActionStepId,
     AutomationCustomIOType,
+    SortOrder,
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
+  import { API } from "@/api"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let automation
   export let block
@@ -95,6 +105,8 @@
   let inputData
   let insertAtPos, getCaretPosition
   let stepLayouts = {}
+  let rowSearchTerm = ""
+  let selectedRow
 
   $: memoBlock.set(block)
 
@@ -109,9 +121,13 @@
   $: stepId = $memoBlock.stepId
 
   $: getInputData(testData, $memoBlock.inputs)
-  $: tableId = inputData ? inputData.tableId : null
+  $: tableId =
+    inputData?.row?.tableId ||
+    testData?.row?.tableId ||
+    inputData?.tableId ||
+    null
   $: table = tableId
-    ? $tables.list.find(table => table._id === inputData.tableId)
+    ? $tables.list.find(table => table._id === tableId)
     : { schema: {} }
   $: schema = getSchemaForDatasourcePlus(tableId, {
     searchableSchema: true,
@@ -140,6 +156,40 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
+  $: fetch = createFetch({ type: "table", tableId })
+  $: fetchedRows = $fetch?.rows
+  $: fetch?.update({
+    query: {
+      fuzzy: {
+        [primaryDisplay]: rowSearchTerm || "",
+      },
+    },
+  })
+
+  $: fetchLoading = $fetch?.loading
+  $: primaryDisplay = table?.primaryDisplay
+
+  const createFetch = datasource => {
+    if (!datasource) {
+      return
+    }
+
+    return fetchData({
+      API,
+      datasource,
+      options: {
+        sortColumn: primaryDisplay,
+        sortOrder: SortOrder.ASCENDING,
+        query: {
+          fuzzy: {
+            [primaryDisplay]: rowSearchTerm || "",
+          },
+        },
+        limit: 20,
+      },
+    })
+  }
+
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -167,7 +217,7 @@
   const stepStore = writable({})
   $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, stepState)
+  $: customStepLayouts($memoBlock, schemaProperties, stepState, fetchedRows)
 
   const customStepLayouts = block => {
     if (
@@ -360,6 +410,49 @@
                   })
                 },
                 disabled: isTestModal,
+              },
+            },
+            {
+              type: CoreSelect,
+              title: "Row",
+              props: {
+                disabled: !table,
+                placeholder: "Select a row",
+                options: fetchedRows,
+                loading: fetchLoading,
+                value: selectedRow,
+                autocomplete: true,
+                filter: false,
+                getOptionLabel: row => row?.[primaryDisplay] || "",
+                compare: (a, b) => a?.[primaryDisplay] === b?.[primaryDisplay],
+                onChange: e => {
+                  if (isTestModal) {
+                    onChange({
+                      id: e.detail?._id,
+                      revision: e.detail?._rev,
+                      row: e.detail,
+                      oldRow: e.detail,
+                      meta: {
+                        fields: inputData["meta"]?.fields || {},
+                        oldFields: e.detail?.meta?.fields || {},
+                      },
+                    })
+                  }
+                },
+              },
+            },
+            {
+              type: InfoDisplay,
+              props: {
+                warning: true,
+                icon: "AlertCircleFilled",
+                body: `Be careful when testing this automation because your data may be modified or deleted.`,
+              },
+            },
+            {
+              type: Divider,
+              props: {
+                noMargin: true,
               },
             },
             ...getIdConfig(),
@@ -556,6 +649,15 @@
           ...request,
         }
 
+        if (
+          newTestData?.row == null ||
+          Object.keys(newTestData?.row).length === 0
+        ) {
+          selectedRow = null
+        } else {
+          selectedRow = newTestData.row
+        }
+
         const updatedAuto =
           automationStore.actions.addTestDataToAutomation(newTestData)
 
@@ -668,6 +770,7 @@
                 {...config.props}
                 {bindings}
                 on:change={config.props.onChange}
+                bind:searchTerm={rowSearchTerm}
               />
             </PropField>
           {:else}
