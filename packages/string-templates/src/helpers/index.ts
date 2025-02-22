@@ -32,6 +32,22 @@ const HELPERS = [
   }),
   // javascript helper
   new Helper(HelperFunctionNames.JS, processJS, false),
+  new Helper(HelperFunctionNames.DECODE_ID, (_id: string | { _id: string }) => {
+    if (!_id) {
+      return []
+    }
+    // have to replace on the way back as we swapped out the double quotes
+    // when encoding, but JSON can't handle the single quotes
+    const id = typeof _id === "string" ? _id : _id._id
+    const decoded: string = decodeURIComponent(id).replace(/'/g, '"')
+    try {
+      const parsed = JSON.parse(decoded)
+      return Array.isArray(parsed) ? parsed : [parsed]
+    } catch (err) {
+      // wasn't json - likely was handlebars for a many to many
+      return [_id]
+    }
+  }),
   // this help is applied to all statements
   new Helper(
     HelperFunctionNames.ALL,
