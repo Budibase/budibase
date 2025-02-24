@@ -387,7 +387,8 @@
 
   .add-fields-btn {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
     gap: var(--spacing-s);
   }
 </style>
