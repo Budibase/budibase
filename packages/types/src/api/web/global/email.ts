@@ -12,13 +12,13 @@ export enum EmailTemplatePurpose {
 export interface SendEmailRequest {
   workspaceId?: string
   email: string
-  userId: string
+  userId?: string
   purpose: EmailTemplatePurpose
   contents?: string
   from?: string
   subject: string
-  cc?: boolean
-  bcc?: boolean
+  cc?: string
+  bcc?: string
   automation?: boolean
   invite?: EmailInvite
   attachments?: EmailAttachment[]

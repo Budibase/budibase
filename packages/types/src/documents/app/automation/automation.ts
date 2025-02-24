@@ -1,10 +1,10 @@
 import { Document } from "../../document"
 import { User } from "../../global"
-import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
 import { ContextEmitter } from "../../../sdk"
+import { Readable } from "stream"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -108,8 +108,8 @@ export interface SendEmailOpts {
   subject: string
   // info Pass in a structure of information to be stored alongside the invitation.
   info?: any
-  cc?: boolean
-  bcc?: boolean
+  cc?: string
+  bcc?: string
   automation?: boolean
   invite?: EmailInvite
   attachments?: EmailAttachment[]
@@ -269,7 +269,7 @@ export type AutomationAttachment = {
 
 export type AutomationAttachmentContent = {
   filename: string
-  content: ReadStream | NodeJS.ReadableStream
+  content: Readable
 }
 
 export type BucketedContent = AutomationAttachmentContent & {
