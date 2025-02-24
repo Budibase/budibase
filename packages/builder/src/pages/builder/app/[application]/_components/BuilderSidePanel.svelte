@@ -755,7 +755,7 @@
                   <div class="auth-entity-access" class:muted={user.group}>
                     <RoleSelect
                       footer={getRoleFooter(user)}
-                      placeholder={false}
+                      placeholder={userGroups?.length ? "Override" : false}
                       value={parseRole(user)}
                       allowRemove={user.role && !user.group}
                       allowPublic={false}
