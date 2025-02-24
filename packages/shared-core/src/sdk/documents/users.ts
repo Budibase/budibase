@@ -4,6 +4,7 @@ import {
   SEPARATOR,
   User,
   InternalTable,
+  UserGroup,
 } from "@budibase/types"
 import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
@@ -128,4 +129,14 @@ export function containsUserID(value: string | undefined): boolean {
     return false
   }
   return value.includes(`${DocumentType.USER}${SEPARATOR}`)
+}
+
+export function userAppAccessList(user: User, groups?: UserGroup[]) {
+  const userGroups =
+    groups?.filter(group => group.users?.find(u => u._id === user._id)) || []
+  const userGroupApps = userGroups.flatMap(userGroup =>
+    Object.keys(userGroup.roles || {})
+  )
+  const fullList = [...Object.keys(user.roles), ...userGroupApps]
+  return [...new Set(fullList)]
 }
