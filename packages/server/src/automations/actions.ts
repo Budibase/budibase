@@ -28,6 +28,8 @@ import {
   Hosting,
   ActionImplementation,
   AutomationStepDefinition,
+  AutomationStepInputs,
+  AutomationStepOutputs,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
@@ -123,11 +125,15 @@ export async function getActionDefinitions(): Promise<
 }
 
 /* istanbul ignore next */
-export async function getAction(
-  stepId: AutomationActionStepId
-): Promise<ActionImplementation<any, any> | undefined> {
+export async function getAction<
+  TStep extends AutomationActionStepId,
+  TInputs = AutomationStepInputs<TStep>,
+  TOutputs = AutomationStepOutputs<TStep>
+>(stepId: TStep): Promise<ActionImplementation<TInputs, TOutputs> | undefined> {
   if (ACTION_IMPLS[stepId as keyof ActionImplType] != null) {
-    return ACTION_IMPLS[stepId as keyof ActionImplType]
+    return ACTION_IMPLS[
+      stepId as keyof ActionImplType
+    ] as unknown as ActionImplementation<TInputs, TOutputs>
   }
 
   // must be a plugin

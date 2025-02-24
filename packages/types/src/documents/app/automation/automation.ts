@@ -5,16 +5,6 @@ import { Row } from "../row"
 import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
 import { ContextEmitter } from "../../../sdk"
-import {
-  AppActionTriggerOutputs,
-  AppSelfResponse,
-  CronTriggerOutputs,
-  RowActionTriggerOutputs,
-  RowCreatedTriggerOutputs,
-  RowDeletedTriggerOutputs,
-  RowUpdatedTriggerOutputs,
-  WebhookTriggerOutputs,
-} from "@budibase/types"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -146,7 +136,7 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
-  testData?: TriggerTestOutputs
+  testData?: AutomationTriggerResultOutputs
 }
 
 export interface BaseIOStructure {
@@ -179,6 +169,8 @@ export enum AutomationFeature {
 export enum AutomationStepStatus {
   NO_ITERATIONS = "no_iterations",
   MAX_ITERATIONS = "max_iterations_reached",
+  FAILURE_CONDITION = "FAILURE_CONDITION_MET",
+  INCORRECT_TYPE = "INCORRECT_TYPE",
 }
 
 export enum AutomationStatus {
@@ -193,48 +185,37 @@ export enum AutomationStoppedReason {
   TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
 }
 
-// UI and context fields
-export type AutomationResultFields = {
-  meta?: {
-    [key: string]: unknown
-  }
-  user?: AppSelfResponse
-  automation?: Automation
+export interface AutomationStepResultOutputs {
+  success: boolean
+  [key: string]: any
 }
 
-// Base types for Trigger outputs combined with UI and context fields
-export type TriggerTestOutputs =
-  | (WebhookTriggerOutputs & AutomationResultFields)
-  | (AppActionTriggerOutputs & AutomationResultFields)
-  | (CronTriggerOutputs & AutomationResultFields)
-  | (RowActionTriggerOutputs & AutomationResultFields)
-  | (RowDeletedTriggerOutputs & AutomationResultFields)
-  | (RowCreatedTriggerOutputs & AutomationResultFields)
-  | (RowUpdatedTriggerOutputs & AutomationResultFields)
+export interface AutomationStepResultInputs {
+  [key: string]: any
+}
 
-export type AutomationTestTrigger = {
+export interface AutomationStepResult {
   id: string
-  inputs: null
+  stepId: AutomationActionStepId
+  inputs: AutomationStepResultInputs
+  outputs: AutomationStepResultOutputs
+}
+
+export type AutomationTriggerResultInputs = Record<string, any>
+export type AutomationTriggerResultOutputs = Record<string, any>
+
+export interface AutomationTriggerResult {
+  id: string
   stepId: AutomationTriggerStepId
-  outputs: TriggerTestOutputs
+  inputs?: AutomationTriggerResultInputs | null
+  outputs: AutomationTriggerResultOutputs
 }
 
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
-  trigger?: AutomationTestTrigger
-  steps: AutomationStepResults[]
-}
-
-export interface AutomationStepResults {
-  id: string
-  stepId: AutomationTriggerStepId | AutomationActionStepId
-  inputs: {
-    [key: string]: any
-  }
-  outputs: {
-    [key: string]: any
-  }
+  trigger: AutomationTriggerResult
+  steps: [AutomationTriggerResult, ...AutomationStepResult[]]
 }
 
 export interface DidNotTriggerResponse {
@@ -268,6 +249,7 @@ export type ActionImplementation<TInputs, TOutputs> = (
     inputs: TInputs
   } & AutomationStepInputBase
 ) => Promise<TOutputs>
+
 export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number
