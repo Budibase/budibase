@@ -69,7 +69,8 @@ export const getQueryableFields = async (
     fromTables: string[],
     opts?: { noRelationships?: boolean }
   ): Promise<string[]> => {
-    const result = []
+    // Querying by _id is always allowed, even if it's never part of the schema
+    const result = ["_id"]
     for (const field of Object.keys(table.schema).filter(
       f => allowedFields.includes(f) && table.schema[f].visible !== false
     )) {
@@ -113,9 +114,7 @@ export const getQueryableFields = async (
     return result
   }
 
-  const result = [
-    "_id", // Querying by _id is always allowed, even if it's never part of the schema
-  ]
+  const result = []
 
   if (fields == null) {
     fields = Object.keys(table.schema)
