@@ -123,7 +123,7 @@ export async function doInAutomationContext<T>(params: {
   task: () => T
 }): Promise<T> {
   await ensureSnippetContext()
-  return newContext(
+  return await newContext(
     {
       tenantId: getTenantIDFromAppID(params.appId),
       appId: params.appId,
