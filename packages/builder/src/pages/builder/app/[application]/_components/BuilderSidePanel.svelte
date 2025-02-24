@@ -13,6 +13,7 @@
     FancyInput,
     Button,
     FancySelect,
+    Badge,
   } from "@budibase/bbui"
   import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
   import {
@@ -741,11 +742,15 @@
                 <div class="auth-entity-access-title">Access</div>
               </div>
               {#each allUsers as user}
+                {@const userGroups = sdk.users.getUserGroups(user, $groups)}
                 <div class="auth-entity">
                   <div class="details">
                     <div class="user-email" title={user.email}>
                       {user.email}
                     </div>
+                    {#each userGroups as group}
+                      <Badge size="S" customColor={group.color}>{group.name}</Badge>
+                    {/each}
                   </div>
                   <div class="auth-entity-access" class:muted={user.group}>
                     <RoleSelect

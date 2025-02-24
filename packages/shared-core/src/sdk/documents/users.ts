@@ -131,9 +131,14 @@ export function containsUserID(value: string | undefined): boolean {
   return value.includes(`${DocumentType.USER}${SEPARATOR}`)
 }
 
-export function userAppAccessList(user: User, groups?: UserGroup[]) {
-  const userGroups =
+export function getUserGroups(user: User, groups?: UserGroup[]) {
+  return (
     groups?.filter(group => group.users?.find(u => u._id === user._id)) || []
+  )
+}
+
+export function userAppAccessList(user: User, groups?: UserGroup[]) {
+  const userGroups = getUserGroups(user, groups)
   const userGroupApps = userGroups.flatMap(userGroup =>
     Object.keys(userGroup.roles || {})
   )
