@@ -5,16 +5,6 @@ import { Row } from "../row"
 import { Table } from "../table"
 import { AutomationStep, AutomationTrigger } from "./schema"
 import { ContextEmitter } from "../../../sdk"
-import {
-  AppActionTriggerOutputs,
-  AppSelfResponse,
-  CronTriggerOutputs,
-  RowActionTriggerOutputs,
-  RowCreatedTriggerInputs,
-  RowDeletedTriggerInputs,
-  RowUpdatedTriggerOutputs,
-  WebhookTriggerOutputs,
-} from "@budibase/types"
 
 export enum AutomationIOType {
   OBJECT = "object",
