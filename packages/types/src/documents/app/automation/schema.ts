@@ -57,6 +57,7 @@ import {
   RowCreatedTriggerOutputs,
   RowUpdatedTriggerOutputs,
   WebhookTriggerOutputs,
+  RowActionTriggerInputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -240,11 +241,8 @@ export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
   id: string
   stepId: TStep
-  inputs: StepInputs<TStep>
+  inputs: AutomationStepInputs<TStep>
 }
-
-export type StepInputs<TStep extends AutomationActionStepId> =
-  AutomationStepInputs<TStep> & Record<string, any> // Remove `Record<string, any>` once types are fixed
 
 export type CollectStep = AutomationStepSchema<AutomationActionStepId.COLLECT>
 
@@ -349,7 +347,7 @@ export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
     : T extends AutomationTriggerStepId.CRON
     ? CronTriggerInputs
     : T extends AutomationTriggerStepId.ROW_ACTION
-    ? Record<string, any>
+    ? RowActionTriggerInputs
     : T extends AutomationTriggerStepId.ROW_DELETED
     ? RowDeletedTriggerInputs
     : T extends AutomationTriggerStepId.ROW_SAVED
@@ -385,7 +383,7 @@ export interface AutomationTriggerSchema<
   event?: AutomationEventType
   cronJobId?: string
   stepId: TTrigger
-  inputs: AutomationTriggerInputs<TTrigger> & Record<string, any> // The record union to be removed once the types are fixed
+  inputs: AutomationTriggerInputs<AutomationTriggerStepId>
 }
 
 export type AutomationTrigger =

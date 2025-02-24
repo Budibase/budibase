@@ -10,8 +10,8 @@ import {
   AppSelfResponse,
   CronTriggerOutputs,
   RowActionTriggerOutputs,
-  RowCreatedTriggerInputs,
-  RowDeletedTriggerInputs,
+  RowCreatedTriggerOutputs,
+  RowDeletedTriggerOutputs,
   RowUpdatedTriggerOutputs,
   WebhookTriggerOutputs,
 } from "@budibase/types"
@@ -149,7 +149,7 @@ export interface Automation extends Document {
   testData?: TriggerTestOutputs
 }
 
-interface BaseIOStructure {
+export interface BaseIOStructure {
   type?: AutomationIOType
   subtype?: AutomationIOType
   customType?: AutomationCustomIOType
@@ -158,18 +158,18 @@ interface BaseIOStructure {
   dependsOn?: string
   enum?: string[]
   pretty?: string[]
-  properties?: {
-    [key: string]: BaseIOStructure
-  }
+  properties?: AutomationIOProps
   required?: string[]
   readonly?: true
 }
 
 export interface InputOutputBlock {
-  properties: {
-    [key: string]: BaseIOStructure
-  }
+  properties: AutomationIOProps
   required?: string[]
+}
+
+export interface AutomationIOProps {
+  [key: string]: BaseIOStructure
 }
 
 export enum AutomationFeature {
@@ -208,8 +208,8 @@ export type TriggerTestOutputs =
   | (AppActionTriggerOutputs & AutomationResultFields)
   | (CronTriggerOutputs & AutomationResultFields)
   | (RowActionTriggerOutputs & AutomationResultFields)
-  | (RowDeletedTriggerInputs & AutomationResultFields)
-  | (RowCreatedTriggerInputs & AutomationResultFields)
+  | (RowDeletedTriggerOutputs & AutomationResultFields)
+  | (RowCreatedTriggerOutputs & AutomationResultFields)
   | (RowUpdatedTriggerOutputs & AutomationResultFields)
 
 export type AutomationTestTrigger = {
@@ -223,15 +223,18 @@ export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
   trigger?: AutomationTestTrigger
-  steps: {
-    stepId: AutomationTriggerStepId | AutomationActionStepId
-    inputs: {
-      [key: string]: any
-    }
-    outputs: {
-      [key: string]: any
-    }
-  }[]
+  steps: AutomationStepResults[]
+}
+
+export interface AutomationStepResults {
+  id: string
+  stepId: AutomationTriggerStepId | AutomationActionStepId
+  inputs: {
+    [key: string]: any
+  }
+  outputs: {
+    [key: string]: any
+  }
 }
 
 export interface DidNotTriggerResponse {
