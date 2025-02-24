@@ -10,6 +10,8 @@ import {
   findHBSBlocks,
 } from "../src/index"
 
+import { HELPERS } from "../src/helpers/index"
+
 describe("Test that the string processing works correctly", () => {
   it("should process a basic template string", async () => {
     const output = await processString("templating is {{ adjective }}", {
@@ -336,5 +338,12 @@ describe("check multiple space behaviour", () => {
       num2: 2,
     })
     expect(output).toEqual("test   string")
+  })
+})
+
+describe.only("MikeTest1", () => {
+  it("miktest111", async () => {
+    const output = "%5B41%5D"
+    expect(output).toEqual(HELPERS)
   })
 })

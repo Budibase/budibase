@@ -25,7 +25,7 @@ function isObject(value: string | any[]) {
   )
 }
 
-const HELPERS = [
+export const HELPERS = [
   // external helpers
   new Helper(HelperFunctionNames.OBJECT, (value: any) => {
     return new Handlebars.SafeString(JSON.stringify(value))
