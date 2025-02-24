@@ -62,6 +62,7 @@
     "koa-body": "4.2.0",
     "koa-compress": "4.0.1",
     "koa-passport": "4.1.4",
+    "koa-redis": "^4.0.1",
     "koa-send": "5.0.1",
     "koa-session": "5.13.1",
     "koa-static": "5.0.0",
