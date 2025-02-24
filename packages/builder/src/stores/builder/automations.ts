@@ -15,7 +15,6 @@ import {
 import {
   AutomationTriggerStepId,
   AutomationEventType,
-  AutomationStepType,
   AutomationActionStepId,
   Automation,
   AutomationStep,
@@ -26,20 +25,25 @@ import {
   UILogicalOperator,
   EmptyFilterOption,
   AutomationIOType,
-  AutomationStepSchema,
-  AutomationTriggerSchema,
   BranchPath,
   BlockDefinitions,
+  isBranchStep,
+  isTrigger,
+  isRowUpdateTrigger,
+  isRowSaveTrigger,
+  isAppTrigger,
+  BranchStep,
   GetAutomationTriggerDefinitionsResponse,
   GetAutomationActionDefinitionsResponse,
   AppSelfResponse,
   TestAutomationResponse,
   isAutomationResults,
-  AutomationTestTrigger,
-  TriggerTestOutputs,
   RowActionTriggerOutputs,
   WebhookTriggerOutputs,
   AutomationCustomIOType,
+  AutomationTriggerResultOutputs,
+  AutomationTriggerResult,
+  AutomationStepType,
 } from "@budibase/types"
 import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
 import { FIELDS as COLUMNS } from "@/constants/backend"
@@ -111,7 +115,7 @@ const automationActions = (store: AutomationStore) => ({
         const results: TestAutomationResponse | undefined =
           $selectedAutomation?.testResults
 
-        const testData: TriggerTestOutputs | undefined =
+        const testData: AutomationTriggerResultOutputs | undefined =
           $selectedAutomation.data?.testData
         const triggerDef = $selectedAutomation.data?.definition?.trigger
 
@@ -122,13 +126,13 @@ const automationActions = (store: AutomationStore) => ({
           ? $tables.list.find(table => table._id === rowActionTableId)
           : undefined
 
-        let triggerData: TriggerTestOutputs | undefined
+        let triggerData: AutomationTriggerResultOutputs | undefined
 
         if (results && isAutomationResults(results)) {
-          const automationTrigger: AutomationTestTrigger | undefined =
+          const automationTrigger: AutomationTriggerResult | undefined =
             results?.trigger
 
-          const outputs: TriggerTestOutputs | undefined =
+          const outputs: AutomationTriggerResultOutputs | undefined =
             automationTrigger?.outputs
           triggerData = outputs ? outputs : undefined
 
@@ -417,16 +421,16 @@ const automationActions = (store: AutomationStore) => ({
     let result: (AutomationStep | AutomationTrigger)[] = []
     pathWay.forEach(path => {
       const { stepIdx, branchIdx } = path
-      let last = result.length ? result[result.length - 1] : []
       if (!result.length) {
         // Preceeding steps.
         result = steps.slice(0, stepIdx + 1)
         return
       }
-      if (last && "inputs" in last) {
+      let last = result[result.length - 1]
+      if (isBranchStep(last)) {
         if (Number.isInteger(branchIdx)) {
           const branchId = last.inputs.branches[branchIdx].id
-          const children = last.inputs.children[branchId]
+          const children = last.inputs.children?.[branchId] || []
           const stepChildren = children.slice(0, stepIdx + 1)
           // Preceeding steps.
           result = result.concat(stepChildren)
@@ -599,23 +603,28 @@ const automationActions = (store: AutomationStore) => ({
           id: block.id,
         },
       ]
-      const branches: Branch[] = block.inputs?.branches || []
 
-      branches.forEach((branch, bIdx) => {
-        block.inputs?.children[branch.id].forEach(
-          (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
-            const ended =
-              array.length - 1 === sIdx && !bBlock.inputs?.branches?.length
-            treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
-          }
-        )
-      })
+      if (isBranchStep(block)) {
+        const branches = block.inputs?.branches || []
+        const children = block.inputs?.children || {}
+
+        branches.forEach((branch, bIdx) => {
+          children[branch.id].forEach(
+            (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
+              const ended = array.length - 1 === sIdx && !branches.length
+              treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
+            }
+          )
+        })
+
+        terminating = terminating && !branches.length
+      }
 
       store.actions.registerBlock(
         blockRefs,
         block,
         pathToCurrentNode,
-        terminating && !branches.length
+        terminating
       )
     }
 
@@ -732,7 +741,6 @@ const automationActions = (store: AutomationStore) => ({
           pathBlock.stepId === ActionStepID.LOOP &&
           pathBlock.blockToLoop in blocks
       }
-      const isTrigger = pathBlock.type === AutomationStepType.TRIGGER
 
       if (isLoopBlock && loopBlockCount == 0) {
         schema = {
@@ -743,17 +751,14 @@ const automationActions = (store: AutomationStore) => ({
         }
       }
 
-      const icon = isTrigger
+      const icon = isTrigger(pathBlock)
         ? pathBlock.icon
         : isLoopBlock
         ? "Reuse"
         : pathBlock.icon
 
-      if (blockIdx === 0 && isTrigger) {
-        if (
-          pathBlock.event === AutomationEventType.ROW_UPDATE ||
-          pathBlock.event === AutomationEventType.ROW_SAVE
-        ) {
+      if (blockIdx === 0 && isTrigger(pathBlock)) {
+        if (isRowUpdateTrigger(pathBlock) || isRowSaveTrigger(pathBlock)) {
           let table: any = get(tables).list.find(
             (table: Table) => table._id === pathBlock.inputs.tableId
           )
@@ -765,7 +770,7 @@ const automationActions = (store: AutomationStore) => ({
             }
           }
           delete schema.row
-        } else if (pathBlock.event === AutomationEventType.APP_TRIGGER) {
+        } else if (isAppTrigger(pathBlock)) {
           schema = Object.fromEntries(
             Object.keys(pathBlock.inputs.fields || []).map(key => [
               key,
@@ -1081,8 +1086,10 @@ const automationActions = (store: AutomationStore) => ({
     ]
 
     let cache:
-      | AutomationStepSchema<AutomationActionStepId>
-      | AutomationTriggerSchema<AutomationTriggerStepId>
+      | AutomationStep
+      | AutomationTrigger
+      | AutomationStep[]
+      | undefined = undefined
 
     pathWay.forEach((path, pathIdx, array) => {
       const { stepIdx, branchIdx } = path
@@ -1104,9 +1111,13 @@ const automationActions = (store: AutomationStore) => ({
         }
         return
       }
-      if (Number.isInteger(branchIdx)) {
+      if (
+        Number.isInteger(branchIdx) &&
+        !Array.isArray(cache) &&
+        isBranchStep(cache)
+      ) {
         const branchId = cache.inputs.branches[branchIdx].id
-        const children = cache.inputs.children[branchId]
+        const children = cache.inputs.children?.[branchId] || []
 
         if (final) {
           insertBlock(children, stepIdx)
@@ -1256,7 +1267,7 @@ const automationActions = (store: AutomationStore) => ({
   branchLeft: async (
     pathTo: Array<any>,
     automation: Automation,
-    block: AutomationStep
+    block: BranchStep
   ) => {
     const update = store.actions.shiftBranch(pathTo, block)
     if (update) {
@@ -1279,7 +1290,7 @@ const automationActions = (store: AutomationStore) => ({
   branchRight: async (
     pathTo: Array<BranchPath>,
     automation: Automation,
-    block: AutomationStep
+    block: BranchStep
   ) => {
     const update = store.actions.shiftBranch(pathTo, block, 1)
     if (update) {
@@ -1299,7 +1310,7 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Number} direction - the direction of the swap. Defaults to -1 for left, add 1 for right
    * @returns
    */
-  shiftBranch: (pathTo: Array<any>, block: AutomationStep, direction = -1) => {
+  shiftBranch: (pathTo: Array<any>, block: BranchStep, direction = -1) => {
     let newBlock = cloneDeep(block)
     const branchPath = pathTo.at(-1)
     const targetIdx = branchPath.branchIdx
@@ -1595,7 +1606,7 @@ const automationActions = (store: AutomationStore) => ({
 
 export interface AutomationContext {
   user: AppSelfResponse | null
-  trigger?: TriggerTestOutputs
+  trigger?: AutomationTriggerResultOutputs
   steps: Record<string, AutomationStep>
   env: Record<string, any>
   settings: Record<string, any>

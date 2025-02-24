@@ -8,6 +8,7 @@ import {
   UIComponentError,
   ComponentDefinition,
   DependsOnComponentSetting,
+  Screen,
 } from "@budibase/types"
 import { queries } from "./queries"
 import { views } from "./views"
@@ -66,6 +67,7 @@ export const screenComponentErrorList = derived(
     if (!$selectedScreen) {
       return []
     }
+    const screen = $selectedScreen
 
     const datasources = {
       ...reduceBy("_id", $tables.list),
@@ -79,7 +81,9 @@ export const screenComponentErrorList = derived(
     const errors: UIComponentError[] = []
 
     function checkComponentErrors(component: Component, ancestors: string[]) {
-      errors.push(...getInvalidDatasources(component, datasources, definitions))
+      errors.push(
+        ...getInvalidDatasources(screen, component, datasources, definitions)
+      )
       errors.push(...getMissingRequiredSettings(component, definitions))
       errors.push(...getMissingAncestors(component, definitions, ancestors))
 
@@ -95,6 +99,7 @@ export const screenComponentErrorList = derived(
 )
 
 function getInvalidDatasources(
+  screen: Screen,
   component: Component,
   datasources: Record<string, any>,
   definitions: Record<string, ComponentDefinition>

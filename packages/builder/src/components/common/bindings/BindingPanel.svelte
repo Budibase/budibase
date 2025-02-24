@@ -377,6 +377,7 @@
               value={jsValue ? decodeJSBinding(jsValue) : ""}
               on:change={onChangeJSValue}
               {completions}
+              {validations}
               mode={EditorModes.JS}
               bind:getCaretPosition
               bind:insertAtPos

@@ -82,7 +82,6 @@
     "@swc/jest": "0.2.27",
     "@types/jest": "29.5.5",
     "@types/jsonwebtoken": "9.0.3",
-    "@types/koa": "2.13.4",
     "@types/koa__router": "12.0.4",
     "@types/lodash": "4.14.200",
     "@types/node-fetch": "2.6.4",

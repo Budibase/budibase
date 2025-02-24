@@ -3,20 +3,14 @@ import {
   AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
+  FilterCondition,
 } from "@budibase/types"
 
-export const FilterConditions = {
-  EQUAL: "EQUAL",
-  NOT_EQUAL: "NOT_EQUAL",
-  GREATER_THAN: "GREATER_THAN",
-  LESS_THAN: "LESS_THAN",
-}
-
 export const PrettyFilterConditions = {
-  [FilterConditions.EQUAL]: "Equals",
-  [FilterConditions.NOT_EQUAL]: "Not equals",
-  [FilterConditions.GREATER_THAN]: "Greater than",
-  [FilterConditions.LESS_THAN]: "Less than",
+  [FilterCondition.EQUAL]: "Equals",
+  [FilterCondition.NOT_EQUAL]: "Not equals",
+  [FilterCondition.GREATER_THAN]: "Greater than",
+  [FilterCondition.LESS_THAN]: "Less than",
 }
 
 export const definition: AutomationStepDefinition = {
@@ -30,7 +24,7 @@ export const definition: AutomationStepDefinition = {
   features: {},
   stepId: AutomationActionStepId.FILTER,
   inputs: {
-    condition: FilterConditions.EQUAL,
+    condition: FilterCondition.EQUAL,
   },
   schema: {
     inputs: {
@@ -42,7 +36,7 @@ export const definition: AutomationStepDefinition = {
         condition: {
           type: AutomationIOType.STRING,
           title: "Condition",
-          enum: Object.values(FilterConditions),
+          enum: Object.values(FilterCondition),
           pretty: Object.values(PrettyFilterConditions),
         },
         value: {
