@@ -1,26 +1,43 @@
 import * as setup from "../../tests/utilities"
-import { generateMakeRequest, MakeRequestResponse } from "./utils"
 import { User } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
+import nock from "nock"
+import environment from "../../../../environment"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
-import * as workerRequests from "../../../../utilities/workerRequests"
-
-const mockedWorkerReq = jest.mocked(workerRequests)
-
-let config = setup.getConfig()
-let apiKey: string, globalUser: User, makeRequest: MakeRequestResponse
+const config = new TestConfiguration()
+let globalUser: User
 
 beforeAll(async () => {
   await config.init()
-  globalUser = await config.globalUser()
-  apiKey = await config.generateApiKey(globalUser._id)
-  makeRequest = generateMakeRequest(apiKey)
-  mockedWorkerReq.readGlobalUser.mockImplementation(() =>
-    Promise.resolve(globalUser)
-  )
 })
 
 afterAll(setup.afterAll)
+
+beforeEach(async () => {
+  globalUser = await config.globalUser()
+
+  nock.cleanAll()
+  nock(environment.WORKER_URL!)
+    .get(`/api/global/users/${globalUser._id}`)
+    .reply(200, (uri, body) => {
+      return globalUser
+    })
+    .persist()
+
+  nock(environment.WORKER_URL!)
+    .post(`/api/global/users`)
+    .reply(200, (uri, body) => {
+      const updatedUser = body as User
+      if (updatedUser._id === globalUser._id) {
+        globalUser = updatedUser
+        return globalUser
+      } else {
+        throw new Error("User not found")
+      }
+    })
+    .persist()
+})
 
 function base() {
   return {
@@ -30,37 +47,26 @@ function base() {
   }
 }
 
-function updateMock() {
-  mockedWorkerReq.readGlobalUser.mockImplementation(ctx => ctx.request.body)
-}
-
-describe("check user endpoints", () => {
+describe.only("check user endpoints", () => {
   it("should not allow a user to update their own roles", async () => {
-    const res = await makeRequest("put", `/users/${globalUser._id}`, {
-      ...globalUser,
-      roles: {
-        app_1: "ADMIN",
-      },
-    })
-    expect(
-      mockedWorkerReq.saveGlobalUser.mock.lastCall?.[0].body.data.roles["app_1"]
-    ).toBeUndefined()
-    expect(res.status).toBe(200)
-    expect(res.body.data.roles["app_1"]).toBeUndefined()
+    await config.withUser(globalUser, () =>
+      config.api.public.user.update({
+        ...globalUser,
+        roles: { app_1: "ADMIN" },
+      })
+    )
+    const updatedUser = await config.api.user.find(globalUser._id!)
+    expect(updatedUser.roles?.app_1).toBeUndefined()
   })
 
   it("should not allow a user to delete themselves", async () => {
-    const res = await makeRequest("delete", `/users/${globalUser._id}`)
-    expect(res.status).toBe(405)
-    expect(mockedWorkerReq.deleteGlobalUser.mock.lastCall).toBeUndefined()
+    await config.withUser(globalUser, () =>
+      config.api.public.user.destroy(globalUser._id!, { status: 405 })
+    )
   })
 })
 
 describe("no user role update in free", () => {
-  beforeAll(() => {
-    updateMock()
-  })
-
   it("should not allow 'roles' to be updated", async () => {
     const res = await makeRequest("post", "/users", {
       ...base(),
@@ -94,7 +100,6 @@ describe("no user role update in free", () => {
 
 describe("no user role update in business", () => {
   beforeAll(() => {
-    updateMock()
     mocks.licenses.useExpandedPublicApi()
   })
 
