@@ -24,10 +24,7 @@ export interface Plugin extends Document {
   source: PluginSource
   package: { [key: string]: any }
   hash: string
-  schema: {
-    type: PluginType
-    [key: string]: any
-  }
+  schema: PluginSchema
   iconFileName?: string
   // Populated on read
   jsUrl?: string
@@ -36,3 +33,24 @@ export interface Plugin extends Document {
 }
 
 export const PLUGIN_TYPE_ARR = Object.values(PluginType)
+
+export interface PluginSchema {
+  type: PluginType
+  [key: string]: any
+}
+
+interface Package {
+  name: string
+  version: string
+  description: string
+}
+
+export interface PluginMetadata {
+  schema: PluginSchema
+  package: Package
+}
+
+export interface PluginUpload {
+  metadata: PluginMetadata
+  directory: string
+}

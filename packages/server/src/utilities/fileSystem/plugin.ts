@@ -1,4 +1,4 @@
-import { Plugin } from "@budibase/types"
+import { Plugin, PluginUpload } from "@budibase/types"
 import { budibaseTempDir } from "../budibaseDir"
 import fs from "fs"
 import { join } from "path"
@@ -8,31 +8,31 @@ import stream from "stream"
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 const AUTOMATION_PATH = join(budibaseTempDir(), "automation")
 
-export const getPluginMetadata = async (path: string) => {
-  let metadata: any = {}
+export const getPluginMetadata = async (
+  path: string
+): Promise<PluginUpload> => {
+  let pkg: any
+  let schema: any
   try {
-    const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
-    const schema = fs.readFileSync(join(path, "schema.json"), "utf8")
-
-    metadata.schema = JSON.parse(schema)
-    metadata.package = JSON.parse(pkg)
-
-    if (
-      !metadata.package.name ||
-      !metadata.package.version ||
-      !metadata.package.description
-    ) {
-      throw new Error(
-        "package.json is missing one of 'name', 'version' or 'description'."
-      )
+    pkg = JSON.parse(fs.readFileSync(join(path, "package.json"), "utf8"))
+    schema = JSON.parse(fs.readFileSync(join(path, "schema.json"), "utf8"))
+    if (!pkg.name) {
+      throw new Error("package.json is missing 'name'.")
+    }
+    if (!pkg.version) {
+      throw new Error("package.json is missing 'version'.")
+    }
+    if (!pkg.description) {
+      throw new Error("package.json is missing 'description'.")
     }
   } catch (err: any) {
     throw new Error(
-      `Unable to process schema.json/package.json in plugin. ${err.message}`
+      `Unable to process schema.json/package.json in plugin. ${err.message}`,
+      { cause: err }
     )
   }
 
-  return { metadata, directory: path }
+  return { metadata: { package: pkg, schema }, directory: path }
 }
 
 async function getPluginImpl(path: string, plugin: Plugin) {
