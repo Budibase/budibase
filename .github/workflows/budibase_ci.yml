@@ -155,7 +155,18 @@ jobs:
     strategy:
       matrix:
         datasource:
-          [mssql, mysql, postgres, postgres_legacy, mongodb, mariadb, oracle, sqs, none]
+          [
+            mssql,
+            mysql,
+            postgres,
+            postgres_legacy,
+            mongodb,
+            mariadb,
+            oracle,
+            sqs,
+            elasticsearch,
+            none,
+          ]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -192,6 +203,8 @@ jobs:
             docker pull budibase/oracle-database:23.2-slim-faststart
           elif [ "${{ matrix.datasource }}" == "postgres_legacy" ]; then
             docker pull postgres:9.5.25
+          elif [ "${{ matrix.datasource }}" == "elasticsearch" ]; then
+            docker pull elasticsearch@${{ steps.dotenv.outputs.ELASTICSEARCH_SHA }}
           fi
           docker pull minio/minio &
           docker pull redis &
