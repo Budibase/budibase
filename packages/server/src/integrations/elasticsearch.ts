@@ -10,7 +10,7 @@ import {
 import { Client, ClientOptions } from "@elastic/elasticsearch"
 import { HOST_ADDRESS } from "./utils"
 
-interface ElasticsearchConfig {
+export interface ElasticsearchConfig {
   url: string
   ssl?: boolean
   ca?: string
@@ -99,9 +99,9 @@ const SCHEMA: Integration = {
   },
 }
 
-class ElasticSearchIntegration implements IntegrationBase {
+export class ElasticSearchIntegration implements IntegrationBase {
   private config: ElasticsearchConfig
-  private client
+  private client: Client
 
   constructor(config: ElasticsearchConfig) {
     this.config = config
@@ -132,20 +132,23 @@ class ElasticSearchIntegration implements IntegrationBase {
     }
   }
 
-  async create(query: { index: string; json: object }) {
-    const { index, json } = query
+  async create(query: {
+    index: string
+    json: object
+    extra?: Record<string, string>
+  }) {
+    const { index, json, extra } = query
 
     try {
       const result = await this.client.index({
         index,
         body: json,
+        ...extra,
       })
       return result.body
     } catch (err) {
       console.error("Error writing to elasticsearch", err)
       throw err
-    } finally {
-      await this.client.close()
     }
   }
 
@@ -160,41 +163,46 @@ class ElasticSearchIntegration implements IntegrationBase {
     } catch (err) {
       console.error("Error querying elasticsearch", err)
       throw err
-    } finally {
-      await this.client.close()
     }
   }
 
-  async update(query: { id: string; index: string; json: object }) {
-    const { id, index, json } = query
+  async update(query: {
+    id: string
+    index: string
+    json: object
+    extra?: Record<string, string>
+  }) {
+    const { id, index, json, extra } = query
     try {
       const result = await this.client.update({
         id,
         index,
         body: json,
+        ...extra,
       })
       return result.body
     } catch (err) {
       console.error("Error querying elasticsearch", err)
       throw err
-    } finally {
-      await this.client.close()
     }
   }
 
-  async delete(query: { id: string; index: string }) {
-    const { id, index } = query
+  async delete(query: {
+    id: string
+    index: string
+    extra?: Record<string, string>
+  }) {
+    const { id, index, extra } = query
     try {
       const result = await this.client.delete({
         id,
         index,
+        ...extra,
       })
       return result.body
     } catch (err) {
       console.error("Error deleting from elasticsearch", err)
       throw err
-    } finally {
-      await this.client.close()
     }
   }
 }
