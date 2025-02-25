@@ -1,8 +1,5 @@
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   db as dbCore,
@@ -60,7 +57,7 @@ jest.mock("@budibase/pro", () => ({
   },
 }))
 
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
