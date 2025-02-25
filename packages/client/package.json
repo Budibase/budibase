@@ -28,7 +28,7 @@
     "apexcharts": "^3.48.0",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
-    "html5-qrcode": "^2.2.1",
+    "html5-qrcode": "^2.3.8",
     "leaflet": "^1.7.1",
     "sanitize-html": "^2.13.0",
     "screenfull": "^6.0.1",
