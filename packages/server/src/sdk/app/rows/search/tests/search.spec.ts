@@ -10,16 +10,13 @@ import {
 import { search } from "../../../../../sdk/app/rows/search"
 import { generator } from "@budibase/backend-core/tests"
 
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../../../tests/utilities/structures"
 
 // These test cases are only for things that cannot be tested through the API
 // (e.g. limiting searches to returning specific fields). If it's possible to
 // test through the API, it should be done there instead.
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
