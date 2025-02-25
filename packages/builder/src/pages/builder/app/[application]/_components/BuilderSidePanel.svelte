@@ -742,7 +742,7 @@
                 <div class="auth-entity-access-title">Access</div>
               </div>
               {#each allUsers as user}
-                {@const userGroups = sdk.users.getUserAppGroups($appStore.appId, user, $groups)}
+                {@const userGroups = sdk.users.getUserAppGroups($appStore.appId, user, $groups).slice(0, 3)}
                 <div class="auth-entity">
                   <div class="details">
                     <div class="user-groups">
@@ -751,7 +751,7 @@
                       </div>
                       <div class="group-badges">
                         {#each userGroups as group}
-                          <Badge size="S" customColor={group.color}>{group.name}</Badge>
+                          <Badge size="S" customColor={`color-mix(in srgb, ${group.color} 30%, transparent)`}>{group.name}</Badge>
                         {/each}
                       </div>
                     </div>
@@ -949,6 +949,8 @@
     grid-template-columns: 1fr 220px;
     align-items: center;
     gap: var(--spacing-xl);
+    border-bottom: var(--border-light);
+    padding-bottom: var(--spacing-s);
   }
 
   .auth-entity .details {

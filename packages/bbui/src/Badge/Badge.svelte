@@ -30,7 +30,7 @@
   class:spectrum-Label--seafoam={seafoam}
   class:spectrum-Label--active={active}
   class:spectrum-Label--inactive={inactive}
-  style={customColor ? `background-color: ${customColor};` : ""}
+  style={customColor ? `background-color: ${customColor}` : ""}
 >
   <slot />
 </span>
