@@ -2,9 +2,21 @@ import { writable } from "svelte/store"
 
 const NOTIFICATION_TIMEOUT = 3000
 
+interface Notification {
+  id: string
+  type: string
+  message: string
+  icon: string
+  dismissable: boolean
+  action: (() => void) | null
+  actionMessage: string | null
+  wide: boolean
+  dismissTimeout: number
+}
+
 export const createNotificationStore = () => {
-  const timeoutIds = new Set()
-  const _notifications = writable([], () => {
+  const timeoutIds = new Set<NodeJS.Timeout>()
+  const _notifications = writable<Notification[]>([], () => {
     return () => {
       // clear all the timers
       timeoutIds.forEach(timeoutId => {
@@ -21,7 +33,7 @@ export const createNotificationStore = () => {
   }
 
   const send = (
-    message,
+    message: string,
     {
       type = "default",
       icon = "",
@@ -30,7 +42,15 @@ export const createNotificationStore = () => {
       actionMessage = null,
       wide = false,
       dismissTimeout = NOTIFICATION_TIMEOUT,
-    }
+    }: {
+      type?: string
+      icon?: string
+      autoDismiss?: boolean
+      action?: (() => void) | null
+      actionMessage?: string | null
+      wide?: boolean
+      dismissTimeout?: number
+    } = {}
   ) => {
     if (block) {
       return
@@ -60,7 +80,7 @@ export const createNotificationStore = () => {
     }
   }
 
-  const dismissNotification = id => {
+  const dismissNotification = (id: string) => {
     _notifications.update(state => {
       return state.filter(n => n.id !== id)
     })
@@ -71,17 +91,18 @@ export const createNotificationStore = () => {
   return {
     subscribe,
     send,
-    info: msg => send(msg, { type: "info", icon: "Info" }),
-    error: msg =>
+    info: (msg: string) => send(msg, { type: "info", icon: "Info" }),
+    error: (msg: string) =>
       send(msg, { type: "error", icon: "Alert", autoDismiss: false }),
-    warning: msg => send(msg, { type: "warning", icon: "Alert" }),
-    success: msg => send(msg, { type: "success", icon: "CheckmarkCircle" }),
+    warning: (msg: string) => send(msg, { type: "warning", icon: "Alert" }),
+    success: (msg: string) =>
+      send(msg, { type: "success", icon: "CheckmarkCircle" }),
     blockNotifications,
     dismiss: dismissNotification,
   }
 }
 
-function id() {
+function id(): string {
   return "_" + Math.random().toString(36).slice(2, 9)
 }
 

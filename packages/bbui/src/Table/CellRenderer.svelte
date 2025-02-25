@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import StringRenderer from "./StringRenderer.svelte"
   import BooleanRenderer from "./BooleanRenderer.svelte"
   import DateTimeRenderer from "./DateTimeRenderer.svelte"
@@ -8,14 +8,14 @@
   import InternalRenderer from "./InternalRenderer.svelte"
   import { processStringSync } from "@budibase/string-templates"
 
-  export let row
-  export let schema
-  export let value
-  export let customRenderers = []
-  export let snippets
+  export let row: any
+  export let schema: any
+  export let value: any
+  export let customRenderers: { column: string; component: any }[] = []
+  export let snippets: any
 
-  let renderer
-  const typeMap = {
+  let renderer: any
+  const typeMap: Record<string, any> = {
     boolean: BooleanRenderer,
     datetime: DateTimeRenderer,
     link: RelationshipRenderer,
@@ -33,7 +33,7 @@
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
   $: cellValue = getCellValue(value, schema.template)
 
-  const getType = schema => {
+  const getType = (schema: any): string => {
     // Use a string renderer for dates if we use a custom template
     if (schema?.type === "datetime" && schema?.template) {
       return "string"
@@ -41,7 +41,7 @@
     return schema?.type || "string"
   }
 
-  const getCellValue = (value, template) => {
+  const getCellValue = (value: any, template: string | undefined): any => {
     if (!template) {
       return value
     }
