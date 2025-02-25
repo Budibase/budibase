@@ -557,8 +557,16 @@ class Orchestrator {
         throw new Error(`Cannot find automation step by name ${step.stepId}`)
       }
 
-      const inputs = automationUtils.cleanInputValues(
-        await processObject(cloneDeep(step.inputs), prepareContext(ctx)),
+      let inputs = cloneDeep(step.inputs)
+      if (step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2) {
+        // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
+        // "..." }}` template, and expects to receive it that way in the
+        // function that runs it. So we skip this next bit for that step.
+        inputs = await processObject(inputs, prepareContext(ctx))
+      }
+
+      inputs = automationUtils.cleanInputValues(
+        inputs,
         step.schema.inputs.properties
       )
 

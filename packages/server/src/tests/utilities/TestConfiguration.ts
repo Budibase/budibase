@@ -98,6 +98,7 @@ export default class TestConfiguration {
   request?: supertest.SuperTest<supertest.Test>
   started: boolean
   appId?: string
+  name?: string
   allApps: App[]
   app?: App
   prodApp?: App

@@ -8,14 +8,14 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "JS Scripting",
+  name: "JavaScript",
   tagline: "Execute JavaScript Code",
-  deprecated: true,
-  icon: "Code",
+  icon: "Brackets",
   description: "Run a piece of JavaScript code in your automation",
   type: AutomationStepType.ACTION,
   internal: true,
-  stepId: AutomationActionStepId.EXECUTE_SCRIPT,
+  new: true,
+  stepId: AutomationActionStepId.EXECUTE_SCRIPT_V2,
   inputs: {},
   features: {
     [AutomationFeature.LOOPING]: true,
