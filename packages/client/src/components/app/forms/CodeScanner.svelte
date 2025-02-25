@@ -60,7 +60,8 @@
         .start(cameraSetting, cameraConfig, onScanSuccess)
         .then(() => {
           if (defaultZoom > 1) {
-            const cameraOptions = html5QrCode.getRunningTrackCameraCapabilities()
+            const cameraOptions =
+              html5QrCode.getRunningTrackCameraCapabilities()
             const zoom = cameraOptions.zoomFeature()
             if (zoom.isSupported()) {
               zoom.apply(defaultZoom)
