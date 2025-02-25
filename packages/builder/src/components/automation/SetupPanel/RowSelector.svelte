@@ -25,6 +25,7 @@
   export let meta
   export let bindings
   export let isTestModal
+  export let context = {}
 
   const typeToField = Object.values(FIELDS).reduce((acc, field) => {
     acc[field.type] = field
@@ -58,7 +59,7 @@
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
-    clone.icon = "ShareAndroid"
+    clone.icon = clone.icon ?? "ShareAndroid"
     return clone
   })
 
@@ -258,6 +259,7 @@
               fields: editableFields,
             }}
             {onChange}
+            {context}
           />
         {:else}
           <DrawerBindableSlot
@@ -276,6 +278,7 @@
             allowJS={true}
             updateOnChange={false}
             drawerLeft="260px"
+            {context}
           >
             <RowSelectorTypes
               {isTestModal}
@@ -286,6 +289,7 @@
               meta={{
                 fields: editableFields,
               }}
+              {context}
               onChange={change => onChange(change)}
             />
           </DrawerBindableSlot>

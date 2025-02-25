@@ -16,6 +16,7 @@
   export let datasource
   export let builderType
   export let docsURL
+  export let evaluationContext = {}
 </script>
 
 <CoreFilterBuilder
@@ -32,5 +33,6 @@
   {allowOnEmpty}
   {builderType}
   {docsURL}
+  {evaluationContext}
   on:change
 />

@@ -24,6 +24,7 @@
   export let drawerTitle
   export let toReadable
   export let toRuntime
+  export let evaluationContext = {}
 
   const dispatch = createEventDispatcher()
   const { OperatorOptions, FilterValueType } = Constants
@@ -156,6 +157,7 @@
       allowHBS
       on:change={drawerOnChange}
       {bindings}
+      context={evaluationContext}
     />
   </Drawer>
 

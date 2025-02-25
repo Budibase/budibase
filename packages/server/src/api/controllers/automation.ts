@@ -3,7 +3,13 @@ import { sdk as coreSdk } from "@budibase/shared-core"
 import { DocumentType } from "../../db/utils"
 import { updateTestHistory } from "../../automations/utils"
 import { withTestFlag } from "../../utilities/redis"
-import { context, cache, events, db as dbCore } from "@budibase/backend-core"
+import {
+  context,
+  cache,
+  events,
+  db as dbCore,
+  HTTPError,
+} from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import {
   App,
@@ -28,6 +34,7 @@ import {
   TriggerAutomationResponse,
   TestAutomationRequest,
   TestAutomationResponse,
+  Table,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -231,14 +238,22 @@ export async function test(
   const { request, appId } = ctx
   const { body } = request
 
+  let table: Table | undefined
+  if (coreSdk.automations.isRowAction(automation) && body.row?.tableId) {
+    table = await sdk.tables.getTable(body.row?.tableId)
+    if (!table) {
+      throw new HTTPError("Table not found", 404)
+    }
+  }
+
   ctx.body = await withTestFlag(automation._id!, async () => {
     const occurredAt = new Date().getTime()
     await updateTestHistory(appId, automation, { ...body, occurredAt })
-
+    const input = prepareTestInput(body)
     const user = sdk.users.getUserContextBindings(ctx.user)
     return await triggers.externalTrigger(
       automation,
-      { ...prepareTestInput(body), appId, user },
+      { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
       { getResponses: true }
     )
   })

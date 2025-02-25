@@ -11,6 +11,7 @@ import {
   automationStore,
   selectedAutomation,
   automationHistoryStore,
+  evaluationContext,
 } from "./automations"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users"
 import { deploymentStore } from "./deployments"
@@ -72,6 +73,7 @@ export {
   snippets,
   rowActions,
   appPublished,
+  evaluationContext,
   screenComponentsList,
   screenComponentErrors,
   screenComponentErrorList,

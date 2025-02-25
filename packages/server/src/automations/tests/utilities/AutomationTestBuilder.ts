@@ -4,6 +4,7 @@ import { TRIGGER_DEFINITIONS } from "../../triggers"
 import {
   Automation,
   AutomationActionStepId,
+  AutomationResults,
   AutomationStep,
   AutomationStepInputs,
   AutomationTrigger,
@@ -213,10 +214,11 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
       throw new Error(response.message)
     }
 
+    const results: AutomationResults = response as AutomationResults
     // Remove the trigger step from the response.
-    response.steps.shift()
+    results.steps.shift()
 
-    return response
+    return results
   }
 
   async trigger(
