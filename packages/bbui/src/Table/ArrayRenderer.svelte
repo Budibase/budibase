@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/label/dist/index-vars.css"
   import Badge from "../Badge/Badge.svelte"
 
-  export let value
+  export let value: string | string[]
 
   const displayLimit = 5
 

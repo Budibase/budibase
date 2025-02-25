@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from "svelte"
   import "@spectrum-css/table/dist/index-vars.css"
   import CellRenderer from "./CellRenderer.svelte"
@@ -8,6 +8,7 @@
   import Checkbox from "../Form/Checkbox.svelte"
 
   /**
+   /**
    * The expected schema is our normal couch schemas for our tables.
    * Each field schema can be enriched with a few extra properties to customise
    * the behaviour.
@@ -24,42 +25,42 @@
    * borderLeft: show a left border
    * borderRight: show a right border
    */
-  export let data = []
-  export let schema = {}
-  export let showAutoColumns = false
-  export let rowCount = 0
-  export let quiet = false
-  export let loading = false
-  export let allowSelectRows
-  export let allowEditRows = true
-  export let allowEditColumns = true
-  export let allowClickRows = true
-  export let selectedRows = []
-  export let customRenderers = []
-  export let disableSorting = false
-  export let autoSortColumns = true
-  export let compact = false
-  export let customPlaceholder = false
-  export let showHeaderBorder = true
-  export let placeholderText = "No rows found"
-  export let snippets = []
-  export let defaultSortColumn = undefined
-  export let defaultSortOrder = "Ascending"
+  export let data: any[] = []
+  export let schema: Record<string, any> = {}
+  export let showAutoColumns: boolean = false
+  export let rowCount: number = 0
+  export let quiet: boolean = false
+  export let loading: boolean = false
+  export let allowSelectRows: boolean = false
+  export let allowEditRows: boolean = true
+  export let allowEditColumns: boolean = true
+  export let allowClickRows: boolean = true
+  export let selectedRows: any[] = []
+  export let customRenderers: any[] = []
+  export let disableSorting: boolean = false
+  export let autoSortColumns: boolean = true
+  export let compact: boolean = false
+  export let customPlaceholder: boolean = false
+  export let showHeaderBorder: boolean = true
+  export let placeholderText: string = "No rows found"
+  export let snippets: any[] = []
+  export let defaultSortColumn: string | undefined = undefined
+  export let defaultSortOrder: "Ascending" | "Descending" = "Ascending"
 
   const dispatch = createEventDispatcher()
 
   // Config
-  const headerHeight = 36
+  const headerHeight: number = 36
   $: rowHeight = compact ? 46 : 55
 
   // Sorting state
-  let sortColumn
-  let sortOrder
+  let sortColumn: string | undefined
+  let sortOrder: "Ascending" | "Descending" | undefined
 
   // Table state
-  let height = 0
-  let loaded = false
-  let checkboxStatus = false
+  let height: number = 0
+  let loaded: boolean = false
+  let checkboxStatus: boolean = false
 
   $: schema = fixSchema(schema)
   $: if (!loading) loaded = true
@@ -95,8 +96,8 @@
     }
   }
 
-  const fixSchema = schema => {
-    let fixedSchema = {}
+  const fixSchema = (schema: Record<string, any>): Record<string, any> => {
+    let fixedSchema: Record<string, any> = {}
     Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
       if (typeof fieldSchema === "string") {
         fixedSchema[fieldName] = {
@@ -120,7 +121,13 @@
     return fixedSchema
   }
 
-  const getVisibleRowCount = (loaded, height, allRows, rowCount, rowHeight) => {
+  const getVisibleRowCount = (
+    loaded: boolean,
+    height: number,
+    allRows: number,
+    rowCount: number,
+    rowHeight: number
+  ): number => {
     if (!loaded) {
       return rowCount || 0
     }
@@ -131,12 +138,12 @@
   }
 
   const getHeightStyle = (
-    visibleRowCount,
-    rowCount,
-    totalRowCount,
-    rowHeight,
-    loading
-  ) => {
+    visibleRowCount: number,
+    rowCount: number,
+    totalRowCount: number,
+    rowHeight: number,
+    loading: boolean
+  ): string => {
     if (loading) {
       return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
     }
@@ -146,7 +153,11 @@
     return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
   }
 
-  const getGridStyle = (fields, schema, showEditColumn) => {
+  const getGridStyle = (
+    fields: string[],
+    schema: Record<string, any>,
+    showEditColumn: boolean
+  ): string => {
     let style = "grid-template-columns:"
     if (showEditColumn) {
       style += " auto"
@@ -163,7 +174,11 @@
     return style
   }
 
-  const sortRows = (rows, sortColumn, sortOrder) => {
+  const sortRows = (
+    rows: any[],
+    sortColumn: string | undefined,
+    sortOrder: string | undefined
+  ): any[] => {
     sortColumn = sortColumn ?? defaultSortColumn
     sortOrder = sortOrder ?? defaultSortOrder
     if (!sortColumn || !sortOrder || disableSorting) {
@@ -180,7 +195,7 @@
     })
   }
 
-  const sortBy = fieldSchema => {
+  const sortBy = (fieldSchema: Record<string, any>): void => {
     if (fieldSchema.sortable === false) {
       return
     }
@@ -193,7 +208,7 @@
     dispatch("sort", { column: sortColumn, order: sortOrder })
   }
 
-  const getDisplayName = schema => {
+  const getDisplayName = (schema: Record<string, any>): string => {
     let name = schema?.displayName
     if (schema && name === undefined) {
       name = schema.name
@@ -201,9 +216,13 @@
     return name || ""
   }
 
-  const getFields = (schema, showAutoColumns, autoSortColumns) => {
-    let columns = []
-    let autoColumns = []
+  const getFields = (
+    schema: Record<string, any>,
+    showAutoColumns: boolean,
+    autoSortColumns: boolean
+  ): string[] => {
+    let columns: any[] = []
+    let autoColumns: any[] = []
     Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
       if (!field || !fieldSchema) {
         return
@@ -235,17 +254,17 @@
       .map(column => column.name)
   }
 
-  const editColumn = (e, field) => {
+  const editColumn = (e: Event, field: any): void => {
     e.stopPropagation()
     dispatch("editcolumn", field)
   }
 
-  const editRow = (e, row) => {
+  const editRow = (e: Event, row: any): void => {
     e.stopPropagation()
     dispatch("editrow", cloneDeep(row))
   }
 
-  const toggleSelectRow = row => {
+  const toggleSelectRow = (row: any): void => {
     if (!allowSelectRows) {
       return
     }
@@ -258,7 +277,7 @@
     }
   }
 
-  const toggleSelectAll = e => {
+  const toggleSelectAll = (e: CustomEvent): void => {
     const select = !!e.detail
     if (select) {
       // Add any rows which are not already in selected rows
@@ -278,8 +297,10 @@
     }
   }
 
-  const computeCellStyles = schema => {
-    let styles = {}
+  const computeCellStyles = (
+    schema: Record<string, any>
+  ): Record<string, string> => {
+    let styles: Record<string, string> = {}
     Object.keys(schema || {}).forEach(field => {
       styles[field] = ""
       if (schema[field].color) {

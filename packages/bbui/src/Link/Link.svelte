@@ -10,7 +10,7 @@
   export let secondary: boolean = false
   export let overBackground: boolean = false
   export let target: string | undefined = undefined
-  export let download: boolean | undefined = undefined
+  export let download: string | undefined = undefined
   export let disabled: boolean = false
   export let tooltip: string | null = null
 
