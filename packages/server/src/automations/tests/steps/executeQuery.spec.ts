@@ -9,7 +9,8 @@ import { generator } from "@budibase/backend-core/tests"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {
