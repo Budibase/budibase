@@ -27,7 +27,7 @@ export type UpdateHandler = (
 
 interface Opts {
   anchor?: HTMLElement
-  align: PopoverAlignment
+  align: PopoverAlignment | `${PopoverAlignment}`
   maxHeight?: number
   maxWidth?: number
   minWidth?: number

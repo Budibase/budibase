@@ -1,10 +1,10 @@
 import { getManifest, helpersToRemoveForJs } from "@budibase/string-templates"
+import { Helper } from "@budibase/types"
 
-export function handlebarsCompletions() {
+export function handlebarsCompletions(): Helper[] {
   const manifest = getManifest()
-
-  return Object.keys(manifest).flatMap(key =>
-    Object.entries(manifest[key]).map(([helperName, helperConfig]) => ({
+  return Object.values(manifest).flatMap(helpersObj =>
+    Object.entries(helpersObj).map<Helper>(([helperName, helperConfig]) => ({
       text: helperName,
       path: helperName,
       example: helperConfig.example,
@@ -14,6 +14,7 @@ export function handlebarsCompletions() {
       allowsJs:
         !helperConfig.requiresBlock &&
         !helpersToRemoveForJs.includes(helperName),
+      args: helperConfig.args,
     }))
   )
 }

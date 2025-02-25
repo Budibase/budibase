@@ -6,7 +6,7 @@
   import { findComponentById } from "@/utils/components.js"
   import { isGridEvent } from "@/utils/grid"
   import { DNDPlaceholderID } from "@/constants"
-  import { Component } from "@budibase/types"
+  import type { Component } from "@budibase/types"
 
   type ChildCoords = {
     placeholder: boolean
