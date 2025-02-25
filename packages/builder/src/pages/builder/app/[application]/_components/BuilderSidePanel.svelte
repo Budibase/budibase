@@ -742,15 +742,19 @@
                 <div class="auth-entity-access-title">Access</div>
               </div>
               {#each allUsers as user}
-                {@const userGroups = sdk.users.getUserGroups(user, $groups)}
+                {@const userGroups = sdk.users.getUserAppGroups($appStore.appId, user, $groups)}
                 <div class="auth-entity">
                   <div class="details">
-                    <div class="user-email" title={user.email}>
-                      {user.email}
+                    <div class="user-groups">
+                      <div class="user-email" title={user.email}>
+                        {user.email}
+                      </div>
+                      <div class="group-badges">
+                        {#each userGroups as group}
+                          <Badge size="S" customColor={group.color}>{group.name}</Badge>
+                        {/each}
+                      </div>
                     </div>
-                    {#each userGroups as group}
-                      <Badge size="S" customColor={group.color}>{group.name}</Badge>
-                    {/each}
                   </div>
                   <div class="auth-entity-access" class:muted={user.group}>
                     <RoleSelect
@@ -1052,5 +1056,16 @@
   }
   .alert {
     padding: 0 var(--spacing-xl);
+  }
+
+  .user-groups {
+    display: flex;
+    flex-direction: column;
+  }
+  .group-badges {
+    padding-top: var(--spacing-s);
+    display: flex;
+    gap: var(--spacing-s);
+    flex-wrap: wrap;
   }
 </style>

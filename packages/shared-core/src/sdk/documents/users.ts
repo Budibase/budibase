@@ -137,6 +137,18 @@ export function getUserGroups(user: User, groups?: UserGroup[]) {
   )
 }
 
+export function getUserAppGroups(
+  appId: string,
+  user: User,
+  groups?: UserGroup[]
+) {
+  const prodAppId = getProdAppID(appId)
+  const userGroups = getUserGroups(user, groups)
+  return userGroups.filter(group =>
+    Object.keys(group.roles || {}).find(app => app === prodAppId)
+  )
+}
+
 export function userAppAccessList(user: User, groups?: UserGroup[]) {
   const userGroups = getUserGroups(user, groups)
   const userGroupApps = userGroups.flatMap(userGroup =>
