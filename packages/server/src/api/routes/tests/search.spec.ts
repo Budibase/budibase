@@ -3550,6 +3550,31 @@ if (descriptions.length) {
                     limit: 1,
                   }).toContainExactly([row])
                 })
+
+                isInternal &&
+                  describe("search by _id for relations", () => {
+                    it("can filter by the related _id", async () => {
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": row.rel[0]._id },
+                        },
+                      }).toContainExactly([row])
+
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": row.rel[1]._id },
+                        },
+                      }).toContainExactly([row])
+                    })
+
+                    it("can filter by the related _id and find nothing", async () => {
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": "rel_none" },
+                        },
+                      }).toFindNothing()
+                    })
+                  })
               })
 
             !isInternal &&
