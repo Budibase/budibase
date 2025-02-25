@@ -135,7 +135,7 @@
       datasource,
       options: {
         filter,
-        limit: writable ? 100 : 0,
+        limit: writable ? 100 : 1,
       },
     })
   }
