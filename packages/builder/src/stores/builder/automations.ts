@@ -489,7 +489,7 @@ const automationActions = (store: AutomationStore) => ({
         branches.forEach((branch, bIdx) => {
           children[branch.id].forEach(
             (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
-              const ended = array.length - 1 === sIdx && !branches.length
+              const ended = array.length - 1 === sIdx
               treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
             }
           )
@@ -510,7 +510,6 @@ const automationActions = (store: AutomationStore) => ({
     blocks.forEach((block, idx, array) => {
       treeTraverse(block, null, idx, null, array.length - 1 === idx)
     })
-
     return blockRefs
   },
 
