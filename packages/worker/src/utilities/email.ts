@@ -13,7 +13,8 @@ import { configs, cache, objectStore } from "@budibase/backend-core"
 import ical from "ical-generator"
 import _ from "lodash"
 
-const nodemailer = require("nodemailer")
+import nodemailer from "nodemailer"
+import SMTPTransport from "nodemailer/lib/smtp-transport"
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
 const TYPE = TemplateType.EMAIL
@@ -26,7 +27,7 @@ const FULL_EMAIL_PURPOSES = [
 ]
 
 function createSMTPTransport(config?: SMTPInnerConfig) {
-  let options: any
+  let options: SMTPTransport.Options
   let secure = config?.secure
   // default it if not specified
   if (secure == null) {
@@ -161,7 +162,7 @@ export async function sendEmail(
   const code = await getLinkCode(purpose, email, opts.user, opts?.info)
   let context = await getSettingsTemplateContext(purpose, code)
 
-  let message: any = {
+  let message: Parameters<typeof transport.sendMail>[0] = {
     from: opts?.from || config?.from,
     html: await buildEmail(purpose, email, context, {
       user: opts?.user,
