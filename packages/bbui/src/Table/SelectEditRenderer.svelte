@@ -3,7 +3,7 @@
   import ActionButton from "../ActionButton/ActionButton.svelte"
 
   export let selected: boolean | undefined
-  export let onEdit: () => void
+  export let onEdit: (_e: Event) => void
   export let allowSelectRows: boolean = false
   export let allowEditRows: boolean = false
   export let data: Record<string, any>
