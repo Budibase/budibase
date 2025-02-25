@@ -7,6 +7,7 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
+import { isInternal } from "../tables/utils"
 
 export const removeInvalidFilters = (
   filters: SearchFilters,
@@ -69,8 +70,11 @@ export const getQueryableFields = async (
     fromTables: string[],
     opts?: { noRelationships?: boolean }
   ): Promise<string[]> => {
-    // Querying by _id is always allowed, even if it's never part of the schema
-    const result = ["_id"]
+    const result = []
+    if (isInternal({ table })) {
+      result.push("_id")
+    }
+
     for (const field of Object.keys(table.schema).filter(
       f => allowedFields.includes(f) && table.schema[f].visible !== false
     )) {
@@ -114,7 +118,8 @@ export const getQueryableFields = async (
     return result
   }
 
-  const result = []
+  // Querying by _id is always allowed, even if it's never part of the schema
+  const result = ["_id"]
 
   if (fields == null) {
     fields = Object.keys(table.schema)
