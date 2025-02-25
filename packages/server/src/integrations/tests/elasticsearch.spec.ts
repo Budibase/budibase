@@ -1,20 +1,20 @@
 import { Datasource } from "@budibase/types"
 import { ElasticsearchConfig, ElasticSearchIntegration } from "../elasticsearch"
-import * as elasticsearch from "../tests/utils/elasticsearch"
 import { generator } from "@budibase/backend-core/tests"
 import { DatabaseName, datasourceDescribe } from "./utils"
 
 const describes = datasourceDescribe({ only: [DatabaseName.ELASTICSEARCH] })
 
 if (describes.length) {
-  describe.each(describes)("Elasticsearch Integration", () => {
+  describe.each(describes)("Elasticsearch Integration", ({ dsProvider }) => {
     let datasource: Datasource
     let integration: ElasticSearchIntegration
 
     let index: string
 
     beforeAll(async () => {
-      datasource = await elasticsearch.getDatasource()
+      const ds = await dsProvider()
+      datasource = ds.datasource!
     })
 
     beforeEach(() => {
