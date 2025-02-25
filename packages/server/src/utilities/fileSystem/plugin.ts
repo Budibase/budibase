@@ -14,7 +14,7 @@ export const getPluginMetadata = async (
   let pkg: any
   let schema: any
   try {
-    pkg = JSON.parse(fs.readFileSync(join(path, "pkg.json"), "utf8"))
+    pkg = JSON.parse(fs.readFileSync(join(path, "package.json"), "utf8"))
     schema = JSON.parse(fs.readFileSync(join(path, "schema.json"), "utf8"))
     if (!pkg.name) {
       throw new Error("package.json is missing 'name'.")
@@ -27,7 +27,8 @@ export const getPluginMetadata = async (
     }
   } catch (err: any) {
     throw new Error(
-      `Unable to process schema.json/package.json in plugin. ${err.message}`
+      `Unable to process schema.json/package.json in plugin. ${err.message}`,
+      { cause: err }
     )
   }
 
