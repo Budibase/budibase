@@ -89,8 +89,8 @@
   $: updateOptions(optionsMap)
   $: !open && sortOptions()
 
-  // Fetch new options when search term changes
-  $: debouncedFetchRows(searchTerm, primaryDisplay)
+  // Search for new options when search term changes
+  $: debouncedSearchOptions(searchTerm || "", primaryDisplayField)
 
   // Ensure backwards compatibility
   $: enrichedDefaultValue = enrichDefaultValue(defaultValue)
@@ -310,28 +310,29 @@
     return val.includes(",") ? val.split(",") : val
   }
 
-  async function fetchRows(searchTerm: any, primaryDisplay: string) {
-    // Don't request until we have the primary display or default value has been fetched
+  // Searches for new options matching the given term
+  async function searchOptions(searchTerm: string, primaryDisplay?: string) {
     if (!primaryDisplay) {
       return
     }
 
     // Ensure we match all filters, rather than any
-    // @ts-expect-error this doesn't fit types, but don't want to change it yet
-    const baseFilter: any = (filter || []).filter(x => x.operator !== "allOr")
+    let newFilter: any = filter
+    if (searchTerm) {
+      // @ts-expect-error this doesn't fit types, but don't want to change it yet
+      newFilter = (newFilter || []).filter(x => x.operator !== "allOr")
+      newFilter.push({
+        // Use a big numeric prefix to avoid clashing with an existing filter
+        field: `999:${primaryDisplay}`,
+        operator: "string",
+        value: searchTerm,
+      })
+    }
     await fetch?.update({
-      filter: [
-        ...baseFilter,
-        {
-          // Use a big numeric prefix to avoid clashing with an existing filter
-          field: `999:${primaryDisplay}`,
-          operator: "string",
-          value: searchTerm,
-        },
-      ],
+      filter: newFilter,
     })
   }
-  const debouncedFetchRows = Utils.debounce(fetchRows, 250)
+  const debouncedSearchOptions = Utils.debounce(searchOptions, 250)
 
   // Flattens an array of row-like objects into a simple array of row IDs
   const flatten = (values: any | any[]): string[] => {
