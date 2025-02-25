@@ -38,6 +38,8 @@
   import { emailValidator } from "@/helpers/validation"
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
+  import GroupBadge from "./GroupBadge.svelte"
 
   let query = null
   let loaded = false
@@ -742,7 +744,11 @@
                 <div class="auth-entity-access-title">Access</div>
               </div>
               {#each allUsers as user}
-                {@const userGroups = sdk.users.getUserAppGroups($appStore.appId, user, $groups).slice(0, 3)}
+                {@const userGroups = sdk.users.getUserAppGroups(
+                  $appStore.appId,
+                  user,
+                  $groups
+                )}
                 <div class="auth-entity">
                   <div class="details">
                     <div class="user-groups">
@@ -750,9 +756,12 @@
                         {user.email}
                       </div>
                       <div class="group-badges">
-                        {#each userGroups as group}
-                          <Badge size="S" customColor={`color-mix(in srgb, ${group.color} 30%, transparent)`}>{group.name}</Badge>
+                        {#each userGroups.slice(0, 3) as group}
+                          <GroupBadge color={group.color} name={group.name} />
                         {/each}
+                        {#if userGroups.length > 3}
+                          <BuilderGroupPopover groups={userGroups.slice(3)} />
+                        {/if}
                       </div>
                     </div>
                   </div>
