@@ -425,9 +425,7 @@ describe("query utils", () => {
 
             // aux2_2 primitive props
             "aux2_2._id",
-            "aux2Table._id",
             "aux2_2.title",
-            "aux2Table.title",
 
             // table primitive props
             "table._id",
@@ -453,9 +451,7 @@ describe("query utils", () => {
 
             // aux1_2 primitive props
             "aux1_2._id",
-            "aux1Table._id",
             "aux1_2.name",
-            "aux1Table.name",
 
             // table primitive props
             "table._id",

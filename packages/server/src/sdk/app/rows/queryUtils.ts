@@ -126,5 +126,5 @@ export const getQueryableFields = async (
   }
   result.push(...(await extractTableFields(table, fields, [table._id!])))
 
-  return result
+  return Array.from(new Set(result))
 }
