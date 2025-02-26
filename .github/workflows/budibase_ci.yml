@@ -164,6 +164,7 @@ jobs:
             mariadb,
             oracle,
             sqs,
+            elasticsearch,
             none,
           ]
     steps:
