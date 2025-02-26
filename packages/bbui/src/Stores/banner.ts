@@ -7,17 +7,26 @@ export const BANNER_TYPES = {
   WARNING: "warning",
 }
 
+interface BannerConfig {
+  message?: string
+  type?: string
+  extraButtonText?: string
+  extraButtonAction?: () => void
+  onChange?: () => void
+}
+
+interface DefaultConfig {
+  messages: BannerConfig[]
+}
+
 export function createBannerStore() {
-  const DEFAULT_CONFIG = {
+  const DEFAULT_CONFIG: DefaultConfig = {
     messages: [],
   }
 
-  const banner = writable(DEFAULT_CONFIG)
+  const banner = writable<DefaultConfig>(DEFAULT_CONFIG)
 
-  const show = async (
-    // eslint-disable-next-line
-    config = { message, type, extraButtonText, extraButtonAction, onChange }
-  ) => {
+  const show = async (config: BannerConfig = {}) => {
     banner.update(store => {
       return {
         ...store,
@@ -27,7 +36,7 @@ export function createBannerStore() {
   }
 
   const showStatus = async () => {
-    const config = {
+    const config: BannerConfig = {
       message: "Some systems are experiencing issues",
       type: BANNER_TYPES.NEGATIVE,
       extraButtonText: "View Status",
@@ -37,18 +46,24 @@ export function createBannerStore() {
     await queue([config])
   }
 
-  const queue = async entries => {
-    const priority = {
+  const queue = async (entries: Array<BannerConfig>) => {
+    const priority: Record<string, number> = {
       [BANNER_TYPES.NEGATIVE]: 0,
       [BANNER_TYPES.WARNING]: 1,
       [BANNER_TYPES.INFO]: 2,
     }
     banner.update(store => {
       const sorted = [...store.messages, ...entries].sort((a, b) => {
-        if (priority[a.type] == priority[b.type]) {
+        if (
+          priority[a.type as keyof typeof priority] ===
+          priority[b.type as keyof typeof priority]
+        ) {
           return 0
         }
-        return priority[a.type] < priority[b.type] ? -1 : 1
+        return priority[a.type as keyof typeof priority] <
+          priority[b.type as keyof typeof priority]
+          ? -1
+          : 1
       })
       return {
         ...store,
