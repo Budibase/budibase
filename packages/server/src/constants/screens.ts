@@ -227,3 +227,92 @@ export function createQueryScreen(datasourceId: string, query: Query): Screen {
     name: "screen-id",
   }
 }
+
+export function createSampleDataTableScreen(): Screen {
+  return {
+    showNavigation: true,
+    width: "Large",
+    routing: { route: "/inventory", roleId: "BASIC", homeScreen: false },
+    name: "sample-data-inventory-screen",
+    props: {
+      _id: "c38f2b9f250fb4c33965ce47e12c02a80",
+      _component: "@budibase/standard-components/container",
+      _styles: { normal: {}, hover: {}, active: {}, selected: {} },
+      _children: [
+        {
+          _id: "cf600445f0b0048c79c0c81606b30d542",
+          _component: "@budibase/standard-components/gridblock",
+          _styles: {
+            normal: {
+              "--grid-desktop-col-start": 1,
+              "--grid-desktop-col-end": 13,
+              "--grid-desktop-row-start": 3,
+              "--grid-desktop-row-end": 21,
+            },
+            hover: {},
+            active: {},
+            selected: {},
+          },
+          _instanceName: "Inventory - Table",
+          _children: [],
+          table: {
+            label: "Inventory",
+            tableId: "ta_bb_inventory",
+            type: "table",
+            datasourceName: "Sample Data",
+          },
+          columns: [
+            { label: "Item Tags", field: "Item Tags", active: true },
+            { label: "Purchase Date", field: "Purchase Date", active: true },
+            {
+              label: "Purchase Price",
+              field: "Purchase Price",
+              active: true,
+              format:
+                // eslint-disable-next-line no-template-curly-in-string
+                "${{ [cf600445f0b0048c79c0c81606b30d542].[Purchase Price] }}",
+            },
+            { label: "Notes", field: "Notes", active: true },
+            {
+              label: "Status",
+              field: "Status",
+              active: true,
+              conditions: [
+                {
+                  target: "row",
+                  metadataKey: "backgroundColor",
+                  operator: "contains",
+                  valueType: "array",
+                  metadataValue: "var(--spectrum-global-color-red-100)",
+                  noValue: false,
+                  referenceValue: "Repair",
+                },
+              ],
+            },
+            { label: "SKU", field: "SKU", active: true },
+            { label: "Item ID", field: "Item ID", active: true },
+            { label: "Created At", field: "Created At", active: false },
+            { label: "Updated At", field: "Updated At", active: false },
+            { label: "Item Name", field: "Item Name", active: true },
+          ],
+          initialSortColumn: "Item ID",
+        },
+        {
+          _id: "c09edf7de69be44ce8f0215c3f62e43a5",
+          _component: "@budibase/standard-components/textv2",
+          _styles: { normal: {}, hover: {}, active: {} },
+          _instanceName: "New Text",
+          align: "left",
+          text: "## Inventory",
+        },
+      ],
+      _instanceName: "Inventory - List",
+      layout: "grid",
+      direction: "column",
+      hAlign: "stretch",
+      vAlign: "top",
+      size: "grow",
+      gap: "M",
+    },
+  }
+}

@@ -16,6 +16,7 @@ import {
   DocumentType,
   generateAppID,
   generateDevAppID,
+  generateScreenID,
   getLayoutParams,
   getScreenParams,
 } from "../../db/utils"
@@ -75,6 +76,7 @@ import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
+import { createSampleDataTableScreen } from "../../constants/screens"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -189,6 +191,13 @@ async function addSampleDataDocs() {
   }
 }
 
+async function addSampleDataScreen() {
+  const db = context.getAppDB()
+  let screen = createSampleDataTableScreen()
+  screen._id = generateScreenID()
+  await db.put(screen)
+}
+
 export const addSampleData = async (
   ctx: UserCtx<void, AddAppSampleDataResponse>
 ) => {
@@ -295,10 +304,24 @@ async function performAppCreate(
   return await context.doInAppContext(appId, async () => {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
+    const isImport = !!instanceConfig.file
+    const addSampleData = !isImport && !useTemplate
 
     if (instanceConfig.useTemplate && !instanceConfig.file) {
       await updateUserColumns(appId, db, ctx.user._id!)
     }
+
+    // Add link to sample data page if required
+    const newLinks = addSampleData
+      ? [
+          {
+            text: "Inventory",
+            url: "/inventory",
+            type: "link",
+            roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          },
+        ]
+      : []
 
     const newApplication: App = {
       _id: DocumentType.APP_METADATA,
@@ -320,7 +343,7 @@ async function performAppCreate(
         title: name,
         navWidth: "Large",
         navBackground: "var(--spectrum-global-color-gray-50)",
-        links: [],
+        links: newLinks,
       },
       theme: DefaultAppTheme,
       customTheme: {
@@ -334,7 +357,6 @@ async function performAppCreate(
       creationVersion: undefined,
     }
 
-    const isImport = !!instanceConfig.file
     if (!isImport) {
       newApplication.creationVersion = envCore.VERSION
     }
@@ -381,9 +403,10 @@ async function performAppCreate(
       await uploadAppFiles(appId)
     }
 
-    // Add sample datasource for all apps that aren't imports
-    if (!isImport && !useTemplate) {
+    // Add sample datasource and example screen for non-templates/non-imports
+    if (addSampleData) {
       await addSampleDataDocs()
+      await addSampleDataScreen()
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
