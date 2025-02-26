@@ -35,6 +35,7 @@
   export let navWidth
   export let pageWidth
   export let logoLinkUrl
+  export let logoHeight
   export let openLogoLinkInNewTab
   export let textAlign
   export let embedded = false
@@ -71,6 +72,7 @@
   $: navStyle = getNavStyle(
     navBackground,
     navTextColor,
+    logoHeight,
     $context.device.width,
     $context.device.height
   )
@@ -176,7 +178,13 @@
     }
   }
 
-  const getNavStyle = (backgroundColor, textColor, width, height) => {
+  const getNavStyle = (
+    backgroundColor,
+    textColor,
+    logoHeight,
+    width,
+    height
+  ) => {
     let style = `--width:${width}px; --height:${height}px;`
     if (backgroundColor) {
       style += `--navBackground:${backgroundColor};`
@@ -184,6 +192,7 @@
     if (textColor) {
       style += `--navTextColor:${textColor};`
     }
+    style += `--logoHeight:${logoHeight || 24}px;`
     return style
   }
 
@@ -408,9 +417,9 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: 24px 32px 20px 32px;
+    padding: 20px 32px 16px 32px;
     max-width: 100%;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-s);
   }
   .nav :global(.spectrum-Icon) {
     color: var(--navTextColor);
@@ -524,7 +533,7 @@
     flex: 1 1 auto;
   }
   .logo img {
-    height: 24px;
+    height: var(--logoHeight);
   }
   .logo :global(h1) {
     font-weight: 600;
