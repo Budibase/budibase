@@ -367,6 +367,8 @@ class Orchestrator {
         if (e.errno === "ETIME") {
           span?.addTags({ timedOut: true })
           console.warn(`Automation execution timed out after ${timeout}ms`)
+        } else {
+          throw e
         }
       }
 

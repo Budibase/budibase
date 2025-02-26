@@ -90,7 +90,7 @@
   $: requestEval(runtimeExpression, context, snippets)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
-  $: bindingOptions = bindingsToCompletions(bindings, editorMode)
+  $: bindingOptions = bindingsToCompletions(enrichedBindings, editorMode)
   $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
   $: snippetsOptions =
     usingJS && useSnippets && snippets?.length ? snippets : []
@@ -377,6 +377,7 @@
               value={jsValue ? decodeJSBinding(jsValue) : jsValue}
               on:change={onChangeJSValue}
               {completions}
+              {validations}
               mode={EditorModes.JS}
               bind:getCaretPosition
               bind:insertAtPos

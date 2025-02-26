@@ -4495,6 +4495,12 @@
         ]
       },
       {
+        "type": "text",
+        "label": "Zoom level",
+        "key": "defaultZoom",
+        "defaultValue": "1"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",

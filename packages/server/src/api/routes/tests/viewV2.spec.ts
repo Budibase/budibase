@@ -37,17 +37,14 @@ import {
   ViewV2Type,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { context, db, events, roles, setEnv } from "@budibase/backend-core"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
 import nock from "nock"
 
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
