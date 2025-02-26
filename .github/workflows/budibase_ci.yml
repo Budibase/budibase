@@ -30,7 +30,7 @@ env:
 
 jobs:
   lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -47,7 +47,7 @@ jobs:
       - run: yarn lint
 
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -76,7 +76,7 @@ jobs:
           fi
 
   helm-lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -88,7 +88,7 @@ jobs:
       - run: cd charts/budibase && helm lint .
 
   test-libraries:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -122,7 +122,7 @@ jobs:
           fi
 
   test-worker:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -151,7 +151,7 @@ jobs:
           yarn test --verbose --reporters=default --reporters=github-actions
 
   test-server:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         datasource:
@@ -254,7 +254,7 @@ jobs:
           yarn test --filter $FILTER --verbose --reporters=default --reporters=github-actions
 
   check-pro-submodule:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo and submodules
@@ -313,7 +313,7 @@ jobs:
           fi
 
   check-lockfile:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo
