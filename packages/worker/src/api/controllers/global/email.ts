@@ -24,13 +24,10 @@ export async function sendEmail(
     invite,
     attachments,
   } = ctx.request.body
-  let user: User | undefined = undefined
+  let user: any
   if (userId) {
     const db = tenancy.getGlobalDB()
-    user = await db.tryGet<User>(userId)
-  }
-  if (!user) {
-    ctx.throw(404, "User not found.")
+    user = await db.get<User>(userId)
   }
   const response = await sendEmailFn(email, purpose, {
     workspaceId,

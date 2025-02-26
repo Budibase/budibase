@@ -1,5 +1,4 @@
 import { EmailAttachment, EmailInvite } from "../../../documents"
-import SMTPTransport from "nodemailer/lib/smtp-transport"
 
 export enum EmailTemplatePurpose {
   CORE = "core",
@@ -13,17 +12,17 @@ export enum EmailTemplatePurpose {
 export interface SendEmailRequest {
   workspaceId?: string
   email: string
-  userId?: string
+  userId: string
   purpose: EmailTemplatePurpose
   contents?: string
   from?: string
   subject: string
-  cc?: string
-  bcc?: string
+  cc?: boolean
+  bcc?: boolean
   automation?: boolean
   invite?: EmailInvite
   attachments?: EmailAttachment[]
 }
-export interface SendEmailResponse extends SMTPTransport.SentMessageInfo {
+export interface SendEmailResponse extends Record<string, any> {
   message: string
 }
