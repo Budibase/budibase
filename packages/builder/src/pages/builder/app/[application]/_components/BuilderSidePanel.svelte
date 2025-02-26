@@ -542,9 +542,7 @@
   }
 
   const itemCountText = (word, count) => {
-    return `${count} ${word}${
-      count !== 1 ? "s" : ""
-    }`
+    return `${count} ${word}${count !== 1 ? "s" : ""}`
   }
 </script>
 
@@ -770,7 +768,9 @@
                   <div class="auth-entity-access" class:muted={user.group}>
                     <RoleSelect
                       footer={getRoleFooter(user)}
-                      placeholder={userGroups?.length ? "Controlled by group" : false}
+                      placeholder={userGroups?.length
+                        ? "Controlled by group"
+                        : false}
                       value={parseRole(user)}
                       allowRemove={user.role && !user.group}
                       allowPublic={false}
