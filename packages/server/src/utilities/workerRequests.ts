@@ -8,15 +8,7 @@ import {
   logging,
   env as coreEnv,
 } from "@budibase/backend-core"
-import {
-  Ctx,
-  User,
-  EmailInvite,
-  EmailAttachment,
-  SendEmailResponse,
-  SendEmailRequest,
-  EmailTemplatePurpose,
-} from "@budibase/types"
+import { Ctx, User, EmailInvite, EmailAttachment } from "@budibase/types"
 
 interface Request {
   ctx?: Ctx
@@ -118,23 +110,25 @@ export async function sendSmtpEmail({
   invite?: EmailInvite
 }) {
   // tenant ID will be set in header
-  const request: SendEmailRequest = {
-    email: to,
-    from,
-    contents,
-    subject,
-    cc,
-    bcc,
-    purpose: EmailTemplatePurpose.CUSTOM,
-    automation,
-    invite,
-    attachments,
-  }
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
-    createRequest({ method: "POST", body: request })
+    createRequest({
+      method: "POST",
+      body: {
+        email: to,
+        from,
+        contents,
+        subject,
+        cc,
+        bcc,
+        purpose: "custom",
+        automation,
+        invite,
+        attachments,
+      },
+    })
   )
-  return (await checkResponse(response, "send email")) as SendEmailResponse
+  return checkResponse(response, "send email")
 }
 
 export async function removeAppFromUserRoles(ctx: Ctx, appId: string) {
