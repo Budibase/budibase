@@ -25,12 +25,13 @@
   export let meta
   export let bindings
   export let isTestModal
+  export let context
 
   $: fieldData = value[field]
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
-    clone.icon = "ShareAndroid"
+    clone.icon = clone.icon ?? "ShareAndroid"
     return clone
   })
 
@@ -232,6 +233,7 @@
           actionButtonDisabled={(schema.type === FieldType.ATTACHMENT_SINGLE ||
             schema.type === FieldType.SIGNATURE_SINGLE) &&
             fieldData}
+          {context}
         />
       </div>
     {:else}

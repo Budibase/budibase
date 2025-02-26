@@ -11,6 +11,7 @@ import {
 import { configs, context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import {
+  AutomationResults,
   ConfigType,
   FieldType,
   FilterCondition,
@@ -622,7 +623,7 @@ describe("/automations", () => {
           })
         )
 
-        const res = await config.api.automation.test(automation._id!, {
+        const response = await config.api.automation.test(automation._id!, {
           fields: {},
           oldRow: {
             City: oldCity,
@@ -632,12 +633,14 @@ describe("/automations", () => {
           },
         })
 
-        if (isDidNotTriggerResponse(res)) {
+        if (isDidNotTriggerResponse(response)) {
           throw new Error("Automation did not trigger")
         }
 
+        const results: AutomationResults = response as AutomationResults
+
         const expectedResult = oldCity === newCity
-        expect(res.steps[1].outputs.result).toEqual(expectedResult)
+        expect(results.steps[1].outputs.result).toEqual(expectedResult)
       }
     )
   })
@@ -724,7 +727,8 @@ describe("/automations", () => {
         if (isDidNotTriggerResponse(res)) {
           expect(expectToRun).toEqual(false)
         } else {
-          expect(res.steps[1].outputs.success).toEqual(expectToRun)
+          const results: AutomationResults = res as AutomationResults
+          expect(results.steps[1].outputs.success).toEqual(expectToRun)
         }
       }
     )

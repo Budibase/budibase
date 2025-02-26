@@ -5,6 +5,7 @@
   export let bindings = []
   export let value = ""
   export let allowJS = false
+  export let allowHBS = true
   export let context = null
 
   $: enrichedBindings = enrichBindings(bindings)
@@ -22,8 +23,10 @@
 <BindingPanel
   bindings={enrichedBindings}
   snippets={$snippets}
+  allowHelpers
   {value}
   {allowJS}
+  {allowHBS}
   {context}
   on:change
 />
