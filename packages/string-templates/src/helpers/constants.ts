@@ -36,6 +36,7 @@ export const HelperFunctionNames = {
   ALL: "all",
   LITERAL: "literal",
   JS: "js",
+  DECODE_ID: "decodeId",
 }
 
 export const LITERAL_MARKER = "%LITERAL%"
