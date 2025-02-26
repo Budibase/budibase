@@ -7,6 +7,7 @@ import {
   SendEmailOpts,
   SMTPInnerConfig,
   EmailTemplatePurpose,
+  User,
 } from "@budibase/types"
 import { configs, cache, objectStore } from "@budibase/backend-core"
 import ical from "ical-generator"
@@ -71,8 +72,8 @@ function createSMTPTransport(config?: SMTPInnerConfig) {
 async function buildEmail(
   purpose: EmailTemplatePurpose,
   email: string,
-  context: any,
-  { user, contents }: any = {}
+  context: Record<string, any>,
+  { user, contents }: { user?: User; contents?: string } = {}
 ) {
   // this isn't a full email
   if (FULL_EMAIL_PURPOSES.indexOf(purpose) === -1) {
@@ -90,8 +91,8 @@ async function buildEmail(
     throw "Unable to build email, missing base components"
   }
 
-  let name = user ? user.name : undefined
-  if (user && !name && user.firstName) {
+  let name: string | undefined
+  if (user && user.firstName) {
     name = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName
   }
   context = {

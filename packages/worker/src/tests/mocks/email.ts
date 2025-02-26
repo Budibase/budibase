@@ -1,10 +1,148 @@
-export function mock() {
-  // mock the email system
-  const sendMailMock = jest.fn()
-  const nodemailer = require("nodemailer")
-  nodemailer.createTransport.mockReturnValue({
-    sendMail: sendMailMock,
-    verify: jest.fn(),
+import MailDev from "maildev"
+import { promisify } from "util"
+import TestConfiguration from "../TestConfiguration"
+
+export type Mailserver = InstanceType<typeof MailDev>
+export type MailserverConfig = ConstructorParameters<typeof MailDev>[0]
+
+export interface Attachment {
+  checksum: string
+  contentId: string
+  contentType: string
+  fileName: string
+  generatedFileName: string
+  length: number
+  transferEncoding: string
+  transformed: boolean
+}
+
+export interface Address {
+  address: string
+  args?: boolean
+  name?: string
+}
+
+export interface Envelope {
+  from: Address
+  to: Address[]
+  host: string
+  remoteAddress: string
+}
+
+export interface Email {
+  attachments: Attachment[]
+  calculatedBcc: string[]
+  date: string
+  envelope: Envelope
+  from: Address[]
+  headers: Record<string, string>
+  html: string
+  id: string
+  messageId: string
+  priority: string
+  read: boolean
+  size: number
+  sizeHuman: string
+  source: string
+  time: Date
+  to: Address[]
+}
+
+export function getUnusedPort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = require("net").createServer()
+    server.unref()
+    server.on("error", reject)
+    server.listen(0, () => {
+      const port = server.address().port
+      server.close(() => {
+        resolve(port)
+      })
+    })
   })
-  return sendMailMock
+}
+
+export function waitForEmail(
+  mailserver: Mailserver,
+  timeoutMs = 5000
+): Promise<Email> {
+  let timeout: ReturnType<typeof setTimeout>
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => {
+      reject(new Error("Timed out waiting for email"))
+    }, timeoutMs)
+  })
+  const mailPromise = new Promise<Email>(resolve => {
+    // @ts-expect-error - types are wrong
+    mailserver.once("new", email => {
+      resolve(email as Email)
+      clearTimeout(timeout)
+    })
+  })
+  return Promise.race([mailPromise, timeoutPromise])
+}
+
+export async function captureEmail(
+  mailserver: Mailserver,
+  f: () => Promise<void>
+): Promise<Email> {
+  const emailPromise = waitForEmail(mailserver)
+  await f()
+  return await emailPromise
+}
+
+export async function startMailserver(
+  config: TestConfiguration,
+  opts?: MailserverConfig
+): Promise<Mailserver> {
+  if (!opts) {
+    opts = {}
+  }
+  if (!opts.smtp) {
+    opts.smtp = await getUnusedPort()
+  }
+  const mailserver = new MailDev(opts || {})
+  await new Promise((resolve, reject) => {
+    mailserver.listen(err => {
+      if (err) {
+        return reject(err)
+      }
+      resolve(mailserver)
+    })
+  })
+  await config.saveSmtpConfig({
+    host: "localhost",
+    port: opts.smtp,
+    secure: false,
+    from: "test@example.com",
+  })
+  return mailserver
+}
+
+export function deleteAllEmail(mailserver: Mailserver) {
+  return promisify(mailserver.deleteAllEmail).bind(mailserver)()
+}
+
+export function stopMailserver(mailserver: Mailserver) {
+  return promisify(mailserver.close).bind(mailserver)()
+}
+
+export function getAttachment(
+  mailserver: Mailserver,
+  email: Email,
+  attachment: Attachment
+) {
+  return new Promise<string>(resolve => {
+    // @ts-expect-error - types are wrong
+    mailserver.getEmailAttachment(
+      email.id,
+      attachment.generatedFileName,
+      (err: any, _contentType: string, stream: ReadableStream) => {
+        if (err) {
+          throw err
+        }
+        resolve(new Response(stream).text())
+      }
+    )
+  })
 }
