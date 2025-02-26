@@ -1,11 +1,3 @@
-// Directly mock the AWS SDK
-jest.mock("@aws-sdk/s3-request-presigner", () => ({
-  getSignedUrl: jest.fn(() => {
-    return `http://example.com`
-  }),
-}))
-jest.mock("@aws-sdk/client-s3")
-
 import { Datasource, SourceName } from "@budibase/types"
 import { setEnv } from "../../../environment"
 import { getRequest, getConfig, afterAll as _afterAll } from "./utilities"
@@ -92,7 +84,17 @@ describe("/static", () => {
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(200)
-        expect(res.body.signedUrl).toEqual("http://example.com")
+
+        expect(res.body.signedUrl).toStartWith(
+          "https://foo.s3.eu-west-1.amazonaws.com/bar?"
+        )
+        expect(res.body.signedUrl).toContain("X-Amz-Algorithm=AWS4-HMAC-SHA256")
+        expect(res.body.signedUrl).toContain("X-Amz-Credential=bb")
+        expect(res.body.signedUrl).toContain("X-Amz-Date=")
+        expect(res.body.signedUrl).toContain("X-Amz-Signature=")
+        expect(res.body.signedUrl).toContain("X-Amz-Expires=900")
+        expect(res.body.signedUrl).toContain("X-Amz-SignedHeaders=host")
+
         expect(res.body.publicUrl).toEqual(
           `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
         )
