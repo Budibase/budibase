@@ -4,6 +4,7 @@
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
+  import { UserAvatar } from "@budibase/frontend-core"
 
   const sdk = getContext("sdk")
   const {
@@ -13,7 +14,7 @@
     builderStore,
     sidePanelStore,
     modalStore,
-    appStore,
+    authStore,
   } = sdk
   const context = getContext("context")
   const navStateStore = writable({})
@@ -266,14 +267,10 @@
                   <Heading size="S" {textAlign}>{title}</Heading>
                 {/if}
               </div>
-              {#if !embedded}
-                <div class="portal">
-                  <Icon
-                    hoverable
-                    name="Apps"
-                    on:click={navigateToPortal}
-                    disabled={$appStore.isDevApp}
-                  />
+              {#if !embedded && $authStore}
+                <div class="user top">
+                  <UserAvatar user={$authStore} size="M" />
+                  <Icon name="ChevronDown" />
                 </div>
               {/if}
             </div>
@@ -297,13 +294,18 @@
                     {navStateStore}
                   />
                 {/each}
-                <div class="close">
-                  <Icon
-                    hoverable
-                    name="Close"
-                    on:click={() => (mobileOpen = false)}
-                  />
+              </div>
+            {/if}
+            {#if !embedded && $authStore}
+              <div class="user left">
+                <UserAvatar user={$authStore} size="M" />
+                <div class="text">
+                  <div class="name">
+                    {$authStore.firstName}
+                    {$authStore.lastName}
+                  </div>
                 </div>
+                <Icon name="ChevronDown" />
               </div>
             {/if}
           </div>
@@ -522,7 +524,7 @@
     flex: 1 1 auto;
   }
   .logo img {
-    height: 36px;
+    height: 24px;
   }
   .logo :global(h1) {
     font-weight: 600;
@@ -532,11 +534,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .portal {
-    display: grid;
-    place-items: center;
-  }
   .links {
+    flex: 1 0 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
@@ -544,14 +543,41 @@
     gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
   }
-  .close {
-    display: none;
-    position: absolute;
-    top: var(--spacing-xl);
-    right: var(--spacing-xl);
-  }
   .mobile-click-handler {
     display: none;
+  }
+
+  /* User avatar */
+  .user {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    transition: background 130ms ease-out;
+    border-radius: 4px;
+  }
+  .user .text {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    color: var(--navTextColor);
+    display: none;
+  }
+  .user .name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .layout--left .user .text {
+    display: flex;
+  }
+  .user:hover {
+    cursor: pointer;
+  }
+
+  /* Left overrides for both desktop and mobile */
+  .nav--left {
+    overflow-y: auto;
   }
 
   /* Desktop nav overrides */
@@ -566,23 +592,23 @@
     height: 100%;
     overflow: auto;
   }
-  .desktop.layout--left .links {
-    overflow-y: auto;
-  }
-
   .desktop .nav--left {
     width: 250px;
     padding: var(--spacing-xl);
   }
-
   .desktop .nav--left .links {
     margin-top: var(--spacing-m);
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    gap: var(--spacing-xs);
   }
   .desktop .nav--left .link {
     font-size: var(--spectrum-global-dimension-font-size-150);
+  }
+  .desktop .nav--left .user.top,
+  .desktop .nav--top .user.left {
+    display: none;
   }
 
   /* Mobile nav overrides */
@@ -594,10 +620,8 @@
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     border-right: none;
   }
-
-  /* Show close button in drawer */
-  .mobile .close {
-    display: block;
+  .mobile .user.left {
+    display: none;
   }
 
   /* Force standard top bar */
@@ -635,6 +659,7 @@
     left: -250px;
     transform: translateX(0);
     width: 250px;
+    max-width: 75%;
     transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
     height: var(--height);
     opacity: 0;
@@ -646,9 +671,8 @@
     padding: var(--spacing-xl);
     overflow-y: auto;
   }
-  .mobile .link {
-    width: calc(100% - 30px);
-    font-size: 120%;
+  .mobile .links :global(a) {
+    flex: 0 0 auto;
   }
   .mobile .links.visible {
     opacity: 1;
