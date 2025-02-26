@@ -128,7 +128,7 @@
           $auth.user?.email === user.email
             ? false
             : true,
-        apps: [...new Set(Object.keys(user.roles))],
+        apps: sdk.users.userAppAccessList(user, $groups),
         access: role.sortOrder,
       }
     })

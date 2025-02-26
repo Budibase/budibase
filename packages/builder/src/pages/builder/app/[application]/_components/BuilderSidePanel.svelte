@@ -37,6 +37,7 @@
   import { emailValidator } from "@/helpers/validation"
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
 
   let query = null
   let loaded = false
@@ -539,6 +540,10 @@
       creationAccessType = Constants.Roles.CREATOR
     }
   }
+
+  const itemCountText = (word, count) => {
+    return `${count} ${word}${count !== 1 ? "s" : ""}`
+  }
 </script>
 
 <svelte:window on:keydown={handleKeyDown} />
@@ -705,9 +710,7 @@
                       {group.name}
                     </div>
                     <div class="auth-entity-meta">
-                      {`${group.users?.length} user${
-                        group.users?.length != 1 ? "s" : ""
-                      }`}
+                      {itemCountText("user", group.users?.length)}
                     </div>
                   </div>
                   <div class="auth-entity-access">
@@ -741,16 +744,33 @@
                 <div class="auth-entity-access-title">Access</div>
               </div>
               {#each allUsers as user}
+                {@const userGroups = sdk.users.getUserAppGroups(
+                  $appStore.appId,
+                  user,
+                  $groups
+                )}
                 <div class="auth-entity">
                   <div class="details">
-                    <div class="user-email" title={user.email}>
-                      {user.email}
+                    <div class="user-groups">
+                      <div class="user-email" title={user.email}>
+                        {user.email}
+                      </div>
+                      {#if userGroups.length}
+                        <div class="group-info">
+                          <div class="auth-entity-meta">
+                            {itemCountText("group", userGroups.length)}
+                          </div>
+                          <BuilderGroupPopover groups={userGroups} />
+                        </div>
+                      {/if}
                     </div>
                   </div>
                   <div class="auth-entity-access" class:muted={user.group}>
                     <RoleSelect
                       footer={getRoleFooter(user)}
-                      placeholder={false}
+                      placeholder={userGroups?.length
+                        ? "Controlled by group"
+                        : false}
                       value={parseRole(user)}
                       allowRemove={user.role && !user.group}
                       allowPublic={false}
@@ -931,7 +951,7 @@
 
   .auth-entity,
   .auth-entity-header {
-    padding: 0px var(--spacing-xl);
+    padding: 0 var(--spacing-xl);
   }
 
   .auth-entity,
@@ -1047,5 +1067,20 @@
   }
   .alert {
     padding: 0 var(--spacing-xl);
+  }
+
+  .user-groups {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .group-info {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-xs);
+    justify-content: center;
   }
 </style>
