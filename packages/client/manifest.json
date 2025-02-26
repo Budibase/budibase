@@ -8009,19 +8009,11 @@
         "wide": true
       },
       {
-        "type": "color",
-        "label": "Color",
-        "key": "color",
-        "showInBar": true,
-        "wide": true
-      },
-      {
         "type": "select",
         "label": "Alignment",
         "key": "align",
         "defaultValue": "left",
         "showInBar": true,
-        "wide": true,
         "barStyle": "buttons",
         "options": [
           {
@@ -8049,6 +8041,12 @@
             "barTitle": "Justify text"
           }
         ]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true
       }
     ]
   }
