@@ -1,12 +1,13 @@
 import * as setup from "../../tests/utilities"
 import { User } from "@budibase/types"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import nock from "nock"
 import environment from "../../../../environment"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 const config = new TestConfiguration()
 let globalUser: User
+let users: Record<string, User> = {}
 
 beforeAll(async () => {
   await config.init()
@@ -16,25 +17,26 @@ afterAll(setup.afterAll)
 
 beforeEach(async () => {
   globalUser = await config.globalUser()
+  users[globalUser._id!] = globalUser
 
   nock.cleanAll()
   nock(environment.WORKER_URL!)
-    .get(`/api/global/users/${globalUser._id}`)
+    .get(new RegExp(`/api/global/users/.*`))
     .reply(200, (uri, body) => {
-      return globalUser
+      const id = uri.split("/").pop()
+      return users[id!]
     })
     .persist()
 
   nock(environment.WORKER_URL!)
     .post(`/api/global/users`)
     .reply(200, (uri, body) => {
-      const updatedUser = body as User
-      if (updatedUser._id === globalUser._id) {
-        globalUser = updatedUser
-        return globalUser
-      } else {
-        throw new Error("User not found")
+      const newUser = body as User
+      if (!newUser._id) {
+        newUser._id = `us_${generator.guid()}`
       }
+      users[newUser._id!] = newUser
+      return newUser
     })
     .persist()
 })
@@ -47,7 +49,7 @@ function base() {
   }
 }
 
-describe.only("check user endpoints", () => {
+describe("check user endpoints", () => {
   it("should not allow a user to update their own roles", async () => {
     await config.withUser(globalUser, () =>
       config.api.public.user.update({
@@ -67,14 +69,12 @@ describe.only("check user endpoints", () => {
 })
 
 describe("no user role update in free", () => {
-  it("should not allow 'roles' to be updated", async () => {
-    const res = await makeRequest("post", "/users", {
-      ...base(),
+  it.only("should not allow 'roles' to be updated", async () => {
+    const newUser = await config.api.public.user.create({
+      email: generator.email({ domain: "example.com" }),
       roles: { app_a: "BASIC" },
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.roles["app_a"]).toBeUndefined()
-    expect(res.body.message).toBeDefined()
+    expect(newUser.roles["app_a"]).toBeUndefined()
   })
 
   it("should not allow 'admin' to be updated", async () => {

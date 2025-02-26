@@ -1,4 +1,4 @@
-import { User } from "@budibase/types"
+import { UnsavedUser, User } from "@budibase/types"
 import { Expectations, PublicAPI } from "../base"
 
 export class UserPublicAPI extends PublicAPI {
@@ -15,5 +15,16 @@ export class UserPublicAPI extends PublicAPI {
 
   destroy = async (id: string, expectations?: Expectations): Promise<void> => {
     return await this._delete(`/users/${id}`, { expectations })
+  }
+
+  create = async (
+    user: UnsavedUser,
+    expectations?: Expectations
+  ): Promise<User> => {
+    const response = await this._post<{ data: User }>("/users", {
+      body: user,
+      expectations,
+    })
+    return response.data
   }
 }

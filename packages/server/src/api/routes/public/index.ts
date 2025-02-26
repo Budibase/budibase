@@ -12,6 +12,7 @@ import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { PermissionLevel, PermissionType } from "@budibase/types"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
+import testErrorHandling from "./middleware/testErrorHandling"
 import env from "../../../environment"
 import { middleware, redis } from "@budibase/backend-core"
 import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
@@ -144,6 +145,10 @@ function applyRoutes(
   // add the output mapper middleware
   addMiddleware(endpoints.read, mapperMiddleware, { output: true })
   addMiddleware(endpoints.write, mapperMiddleware, { output: true })
+  if (env.isTest()) {
+    addMiddleware(endpoints.read, testErrorHandling)
+    addMiddleware(endpoints.write, testErrorHandling)
+  }
   addToRouter(endpoints.read)
   addToRouter(endpoints.write)
 }
