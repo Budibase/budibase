@@ -2785,9 +2785,9 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "3.4.12"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.12.tgz#60e630944de4e2de970a04179d8f0f57d48ce75e"
-  integrity sha512-msUBmcWxRDg+ugjZvd27XudERQqtQRdiARsO8MaDVTcp5ejIXgshEIVVshHOCj3hcbRblw9pXvBIMI53iTMUsA==
+  version "3.4.16"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.16.tgz#c482a400e27b7e89ca73092c4c81bdeac1d24581"
+  integrity sha512-8ECnqOh9jQ10KlQEwmKPFcoVGE+2gGgSybj+vbshwDp1zAW76doyMR2DMNjEatNpWVnpoMnTkDWtE9aqQ5v0vQ==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
     "@budibase/backend-core" "*"
@@ -6774,6 +6774,13 @@
   integrity sha512-0JOXkRyLanfGPE2QRCwgxhzlBAvaRdCNMcvbd7jFfpmD4eEXll7LRwy5ymJmyeZqk7Nh7eD2LeUyQ68BbndmXw==
   dependencies:
     undici-types "~6.19.2"
+
+"@types/nodemailer@^6.4.17":
+  version "6.4.17"
+  resolved "https://registry.yarnpkg.com/@types/nodemailer/-/nodemailer-6.4.17.tgz#5c82a42aee16a3dd6ea31446a1bd6a447f1ac1a4"
+  integrity sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==
+  dependencies:
+    "@types/node" "*"
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
