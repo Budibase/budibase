@@ -13,7 +13,6 @@
     FancyInput,
     Button,
     FancySelect,
-    Badge,
   } from "@budibase/bbui"
   import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
   import {
@@ -39,7 +38,6 @@
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
-  import GroupBadge from "./GroupBadge.svelte"
 
   let query = null
   let loaded = false
@@ -542,6 +540,12 @@
       creationAccessType = Constants.Roles.CREATOR
     }
   }
+
+  const itemCountText = (word, count) => {
+    return `${count} ${word}${
+      count !== 1 ? "s" : ""
+    }`
+  }
 </script>
 
 <svelte:window on:keydown={handleKeyDown} />
@@ -708,9 +712,7 @@
                       {group.name}
                     </div>
                     <div class="auth-entity-meta">
-                      {`${group.users?.length} user${
-                        group.users?.length != 1 ? "s" : ""
-                      }`}
+                      {itemCountText("user", group.users?.length)}
                     </div>
                   </div>
                   <div class="auth-entity-access">
@@ -755,20 +757,20 @@
                       <div class="user-email" title={user.email}>
                         {user.email}
                       </div>
-                      <div class="group-badges">
-                        {#each userGroups.slice(0, 3) as group}
-                          <GroupBadge color={group.color} name={group.name} />
-                        {/each}
-                        {#if userGroups.length > 3}
-                          <BuilderGroupPopover groups={userGroups.slice(3)} />
-                        {/if}
-                      </div>
+                      {#if userGroups.length}
+                        <div class="group-info">
+                          <div class="auth-entity-meta">
+                            {itemCountText("group", userGroups.length)}
+                          </div>
+                          <BuilderGroupPopover groups={userGroups} />
+                        </div>
+                      {/if}
                     </div>
                   </div>
                   <div class="auth-entity-access" class:muted={user.group}>
                     <RoleSelect
                       footer={getRoleFooter(user)}
-                      placeholder={userGroups?.length ? "Override" : false}
+                      placeholder={userGroups?.length ? "Controlled by group" : false}
                       value={parseRole(user)}
                       allowRemove={user.role && !user.group}
                       allowPublic={false}
@@ -949,7 +951,7 @@
 
   .auth-entity,
   .auth-entity-header {
-    padding: 0px var(--spacing-xl);
+    padding: 0 var(--spacing-xl);
   }
 
   .auth-entity,
@@ -958,8 +960,6 @@
     grid-template-columns: 1fr 220px;
     align-items: center;
     gap: var(--spacing-xl);
-    border-bottom: var(--border-light);
-    padding-bottom: var(--spacing-s);
   }
 
   .auth-entity .details {
@@ -1071,12 +1071,16 @@
 
   .user-groups {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-m);
   }
-  .group-badges {
-    padding-top: var(--spacing-s);
+
+  .group-info {
     display: flex;
-    gap: var(--spacing-s);
-    flex-wrap: wrap;
+    flex-direction: row;
+    gap: var(--spacing-xs);
+    justify-content: center;
   }
 </style>
