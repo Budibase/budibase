@@ -4,7 +4,6 @@ import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import {
-  User,
   SendEmailOpts,
   SMTPInnerConfig,
   EmailTemplatePurpose,
