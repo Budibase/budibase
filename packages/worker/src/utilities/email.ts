@@ -60,22 +60,6 @@ function createSMTPTransport(config?: SMTPInnerConfig) {
   return nodemailer.createTransport(options)
 }
 
-async function getLinkCode(
-  purpose: EmailTemplatePurpose,
-  email: string,
-  user: User,
-  info: any = null
-) {
-  switch (purpose) {
-    case EmailTemplatePurpose.PASSWORD_RECOVERY:
-      return cache.passwordReset.createCode(user._id!, info)
-    case EmailTemplatePurpose.INVITATION:
-      return cache.invite.createCode(email, info)
-    default:
-      return null
-  }
-}
-
 /**
  * Builds an email using handlebars and the templates found in the system (default or otherwise).
  * @param purpose the purpose of the email being built, e.g. invitation, password reset.
@@ -159,7 +143,18 @@ export async function sendEmail(
   }
   const transport = createSMTPTransport(config)
   // if there is a link code needed this will retrieve it
-  const code = await getLinkCode(purpose, email, opts.user, opts?.info)
+  let code: string | null = null
+  switch (purpose) {
+    case EmailTemplatePurpose.PASSWORD_RECOVERY:
+      if (!opts.user || !opts.user._id) {
+        throw "User must be provided for password recovery."
+      }
+      code = await cache.passwordReset.createCode(opts.user._id, opts.info)
+      break
+    case EmailTemplatePurpose.INVITATION:
+      code = await cache.invite.createCode(email, opts.info)
+      break
+  }
   let context = await getSettingsTemplateContext(purpose, code)
 
   let message: Parameters<typeof transport.sendMail>[0] = {

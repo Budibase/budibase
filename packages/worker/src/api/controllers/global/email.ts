@@ -28,9 +28,9 @@ export async function sendEmail(
   if (userId) {
     const db = tenancy.getGlobalDB()
     user = await db.tryGet<User>(userId)
-  }
-  if (!user) {
-    ctx.throw(404, "User not found.")
+    if (!user) {
+      ctx.throw(404, "User not found.")
+    }
   }
   const response = await sendEmailFn(email, purpose, {
     workspaceId,
