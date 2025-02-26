@@ -28,7 +28,7 @@
   const dispatch = createEventDispatcher()
   const categories = [
     {
-      label: "Theme",
+      label: "Theme grays",
       colors: [
         "gray-50",
         "gray-75",
@@ -44,7 +44,7 @@
       ],
     },
     {
-      label: "Colors",
+      label: "Theme colors",
       colors: [
         "red-100",
         "orange-100",
@@ -90,6 +90,28 @@
         "blue-700",
         "indigo-700",
         "magenta-700",
+      ],
+    },
+    {
+      label: "Static colors",
+      colors: [
+        "static-red-400",
+        "static-orange-400",
+        "static-yellow-400",
+        "static-green-400",
+        "static-seafoam-400",
+        "static-blue-400",
+        "static-indigo-400",
+        "static-magenta-400",
+
+        "static-red-800",
+        "static-orange-800",
+        "static-yellow-800",
+        "static-green-800",
+        "static-seafoam-800",
+        "static-blue-800",
+        "static-indigo-800",
+        "static-magenta-800",
 
         "static-white",
         "static-black",
@@ -169,7 +191,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<Popover bind:this={dropdown} anchor={preview} maxHeight={320} {offset} {align}>
+<Popover bind:this={dropdown} anchor={preview} maxHeight={384} {offset} {align}>
   <Layout paddingX="XL" paddingY="L">
     <div class="container">
       {#each categories as category}
