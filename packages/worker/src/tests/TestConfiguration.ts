@@ -32,6 +32,8 @@ import {
   AuthToken,
   SCIMConfig,
   ConfigType,
+  SMTPConfig,
+  SMTPInnerConfig,
 } from "@budibase/types"
 import API from "./api"
 import jwt, { Secret } from "jsonwebtoken"
@@ -348,9 +350,15 @@ class TestConfiguration {
 
   // CONFIGS - SMTP
 
-  async saveSmtpConfig() {
+  async saveSmtpConfig(config?: SMTPInnerConfig) {
     await this.deleteConfig(Config.SMTP)
-    await this._req(structures.configs.smtp(), null, controllers.config.save)
+
+    let smtpConfig: SMTPConfig = structures.configs.smtp()
+    if (config) {
+      smtpConfig = { type: ConfigType.SMTP, config }
+    }
+
+    await this._req(smtpConfig, null, controllers.config.save)
   }
 
   async saveEtherealSmtpConfig() {
