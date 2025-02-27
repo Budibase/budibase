@@ -2,7 +2,7 @@ import { validateHbsTemplate } from "../hbs"
 import { CodeValidator } from "@/types"
 
 describe("hbs validator", () => {
-  it("validate empty strings", () => {
+  it("validates empty strings", () => {
     const text = ""
     const validators = {}
 
@@ -10,7 +10,7 @@ describe("hbs validator", () => {
     expect(result).toHaveLength(0)
   })
 
-  it("validate strings without hbs expressions", () => {
+  it("validates strings without hbs expressions", () => {
     const text = "first line\nand another one"
     const validators = {}
 
@@ -23,7 +23,7 @@ describe("hbs validator", () => {
       fieldName: {},
     }
 
-    it("validate valid expressions", () => {
+    it("validates valid expressions", () => {
       const text = "{{ fieldName }}"
 
       const result = validateHbsTemplate(text, validators)
@@ -105,7 +105,7 @@ describe("hbs validator", () => {
         },
       }
 
-      it("validate valid params", () => {
+      it("validates valid params", () => {
         const text = "{{ helperFunction 1 99 'a' }}"
 
         const result = validateHbsTemplate(text, validators)
@@ -152,21 +152,21 @@ describe("hbs validator", () => {
         },
       }
 
-      it("validate valid params", () => {
+      it("validates valid params", () => {
         const text = "{{#bodyFunction 1 99  }}body{{/bodyFunction}}"
 
         const result = validateHbsTemplate(text, validators)
         expect(result).toHaveLength(0)
       })
 
-      it("validate empty bodies", () => {
+      it("validates empty bodies", () => {
         const text = "{{#bodyFunction 1 99  }}{{/bodyFunction}}"
 
         const result = validateHbsTemplate(text, validators)
         expect(result).toHaveLength(0)
       })
 
-      it("validate too little parameters", () => {
+      it("validates too little parameters", () => {
         const text = "{{#bodyFunction 1 }}{{/bodyFunction}}"
 
         const result = validateHbsTemplate(text, validators)
@@ -180,7 +180,7 @@ describe("hbs validator", () => {
         ])
       })
 
-      it("validate too many parameters", () => {
+      it("validates too many parameters", () => {
         const text = "{{#bodyFunction 1 99 'a' 0 }}{{/bodyFunction}}"
 
         const result = validateHbsTemplate(text, validators)
@@ -194,7 +194,7 @@ describe("hbs validator", () => {
         ])
       })
 
-      it("validate non-supported body usages", () => {
+      it("validates non-supported body usages", () => {
         const text = "{{#nonBodyFunction 1 99}}{{/nonBodyFunction}}"
 
         const result = validateHbsTemplate(text, validators)
@@ -272,5 +272,19 @@ describe("hbs validator", () => {
         ])
       })
     })
+  })
+
+  it("validates wrong hbs code", () => {
+    const text = "{{#fieldName}}{{/wrong}}"
+
+    const result = validateHbsTemplate(text, {})
+    expect(result).toEqual([
+      {
+        from: 0,
+        message: `The handlebars code is not valid:\nfieldName doesn't match wrong - 1:3`,
+        severity: "error",
+        to: text.length,
+      },
+    ])
   })
 })
