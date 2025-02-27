@@ -1,4 +1,3 @@
-import { SendEmailResponse } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as workerRequests from "../../../utilities/workerRequests"
 
@@ -6,18 +5,17 @@ jest.mock("../../../utilities/workerRequests", () => ({
   sendSmtpEmail: jest.fn(),
 }))
 
-function generateResponse(to: string, from: string): SendEmailResponse {
+function generateResponse(to: string, from: string) {
   return {
-    message: `Email sent to ${to}.`,
-    accepted: [to],
-    envelope: {
-      from: from,
-      to: [to],
+    success: true,
+    response: {
+      accepted: [to],
+      envelope: {
+        from: from,
+        to: [to],
+      },
+      message: `Email sent to ${to}.`,
     },
-    messageId: "messageId",
-    pending: [],
-    rejected: [],
-    response: "response",
   }
 }
 
