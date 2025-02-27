@@ -150,7 +150,7 @@ describe("/api/global/email", () => {
 
   it("can cc people", async () => {
     const email = await captureEmail(mailserver, async () => {
-      const res = await config.api.emails.sendEmail({
+      await config.api.emails.sendEmail({
         email: "to@example.com",
         cc: "cc@example.com",
         subject: "Test",
@@ -164,7 +164,7 @@ describe("/api/global/email", () => {
 
   it("can bcc people", async () => {
     const email = await captureEmail(mailserver, async () => {
-      const res = await config.api.emails.sendEmail({
+      await config.api.emails.sendEmail({
         email: "to@example.com",
         bcc: "bcc@example.com",
         subject: "Test",

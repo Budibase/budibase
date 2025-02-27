@@ -1,8 +1,4 @@
-import {
-  EmailAttachment,
-  SendEmailRequest,
-  SendEmailResponse,
-} from "@budibase/types"
+import { SendEmailRequest, SendEmailResponse } from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class EmailAPI extends TestAPI {
