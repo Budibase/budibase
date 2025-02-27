@@ -81,11 +81,11 @@ export const screenComponentErrorList = derived(
     const errors: UIComponentError[] = []
 
     function checkComponentErrors(component: Component, ancestors: string[]) {
+      errors.push(...getMissingAncestors(component, definitions, ancestors))
       errors.push(
         ...getInvalidDatasources(screen, component, datasources, definitions)
       )
       errors.push(...getMissingRequiredSettings(component, definitions))
-      errors.push(...getMissingAncestors(component, definitions, ancestors))
 
       for (const child of component._children || []) {
         checkComponentErrors(child, [...ancestors, component._component])
@@ -239,7 +239,10 @@ function getMissingAncestors(
   ancestors: string[]
 ): UIComponentError[] {
   const definition = definitions[component._component]
-
+  if (ancestors.some(a => !a.startsWith(BudibasePrefix))) {
+    // We don't have a way to know what components are used within a plugin component
+    return []
+  }
   if (!definition?.requiredAncestors?.length) {
     return []
   }
