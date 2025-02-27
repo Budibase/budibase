@@ -966,15 +966,16 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
-    color: var(--spectrum-global-color-gray-900);
     overflow: hidden;
+    width: 100%;
   }
 
   .auth-entity .user-email {
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    flex: 1 1 0;
+    min-width: 0;
     overflow: hidden;
-    color: var(--spectrum-global-color-gray-900);
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   #builder-side-panel-container {
@@ -1072,15 +1073,19 @@
   .user-groups {
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start; /* or space-between */
     align-items: center;
     gap: var(--spacing-m);
+    width: 100%;
+    min-width: 0;
   }
 
   .group-info {
     display: flex;
     flex-direction: row;
     gap: var(--spacing-xs);
-    justify-content: center;
+    justify-content: end;
+    width: 60px;
+    flex: 0 0 auto;
   }
 </style>
