@@ -98,45 +98,115 @@ describe("hbs validator", () => {
   })
 
   describe("expressions with parameters", () => {
-    const validators: CodeValidator = {
-      helperFunction: {
-        arguments: ["a", "b", "c"],
-      },
-    }
+    describe("basic expression", () => {
+      const validators: CodeValidator = {
+        helperFunction: {
+          arguments: ["a", "b", "c"],
+        },
+      }
 
-    it("validate valid params", () => {
-      const text = "{{ helperFunction 1 99 'a' }}"
+      it("validate valid params", () => {
+        const text = "{{ helperFunction 1 99 'a' }}"
 
-      const result = validateHbsTemplate(text, validators)
-      expect(result).toHaveLength(0)
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toHaveLength(0)
+      })
+
+      it("throws on too few params", () => {
+        const text = "{{ helperFunction 100 }}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toEqual([
+          {
+            from: 0,
+            message: `Helper "helperFunction" expects 3 parameters (a, b, c), but got 1.`,
+            severity: "error",
+            to: 24,
+          },
+        ])
+      })
+
+      it("throws on too many params", () => {
+        const text = "{{ helperFunction  1 99 'a' 100 }}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toEqual([
+          {
+            from: 0,
+            message: `Helper "helperFunction" expects 3 parameters (a, b, c), but got 4.`,
+            severity: "error",
+            to: 34,
+          },
+        ])
+      })
     })
 
-    it("throws on too few params", () => {
-      const text = "{{ helperFunction 100 }}"
-
-      const result = validateHbsTemplate(text, validators)
-      expect(result).toEqual([
-        {
-          from: 0,
-          message: `Helper "helperFunction" expects 3 parameters (a, b, c), but got 1.`,
-          severity: "error",
-          to: 24,
+    describe("body expressions", () => {
+      const validators: CodeValidator = {
+        bodyFunction: {
+          arguments: ["a", "b", "c"],
+          requiresBlock: true,
         },
-      ])
-    })
-
-    it("throws on too many params", () => {
-      const text = "{{ helperFunction  1 99 'a' 100 }}"
-
-      const result = validateHbsTemplate(text, validators)
-      expect(result).toEqual([
-        {
-          from: 0,
-          message: `Helper "helperFunction" expects 3 parameters (a, b, c), but got 4.`,
-          severity: "error",
-          to: 34,
+        nonBodyFunction: {
+          arguments: ["a", "b"],
         },
-      ])
+      }
+
+      it("validate valid params", () => {
+        const text = "{{#bodyFunction 1 99  }}body{{/bodyFunction}}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toHaveLength(0)
+      })
+
+      it("validate empty bodies", () => {
+        const text = "{{#bodyFunction 1 99  }}{{/bodyFunction}}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toHaveLength(0)
+      })
+
+      it("validate too little parameters", () => {
+        const text = "{{#bodyFunction 1 }}{{/bodyFunction}}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toEqual([
+          {
+            from: 0,
+            message: `Helper "bodyFunction" expects 3 parameters (a, b, c), but got 2.`,
+            severity: "error",
+            to: 37,
+          },
+        ])
+      })
+
+      it("validate too many parameters", () => {
+        const text = "{{#bodyFunction 1 99 'a' 0 }}{{/bodyFunction}}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toEqual([
+          {
+            from: 0,
+            message: `Helper "bodyFunction" expects 3 parameters (a, b, c), but got 5.`,
+            severity: "error",
+            to: 46,
+          },
+        ])
+      })
+
+      it("validate non-supported body usages", () => {
+        const text = "{{#nonBodyFunction 1 99}}{{/nonBodyFunction}}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toEqual([
+          {
+            from: 0,
+            message: `Helper "nonBodyFunction" should not contain a body.`,
+            severity: "error",
+            to: 45,
+          },
+        ])
+      })
     })
 
     describe("optional parameters", () => {
