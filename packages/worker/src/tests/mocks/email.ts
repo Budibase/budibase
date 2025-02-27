@@ -146,3 +146,11 @@ export function getAttachment(
     )
   })
 }
+
+export function getAttachments(mailserver: Mailserver, email: Email) {
+  return Promise.all(
+    email.attachments.map(attachment =>
+      getAttachment(mailserver, email, attachment)
+    )
+  )
+}

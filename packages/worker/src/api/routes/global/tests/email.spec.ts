@@ -3,8 +3,7 @@ import { TestConfiguration } from "../../../../tests"
 import {
   captureEmail,
   deleteAllEmail,
-  getAttachment,
-  getUnusedPort,
+  getAttachments,
   Mailserver,
   startMailserver,
   stopMailserver,
@@ -17,8 +16,7 @@ describe("/api/global/email", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
-    const port = await getUnusedPort()
-    mailserver = await startMailserver(config, { smtp: port })
+    mailserver = await startMailserver(config)
   })
 
   afterAll(async () => {
@@ -45,9 +43,13 @@ describe("/api/global/email", () => {
     },
   ])("can send $purpose emails", async ({ purpose, expectedText }) => {
     const email = await captureEmail(mailserver, async () => {
-      const res = await config.api.emails.sendEmail(purpose)
-      expect(res.body.message).toBeDefined()
-      expect(res.status).toBe(200)
+      const res = await config.api.emails.sendEmail({
+        email: "foo@example.com",
+        subject: "Test",
+        userId: config.user!._id,
+        purpose,
+      })
+      expect(res.message).toBeDefined()
     })
 
     expect(email.html).toContain(expectedText)
@@ -74,12 +76,14 @@ describe("/api/global/email", () => {
     }
 
     const email = await captureEmail(mailserver, async () => {
-      const res = await config.api.emails.sendEmail(
-        EmailTemplatePurpose.WELCOME,
-        [attachmentObject]
-      )
-      expect(res.body.message).toBeDefined()
-      expect(res.status).toBe(200)
+      const res = await config.api.emails.sendEmail({
+        email: "foo@example.com",
+        subject: "Test",
+        userId: config.user!._id,
+        purpose: EmailTemplatePurpose.WELCOME,
+        attachments: [attachmentObject],
+      })
+      expect(res.message).toBeDefined()
     })
 
     expect(email.html).toContain(
@@ -87,11 +91,7 @@ describe("/api/global/email", () => {
     )
     expect(email.html).not.toContain("Invalid binding")
 
-    const attachment = await getAttachment(
-      mailserver,
-      email,
-      email.attachments[0]
-    )
-    expect(attachment).toEqual("test data")
+    const attachments = await getAttachments(mailserver, email)
+    expect(attachments).toEqual(["test data"])
   })
 })
