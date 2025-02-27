@@ -2785,9 +2785,9 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "3.4.16"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.16.tgz#c482a400e27b7e89ca73092c4c81bdeac1d24581"
-  integrity sha512-8ECnqOh9jQ10KlQEwmKPFcoVGE+2gGgSybj+vbshwDp1zAW76doyMR2DMNjEatNpWVnpoMnTkDWtE9aqQ5v0vQ==
+  version "3.4.12"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.12.tgz#60e630944de4e2de970a04179d8f0f57d48ce75e"
+  integrity sha512-msUBmcWxRDg+ugjZvd27XudERQqtQRdiARsO8MaDVTcp5ejIXgshEIVVshHOCj3hcbRblw9pXvBIMI53iTMUsA==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
     "@budibase/backend-core" "*"
@@ -6774,13 +6774,6 @@
   integrity sha512-0JOXkRyLanfGPE2QRCwgxhzlBAvaRdCNMcvbd7jFfpmD4eEXll7LRwy5ymJmyeZqk7Nh7eD2LeUyQ68BbndmXw==
   dependencies:
     undici-types "~6.19.2"
-
-"@types/nodemailer@^6.4.17":
-  version "6.4.17"
-  resolved "https://registry.yarnpkg.com/@types/nodemailer/-/nodemailer-6.4.17.tgz#5c82a42aee16a3dd6ea31446a1bd6a447f1ac1a4"
-  integrity sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==
-  dependencies:
-    "@types/node" "*"
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
@@ -12789,10 +12782,10 @@ html-tag@^2.0.0:
     is-self-closing "^1.0.1"
     kind-of "^6.0.0"
 
-html5-qrcode@^2.2.1:
-  version "2.3.7"
-  resolved "https://registry.yarnpkg.com/html5-qrcode/-/html5-qrcode-2.3.7.tgz#09ed2ca7473a47bd551088c15fcfcb7cb409a5be"
-  integrity sha512-Jmlok9Ynm49hgVXkdupWryf8o430proIFoQsRl1LmTg4Rq461W72omylR9yw9tsEMtswMEw3wacUM5y0agOBQA==
+html5-qrcode@^2.3.8:
+  version "2.3.8"
+  resolved "https://registry.yarnpkg.com/html5-qrcode/-/html5-qrcode-2.3.8.tgz#0b0cdf7a9926cfd4be530e13a51db47592adfa0d"
+  integrity sha512-jsr4vafJhwoLVEDW3n1KvPnCCXWaQfRng0/EEYk1vNcQGcG/htAdhJX0be8YyqMoSz7+hZvOZSTAepsabiuhiQ==
 
 htmlparser2@^8.0.0:
   version "8.0.1"
