@@ -78,6 +78,14 @@ export function validateHbsTemplate(
               message: `Helper "${helperName}" requires a body:\n{{#${helperName} ...}} [body] {{/${helperName}}}`,
             })
             return
+          } else if (!requiresBlock && isBlockStatement(node)) {
+            diagnostics.push({
+              from,
+              to,
+              severity: "error",
+              message: `Helper "${helperName}" should not contain a body.`,
+            })
+            return
           }
 
           let providedParamsCount = node.params.length
