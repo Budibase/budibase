@@ -34,8 +34,8 @@ const outputJSON: Manifest = {}
 const ADDED_HELPERS = {
   date: {
     date: {
-      args: ["datetime", "format"],
-      numArgs: 2,
+      args: ["datetime", "format", "options"],
+      numArgs: 3,
       example: '{{date now "DD-MM-YYYY" "America/New_York" }} -> 21-01-2021',
       description:
         "Format a date using moment.js date formatting - the timezone is optional and uses the tz database.",
