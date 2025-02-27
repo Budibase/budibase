@@ -706,7 +706,7 @@
                 >
                   <div class="details">
                     <GroupIcon {group} size="S" />
-                    <div>
+                    <div class="group-name">
                       {group.name}
                     </div>
                     <div class="auth-entity-meta">
@@ -935,6 +935,7 @@
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
     white-space: nowrap;
+    text-align: end;
   }
 
   .auth-entity-access {
@@ -970,7 +971,7 @@
     width: 100%;
   }
 
-  .auth-entity .user-email {
+  .auth-entity .user-email, .group-name {
     flex: 1 1 0;
     min-width: 0;
     overflow: hidden;
@@ -1073,7 +1074,7 @@
   .user-groups {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start; /* or space-between */
+    justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-m);
     width: 100%;
