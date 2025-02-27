@@ -138,5 +138,69 @@ describe("hbs validator", () => {
         },
       ])
     })
+
+    describe("optional parameters", () => {
+      it("supports empty parameters", () => {
+        const validators: CodeValidator = {
+          helperFunction: {
+            arguments: ["a", "b", "[c]"],
+          },
+        }
+        const text = "{{ helperFunction 1 99 }}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toHaveLength(0)
+      })
+
+      it("supports valid parameters", () => {
+        const validators: CodeValidator = {
+          helperFunction: {
+            arguments: ["a", "b", "[c]"],
+          },
+        }
+        const text = "{{ helperFunction 1 99 'a' }}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toHaveLength(0)
+      })
+
+      it("returns a valid message on missing parameters", () => {
+        const validators: CodeValidator = {
+          helperFunction: {
+            arguments: ["a", "b", "[c]"],
+          },
+        }
+        const text = "{{ helperFunction 1 }}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toEqual([
+          {
+            from: 0,
+            message: `Helper "helperFunction" expects between 2 to 3 parameters (a, b, c (optional)), but got 1.`,
+            severity: "error",
+            to: 22,
+          },
+        ])
+      })
+
+      it("returns a valid message on too many parameters", () => {
+        const validators: CodeValidator = {
+          helperFunction: {
+            arguments: ["a", "b", "[c]"],
+          },
+        }
+        const text = "{{ helperFunction 1 2 3 4 }}"
+
+        const result = validateHbsTemplate(text, validators)
+        expect(result).toEqual([
+          {
+            from: 0,
+            message: `Helper "helperFunction" expects between 2 to 3 parameters (a, b, c (optional)), but got 4.`,
+            severity: "error",
+            to: 28,
+          },
+        ])
+      })
+    })
   })
 })

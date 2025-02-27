@@ -94,7 +94,15 @@ export function validateHbsTemplate(
             providedParamsCount++
           }
 
-          if (providedParamsCount !== expectedArguments.length) {
+          const optionalArgMatcher = new RegExp(/^\[(.+)\]$/)
+          const optionalArgs = expectedArguments.filter(a =>
+            optionalArgMatcher.test(a)
+          )
+
+          if (
+            !optionalArgs.length &&
+            providedParamsCount !== expectedArguments.length
+          ) {
             diagnostics.push({
               from,
               to,
@@ -105,6 +113,29 @@ export function validateHbsTemplate(
                 ", "
               )}), but got ${providedParamsCount}.`,
             })
+          } else if (optionalArgs.length) {
+            const maxArgs = expectedArguments.length
+            const minArgs = maxArgs - optionalArgs.length
+            const parameters = expectedArguments
+              .map(a => {
+                const test = optionalArgMatcher.exec(a)
+                if (!test?.[1]) {
+                  return a
+                }
+                return `${test[1]} (optional)`
+              })
+              .join(", ")
+            if (
+              minArgs > providedParamsCount ||
+              maxArgs < providedParamsCount
+            ) {
+              diagnostics.push({
+                from,
+                to,
+                severity: "error",
+                message: `Helper "${helperName}" expects between ${minArgs} to ${expectedArguments.length} parameters (${parameters}), but got ${providedParamsCount}.`,
+              })
+            }
           }
         }
 
