@@ -80,18 +80,22 @@ export function validateHbsTemplate(
             return
           }
 
-          const providedParams = node.params
+          let providedParamsCount = node.params.length
+          if (isBlockStatement(node)) {
+            // Block body counts as a parameter
+            providedParamsCount++
+          }
 
-          if (providedParams.length !== expectedArguments.length) {
+          if (providedParamsCount !== expectedArguments.length) {
             diagnostics.push({
               from,
               to,
               severity: "error",
               message: `Helper "${helperName}" expects ${
                 expectedArguments.length
-              } parameters (${expectedArguments.join(", ")}), but got ${
-                providedParams.length
-              }.`,
+              } parameters (${expectedArguments.join(
+                ", "
+              )}), but got ${providedParamsCount}.`,
             })
           }
         }
