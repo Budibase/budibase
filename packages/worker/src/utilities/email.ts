@@ -9,7 +9,7 @@ import {
   EmailTemplatePurpose,
   User,
 } from "@budibase/types"
-import { configs, cache, objectStore } from "@budibase/backend-core"
+import { configs, cache, objectStore, HTTPError } from "@budibase/backend-core"
 import ical from "ical-generator"
 import _ from "lodash"
 
@@ -147,7 +147,7 @@ export async function sendEmail(
   switch (purpose) {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
       if (!opts.user || !opts.user._id) {
-        throw "User must be provided for password recovery."
+        throw new HTTPError("User must be provided for password recovery.", 400)
       }
       code = await cache.passwordReset.createCode(opts.user._id, opts.info)
       break

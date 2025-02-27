@@ -22,6 +22,14 @@ export interface Address {
   name?: string
 }
 
+export interface Alternative {
+  contentType: string
+  content: string
+  charset: string
+  method: string
+  transferEncoding: string
+}
+
 export interface Envelope {
   from: Address
   to: Address[]
@@ -31,7 +39,9 @@ export interface Envelope {
 
 export interface Email {
   attachments: Attachment[]
-  calculatedBcc: string[]
+  alternatives: Alternative[]
+  calculatedBcc: Address[]
+  cc: Address[]
   date: string
   envelope: Envelope
   from: Address[]
@@ -62,11 +72,18 @@ export function getUnusedPort(): Promise<number> {
   })
 }
 
-export function waitForEmail(
+export async function captureEmail(
   mailserver: Mailserver,
-  timeoutMs = 5000
+  f: () => Promise<void>
 ): Promise<Email> {
-  let timeout: ReturnType<typeof setTimeout>
+  const timeoutMs = 5000
+  let timeout: ReturnType<typeof setTimeout> | undefined = undefined
+  const cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = undefined
+    }
+  }
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeout = setTimeout(() => {
       reject(new Error("Timed out waiting for email"))
@@ -76,18 +93,15 @@ export function waitForEmail(
     // @ts-expect-error - types are wrong
     mailserver.once("new", email => {
       resolve(email as Email)
-      clearTimeout(timeout)
+      cancel()
     })
   })
-  return Promise.race([mailPromise, timeoutPromise])
-}
-
-export async function captureEmail(
-  mailserver: Mailserver,
-  f: () => Promise<void>
-): Promise<Email> {
-  const emailPromise = waitForEmail(mailserver)
-  await f()
+  const emailPromise = Promise.race([mailPromise, timeoutPromise])
+  try {
+    await f()
+  } finally {
+    cancel()
+  }
   return await emailPromise
 }
 

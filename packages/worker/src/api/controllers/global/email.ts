@@ -11,7 +11,6 @@ export async function sendEmail(
   ctx: UserCtx<SendEmailRequest, SendEmailResponse>
 ) {
   let {
-    workspaceId,
     email,
     userId,
     purpose,
@@ -33,7 +32,6 @@ export async function sendEmail(
     }
   }
   const response = await sendEmailFn(email, purpose, {
-    workspaceId,
     user,
     contents,
     from,
