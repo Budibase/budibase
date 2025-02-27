@@ -20,6 +20,7 @@
   export let beepFrequency = 2637
   export let customFrequency = 1046
   export let preferredCamera = "environment"
+  export let defaultZoom = 1
   export let validator
 
   const dispatch = createEventDispatcher()
@@ -58,6 +59,14 @@
       html5QrCode
         .start(cameraSetting, cameraConfig, onScanSuccess)
         .then(() => {
+          if (defaultZoom > 1) {
+            const cameraOptions =
+              html5QrCode.getRunningTrackCameraCapabilities()
+            const zoom = cameraOptions.zoomFeature()
+            if (zoom.isSupported()) {
+              zoom.apply(defaultZoom)
+            }
+          }
           resolve({ initialised: true })
         })
         .catch(err => {
