@@ -3,14 +3,18 @@ import { Expectations, PublicAPI } from "../base"
 
 export class UserPublicAPI extends PublicAPI {
   find = async (id: string, expectations?: Expectations): Promise<User> => {
-    return await this._get<User>(`/users/${id}`, { expectations })
+    const response = await this._get<{ data: User }>(`/users/${id}`, {
+      expectations,
+    })
+    return response.data
   }
 
   update = async (user: User, expectations?: Expectations): Promise<User> => {
-    return await this._put<User>(`/users/${user._id}`, {
+    const response = await this._put<{ data: User }>(`/users/${user._id}`, {
       body: user,
       expectations,
     })
+    return response.data
   }
 
   destroy = async (id: string, expectations?: Expectations): Promise<void> => {

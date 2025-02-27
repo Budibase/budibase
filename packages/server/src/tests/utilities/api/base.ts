@@ -1,7 +1,12 @@
+import jestOpenAPI from "jest-openapi"
+import { run as generateSchema } from "../../../../specs/generate"
 import TestConfiguration from "../TestConfiguration"
 import request, { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
 import { getServer } from "../../../app"
+
+const yamlPath = generateSchema()
+jestOpenAPI(yamlPath!)
 
 type Headers = Record<string, string | string[] | undefined>
 type Method = "get" | "post" | "put" | "patch" | "delete"
@@ -170,10 +175,7 @@ export abstract class TestAPI {
     }
   }
 
-  protected _checkResponse = (
-    response: Response,
-    expectations?: Expectations
-  ) => {
+  protected _checkResponse(response: Response, expectations?: Expectations) {
     const { status = 200 } = expectations || {}
 
     if (response.status !== status) {
@@ -258,5 +260,15 @@ export abstract class PublicAPI extends TestAPI {
     }
 
     return headers
+  }
+
+  protected _checkResponse(response: Response, expectations?: Expectations) {
+    const checked = super._checkResponse(response, expectations)
+    if (checked.status >= 200 && checked.status < 300) {
+      // We don't seem to have documented our errors yet, so for the time being
+      // we'll only do the schema check for successful responses.
+      expect(checked).toSatisfyApiSpec()
+    }
+    return checked
   }
 }
