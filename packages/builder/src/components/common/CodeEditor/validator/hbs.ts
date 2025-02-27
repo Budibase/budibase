@@ -116,19 +116,19 @@ export function validateHbsTemplate(
           } else if (optionalArgs.length) {
             const maxArgs = expectedArguments.length
             const minArgs = maxArgs - optionalArgs.length
-            const parameters = expectedArguments
-              .map(a => {
-                const test = optionalArgMatcher.exec(a)
-                if (!test?.[1]) {
-                  return a
-                }
-                return `${test[1]} (optional)`
-              })
-              .join(", ")
             if (
               minArgs > providedParamsCount ||
               maxArgs < providedParamsCount
             ) {
+              const parameters = expectedArguments
+                .map(a => {
+                  const test = optionalArgMatcher.exec(a)
+                  if (!test?.[1]) {
+                    return a
+                  }
+                  return `${test[1]} (optional)`
+                })
+                .join(", ")
               diagnostics.push({
                 from,
                 to,
