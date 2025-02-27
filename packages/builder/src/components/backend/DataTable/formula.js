@@ -26,7 +26,7 @@ export function getBindings({
   if (!table) {
     return bindings
   }
-  for (let [column, schema] of Object.entries(table.schema)) {
+  for (const [column, schema] of Object.entries(table.schema)) {
     const isRelationship = schema.type === FieldType.LINK
     // skip relationships after a certain depth and types which
     // can't bind to
@@ -62,6 +62,12 @@ export function getBindings({
 
     const label = path == null ? column : `${path}.0.${column}`
     const binding = path == null ? `[${column}]` : `[${path}].0.[${column}]`
+
+    let readableBinding = label
+    if (readableBinding.includes(" ")) {
+      readableBinding = `[${readableBinding}]`
+    }
+
     // only supply a description for relationship paths
     const description =
       path == null
@@ -75,7 +81,7 @@ export function getBindings({
       description,
       // don't include path, it messes things up, relationship path
       // will be replaced by the main array binding
-      readableBinding: label,
+      readableBinding,
       runtimeBinding: binding,
       display: {
         name: label,
