@@ -81,11 +81,11 @@ export const screenComponentErrorList = derived(
     const errors: UIComponentError[] = []
 
     function checkComponentErrors(component: Component, ancestors: string[]) {
+      errors.push(...getMissingAncestors(component, definitions, ancestors))
       errors.push(
         ...getInvalidDatasources(screen, component, datasources, definitions)
       )
       errors.push(...getMissingRequiredSettings(component, definitions))
-      errors.push(...getMissingAncestors(component, definitions, ancestors))
 
       for (const child of component._children || []) {
         checkComponentErrors(child, [...ancestors, component._component])
