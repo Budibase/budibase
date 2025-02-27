@@ -6,6 +6,7 @@ import * as mysql from "./mysql"
 import * as mssql from "./mssql"
 import * as mariadb from "./mariadb"
 import * as oracle from "./oracle"
+import * as elasticsearch from "./elasticsearch"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import { Knex } from "knex"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -23,22 +24,32 @@ export enum DatabaseName {
   MARIADB = "mariadb",
   ORACLE = "oracle",
   SQS = "sqs",
+  ELASTICSEARCH = "elasticsearch",
 }
 
+const DATASOURCE_PLUS = [
+  DatabaseName.POSTGRES,
+  DatabaseName.POSTGRES_LEGACY,
+  DatabaseName.MYSQL,
+  DatabaseName.SQL_SERVER,
+  DatabaseName.MARIADB,
+  DatabaseName.ORACLE,
+  DatabaseName.SQS,
+]
+
 const providers: Record<DatabaseName, DatasourceProvider> = {
+  // datasource_plus entries
   [DatabaseName.POSTGRES]: postgres.getDatasource,
   [DatabaseName.POSTGRES_LEGACY]: postgres.getLegacyDatasource,
-  [DatabaseName.MONGODB]: mongodb.getDatasource,
   [DatabaseName.MYSQL]: mysql.getDatasource,
   [DatabaseName.SQL_SERVER]: mssql.getDatasource,
   [DatabaseName.MARIADB]: mariadb.getDatasource,
   [DatabaseName.ORACLE]: oracle.getDatasource,
   [DatabaseName.SQS]: async () => undefined,
-}
 
-export interface DatasourceDescribeOpts {
-  only?: DatabaseName[]
-  exclude?: DatabaseName[]
+  // rest
+  [DatabaseName.ELASTICSEARCH]: elasticsearch.getDatasource,
+  [DatabaseName.MONGODB]: mongodb.getDatasource,
 }
 
 export interface DatasourceDescribeReturnPromise {
@@ -103,6 +114,20 @@ function createDummyTest() {
   })
 }
 
+interface OnlyOpts {
+  only: DatabaseName[]
+}
+
+interface PlusOpts {
+  plus: true
+  exclude?: DatabaseName[]
+}
+
+export type DatasourceDescribeOpts = OnlyOpts | PlusOpts
+
+// If you ever want to rename this function, be mindful that you will also need
+// to modify src/tests/filters/index.js to make sure that we're correctly
+// filtering datasource/non-datasource tests in CI.
 export function datasourceDescribe(opts: DatasourceDescribeOpts) {
   // tests that call this need a lot longer timeouts
   jest.setTimeout(120000)
@@ -111,17 +136,15 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
     createDummyTest()
   }
 
-  const { only, exclude } = opts
-
-  if (only && exclude) {
-    throw new Error("you can only supply one of 'only' or 'exclude'")
-  }
-
-  let databases = Object.values(DatabaseName)
-  if (only) {
-    databases = only
-  } else if (exclude) {
-    databases = databases.filter(db => !exclude.includes(db))
+  let databases: DatabaseName[] = []
+  if ("only" in opts) {
+    databases = opts.only
+  } else if ("plus" in opts) {
+    databases = Object.values(DatabaseName)
+      .filter(db => DATASOURCE_PLUS.includes(db))
+      .filter(db => !opts.exclude?.includes(db))
+  } else {
+    throw new Error("invalid options")
   }
 
   if (process.env.DATASOURCE) {
@@ -156,6 +179,7 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
     isMSSQL: dbName === DatabaseName.SQL_SERVER,
     isOracle: dbName === DatabaseName.ORACLE,
     isMariaDB: dbName === DatabaseName.MARIADB,
+    isElasticsearch: dbName === DatabaseName.ELASTICSEARCH,
   }))
 }
 
