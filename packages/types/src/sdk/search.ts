@@ -3,6 +3,7 @@ import { Row, DocumentType, Table, Datasource } from "../documents"
 import { SortOrder, SortType } from "../api"
 import { Knex } from "knex"
 import { Aggregation } from "./row"
+import _ from "lodash"
 
 export enum BasicOperator {
   EQUAL = "equal",
@@ -83,7 +84,7 @@ type RangeFilter = Record<
 type LogicalFilter = { conditions: SearchFilters[] }
 
 export function isLogicalFilter(filter: any): filter is LogicalFilter {
-  return "conditions" in filter
+  return _.isPlainObject(filter) && "conditions" in filter
 }
 
 export type AnySearchFilter = BasicFilter | ArrayFilter | RangeFilter
