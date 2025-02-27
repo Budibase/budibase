@@ -2,6 +2,20 @@ import MailDev from "maildev"
 import { promisify } from "util"
 import TestConfiguration from "../TestConfiguration"
 
+/**
+ * @deprecated please use the `MailDev` email server instead of this mock.
+ */
+export function mock() {
+  // mock the email system
+  const sendMailMock = jest.fn()
+  const nodemailer = require("nodemailer")
+  nodemailer.createTransport.mockReturnValue({
+    sendMail: sendMailMock,
+    verify: jest.fn(),
+  })
+  return sendMailMock
+}
+
 export type Mailserver = InstanceType<typeof MailDev>
 export type MailserverConfig = ConstructorParameters<typeof MailDev>[0]
 
