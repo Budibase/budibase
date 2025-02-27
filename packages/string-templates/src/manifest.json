@@ -1208,8 +1208,8 @@
   "date": {
     "date": {
       "args": [
-        "datetime",
-        "format",
+        "[datetime]",
+        "[format]",
         "[options]"
       ],
       "example": "{{date now \"DD-MM-YYYY\" \"America/New_York\" }} -> 21-01-2021",
