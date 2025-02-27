@@ -239,7 +239,10 @@ function getMissingAncestors(
   ancestors: string[]
 ): UIComponentError[] {
   const definition = definitions[component._component]
-
+  if (ancestors.some(a => !a.startsWith(BudibasePrefix))) {
+    // We don't have a way to know what components are used within a plugin component
+    return []
+  }
   if (!definition?.requiredAncestors?.length) {
     return []
   }
