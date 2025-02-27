@@ -463,6 +463,10 @@ const generateComponentContextBindings = (asset, componentContext) => {
       }
       readableBinding += `.${fieldSchema.name || key}`
 
+      if (readableBinding.includes(" ")) {
+        readableBinding = `[${readableBinding}]`
+      }
+
       // Determine which category this binding belongs in
       const bindingCategory = getComponentBindingCategory(
         component,
