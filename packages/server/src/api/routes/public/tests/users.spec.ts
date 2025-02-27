@@ -41,14 +41,6 @@ beforeEach(async () => {
     .persist()
 })
 
-function base() {
-  return {
-    tenantId: config.getTenantId(),
-    firstName: "Test",
-    lastName: "Test",
-  }
-}
-
 describe("check user endpoints", () => {
   it("should not allow a user to update their own roles", async () => {
     await config.withUser(globalUser, () =>
@@ -68,8 +60,8 @@ describe("check user endpoints", () => {
   })
 })
 
-describe("no user role update in free", () => {
-  it.only("should not allow 'roles' to be updated", async () => {
+describe("role updating on free tier", () => {
+  it("should not allow 'roles' to be updated", async () => {
     const newUser = await config.api.public.user.create({
       email: generator.email({ domain: "example.com" }),
       roles: { app_a: "BASIC" },
@@ -78,60 +70,52 @@ describe("no user role update in free", () => {
   })
 
   it("should not allow 'admin' to be updated", async () => {
-    const res = await makeRequest("post", "/users", {
-      ...base(),
+    const newUser = await config.api.public.user.create({
+      email: generator.email({ domain: "example.com" }),
+      roles: {},
       admin: { global: true },
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.admin).toBeUndefined()
-    expect(res.body.message).toBeDefined()
+    expect(newUser.admin).toBeUndefined()
   })
 
   it("should not allow 'builder' to be updated", async () => {
-    const res = await makeRequest("post", "/users", {
-      ...base(),
+    const newUser = await config.api.public.user.create({
+      email: generator.email({ domain: "example.com" }),
+      roles: {},
       builder: { global: true },
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.builder).toBeUndefined()
-    expect(res.body.message).toBeDefined()
+    expect(newUser.builder).toBeUndefined()
   })
 })
 
-describe("no user role update in business", () => {
+describe("role updating on business tier", () => {
   beforeAll(() => {
     mocks.licenses.useExpandedPublicApi()
   })
 
   it("should allow 'roles' to be updated", async () => {
-    const res = await makeRequest("post", "/users", {
-      ...base(),
+    const newUser = await config.api.public.user.create({
+      email: generator.email({ domain: "example.com" }),
       roles: { app_a: "BASIC" },
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.roles["app_a"]).toBe("BASIC")
-    expect(res.body.message).toBeUndefined()
+    expect(newUser.roles["app_a"]).toBe("BASIC")
   })
 
   it("should allow 'admin' to be updated", async () => {
-    mocks.licenses.useExpandedPublicApi()
-    const res = await makeRequest("post", "/users", {
-      ...base(),
+    const newUser = await config.api.public.user.create({
+      email: generator.email({ domain: "example.com" }),
+      roles: {},
       admin: { global: true },
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.admin.global).toBe(true)
-    expect(res.body.message).toBeUndefined()
+    expect(newUser.admin?.global).toBe(true)
   })
 
   it("should allow 'builder' to be updated", async () => {
-    mocks.licenses.useExpandedPublicApi()
-    const res = await makeRequest("post", "/users", {
-      ...base(),
+    const newUser = await config.api.public.user.create({
+      email: generator.email({ domain: "example.com" }),
+      roles: {},
       builder: { global: true },
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.builder.global).toBe(true)
-    expect(res.body.message).toBeUndefined()
+    expect(newUser.builder?.global).toBe(true)
   })
 })
