@@ -971,7 +971,8 @@
     width: 100%;
   }
 
-  .auth-entity .user-email, .group-name {
+  .auth-entity .user-email,
+  .group-name {
     flex: 1 1 0;
     min-width: 0;
     overflow: hidden;
