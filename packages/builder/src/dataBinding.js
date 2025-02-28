@@ -373,6 +373,18 @@ const getContextBindings = (asset, componentId) => {
     .flat()
 }
 
+const makeReadableKeyPropSafe = key => {
+  if (!key.includes(" ")) {
+    return key
+  }
+
+  if (new RegExp(/^\[(.+)\]$/).test(key.test)) {
+    return key
+  }
+
+  return `[${key}]`
+}
+
 /**
  * Generates a set of bindings for a given component context
  */
@@ -457,15 +469,11 @@ const generateComponentContextBindings = (asset, componentContext) => {
       const runtimeBinding = `${safeComponentId}.${safeKey}`
 
       // Optionally use a prefix with readable bindings
-      let readableBinding = component._instanceName
+      let readableBinding = makeReadableKeyPropSafe(component._instanceName)
       if (readablePrefix) {
         readableBinding += `.${readablePrefix}`
       }
-      readableBinding += `.${fieldSchema.name || key}`
-
-      if (readableBinding.includes(" ")) {
-        readableBinding = `[${readableBinding}]`
-      }
+      readableBinding += `.${makeReadableKeyPropSafe(fieldSchema.name || key)}`
 
       // Determine which category this binding belongs in
       const bindingCategory = getComponentBindingCategory(
@@ -477,7 +485,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
       bindings.push({
         type: "context",
         runtimeBinding,
-        readableBinding: `${readableBinding}`,
+        readableBinding,
         // Field schema and provider are required to construct relationship
         // datasource options, based on bindable properties
         fieldSchema,
@@ -1358,13 +1366,14 @@ const bindingReplacement = (
   }
   // work from longest to shortest
   const convertFromProps = bindableProperties
+    // TODO check whitespaces
     .map(el => el[convertFrom])
     .sort((a, b) => {
       return b.length - a.length
     })
   const boundValues = textWithBindings.match(regex) || []
   let result = textWithBindings
-  for (let boundValue of boundValues) {
+  for (const boundValue of boundValues) {
     let newBoundValue = boundValue
     // we use a search string, where any time we replace something we blank it out
     // in the search, working from longest to shortest so always use best match first
