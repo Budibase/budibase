@@ -2,6 +2,7 @@
 import Handlebars from "handlebars"
 import type { Diagnostic } from "@codemirror/lint"
 import { CodeValidator } from "@/types"
+import { featureFlag } from "@/helpers"
 
 function isMustacheStatement(
   node: hbs.AST.Statement
@@ -99,7 +100,9 @@ export function validateHbsTemplate(
       })
     }
 
-    traverseNodes(ast.body, { ignoreMissing: true })
+    traverseNodes(ast.body, {
+      ignoreMissing: !featureFlag.isEnabled("VALIDATE_HBS_MISSING_EXPRESSIONS"),
+    })
   } catch (e: any) {
     diagnostics.push({
       from: 0,
