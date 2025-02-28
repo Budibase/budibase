@@ -373,7 +373,7 @@ const getContextBindings = (asset, componentId) => {
     .flat()
 }
 
-const makeReadableKeyPropSafe = key => {
+export const makeReadableKeyPropSafe = key => {
   if (!key.includes(" ")) {
     return key
   }

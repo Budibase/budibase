@@ -2,6 +2,7 @@ import { FieldType } from "@budibase/types"
 import { FIELDS } from "@/constants/backend"
 import { tables } from "@/stores/builder"
 import { get as svelteGet } from "svelte/store"
+import { makeReadableKeyPropSafe } from "@/dataBinding"
 
 // currently supported level of relationship depth (server side)
 const MAX_DEPTH = 1
@@ -62,11 +63,9 @@ export function getBindings({
 
     const label = path == null ? column : `${path}.0.${column}`
     const binding = path == null ? `[${column}]` : `[${path}].0.[${column}]`
-
-    let readableBinding = label
-    if (readableBinding.includes(" ")) {
-      readableBinding = `[${readableBinding}]`
-    }
+    const readableBinding = (path == null ? [column] : [path, "0", column])
+      .map(makeReadableKeyPropSafe)
+      .join(".")
 
     // only supply a description for relationship paths
     const description =
