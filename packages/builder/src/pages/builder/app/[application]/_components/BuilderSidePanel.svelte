@@ -198,12 +198,19 @@
       return
     }
     const update = await users.get(user._id)
+    const newRoles = {
+      ...update.roles,
+      [prodAppId]: role,
+    }
+    // make sure no undefined/null roles (during removal)
+    for (let [appId, role] of Object.entries(newRoles)) {
+      if (!role) {
+        delete newRoles[appId]
+      }
+    }
     await users.save({
       ...update,
-      roles: {
-        ...update.roles,
-        [prodAppId]: role,
-      },
+      roles: newRoles,
     })
     await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
