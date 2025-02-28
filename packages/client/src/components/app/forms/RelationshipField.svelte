@@ -1,13 +1,12 @@
 <script lang="ts">
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
-  import { FieldType } from "@budibase/types"
+  import { FieldType, InternalTable } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import type {
     SearchFilter,
     RelationshipFieldMetadata,
-    Table,
     Row,
   } from "@budibase/types"
 
@@ -23,7 +22,7 @@
   export let defaultValue: string | undefined = undefined
   export let onChange: any
   export let filter: SearchFilter[]
-  export let datasourceType: "table" | "user" | "groupUser" = "table"
+  export let datasourceType: "table" | "user" = "table"
   export let primaryDisplay: string | undefined = undefined
   export let span: number | undefined = undefined
   export let helpText: string | undefined = undefined
@@ -39,7 +38,6 @@
   let fieldState: any
   let fieldApi: any
   let fieldSchema: RelationshipFieldMetadata | undefined
-  let tableDefinition: Table | null | undefined
   let searchTerm: any
   let open: boolean
   let selectedValue: string[] | string
@@ -49,22 +47,34 @@
   $: multiselect =
     [FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
     fieldSchema?.relationshipType !== "one-to-many"
-  $: linkedTableId = fieldSchema?.tableId!
-  $: fetch = fetchData({
-    API,
-    datasource: {
-      // typing here doesn't seem correct - we have the correct datasourceType options
-      // but when we configure the fetchData, it seems to think only "table" is valid
-      type: datasourceType as any,
-      tableId: linkedTableId,
-    },
-    options: {
-      filter,
-      limit: 100,
-    },
-  })
 
-  $: tableDefinition = $fetch.definition
+  function getFetch(
+    datasourceType: "table" | "user",
+    fieldSchema: RelationshipFieldMetadata | undefined
+  ) {
+    const datasource =
+      datasourceType === "table"
+        ? {
+            type: datasourceType,
+            tableId: fieldSchema?.tableId!,
+          }
+        : {
+            type: datasourceType,
+            tableId: InternalTable.USER_METADATA,
+          }
+    return fetchData({
+      API,
+      datasource,
+      options: {
+        filter,
+        limit: 100,
+      },
+    })
+  }
+
+  $: fetch = getFetch(datasourceType, fieldSchema)
+
+  $: tableDefinition = $fetch?.definition
   $: selectedValue = multiselect
     ? flatten(fieldState?.value) ?? []
     : flatten(fieldState?.value)?.[0]
@@ -159,7 +169,7 @@
   ) {
     const allRowsFetched =
       $fetch.loaded &&
-      !Object.keys($fetch.query?.string || {}).length &&
+      !Object.keys(($fetch.query as any)?.string || {}).length &&
       !$fetch.hasNextPage
     // Don't request until we have the primary display or default value has been fetched
     if (allRowsFetched || !primaryDisplay) {
