@@ -16,30 +16,55 @@ export const hasAdminPermissions = sdk.users.hasAdminPermissions
 export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
 export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
 
-export async function isCreator(user?: User | ContextUser) {
+async function getGroups(groupIds: string[]) {
+  if (groupIds.length) {
+    const db = context.getGlobalDB()
+    return await db.getMultiple<UserGroup>(groupIds)
+  }
+  return []
+}
+
+export async function creatorsInList(
+  users: (User | ContextUser)[],
+  groups?: UserGroup[]
+) {
+  if (!groups) {
+    const groupIds = users.flatMap(user => user.userGroups || [])
+    if (groupIds.length) {
+      groups = await getGroups(groupIds)
+    }
+  }
+  return users.map(user => isCreatorSync(user, groups || []))
+}
+
+// fetches groups if no provided, but is async and shouldn't be looped with
+export async function isCreatorAsync(
+  user: User | ContextUser,
+  groups?: UserGroup[]
+) {
+  if (!groups) {
+    groups = await getGroups(user.userGroups || [])
+  }
+  return isCreatorSync(user, groups)
+}
+
+export function isCreatorSync(user: User | ContextUser, groups: UserGroup[]) {
   const isCreatorByUserDefinition = sdk.users.isCreator(user)
   if (!isCreatorByUserDefinition && user) {
-    return await isCreatorByGroupMembership(user)
+    return isCreatorByGroupMembership(user, groups)
   }
   return isCreatorByUserDefinition
 }
 
-async function isCreatorByGroupMembership(user?: User | ContextUser) {
-  const userGroups = user?.userGroups || []
+function isCreatorByGroupMembership(
+  user: User | ContextUser,
+  groups: UserGroup[]
+) {
+  const userGroups = groups.filter(
+    group => user.userGroups?.indexOf(group._id!) !== -1
+  )
   if (userGroups.length > 0) {
-    const db = context.getGlobalDB()
-    const groups: UserGroup[] = []
-    for (let groupId of userGroups) {
-      try {
-        const group = await db.get<UserGroup>(groupId)
-        groups.push(group)
-      } catch (e: any) {
-        if (e.error !== "not_found") {
-          throw e
-        }
-      }
-    }
-    return groups.some(group =>
+    return userGroups.some(group =>
       Object.values(group.roles || {}).includes(BUILTIN_ROLE_IDS.ADMIN)
     )
   }
