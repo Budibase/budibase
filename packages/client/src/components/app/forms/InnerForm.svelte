@@ -12,7 +12,7 @@
     TableSchema,
   } from "@budibase/types"
 
-  type FieldStore = {
+  type FieldInfo = {
     name: string
     step: number
     type: `${FieldType}`
@@ -53,7 +53,7 @@
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
 
-  let fields: Writable<FieldStore>[] = []
+  let fields: Writable<FieldInfo>[] = []
   const formState = writable({
     values: {},
     errors: {},
@@ -104,8 +104,8 @@
   // Generates a derived store from an array of fields, comprised of a map of
   // extracted values from the field array
   const deriveFieldProperty = (
-    fieldStores: Readable<FieldStore>[],
-    getProp: (_field: FieldStore) => any
+    fieldStores: Readable<FieldInfo>[],
+    getProp: (_field: FieldInfo) => any
   ) => {
     return derived(fieldStores, fieldValues => {
       return fieldValues.reduce(
@@ -118,7 +118,7 @@
   // Derives any enrichments which need to be made so that bindings work for
   // special data types like attachments. Relationships are currently not
   // handled as we don't have the primaryDisplay field that is required.
-  const deriveBindingEnrichments = (fieldStores: Readable<FieldStore>[]) => {
+  const deriveBindingEnrichments = (fieldStores: Readable<FieldInfo>[]) => {
     return derived(fieldStores, fieldValues => {
       const enrichments: Record<string, string> = {}
       fieldValues.forEach(field => {
@@ -241,7 +241,7 @@
       const isAutoColumn = !!schema?.[field]?.autocolumn
 
       // Construct field info
-      const fieldInfo = writable({
+      const fieldInfo = writable<FieldInfo>({
         name: field,
         type,
         step: step || 1,
