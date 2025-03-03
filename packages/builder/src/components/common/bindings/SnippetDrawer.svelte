@@ -17,7 +17,15 @@
   import { ValidSnippetNameRegex } from "@budibase/shared-core"
   import type { Snippet } from "@budibase/types"
 
-  export const show = () => drawer.show()
+  export const show = () => {
+    if (!snippet) {
+      key = Math.random().toString()
+      // Reset state when creating multiple snippets
+      code = ""
+      name = defaultName
+    }
+    drawer.show()
+  }
   export const hide = () => drawer.hide()
   export let snippet: Snippet | null
 
