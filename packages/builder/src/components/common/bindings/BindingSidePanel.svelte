@@ -412,7 +412,7 @@
 
       {#if selectedCategory === "Snippets" || search}
         <div class="snippet-list">
-          {#if enableSnippets}
+          {#if enableSnippets && filteredSnippets.length}
             {#each filteredSnippets as snippet}
               <li
                 class="snippet"
