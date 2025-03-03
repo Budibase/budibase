@@ -1,4 +1,7 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
+import { setEnv } from "../../../environment"
+
+setEnv({ USE_LOCAL_COMPONENT_LIBS: "0" })
 
 jest.mock("../../../utilities/redis", () => ({
   init: jest.fn(),

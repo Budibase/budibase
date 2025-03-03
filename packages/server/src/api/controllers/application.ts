@@ -659,7 +659,7 @@ async function destroyApp(ctx: UserCtx) {
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  if (!env.isTest()) {
+  if (!env.USE_LOCAL_COMPONENT_LIBS) {
     await deleteAppFiles(appId)
   }
 
