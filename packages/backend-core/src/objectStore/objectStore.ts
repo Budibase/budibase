@@ -478,7 +478,7 @@ export async function deleteFolder(
   if (existingObjectsResponse.Contents?.length === 0) {
     return
   }
-  const deleteParams: any = {
+  const deleteParams: { Bucket: string; Delete: { Objects: any[] } } = {
     Bucket: bucketName,
     Delete: {
       Objects: [],
@@ -489,10 +489,12 @@ export async function deleteFolder(
     deleteParams.Delete.Objects.push({ Key: content.Key })
   })
 
-  const deleteResponse = await client.deleteObjects(deleteParams)
-  // can only empty 1000 items at once
-  if (deleteResponse.Deleted?.length === 1000) {
-    return deleteFolder(bucketName, folder)
+  if (deleteParams.Delete.Objects.length) {
+    const deleteResponse = await client.deleteObjects(deleteParams)
+    // can only empty 1000 items at once
+    if (deleteResponse.Deleted?.length === 1000) {
+      return deleteFolder(bucketName, folder)
+    }
   }
 }
 
