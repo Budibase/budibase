@@ -17,6 +17,7 @@ import { RowActionAPI } from "./rowAction"
 import { AutomationAPI } from "./automation"
 import { PluginAPI } from "./plugin"
 import { WebhookAPI } from "./webhook"
+import { UserPublicAPI } from "./public/user"
 
 export default class API {
   application: ApplicationAPI
@@ -38,6 +39,10 @@ export default class API {
   viewV2: ViewV2API
   webhook: WebhookAPI
 
+  public: {
+    user: UserPublicAPI
+  }
+
   constructor(config: TestConfiguration) {
     this.application = new ApplicationAPI(config)
     this.attachment = new AttachmentAPI(config)
@@ -57,5 +62,8 @@ export default class API {
     this.user = new UserAPI(config)
     this.viewV2 = new ViewV2API(config)
     this.webhook = new WebhookAPI(config)
+    this.public = {
+      user: new UserPublicAPI(config),
+    }
   }
 }
