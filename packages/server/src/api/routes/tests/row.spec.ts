@@ -2522,7 +2522,7 @@ if (descriptions.length) {
               value: any,
               isArray: boolean
             ) => {
-              const objectMatcher = `{\"${key}\":\"${value[key]}\".*?}`
+              const objectMatcher = `{"${key}":"${value[key]}".*?}`
               if (isArray) {
                 return expect.stringMatching(
                   new RegExp(`^\\[${objectMatcher}\\]$`)
