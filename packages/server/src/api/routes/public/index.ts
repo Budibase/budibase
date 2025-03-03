@@ -146,8 +146,8 @@ function applyRoutes(
   addMiddleware(endpoints.read, mapperMiddleware, { output: true })
   addMiddleware(endpoints.write, mapperMiddleware, { output: true })
   if (env.isTest()) {
-    addMiddleware(endpoints.read, testErrorHandling)
-    addMiddleware(endpoints.write, testErrorHandling)
+    addMiddleware(endpoints.read, testErrorHandling())
+    addMiddleware(endpoints.write, testErrorHandling())
   }
   addToRouter(endpoints.read)
   addToRouter(endpoints.write)
