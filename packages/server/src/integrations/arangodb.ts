@@ -9,7 +9,7 @@ import {
 
 import { Database, aql } from "arangojs"
 
-interface ArangodbConfig {
+export interface ArangodbConfig {
   url: string
   username: string
   password: string
@@ -61,9 +61,9 @@ const SCHEMA: Integration = {
   },
 }
 
-class ArangoDBIntegration implements IntegrationBase {
+export class ArangoDBIntegration implements IntegrationBase {
   private config: ArangodbConfig
-  private client
+  private client: Database
 
   constructor(config: ArangodbConfig) {
     const newConfig = {
@@ -96,8 +96,7 @@ class ArangoDBIntegration implements IntegrationBase {
     try {
       const result = await this.client.query(query.sql)
       return result.all()
-    } catch (err) {
-      // @ts-ignore
+    } catch (err: any) {
       console.error("Error querying arangodb", err.message)
       throw err
     } finally {
@@ -108,12 +107,10 @@ class ArangoDBIntegration implements IntegrationBase {
   async create(query: { json: any }) {
     const clc = this.client.collection(this.config.collection)
     try {
-      const result = await this.client.query(
-        aql`INSERT ${query.json} INTO ${clc} RETURN NEW`
-      )
+      const q = aql`INSERT ${query.json} INTO ${clc} RETURN NEW`
+      const result = await this.client.query(q)
       return result.all()
-    } catch (err) {
-      // @ts-ignore
+    } catch (err: any) {
       console.error("Error querying arangodb", err.message)
       throw err
     } finally {

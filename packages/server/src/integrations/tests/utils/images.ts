@@ -13,3 +13,4 @@ export const POSTGRES_LEGACY_IMAGE = `postgres:9.5.25`
 export const MONGODB_IMAGE = `mongo@${process.env.MONGODB_SHA}`
 export const MARIADB_IMAGE = `mariadb@${process.env.MARIADB_SHA}`
 export const ELASTICSEARCH_IMAGE = `elasticsearch@${process.env.ELASTICSEARCH_SHA}`
+export const ARANGODB_IMAGE = `arangodb@${process.env.ARANGODB_SHA}`

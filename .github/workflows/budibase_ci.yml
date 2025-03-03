@@ -165,6 +165,7 @@ jobs:
             oracle,
             sqs,
             elasticsearch,
+            arangodb,
             none,
           ]
     steps:
@@ -205,6 +206,8 @@ jobs:
             docker pull postgres:9.5.25
           elif [ "${{ matrix.datasource }}" == "elasticsearch" ]; then
             docker pull elasticsearch@${{ steps.dotenv.outputs.ELASTICSEARCH_SHA }}
+          elif [ "${{ matrix.datasource }}" == "arangodb" ]; then
+            docker pull arangodb@${{ steps.dotenv.outputs.ARANGODB_SHA }}
           fi
           docker pull minio/minio &
           docker pull redis &

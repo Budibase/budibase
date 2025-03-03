@@ -1,38 +1,35 @@
-import { default as ArangoDBIntegration } from "../arangodb"
+import { Datasource } from "@budibase/types"
+import { ArangodbConfig, ArangoDBIntegration } from "../arangodb"
+import { DatabaseName, datasourceDescribe } from "./utils"
 
-jest.mock("arangojs")
-
-class TestConfiguration {
-  integration: any
-
-  constructor(config: any = {}) {
-    this.integration = new ArangoDBIntegration.integration(config)
-  }
-}
-
-describe("ArangoDB Integration", () => {
-  let config: any
-
-  beforeEach(() => {
-    config = new TestConfiguration()
-  })
-
-  it("calls the create method with the correct params", async () => {
-    const body = {
-      json: "Hello",
-    }
-
-    await config.integration.create(body)
-    expect(config.integration.client.query).toHaveBeenCalledWith(
-      `INSERT Hello INTO collection RETURN NEW`
-    )
-  })
-
-  it("calls the read method with the correct params", async () => {
-    const query = {
-      sql: `test`,
-    }
-    await config.integration.read(query)
-    expect(config.integration.client.query).toHaveBeenCalledWith(query.sql)
-  })
+const describes = datasourceDescribe({
+  only: [DatabaseName.ARANGODB],
 })
+
+if (describes.length > 0) {
+  describe.each(describes)("ArangoDB Integration", ({ dsProvider }) => {
+    let arangodb: ArangoDBIntegration
+    let rawDatasource: Datasource
+
+    beforeAll(async () => {
+      const ds = await dsProvider()
+      rawDatasource = ds.rawDatasource!
+      arangodb = new ArangoDBIntegration(
+        rawDatasource.config! as ArangodbConfig
+      )
+    })
+
+    it("can test connection", async () => {
+      const result = await arangodb.testConnection()
+      expect(result.connected).toBe(true)
+    })
+
+    it("can create and read documents", async () => {
+      await arangodb.create({ json: { name: "Fred" } })
+      const result = await arangodb.read({
+        sql: `FOR doc IN ${rawDatasource.config!.collection} RETURN doc`,
+      })
+      expect(result).toEqual([expect.objectContaining({ name: "Fred" })])
+    })
+  })
+}

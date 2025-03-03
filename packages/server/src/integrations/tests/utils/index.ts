@@ -7,6 +7,7 @@ import * as mssql from "./mssql"
 import * as mariadb from "./mariadb"
 import * as oracle from "./oracle"
 import * as elasticsearch from "./elasticsearch"
+import * as arangodb from "./arangodb"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import { Knex } from "knex"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -25,6 +26,7 @@ export enum DatabaseName {
   ORACLE = "oracle",
   SQS = "sqs",
   ELASTICSEARCH = "elasticsearch",
+  ARANGODB = "arangodb",
 }
 
 const DATASOURCE_PLUS = [
@@ -50,6 +52,7 @@ const providers: Record<DatabaseName, DatasourceProvider> = {
   // rest
   [DatabaseName.ELASTICSEARCH]: elasticsearch.getDatasource,
   [DatabaseName.MONGODB]: mongodb.getDatasource,
+  [DatabaseName.ARANGODB]: arangodb.getDatasource,
 }
 
 export interface DatasourceDescribeReturnPromise {
@@ -180,6 +183,7 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
     isOracle: dbName === DatabaseName.ORACLE,
     isMariaDB: dbName === DatabaseName.MARIADB,
     isElasticsearch: dbName === DatabaseName.ELASTICSEARCH,
+    isArangodb: dbName === DatabaseName.ARANGODB,
   }))
 }
 
