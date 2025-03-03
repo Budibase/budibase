@@ -6,6 +6,7 @@ import {
   docIds,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
+  setEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
@@ -43,19 +44,7 @@ import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
-
-jest.mock("@budibase/pro", () => ({
-  ...jest.requireActual("@budibase/pro"),
-  ai: {
-    LargeLanguageModel: {
-      forCurrentTenant: async () => ({
-        llm: {},
-        run: jest.fn(() => `Mock LLM Response`),
-        buildPromptFromAIOperation: jest.fn(),
-      }),
-    },
-  },
-}))
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
 
@@ -1896,10 +1885,14 @@ if (descriptions.length) {
               !isInMemory &&
               describe("AI Column", () => {
                 const UNEXISTING_AI_COLUMN = "Real LLM Response"
+                let envCleanup: () => void
 
                 beforeAll(async () => {
                   mocks.licenses.useBudibaseAI()
                   mocks.licenses.useAICustomConfigs()
+
+                  envCleanup = setEnv({ OPENAI_API_KEY: "mock" })
+                  mockChatGPTResponse("Mock LLM Response")
 
                   tableOrViewId = await createTableOrView({
                     product: { name: "product", type: FieldType.STRING },
@@ -1915,6 +1908,10 @@ if (descriptions.length) {
                     { product: "Big Mac" },
                     { product: "McCrispy" },
                   ])
+                })
+
+                afterAll(() => {
+                  envCleanup()
                 })
 
                 describe("equal", () => {

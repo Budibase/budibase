@@ -1,6 +1,6 @@
-<script>
-  export let small = false
-  export let disabled
+<script lang="ts">
+  export let small: boolean = false
+  export let disabled: boolean = false
 </script>
 
 <button

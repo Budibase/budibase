@@ -28,6 +28,9 @@
     <svg
       on:contextmenu
       on:click
+      on:mouseover
+      on:mouseleave
+      on:focus
       class:hoverable
       class:disabled
       class="spectrum-Icon spectrum-Icon--size{size}"
