@@ -1,8 +1,6 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
 import { setEnv } from "../../../environment"
 
-setEnv({ USE_LOCAL_COMPONENT_LIBS: "0" })
-
 jest.mock("../../../utilities/redis", () => ({
   init: jest.fn(),
   getLocksById: () => {
@@ -30,10 +28,16 @@ import path from "path"
 
 describe("/applications", () => {
   let config = setup.getConfig()
-  let app: App
+  let app: App, cleanup: () => void
 
-  afterAll(setup.afterAll)
-  beforeAll(async () => await config.init())
+  afterAll(() => {
+    setup.afterAll()
+    cleanup()
+  })
+  beforeAll(async () => {
+    cleanup = setEnv({ USE_LOCAL_COMPONENT_LIBS: "0" })
+    await config.init()
+  })
 
   beforeEach(async () => {
     app = await config.api.application.create({ name: utils.newid() })
