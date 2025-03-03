@@ -27,12 +27,11 @@
   } from "../CodeEditor"
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
-  import SnippetSidePanel from "./SnippetSidePanel.svelte"
   import { BindingHelpers } from "./utils"
   import { capitalise } from "@/helpers"
   import { Utils, JsonFormatter } from "@budibase/frontend-core"
   import { licensing } from "@/stores/portal"
-  import { BindingMode, SidePanel } from "@budibase/types"
+  import { BindingMode } from "@budibase/types"
   import type {
     EnrichedBinding,
     Snippet,
@@ -43,6 +42,8 @@
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
   import type { CodeValidator } from "@/types"
+
+  type SidePanel = "Bindings" | "Evaluation"
 
   const dispatch = createEventDispatcher()
 
@@ -55,7 +56,7 @@
   export let context = null
   export let snippets: Snippet[] | null = null
   export let autofocusEditor = false
-  export let placeholder = null
+  export let placeholder: string | null = null
   export let showTabBar = true
 
   let mode: BindingMode
@@ -71,14 +72,13 @@
   let expressionError: string | undefined
   let evaluating = false
 
-  $: useSnippets = allowSnippets && !$licensing.isFreePlan
+  const SidePanelIcons: Record<SidePanel, string> = {
+    Bindings: "FlashOn",
+    Evaluation: "Play",
+  }
+
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
-  $: sidePanelOptions = getSidePanelOptions(
-    bindings,
-    context,
-    allowSnippets,
-    mode
-  )
+  $: sidePanelOptions = getSidePanelOptions(bindings, context)
   $: enrichedBindings = enrichBindings(bindings, context, snippets)
   $: usingJS = mode === BindingMode.JavaScript
   $: editorMode =
@@ -93,7 +93,9 @@
   $: bindingOptions = bindingsToCompletions(enrichedBindings, editorMode)
   $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
   $: snippetsOptions =
-    usingJS && useSnippets && snippets?.length ? snippets : []
+    usingJS && allowSnippets && !$licensing.isFreePlan && snippets?.length
+      ? snippets
+      : []
 
   $: completions = !usingJS
     ? [hbAutocomplete([...bindingOptions, ...helperOptions])]
@@ -137,21 +139,13 @@
     return options
   }
 
-  const getSidePanelOptions = (
-    bindings: EnrichedBinding[],
-    context: any,
-    useSnippets: boolean,
-    mode: BindingMode | null
-  ) => {
-    let options = []
+  const getSidePanelOptions = (bindings: EnrichedBinding[], context: any) => {
+    let options: SidePanel[] = []
     if (bindings?.length) {
-      options.push(SidePanel.Bindings)
+      options.push("Bindings")
     }
     if (context && Object.keys(context).length > 0) {
-      options.push(SidePanel.Evaluation)
-    }
-    if (useSnippets && mode === BindingMode.JavaScript) {
-      options.push(SidePanel.Snippets)
+      options.push("Evaluation")
     }
     return options
   }
@@ -342,14 +336,15 @@
             {/each}
           </div>
           <div class="side-tabs">
-            {#each sidePanelOptions as panel}
+            {#each sidePanelOptions as panelOption}
               <ActionButton
                 size="M"
                 quiet
-                selected={sidePanel === panel}
-                on:click={() => changeSidePanel(panel)}
+                selected={sidePanel === panelOption}
+                on:click={() => changeSidePanel(panelOption)}
+                tooltip={panelOption}
               >
-                <Icon name={panel} size="S" />
+                <Icon name={SidePanelIcons[panelOption]} size="S" />
               </ActionButton>
             {/each}
           </div>
@@ -415,16 +410,19 @@
       </div>
     </div>
     <div class="side" class:visible={!!sidePanel}>
-      {#if sidePanel === SidePanel.Bindings}
+      {#if sidePanel === "Bindings"}
         <BindingSidePanel
           bindings={enrichedBindings}
           {allowHelpers}
+          {allowSnippets}
           {context}
           addHelper={onSelectHelper}
           addBinding={onSelectBinding}
+          {addSnippet}
           {mode}
+          {snippets}
         />
-      {:else if sidePanel === SidePanel.Evaluation}
+      {:else if sidePanel === "Evaluation"}
         <EvaluationSidePanel
           {expressionResult}
           {expressionError}
@@ -432,8 +430,6 @@
           {evaluating}
           expression={editorValue ? editorValue : ""}
         />
-      {:else if sidePanel === SidePanel.Snippets}
-        <SnippetSidePanel {addSnippet} {snippets} />
       {/if}
     </div>
   </div>
