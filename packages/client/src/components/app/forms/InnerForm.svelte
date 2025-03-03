@@ -10,6 +10,7 @@
     FieldType,
     Table,
     TableSchema,
+    UIFieldValidationRule,
   } from "@budibase/types"
 
   type FieldInfo = {
@@ -21,8 +22,9 @@
       value: any
       defaultValue: any
       disabled: boolean
-      validator: Function | null
-      error: string | null
+      readonly: boolean
+      validator: ((_value: any) => string | null) | null
+      error: string | null | undefined
       lastUpdate: number
     }
     fieldApi: {
@@ -30,6 +32,7 @@
       validate(): boolean
       reset(): void
     }
+    fieldSchema: FieldSchema | {}
   }
 
   export let dataSource: DataFetchDatasource | undefined = undefined
@@ -195,7 +198,7 @@
       defaultValue = null,
       fieldDisabled = false,
       fieldReadOnly = false,
-      validationRules: any[],
+      validationRules: UIFieldValidationRule[],
       step = 1
     ) => {
       if (!field) {
@@ -376,36 +379,6 @@
       })
     }
 
-    // Updates the validator rules for a certain field
-    const updateValidation = (validationRules: any) => {
-      const fieldInfo = getField(field)
-      const { fieldState } = get(fieldInfo)
-      const { value, error } = fieldState
-
-      // Create new validator
-      const schemaConstraints = disableSchemaValidation
-        ? null
-        : schema?.[field]?.constraints
-      const validator = createValidatorFromConstraints(
-        schemaConstraints,
-        validationRules,
-        field,
-        definition
-      )
-
-      // Update validator
-      fieldInfo.update(state => {
-        state.fieldState.validator = validator
-        return state
-      })
-
-      // If there is currently an error, run the validator again in case
-      // the error should be cleared by the new validation rules
-      if (error) {
-        setValue(value, true)
-      }
-    }
-
     // We don't want to actually remove the field state when deregistering, just
     // remove any errors and validation
     const deregister = () => {
@@ -434,7 +407,6 @@
     return {
       setValue,
       reset,
-      updateValidation,
       setDisabled,
       deregister,
       validate: () => {
