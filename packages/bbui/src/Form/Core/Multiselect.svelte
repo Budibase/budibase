@@ -11,8 +11,8 @@
   export let placeholder: string | null = null
   export let disabled: boolean = false
   export let options: Option[] = []
-  export let getOptionLabel = (option: Option) => option
-  export let getOptionValue = (option: Option) => option
+  export let getOptionLabel = (option: Option, _index?: number) => option
+  export let getOptionValue = (option: Option, _index?: number) => option
   export let readonly: boolean = false
   export let autocomplete: boolean = false
   export let sort: boolean = false
@@ -31,10 +31,15 @@
   $: optionLookupMap = getOptionLookupMap(options)
 
   $: fieldText = getFieldText(arrayValue, optionLookupMap, placeholder)
-  $: isOptionSelected = optionValue => selectedLookupMap[optionValue] === true
+  $: isOptionSelected = (optionValue: string) =>
+    selectedLookupMap[optionValue] === true
   $: toggleOption = makeToggleOption(selectedLookupMap, arrayValue)
 
-  const getFieldText = (value, map, placeholder) => {
+  const getFieldText = (
+    value: string[],
+    map: Record<string, any> | null,
+    placeholder: string | null
+  ) => {
     if (Array.isArray(value) && value.length > 0) {
       if (!map) {
         return ""
@@ -46,8 +51,8 @@
     }
   }
 
-  const getSelectedLookupMap = value => {
-    let map = {}
+  const getSelectedLookupMap = (value: string[]) => {
+    const map: Record<string, boolean> = {}
     if (Array.isArray(value) && value.length > 0) {
       value.forEach(option => {
         if (option) {
@@ -58,22 +63,23 @@
     return map
   }
 
-  const getOptionLookupMap = options => {
-    let map = null
-    if (options?.length) {
-      map = {}
-      options.forEach((option, idx) => {
-        const optionValue = getOptionValue(option, idx)
-        if (optionValue != null) {
-          map[optionValue] = getOptionLabel(option, idx) || ""
-        }
-      })
+  const getOptionLookupMap = (options: Option[]) => {
+    if (!options?.length) {
+      return null
     }
+
+    const map: Record<string, any> = {}
+    options.forEach((option, idx) => {
+      const optionValue = getOptionValue(option, idx)
+      if (optionValue != null) {
+        map[optionValue] = getOptionLabel(option, idx) || ""
+      }
+    })
     return map
   }
 
-  const makeToggleOption = (map, value) => {
-    return optionValue => {
+  const makeToggleOption = (map: Record<string, boolean>, value: string[]) => {
+    return (optionValue: string) => {
       if (map[optionValue]) {
         const filtered = value.filter(option => option !== optionValue)
         dispatch("change", filtered)
