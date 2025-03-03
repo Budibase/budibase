@@ -17,7 +17,7 @@ import {
 import { DynamoDB } from "@aws-sdk/client-dynamodb"
 import { AWS_REGION } from "../constants"
 
-interface DynamoDBConfig {
+export interface DynamoDBConfig {
   region: string
   accessKeyId: string
   secretAccessKey: string
@@ -138,9 +138,9 @@ const SCHEMA: Integration = {
   },
 }
 
-class DynamoDBIntegration implements IntegrationBase {
+export class DynamoDBIntegration implements IntegrationBase {
   private config: DynamoDBConfig
-  private client
+  private client: DynamoDBDocument
 
   constructor(config: DynamoDBConfig) {
     this.config = config
