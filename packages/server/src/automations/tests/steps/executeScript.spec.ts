@@ -13,6 +13,7 @@ describe("Execute Script Automations", () => {
     await config.init()
     table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, {})
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
