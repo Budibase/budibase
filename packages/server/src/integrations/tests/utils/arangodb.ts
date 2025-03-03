@@ -4,7 +4,7 @@ import { GenericContainer, Wait } from "testcontainers"
 import { startContainer } from "."
 import { ARANGODB_IMAGE } from "./images"
 
-import { Database, aql } from "arangojs"
+import { Database } from "arangojs"
 
 let ports: Promise<testContainerUtils.Port[]>
 
