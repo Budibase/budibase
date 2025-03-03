@@ -11,7 +11,6 @@ export enum EmailTemplatePurpose {
 }
 
 export interface SendEmailRequest {
-  workspaceId?: string
   email: string
   userId?: string
   purpose: EmailTemplatePurpose

@@ -17,7 +17,6 @@ type BudibaseAnnotation = Annotation & {
 
 type Helper = {
   args: string[]
-  numArgs: number
   example?: string
   description: string
   requiresBlock?: boolean
@@ -34,15 +33,13 @@ const outputJSON: Manifest = {}
 const ADDED_HELPERS = {
   date: {
     date: {
-      args: ["datetime", "format"],
-      numArgs: 2,
+      args: ["[datetime]", "[format]", "[options]"],
       example: '{{date now "DD-MM-YYYY" "America/New_York" }} -> 21-01-2021',
       description:
         "Format a date using moment.js date formatting - the timezone is optional and uses the tz database.",
     },
     duration: {
       args: ["time", "durationType"],
-      numArgs: 2,
       example: '{{duration 8 "seconds"}} -> a few seconds',
       description:
         "Produce a humanized duration left/until given an amount of time and the type of time measurement.",
@@ -53,7 +50,6 @@ const ADDED_HELPERS = {
 function fixSpecialCases(name: string, obj: Helper) {
   if (name === "ifNth") {
     obj.args = ["a", "b", "options"]
-    obj.numArgs = 3
   }
   if (name === "eachIndex") {
     obj.description = "Iterates the array, listing an item and the index of it."
@@ -163,7 +159,6 @@ function run() {
         .map(tag => tag.description!.replace(/`/g, "").split(" ")[0].trim())
       collectionInfo[name] = fixSpecialCases(name, {
         args,
-        numArgs: args.length,
         example: jsDocInfo.example || undefined,
         description: jsDocInfo.description,
         requiresBlock: jsDocInfo.acceptsBlock && !jsDocInfo.acceptsInline,
