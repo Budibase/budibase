@@ -17,6 +17,8 @@
   import { ValidSnippetNameRegex } from "@budibase/shared-core"
   import type { Snippet } from "@budibase/types"
 
+  export const show = () => drawer.show()
+  export const hide = () => drawer.hide()
   export let snippet: Snippet | null
 
   const firstCharNumberRegex = /^[0-9].*$/
@@ -77,13 +79,9 @@
     }
     return null
   }
-
-  onMount(() => {
-    drawer.show()
-  })
 </script>
 
-<Drawer bind:this={drawer} on:drawerHide>
+<Drawer bind:this={drawer}>
   <svelte:fragment slot="title">
     {#if snippet}
       {snippet.name}

@@ -43,8 +43,8 @@
   let helpers = handlebarsCompletions()
   let selectedCategory: string | null
   let hideTimeout: ReturnType<typeof setTimeout> | null
+  let snippetDrawer: SnippetDrawer
   let editableSnippet: Snippet | null
-  let showSnippetDrawer = false
 
   $: enableSnippets = !$licensing.isFreePlan
   $: bindingIcons = bindings?.reduce<Record<string, string>>((acc, ele) => {
@@ -212,14 +212,14 @@
 
   const createSnippet = () => {
     editableSnippet = null
-    showSnippetDrawer = true
+    snippetDrawer.show()
   }
 
   const editSnippet = (e: Event, snippet: Snippet) => {
     e.preventDefault()
     e.stopPropagation()
     editableSnippet = snippet
-    showSnippetDrawer = true
+    snippetDrawer.show()
   }
 </script>
 
@@ -449,12 +449,7 @@
   </Layout>
 </div>
 
-{#if showSnippetDrawer}
-  <SnippetDrawer
-    snippet={editableSnippet}
-    on:drawerHide={() => (showSnippetDrawer = false)}
-  />
-{/if}
+<SnippetDrawer bind:this={snippetDrawer} snippet={editableSnippet} />
 
 <style>
   .binding-side-panel {
