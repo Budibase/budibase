@@ -1,12 +1,6 @@
 <script lang="ts">
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
-  import {
-    FieldType,
-    GroupUserDatasource,
-    InternalTable,
-    TableDatasource,
-    UserDatasource,
-  } from "@budibase/types"
+  import { FieldType, InternalTable } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
@@ -15,9 +9,6 @@
     RelationshipFieldMetadata,
     Row,
   } from "@budibase/types"
-  import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch"
-  import UserFetch from "@budibase/frontend-core/src/fetch/UserFetch.js"
-  import GroupUserFetch from "@budibase/frontend-core/src/fetch/GroupUserFetch.js"
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
@@ -29,7 +20,7 @@
   export let defaultValue: string | string[] | undefined = undefined
   export let onChange: any
   export let filter: SearchFilter[]
-  export let datasourceType: "table" | "user" | "groupUser" = "table"
+  export let datasourceType: "table" | "user" = "table"
   export let primaryDisplay: string | undefined = undefined
   export let span: number | undefined = undefined
   export let helpText: string | undefined = undefined
@@ -114,22 +105,20 @@
     dsType: typeof datasourceType,
     filter: SearchFilter[],
     linkedTableId?: string
-  ): TableFetch | UserFetch | GroupUserFetch | undefined => {
+  ) => {
     if (!linkedTableId) {
       return undefined
     }
-    let datasource: TableDatasource | UserDatasource | GroupUserDatasource
-    if (dsType === "table") {
-      datasource = {
-        type: "table",
-        tableId: linkedTableId,
-      }
-    } else {
-      datasource = {
-        type: dsType,
-        tableId: InternalTable.USER_METADATA,
-      }
-    }
+    const datasource =
+      datasourceType === "table"
+        ? {
+            type: datasourceType,
+            tableId: fieldSchema?.tableId!,
+          }
+        : {
+            type: datasourceType,
+            tableId: InternalTable.USER_METADATA,
+          }
     return fetchData({
       API,
       datasource,
