@@ -1,132 +1,143 @@
 import * as setup from "../../tests/utilities"
-import { generateMakeRequest, MakeRequestResponse } from "./utils"
 import { User } from "@budibase/types"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import nock from "nock"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { mockWorkerUserAPI } from "./utils"
 
-import * as workerRequests from "../../../../utilities/workerRequests"
+describe("public users API", () => {
+  const config = new TestConfiguration()
+  let globalUser: User
 
-const mockedWorkerReq = jest.mocked(workerRequests)
+  beforeAll(async () => {
+    await config.init()
+  })
 
-let config = setup.getConfig()
-let apiKey: string, globalUser: User, makeRequest: MakeRequestResponse
+  afterAll(setup.afterAll)
 
-beforeAll(async () => {
-  await config.init()
-  globalUser = await config.globalUser()
-  apiKey = await config.generateApiKey(globalUser._id)
-  makeRequest = generateMakeRequest(apiKey)
-  mockedWorkerReq.readGlobalUser.mockImplementation(() =>
-    Promise.resolve(globalUser)
-  )
-})
+  beforeEach(async () => {
+    globalUser = await config.globalUser()
 
-afterAll(setup.afterAll)
+    nock.cleanAll()
+    mockWorkerUserAPI(globalUser)
+  })
 
-function base() {
-  return {
-    tenantId: config.getTenantId(),
-    firstName: "Test",
-    lastName: "Test",
-  }
-}
-
-function updateMock() {
-  mockedWorkerReq.readGlobalUser.mockImplementation(ctx => ctx.request.body)
-}
-
-describe("check user endpoints", () => {
-  it("should not allow a user to update their own roles", async () => {
-    const res = await makeRequest("put", `/users/${globalUser._id}`, {
-      ...globalUser,
-      roles: {
-        app_1: "ADMIN",
-      },
+  describe("read", () => {
+    it("should allow a user to read themselves", async () => {
+      const user = await config.api.user.find(globalUser._id!)
+      expect(user._id).toBe(globalUser._id)
     })
-    expect(
-      mockedWorkerReq.saveGlobalUser.mock.lastCall?.[0].body.data.roles["app_1"]
-    ).toBeUndefined()
-    expect(res.status).toBe(200)
-    expect(res.body.data.roles["app_1"]).toBeUndefined()
-  })
 
-  it("should not allow a user to delete themselves", async () => {
-    const res = await makeRequest("delete", `/users/${globalUser._id}`)
-    expect(res.status).toBe(405)
-    expect(mockedWorkerReq.deleteGlobalUser.mock.lastCall).toBeUndefined()
-  })
-})
-
-describe("no user role update in free", () => {
-  beforeAll(() => {
-    updateMock()
-  })
-
-  it("should not allow 'roles' to be updated", async () => {
-    const res = await makeRequest("post", "/users", {
-      ...base(),
-      roles: { app_a: "BASIC" },
+    it("should allow a user to read another user", async () => {
+      const otherUser = await config.api.public.user.create({
+        email: generator.email({ domain: "example.com" }),
+        roles: {},
+      })
+      const user = await config.withUser(globalUser, () =>
+        config.api.public.user.find(otherUser._id!)
+      )
+      expect(user._id).toBe(otherUser._id)
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.roles["app_a"]).toBeUndefined()
-    expect(res.body.message).toBeDefined()
   })
 
-  it("should not allow 'admin' to be updated", async () => {
-    const res = await makeRequest("post", "/users", {
-      ...base(),
-      admin: { global: true },
+  describe("create", () => {
+    it("can successfully create a new user", async () => {
+      const email = generator.email({ domain: "example.com" })
+      const newUser = await config.api.public.user.create({
+        email,
+        roles: {},
+      })
+      expect(newUser.email).toBe(email)
+      expect(newUser._id).toBeDefined()
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.admin).toBeUndefined()
-    expect(res.body.message).toBeDefined()
-  })
 
-  it("should not allow 'builder' to be updated", async () => {
-    const res = await makeRequest("post", "/users", {
-      ...base(),
-      builder: { global: true },
+    describe("role creation on free tier", () => {
+      it("should not allow 'roles' to be updated", async () => {
+        const newUser = await config.api.public.user.create({
+          email: generator.email({ domain: "example.com" }),
+          roles: { app_a: "BASIC" },
+        })
+        expect(newUser.roles["app_a"]).toBeUndefined()
+      })
+
+      it("should not allow 'admin' to be updated", async () => {
+        const newUser = await config.api.public.user.create({
+          email: generator.email({ domain: "example.com" }),
+          roles: {},
+          admin: { global: true },
+        })
+        expect(newUser.admin).toBeUndefined()
+      })
+
+      it("should not allow 'builder' to be updated", async () => {
+        const newUser = await config.api.public.user.create({
+          email: generator.email({ domain: "example.com" }),
+          roles: {},
+          builder: { global: true },
+        })
+        expect(newUser.builder).toBeUndefined()
+      })
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.builder).toBeUndefined()
-    expect(res.body.message).toBeDefined()
-  })
-})
 
-describe("no user role update in business", () => {
-  beforeAll(() => {
-    updateMock()
-    mocks.licenses.useExpandedPublicApi()
-  })
+    describe("role creation on business tier", () => {
+      beforeAll(() => {
+        mocks.licenses.useExpandedPublicApi()
+      })
 
-  it("should allow 'roles' to be updated", async () => {
-    const res = await makeRequest("post", "/users", {
-      ...base(),
-      roles: { app_a: "BASIC" },
+      it("should allow 'roles' to be updated", async () => {
+        const newUser = await config.api.public.user.create({
+          email: generator.email({ domain: "example.com" }),
+          roles: { app_a: "BASIC" },
+        })
+        expect(newUser.roles["app_a"]).toBe("BASIC")
+      })
+
+      it("should allow 'admin' to be updated", async () => {
+        const newUser = await config.api.public.user.create({
+          email: generator.email({ domain: "example.com" }),
+          roles: {},
+          admin: { global: true },
+        })
+        expect(newUser.admin?.global).toBe(true)
+      })
+
+      it("should allow 'builder' to be updated", async () => {
+        const newUser = await config.api.public.user.create({
+          email: generator.email({ domain: "example.com" }),
+          roles: {},
+          builder: { global: true },
+        })
+        expect(newUser.builder?.global).toBe(true)
+      })
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.roles["app_a"]).toBe("BASIC")
-    expect(res.body.message).toBeUndefined()
   })
 
-  it("should allow 'admin' to be updated", async () => {
-    mocks.licenses.useExpandedPublicApi()
-    const res = await makeRequest("post", "/users", {
-      ...base(),
-      admin: { global: true },
+  describe("update", () => {
+    it("can update a user", async () => {
+      const updatedUser = await config.api.public.user.update({
+        ...globalUser,
+        email: `updated-${globalUser.email}`,
+      })
+      expect(updatedUser.email).toBe(`updated-${globalUser.email}`)
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.admin.global).toBe(true)
-    expect(res.body.message).toBeUndefined()
+
+    it("should not allow a user to update their own roles", async () => {
+      await config.withUser(globalUser, () =>
+        config.api.public.user.update({
+          ...globalUser,
+          roles: { app_1: "ADMIN" },
+        })
+      )
+      const updatedUser = await config.api.user.find(globalUser._id!)
+      expect(updatedUser.roles?.app_1).toBeUndefined()
+    })
   })
 
-  it("should allow 'builder' to be updated", async () => {
-    mocks.licenses.useExpandedPublicApi()
-    const res = await makeRequest("post", "/users", {
-      ...base(),
-      builder: { global: true },
+  describe("delete", () => {
+    it("should not allow a user to delete themselves", async () => {
+      await config.withUser(globalUser, () =>
+        config.api.public.user.destroy(globalUser._id!, { status: 405 })
+      )
     })
-    expect(res.status).toBe(200)
-    expect(res.body.data.builder.global).toBe(true)
-    expect(res.body.message).toBeUndefined()
   })
 })
