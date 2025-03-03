@@ -87,8 +87,6 @@ export { default as MarkdownEditor } from "./Markdown/MarkdownEditor.svelte"
 export { default as MarkdownViewer } from "./Markdown/MarkdownViewer.svelte"
 export { default as List } from "./List/List.svelte"
 export { default as ListItem } from "./List/ListItem.svelte"
-export { default as IconSideNav } from "./IconSideNav/IconSideNav.svelte"
-export { default as IconSideNavItem } from "./IconSideNav/IconSideNavItem.svelte"
 export { default as Accordion } from "./Accordion/Accordion.svelte"
 export { default as AbsTooltip } from "./Tooltip/AbsTooltip.svelte"
 
