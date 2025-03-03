@@ -15,7 +15,7 @@ interface Notification {
 }
 
 export const createNotificationStore = () => {
-  const timeoutIds = new Set<NodeJS.Timeout>()
+  const timeoutIds = new Set<ReturnType<typeof setTimeout>>()
   const _notifications = writable<Notification[]>([], () => {
     return () => {
       // clear all the timers

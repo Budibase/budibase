@@ -8,9 +8,9 @@
   import InternalRenderer from "./InternalRenderer.svelte"
   import { processStringSync } from "@budibase/string-templates"
 
-  export let row: any
-  export let schema: any
-  export let value: any
+  export let row: Record<string, any>
+  export let schema: Record<string, any>
+  export let value: Record<string, any>
   export let customRenderers: { column: string; component: any }[] = []
   export let snippets: any
 
