@@ -67,6 +67,7 @@ import {
   View,
   Webhook,
   WithRequired,
+  DevInfo,
 } from "@budibase/types"
 
 import API from "./api"
@@ -248,7 +249,7 @@ export default class TestConfiguration {
     }
   }
 
-  async withUser(user: User, f: () => Promise<void>) {
+  async withUser<T>(user: User, f: () => Promise<T>): Promise<T> {
     const oldUser = this.user
     this.user = user
     try {
@@ -469,7 +470,10 @@ export default class TestConfiguration {
     }
   }
 
-  defaultHeaders(extras = {}, prodApp = false) {
+  defaultHeaders(
+    extras: Record<string, string | string[]> = {},
+    prodApp = false
+  ) {
     const tenantId = this.getTenantId()
     const user = this.getUser()
     const authObj: AuthToken = {
@@ -498,10 +502,13 @@ export default class TestConfiguration {
     }
   }
 
-  publicHeaders({ prodApp = true } = {}) {
+  publicHeaders({
+    prodApp = true,
+    extras = {},
+  }: { prodApp?: boolean; extras?: Record<string, string | string[]> } = {}) {
     const appId = prodApp ? this.prodAppId : this.appId
 
-    const headers: any = {
+    const headers: Record<string, string> = {
       Accept: "application/json",
       Cookie: "",
     }
@@ -514,6 +521,7 @@ export default class TestConfiguration {
     return {
       ...headers,
       ...this.temporaryHeaders,
+      ...extras,
     }
   }
 
@@ -577,17 +585,17 @@ export default class TestConfiguration {
     }
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
-    let devInfo: any
-    try {
-      devInfo = await db.get(id)
-    } catch (err) {
-      devInfo = { _id: id, userId }
+    const devInfo = await db.tryGet<DevInfo>(id)
+    if (devInfo && devInfo.apiKey) {
+      return devInfo.apiKey
     }
-    devInfo.apiKey = encryption.encrypt(
+
+    const apiKey = encryption.encrypt(
       `${this.getTenantId()}${dbCore.SEPARATOR}${newid()}`
     )
-    await db.put(devInfo)
-    return devInfo.apiKey
+    const newDevInfo: DevInfo = { _id: id, userId, apiKey }
+    await db.put(newDevInfo)
+    return apiKey
   }
 
   // APP

@@ -2796,9 +2796,9 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "3.4.20"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.20.tgz#0d855d6ed8fe92fd178c74a8963d879cc124b034"
-  integrity sha512-hUteGvhMOKjBo0fluxcqNs7d4x8OU5W8Oqqrm7eIS9Ohe7ala2iWNCcrj+x+S9CavIm6s7JZZnAewa2Maiz2zQ==
+  version "3.4.22"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.22.tgz#943f23cb7056041bc1f433ee60b3d093145e7a4a"
+  integrity sha512-Du3iZsmRLopfoi2SvxQyY1P2Su3Nw0WbITOrKmZFsVLjZ9MzzTZs0Ph/SJHzrfJpM7rn9+8788BLSf3Z3l9KcQ==
   dependencies:
     "@anthropic-ai/sdk" "^0.27.3"
     "@budibase/backend-core" "*"
@@ -7141,6 +7141,11 @@
   integrity sha512-Q900DeeHNFF3ZYYepf/EyJfZDA2JrnWLaSQ0YNV7+2GTo8IlJzauEnDGhya+hauncpBYTYGpVHwGdssJeAQ7eA==
   dependencies:
     "@types/superagent" "*"
+
+"@types/swagger-jsdoc@^6.0.4":
+  version "6.0.4"
+  resolved "https://registry.yarnpkg.com/@types/swagger-jsdoc/-/swagger-jsdoc-6.0.4.tgz#bb4f60f3a5f103818e022f2e29ff8935113fb83d"
+  integrity sha512-W+Xw5epcOZrF/AooUM/PccNMSAFOKWZA5dasNyMujTwsBkU74njSJBpvCCJhHAJ95XRMzQrrW844Btu0uoetwQ==
 
 "@types/tar-fs@2.0.1":
   version "2.0.1"
