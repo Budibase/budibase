@@ -1,26 +1,36 @@
 <script lang="ts">
   import { setContext, getContext } from "svelte"
-  import { derived, get, Readable, writable } from "svelte/store"
+  import { derived, get, Readable, Writable, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
-  import { FieldType } from "@budibase/types"
+  import { FieldSchema, FieldType, TableSchema } from "@budibase/types"
 
   type FieldStore = {
     name: string
     step: number
     type: `${FieldType}`
     fieldState: {
+      fieldId: string
       value: any
-      error: string
+      defaultValue: any
+      disabled: boolean
+      validator: Function | null
+      error: string | null
+      lastUpdate: number
+    }
+    fieldApi: {
+      setValue(value: any): void
+      validate(): boolean
+      reset(): void
     }
   }
 
   export let dataSource = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
-  export let initialValues = undefined
+  export let initialValues: Record<string, any> | undefined = undefined
   export let size = undefined
-  export let schema = undefined
+  export let schema: TableSchema | undefined = undefined
   export let definition = undefined
   export let disableSchemaValidation: boolean = false
   export let editAutoColumns: boolean = false
@@ -31,12 +41,12 @@
 
   // We export this store so that when we remount the inner form we can still
   // persist what step we're on
-  export let currentStep: Readable<number>
+  export let currentStep: Writable<number>
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
 
-  let fields: Readable<FieldStore>[] = []
+  let fields: Writable<FieldStore>[] = []
   const formState = writable({
     values: {},
     errors: {},
@@ -103,7 +113,7 @@
   // handled as we don't have the primaryDisplay field that is required.
   const deriveBindingEnrichments = (fieldStores: Readable<FieldStore>[]) => {
     return derived(fieldStores, fieldValues => {
-      let enrichments = {}
+      const enrichments: Record<string, string> = {}
       fieldValues.forEach(field => {
         if (field.type === "attachment") {
           const value = field.fieldState.value
@@ -120,7 +130,11 @@
 
   // Derive the overall form value and deeply set all field paths so that we
   // can support things like JSON fields.
-  const deriveFormValue = (initialValues, values, enrichments) => {
+  const deriveFormValue = (
+    initialValues: Record<string, any> | undefined,
+    values: Record<string, any>,
+    enrichments: Record<string, string>
+  ) => {
     let formValue = Helpers.cloneDeep(initialValues || {})
 
     // We need to sort the keys to avoid a JSON field overwriting a nested field
@@ -134,7 +148,7 @@
         }
       })
       .sort((a, b) => {
-        return a.lastUpdate > b.lastUpdate
+        return a.lastUpdate - b.lastUpdate
       })
 
     // Merge all values and enrichments into a single value
@@ -148,12 +162,16 @@
   }
 
   // Searches the field array for a certain field
-  const getField = name => {
-    return fields.find(field => get(field).name === name)
+  const getField = (name: string) => {
+    return fields.find(field => get(field).name === name)!
   }
 
   // Sanitises a value by ensuring it doesn't contain any invalid data
-  const sanitiseValue = (value, schema, type) => {
+  const sanitiseValue = (
+    value: any,
+    schema: FieldSchema | undefined,
+    type: `${FieldType}`
+  ) => {
     // Check arrays - remove any values not present in the field schema and
     // convert any values supplied to strings
     if (Array.isArray(value) && type === "array" && schema) {
@@ -165,12 +183,12 @@
 
   const formApi = {
     registerField: (
-      field,
-      type,
+      field: string,
+      type: FieldType,
       defaultValue = null,
       fieldDisabled = false,
       fieldReadOnly = false,
-      validationRules,
+      validationRules: any[],
       step = 1
     ) => {
       if (!field) {
@@ -226,7 +244,8 @@
           error: initialError,
           disabled:
             disabled || fieldDisabled || (isAutoColumn && !editAutoColumns),
-          readonly: readonly || fieldReadOnly || schema?.[field]?.readonly,
+          readonly:
+            readonly || fieldReadOnly || (schema?.[field] as any)?.readonly,
           defaultValue,
           validator,
           lastUpdate: Date.now(),
@@ -270,7 +289,13 @@
         get(field).fieldApi.reset()
       })
     },
-    changeStep: ({ type, number }) => {
+    changeStep: ({
+      type,
+      number,
+    }: {
+      type: "next" | "prev" | "first" | "specific"
+      number: any
+    }) => {
       if (type === "next") {
         currentStep.update(step => step + 1)
       } else if (type === "prev") {
@@ -281,12 +306,12 @@
         currentStep.set(parseInt(number))
       }
     },
-    setStep: step => {
+    setStep: (step: number) => {
       if (step) {
         currentStep.set(step)
       }
     },
-    setFieldValue: (fieldName, value) => {
+    setFieldValue: (fieldName: string, value: any) => {
       const field = getField(fieldName)
       if (!field) {
         return
@@ -294,7 +319,7 @@
       const { fieldApi } = get(field)
       fieldApi.setValue(value)
     },
-    resetField: fieldName => {
+    resetField: (fieldName: string) => {
       const field = getField(fieldName)
       if (!field) {
         return
@@ -305,9 +330,9 @@
   }
 
   // Creates an API for a specific field
-  const makeFieldApi = field => {
+  const makeFieldApi = (field: string) => {
     // Sets the value for a certain field and invokes validation
-    const setValue = (value, skipCheck = false) => {
+    const setValue = (value: any, skipCheck = false) => {
       const fieldInfo = getField(field)
       const { fieldState } = get(fieldInfo)
       const { validator } = fieldState
@@ -345,7 +370,7 @@
     }
 
     // Updates the validator rules for a certain field
-    const updateValidation = validationRules => {
+    const updateValidation = (validationRules: any) => {
       const fieldInfo = getField(field)
       const { fieldState } = get(fieldInfo)
       const { value, error } = fieldState
@@ -386,7 +411,7 @@
     }
 
     // Updates the disabled state of a certain field
-    const setDisabled = fieldDisabled => {
+    const setDisabled = (fieldDisabled: boolean) => {
       const fieldInfo = getField(field)
 
       // Auto columns are always disabled
@@ -428,7 +453,15 @@
   // register their fields to step 1
   setContext("form-step", writable(1))
 
-  const handleUpdateFieldValue = ({ type, field, value }) => {
+  const handleUpdateFieldValue = ({
+    type,
+    field,
+    value,
+  }: {
+    type: "set" | "reset"
+    field: string
+    value: any
+  }) => {
     if (type === "set") {
       formApi.setFieldValue(field, value)
     } else {
@@ -436,7 +469,7 @@
     }
   }
 
-  const handleScrollToField = ({ field }) => {
+  const handleScrollToField = ({ field }: any) => {
     if (!field.fieldState) {
       field = get(getField(field))
     }
@@ -445,7 +478,7 @@
     if (fieldElement) {
       fieldElement.focus({ preventScroll: true })
     }
-    const label = document.querySelector(`label[for="${fieldId}"]`)
+    const label = document.querySelector<HTMLElement>(`label[for="${fieldId}"]`)
     if (label) {
       label.style.scrollMargin = "100px"
       label.scrollIntoView({ behavior: "smooth", block: "nearest" })
