@@ -1,18 +1,29 @@
-<script>
+<script lang="ts">
   import { setContext, getContext } from "svelte"
-  import { derived, get, writable } from "svelte/store"
+  import { derived, get, Readable, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
+
+  type FieldStore = {
+    name: string
+    step: number
+    type: `${FieldType}`
+    fieldState: {
+      value: any
+      error: string
+    }
+  }
 
   export let dataSource = undefined
-  export let disabled = false
-  export let readonly = false
+  export let disabled: boolean = false
+  export let readonly: boolean = false
   export let initialValues = undefined
   export let size = undefined
   export let schema = undefined
   export let definition = undefined
-  export let disableSchemaValidation = false
-  export let editAutoColumns = false
+  export let disableSchemaValidation: boolean = false
+  export let editAutoColumns: boolean = false
 
   // For internal use only, to disable context when being used with standalone
   // fields
@@ -20,12 +31,12 @@
 
   // We export this store so that when we remount the inner form we can still
   // persist what step we're on
-  export let currentStep
+  export let currentStep: Readable<number>
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
 
-  let fields = []
+  let fields: Readable<FieldStore>[] = []
   const formState = writable({
     values: {},
     errors: {},
@@ -75,17 +86,22 @@
 
   // Generates a derived store from an array of fields, comprised of a map of
   // extracted values from the field array
-  const deriveFieldProperty = (fieldStores, getProp) => {
+  const deriveFieldProperty = (
+    fieldStores: Readable<FieldStore>[],
+    getProp: (field: FieldStore) => any
+  ) => {
     return derived(fieldStores, fieldValues => {
-      const reducer = (map, field) => ({ ...map, [field.name]: getProp(field) })
-      return fieldValues.reduce(reducer, {})
+      return fieldValues.reduce(
+        (map, field) => ({ ...map, [field.name]: getProp(field) }),
+        {}
+      )
     })
   }
 
   // Derives any enrichments which need to be made so that bindings work for
   // special data types like attachments. Relationships are currently not
   // handled as we don't have the primaryDisplay field that is required.
-  const deriveBindingEnrichments = fieldStores => {
+  const deriveBindingEnrichments = (fieldStores: Readable<FieldStore>[]) => {
     return derived(fieldStores, fieldValues => {
       let enrichments = {}
       fieldValues.forEach(field => {
