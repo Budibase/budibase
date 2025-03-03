@@ -26,6 +26,7 @@ describe("test the filter logic", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
