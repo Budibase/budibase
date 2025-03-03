@@ -37,8 +37,6 @@ import {
   DeepPartial,
   FilterCondition,
   AutomationTriggerResult,
-  EnvironmentVariablesDoc,
-  EnvironmentVariableValue,
   CreateEnvironmentVariableRequest,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"

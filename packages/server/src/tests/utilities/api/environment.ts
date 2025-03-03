@@ -3,7 +3,6 @@ import {
   CreateEnvironmentVariableRequest,
   CreateEnvironmentVariableResponse,
   GetEnvironmentVariablesResponse,
-  Row,
   StatusEnvironmentVariableResponse,
   UpdateEnvironmentVariableRequest,
 } from "@budibase/types"

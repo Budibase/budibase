@@ -1,5 +1,3 @@
-const pg = require("pg")
-
 import { structures } from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
 import { setEnv } from "@budibase/backend-core"
