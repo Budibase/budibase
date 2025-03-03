@@ -654,9 +654,7 @@ async function destroyApp(ctx: UserCtx) {
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  if (!env.isTest()) {
-    await deleteAppFiles(appId)
-  }
+  await deleteAppFiles(appId)
 
   await removeAppFromUserRoles(ctx, appId)
   await cache.app.invalidateAppMetadata(devAppId)
