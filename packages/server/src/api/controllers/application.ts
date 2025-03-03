@@ -635,6 +635,11 @@ async function unpublishApp(ctx: UserCtx) {
   return result
 }
 
+async function invalidateAppCache(appId: string) {
+  await cache.app.invalidateAppMetadata(dbCore.getDevAppID(appId))
+  await cache.app.invalidateAppMetadata(dbCore.getProdAppID(appId))
+}
+
 async function destroyApp(ctx: UserCtx) {
   let appId = ctx.params.appId
   appId = dbCore.getProdAppID(appId)
@@ -654,17 +659,21 @@ async function destroyApp(ctx: UserCtx) {
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  if (!env.isTest()) {
+  if (!env.USE_LOCAL_COMPONENT_LIBS) {
     await deleteAppFiles(appId)
   }
 
   await removeAppFromUserRoles(ctx, appId)
-  await cache.app.invalidateAppMetadata(devAppId)
+  await invalidateAppCache(appId)
   return result
 }
 
 async function preDestroyApp(ctx: UserCtx) {
-  const { rows } = await getUniqueRows([ctx.params.appId])
+  // invalidate the cache immediately in-case they are leading to
+  // zombie appearing apps
+  const appId = ctx.params.appId
+  await invalidateAppCache(appId)
+  const { rows } = await getUniqueRows([appId])
   ctx.rowCount = rows.length
 }
 
