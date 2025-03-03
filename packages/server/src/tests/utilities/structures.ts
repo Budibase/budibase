@@ -37,6 +37,9 @@ import {
   DeepPartial,
   FilterCondition,
   AutomationTriggerResult,
+  EnvironmentVariablesDoc,
+  EnvironmentVariableValue,
+  CreateEnvironmentVariableRequest,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -574,7 +577,7 @@ export function basicEnvironmentVariable(
   name: string,
   prod: string,
   dev?: string
-) {
+): CreateEnvironmentVariableRequest {
   return {
     name,
     production: prod,

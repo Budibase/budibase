@@ -17,6 +17,7 @@ import { RowActionAPI } from "./rowAction"
 import { AutomationAPI } from "./automation"
 import { PluginAPI } from "./plugin"
 import { WebhookAPI } from "./webhook"
+import { EnvironmentAPI } from "./environment"
 
 export default class API {
   application: ApplicationAPI
@@ -24,6 +25,7 @@ export default class API {
   automation: AutomationAPI
   backup: BackupAPI
   datasource: DatasourceAPI
+  environment: EnvironmentAPI
   legacyView: LegacyViewAPI
   permission: PermissionAPI
   plugin: PluginAPI
@@ -44,6 +46,7 @@ export default class API {
     this.automation = new AutomationAPI(config)
     this.backup = new BackupAPI(config)
     this.datasource = new DatasourceAPI(config)
+    this.environment = new EnvironmentAPI(config)
     this.legacyView = new LegacyViewAPI(config)
     this.permission = new PermissionAPI(config)
     this.plugin = new PluginAPI(config)
