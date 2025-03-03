@@ -25,7 +25,7 @@
       lastUpdate: number
     }
     fieldApi: {
-      setValue(value: any): void
+      setValue(_value: any): void
       validate(): boolean
       reset(): void
     }
@@ -104,7 +104,7 @@
   // extracted values from the field array
   const deriveFieldProperty = (
     fieldStores: Readable<FieldStore>[],
-    getProp: (field: FieldStore) => any
+    getProp: (_field: FieldStore) => any
   ) => {
     return derived(fieldStores, fieldValues => {
       return fieldValues.reduce(
