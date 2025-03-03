@@ -12,23 +12,24 @@
     TableSchema,
     UIFieldValidationRule,
   } from "@budibase/types"
+  import Tab from "@budibase/bbui/src/Tabs/Tab.svelte"
 
-  type FieldInfo = {
+  type FieldInfo<T = any> = {
     name: string
     step: number
     type: `${FieldType}`
     fieldState: {
       fieldId: string
-      value: any
-      defaultValue: any
+      value: T
+      defaultValue: T
       disabled: boolean
       readonly: boolean
-      validator: ((_value: any) => string | null) | null
+      validator: ((_value: T) => string | null) | null
       error: string | null | undefined
       lastUpdate: number
     }
     fieldApi: {
-      setValue(_value: any): void
+      setValue(_value: T): void
       validate(): boolean
       reset(): void
     }
@@ -39,7 +40,7 @@
   export let disabled: boolean = false
   export let readonly: boolean = false
   export let initialValues: Record<string, any> | undefined = undefined
-  export let size: any = undefined
+  export let size: "Medium" | "Large" | undefined = undefined
   export let schema: TableSchema | undefined = undefined
   export let definition: Table | undefined = undefined
   export let disableSchemaValidation: boolean = false
@@ -448,9 +449,12 @@
     }
   }
 
-  const handleScrollToField = ({ field }: any) => {
-    if (!field.fieldState) {
-      field = get(getField(field))
+  const handleScrollToField = (props: { field: FieldInfo | string }) => {
+    let field
+    if (typeof props.field === "string") {
+      field = get(getField(props.field))
+    } else {
+      field = props.field
     }
     const fieldId = field.fieldState.fieldId
     const fieldElement = document.getElementById(fieldId)

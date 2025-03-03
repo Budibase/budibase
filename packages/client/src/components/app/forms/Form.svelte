@@ -6,7 +6,7 @@
   import type { DataFetchDatasource, Table, TableSchema } from "@budibase/types"
 
   export let dataSource: DataFetchDatasource
-  export let size: any
+  export let size: "Medium" | "Large"
   export let disabled: boolean = false
   export let readonly: boolean = false
   export let actionType: "Create" = "Create"
