@@ -3,7 +3,7 @@
   import InnerForm from "./InnerForm.svelte"
   import { Helpers } from "@budibase/bbui"
   import { writable } from "svelte/store"
-  import { DataFetchDatasource, Table, TableSchema } from "@budibase/types"
+  import type { DataFetchDatasource, Table, TableSchema } from "@budibase/types"
 
   export let dataSource: DataFetchDatasource
   export let size: any

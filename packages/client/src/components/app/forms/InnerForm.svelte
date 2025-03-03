@@ -1,9 +1,10 @@
 <script lang="ts">
   import { setContext, getContext } from "svelte"
-  import { derived, get, Readable, Writable, writable } from "svelte/store"
+  import type { Readable, Writable } from "svelte/store"
+  import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
-  import {
+  import type {
     DataFetchDatasource,
     FieldSchema,
     FieldType,
