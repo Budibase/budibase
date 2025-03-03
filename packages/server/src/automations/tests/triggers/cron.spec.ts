@@ -16,6 +16,7 @@ describe("cron trigger", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
