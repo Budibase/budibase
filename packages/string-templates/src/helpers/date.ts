@@ -71,7 +71,7 @@ function getContext(thisArg: any, locals: any, options: any) {
 function initialConfig(str: any, pattern: any, options?: any) {
   if (isOptions(pattern)) {
     options = pattern
-    pattern = null
+    pattern = DEFAULT_FORMAT
   }
 
   if (isOptions(str)) {
@@ -93,13 +93,15 @@ function setLocale(this: any, str: any, pattern: any, options?: any) {
   dayjs.locale(opts.lang || opts.language)
 }
 
+const DEFAULT_FORMAT = "MMMM DD, YYYY"
+
 export const date = (str: any, pattern: any, options: any) => {
   const config = initialConfig(str, pattern, options)
 
   // if no args are passed, return a formatted date
   if (config.str == null && config.pattern == null) {
     dayjs.locale("en")
-    return dayjs().format("MMMM DD, YYYY")
+    return dayjs().format(DEFAULT_FORMAT)
   }
 
   setLocale(config.str, config.pattern, config.options)
