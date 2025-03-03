@@ -1246,10 +1246,7 @@ if (descriptions.length) {
       })
 
       describe.each([
-        [
-          RowExportFormat.CSV,
-          (val: any) => JSON.stringify(val).replace(/"/g, "'"),
-        ],
+        [RowExportFormat.CSV, (val: any) => JSON.stringify(val)],
         [RowExportFormat.JSON, (val: any) => val],
       ])("import validation (%s)", (_, userParser) => {
         const basicSchema: TableSchema = {
