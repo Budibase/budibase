@@ -3,6 +3,12 @@ import * as matchers from "jest-extended"
 import { env as coreEnv, timers } from "@budibase/backend-core"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import nock from "nock"
+import AWS from "aws-sdk"
+
+// Prevent accidental use of real AWS credentials
+AWS.config.update({
+  credentialProvider: new AWS.CredentialProviderChain([]),
+})
 
 expect.extend(matchers)
 if (!process.env.CI) {

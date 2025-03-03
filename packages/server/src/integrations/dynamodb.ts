@@ -14,7 +14,7 @@ import {
   UpdateCommandInput,
   DeleteCommandInput,
 } from "@aws-sdk/lib-dynamodb"
-import { DynamoDB } from "@aws-sdk/client-dynamodb"
+import { DynamoDB, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb"
 import { AWS_REGION } from "../constants"
 
 export interface DynamoDBConfig {
@@ -22,7 +22,6 @@ export interface DynamoDBConfig {
   accessKeyId: string
   secretAccessKey: string
   endpoint?: string
-  currentClockSkew?: boolean
 }
 
 const SCHEMA: Integration = {
@@ -139,21 +138,15 @@ const SCHEMA: Integration = {
 }
 
 export class DynamoDBIntegration implements IntegrationBase {
-  private config: DynamoDBConfig
+  private config: DynamoDBClientConfig
   private client: DynamoDBDocument
 
   constructor(config: DynamoDBConfig) {
-    this.config = config
-
-    // User is using a local dynamoDB endpoint, don't auth with remote
-    if (this.config?.endpoint?.includes("localhost")) {
-      // @ts-ignore
-      this.config = {}
-    }
-
     this.config = {
-      ...this.config,
-      currentClockSkew: true,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
       region: config.region || AWS_REGION,
       endpoint: config.endpoint || undefined,
     }

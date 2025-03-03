@@ -1,7 +1,11 @@
 import { Datasource } from "@budibase/types"
 import { DynamoDBConfig, DynamoDBIntegration } from "../dynamodb"
 import { DatabaseName, datasourceDescribe } from "./utils"
-import { CreateTableCommandInput, DynamoDB } from "@aws-sdk/client-dynamodb"
+import {
+  CreateTableCommandInput,
+  DynamoDB,
+  DynamoDBClientConfig,
+} from "@aws-sdk/client-dynamodb"
 
 const describes = datasourceDescribe({ only: [DatabaseName.DYNAMODB] })
 
@@ -38,7 +42,16 @@ if (describes.length > 0) {
         rawDatasource.config! as DynamoDBConfig
       )
 
-      const client = new DynamoDB(rawDatasource.config as DynamoDBConfig)
+      const config: DynamoDBClientConfig = {
+        credentials: {
+          accessKeyId: "test",
+          secretAccessKey: "test",
+        },
+        region: "us-east-1",
+        endpoint: rawDatasource.config!.endpoint,
+      }
+
+      const client = new DynamoDB(config)
       await createTable(client, {
         TableName: table,
         KeySchema: [{ AttributeName: "Id", KeyType: "HASH" }],
