@@ -29,7 +29,6 @@ import {
   SearchResponse,
   SearchRowRequest,
   SortOrder,
-  SortType,
   Table,
   TableSchema,
   User,
@@ -213,7 +212,6 @@ if (descriptions.length) {
                     bookmark: this.query.bookmark ?? undefined,
                     limit: this.query.limit,
                     sortOrder: this.query.sortOrder,
-                    sortType: this.query.sortType ?? undefined,
                     version: this.query.version,
                     disableEscaping: this.query.disableEscaping,
                     countRows: this.query.countRows,
@@ -1119,26 +1117,6 @@ if (descriptions.length) {
                   }).toMatchExactly([{ name: "foo" }, { name: "bar" }])
                 })
 
-                describe("sortType STRING", () => {
-                  it("sorts ascending", async () => {
-                    await expectSearch({
-                      query: {},
-                      sort: "name",
-                      sortType: SortType.STRING,
-                      sortOrder: SortOrder.ASCENDING,
-                    }).toMatchExactly([{ name: "bar" }, { name: "foo" }])
-                  })
-
-                  it("sorts descending", async () => {
-                    await expectSearch({
-                      query: {},
-                      sort: "name",
-                      sortType: SortType.STRING,
-                      sortOrder: SortOrder.DESCENDING,
-                    }).toMatchExactly([{ name: "foo" }, { name: "bar" }])
-                  })
-                })
-
                 !isInternal &&
                   !isInMemory &&
                   // This test was added because we automatically add in a sort by the
@@ -1318,26 +1296,6 @@ if (descriptions.length) {
                   }).toMatchExactly([{ age: 10 }, { age: 1 }])
                 })
               })
-
-              describe("sortType NUMBER", () => {
-                it("sorts ascending", async () => {
-                  await expectSearch({
-                    query: {},
-                    sort: "age",
-                    sortType: SortType.NUMBER,
-                    sortOrder: SortOrder.ASCENDING,
-                  }).toMatchExactly([{ age: 1 }, { age: 10 }])
-                })
-
-                it("sorts descending", async () => {
-                  await expectSearch({
-                    query: {},
-                    sort: "age",
-                    sortType: SortType.NUMBER,
-                    sortOrder: SortOrder.DESCENDING,
-                  }).toMatchExactly([{ age: 10 }, { age: 1 }])
-                })
-              })
             })
 
             describe("dates", () => {
@@ -1471,26 +1429,6 @@ if (descriptions.length) {
                     sort: "dob",
                     sortOrder: SortOrder.DESCENDING,
                   }).toMatchExactly([{ dob: JAN_10TH }, { dob: JAN_1ST }])
-                })
-
-                describe("sortType STRING", () => {
-                  it("sorts ascending", async () => {
-                    await expectSearch({
-                      query: {},
-                      sort: "dob",
-                      sortType: SortType.STRING,
-                      sortOrder: SortOrder.ASCENDING,
-                    }).toMatchExactly([{ dob: JAN_1ST }, { dob: JAN_10TH }])
-                  })
-
-                  it("sorts descending", async () => {
-                    await expectSearch({
-                      query: {},
-                      sort: "dob",
-                      sortType: SortType.STRING,
-                      sortOrder: SortOrder.DESCENDING,
-                    }).toMatchExactly([{ dob: JAN_10TH }, { dob: JAN_1ST }])
-                  })
                 })
               })
             })
@@ -1637,40 +1575,6 @@ if (descriptions.length) {
                       { time: "00:00:00" },
                       { timeid: NULL_TIME__ID },
                     ])
-                  })
-
-                  describe("sortType STRING", () => {
-                    it("sorts ascending", async () => {
-                      await expectSearch({
-                        query: {},
-                        sort: "time",
-                        sortType: SortType.STRING,
-                        sortOrder: SortOrder.ASCENDING,
-                      }).toMatchExactly([
-                        { timeid: NULL_TIME__ID },
-                        { time: "00:00:00" },
-                        { time: "10:00:00" },
-                        { time: "10:45:00" },
-                        { time: "12:00:00" },
-                        { time: "15:30:00" },
-                      ])
-                    })
-
-                    it("sorts descending", async () => {
-                      await expectSearch({
-                        query: {},
-                        sort: "time",
-                        sortType: SortType.STRING,
-                        sortOrder: SortOrder.DESCENDING,
-                      }).toMatchExactly([
-                        { time: "15:30:00" },
-                        { time: "12:00:00" },
-                        { time: "10:45:00" },
-                        { time: "10:00:00" },
-                        { time: "00:00:00" },
-                        { timeid: NULL_TIME__ID },
-                      ])
-                    })
                   })
                 })
               })
@@ -1845,34 +1749,6 @@ if (descriptions.length) {
                             { date: JAN_1ST },
                             { dateid: NULL_DATE__ID },
                           ])
-                        })
-
-                        describe("sortType STRING", () => {
-                          it("sorts ascending", async () => {
-                            await expectSearch({
-                              query: {},
-                              sort: "date",
-                              sortType: SortType.STRING,
-                              sortOrder: SortOrder.ASCENDING,
-                            }).toMatchExactly([
-                              { dateid: NULL_DATE__ID },
-                              { date: JAN_1ST },
-                              { date: JAN_10TH },
-                            ])
-                          })
-
-                          it("sorts descending", async () => {
-                            await expectSearch({
-                              query: {},
-                              sort: "date",
-                              sortType: SortType.STRING,
-                              sortOrder: SortOrder.DESCENDING,
-                            }).toMatchExactly([
-                              { date: JAN_10TH },
-                              { date: JAN_1ST },
-                              { dateid: NULL_DATE__ID },
-                            ])
-                          })
                         })
                       })
                     }
@@ -2298,7 +2174,6 @@ if (descriptions.length) {
                       query: {},
                       sort: "auto",
                       sortOrder: SortOrder.ASCENDING,
-                      sortType: SortType.NUMBER,
                     }).toMatchExactly([
                       { auto: 1 },
                       { auto: 2 },
@@ -2318,7 +2193,6 @@ if (descriptions.length) {
                       query: {},
                       sort: "auto",
                       sortOrder: SortOrder.DESCENDING,
-                      sortType: SortType.NUMBER,
                     }).toMatchExactly([
                       { auto: 10 },
                       { auto: 9 },
