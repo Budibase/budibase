@@ -249,7 +249,7 @@ export class DatabaseImpl implements Database {
     if (!opts?.allowMissing && someMissing) {
       const missing = response.rows.filter(row => rowUnavailable(row))
       const missingIds = missing.map(row => row.key).join(", ")
-      throw new Error(`Unable to get documents: ${missingIds}`)
+      throw new Error(`Unable to get bulk documents: ${missingIds}`)
     }
     return rows.map(row => (includeDocs ? row.doc! : row.value))
   }

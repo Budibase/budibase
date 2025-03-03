@@ -19,7 +19,7 @@ export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
 async function getGroups(groupIds: string[]) {
   if (groupIds.length) {
     const db = context.getGlobalDB()
-    return await db.getMultiple<UserGroup>(groupIds)
+    return await db.getMultiple<UserGroup>(groupIds, { allowMissing: true })
   }
   return []
 }
