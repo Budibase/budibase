@@ -9,7 +9,7 @@
     RelationshipFieldMetadata,
     Row,
   } from "@budibase/types"
-  import { FieldApi, FieldState } from "."
+  import type { FieldApi, FieldState } from "."
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined

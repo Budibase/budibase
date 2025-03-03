@@ -5,7 +5,7 @@
   import { memo } from "@budibase/frontend-core"
   import Placeholder from "../Placeholder.svelte"
   import InnerForm from "./InnerForm.svelte"
-  import { FieldApi } from "."
+  import type { FieldApi } from "."
 
   export let label: string | undefined = undefined
   export let field: string | undefined = undefined
