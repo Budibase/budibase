@@ -64,7 +64,7 @@
   import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
 
-  export let title
+  export let title = ""
   export let forceModal = false
 
   const dispatch = createEventDispatcher()
