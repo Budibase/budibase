@@ -3,7 +3,13 @@
   import { derived, get, Readable, Writable, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
-  import { FieldSchema, FieldType, TableSchema } from "@budibase/types"
+  import {
+    DataFetchDatasource,
+    FieldSchema,
+    FieldType,
+    Table,
+    TableSchema,
+  } from "@budibase/types"
 
   type FieldStore = {
     name: string
@@ -25,13 +31,13 @@
     }
   }
 
-  export let dataSource = undefined
+  export let dataSource: DataFetchDatasource | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
   export let initialValues: Record<string, any> | undefined = undefined
-  export let size = undefined
+  export let size: any = undefined
   export let schema: TableSchema | undefined = undefined
-  export let definition = undefined
+  export let definition: Table | undefined = undefined
   export let disableSchemaValidation: boolean = false
   export let editAutoColumns: boolean = false
 
