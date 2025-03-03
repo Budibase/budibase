@@ -270,20 +270,6 @@ function parseJsonExport<T>(value: any) {
   if (typeof value !== "string") {
     return value
   }
-  try {
-    const parsed = JSON.parse(value)
-
-    return parsed as T
-  } catch (e: any) {
-    if (
-      e.message.startsWith("Expected property name or '}' in JSON at position ")
-    ) {
-      // This was probably converted as CSV and it has single quotes instead of double ones
-      const parsed = JSON.parse(value.replace(/'/g, '"'))
-      return parsed as T
-    }
-
-    // It is no a valid JSON
-    throw e
-  }
+  const parsed = JSON.parse(value)
+  return parsed as T
 }
