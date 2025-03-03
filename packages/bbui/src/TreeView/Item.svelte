@@ -1,9 +1,9 @@
-<script>
-  export let selected = false
-  export let open = false
-  export let href = false
-  export let title
-  export let icon
+<script lang="ts">
+  export let selected: boolean = false
+  export let open: boolean = false
+  export let href: string | null = null
+  export let title: string
+  export let icon: string | undefined
 </script>
 
 <li

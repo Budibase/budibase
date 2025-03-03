@@ -4,7 +4,7 @@
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./FormBlockWrapper.svelte"
   import { get } from "svelte/store"
-  import { TableSchema } from "@budibase/types"
+  import type { TableSchema } from "@budibase/types"
 
   type Field = { name: string; active: boolean }
 

@@ -4,7 +4,7 @@ import { GroupUserDatasource, InternalTable } from "@budibase/types"
 
 interface GroupUserQuery {
   groupId: string
-  emailSearch: string
+  emailSearch?: string
 }
 
 interface GroupUserDefinition {

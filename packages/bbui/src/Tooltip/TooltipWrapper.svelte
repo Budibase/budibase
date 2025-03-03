@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import Icon from "../Icon/Icon.svelte"
   import AbsTooltip from "./AbsTooltip.svelte"
 
-  export let tooltip = ""
-  export let size = "M"
-  export let disabled = true
+  export let tooltip: string = ""
+  export let size: "S" | "M" = "M"
+  export let disabled: boolean = true
 </script>
 
 <div class:container={!!tooltip}>
