@@ -9,7 +9,7 @@
     RelationshipFieldMetadata,
     Row,
   } from "@budibase/types"
-  import { FieldApi } from "."
+  import { FieldApi, FieldState } from "."
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
@@ -36,14 +36,7 @@
   const { API } = getContext("sdk")
 
   // Field state
-  let fieldState:
-    | {
-        value: string | string[]
-        fieldId: string
-        disabled: boolean
-        readonly: boolean
-      }
-    | undefined
+  let fieldState: FieldState<string | string[]> | undefined
 
   let fieldApi: FieldApi
   let fieldSchema: RelationshipFieldMetadata | undefined

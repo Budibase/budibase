@@ -22,4 +22,12 @@ export { default as bbreferencesinglefield } from "./BBReferenceSingleField.svel
 
 export interface FieldApi {
   setValue(value: any): boolean
+  deregister(): void
+}
+
+export interface FieldState<T> {
+  value: T
+  fieldId: string
+  disabled: boolean
+  readonly: boolean
 }
