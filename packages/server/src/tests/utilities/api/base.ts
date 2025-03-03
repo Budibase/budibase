@@ -1,12 +1,11 @@
 import jestOpenAPI from "jest-openapi"
-import { run as generateSchema } from "../../../../specs/generate"
+import { spec } from "../../../../specs/generate"
 import TestConfiguration from "../TestConfiguration"
 import request, { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
 import { getServer } from "../../../app"
 
-const yamlPath = generateSchema()
-jestOpenAPI(yamlPath!)
+jestOpenAPI(spec() as any)
 
 type Headers = Record<string, string | string[] | undefined>
 type Method = "get" | "post" | "put" | "patch" | "delete"

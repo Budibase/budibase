@@ -72,6 +72,10 @@ function writeFile(output: any, filename: string) {
   return path
 }
 
+export function spec() {
+  return swaggerJsdoc({ ...opts, format: ".json" })
+}
+
 export function run() {
   writeFile(swaggerJsdoc({ ...opts, format: ".json" }), "openapi.json")
   return writeFile(swaggerJsdoc({ ...opts, format: ".yaml" }), "openapi.yaml")
