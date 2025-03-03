@@ -22,10 +22,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   beforeEach(async () => {
-    const { automations } = await config.api.automation.fetch()
-    for (const automation of automations) {
-      await config.api.automation.delete(automation)
-    }
+    await config.api.automation.deleteAll()
 
     table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, {})
