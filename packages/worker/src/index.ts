@@ -63,11 +63,6 @@ const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
       store: new RedisStore({ client: redisClient.getClient() }),
       key: "koa:sess",
       maxAge: 86400000, // one day
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      rolling: true,
-      renew: true,
     },
     app
   )(ctx, next)

@@ -106,6 +106,7 @@ export const Roles = {
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
   CREATOR: "CREATOR",
+  GROUP: "GROUP",
 }
 
 export const EventPublishType = {

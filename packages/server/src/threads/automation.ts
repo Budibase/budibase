@@ -68,7 +68,11 @@ function getLoopIterable(step: LoopStep): any[] {
   let input = step.inputs.binding
 
   if (option === LoopStepType.ARRAY && typeof input === "string") {
-    input = JSON.parse(input)
+    if (input === "") {
+      input = []
+    } else {
+      input = JSON.parse(input)
+    }
   }
 
   if (option === LoopStepType.STRING && Array.isArray(input)) {
@@ -363,6 +367,8 @@ class Orchestrator {
         if (e.errno === "ETIME") {
           span?.addTags({ timedOut: true })
           console.warn(`Automation execution timed out after ${timeout}ms`)
+        } else {
+          throw e
         }
       }
 
@@ -492,7 +498,7 @@ class Orchestrator {
       }
 
       const status =
-        iterations === 0 ? AutomationStatus.NO_CONDITION_MET : undefined
+        iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
       return stepSuccess(stepToLoop, { status, iterations, items })
     })
   }
