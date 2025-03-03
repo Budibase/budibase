@@ -1,7 +1,19 @@
 export interface EnrichedBinding {
+  value: string
+  valueHTML: string
   runtimeBinding: string
   readableBinding: string
   type?: null | string
+  icon?: string
+  category: string
+  display?: { name: string; type: string }
+  fieldSchema?: {
+    name: string
+    tableId: string
+    type: string
+    subtype?: string
+    prefixKeys?: string
+  }
 }
 
 export enum BindingMode {
