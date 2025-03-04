@@ -9,6 +9,7 @@ describe("Test triggering an automation from another automation", () => {
   beforeAll(async () => {
     await automation.init()
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(async () => {
