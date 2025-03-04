@@ -33,6 +33,7 @@ describe("test the create row action", () => {
       name: "test",
       description: "test",
     }
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {

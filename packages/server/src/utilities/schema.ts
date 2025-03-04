@@ -270,6 +270,7 @@ function parseJsonExport<T>(value: any) {
   if (typeof value !== "string") {
     return value
   }
+
   try {
     const parsed = JSON.parse(value)
 
@@ -278,12 +279,17 @@ function parseJsonExport<T>(value: any) {
     if (
       e.message.startsWith("Expected property name or '}' in JSON at position ")
     ) {
-      // This was probably converted as CSV and it has single quotes instead of double ones
+      // In order to store JSON within CSVs what we used to do is replace double
+      // quotes with single quotes. This results in invalid JSON, so the line
+      // below is a workaround to parse it. However, this method of storing JSON
+      // was never valid, and we don't do it anymore. However, people may have
+      // exported data and stored it, hoping to be able to restore it later, so
+      // we leave this in place to support that.
       const parsed = JSON.parse(value.replace(/'/g, '"'))
       return parsed as T
     }
 
-    // It is no a valid JSON
+    // It is not valid JSON
     throw e
   }
 }

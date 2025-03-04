@@ -1,19 +1,6 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
 import { setEnv } from "../../../environment"
 
-jest.mock("../../../utilities/redis", () => ({
-  init: jest.fn(),
-  getLocksById: () => {
-    return {}
-  },
-  doesUserHaveLock: () => {
-    return true
-  },
-  updateLock: jest.fn(),
-  setDebounce: jest.fn(),
-  checkDebounce: jest.fn(),
-  shutdown: jest.fn(),
-}))
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
