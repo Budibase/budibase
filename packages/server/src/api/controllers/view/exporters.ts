@@ -26,7 +26,7 @@ export function csv(
       headers.map(header => {
         const val = row[header]
         if (typeof val === "object" && !(val instanceof Date)) {
-          return `"${JSON.stringify(val).replace(/"/g, "'")}"`
+          return `"${escapeCsvString(JSON.stringify(val))}"`
         }
         if (val !== undefined) {
           return `"${escapeCsvString(val.toString())}"`
