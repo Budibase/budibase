@@ -11,7 +11,6 @@ import {
   SortType,
   FieldConstraints,
   SortOrder,
-  RowSearchParams,
   EmptyFilterOption,
   SearchResponse,
   Table,
@@ -25,6 +24,8 @@ import {
   isArraySearchOperator,
   isRangeSearchOperator,
   SearchFilter,
+  WithRequired,
+  SearchParams,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -521,9 +522,17 @@ export function fixupFilterArrays(filters: SearchFilters) {
   return filters
 }
 
+type SearchQuery = WithRequired<
+  Pick<
+    SearchParams,
+    "query" | "sort" | "sortOrder" | "sortType" | "limit" | "countRows"
+  >,
+  "query"
+>
+
 export function search<T extends Record<string, any>>(
   docs: T[],
-  query: Omit<RowSearchParams, "tableId">
+  query: SearchQuery
 ): SearchResponse<T> {
   let result = runQuery(docs, query.query)
   if (query.sort) {
