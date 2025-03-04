@@ -16,8 +16,8 @@ export const hasAdminPermissions = sdk.users.hasAdminPermissions
 export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
 export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
 
-async function getGroups(groupIds: string[]) {
-  if (groupIds.length) {
+async function getGroups(groupIds?: string[]) {
+  if (groupIds?.length) {
     const db = context.getGlobalDB()
     return await db.getMultiple<UserGroup>(groupIds, { allowMissing: true })
   }
@@ -34,21 +34,16 @@ export async function creatorsInList(
       groups = await getGroups(groupIds)
     }
   }
-  return users.map(user => isCreatorSync(user, groups || []))
+  return users.map(user => isCreatorSync(user, groups))
 }
 
 // fetches groups if no provided, but is async and shouldn't be looped with
-export async function isCreatorAsync(
-  user: User | ContextUser,
-  groups?: UserGroup[]
-) {
-  if (!groups) {
-    groups = await getGroups(user.userGroups || [])
-  }
+export async function isCreatorAsync(user: User | ContextUser) {
+  const groups = await getGroups(user.userGroups)
   return isCreatorSync(user, groups)
 }
 
-export function isCreatorSync(user: User | ContextUser, groups: UserGroup[]) {
+export function isCreatorSync(user: User | ContextUser, groups?: UserGroup[]) {
   const isCreatorByUserDefinition = sdk.users.isCreator(user)
   if (!isCreatorByUserDefinition && user) {
     return isCreatorByGroupMembership(user, groups)
@@ -58,12 +53,12 @@ export function isCreatorSync(user: User | ContextUser, groups: UserGroup[]) {
 
 function isCreatorByGroupMembership(
   user: User | ContextUser,
-  groups: UserGroup[]
+  groups?: UserGroup[]
 ) {
-  const userGroups = groups.filter(
+  const userGroups = groups?.filter(
     group => user.userGroups?.indexOf(group._id!) !== -1
   )
-  if (userGroups.length > 0) {
+  if (userGroups && userGroups.length > 0) {
     return userGroups.some(group =>
       Object.values(group.roles || {}).includes(BUILTIN_ROLE_IDS.ADMIN)
     )
