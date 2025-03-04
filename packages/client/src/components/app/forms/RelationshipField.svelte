@@ -108,17 +108,14 @@
     filter: SearchFilter[],
     linkedTableId?: string
   ) => {
-    if (!linkedTableId) {
-      return undefined
-    }
     const datasource =
-      datasourceType === "table"
+      dsType === "table"
         ? {
-            type: datasourceType,
-            tableId: fieldSchema?.tableId!,
+            type: dsType,
+            tableId: linkedTableId!,
           }
         : {
-            type: datasourceType,
+            type: dsType,
             tableId: InternalTable.USER_METADATA,
           }
     return fetchData({
