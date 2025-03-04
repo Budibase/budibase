@@ -13,24 +13,26 @@ import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 describe("Attempt to run a basic loop automation", () => {
-  const config = new TestConfiguration()
+  let config: TestConfiguration
   let table: Table
 
   beforeAll(async () => {
-    await config.init()
     await automation.init()
   })
 
   beforeEach(async () => {
-    await config.api.automation.deleteAll()
+    config = new TestConfiguration()
+    await config.init()
 
     table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, {})
   })
+  afterEach(async () => {
+    config.end()
+  })
 
   afterAll(async () => {
     await automation.shutdown()
-    config.end()
   })
 
   it("attempt to run a basic loop", async () => {

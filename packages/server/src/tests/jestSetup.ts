@@ -3,6 +3,7 @@ import * as matchers from "jest-extended"
 import { env as coreEnv, timers } from "@budibase/backend-core"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import nock from "nock"
+import { quotas } from "@budibase/pro"
 
 expect.extend(matchers)
 if (!process.env.CI) {
@@ -23,6 +24,10 @@ nock.enableNetConnect(host => {
 
 testContainerUtils.setupEnv(env, coreEnv)
 
-afterAll(() => {
+beforeAll(async () => {
+  quotas.disable()
+})
+
+afterAll(async () => {
   timers.cleanup()
 })

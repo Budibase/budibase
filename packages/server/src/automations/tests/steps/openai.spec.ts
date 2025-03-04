@@ -44,11 +44,13 @@ describe("test the openai action", () => {
   }
 
   const expectAIUsage = async <T>(expected: number, f: () => Promise<T>) => {
-    const before = await getAIUsage()
-    const result = await f()
-    const after = await getAIUsage()
-    expect(after - before).toEqual(expected)
-    return result
+    return await quotas.withEnabled(async () => {
+      const before = await getAIUsage()
+      const result = await f()
+      const after = await getAIUsage()
+      expect(after - before).toEqual(expected)
+      return result
+    })
   }
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
