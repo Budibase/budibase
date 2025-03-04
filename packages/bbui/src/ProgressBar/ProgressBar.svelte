@@ -14,7 +14,6 @@
   class:spectrum-ProgressBar--indeterminate={!value && value !== 0}
   class:spectrum-ProgressBar--sideLabel={sideLabel}
   class="spectrum-ProgressBar spectrum-ProgressBar--size{size}"
-  value={typeof value === "number" ? value : undefined}
   role="progressbar"
   aria-valuenow={typeof value === "number" ? value : undefined}
   aria-valuemin="0"
@@ -45,7 +44,7 @@
         : 0}%; --duration: {duration}ms;"
     />
   </div>
-  <div class="spectrum-ProgressBar-label" hidden="" />
+  <div class="spectrum-ProgressBar-label" hidden={false} />
 </div>
 
 <style>
