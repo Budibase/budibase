@@ -530,6 +530,8 @@ type SearchQuery = WithRequired<
   "query"
 >
 
+export type InMemorySearchQuery = SearchQuery
+
 export function search<T extends Record<string, any>>(
   docs: T[],
   query: SearchQuery
