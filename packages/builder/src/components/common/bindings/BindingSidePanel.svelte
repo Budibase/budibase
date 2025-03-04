@@ -246,15 +246,15 @@
         </div>
       {/if}
       {#if hoverTarget.code}
-        {#if mode === BindingMode.JavaScript}
+        {#if mode === BindingMode.Text || (mode === BindingMode.JavaScript && hoverTarget.type === "binding")}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          <pre>{@html hoverTarget.code}</pre>
+        {:else}
           <CodeEditor
             value={hoverTarget.code?.trim()}
             mode={EditorModes.JS}
             readonly
           />
-        {:else if mode === BindingMode.Text}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-          <pre>{@html hoverTarget.code}</pre>
         {/if}
       {/if}
     </div>
