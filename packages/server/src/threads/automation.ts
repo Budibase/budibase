@@ -293,13 +293,6 @@ class Orchestrator {
 
   hasErrored(context: AutomationContext): boolean {
     return context._error === true
-    // const [_trigger, ...steps] = context.steps
-    // for (const step of steps) {
-    //   if (step.success === false) {
-    //     return true
-    //   }
-    // }
-    // return false
   }
 
   async execute(): Promise<AutomationResults> {

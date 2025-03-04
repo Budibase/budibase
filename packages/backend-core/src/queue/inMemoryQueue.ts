@@ -87,9 +87,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
    */
   async process(concurrencyOrFunc: number | any, func?: any) {
     func = typeof concurrencyOrFunc === "number" ? func : concurrencyOrFunc
-    this._emitter.on("message", async msg => {
-      const message = msg
-
+    this._emitter.on("message", async message => {
       // For the purpose of testing, don't trigger cron jobs immediately.
       // Require the test to trigger them manually with timestamps.
       if (!message.manualTrigger && message.opts?.repeat != null) {
