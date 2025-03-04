@@ -112,13 +112,13 @@
       return undefined
     }
     const datasource =
-      datasourceType === "table"
+      dsType === "table"
         ? {
-            type: datasourceType,
+            type: dsType,
             tableId: fieldSchema?.tableId!,
           }
         : {
-            type: datasourceType,
+            type: dsType,
             tableId: InternalTable.USER_METADATA,
           }
     return fetchData({
