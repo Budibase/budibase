@@ -2,16 +2,10 @@ import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
 import env from "../environment"
 import { env as coreEnv, timers } from "@budibase/backend-core"
 import nock from "nock"
-import AWS from "aws-sdk"
 
 // mock all dates to 2020-01-01T00:00:00.000Z
 // use tk.reset() to use real dates in individual tests
 import tk from "timekeeper"
-
-// Prevent accidental use of real AWS credentials
-AWS.config.update({
-  credentialProvider: new AWS.CredentialProviderChain([]),
-})
 
 nock.disableNetConnect()
 nock.enableNetConnect(host => {
