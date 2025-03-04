@@ -1,10 +1,10 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { Heading, Icon, clickOutside, TooltipPosition } from "@budibase/bbui"
+  import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
-  import { UserAvatar } from "@budibase/frontend-core"
+  import UserMenu from "./UserMenu.svelte"
 
   const sdk = getContext("sdk")
   const {
@@ -14,7 +14,6 @@
     builderStore,
     sidePanelStore,
     modalStore,
-    authStore,
   } = sdk
   const context = getContext("context")
   const navStateStore = writable({})
@@ -159,11 +158,6 @@
     return !url.startsWith("http") ? `http://${url}` : url
   }
 
-  const navigateToPortal = () => {
-    if ($builderStore.inBuilder) return
-    window.location.href = "/builder/apps"
-  }
-
   const getScreenXOffset = (navigation, mobile) => {
     if (navigation !== "Left") {
       return 0
@@ -276,14 +270,9 @@
                   <Heading size="S" {textAlign}>{title}</Heading>
                 {/if}
               </div>
-              {#if !embedded && $authStore}
+              {#if !embedded}
                 <div class="user top">
-                  <UserAvatar
-                    user={$authStore}
-                    size="M"
-                    tooltipPosition={TooltipPosition.Left}
-                  />
-                  <Icon name="ChevronDown" />
+                  <UserMenu compact />
                 </div>
               {/if}
             </div>
@@ -309,16 +298,9 @@
                 {/each}
               </div>
             {/if}
-            {#if !embedded && $authStore}
+            {#if !embedded}
               <div class="user left">
-                <UserAvatar user={$authStore} size="M" showTooltip={false} />
-                <div class="text">
-                  <div class="name">
-                    {$authStore.firstName}
-                    {$authStore.lastName}
-                  </div>
-                </div>
-                <Icon name="ChevronDown" />
+                <UserMenu />
               </div>
             {/if}
           </div>
@@ -558,34 +540,6 @@
   }
   .mobile-click-handler {
     display: none;
-  }
-
-  /* User avatar */
-  .user {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
-    transition: background 130ms ease-out;
-    border-radius: 4px;
-  }
-  .user .text {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    color: var(--navTextColor);
-    display: none;
-  }
-  .user .name {
-    font-weight: 600;
-    font-size: 14px;
-  }
-  .layout--left .user .text {
-    display: flex;
-  }
-  .user:hover {
-    cursor: pointer;
   }
 
   /* Left overrides for both desktop and mobile */

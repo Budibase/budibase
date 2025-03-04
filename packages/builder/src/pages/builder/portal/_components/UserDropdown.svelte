@@ -26,8 +26,8 @@
 
 <ActionMenu align="right">
   <div slot="control" class="user-dropdown">
-    <UserAvatar user={$auth.user} showTooltip={false} />
-    <Icon size="XL" name="ChevronDown" />
+    <UserAvatar size="M" user={$auth.user} showTooltip={false} />
+    <Icon size="L" name="ChevronDown" />
   </div>
   <MenuItem icon="UserEdit" on:click={() => profileModal.show()}>
     My profile
@@ -75,7 +75,8 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
+    transition: filter 130ms ease-out;
   }
   .user-dropdown:hover {
     cursor: pointer;

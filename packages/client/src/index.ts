@@ -1,6 +1,7 @@
 import ClientApp from "./components/ClientApp.svelte"
 import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
+  authStore,
   builderStore,
   appStore,
   blockStore,
@@ -80,6 +81,7 @@ export interface SDK {
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
   generateGoldenSample: any
+  authStore: typeof authStore
   builderStore: Readable<{
     inBuilder: boolean
   }> & {

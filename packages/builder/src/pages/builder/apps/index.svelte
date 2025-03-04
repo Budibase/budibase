@@ -105,8 +105,8 @@
             <img class="logo" alt="logo" src={$organisation.logoUrl || Logo} />
             <ActionMenu align="right">
               <div slot="control" class="avatar">
-                <UserAvatar user={$auth.user} showTooltip={false} />
-                <Icon size="XL" name="ChevronDown" />
+                <UserAvatar size="M" user={$auth.user} showTooltip={false} />
+                <Icon size="L" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
                 My profile
@@ -239,6 +239,7 @@
     grid-template-columns: auto auto;
     place-items: center;
     grid-gap: var(--spacing-xs);
+    transition: filter 130ms ease-out;
   }
   .avatar:hover {
     cursor: pointer;

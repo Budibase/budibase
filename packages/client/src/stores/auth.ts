@@ -1,10 +1,21 @@
 import { API } from "@/api"
 import { writable } from "svelte/store"
+import {
+  AppSelfResponse,
+  ContextUserMetadata,
+  GetGlobalSelfResponse,
+} from "@budibase/types"
+
+type AuthState = ContextUserMetadata | GetGlobalSelfResponse | null
 
 const createAuthStore = () => {
-  const store = writable<{
-    csrfToken?: string
-  } | null>(null)
+  const store = writable<AuthState>(null)
+
+  const hasAppSelfUser = (
+    user: AppSelfResponse | null
+  ): user is ContextUserMetadata => {
+    return user != null && "_id" in user
+  }
 
   // Fetches the user object if someone is logged in and has reloaded the page
   const fetchUser = async () => {
@@ -21,7 +32,10 @@ const createAuthStore = () => {
 
     // Then try and get the user for this app to provide via context
     try {
-      appSelf = await API.fetchSelf()
+      const res = await API.fetchSelf()
+      if (hasAppSelfUser(res)) {
+        appSelf = res
+      }
     } catch (error) {
       // Swallow
     }
