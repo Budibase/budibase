@@ -222,9 +222,12 @@ export class DatabaseImpl implements Database {
   }
 
   async getMultiple<T extends Document>(
-    ids: string[],
+    ids?: string[],
     opts?: { allowMissing?: boolean; excludeDocs?: boolean }
   ): Promise<T[]> {
+    if (!ids || ids.length === 0) {
+      return []
+    }
     // get unique
     ids = [...new Set(ids)]
     const includeDocs = !opts?.excludeDocs
