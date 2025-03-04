@@ -23,11 +23,6 @@ nock.enableNetConnect(host => {
 
 testContainerUtils.setupEnv(env, coreEnv)
 
-beforeAll(async () => {
-  const quotas = require("@budibase/pro").quotas
-  quotas.disable()
-})
-
 afterAll(async () => {
   timers.cleanup()
 })
