@@ -190,7 +190,34 @@ describe("Attempt to run a basic loop automation", () => {
       .serverLog({ text: "{{steps.1.iterations}}" })
       .test({ fields: {} })
 
+    expect(results.steps[0].outputs.status).toBe(
+      AutomationStepStatus.MAX_ITERATIONS
+    )
     expect(results.steps[0].outputs.iterations).toBe(2)
+    expect(results.steps[0].outputs.items).toHaveLength(2)
+    expect(results.steps[0].outputs.items[0].message).toEndWith("test")
+    expect(results.steps[0].outputs.items[1].message).toEndWith("test2")
+  })
+
+  it("should stop when a failure condition is hit", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: ["test", "test2", "test3"],
+        failure: "test3",
+      })
+      .serverLog({ text: "{{loop.currentItem}}" })
+      .serverLog({ text: "{{steps.1.iterations}}" })
+      .test({ fields: {} })
+
+    expect(results.steps[0].outputs.status).toBe(
+      AutomationStepStatus.FAILURE_CONDITION
+    )
+    expect(results.steps[0].outputs.iterations).toBe(2)
+    expect(results.steps[0].outputs.items).toHaveLength(2)
+    expect(results.steps[0].outputs.items[0].message).toEndWith("test")
+    expect(results.steps[0].outputs.items[1].message).toEndWith("test2")
   })
 
   it("should run an automation with loop and max iterations to ensure context correctness further down the tree", async () => {

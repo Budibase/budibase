@@ -473,6 +473,7 @@ class Orchestrator {
           return stepFailure(stepToLoop, {
             status: AutomationStepStatus.MAX_ITERATIONS,
             iterations,
+            items,
           })
         }
 
@@ -483,6 +484,8 @@ class Orchestrator {
           })
           return stepFailure(stepToLoop, {
             status: AutomationStepStatus.FAILURE_CONDITION,
+            iterations,
+            items,
           })
         }
 
