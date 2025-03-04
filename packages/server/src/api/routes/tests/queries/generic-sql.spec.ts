@@ -9,7 +9,8 @@ import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {

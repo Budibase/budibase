@@ -165,7 +165,8 @@ describe("/datasources", () => {
 })
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {
@@ -590,7 +591,8 @@ if (descriptions.length) {
 }
 
 const datasources = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS, DatabaseName.ORACLE],
+  plus: true,
+  exclude: [DatabaseName.SQS, DatabaseName.ORACLE],
 })
 
 if (datasources.length) {

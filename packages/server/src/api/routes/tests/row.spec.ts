@@ -1,9 +1,6 @@
 import * as setup from "./utilities"
 
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
@@ -80,7 +77,7 @@ function encodeJS(binding: string) {
   return `{{ js "${Buffer.from(binding).toString("base64")}"}}`
 }
 
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -2518,15 +2515,14 @@ if (descriptions.length) {
               csvString: exportedValue,
             })
 
-            const stringified = (value: string) =>
-              JSON.stringify(value).replace(/"/g, "'")
+            const stringified = (value: string) => JSON.stringify(value)
 
             const matchingObject = (
               key: string,
               value: any,
               isArray: boolean
             ) => {
-              const objectMatcher = `{'${key}':'${value[key]}'.*?}`
+              const objectMatcher = `{"${key}":"${value[key]}".*?}`
               if (isArray) {
                 return expect.stringMatching(
                   new RegExp(`^\\[${objectMatcher}\\]$`)

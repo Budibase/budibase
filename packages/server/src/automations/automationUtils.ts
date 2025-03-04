@@ -6,10 +6,10 @@ import {
 import sdk from "../sdk"
 import {
   AutomationAttachment,
+  BaseIOStructure,
+  FieldSchema,
   FieldType,
   Row,
-  LoopStepType,
-  LoopStepInputs,
 } from "@budibase/types"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
@@ -32,33 +32,34 @@ import path from "path"
  * primitive types.
  */
 export function cleanInputValues<T extends Record<string, any>>(
-  inputs: any,
-  schema?: any
+  inputs: T,
+  schema?: Partial<Record<keyof T, FieldSchema | BaseIOStructure>>
 ): T {
-  if (schema == null) {
-    return inputs
-  }
-  for (let inputKey of Object.keys(inputs)) {
+  const keys = Object.keys(inputs) as (keyof T)[]
+  for (let inputKey of keys) {
     let input = inputs[inputKey]
     if (typeof input !== "string") {
       continue
     }
-    let propSchema = schema.properties[inputKey]
+    let propSchema = schema?.[inputKey]
     if (!propSchema) {
       continue
     }
     if (propSchema.type === "boolean") {
       let lcInput = input.toLowerCase()
       if (lcInput === "true") {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = true
       }
       if (lcInput === "false") {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = false
       }
     }
     if (propSchema.type === "number") {
       let floatInput = parseFloat(input)
       if (!isNaN(floatInput)) {
+        // @ts-expect-error - indexing a generic on purpose
         inputs[inputKey] = floatInput
       }
     }
@@ -93,7 +94,7 @@ export function cleanInputValues<T extends Record<string, any>>(
  */
 export async function cleanUpRow(tableId: string, row: Row) {
   let table = await sdk.tables.getTable(tableId)
-  return cleanInputValues(row, { properties: table.schema })
+  return cleanInputValues(row, table.schema)
 }
 
 export function getError(err: any) {
@@ -270,37 +271,4 @@ export function stringSplit(value: string | string[]) {
     return splitOnNewLine
   }
   return value.split(",")
-}
-
-export function typecastForLooping(input: LoopStepInputs) {
-  if (!input || !input.binding) {
-    return null
-  }
-  try {
-    switch (input.option) {
-      case LoopStepType.ARRAY:
-        if (typeof input.binding === "string") {
-          return JSON.parse(input.binding)
-        }
-        break
-      case LoopStepType.STRING:
-        if (Array.isArray(input.binding)) {
-          return input.binding.join(",")
-        }
-        break
-    }
-  } catch (err) {
-    throw new Error("Unable to cast to correct type")
-  }
-  return input.binding
-}
-
-export function ensureMaxIterationsAsNumber(
-  value: number | string | undefined
-): number | undefined {
-  if (typeof value === "number") return value
-  if (typeof value === "string") {
-    return parseInt(value)
-  }
-  return undefined
 }

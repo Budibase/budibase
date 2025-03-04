@@ -1,19 +1,21 @@
-import { automations } from "@budibase/shared-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { FilterCondition } from "@budibase/types"
 
-const FilterConditions = automations.steps.filter.FilterConditions
-
-function stringToFilterCondition(condition: "==" | "!=" | ">" | "<"): string {
+function stringToFilterCondition(
+  condition: "==" | "!=" | ">" | "<"
+): FilterCondition {
   switch (condition) {
     case "==":
-      return FilterConditions.EQUAL
+      return FilterCondition.EQUAL
     case "!=":
-      return FilterConditions.NOT_EQUAL
+      return FilterCondition.NOT_EQUAL
     case ">":
-      return FilterConditions.GREATER_THAN
+      return FilterCondition.GREATER_THAN
     case "<":
-      return FilterConditions.LESS_THAN
+      return FilterCondition.LESS_THAN
+    default:
+      throw new Error(`Unsupported condition: ${condition}`)
   }
 }
 
@@ -24,6 +26,7 @@ describe("test the filter logic", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {

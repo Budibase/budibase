@@ -17,6 +17,7 @@
   export let beepFrequency
   export let customFrequency
   export let preferredCamera
+  export let defaultZoom
   export let helpText = null
 
   let fieldState
@@ -56,6 +57,7 @@
       {beepFrequency}
       {customFrequency}
       {preferredCamera}
+      {defaultZoom}
       validator={fieldState.validator}
     />
   {/if}

@@ -16,6 +16,7 @@ describe("cron trigger", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
@@ -66,7 +67,7 @@ describe("cron trigger", () => {
     })
   })
 
-  it("should stop if the job fails more than 3 times", async () => {
+  it("should stop if the job fails more than N times", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onCron({ cron: "* * * * *" })
       .queryRows({
