@@ -2515,15 +2515,14 @@ if (descriptions.length) {
               csvString: exportedValue,
             })
 
-            const stringified = (value: string) =>
-              JSON.stringify(value).replace(/"/g, "'")
+            const stringified = (value: string) => JSON.stringify(value)
 
             const matchingObject = (
               key: string,
               value: any,
               isArray: boolean
             ) => {
-              const objectMatcher = `{'${key}':'${value[key]}'.*?}`
+              const objectMatcher = `{"${key}":"${value[key]}".*?}`
               if (isArray) {
                 return expect.stringMatching(
                   new RegExp(`^\\[${objectMatcher}\\]$`)
