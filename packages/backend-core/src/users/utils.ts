@@ -25,10 +25,8 @@ export async function creatorsInList(
       users.filter(user => user.userGroups).flatMap(user => user.userGroups!)
     ),
   ]
-  if (groupIds.length) {
-    const db = context.getGlobalDB()
-    groups = await db.getMultiple<UserGroup>(groupIds)
-  }
+  const db = context.getGlobalDB()
+  groups = await db.getMultiple<UserGroup>(groupIds, { allowMissing: true })
   return users.map(user => isCreatorSync(user, groups))
 }
 
