@@ -30,6 +30,7 @@
     filter,
     inlineFilters,
     keyboardBlocked,
+    props,
   } = getContext("grid")
 
   const searchableTypes = [
@@ -303,9 +304,11 @@
       />
     {/if}
 
-    <div class="column-icon">
-      <Icon size="S" name={getColumnIcon(column)} />
-    </div>
+    {#if !$props.hideColumnIcons}
+      <div class="column-icon">
+        <Icon size="S" name={getColumnIcon(column)} />
+      </div>
+    {/if}
     <div class="search-icon" on:click={startSearching}>
       <Icon hoverable size="S" name="Search" />
     </div>
