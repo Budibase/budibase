@@ -634,6 +634,7 @@
     align-items: stretch;
     padding: var(--spacing-xl);
     overflow-y: auto;
+    gap: var(--spacing-xs);
   }
   .mobile .links :global(a) {
     flex: 0 0 auto;
