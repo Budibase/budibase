@@ -108,14 +108,11 @@
     filter: SearchFilter[],
     linkedTableId?: string
   ) => {
-    if (!linkedTableId) {
-      return undefined
-    }
     const datasource =
       dsType === "table"
         ? {
             type: dsType,
-            tableId: fieldSchema?.tableId!,
+            tableId: linkedTableId!,
           }
         : {
             type: dsType,
