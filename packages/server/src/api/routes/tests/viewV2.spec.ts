@@ -3182,15 +3182,15 @@ if (descriptions.length) {
             [
               {
                 field: "age",
-                order: SortOrder.DESCENDING,
               },
-              ["Bob", "Charly", "Alice", "Danny"],
+              ["Danny", "Alice", "Charly", "Bob"],
             ],
             [
               {
                 field: "age",
+                order: SortOrder.DESCENDING,
               },
-              ["Danny", "Alice", "Charly", "Bob"],
+              ["Bob", "Charly", "Alice", "Danny"],
             ],
           ]
 
