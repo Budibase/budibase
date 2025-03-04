@@ -340,10 +340,3 @@ describe("check multiple space behaviour", () => {
     expect(output).toEqual("test   string")
   })
 })
-
-describe.only("MikeTest1", () => {
-  it("miktest111", async () => {
-    const output = "%5B41%5D"
-    expect(output).toEqual(HELPERS)
-  })
-})
