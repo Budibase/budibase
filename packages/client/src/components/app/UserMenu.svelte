@@ -25,16 +25,6 @@
     }
   }
 
-  const requestChangeDetails = () => {}
-
-  const requestChangePassword = () => {
-    // if (isOwner) {
-    //   window.location.href = `${$admin.accountPortalUrl}/portal/account`
-    // } else {
-    //   changePasswordModal.show()
-    // }
-  }
-
   const goToPortal = () => {
     window.location.href = "/builder/apps"
   }
@@ -55,12 +45,6 @@
         <Icon size="L" name="ChevronDown" />
       </div>
     </svelte:fragment>
-    <MenuItem icon="UserEdit" on:click={requestChangeDetails}>
-      My profile
-    </MenuItem>
-    <MenuItem icon="LockClosed" on:click={requestChangePassword}>
-      Update password
-    </MenuItem>
     <MenuItem icon="Apps" on:click={goToPortal}>Go to portal</MenuItem>
     <MenuItem icon="LogOut" on:click={authStore.actions.logOut}>
       Log out
