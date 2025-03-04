@@ -1,6 +1,6 @@
 <script lang="ts">
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
-  import { FieldType, InternalTable } from "@budibase/types"
+  import { BasicOperator, FieldType, InternalTable } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
@@ -9,10 +9,11 @@
     RelationshipFieldMetadata,
     Row,
   } from "@budibase/types"
+  import type { FieldApi, FieldState } from "."
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let placeholder: any = undefined
+  export let placeholder: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
   export let validation: any
@@ -35,12 +36,13 @@
   const { API } = getContext("sdk")
 
   // Field state
-  let fieldState: any
-  let fieldApi: any
+  let fieldState: FieldState<string | string[]> | undefined
+
+  let fieldApi: FieldApi
   let fieldSchema: RelationshipFieldMetadata | undefined
 
   // Local UI state
-  let searchTerm: any
+  let searchTerm: string
   let open: boolean = false
 
   // Options state
@@ -306,14 +308,14 @@
     }
 
     // Ensure we match all filters, rather than any
-    let newFilter: any = filter
+    let newFilter = filter
     if (searchTerm) {
       // @ts-expect-error this doesn't fit types, but don't want to change it yet
       newFilter = (newFilter || []).filter(x => x.operator !== "allOr")
       newFilter.push({
         // Use a big numeric prefix to avoid clashing with an existing filter
         field: `999:${primaryDisplay}`,
-        operator: "string",
+        operator: BasicOperator.STRING,
         value: searchTerm,
       })
     }
