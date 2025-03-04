@@ -47,7 +47,7 @@
     overflow-x: hidden;
   }
   .main {
-    overflow-y: scroll;
+    overflow-y: auto;
   }
   .content {
     display: flex;

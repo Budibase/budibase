@@ -45,7 +45,10 @@ export function validateHbsTemplate(
     ) {
       const ignoreMissing = options?.ignoreMissing || false
       nodes.forEach(node => {
-        if (isMustacheStatement(node) && isPathExpression(node.path)) {
+        if (
+          (isMustacheStatement(node) || isBlockStatement(node)) &&
+          isPathExpression(node.path)
+        ) {
           const helperName = node.path.original
 
           const from =
@@ -75,21 +78,64 @@ export function validateHbsTemplate(
               message: `Helper "${helperName}" requires a body:\n{{#${helperName} ...}} [body] {{/${helperName}}}`,
             })
             return
+          } else if (!requiresBlock && isBlockStatement(node)) {
+            diagnostics.push({
+              from,
+              to,
+              severity: "error",
+              message: `Helper "${helperName}" should not contain a body.`,
+            })
+            return
           }
 
-          const providedParams = node.params
+          let providedParamsCount = node.params.length
+          if (isBlockStatement(node)) {
+            // Block body counts as a parameter
+            providedParamsCount++
+          }
 
-          if (providedParams.length !== expectedArguments.length) {
+          const optionalArgMatcher = new RegExp(/^\[(.+)\]$/)
+          const optionalArgs = expectedArguments.filter(a =>
+            optionalArgMatcher.test(a)
+          )
+
+          if (
+            !optionalArgs.length &&
+            providedParamsCount !== expectedArguments.length
+          ) {
             diagnostics.push({
               from,
               to,
               severity: "error",
               message: `Helper "${helperName}" expects ${
                 expectedArguments.length
-              } parameters (${expectedArguments.join(", ")}), but got ${
-                providedParams.length
-              }.`,
+              } parameters (${expectedArguments.join(
+                ", "
+              )}), but got ${providedParamsCount}.`,
             })
+          } else if (optionalArgs.length) {
+            const maxArgs = expectedArguments.length
+            const minArgs = maxArgs - optionalArgs.length
+            if (
+              minArgs > providedParamsCount ||
+              maxArgs < providedParamsCount
+            ) {
+              const parameters = expectedArguments
+                .map(a => {
+                  const test = optionalArgMatcher.exec(a)
+                  if (!test?.[1]) {
+                    return a
+                  }
+                  return `${test[1]} (optional)`
+                })
+                .join(", ")
+              diagnostics.push({
+                from,
+                to,
+                severity: "error",
+                message: `Helper "${helperName}" expects between ${minArgs} to ${expectedArguments.length} parameters (${parameters}), but got ${providedParamsCount}.`,
+              })
+            }
           }
         }
 
