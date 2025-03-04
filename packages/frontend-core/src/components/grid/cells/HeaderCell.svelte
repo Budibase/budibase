@@ -463,6 +463,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    font-weight: bold;
   }
   .header-cell.searching .name {
     opacity: 0;
