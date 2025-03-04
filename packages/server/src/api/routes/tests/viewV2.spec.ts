@@ -2830,14 +2830,12 @@ if (descriptions.length) {
             expected: number,
             f: () => Promise<T>
           ): Promise<T> {
-            return await quotas.withEnabled(async () => {
-              const before = await getRowUsage()
-              const result = await f()
-              const after = await getRowUsage()
-              const usage = after - before
-              expect(usage).toBe(expected)
-              return result
-            })
+            const before = await getRowUsage()
+            const result = await f()
+            const after = await getRowUsage()
+            const usage = after - before
+            expect(usage).toBe(expected)
+            return result
           }
 
           it("should be able to delete a row", async () => {

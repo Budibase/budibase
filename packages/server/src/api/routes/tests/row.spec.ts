@@ -177,28 +177,26 @@ if (descriptions.length) {
       }
 
       async function expectRowUsage(expected: number, f: () => Promise<void>) {
-        return await quotas.withEnabled(async () => {
-          const before = await getRowUsage()
-          await f()
-          const after = await getRowUsage()
-          const usage = after - before
+        const before = await getRowUsage()
+        await f()
+        const after = await getRowUsage()
+        const usage = after - before
 
-          // Because our quota tracking is not perfect, we allow a 10% margin of
-          // error.  This is to account for the fact that parallel writes can
-          // result in some quota updates getting lost. We don't have any need
-          // to solve this right now, so we just allow for some error.
-          if (expected === 0) {
-            expect(usage).toEqual(0)
-            return
-          }
-          if (usage < 0) {
-            expect(usage).toBeGreaterThan(expected * 1.1)
-            expect(usage).toBeLessThan(expected * 0.9)
-          } else {
-            expect(usage).toBeGreaterThan(expected * 0.9)
-            expect(usage).toBeLessThan(expected * 1.1)
-          }
-        })
+        // Because our quota tracking is not perfect, we allow a 10% margin of
+        // error.  This is to account for the fact that parallel writes can
+        // result in some quota updates getting lost. We don't have any need
+        // to solve this right now, so we just allow for some error.
+        if (expected === 0) {
+          expect(usage).toEqual(0)
+          return
+        }
+        if (usage < 0) {
+          expect(usage).toBeGreaterThan(expected * 1.1)
+          expect(usage).toBeLessThan(expected * 0.9)
+        } else {
+          expect(usage).toBeGreaterThan(expected * 0.9)
+          expect(usage).toBeLessThan(expected * 1.1)
+        }
       }
 
       const defaultRowFields = isInternal
