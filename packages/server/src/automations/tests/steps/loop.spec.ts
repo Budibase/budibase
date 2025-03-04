@@ -1,3 +1,4 @@
+import * as automation from "../../index"
 import { basicTable } from "../../../tests/utilities/structures"
 import {
   Table,
@@ -17,14 +18,18 @@ describe("Attempt to run a basic loop automation", () => {
 
   beforeAll(async () => {
     await config.init()
+    await automation.init()
   })
 
   beforeEach(async () => {
+    await config.api.automation.deleteAll()
+
     table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, {})
   })
 
   afterAll(async () => {
+    await automation.shutdown()
     config.end()
   })
 
