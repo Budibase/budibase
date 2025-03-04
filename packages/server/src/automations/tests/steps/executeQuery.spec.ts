@@ -26,6 +26,7 @@ if (descriptions.length) {
         const ds = await dsProvider()
         datasource = ds.datasource!
         client = ds.client!
+        await config.api.automation.deleteAll()
       })
 
       beforeEach(async () => {

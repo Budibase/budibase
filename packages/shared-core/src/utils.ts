@@ -117,7 +117,8 @@ export function isSupportedUserSearch(
     { op: BasicOperator.EQUAL, key: "_id" },
     { op: ArrayOperator.ONE_OF, key: "_id" },
   ]
-  for (const [key, operation] of Object.entries(query)) {
+  const { allOr, onEmptyFilter, ...filters } = query
+  for (const [key, operation] of Object.entries(filters)) {
     if (typeof operation !== "object") {
       return false
     }

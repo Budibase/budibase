@@ -37,6 +37,7 @@ describe("Webhook trigger test", () => {
 
   beforeEach(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
     table = await config.createTable()
   })
 
