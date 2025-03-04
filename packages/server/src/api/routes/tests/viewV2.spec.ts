@@ -2826,16 +2826,22 @@ if (descriptions.length) {
             return total
           }
 
-          const assertRowUsage = async (expected: number) => {
-            const usage = await getRowUsage()
+          async function expectRowUsage(
+            expected: number,
+            f: () => Promise<void>
+          ) {
+            const before = await getRowUsage()
+            await f()
+            const after = await getRowUsage()
+            const usage = after - before
             expect(usage).toBe(expected)
           }
 
           it("should be able to delete a row", async () => {
             const createdRow = await config.api.row.save(table._id!, {})
-            const rowUsage = await getRowUsage()
-            await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
-            await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
+            await expectRowUsage(isInternal ? 0 : -1, async () => {
+              await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
+            })
             await config.api.row.get(table._id!, createdRow._id!, {
               status: 404,
             })
@@ -2847,13 +2853,12 @@ if (descriptions.length) {
               config.api.row.save(table._id!, {}),
               config.api.row.save(table._id!, {}),
             ])
-            const rowUsage = await getRowUsage()
 
-            await config.api.row.bulkDelete(view.id, {
-              rows: [rows[0], rows[2]],
+            await expectRowUsage(isInternal ? 0 : -2, async () => {
+              await config.api.row.bulkDelete(view.id, {
+                rows: [rows[0], rows[2]],
+              })
             })
-
-            await assertRowUsage(isInternal ? rowUsage - 2 : rowUsage)
 
             await config.api.row.get(table._id!, rows[0]._id!, {
               status: 404,
