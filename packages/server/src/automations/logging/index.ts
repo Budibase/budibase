@@ -1,7 +1,7 @@
 import env from "../../environment"
 import { AutomationResults, Automation, App } from "@budibase/types"
 import { automations } from "@budibase/pro"
-import { db as dbUtils } from "@budibase/backend-core"
+import { db as dbUtils, logging } from "@budibase/backend-core"
 import sizeof from "object-sizeof"
 
 const MAX_LOG_SIZE_MB = 5
@@ -32,7 +32,16 @@ export async function storeLog(
   if (bytes / MB_IN_BYTES > MAX_LOG_SIZE_MB) {
     sanitiseResults(results)
   }
-  await automations.logs.storeLog(automation, results)
+  try {
+    await automations.logs.storeLog(automation, results)
+  } catch (e: any) {
+    if (e.status === 413 && e.request?.data) {
+      // if content is too large we shouldn't log it
+      delete e.request.data
+      e.request.data = { message: "removed due to large size" }
+    }
+    logging.logAlert("Error writing automation log", e)
+  }
 }
 
 export async function checkAppMetadata(apps: App[]) {

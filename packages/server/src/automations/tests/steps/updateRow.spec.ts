@@ -23,6 +23,7 @@ describe("test the update row action", () => {
     await config.init()
     table = await config.createTable()
     row = await config.createRow()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {

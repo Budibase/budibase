@@ -123,7 +123,7 @@ export async function doInAutomationContext<T>(params: {
   task: () => T
 }): Promise<T> {
   await ensureSnippetContext()
-  return newContext(
+  return await newContext(
     {
       tenantId: getTenantIDFromAppID(params.appId),
       appId: params.appId,
@@ -266,9 +266,9 @@ export const getProdAppId = () => {
   return conversions.getProdAppID(appId)
 }
 
-export function doInEnvironmentContext(
+export function doInEnvironmentContext<T>(
   values: Record<string, string>,
-  task: any
+  task: () => T
 ) {
   if (!values) {
     throw new Error("Must supply environment variables.")

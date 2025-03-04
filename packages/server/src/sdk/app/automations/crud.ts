@@ -40,7 +40,8 @@ function cleanAutomationInputs(automation: Automation) {
     if (step == null) {
       continue
     }
-    for (let inputName of Object.keys(step.inputs)) {
+    for (const key of Object.keys(step.inputs)) {
+      const inputName = key as keyof typeof step.inputs
       if (!step.inputs[inputName] || step.inputs[inputName] === "") {
         delete step.inputs[inputName]
       }
@@ -281,7 +282,8 @@ function guardInvalidUpdatesAndThrow(
     const readonlyFields = Object.keys(
       step.schema.inputs.properties || {}
     ).filter(k => step.schema.inputs.properties[k].readonly)
-    readonlyFields.forEach(readonlyField => {
+    readonlyFields.forEach(key => {
+      const readonlyField = key as keyof typeof step.inputs
       const oldStep = oldStepDefinitions.find(i => i.id === step.id)
       if (step.inputs[readonlyField] !== oldStep?.inputs[readonlyField]) {
         throw new HTTPError(

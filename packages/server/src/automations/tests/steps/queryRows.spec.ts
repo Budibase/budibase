@@ -21,6 +21,7 @@ describe("Test a query step automation", () => {
     }
     await config.api.row.save(table._id!, row)
     await config.api.row.save(table._id!, row)
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {

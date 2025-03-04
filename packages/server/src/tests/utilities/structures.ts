@@ -35,6 +35,9 @@ import {
   WebhookActionType,
   BuiltinPermissionID,
   DeepPartial,
+  FilterCondition,
+  AutomationTriggerResult,
+  CreateEnvironmentVariableRequest,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -372,7 +375,11 @@ export function filterAutomation(opts?: DeepPartial<Automation>): Automation {
           type: AutomationStepType.ACTION,
           internal: true,
           stepId: AutomationActionStepId.FILTER,
-          inputs: { field: "name", value: "test", condition: "EQ" },
+          inputs: {
+            field: "name",
+            value: "test",
+            condition: FilterCondition.EQUAL,
+          },
           schema: BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT.schema,
         },
       ],
@@ -437,15 +444,24 @@ export function updateRowAutomationWithFilters(
 export function basicAutomationResults(
   automationId: string
 ): AutomationResults {
+  const trigger: AutomationTriggerResult = {
+    id: "trigger",
+    stepId: AutomationTriggerStepId.APP,
+    outputs: {},
+  }
   return {
     automationId,
     status: AutomationStatus.SUCCESS,
-    trigger: "trigger" as any,
+    trigger,
     steps: [
+      trigger,
       {
+        id: "step1",
         stepId: AutomationActionStepId.SERVER_LOG,
         inputs: {},
-        outputs: {},
+        outputs: {
+          success: true,
+        },
       },
     ],
   }
@@ -559,7 +575,7 @@ export function basicEnvironmentVariable(
   name: string,
   prod: string,
   dev?: string
-) {
+): CreateEnvironmentVariableRequest {
   return {
     name,
     production: prod,

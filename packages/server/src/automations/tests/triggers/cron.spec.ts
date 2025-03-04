@@ -1,17 +1,22 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
-  captureAutomationQueueMessages,
+  captureAutomationMessages,
+  captureAutomationRemovals,
   captureAutomationResults,
+  triggerCron,
 } from "../utilities"
 import { automations } from "@budibase/pro"
-import { AutomationStatus } from "@budibase/types"
+import { AutomationData, AutomationStatus } from "@budibase/types"
+import { MAX_AUTOMATION_RECURRING_ERRORS } from "../../../constants"
+import { queue } from "@budibase/backend-core"
 
 describe("cron trigger", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
@@ -33,7 +38,7 @@ describe("cron trigger", () => {
       })
       .save()
 
-    const messages = await captureAutomationQueueMessages(automation, () =>
+    const messages = await captureAutomationMessages(automation, () =>
       config.api.application.publish()
     )
     expect(messages).toHaveLength(1)
@@ -62,8 +67,8 @@ describe("cron trigger", () => {
     })
   })
 
-  it("should stop if the job fails more than 3 times", async () => {
-    const runner = await createAutomationBuilder(config)
+  it("should stop if the job fails more than N times", async () => {
+    const { automation } = await createAutomationBuilder(config)
       .onCron({ cron: "* * * * *" })
       .queryRows({
         // @ts-expect-error intentionally sending invalid data
@@ -71,28 +76,31 @@ describe("cron trigger", () => {
       })
       .save()
 
-    await config.api.application.publish()
-
-    const results = await captureAutomationResults(
-      runner.automation,
-      async () => {
-        await runner.trigger({ timeout: 1000, fields: {} })
-        await runner.trigger({ timeout: 1000, fields: {} })
-        await runner.trigger({ timeout: 1000, fields: {} })
-        await runner.trigger({ timeout: 1000, fields: {} })
-        await runner.trigger({ timeout: 1000, fields: {} })
-      }
+    const [message] = await captureAutomationMessages(automation, () =>
+      config.api.application.publish()
     )
 
-    expect(results).toHaveLength(5)
-
     await config.withProdApp(async () => {
-      const {
-        data: [latest, ..._],
-      } = await automations.logs.logSearch({
-        automationId: runner.automation._id,
+      let results: queue.TestQueueMessage<AutomationData>[] = []
+      const removed = await captureAutomationRemovals(automation, async () => {
+        results = await captureAutomationResults(automation, async () => {
+          for (let i = 0; i < MAX_AUTOMATION_RECURRING_ERRORS; i++) {
+            triggerCron(message)
+          }
+        })
       })
-      expect(latest.status).toEqual(AutomationStatus.STOPPED_ERROR)
+
+      expect(removed).toHaveLength(1)
+      expect(removed[0].id).toEqual(message.id)
+
+      expect(results).toHaveLength(5)
+
+      const search = await automations.logs.logSearch({
+        automationId: automation._id,
+        status: AutomationStatus.STOPPED_ERROR,
+      })
+      expect(search.data).toHaveLength(1)
+      expect(search.data[0].status).toEqual(AutomationStatus.STOPPED_ERROR)
     })
   })
 

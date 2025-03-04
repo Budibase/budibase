@@ -1,4 +1,3 @@
-export * from "./sidepanel"
 export * from "./codeEditor"
 export * from "./errors"
 
@@ -28,6 +27,8 @@ export interface ComponentDefinition {
     width: number
     height: number
   }
+  context?: ComponentContext | ComponentContext[]
+  actions?: (string | any)[]
 }
 
 export type DependsOnComponentSetting =
@@ -55,4 +56,29 @@ export interface ComponentSetting {
     global: boolean
     self: boolean
   }
+}
+interface ComponentAction {
+  type: string
+  suffix?: string
+}
+
+interface ComponentStaticContextValue {
+  label: string
+  key: string
+  type: string // technically this is a long list of options but there are too many to enumerate
+}
+
+export interface ComponentContext {
+  type: ComponentContextType
+  scope?: ComponentContextScopes
+  actions?: ComponentAction[]
+  suffix?: string
+  values?: ComponentStaticContextValue[]
+}
+
+export type ComponentContextType = "action" | "static" | "schema" | "form"
+
+export const enum ComponentContextScopes {
+  Local = "local",
+  Global = "global",
 }

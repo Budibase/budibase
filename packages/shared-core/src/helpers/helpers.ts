@@ -105,10 +105,10 @@ export function cancelableTimeout(
 
 export async function withTimeout<T>(
   timeout: number,
-  promise: Promise<T>
+  promise: () => Promise<T>
 ): Promise<T> {
   const [timeoutPromise, cancel] = cancelableTimeout(timeout)
-  const result = (await Promise.race([promise, timeoutPromise])) as T
+  const result = (await Promise.race([promise(), timeoutPromise])) as T
   cancel()
   return result
 }
