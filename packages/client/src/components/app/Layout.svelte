@@ -1,7 +1,7 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { Heading, Icon, clickOutside } from "@budibase/bbui"
+  import { Heading, Icon, clickOutside, TooltipPosition } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import { UserAvatar } from "@budibase/frontend-core"
@@ -278,7 +278,11 @@
               </div>
               {#if !embedded && $authStore}
                 <div class="user top">
-                  <UserAvatar user={$authStore} size="M" />
+                  <UserAvatar
+                    user={$authStore}
+                    size="M"
+                    tooltipPosition={TooltipPosition.Left}
+                  />
                   <Icon name="ChevronDown" />
                 </div>
               {/if}
@@ -307,7 +311,7 @@
             {/if}
             {#if !embedded && $authStore}
               <div class="user left">
-                <UserAvatar user={$authStore} size="M" />
+                <UserAvatar user={$authStore} size="M" showTooltip={false} />
                 <div class="text">
                   <div class="name">
                     {$authStore.firstName}
@@ -417,9 +421,9 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: 20px 32px 16px 32px;
+    padding: 18px 32px 18px 32px;
     max-width: 100%;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
   }
   .nav :global(.spectrum-Icon) {
     color: var(--navTextColor);
@@ -611,9 +615,6 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-xs);
-  }
-  .desktop .nav--left .link {
-    font-size: var(--spectrum-global-dimension-font-size-150);
   }
   .desktop .nav--left .user.top,
   .desktop .nav--top .user.left {
