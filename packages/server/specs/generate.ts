@@ -4,11 +4,11 @@ import { examples, schemas } from "./resources"
 import * as parameters from "./parameters"
 import * as security from "./security"
 
-const swaggerJsdoc = require("swagger-jsdoc")
+import swaggerJsdoc from "swagger-jsdoc"
 
 const VARIABLES = {}
 
-const options = {
+const opts: swaggerJsdoc.Options = {
   definition: {
     openapi: "3.0.0",
     info: {
@@ -58,30 +58,27 @@ const options = {
 }
 
 function writeFile(output: any, filename: string) {
-  try {
-    const path = join(__dirname, filename)
-    let spec = output
-    if (filename.endsWith("json")) {
-      spec = JSON.stringify(output, null, 2)
-    }
-    // input the static variables
-    for (let [key, replacement] of Object.entries(VARIABLES)) {
-      spec = spec.replace(new RegExp(`{${key}}`, "g"), replacement)
-    }
-    writeFileSync(path, spec)
-    console.log(`Wrote spec to ${path}`)
-    return path
-  } catch (err) {
-    console.error("Error writing spec file", err)
+  const path = join(__dirname, filename)
+  let spec = output
+  if (filename.endsWith("json")) {
+    spec = JSON.stringify(output, null, 2)
   }
+  // input the static variables
+  for (let [key, replacement] of Object.entries(VARIABLES)) {
+    spec = spec.replace(new RegExp(`{${key}}`, "g"), replacement)
+  }
+  writeFileSync(path, spec)
+  console.log(`Wrote spec to ${path}`)
+  return path
+}
+
+export function spec() {
+  return swaggerJsdoc({ ...opts, format: ".json" })
 }
 
 export function run() {
-  const outputJSON = swaggerJsdoc(options)
-  options.format = ".yaml"
-  const outputYAML = swaggerJsdoc(options)
-  writeFile(outputJSON, "openapi.json")
-  return writeFile(outputYAML, "openapi.yaml")
+  writeFile(swaggerJsdoc({ ...opts, format: ".json" }), "openapi.json")
+  return writeFile(swaggerJsdoc({ ...opts, format: ".yaml" }), "openapi.yaml")
 }
 
 if (require.main === module) {
