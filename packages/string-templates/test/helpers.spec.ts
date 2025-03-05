@@ -517,3 +517,44 @@ describe("helper overlap", () => {
     expect(output).toEqual("a")
   })
 })
+
+describe("Test the decodeId helper", () => {
+  it("should decode a valid encoded ID", async () => {
+    const encodedId = encodeURIComponent("[42]") // "%5B42%5D"
+    const output = await processString("{{ decodeId id }}", { id: encodedId })
+    expect(output).toBe("42")
+  })
+
+  it("Should return an unchanged string if the string isn't encoded", async () => {
+    const unencodedId = "forty-two"
+    const output = await processString("{{ decodeId id }}", { id: unencodedId })
+    expect(output).toBe("forty-two")
+  })
+
+  it("Should return a string of comma-separated IDs when passed multiple IDs in a URI encoded array", async () => {
+    const encodedIds = encodeURIComponent("[1,2,3]") // "%5B1%2C2%2C3%5D"
+    const output = await processString("{{ decodeId id }}", { id: encodedIds })
+    expect(output).toBe("1,2,3")
+  })
+
+  it("Handles empty array gracefully", async () => {
+    const output = await processString("{{ decodeId value }}", {
+      value: [],
+    })
+    expect(output).toBe("[[]]")
+  })
+
+  it("Handles undefined gracefully", async () => {
+    const output = await processString("{{ decodeId value }}", {
+      value: undefined,
+    })
+    expect(output).toBe("")
+  })
+
+  it("Handles null gracefully", async () => {
+    const output = await processString("{{ decodeId value }}", {
+      value: undefined,
+    })
+    expect(output).toBe("")
+  })
+})
