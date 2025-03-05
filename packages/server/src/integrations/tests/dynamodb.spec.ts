@@ -1,167 +1,108 @@
-jest.mock("@aws-sdk/lib-dynamodb", () => ({
-  DynamoDBDocument: {
-    from: jest.fn(() => ({
-      update: jest.fn(),
-      put: jest.fn(),
-      query: jest.fn(() => ({
-        Items: [],
-      })),
-      scan: jest.fn(() => ({
-        Items: [],
-      })),
-      delete: jest.fn(),
-      get: jest.fn(),
-    })),
-  },
-}))
-jest.mock("@aws-sdk/client-dynamodb")
-import { default as DynamoDBIntegration } from "../dynamodb"
+import { Datasource } from "@budibase/types"
+import { DynamoDBConfig, DynamoDBIntegration } from "../dynamodb"
+import { DatabaseName, datasourceDescribe } from "./utils"
+import {
+  CreateTableCommandInput,
+  DynamoDB,
+  DynamoDBClientConfig,
+} from "@aws-sdk/client-dynamodb"
 
-class TestConfiguration {
-  integration: any
+const describes = datasourceDescribe({ only: [DatabaseName.DYNAMODB] })
 
-  constructor(config: any = {}) {
-    this.integration = new DynamoDBIntegration.integration(config)
+async function createTable(client: DynamoDB, req: CreateTableCommandInput) {
+  try {
+    await client.deleteTable({ TableName: req.TableName })
+  } catch (e: any) {
+    if (e.name !== "ResourceNotFoundException") {
+      throw e
+    }
   }
+
+  return await client.createTable(req)
 }
 
-describe("DynamoDB Integration", () => {
-  let config: any
-  let tableName = "Users"
+if (describes.length > 0) {
+  describe.each(describes)("DynamoDB Integration", ({ dsProvider }) => {
+    let table = "Users"
+    let rawDatasource: Datasource
+    let dynamodb: DynamoDBIntegration
 
-  beforeEach(() => {
-    config = new TestConfiguration()
-  })
-
-  it("calls the create method with the correct params", async () => {
-    await config.integration.create({
-      table: tableName,
-      json: {
-        Name: "John",
-      },
-    })
-    expect(config.integration.client.put).toHaveBeenCalledWith({
-      TableName: tableName,
-      Name: "John",
-    })
-  })
-
-  it("calls the read method with the correct params", async () => {
-    const indexName = "Test"
-
-    const response = await config.integration.read({
-      table: tableName,
-      index: indexName,
-      json: {},
-    })
-    expect(config.integration.client.query).toHaveBeenCalledWith({
-      TableName: tableName,
-      IndexName: indexName,
-    })
-    expect(response).toEqual([])
-  })
-
-  it("calls the scan method with the correct params", async () => {
-    const indexName = "Test"
-
-    const response = await config.integration.scan({
-      table: tableName,
-      index: indexName,
-      json: {},
-    })
-    expect(config.integration.client.scan).toHaveBeenCalledWith({
-      TableName: tableName,
-      IndexName: indexName,
-    })
-    expect(response).toEqual([])
-  })
-
-  it("calls the get method with the correct params", async () => {
-    await config.integration.get({
-      table: tableName,
-      json: {
-        Id: 123,
-      },
-    })
-
-    expect(config.integration.client.get).toHaveBeenCalledWith({
-      TableName: tableName,
-      Id: 123,
-    })
-  })
-
-  it("calls the update method with the correct params", async () => {
-    await config.integration.update({
-      table: tableName,
-      json: {
-        Name: "John",
-      },
-    })
-    expect(config.integration.client.update).toHaveBeenCalledWith({
-      TableName: tableName,
-      Name: "John",
-    })
-  })
-
-  it("calls the delete method with the correct params", async () => {
-    await config.integration.delete({
-      table: tableName,
-      json: {
-        Name: "John",
-      },
-    })
-    expect(config.integration.client.delete).toHaveBeenCalledWith({
-      TableName: tableName,
-      Name: "John",
-    })
-  })
-
-  it("configures the dynamoDB constructor based on an empty endpoint parameter", async () => {
-    const config = {
-      region: "us-east-1",
-      accessKeyId: "test",
-      secretAccessKey: "test",
+    function item(json: Record<string, any>) {
+      return { table, json: { Item: json } }
     }
 
-    const integration: any = new DynamoDBIntegration.integration(config)
-
-    expect(integration.config).toEqual({
-      currentClockSkew: true,
-      ...config,
-    })
-  })
-
-  it("configures the dynamoDB constructor based on a localhost endpoint parameter", async () => {
-    const config = {
-      region: "us-east-1",
-      accessKeyId: "test",
-      secretAccessKey: "test",
-      endpoint: "localhost:8080",
+    function key(json: Record<string, any>) {
+      return { table, json: { Key: json } }
     }
 
-    const integration: any = new DynamoDBIntegration.integration(config)
+    beforeEach(async () => {
+      const ds = await dsProvider()
+      rawDatasource = ds.rawDatasource!
+      dynamodb = new DynamoDBIntegration(
+        rawDatasource.config! as DynamoDBConfig
+      )
 
-    expect(integration.config).toEqual({
-      region: "us-east-1",
-      currentClockSkew: true,
-      endpoint: "localhost:8080",
+      const config: DynamoDBClientConfig = {
+        credentials: {
+          accessKeyId: "test",
+          secretAccessKey: "test",
+        },
+        region: "us-east-1",
+        endpoint: rawDatasource.config!.endpoint,
+      }
+
+      const client = new DynamoDB(config)
+      await createTable(client, {
+        TableName: table,
+        KeySchema: [{ AttributeName: "Id", KeyType: "HASH" }],
+        AttributeDefinitions: [{ AttributeName: "Id", AttributeType: "N" }],
+        ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 },
+      })
+    })
+
+    it("can create and read a record", async () => {
+      await dynamodb.create(item({ Id: 1, Name: "John" }))
+
+      const resp = await dynamodb.get(key({ Id: 1 }))
+      expect(resp.Item).toEqual({ Id: 1, Name: "John" })
+    })
+
+    it("can scan", async () => {
+      await dynamodb.create(item({ Id: 1, Name: "John" }))
+      await dynamodb.create(item({ Id: 2, Name: "Jane" }))
+      await dynamodb.create(item({ Id: 3, Name: "Jack" }))
+
+      const resp = await dynamodb.scan({ table, json: {}, index: null })
+      expect(resp).toEqual(
+        expect.arrayContaining([
+          { Id: 1, Name: "John" },
+          { Id: 2, Name: "Jane" },
+          { Id: 3, Name: "Jack" },
+        ])
+      )
+    })
+
+    it("can update", async () => {
+      await dynamodb.create(item({ Id: 1, Foo: "John" }))
+      await dynamodb.update({
+        table,
+        json: {
+          Key: { Id: 1 },
+          UpdateExpression: "SET Foo = :foo",
+          ExpressionAttributeValues: { ":foo": "Jane" },
+        },
+      })
+
+      const updatedRecord = await dynamodb.get(key({ Id: 1 }))
+      expect(updatedRecord.Item).toEqual({ Id: 1, Foo: "Jane" })
+    })
+
+    it("can delete", async () => {
+      await dynamodb.create(item({ Id: 1, Name: "John" }))
+      await dynamodb.delete(key({ Id: 1 }))
+
+      const deletedRecord = await dynamodb.get(key({ Id: 1 }))
+      expect(deletedRecord.Item).toBeUndefined()
     })
   })
-
-  it("configures the dynamoDB constructor based on a remote endpoint parameter", async () => {
-    const config = {
-      region: "us-east-1",
-      accessKeyId: "test",
-      secretAccessKey: "test",
-      endpoint: "dynamodb.aws.foo.net",
-    }
-
-    const integration = new DynamoDBIntegration.integration(config)
-
-    // @ts-ignore
-    expect(integration.config).toEqual({
-      currentClockSkew: true,
-      ...config,
-    })
-  })
-})
+}
