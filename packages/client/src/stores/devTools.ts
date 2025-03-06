@@ -8,6 +8,7 @@ interface DevToolsState {
   visible: boolean
   allowSelection: boolean
   role: string | null
+  user: string | null
 }
 
 const createDevToolStore = () => {
@@ -15,6 +16,7 @@ const createDevToolStore = () => {
     visible: false,
     allowSelection: false,
     role: null,
+    user: null,
   })
 
   const setVisible = (visible: boolean) => {
@@ -31,6 +33,12 @@ const createDevToolStore = () => {
     }))
   }
 
+  const refetch = async () => {
+    API.invalidateCache()
+    await authStore.actions.fetchUser()
+    await initialise()
+  }
+
   const changeRole = async (role: string | null) => {
     if (role === "self") {
       role = null
@@ -41,15 +49,25 @@ const createDevToolStore = () => {
     store.update(state => ({
       ...state,
       role,
+      user: null,
     }))
-    API.invalidateCache()
-    await authStore.actions.fetchUser()
-    await initialise()
+
+    await refetch()
+  }
+
+  const changeUser = async (user: string | null) => {
+    store.update(state => ({
+      ...state,
+      user,
+      role: null,
+    }))
+
+    await refetch()
   }
 
   return {
     subscribe: store.subscribe,
-    actions: { setVisible, setAllowSelection, changeRole },
+    actions: { setVisible, setAllowSelection, changeRole, changeUser },
   }
 }
 

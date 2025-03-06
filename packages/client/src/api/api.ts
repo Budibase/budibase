@@ -2,6 +2,7 @@ import { createAPIClient } from "@budibase/frontend-core"
 import { authStore } from "../stores/auth"
 import { notificationStore, devToolsEnabled, devToolsStore } from "../stores"
 import { get } from "svelte/store"
+import { Header } from "@budibase/shared-core"
 
 export const API = createAPIClient({
   // Enable caching of cacheable endpoints to speed things up,
@@ -10,24 +11,30 @@ export const API = createAPIClient({
   // Attach client specific headers
   attachHeaders: headers => {
     // Attach app ID header
-    headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
+    if (window["##BUDIBASE_APP_ID##"]) {
+      headers[Header.APP_ID] = window["##BUDIBASE_APP_ID##"]
+    }
 
     // Attach client header if not inside the builder preview
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
-      headers["x-budibase-type"] = "client"
+      headers[Header.TYPE] = "client"
     }
 
     // Add csrf token if authenticated
     const auth = get(authStore)
     if (auth?.csrfToken) {
-      headers["x-csrf-token"] = auth.csrfToken
+      headers[Header.CSRF_TOKEN] = auth.csrfToken
     }
 
     // Add role header
     const $devToolsStore = get(devToolsStore)
     const $devToolsEnabled = get(devToolsEnabled)
-    if ($devToolsEnabled && $devToolsStore.role) {
-      headers["x-budibase-role"] = $devToolsStore.role
+    if ($devToolsEnabled) {
+      if ($devToolsStore.user) {
+        headers[Header.PREVIEW_USER] = $devToolsStore.user
+      } else if ($devToolsStore.role) {
+        headers[Header.PREVIEW_ROLE] = $devToolsStore.role
+      }
     }
   },
 

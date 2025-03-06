@@ -6,6 +6,7 @@ export enum Header {
   SESSION_ID = "x-budibase-session-id",
   TYPE = "x-budibase-type",
   PREVIEW_ROLE = "x-budibase-role",
+  PREVIEW_USER = "x-budibase-impersonate-user-id",
   TENANT_ID = "x-budibase-tenant-id",
   VERIFICATION_CODE = "x-budibase-verification-code",
   RETURN_VERIFICATION_CODE = "x-budibase-return-verification-code",

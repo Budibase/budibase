@@ -55,6 +55,7 @@
     autocomplete
     getOptionLabel={u => u.email}
     getOptionValue={u => u._id}
+    on:change={e => devToolsStore.actions.changeUser(e.detail)}
   />
   {#if !$context.device.mobile}
     <ActionButton

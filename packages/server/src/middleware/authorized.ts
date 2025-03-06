@@ -1,7 +1,9 @@
 import type koa from "koa"
 import {
   auth,
+  cache,
   context,
+  Header,
   permissions,
   roles,
   users,
@@ -11,6 +13,7 @@ import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
 import { paramResource } from "./resourceId"
 import sdk from "../sdk"
+import { isDevAppID } from "../db/utils"
 
 function hasResource(ctx: UserCtx) {
   return ctx.resourceId != null
@@ -98,6 +101,13 @@ const authorized =
 
     if (!ctx.user) {
       return ctx.throw(401, "No user info found")
+    }
+
+    if (isDevAppID(context.getAppId()) && ctx.get(Header.PREVIEW_USER)) {
+      const impersonatedUserId = ctx.get(Header.PREVIEW_USER)
+      ctx.user = await cache.user.getUser({
+        userId: impersonatedUserId,
+      })
     }
 
     // get the resource roles
