@@ -296,6 +296,7 @@ export function createSampleDataTableScreen(): Screen {
               active: true,
               conditions: [
                 {
+                  id: Math.random(),
                   target: "row",
                   metadataKey: "backgroundColor",
                   operator: "contains",
