@@ -1,15 +1,10 @@
-<script lang="ts" context="module">
-  type O = any
-  type V = any
-</script>
-
-<script lang="ts">
+<script lang="ts" generics="O extends any">
   import Field from "./Field.svelte"
   import Select from "./Core/Select.svelte"
   import { createEventDispatcher } from "svelte"
   import { PopoverAlignment } from "../constants"
 
-  export let value: V | undefined = undefined
+  export let value: string | undefined = undefined
   export let label: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
@@ -22,9 +17,11 @@
   export let getOptionValue = (option: O, _index?: number) =>
     extractProperty(option, "value")
   export let getOptionSubtitle = (option: O, _index?: number) =>
-    option?.subtitle
-  export let getOptionIcon = (option: O, _index?: number) => option?.icon
-  export let getOptionColour = (option: O, _index?: number) => option?.colour
+    (option as any)?.subtitle
+  export let getOptionIcon = (option: O, _index?: number) =>
+    (option as any)?.icon
+  export let getOptionColour = (option: O, _index?: number) =>
+    (option as any)?.colour
   export let useOptionIconImage = false
   export let isOptionEnabled:
     | ((_option: O, _index?: number) => boolean)
@@ -48,9 +45,9 @@
     dispatch("change", e.detail)
   }
 
-  const extractProperty = (value: any, property: any) => {
+  const extractProperty = (value: O, property: any): any => {
     if (value && typeof value === "object") {
-      return value[property]
+      return value[property as keyof O]
     }
     return value
   }

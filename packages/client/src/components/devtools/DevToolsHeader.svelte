@@ -3,12 +3,13 @@
   import { devToolsStore, appStore } from "@/stores"
   import { getContext, onMount } from "svelte"
   import { API } from "@/api"
-  import { Role } from "@budibase/types"
+  import { Role, User } from "@budibase/types"
 
   const context = getContext("context")
   const SELF_ROLE = "self"
 
   let roles: Role[]
+  let users: User[]
 
   $: previewOptions = buildRoleList(roles)
 
@@ -34,6 +35,7 @@
     // make sure correct before starting
     await devToolsStore.actions.changeRole(SELF_ROLE)
     roles = await API.getRoles()
+    users = await API.getUsers()
   })
 </script>
 
@@ -45,6 +47,14 @@
     value={$devToolsStore.role || SELF_ROLE}
     autoWidth
     on:change={e => devToolsStore.actions.changeRole(e.detail)}
+  />
+  <Select
+    quiet
+    options={users}
+    autoWidth
+    autocomplete
+    getOptionLabel={u => u.email}
+    getOptionValue={u => u._id}
   />
   {#if !$context.device.mobile}
     <ActionButton
