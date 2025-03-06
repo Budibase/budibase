@@ -9,7 +9,6 @@
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding, findHBSBlocks } from "@budibase/string-templates"
-  import { API } from "../../../api"
 
   export let panel = ClientBindingPanel
   export let value = ""
@@ -49,10 +48,6 @@
   setContext("binding-drawer-actions", {
     save: saveBinding,
   })
-
-  const magic = async () => {
-    await API.generateJs({})
-  }
 
   const onChange = value => {
     if (
@@ -179,13 +174,13 @@
     <slot />
   {/if}
   {#if !disabled && type !== "formula" && !attachmentTypes.includes(type)}
-    <div class={`icon ${getIconClass(value, type)}`}>
-      <div on:click={() => bindingDrawer.show()}>
-        <Icon size="S" name="FlashOn" />
-      </div>
-      <div on:click={() => magic()}>
-        <Icon size="S" name="MagicWand" />
-      </div>
+    <div
+      class={`icon ${getIconClass(value, type)}`}
+      on:click={() => {
+        bindingDrawer.show()
+      }}
+    >
+      <Icon size="S" name="FlashOn" />
     </div>
   {/if}
 </div>
@@ -243,11 +238,10 @@
     display: flex;
     flex-direction: row;
     box-sizing: border-box;
-    padding: var(--spacing-s);
-    gap: var(--spacing-s);
     border-left: 1px solid var(--spectrum-alias-border-color);
     border-top-right-radius: var(--spectrum-alias-border-radius-regular);
     border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
+    width: 31px;
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);
     transition: background-color

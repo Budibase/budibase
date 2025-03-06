@@ -25,18 +25,23 @@ export async function generateJs(
     messages: [
       {
         role: "system",
-        content:
-          "You are an expert in writing JavaScript for the Budibase low-code platform.",
+        content: `
+            You are a helpful expert in writing JavaScript for the Budibase 
+            low-code platform. A user is asking you for help writing some 
+            JavaScript for their application.
+          `,
       },
       {
         role: "user",
-        content: "",
+        content: `
+            Please write me a JavaScript function that returns the sum of two 
+            numbers. You must only return code, no talking.
+          `,
       },
     ],
   })
 
   ctx.body = {
-    success: true,
-    code: response.choices[0].message.content,
+    code: response.choices[0].message.content!,
   }
 }

@@ -1,2 +1,4 @@
 export interface GenerateJsRequest {}
-export interface GenerateJsResponse {}
+export interface GenerateJsResponse {
+  code: string
+}
