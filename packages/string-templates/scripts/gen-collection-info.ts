@@ -44,6 +44,13 @@ const ADDED_HELPERS = {
       description:
         "Produce a humanized duration left/until given an amount of time and the type of time measurement.",
     },
+    difference: {
+      args: ["from", "to", "[unitType=ms]"],
+      example:
+        '{{ difference "2025-09-30" "2025-06-17" "seconds" }} -> 9072000',
+      description:
+        "Gets the difference between two dates, in milliseconds. Pass a third parameter to adjust the unit measurement.",
+    },
   },
 }
 
