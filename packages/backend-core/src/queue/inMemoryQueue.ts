@@ -3,7 +3,6 @@ import { newid } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 import { helpers } from "@budibase/shared-core"
 import { Job, JobId, JobInformation } from "bull"
-import { cloneDeep } from "lodash"
 
 function jobToJobInformation(job: Job): JobInformation {
   let cron = ""
@@ -88,9 +87,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
    */
   async process(concurrencyOrFunc: number | any, func?: any) {
     func = typeof concurrencyOrFunc === "number" ? func : concurrencyOrFunc
-    this._emitter.on("message", async msg => {
-      const message = cloneDeep(msg)
-
+    this._emitter.on("message", async message => {
       // For the purpose of testing, don't trigger cron jobs immediately.
       // Require the test to trigger them manually with timestamps.
       if (!message.manualTrigger && message.opts?.repeat != null) {
@@ -165,6 +162,9 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         opts,
       }
       this._messages.push(message)
+      if (this._messages.length > 1000) {
+        this._messages.shift()
+      }
       this._addCount++
       this._emitter.emit("message", message)
     }
