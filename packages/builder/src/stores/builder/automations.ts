@@ -33,6 +33,8 @@ import {
   isRowSaveTrigger,
   isAppTrigger,
   BranchStep,
+  GetAutomationTriggerDefinitionsResponse,
+  GetAutomationActionDefinitionsResponse,
 } from "@budibase/types"
 import { ActionStepID } from "@/constants/backend/automations"
 import { FIELDS } from "@/constants/backend"
@@ -68,16 +70,19 @@ const initialAutomationState: AutomationState = {
 }
 
 const getFinalDefinitions = (
-  triggers: Record<string, any>,
-  actions: Record<string, any>
+  triggers: GetAutomationTriggerDefinitionsResponse,
+  actions: GetAutomationActionDefinitionsResponse
 ): BlockDefinitions => {
-  const creatable: Record<string, any> = {}
-  Object.entries(triggers).forEach(entry => {
-    if (entry[0] === AutomationTriggerStepId.ROW_ACTION) {
-      return
+  const creatable: Partial<GetAutomationTriggerDefinitionsResponse> = {}
+  for (const [key, trigger] of Object.entries(triggers)) {
+    if (key === AutomationTriggerStepId.ROW_ACTION) {
+      continue
     }
-    creatable[entry[0]] = entry[1]
-  })
+    if (trigger.deprecated === true) {
+      continue
+    }
+    creatable[key as keyof GetAutomationTriggerDefinitionsResponse] = trigger
+  }
   return {
     TRIGGER: triggers,
     CREATABLE_TRIGGER: creatable,
@@ -679,7 +684,10 @@ const automationActions = (store: AutomationStore) => ({
       runtimeName = `loop.${name}`
     } else if (idx === 0) {
       runtimeName = `trigger.${name}`
-    } else if (currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT) {
+    } else if (
+      currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT ||
+      currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT_V2
+    ) {
       const stepId = pathSteps[idx].id
       if (!stepId) {
         notifications.error("Error generating binding: Step ID not found.")
