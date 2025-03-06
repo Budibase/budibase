@@ -146,8 +146,9 @@ export abstract class TestAPI {
       }
     }
 
+    let resp: Response | undefined = undefined
     try {
-      return await req
+      resp = await req
     } catch (e: any) {
       // We've found that occasionally the connection between supertest and the
       // server supertest starts gets reset. Not sure why, but retrying it
@@ -161,6 +162,7 @@ export abstract class TestAPI {
       }
       throw e
     }
+    return resp
   }
 
   protected async getHeaders(
