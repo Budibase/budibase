@@ -6,8 +6,6 @@
 
   export let parameters
 
-  const inlineMessage = ""
-
   $: tables = findAllMatchingComponents($selectedScreen?.props, component =>
     component._component.endsWith("table")
   ).map(table => ({
