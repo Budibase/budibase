@@ -53,7 +53,7 @@ const ADDED_HELPERS = {
     },
     durationFromNow: {
       args: ["time"],
-      example: '{{durationFromNow "2025-09-30"}} -> 7 months',
+      example: '{{durationFromNow "2021-09-30"}} -> 8 months',
       description:
         "Produce a humanized duration left/until given an amount of time and the type of time measurement.",
     },
