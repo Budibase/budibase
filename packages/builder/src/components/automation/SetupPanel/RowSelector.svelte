@@ -303,12 +303,21 @@
   >
     <ActionButton
       icon="Add"
-      fullWidth
       on:click={() => {
         customPopover.show()
       }}
       disabled={!schemaFields}
       >Add fields
+    </ActionButton>
+    <ActionButton
+      icon="Remove"
+      on:click={() => {
+        dispatch("change", {
+          meta: { fields: {} },
+          row: {},
+        })
+      }}
+      >Clear
     </ActionButton>
   </div>
 {/if}
@@ -374,5 +383,12 @@
   /* Override for general json field override */
   .prop-control-wrap :global(.icon.json-slot-icon) {
     right: 1px !important;
+  }
+
+  .add-fields-btn {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--spacing-s);
   }
 </style>
