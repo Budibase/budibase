@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from "svelte"
   import { Icon } from "@budibase/bbui"
-  import { UIComponentError } from "@budibase/types"
+  import type { UIComponentError } from "@budibase/types"
   import ComponentErrorStateCta from "./ComponentErrorStateCTA.svelte"
 
   export let componentErrors: UIComponentError[] | undefined

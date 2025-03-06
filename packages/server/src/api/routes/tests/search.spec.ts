@@ -1,14 +1,12 @@
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   db as dbCore,
   docIds,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
+  setEnv,
   SQLITE_DESIGN_DOC_ID,
   utils,
   withEnv as withCoreEnv,
@@ -46,21 +44,9 @@ import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
 
-jest.mock("@budibase/pro", () => ({
-  ...jest.requireActual("@budibase/pro"),
-  ai: {
-    LargeLanguageModel: {
-      forCurrentTenant: async () => ({
-        llm: {},
-        run: jest.fn(() => `Mock LLM Response`),
-        buildPromptFromAIOperation: jest.fn(),
-      }),
-    },
-  },
-}))
-
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -1899,10 +1885,14 @@ if (descriptions.length) {
               !isInMemory &&
               describe("AI Column", () => {
                 const UNEXISTING_AI_COLUMN = "Real LLM Response"
+                let envCleanup: () => void
 
                 beforeAll(async () => {
                   mocks.licenses.useBudibaseAI()
                   mocks.licenses.useAICustomConfigs()
+
+                  envCleanup = setEnv({ OPENAI_API_KEY: "mock" })
+                  mockChatGPTResponse("Mock LLM Response")
 
                   tableOrViewId = await createTableOrView({
                     product: { name: "product", type: FieldType.STRING },
@@ -1918,6 +1908,10 @@ if (descriptions.length) {
                     { product: "Big Mac" },
                     { product: "McCrispy" },
                   ])
+                })
+
+                afterAll(() => {
+                  envCleanup()
                 })
 
                 describe("equal", () => {
@@ -3553,6 +3547,31 @@ if (descriptions.length) {
                     limit: 1,
                   }).toContainExactly([row])
                 })
+
+                isInternal &&
+                  describe("search by _id for relations", () => {
+                    it("can filter by the related _id", async () => {
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": row.rel[0]._id },
+                        },
+                      }).toContainExactly([row])
+
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": row.rel[1]._id },
+                        },
+                      }).toContainExactly([row])
+                    })
+
+                    it("can filter by the related _id and find nothing", async () => {
+                      await expectSearch({
+                        query: {
+                          equal: { "rel._id": "rel_none" },
+                        },
+                      }).toFindNothing()
+                    })
+                  })
               })
 
             !isInternal &&

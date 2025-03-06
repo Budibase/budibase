@@ -143,7 +143,6 @@ async function branchMatches(
   branch: Readonly<Branch>
 ): Promise<boolean> {
   const toFilter: Record<string, any> = {}
-  const preparedCtx = prepareContext(ctx)
 
   // Because we allow bindings on both the left and right of each condition in
   // automation branches, we can't pass the BranchSearchFilters directly to
@@ -160,9 +159,9 @@ async function branchMatches(
         filter.conditions = filter.conditions.map(evaluateBindings)
       } else {
         for (const [field, value] of Object.entries(filter)) {
-          toFilter[field] = processStringSync(field, preparedCtx)
+          toFilter[field] = processStringSync(field, ctx)
           if (typeof value === "string" && findHBSBlocks(value).length > 0) {
-            filter[field] = processStringSync(value, preparedCtx)
+            filter[field] = processStringSync(value, ctx)
           }
         }
       }
@@ -176,17 +175,6 @@ async function branchMatches(
     evaluateBindings(branch.condition)
   )
   return result.length > 0
-}
-
-function prepareContext(context: AutomationContext) {
-  return {
-    ...context,
-    steps: {
-      ...context.steps,
-      ...context.stepsById,
-      ...context.stepsByName,
-    },
-  }
 }
 
 async function enrichBaseContext(context: AutomationContext) {
@@ -304,41 +292,37 @@ class Orchestrator {
   }
 
   hasErrored(context: AutomationContext): boolean {
-    const [_trigger, ...steps] = context.steps
-    for (const step of steps) {
-      if (step.success === false) {
-        return true
-      }
-    }
-    return false
+    return context._error === true
   }
 
   async execute(): Promise<AutomationResults> {
     return await tracer.trace("execute", async span => {
       span.addTags({ appId: this.appId, automationId: this.automation._id })
 
-      const job = cloneDeep(this.job)
-      delete job.data.event.appId
-      delete job.data.event.metadata
+      const data = cloneDeep(this.job.data)
+      delete data.event.appId
+      delete data.event.metadata
 
-      if (this.isCron() && !job.data.event.timestamp) {
-        job.data.event.timestamp = Date.now()
+      if (this.isCron() && !data.event.timestamp) {
+        data.event.timestamp = Date.now()
       }
 
       const trigger: AutomationTriggerResult = {
-        id: job.data.automation.definition.trigger.id,
-        stepId: job.data.automation.definition.trigger.stepId,
+        id: data.automation.definition.trigger.id,
+        stepId: data.automation.definition.trigger.stepId,
         inputs: null,
-        outputs: job.data.event,
+        outputs: data.event,
       }
       const result: AutomationResults = { trigger, steps: [trigger] }
 
       const ctx: AutomationContext = {
         trigger: trigger.outputs,
-        steps: [trigger.outputs],
-        stepsById: {},
+        steps: { "0": trigger.outputs },
         stepsByName: {},
+        stepsById: {},
         user: trigger.outputs.user,
+        _error: false,
+        _stepIndex: 1,
       }
       await enrichBaseContext(ctx)
 
@@ -348,7 +332,7 @@ class Orchestrator {
       try {
         await helpers.withTimeout(timeout, async () => {
           const [stepOutputs, executionTime] = await utils.time(() =>
-            this.executeSteps(ctx, job.data.automation.definition.steps)
+            this.executeSteps(ctx, data.automation.definition.steps)
           )
 
           result.steps.push(...stepOutputs)
@@ -367,6 +351,8 @@ class Orchestrator {
         if (e.errno === "ETIME") {
           span?.addTags({ timedOut: true })
           console.warn(`Automation execution timed out after ${timeout}ms`)
+        } else {
+          throw e
         }
       }
 
@@ -398,9 +384,20 @@ class Orchestrator {
         step: AutomationStep,
         result: AutomationStepResult
       ) {
-        ctx.steps.push(result.outputs)
+        ctx.steps[step.id] = result.outputs
+        ctx.steps[step.name || step.id] = result.outputs
+
         ctx.stepsById[step.id] = result.outputs
         ctx.stepsByName[step.name || step.id] = result.outputs
+
+        ctx._stepIndex ||= 0
+        ctx.steps[ctx._stepIndex] = result.outputs
+        ctx._stepIndex++
+
+        if (result.outputs.success === false) {
+          ctx._error = true
+        }
+
         results.push(result)
       }
 
@@ -447,7 +444,7 @@ class Orchestrator {
     stepToLoop: AutomationStep
   ): Promise<AutomationStepResult> {
     return await tracer.trace("executeLoopStep", async span => {
-      await processObject(step.inputs, prepareContext(ctx))
+      await processObject(step.inputs, ctx)
 
       const maxIterations = getLoopMaxIterations(step)
       const items: Record<string, any>[] = []
@@ -476,6 +473,7 @@ class Orchestrator {
           return stepFailure(stepToLoop, {
             status: AutomationStepStatus.MAX_ITERATIONS,
             iterations,
+            items,
           })
         }
 
@@ -486,6 +484,8 @@ class Orchestrator {
           })
           return stepFailure(stepToLoop, {
             status: AutomationStepStatus.FAILURE_CONDITION,
+            iterations,
+            items,
           })
         }
 
@@ -556,7 +556,7 @@ class Orchestrator {
       }
 
       const inputs = automationUtils.cleanInputValues(
-        await processObject(cloneDeep(step.inputs), prepareContext(ctx)),
+        await processObject(cloneDeep(step.inputs), ctx),
         step.schema.inputs.properties
       )
 
@@ -564,7 +564,7 @@ class Orchestrator {
         inputs,
         appId: this.appId,
         emitter: this.emitter,
-        context: prepareContext(ctx),
+        context: ctx,
       })
 
       if (

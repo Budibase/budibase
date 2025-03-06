@@ -7,6 +7,7 @@ describe("test the outgoing webhook action", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
