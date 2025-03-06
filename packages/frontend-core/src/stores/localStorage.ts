@@ -1,24 +1,28 @@
 import { get, writable } from "svelte/store"
 
-export const createLocalStorageStore = (localStorageKey, initialValue) => {
+export const createLocalStorageStore = <T>(
+  localStorageKey: string,
+  initialValue: T
+) => {
   const store = writable(initialValue, () => {
     // Hydrate from local storage when we get a new subscriber
     hydrate()
 
     // Listen for local storage changes and keep store in sync
-    const storageListener = ({ key }) => key === localStorageKey && hydrate()
+    const storageListener = ({ key }: StorageEvent) =>
+      key === localStorageKey && hydrate()
     window.addEventListener("storage", storageListener)
     return () => window.removeEventListener("storage", storageListener)
   })
 
   // New store setter which updates the store and localstorage
-  const set = value => {
+  const set = (value: T) => {
     store.set(value)
     localStorage.setItem(localStorageKey, JSON.stringify(value))
   }
 
   // New store updater which updates the store and localstorage
-  const update = updaterFn => set(updaterFn(get(store)))
+  const update = (updaterFn: (value: T) => T) => set(updaterFn(get(store)))
 
   // Hydrates the store from localstorage
   const hydrate = () => {
