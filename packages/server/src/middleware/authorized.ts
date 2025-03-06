@@ -103,7 +103,10 @@ const authorized =
       return ctx.throw(401, "No user info found")
     }
 
-    if (isDevAppID(context.getAppId()) && ctx.get(Header.PREVIEW_USER)) {
+    if (ctx.get(Header.PREVIEW_USER)) {
+      if (!isDevAppID(context.getAppId())) {
+        return ctx.throw(403, "Action not allowed")
+      }
       const impersonatedUserId = ctx.get(Header.PREVIEW_USER)
       ctx.user = await cache.user.getUser({
         userId: impersonatedUserId,
