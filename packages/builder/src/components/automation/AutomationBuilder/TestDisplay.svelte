@@ -21,14 +21,17 @@
 
   let openBlocks = {}
   let blocks
-
+  let selectedBlock = null
   let modal
 
-  export const show = () => {
+  function show(block) {
+    selectedBlock = block
     modal.show()
   }
-  export const hide = () => {
+
+  function hide() {
     modal.hide()
+    selectedBlock = null
   }
 
   function prepTestResults(results) {
@@ -83,47 +86,49 @@
 
 <div class="container">
   {#each blocks as block, idx}
-    <Modal bind:this={modal} on:hide>
+    <Modal bind:this={modal} on:hide={hide}>
       <ModalContent
         size="XL"
         title="Steps"
         showConfirmButton={false}
         showCancelButton={false}
       >
-        <div class="tabs">
-          <Tabs quiet noHorizPadding selected="Input">
-            <Tab title="Input">
-              <div class="wrap">
-                {#if testResults.message}
-                  No input
-                {:else if filteredResults?.[idx]?.inputs}
-                  <JsonView depth={2} json={filteredResults?.[idx]?.inputs} />
-                {:else}
-                  No input
-                {/if}
-              </div>
-            </Tab>
-            <Tab title="Output">
-              <div class="wrap">
-                {#if testResults.message}
-                  <JsonView
-                    depth={2}
-                    json={{
-                      success: testResults.outputs?.success || false,
-                      status: testResults.outputs?.status || "unknown",
-                      message: testResults.message,
-                    }}
-                  />
-                {:else if filteredResults?.[idx]?.outputs}
-                  <JsonView depth={2} json={filteredResults?.[idx]?.outputs} />
-                {:else}
-                  No output
-                {/if}
-              </div>
-            </Tab>
-          </Tabs>
-        </div></ModalContent
-      >
+        {#if selectedBlock}
+          <div class="tabs">
+            <Tabs quiet noHorizPadding selected="Input">
+              <Tab title="Input">
+                <div class="wrap">
+                  {#if testResults.message}
+                    No input
+                  {:else if selectedBlock?.inputs}
+                    <JsonView depth={2} json={selectedBlock.inputs} />
+                  {:else}
+                    No input
+                  {/if}
+                </div>
+              </Tab>
+              <Tab title="Output">
+                <div class="wrap">
+                  {#if testResults.message}
+                    <JsonView
+                      depth={2}
+                      json={{
+                        success: testResults.outputs?.success || false,
+                        status: testResults.outputs?.status || "unknown",
+                        message: testResults.message,
+                      }}
+                    />
+                  {:else if selectedBlock?.outputs}
+                    <JsonView depth={2} json={selectedBlock.outputs} />
+                  {:else}
+                    No output
+                  {/if}
+                </div>
+              </Tab>
+            </Tabs>
+          </div>
+        {/if}
+      </ModalContent>
     </Modal>
     <div class="block">
       {#if block.stepId !== ActionStepID.LOOP}
@@ -191,7 +196,9 @@
                 </div>
               </Tab>
             </Tabs>
-            <Button primary on:click={show}>View in modal</Button>
+            <Button primary on:click={() => show(filteredResults[idx])}
+              >View in modal</Button
+            >
           </div>
         {/if}
       {/if}
