@@ -8,6 +8,8 @@
   export let onConfirm = undefined
   export let buttonText = ""
   export let cta = false
+  export let link = ""
+  export let linkText
 
   $: icon = selectIcon(type)
   // if newlines used, convert them to different elements
@@ -49,6 +51,20 @@
       >
     </div>
   {/if}
+  {#if link && linkText}
+    <div id="docs-link">
+      <a href={link} target="_blank" rel="noopener noreferrer" class="doc-link">
+        {linkText}
+        <svg
+          class="spectrum-Icon spectrum-Icon--sizeS spectrum-Toast-typeIcon"
+          focusable="false"
+          aria-hidden="true"
+        >
+          <use xlink:href="#spectrum-icon-18-LinkOut" />
+        </svg>
+      </a>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -63,5 +79,13 @@
     min-width: 100px;
     margin: 0;
     border-width: 1px;
+  }
+
+  a {
+    color: white;
+  }
+
+  #docs-link {
+    padding-top: 10px;
   }
 </style>
