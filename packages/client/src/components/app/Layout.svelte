@@ -391,12 +391,6 @@
     top: 0;
     left: 0;
   }
-  .layout--top .nav-wrapper {
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-  }
-  .layout--left .nav-wrapper {
-    border-right: 1px solid var(--spectrum-global-color-gray-300);
-  }
 
   .nav {
     display: flex;
