@@ -20,9 +20,12 @@ export interface TriggerOutput {
 
 export interface AutomationContext {
   trigger: AutomationTriggerResultOutputs
-  steps: [AutomationTriggerResultOutputs, ...AutomationStepResultOutputs[]]
-  stepsById: Record<string, AutomationStepResultOutputs>
+  steps: Record<
+    string,
+    AutomationStepResultOutputs | AutomationTriggerResultOutputs
+  >
   stepsByName: Record<string, AutomationStepResultOutputs>
+  stepsById: Record<string, AutomationStepResultOutputs>
   env?: Record<string, string>
   user?: UserBindings
   settings?: {
@@ -31,4 +34,6 @@ export interface AutomationContext {
     company?: string
   }
   loop?: { currentItem: any }
+  _stepIndex: number
+  _error: boolean
 }
