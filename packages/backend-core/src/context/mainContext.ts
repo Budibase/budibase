@@ -13,8 +13,6 @@ import {
 import { Database, IdentityContext, Snippet, App, Table } from "@budibase/types"
 import { ContextMap } from "./types"
 
-let TEST_APP_ID: string | null = null
-
 export function getGlobalDBName(tenantId?: string) {
   // tenant ID can be set externally, for example user API where
   // new tenants are being created, this may be the case
@@ -246,11 +244,7 @@ export function getAutomationId(): string | undefined {
 export function getAppId(): string | undefined {
   const context = Context.get()
   const foundId = context?.appId
-  if (!foundId && env.isTest() && TEST_APP_ID) {
-    return TEST_APP_ID
-  } else {
-    return foundId
-  }
+  return foundId
 }
 
 export function getIP(): string | undefined {
