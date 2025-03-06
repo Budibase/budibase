@@ -19,7 +19,6 @@ import {
   Table,
 } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
-import { removeDeprecated } from "../../../automations/utils"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -64,15 +63,11 @@ describe("/automations", () => {
     it("returns all of the definitions in one", async () => {
       const { action, trigger } = await config.api.automation.getDefinitions()
 
-      let definitionsLength = Object.keys(
-        removeDeprecated(BUILTIN_ACTION_DEFINITIONS)
-      ).length
-
       expect(Object.keys(action).length).toBeGreaterThanOrEqual(
-        definitionsLength
+        Object.keys(BUILTIN_ACTION_DEFINITIONS).length
       )
       expect(Object.keys(trigger).length).toEqual(
-        Object.keys(removeDeprecated(TRIGGER_DEFINITIONS)).length
+        Object.keys(TRIGGER_DEFINITIONS).length
       )
     })
   })
