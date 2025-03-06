@@ -564,7 +564,7 @@ class Orchestrator {
       }
 
       inputs = automationUtils.cleanInputValues(
-        await processObject(cloneDeep(step.inputs), ctx),
+        inputs,
         step.schema.inputs.properties
       )
 
