@@ -134,7 +134,7 @@ export const duration = (str: any, pattern: any, format?: any) => {
   }
 }
 
-export const difference = (from: string, to: string, units: UnitType) => {
+export const difference = (from: string, to: string, units?: UnitType) => {
   const result = dayjs(new Date(from)).diff(dayjs(new Date(to)), units)
   return result
 }
