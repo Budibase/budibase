@@ -100,6 +100,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   loop = this.step(AutomationActionStepId.LOOP)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)
   executeScript = this.step(AutomationActionStepId.EXECUTE_SCRIPT)
+  executeScriptV2 = this.step(AutomationActionStepId.EXECUTE_SCRIPT_V2)
   filter = this.step(AutomationActionStepId.FILTER)
   bash = this.step(AutomationActionStepId.EXECUTE_BASH)
   openai = this.step(AutomationActionStepId.OPENAI)

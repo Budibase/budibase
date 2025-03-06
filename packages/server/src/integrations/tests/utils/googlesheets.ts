@@ -420,15 +420,16 @@ export class GoogleSheetsMock {
     }
 
     const newRows = body.values.map(v => this.valuesToRowData(v))
-    const toDelete =
-      params.insertDataOption === "INSERT_ROWS" ? newRows.length : 0
-    sheet.data[0].rowData.splice(endRowIndex + 1, toDelete, ...newRows)
-    sheet.data[0].rowMetadata.splice(endRowIndex + 1, toDelete, {
+    const newMetadata = newRows.map(() => ({
       hiddenByUser: false,
       hiddenByFilter: false,
       pixelSize: 100,
       developerMetadata: [],
-    })
+    }))
+    const toDelete =
+      params.insertDataOption === "INSERT_ROWS" ? newRows.length : 0
+    sheet.data[0].rowData.splice(endRowIndex + 1, toDelete, ...newRows)
+    sheet.data[0].rowMetadata.splice(endRowIndex + 1, toDelete, ...newMetadata)
 
     // It's important to give back a correct updated range because the API
     // library we use makes use of it to assign the correct row IDs to rows.
