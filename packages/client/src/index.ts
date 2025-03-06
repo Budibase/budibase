@@ -70,6 +70,9 @@ declare global {
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
     svelte_internal: typeof internal
+
+    isBuilder: boolean
+    closePreview?: () => void
   }
 }
 

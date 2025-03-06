@@ -1,17 +1,18 @@
-<script>
+<script lang="ts">
   import { Heading, Select, ActionButton } from "@budibase/bbui"
   import { devToolsStore, appStore } from "@/stores"
   import { getContext, onMount } from "svelte"
   import { API } from "@/api"
+  import { Role } from "@budibase/types"
 
   const context = getContext("context")
   const SELF_ROLE = "self"
 
-  let roles
+  let roles: Role[]
 
   $: previewOptions = buildRoleList(roles)
 
-  function buildRoleList(roles) {
+  function buildRoleList(roles: Role[]) {
     const list = []
     list.push({
       label: "View as yourself",
@@ -42,7 +43,6 @@
     quiet
     options={previewOptions}
     value={$devToolsStore.role || SELF_ROLE}
-    placeholder={null}
     autoWidth
     on:change={e => devToolsStore.actions.changeRole(e.detail)}
   />
