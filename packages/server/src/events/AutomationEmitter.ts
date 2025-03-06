@@ -32,6 +32,8 @@ class AutomationEmitter implements ContextEmitter {
 
     if (chainAutomations === true) {
       return MAX_AUTOMATIONS_ALLOWED
+    } else if (env.isTest()) {
+      return 0
     } else if (chainAutomations === undefined && env.SELF_HOSTED) {
       return MAX_AUTOMATIONS_ALLOWED
     } else {
