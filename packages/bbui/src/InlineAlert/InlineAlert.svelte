@@ -9,7 +9,7 @@
   export let buttonText = ""
   export let cta = false
   export let link = ""
-  export let linkText
+  export let linkText = ""
 
   $: icon = selectIcon(type)
   // if newlines used, convert them to different elements
