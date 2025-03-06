@@ -1,5 +1,14 @@
 <script>
-  import { Icon, Divider, Tabs, Tab, Label } from "@budibase/bbui"
+  import {
+    Icon,
+    Divider,
+    Tabs,
+    Tab,
+    Label,
+    Button,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
   import { ActionStepID } from "@/constants/backend/automations"
   import { JsonView } from "@zerodevx/svelte-json-view"
@@ -12,6 +21,15 @@
 
   let openBlocks = {}
   let blocks
+
+  let modal
+
+  export const show = () => {
+    modal.show()
+  }
+  export const hide = () => {
+    modal.hide()
+  }
 
   function prepTestResults(results) {
     if (results.message) {
@@ -65,6 +83,48 @@
 
 <div class="container">
   {#each blocks as block, idx}
+    <Modal bind:this={modal} on:hide>
+      <ModalContent
+        size="XL"
+        title="Steps"
+        showConfirmButton={false}
+        showCancelButton={false}
+      >
+        <div class="tabs">
+          <Tabs quiet noHorizPadding selected="Input">
+            <Tab title="Input">
+              <div class="wrap">
+                {#if testResults.message}
+                  No input
+                {:else if filteredResults?.[idx]?.inputs}
+                  <JsonView depth={2} json={filteredResults?.[idx]?.inputs} />
+                {:else}
+                  No input
+                {/if}
+              </div>
+            </Tab>
+            <Tab title="Output">
+              <div class="wrap">
+                {#if testResults.message}
+                  <JsonView
+                    depth={2}
+                    json={{
+                      success: testResults.outputs?.success || false,
+                      status: testResults.outputs?.status || "unknown",
+                      message: testResults.message,
+                    }}
+                  />
+                {:else if filteredResults?.[idx]?.outputs}
+                  <JsonView depth={2} json={filteredResults?.[idx]?.outputs} />
+                {:else}
+                  No output
+                {/if}
+              </div>
+            </Tab>
+          </Tabs>
+        </div></ModalContent
+      >
+    </Modal>
     <div class="block">
       {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
@@ -131,6 +191,7 @@
                 </div>
               </Tab>
             </Tabs>
+            <Button primary on:click={show}>View in modal</Button>
           </div>
         {/if}
       {/if}
