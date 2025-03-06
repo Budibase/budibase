@@ -51,6 +51,12 @@ const ADDED_HELPERS = {
       description:
         "Gets the difference between two dates, in milliseconds. Pass a third parameter to adjust the unit measurement.",
     },
+    durationFromNow: {
+      args: ["time"],
+      example: '{{durationFromNow "2025-09-30"}} -> 7 months',
+      description:
+        "Produce a humanized duration left/until given an amount of time and the type of time measurement.",
+    },
   },
 }
 

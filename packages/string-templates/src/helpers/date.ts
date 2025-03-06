@@ -121,7 +121,7 @@ export const date = (str: any, pattern: any, options: any) => {
   return date.format(config.pattern)
 }
 
-export const duration = (str: any, pattern: any, format: any) => {
+export const duration = (str: any, pattern: any, format?: any) => {
   const config = initialConfig(str, pattern)
 
   setLocale(config.str, config.pattern)
@@ -137,4 +137,9 @@ export const duration = (str: any, pattern: any, format: any) => {
 export const difference = (from: string, to: string, units: UnitType) => {
   const result = dayjs(new Date(from)).diff(dayjs(new Date(to)), units)
   return result
+}
+
+export const durationFromNow = (from: string) => {
+  const diff = difference(from, new Date().toISOString(), "ms")
+  return duration(diff, "ms")
 }
