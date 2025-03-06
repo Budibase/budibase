@@ -1,6 +1,6 @@
 import { derived } from "svelte/store"
 import { Constants } from "@budibase/frontend-core"
-import { devToolsStore } from "../devTools.js"
+import { devToolsStore } from "../devTools"
 import { authStore } from "../auth"
 import { devToolsEnabled } from "./devToolsEnabled.js"
 
