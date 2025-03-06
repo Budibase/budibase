@@ -196,9 +196,11 @@
                 </div>
               </Tab>
             </Tabs>
-            <Button primary on:click={() => show(filteredResults[idx])}
-              >View in modal</Button
-            >
+            <div class="center">
+              <Button secondary on:click={() => show(filteredResults[idx])}
+                >View in modal</Button
+              >
+            </div>
           </div>
         {/if}
       {/if}
@@ -275,5 +277,11 @@
     /* center horizontally */
     text-align: center;
     margin-left: 50%;
+  }
+
+  .center {
+    display: flex;
+    justify-content: center;
+    padding: 14px;
   }
 </style>
