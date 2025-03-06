@@ -3,10 +3,12 @@ jest.mock("../../sdk/app/permissions", () => ({
   getResourcePerms: jest.fn().mockResolvedValue([]),
 }))
 
+import type koa from "koa"
 import {
   PermissionType,
   PermissionLevel,
   PermissionSource,
+  UserCtx,
 } from "@budibase/types"
 
 import authorizedMiddleware from "../authorized"
@@ -20,28 +22,28 @@ const APP_ID = ""
 initProMocks()
 
 class TestConfiguration {
-  middleware: (ctx: any, next: any) => Promise<void>
-  next: () => void
-  throw: () => void
+  middleware: (ctx: UserCtx, next: koa.Next) => Promise<void>
+  next: () => any
+  throw: () => never
   headers: Record<string, any>
-  ctx: any
+  ctx: UserCtx
 
   constructor() {
     this.middleware = authorizedMiddleware(PermissionType.APP)
     this.next = jest.fn()
-    this.throw = jest.fn()
+    this.throw = jest.fn<never, []>()
     this.headers = {}
     this.ctx = {
       headers: {},
       request: {
         url: "",
-      },
+      } as UserCtx["request"],
       appId: APP_ID,
       auth: {},
       next: this.next,
       throw: this.throw,
       get: (name: string) => this.headers[name],
-    }
+    } as any
   }
 
   executeMiddleware() {
