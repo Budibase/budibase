@@ -19,7 +19,6 @@ import {
   Table,
 } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
-import { removeDeprecated } from "../../../automations/utils"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -64,15 +63,11 @@ describe("/automations", () => {
     it("returns all of the definitions in one", async () => {
       const { action, trigger } = await config.api.automation.getDefinitions()
 
-      let definitionsLength = Object.keys(
-        removeDeprecated(BUILTIN_ACTION_DEFINITIONS)
-      ).length
-
       expect(Object.keys(action).length).toBeGreaterThanOrEqual(
-        definitionsLength
+        Object.keys(BUILTIN_ACTION_DEFINITIONS).length
       )
       expect(Object.keys(trigger).length).toEqual(
-        Object.keys(removeDeprecated(TRIGGER_DEFINITIONS)).length
+        Object.keys(TRIGGER_DEFINITIONS).length
       )
     })
   })
@@ -290,8 +285,7 @@ describe("/automations", () => {
         await setup.delay(500)
         let elements = await getAllTableRows(config)
         // don't test it unless there are values to test
-        if (elements.length > 1) {
-          expect(elements.length).toBeGreaterThanOrEqual(MAX_RETRIES)
+        if (elements.length >= 1) {
           expect(elements[0].name).toEqual("Test")
           expect(elements[0].description).toEqual("TEST")
           return

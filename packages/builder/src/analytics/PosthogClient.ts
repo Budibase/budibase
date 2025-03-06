@@ -1,9 +1,12 @@
 import posthog from "posthog-js"
-import { Events } from "./constants"
 
 export default class PosthogClient {
-  constructor(token) {
+  token: string
+  initialised: boolean
+
+  constructor(token: string) {
     this.token = token
+    this.initialised = false
   }
 
   init() {
@@ -12,6 +15,8 @@ export default class PosthogClient {
     posthog.init(this.token, {
       autocapture: false,
       capture_pageview: false,
+      // disable by default
+      disable_session_recording: true,
     })
     posthog.set_config({ persistence: "cookie" })
 
@@ -22,7 +27,7 @@ export default class PosthogClient {
    * Set the posthog context to the current user
    * @param {String} id - unique user id
    */
-  identify(id) {
+  identify(id: string) {
     if (!this.initialised) return
 
     posthog.identify(id)
@@ -32,7 +37,7 @@ export default class PosthogClient {
    * Update user metadata associated with current user in posthog
    * @param {Object} meta - user fields
    */
-  updateUser(meta) {
+  updateUser(meta: Record<string, any>) {
     if (!this.initialised) return
 
     posthog.people.set(meta)
@@ -43,28 +48,22 @@ export default class PosthogClient {
    * @param {String} event - event identifier
    * @param {Object} props - properties for the event
    */
-  captureEvent(eventName, props) {
-    if (!this.initialised) return
-
-    props.sourceApp = "builder"
-    posthog.capture(eventName, props)
-  }
-
-  /**
-   * Submit NPS feedback to posthog.
-   * @param {Object} values - NPS Values
-   */
-  npsFeedback(values) {
-    if (!this.initialised) return
-
-    localStorage.setItem(Events.NPS.SUBMITTED, Date.now())
-
-    const prefixedFeedback = {}
-    for (let key in values) {
-      prefixedFeedback[`feedback_${key}`] = values[key]
+  captureEvent(event: string, props: Record<string, any>) {
+    if (!this.initialised) {
+      return
     }
 
-    posthog.capture(Events.NPS.SUBMITTED, prefixedFeedback)
+    props.sourceApp = "builder"
+    posthog.capture(event, props)
+  }
+
+  enableSessionRecording() {
+    if (!this.initialised) {
+      return
+    }
+    posthog.set_config({
+      disable_session_recording: false,
+    })
   }
 
   /**
