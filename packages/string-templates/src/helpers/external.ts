@@ -1,7 +1,7 @@
 // @ts-ignore we don't have types for it
 import helpers from "@budibase/handlebars-helpers"
 
-import { date, duration } from "./date"
+import { date, difference, duration } from "./date"
 import {
   HelperFunctionBuiltin,
   EXTERNAL_FUNCTION_COLLECTIONS,
@@ -9,8 +9,9 @@ import {
 import Handlebars from "handlebars"
 
 const ADDED_HELPERS = {
-  date: date,
-  duration: duration,
+  date,
+  duration,
+  difference,
 }
 
 export const externalCollections = EXTERNAL_FUNCTION_COLLECTIONS

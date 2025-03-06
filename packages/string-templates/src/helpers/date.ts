@@ -1,4 +1,4 @@
-import dayjs from "dayjs"
+import dayjs, { UnitType } from "dayjs"
 
 import dayjsDurationPlugin from "dayjs/plugin/duration"
 import dayjsAdvancedFormatPlugin from "dayjs/plugin/advancedFormat"
@@ -132,4 +132,9 @@ export const duration = (str: any, pattern: any, format: any) => {
   } else {
     return duration.humanize()
   }
+}
+
+export const difference = (from: string, to: string, units: UnitType) => {
+  const result = dayjs(new Date(from)).diff(dayjs(new Date(to)), units)
+  return result
 }
