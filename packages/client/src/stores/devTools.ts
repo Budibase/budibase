@@ -4,30 +4,34 @@ import { authStore } from "./auth"
 import { API } from "../api"
 import { get } from "svelte/store"
 
-const initialState = {
-  visible: false,
-  allowSelection: false,
-  role: null,
+interface DevToolsState {
+  visible: boolean
+  allowSelection: boolean
+  role: string | null
 }
 
 const createDevToolStore = () => {
-  const store = createLocalStorageStore("bb-devtools", initialState)
+  const store = createLocalStorageStore<DevToolsState>("bb-devtools", {
+    visible: false,
+    allowSelection: false,
+    role: null,
+  })
 
-  const setVisible = visible => {
+  const setVisible = (visible: boolean) => {
     store.update(state => ({
       ...state,
       visible,
     }))
   }
 
-  const setAllowSelection = allowSelection => {
+  const setAllowSelection = (allowSelection: boolean) => {
     store.update(state => ({
       ...state,
       allowSelection,
     }))
   }
 
-  const changeRole = async role => {
+  const changeRole = async (role: string | null) => {
     if (role === "self") {
       role = null
     }
