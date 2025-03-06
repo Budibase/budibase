@@ -1,3 +1,4 @@
+import type koa from "koa"
 import {
   auth,
   context,
@@ -5,13 +6,13 @@ import {
   roles,
   users,
 } from "@budibase/backend-core"
-import { PermissionLevel, PermissionType, UserCtx } from "@budibase/types"
+import { PermissionLevel, PermissionType, Role, UserCtx } from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
 import { paramResource } from "./resourceId"
 import sdk from "../sdk"
 
-function hasResource(ctx: any) {
+function hasResource(ctx: UserCtx) {
   return ctx.resourceId != null
 }
 
@@ -25,7 +26,7 @@ const csrf = auth.buildCsrfMiddleware()
  */
 const checkAuthorized = async (
   ctx: UserCtx,
-  resourceRoles: any,
+  resourceRoles: string[],
   permType: PermissionType,
   permLevel: PermissionLevel
 ) => {
@@ -56,7 +57,7 @@ const checkAuthorized = async (
 
 const checkAuthorizedResource = async (
   ctx: UserCtx,
-  resourceRoles: any,
+  resourceRoles: string[],
   permType: PermissionType,
   permLevel: PermissionLevel
 ) => {
@@ -68,7 +69,7 @@ const checkAuthorizedResource = async (
   if (resourceRoles.length > 0) {
     // deny access if the user doesn't have the required resource role
     const found = userRoles.find(
-      (role: any) => resourceRoles.indexOf(role._id) !== -1
+      (role: Role) => resourceRoles.indexOf(role._id!) !== -1
     )
     if (!found) {
       ctx.throw(403, permError)
@@ -88,7 +89,7 @@ const authorized =
     opts = { schema: false },
     resourcePath?: string
   ) =>
-  async (ctx: UserCtx, next: any) => {
+  async (ctx: UserCtx, next: koa.Next) => {
     // webhooks don't need authentication, each webhook unique
     // also internal requests (between services) don't need authorized
     if (isWebhookEndpoint(ctx) || ctx.internal) {
