@@ -282,7 +282,9 @@
             let { text } = view.state.doc.lineAt(from)
             const left = from ? text.substring(0, from) : ""
             const right = to ? text.substring(to) : ""
-            const wrap = (!left.includes('$("') || !right.includes('")')) && !(left.includes("`") && right.includes("`"))
+            const wrap =
+              (!left.includes('$("') || !right.includes('")')) &&
+              !(left.includes("`") && right.includes("`"))
             const anchor = from + (wrap ? 3 : 1)
             const tr = view.state.update(
               {
@@ -299,11 +301,13 @@
             // first loaded, the first usage of the editor is not ready
             // for the anchor to move as well as perform a change
             setTimeout(() => {
-              view.dispatch(view.state.update({
-                selection: {
-                  anchor,
-                },
-              }))
+              view.dispatch(
+                view.state.update({
+                  selection: {
+                    anchor,
+                  },
+                })
+              )
             }, 1)
             return true
           }
