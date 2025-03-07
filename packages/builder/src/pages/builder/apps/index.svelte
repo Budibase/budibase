@@ -204,7 +204,11 @@
     <ProfileModal {API} user={$auth.user} on:save={() => auth.getSelf()} />
   </Modal>
   <Modal bind:this={changePasswordModal}>
-    <ChangePasswordModal {API} on:save={() => auth.getSelf()} />
+    <ChangePasswordModal
+      {API}
+      passwordMinLength={$admin.passwordMinLength}
+      on:save={() => auth.getSelf()}
+    />
   </Modal>
 {/if}
 

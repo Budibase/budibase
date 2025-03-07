@@ -4,7 +4,7 @@
 
   export let password
   export let error
-  export let minLength = 12
+  export let minLength = "12"
 
   const validatePassword = value => {
     if (!value || value.length < minLength) {

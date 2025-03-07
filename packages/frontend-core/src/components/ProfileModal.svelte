@@ -8,8 +8,6 @@
   export let user: User | ContextUser | undefined = undefined
   export let API: APIClient
 
-  $: console.log(user)
-
   const dispatch = createEventDispatcher()
 
   const values = writable({

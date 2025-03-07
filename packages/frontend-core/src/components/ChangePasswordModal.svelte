@@ -5,6 +5,7 @@
   import { createEventDispatcher } from "svelte"
 
   export let API: APIClient
+  export let passwordMinLength: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -36,5 +37,5 @@
   disabled={!!error || !password}
 >
   <Body size="S">Enter your new password below.</Body>
-  <PasswordRepeatInput bind:password bind:error />
+  <PasswordRepeatInput bind:password bind:error minLength={passwordMinLength} />
 </ModalContent>

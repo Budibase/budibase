@@ -7,6 +7,7 @@
   import ThemeModal from "@/components/settings/ThemeModal.svelte"
   import APIKeyModal from "@/components/settings/APIKeyModal.svelte"
   import { UserAvatar } from "@budibase/frontend-core"
+  import { API } from "@/api"
 
   let themeModal
   let profileModal
@@ -60,10 +61,14 @@
   <ThemeModal />
 </Modal>
 <Modal bind:this={profileModal}>
-  <ProfileModal />
+  <ProfileModal {API} user={$auth.user} on:save={() => auth.getSelf()} />
 </Modal>
 <Modal bind:this={updatePasswordModal}>
-  <ChangePasswordModal />
+  <ChangePasswordModal
+    {API}
+    passwordMinLength={$admin.passwordMinLength}
+    on:save={() => auth.getSelf()}
+  />
 </Modal>
 <Modal bind:this={apiKeyModal}>
   <APIKeyModal />
