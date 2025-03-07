@@ -103,7 +103,7 @@ const authorized =
       return ctx.throw(401, "No user info found")
     }
 
-    if (ctx.get(Header.PREVIEW_USER)) {
+    if (permType !== permissions.BUILDER && ctx.get(Header.PREVIEW_USER)) {
       if (!isDevAppID(context.getAppId())) {
         return ctx.throw(403, "Action not allowed")
       }
