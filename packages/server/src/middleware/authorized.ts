@@ -111,6 +111,7 @@ const authorized =
       ctx.user = await cache.user.getUser({
         userId: impersonatedUserId,
       })
+      ctx.roleId = ctx.user.role?._id ?? ctx.user.roleId ?? undefined
     }
 
     // get the resource roles
