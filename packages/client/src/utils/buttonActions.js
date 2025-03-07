@@ -432,8 +432,9 @@ const copyToClipboardHandler = action => {
   navigator.clipboard
     .writeText(textToCopy)
     .then(() => {
-      if (showNotification && notificationMessage) {
-        notificationStore.actions.success(notificationMessage, true, 3000)
+      if (showNotification) {
+        const message = notificationMessage || "Copied to clipboard"
+        notificationStore.actions.success(message, true, 3000)
       }
     })
     .catch(err => {
