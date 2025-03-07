@@ -11,8 +11,6 @@
   import { FieldType } from "@budibase/types"
 
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
-  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { FIELDS } from "@/constants/backend"
   import { capitalise } from "@/helpers"
   import { memo } from "@budibase/frontend-core"
@@ -26,6 +24,7 @@
   export let bindings
   export let isTestModal
   export let context = {}
+  export let componentWidth
 
   const typeToField = Object.values(FIELDS).reduce((acc, field) => {
     acc[field.type] = field
@@ -234,66 +233,28 @@
     )
     dispatch("change", result)
   }
-
-  /**
-   * Converts arrays into strings. The CodeEditor expects a string or encoded JS
-   * @param{object} fieldValue
-   */
-  const drawerValue = fieldValue => {
-    return Array.isArray(fieldValue) ? fieldValue.join(",") : fieldValue
-  }
 </script>
 
 {#each schemaFields || [] as [field, schema]}
   {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
-    <PropField label={field} fullWidth={isFullWidth(schema.type)}>
+    <PropField
+      label={field}
+      fullWidth={isFullWidth(schema.type)}
+      {componentWidth}
+    >
       <div class="prop-control-wrap">
-        {#if isTestModal}
-          <RowSelectorTypes
-            {isTestModal}
-            {field}
-            {schema}
-            bindings={parsedBindings}
-            value={editableRow}
-            meta={{
-              fields: editableFields,
-            }}
-            {onChange}
-            {context}
-          />
-        {:else}
-          <DrawerBindableSlot
-            title={$memoStore?.row?.title || field}
-            panel={AutomationBindingPanel}
-            type={schema.type}
-            {schema}
-            value={drawerValue(editableRow[field])}
-            on:change={e =>
-              onChange({
-                row: {
-                  [field]: e.detail,
-                },
-              })}
-            {bindings}
-            allowJS={true}
-            updateOnChange={false}
-            drawerLeft="260px"
-            {context}
-          >
-            <RowSelectorTypes
-              {isTestModal}
-              {field}
-              {schema}
-              bindings={parsedBindings}
-              value={editableRow}
-              meta={{
-                fields: editableFields,
-              }}
-              {context}
-              onChange={change => onChange(change)}
-            />
-          </DrawerBindableSlot>
-        {/if}
+        <RowSelectorTypes
+          {isTestModal}
+          {field}
+          {schema}
+          bindings={parsedBindings}
+          value={editableRow}
+          meta={{
+            fields: editableFields,
+          }}
+          {onChange}
+          {context}
+        />
       </div>
     </PropField>
   {/if}
