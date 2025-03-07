@@ -1,8 +1,8 @@
-<script context="module">
+<script context="module" lang="ts">
   export const keepOpen = Symbol("keepOpen")
 </script>
 
-<script>
+<script lang="ts">
   import "@spectrum-css/dialog/dist/index-vars.css"
   import { getContext } from "svelte"
   import Button from "../Button/Button.svelte"
@@ -11,31 +11,36 @@
   import Context from "../context"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
 
-  export let title = undefined
-  export let size = "S"
-  export let cancelText = "Cancel"
-  export let confirmText = "Confirm"
-  export let showCancelButton = true
-  export let showConfirmButton = true
-  export let showCloseIcon = true
-  export let onConfirm = undefined
-  export let onCancel = undefined
-  export let disabled = false
-  export let showDivider = true
+  export let title: string | undefined = undefined
+  export let size: "S" | "M" | "L" | "XL" = "S"
+  export let cancelText: string = "Cancel"
+  export let confirmText: string = "Confirm"
+  export let showCancelButton: boolean = true
+  export let showConfirmButton: boolean = true
+  export let showCloseIcon: boolean = true
+  export let onConfirm: (() => Promise<any> | any) | undefined = undefined
+  export let onCancel: (() => Promise<any> | any) | undefined = undefined
+  export let disabled: boolean = false
+  export let showDivider: boolean = true
 
-  export let showSecondaryButton = false
-  export let secondaryButtonText = undefined
-  export let secondaryAction = undefined
-  export let secondaryButtonWarning = false
-  export let custom = false
+  export let showSecondaryButton: boolean = false
+  export let secondaryButtonText: string | undefined = undefined
+  export let secondaryAction: ((_e: Event) => Promise<any> | any) | undefined =
+    undefined
+  export let secondaryButtonWarning: boolean = false
+  export let custom: boolean = false
 
-  const { hide, cancel } = getContext(Context.Modal)
+  const { hide, cancel } = getContext(Context.Modal) as {
+    hide: () => void
+    cancel: () => void
+  }
 
-  let loading = false
+  let loading: boolean = false
 
+  let confirmDisabled: boolean
   $: confirmDisabled = disabled || loading
 
-  async function secondary(e) {
+  async function secondary(e: Event): Promise<void> {
     loading = true
     if (!secondaryAction || (await secondaryAction(e)) !== keepOpen) {
       hide()
@@ -43,7 +48,7 @@
     loading = false
   }
 
-  export async function confirm() {
+  export async function confirm(): Promise<void> {
     loading = true
     if (!onConfirm || (await onConfirm()) !== keepOpen) {
       hide()
@@ -51,7 +56,7 @@
     loading = false
   }
 
-  async function close() {
+  async function close(): Promise<void> {
     loading = true
     if (!onCancel || (await onCancel()) !== keepOpen) {
       cancel()
@@ -90,7 +95,6 @@
       {/if}
     {/if}
 
-    <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
       <slot {loading} />
     </section>
@@ -102,7 +106,6 @@
         {#if showSecondaryButton && secondaryButtonText && secondaryAction}
           <div class="secondary-action">
             <Button
-              group
               secondary
               warning={secondaryButtonWarning}
               on:click={secondary}>{secondaryButtonText}</Button
@@ -111,14 +114,13 @@
         {/if}
 
         {#if showCancelButton}
-          <Button group secondary on:click={close}>
+          <Button secondary on:click={close}>
             {cancelText}
           </Button>
         {/if}
         {#if showConfirmButton}
           <span class="confirm-wrap">
             <Button
-              group
               cta
               {...$$restProps}
               disabled={confirmDisabled}

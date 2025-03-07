@@ -1,19 +1,19 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/inlinealert/dist/index-vars.css"
   import Button from "../Button/Button.svelte"
 
-  export let type = "info"
-  export let header = ""
-  export let message = ""
-  export let onConfirm = undefined
-  export let buttonText = ""
-  export let cta = false
+  export let type: "info" | "error" | "success" | "help" | "negative" = "info"
+  export let header: string = ""
+  export let message: string = ""
+  export let onConfirm: (() => void) | undefined = undefined
+  export let buttonText: string = ""
+  export let cta: boolean = false
 
   $: icon = selectIcon(type)
   // if newlines used, convert them to different elements
   $: split = message.split("\n")
 
-  function selectIcon(alertType) {
+  function selectIcon(alertType: string): string {
     switch (alertType) {
       case "error":
       case "negative":

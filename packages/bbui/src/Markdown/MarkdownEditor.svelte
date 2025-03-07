@@ -1,20 +1,20 @@
-<script>
+<script lang="ts">
   import SpectrumMDE from "./SpectrumMDE.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value = null
-  export let height = null
-  export let placeholder = null
-  export let id = null
-  export let fullScreenOffset = 0
-  export let disabled = false
-  export let readonly = false
-  export let easyMDEOptions
+  export let value: string | null = null
+  export let height: string | null = null
+  export let placeholder: string | null = null
+  export let id: string | null = null
+  export let fullScreenOffset: { x: string; y: string } | null = null
+  export let disabled: boolean = false
+  export let readonly: boolean = false
+  export let easyMDEOptions: Record<string, any> = {}
 
   const dispatch = createEventDispatcher()
 
-  let latestValue
-  let mde
+  let latestValue: string | null
+  let mde: any
 
   // Ensure the value is updated if the value prop changes outside the editor's
   // control
@@ -24,7 +24,7 @@
     mde?.togglePreview()
   }
 
-  const checkValue = val => {
+  const checkValue = (val: string | null) => {
     if (mde && val !== latestValue) {
       mde.value(val)
     }

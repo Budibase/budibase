@@ -1,17 +1,17 @@
-<script>
+<script lang="ts">
   import EasyMDE from "easymde"
   import "easymde/dist/easymde.min.css"
   import { onMount } from "svelte"
 
-  export let height = null
-  export let scroll = true
-  export let easyMDEOptions = null
-  export let mde = null
-  export let id = null
-  export let fullScreenOffset = null
-  export let disabled = false
+  export let height: string | null = null
+  export let scroll: boolean = true
+  export let easyMDEOptions: Record<string, any> | null = null
+  export let mde: EasyMDE | null = null
+  export let id: string | null = null
+  export let fullScreenOffset: { x: string; y: string } | null = null
+  export let disabled: boolean = false
 
-  let element
+  let element: HTMLTextAreaElement | undefined = undefined
 
   onMount(() => {
     height = height || "200px"
@@ -27,13 +27,13 @@
 
     // Revert the editor when we unmount
     return () => {
-      mde.toTextArea()
+      mde?.toTextArea()
     }
   })
 
   $: styleString = getStyleString(fullScreenOffset)
 
-  const getStyleString = offset => {
+  const getStyleString = (offset: { x?: string; y?: string } | null) => {
     let string = ""
     string += `--fullscreen-offset-x:${offset?.x || "0px"};`
     string += `--fullscreen-offset-y:${offset?.y || "0px"};`
