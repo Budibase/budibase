@@ -4,6 +4,7 @@ import { TRIGGER_DEFINITIONS } from "../../triggers"
 import {
   Automation,
   AutomationActionStepId,
+  AutomationResults,
   AutomationStep,
   AutomationStepInputs,
   AutomationTrigger,
@@ -100,6 +101,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   loop = this.step(AutomationActionStepId.LOOP)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)
   executeScript = this.step(AutomationActionStepId.EXECUTE_SCRIPT)
+  executeScriptV2 = this.step(AutomationActionStepId.EXECUTE_SCRIPT_V2)
   filter = this.step(AutomationActionStepId.FILTER)
   bash = this.step(AutomationActionStepId.EXECUTE_BASH)
   openai = this.step(AutomationActionStepId.OPENAI)
@@ -212,10 +214,11 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
       throw new Error(response.message)
     }
 
+    const results: AutomationResults = response as AutomationResults
     // Remove the trigger step from the response.
-    response.steps.shift()
+    results.steps.shift()
 
-    return response
+    return results
   }
 
   async trigger(

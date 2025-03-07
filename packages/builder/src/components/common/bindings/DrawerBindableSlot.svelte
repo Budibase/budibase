@@ -22,6 +22,8 @@
   export let updateOnChange = true
   export let type
   export let schema
+  export let allowHBS = true
+  export let context = {}
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -147,7 +149,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="control" class:disabled>
-  {#if !isValid(value)}
+  {#if !isValid(value) && !$$slots.default}
     <Input
       {label}
       {disabled}
@@ -171,7 +173,7 @@
   {:else}
     <slot />
   {/if}
-  {#if !disabled && type !== "formula" && !disabled && !attachmentTypes.includes(type)}
+  {#if !disabled && type !== "formula" && !attachmentTypes.includes(type)}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {
@@ -187,7 +189,6 @@
   on:drawerShow
   bind:this={bindingDrawer}
   title={title ?? placeholder ?? "Bindings"}
-  forceModal={true}
 >
   <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
   <svelte:component
@@ -197,7 +198,9 @@
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}
+    {allowHBS}
     {allowHelpers}
+    {context}
   />
 </Drawer>
 
@@ -208,22 +211,22 @@
   }
 
   .slot-icon {
-    right: 31px !important;
+    right: 31px;
     border-right: 1px solid var(--spectrum-alias-border-color);
-    border-top-right-radius: 0px !important;
-    border-bottom-right-radius: 0px !important;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
   }
 
   .text-area-slot-icon {
     border-bottom: 1px solid var(--spectrum-alias-border-color);
-    border-bottom-right-radius: 0px !important;
-    top: 1px !important;
+    border-bottom-right-radius: 0px;
+    top: 1px;
   }
   .json-slot-icon {
     border-bottom: 1px solid var(--spectrum-alias-border-color);
-    border-bottom-right-radius: 0px !important;
-    top: 1px !important;
-    right: 0px !important;
+    border-bottom-right-radius: 0px;
+    top: 1px;
+    right: 0px;
   }
 
   .icon {
