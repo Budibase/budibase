@@ -546,9 +546,6 @@
     flex-direction: row;
     overflow: hidden;
   }
-  .desktop.layout--left .nav-wrapper {
-    border-bottom: none;
-  }
   .desktop.layout--left .main-wrapper {
     height: 100%;
     overflow: auto;
@@ -575,8 +572,6 @@
     top: 0;
     left: 0;
     box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    border-right: none;
   }
   .mobile .user.left {
     display: none;

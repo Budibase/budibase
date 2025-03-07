@@ -7691,7 +7691,7 @@
       },
       {
         "type": "boolean",
-        "label": "High contrast",
+        "label": "Striped rows",
         "key": "stripeRows",
         "defaultValue": false
       },
