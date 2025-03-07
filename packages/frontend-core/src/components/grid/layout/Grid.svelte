@@ -48,7 +48,6 @@
   export let darkMode = false
   export let isCloud = null
   export let aiEnabled = false
-  export let hideColumnIcons = false
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -105,7 +104,6 @@
     darkMode,
     isCloud,
     aiEnabled,
-    hideColumnIcons,
   })
 
   // Derive min height and make available in context

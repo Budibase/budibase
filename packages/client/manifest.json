@@ -7702,12 +7702,6 @@
         "defaultValue": false
       },
       {
-        "type": "boolean",
-        "label": "Hide col. icons",
-        "key": "hideColumnIcons",
-        "defaultValue": false
-      },
-      {
         "section": true,
         "name": "Columns",
         "settings": [

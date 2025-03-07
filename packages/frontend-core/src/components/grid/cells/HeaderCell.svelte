@@ -304,7 +304,7 @@
       />
     {/if}
 
-    {#if !$props.hideColumnIcons}
+    {#if !$config.quiet}
       <div class="column-icon">
         <Icon size="S" name={getColumnIcon(column)} />
       </div>

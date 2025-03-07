@@ -339,7 +339,6 @@ export function createSampleDataTableScreen(): Screen {
           allowDeleteRows: false,
           stripeRows: true,
           quiet: true,
-          hideColumnIcons: true,
           onRowClick: [
             {
               parameters: {

@@ -23,7 +23,6 @@
   export let buttons = null
   export let buttonsCollapsed = false
   export let buttonsCollapsedText = null
-  export let hideColumnIcons = false
 
   const context = getContext("context")
   const component = getContext("component")
@@ -203,7 +202,6 @@
     {initialSortOrder}
     {fixedRowHeight}
     {schemaOverrides}
-    {hideColumnIcons}
     canAddRows={allowAddRows}
     canEditRows={allowEditRows}
     canDeleteRows={allowDeleteRows}
