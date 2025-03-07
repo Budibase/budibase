@@ -152,6 +152,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
       },
       name: "Notes",
       useRichText: null,
+      width: 220,
     },
     Status: {
       type: FieldType.ARRAY,
