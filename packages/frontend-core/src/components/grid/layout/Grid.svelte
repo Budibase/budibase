@@ -217,6 +217,10 @@
     --accent-color: var(--primaryColor, var(--spectrum-global-color-blue-400));
     --grid-background: var(--spectrum-global-color-gray-50);
     --grid-background-alt: var(--spectrum-global-color-gray-100);
+    --header-cell-background: var(
+      --custom-header-cell-background,
+      var(--grid-background-alt)
+    );
     --cell-background: var(--grid-background);
     --cell-background-hover: var(--grid-background-alt);
     --cell-background-alt: var(--cell-background);
@@ -246,7 +250,10 @@
     cursor: grabbing !important;
   }
   .grid.stripe {
-    --cell-background-alt: var(--spectrum-global-color-gray-75);
+    --cell-background-alt: var(
+      --custom-stripe-cell-background,
+      var(--spectrum-global-color-gray-75)
+    );
   }
 
   /* Data layers */
@@ -360,8 +367,10 @@
   .grid.quiet :global(.sticky-column:before) {
     display: none;
   }
-  .grid.quiet :global(.header),
-  .grid.quiet :global(.header .cell) {
-    background: var(--grid-background);
+  .grid.quiet:not(.stripe) {
+    --header-cell-background: var(
+      --custom-header-cell-background,
+      var(--grid-background)
+    );
   }
 </style>

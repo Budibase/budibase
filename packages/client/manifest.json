@@ -7584,6 +7584,15 @@
     "name": "Table",
     "icon": "Table",
     "styles": ["size"],
+    "cssVariables": [{
+      "label": "Header color",
+      "variable": "--custom-header-cell-background",
+      "type": "color"
+    }, {
+      "label": "Stripe color",
+      "variable": "--custom-stripe-cell-background",
+      "type": "color"
+    }],
     "size": {
       "width": 600,
       "height": 400

@@ -434,7 +434,7 @@
   .header-cell :global(.cell) {
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
-    background: var(--grid-background-alt);
+    background: var(--header-cell-background);
   }
 
   /* Icon colors */
