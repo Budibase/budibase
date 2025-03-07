@@ -1,16 +1,26 @@
-<script>
-  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
+<script lang="ts">
   import { writable } from "svelte/store"
-  import { auth } from "@/stores/portal"
+  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
+  import type { User, ContextUser } from "@budibase/types"
+  import type { APIClient } from "@budibase/frontend-core"
+  import { createEventDispatcher } from "svelte"
+
+  export let user: User | ContextUser | undefined = undefined
+  export let API: APIClient
+
+  $: console.log(user)
+
+  const dispatch = createEventDispatcher()
 
   const values = writable({
-    firstName: $auth.user.firstName,
-    lastName: $auth.user.lastName,
+    firstName: user?.firstName,
+    lastName: user?.lastName,
   })
 
   const updateInfo = async () => {
     try {
-      await auth.updateSelf($values)
+      await API.updateSelf($values)
+      dispatch("save")
       notifications.success("Information updated successfully")
     } catch (error) {
       console.error(error)
@@ -23,7 +33,7 @@
   <Body size="S">
     Personalise the platform by adding your first name and last name.
   </Body>
-  <Input disabled bind:value={$auth.user.email} label="Email" />
+  <Input disabled value={user?.email || ""} label="Email" />
   <Input bind:value={$values.firstName} label="First name" />
   <Input bind:value={$values.lastName} label="Last name" />
 </ModalContent>

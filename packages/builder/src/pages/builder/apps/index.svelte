@@ -24,13 +24,13 @@
   import { goto } from "@roxi/routify"
   import { AppStatus } from "@/constants"
   import { gradient } from "@/actions"
-  import ProfileModal from "@/components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
+  import { ProfileModal, ChangePasswordModal } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
   import { UserAvatar } from "@budibase/frontend-core"
   import { helpers, sdk } from "@budibase/shared-core"
+  import { API } from "@/api"
 
   let loaded = false
   let userInfoModal
@@ -201,10 +201,10 @@
     </Page>
   </div>
   <Modal bind:this={userInfoModal}>
-    <ProfileModal />
+    <ProfileModal {API} user={$auth.user} on:save={() => auth.getSelf()} />
   </Modal>
   <Modal bind:this={changePasswordModal}>
-    <ChangePasswordModal />
+    <ChangePasswordModal {API} on:save={() => auth.getSelf()} />
   </Modal>
 {/if}
 

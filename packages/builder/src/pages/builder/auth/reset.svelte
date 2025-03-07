@@ -12,7 +12,7 @@
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { onMount } from "svelte"
-  import PasswordRepeatInput from "../../../components/common/users/PasswordRepeatInput.svelte"
+  import PasswordRepeatInput from "@budibase/frontend-core/src/components/PasswordRepeatInput.svelte"
 
   const resetCode = $params["?code"]
   let form
@@ -79,11 +79,7 @@
     <Layout gap="S" noPadding>
       <Heading size="M">Reset your password</Heading>
       <Body size="M">Must contain at least 12 characters</Body>
-      <PasswordRepeatInput
-        bind:passwordForm={form}
-        bind:password
-        bind:error={passwordError}
-      />
+      <PasswordRepeatInput bind:password bind:error={passwordError} />
       <Button secondary cta on:click={reset}>
         {#if loading}
           <ProgressCircle overBackground={true} size="S" />

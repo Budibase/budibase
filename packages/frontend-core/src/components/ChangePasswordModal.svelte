@@ -1,21 +1,27 @@
-<script>
+<script lang="ts">
   import { ModalContent, Body, notifications } from "@budibase/bbui"
-  import PasswordRepeatInput from "@/components/common/users/PasswordRepeatInput.svelte"
-  import { auth } from "@/stores/portal"
+  import PasswordRepeatInput from "./PasswordRepeatInput.svelte"
+  import type { APIClient } from "@budibase/frontend-core"
+  import { createEventDispatcher } from "svelte"
 
-  let password
-  let error
+  export let API: APIClient
+
+  const dispatch = createEventDispatcher()
+
+  let password: string = ""
+  let error: string = ""
 
   const updatePassword = async () => {
     try {
-      await auth.updateSelf({ password })
+      await API.updateSelf({ password })
+      dispatch("save")
       notifications.success("Password changed successfully")
     } catch (error) {
       notifications.error("Failed to update password")
     }
   }
 
-  const handleKeydown = evt => {
+  const handleKeydown = (evt: KeyboardEvent) => {
     if (evt.key === "Enter" && !error && password) {
       updatePassword()
     }
@@ -27,7 +33,7 @@
   title="Update password"
   confirmText="Update password"
   onConfirm={updatePassword}
-  disabled={error || !password}
+  disabled={!!error || !password}
 >
   <Body size="S">Enter your new password below.</Body>
   <PasswordRepeatInput bind:password bind:error />
