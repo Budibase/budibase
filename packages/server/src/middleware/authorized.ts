@@ -88,7 +88,7 @@ const checkAuthorizedResource = async (
 const authorized =
   (
     permType: PermissionType,
-    permLevel?: PermissionLevel,
+    permLevel: PermissionLevel,
     opts = { schema: false },
     resourcePath?: string
   ) =>
@@ -145,9 +145,9 @@ const authorized =
         return result
       }
 
-      resourceRoles = getPermLevel(permLevel!)
+      resourceRoles = getPermLevel(permLevel)
       if (opts && opts.schema) {
-        otherLevelRoles = getPermLevel(otherLevel!)
+        otherLevelRoles = getPermLevel(otherLevel)
       }
     }
 
@@ -177,7 +177,7 @@ const authorized =
 
     try {
       // check authorized
-      await checkAuthorized(ctx, resourceRoles, permType, permLevel!)
+      await checkAuthorized(ctx, resourceRoles, permType, permLevel)
     } catch (err) {
       // this is a schema, check if
       if (opts && opts.schema && permLevel) {
@@ -193,7 +193,7 @@ const authorized =
 
 export default (
   permType: PermissionType,
-  permLevel?: PermissionLevel,
+  permLevel: PermissionLevel,
   opts = { schema: false }
 ) => authorized(permType, permLevel, opts)
 

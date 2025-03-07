@@ -3,6 +3,7 @@ import * as controller from "../controllers/role"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { roleValidator } from "./utils/validators"
+import { PermissionLevel } from "@budibase/types"
 
 const router: Router = new Router()
 
@@ -12,15 +13,23 @@ router
   .get("/api/roles/accessible", controller.accessible)
   .post(
     "/api/roles",
-    authorized(permissions.BUILDER),
+    authorized(permissions.BUILDER, PermissionLevel.READ),
     roleValidator(),
     controller.save
   )
-  .get("/api/roles", authorized(permissions.BUILDER), controller.fetch)
-  .get("/api/roles/:roleId", authorized(permissions.BUILDER), controller.find)
+  .get(
+    "/api/roles",
+    authorized(permissions.BUILDER, PermissionLevel.READ),
+    controller.fetch
+  )
+  .get(
+    "/api/roles/:roleId",
+    authorized(permissions.BUILDER, PermissionLevel.READ),
+    controller.find
+  )
   .delete(
     "/api/roles/:roleId/:rev",
-    authorized(permissions.BUILDER),
+    authorized(permissions.BUILDER, PermissionLevel.WRITE),
     controller.destroy
   )
 
