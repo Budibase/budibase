@@ -421,7 +421,7 @@ const showNotificationHandler = action => {
 
 const promptUserHandler = () => {}
 
-const copyToClipboardHandler = action => {
+const copyToClipboardHandler = async action => {
   const { textToCopy, showNotification, notificationMessage } =
     action.parameters
 
@@ -429,18 +429,16 @@ const copyToClipboardHandler = action => {
     return
   }
 
-  navigator.clipboard
-    .writeText(textToCopy)
-    .then(() => {
-      if (showNotification) {
-        const message = notificationMessage || "Copied to clipboard"
-        notificationStore.actions.success(message, true, 3000)
-      }
-    })
-    .catch(err => {
-      console.error("Failed to copy text: ", err)
-      notificationStore.actions.error("Failed to copy to clipboard")
-    })
+  try {
+    await navigator.clipboard.writeText(textToCopy)
+    if (showNotification) {
+      const message = notificationMessage || "Copied to clipboard"
+      notificationStore.actions.success(message, true, 3000)
+    }
+  } catch (err) {
+    console.error("Failed to copy text: ", err)
+    notificationStore.actions.error("Failed to copy to clipboard")
+  }
 
   return { copied: textToCopy }
 }
