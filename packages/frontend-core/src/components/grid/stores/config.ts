@@ -83,7 +83,7 @@ export const deriveStores = (context: StoreContext): ConfigDerivedStore => {
       }
 
       // Determine if we can select rows
-      config.canSelectRows = false //!!config.canDeleteRows || !!config.canAddRows
+      config.canSelectRows = !!config.canDeleteRows || !!config.canAddRows
 
       return config
     }
