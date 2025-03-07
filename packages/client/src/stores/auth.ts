@@ -6,10 +6,10 @@ import {
   GetGlobalSelfResponse,
 } from "@budibase/types"
 
-type AuthState = ContextUserMetadata | GetGlobalSelfResponse | null
+type AuthState = ContextUserMetadata | GetGlobalSelfResponse | undefined
 
 const createAuthStore = () => {
-  const store = writable<AuthState>(null)
+  const store = writable<AuthState>()
 
   const hasAppSelfUser = (
     user: AppSelfResponse | null
@@ -19,14 +19,13 @@ const createAuthStore = () => {
 
   // Fetches the user object if someone is logged in and has reloaded the page
   const fetchUser = async () => {
-    let globalSelf = null
-    let appSelf = null
+    let globalSelf, appSelf
 
     // First try and get the global user, to see if we are logged in at all
     try {
       globalSelf = await API.fetchBuilderSelf()
     } catch (error) {
-      store.set(null)
+      store.set(undefined)
       return
     }
 
@@ -41,7 +40,7 @@ const createAuthStore = () => {
     }
 
     // Use the app self if present, otherwise fallback to the global self
-    store.set(appSelf || globalSelf || null)
+    store.set(appSelf || globalSelf)
   }
 
   const logOut = async () => {

@@ -3,14 +3,16 @@
   import { UserAvatar } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import { User, ContextUser } from "@budibase/types"
+  import { sdk } from "@budibase/shared-core"
 
   export let compact: boolean = false
 
   const { authStore } = getContext("sdk")
 
   $: text = getText($authStore)
+  $: isBuilder = sdk.users.hasBuilderPermissions($authStore)
 
-  const getText = (user: User | ContextUser | null): string => {
+  const getText = (user?: User | ContextUser): string => {
     if (!user) {
       return ""
     }
@@ -26,7 +28,7 @@
   }
 
   const goToPortal = () => {
-    window.location.href = "/builder/apps"
+    window.location.href = isBuilder ? "/builder/portal/apps" : "/builder/apps"
   }
 </script>
 
