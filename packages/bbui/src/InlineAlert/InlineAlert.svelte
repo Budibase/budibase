@@ -1,6 +1,7 @@
 <script>
   import "@spectrum-css/inlinealert/dist/index-vars.css"
   import Button from "../Button/Button.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let type = "info"
   export let header = ""
@@ -53,15 +54,14 @@
   {/if}
   {#if link && linkText}
     <div id="docs-link">
-      <a href={link} target="_blank" rel="noopener noreferrer" class="doc-link">
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="docs-link"
+      >
         {linkText}
-        <svg
-          class="spectrum-Icon spectrum-Icon--sizeS spectrum-Toast-typeIcon"
-          focusable="false"
-          aria-hidden="true"
-        >
-          <use xlink:href="#spectrum-icon-18-LinkOut" />
-        </svg>
+        <Icon name="LinkOut" size="XS" />
       </a>
     </div>
   {/if}
@@ -87,5 +87,14 @@
 
   #docs-link {
     padding-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  #docs-link > * {
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
 </style>
