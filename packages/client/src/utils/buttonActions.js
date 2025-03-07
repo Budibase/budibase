@@ -421,6 +421,29 @@ const showNotificationHandler = action => {
 
 const promptUserHandler = () => {}
 
+const copyToClipboardHandler = action => {
+  const { textToCopy, showNotification, notificationMessage } =
+    action.parameters
+
+  if (!textToCopy) {
+    return
+  }
+
+  navigator.clipboard
+    .writeText(textToCopy)
+    .then(() => {
+      if (showNotification && notificationMessage) {
+        notificationStore.actions.success(notificationMessage, true, 3000)
+      }
+    })
+    .catch(err => {
+      console.error("Failed to copy text: ", err)
+      notificationStore.actions.error("Failed to copy to clipboard")
+    })
+
+  return { copied: textToCopy }
+}
+
 const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
@@ -514,6 +537,7 @@ const handlerMap = {
   ["Close Modal"]: closeModalHandler,
   ["Download File"]: downloadFileHandler,
   ["Row Action"]: rowActionHandler,
+  ["Copy To Clipboard"]: copyToClipboardHandler,
 }
 
 const confirmTextMap = {
