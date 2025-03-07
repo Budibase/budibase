@@ -21,7 +21,7 @@
   export let createDatasource = false
   export let onCancel: (() => void) | undefined = undefined
 
-  const data = writable<{ url: string, raw: string, file?: any }>({
+  const data = writable<{ url: string; raw: string; file?: any }>({
     url: "",
     raw: "",
     file: undefined,

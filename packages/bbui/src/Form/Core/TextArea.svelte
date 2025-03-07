@@ -23,7 +23,10 @@
     focus = false
   }
 
-  const getStyleString = (attribute: string, value: string | number | undefined) => {
+  const getStyleString = (
+    attribute: string,
+    value: string | number | undefined
+  ) => {
     if (!attribute || value == null) {
       return ""
     }
