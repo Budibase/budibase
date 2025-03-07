@@ -82,6 +82,7 @@ export interface SDK {
   fetchDatasourceSchema: any
   generateGoldenSample: any
   authStore: typeof authStore
+  environmentStore: typeof environmentStore
   builderStore: Readable<{
     inBuilder: boolean
   }> & {

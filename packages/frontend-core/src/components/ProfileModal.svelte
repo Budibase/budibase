@@ -18,8 +18,8 @@
   const updateInfo = async () => {
     try {
       await API.updateSelf($values)
-      dispatch("save")
       notifications.success("Information updated successfully")
+      dispatch("save")
     } catch (error) {
       console.error(error)
       notifications.error("Failed to update information")

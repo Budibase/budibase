@@ -15,8 +15,8 @@
   const updatePassword = async () => {
     try {
       await API.updateSelf({ password })
-      dispatch("save")
       notifications.success("Password changed successfully")
+      dispatch("save")
     } catch (error) {
       notifications.error("Failed to update password")
     }

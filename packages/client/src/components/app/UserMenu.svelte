@@ -1,16 +1,26 @@
 <script lang="ts">
-  import { ActionMenu, Icon, MenuItem } from "@budibase/bbui"
-  import { UserAvatar } from "@budibase/frontend-core"
+  import { ActionMenu, Icon, MenuItem, Modal } from "@budibase/bbui"
+  import {
+    UserAvatar,
+    ProfileModal,
+    ChangePasswordModal,
+  } from "@budibase/frontend-core"
   import { getContext } from "svelte"
-  import { User, ContextUser } from "@budibase/types"
+  import { type User, type ContextUser, isSSOUser } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
+  import { API } from "@/api"
 
   export let compact: boolean = false
 
-  const { authStore } = getContext("sdk")
+  const { authStore, environmentStore } = getContext("sdk")
+
+  let profileModal: any
+  let changePasswordModal: any
 
   $: text = getText($authStore)
   $: isBuilder = sdk.users.hasBuilderPermissions($authStore)
+  $: isSSO = $authStore != null && isSSOUser($authStore)
+  $: isOwner = $authStore?.accountPortalAccess && $environmentStore.cloud
 
   const getText = (user?: User | ContextUser): string => {
     if (!user) {
@@ -47,11 +57,45 @@
         <Icon size="L" name="ChevronDown" />
       </div>
     </svelte:fragment>
+
+    <MenuItem icon="UserEdit" on:click={() => profileModal?.show()}>
+      My profile
+    </MenuItem>
+    {#if !isSSO}
+      <MenuItem
+        icon="LockClosed"
+        on:click={() => {
+          if (isOwner) {
+            window.location.href = `${$environmentStore.accountPortalUrl}/portal/account`
+          } else {
+            changePasswordModal?.show()
+          }
+        }}
+      >
+        Update password
+      </MenuItem>
+    {/if}
+
     <MenuItem icon="Apps" on:click={goToPortal}>Go to portal</MenuItem>
     <MenuItem icon="LogOut" on:click={authStore.actions.logOut}>
       Log out
     </MenuItem>
   </ActionMenu>
+
+  <Modal bind:this={profileModal}>
+    <ProfileModal
+      {API}
+      user={$authStore}
+      on:save={() => authStore.actions.fetchUser()}
+    />
+  </Modal>
+  <Modal bind:this={changePasswordModal}>
+    <ChangePasswordModal
+      {API}
+      passwordMinLength={$environmentStore.passwordMinLength}
+      on:save={() => authStore.actions.fetchUser()}
+    />
+  </Modal>
 {/if}
 
 <style>
