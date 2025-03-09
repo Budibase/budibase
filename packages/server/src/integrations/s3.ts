@@ -168,6 +168,7 @@ class S3Integration implements IntegrationBase {
         secretAccessKey: config.secretAccessKey,
       },
       region: config.region,
+      endpoint: config.endpoint,
     }
     if (config.endpoint) {
       this.config.forcePathStyle = true
