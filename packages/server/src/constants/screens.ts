@@ -2,6 +2,8 @@ import { roles } from "@budibase/backend-core"
 import { BASE_LAYOUT_PROP_IDS } from "./layouts"
 import { Screen, Table, Query, ViewV2, Component } from "@budibase/types"
 
+export const SAMPLE_DATA_SCREEN_NAME = "sample-data-inventory-screen"
+
 export function createHomeScreen(
   config: {
     roleId: string
@@ -233,7 +235,7 @@ export function createSampleDataTableScreen(): Screen {
     showNavigation: true,
     width: "Large",
     routing: { route: "/inventory", roleId: "BASIC", homeScreen: false },
-    name: "sample-data-inventory-screen",
+    name: SAMPLE_DATA_SCREEN_NAME,
     props: {
       _id: "c38f2b9f250fb4c33965ce47e12c02a80",
       _component: "@budibase/standard-components/container",
