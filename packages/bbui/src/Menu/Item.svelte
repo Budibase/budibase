@@ -1,18 +1,18 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher, getContext } from "svelte"
   import Icon from "../Icon/Icon.svelte"
 
   const dispatch = createEventDispatcher()
-  const actionMenu = getContext("actionMenu")
+  const actionMenu = getContext("actionMenu") as { hideAll: () => void }
 
-  export let icon = undefined
-  export let disabled = undefined
-  export let noClose = false
-  export let keyBind = undefined
+  export let icon: string | undefined = undefined
+  export let disabled: boolean | undefined = undefined
+  export let noClose: boolean = false
+  export let keyBind: string | undefined = undefined
 
   $: keys = getKeys(keyBind)
 
-  const getKeys = keyBind => {
+  const getKeys = (keyBind: string | undefined): string[] => {
     let keys = keyBind?.split("+") || []
     for (let i = 0; i < keys.length; i++) {
       if (
