@@ -7,6 +7,8 @@
 
   export let user: User | ContextUser | undefined = undefined
   export let API: APIClient
+  export let notifySuccess = notifications.success
+  export let notifyError = notifications.error
 
   const dispatch = createEventDispatcher()
 
@@ -18,11 +20,11 @@
   const updateInfo = async () => {
     try {
       await API.updateSelf($values)
-      notifications.success("Information updated successfully")
+      notifySuccess("Information updated successfully")
       dispatch("save")
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to update information")
+      notifyError("Failed to update information")
     }
   }
 </script>

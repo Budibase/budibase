@@ -6,6 +6,8 @@
 
   export let API: APIClient
   export let passwordMinLength: string | undefined = undefined
+  export let notifySuccess = notifications.success
+  export let notifyError = notifications.error
 
   const dispatch = createEventDispatcher()
 
@@ -15,10 +17,10 @@
   const updatePassword = async () => {
     try {
       await API.updateSelf({ password })
-      notifications.success("Password changed successfully")
+      notifySuccess("Password changed successfully")
       dispatch("save")
     } catch (error) {
-      notifications.error("Failed to update password")
+      notifyError("Failed to update password")
     }
   }
 

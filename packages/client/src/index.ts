@@ -12,6 +12,7 @@ import {
   hoverStore,
   stateStore,
   routeStore,
+  notificationStore,
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
@@ -83,6 +84,7 @@ export interface SDK {
   generateGoldenSample: any
   authStore: typeof authStore
   environmentStore: typeof environmentStore
+  notificationStore: typeof notificationStore
   builderStore: Readable<{
     inBuilder: boolean
   }> & {

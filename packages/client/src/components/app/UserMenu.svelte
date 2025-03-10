@@ -12,7 +12,7 @@
 
   export let compact: boolean = false
 
-  const { authStore, environmentStore } = getContext("sdk")
+  const { authStore, environmentStore, notificationStore } = getContext("sdk")
 
   let profileModal: any
   let changePasswordModal: any
@@ -87,13 +87,17 @@
       {API}
       user={$authStore}
       on:save={() => authStore.actions.fetchUser()}
+      notifySuccess={notificationStore.actions.success}
+      notifyError={notificationStore.actions.error}
     />
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal
       {API}
       passwordMinLength={$environmentStore.passwordMinLength}
-      on:save={() => authStore.actions.fetchUser()}
+      on:save={() => authStore.actions.logOut()}
+      notifySuccess={notificationStore.actions.success}
+      notifyError={notificationStore.actions.error}
     />
   </Modal>
 {/if}

@@ -46,6 +46,7 @@ const createAuthStore = () => {
   const logOut = async () => {
     try {
       await API.logOut()
+      window.location.href = "/"
     } catch (error) {
       // Do nothing
     }
