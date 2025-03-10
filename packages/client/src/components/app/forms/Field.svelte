@@ -1,3 +1,7 @@
+<script context="module" lang="ts">
+  export type FieldValidation = () => string | undefined
+</script>
+
 <script lang="ts">
   import { getContext, onDestroy } from "svelte"
   import type { Readable } from "svelte/store"
@@ -19,7 +23,7 @@
   export let type: FieldType
   export let disabled = false
   export let readonly = false
-  export let validation: () => string | undefined
+  export let validation: FieldValidation | undefined
   export let span = 6
   export let helpText: string | undefined = undefined
 

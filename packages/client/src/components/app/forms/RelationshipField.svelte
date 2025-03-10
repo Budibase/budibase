@@ -3,7 +3,7 @@
   import { BasicOperator, FieldType, InternalTable } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
-  import Field from "./Field.svelte"
+  import Field, { FieldValidation } from "./Field.svelte"
   import type {
     SearchFilter,
     RelationshipFieldMetadata,
@@ -16,7 +16,7 @@
   export let placeholder: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
-  export let validation: any
+  export let validation: FieldValidation | undefined = undefined
   export let autocomplete: boolean = true
   export let defaultValue: string | string[] | undefined = undefined
   export let onChange: any

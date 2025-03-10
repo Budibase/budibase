@@ -22,10 +22,13 @@
   }
 
   $: updatedDefaultValue = updateReferences(defaultValue)
+
+  // This cannot be typed, as svelte does not provide typed inheritance
+  $: allProps = $$props as any
 </script>
 
 <RelationshipField
-  {...$$props}
+  {...allProps}
   {type}
   datasourceType={"user"}
   primaryDisplay={"email"}
