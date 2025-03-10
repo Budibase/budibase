@@ -27,6 +27,8 @@ import {
   Snippet,
   UIComponentError,
   CustomComponent,
+  Table,
+  DataFetchDatasource,
 } from "@budibase/types"
 
 // Provide svelte and svelte/internal as globals for custom components
@@ -79,6 +81,7 @@ export interface SDK {
   Provider: any
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
+  fetchDatasourceDefinition: (datasource: DataFetchDatasource) => Promise<Table>
   generateGoldenSample: any
   builderStore: Readable<{
     inBuilder: boolean
@@ -97,6 +100,7 @@ export type Component = Readable<{
   id: string
   styles: any
   errorState: boolean
+  path: string[]
 }>
 
 export type Context = Readable<Record<string, any>>
