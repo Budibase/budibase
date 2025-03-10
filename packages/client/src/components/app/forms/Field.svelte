@@ -1,37 +1,39 @@
 <script lang="ts">
   import { getContext, onDestroy } from "svelte"
-  import { writable } from "svelte/store"
+  import { Readable, writable } from "svelte/store"
   import { Icon } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import Placeholder from "../Placeholder.svelte"
   import InnerForm from "./InnerForm.svelte"
-  import type { FieldApi } from "."
+  import type { FieldApi, FieldState } from "."
+  import { FieldSchema, FieldType } from "@budibase/types"
+  import { FormField } from "@/index"
 
   export let label: string | undefined = undefined
   export let field: string | undefined = undefined
-  export let fieldState: any
-  export let fieldApi: FieldApi
-  export let fieldSchema: any
+  export let fieldState: FieldState | undefined
+  export let fieldApi: FieldApi | undefined
+  export let fieldSchema: FieldSchema | undefined
   export let defaultValue: string | undefined = undefined
-  export let type: any
+  export let type: FieldType
   export let disabled = false
   export let readonly = false
-  export let validation: any
+  export let validation: () => string | undefined
   export let span = 6
   export let helpText: string | undefined = undefined
 
   // Get contexts
-  const formContext: any = getContext("form")
+  const formContext = getContext("form")
   const formStepContext: any = getContext("form-step")
   const fieldGroupContext: any = getContext("field-group")
   const { styleable, builderStore, Provider } = getContext("sdk")
-  const component: any = getContext("component")
+  const component = getContext("component")
 
   // Register field with form
   const formApi = formContext?.formApi
   const labelPos = fieldGroupContext?.labelPosition || "above"
 
-  let formField: any
+  let formField: Readable<FormField> | undefined
   let touched = false
   let labelNode: any
 
@@ -66,11 +68,17 @@
   $: $component.editing && labelNode?.focus()
 
   // Update form properties in parent component on every store change
-  $: unsubscribe = formField?.subscribe((value: any) => {
-    fieldState = value?.fieldState
-    fieldApi = value?.fieldApi
-    fieldSchema = value?.fieldSchema
-  })
+  $: unsubscribe = formField?.subscribe(
+    (value?: {
+      fieldState: FieldState
+      fieldApi: FieldApi
+      fieldSchema: FieldSchema
+    }) => {
+      fieldState = value?.fieldState
+      fieldApi = value?.fieldApi
+      fieldSchema = value?.fieldSchema
+    }
+  )
 
   // Determine label class from position
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`

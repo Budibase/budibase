@@ -27,6 +27,8 @@ import {
   Snippet,
   UIComponentError,
   CustomComponent,
+  FieldType,
+  FieldSchema,
 } from "@budibase/types"
 
 // Provide svelte and svelte/internal as globals for custom components
@@ -39,6 +41,7 @@ window.svelte = svelte
 // Initialise spectrum icons
 // eslint-disable-next-line local-rules/no-budibase-imports
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
+import { FieldApi, FieldState } from "./components/app"
 loadSpectrumIcons()
 
 // Extend global window scope
@@ -95,11 +98,33 @@ export interface SDK {
 
 export type Component = Readable<{
   id: string
+  name: string
   styles: any
+  editing: boolean
   errorState: boolean
 }>
 
 export type Context = Readable<Record<string, any>>
+
+export interface FormContext {
+  formApi?: {
+    registerField: (
+      field: string,
+      type: FieldType,
+      defaultValue: string | undefined,
+      disabled: boolean,
+      readonly: boolean,
+      validation: () => string | undefined,
+      formStep: number
+    ) => Readable<FormField>
+  }
+}
+
+export interface FormField {
+  fieldState: FieldState
+  fieldApi: FieldApi
+  fieldSchema: FieldSchema
+}
 
 let app: ClientApp
 
