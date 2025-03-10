@@ -40,7 +40,7 @@
 
   let formField: Readable<FormField> | undefined
   let touched = false
-  let labelNode: any
+  let labelNode: HTMLElement | undefined
 
   // Memoize values required to register the field to avoid loops
   const formStep = formStepContext || writable(1)
@@ -100,10 +100,10 @@
     )
   }
 
-  const updateLabel = (e: any) => {
+  const updateLabel = (e: Event) => {
     if (touched) {
-      // @ts-expect-error and TODO updateProp isn't recognised - need builder TS conversion
-      builderStore.actions.updateProp("label", e.target.textContent)
+      const label = e.target as HTMLLabelElement
+      builderStore.actions.updateProp("label", label.textContent)
     }
     touched = false
   }

@@ -92,6 +92,7 @@ export interface SDK {
         componentId: string,
         fullAncestorType: string
       ) => void
+      updateProp: (key: string, value: any) => void
     }
   }
 }
