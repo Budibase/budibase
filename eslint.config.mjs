@@ -150,6 +150,8 @@ export default [
 
       "no-useless-constructor": "off",
       "@typescript-eslint/no-useless-constructor": "error",
+
+      "@typescript-eslint/consistent-type-imports": "error",
     },
   })),
   {
