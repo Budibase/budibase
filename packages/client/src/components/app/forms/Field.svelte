@@ -29,8 +29,8 @@
 
   // Get contexts
   const formContext = getContext("form")
-  const formStepContext: any = getContext("form-step")
-  const fieldGroupContext: any = getContext("field-group")
+  const formStepContext = getContext("form-step")
+  const fieldGroupContext = getContext("field-group")
   const { styleable, builderStore, Provider } = getContext("sdk")
   const component = getContext("component")
 

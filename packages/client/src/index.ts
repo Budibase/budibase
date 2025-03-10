@@ -126,6 +126,10 @@ export interface FormField {
   fieldSchema: FieldSchema
 }
 
+export interface FieldGroupContext {
+  labelPosition: string
+}
+
 let app: ClientApp
 
 const loadBudibase = async () => {
