@@ -1,20 +1,14 @@
 <script>
   import { FancyForm, FancyInput } from "@budibase/bbui"
-  import {
-    createValidationStore,
-    requiredValidator,
-  } from "@/helpers/validation"
-  import { admin } from "@/stores/portal"
+  import { createValidationStore, requiredValidator } from "../utils/validation"
 
   export let password
-  export let passwordForm
   export let error
-
-  $: passwordMinLength = $admin.passwordMinLength ?? 12
+  export let minLength = "12"
 
   const validatePassword = value => {
-    if (!value || value.length < passwordMinLength) {
-      return `Please enter at least ${passwordMinLength} characters. We recommend using machine generated or random passwords.`
+    if (!value || value.length < minLength) {
+      return `Please enter at least ${minLength} characters. We recommend using machine generated or random passwords.`
     }
     return null
   }
@@ -41,7 +35,7 @@
     firstPasswordError
 </script>
 
-<FancyForm bind:this={passwordForm}>
+<FancyForm>
   <FancyInput
     label="Password"
     type="password"

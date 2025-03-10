@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Icon, Input, Drawer, Button } from "@budibase/bbui"
+  import { Icon, Input, Drawer, Button, CoreTextArea } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -25,11 +25,13 @@
   export let forceModal: boolean = false
   export let context = null
   export let autocomplete: boolean | undefined = undefined
+  export let multiline: boolean = false
 
   const dispatch = createEventDispatcher()
 
   let bindingDrawer: any
   let currentVal = value
+  let scrollable = false
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
@@ -63,14 +65,16 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="control" class:disabled>
-  <Input
+<div class="control" class:multiline class:disabled class:scrollable>
+  <svelte:component
+    this={multiline ? CoreTextArea : Input}
     {label}
     {disabled}
     readonly={isJS}
     value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
     on:blur={onBlur}
+    on:scrollable={e => (scrollable = e.detail)}
     {placeholder}
     {updateOnChange}
     {autocomplete}
@@ -114,36 +118,38 @@
     position: relative;
   }
 
-  .icon {
-    right: 1px;
-    bottom: 1px;
-    position: absolute;
-    justify-content: center;
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    box-sizing: border-box;
-    border-left: 1px solid var(--spectrum-alias-border-color);
-    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
-    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
-    width: 31px;
-    color: var(--spectrum-alias-text-color);
-    background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color
-        var(--spectrum-global-animation-duration-100, 130ms),
-      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
-      border-color var(--spectrum-global-animation-duration-100, 130ms);
-    height: calc(var(--spectrum-alias-item-height-m) - 2px);
+  /* Multiline styles */
+  .control.multiline :global(textarea) {
+    min-height: 0 !important;
+    field-sizing: content;
+    max-height: 105px;
+    padding: 6px 11px 6px 11px;
+    height: auto;
+    resize: none;
+    flex: 1 1 auto;
+    width: 0;
   }
 
+  .icon {
+    right: 6px;
+    top: 8px;
+    position: absolute;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    border-radius: 4px;
+    color: var(--spectrum-alias-text-color);
+  }
   .icon:hover {
     cursor: pointer;
-    color: var(--spectrum-alias-text-color-hover);
-    background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-alias-border-color-hover);
+    color: var(--spectrum-global-color-blue-600);
+  }
+  .control.scrollable .icon {
+    right: 12px;
   }
 
-  .control:not(.disabled) :global(.spectrum-Textfield-input) {
-    padding-right: 40px;
+  .control:not(.disabled) :global(.spectrum-Textfield-input),
+  .control:not(.disabled) :global(textarea) {
+    padding-right: 26px;
   }
 </style>

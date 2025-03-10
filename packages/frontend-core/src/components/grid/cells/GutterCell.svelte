@@ -56,7 +56,7 @@
   rowIdx={row?.__idx}
   metadata={row?.__metadata?.row}
 >
-  <div class="gutter">
+  <div class="gutter" class:selectable={$config.canSelectRows}>
     {#if $$slots.default}
       <slot />
     {:else}
@@ -116,12 +116,9 @@
     margin: 3px 0 0 0;
   }
   .number {
-    color: val(--cell-font-color, var(--spectrum-global-color-gray-500));
+    color: var(--spectrum-global-color-gray-500);
   }
-  .checkbox.visible,
-  .number.visible {
-    display: flex;
-  }
+
   .delete,
   .expand {
     margin-right: 4px;
@@ -136,5 +133,12 @@
   }
   .delete:hover :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-red-600) !important;
+  }
+
+  /* Visibility of checkbox and number */
+  .gutter.selectable .checkbox.visible,
+  .number.visible,
+  .gutter:not(.selectable) .number {
+    display: flex;
   }
 </style>

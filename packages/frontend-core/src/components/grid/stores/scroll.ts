@@ -58,6 +58,7 @@ export const deriveStores = (context: StoreContext) => {
     width,
     height,
     buttonColumnWidth,
+    config,
   } = context
 
   // Memoize store primitives
@@ -97,11 +98,14 @@ export const deriveStores = (context: StoreContext) => {
 
   // Derive vertical limits
   const contentHeight = derived(
-    [rows, rowHeight, showHScrollbar],
-    ([$rows, $rowHeight, $showHScrollbar]) => {
-      let height = ($rows.length + 1) * $rowHeight + VPadding
+    [rows, rowHeight, showHScrollbar, config],
+    ([$rows, $rowHeight, $showHScrollbar, $config]) => {
+      let height = $rows.length * $rowHeight + VPadding
       if ($showHScrollbar) {
-        height += ScrollBarSize * 2
+        height += ScrollBarSize * 3
+      }
+      if ($config.canAddRows) {
+        height += $rowHeight
       }
       return height
     }

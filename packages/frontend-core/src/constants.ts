@@ -166,3 +166,9 @@ export const FieldPermissions = {
   READONLY: "readonly",
   HIDDEN: "hidden",
 }
+
+// one or more word characters and whitespace
+export const APP_NAME_REGEX = /^[\w\s]+$/
+
+// zero or more non-whitespace characters
+export const APP_URL_REGEX = /^[0-9a-zA-Z-_]+$/

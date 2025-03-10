@@ -184,9 +184,9 @@
           order={0}
         >
           <BlockComponent
-            type="heading"
+            type="textv2"
             props={{
-              text: title,
+              text: title ? `## ${title}` : "",
             }}
             order={0}
           />

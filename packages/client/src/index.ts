@@ -1,6 +1,7 @@
 import ClientApp from "./components/ClientApp.svelte"
 import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
+  authStore,
   builderStore,
   appStore,
   blockStore,
@@ -11,6 +12,7 @@ import {
   hoverStore,
   stateStore,
   routeStore,
+  notificationStore,
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
@@ -80,6 +82,9 @@ export interface SDK {
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
   generateGoldenSample: any
+  authStore: typeof authStore
+  environmentStore: typeof environmentStore
+  notificationStore: typeof notificationStore
   builderStore: Readable<{
     inBuilder: boolean
   }> & {

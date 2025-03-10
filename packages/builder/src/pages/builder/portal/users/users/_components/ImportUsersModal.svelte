@@ -8,8 +8,7 @@
     Icon,
   } from "@budibase/bbui"
   import { groups, licensing, admin } from "@/stores/portal"
-  import { emailValidator } from "@/helpers/validation"
-  import { Constants } from "@budibase/frontend-core"
+  import { emailValidator, Constants } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
 
   const BYTES_IN_MB = 1000000

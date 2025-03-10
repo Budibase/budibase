@@ -1,13 +1,23 @@
 import { API } from "@/api"
 import { writable } from "svelte/store"
+import type { GetEnvironmentResponse } from "@budibase/types"
 
-const initialState = {
-  loaded: false,
+interface EnvironmentState extends GetEnvironmentResponse {
+  loaded: boolean
+}
+
+const initialState: EnvironmentState = {
+  multiTenancy: false,
+  offlineMode: false,
   cloud: false,
+  disableAccountPortal: false,
+  isDev: false,
+  maintenance: [],
+  loaded: false,
 }
 
 const createEnvironmentStore = () => {
-  const store = writable(initialState)
+  const store = writable<EnvironmentState>(initialState)
 
   const actions = {
     fetchEnvironment: async () => {

@@ -8,6 +8,7 @@
     Checkbox,
     notifications,
     Select,
+    Stepper,
   } from "@budibase/bbui"
   import {
     themeStore,
@@ -180,6 +181,16 @@
             props={{
               appendBindingsAsOptions: false,
               options: screenRouteOptions,
+            }}
+          />
+          <PropertyControl
+            label="Logo height (px)"
+            control={Stepper}
+            value={$nav.logoHeight}
+            onChange={height => update("logoHeight", height)}
+            props={{
+              updateOnChange: false,
+              placeholder: "24",
             }}
           />
           <PropertyControl

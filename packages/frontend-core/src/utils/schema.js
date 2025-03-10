@@ -2,7 +2,9 @@ import { helpers } from "@budibase/shared-core"
 import { TypeIconMap } from "../constants"
 
 export const getColumnIcon = column => {
-  if (column.schema.icon) {
+  // For some reason we have remix icons saved under this property sometimes,
+  // so we must ignore those as they are invalid spectrum icons
+  if (column.schema.icon && !column.schema.icon.startsWith("ri-")) {
     return column.schema.icon
   }
   if (column.calculationType) {

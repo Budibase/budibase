@@ -32,8 +32,7 @@
     "name": "Basic",
     "icon": "TextParagraph",
     "children": [
-      "heading",
-      "text",
+      "textv2",
       "button",
       "buttongroup",
       "tag",

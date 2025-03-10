@@ -1,7 +1,7 @@
 <script>
   import { Button, FancyForm, FancyInput } from "@budibase/bbui"
   import PanelHeader from "./PanelHeader.svelte"
-  import { APP_URL_REGEX } from "@/constants"
+  import { Constants } from "@budibase/frontend-core"
 
   export let disabled
   export let name = ""
@@ -28,7 +28,7 @@
       return "URL must be provided"
     }
 
-    if (!APP_URL_REGEX.test(url)) {
+    if (!Constants.APP_URL_REGEX.test(url)) {
       return "Invalid URL"
     }
   }

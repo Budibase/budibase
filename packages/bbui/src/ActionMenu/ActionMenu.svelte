@@ -5,10 +5,10 @@
 
   export let disabled = false
   export let align = "left"
-  export let portalTarget
+  export let portalTarget = undefined
   export let openOnHover = false
-  export let animate
-  export let offset
+  export let animate = true
+  export let offset = undefined
 
   const actionMenuContext = getContext("actionMenu")
 

@@ -2,6 +2,7 @@
   import StyleSection from "./StyleSection.svelte"
   import * as ComponentStyles from "./componentStyles"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
+  import ColorPicker from "@/components/design/settings/controls/ColorPicker.svelte"
 
   export let componentDefinition
   export let componentInstance
@@ -18,6 +19,19 @@
         styles.push(ComponentStyles[style])
       }
     })
+
+    // Add section for CSS variables if present
+    if (def?.cssVariables?.length) {
+      styles.push({
+        label: "Customization",
+        settings: def.cssVariables.map(variable => ({
+          label: variable.label,
+          key: variable.variable,
+          control: ColorPicker,
+        })),
+      })
+    }
+
     return styles
   }
 

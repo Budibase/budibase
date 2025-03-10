@@ -14,7 +14,7 @@
   export let url = ""
   export let disabled = false
   export let initials = "JD"
-  export let color = null
+  export let color = ""
 
   const DefaultColor = "#3aab87"
 

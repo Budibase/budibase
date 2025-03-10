@@ -148,7 +148,10 @@
               }}
               order={0}
             >
-              <BlockComponent type="heading" props={{ text: step.title }} />
+              <BlockComponent
+                type="textv2"
+                props={{ text: `## ${step.title}` }}
+              />
               {#if buttonPosition === "top"}
                 <BlockComponent
                   type="buttongroup"
@@ -157,7 +160,7 @@
               {/if}
             </BlockComponent>
           </BlockComponent>
-          <BlockComponent type="text" props={{ text: step.desc }} order={1} />
+          <BlockComponent type="textv2" props={{ text: step.desc }} order={1} />
 
           <BlockComponent type="container" order={2}>
             <div
