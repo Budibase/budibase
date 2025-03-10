@@ -174,7 +174,7 @@
 
   // Parses a row-like structure into a properly shaped option
   const parseOption = (
-    option: any | BasicRelatedRow | Row,
+    option: string | BasicRelatedRow | Row,
     primaryDisplay?: string
   ): BasicRelatedRow | null => {
     if (!option || typeof option !== "object" || !option?._id) {
