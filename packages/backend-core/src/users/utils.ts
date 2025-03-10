@@ -32,8 +32,11 @@ export async function creatorsInList(
 
 // fetches groups if no provided, but is async and shouldn't be looped with
 export async function isCreatorAsync(user: User | ContextUser) {
-  const db = context.getGlobalDB()
-  const groups = await db.getMultiple<UserGroup>(user.userGroups)
+  let groups: UserGroup[] = []
+  if (user.userGroups) {
+    const db = context.getGlobalDB()
+    groups = await db.getMultiple<UserGroup>(user.userGroups)
+  }
   return isCreatorSync(user, groups)
 }
 
