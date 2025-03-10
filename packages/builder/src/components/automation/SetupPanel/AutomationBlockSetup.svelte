@@ -22,7 +22,7 @@
   } from "@budibase/bbui"
 
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, tables } from "@/stores/builder"
+  import { automationStore, tables, evaluationContext } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
@@ -70,6 +70,7 @@
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
+  import DrawerBindableCodeEditorField from "@/components/common/bindings/DrawerBindableCodeEditorField.svelte"
   import { API } from "@/api"
   import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
@@ -84,6 +85,7 @@
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
+  const memoContext = memo({})
 
   const rowTriggers = [
     TriggerStepID.ROW_UPDATED,
@@ -109,6 +111,7 @@
   let selectedRow
 
   $: memoBlock.set(block)
+  $: memoContext.set($evaluationContext)
 
   $: filters = lookForFilters(schemaProperties)
   $: filterCount =
@@ -250,7 +253,6 @@
                     onChange({ ["revision"]: e.detail })
                   },
                   updateOnChange: false,
-                  forceModal: true,
                 },
               },
             ]
@@ -278,7 +280,6 @@
                 onChange({ [rowIdentifier]: e.detail })
               },
               updateOnChange: false,
-              forceModal: true,
             },
           },
         ]
@@ -569,6 +570,10 @@
           ...update,
         })
 
+      if (!updatedAutomation) {
+        return
+      }
+
       // Exclude default or invalid data from the test data
       let updatedFields = {}
       for (const key of Object.keys(block?.inputs?.fields || {})) {
@@ -640,7 +645,7 @@
             ...newTestData,
             body: {
               ...update,
-              ...automation.testData?.body,
+              ...(automation?.testData?.body || {}),
             },
           }
         }
@@ -770,6 +775,7 @@
                 {...config.props}
                 {bindings}
                 on:change={config.props.onChange}
+                context={$memoContext}
                 bind:searchTerm={rowSearchTerm}
               />
             </PropField>
@@ -779,6 +785,7 @@
               {...config.props}
               {bindings}
               on:change={config.props.onChange}
+              context={$memoContext}
             />
           {/if}
         {/each}
@@ -903,6 +910,7 @@
                         : "Add signature"}
                       keyPlaceholder={"URL"}
                       valuePlaceholder={"Filename"}
+                      context={$memoContext}
                     />
                   {:else if isTestModal}
                     <ModalBindableInput
@@ -927,6 +935,7 @@
                         ? queryLimit
                         : ""}
                       drawerLeft="260px"
+                      context={$memoContext}
                     />
                   {/if}
                 </div>
@@ -956,6 +965,7 @@
                     panel={AutomationBindingPanel}
                     showFilterEmptyDropdown={!rowTriggers.includes(stepId)}
                     on:change={e => (tempFilters = e.detail)}
+                    evaluationContext={$memoContext}
                   />
                 </DrawerContent>
               </Drawer>
@@ -998,7 +1008,19 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
               />
-            {:else if value.customType === "code"}
+            {:else if value.customType === "code" && stepId === ActionStepID.EXECUTE_SCRIPT_V2}
+              <div class="scriptv2-wrapper">
+                <DrawerBindableCodeEditorField
+                  {bindings}
+                  {schema}
+                  panel={AutomationBindingPanel}
+                  on:change={e => onChange({ [key]: e.detail })}
+                  context={$memoContext}
+                  value={inputData[key]}
+                />
+              </div>
+            {:else if value.customType === "code" && stepId === ActionStepID.EXECUTE_SCRIPT}
+              <!-- DEPRECATED -->
               <CodeEditorModal
                 on:hide={() => {
                   // Push any pending changes when the window closes
@@ -1080,6 +1102,7 @@
                       ? queryLimit
                       : ""}
                     drawerLeft="260px"
+                    context={$memoContext}
                   />
                 </div>
               {/if}

@@ -18,8 +18,12 @@
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import FlowItemActions from "./FlowItemActions.svelte"
-  import { automationStore, selectedAutomation } from "@/stores/builder"
-  import { QueryUtils, Utils } from "@budibase/frontend-core"
+  import {
+    automationStore,
+    selectedAutomation,
+    evaluationContext,
+  } from "@/stores/builder"
+  import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
@@ -34,10 +38,13 @@
   export let automation
 
   const view = getContext("draggableView")
+  const memoContext = memo({})
 
   let drawer
   let open = true
   let confirmDeleteModal
+
+  $: memoContext.set($evaluationContext)
 
   $: branch = step.inputs?.branches?.[branchIdx]
   $: editableConditionUI = branch.conditionUI || {}
@@ -100,6 +107,7 @@
       allowOnEmpty={false}
       builderType={"condition"}
       docsURL={null}
+      evaluationContext={$memoContext}
     />
   </DrawerContent>
 </Drawer>

@@ -1,3 +1,10 @@
+<script context="module" lang="ts">
+  export const DropdownPosition = {
+    Relative: "top",
+    Absolute: "right",
+  }
+</script>
+
 <script lang="ts">
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
@@ -47,6 +54,7 @@
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
   import type { EditorMode } from "@budibase/types"
+  import { tooltips } from "@codemirror/view"
   import type { BindingCompletion, CodeValidator } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
@@ -62,11 +70,13 @@
   export let jsBindingWrapping = true
   export let readonly = false
   export let readonlyLineNumbers = false
+  export let dropdown = DropdownPosition.Relative
 
   const dispatch = createEventDispatcher()
 
   let textarea: HTMLDivElement
   let editor: EditorView
+  let editorEle: HTMLDivElement
   let mounted = false
   let isEditorInitialised = false
   let queuedRefresh = false
@@ -117,7 +127,6 @@
       queuedRefresh = true
       return
     }
-
     if (
       editor &&
       value &&
@@ -271,16 +280,15 @@
         EditorView.inputHandler.of((view, from, to, insert) => {
           if (jsBindingWrapping && insert === "$") {
             let { text } = view.state.doc.lineAt(from)
-
             const left = from ? text.substring(0, from) : ""
             const right = to ? text.substring(to) : ""
-            const wrap = !left.includes('$("') || !right.includes('")')
+            const wrap =
+              (!left.includes('$("') || !right.includes('")')) &&
+              !(left.includes("`") && right.includes("`"))
+            const anchor = from + (wrap ? 3 : 1)
             const tr = view.state.update(
               {
                 changes: [{ from, insert: wrap ? '$("")' : "$" }],
-                selection: {
-                  anchor: from + (wrap ? 3 : 1),
-                },
               },
               {
                 scrollIntoView: true,
@@ -288,6 +296,19 @@
               }
             )
             view.dispatch(tr)
+            // the selection needs to fired after the dispatch - this seems
+            // to fix an issue with the cursor not moving when the editor is
+            // first loaded, the first usage of the editor is not ready
+            // for the anchor to move as well as perform a change
+            setTimeout(() => {
+              view.dispatch(
+                view.state.update({
+                  selection: {
+                    anchor,
+                  },
+                })
+              )
+            }, 1)
             return true
           }
           return false
@@ -369,14 +390,25 @@
     const baseExtensions = buildBaseExtensions()
 
     editor = new EditorView({
-      doc: value?.toString(),
-      extensions: buildExtensions(baseExtensions),
+      doc: String(value),
+      extensions: buildExtensions([
+        ...baseExtensions,
+        dropdown == DropdownPosition.Absolute
+          ? tooltips({
+              position: "absolute",
+            })
+          : [],
+      ]),
       parent: textarea,
     })
   }
 
   onMount(async () => {
     mounted = true
+    // Capture scrolling
+    editorEle.addEventListener("wheel", e => {
+      e.stopPropagation()
+    })
   })
 
   onDestroy(() => {
@@ -391,7 +423,8 @@
     <Label size="S">{label}</Label>
   </div>
 {/if}
-<div class={`code-editor ${mode?.name || ""}`}>
+
+<div class={`code-editor ${mode?.name || ""}`} bind:this={editorEle}>
   <div tabindex="-1" bind:this={textarea} />
 </div>
 
@@ -400,6 +433,7 @@
   .code-editor {
     font-size: 12px;
     height: 100%;
+    cursor: text;
   }
   .code-editor :global(.cm-editor) {
     height: 100%;
@@ -559,12 +593,11 @@
 
   /* Live binding value / helper container */
   .code-editor :global(.cm-completionInfo) {
-    margin-left: var(--spacing-s);
+    margin: 0px var(--spacing-s);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-s);
     background-color: var(--spectrum-global-color-gray-50);
     padding: var(--spacing-m);
-    margin-top: -2px;
   }
 
   /* Wrapper around helpers */
@@ -589,6 +622,7 @@
     white-space: pre;
     text-overflow: ellipsis;
     overflow: hidden;
+    overflow-y: auto;
     max-height: 480px;
   }
   .code-editor :global(.binding__example.helper) {

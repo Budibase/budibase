@@ -1,3 +1,4 @@
+import { AutomationJob } from "../../../sdk/automations"
 import {
   Automation,
   AutomationActionStepId,
@@ -78,10 +79,25 @@ export interface TestAutomationRequest {
   row?: Row
   oldRow?: Row
 }
-export type TestAutomationResponse = AutomationResults | DidNotTriggerResponse
 
 export function isDidNotTriggerResponse(
   response: TestAutomationResponse
 ): response is DidNotTriggerResponse {
   return !!("message" in response && response.message)
 }
+
+export function isAutomationResults(
+  response: TestAutomationResponse
+): response is AutomationResults {
+  return !!(
+    "steps" in response &&
+    response.steps &&
+    "trigger" in response &&
+    response.trigger
+  )
+}
+
+export type TestAutomationResponse =
+  | AutomationResults
+  | DidNotTriggerResponse
+  | AutomationJob
