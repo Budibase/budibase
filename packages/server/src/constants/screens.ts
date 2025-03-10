@@ -337,7 +337,7 @@ export function createSampleDataTableScreen(): Screen {
           allowAddRows: false,
           allowEditRows: false,
           allowDeleteRows: false,
-          stripeRows: true,
+          stripeRows: false,
           quiet: true,
           onRowClick: [
             {
