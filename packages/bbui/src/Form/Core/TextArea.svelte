@@ -15,12 +15,20 @@
   })
   export let align = null
 
-  let focus = false
+  let isFocused = false
   let textarea
   const dispatch = createEventDispatcher()
   const onChange = event => {
     dispatch("change", event.target.value)
-    focus = false
+    isFocused = false
+  }
+
+  export function focus() {
+    textarea.focus()
+  }
+
+  export function contents() {
+    return textarea.value
   }
 
   const getStyleString = (attribute, value) => {
@@ -41,7 +49,7 @@
   style={`${heightString}${minHeightString}`}
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-disabled={disabled}
-  class:is-focused={focus}
+  class:is-focused={isFocused}
 >
   <!-- prettier-ignore -->
   <textarea
@@ -52,8 +60,9 @@
     {disabled}
     {readonly}
     {id}
-    on:focus={() => (focus = true)}
+    on:focus={() => (isFocused = true)}
     on:blur={onChange}
+    on:keypress
   >{value || ""}</textarea>
 </div>
 

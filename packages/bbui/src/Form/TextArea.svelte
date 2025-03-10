@@ -14,6 +14,15 @@
   export let minHeight = null
   export let helpText = null
 
+  let textarea
+  export function focus() {
+    textarea.focus()
+  }
+
+  export function contents() {
+    return textarea.contents()
+  }
+
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -23,6 +32,7 @@
 
 <Field {helpText} {label} {labelPosition} {error}>
   <TextArea
+    bind:this={textarea}
     bind:getCaretPosition
     {error}
     {disabled}
@@ -31,5 +41,6 @@
     {height}
     {minHeight}
     on:change={onChange}
+    on:keypress
   />
 </Field>

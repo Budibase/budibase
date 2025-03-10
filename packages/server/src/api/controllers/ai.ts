@@ -7,6 +7,8 @@ import {
 } from "@budibase/types"
 import OpenAI from "openai"
 
+const MARKDOWN_CODE_BLOCK = /```(?:\w+)?\n([\s\S]+?)\n```/
+
 export async function generateJs(
   ctx: UserCtx<GenerateJsRequest, GenerateJsResponse>
 ) {
@@ -19,29 +21,39 @@ export async function generateJs(
   }
 
   const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+  const { prompt } = ctx.request.body
 
   const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
     messages: [
       {
         role: "system",
         content: `
-            You are a helpful expert in writing JavaScript for the Budibase 
-            low-code platform. A user is asking you for help writing some 
-            JavaScript for their application.
+You are a helpful expert in writing JavaScript.  A user is asking you for help
+writing some JavaScript for their application.
+
+Your reply MUST only contain JavaScript code. No explanations,
+no markdown, no delimiters around it. It is crucial for it to only
+be the code itself.
+
+The code you are to return is a JavaScript function, except without
+the function signature, opening brace, and closing brace. Just the
+content of the function. The wrapper around the function is
+generated elsewhere.
           `,
       },
       {
         role: "user",
-        content: `
-            Please write me a JavaScript function that returns the sum of two 
-            numbers. You must only return code, no talking.
-          `,
+        content: prompt,
       },
     ],
   })
 
-  ctx.body = {
-    code: response.choices[0].message.content!,
+  let code = response.choices[0].message.content!
+  const match = code.match(MARKDOWN_CODE_BLOCK)
+  if (match) {
+    code = match[1]
   }
+
+  ctx.body = { code }
 }
