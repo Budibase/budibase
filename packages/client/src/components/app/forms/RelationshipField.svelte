@@ -10,7 +10,7 @@
     Row,
   } from "@budibase/types"
   import type { FieldApi, FieldState } from "."
-  import { FieldValidation } from "@/index"
+  import type { FieldValidation } from "@/index"
 
   type ValueType = string | string[]
 
@@ -22,7 +22,7 @@
   export let validation: FieldValidation | undefined = undefined
   export let autocomplete: boolean = true
   export let defaultValue: ValueType | undefined = undefined
-  export let onChange: (props: { value: ValueType }) => void
+  export let onChange: (_props: { value: ValueType }) => void
   export let filter: SearchFilter[]
   export let datasourceType: "table" | "user" = "table"
   export let primaryDisplay: string | undefined = undefined
