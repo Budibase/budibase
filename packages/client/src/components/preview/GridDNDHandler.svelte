@@ -17,6 +17,7 @@
     Devices,
     GridDragMode,
   } from "@/utils/grid"
+  import { DropPosition } from "@budibase/types"
 
   type GridDragSide =
     | "top"
@@ -222,7 +223,7 @@
 
     // If holding ctrl/cmd then leave behind a duplicate of this component
     if (mode === GridDragMode.Move && (e.ctrlKey || e.metaKey)) {
-      builderStore.actions.duplicateComponent(id, "above", false)
+      builderStore.actions.duplicateComponent(id, DropPosition.ABOVE, false)
     }
 
     // Find grid parent and read from DOM
