@@ -1,7 +1,3 @@
-<script context="module" lang="ts">
-  export type FieldValidation = () => string | undefined
-</script>
-
 <script lang="ts">
   import { getContext, onDestroy } from "svelte"
   import type { Readable } from "svelte/store"
@@ -12,7 +8,17 @@
   import InnerForm from "./InnerForm.svelte"
   import type { FieldApi, FieldState } from "."
   import type { FieldSchema, FieldType } from "@budibase/types"
-  import type { FormField } from "@/index"
+  import type { FieldValidation, FormField } from "@/index"
+
+  interface FieldInfo {
+    field: string
+    type: FieldType
+    defaultValue: string | undefined
+    disabled: boolean
+    readonly: boolean
+    validation?: FieldValidation
+    formStep: number
+  }
 
   export let label: string | undefined = undefined
   export let field: string | undefined = undefined
@@ -44,7 +50,7 @@
 
   // Memoize values required to register the field to avoid loops
   const formStep = formStepContext || writable(1)
-  const fieldInfo = memo({
+  const fieldInfo = memo<FieldInfo>({
     field: field || $component.name,
     type,
     defaultValue,
@@ -88,7 +94,7 @@
   // Determine label class from position
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
-  const registerField = (info: any) => {
+  const registerField = (info: FieldInfo) => {
     formField = formApi?.registerField(
       info.field,
       info.type,

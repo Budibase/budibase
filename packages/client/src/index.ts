@@ -115,11 +115,13 @@ export interface FormContext {
       defaultValue: string | undefined,
       disabled: boolean,
       readonly: boolean,
-      validation: () => string | undefined,
+      validation: FieldValidation | undefined,
       formStep: number
     ) => Readable<FormField>
   }
 }
+
+export type FieldValidation = () => string | undefined
 
 export interface FormField {
   fieldState: FieldState

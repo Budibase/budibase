@@ -3,13 +3,14 @@
   import { BasicOperator, FieldType, InternalTable } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
-  import Field, { FieldValidation } from "./Field.svelte"
+  import Field from "./Field.svelte"
   import type {
     SearchFilter,
     RelationshipFieldMetadata,
     Row,
   } from "@budibase/types"
   import type { FieldApi, FieldState } from "."
+  import { FieldValidation } from "@/index"
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
