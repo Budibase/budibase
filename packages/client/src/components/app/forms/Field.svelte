@@ -1,13 +1,14 @@
 <script lang="ts">
   import { getContext, onDestroy } from "svelte"
-  import { Readable, writable } from "svelte/store"
+  import type { Readable } from "svelte/store"
+  import { writable } from "svelte/store"
   import { Icon } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import Placeholder from "../Placeholder.svelte"
   import InnerForm from "./InnerForm.svelte"
   import type { FieldApi, FieldState } from "."
-  import { FieldSchema, FieldType } from "@budibase/types"
-  import { FormField } from "@/index"
+  import type { FieldSchema, FieldType } from "@budibase/types"
+  import type { FormField } from "@/index"
 
   export let label: string | undefined = undefined
   export let field: string | undefined = undefined
