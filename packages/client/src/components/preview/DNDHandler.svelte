@@ -6,7 +6,7 @@
   import { findComponentById } from "@/utils/components.js"
   import { isGridEvent } from "@/utils/grid"
   import { DNDPlaceholderID } from "@/constants"
-  import type { Component } from "@budibase/types"
+  import { Component, DropPosition } from "@budibase/types"
 
   type ChildCoords = {
     placeholder: boolean
@@ -287,7 +287,7 @@
     }
 
     // Convert parent + index into target + mode
-    let legacyDropTarget, legacyDropMode
+    let legacyDropTarget, legacyDropMode: DropPosition
     const parent: Component | null = findComponentById(
       get(screenStore).activeScreen?.props,
       drop.parent
@@ -309,16 +309,16 @@
     // Use inside if no existing children
     if (!children?.length) {
       legacyDropTarget = parent._id
-      legacyDropMode = "inside"
+      legacyDropMode = DropPosition.INSIDE
     } else if (drop.index === 0) {
       legacyDropTarget = children[0]?._id
-      legacyDropMode = "above"
+      legacyDropMode = DropPosition.ABOVE
     } else {
       legacyDropTarget = children[drop.index - 1]?._id
-      legacyDropMode = "below"
+      legacyDropMode = DropPosition.BELOW
     }
 
-    if (legacyDropTarget && legacyDropMode) {
+    if (legacyDropTarget && legacyDropMode && source.id) {
       dropping = true
       await builderStore.actions.moveComponent(
         source.id,

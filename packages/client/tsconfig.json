@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "verbatimModuleSyntax": true,
     "allowJs": true,
     "strict": true,
     "outDir": "dist",
