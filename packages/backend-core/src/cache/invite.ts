@@ -3,7 +3,7 @@ import { Duration } from "../utils"
 import env from "../environment"
 import { getTenantId } from "../context"
 import * as redis from "../redis/init"
-import { Invite, InviteWithCode } from "@budibase/types"
+import type { Invite, InviteWithCode } from "@budibase/types"
 
 const TTL_SECONDS = Duration.fromDays(7).toSeconds()
 

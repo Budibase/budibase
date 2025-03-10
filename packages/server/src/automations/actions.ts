@@ -21,8 +21,7 @@ import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import * as openai from "./steps/openai"
 import * as bash from "./steps/bash"
 import env from "../environment"
-import {
-  PluginType,
+import type {
   AutomationActionStepId,
   ActionImplementations,
   Hosting,
@@ -31,6 +30,7 @@ import {
   AutomationStepInputs,
   AutomationStepOutputs,
 } from "@budibase/types"
+import { PluginType } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
 

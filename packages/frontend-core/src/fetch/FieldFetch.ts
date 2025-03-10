@@ -1,4 +1,4 @@
-import {
+import type {
   FieldDatasource,
   JSONArrayFieldDatasource,
   QueryArrayFieldDatasource,

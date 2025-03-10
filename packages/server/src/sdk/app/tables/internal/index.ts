@@ -1,12 +1,11 @@
-import {
-  FieldType,
+import type {
   RenameColumn,
   Table,
   ViewStatisticsSchema,
   ViewV2,
   Row,
-  TableSourceType,
 } from "@budibase/types"
+import { FieldType, TableSourceType } from "@budibase/types"
 import {
   hasTypeChanged,
   TableSaveFunctions,

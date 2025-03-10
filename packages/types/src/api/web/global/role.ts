@@ -1,4 +1,4 @@
-import { Role } from "../../../documents"
+import type { Role } from "../../../documents"
 
 interface GlobalRoleResponse {
   roles: Role[]

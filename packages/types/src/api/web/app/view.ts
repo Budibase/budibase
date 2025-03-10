@@ -1,5 +1,5 @@
-import { ViewV2 } from "../../../documents"
-import { ViewV2Enriched } from "../../../sdk/view"
+import type { ViewV2 } from "../../../documents"
+import type { ViewV2Enriched } from "../../../sdk/view"
 
 export interface ViewResponse {
   data: ViewV2

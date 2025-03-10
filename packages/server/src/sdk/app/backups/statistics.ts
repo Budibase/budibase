@@ -1,5 +1,5 @@
 import { context, db as dbCore } from "@budibase/backend-core"
-import { Database } from "@budibase/types"
+import type { Database } from "@budibase/types"
 import {
   getDatasourceParams,
   getTableParams,

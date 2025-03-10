@@ -1,6 +1,6 @@
 import { verifyAIConfig } from "../configs"
 import { TestConfiguration, structures } from "../../../../tests"
-import { AIInnerConfig } from "@budibase/types"
+import type { AIInnerConfig } from "@budibase/types"
 
 describe("Global configs controller", () => {
   const config = new TestConfiguration()

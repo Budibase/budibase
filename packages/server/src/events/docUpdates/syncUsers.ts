@@ -1,8 +1,9 @@
 import { constants, logging } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
-import { DocUpdateEvent, UserGroupSyncEvents } from "@budibase/types"
+import type { DocUpdateEvent } from "@budibase/types"
+import { UserGroupSyncEvents } from "@budibase/types"
 import { syncUsersToAllApps } from "../../sdk/app/applications/sync"
-import { UpdateCallback } from "./processors"
+import type { UpdateCallback } from "./processors"
 
 export default function process(updateCb?: UpdateCallback) {
   const processor = async (update: DocUpdateEvent) => {

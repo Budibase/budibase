@@ -1,11 +1,10 @@
-import {
+import type {
   AutoColumnFieldMetadata,
-  AutoFieldSubType,
   Datasource,
-  FieldType,
   NumberFieldMetadata,
   Table,
 } from "@budibase/types"
+import { AutoFieldSubType, FieldType } from "@budibase/types"
 
 import { search } from "../../../../../sdk/app/rows/search"
 import { generator } from "@budibase/backend-core/tests"

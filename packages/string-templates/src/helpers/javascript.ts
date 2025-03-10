@@ -9,7 +9,7 @@ import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
 import { JsTimeoutError, UserScriptError } from "../errors"
 import { cloneDeep } from "lodash/fp"
-import { Log, LogType } from "../types"
+import type { Log, LogType } from "../types"
 import { isTest } from "../environment"
 
 // The method of executing JS scripts depends on the bundle being built.

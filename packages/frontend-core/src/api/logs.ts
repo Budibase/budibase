@@ -1,4 +1,4 @@
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface LogEndpoints {
   getSystemLogs: () => Promise<any>

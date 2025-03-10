@@ -1,7 +1,7 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationResults } from "../utilities"
-import { Automation, Table } from "@budibase/types"
+import type { Automation, Table } from "@budibase/types"
 import { basicTable } from "../../../tests/utilities/structures"
 
 describe("row deleted trigger", () => {

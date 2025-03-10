@@ -1,12 +1,6 @@
 // need to handle table name + field or just field, depending on if relationships used
-import {
-  FieldSchema,
-  FieldType,
-  Row,
-  Table,
-  JsonTypes,
-  ViewV2,
-} from "@budibase/types"
+import type { FieldSchema, Row, Table, ViewV2 } from "@budibase/types"
+import { FieldType, JsonTypes } from "@budibase/types"
 import {
   helpers,
   PROTECTED_EXTERNAL_COLUMNS,

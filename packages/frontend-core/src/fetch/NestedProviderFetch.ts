@@ -1,4 +1,4 @@
-import { NestedProviderDatasource, TableSchema } from "@budibase/types"
+import type { NestedProviderDatasource, TableSchema } from "@budibase/types"
 import BaseDataFetch from "./DataFetch"
 
 interface NestedProviderDefinition {

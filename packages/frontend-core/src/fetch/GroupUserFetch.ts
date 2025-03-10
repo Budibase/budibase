@@ -1,6 +1,8 @@
 import { get } from "svelte/store"
-import BaseDataFetch, { DataFetchParams } from "./DataFetch"
-import { GroupUserDatasource, InternalTable } from "@budibase/types"
+import type { DataFetchParams } from "./DataFetch"
+import BaseDataFetch from "./DataFetch"
+import type { GroupUserDatasource } from "@budibase/types"
+import { InternalTable } from "@budibase/types"
 
 interface GroupUserQuery {
   groupId: string

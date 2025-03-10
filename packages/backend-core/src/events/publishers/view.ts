@@ -1,7 +1,6 @@
 import { publishEvent } from "../events"
-import {
+import type {
   CalculationType,
-  Event,
   Table,
   TableExportFormat,
   View,
@@ -19,6 +18,7 @@ import {
   ViewV2,
   ViewJoinCreatedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 async function created(view: ViewV2, timestamp?: string | number) {
   const properties: ViewCreatedEvent = {

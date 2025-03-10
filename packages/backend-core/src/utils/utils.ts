@@ -3,15 +3,14 @@ import { Header, MAX_VALID_DATE, DocumentType, SEPARATOR } from "../constants"
 import env from "../environment"
 import * as tenancy from "../tenancy"
 import * as context from "../context"
+import type { App, Ctx, Event } from "@budibase/types"
 import {
-  App,
   AuditedEventFriendlyName,
-  Ctx,
-  Event,
   TenantResolutionStrategy,
 } from "@budibase/types"
 import type { SetOption } from "cookies"
-import jwt, { Secret } from "jsonwebtoken"
+import type { Secret } from "jsonwebtoken"
+import jwt from "jsonwebtoken"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"

@@ -1,4 +1,4 @@
-import {
+import type {
   DatasourcePlusQueryResponse,
   EnrichedQueryJson,
   QueryJson,

@@ -1,4 +1,4 @@
-import { UITable, UIView } from "@budibase/types"
+import type { UITable, UIView } from "@budibase/types"
 
 export type UIDatasource = UITable | (Omit<UIView, "type"> & { type: "viewV2" })
 

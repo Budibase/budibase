@@ -1,18 +1,20 @@
 import { BadRequestError, context, db as dbCore } from "@budibase/backend-core"
-import {
+import type {
   BBReferenceFieldMetadata,
   FieldSchema,
-  BBReferenceFieldSubType,
-  InternalTable,
-  isRelationshipField,
   LinkDocument,
   LinkInfo,
   RelationshipFieldMetadata,
-  RelationshipType,
   Row,
   Table,
-  FieldType,
   BBReferenceSingleFieldMetadata,
+} from "@budibase/types"
+import {
+  BBReferenceFieldSubType,
+  InternalTable,
+  isRelationshipField,
+  RelationshipType,
+  FieldType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { isExternalTableID } from "../../../integrations/utils"

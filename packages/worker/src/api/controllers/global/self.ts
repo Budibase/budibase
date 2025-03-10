@@ -9,7 +9,7 @@ import {
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
-import {
+import type {
   DevInfo,
   FetchAPIKeyResponse,
   GenerateAPIKeyRequest,

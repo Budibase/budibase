@@ -1,5 +1,5 @@
-import { Document } from "../document"
-import { JSONSchema7 } from "json-schema"
+import type { Document } from "../document"
+import type { JSONSchema7 } from "json-schema"
 
 export enum WebhookActionType {
   AUTOMATION = "automation",

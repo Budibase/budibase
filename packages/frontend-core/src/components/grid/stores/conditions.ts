@@ -1,12 +1,9 @@
-import { writable, get, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { derivedMemo, QueryUtils } from "../../../utils"
-import {
-  FieldType,
-  EmptyFilterOption,
-  UIRow,
-  UICondition,
-} from "@budibase/types"
-import { Store as StoreContext } from "."
+import type { UIRow, UICondition } from "@budibase/types"
+import { FieldType, EmptyFilterOption } from "@budibase/types"
+import type { Store as StoreContext } from "."
 
 interface ConditionStore {
   metadata: Writable<Record<string, any>>

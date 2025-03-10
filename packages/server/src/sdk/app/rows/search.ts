@@ -1,5 +1,4 @@
-import {
-  EmptyFilterOption,
+import type {
   LegacyFilter,
   Row,
   RowSearchParams,
@@ -9,10 +8,11 @@ import {
   Table,
   ViewV2,
 } from "@budibase/types"
+import { EmptyFilterOption } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
-import { ExportRowsParams, ExportRowsResult } from "./search/types"
+import type { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { checkFilters, searchInputMapping } from "./search/utils"

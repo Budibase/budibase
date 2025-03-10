@@ -1,4 +1,4 @@
-import { PriceDuration } from "./plan"
+import type { PriceDuration } from "./plan"
 
 export interface Customer {
   balance: number | null | undefined

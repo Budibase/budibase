@@ -1,6 +1,6 @@
 import { getTenantId, isMultiTenant } from "../../context"
 import * as configs from "../../configs"
-import { ConfigType, GoogleInnerConfig } from "@budibase/types"
+import type { ConfigType, GoogleInnerConfig } from "@budibase/types"
 
 /**
  * Utility to handle authentication errors.

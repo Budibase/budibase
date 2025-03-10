@@ -1,7 +1,7 @@
 import * as setup from "./utilities"
 import { checkBuilderEndpoint, runInProd } from "./utilities/TestFunctions"
 import { roles } from "@budibase/backend-core"
-import { Screen } from "@budibase/types"
+import type { Screen } from "@budibase/types"
 
 const { BUILTIN_ROLE_IDS } = roles
 const { basicScreen, powerScreen } = setup.structures

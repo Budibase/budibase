@@ -1,5 +1,5 @@
 import { TestAPI } from "./base"
-import {
+import type {
   ActivateLicenseKeyRequest,
   ActivateOfflineLicenseTokenRequest,
 } from "@budibase/types"

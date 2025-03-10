@@ -1,6 +1,7 @@
-import { Feature, Hosting, License, PlanType, Quotas } from "../../sdk"
-import { DeepPartial } from "../../shared"
-import { QuotaUsage } from "../global"
+import type { Feature, License, PlanType, Quotas } from "../../sdk"
+import { Hosting } from "../../sdk"
+import type { DeepPartial } from "../../shared"
+import type { QuotaUsage } from "../global"
 
 export interface CreateAccount {
   email: string

@@ -1,4 +1,4 @@
-import { Table } from "@budibase/types"
+import type { Table } from "@budibase/types"
 import { fixAutoColumnSubType } from "../../../../utilities/rowProcessor"
 
 export function checkAutoColumns(table: Table, oldTable?: Table) {

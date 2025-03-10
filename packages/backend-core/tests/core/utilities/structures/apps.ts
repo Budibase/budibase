@@ -1,5 +1,5 @@
 import { generator } from "."
-import { App } from "@budibase/types"
+import type { App } from "@budibase/types"
 import { DEFAULT_TENANT_ID, DocumentType } from "../../../../src/constants"
 
 export function app(id: string): App {

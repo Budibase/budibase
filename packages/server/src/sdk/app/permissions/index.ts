@@ -1,10 +1,9 @@
 import { db, roles, context, docIds } from "@budibase/backend-core"
+import type { Role, Database } from "@budibase/types"
 import {
   PermissionLevel,
   PermissionSource,
   VirtualDocumentType,
-  Role,
-  Database,
 } from "@budibase/types"
 import { extractViewInfoFromID, getRoleParams } from "../../../db/utils"
 import {

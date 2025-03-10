@@ -1,15 +1,15 @@
 import * as utils from "../../../../db/utils"
 
 import { docIds, sql } from "@budibase/backend-core"
-import {
+import type {
   Ctx,
   DatasourcePlusQueryResponse,
-  FieldType,
   RelationshipsJson,
   Row,
   Table,
   ViewV2,
 } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import {
   processDates,
   processFormulas,

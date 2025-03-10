@@ -1,4 +1,4 @@
-import { InternalTable, Row, TableSchema } from "../../documents"
+import type { InternalTable, Row, TableSchema } from "../../documents"
 
 export type DataFetchDatasource =
   | TableDatasource

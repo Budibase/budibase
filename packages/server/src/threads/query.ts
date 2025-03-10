@@ -1,7 +1,7 @@
 import { default as threadUtils } from "./utils"
 
 threadUtils.threadSetup()
-import {
+import type {
   WorkerCallback,
   QueryEvent,
   QueryVariable,
@@ -14,7 +14,8 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query, SourceName, Row } from "@budibase/types"
+import type { Datasource, Query, Row } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"

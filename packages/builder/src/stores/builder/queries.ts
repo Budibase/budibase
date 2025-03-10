@@ -1,10 +1,11 @@
-import { derived, get, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { datasources } from "./datasources"
 import { integrations } from "./integrations"
 import { API } from "@/api"
 import { duplicateName } from "@/helpers/duplicate"
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import {
+import type {
   Query,
   QueryPreview,
   PreviewQueryResponse,

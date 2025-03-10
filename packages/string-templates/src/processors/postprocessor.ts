@@ -1,5 +1,5 @@
 import { LITERAL_MARKER } from "../helpers/constants"
-import { Log } from "../types"
+import type { Log } from "../types"
 
 export enum PostProcessorNames {
   CONVERT_LITERALS = "convert-literals",

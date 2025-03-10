@@ -1,14 +1,14 @@
-import {
+import type {
   Event,
   Identity,
-  IdentityType,
   AuditLogQueueEvent,
   AuditLogFn,
   HostInfo,
 } from "@budibase/types"
-import { EventProcessor } from "./types"
+import { IdentityType } from "@budibase/types"
+import type { EventProcessor } from "./types"
 import { getAppId, doInTenant, getTenantId } from "../../context"
-import BullQueue from "bull"
+import type BullQueue from "bull"
 import { createQueue, JobQueue } from "../../queue"
 import { isAudited } from "../../utils"
 import env from "../../environment"

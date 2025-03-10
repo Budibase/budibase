@@ -1,5 +1,5 @@
 import { db as dbCore, context, docIds } from "@budibase/backend-core"
-import { Database, Row } from "@budibase/types"
+import type { Database, Row } from "@budibase/types"
 import { extractViewInfoFromID, getRowParams } from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"

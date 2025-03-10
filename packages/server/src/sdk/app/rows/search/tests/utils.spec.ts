@@ -1,11 +1,10 @@
 import { searchInputMapping } from "../utils"
 import { db as dbCore } from "@budibase/backend-core"
+import type { RowSearchParams, Table } from "@budibase/types"
 import {
   FieldType,
   BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
-  RowSearchParams,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 

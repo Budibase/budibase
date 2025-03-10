@@ -1,4 +1,5 @@
-import { derived, Readable } from "svelte/store"
+import type { Readable } from "svelte/store"
+import { derived } from "svelte/store"
 import { admin } from "./admin"
 import { auth } from "./auth"
 import { sdk } from "@budibase/shared-core"

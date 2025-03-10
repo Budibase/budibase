@@ -1,4 +1,4 @@
-import { ScreenRoutingJson, Screen, SourceType } from "../../../documents"
+import type { ScreenRoutingJson, Screen, SourceType } from "../../../documents"
 
 export interface FetchScreenRoutingResponse {
   routes: ScreenRoutingJson

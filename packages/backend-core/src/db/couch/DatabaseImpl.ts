@@ -1,5 +1,5 @@
 import Nano from "@budibase/nano"
-import {
+import type {
   AllDocsResponse,
   AnyDocument,
   Database,
@@ -10,17 +10,16 @@ import {
   DatabaseQueryOpts,
   DBError,
   Document,
-  isDocument,
   RowResponse,
   RowValue,
-  SqlClient,
   SQLiteDefinition,
   SqlQueryBinding,
 } from "@budibase/types"
+import { isDocument, SqlClient } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
-import { ReadStream, WriteStream } from "fs"
+import type { ReadStream, WriteStream } from "fs"
 import { newid } from "../../docIds/newid"
 import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"

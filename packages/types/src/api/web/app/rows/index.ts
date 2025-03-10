@@ -1,8 +1,8 @@
-import { SearchFilters } from "../../../../sdk"
-import { Row } from "../../../../documents"
-import { SortOrder } from "../../pagination"
-import { ReadStream } from "fs"
-import stream from "node:stream"
+import type { SearchFilters } from "../../../../sdk"
+import type { Row } from "../../../../documents"
+import type { SortOrder } from "../../pagination"
+import type { ReadStream } from "fs"
+import type stream from "node:stream"
 
 export * from "./search"
 

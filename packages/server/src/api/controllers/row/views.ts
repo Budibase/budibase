@@ -1,4 +1,4 @@
-import {
+import type {
   UserCtx,
   ViewV2,
   SearchViewRowRequest,

@@ -1,4 +1,4 @@
-import { UserGroup } from "@budibase/types"
+import type { UserGroup } from "@budibase/types"
 import { generator } from "./generator"
 
 export function userGroup(): UserGroup {

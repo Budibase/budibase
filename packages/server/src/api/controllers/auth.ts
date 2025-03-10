@@ -2,7 +2,7 @@ import { outputProcessing } from "../../utilities/rowProcessor"
 import { InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { roles, context, db as dbCore } from "@budibase/backend-core"
-import { AppSelfResponse, ContextUser, UserCtx } from "@budibase/types"
+import type { AppSelfResponse, ContextUser, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 import { processUser } from "../../utilities/global"
 

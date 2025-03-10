@@ -6,20 +6,20 @@ import { invalidateCachedVariable } from "../../../threads/utils"
 import env from "../../../environment"
 import { constants, context, events, utils } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
-import {
-  ConfigType,
+import type {
+  QueryEvent,
+  QueryEventParameters,
+} from "../../../threads/definitions"
+import type {
   CreateDatasourceRequest,
   Datasource,
   ExecuteQueryRequest,
   ExecuteV2QueryResponse,
   ExecuteV1QueryResponse,
   FetchQueriesResponse,
-  FieldType,
   FindQueryResponse,
   ImportRestQueryRequest,
   ImportRestQueryResponse,
-  JsonFieldSubType,
   PreviewQueryRequest,
   PreviewQueryResponse,
   Query,
@@ -28,9 +28,14 @@ import {
   SaveQueryRequest,
   SaveQueryResponse,
   SessionCookie,
-  SourceName,
   UserCtx,
   DeleteQueryResponse,
+} from "@budibase/types"
+import {
+  ConfigType,
+  FieldType,
+  JsonFieldSubType,
+  SourceName,
 } from "@budibase/types"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"

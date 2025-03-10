@@ -1,4 +1,4 @@
-import { JSONValue } from "@budibase/types"
+import type { JSONValue } from "@budibase/types"
 
 export type ColorsOptions = {
   keyColor?: string

@@ -1,7 +1,8 @@
 import { Header } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
-import { AppMigration, getLatestEnabledMigrationId } from "../index"
+import type { AppMigration } from "../index"
+import { getLatestEnabledMigrationId } from "../index"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
 
 jest.mock<typeof migrations>("../migrations", () => ({

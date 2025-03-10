@@ -1,5 +1,5 @@
 import { generator } from "../../generator"
-import { Installation } from "@budibase/types"
+import type { Installation } from "@budibase/types"
 import * as db from "../../db"
 
 export function install(): Installation {

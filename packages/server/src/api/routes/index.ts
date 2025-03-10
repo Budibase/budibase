@@ -26,7 +26,7 @@ import migrationRoutes from "./migrations"
 import pluginRoutes from "./plugin"
 import opsRoutes from "./ops"
 import debugRoutes from "./debug"
-import Router from "@koa/router"
+import type Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
 import rowActionRoutes from "./rowAction"
 

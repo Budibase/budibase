@@ -7,7 +7,7 @@ import {
 } from "../constants"
 import { getGlobalDB } from "../context"
 import { doWithDB } from "./"
-import {
+import type {
   AllDocsResponse,
   Database,
   DatabaseQueryOpts,

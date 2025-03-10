@@ -23,12 +23,10 @@ import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import {
+import type {
   App,
   BudibaseAppProps,
   Ctx,
-  DocumentType,
-  Feature,
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
@@ -38,6 +36,7 @@ import {
   ToggleBetaFeatureResponse,
   UserCtx,
 } from "@budibase/types"
+import { DocumentType, Feature } from "@budibase/types"
 import {
   getAppMigrationVersion,
   getLatestEnabledMigrationId,

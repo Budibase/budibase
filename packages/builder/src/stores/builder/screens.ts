@@ -10,10 +10,11 @@ import {
   navigationStore,
   selectedComponent,
 } from "@/stores/builder"
-import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
+import type { HistoryStore } from "@/stores/builder/history"
+import { createHistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import {
+import type {
   FetchAppPackageResponse,
   DeleteScreenResponse,
   Screen,

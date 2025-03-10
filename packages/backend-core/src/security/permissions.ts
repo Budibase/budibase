@@ -1,9 +1,8 @@
+import type { Permission, BuiltinPermissions } from "@budibase/types"
 import {
   PermissionLevel,
   PermissionType,
   BuiltinPermissionID,
-  Permission,
-  BuiltinPermissions,
 } from "@budibase/types"
 import flatten from "lodash/flatten"
 import cloneDeep from "lodash/fp/cloneDeep"

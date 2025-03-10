@@ -11,10 +11,9 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
-import {
+import type {
   App,
   Automation,
-  AutomationActionStepId,
   UserCtx,
   DeleteAutomationResponse,
   FetchAutomationResponse,
@@ -36,6 +35,7 @@ import {
   TestAutomationResponse,
   Table,
 } from "@budibase/types"
+import { AutomationActionStepId } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"

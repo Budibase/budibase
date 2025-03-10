@@ -1,4 +1,4 @@
-import { CollectStepInputs, CollectStepOutputs } from "@budibase/types"
+import type { CollectStepInputs, CollectStepOutputs } from "@budibase/types"
 
 export async function run({
   inputs,

@@ -1,6 +1,6 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import { TemplateMetadata } from "@budibase/types"
+import type { TemplateMetadata } from "@budibase/types"
 
 class TemplateStore extends BudiStore<TemplateMetadata[]> {
   constructor() {

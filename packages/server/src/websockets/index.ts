@@ -1,5 +1,5 @@
-import http from "http"
-import Koa from "koa"
+import type http from "http"
+import type Koa from "koa"
 import ClientAppSocket from "./client"
 import GridSocket from "./grid"
 import BuilderSocket from "./builder"

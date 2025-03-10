@@ -1,5 +1,5 @@
 import type Nano from "@budibase/nano"
-import {
+import type {
   AllDocsResponse,
   AnyDocument,
   Document,
@@ -7,7 +7,7 @@ import {
   SqlQueryBinding,
   ViewTemplateOpts,
 } from "../"
-import { Writable } from "stream"
+import type { Writable } from "stream"
 import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {

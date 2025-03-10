@@ -1,12 +1,15 @@
-import {
-  DatasourceFieldType,
+import type {
   Integration,
-  QueryType,
   IntegrationBase,
-  DatasourceFeature,
   ConnectionInfo,
 } from "@budibase/types"
-import { Firestore, WhereFilterOp } from "@google-cloud/firestore"
+import {
+  DatasourceFieldType,
+  QueryType,
+  DatasourceFeature,
+} from "@budibase/types"
+import type { WhereFilterOp } from "@google-cloud/firestore"
+import { Firestore } from "@google-cloud/firestore"
 
 interface FirebaseConfig {
   email: string

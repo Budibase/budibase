@@ -7,18 +7,17 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
-import {
+import type {
   CreateRowActionRequest,
   Datasource,
-  DocumentType,
-  PermissionLevel,
   RowActionResponse,
   Table,
   TableRowActions,
 } from "@budibase/types"
+import { DocumentType, PermissionLevel } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import { Expectations } from "../../../tests/utilities/api/base"
+import type { Expectations } from "../../../tests/utilities/api/base"
 import {
   DatabaseName,
   datasourceDescribe,

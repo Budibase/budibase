@@ -1,11 +1,9 @@
 import { auth, permissions } from "@budibase/backend-core"
+import type { AutomationStep, SearchFilters, Table } from "@budibase/types"
 import {
   AutomationActionStepId,
-  AutomationStep,
   AutomationStepType,
   EmptyFilterOption,
-  SearchFilters,
-  Table,
   WebhookActionType,
   BuiltinPermissionID,
   ViewV2Type,
@@ -16,7 +14,8 @@ import {
   ArrayOperator,
   RangeOperator,
 } from "@budibase/types"
-import Joi, { CustomValidator } from "joi"
+import type { CustomValidator } from "joi"
+import Joi from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 

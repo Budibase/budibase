@@ -1,8 +1,8 @@
 import { constants, objectStore, roles } from "@budibase/backend-core"
+import type { Table } from "@budibase/types"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 

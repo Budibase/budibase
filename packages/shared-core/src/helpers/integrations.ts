@@ -1,4 +1,5 @@
-import { Datasource, SourceName } from "@budibase/types"
+import type { Datasource } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 
 export function isGoogleSheets(type: SourceName) {
   return type === SourceName.GOOGLE_SHEETS

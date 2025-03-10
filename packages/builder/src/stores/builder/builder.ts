@@ -1,10 +1,10 @@
 import { get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
-import { Socket } from "socket.io-client"
+import type { Socket } from "socket.io-client"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import { BudiStore } from "../BudiStore.js"
 import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
-import { App } from "@budibase/types"
+import type { App } from "@budibase/types"
 
 interface BuilderState {
   previousTopNavPath: Record<string, string>

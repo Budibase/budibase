@@ -1,5 +1,5 @@
-import { Ctx } from "./koa"
-import { Hosting } from "./hosting"
+import type { Ctx } from "./koa"
+import type { Hosting } from "./hosting"
 
 export interface AuthToken {
   userId: string

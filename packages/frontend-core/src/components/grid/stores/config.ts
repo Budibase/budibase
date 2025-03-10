@@ -1,7 +1,8 @@
 import { derivedMemo } from "../../../utils"
-import { derived, Readable } from "svelte/store"
+import type { Readable } from "svelte/store"
+import { derived } from "svelte/store"
 import { ViewV2Type } from "@budibase/types"
-import { BaseStoreProps, Store as StoreContext } from "."
+import type { BaseStoreProps, Store as StoreContext } from "."
 
 type ConfigStore = {
   [key in keyof BaseStoreProps]: Readable<BaseStoreProps[key]>

@@ -1,11 +1,11 @@
-import {
+import type {
   FetchBuiltinPermissionsResponse,
   FetchIntegrationsResponse,
   GetEnvironmentResponse,
   GetVersionResponse,
   SystemStatusResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface OtherEndpoints {
   getSystemStatus: () => Promise<SystemStatusResponse>

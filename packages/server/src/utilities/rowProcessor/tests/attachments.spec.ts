@@ -1,5 +1,6 @@
 import { AttachmentCleanup } from "../attachments"
-import { FieldType, Table, Row, TableSourceType } from "@budibase/types"
+import type { Table, Row } from "@budibase/types"
+import { FieldType, TableSourceType } from "@budibase/types"
 import { DEFAULT_BB_DATASOURCE_ID } from "../../../constants"
 import { objectStore, db, context } from "@budibase/backend-core"
 import * as uuid from "uuid"

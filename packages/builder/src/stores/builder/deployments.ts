@@ -1,7 +1,7 @@
 import { writable, type Writable } from "svelte/store"
 import { API } from "@/api"
 import { notifications } from "@budibase/bbui"
-import { DeploymentProgressResponse } from "@budibase/types"
+import type { DeploymentProgressResponse } from "@budibase/types"
 
 export const createDeploymentStore = () => {
   let store: Writable<DeploymentProgressResponse[]> = writable([])

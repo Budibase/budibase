@@ -1,4 +1,4 @@
-import { PreSaveSQLiteDefinition } from "@budibase/types"
+import type { PreSaveSQLiteDefinition } from "@budibase/types"
 import { SQLITE_DESIGN_DOC_ID } from "../constants"
 
 // the table id property defines which property in the document

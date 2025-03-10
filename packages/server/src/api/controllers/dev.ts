@@ -11,7 +11,7 @@ import {
   db as dbCore,
   cache,
 } from "@budibase/backend-core"
-import {
+import type {
   App,
   ClearDevLockResponse,
   Ctx,

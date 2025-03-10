@@ -1,14 +1,13 @@
 import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
-import {
-  FieldType,
+import type {
   RelationshipFieldMetadata,
   SQLiteDefinition,
   PreSaveSQLiteDefinition,
   SQLiteTable,
   SQLiteTables,
-  SQLiteType,
   Table,
 } from "@budibase/types"
+import { FieldType, SQLiteType } from "@budibase/types"
 import tablesSdk from "../"
 import { generateJunctionTableID } from "../../../../db/utils"
 import { isEqual } from "lodash"

@@ -1,9 +1,5 @@
-import {
-  FieldType,
-  RelationshipType,
-  SearchFilters,
-  Table,
-} from "@budibase/types"
+import type { SearchFilters, Table } from "@budibase/types"
+import { FieldType, RelationshipType } from "@budibase/types"
 import { getQueryableFields, removeInvalidFilters } from "../queryUtils"
 import { structures } from "../../../../api/routes/tests/utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"

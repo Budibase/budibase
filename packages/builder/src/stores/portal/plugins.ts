@@ -1,6 +1,6 @@
 import { writable } from "svelte/store"
 import { PluginSource } from "@/constants/index"
-import { Plugin } from "@budibase/types"
+import type { Plugin } from "@budibase/types"
 import { API } from "@/api"
 
 export function createPluginsStore() {

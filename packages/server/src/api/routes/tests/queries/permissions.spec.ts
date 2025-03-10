@@ -1,7 +1,8 @@
 import * as setup from "../utilities"
 import { checkBuilderEndpoint } from "../utilities/TestFunctions"
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { Datasource, Query, SourceName } from "@budibase/types"
+import type TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import type { Datasource, Query } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 
 describe("query permissions", () => {
   let config: TestConfiguration

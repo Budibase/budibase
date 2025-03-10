@@ -2,16 +2,15 @@ import fetch from "node-fetch"
 import * as sso from "./sso"
 import { ssoCallbackUrl } from "../utils"
 import { validEmail } from "../../../utils"
-import {
-  ConfigType,
+import type {
   OIDCInnerConfig,
   SSOProfile,
   OIDCStrategyConfiguration,
   SSOAuthDetails,
-  SSOProviderType,
   JwtClaims,
   SaveSSOUserFunction,
 } from "@budibase/types"
+import { ConfigType, SSOProviderType } from "@budibase/types"
 
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 

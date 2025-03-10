@@ -1,8 +1,6 @@
 import { npmUpload, urlUpload, githubUpload } from "./uploaders"
 import { plugins as pluginCore } from "@budibase/backend-core"
-import {
-  PluginType,
-  PluginSource,
+import type {
   CreatePluginRequest,
   CreatePluginResponse,
   UserCtx,
@@ -13,6 +11,7 @@ import {
   DeletePluginResponse,
   PluginMetadata,
 } from "@budibase/types"
+import { PluginType, PluginSource } from "@budibase/types"
 import env from "../../../environment"
 import { clientAppSocket } from "../../../websockets"
 import sdk from "../../../sdk"

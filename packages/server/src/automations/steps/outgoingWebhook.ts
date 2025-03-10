@@ -1,7 +1,7 @@
 import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
 import * as automationUtils from "../automationUtils"
-import {
+import type {
   ExternalAppStepOutputs,
   OutgoingWebhookStepInputs,
 } from "@budibase/types"

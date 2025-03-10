@@ -3,12 +3,12 @@ import { API } from "@/api"
 import { admin } from "@/stores/portal"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
-import {
+import type {
   GetGlobalSelfResponse,
-  isSSOUser,
   SetInitInfoRequest,
   UpdateSelfRequest,
 } from "@budibase/types"
+import { isSSOUser } from "@budibase/types"
 
 interface PortalAuthStore {
   user?: GetGlobalSelfResponse

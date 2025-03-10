@@ -1,10 +1,10 @@
-import { Document } from "../../document"
-import { User } from "../../global"
-import { Row } from "../row"
-import { Table } from "../table"
-import { AutomationStep, AutomationTrigger } from "./schema"
-import { ContextEmitter } from "../../../sdk"
-import { Readable } from "stream"
+import type { Document } from "../../document"
+import type { User } from "../../global"
+import type { Row } from "../row"
+import type { Table } from "../table"
+import type { AutomationStep, AutomationTrigger } from "./schema"
+import type { ContextEmitter } from "../../../sdk"
+import type { Readable } from "stream"
 
 export enum AutomationIOType {
   OBJECT = "object",

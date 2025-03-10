@@ -1,5 +1,5 @@
 import * as automationUtils from "../automationUtils"
-import {
+import type {
   ExecuteScriptStepInputs,
   ExecuteScriptStepOutputs,
 } from "@budibase/types"

@@ -1,7 +1,7 @@
-import { Socket } from "socket.io"
+import type { Socket } from "socket.io"
 import Cookies from "cookies"
 import http from "http"
-import Koa from "koa"
+import type Koa from "koa"
 import { Header } from "@budibase/backend-core"
 
 /**

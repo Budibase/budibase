@@ -12,7 +12,7 @@ import {
   UNICODE_MAX,
   ViewName,
 } from "../db"
-import {
+import type {
   BulkDocsResponse,
   ContextUser,
   CouchFindOptions,

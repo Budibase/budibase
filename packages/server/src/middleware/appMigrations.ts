@@ -1,4 +1,4 @@
-import { UserCtx } from "@budibase/types"
+import type { UserCtx } from "@budibase/types"
 import { checkMissingMigrations } from "../appMigrations"
 import env from "../environment"
 import type { Middleware, Next } from "koa"

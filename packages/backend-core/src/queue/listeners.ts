@@ -1,4 +1,4 @@
-import { Job, JobId, Queue } from "bull"
+import type { Job, JobId, Queue } from "bull"
 import { JobQueue } from "./constants"
 import * as context from "../context"
 

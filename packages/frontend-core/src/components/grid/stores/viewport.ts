@@ -1,7 +1,8 @@
-import { derived, Readable } from "svelte/store"
+import type { Readable } from "svelte/store"
+import { derived } from "svelte/store"
 import { MinColumnWidth } from "../lib/constants"
-import { Store as StoreContext } from "."
-import { Row } from "@budibase/types"
+import type { Store as StoreContext } from "."
+import type { Row } from "@budibase/types"
 
 interface ViewportDerivedStore {
   scrolledRowCount: Readable<number>

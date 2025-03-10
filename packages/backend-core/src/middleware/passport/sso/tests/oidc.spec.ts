@@ -1,10 +1,10 @@
 import { generator, structures } from "../../../../../tests"
-import {
+import type {
   JwtClaims,
   OIDCInnerConfig,
   SSOAuthDetails,
-  SSOProviderType,
 } from "@budibase/types"
+import { SSOProviderType } from "@budibase/types"
 import * as _sso from "../sso"
 import * as oidc from "../oidc"
 import nock from "nock"

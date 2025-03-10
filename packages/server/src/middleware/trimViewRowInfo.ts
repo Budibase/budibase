@@ -1,7 +1,7 @@
-import { Ctx, Row, ViewV2 } from "@budibase/types"
+import type { Ctx, Row, ViewV2 } from "@budibase/types"
 
 import sdk from "../sdk"
-import { Next } from "koa"
+import type { Next } from "koa"
 import { getSourceId } from "../api/controllers/row/utils"
 
 export default async (ctx: Ctx<Row, Row>, next: Next) => {

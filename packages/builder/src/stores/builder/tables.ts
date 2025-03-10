@@ -1,11 +1,8 @@
-import {
-  FieldSchema,
-  FieldType,
-  SaveTableRequest,
-  Table,
-} from "@budibase/types"
+import type { FieldSchema, SaveTableRequest, Table } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { SWITCHABLE_TYPES } from "@budibase/shared-core"
-import { get, derived, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { get, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "@/api"
 import { DerivedBudiStore } from "@/stores/BudiStore"

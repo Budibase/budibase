@@ -1,8 +1,9 @@
 import jestOpenAPI from "jest-openapi"
 import { spec } from "../../../../specs/generate"
-import TestConfiguration from "../TestConfiguration"
-import request, { SuperTest, Test, Response } from "supertest"
-import { ReadStream } from "fs"
+import type TestConfiguration from "../TestConfiguration"
+import type { SuperTest, Test, Response } from "supertest"
+import request from "supertest"
+import type { ReadStream } from "fs"
 import { getServer } from "../../../app"
 
 jestOpenAPI(spec() as any)

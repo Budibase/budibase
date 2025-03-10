@@ -1,4 +1,4 @@
-import { Row, Document, DBView } from "@budibase/types"
+import type { Row, Document, DBView } from "@budibase/types"
 
 // bypass the main application db config
 // use in memory pouchdb directly

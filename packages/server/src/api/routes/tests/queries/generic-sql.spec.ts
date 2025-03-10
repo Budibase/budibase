@@ -1,11 +1,11 @@
-import { Datasource, Query, QueryPreview } from "@budibase/types"
+import type { Datasource, Query, QueryPreview } from "@budibase/types"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../../integrations/tests/utils"
-import { Expectations } from "../../../../tests/utilities/api/base"
+import type { Expectations } from "../../../../tests/utilities/api/base"
 import { events } from "@budibase/backend-core"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 
 const descriptions = datasourceDescribe({

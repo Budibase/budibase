@@ -2,13 +2,8 @@ import * as rowController from "../../api/controllers/row"
 import * as tableController from "../../api/controllers/table"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
-import {
-  FieldType,
-  EmptyFilterOption,
-  SortOrder,
-  QueryRowsStepInputs,
-  QueryRowsStepOutputs,
-} from "@budibase/types"
+import type { QueryRowsStepInputs, QueryRowsStepOutputs } from "@budibase/types"
+import { FieldType, EmptyFilterOption, SortOrder } from "@budibase/types"
 
 async function getTable(appId: string, tableId: string) {
   const ctx: any = buildCtx(appId, null, {

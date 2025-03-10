@@ -1,5 +1,5 @@
-import { BaseEvent, TableExportFormat } from "./event"
-import { AIOperationEnum } from "../ai"
+import type { BaseEvent, TableExportFormat } from "./event"
+import type { AIOperationEnum } from "../ai"
 
 export interface TableCreatedEvent extends BaseEvent {
   tableId: string

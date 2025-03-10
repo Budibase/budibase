@@ -1,9 +1,9 @@
-import { Table, RenameColumn } from "@budibase/types"
+import type { Table, RenameColumn } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../../index"
 import { context } from "@budibase/backend-core"
 import { isExternal } from "./utils"
-import { DocumentInsertResponse } from "@budibase/nano"
+import type { DocumentInsertResponse } from "@budibase/nano"
 
 import * as external from "./external"
 import * as internal from "./internal"

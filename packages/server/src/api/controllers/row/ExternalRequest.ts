@@ -1,29 +1,31 @@
 import dayjs from "dayjs"
-import {
+import type {
   Aggregation,
-  AutoFieldSubType,
-  AutoReason,
   Datasource,
   DatasourcePlusQueryResponse,
   FieldSchema,
+  OneToManyRelationshipFieldMetadata,
+  PaginationJson,
+  QueryJson,
+  RelationshipFieldMetadata,
+  Row,
+  SearchFilters,
+  SortJson,
+  Table,
+  ViewV2,
+} from "@budibase/types"
+import {
+  AutoFieldSubType,
+  AutoReason,
   FieldType,
   FilterType,
   IncludeRelationship,
   InternalSearchFilterOperator,
   isManyToOne,
   isOneToMany,
-  OneToManyRelationshipFieldMetadata,
   Operation,
-  PaginationJson,
-  QueryJson,
-  RelationshipFieldMetadata,
   RelationshipType,
-  Row,
-  SearchFilters,
-  SortJson,
   SortType,
-  Table,
-  ViewV2,
 } from "@budibase/types"
 import {
   breakExternalTableId,

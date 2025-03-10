@@ -1,7 +1,7 @@
 import * as scriptController from "../../api/controllers/script"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
-import {
+import type {
   ContextEmitter,
   ExecuteScriptStepInputs,
   ExecuteScriptStepOutputs,

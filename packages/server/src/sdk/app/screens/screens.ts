@@ -1,6 +1,6 @@
 import { getScreenParams } from "../../../db/utils"
 import { context } from "@budibase/backend-core"
-import { Screen } from "@budibase/types"
+import type { Screen } from "@budibase/types"
 
 export async function fetch(): Promise<Screen[]> {
   const db = context.getAppDB()

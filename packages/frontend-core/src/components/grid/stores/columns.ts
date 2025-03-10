@@ -1,7 +1,8 @@
-import { derived, get, Readable, Writable, writable } from "svelte/store"
+import type { Readable, Writable } from "svelte/store"
+import { derived, get, writable } from "svelte/store"
 import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
-import { UIColumn } from "@budibase/types"
-import { Store as StoreContext } from "."
+import type { UIColumn } from "@budibase/types"
+import type { Store as StoreContext } from "."
 
 interface ColumnStore {
   columns: Writable<UIColumn[]>

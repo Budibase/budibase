@@ -1,10 +1,9 @@
 import { Helpers } from "@budibase/bbui"
+import type { Row, UIFieldSchema } from "@budibase/types"
 import {
   FieldType,
   isRelationshipField,
   RelationshipType,
-  Row,
-  UIFieldSchema,
 } from "@budibase/types"
 
 const columnTypeManyTypeOverrides: Partial<Record<FieldType, FieldType>> = {

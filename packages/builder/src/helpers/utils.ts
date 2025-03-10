@@ -1,12 +1,11 @@
-import {
+import type {
   AutoFieldSubType,
   Automation,
   DateFieldMetadata,
-  FieldType,
   NumberFieldMetadata,
   RelationshipFieldMetadata,
-  RelationshipType,
 } from "@budibase/types"
+import { FieldType, RelationshipType } from "@budibase/types"
 import { ActionStepID } from "@/constants/backend/automations"
 import { TableNames } from "@/constants"
 import {

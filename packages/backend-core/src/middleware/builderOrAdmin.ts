@@ -1,4 +1,4 @@
-import { UserCtx } from "@budibase/types"
+import type { UserCtx } from "@budibase/types"
 import { isBuilder, isAdmin, hasBuilderPermissions } from "../users"
 import { getAppId } from "../context"
 import env from "../environment"

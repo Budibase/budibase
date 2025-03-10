@@ -1,4 +1,5 @@
-import { Datasource, SourceName } from "@budibase/types"
+import type { Datasource } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 import { setEnv } from "../../../environment"
 import { getRequest, getConfig, afterAll as _afterAll } from "./utilities"
 import { constants } from "@budibase/backend-core"

@@ -2,7 +2,7 @@ import { API } from "@/api"
 import { licensing } from "."
 import { sdk } from "@budibase/shared-core"
 import { Constants } from "@budibase/frontend-core"
-import {
+import type {
   DeleteInviteUsersRequest,
   InviteUsersRequest,
   SearchUsersRequest,

@@ -1,15 +1,17 @@
 import { context, db as dbCore, docIds, utils } from "@budibase/backend-core"
-import {
+import type {
   DatabaseQueryOpts,
   Datasource,
-  DocumentType,
   FieldSchema,
+  RelationshipFieldMetadata,
+  LinkDocument,
+} from "@budibase/types"
+import {
+  DocumentType,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
-  RelationshipFieldMetadata,
   SourceName,
   VirtualDocumentType,
-  LinkDocument,
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"

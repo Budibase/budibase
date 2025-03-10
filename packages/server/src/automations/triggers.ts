@@ -8,21 +8,23 @@ import { checkTestFlag } from "../utilities/redis"
 import * as utils from "./utils"
 import env from "../environment"
 import { context, logging, db as dbCore } from "@budibase/backend-core"
-import {
+import type {
   Automation,
   Row,
   AutomationData,
   AutomationJob,
-  AutomationEventType,
   UpdatedRowEventEmitter,
   SearchFilters,
-  AutomationStoppedReason,
-  AutomationStatus,
   AutomationRowEvent,
   UserBindings,
   AutomationResults,
   DidNotTriggerResponse,
   Table,
+} from "@budibase/types"
+import {
+  AutomationEventType,
+  AutomationStoppedReason,
+  AutomationStatus,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"

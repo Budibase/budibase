@@ -1,6 +1,6 @@
 import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
-import { ExternalAppStepOutputs, SlackStepInputs } from "@budibase/types"
+import type { ExternalAppStepOutputs, SlackStepInputs } from "@budibase/types"
 
 export async function run({
   inputs,

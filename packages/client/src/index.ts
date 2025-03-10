@@ -14,10 +14,10 @@ import {
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { APIClient } from "@budibase/frontend-core"
+import type { APIClient } from "@budibase/frontend-core"
 import type { ActionTypes } from "@/constants"
-import { Readable } from "svelte/store"
-import {
+import type { Readable } from "svelte/store"
+import type {
   Screen,
   Theme,
   AppCustomTheme,

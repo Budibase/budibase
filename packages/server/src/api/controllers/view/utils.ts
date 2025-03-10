@@ -7,13 +7,13 @@ import {
 import env from "../../../environment"
 import { context } from "@budibase/backend-core"
 import viewBuilder from "./viewBuilder"
-import {
+import type {
   Database,
   DBView,
-  DocumentType,
   DesignDocument,
   InMemoryView,
 } from "@budibase/types"
+import { DocumentType } from "@budibase/types"
 
 export async function getView(viewName: string) {
   const db = context.getAppDB()

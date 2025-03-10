@@ -2,16 +2,10 @@ import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../integrations/utils"
-import {
-  ExternalRequest,
-  ExternalRequestReturnType,
-  RunConfig,
-} from "./ExternalRequest"
-import {
-  FieldType,
+import type { ExternalRequestReturnType, RunConfig } from "./ExternalRequest"
+import { ExternalRequest } from "./ExternalRequest"
+import type {
   Datasource,
-  IncludeRelationship,
-  Operation,
   PatchRowRequest,
   PatchRowResponse,
   Row,
@@ -19,6 +13,7 @@ import {
   UserCtx,
   ViewV2,
 } from "@budibase/types"
+import { FieldType, IncludeRelationship, Operation } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as utils from "./utils"
 import {

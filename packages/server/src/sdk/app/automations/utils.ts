@@ -1,4 +1,5 @@
-import { Automation, AutomationActionStepId } from "@budibase/types"
+import type { Automation } from "@budibase/types"
+import { AutomationActionStepId } from "@budibase/types"
 
 export function checkForCollectStep(automation: Automation) {
   return automation.definition.steps.some(

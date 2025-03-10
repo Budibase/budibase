@@ -1,13 +1,16 @@
-import {
+import type {
   Integration,
-  QueryType,
   IntegrationBase,
-  DatasourceFieldType,
-  DatasourceFeature,
   ConnectionInfo,
 } from "@budibase/types"
+import {
+  QueryType,
+  DatasourceFieldType,
+  DatasourceFeature,
+} from "@budibase/types"
 
-import { S3, S3ClientConfig } from "@aws-sdk/client-s3"
+import type { S3ClientConfig } from "@aws-sdk/client-s3"
+import { S3 } from "@aws-sdk/client-s3"
 import csv from "csvtojson"
 import stream from "stream"
 

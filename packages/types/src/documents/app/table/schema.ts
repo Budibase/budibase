@@ -1,15 +1,16 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
-import { FieldType, FormulaResponseType } from "../row"
-import {
+import type { FormulaResponseType } from "../row"
+import { FieldType } from "../row"
+import type {
   AutoFieldSubType,
   AutoReason,
   BBReferenceFieldSubType,
   FormulaType,
   JsonFieldSubType,
-  RelationshipType,
 } from "./constants"
-import { AIOperationEnum } from "../../../sdk/ai"
+import { RelationshipType } from "./constants"
+import type { AIOperationEnum } from "../../../sdk/ai"
 
 export interface UIFieldMetadata {
   order?: number

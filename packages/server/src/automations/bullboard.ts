@@ -5,7 +5,7 @@ import * as automation from "../threads/automation"
 import { backups } from "@budibase/pro"
 import { getAppMigrationQueue } from "../appMigrations/queue"
 import { createBullBoard } from "@bull-board/api"
-import { AutomationData } from "@budibase/types"
+import type { AutomationData } from "@budibase/types"
 
 export const automationQueue = queue.createQueue<AutomationData>(
   queue.JobQueue.AUTOMATION,

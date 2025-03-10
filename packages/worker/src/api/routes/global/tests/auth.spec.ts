@@ -1,4 +1,4 @@
-import { CloudAccount, SSOUser, User } from "@budibase/types"
+import type { CloudAccount, SSOUser, User } from "@budibase/types"
 
 jest.mock("nodemailer")
 import {
@@ -10,7 +10,7 @@ import {
 
 const sendMailMock = mocks.email.mock()
 import { events, constants } from "@budibase/backend-core"
-import { Response } from "superagent"
+import type { Response } from "superagent"
 
 import * as userSdk from "../../../../sdk/users"
 import nock from "nock"

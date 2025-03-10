@@ -5,11 +5,8 @@ import {
   isMultiTenant,
   getPlatformURL,
 } from "../context"
-import {
-  Ctx,
-  TenantResolutionStrategy,
-  GetTenantIdOptions,
-} from "@budibase/types"
+import type { Ctx, GetTenantIdOptions } from "@budibase/types"
+import { TenantResolutionStrategy } from "@budibase/types"
 import { Header } from "../constants"
 
 export function addTenantToUrl(url: string) {

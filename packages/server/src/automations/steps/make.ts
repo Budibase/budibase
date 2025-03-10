@@ -1,6 +1,9 @@
 import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
-import { ExternalAppStepOutputs, MakeIntegrationInputs } from "@budibase/types"
+import type {
+  ExternalAppStepOutputs,
+  MakeIntegrationInputs,
+} from "@budibase/types"
 
 export async function run({
   inputs,

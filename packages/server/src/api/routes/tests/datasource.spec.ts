@@ -5,16 +5,18 @@ import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 import { generator } from "@budibase/backend-core/tests"
-import {
+import type {
   Datasource,
   FieldSchema,
+  Table,
+  TableSchema,
+  SupportedSqlTypes,
+} from "@budibase/types"
+import {
   BBReferenceFieldSubType,
   FieldType,
   RelationshipType,
   SourceName,
-  Table,
-  TableSchema,
-  SupportedSqlTypes,
   JsonFieldSubType,
 } from "@budibase/types"
 import {
@@ -23,7 +25,7 @@ import {
 } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import nock from "nock"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 
 describe("/datasources", () => {
   const config = setup.getConfig()

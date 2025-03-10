@@ -1,4 +1,5 @@
-import { User, SearchIndex } from "@budibase/types"
+import type { User } from "@budibase/types"
+import { SearchIndex } from "@budibase/types"
 import { getGlobalDB } from "../../context"
 
 export async function createUserIndex() {

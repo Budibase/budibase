@@ -1,7 +1,7 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
 import { cloneDeep } from "lodash"
-import { SearchFilterGroup, UISearchFilter } from "@budibase/types"
+import type { SearchFilterGroup, UISearchFilter } from "@budibase/types"
 
 export const sleep = (ms: number) =>
   new Promise(resolve => setTimeout(resolve, ms))

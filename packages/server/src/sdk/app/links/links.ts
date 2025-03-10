@@ -1,6 +1,6 @@
 import { context, docIds } from "@budibase/backend-core"
 
-import {
+import type {
   DatabaseQueryOpts,
   LinkDocument,
   LinkDocumentValue,

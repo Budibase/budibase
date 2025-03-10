@@ -1,4 +1,4 @@
-import { App } from "@budibase/types"
+import type { App } from "@budibase/types"
 import { tenancy, db as dbCore, platform } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 

@@ -1,4 +1,4 @@
-import {
+import type {
   GetInitInfoResponse,
   LoginRequest,
   LoginResponse,
@@ -10,7 +10,7 @@ import {
   SetInitInfoRequest,
   SetInitInfoResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface AuthEndpoints {
   logIn: (

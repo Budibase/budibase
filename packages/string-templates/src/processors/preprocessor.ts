@@ -1,6 +1,6 @@
 import { HelperNames } from "../helpers"
 import { swapStrings, isAlphaNumeric } from "../utilities"
-import { ProcessOptions } from "../types"
+import type { ProcessOptions } from "../types"
 
 const FUNCTION_CASES = ["#", "else", "/"]
 

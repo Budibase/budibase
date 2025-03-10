@@ -1,7 +1,7 @@
 import env from "../environment"
 import { context } from "@budibase/backend-core"
 import { generateMetadataID } from "../db/utils"
-import { Document } from "@budibase/types"
+import type { Document } from "@budibase/types"
 import dayjs from "dayjs"
 import customParseFormat from "dayjs/plugin/customParseFormat"
 

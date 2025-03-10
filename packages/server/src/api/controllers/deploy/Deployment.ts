@@ -1,5 +1,5 @@
 import { context, utils } from "@budibase/backend-core"
-import { DeploymentStatus } from "@budibase/types"
+import type { DeploymentStatus } from "@budibase/types"
 
 /**
  * This is used to pass around information about the deployment that is occurring

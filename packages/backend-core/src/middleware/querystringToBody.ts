@@ -1,4 +1,4 @@
-import { Ctx } from "@budibase/types"
+import type { Ctx } from "@budibase/types"
 
 /**
  * Expects a standard "query" query string property which is the JSON body

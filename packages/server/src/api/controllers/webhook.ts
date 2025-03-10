@@ -1,12 +1,10 @@
 import { getWebhookParams } from "../../db/utils"
 import * as triggers from "../../automations/triggers"
 import { db as dbCore, context } from "@budibase/backend-core"
-import {
+import type {
   Webhook,
-  WebhookActionType,
   Ctx,
   Automation,
-  AutomationActionStepId,
   FetchWebhooksResponse,
   SaveWebhookResponse,
   SaveWebhookRequest,
@@ -17,6 +15,7 @@ import {
   TriggerWebhookResponse,
   AutomationIOType,
 } from "@budibase/types"
+import { WebhookActionType, AutomationActionStepId } from "@budibase/types"
 import sdk from "../../sdk"
 import * as pro from "@budibase/pro"
 

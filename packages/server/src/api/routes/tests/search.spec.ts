@@ -12,34 +12,36 @@ import {
   withEnv as withCoreEnv,
 } from "@budibase/backend-core"
 
-import {
-  AIOperationEnum,
-  AutoFieldSubType,
-  BBReferenceFieldSubType,
+import type {
   Datasource,
-  EmptyFilterOption,
-  FieldType,
-  JsonFieldSubType,
-  LogicalOperator,
-  RelationshipType,
   RequiredKeys,
   Row,
   RowSearchParams,
   SearchFilters,
   SearchResponse,
   SearchRowRequest,
-  SortOrder,
-  SortType,
   Table,
   TableSchema,
   User,
   ViewV2Schema,
 } from "@budibase/types"
+import {
+  AIOperationEnum,
+  AutoFieldSubType,
+  BBReferenceFieldSubType,
+  EmptyFilterOption,
+  FieldType,
+  JsonFieldSubType,
+  LogicalOperator,
+  RelationshipType,
+  SortOrder,
+  SortType,
+} from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"

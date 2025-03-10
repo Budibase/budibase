@@ -1,4 +1,4 @@
-import {
+import type {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
   BulkUserCreated,
@@ -28,7 +28,7 @@ import {
   UpdateSelfMetadataResponse,
   UserIdentifier,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface UserEndpoints {
   getUsers: () => Promise<FetchUsersResponse>

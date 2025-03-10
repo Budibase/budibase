@@ -1,9 +1,8 @@
+import type { RowAttachment, Table } from "@budibase/types"
 import {
   FieldType,
   BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
-  RowAttachment,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 import { outputProcessing } from ".."

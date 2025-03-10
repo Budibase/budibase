@@ -1,7 +1,8 @@
-import { derived, get, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { memo } from "../../../utils"
 import { SortOrder } from "@budibase/types"
-import { Store as StoreContext } from "."
+import type { Store as StoreContext } from "."
 
 interface SortStore {
   sort: Writable<{

@@ -1,5 +1,6 @@
 import { publishEvent } from "../events"
-import { Event, RowActionCreatedEvent } from "@budibase/types"
+import type { RowActionCreatedEvent } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 async function created(
   rowAction: RowActionCreatedEvent,

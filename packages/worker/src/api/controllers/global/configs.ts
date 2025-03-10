@@ -11,36 +11,38 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
-import {
+import type {
   AIConfig,
   AIInnerConfig,
   Config,
   ConfigChecklistResponse,
-  ConfigType,
   Ctx,
   DeleteConfigResponse,
   FindConfigResponse,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
   GoogleInnerConfig,
-  isAIConfig,
-  isGoogleConfig,
-  isOIDCConfig,
-  isSettingsConfig,
-  isSMTPConfig,
   OIDCConfigs,
   OIDCLogosConfig,
-  PASSWORD_REPLACEMENT,
-  QuotaUsageType,
   SaveConfigRequest,
   SaveConfigResponse,
   SettingsBrandingConfig,
   SettingsInnerConfig,
   SSOConfig,
   SSOConfigType,
-  StaticQuotaName,
   UploadConfigFileResponse,
   UserCtx,
+} from "@budibase/types"
+import {
+  ConfigType,
+  isAIConfig,
+  isGoogleConfig,
+  isOIDCConfig,
+  isSettingsConfig,
+  isSMTPConfig,
+  PASSWORD_REPLACEMENT,
+  QuotaUsageType,
+  StaticQuotaName,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 

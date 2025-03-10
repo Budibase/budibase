@@ -1,7 +1,6 @@
-import {
+import type {
   AIConfig,
   Config,
-  ConfigType,
   GoogleConfig,
   GoogleInnerConfig,
   OIDCConfig,
@@ -14,6 +13,7 @@ import {
   SMTPConfig,
   SMTPInnerConfig,
 } from "@budibase/types"
+import { ConfigType } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../constants"
 import { CacheKey, TTL, withCache } from "../cache"
 import * as context from "../context"

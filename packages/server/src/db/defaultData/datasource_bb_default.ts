@@ -13,16 +13,13 @@ import { employeeImport } from "./employeeImport"
 import { jobsImport } from "./jobsImport"
 import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
+import type { Datasource, Row, Table, TableSchema } from "@budibase/types"
 import {
   AutoFieldSubType,
-  Datasource,
   FieldType,
   JsonFieldSubType,
   RelationshipType,
-  Row,
   SourceName,
-  Table,
-  TableSchema,
   TableSourceType,
 } from "@budibase/types"
 

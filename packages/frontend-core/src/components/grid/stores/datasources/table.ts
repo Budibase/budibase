@@ -1,14 +1,14 @@
-import {
+import type {
   Row,
   SaveRowRequest,
   SaveTableRequest,
-  SortOrder,
   UIDatasource,
 } from "@budibase/types"
+import { SortOrder } from "@budibase/types"
 import { get } from "svelte/store"
-import { Store as StoreContext } from ".."
-import { DatasourceTableActions } from "."
-import TableFetch from "../../../../fetch/TableFetch"
+import type { Store as StoreContext } from ".."
+import type { DatasourceTableActions } from "."
+import type TableFetch from "../../../../fetch/TableFetch"
 
 const SuppressErrors = true
 

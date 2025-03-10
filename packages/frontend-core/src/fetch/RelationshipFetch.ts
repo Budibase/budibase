@@ -1,4 +1,4 @@
-import { RelationshipDatasource, Table } from "@budibase/types"
+import type { RelationshipDatasource, Table } from "@budibase/types"
 import BaseDataFetch from "./DataFetch"
 
 export default class RelationshipFetch extends BaseDataFetch<

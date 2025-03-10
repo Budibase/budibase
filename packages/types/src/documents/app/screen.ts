@@ -1,5 +1,5 @@
-import { Document } from "../document"
-import { Component } from "./component"
+import type { Document } from "../document"
+import type { Component } from "./component"
 
 export interface ScreenProps extends Component {
   size?: string

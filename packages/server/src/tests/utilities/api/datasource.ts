@@ -1,16 +1,16 @@
-import {
+import type {
   BuildSchemaFromSourceResponse,
   CreateDatasourceResponse,
   Datasource,
   FetchDatasourceInfoResponse,
   FetchExternalSchemaResponse,
-  FieldType,
-  RelationshipType,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   VerifyDatasourceRequest,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import { FieldType, RelationshipType } from "@budibase/types"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 import { sql } from "@budibase/backend-core"
 
 export class DatasourceAPI extends TestAPI {

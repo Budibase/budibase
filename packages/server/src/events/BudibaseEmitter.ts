@@ -1,6 +1,6 @@
 import { EventEmitter } from "events"
 import { rowEmission, tableEmission } from "./utils"
-import {
+import type {
   Table,
   Row,
   UserBindings,

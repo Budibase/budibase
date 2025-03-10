@@ -1,4 +1,4 @@
-import { ServerLogStepInputs, ServerLogStepOutputs } from "@budibase/types"
+import type { ServerLogStepInputs, ServerLogStepOutputs } from "@budibase/types"
 
 export async function run({
   inputs,

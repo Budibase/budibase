@@ -1,5 +1,5 @@
-import { Row } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { Row } from "@budibase/types"
+import type { BaseAPIClient } from "./types"
 
 export interface ViewEndpoints {
   // Missing request or response types

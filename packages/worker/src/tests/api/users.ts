@@ -1,4 +1,4 @@
-import {
+import type {
   BulkUserResponse,
   BulkUserRequest,
   InviteUsersRequest,
@@ -9,7 +9,8 @@ import {
 } from "@budibase/types"
 import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
-import { TestAPI, TestAPIOpts } from "./base"
+import type { TestAPIOpts } from "./base"
+import { TestAPI } from "./base"
 
 export class UserAPI extends TestAPI {
   // INVITE

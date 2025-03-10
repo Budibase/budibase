@@ -1,4 +1,5 @@
-import { FieldType, CouchFindOptions, Table, Row } from "@budibase/types"
+import type { CouchFindOptions, Table, Row } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
 import { DocumentType, SEPARATOR } from "../../../db/utils"
 

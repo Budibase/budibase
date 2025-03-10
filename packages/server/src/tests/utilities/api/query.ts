@@ -1,11 +1,12 @@
-import {
+import type {
   Query,
   ExecuteQueryRequest,
   ExecuteV2QueryResponse,
   PreviewQueryRequest,
   PreviewQueryResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 import { constants } from "@budibase/backend-core"
 
 export class QueryAPI extends TestAPI {

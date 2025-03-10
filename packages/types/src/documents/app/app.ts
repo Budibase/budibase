@@ -1,5 +1,5 @@
-import { User, Document, Plugin, Snippet, Theme } from "../"
-import { SocketSession } from "../../sdk"
+import type { User, Document, Plugin, Snippet, Theme } from "../"
+import type { SocketSession } from "../../sdk"
 
 export type AppMetadataErrors = { [key: string]: string[] }
 

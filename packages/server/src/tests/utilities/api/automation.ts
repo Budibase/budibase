@@ -1,4 +1,4 @@
-import {
+import type {
   Automation,
   CreateAutomationResponse,
   DeleteAutomationResponse,
@@ -13,7 +13,8 @@ import {
   UpdateAutomationRequest,
   UpdateAutomationResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 
 export class AutomationAPI extends TestAPI {
   get = async (

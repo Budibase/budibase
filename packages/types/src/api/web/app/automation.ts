@@ -1,5 +1,5 @@
-import { AutomationJob } from "../../../sdk/automations"
-import {
+import type { AutomationJob } from "../../../sdk/automations"
+import type {
   Automation,
   AutomationActionStepId,
   AutomationLogPage,
@@ -11,7 +11,7 @@ import {
   DidNotTriggerResponse,
   Row,
 } from "../../../documents"
-import { DocumentDestroyResponse } from "@budibase/nano"
+import type { DocumentDestroyResponse } from "@budibase/nano"
 
 export type GetAutomationTriggerDefinitionsResponse = Record<
   keyof typeof AutomationTriggerStepId,

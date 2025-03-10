@@ -2,7 +2,7 @@ import { OpenAPI2 } from "../../openapi2"
 import { readFileSync } from "fs"
 import { join } from "path"
 import { groupBy, mapValues } from "lodash"
-import { Query } from "@budibase/types"
+import type { Query } from "@budibase/types"
 
 const getData = (file: string, extension: string) => {
   return readFileSync(

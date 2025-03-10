@@ -1,4 +1,4 @@
-import { User } from "@budibase/types"
+import type { User } from "@budibase/types"
 
 export interface UIUser extends User {
   sessionId: string

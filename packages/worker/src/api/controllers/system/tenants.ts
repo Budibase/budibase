@@ -1,4 +1,4 @@
-import { GetTenantInfoResponse, UserCtx } from "@budibase/types"
+import type { GetTenantInfoResponse, UserCtx } from "@budibase/types"
 import * as tenantSdk from "../../../sdk/tenants"
 
 export async function destroy(ctx: UserCtx<void, void>) {

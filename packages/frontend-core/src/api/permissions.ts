@@ -1,11 +1,11 @@
-import {
+import type {
   AddPermissionResponse,
   GetDependantResourcesResponse,
   GetResourcePermsResponse,
   PermissionLevel,
   RemovePermissionResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface PermissionEndpoints {
   getPermissionForResource: (

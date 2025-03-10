@@ -1,8 +1,8 @@
+import type { AutomationTriggerDefinition } from "@budibase/types"
 import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
-  AutomationTriggerDefinition,
   AutomationTriggerStepId,
   AutomationEventType,
 } from "@budibase/types"

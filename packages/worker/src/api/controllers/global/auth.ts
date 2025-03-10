@@ -6,8 +6,7 @@ import {
   utils as utilsCore,
   configs,
 } from "@budibase/backend-core"
-import {
-  ConfigType,
+import type {
   User,
   Ctx,
   LoginRequest,
@@ -25,8 +24,9 @@ import {
   SetInitInfoResponse,
   LoginResponse,
 } from "@budibase/types"
+import { ConfigType } from "@budibase/types"
 import env from "../../../environment"
-import { Next } from "koa"
+import type { Next } from "koa"
 
 import * as authSdk from "../../../sdk/auth"
 import * as userSdk from "../../../sdk/users"

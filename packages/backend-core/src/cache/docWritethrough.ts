@@ -1,6 +1,7 @@
-import { AnyDocument, Database } from "@budibase/types"
+import type { AnyDocument, Database } from "@budibase/types"
 
-import { JobQueue, Queue, createQueue } from "../queue"
+import type { Queue } from "../queue"
+import { JobQueue, createQueue } from "../queue"
 import * as dbUtils from "../db"
 
 interface ProcessDocMessage {

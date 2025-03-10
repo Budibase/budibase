@@ -1,5 +1,5 @@
 import { derived } from "svelte/store"
-import { Store as StoreContext } from "."
+import type { Store as StoreContext } from "."
 
 export const initialise = (context: StoreContext) => {
   const { scrolledRowCount, rows, visualRowCapacity } = context

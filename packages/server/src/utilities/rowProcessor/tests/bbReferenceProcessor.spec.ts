@@ -1,6 +1,7 @@
 import _ from "lodash"
 import * as backendCore from "@budibase/backend-core"
-import { BBReferenceFieldSubType, User } from "@budibase/types"
+import type { User } from "@budibase/types"
+import { BBReferenceFieldSubType } from "@budibase/types"
 import {
   processInputBBReference,
   processInputBBReferences,

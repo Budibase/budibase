@@ -1,4 +1,4 @@
-import Handlebars from "handlebars"
+import type Handlebars from "handlebars"
 
 export default class Helper {
   private name: any

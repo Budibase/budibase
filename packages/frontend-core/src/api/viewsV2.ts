@@ -1,4 +1,4 @@
-import {
+import type {
   CreateViewRequest,
   CreateViewResponse,
   PaginatedSearchRowResponse,
@@ -8,7 +8,7 @@ import {
   UpdateViewResponse,
   ViewResponseEnriched,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface ViewV2Endpoints {
   fetchDefinition: (viewId: string) => Promise<ViewResponseEnriched>

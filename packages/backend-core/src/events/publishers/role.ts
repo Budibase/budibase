@@ -1,6 +1,5 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   Role,
   RoleAssignedEvent,
   RoleCreatedEvent,
@@ -9,6 +8,7 @@ import {
   RoleUpdatedEvent,
   User,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 async function created(role: Role, timestamp?: string | number) {
   const properties: RoleCreatedEvent = {

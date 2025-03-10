@@ -1,6 +1,5 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   LicenseActivatedEvent,
   LicensePlanChangedEvent,
   PlanType,
@@ -12,6 +11,7 @@ import {
   LicensePaymentRecoveredEvent,
   PriceDuration,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 async function planChanged(
   account: Account,

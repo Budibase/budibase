@@ -1,13 +1,10 @@
 import _ from "lodash"
+import type { FieldSchema, Table, TableSchema, ViewV2 } from "@budibase/types"
 import {
-  FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   RelationshipType,
-  Table,
-  TableSchema,
   TableSourceType,
-  ViewV2,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import { enrichSchema, syncSchema } from ".."

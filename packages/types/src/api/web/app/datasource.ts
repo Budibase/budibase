@@ -1,4 +1,4 @@
-import { Datasource } from "../../../documents"
+import type { Datasource } from "../../../documents"
 
 export interface CreateDatasourceResponse {
   datasource: Datasource

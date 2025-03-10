@@ -1,12 +1,6 @@
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
-import {
-  Database,
-  Row,
-  Automation,
-  AutomationTriggerStepId,
-  RowAttachment,
-  FieldType,
-} from "@budibase/types"
+import type { Database, Row, Automation, RowAttachment } from "@budibase/types"
+import { AutomationTriggerStepId, FieldType } from "@budibase/types"
 import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import {

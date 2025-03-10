@@ -1,4 +1,4 @@
-import { Document } from "../../"
+import type { Document } from "../../"
 
 export interface ApiKeyDoc extends Document {
   apiKeys: Record<string, string>

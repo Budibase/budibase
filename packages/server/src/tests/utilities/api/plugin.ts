@@ -1,5 +1,6 @@
-import { Expectations, TestAPI } from "./base"
-import { CreatePluginRequest, CreatePluginResponse } from "@budibase/types"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
+import type { CreatePluginRequest, CreatePluginResponse } from "@budibase/types"
 
 export class PluginAPI extends TestAPI {
   create = async (body: CreatePluginRequest, expectations?: Expectations) => {

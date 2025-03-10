@@ -1,4 +1,5 @@
-import { writable, derived, get, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
 import {
   GutterWidth,
@@ -8,7 +9,7 @@ import {
   VPadding,
 } from "../lib/constants"
 import { parseCellID } from "../lib/utils"
-import { Store as StoreContext } from "."
+import type { Store as StoreContext } from "."
 
 interface ScrollStore {
   scroll: Writable<{

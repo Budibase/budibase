@@ -5,7 +5,7 @@ import {
 } from "../../../constants"
 import { getTemplateByID, getTemplates } from "../../../constants/templates"
 import { tenancy, db as dbCore } from "@budibase/backend-core"
-import {
+import type {
   DeleteGlobalTemplateResponse,
   FetchGlobalTemplateByOwnerIDResponse,
   FetchGlobalTemplateByTypeResponse,

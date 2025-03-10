@@ -1,16 +1,14 @@
-import {
-  IncludeRelationship,
-  Operation,
+import type {
   PaginationJson,
   Row,
   RowSearchParams,
   SearchFilters,
   SearchResponse,
   SortJson,
-  SortOrder,
   Table,
   ViewV2,
 } from "@budibase/types"
+import { IncludeRelationship, Operation, SortOrder } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
 import {
@@ -18,7 +16,7 @@ import {
   breakRowIdField,
 } from "../../../../integrations/utils"
 import { utils, PROTECTED_EXTERNAL_COLUMNS } from "@budibase/shared-core"
-import { ExportRowsParams, ExportRowsResult } from "./types"
+import type { ExportRowsParams, ExportRowsResult } from "./types"
 import { HTTPError } from "@budibase/backend-core"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"

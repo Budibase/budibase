@@ -1,5 +1,5 @@
 import { makePropSafe } from "@budibase/string-templates"
-import { UIBinding } from "@budibase/types"
+import type { UIBinding } from "@budibase/types"
 
 export function extractRelationships(bindings: UIBinding[]) {
   return (

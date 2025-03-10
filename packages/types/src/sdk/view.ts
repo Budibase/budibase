@@ -1,4 +1,4 @@
-import {
+import type {
   FieldSchema,
   FieldSubType,
   FieldType,

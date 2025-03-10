@@ -1,5 +1,6 @@
-import { Expectations, TestAPI } from "./base"
-import {
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
+import type {
   BuildWebhookSchemaResponse,
   SaveWebhookResponse,
   TriggerWebhookResponse,

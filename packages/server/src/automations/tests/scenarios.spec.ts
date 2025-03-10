@@ -1,17 +1,12 @@
 import * as automation from "../index"
-import {
-  LoopStepType,
-  FieldType,
-  Table,
-  Datasource,
-  FilterCondition,
-} from "@budibase/types"
+import type { Table, Datasource } from "@budibase/types"
+import { LoopStepType, FieldType, FilterCondition } from "@budibase/types"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../integrations/tests/utils"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"

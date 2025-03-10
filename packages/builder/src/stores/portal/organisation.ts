@@ -1,12 +1,12 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
 import { auth } from "@/stores/portal"
-import {
-  ConfigType,
+import type {
   PublicSettingsInnerConfig,
   SettingsBrandingConfig,
   SettingsInnerConfig,
 } from "@budibase/types"
+import { ConfigType } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 interface LocalOrganisationState {

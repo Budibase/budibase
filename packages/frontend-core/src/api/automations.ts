@@ -1,4 +1,4 @@
-import {
+import type {
   ClearAutomationLogRequest,
   ClearAutomationLogResponse,
   CreateAutomationRequest,
@@ -15,7 +15,7 @@ import {
   UpdateAutomationRequest,
   UpdateAutomationResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface AutomationEndpoints {
   getAutomations: () => Promise<FetchAutomationResponse>

@@ -1,30 +1,32 @@
-import {
+import type {
   Datasource,
   BBReferenceFieldSubType,
-  FieldType,
-  FormulaType,
   LegacyFilter,
   SearchFilters,
   SearchQueryFields,
-  ArrayOperator,
   SearchFilterOperator,
-  SortType,
   FieldConstraints,
-  SortOrder,
   RowSearchParams,
-  EmptyFilterOption,
   SearchResponse,
   Table,
+  UISearchFilter,
+  SearchFilter,
+} from "@budibase/types"
+import {
+  FieldType,
+  FormulaType,
+  ArrayOperator,
+  SortType,
+  SortOrder,
+  EmptyFilterOption,
   BasicOperator,
   RangeOperator,
   LogicalOperator,
   isLogicalSearchOperator,
-  UISearchFilter,
   UILogicalOperator,
   isBasicSearchOperator,
   isArraySearchOperator,
   isRangeSearchOperator,
-  SearchFilter,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"

@@ -1,7 +1,7 @@
-import { SortOrder, SortType } from "../api"
-import { SearchFilters } from "./search"
-import { CalculationType, Row } from "../documents"
-import { WithRequired } from "../shared"
+import type { SortOrder, SortType } from "../api"
+import type { SearchFilters } from "./search"
+import type { CalculationType, Row } from "../documents"
+import type { WithRequired } from "../shared"
 
 export interface BaseAggregation {
   name: string

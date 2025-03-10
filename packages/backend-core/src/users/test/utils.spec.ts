@@ -1,4 +1,4 @@
-import { User, UserGroup } from "@budibase/types"
+import type { User, UserGroup } from "@budibase/types"
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
 import { getGlobalDB } from "../../context"

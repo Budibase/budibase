@@ -2,12 +2,8 @@ import { doInTenant } from "../context"
 import { getTenantIDFromCtx } from "../tenancy"
 import { buildMatcherRegex, matches } from "./matchers"
 import { Header } from "../constants"
-import {
-  Ctx,
-  EndpointMatcher,
-  GetTenantIdOptions,
-  TenantResolutionStrategy,
-} from "@budibase/types"
+import type { Ctx, EndpointMatcher, GetTenantIdOptions } from "@budibase/types"
+import { TenantResolutionStrategy } from "@budibase/types"
 import type { Next, Middleware } from "koa"
 
 export default function (

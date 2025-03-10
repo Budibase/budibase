@@ -4,7 +4,8 @@ import {
 } from "../../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { FilterCondition, Row, Table } from "@budibase/types"
+import type { Row, Table } from "@budibase/types"
+import { FilterCondition } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 async function uploadTestFile(filename: string) {

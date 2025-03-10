@@ -1,4 +1,4 @@
-import { BuiltinPermission, PermissionLevel } from "../../../sdk"
+import type { BuiltinPermission, PermissionLevel } from "../../../sdk"
 
 export type FetchBuiltinPermissionsResponse = BuiltinPermission[]
 

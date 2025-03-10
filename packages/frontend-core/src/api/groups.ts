@@ -1,9 +1,9 @@
-import {
+import type {
   SearchGroupResponse,
   SearchUserGroupResponse,
   UserGroup,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface GroupEndpoints {
   saveGroup: (group: UserGroup) => Promise<{ _id: string; _rev: string }>

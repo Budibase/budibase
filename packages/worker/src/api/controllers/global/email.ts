@@ -1,6 +1,6 @@
 import { sendEmail as sendEmailFn } from "../../../utilities/email"
 import { tenancy } from "@budibase/backend-core"
-import {
+import type {
   UserCtx,
   User,
   SendEmailRequest,

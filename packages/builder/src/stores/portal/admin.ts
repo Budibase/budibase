@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import { API } from "@/api"
 import { auth } from "@/stores/portal"
 import { banner } from "@budibase/bbui"
-import {
+import type {
   ConfigChecklistResponse,
   GetEnvironmentResponse,
   SystemStatusResponse,

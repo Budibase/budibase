@@ -1,20 +1,23 @@
-import {
+import type {
   Integration,
-  DatasourceFieldType,
-  QueryType,
   IntegrationBase,
-  DatasourceFeature,
   ConnectionInfo,
 } from "@budibase/types"
-
 import {
-  DynamoDBDocument,
+  DatasourceFieldType,
+  QueryType,
+  DatasourceFeature,
+} from "@budibase/types"
+
+import type {
   PutCommandInput,
   GetCommandInput,
   UpdateCommandInput,
   DeleteCommandInput,
 } from "@aws-sdk/lib-dynamodb"
-import { DynamoDB, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb"
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"
+import type { DynamoDBClientConfig } from "@aws-sdk/client-dynamodb"
+import { DynamoDB } from "@aws-sdk/client-dynamodb"
 import { AWS_REGION } from "../constants"
 
 export interface DynamoDBConfig {

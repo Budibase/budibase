@@ -1,5 +1,6 @@
 import { checkForRoleInheritanceLoops } from "../roles"
-import { BuiltinPermissionID, Role } from "@budibase/types"
+import type { Role } from "@budibase/types"
+import { BuiltinPermissionID } from "@budibase/types"
 
 /**
  * This unit test exists as this utility will be used in the frontend and backend, confirmation

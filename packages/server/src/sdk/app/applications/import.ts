@@ -1,12 +1,6 @@
 import { db as dbCore } from "@budibase/backend-core"
-import {
-  DocumentTypesToImport,
-  Document,
-  Database,
-  RowValue,
-  DocumentType,
-  App,
-} from "@budibase/types"
+import type { Document, Database, RowValue, App } from "@budibase/types"
+import { DocumentTypesToImport, DocumentType } from "@budibase/types"
 import backups from "../backups"
 
 export type FileAttributes = {

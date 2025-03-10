@@ -1,5 +1,6 @@
-import { ImportSource, ImportInfo } from "./base"
-import { Query } from "../../../../../definitions/common"
+import type { ImportInfo } from "./base"
+import { ImportSource } from "./base"
+import type { Query } from "../../../../../definitions/common"
 import { URL } from "url"
 
 const curlconverter = require("curlconverter")

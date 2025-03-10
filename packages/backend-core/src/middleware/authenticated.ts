@@ -13,13 +13,8 @@ import { doInTenant, getGlobalDB } from "../context"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
-import {
-  Ctx,
-  EndpointMatcher,
-  LoginMethod,
-  SessionCookie,
-  User,
-} from "@budibase/types"
+import type { Ctx, EndpointMatcher, SessionCookie, User } from "@budibase/types"
+import { LoginMethod } from "@budibase/types"
 import { ErrorCode, InvalidAPIKeyError } from "../errors"
 import tracer from "dd-trace"
 import type { Middleware, Next } from "koa"

@@ -1,4 +1,4 @@
-import { Webhook } from "@budibase/types"
+import type { Webhook } from "@budibase/types"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { mocks } from "@budibase/backend-core/tests"

@@ -2,12 +2,12 @@ import { get } from "svelte/store"
 import { API } from "@/api"
 import { licensing } from "@/stores/portal"
 import { BudiStore } from "../BudiStore"
-import {
+import type {
   CreateEnvironmentVariableRequest,
-  EventPublishType,
   StatusEnvironmentVariableResponse,
   UpdateEnvironmentVariableRequest,
 } from "@budibase/types"
+import { EventPublishType } from "@budibase/types"
 
 type EnvVar = {
   name: string

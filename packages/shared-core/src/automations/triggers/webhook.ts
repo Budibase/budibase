@@ -1,10 +1,10 @@
+import type { AutomationTriggerDefinition } from "@budibase/types"
 import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
   AutomationTriggerStepId,
   AutomationEventType,
-  AutomationTriggerDefinition,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {

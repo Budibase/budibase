@@ -1,4 +1,4 @@
-import {
+import type {
   PatchRowRequest,
   SaveRowRequest,
   Row,
@@ -10,10 +10,11 @@ import {
   DeleteRows,
   DeleteRow,
   PaginatedSearchRowResponse,
-  RowExportFormat,
   SearchRowRequest,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import { RowExportFormat } from "@budibase/types"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 
 export class RowAPI extends TestAPI {
   get = async (

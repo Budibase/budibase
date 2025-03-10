@@ -1,6 +1,7 @@
 import { testAutomation } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-import { MetadataType, Automation } from "@budibase/types"
+import type { Automation } from "@budibase/types"
+import { MetadataType } from "@budibase/types"
 
 describe("/metadata", () => {
   let request = setup.getRequest()

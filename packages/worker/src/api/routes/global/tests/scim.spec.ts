@@ -1,7 +1,7 @@
 import tk from "timekeeper"
 import _ from "lodash"
 import { generator, mocks, structures } from "@budibase/backend-core/tests"
-import {
+import type {
   CloudAccount,
   ScimCreateUserRequest,
   ScimGroupResponse,

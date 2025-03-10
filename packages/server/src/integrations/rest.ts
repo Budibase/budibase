@@ -1,17 +1,19 @@
-import {
-  BodyType,
-  DatasourceFieldType,
-  HttpMethod,
+import type {
   Integration,
   IntegrationBase,
   PaginationConfig,
   PaginationValues,
-  QueryType,
-  RestAuthType,
   RestBasicAuthConfig,
   RestBearerAuthConfig,
   RestConfig,
   RestQueryFields as RestQuery,
+} from "@budibase/types"
+import {
+  BodyType,
+  DatasourceFieldType,
+  HttpMethod,
+  QueryType,
+  RestAuthType,
 } from "@budibase/types"
 import get from "lodash/get"
 import * as https from "https"

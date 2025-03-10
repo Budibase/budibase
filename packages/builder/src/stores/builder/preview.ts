@@ -1,6 +1,10 @@
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
-import { PreviewDevice, ComponentContext, AppContext } from "@budibase/types"
+import type {
+  PreviewDevice,
+  ComponentContext,
+  AppContext,
+} from "@budibase/types"
 
 type PreviewEventHandler = (name: string, payload?: any) => void
 

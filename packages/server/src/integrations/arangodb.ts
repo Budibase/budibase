@@ -1,10 +1,12 @@
-import {
+import type {
   Integration,
+  IntegrationBase,
+  ConnectionInfo,
+} from "@budibase/types"
+import {
   DatasourceFieldType,
   QueryType,
-  IntegrationBase,
   DatasourceFeature,
-  ConnectionInfo,
 } from "@budibase/types"
 
 import { Database, aql } from "arangojs"

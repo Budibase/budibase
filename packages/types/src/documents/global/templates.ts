@@ -1,4 +1,4 @@
-import { Document } from "../document"
+import type { Document } from "../document"
 
 export interface Template extends Document {
   ownerId?: string

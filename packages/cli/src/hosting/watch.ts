@@ -2,7 +2,7 @@ import { resolve } from "path"
 import fs from "fs"
 import { error, success } from "../utils"
 import { updateDockerComposeService } from "./utils"
-import { DockerCompose } from "./types"
+import type { DockerCompose } from "./types"
 
 export async function watchPlugins(pluginPath: string, silent: boolean) {
   const PLUGIN_PATH = "/plugins"

@@ -1,4 +1,4 @@
-import { FeatureFlag } from "@budibase/types"
+import type { FeatureFlag } from "@budibase/types"
 import { auth } from "../stores/portal"
 import { get } from "svelte/store"
 

@@ -1,7 +1,7 @@
 import { structures } from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
 import { setEnv } from "@budibase/backend-core"
-import { Datasource } from "@budibase/types"
+import type { Datasource } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
   DatabaseName,

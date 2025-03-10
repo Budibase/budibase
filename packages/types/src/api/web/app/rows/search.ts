@@ -1,3 +1,4 @@
+import type { SearchFilterKey } from "../../../../sdk"
 import {
   ArrayOperator,
   BasicOperator,
@@ -5,14 +6,10 @@ import {
   InternalSearchFilterOperator,
   LogicalOperator,
   RangeOperator,
-  SearchFilterKey,
 } from "../../../../sdk"
-import { Row } from "../../../../documents"
-import {
-  PaginationResponse,
-  SortOrder,
-  SortType,
-} from "../../../../api/web/pagination"
+import type { Row } from "../../../../documents"
+import type { PaginationResponse } from "../../../../api/web/pagination"
+import { SortOrder, SortType } from "../../../../api/web/pagination"
 import { z } from "zod"
 
 const fieldKey = z

@@ -1,14 +1,14 @@
 import { ViewName, getQueryIndex, isRelationshipColumn } from "../utils"
 import { createLinkView } from "../views/staticViews"
 import { context, logging } from "@budibase/backend-core"
-import {
-  FieldType,
+import type {
   DatabaseQueryOpts,
   LinkDocument,
   LinkDocumentValue,
   Table,
   TableSchema,
 } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import sdk from "../../sdk"
 
 export { createLinkView } from "../views/staticViews"

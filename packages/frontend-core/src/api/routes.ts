@@ -1,8 +1,8 @@
-import {
+import type {
   FetchClientScreenRoutingResponse,
   FetchScreenRoutingResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface RouteEndpoints {
   fetchClientAppRoutes: () => Promise<FetchClientScreenRoutingResponse>

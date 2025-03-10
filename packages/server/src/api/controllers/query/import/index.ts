@@ -1,12 +1,12 @@
 import { queryValidation } from "../validation"
 import { generateQueryID } from "../../../../db/utils"
-import { ImportInfo, ImportSource } from "./sources/base"
+import type { ImportInfo, ImportSource } from "./sources/base"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
 import { Curl } from "./sources/curl"
 // @ts-ignore
 import { events, context } from "@budibase/backend-core"
-import { Datasource, Query } from "@budibase/types"
+import type { Datasource, Query } from "@budibase/types"
 
 interface ImportResult {
   errorQueries: Query[]

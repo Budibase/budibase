@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid"
 import { logWarn } from "../logging"
 import env from "../environment"
 import { Duration } from "../utils"
-import {
+import type {
   Session,
   ScannedSession,
   SessionKey,

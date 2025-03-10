@@ -7,15 +7,14 @@ import {
   doWithDB,
 } from "../db"
 import { getAppDB } from "../context"
-import {
+import type {
   Screen,
   Role as RoleDoc,
   RoleUIMetadata,
   Database,
   App,
-  BuiltinPermissionID,
-  PermissionLevel,
 } from "@budibase/types"
+import { BuiltinPermissionID, PermissionLevel } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { RoleColor, helpers } from "@budibase/shared-core"
 import { uniqBy } from "lodash"

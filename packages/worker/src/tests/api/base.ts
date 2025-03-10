@@ -1,5 +1,5 @@
-import TestConfiguration from "../TestConfiguration"
-import { SuperTest, Test } from "supertest"
+import type TestConfiguration from "../TestConfiguration"
+import type { SuperTest, Test } from "supertest"
 
 export interface TestAPIOpts {
   headers?: any

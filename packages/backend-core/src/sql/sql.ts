@@ -1,4 +1,5 @@
-import { Knex, knex } from "knex"
+import type { Knex } from "knex"
+import { knex } from "knex"
 import * as dbCore from "../db"
 import {
   getNativeSql,
@@ -10,34 +11,36 @@ import {
   validateManyToMany,
 } from "./utils"
 import SqlTableQueryBuilder from "./sqlTable"
-import {
+import type {
   Aggregation,
   AnySearchFilter,
   ArrayFilter,
-  ArrayOperator,
-  BasicOperator,
   BBReferenceFieldMetadata,
-  CalculationType,
   EnrichedQueryJson,
   FieldSchema,
+  JsonFieldMetadata,
+  QueryOptions,
+  RelationshipsJson,
+  SearchFilterKey,
+  SearchFilters,
+  SqlQuery,
+  SqlQueryBinding,
+  Table,
+} from "@budibase/types"
+import {
+  ArrayOperator,
+  BasicOperator,
+  CalculationType,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalSearchFilterOperator,
-  JsonFieldMetadata,
   JsonTypes,
   LogicalOperator,
   Operation,
   prefixed,
-  QueryOptions,
   RangeOperator,
-  RelationshipsJson,
-  SearchFilterKey,
-  SearchFilters,
   SortOrder,
   SqlClient,
-  SqlQuery,
-  SqlQueryBinding,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 import environment from "../environment"

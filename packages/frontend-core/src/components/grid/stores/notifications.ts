@@ -1,6 +1,7 @@
 import { notifications as BBUINotifications } from "@budibase/bbui"
-import { derived, Readable } from "svelte/store"
-import { Store as StoreContext } from "."
+import type { Readable } from "svelte/store"
+import { derived } from "svelte/store"
+import type { Store as StoreContext } from "."
 
 interface NotificationStore {
   notifications: Readable<{

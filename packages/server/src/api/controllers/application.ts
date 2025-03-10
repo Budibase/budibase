@@ -39,10 +39,9 @@ import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { groups, licensing, quotas } from "@budibase/pro"
-import {
+import type {
   App,
   Layout,
-  PlanType,
   Screen,
   UserCtx,
   CreateAppRequest,
@@ -53,8 +52,6 @@ import {
   UpdateAppRequest,
   UpdateAppResponse,
   Database,
-  FieldType,
-  BBReferenceFieldSubType,
   Row,
   BBRequest,
   SyncAppResponse,
@@ -70,6 +67,7 @@ import {
   UnpublishAppResponse,
   SetRevertableAppVersionResponse,
 } from "@budibase/types"
+import { PlanType, FieldType, BBReferenceFieldSubType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"

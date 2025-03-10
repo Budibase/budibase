@@ -1,7 +1,7 @@
 import { getPlatformDB } from "./platformDb"
 import { DEFAULT_TENANT_ID } from "../constants"
 import env from "../environment"
-import {
+import type {
   PlatformUser,
   PlatformUserByEmail,
   PlatformUserById,

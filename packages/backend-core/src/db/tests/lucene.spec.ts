@@ -1,7 +1,7 @@
 import { newid } from "../../docIds/newid"
 import { getDB } from "../db"
+import type { Database } from "@budibase/types"
 import {
-  Database,
   EmptyFilterOption,
   SortOrder,
   SortType,

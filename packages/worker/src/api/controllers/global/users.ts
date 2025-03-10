@@ -1,6 +1,6 @@
 import * as userSdk from "../../../sdk/users"
 import env from "../../../environment"
-import {
+import type {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
   AddSSoUserRequest,
@@ -19,13 +19,10 @@ import {
   FetchUsersResponse,
   FindUserResponse,
   GetUserInvitesResponse,
-  Hosting,
   InviteUserRequest,
   InviteUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
-  LockName,
-  LockType,
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
   PlatformUserByEmail,
@@ -39,6 +36,7 @@ import {
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
+import { Hosting, LockName, LockType } from "@budibase/types"
 import {
   users,
   cache,

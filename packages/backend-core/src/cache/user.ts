@@ -6,7 +6,7 @@ import env from "../environment"
 import * as accounts from "../accounts"
 import { UserDB } from "../users"
 import { sdk } from "@budibase/shared-core"
-import { User, UserMetadata } from "@budibase/types"
+import type { User, UserMetadata } from "@budibase/types"
 
 const EXPIRY_SECONDS = 3600
 

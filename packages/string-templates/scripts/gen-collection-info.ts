@@ -7,7 +7,8 @@ import { marked } from "marked"
 import { join, dirname } from "path"
 
 const helpers = require("@budibase/handlebars-helpers")
-import doctrine, { Annotation } from "doctrine"
+import type { Annotation } from "doctrine"
+import doctrine from "doctrine"
 
 type BudibaseAnnotation = Annotation & {
   example?: string

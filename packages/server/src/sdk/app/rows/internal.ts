@@ -1,5 +1,5 @@
 import { context, db, HTTPError } from "@budibase/backend-core"
-import { Row, Table, ViewV2 } from "@budibase/types"
+import type { Row, Table, ViewV2 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { finaliseRow } from "../../../api/controllers/row/staticFormula"
 import {

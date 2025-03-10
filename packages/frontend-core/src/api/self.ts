@@ -1,4 +1,4 @@
-import {
+import type {
   AppSelfResponse,
   FetchAPIKeyResponse,
   GenerateAPIKeyResponse,
@@ -6,7 +6,7 @@ import {
   UpdateSelfRequest,
   UpdateSelfResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface SelfEndpoints {
   updateSelf: (user: UpdateSelfRequest) => Promise<UpdateSelfResponse>

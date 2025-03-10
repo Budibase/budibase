@@ -1,5 +1,4 @@
-import {
-  Event,
+import type {
   UserCreatedEvent,
   UserUpdatedEvent,
   UserDeletedEvent,
@@ -12,6 +11,7 @@ import {
   GroupUsersDeletedEvent,
   GroupPermissionsEditedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 const getEventProperties: Record<
   string,

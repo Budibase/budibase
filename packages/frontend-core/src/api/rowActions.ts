@@ -1,11 +1,11 @@
-import {
+import type {
   RowActionsResponse,
   RowActionResponse,
   CreateRowActionRequest,
   RowActionPermissionsResponse,
   RowActionTriggerRequest,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface RowActionEndpoints {
   fetch: (tableId: string) => Promise<Record<string, RowActionResponse>>

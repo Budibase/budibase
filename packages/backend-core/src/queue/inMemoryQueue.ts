@@ -1,8 +1,8 @@
 import events from "events"
 import { newid } from "../utils"
-import { Queue, QueueOptions, JobOptions } from "./queue"
+import type { Queue, QueueOptions, JobOptions } from "./queue"
 import { helpers } from "@budibase/shared-core"
-import { Job, JobId, JobInformation } from "bull"
+import type { Job, JobId, JobInformation } from "bull"
 
 function jobToJobInformation(job: Job): JobInformation {
   let cron = ""

@@ -1,4 +1,4 @@
-import { SendEmailResponse } from "@budibase/types"
+import type { SendEmailResponse } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as workerRequests from "../../../utilities/workerRequests"
 

@@ -3,7 +3,7 @@ import { processStringSync } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import { getQueryParams, isProdAppID } from "../../../db/utils"
 import { BaseQueryVerbs } from "../../../constants"
-import { Query, QuerySchema } from "@budibase/types"
+import type { Query, QuerySchema } from "@budibase/types"
 
 function updateSchema(query: Query): Query {
   if (!query.schema) {

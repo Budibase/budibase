@@ -1,4 +1,5 @@
-import { Automation, AutomationTriggerStepId } from "@budibase/types"
+import type { Automation } from "@budibase/types"
+import { AutomationTriggerStepId } from "@budibase/types"
 
 export function isRowAction(automation: Automation) {
   return (

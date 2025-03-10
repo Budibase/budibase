@@ -1,8 +1,5 @@
-import {
-  FilterCondition,
-  FilterStepInputs,
-  FilterStepOutputs,
-} from "@budibase/types"
+import type { FilterStepInputs, FilterStepOutputs } from "@budibase/types"
+import { FilterCondition } from "@budibase/types"
 
 export async function run({
   inputs,

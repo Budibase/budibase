@@ -1,14 +1,14 @@
 import { get } from "svelte/store"
-import {
+import type {
   Row,
   SaveRowRequest,
-  SortOrder,
   UIDatasource,
   UpdateViewRequest,
 } from "@budibase/types"
-import { Store as StoreContext } from ".."
-import { DatasourceViewActions } from "."
-import ViewV2Fetch from "../../../../fetch/ViewV2Fetch"
+import { SortOrder } from "@budibase/types"
+import type { Store as StoreContext } from ".."
+import type { DatasourceViewActions } from "."
+import type ViewV2Fetch from "../../../../fetch/ViewV2Fetch"
 
 const SuppressErrors = true
 

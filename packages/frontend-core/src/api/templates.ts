@@ -1,11 +1,11 @@
-import {
+import type {
   FetchGlobalTemplateByTypeResponse,
   FetchGlobalTemplateDefinitionResponse,
   FetchTemplateResponse,
   SaveGlobalTemplateRequest,
   SaveGlobalTemplateResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface TemplateEndpoints {
   getEmailTemplates: () => Promise<FetchGlobalTemplateByTypeResponse>

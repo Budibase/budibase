@@ -1,12 +1,13 @@
 import { get } from "svelte/store"
-import BaseDataFetch, { DataFetchParams } from "./DataFetch"
+import type { DataFetchParams } from "./DataFetch"
+import BaseDataFetch from "./DataFetch"
 import { utils } from "@budibase/shared-core"
-import {
-  InternalTable,
+import type {
   SearchFilters,
   SearchUsersRequest,
   UserDatasource,
 } from "@budibase/types"
+import { InternalTable } from "@budibase/types"
 
 interface UserFetchQuery {
   appId?: string

@@ -5,16 +5,15 @@ import { deleteView, getView, getViews, saveView } from "./utils"
 import { fetchLegacyView } from "../row"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import {
-  FieldType,
+import type {
   Ctx,
   Row,
   Table,
   TableExportFormat,
   TableSchema,
   View,
-  DocumentType,
 } from "@budibase/types"
+import { FieldType, DocumentType } from "@budibase/types"
 import { builderSocket } from "../../../websockets"
 
 const cloneDeep = require("lodash/cloneDeep")

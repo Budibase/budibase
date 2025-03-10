@@ -1,4 +1,4 @@
-import { Row, Table } from "@budibase/types"
+import type { Row, Table } from "@budibase/types"
 
 import * as external from "./external"
 import * as internal from "./internal"

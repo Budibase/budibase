@@ -1,4 +1,4 @@
-import {
+import type {
   DeleteQueryResponse,
   ExecuteQueryRequest,
   ExecuteV2QueryResponse,
@@ -11,7 +11,7 @@ import {
   SaveQueryRequest,
   SaveQueryResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface QueryEndpoints {
   executeQuery: (

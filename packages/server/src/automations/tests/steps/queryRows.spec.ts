@@ -1,4 +1,5 @@
-import { EmptyFilterOption, SortOrder, Table } from "@budibase/types"
+import type { Table } from "@budibase/types"
+import { EmptyFilterOption, SortOrder } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import * as automation from "../../index"
 import { basicTable } from "../../../tests/utilities/structures"

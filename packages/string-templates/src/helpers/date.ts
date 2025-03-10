@@ -1,4 +1,5 @@
-import dayjs, { UnitType } from "dayjs"
+import type { UnitType } from "dayjs"
+import dayjs from "dayjs"
 
 import dayjsDurationPlugin from "dayjs/plugin/duration"
 import dayjsAdvancedFormatPlugin from "dayjs/plugin/advancedFormat"

@@ -2,10 +2,9 @@ import { breakExternalTableId } from "../../../integrations/utils"
 import { handleRequest } from "../row/external"
 import { events } from "@budibase/backend-core"
 import { isRows, isSchema, parse } from "../../../utilities/schema"
-import {
+import type {
   BulkImportRequest,
   BulkImportResponse,
-  Operation,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
@@ -13,6 +12,7 @@ import {
   TableRequest,
   UserCtx,
 } from "@budibase/types"
+import { Operation } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { inputProcessing } from "../../../utilities/rowProcessor"

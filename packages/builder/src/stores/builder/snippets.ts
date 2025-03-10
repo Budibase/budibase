@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import { API } from "@/api"
 import { appStore } from "./app"
 import { BudiStore } from "../BudiStore"
-import { Snippet, UpdateAppResponse } from "@budibase/types"
+import type { Snippet, UpdateAppResponse } from "@budibase/types"
 
 export class SnippetStore extends BudiStore<Snippet[]> {
   constructor() {

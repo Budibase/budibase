@@ -1,4 +1,4 @@
-import { Ctx, LogOpsRequest, ErrorOpsRequest } from "@budibase/types"
+import type { Ctx, LogOpsRequest, ErrorOpsRequest } from "@budibase/types"
 import { logging } from "@budibase/backend-core"
 
 export async function log(ctx: Ctx<LogOpsRequest, void>) {

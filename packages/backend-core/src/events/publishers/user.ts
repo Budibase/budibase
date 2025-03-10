@@ -1,6 +1,5 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   User,
   UserCreatedEvent,
   UserDataCollaborationEvent,
@@ -16,6 +15,7 @@ import {
   UserUpdatedEvent,
   UserOnboardingEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 import { isScim } from "../../context"
 
 async function created(user: User, timestamp?: number) {

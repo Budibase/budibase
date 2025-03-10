@@ -1,8 +1,9 @@
-import { derived, writable, get, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { derived, writable, get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import { parseCellID, getCellID } from "../lib/utils"
 import { NewRowID } from "../lib/constants"
-import { Store as StoreContext } from "."
+import type { Store as StoreContext } from "."
 
 type ClipboardStoreData =
   | {

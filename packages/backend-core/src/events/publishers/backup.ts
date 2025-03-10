@@ -1,11 +1,11 @@
-import {
+import type {
   AppBackup,
   AppBackupRestoreEvent,
   AppBackupTriggeredEvent,
   AppBackupTrigger,
   AppBackupType,
-  Event,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 import { publishEvent } from "../events"
 
 async function appBackupRestored(backup: AppBackup) {

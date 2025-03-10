@@ -1,10 +1,10 @@
-import {
+import type {
   SearchAuditLogsRequest,
   SearchAuditLogsResponse,
   DefinitionsAuditLogsResponse,
   DownloadAuditLogsRequest,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface AuditLogEndpoints {
   searchAuditLogs: (

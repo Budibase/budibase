@@ -1,6 +1,6 @@
 import env from "../environment"
 import { constants, utils } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
+import type { UserCtx } from "@budibase/types"
 
 /**
  * This is a restricted endpoint in the cloud.

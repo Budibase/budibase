@@ -6,7 +6,7 @@ import crypto from "crypto"
 import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
-import { Snippet, VM } from "@budibase/types"
+import type { Snippet, VM } from "@budibase/types"
 import { iifeWrapper, UserScriptError } from "@budibase/string-templates"
 import environment from "../../environment"
 

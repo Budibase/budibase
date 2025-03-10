@@ -1,10 +1,10 @@
-import {
+import type {
   Automation,
   AutomationMetadata,
   Row,
   UserBindings,
 } from "../../documents"
-import { Job } from "bull"
+import type { Job } from "bull"
 
 export interface AutomationDataEvent {
   appId?: string

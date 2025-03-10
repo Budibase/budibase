@@ -1,12 +1,12 @@
 import { context, events } from "@budibase/backend-core"
-import {
+import type {
   AnalyticsEnabledResponse,
   AnalyticsPingRequest,
   AnalyticsPingResponse,
   App,
   Ctx,
-  PingSource,
 } from "@budibase/types"
+import { PingSource } from "@budibase/types"
 import { DocumentType, isDevAppID } from "../../db/utils"
 
 export const isEnabled = async (ctx: Ctx<void, AnalyticsEnabledResponse>) => {

@@ -1,6 +1,6 @@
 import { Header } from "../constants"
 import { buildMatcherRegex, matches } from "./matchers"
-import { Ctx, EndpointMatcher } from "@budibase/types"
+import type { Ctx, EndpointMatcher } from "@budibase/types"
 import type { Middleware, Next } from "koa"
 
 /**

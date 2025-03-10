@@ -5,13 +5,8 @@ import isEqual from "lodash/isEqual"
 import uniq from "lodash/uniq"
 import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
-import {
-  FieldSchema,
-  FieldType,
-  FormulaFieldMetadata,
-  FormulaType,
-  Table,
-} from "@budibase/types"
+import type { FieldSchema, FormulaFieldMetadata, Table } from "@budibase/types"
+import { FieldType, FormulaType } from "@budibase/types"
 import sdk from "../../../sdk"
 import { isRelationshipColumn } from "../../../db/utils"
 

@@ -1,4 +1,5 @@
-import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
+import type { Ctx, GetEnvironmentResponse } from "@budibase/types"
+import { MaintenanceType } from "@budibase/types"
 import env from "../../../environment"
 import { env as coreEnv, db as dbCore } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"

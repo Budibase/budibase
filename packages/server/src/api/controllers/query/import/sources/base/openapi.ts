@@ -1,6 +1,6 @@
 import { ImportSource } from "."
 import SwaggerParser from "@apidevtools/swagger-parser"
-import { OpenAPI } from "openapi-types"
+import type { OpenAPI } from "openapi-types"
 
 const yaml = require("js-yaml")
 

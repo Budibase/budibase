@@ -2,7 +2,7 @@ import { derived, get, type Writable } from "svelte/store"
 import { API } from "@/api"
 import { RoleUtils } from "@budibase/frontend-core"
 import { DerivedBudiStore } from "../BudiStore"
-import { Role } from "@budibase/types"
+import type { Role } from "@budibase/types"
 
 export class RoleStore extends DerivedBudiStore<Role[], Role[]> {
   constructor() {

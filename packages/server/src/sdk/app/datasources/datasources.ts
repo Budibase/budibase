@@ -1,15 +1,17 @@
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
-import {
+import type {
   Datasource,
-  DatasourceFieldType,
   Integration,
-  PASSWORD_REPLACEMENT,
   RestAuthConfig,
-  RestAuthType,
   RestBasicAuthConfig,
   Row,
   RestConfig,
+} from "@budibase/types"
+import {
+  DatasourceFieldType,
+  PASSWORD_REPLACEMENT,
+  RestAuthType,
   SourceName,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"

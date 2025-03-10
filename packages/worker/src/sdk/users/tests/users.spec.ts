@@ -1,7 +1,7 @@
 import { structures, mocks } from "../../../tests"
 import { env, context } from "@budibase/backend-core"
 import { db as userDb } from "../"
-import { CloudAccount } from "@budibase/types"
+import type { CloudAccount } from "@budibase/types"
 
 describe("users", () => {
   beforeEach(() => {

@@ -1,15 +1,15 @@
 import { generateTableID } from "../../../db/utils"
 import { handleDataImport } from "./utils"
-import {
+import type {
   BulkImportRequest,
   BulkImportResponse,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
   Table,
-  TableSourceType,
   UserCtx,
 } from "@budibase/types"
+import { TableSourceType } from "@budibase/types"
 import sdk from "../../../sdk"
 
 export async function updateTable(

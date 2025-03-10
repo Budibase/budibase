@@ -1,16 +1,18 @@
 import { AutoFieldDefaultNames } from "../../constants"
 import { processStringSync } from "@budibase/string-templates"
-import {
+import type {
   AutoColumnFieldMetadata,
   FieldSchema,
   Row,
   Table,
+  AIOperationEnum,
+  AIFieldMetadata,
+} from "@budibase/types"
+import {
   FormulaType,
   AutoFieldSubType,
   FieldType,
   OperationFieldTypeEnum,
-  AIOperationEnum,
-  AIFieldMetadata,
 } from "@budibase/types"
 import { OperationFields } from "@budibase/shared-core"
 import tracer from "dd-trace"

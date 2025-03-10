@@ -7,7 +7,7 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
-import {
+import type {
   DeleteScreenResponse,
   FetchScreenResponse,
   Plugin,

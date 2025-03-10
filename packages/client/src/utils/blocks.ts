@@ -1,12 +1,7 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { API } from "../api"
-import {
-  BasicOperator,
-  LegacyFilter,
-  UIColumn,
-  UILogicalOperator,
-  UISearchFilter,
-} from "@budibase/types"
+import type { LegacyFilter, UIColumn, UISearchFilter } from "@budibase/types"
+import { BasicOperator, UILogicalOperator } from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
 
 // Map of data types to component types for search fields inside blocks

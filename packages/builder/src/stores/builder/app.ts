@@ -1,6 +1,6 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import {
+import type {
   App,
   AppFeatures,
   AppIcon,

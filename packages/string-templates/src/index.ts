@@ -1,6 +1,7 @@
 import browserVM from "@budibase/vm-browserify"
 import vm from "vm"
-import { create, TemplateDelegate } from "handlebars"
+import type { TemplateDelegate } from "handlebars"
+import { create } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { postprocess, postprocessWithLogs, preprocess } from "./processors"
 import {
@@ -16,7 +17,7 @@ import {
 import { convertHBSBlock } from "./conversion"
 import { removeJSRunner, setJSRunner } from "./helpers/javascript"
 import manifest from "./manifest.json"
-import { Log, ProcessOptions } from "./types"
+import type { Log, ProcessOptions } from "./types"
 import { UserScriptError } from "./errors"
 import { isTest } from "./environment"
 

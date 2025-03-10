@@ -1,4 +1,4 @@
-import { Table, ViewV1Datasource } from "@budibase/types"
+import type { Table, ViewV1Datasource } from "@budibase/types"
 import BaseDataFetch from "./DataFetch"
 
 export default class ViewFetch extends BaseDataFetch<ViewV1Datasource, Table> {

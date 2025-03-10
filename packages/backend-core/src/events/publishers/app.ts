@@ -1,6 +1,5 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   App,
   AppCreatedEvent,
   AppUpdatedEvent,
@@ -15,6 +14,7 @@ import {
   AppExportedEvent,
   AppDuplicatedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 const created = async (app: App, timestamp?: string | number) => {
   const properties: AppCreatedEvent = {

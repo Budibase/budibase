@@ -1,6 +1,10 @@
 import BaseDataFetch from "./DataFetch"
 import { Helpers } from "@budibase/bbui"
-import { ExecuteQueryRequest, Query, QueryDatasource } from "@budibase/types"
+import type {
+  ExecuteQueryRequest,
+  Query,
+  QueryDatasource,
+} from "@budibase/types"
 import { get } from "svelte/store"
 
 export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {

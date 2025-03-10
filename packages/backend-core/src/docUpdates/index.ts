@@ -1,8 +1,6 @@
 import { asyncEventQueue, init as initQueue } from "../events/asyncEvents"
-import {
-  ProcessorMap,
-  default as DocumentUpdateProcessor,
-} from "../events/processors/async/DocumentUpdateProcessor"
+import type { ProcessorMap } from "../events/processors/async/DocumentUpdateProcessor"
+import { default as DocumentUpdateProcessor } from "../events/processors/async/DocumentUpdateProcessor"
 
 let processingPromise: Promise<void>
 let documentProcessor: DocumentUpdateProcessor

@@ -1,5 +1,5 @@
-import { Context, Request } from "koa"
-import {
+import type { Context, Request } from "koa"
+import type {
   User,
   Role,
   UserRoles,
@@ -9,10 +9,10 @@ import {
   Table,
   UserBindings,
 } from "../documents"
-import { FeatureFlag, License } from "../sdk"
-import { Files } from "formidable"
-import { EventType } from "../core"
-import { UserAgentContext } from "koa-useragent"
+import type { FeatureFlag, License } from "../sdk"
+import type { Files } from "formidable"
+import type { EventType } from "../core"
+import type { UserAgentContext } from "koa-useragent"
 
 export enum LoginMethod {
   API_KEY = "api_key",

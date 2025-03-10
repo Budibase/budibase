@@ -1,6 +1,6 @@
+import type { License } from "@budibase/types"
 import {
   Feature,
-  License,
   MonthlyQuotaName,
   QuotaType,
   QuotaUsageType,

@@ -3,7 +3,7 @@ import fs from "fs"
 import * as makeFiles from "./makeFiles"
 import { logErrorToFile, downloadFile, error } from "../utils"
 import yaml from "yaml"
-import { DockerCompose } from "./types"
+import type { DockerCompose } from "./types"
 
 const ERROR_FILE = "docker-error.log"
 const COMPOSE_URL =

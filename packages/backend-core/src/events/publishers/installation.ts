@@ -1,5 +1,6 @@
 import { publishEvent } from "../events"
-import { Event, VersionCheckedEvent, VersionChangeEvent } from "@budibase/types"
+import type { VersionCheckedEvent, VersionChangeEvent } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 async function versionChecked(version: string) {
   const properties: VersionCheckedEvent = {

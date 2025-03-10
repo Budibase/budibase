@@ -1,7 +1,11 @@
 import { InternalTables } from "../db/utils"
 import { getGlobalUser } from "./global"
 import { context, roles } from "@budibase/backend-core"
-import { ContextUserMetadata, UserCtx, UserMetadata } from "@budibase/types"
+import type {
+  ContextUserMetadata,
+  UserCtx,
+  UserMetadata,
+} from "@budibase/types"
 
 export async function getFullUser(
   userId: string

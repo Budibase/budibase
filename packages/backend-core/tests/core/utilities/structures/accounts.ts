@@ -1,13 +1,11 @@
 import { generator, quotas, uuid } from "."
 import { generateGlobalUserID } from "../../../../src/docIds"
+import type { Account, CloudAccount, SSOAccount } from "@budibase/types"
 import {
-  Account,
   AccountSSOProvider,
   AccountSSOProviderType,
   AuthType,
-  CloudAccount,
   Hosting,
-  SSOAccount,
 } from "@budibase/types"
 import sample from "lodash/sample"
 

@@ -1,7 +1,8 @@
-import { writable, get, derived, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 import { helpers } from "@budibase/shared-core"
-import { Store as StoreContext } from "."
-import { UIUser } from "@budibase/types"
+import type { Store as StoreContext } from "."
+import type { UIUser } from "@budibase/types"
 
 interface UIEnrichedUser extends UIUser {
   color: string

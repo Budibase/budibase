@@ -1,14 +1,12 @@
-import {
-  DocumentType,
+import type {
   ManyToManyRelationshipJson,
   RelationshipsJson,
   SqlQuery,
   Table,
-  TableSourceType,
-  SEPARATOR,
 } from "@budibase/types"
+import { DocumentType, TableSourceType, SEPARATOR } from "@budibase/types"
 import { DEFAULT_BB_DATASOURCE_ID } from "../constants"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 import environment from "../environment"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`

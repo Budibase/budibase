@@ -1,6 +1,9 @@
 import { sendSmtpEmail } from "../../utilities/workerRequests"
 import * as automationUtils from "../automationUtils"
-import { SmtpEmailStepInputs, BaseAutomationOutputs } from "@budibase/types"
+import type {
+  SmtpEmailStepInputs,
+  BaseAutomationOutputs,
+} from "@budibase/types"
 
 export async function run({
   inputs,

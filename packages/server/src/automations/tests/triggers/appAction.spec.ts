@@ -1,7 +1,7 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationResults } from "../utilities"
-import { Automation } from "@budibase/types"
+import type { Automation } from "@budibase/types"
 
 describe("app action trigger", () => {
   const config = new TestConfiguration()

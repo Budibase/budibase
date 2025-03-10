@@ -3,18 +3,14 @@ import { TemplateType } from "../constants"
 import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
-import {
-  SendEmailOpts,
-  SMTPInnerConfig,
-  EmailTemplatePurpose,
-  User,
-} from "@budibase/types"
+import type { SendEmailOpts, SMTPInnerConfig, User } from "@budibase/types"
+import { EmailTemplatePurpose } from "@budibase/types"
 import { configs, cache, objectStore, HTTPError } from "@budibase/backend-core"
 import ical from "ical-generator"
 import _ from "lodash"
 
 import nodemailer from "nodemailer"
-import SMTPTransport from "nodemailer/lib/smtp-transport"
+import type SMTPTransport from "nodemailer/lib/smtp-transport"
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
 const TYPE = TemplateType.EMAIL

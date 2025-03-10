@@ -1,5 +1,5 @@
-import { FindTableResponse } from "@budibase/types"
-import { Store as StoreContext } from "."
+import type { FindTableResponse } from "@budibase/types"
+import type { Store as StoreContext } from "."
 
 interface CacheActionStore {
   cache: {

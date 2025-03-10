@@ -1,5 +1,5 @@
 import { DocumentType } from "../../db/utils"
-import {
+import type {
   App,
   FetchComponentDefinitionResponse,
   Plugin,

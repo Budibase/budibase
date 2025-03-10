@@ -1,4 +1,4 @@
-import { Account, AccountMetadata } from "@budibase/types"
+import type { Account, AccountMetadata } from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class AccountAPI extends TestAPI {

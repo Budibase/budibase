@@ -1,6 +1,6 @@
 import { getAppClient } from "../redis/init"
 import { doWithDB, DocumentType } from "../db"
-import { Database, App } from "@budibase/types"
+import type { Database, App } from "@budibase/types"
 
 export enum AppState {
   INVALID = "invalid",

@@ -1,9 +1,5 @@
-import {
-  BBReferenceFieldSubType,
-  FieldConstraints,
-  FieldSchema,
-  FieldType,
-} from "@budibase/types"
+import type { FieldConstraints, FieldSchema } from "@budibase/types"
+import { BBReferenceFieldSubType, FieldType } from "@budibase/types"
 
 export function isDeprecatedSingleUserColumn(
   schema: Pick<FieldSchema, "type" | "subtype" | "constraints">

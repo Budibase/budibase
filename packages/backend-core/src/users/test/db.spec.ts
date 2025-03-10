@@ -1,4 +1,5 @@
-import { User, UserStatus } from "@budibase/types"
+import type { User } from "@budibase/types"
+import { UserStatus } from "@budibase/types"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { UserDB } from "../db"
 import { searchExistingEmails } from "../lookup"

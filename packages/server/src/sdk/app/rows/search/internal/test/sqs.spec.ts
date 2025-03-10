@@ -1,11 +1,10 @@
+import type { Table, ViewV2 } from "@budibase/types"
 import {
   AIOperationEnum,
   CalculationType,
   FieldType,
   RelationshipType,
   SourceName,
-  Table,
-  ViewV2,
   ViewV2Type,
 } from "@budibase/types"
 import { buildInternalFieldList } from "../sqs"

@@ -10,8 +10,8 @@ import { env as coreEnv } from "@budibase/backend-core"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import createKoaApp from "./koa"
-import Koa from "koa"
-import { Server } from "http"
+import type Koa from "koa"
+import type { Server } from "http"
 import { startup } from "./startup"
 
 let app: Koa, server: Server

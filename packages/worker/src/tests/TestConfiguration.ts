@@ -26,17 +26,18 @@ import {
   utils,
 } from "@budibase/backend-core"
 import structures, { CSRF_TOKEN } from "./structures"
-import {
+import type {
   SaveUserResponse,
   User,
   AuthToken,
   SCIMConfig,
-  ConfigType,
   SMTPConfig,
   SMTPInnerConfig,
 } from "@budibase/types"
+import { ConfigType } from "@budibase/types"
 import API from "./api"
-import jwt, { Secret } from "jsonwebtoken"
+import type { Secret } from "jsonwebtoken"
+import jwt from "jsonwebtoken"
 
 class TestConfiguration {
   server: any

@@ -1,5 +1,5 @@
-import { Table, Row, UserBindings } from "@budibase/types"
-import BudibaseEmitter from "./BudibaseEmitter"
+import type { Table, Row, UserBindings } from "@budibase/types"
+import type BudibaseEmitter from "./BudibaseEmitter"
 
 type BBEventOpts = {
   emitter: BudibaseEmitter

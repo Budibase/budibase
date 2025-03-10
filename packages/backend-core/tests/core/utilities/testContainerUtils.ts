@@ -1,6 +1,6 @@
 import { execSync } from "child_process"
 import { cloneDeep } from "lodash"
-import { GenericContainer, StartedTestContainer } from "testcontainers"
+import type { GenericContainer, StartedTestContainer } from "testcontainers"
 
 const IPV4_PORT_REGEX = new RegExp(`0\\.0\\.0\\.0:(\\d+)->(\\d+)/tcp`, "g")
 

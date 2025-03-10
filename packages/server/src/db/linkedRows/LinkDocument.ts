@@ -1,5 +1,6 @@
 import { generateLinkID, generateJunctionTableID } from "../utils"
-import { FieldType, LinkDocument } from "@budibase/types"
+import type { LinkDocument } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to

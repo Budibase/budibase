@@ -1,5 +1,5 @@
-import { Event, Identity, Group } from "@budibase/types"
-import { EventProcessor } from "./types"
+import type { Event, Identity, Group } from "@budibase/types"
+import type { EventProcessor } from "./types"
 
 export default class Processor implements EventProcessor {
   initialised = false

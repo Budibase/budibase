@@ -5,7 +5,8 @@ import {
   roles,
   users,
 } from "@budibase/backend-core"
-import { PermissionLevel, PermissionType, UserCtx } from "@budibase/types"
+import type { UserCtx } from "@budibase/types"
+import { PermissionLevel, PermissionType } from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
 import { paramResource } from "./resourceId"

@@ -1,10 +1,10 @@
 import { events, tenancy, users as usersCore } from "@budibase/backend-core"
-import {
+import type {
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
-  EmailTemplatePurpose,
 } from "@budibase/types"
+import { EmailTemplatePurpose } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 
 export async function invite(

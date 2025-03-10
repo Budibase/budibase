@@ -1,4 +1,4 @@
-import { Ctx } from "@budibase/types"
+import type { Ctx } from "@budibase/types"
 import { IsolatedVM } from "../../jsRunner/vm"
 import { iifeWrapper, UserScriptError } from "@budibase/string-templates"
 

@@ -1,12 +1,7 @@
 import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
-import {
-  FieldType,
-  RenameColumn,
-  Row,
-  RowAttachment,
-  Table,
-} from "@budibase/types"
+import type { RenameColumn, Row, RowAttachment, Table } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 
 export class AttachmentCleanup {
   static async coreCleanup(fileListFn: () => string[]): Promise<void> {

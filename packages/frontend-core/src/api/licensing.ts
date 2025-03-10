@@ -1,4 +1,4 @@
-import {
+import type {
   ActivateLicenseKeyRequest,
   ActivateLicenseKeyResponse,
   ActivateOfflineLicenseTokenRequest,
@@ -9,7 +9,7 @@ import {
   QuotaUsage,
   RefreshOfflineLicenseResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface LicensingEndpoints {
   activateLicenseKey: (

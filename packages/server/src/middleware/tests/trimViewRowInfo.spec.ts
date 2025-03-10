@@ -1,9 +1,7 @@
 import { generator } from "@budibase/backend-core/tests"
+import type { BBRequest, Row, Table } from "@budibase/types"
 import {
-  BBRequest,
   FieldType,
-  Row,
-  Table,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
 } from "@budibase/types"
@@ -21,7 +19,7 @@ jest.mock("../../sdk", () => ({
 }))
 
 import sdk from "../../sdk"
-import { Next } from "koa"
+import type { Next } from "koa"
 
 const tableId = utils.generateTableID()
 const mockGetView = sdk.views.get as jest.MockedFunction<typeof sdk.views.get>

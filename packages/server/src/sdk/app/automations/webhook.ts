@@ -1,4 +1,4 @@
-import { Webhook, WebhookActionType } from "@budibase/types"
+import type { Webhook, WebhookActionType } from "@budibase/types"
 import { db as dbCore, context } from "@budibase/backend-core"
 import { generateWebhookID } from "../../../db/utils"
 

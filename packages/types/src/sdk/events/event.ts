@@ -1,5 +1,5 @@
-import { Hosting } from "../hosting"
-import { Group, Identity } from "./identification"
+import type { Hosting } from "../hosting"
+import type { Group, Identity } from "./identification"
 
 export enum Event {
   // USER

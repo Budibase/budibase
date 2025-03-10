@@ -8,21 +8,19 @@ import { EmailUnavailableError, HTTPError } from "../errors"
 import * as platform from "../platform"
 import * as sessions from "../security/sessions"
 import * as usersCore from "./users"
-import {
+import type {
   Account,
   BulkUserCreated,
   BulkUserDeleted,
-  isSSOAccount,
-  isSSOUser,
   SaveUserOpts,
   User,
   UserGroup,
   UserIdentifier,
-  UserStatus,
   PlatformUserBySsoId,
   PlatformUserById,
   AnyDocument,
 } from "@budibase/types"
+import { isSSOAccount, isSSOUser, UserStatus } from "@budibase/types"
 import {
   getAccountHolderFromUsers,
   isAdmin,

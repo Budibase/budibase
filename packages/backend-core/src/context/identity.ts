@@ -1,13 +1,12 @@
-import {
+import type {
   IdentityContext,
-  IdentityType,
   User,
-  isCloudAccount,
   Account,
   AccountUserContext,
   UserContext,
   Ctx,
 } from "@budibase/types"
+import { IdentityType, isCloudAccount } from "@budibase/types"
 import * as context from "."
 
 export function getIdentity(): IdentityContext | undefined {

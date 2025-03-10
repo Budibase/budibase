@@ -1,6 +1,7 @@
-import { writable, get, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 
-import { Store as StoreContext } from "."
+import type { Store as StoreContext } from "."
 import { parseCellID } from "../lib/utils"
 
 interface MenuStoreData {

@@ -1,4 +1,5 @@
-import { FieldType, Table } from "@budibase/types"
+import type { Table } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { PROTECTED_INTERNAL_COLUMNS } from "./constants"
 
 const allowDisplayColumnByType: Record<FieldType, boolean> = {

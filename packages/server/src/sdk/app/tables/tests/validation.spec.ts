@@ -1,12 +1,11 @@
 import { populateExternalTableSchemas } from "../validation"
 import { cloneDeep } from "lodash/fp"
+import type { Datasource, Table } from "@budibase/types"
 import {
   AutoReason,
-  Datasource,
   FieldType,
   RelationshipType,
   SourceName,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 import { isEqual } from "lodash"

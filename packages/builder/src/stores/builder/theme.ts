@@ -2,7 +2,12 @@ import { get } from "svelte/store"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import { ensureValidTheme, DefaultAppTheme } from "@budibase/shared-core"
-import { App, UpdateAppResponse, Theme, AppCustomTheme } from "@budibase/types"
+import type {
+  App,
+  UpdateAppResponse,
+  Theme,
+  AppCustomTheme,
+} from "@budibase/types"
 
 interface ThemeState {
   theme: Theme

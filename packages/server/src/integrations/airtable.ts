@@ -1,9 +1,11 @@
-import {
+import type {
   ConnectionInfo,
-  DatasourceFeature,
-  DatasourceFieldType,
   Integration,
   IntegrationBase,
+} from "@budibase/types"
+import {
+  DatasourceFeature,
+  DatasourceFieldType,
   QueryType,
 } from "@budibase/types"
 

@@ -1,4 +1,4 @@
-import { Plugin } from "../"
+import type { Plugin } from "../"
 
 export interface BudibaseAppProps {
   title: string

@@ -1,4 +1,4 @@
-import {
+import type {
   CreateEnvironmentVariableRequest,
   CreateEnvironmentVariableResponse,
   DeleteEnvironmentVariablesResponse,
@@ -7,7 +7,7 @@ import {
   UpdateEnvironmentVariableRequest,
   UpdateEnvironmentVariableResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface EnvironmentVariableEndpoints {
   checkEnvironmentVariableStatus: () => Promise<StatusEnvironmentVariableResponse>

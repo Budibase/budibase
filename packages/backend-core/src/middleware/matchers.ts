@@ -1,4 +1,4 @@
-import { Ctx, EndpointMatcher, RegexMatcher } from "@budibase/types"
+import type { Ctx, EndpointMatcher, RegexMatcher } from "@budibase/types"
 
 const PARAM_REGEX = /\/:(.*?)(\/.*)?$/g
 

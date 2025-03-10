@@ -1,5 +1,5 @@
 import { db as dbCore, tenancy } from "@budibase/backend-core"
-import {
+import type {
   Document,
   UserCtx,
   ApiKeyDoc,

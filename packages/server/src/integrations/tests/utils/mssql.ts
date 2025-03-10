@@ -1,8 +1,11 @@
-import { Datasource, SourceName } from "@budibase/types"
+import type { Datasource } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
-import { generator, testContainerUtils } from "@budibase/backend-core/tests"
+import type { testContainerUtils } from "@budibase/backend-core/tests"
+import { generator } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex, { Knex } from "knex"
+import type { Knex } from "knex"
+import knex from "knex"
 import { MSSQL_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>

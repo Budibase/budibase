@@ -1,9 +1,9 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   AIConfigCreatedEvent,
   AIConfigUpdatedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 async function AIConfigCreated(timestamp?: string | number) {
   const properties: AIConfigCreatedEvent = {}

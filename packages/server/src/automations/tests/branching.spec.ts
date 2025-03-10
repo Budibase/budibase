@@ -1,5 +1,6 @@
 import * as automation from "../index"
-import { Table, AutomationStatus, EmptyFilterOption } from "@budibase/types"
+import type { Table } from "@budibase/types"
+import { AutomationStatus, EmptyFilterOption } from "@budibase/types"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 

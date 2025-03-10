@@ -1,8 +1,13 @@
-import { derived, get, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { tables } from "./tables"
 import { API } from "@/api"
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { CreateViewRequest, UpdateViewRequest, ViewV2 } from "@budibase/types"
+import type {
+  CreateViewRequest,
+  UpdateViewRequest,
+  ViewV2,
+} from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 
 interface BuilderViewV2Store {

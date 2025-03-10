@@ -1,10 +1,10 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   RowsImportedEvent,
   RowsCreatedEvent,
   Table,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 const created = async (count: number, timestamp?: string | number) => {
   const properties: RowsCreatedEvent = {

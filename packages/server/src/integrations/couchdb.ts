@@ -1,11 +1,13 @@
-import {
+import type {
   ConnectionInfo,
   Database,
-  DatasourceFeature,
-  DatasourceFieldType,
   Document,
   Integration,
   IntegrationBase,
+} from "@budibase/types"
+import {
+  DatasourceFeature,
+  DatasourceFieldType,
   QueryType,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"

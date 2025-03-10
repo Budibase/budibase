@@ -1,13 +1,8 @@
 import { context, HTTPError } from "@budibase/backend-core"
 import env from "../../../../../environment"
 import { getRowParams, InternalTables } from "../../../../../db/utils"
-import {
-  Database,
-  DocumentType,
-  Row,
-  Table,
-  TableSchema,
-} from "@budibase/types"
+import type { Database, Row, Table, TableSchema } from "@budibase/types"
+import { DocumentType } from "@budibase/types"
 import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import {
   csv,
@@ -23,7 +18,7 @@ import {
   migrateToInMemoryView,
 } from "../../../../../api/controllers/view/utils"
 import sdk from "../../../../../sdk"
-import { ExportRowsParams, ExportRowsResult } from "../types"
+import type { ExportRowsParams, ExportRowsResult } from "../types"
 import { breakRowIdField } from "../../../../../integrations/utils"
 
 export async function exportRows(

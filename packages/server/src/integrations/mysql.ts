@@ -1,20 +1,22 @@
-import {
+import type {
   Integration,
-  DatasourceFieldType,
-  QueryType,
   SqlQuery,
   Table,
   TableSchema,
   DatasourcePlus,
-  DatasourceFeature,
   ConnectionInfo,
-  SourceName,
   Schema,
-  TableSourceType,
   DatasourcePlusQueryResponse,
   SqlQueryBinding,
-  SqlClient,
   EnrichedQueryJson,
+} from "@budibase/types"
+import {
+  DatasourceFieldType,
+  QueryType,
+  DatasourceFeature,
+  SourceName,
+  TableSourceType,
+  SqlClient,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -25,7 +27,7 @@ import {
   HOST_ADDRESS,
 } from "./utils"
 import { isDate, NUMBER_REGEX } from "../utilities"
-import { MySQLColumn } from "./base/types"
+import type { MySQLColumn } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import { sql } from "@budibase/backend-core"
 import mysql from "mysql2/promise"

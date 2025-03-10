@@ -1,23 +1,25 @@
-import {
+import type {
   ConnectionInfo,
-  DatasourceFeature,
-  DatasourceFieldType,
   DatasourcePlus,
-  FieldType,
   Integration,
-  Operation,
   PaginationJson,
-  QueryType,
   Row,
   Schema,
   SearchFilters,
   SortJson,
   Table,
   TableRequest,
-  TableSourceType,
   DatasourcePlusQueryResponse,
-  BBReferenceFieldSubType,
   EnrichedQueryJson,
+} from "@budibase/types"
+import {
+  DatasourceFeature,
+  DatasourceFieldType,
+  FieldType,
+  Operation,
+  QueryType,
+  TableSourceType,
+  BBReferenceFieldSubType,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import {
@@ -25,7 +27,8 @@ import {
   checkExternalTables,
   finaliseExternalTables,
 } from "./utils"
-import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
+import type { GoogleSpreadsheetRow } from "google-spreadsheet"
+import { GoogleSpreadsheet } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"

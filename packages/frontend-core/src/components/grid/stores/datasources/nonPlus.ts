@@ -1,7 +1,8 @@
-import { SortOrder, UIDatasource } from "@budibase/types"
+import type { UIDatasource } from "@budibase/types"
+import { SortOrder } from "@budibase/types"
 import { get } from "svelte/store"
-import { Store as StoreContext } from ".."
-import { DatasourceNonPlusActions } from "."
+import type { Store as StoreContext } from ".."
+import type { DatasourceNonPlusActions } from "."
 
 interface NonPlusActions {
   nonPlus: {

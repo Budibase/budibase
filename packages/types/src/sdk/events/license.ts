@@ -1,4 +1,4 @@
-import { PlanType, PriceDuration } from "../licensing"
+import type { PlanType, PriceDuration } from "../licensing"
 
 export interface LicensePlanChangedEvent {
   accountId: string

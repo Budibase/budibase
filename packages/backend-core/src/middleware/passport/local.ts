@@ -2,7 +2,7 @@ import { UserStatus } from "../../constants"
 import { compare } from "../../utils"
 import * as users from "../../users"
 import { authError } from "./utils"
-import { Ctx } from "@budibase/types"
+import type { Ctx } from "@budibase/types"
 
 const INVALID_ERR = "Invalid credentials"
 const EXPIRED = "This account has expired. Please reset your password"

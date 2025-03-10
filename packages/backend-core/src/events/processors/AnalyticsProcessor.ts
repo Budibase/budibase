@@ -1,5 +1,6 @@
-import { Event, Identity, Group, IdentityType } from "@budibase/types"
-import { EventProcessor } from "./types"
+import type { Identity, Group } from "@budibase/types"
+import { Event, IdentityType } from "@budibase/types"
+import type { EventProcessor } from "./types"
 import env from "../../environment"
 import * as analytics from "../analytics"
 import PosthogProcessor from "./posthog"

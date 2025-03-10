@@ -1,6 +1,5 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   AppBackfillSucceededEvent,
   AppBackfillFailedEvent,
   TenantBackfillSucceededEvent,
@@ -8,6 +7,7 @@ import {
   InstallationBackfillSucceededEvent,
   InstallationBackfillFailedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 import env from "../../environment"
 
 const shouldSkip = !env.SELF_HOSTED && !env.isDev()

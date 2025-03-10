@@ -2,7 +2,7 @@ import * as setup from "../../api/routes/tests/utilities"
 import { processMigrations } from "../migrationsProcessor"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
 import { context } from "@budibase/backend-core"
-import { AppMigration } from ".."
+import type { AppMigration } from ".."
 
 const futureTimestamp = `20500101174029`
 

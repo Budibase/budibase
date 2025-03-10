@@ -5,11 +5,12 @@ import { updateEntityMetadata } from "../utilities"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { quotas } from "@budibase/pro"
-import { Automation, AutomationJob, MetadataType } from "@budibase/types"
+import type { Automation, AutomationJob } from "@budibase/types"
+import { MetadataType } from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
-import { JobId } from "bull"
+import type { JobId } from "bull"
 
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 let Runner: Thread

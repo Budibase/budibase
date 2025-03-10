@@ -1,5 +1,5 @@
 import { builderSocket } from "../../websockets"
-import { App, SocketSession } from "@budibase/types"
+import type { App, SocketSession } from "@budibase/types"
 
 export const enrichApps = async (apps: App[]) => {
   // Sessions can only exist for dev app IDs

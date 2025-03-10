@@ -1,4 +1,4 @@
-import { Document } from "../"
+import type { Document } from "../"
 
 export interface RowValue {
   rev: string

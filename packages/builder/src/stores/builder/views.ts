@@ -1,9 +1,10 @@
 import { DerivedBudiStore } from "../BudiStore"
 import { tables } from "./tables"
 import { API } from "@/api"
-import { View } from "@budibase/types"
+import type { View } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
-import { derived, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { derived } from "svelte/store"
 
 interface BuilderViewStore {
   selectedViewName: string | null

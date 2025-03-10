@@ -1,6 +1,6 @@
-import { License } from "../../../sdk"
-import { Account, DevInfo, User } from "../../../documents"
-import { FeatureFlags } from "@budibase/types"
+import type { License } from "../../../sdk"
+import type { Account, DevInfo, User } from "../../../documents"
+import type { FeatureFlags } from "@budibase/types"
 
 export interface GenerateAPIKeyRequest {
   userId?: string

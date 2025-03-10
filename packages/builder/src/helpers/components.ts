@@ -8,7 +8,7 @@ import {
 } from "@budibase/string-templates"
 import { capitalise } from "@/helpers"
 import { Constants } from "@budibase/frontend-core"
-import { Component, ComponentContext } from "@budibase/types"
+import type { Component, ComponentContext } from "@budibase/types"
 
 const { ContextScopes } = Constants
 

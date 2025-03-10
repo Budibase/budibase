@@ -3,13 +3,8 @@ import { API } from "@/api"
 import { auth, admin } from "@/stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "@/components/portal/licensing/constants"
-import {
-  License,
-  MonthlyQuotaName,
-  PlanModel,
-  QuotaUsage,
-  StaticQuotaName,
-} from "@budibase/types"
+import type { License, QuotaUsage } from "@budibase/types"
+import { MonthlyQuotaName, PlanModel, StaticQuotaName } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 const UNLIMITED = -1

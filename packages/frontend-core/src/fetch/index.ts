@@ -10,8 +10,12 @@ import UserFetch from "./UserFetch"
 import GroupUserFetch from "./GroupUserFetch"
 import CustomFetch from "./CustomFetch"
 import QueryArrayFetch from "./QueryArrayFetch"
-import { APIClient } from "../api/types"
-import { DataFetchDatasource, Table, ViewV2Enriched } from "@budibase/types"
+import type { APIClient } from "../api/types"
+import type {
+  DataFetchDatasource,
+  Table,
+  ViewV2Enriched,
+} from "@budibase/types"
 
 export type DataFetchType = keyof typeof DataFetchMap
 

@@ -1,7 +1,7 @@
 import sdk from "../../sdk"
 import { events, context, db } from "@budibase/backend-core"
 import { DocumentType } from "../../db/utils"
-import {
+import type {
   App,
   Ctx,
   ExportAppDumpRequest,

@@ -1,4 +1,4 @@
-import { Screen, Component } from "@budibase/types"
+import type { Screen, Component } from "@budibase/types"
 
 export function findInSettings(screen: Screen, toFind: string) {
   const foundIn: { setting: string; value: string }[] = []

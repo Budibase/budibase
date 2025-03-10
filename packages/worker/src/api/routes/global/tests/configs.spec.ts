@@ -4,7 +4,8 @@ import { TestConfiguration, structures, mocks } from "../../../../tests"
 
 mocks.email.mock()
 import { events } from "@budibase/backend-core"
-import { GetPublicSettingsResponse, Config, ConfigType } from "@budibase/types"
+import type { GetPublicSettingsResponse, Config } from "@budibase/types"
+import { ConfigType } from "@budibase/types"
 
 describe("configs", () => {
   const config = new TestConfiguration()

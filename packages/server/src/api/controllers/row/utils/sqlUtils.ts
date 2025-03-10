@@ -1,15 +1,17 @@
-import {
+import type {
   DatasourcePlusQueryResponse,
-  DSPlusOperation,
-  FieldType,
-  isManyToOne,
-  isOneToMany,
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
   Row,
   Table,
   ViewV2,
+} from "@budibase/types"
+import {
+  DSPlusOperation,
+  FieldType,
+  isManyToOne,
+  isOneToMany,
 } from "@budibase/types"
 import { breakExternalTableId } from "../../../../integrations/utils"
 import { generateJunctionTableID } from "../../../../db/utils"

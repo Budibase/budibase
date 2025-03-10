@@ -2,14 +2,8 @@ import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import nock from "nock"
 
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import {
-  Datasource,
-  FieldType,
-  Row,
-  SourceName,
-  Table,
-  TableSourceType,
-} from "@budibase/types"
+import type { Datasource, Row, Table } from "@budibase/types"
+import { FieldType, SourceName, TableSourceType } from "@budibase/types"
 import { GoogleSheetsMock } from "./utils/googlesheets"
 
 describe("Google Sheets Integration", () => {

@@ -1,4 +1,4 @@
-import { AccountMetadata } from "@budibase/types"
+import type { AccountMetadata } from "@budibase/types"
 import {
   db,
   StaticDatabases,

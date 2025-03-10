@@ -35,15 +35,15 @@ import {
 } from "@/constants/backend"
 import { BudiStore } from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
-import {
+import type {
   ComponentDefinition,
   ComponentSetting,
   Component,
   ComponentCondition,
-  FieldType,
   Screen,
   Table,
 } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
 import { getSequentialName } from "@/helpers/duplicate"
 

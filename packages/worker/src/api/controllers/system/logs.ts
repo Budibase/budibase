@@ -1,4 +1,4 @@
-import { GetLogResponse, UserCtx } from "@budibase/types"
+import type { GetLogResponse, UserCtx } from "@budibase/types"
 import { installation, logging } from "@budibase/backend-core"
 
 export async function getLogs(ctx: UserCtx<void, GetLogResponse>) {

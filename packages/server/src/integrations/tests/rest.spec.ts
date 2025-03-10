@@ -4,7 +4,7 @@ import { BodyType, RestAuthType } from "@budibase/types"
 import { Response } from "node-fetch"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 import { createServer } from "http"
-import { AddressInfo } from "net"
+import type { AddressInfo } from "net"
 
 const UUID_REGEX =
   "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"

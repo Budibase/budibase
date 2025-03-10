@@ -1,8 +1,5 @@
-import {
-  AIOperationEnum,
-  OperationFieldsType,
-  OperationFieldTypeEnum,
-} from "@budibase/types"
+import type { OperationFieldsType } from "@budibase/types"
+import { AIOperationEnum, OperationFieldTypeEnum } from "@budibase/types"
 
 export const AIOperations = {
   SUMMARISE_TEXT: {

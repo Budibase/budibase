@@ -1,9 +1,9 @@
+import type { AutomationStepDefinition } from "@budibase/types"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepDefinition,
   AutomationStepType,
   SortOrder,
 } from "@budibase/types"

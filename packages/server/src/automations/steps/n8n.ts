@@ -1,10 +1,8 @@
-import fetch, { HeadersInit } from "node-fetch"
+import type { HeadersInit } from "node-fetch"
+import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
-import {
-  HttpMethod,
-  ExternalAppStepOutputs,
-  n8nStepInputs,
-} from "@budibase/types"
+import type { ExternalAppStepOutputs, n8nStepInputs } from "@budibase/types"
+import { HttpMethod } from "@budibase/types"
 
 export async function run({
   inputs,

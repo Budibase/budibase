@@ -1,14 +1,12 @@
 import { events } from "@budibase/backend-core"
 import * as setup from "./utilities"
+import type { SaveTableRequest, Table, View } from "@budibase/types"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   QuotaUsageType,
-  SaveTableRequest,
   StaticQuotaName,
-  Table,
   TableSourceType,
-  View,
   ViewCalculation,
 } from "@budibase/types"
 import { quotas } from "@budibase/pro"

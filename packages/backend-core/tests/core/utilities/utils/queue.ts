@@ -1,4 +1,4 @@
-import { Queue } from "bull"
+import type { Queue } from "bull"
 import { GenericContainer, Wait } from "testcontainers"
 import { startContainer } from "../testContainerUtils"
 

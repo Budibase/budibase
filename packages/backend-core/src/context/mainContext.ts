@@ -10,8 +10,14 @@ import {
   StaticDatabases,
   DEFAULT_TENANT_ID,
 } from "../constants"
-import { Database, IdentityContext, Snippet, App, Table } from "@budibase/types"
-import { ContextMap } from "./types"
+import type {
+  Database,
+  IdentityContext,
+  Snippet,
+  App,
+  Table,
+} from "@budibase/types"
+import type { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
 

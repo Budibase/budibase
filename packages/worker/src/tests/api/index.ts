@@ -1,4 +1,4 @@
-import TestConfiguration from "../TestConfiguration"
+import type TestConfiguration from "../TestConfiguration"
 import { AccountAPI } from "./accounts"
 import { AuthAPI } from "./auth"
 import { ConfigAPI } from "./configs"

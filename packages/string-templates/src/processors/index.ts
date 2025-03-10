@@ -3,7 +3,7 @@ import * as preprocessor from "./preprocessor"
 import type { Preprocessor } from "./preprocessor"
 import * as postprocessor from "./postprocessor"
 import type { Postprocessor } from "./postprocessor"
-import { Log, ProcessOptions } from "../types"
+import type { Log, ProcessOptions } from "../types"
 
 function process(
   output: string,

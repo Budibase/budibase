@@ -1,10 +1,5 @@
-import {
-  IncludeRelationship,
-  Operation,
-  Row,
-  Table,
-  ViewV2,
-} from "@budibase/types"
+import type { Row, Table, ViewV2 } from "@budibase/types"
+import { IncludeRelationship, Operation } from "@budibase/types"
 import { docIds, HTTPError } from "@budibase/backend-core"
 import { handleRequest } from "../../../api/controllers/row/external"
 import { breakRowIdField } from "../../../integrations/utils"

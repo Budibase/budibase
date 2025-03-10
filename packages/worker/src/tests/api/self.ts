@@ -1,4 +1,4 @@
-import { User } from "@budibase/types"
+import type { User } from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class SelfAPI extends TestAPI {

@@ -1,11 +1,11 @@
-import {
+import type {
   AccessibleRolesResponse,
   DeleteRoleResponse,
   FetchRolesResponse,
   SaveRoleRequest,
   SaveRoleResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface RoleEndpoints {
   deleteRole: (id: string, rev: string) => Promise<DeleteRoleResponse>

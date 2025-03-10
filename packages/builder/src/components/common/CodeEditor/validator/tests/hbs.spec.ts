@@ -1,5 +1,5 @@
 import { validateHbsTemplate } from "../hbs"
-import { CodeValidator } from "@/types"
+import type { CodeValidator } from "@/types"
 
 describe("hbs validator", () => {
   it("validates empty strings", () => {

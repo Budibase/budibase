@@ -1,4 +1,5 @@
-import { Table, TableSourceType } from "@budibase/types"
+import type { Table } from "@budibase/types"
+import { TableSourceType } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import { docIds } from "@budibase/backend-core"
 

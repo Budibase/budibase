@@ -1,6 +1,6 @@
-import { IdentityContext, Snippet, Table, VM } from "@budibase/types"
-import { OAuth2Client } from "google-auth-library"
-import { GoogleSpreadsheet } from "google-spreadsheet"
+import type { IdentityContext, Snippet, Table, VM } from "@budibase/types"
+import type { OAuth2Client } from "google-auth-library"
+import type { GoogleSpreadsheet } from "google-spreadsheet"
 
 // keep this out of Budibase types, don't want to expose context info
 export type ContextMap = {

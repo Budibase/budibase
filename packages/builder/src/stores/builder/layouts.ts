@@ -2,7 +2,7 @@ import { derived, get } from "svelte/store"
 import { componentStore } from "@/stores/builder"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import { Layout } from "@budibase/types"
+import type { Layout } from "@budibase/types"
 
 interface LayoutState {
   layouts: Layout[]

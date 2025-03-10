@@ -1,7 +1,8 @@
 import { features } from "@budibase/backend-core"
-import { Ctx, FeatureFlag } from "@budibase/types"
+import type { Ctx } from "@budibase/types"
+import { FeatureFlag } from "@budibase/types"
 
-import { AnyZodObject } from "zod"
+import type { AnyZodObject } from "zod"
 import { fromZodError } from "zod-validation-error"
 
 function validate(schema: AnyZodObject, property: "body" | "params") {

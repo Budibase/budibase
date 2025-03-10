@@ -1,5 +1,5 @@
 import { validateJsTemplate } from "../js"
-import { CodeValidator } from "@/types"
+import type { CodeValidator } from "@/types"
 
 describe("js validator", () => {
   it("validates valid code", () => {

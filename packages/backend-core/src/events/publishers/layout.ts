@@ -1,10 +1,10 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   Layout,
   LayoutCreatedEvent,
   LayoutDeletedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 async function created(layout: Layout, timestamp?: string | number) {
   const properties: LayoutCreatedEvent = {

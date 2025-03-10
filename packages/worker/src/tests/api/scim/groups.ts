@@ -1,10 +1,11 @@
-import {
+import type {
   ScimCreateGroupRequest,
   ScimGroupListResponse,
   ScimGroupResponse,
   ScimUpdateRequest,
 } from "@budibase/types"
-import { RequestSettings, ScimTestAPI } from "./shared"
+import type { RequestSettings } from "./shared"
+import { ScimTestAPI } from "./shared"
 
 export class ScimGroupsAPI extends ScimTestAPI {
   get = async (

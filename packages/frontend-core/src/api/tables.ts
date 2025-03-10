@@ -1,4 +1,4 @@
-import {
+import type {
   BulkImportRequest,
   BulkImportResponse,
   CsvToJsonRequest,
@@ -19,7 +19,7 @@ import {
   MigrateTableRequest,
   DeleteTableResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface TableEndpoints {
   fetchTableDefinition: (tableId: string) => Promise<FindTableResponse>

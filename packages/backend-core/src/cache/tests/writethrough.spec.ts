@@ -2,7 +2,7 @@ import { DBTestConfiguration } from "../../../tests/extra"
 import { structures } from "../../../tests"
 import { Writethrough } from "../writethrough"
 import { getDB } from "../../db"
-import { Document } from "@budibase/types"
+import type { Document } from "@budibase/types"
 import tk from "timekeeper"
 
 tk.freeze(Date.now())

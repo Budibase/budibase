@@ -6,40 +6,42 @@ import {
   BUILTIN_ACTION_DEFINITIONS,
   TRIGGER_DEFINITIONS,
 } from "../../automations"
-import {
-  AIOperationEnum,
-  AutoFieldSubType,
+import type {
   Automation,
-  AutomationActionStepId,
-  AutomationEventType,
   AutomationResults,
-  AutomationStatus,
   AutomationStep,
-  AutomationStepType,
   AutomationTrigger,
-  AutomationTriggerStepId,
-  BBReferenceFieldSubType,
   CreateViewRequest,
   Datasource,
   FieldSchema,
+  Query,
+  Role,
+  Table,
+  Webhook,
+  DeepPartial,
+  AutomationTriggerResult,
+  CreateEnvironmentVariableRequest,
+} from "@budibase/types"
+import {
+  AIOperationEnum,
+  AutoFieldSubType,
+  AutomationActionStepId,
+  AutomationEventType,
+  AutomationStatus,
+  AutomationStepType,
+  AutomationTriggerStepId,
+  BBReferenceFieldSubType,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   JsonFieldSubType,
   LoopStepType,
-  Query,
-  Role,
   SourceName,
-  Table,
   TableSourceType,
-  Webhook,
   WebhookActionType,
   BuiltinPermissionID,
-  DeepPartial,
   FilterCondition,
-  AutomationTriggerResult,
-  CreateEnvironmentVariableRequest,
 } from "@budibase/types"
-import { LoopInput } from "../../definitions/automations"
+import type { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 export {

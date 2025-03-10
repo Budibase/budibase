@@ -1,4 +1,4 @@
-import Router from "@koa/router"
+import type Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
 import userRoutes from "./global/users"
 import configRoutes from "./global/configs"

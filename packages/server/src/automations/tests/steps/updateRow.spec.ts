@@ -1,11 +1,9 @@
+import type { FieldSchema, Row, Table } from "@budibase/types"
 import {
-  FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
   RelationshipType,
-  Row,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"

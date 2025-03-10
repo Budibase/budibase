@@ -5,7 +5,8 @@ import {
   processFormulas,
 } from "../../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
-import { Table, Row, FormulaType, FieldType, ViewV2 } from "@budibase/types"
+import type { Table, Row, ViewV2 } from "@budibase/types"
+import { FormulaType, FieldType } from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
 import { cloneDeep, merge } from "lodash/fp"

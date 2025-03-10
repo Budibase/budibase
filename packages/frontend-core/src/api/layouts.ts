@@ -1,9 +1,9 @@
-import {
+import type {
   DeleteLayoutResponse,
   SaveLayoutRequest,
   SaveLayoutResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface LayoutEndpoints {
   saveLayout: (layout: SaveLayoutRequest) => Promise<SaveLayoutResponse>

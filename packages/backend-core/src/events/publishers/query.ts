@@ -1,6 +1,5 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   Datasource,
   Query,
   QueryPreview,
@@ -11,6 +10,7 @@ import {
   QueryPreviewedEvent,
   QueriesRunEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 
 const created = async (
   datasource: Datasource,

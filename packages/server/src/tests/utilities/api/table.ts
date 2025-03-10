@@ -1,4 +1,4 @@
-import {
+import type {
   BulkImportRequest,
   BulkImportResponse,
   CsvToJsonRequest,
@@ -12,7 +12,8 @@ import {
   ValidateTableImportRequest,
   ValidateTableImportResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 
 export class TableAPI extends TestAPI {
   save = async (

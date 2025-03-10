@@ -1,5 +1,5 @@
-import { PurchasedPlan, Quotas, Feature, Billing } from "."
-import { ISO8601 } from "../../shared"
+import type { PurchasedPlan, Quotas, Feature, Billing } from "."
+import type { ISO8601 } from "../../shared"
 
 export interface OfflineIdentifier {
   installId: string

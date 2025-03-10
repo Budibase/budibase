@@ -1,11 +1,8 @@
+import type { RenameColumn, Table, TableRequest, ViewV2 } from "@budibase/types"
 import {
   FieldType,
   Operation,
   RelationshipType,
-  RenameColumn,
-  Table,
-  TableRequest,
-  ViewV2,
   AutoFieldSubType,
 } from "@budibase/types"
 import { context, HTTPError } from "@budibase/backend-core"

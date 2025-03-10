@@ -1,6 +1,5 @@
 import { publishEvent } from "../events"
-import {
-  Event,
+import type {
   LoginEvent,
   LoginSource,
   LogoutEvent,
@@ -10,6 +9,7 @@ import {
   SSOType,
   SSOUpdatedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 import { identification } from ".."
 
 async function login(source: LoginSource, email: string) {

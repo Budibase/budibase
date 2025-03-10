@@ -1,9 +1,9 @@
-import {
+import type {
   CreateAppBackupResponse,
   ImportAppBackupResponse,
   SearchAppBackupsRequest,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface BackupEndpoints {
   createManualBackup: (appId: string) => Promise<CreateAppBackupResponse>

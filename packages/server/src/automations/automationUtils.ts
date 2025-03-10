@@ -4,13 +4,13 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import sdk from "../sdk"
-import {
+import type {
   AutomationAttachment,
   BaseIOStructure,
   FieldSchema,
-  FieldType,
   Row,
 } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
 import path from "path"

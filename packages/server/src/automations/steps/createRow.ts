@@ -5,7 +5,7 @@ import {
   sendAutomationAttachmentsToStorage,
 } from "../automationUtils"
 import { buildCtx } from "./utils"
-import {
+import type {
   ContextEmitter,
   CreateRowStepInputs,
   CreateRowStepOutputs,

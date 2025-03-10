@@ -1,4 +1,4 @@
-import {
+import type {
   GetAutomationActionDefinitionsResponse,
   GetAutomationTriggerDefinitionsResponse,
 } from "../../api"

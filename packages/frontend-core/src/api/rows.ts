@@ -1,4 +1,4 @@
-import {
+import type {
   DeleteRowRequest,
   ExportRowsRequest,
   FindRowResponse,
@@ -8,7 +8,7 @@ import {
   SaveRowRequest,
   SaveRowResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface RowEndpoints {
   fetchRow: (tableId: string, rowId: string) => Promise<FindRowResponse>

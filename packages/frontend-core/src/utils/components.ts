@@ -1,4 +1,4 @@
-import { ComponentDefinition, ComponentSetting } from "@budibase/types"
+import type { ComponentDefinition, ComponentSetting } from "@budibase/types"
 
 /**
  * Gets the definition of this component's settings from the manifest

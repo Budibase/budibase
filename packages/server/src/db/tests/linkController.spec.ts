@@ -6,16 +6,15 @@ import {
 } from "../../tests/utilities/structures"
 import LinkController from "../linkedRows/LinkController"
 import { context } from "@budibase/backend-core"
-import {
-  FieldType,
+import type {
   ManyToManyRelationshipFieldMetadata,
   ManyToOneRelationshipFieldMetadata,
   OneToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
-  RelationshipType,
   Row,
   Table,
 } from "@budibase/types"
+import { FieldType, RelationshipType } from "@budibase/types"
 import { cloneDeep } from "lodash"
 
 const baseColumn = {

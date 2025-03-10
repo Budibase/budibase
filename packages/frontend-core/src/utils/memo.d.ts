@@ -1,4 +1,4 @@
-import { Readable, Writable } from "svelte/store"
+import type { Readable, Writable } from "svelte/store"
 
 declare module "./memo" {
   export function memo<T>(value?: T): Writable<T>

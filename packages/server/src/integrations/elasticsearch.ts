@@ -1,13 +1,16 @@
-import {
+import type {
   Integration,
-  DatasourceFieldType,
-  QueryType,
   IntegrationBase,
-  DatasourceFeature,
   ConnectionInfo,
 } from "@budibase/types"
+import {
+  DatasourceFieldType,
+  QueryType,
+  DatasourceFeature,
+} from "@budibase/types"
 
-import { Client, ClientOptions } from "@elastic/elasticsearch"
+import type { ClientOptions } from "@elastic/elasticsearch"
+import { Client } from "@elastic/elasticsearch"
 import { HOST_ADDRESS } from "./utils"
 
 export interface ElasticsearchConfig {

@@ -1,10 +1,10 @@
-import {
+import type {
   GetUserFlagsResponse,
   SetUserFlagRequest,
   SetUserFlagResponse,
   ToggleBetaFeatureResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface FlagEndpoints {
   getFlags: () => Promise<GetUserFlagsResponse>

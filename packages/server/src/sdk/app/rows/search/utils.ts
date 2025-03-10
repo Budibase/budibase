@@ -1,14 +1,16 @@
-import {
-  FieldType,
+import type {
   Table,
-  DocumentType,
-  SEPARATOR,
-  BBReferenceFieldSubType,
   SearchFilters,
-  SearchIndex,
   SearchResponse,
   Row,
   RowSearchParams,
+} from "@budibase/types"
+import {
+  FieldType,
+  DocumentType,
+  SEPARATOR,
+  BBReferenceFieldSubType,
+  SearchIndex,
 } from "@budibase/types"
 import { db as dbCore, context } from "@budibase/backend-core"
 import { utils, dataFilters } from "@budibase/shared-core"

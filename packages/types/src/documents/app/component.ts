@@ -1,5 +1,5 @@
-import { Document } from "../document"
-import { BasicOperator } from "../../sdk"
+import type { Document } from "../document"
+import type { BasicOperator } from "../../sdk"
 
 export interface Component extends Document {
   _instanceName: string

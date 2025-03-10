@@ -1,4 +1,4 @@
-import { ContextEmitter } from "@budibase/types"
+import type { ContextEmitter } from "@budibase/types"
 
 export async function getFetchResponse(fetched: any) {
   let status = fetched.status,

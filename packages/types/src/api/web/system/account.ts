@@ -1,4 +1,4 @@
-import { Account, AccountMetadata } from "../../../documents"
+import type { Account, AccountMetadata } from "../../../documents"
 
 export interface SaveAccountRequest extends Account {}
 export interface SaveAccountResponse extends AccountMetadata {}

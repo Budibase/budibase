@@ -1,5 +1,5 @@
-import { Event, HostInfo } from "./events"
-import { AuditLogDoc } from "../documents"
+import type { Event, HostInfo } from "./events"
+import type { AuditLogDoc } from "../documents"
 
 export type AuditWriteOpts = {
   appId?: string

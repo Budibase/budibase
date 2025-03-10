@@ -1,4 +1,9 @@
-import { ContextUser, User, UserGroup, UserIdentifier } from "@budibase/types"
+import type {
+  ContextUser,
+  User,
+  UserGroup,
+  UserIdentifier,
+} from "@budibase/types"
 import * as accountSdk from "../accounts"
 import env from "../environment"
 import { getExistingAccounts, getFirstPlatformUser } from "./lookup"

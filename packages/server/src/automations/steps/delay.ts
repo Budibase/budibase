@@ -1,5 +1,5 @@
 import { wait } from "../../utilities"
-import { DelayStepInputs, DelayStepOutputs } from "@budibase/types"
+import type { DelayStepInputs, DelayStepOutputs } from "@budibase/types"
 
 export async function run({
   inputs,

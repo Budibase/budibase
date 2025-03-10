@@ -1,5 +1,5 @@
 import { licensing, quotas } from "@budibase/pro"
-import {
+import type {
   ActivateLicenseKeyRequest,
   ActivateLicenseKeyResponse,
   ActivateOfflineLicenseTokenRequest,

@@ -1,4 +1,4 @@
-import Redlock from "redlock"
+import type Redlock from "redlock"
 
 export enum LockType {
   /**

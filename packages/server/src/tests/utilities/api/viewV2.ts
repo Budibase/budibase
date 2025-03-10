@@ -1,4 +1,4 @@
-import {
+import type {
   CreateViewRequest,
   UpdateViewRequest,
   ViewV2,
@@ -7,7 +7,8 @@ import {
   ViewResponseEnriched,
   ViewFetchResponseEnriched,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 
 export class ViewV2API extends TestAPI {
   create = async (

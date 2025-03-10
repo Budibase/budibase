@@ -1,5 +1,5 @@
 import { default as threadUtils } from "./utils"
-import { Job } from "bull"
+import type { Job } from "bull"
 import { disableCronById } from "../automations/utils"
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
@@ -9,28 +9,30 @@ import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { automations } from "@budibase/shared-core"
 import { MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
-import {
+import type {
   Automation,
-  AutomationActionStepId,
   AutomationData,
   AutomationJob,
   AutomationMetadata,
-  AutomationStatus,
   AutomationStep,
-  AutomationStepStatus,
   BranchSearchFilters,
   BranchStep,
   LoopStep,
   ContextEmitter,
-  LoopStepType,
   AutomationTriggerResult,
   AutomationResults,
   AutomationStepResult,
-  isLogicalFilter,
   Branch,
 } from "@budibase/types"
-import { AutomationContext } from "../definitions/automations"
-import { WorkerCallback } from "./definitions"
+import {
+  AutomationActionStepId,
+  AutomationStatus,
+  AutomationStepStatus,
+  LoopStepType,
+  isLogicalFilter,
+} from "@budibase/types"
+import type { AutomationContext } from "../definitions/automations"
+import type { WorkerCallback } from "./definitions"
 import { context, logging, configs, utils } from "@budibase/backend-core"
 import {
   findHBSBlocks,

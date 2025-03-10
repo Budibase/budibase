@@ -1,4 +1,4 @@
-import { CompletionContext, Completion } from "@codemirror/autocomplete"
+import type { CompletionContext, Completion } from "@codemirror/autocomplete"
 
 export type BindingCompletion = (context: CompletionContext) => {
   from: number

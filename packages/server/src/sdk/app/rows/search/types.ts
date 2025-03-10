@@ -1,5 +1,5 @@
-import { Format } from "../../../../api/controllers/view/exporters"
-import { SearchFilters, SortOrder } from "@budibase/types"
+import type { Format } from "../../../../api/controllers/view/exporters"
+import type { SearchFilters, SortOrder } from "@budibase/types"
 
 export interface ExportRowsParams {
   tableId: string

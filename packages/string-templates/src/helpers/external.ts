@@ -6,7 +6,7 @@ import {
   HelperFunctionBuiltin,
   EXTERNAL_FUNCTION_COLLECTIONS,
 } from "./constants"
-import Handlebars from "handlebars"
+import type Handlebars from "handlebars"
 
 const ADDED_HELPERS = {
   date,

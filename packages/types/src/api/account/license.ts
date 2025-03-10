@@ -1,6 +1,6 @@
-import { LicenseOverrides, QuotaUsage } from "../../documents"
-import { OfflineLicense, PlanType } from "../../sdk"
-import { ISO8601 } from "../../shared"
+import type { LicenseOverrides, QuotaUsage } from "../../documents"
+import type { OfflineLicense, PlanType } from "../../sdk"
+import type { ISO8601 } from "../../shared"
 
 export interface GetLicenseRequest {
   // All fields should be optional to cater for

@@ -1,4 +1,4 @@
-import { QueryVariable } from "./definitions"
+import type { QueryVariable } from "./definitions"
 import env from "../environment"
 import * as db from "../db"
 import { redis, db as dbCore } from "@budibase/backend-core"

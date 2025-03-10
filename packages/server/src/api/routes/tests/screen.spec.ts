@@ -1,13 +1,8 @@
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { events, roles } from "@budibase/backend-core"
-import {
-  Screen,
-  Role,
-  BuiltinPermissionID,
-  SourceType,
-  UsageInScreensResponse,
-} from "@budibase/types"
+import type { Screen, Role, UsageInScreensResponse } from "@budibase/types"
+import { BuiltinPermissionID, SourceType } from "@budibase/types"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 
 const {

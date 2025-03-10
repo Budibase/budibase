@@ -1,10 +1,6 @@
 import { db } from "@budibase/backend-core"
-import {
-  FieldType,
-  isLogicalSearchOperator,
-  SearchFilters,
-  Table,
-} from "@budibase/types"
+import type { SearchFilters, Table } from "@budibase/types"
+import { FieldType, isLogicalSearchOperator } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
 import { isInternal } from "../tables/utils"

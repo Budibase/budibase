@@ -1,5 +1,5 @@
-import { LegacyFilter, SortOrder, UISearchFilter } from "../../api"
-import { SearchFilters } from "../../sdk"
+import type { LegacyFilter, SortOrder, UISearchFilter } from "../../api"
+import type { SearchFilters } from "../../sdk"
 
 export * from "./datasources"
 

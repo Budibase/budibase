@@ -1,15 +1,15 @@
 import { rowEmission, tableEmission } from "./utils"
 import mainEmitter from "./index"
 import env from "../environment"
-import {
+import type {
   Table,
   Row,
-  DocumentType,
   App,
   ContextEmitter,
   EventType,
   UserBindings,
 } from "@budibase/types"
+import { DocumentType } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 
 const MAX_AUTOMATIONS_ALLOWED = 5

@@ -2,7 +2,7 @@ import { Parser } from "acorn"
 import * as walk from "acorn-walk"
 
 import type { Diagnostic } from "@codemirror/lint"
-import { CodeValidator } from "@/types"
+import type { CodeValidator } from "@/types"
 
 export function validateJsTemplate(
   code: string,

@@ -1,4 +1,4 @@
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface AIEndpoints {
   generateCronExpression: (prompt: string) => Promise<{ message: string }>

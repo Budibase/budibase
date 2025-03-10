@@ -1,12 +1,8 @@
 import * as setup from "../../../api/routes/tests/utilities"
 import { basicTable } from "../../../tests/utilities/structures"
 import { db as dbCore, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
-import {
-  LinkDocument,
-  DocumentType,
-  SQLiteDefinition,
-  SQLiteType,
-} from "@budibase/types"
+import type { LinkDocument, SQLiteDefinition } from "@budibase/types"
+import { DocumentType, SQLiteType } from "@budibase/types"
 import {
   generateJunctionTableID,
   generateLinkID,
@@ -14,7 +10,8 @@ import {
 } from "../../../db/utils"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
-import { AppMigration, updateAppMigrationMetadata } from "../../"
+import type { AppMigration } from "../../"
+import { updateAppMigrationMetadata } from "../../"
 import sdk from "../../../sdk"
 
 const MIGRATIONS: AppMigration[] = [

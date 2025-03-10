@@ -1,5 +1,5 @@
-import { FetchEnrichedRowResponse, Row } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { FetchEnrichedRowResponse, Row } from "@budibase/types"
+import type { BaseAPIClient } from "./types"
 
 export interface RelationshipEndpoints {
   fetchRelationshipData: (

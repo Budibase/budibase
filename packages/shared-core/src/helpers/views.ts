@@ -1,11 +1,11 @@
-import {
+import type {
   BasicViewFieldMetadata,
   View,
   ViewCalculationFieldMetadata,
   ViewFieldMetadata,
   ViewV2,
-  ViewV2Type,
 } from "@budibase/types"
+import { ViewV2Type } from "@budibase/types"
 import { pickBy } from "lodash"
 
 export function isCalculationField(

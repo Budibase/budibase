@@ -1,5 +1,5 @@
 import { tenancy, utils, context } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
+import type { UserCtx } from "@budibase/types"
 
 async function ensureTenantAppOwnership(ctx: UserCtx, next: any) {
   const appId = await utils.getAppIdFromCtx(ctx)

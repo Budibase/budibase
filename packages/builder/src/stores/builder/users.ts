@@ -1,6 +1,6 @@
 import { get, derived } from "svelte/store"
 import { BudiStore } from "../BudiStore"
-import { UIUser } from "@budibase/types"
+import type { UIUser } from "@budibase/types"
 
 export class UserStore extends BudiStore<UIUser[]> {
   constructor() {

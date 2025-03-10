@@ -1,8 +1,9 @@
-import { writable, get, derived, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 import { MinColumnWidth, DefaultColumnWidth } from "../lib/constants"
 import { parseEventLocation } from "../lib/utils"
-import { Store as StoreContext } from "."
-import { UIColumn } from "@budibase/types"
+import type { Store as StoreContext } from "."
+import type { UIColumn } from "@budibase/types"
 
 interface ResizeInitialStoreData {
   initialMouseX: number | null

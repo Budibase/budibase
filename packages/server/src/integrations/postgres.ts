@@ -1,19 +1,21 @@
 import fs from "fs"
-import {
+import type {
   Integration,
-  DatasourceFieldType,
-  QueryType,
   SqlQuery,
   Table,
   DatasourcePlus,
-  DatasourceFeature,
   ConnectionInfo,
-  SourceName,
   Schema,
-  TableSourceType,
   DatasourcePlusQueryResponse,
-  SqlClient,
   EnrichedQueryJson,
+} from "@budibase/types"
+import {
+  DatasourceFieldType,
+  QueryType,
+  DatasourceFeature,
+  SourceName,
+  TableSourceType,
+  SqlClient,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -23,10 +25,11 @@ import {
   checkExternalTables,
   HOST_ADDRESS,
 } from "./utils"
-import { PostgresColumn } from "./base/types"
+import type { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
-import { Client, ClientConfig, types } from "pg"
+import type { ClientConfig } from "pg"
+import { Client, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
 import { storeTempFile } from "../utilities/fileSystem"

@@ -1,4 +1,4 @@
-import { ViewFilter, DBView } from "@budibase/types"
+import type { ViewFilter, DBView } from "@budibase/types"
 
 const TOKEN_MAP: Record<string, string> = {
   EQUALS: "===",

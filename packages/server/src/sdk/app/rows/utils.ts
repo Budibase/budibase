@@ -1,20 +1,22 @@
 import validateJs from "validate.js"
 import dayjs from "dayjs"
 import cloneDeep from "lodash/fp/cloneDeep"
-import {
+import type {
   Datasource,
   DatasourcePlusQueryResponse,
   FieldConstraints,
-  FieldType,
   QueryJson,
   Row,
-  SourceName,
   Table,
   TableSchema,
-  SqlClient,
-  ArrayOperator,
   ViewV2,
   EnrichedQueryJson,
+} from "@budibase/types"
+import {
+  FieldType,
+  SourceName,
+  SqlClient,
+  ArrayOperator,
 } from "@budibase/types"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."

@@ -5,14 +5,13 @@ import {
   isExternalTableID,
   isSQL,
 } from "../../../integrations/utils"
-import {
+import type {
   Database,
-  INTERNAL_TABLE_SOURCE_ID,
   Table,
   FindTableResponse,
-  TableSourceType,
   TableViewsResponse,
 } from "@budibase/types"
+import { INTERNAL_TABLE_SOURCE_ID, TableSourceType } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
 import { ensureQueryUISet } from "../views/utils"

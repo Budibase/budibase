@@ -2,7 +2,7 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import { getIntegration } from "../../integrations"
 import { invalidateCachedVariable } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
-import {
+import type {
   BuildSchemaFromSourceRequest,
   BuildSchemaFromSourceResponse,
   CreateDatasourceRequest,
@@ -12,9 +12,7 @@ import {
   Document,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
-  FieldType,
   RelationshipFieldMetadata,
-  SourceName,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   UserCtx,
@@ -28,6 +26,7 @@ import {
   DeleteDatasourceResponse,
   FetchExternalSchemaResponse,
 } from "@budibase/types"
+import { FieldType, SourceName } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"

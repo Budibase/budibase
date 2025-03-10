@@ -1,4 +1,4 @@
-import { Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
 import type { APIClient } from "../../../api/types"
 
 import * as Bounds from "./bounds"
@@ -24,8 +24,8 @@ import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
 import * as Conditions from "./conditions"
-import { SortOrder, UIDatasource, UISearchFilter } from "@budibase/types"
-import * as Constants from "../lib/constants"
+import type { SortOrder, UIDatasource, UISearchFilter } from "@budibase/types"
+import type * as Constants from "../lib/constants"
 
 const DependencyOrderedStores = [
   Sort,

@@ -1,6 +1,7 @@
-import { Constants, APIClient } from "@budibase/frontend-core"
+import type { APIClient } from "@budibase/frontend-core"
+import { Constants } from "@budibase/frontend-core"
 import { FieldTypes } from "../constants"
-import { Row, Table } from "@budibase/types"
+import type { Row, Table } from "@budibase/types"
 
 export const patchAPI = (API: APIClient) => {
   /**

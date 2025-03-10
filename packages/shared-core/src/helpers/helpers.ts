@@ -1,4 +1,4 @@
-import { User } from "@budibase/types"
+import type { User } from "@budibase/types"
 
 /**
  * Gets a key within an object. The key supports dot syntax for retrieving deep

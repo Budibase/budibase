@@ -1,4 +1,5 @@
-import { LoginMethod, UserCtx } from "@budibase/types"
+import type { UserCtx } from "@budibase/types"
+import { LoginMethod } from "@budibase/types"
 
 const WEBHOOK_ENDPOINTS = new RegExp(
   ["webhooks/trigger", "webhooks/schema"].join("|")

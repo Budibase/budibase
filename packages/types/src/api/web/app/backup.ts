@@ -1,4 +1,4 @@
-import { AppBackupTrigger, AppBackupType } from "../../../documents"
+import type { AppBackupTrigger, AppBackupType } from "../../../documents"
 
 export interface SearchAppBackupsRequest {
   trigger: AppBackupTrigger

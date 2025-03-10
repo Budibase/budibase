@@ -1,4 +1,4 @@
-import { Document } from "@budibase/types"
+import type { Document } from "@budibase/types"
 
 export {
   Query,

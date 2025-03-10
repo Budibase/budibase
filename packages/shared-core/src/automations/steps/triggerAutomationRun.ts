@@ -1,6 +1,6 @@
+import type { AutomationStepDefinition } from "@budibase/types"
 import {
   AutomationActionStepId,
-  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationCustomIOType,

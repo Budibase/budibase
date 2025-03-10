@@ -1,4 +1,5 @@
-import fs, { PathLike } from "fs"
+import type { PathLike } from "fs"
+import fs from "fs"
 import { budibaseTempDir } from "../budibaseDir"
 import { resolve, join } from "path"
 import env from "../../environment"

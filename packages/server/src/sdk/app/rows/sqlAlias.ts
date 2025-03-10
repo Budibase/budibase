@@ -1,13 +1,12 @@
-import {
+import type {
   Datasource,
   DatasourcePlusQueryResponse,
   EnrichedQueryJson,
-  Operation,
   Row,
   SearchFilters,
-  SqlClient,
   Table,
 } from "@budibase/types"
+import { Operation, SqlClient } from "@budibase/types"
 import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
 import { dataFilters } from "@budibase/shared-core"

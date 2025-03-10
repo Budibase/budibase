@@ -1,10 +1,5 @@
-import {
-  SqlQuery,
-  Table,
-  Datasource,
-  FieldType,
-  FieldSchema,
-} from "@budibase/types"
+import type { SqlQuery, Table, Datasource, FieldSchema } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { context, objectStore, sql } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { parseStringPromise as xmlParser } from "xml2js"

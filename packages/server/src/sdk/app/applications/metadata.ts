@@ -1,5 +1,5 @@
 import { context, DocumentType } from "@budibase/backend-core"
-import { App } from "@budibase/types"
+import type { App } from "@budibase/types"
 
 /**
  * @deprecated the plan is to get everything using `tryGet` instead, then rename

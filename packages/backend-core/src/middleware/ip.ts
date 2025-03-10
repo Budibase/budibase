@@ -1,4 +1,4 @@
-import { Ctx } from "@budibase/types"
+import type { Ctx } from "@budibase/types"
 import { doInIPContext } from "../context"
 
 export default async (ctx: Ctx, next: any) => {

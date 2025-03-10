@@ -1,4 +1,5 @@
-import { LockName, LockType, LockOptions } from "@budibase/types"
+import type { LockOptions } from "@budibase/types"
+import { LockName, LockType } from "@budibase/types"
 import { AUTO_EXTEND_POLLING_MS, doWithLock } from "../redlockImpl"
 import { DBTestConfiguration, generator } from "../../../tests"
 

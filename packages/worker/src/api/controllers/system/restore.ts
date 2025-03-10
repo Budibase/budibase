@@ -1,5 +1,5 @@
 import env from "../../../environment"
-import { SystemRestoreResponse, UserCtx } from "@budibase/types"
+import type { SystemRestoreResponse, UserCtx } from "@budibase/types"
 import { cache } from "@budibase/backend-core"
 
 export async function systemRestored(

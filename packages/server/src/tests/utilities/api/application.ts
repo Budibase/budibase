@@ -1,15 +1,18 @@
-import {
+import type {
   App,
   PublishResponse,
-  type CreateAppRequest,
-  type FetchAppDefinitionResponse,
-  type FetchAppPackageResponse,
   DuplicateAppResponse,
   UpdateAppRequest,
   UpdateAppResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
-import { AppStatus } from "../../../db/utils"
+import {
+  type CreateAppRequest,
+  type FetchAppDefinitionResponse,
+  type FetchAppPackageResponse,
+} from "@budibase/types"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
+import type { AppStatus } from "../../../db/utils"
 import { constants } from "@budibase/backend-core"
 
 export class ApplicationAPI extends TestAPI {

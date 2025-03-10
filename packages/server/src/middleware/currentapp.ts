@@ -11,7 +11,7 @@ import { generateUserMetadataID, isDevAppID } from "../db/utils"
 import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint, isBrowser, isApiKey } from "./utils"
-import { UserCtx, ContextUser } from "@budibase/types"
+import type { UserCtx, ContextUser } from "@budibase/types"
 import tracer from "dd-trace"
 import type { Middleware, Next } from "koa"
 

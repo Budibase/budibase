@@ -1,4 +1,5 @@
-import { derived, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { derived } from "svelte/store"
 import { API } from "@/api"
 import { licensing } from "./licensing"
 import { ConfigType, isConfig, isSCIMConfig } from "@budibase/types"

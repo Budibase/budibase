@@ -1,9 +1,9 @@
-import {
-  Event,
+import type {
   EnvironmentVariableCreatedEvent,
   EnvironmentVariableDeletedEvent,
   EnvironmentVariableUpgradePanelOpenedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 import { publishEvent } from "../events"
 
 async function created(name: string, environments: string[]) {

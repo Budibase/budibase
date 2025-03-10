@@ -2,15 +2,14 @@ import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 import { InternalTables, getUserMetadataParams } from "../utils"
 import { context, logging } from "@budibase/backend-core"
 import LinkDocument from "./LinkDocument"
-import {
+import type {
   Database,
   FieldSchema,
-  FieldType,
   RelationshipFieldMetadata,
-  RelationshipType,
   Row,
   Table,
 } from "@budibase/types"
+import { FieldType, RelationshipType } from "@budibase/types"
 
 type LinkControllerOpts = {
   tableId?: string

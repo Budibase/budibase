@@ -1,5 +1,4 @@
-import {
-  Event,
+import type {
   BackfillMetadata,
   CachedEvent,
   SSOCreatedEvent,
@@ -20,6 +19,7 @@ import {
   UserPermissionAssignedEvent,
   AppCreatedEvent,
 } from "@budibase/types"
+import { Event } from "@budibase/types"
 import * as context from "../context"
 import { CacheKey } from "../cache/generic"
 import * as cache from "../cache/generic"

@@ -1,6 +1,6 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import { SearchAppBackupsRequest } from "@budibase/types"
+import type { SearchAppBackupsRequest } from "@budibase/types"
 
 interface BackupState {
   selectedBackup?: string

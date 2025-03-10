@@ -1,29 +1,30 @@
 const sanitize = require("sanitize-s3-objectkey")
 
-import {
+import type {
   HeadObjectCommandOutput,
   PutObjectCommandInput,
-  S3,
   S3ClientConfig,
-  GetObjectCommand,
   _Object as S3Object,
 } from "@aws-sdk/client-s3"
+import { S3, GetObjectCommand } from "@aws-sdk/client-s3"
 import { Upload } from "@aws-sdk/lib-storage"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import stream, { Readable } from "stream"
+import type { Readable } from "stream"
+import stream from "stream"
 import fetch from "node-fetch"
 import tar from "tar-fs"
 import zlib from "zlib"
 import { promisify } from "util"
 import { join } from "path"
-import fs, { PathLike, ReadStream } from "fs"
+import type { PathLike, ReadStream } from "fs"
+import fs from "fs"
 import env from "../environment"
 import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
-import { ReadableStream } from "stream/web"
-import { NodeJsClient } from "@smithy/types"
+import type { ReadableStream } from "stream/web"
+import type { NodeJsClient } from "@smithy/types"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created

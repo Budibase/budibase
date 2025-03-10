@@ -1,11 +1,9 @@
+import type { Datasource, Table, ViewV2 } from "@budibase/types"
 import {
   AIOperationEnum,
   CalculationType,
-  Datasource,
   FieldType,
   RelationshipType,
-  Table,
-  ViewV2,
   ViewV2Type,
 } from "@budibase/types"
 import { buildSqlFieldList } from "../sqlUtils"

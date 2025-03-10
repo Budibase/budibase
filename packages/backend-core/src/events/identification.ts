@@ -1,20 +1,22 @@
 import * as context from "../context"
 import * as identityCtx from "../context/identity"
 import env from "../environment"
-import {
-  Hosting,
+import type {
   User,
   Identity,
-  IdentityType,
   Account,
-  isCloudAccount,
-  isSSOAccount,
   TenantGroup,
   CloudAccount,
   UserIdentity,
   InstallationGroup,
   UserContext,
   Group,
+} from "@budibase/types"
+import {
+  Hosting,
+  IdentityType,
+  isCloudAccount,
+  isSSOAccount,
   isSSOUser,
 } from "@budibase/types"
 import { processors } from "./processors"

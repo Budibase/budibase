@@ -1,4 +1,5 @@
-import { writable, get, derived, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 import { tick } from "svelte"
 import {
   DefaultRowHeight,
@@ -7,8 +8,8 @@ import {
   NewRowID,
 } from "../lib/constants"
 import { getCellID, parseCellID } from "../lib/utils"
-import { Store as StoreContext } from "."
-import { Row } from "@budibase/types"
+import type { Store as StoreContext } from "."
+import type { Row } from "@budibase/types"
 
 export interface UIStore {
   focusedCellId: Writable<string | null>

@@ -1,15 +1,15 @@
 import { generateMetadataID } from "../../db/utils"
 import { saveEntityMetadata, deleteEntityMetadata } from "../../utilities"
 import { context } from "@budibase/backend-core"
-import {
+import type {
   UserCtx,
-  MetadataType,
   GetMetadataTypesResponse,
   SaveMetadataRequest,
   SaveMetadataResponse,
   DeleteMetadataResponse,
   FindMetadataResponse,
 } from "@budibase/types"
+import { MetadataType } from "@budibase/types"
 
 export async function getTypes(ctx: UserCtx<void, GetMetadataTypesResponse>) {
   ctx.body = {

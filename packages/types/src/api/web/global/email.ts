@@ -1,5 +1,5 @@
-import { EmailAttachment, EmailInvite } from "../../../documents"
-import SMTPTransport from "nodemailer/lib/smtp-transport"
+import type { EmailAttachment, EmailInvite } from "../../../documents"
+import type SMTPTransport from "nodemailer/lib/smtp-transport"
 
 export enum EmailTemplatePurpose {
   CORE = "core",

@@ -1,4 +1,4 @@
-import { BaseEvent } from "./event"
+import type { BaseEvent } from "./event"
 
 export interface ScreenCreatedEvent extends BaseEvent {
   screenId: string

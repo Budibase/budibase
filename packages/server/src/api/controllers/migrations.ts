@@ -1,5 +1,5 @@
 import { context } from "@budibase/backend-core"
-import { Ctx, GetMigrationStatus } from "@budibase/types"
+import type { Ctx, GetMigrationStatus } from "@budibase/types"
 import {
   getAppMigrationVersion,
   getLatestEnabledMigrationId,

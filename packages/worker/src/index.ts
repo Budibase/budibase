@@ -4,7 +4,8 @@ if (process.env.DD_APM_ENABLED) {
 
 // need to load environment first
 import env from "./environment"
-import Application, { Middleware } from "koa"
+import type { Middleware } from "koa"
+import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
 import { sdk as proSdk } from "@budibase/pro"

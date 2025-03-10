@@ -1,5 +1,6 @@
 import env from "../environment"
-import Redis, { Cluster } from "ioredis"
+import type { Cluster } from "ioredis"
+import Redis from "ioredis"
 // mock-redis doesn't have any typing
 let MockRedis: any | undefined
 if (env.MOCK_REDIS) {

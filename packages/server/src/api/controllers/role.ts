@@ -6,7 +6,7 @@ import {
   Header,
 } from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
-import {
+import type {
   AccessibleRolesResponse,
   Database,
   DeleteRoleResponse,
@@ -17,9 +17,8 @@ import {
   SaveRoleResponse,
   UserCtx,
   UserMetadata,
-  DocumentType,
-  BuiltinPermissionID,
 } from "@budibase/types"
+import { DocumentType, BuiltinPermissionID } from "@budibase/types"
 import { RoleColor, sdk as sharedSdk, helpers } from "@budibase/shared-core"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"

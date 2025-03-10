@@ -1,6 +1,6 @@
 import MailDev from "maildev"
 import { promisify } from "util"
-import TestConfiguration from "../TestConfiguration"
+import type TestConfiguration from "../TestConfiguration"
 
 /**
  * @deprecated please use the `MailDev` email server instead of this mock.

@@ -10,8 +10,7 @@ import * as utils from "./utils"
 import { cloneDeep } from "lodash/fp"
 import { context, HTTPError } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
-import {
-  FieldType,
+import type {
   LinkDocumentValue,
   PatchRowRequest,
   PatchRowResponse,
@@ -19,6 +18,7 @@ import {
   Table,
   UserCtx,
 } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"

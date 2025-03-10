@@ -1,6 +1,6 @@
 import { getTenantId } from "../../context"
 import * as redis from "../../redis/init"
-import { Client } from "../../redis"
+import type { Client } from "../../redis"
 
 function generateTenantKey(key: string) {
   const tenantId = getTenantId()

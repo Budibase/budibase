@@ -1,5 +1,5 @@
 import { accounts, env as coreEnv } from "@budibase/backend-core"
-import { Ctx, SystemStatusResponse } from "@budibase/types"
+import type { Ctx, SystemStatusResponse } from "@budibase/types"
 import env from "../../../environment"
 
 export const fetch = async (ctx: Ctx<void, SystemStatusResponse>) => {

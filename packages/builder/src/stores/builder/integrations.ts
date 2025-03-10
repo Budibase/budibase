@@ -1,6 +1,6 @@
 import { writable, type Writable } from "svelte/store"
 import { API } from "@/api"
-import { Integration } from "@budibase/types"
+import type { Integration } from "@budibase/types"
 
 type IntegrationsState = Record<string, Integration>
 

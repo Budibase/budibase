@@ -1,12 +1,12 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import env from "../../../environment"
-import { Automation, AutomationData, Datasource } from "@budibase/types"
-import { Knex } from "knex"
+import type { Automation, AutomationData, Datasource } from "@budibase/types"
+import type { Knex } from "knex"
 import { getQueue } from "../.."
-import { Job } from "bull"
+import type { Job } from "bull"
 import { helpers } from "@budibase/shared-core"
-import { queue } from "@budibase/backend-core"
+import type { queue } from "@budibase/backend-core"
 
 let config: TestConfiguration
 

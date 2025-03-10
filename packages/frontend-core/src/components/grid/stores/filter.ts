@@ -1,14 +1,13 @@
-import { get, derived, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { get, derived } from "svelte/store"
+import type { UIColumn, UILegacyFilter, UISearchFilter } from "@budibase/types"
 import {
   ArrayOperator,
   BasicOperator,
   FieldType,
-  UIColumn,
-  UILegacyFilter,
   UILogicalOperator,
-  UISearchFilter,
 } from "@budibase/types"
-import { Store as StoreContext } from "."
+import type { Store as StoreContext } from "."
 import { memo } from "../../../utils/memo"
 
 export interface FilterStore {

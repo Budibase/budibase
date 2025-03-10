@@ -11,27 +11,25 @@ import {
   isSQL,
 } from "../../../integrations/utils"
 import { events, HTTPError } from "@budibase/backend-core"
-import {
+import type {
   BulkImportRequest,
   BulkImportResponse,
   CsvToJsonRequest,
   CsvToJsonResponse,
-  EventType,
   FetchTablesResponse,
-  FieldType,
   MigrateTableRequest,
   MigrateTableResponse,
   SaveTableRequest,
   SaveTableResponse,
   Table,
   FindTableResponse,
-  TableSourceType,
   UserCtx,
   ValidateNewTableImportRequest,
   ValidateTableImportRequest,
   ValidateTableImportResponse,
   DeleteTableResponse,
 } from "@budibase/types"
+import { EventType, FieldType, TableSourceType } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"

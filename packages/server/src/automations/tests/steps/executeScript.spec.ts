@@ -1,6 +1,6 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import * as automation from "../../index"
-import { Table } from "@budibase/types"
+import type { Table } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../../tests/utilities/structures"
 

@@ -10,14 +10,12 @@ import {
 } from "../../../automations"
 import { configs, context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import type { AutomationResults, SettingsConfig, Table } from "@budibase/types"
 import {
-  AutomationResults,
   ConfigType,
   FieldType,
   FilterCondition,
   isDidNotTriggerResponse,
-  SettingsConfig,
-  Table,
 } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"

@@ -7,16 +7,15 @@ import {
   enableCronTrigger,
 } from "../../../automations/utils"
 import { backups } from "@budibase/pro"
-import {
+import type {
   App,
-  AppBackupTrigger,
   DeploymentDoc,
   FetchDeploymentResponse,
   PublishAppResponse,
   UserCtx,
-  DeploymentStatus,
   DeploymentProgressResponse,
 } from "@budibase/types"
+import { AppBackupTrigger, DeploymentStatus } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 

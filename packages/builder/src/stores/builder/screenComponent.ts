@@ -2,7 +2,7 @@ import { derived } from "svelte/store"
 import { tables } from "./tables"
 import { selectedScreen } from "./screens"
 import { viewsV2 } from "./viewsV2"
-import {
+import type {
   UIDatasourceType,
   Component,
   UIComponentError,

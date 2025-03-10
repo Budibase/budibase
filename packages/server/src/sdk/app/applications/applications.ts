@@ -1,5 +1,5 @@
 import { AppStatus } from "../../../db/utils"
-import { App, ContextUser, User } from "@budibase/types"
+import type { App, ContextUser, User } from "@budibase/types"
 import { getLocksById } from "../../../utilities/redis"
 import { enrichApps } from "../../users/sessions"
 import { checkAppMetadata } from "../../../automations/logging"

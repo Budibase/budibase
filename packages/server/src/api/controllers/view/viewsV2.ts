@@ -1,5 +1,5 @@
 import sdk from "../../../sdk"
-import {
+import type {
   CreateViewRequest,
   Ctx,
   RequiredKeys,
@@ -10,13 +10,13 @@ import {
   ViewCalculationFieldMetadata,
   RelationSchemaField,
   ViewFieldMetadata,
-  CalculationType,
   ViewFetchResponseEnriched,
   CountDistinctCalculationFieldMetadata,
   CountCalculationFieldMetadata,
   CreateViewResponse,
   UpdateViewResponse,
 } from "@budibase/types"
+import { CalculationType } from "@budibase/types"
 import { events } from "@budibase/backend-core"
 import { builderSocket, gridSocket } from "../../../websockets"
 import { helpers } from "@budibase/shared-core"

@@ -1,7 +1,7 @@
 import { createRoutingView } from "../../db/views/staticViews"
 import { ViewName, getQueryIndex, UNICODE_MAX } from "../../db/utils"
 import { context } from "@budibase/backend-core"
-import { ScreenRoutesViewOutput } from "@budibase/types"
+import type { ScreenRoutesViewOutput } from "@budibase/types"
 
 export async function getRoutingInfo(): Promise<ScreenRoutesViewOutput[]> {
   const db = context.getAppDB()

@@ -1,13 +1,13 @@
 import fetch from "node-fetch"
 import { getCouchInfo } from "./couch"
-import {
+import type {
   SearchFilters,
   Row,
-  EmptyFilterOption,
   SearchResponse,
   SearchParams,
   WithRequired,
 } from "@budibase/types"
+import { EmptyFilterOption } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 
 export const removeKeyNumbering = dataFilters.removeKeyNumbering

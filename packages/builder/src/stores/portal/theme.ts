@@ -1,4 +1,5 @@
-import { derived, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { derived } from "svelte/store"
 import {
   DefaultBuilderTheme,
   ensureValidTheme,
@@ -6,7 +7,7 @@ import {
   ThemeOptions,
   ThemeClassPrefix,
 } from "@budibase/shared-core"
-import { Theme } from "@budibase/types"
+import type { Theme } from "@budibase/types"
 import { DerivedBudiStore, PersistenceType } from "../BudiStore"
 
 interface ThemeState {

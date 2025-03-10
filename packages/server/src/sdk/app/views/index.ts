@@ -1,10 +1,4 @@
-import {
-  BBReferenceFieldSubType,
-  CalculationType,
-  canGroupBy,
-  FieldType,
-  isNumeric,
-  PermissionLevel,
+import type {
   RelationSchemaField,
   RenameColumn,
   RequiredKeys,
@@ -14,6 +8,14 @@ import {
   ViewV2,
   ViewV2ColumnEnriched,
   ViewV2Enriched,
+} from "@budibase/types"
+import {
+  BBReferenceFieldSubType,
+  CalculationType,
+  canGroupBy,
+  FieldType,
+  isNumeric,
+  PermissionLevel,
 } from "@budibase/types"
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {

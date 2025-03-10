@@ -6,20 +6,17 @@ import { objectStore, context } from "@budibase/backend-core"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
-import {
+import type {
   Ctx,
   DeleteRow,
   DeleteRowRequest,
   DeleteRows,
   DownloadAttachmentResponse,
-  EventType,
   ExportRowsRequest,
   ExportRowsResponse,
   FetchEnrichedRowResponse,
   FetchRowsResponse,
-  FieldType,
   FindRowResponse,
-  isRelationshipField,
   PatchRowRequest,
   PatchRowResponse,
   RequiredKeys,
@@ -36,13 +33,14 @@ import {
   ValidateRowRequest,
   ValidateRowResponse,
 } from "@budibase/types"
+import { EventType, FieldType, isRelationshipField } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
 import { addRev } from "../public/utils"
 import { fixRow } from "../public/rows"
 import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
-import { Format } from "../view/exporters"
+import type { Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import { dataFilters } from "@budibase/shared-core"
 

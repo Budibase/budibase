@@ -1,9 +1,5 @@
-import {
-  AutoReason,
-  Datasource,
-  FieldType,
-  RelationshipType,
-} from "@budibase/types"
+import type { Datasource } from "@budibase/types"
+import { AutoReason, FieldType, RelationshipType } from "@budibase/types"
 
 function checkForeignKeysAreAutoColumns(datasource: Datasource) {
   if (!datasource.entities) {

@@ -44,24 +44,19 @@ import { cleanup } from "../../utilities/fileSystem"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
-import {
+import type {
   App,
   AuthToken,
   Automation,
   CreateViewRequest,
   Datasource,
-  FieldType,
-  INTERNAL_TABLE_SOURCE_ID,
   Layout,
   Query,
   RelationshipFieldMetadata,
-  RelationshipType,
   Row,
   Screen,
   RowSearchParams,
-  SourceName,
   Table,
-  TableSourceType,
   User,
   UserCtx,
   View,
@@ -69,10 +64,18 @@ import {
   WithRequired,
   DevInfo,
 } from "@budibase/types"
+import {
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  RelationshipType,
+  SourceName,
+  TableSourceType,
+} from "@budibase/types"
 
 import API from "./api"
-import jwt, { Secret } from "jsonwebtoken"
-import { Server } from "http"
+import type { Secret } from "jsonwebtoken"
+import jwt from "jsonwebtoken"
+import type { Server } from "http"
 
 const newid = utils.newid
 

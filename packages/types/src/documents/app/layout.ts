@@ -1,4 +1,4 @@
-import { Document } from "../document"
+import type { Document } from "../document"
 
 export interface Layout extends Document {
   componentLibraries: string[]

@@ -1,4 +1,5 @@
-import { derived, get, Writable } from "svelte/store"
+import type { Writable } from "svelte/store"
+import { derived, get } from "svelte/store"
 import {
   IntegrationTypes,
   DEFAULT_BB_DATASOURCE_ID,
@@ -7,14 +8,14 @@ import {
 import { tables } from "./tables"
 import { queries } from "./queries"
 import { API } from "@/api"
-import {
-  DatasourceFeature,
+import type {
   Datasource,
   Table,
   Integration,
   UIIntegration,
   SourceName,
 } from "@budibase/types"
+import { DatasourceFeature } from "@budibase/types"
 import { TableNames } from "@/constants"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 

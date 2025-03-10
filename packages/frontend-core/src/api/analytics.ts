@@ -1,5 +1,5 @@
-import { BaseAPIClient } from "./types"
-import {
+import type { BaseAPIClient } from "./types"
+import type {
   AnalyticsEnabledResponse,
   AnalyticsPingRequest,
   AnalyticsPingResponse,

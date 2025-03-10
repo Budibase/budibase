@@ -1,15 +1,17 @@
 import { Knex, knex } from "knex"
-import {
-  FieldType,
+import type {
   NumberFieldMetadata,
-  Operation,
-  RelationshipType,
   RenameColumn,
   SqlQuery,
   Table,
+  EnrichedQueryJson,
+} from "@budibase/types"
+import {
+  FieldType,
+  Operation,
+  RelationshipType,
   TableSourceType,
   SqlClient,
-  EnrichedQueryJson,
 } from "@budibase/types"
 import { breakExternalTableId, getNativeSql } from "./utils"
 import { helpers, utils } from "@budibase/shared-core"

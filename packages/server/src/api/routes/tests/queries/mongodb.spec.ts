@@ -1,9 +1,10 @@
-import { Datasource, Query } from "@budibase/types"
+import type { Datasource, Query } from "@budibase/types"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../../integrations/tests/utils"
-import { MongoClient, type Collection, BSON, Db } from "mongodb"
+import type { Db } from "mongodb"
+import { MongoClient, type Collection, BSON } from "mongodb"
 import { generator } from "@budibase/backend-core/tests"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)

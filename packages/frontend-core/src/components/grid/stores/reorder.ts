@@ -1,6 +1,7 @@
-import { get, writable, derived, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { get, writable, derived } from "svelte/store"
 import { parseEventLocation } from "../lib/utils"
-import { Store as StoreContext } from "."
+import type { Store as StoreContext } from "."
 
 interface Breakpoint {
   x: number

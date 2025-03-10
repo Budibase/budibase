@@ -1,6 +1,6 @@
 import { OpenAI } from "openai"
 
-import { OpenAIStepInputs, OpenAIStepOutputs } from "@budibase/types"
+import type { OpenAIStepInputs, OpenAIStepOutputs } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
 import * as pro from "@budibase/pro"

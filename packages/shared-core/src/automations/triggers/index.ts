@@ -1,4 +1,4 @@
-import {
+import type {
   AutomationTriggerDefinition,
   AutomationTriggerStepId,
 } from "@budibase/types"

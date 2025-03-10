@@ -5,7 +5,7 @@ import * as db from "../../db"
 import { Header } from "../../constants"
 import { newid } from "../../utils"
 import env from "../../environment"
-import { Ctx } from "@budibase/types"
+import type { Ctx } from "@budibase/types"
 
 describe("utils", () => {
   const config = new DBTestConfiguration()

@@ -1,5 +1,7 @@
-import { writable, derived, get, Writable, Readable } from "svelte/store"
-import { DataFetch, fetchData } from "../../../fetch"
+import type { Writable, Readable } from "svelte/store"
+import { writable, derived, get } from "svelte/store"
+import type { DataFetch } from "../../../fetch"
+import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import {
   generateRowID,
@@ -10,9 +12,10 @@ import {
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { FieldType, Row, UIRow } from "@budibase/types"
+import type { Row, UIRow } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { getRelatedTableValues } from "../../../utils"
-import { Store as StoreContext } from "."
+import type { Store as StoreContext } from "."
 
 interface IndexedUIRow extends UIRow {
   __idx: number

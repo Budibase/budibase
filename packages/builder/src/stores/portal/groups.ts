@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
 import { licensing } from "@/stores/portal"
-import { UserGroup } from "@budibase/types"
+import type { UserGroup } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 class GroupStore extends BudiStore<UserGroup[]> {

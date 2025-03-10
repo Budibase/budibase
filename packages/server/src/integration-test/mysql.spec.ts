@@ -1,7 +1,8 @@
-import { Datasource, FieldType } from "@budibase/types"
+import type { Datasource } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { DatabaseName, datasourceDescribe } from "../integrations/tests/utils"
 import { generator } from "@budibase/backend-core/tests"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 
 function uniqueTableName(length?: number): string {
   return generator

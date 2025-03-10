@@ -1,4 +1,4 @@
-import { FieldType } from "../row"
+import type { FieldType } from "../row"
 
 export enum RelationshipType {
   ONE_TO_MANY = "one-to-many",

@@ -1,4 +1,4 @@
-import {
+import type {
   CreatePluginRequest,
   CreatePluginResponse,
   DeletePluginResponse,
@@ -6,7 +6,7 @@ import {
   UploadPluginRequest,
   UploadPluginResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface PluginEndpoins {
   uploadPlugin: (data: UploadPluginRequest) => Promise<UploadPluginResponse>

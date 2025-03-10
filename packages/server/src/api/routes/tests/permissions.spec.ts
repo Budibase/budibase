@@ -1,12 +1,6 @@
 import { roles } from "@budibase/backend-core"
-import {
-  BuiltinPermissionID,
-  Document,
-  PermissionLevel,
-  Role,
-  Row,
-  Table,
-} from "@budibase/types"
+import type { Document, Role, Row, Table } from "@budibase/types"
+import { BuiltinPermissionID, PermissionLevel } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
 

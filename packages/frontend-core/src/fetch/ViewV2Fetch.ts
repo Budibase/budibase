@@ -1,9 +1,5 @@
-import {
-  SortOrder,
-  ViewDatasource,
-  ViewV2Enriched,
-  ViewV2Type,
-} from "@budibase/types"
+import type { ViewDatasource, ViewV2Enriched } from "@budibase/types"
+import { SortOrder, ViewV2Type } from "@budibase/types"
 import BaseDataFetch from "./DataFetch"
 import { get } from "svelte/store"
 import { helpers } from "@budibase/shared-core"

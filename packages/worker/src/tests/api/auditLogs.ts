@@ -1,4 +1,7 @@
-import { AuditLogSearchParams, SearchAuditLogsResponse } from "@budibase/types"
+import type {
+  AuditLogSearchParams,
+  SearchAuditLogsResponse,
+} from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class AuditLogAPI extends TestAPI {

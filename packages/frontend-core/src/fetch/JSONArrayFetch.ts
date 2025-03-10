@@ -1,6 +1,6 @@
 import FieldFetch from "./FieldFetch"
 import { getJSONArrayDatasourceSchema } from "../utils/json"
-import { JSONArrayFieldDatasource } from "@budibase/types"
+import type { JSONArrayFieldDatasource } from "@budibase/types"
 
 export default class JSONArrayFetch extends FieldFetch<JSONArrayFieldDatasource> {
   async getDefinition() {

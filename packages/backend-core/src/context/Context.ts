@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "async_hooks"
-import { ContextMap } from "./types"
+import type { ContextMap } from "./types"
 
 export default class Context {
   static storage = new AsyncLocalStorage<ContextMap>()

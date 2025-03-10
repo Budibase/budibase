@@ -1,12 +1,11 @@
+import type { ConnectionInfo, Integration, SqlQuery } from "@budibase/types"
 import {
-  ConnectionInfo,
   DatasourceFeature,
   DatasourceFieldType,
-  Integration,
   QueryType,
-  SqlQuery,
 } from "@budibase/types"
-import snowflakeSdk, { SnowflakeError } from "snowflake-sdk"
+import type { SnowflakeError } from "snowflake-sdk"
+import snowflakeSdk from "snowflake-sdk"
 import { promisify } from "util"
 
 interface SnowflakeConfig {

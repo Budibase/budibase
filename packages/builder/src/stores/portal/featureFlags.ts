@@ -1,6 +1,8 @@
-import { derived, Readable } from "svelte/store"
+import type { Readable } from "svelte/store"
+import { derived } from "svelte/store"
 import { auth } from "@/stores/portal"
-import { FeatureFlags, FeatureFlagDefaults } from "@budibase/types"
+import type { FeatureFlags } from "@budibase/types"
+import { FeatureFlagDefaults } from "@budibase/types"
 
 export const featureFlags: Readable<FeatureFlags> = derived(auth, $auth => ({
   ...FeatureFlagDefaults,

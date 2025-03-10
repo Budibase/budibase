@@ -1,4 +1,4 @@
-import { BaseEvent, Event } from "./event"
+import type { BaseEvent, Event } from "./event"
 
 export interface AppBackfillSucceededEvent extends BaseEvent {
   appId: string

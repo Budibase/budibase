@@ -1,21 +1,19 @@
-import { derived, get, Readable, Writable } from "svelte/store"
-import {
-  DataFetchDefinition,
-  getDatasourceDefinition,
-  getDatasourceSchema,
-} from "../../../fetch"
+import type { Readable, Writable } from "svelte/store"
+import { derived, get } from "svelte/store"
+import type { DataFetchDefinition } from "../../../fetch"
+import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
 import { cloneDeep } from "lodash"
-import {
+import type {
   SaveRowRequest,
   UIDatasource,
   UIFieldMutation,
   UIFieldSchema,
   UIRow,
-  ViewV2Type,
 } from "@budibase/types"
-import { Store as StoreContext, BaseStoreProps } from "."
-import { DatasourceActions } from "./datasources"
+import { ViewV2Type } from "@budibase/types"
+import type { Store as StoreContext, BaseStoreProps } from "."
+import type { DatasourceActions } from "./datasources"
 
 interface DatasourceStore {
   definition: Writable<DataFetchDefinition | null>

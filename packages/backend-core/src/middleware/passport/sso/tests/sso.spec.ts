@@ -1,6 +1,6 @@
 import { structures } from "../../../../../tests"
 import { testEnv } from "../../../../../tests/extra"
-import { SSOAuthDetails, User } from "@budibase/types"
+import type { SSOAuthDetails, User } from "@budibase/types"
 
 import { HTTPError } from "../../../../errors"
 import * as sso from "../sso"

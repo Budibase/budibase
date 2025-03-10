@@ -1,5 +1,5 @@
-import { FieldType } from "../../documents"
-import {
+import type { FieldType } from "../../documents"
+import type {
   EmptyFilterOption,
   UILogicalOperator,
   BasicOperator,

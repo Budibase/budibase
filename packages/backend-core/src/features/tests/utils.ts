@@ -1,4 +1,4 @@
-import { FeatureFlags } from "@budibase/types"
+import type { FeatureFlags } from "@budibase/types"
 import { setEnv } from "../../environment"
 import { parseEnvFlags } from "../features"
 

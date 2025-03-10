@@ -3,7 +3,7 @@ import {
   getJSONArrayDatasourceSchema,
   generateQueryArraySchemas,
 } from "../utils/json"
-import { QueryArrayFieldDatasource } from "@budibase/types"
+import type { QueryArrayFieldDatasource } from "@budibase/types"
 
 export default class QueryArrayFetch extends FieldFetch<QueryArrayFieldDatasource> {
   async getDefinition() {

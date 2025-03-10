@@ -1,4 +1,5 @@
-import { MonthlyQuotaName, QuotaUsage } from "@budibase/types"
+import type { QuotaUsage } from "@budibase/types"
+import { MonthlyQuotaName } from "@budibase/types"
 
 export const usage = (users = 0, creators = 0): QuotaUsage => {
   return {

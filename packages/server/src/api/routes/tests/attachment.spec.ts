@@ -1,6 +1,6 @@
 import { withEnv } from "../../../environment"
 import * as setup from "./utilities"
-import { APIError } from "@budibase/types"
+import type { APIError } from "@budibase/types"
 
 describe("/api/applications/:appId/sync", () => {
   let config = setup.getConfig()

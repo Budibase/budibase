@@ -1,15 +1,15 @@
-import {
+import type {
   Integration,
-  DatasourceFieldType,
-  QueryType,
   IntegrationBase,
-  DatasourceFeature,
   ConnectionInfo,
 } from "@budibase/types"
 import {
+  DatasourceFieldType,
+  QueryType,
+  DatasourceFeature,
+} from "@budibase/types"
+import type {
   Document,
-  MongoClient,
-  ObjectId,
   Filter,
   UpdateFilter,
   FindOneAndUpdateOptions,
@@ -21,6 +21,7 @@ import {
   InsertOneResult,
   InsertManyResult,
 } from "mongodb"
+import { MongoClient, ObjectId } from "mongodb"
 import environment from "../environment"
 import { HOST_ADDRESS } from "./utils"
 

@@ -1,4 +1,5 @@
-import { Table, Webhook, WebhookActionType } from "@budibase/types"
+import type { Table, Webhook } from "@budibase/types"
+import { WebhookActionType } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { mocks } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"

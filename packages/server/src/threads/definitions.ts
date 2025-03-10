@@ -1,4 +1,4 @@
-import { Datasource, Row, Query } from "@budibase/types"
+import type { Datasource, Row, Query } from "@budibase/types"
 
 export type WorkerCallback = (error: any, response?: any) => void
 

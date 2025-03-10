@@ -1,4 +1,4 @@
-import { UserGroup } from "@budibase/types"
+import type { UserGroup } from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class GroupsAPI extends TestAPI {

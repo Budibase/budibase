@@ -1,10 +1,10 @@
-import {
+import type {
   DeleteScreenResponse,
   SaveScreenRequest,
   SaveScreenResponse,
   UsageInScreensResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface ScreenEndpoints {
   saveScreen: (screen: SaveScreenRequest) => Promise<SaveScreenResponse>

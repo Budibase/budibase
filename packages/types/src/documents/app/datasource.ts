@@ -1,6 +1,6 @@
-import { Document } from "../document"
-import { SourceName } from "../../sdk"
-import { Table } from "./table"
+import type { Document } from "../document"
+import type { SourceName } from "../../sdk"
+import type { Table } from "./table"
 
 export interface Datasource extends Document {
   type: string

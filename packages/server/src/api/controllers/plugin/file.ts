@@ -3,7 +3,7 @@ import {
   getPluginMetadata,
   extractTarball,
 } from "../../../utilities/fileSystem"
-import { KoaFile } from "@budibase/types"
+import type { KoaFile } from "@budibase/types"
 
 export async function fileUpload(file: KoaFile) {
   if (!file.name || !file.path) {

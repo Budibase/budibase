@@ -1,4 +1,4 @@
-import { PlanType } from "./plan"
+import type { PlanType } from "./plan"
 
 export enum Feature {
   USER_GROUPS = "userGroups",

@@ -1,6 +1,7 @@
-import { Document } from "@budibase/types"
+import type { Document } from "@budibase/types"
 import * as jsonpatch from "fast-json-patch"
-import { writable, derived, get, Readable } from "svelte/store"
+import type { Readable } from "svelte/store"
+import { writable, derived, get } from "svelte/store"
 
 export const enum Operations {
   Add = "Add",

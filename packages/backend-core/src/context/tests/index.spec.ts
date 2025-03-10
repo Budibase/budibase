@@ -4,7 +4,7 @@ import { DEFAULT_TENANT_ID } from "../../constants"
 import { structures } from "../../../tests"
 import * as db from "../../db"
 import Context from "../Context"
-import { ContextMap } from "../types"
+import type { ContextMap } from "../types"
 import { IdentityType } from "@budibase/types"
 
 describe("context", () => {

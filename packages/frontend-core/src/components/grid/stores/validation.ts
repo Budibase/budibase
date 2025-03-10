@@ -1,5 +1,6 @@
-import { writable, get, derived, Writable, Readable } from "svelte/store"
-import { Store as StoreContext } from "."
+import type { Writable, Readable } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
+import type { Store as StoreContext } from "."
 import { parseCellID } from "../lib/utils"
 
 interface ValidationStore {

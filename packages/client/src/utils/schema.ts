@@ -1,6 +1,8 @@
 import { API } from "@/api"
-import { DataFetchMap, DataFetchType } from "@budibase/frontend-core"
-import { FieldType, TableSchema } from "@budibase/types"
+import type { DataFetchType } from "@budibase/frontend-core"
+import { DataFetchMap } from "@budibase/frontend-core"
+import type { TableSchema } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 
 /**
  * Constructs a fetch instance for a given datasource.

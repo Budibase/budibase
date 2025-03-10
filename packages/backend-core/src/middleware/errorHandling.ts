@@ -1,4 +1,4 @@
-import { APIError } from "@budibase/types"
+import type { APIError } from "@budibase/types"
 import * as errors from "../errors"
 import environment from "../environment"
 import { stringContainsSecret } from "../security/secrets"

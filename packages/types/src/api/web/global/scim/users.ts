@@ -1,5 +1,5 @@
-import { ScimResource, ScimMeta } from "scim-patch"
-import { ScimListResponse } from "./shared"
+import type { ScimResource, ScimMeta } from "scim-patch"
+import type { ScimListResponse } from "./shared"
 
 type BooleanString = boolean | "True" | "true" | "False" | "false"
 

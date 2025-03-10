@@ -3,7 +3,7 @@ import fs from "fs"
 import { string } from "../questions"
 import { getPouch } from "../core/db"
 import { env as environment } from "@budibase/backend-core"
-import PouchDB from "pouchdb"
+import type PouchDB from "pouchdb"
 
 export const TEMP_DIR = ".temp"
 export const COUCH_DIR = "couchdb"

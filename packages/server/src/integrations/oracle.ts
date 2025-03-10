@@ -1,20 +1,22 @@
-import {
-  FieldType,
-  DatasourceFieldType,
+import type {
   Integration,
-  Operation,
-  QueryType,
   SqlQuery,
   Table,
   DatasourcePlus,
-  DatasourceFeature,
   ConnectionInfo,
   Schema,
-  TableSourceType,
   Row,
   DatasourcePlusQueryResponse,
-  SqlClient,
   EnrichedQueryJson,
+} from "@budibase/types"
+import {
+  FieldType,
+  DatasourceFieldType,
+  Operation,
+  QueryType,
+  DatasourceFeature,
+  TableSourceType,
+  SqlClient,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -24,21 +26,21 @@ import {
   getSqlQuery,
   HOST_ADDRESS,
 } from "./utils"
-import oracledb, {
+import type {
   BindParameters,
   Connection,
   ConnectionAttributes,
   ExecuteOptions,
   Result,
 } from "oracledb"
-import {
+import oracledb from "oracledb"
+import type {
   OracleTable,
   OracleColumn,
   OracleColumnsResponse,
   OracleTriggersResponse,
-  TriggeringEvent,
-  TriggerType,
 } from "./base/types"
+import { TriggeringEvent, TriggerType } from "./base/types"
 import { sql } from "@budibase/backend-core"
 
 const Sql = sql.Sql

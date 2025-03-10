@@ -1,5 +1,4 @@
-import {
-  ConfigType,
+import type {
   GoogleConfig,
   GoogleInnerConfig,
   JwtClaims,
@@ -8,9 +7,9 @@ import {
   OIDCWellKnownConfig,
   SSOAuthDetails,
   SSOProfile,
-  SSOProviderType,
   User,
 } from "@budibase/types"
+import { ConfigType, SSOProviderType } from "@budibase/types"
 import { generator } from "./generator"
 import { email, uuid } from "./common"
 import * as users from "./users"

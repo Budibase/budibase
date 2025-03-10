@@ -1,18 +1,17 @@
-import { writable, derived, get, Writable, Readable } from "svelte/store"
+import type { Writable, Readable } from "svelte/store"
+import { writable, derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
-import {
+import type {
   DataFetchOptions,
-  FieldType,
   Row,
   SearchFilters,
-  SortOrder,
-  SortType,
   TableSchema,
 } from "@budibase/types"
-import { APIClient } from "../api/types"
-import { DataFetchType } from "."
+import { FieldType, SortOrder, SortType } from "@budibase/types"
+import type { APIClient } from "../api/types"
+import type { DataFetchType } from "."
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 

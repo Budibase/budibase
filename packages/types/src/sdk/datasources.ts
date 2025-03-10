@@ -1,5 +1,5 @@
-import { Table, Row } from "../documents"
-import { EnrichedQueryJson } from "./search"
+import type { Table, Row } from "../documents"
+import type { EnrichedQueryJson } from "./search"
 
 export const PASSWORD_REPLACEMENT = "--secret-value--"
 

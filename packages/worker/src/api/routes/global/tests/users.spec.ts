@@ -1,4 +1,4 @@
-import { InviteUsersResponse, User } from "@budibase/types"
+import type { InviteUsersResponse, User } from "@budibase/types"
 
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"

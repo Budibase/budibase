@@ -2,7 +2,7 @@ import { execSync } from "child_process"
 import { processStringSync } from "@budibase/string-templates"
 import * as automationUtils from "../automationUtils"
 import environment from "../../environment"
-import { BashStepInputs, BashStepOutputs } from "@budibase/types"
+import type { BashStepInputs, BashStepOutputs } from "@budibase/types"
 
 export async function run({
   inputs,

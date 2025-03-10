@@ -1,7 +1,7 @@
 import nodeFetch from "node-fetch"
 import { downloadTemplate as dlTemplate } from "../../utilities/fileSystem"
 import env from "../../environment"
-import {
+import type {
   DownloadTemplateResponse,
   FetchGlobalTemplateResponse,
   UserCtx,

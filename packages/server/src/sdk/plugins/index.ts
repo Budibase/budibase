@@ -1,4 +1,5 @@
-import { KoaFile, Plugin, PluginSource, PluginType } from "@budibase/types"
+import type { KoaFile, Plugin, PluginSource } from "@budibase/types"
+import { PluginType } from "@budibase/types"
 import {
   db as dbCore,
   objectStore,

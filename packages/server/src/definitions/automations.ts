@@ -1,4 +1,4 @@
-import {
+import type {
   AutomationStepResultOutputs,
   AutomationTriggerResultOutputs,
   LoopStepType,

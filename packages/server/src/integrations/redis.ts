@@ -1,8 +1,7 @@
+import type { ConnectionInfo, Integration } from "@budibase/types"
 import {
-  ConnectionInfo,
   DatasourceFeature,
   DatasourceFieldType,
-  Integration,
   QueryType,
 } from "@budibase/types"
 import Redis from "ioredis"

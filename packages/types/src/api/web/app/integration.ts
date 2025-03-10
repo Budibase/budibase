@@ -1,4 +1,4 @@
-import { Integration, SourceName } from "../../../sdk"
+import type { Integration, SourceName } from "../../../sdk"
 
 export type FetchIntegrationsResponse = Record<
   SourceName,

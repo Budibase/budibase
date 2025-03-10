@@ -1,5 +1,5 @@
 import _ from "lodash"
-import { AnyDocument } from "@budibase/types"
+import type { AnyDocument } from "@budibase/types"
 import { generator } from "../../../tests"
 import { DatabaseImpl } from "../couch"
 import { newid } from "../../utils"

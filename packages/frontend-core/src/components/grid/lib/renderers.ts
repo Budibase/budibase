@@ -1,4 +1,5 @@
-import { FieldType, UIColumn } from "@budibase/types"
+import type { UIColumn } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 
 import OptionsCell from "../cells/OptionsCell.svelte"
 import DateCell from "../cells/DateCell.svelte"

@@ -2,10 +2,8 @@ import { writable, get } from "svelte/store"
 import { API } from "@/api"
 import { devToolsStore } from "./devTools.js"
 import { eventStore } from "./events.js"
-import {
+import type {
   ComponentDefinition,
-  DropPosition,
-  PingSource,
   PreviewDevice,
   Screen,
   Theme,
@@ -15,6 +13,7 @@ import {
   Snippet,
   UIComponentError,
 } from "@budibase/types"
+import { DropPosition, PingSource } from "@budibase/types"
 
 interface BuilderStore {
   inBuilder: boolean

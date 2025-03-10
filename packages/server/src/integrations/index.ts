@@ -14,12 +14,8 @@ import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
 import oracle from "./oracle"
-import {
-  SourceName,
-  Integration,
-  PluginType,
-  IntegrationBase,
-} from "@budibase/types"
+import type { Integration, IntegrationBase } from "@budibase/types"
+import { SourceName, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
 import cloneDeep from "lodash/cloneDeep"

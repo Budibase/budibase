@@ -1,7 +1,7 @@
 import os from "os"
 import process from "process"
 import { env } from "@budibase/backend-core"
-import { GetDiagnosticsResponse, UserCtx } from "@budibase/types"
+import type { GetDiagnosticsResponse, UserCtx } from "@budibase/types"
 
 export async function systemDebugInfo(
   ctx: UserCtx<void, GetDiagnosticsResponse>

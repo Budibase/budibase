@@ -1,19 +1,21 @@
-import {
+import type {
   ConnectionInfo,
-  DatasourceFeature,
-  DatasourceFieldType,
   DatasourcePlus,
   DatasourcePlusQueryResponse,
   EnrichedQueryJson,
   Integration,
-  Operation,
-  QueryType,
   Schema,
-  SourceName,
-  SqlClient,
   SqlQuery,
   Table,
   TableSchema,
+} from "@budibase/types"
+import {
+  DatasourceFeature,
+  DatasourceFieldType,
+  Operation,
+  QueryType,
+  SourceName,
+  SqlClient,
   TableSourceType,
 } from "@budibase/types"
 import {
@@ -24,7 +26,7 @@ import {
   getSqlQuery,
   HOST_ADDRESS,
 } from "./utils"
-import { MSSQLColumn, MSSQLTablesResponse } from "./base/types"
+import type { MSSQLColumn, MSSQLTablesResponse } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import sqlServer from "mssql"
 import { sql } from "@budibase/backend-core"

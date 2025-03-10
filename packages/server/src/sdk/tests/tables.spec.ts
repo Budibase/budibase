@@ -1,6 +1,6 @@
 import TestConfig from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
-import { Table } from "@budibase/types"
+import type { Table } from "@budibase/types"
 import sdk from "../"
 
 describe("tables", () => {

@@ -1,20 +1,20 @@
-import { Table } from "@budibase/types"
-import { SortOrder } from "../../../api"
-import {
+import type { Table } from "@budibase/types"
+import type { SortOrder } from "../../../api"
+import type {
   SearchFilters,
   EmptyFilterOption,
   BasicOperator,
   LogicalOperator,
 } from "../../../sdk"
-import { HttpMethod } from "../query"
-import { Row } from "../row"
-import {
+import type { HttpMethod } from "../query"
+import type { Row } from "../row"
+import type {
   LoopStepType,
   EmailAttachment,
   AutomationResults,
   AutomationStepResult,
 } from "./automation"
-import { AutomationStep } from "./schema"
+import type { AutomationStep } from "./schema"
 
 export enum FilterCondition {
   EQUAL = "EQUAL",

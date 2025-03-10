@@ -1,9 +1,8 @@
 import { v4 as uuidv4 } from "uuid"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import { TRIGGER_DEFINITIONS } from "../../triggers"
-import {
+import type {
   Automation,
-  AutomationActionStepId,
   AutomationResults,
   AutomationStep,
   AutomationStepInputs,
@@ -11,15 +10,18 @@ import {
   AutomationTriggerDefinition,
   AutomationTriggerInputs,
   AutomationTriggerOutputs,
-  AutomationTriggerStepId,
   BranchStepInputs,
-  isDidNotTriggerResponse,
   SearchFilters,
   TestAutomationRequest,
   TriggerAutomationRequest,
   TriggerAutomationResponse,
 } from "@budibase/types"
-import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import {
+  AutomationActionStepId,
+  AutomationTriggerStepId,
+  isDidNotTriggerResponse,
+} from "@budibase/types"
+import type TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { automations } from "@budibase/shared-core"
 
 type StepBuilderFunction = <TStep extends AutomationTriggerStepId>(

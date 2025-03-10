@@ -1,7 +1,7 @@
 import { events } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { structures, TestConfiguration, mocks } from "../../../../tests"
-import { User, UserGroup } from "@budibase/types"
+import type { User, UserGroup } from "@budibase/types"
 
 mocks.licenses.useGroups()
 

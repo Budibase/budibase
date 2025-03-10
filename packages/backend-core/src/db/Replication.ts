@@ -1,4 +1,4 @@
-import PouchDB from "pouchdb"
+import type PouchDB from "pouchdb"
 import { getPouchDB, closePouchDB } from "./couch"
 import { DocumentType } from "@budibase/types"
 

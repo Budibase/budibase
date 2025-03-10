@@ -3,23 +3,25 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-import {
-  AutoFieldSubType,
-  BBReferenceFieldSubType,
+import type {
   Datasource,
-  FieldType,
-  INTERNAL_TABLE_SOURCE_ID,
-  InternalTable,
-  RelationshipType,
   Row,
   SaveTableRequest,
   Table,
   TableSchema,
-  TableSourceType,
   User,
   ValidateTableImportResponse,
-  ViewCalculation,
   ViewV2Enriched,
+} from "@budibase/types"
+import {
+  AutoFieldSubType,
+  BBReferenceFieldSubType,
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  InternalTable,
+  RelationshipType,
+  TableSourceType,
+  ViewCalculation,
   RowExportFormat,
   PermissionLevel,
 } from "@budibase/types"

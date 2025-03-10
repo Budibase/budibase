@@ -1,4 +1,4 @@
-import { Event, Identity } from "@budibase/types"
+import type { Event, Identity } from "@budibase/types"
 import { processors } from "./processors"
 import identification from "./identification"
 import * as backfill from "./backfill"

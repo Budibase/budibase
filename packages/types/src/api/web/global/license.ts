@@ -1,6 +1,6 @@
 // LICENSE KEY
 
-import { QuotaUsage } from "../../../documents"
+import type { QuotaUsage } from "../../../documents"
 
 export interface ActivateLicenseKeyRequest {
   licenseKey: string

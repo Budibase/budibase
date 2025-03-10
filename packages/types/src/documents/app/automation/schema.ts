@@ -1,14 +1,16 @@
-import { Hosting } from "../../../sdk"
-import {
-  AutomationActionStepId,
+import type { Hosting } from "../../../sdk"
+import type {
   ActionImplementation,
-  AutomationStepType,
   AutomationFeature,
   InputOutputBlock,
-  AutomationTriggerStepId,
   AutomationEventType,
 } from "./automation"
 import {
+  AutomationActionStepId,
+  AutomationStepType,
+  AutomationTriggerStepId,
+} from "./automation"
+import type {
   CollectStepInputs,
   CollectStepOutputs,
   CreateRowStepInputs,

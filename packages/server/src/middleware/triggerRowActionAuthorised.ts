@@ -1,5 +1,6 @@
-import { Next } from "koa"
-import { PermissionLevel, PermissionType, UserCtx } from "@budibase/types"
+import type { Next } from "koa"
+import type { UserCtx } from "@budibase/types"
+import { PermissionLevel, PermissionType } from "@budibase/types"
 import { docIds } from "@budibase/backend-core"
 import * as utils from "../db/utils"
 import sdk from "../sdk"

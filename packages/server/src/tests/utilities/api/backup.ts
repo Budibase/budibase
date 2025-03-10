@@ -1,8 +1,9 @@
-import {
+import type {
   CreateAppBackupResponse,
   ImportAppBackupResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 
 export class BackupAPI extends TestAPI {
   exportBasicBackup = async (appId: string, expectations?: Expectations) => {

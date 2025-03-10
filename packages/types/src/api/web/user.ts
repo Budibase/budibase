@@ -1,5 +1,5 @@
-import { AccountMetadata, PlatformUser, User } from "../../documents"
-import { SearchFilters } from "../../sdk"
+import type { AccountMetadata, PlatformUser, User } from "../../documents"
+import type { SearchFilters } from "../../sdk"
 
 export interface Invite {
   email: string

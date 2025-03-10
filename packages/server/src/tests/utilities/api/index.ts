@@ -1,4 +1,4 @@
-import TestConfiguration from "../TestConfiguration"
+import type TestConfiguration from "../TestConfiguration"
 import { PermissionAPI } from "./permission"
 import { RowAPI } from "./row"
 import { TableAPI } from "./table"

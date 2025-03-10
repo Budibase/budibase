@@ -1,10 +1,10 @@
-import { Datasource, Query } from "@budibase/types"
+import type { Datasource, Query } from "@budibase/types"
 import * as setup from "../utilities"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../integrations/tests/utils"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 

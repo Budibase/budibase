@@ -1,4 +1,4 @@
-import { Integration } from "@budibase/types"
+import type { Integration } from "@budibase/types"
 
 export interface UIIntegration extends Integration {
   name: string

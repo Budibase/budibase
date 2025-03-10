@@ -7,9 +7,10 @@ import {
   triggerCron,
 } from "../utilities"
 import { automations } from "@budibase/pro"
-import { AutomationData, AutomationStatus } from "@budibase/types"
+import type { AutomationData } from "@budibase/types"
+import { AutomationStatus } from "@budibase/types"
 import { MAX_AUTOMATION_RECURRING_ERRORS } from "../../../constants"
-import { queue } from "@budibase/backend-core"
+import type { queue } from "@budibase/backend-core"
 
 describe("cron trigger", () => {
   const config = new TestConfiguration()

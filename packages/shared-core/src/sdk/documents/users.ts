@@ -1,11 +1,5 @@
-import {
-  ContextUser,
-  DocumentType,
-  SEPARATOR,
-  User,
-  InternalTable,
-  UserGroup,
-} from "@budibase/types"
+import type { ContextUser, User, UserGroup } from "@budibase/types"
+import { DocumentType, SEPARATOR, InternalTable } from "@budibase/types"
 import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
 

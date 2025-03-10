@@ -1,5 +1,5 @@
 import { API } from "@/api"
-import { GetUserFlagsResponse } from "@budibase/types"
+import type { GetUserFlagsResponse } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 interface FlagsState {

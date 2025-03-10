@@ -2,7 +2,7 @@ import AnalyticsProcessor from "./AnalyticsProcessor"
 import LoggingProcessor from "./LoggingProcessor"
 import AuditLogsProcessor from "./AuditLogsProcessor"
 import Processors from "./Processors"
-import { AuditLogFn } from "@budibase/types"
+import type { AuditLogFn } from "@budibase/types"
 
 export const analyticsProcessor = new AnalyticsProcessor()
 const loggingProcessor = new LoggingProcessor()

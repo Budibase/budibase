@@ -1,9 +1,9 @@
-import {
+import type {
   EventPublishType,
   PostEventPublishRequest,
   PostEventPublishResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface EventEndpoints {
   publishEvent: (type: EventPublishType) => Promise<PostEventPublishResponse>

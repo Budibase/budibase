@@ -1,4 +1,4 @@
-import {
+import type {
   AddPermissionRequest,
   AddPermissionResponse,
   FetchResourcePermissionInfoResponse,
@@ -6,7 +6,8 @@ import {
   RemovePermissionRequest,
   RemovePermissionResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 
 export class PermissionAPI extends TestAPI {
   get = async (resourceId: string, expectations?: Expectations) => {

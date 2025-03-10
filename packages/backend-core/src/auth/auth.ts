@@ -14,14 +14,13 @@ import {
 } from "../middleware"
 import * as userCache from "../cache/user"
 import { invalidateUser } from "../cache/user"
-import {
-  ConfigType,
+import type {
   GoogleInnerConfig,
   OIDCInnerConfig,
   PlatformLogoutOpts,
   SessionCookie,
-  SSOProviderType,
 } from "@budibase/types"
+import { ConfigType, SSOProviderType } from "@budibase/types"
 import * as events from "../events"
 import * as configs from "../configs"
 import { clearCookie, getCookie } from "../utils"

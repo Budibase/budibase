@@ -1,14 +1,12 @@
-import {
+import type {
   Datasource,
-  FieldType,
   ManyToManyRelationshipFieldMetadata,
   ManyToOneRelationshipFieldMetadata,
   OneToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
-  RelationshipType,
   Table,
-  TableSourceType,
 } from "@budibase/types"
+import { FieldType, RelationshipType, TableSourceType } from "@budibase/types"
 import {
   foreignKeyStructure,
   generateForeignKey,

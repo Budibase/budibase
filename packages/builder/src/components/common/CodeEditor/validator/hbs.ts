@@ -1,7 +1,7 @@
 /* global hbs */
 import Handlebars from "handlebars"
 import type { Diagnostic } from "@codemirror/lint"
-import { CodeValidator } from "@/types"
+import type { CodeValidator } from "@/types"
 
 function isMustacheStatement(
   node: hbs.AST.Statement

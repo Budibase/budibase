@@ -1,4 +1,4 @@
-import { Plugin, PluginUpload } from "@budibase/types"
+import type { Plugin, PluginUpload } from "@budibase/types"
 import { budibaseTempDir } from "../budibaseDir"
 import fs from "fs"
 import { join } from "path"

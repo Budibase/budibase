@@ -1,4 +1,4 @@
-import { MetadataType, Document } from "../../../documents"
+import type { MetadataType, Document } from "../../../documents"
 
 export interface GetMetadataTypesResponse {
   types: typeof MetadataType

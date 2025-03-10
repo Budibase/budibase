@@ -1,8 +1,10 @@
-import { derived, get, readable, Readable } from "svelte/store"
+import type { Readable } from "svelte/store"
+import { derived, get, readable } from "svelte/store"
 import { API } from "@/api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
-import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
+import type { HistoryStore } from "@/stores/builder/history"
+import { createHistoryStore } from "@/stores/builder/history"
 import { licensing, organisation, environment } from "@/stores/portal"
 import { tables, appStore } from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
@@ -12,37 +14,39 @@ import {
   getUserBindings,
   getSettingBindings,
 } from "@/dataBinding"
-import {
-  AutomationTriggerStepId,
-  AutomationEventType,
-  AutomationActionStepId,
+import type {
   Automation,
   AutomationStep,
   Table,
   Branch,
   AutomationTrigger,
   AutomationStatus,
-  UILogicalOperator,
-  EmptyFilterOption,
-  AutomationIOType,
   BranchPath,
   BlockDefinitions,
-  isBranchStep,
-  isTrigger,
-  isRowUpdateTrigger,
-  isRowSaveTrigger,
-  isAppTrigger,
   BranchStep,
   GetAutomationTriggerDefinitionsResponse,
   GetAutomationActionDefinitionsResponse,
   AppSelfResponse,
   TestAutomationResponse,
-  isAutomationResults,
   RowActionTriggerOutputs,
   WebhookTriggerOutputs,
-  AutomationCustomIOType,
   AutomationTriggerResultOutputs,
   AutomationTriggerResult,
+} from "@budibase/types"
+import {
+  AutomationTriggerStepId,
+  AutomationEventType,
+  AutomationActionStepId,
+  UILogicalOperator,
+  EmptyFilterOption,
+  AutomationIOType,
+  isBranchStep,
+  isTrigger,
+  isRowUpdateTrigger,
+  isRowSaveTrigger,
+  isAppTrigger,
+  isAutomationResults,
+  AutomationCustomIOType,
   AutomationStepType,
 } from "@budibase/types"
 import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"

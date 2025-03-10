@@ -1,10 +1,10 @@
 import { inputProcessing } from ".."
 import { generator, structures } from "@budibase/backend-core/tests"
+import type { Table } from "@budibase/types"
 import {
   FieldType,
   BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"

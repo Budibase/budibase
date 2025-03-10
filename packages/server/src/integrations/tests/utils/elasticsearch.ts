@@ -1,9 +1,10 @@
-import { Datasource, SourceName } from "@budibase/types"
+import type { Datasource } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
-import { testContainerUtils } from "@budibase/backend-core/tests"
+import type { testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
 import { ELASTICSEARCH_IMAGE } from "./images"
-import { ElasticsearchConfig } from "../../elasticsearch"
+import type { ElasticsearchConfig } from "../../elasticsearch"
 
 let ports: Promise<testContainerUtils.Port[]>
 

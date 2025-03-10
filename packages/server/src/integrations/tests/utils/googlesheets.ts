@@ -7,9 +7,9 @@
 // development of these tests involved hitting Google's APIs directly and
 // examining the responses. If we couldn't find a good example of something in
 // use, it wasn't included.
-import { Datasource } from "@budibase/types"
+import type { Datasource } from "@budibase/types"
 import nock from "nock"
-import { GoogleSheetsConfig } from "../../googlesheets"
+import type { GoogleSheetsConfig } from "../../googlesheets"
 import type {
   SpreadsheetProperties,
   ExtendedValue,

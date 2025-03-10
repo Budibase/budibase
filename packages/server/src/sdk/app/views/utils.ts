@@ -1,4 +1,4 @@
-import { ViewV2 } from "@budibase/types"
+import type { ViewV2 } from "@budibase/types"
 import { utils, dataFilters } from "@budibase/shared-core"
 import { cloneDeep, isPlainObject } from "lodash"
 import { HTTPError } from "@budibase/backend-core"

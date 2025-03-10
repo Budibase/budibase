@@ -1,11 +1,12 @@
-import {
+import type {
   CreateRowActionRequest,
   RowActionPermissionsResponse,
   RowActionResponse,
   RowActionsResponse,
   RowActionTriggerRequest,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 
 export class RowActionAPI extends TestAPI {
   save = async (

@@ -1,6 +1,6 @@
 import { getRoutingInfo } from "../../utilities/routing"
 import { roles } from "@budibase/backend-core"
-import {
+import type {
   FetchClientScreenRoutingResponse,
   FetchScreenRoutingResponse,
   ScreenRoutingJson,

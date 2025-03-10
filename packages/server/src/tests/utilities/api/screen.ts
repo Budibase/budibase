@@ -1,5 +1,6 @@
-import { Screen, UsageInScreensResponse } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import type { Screen, UsageInScreensResponse } from "@budibase/types"
+import type { Expectations } from "./base"
+import { TestAPI } from "./base"
 
 export class ScreenAPI extends TestAPI {
   list = async (expectations?: Expectations): Promise<Screen[]> => {

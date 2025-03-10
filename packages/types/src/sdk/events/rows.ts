@@ -1,4 +1,4 @@
-import { BaseEvent } from "./event"
+import type { BaseEvent } from "./event"
 
 export interface RowsImportedEvent extends BaseEvent {
   tableId: string

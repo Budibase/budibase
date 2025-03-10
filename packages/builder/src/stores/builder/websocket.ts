@@ -16,7 +16,7 @@ import { auth, appsStore } from "@/stores/portal"
 import { screenStore } from "./screens"
 import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"
-import {
+import type {
   Automation,
   Datasource,
   Role,

@@ -1,5 +1,5 @@
-import { PaginationResponse } from "../../api"
-import { Document } from "../document"
+import type { PaginationResponse } from "../../api"
+import type { Document } from "../document"
 
 export interface UserGroup extends Document {
   name: string

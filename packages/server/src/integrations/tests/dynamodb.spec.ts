@@ -1,11 +1,12 @@
-import { Datasource } from "@budibase/types"
-import { DynamoDBConfig, DynamoDBIntegration } from "../dynamodb"
+import type { Datasource } from "@budibase/types"
+import type { DynamoDBConfig } from "../dynamodb"
+import { DynamoDBIntegration } from "../dynamodb"
 import { DatabaseName, datasourceDescribe } from "./utils"
-import {
+import type {
   CreateTableCommandInput,
-  DynamoDB,
   DynamoDBClientConfig,
 } from "@aws-sdk/client-dynamodb"
+import { DynamoDB } from "@aws-sdk/client-dynamodb"
 
 const describes = datasourceDescribe({ only: [DatabaseName.DYNAMODB] })
 

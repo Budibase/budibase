@@ -1,10 +1,10 @@
 import { getDefinition, getDefinitions } from "../../integrations"
-import {
-  SourceName,
+import type {
   UserCtx,
   FetchIntegrationsResponse,
   FindIntegrationResponse,
 } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 
 const DISABLED_EXTERNAL_INTEGRATIONS = [
   SourceName.AIRTABLE,

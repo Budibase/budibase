@@ -1,7 +1,8 @@
-import pino, { LoggerOptions } from "pino"
+import type { LoggerOptions } from "pino"
+import pino from "pino"
 import pinoPretty from "pino-pretty"
 
-import { IdentityType } from "@budibase/types"
+import type { IdentityType } from "@budibase/types"
 import env from "../../environment"
 import * as context from "../../context"
 import * as correlation from "../correlation"

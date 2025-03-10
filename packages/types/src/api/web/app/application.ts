@@ -1,6 +1,6 @@
 import type { PlanType } from "../../../sdk"
 import type { Layout, App, Screen } from "../../../documents"
-import { ReadStream } from "fs"
+import type { ReadStream } from "fs"
 
 export interface SyncAppResponse {
   message: string

@@ -1,11 +1,6 @@
-import {
+import type {
   Aggregation,
-  CalculationType,
-  DocumentType,
   EnrichedQueryJson,
-  FieldType,
-  isLogicalSearchOperator,
-  Operation,
   QueryJson,
   RelationshipFieldMetadata,
   RelationshipsJson,
@@ -13,11 +8,18 @@ import {
   RowSearchParams,
   SearchFilters,
   SearchResponse,
+  Table,
+  ViewV2,
+} from "@budibase/types"
+import {
+  CalculationType,
+  DocumentType,
+  FieldType,
+  isLogicalSearchOperator,
+  Operation,
   SortOrder,
   SortType,
   SqlClient,
-  Table,
-  ViewV2,
 } from "@budibase/types"
 import {
   buildInternalRelationships,

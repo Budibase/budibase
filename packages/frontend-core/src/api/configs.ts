@@ -1,4 +1,4 @@
-import {
+import type {
   Config,
   ConfigChecklistResponse,
   ConfigType,
@@ -11,7 +11,7 @@ import {
   SaveConfigResponse,
   UploadConfigFileResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface ConfigEndpoints {
   getConfig: (type: ConfigType) => Promise<FindConfigResponse>

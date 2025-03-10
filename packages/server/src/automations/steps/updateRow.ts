@@ -1,7 +1,7 @@
 import * as rowController from "../../api/controllers/row"
 import * as automationUtils from "../automationUtils"
 import { buildCtx } from "./utils"
-import {
+import type {
   ContextEmitter,
   UpdateRowStepInputs,
   UpdateRowStepOutputs,

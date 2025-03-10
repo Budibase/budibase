@@ -1,8 +1,8 @@
 import dayjs from "dayjs"
+import type { Table } from "@budibase/types"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 import { generateTableID } from "../../../../db/utils"

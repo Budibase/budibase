@@ -5,7 +5,7 @@ import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
-import { AppMigration } from "."
+import type { AppMigration } from "."
 
 export async function processMigrations(
   appId: string,

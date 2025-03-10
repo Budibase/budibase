@@ -1,9 +1,10 @@
 import authorized from "../middleware/authorized"
-import { BaseSocket, EmitOptions } from "./websocket"
+import type { EmitOptions } from "./websocket"
+import { BaseSocket } from "./websocket"
 import { permissions, events, context } from "@budibase/backend-core"
-import http from "http"
-import Koa from "koa"
-import {
+import type http from "http"
+import type Koa from "koa"
+import type {
   Datasource,
   Table,
   SocketSession,
@@ -15,7 +16,7 @@ import {
 } from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
-import { Socket } from "socket.io"
+import type { Socket } from "socket.io"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 
 export default class BuilderSocket extends BaseSocket {

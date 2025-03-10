@@ -1,18 +1,16 @@
-import {
+import type {
   Billing,
   Customer,
   Feature,
   License,
   OfflineIdentifier,
   OfflineLicense,
-  PlanModel,
-  PlanType,
-  PriceDuration,
   PurchasedPlan,
   PurchasedPrice,
   Quotas,
   Subscription,
 } from "@budibase/types"
+import { PlanModel, PlanType, PriceDuration } from "@budibase/types"
 import { generator } from "./generator"
 
 export function price(): PurchasedPrice {

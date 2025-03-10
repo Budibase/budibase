@@ -7,7 +7,7 @@ import {
   InternalTables,
 } from "../../db/utils"
 import isEqual from "lodash/isEqual"
-import {
+import type {
   ContextUser,
   UserMetadata,
   Database,

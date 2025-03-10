@@ -1,10 +1,10 @@
-import {
+import type {
   DownloadAttachmentResponse,
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface AttachmentEndpoints {
   downloadAttachment: (

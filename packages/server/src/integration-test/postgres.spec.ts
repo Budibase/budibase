@@ -1,11 +1,12 @@
-import { Datasource, FieldType, Table } from "@budibase/types"
+import type { Datasource, Table } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import {
   DatabaseName,
   datasourceDescribe,
   knexClient,
 } from "../integrations/tests/utils"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 
 const mainDescriptions = datasourceDescribe({
   only: [DatabaseName.POSTGRES, DatabaseName.POSTGRES_LEGACY],

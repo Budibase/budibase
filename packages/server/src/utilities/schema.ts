@@ -1,11 +1,5 @@
-import {
-  FieldType,
-  BBReferenceFieldSubType,
-  TableSchema,
-  FieldSchema,
-  Row,
-  Table,
-} from "@budibase/types"
+import type { TableSchema, FieldSchema, Row, Table } from "@budibase/types"
+import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
 import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db, HTTPError, sql } from "@budibase/backend-core"
 

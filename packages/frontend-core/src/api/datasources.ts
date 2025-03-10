@@ -1,4 +1,4 @@
-import {
+import type {
   BuildSchemaFromSourceRequest,
   BuildSchemaFromSourceResponse,
   CreateDatasourceRequest,
@@ -13,7 +13,7 @@ import {
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
 } from "@budibase/types"
-import { BaseAPIClient } from "./types"
+import type { BaseAPIClient } from "./types"
 
 export interface DatasourceEndpoints {
   getDatasources: () => Promise<Datasource[]>

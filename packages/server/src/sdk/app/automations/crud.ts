@@ -1,10 +1,5 @@
-import {
-  Automation,
-  RequiredKeys,
-  Webhook,
-  WebhookActionType,
-  MetadataType,
-} from "@budibase/types"
+import type { Automation, RequiredKeys, Webhook } from "@budibase/types"
+import { WebhookActionType, MetadataType } from "@budibase/types"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import {

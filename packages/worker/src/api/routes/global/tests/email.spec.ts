@@ -1,10 +1,11 @@
-import { EmailTemplatePurpose, SendEmailRequest } from "@budibase/types"
+import type { SendEmailRequest } from "@budibase/types"
+import { EmailTemplatePurpose } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
+import type { Mailserver } from "../../../../tests/mocks/email"
 import {
   captureEmail,
   deleteAllEmail,
   getAttachments,
-  Mailserver,
   startMailserver,
   stopMailserver,
 } from "../../../../tests/mocks/email"

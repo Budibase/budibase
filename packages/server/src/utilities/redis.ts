@@ -1,6 +1,7 @@
-import { redis, RedisClient } from "@budibase/backend-core"
+import type { RedisClient } from "@budibase/backend-core"
+import { redis } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
-import { ContextUser } from "@budibase/types"
+import type { ContextUser } from "@budibase/types"
 import env from "../environment"
 
 const APP_DEV_LOCK_SECONDS = 600

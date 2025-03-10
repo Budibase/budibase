@@ -1,5 +1,5 @@
-import { Account, AccountSSOProvider } from "../../documents"
-import { Hosting } from "../../sdk"
+import type { Account, AccountSSOProvider } from "../../documents"
+import type { Hosting } from "../../sdk"
 
 export interface CreateAccountRequest {
   email: string

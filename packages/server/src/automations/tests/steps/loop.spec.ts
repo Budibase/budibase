@@ -1,10 +1,12 @@
 import * as automation from "../../index"
 import { basicTable } from "../../../tests/utilities/structures"
-import {
+import type {
   Table,
-  LoopStepType,
   ServerLogStepOutputs,
   CreateRowStepOutputs,
+} from "@budibase/types"
+import {
+  LoopStepType,
   FieldType,
   FilterCondition,
   AutomationStepStatus,

@@ -1,4 +1,5 @@
-import { Row, RowExportFormat, TableSchema } from "@budibase/types"
+import type { Row, TableSchema } from "@budibase/types"
+import { RowExportFormat } from "@budibase/types"
 
 export { RowExportFormat as Format } from "@budibase/types"
 

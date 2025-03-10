@@ -2,7 +2,11 @@ import { get } from "svelte/store"
 import { API } from "@/api"
 import { appStore } from "@/stores/builder"
 import { BudiStore } from "../BudiStore"
-import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
+import type {
+  AppNavigation,
+  AppNavigationLink,
+  UIObject,
+} from "@budibase/types"
 
 export const INITIAL_NAVIGATION_STATE = {
   navigation: "Top",

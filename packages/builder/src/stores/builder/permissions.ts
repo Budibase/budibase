@@ -1,6 +1,6 @@
 import { BudiStore } from "../BudiStore"
 import { API } from "@/api"
-import {
+import type {
   PermissionLevel,
   GetResourcePermsResponse,
   GetDependantResourcesResponse,

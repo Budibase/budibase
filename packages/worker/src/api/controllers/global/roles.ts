@@ -6,7 +6,7 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import {
+import type {
   Ctx,
   App,
   FetchGlobalRolesResponse,

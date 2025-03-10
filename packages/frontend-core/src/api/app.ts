@@ -1,6 +1,6 @@
 import { sdk } from "@budibase/shared-core"
-import { BaseAPIClient } from "./types"
-import {
+import type { BaseAPIClient } from "./types"
+import type {
   AddAppSampleDataResponse,
   ClearDevLockResponse,
   CreateAppRequest,

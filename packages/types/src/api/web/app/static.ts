@@ -1,5 +1,5 @@
-import { App } from "../../../documents"
-import stream from "node:stream"
+import type { App } from "../../../documents"
+import type stream from "node:stream"
 
 export interface ToggleBetaFeatureResponse {
   message: string

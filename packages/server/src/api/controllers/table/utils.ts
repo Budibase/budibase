@@ -16,20 +16,18 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { context, events, HTTPError } from "@budibase/backend-core"
-import {
-  AutoFieldSubType,
+import type {
   Database,
   Datasource,
   FieldSchema,
-  FieldType,
   NumberFieldMetadata,
   RelationshipFieldMetadata,
   RenameColumn,
   Row,
-  SourceName,
   Table,
   View,
 } from "@budibase/types"
+import { AutoFieldSubType, FieldType, SourceName } from "@budibase/types"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import { runStaticFormulaChecks } from "./bulkFormula"

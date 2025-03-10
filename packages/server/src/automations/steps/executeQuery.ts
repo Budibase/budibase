@@ -1,7 +1,7 @@
 import * as queryController from "../../api/controllers/query"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
-import {
+import type {
   ContextEmitter,
   ExecuteQueryStepInputs,
   ExecuteQueryStepOutputs,

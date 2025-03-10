@@ -1,4 +1,4 @@
-import { Ctx } from "@budibase/types"
+import type { Ctx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { tracer } from "dd-trace"
 import type { Middleware, Next } from "koa"

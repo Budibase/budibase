@@ -1,6 +1,6 @@
 import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
-import { ExternalAppStepOutputs, DiscordStepInputs } from "@budibase/types"
+import type { ExternalAppStepOutputs, DiscordStepInputs } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
 const DEFAULT_AVATAR_URL = "https://i.imgur.com/a1cmTKM.png"

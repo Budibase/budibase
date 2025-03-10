@@ -1,9 +1,9 @@
-import {
+import type {
   UserCtx,
   PostEventPublishRequest,
-  EventPublishType,
   PostEventPublishResponse,
 } from "@budibase/types"
+import { EventPublishType } from "@budibase/types"
 import { events } from "@budibase/backend-core"
 
 export async function publish(

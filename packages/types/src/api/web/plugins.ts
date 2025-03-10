@@ -1,4 +1,4 @@
-import { PluginSource, Plugin } from "../../documents"
+import type { PluginSource, Plugin } from "../../documents"
 
 export interface UploadPluginRequest {}
 export interface UploadPluginResponse {

@@ -1,5 +1,4 @@
-import {
-  HTTPMethod,
+import type {
   APICallParams,
   APIClientConfig,
   APIClient,
@@ -8,6 +7,7 @@ import {
   Headers,
   APIError,
 } from "./types"
+import { HTTPMethod } from "./types"
 import { Helpers } from "@budibase/bbui"
 import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"

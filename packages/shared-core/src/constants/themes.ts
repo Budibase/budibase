@@ -1,4 +1,5 @@
-import { ThemeMeta, Theme } from "@budibase/types"
+import type { ThemeMeta } from "@budibase/types"
+import { Theme } from "@budibase/types"
 
 export const ThemeClassPrefix = "spectrum--"
 export const DefaultBuilderTheme = Theme.DARKEST

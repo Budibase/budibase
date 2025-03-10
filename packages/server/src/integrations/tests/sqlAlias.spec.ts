@@ -1,12 +1,14 @@
-import {
+import type {
   Datasource,
-  Operation,
-  SourceName,
   SqlQuery,
-  SqlClient,
   EnrichedQueryJson,
   TableSchema,
   Table,
+} from "@budibase/types"
+import {
+  Operation,
+  SourceName,
+  SqlClient,
   TableSourceType,
 } from "@budibase/types"
 import { sql } from "@budibase/backend-core"

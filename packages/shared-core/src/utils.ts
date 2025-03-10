@@ -1,12 +1,14 @@
-import {
+import type {
   LegacyFilter,
   UISearchFilter,
-  UILogicalOperator,
   SearchFilters,
+  SearchFilter,
+} from "@budibase/types"
+import {
+  UILogicalOperator,
   BasicOperator,
   ArrayOperator,
   isLogicalSearchOperator,
-  SearchFilter,
   EmptyFilterOption,
 } from "@budibase/types"
 import * as Constants from "./constants"

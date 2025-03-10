@@ -1,5 +1,6 @@
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI, TestAPIOpts } from "./base"
+import type TestConfiguration from "../TestConfiguration"
+import type { TestAPIOpts } from "./base"
+import { TestAPI } from "./base"
 
 export class TenantAPI extends TestAPI {
   config: TestConfiguration

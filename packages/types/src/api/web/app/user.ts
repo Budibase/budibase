@@ -1,5 +1,5 @@
-import { ContextUserMetadata, Flags, UserMetadata } from "../../../"
-import { DocumentInsertResponse } from "@budibase/nano"
+import type { ContextUserMetadata, Flags, UserMetadata } from "../../../"
+import type { DocumentInsertResponse } from "@budibase/nano"
 
 export type FetchUserMetadataResponse = ContextUserMetadata[]
 export type FindUserMetadataResponse = ContextUserMetadata

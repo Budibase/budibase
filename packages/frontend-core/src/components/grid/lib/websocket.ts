@@ -1,8 +1,8 @@
 import { get } from "svelte/store"
 import { createWebsocket } from "../../../utils"
 import { SocketEvent, GridSocketEvent } from "@budibase/shared-core"
-import { Store } from "../stores"
-import { UIDatasource, UIUser } from "@budibase/types"
+import type { Store } from "../stores"
+import type { UIDatasource, UIUser } from "@budibase/types"
 
 export const createGridWebsocket = (context: Store) => {
   const { rows, datasource, users, focusedCellId, definition, API } = context

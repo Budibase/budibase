@@ -1,13 +1,12 @@
 import { fixAutoColumnSubType, processAIColumns } from "../utils"
 import { AutoFieldDefaultNames } from "../../../constants"
+import type { FieldSchema, Table } from "@budibase/types"
 import {
   AIOperationEnum,
   AutoFieldSubType,
-  FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   RelationshipType,
-  Table,
   TableSourceType,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"

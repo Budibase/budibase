@@ -1,4 +1,5 @@
-import { Role, DocumentType, SEPARATOR } from "@budibase/types"
+import type { Role } from "@budibase/types"
+import { DocumentType, SEPARATOR } from "@budibase/types"
 
 // need to have a way to prefix, so we can check if the ID has its prefix or not
 // all new IDs should be the same in the future, but old roles they are never prefixed

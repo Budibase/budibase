@@ -9,16 +9,8 @@ import {
 } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import {
-  AutoFieldSubType,
-  FieldType,
-  IdentityType,
-  Row,
-  RowAttachment,
-  Table,
-  User,
-  ViewV2,
-} from "@budibase/types"
+import type { Row, RowAttachment, Table, User, ViewV2 } from "@budibase/types"
+import { AutoFieldSubType, FieldType, IdentityType } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
   processInputBBReference,

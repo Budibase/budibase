@@ -1,7 +1,7 @@
 import { destroy } from "../../api/controllers/row"
 import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
-import {
+import type {
   ContextEmitter,
   DeleteRowStepInputs,
   DeleteRowStepOutputs,

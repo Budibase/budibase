@@ -1,6 +1,6 @@
 import PouchDB from "pouchdb"
 import env from "../../environment"
-import { PouchOptions } from "@budibase/types"
+import type { PouchOptions } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 
 let Pouch: any

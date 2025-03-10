@@ -13,34 +13,36 @@ import {
   utils,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import {
-  AIOperationEnum,
-  AutoFieldSubType,
+import type {
   Datasource,
   DeleteRow,
   FieldSchema,
+  Row,
+  SaveTableRequest,
+  Table,
+  UpdatedRowEventEmitter,
+  TableSchema,
+  RelationSchemaField,
+  FormulaResponseType,
+} from "@budibase/types"
+import {
+  AIOperationEnum,
+  AutoFieldSubType,
   FieldType,
   BBReferenceFieldSubType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   QuotaUsageType,
   RelationshipType,
-  Row,
-  SaveTableRequest,
   StaticQuotaName,
-  Table,
   TableSourceType,
-  UpdatedRowEventEmitter,
-  TableSchema,
   JsonFieldSubType,
   RowExportFormat,
-  RelationSchemaField,
-  FormulaResponseType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
-import { Knex } from "knex"
+import type { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"

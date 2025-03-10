@@ -1,5 +1,5 @@
-import { EventProcessor } from "../types"
-import { Event, Identity, DocUpdateEvent } from "@budibase/types"
+import type { EventProcessor } from "../types"
+import type { Event, Identity, DocUpdateEvent } from "@budibase/types"
 import { doInTenant } from "../../../context"
 import { getDocumentId } from "../../documentId"
 import { shutdown } from "../../asyncEvents"

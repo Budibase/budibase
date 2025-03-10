@@ -1,5 +1,6 @@
-import { Datasource } from "@budibase/types"
-import { ElasticsearchConfig, ElasticSearchIntegration } from "../elasticsearch"
+import type { Datasource } from "@budibase/types"
+import type { ElasticsearchConfig } from "../elasticsearch"
+import { ElasticSearchIntegration } from "../elasticsearch"
 import { generator } from "@budibase/backend-core/tests"
 import { DatabaseName, datasourceDescribe } from "./utils"
 

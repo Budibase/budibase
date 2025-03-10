@@ -1,10 +1,8 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
+import type { Automation, TableRowActions, User } from "@budibase/types"
 import {
-  Automation,
   AutomationTriggerStepId,
   SEPARATOR,
-  TableRowActions,
-  User,
   VirtualDocumentType,
 } from "@budibase/types"
 import { generateRowActionsID } from "../../../db/utils"

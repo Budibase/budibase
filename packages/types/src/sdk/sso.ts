@@ -1,11 +1,11 @@
-import {
+import type {
   OAuth2,
   SSOProfileJson,
   SSOProviderType,
   SSOUser,
   User,
 } from "../documents"
-import { SaveUserOpts } from "./user"
+import type { SaveUserOpts } from "./user"
 
 export interface JwtClaims {
   preferred_username?: string

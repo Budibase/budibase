@@ -1,6 +1,6 @@
 import { roles } from "@budibase/backend-core"
 import { BASE_LAYOUT_PROP_IDS } from "./layouts"
-import { Screen, Table, Query, ViewV2, Component } from "@budibase/types"
+import type { Screen, Table, Query, ViewV2, Component } from "@budibase/types"
 
 export function createHomeScreen(
   config: {

@@ -2,7 +2,7 @@ import env from "../environment"
 import * as events from "../events"
 import * as accounts from "../accounts"
 import { getTenantId } from "../context"
-import { User, UserRoles, CloudAccount } from "@budibase/types"
+import type { User, UserRoles, CloudAccount } from "@budibase/types"
 import { hasBuilderPermissions, hasAdminPermissions } from "./utils"
 
 export const handleDeleteEvents = async (user: any) => {

@@ -1,7 +1,7 @@
-import { Document } from "../../document"
-import { View, ViewV2 } from "../view"
-import { RenameColumn } from "../../../sdk"
-import { TableSchema } from "./schema"
+import type { Document } from "../../document"
+import type { View, ViewV2 } from "../view"
+import type { RenameColumn } from "../../../sdk"
+import type { TableSchema } from "./schema"
 
 export const INTERNAL_TABLE_SOURCE_ID = "bb_internal"
 

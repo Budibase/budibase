@@ -15,10 +15,8 @@ import {
   processFormulas,
 } from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
-import {
+import type {
   ContextUser,
-  EventType,
-  FieldType,
   LinkDocumentValue,
   Row,
   Table,
@@ -26,6 +24,7 @@ import {
   ViewV2,
   ViewV2Schema,
 } from "@budibase/types"
+import { EventType, FieldType } from "@budibase/types"
 import sdk from "../../sdk"
 import { helpers } from "@budibase/shared-core"
 

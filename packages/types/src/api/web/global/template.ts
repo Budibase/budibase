@@ -1,4 +1,4 @@
-import { Template } from "../../../documents"
+import type { Template } from "../../../documents"
 
 export interface GlobalTemplateDefinition {
   name: string

@@ -1,4 +1,7 @@
-import { ScimCreateGroupRequest, ScimCreateUserRequest } from "@budibase/types"
+import type {
+  ScimCreateGroupRequest,
+  ScimCreateUserRequest,
+} from "@budibase/types"
 import { uuid } from "./common"
 import { generator } from "./generator"
 
