@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import Context from "../context"
 
-  const { hide } = getContext(Context.Modal) as { hide: () => void }
+  const { hide } = getContext(Context.Modal)
 
   let count: number = 0
   const clicks: number = 5

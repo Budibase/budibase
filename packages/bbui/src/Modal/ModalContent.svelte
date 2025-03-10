@@ -30,10 +30,7 @@
   export let secondaryButtonWarning: boolean = false
   export let custom: boolean = false
 
-  const { hide, cancel } = getContext(Context.Modal) as {
-    hide: () => void
-    cancel: () => void
-  }
+  const { hide, cancel } = getContext(Context.Modal)
 
   let loading: boolean = false
 

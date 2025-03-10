@@ -5,8 +5,13 @@
   export let noPadding: boolean = false
   export let gap: "XXS" | "XS" | "S" | "M" | "L" | "XL" = "M"
   export let noGap: boolean = false
-  export let alignContent: string = "normal"
-  export let justifyItems: string = "stretch"
+  export let alignContent:
+    | "start"
+    | "center"
+    | "space-between"
+    | "space-around"
+    | "normal" = "normal"
+  export let justifyItems: "stretch" | "start" | "center" | "end" = "stretch"
 </script>
 
 <div
