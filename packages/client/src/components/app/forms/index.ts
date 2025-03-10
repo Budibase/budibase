@@ -25,9 +25,10 @@ export interface FieldApi {
   deregister(): void
 }
 
-export interface FieldState<T> {
+export interface FieldState<T = any> {
   value: T
   fieldId: string
   disabled: boolean
   readonly: boolean
+  error?: string
 }
