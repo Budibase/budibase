@@ -30,7 +30,6 @@
     filter,
     inlineFilters,
     keyboardBlocked,
-    props,
   } = getContext("grid")
 
   const searchableTypes = [
