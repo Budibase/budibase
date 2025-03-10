@@ -145,9 +145,11 @@
       return
     }
     popoverAnchor = target
+
+    const doc = new DOMParser().parseFromString(helper.description, "text/html")
     hoverTarget = {
       type: "helper",
-      description: helper.description,
+      description: doc.body.textContent || "",
       code: getHelperExample(helper, mode === BindingMode.JavaScript),
     }
     popover.show()
@@ -241,20 +243,19 @@
     >
       {#if hoverTarget.description}
         <div>
-          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-          {@html hoverTarget.description}
+          {hoverTarget.description}
         </div>
       {/if}
       {#if hoverTarget.code}
-        {#if mode === BindingMode.JavaScript}
+        {#if mode === BindingMode.Text || (mode === BindingMode.JavaScript && hoverTarget.type === "binding")}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          <pre>{@html hoverTarget.code}</pre>
+        {:else}
           <CodeEditor
             value={hoverTarget.code?.trim()}
             mode={EditorModes.JS}
             readonly
           />
-        {:else if mode === BindingMode.Text}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-          <pre>{@html hoverTarget.code}</pre>
         {/if}
       {/if}
     </div>

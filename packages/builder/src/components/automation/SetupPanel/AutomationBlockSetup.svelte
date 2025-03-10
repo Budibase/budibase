@@ -18,10 +18,11 @@
     Toggle,
     Divider,
     Icon,
+    CoreSelect,
   } from "@budibase/bbui"
 
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, tables } from "@/stores/builder"
+  import { automationStore, tables, evaluationContext } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
@@ -48,7 +49,13 @@
     EditorModes,
   } from "@/components/common/CodeEditor"
   import FilterBuilder from "@/components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
+  import {
+    QueryUtils,
+    Utils,
+    search,
+    memo,
+    fetchData,
+  } from "@budibase/frontend-core"
   import { getSchemaForDatasourcePlus } from "@/dataBinding"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import { onMount, createEventDispatcher } from "svelte"
@@ -59,9 +66,13 @@
     AutomationStepType,
     AutomationActionStepId,
     AutomationCustomIOType,
+    SortOrder,
   } from "@budibase/types"
   import PropField from "./PropField.svelte"
   import { utils } from "@budibase/shared-core"
+  import DrawerBindableCodeEditorField from "@/components/common/bindings/DrawerBindableCodeEditorField.svelte"
+  import { API } from "@/api"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let automation
   export let block
@@ -74,6 +85,7 @@
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
+  const memoContext = memo({})
 
   const rowTriggers = [
     TriggerStepID.ROW_UPDATED,
@@ -95,8 +107,11 @@
   let inputData
   let insertAtPos, getCaretPosition
   let stepLayouts = {}
+  let rowSearchTerm = ""
+  let selectedRow
 
   $: memoBlock.set(block)
+  $: memoContext.set($evaluationContext)
 
   $: filters = lookForFilters(schemaProperties)
   $: filterCount =
@@ -109,9 +124,13 @@
   $: stepId = $memoBlock.stepId
 
   $: getInputData(testData, $memoBlock.inputs)
-  $: tableId = inputData ? inputData.tableId : null
+  $: tableId =
+    inputData?.row?.tableId ||
+    testData?.row?.tableId ||
+    inputData?.tableId ||
+    null
   $: table = tableId
-    ? $tables.list.find(table => table._id === inputData.tableId)
+    ? $tables.list.find(table => table._id === tableId)
     : { schema: {} }
   $: schema = getSchemaForDatasourcePlus(tableId, {
     searchableSchema: true,
@@ -140,6 +159,40 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
+  $: fetch = createFetch({ type: "table", tableId })
+  $: fetchedRows = $fetch?.rows
+  $: fetch?.update({
+    query: {
+      fuzzy: {
+        [primaryDisplay]: rowSearchTerm || "",
+      },
+    },
+  })
+
+  $: fetchLoading = $fetch?.loading
+  $: primaryDisplay = table?.primaryDisplay
+
+  const createFetch = datasource => {
+    if (!datasource) {
+      return
+    }
+
+    return fetchData({
+      API,
+      datasource,
+      options: {
+        sortColumn: primaryDisplay,
+        sortOrder: SortOrder.ASCENDING,
+        query: {
+          fuzzy: {
+            [primaryDisplay]: rowSearchTerm || "",
+          },
+        },
+        limit: 20,
+      },
+    })
+  }
+
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -167,7 +220,7 @@
   const stepStore = writable({})
   $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, stepState)
+  $: customStepLayouts($memoBlock, schemaProperties, stepState, fetchedRows)
 
   const customStepLayouts = block => {
     if (
@@ -200,7 +253,6 @@
                     onChange({ ["revision"]: e.detail })
                   },
                   updateOnChange: false,
-                  forceModal: true,
                 },
               },
             ]
@@ -228,7 +280,6 @@
                 onChange({ [rowIdentifier]: e.detail })
               },
               updateOnChange: false,
-              forceModal: true,
             },
           },
         ]
@@ -362,6 +413,49 @@
                 disabled: isTestModal,
               },
             },
+            {
+              type: CoreSelect,
+              title: "Row",
+              props: {
+                disabled: !table,
+                placeholder: "Select a row",
+                options: fetchedRows,
+                loading: fetchLoading,
+                value: selectedRow,
+                autocomplete: true,
+                filter: false,
+                getOptionLabel: row => row?.[primaryDisplay] || "",
+                compare: (a, b) => a?.[primaryDisplay] === b?.[primaryDisplay],
+                onChange: e => {
+                  if (isTestModal) {
+                    onChange({
+                      id: e.detail?._id,
+                      revision: e.detail?._rev,
+                      row: e.detail,
+                      oldRow: e.detail,
+                      meta: {
+                        fields: inputData["meta"]?.fields || {},
+                        oldFields: e.detail?.meta?.fields || {},
+                      },
+                    })
+                  }
+                },
+              },
+            },
+            {
+              type: InfoDisplay,
+              props: {
+                warning: true,
+                icon: "AlertCircleFilled",
+                body: `Be careful when testing this automation because your data may be modified or deleted.`,
+              },
+            },
+            {
+              type: Divider,
+              props: {
+                noMargin: true,
+              },
+            },
             ...getIdConfig(),
             ...getRevConfig(),
             ...getRowTypeConfig(),
@@ -476,6 +570,10 @@
           ...update,
         })
 
+      if (!updatedAutomation) {
+        return
+      }
+
       // Exclude default or invalid data from the test data
       let updatedFields = {}
       for (const key of Object.keys(block?.inputs?.fields || {})) {
@@ -547,13 +645,22 @@
             ...newTestData,
             body: {
               ...update,
-              ...automation.testData?.body,
+              ...(automation?.testData?.body || {}),
             },
           }
         }
         newTestData = {
           ...newTestData,
           ...request,
+        }
+
+        if (
+          newTestData?.row == null ||
+          Object.keys(newTestData?.row).length === 0
+        ) {
+          selectedRow = null
+        } else {
+          selectedRow = newTestData.row
         }
 
         const updatedAuto =
@@ -668,6 +775,8 @@
                 {...config.props}
                 {bindings}
                 on:change={config.props.onChange}
+                context={$memoContext}
+                bind:searchTerm={rowSearchTerm}
               />
             </PropField>
           {:else}
@@ -676,6 +785,7 @@
               {...config.props}
               {bindings}
               on:change={config.props.onChange}
+              context={$memoContext}
             />
           {/if}
         {/each}
@@ -800,6 +910,7 @@
                         : "Add signature"}
                       keyPlaceholder={"URL"}
                       valuePlaceholder={"Filename"}
+                      context={$memoContext}
                     />
                   {:else if isTestModal}
                     <ModalBindableInput
@@ -824,6 +935,7 @@
                         ? queryLimit
                         : ""}
                       drawerLeft="260px"
+                      context={$memoContext}
                     />
                   {/if}
                 </div>
@@ -853,6 +965,7 @@
                     panel={AutomationBindingPanel}
                     showFilterEmptyDropdown={!rowTriggers.includes(stepId)}
                     on:change={e => (tempFilters = e.detail)}
+                    evaluationContext={$memoContext}
                   />
                 </DrawerContent>
               </Drawer>
@@ -895,7 +1008,19 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
               />
-            {:else if value.customType === "code"}
+            {:else if value.customType === "code" && stepId === ActionStepID.EXECUTE_SCRIPT_V2}
+              <div class="scriptv2-wrapper">
+                <DrawerBindableCodeEditorField
+                  {bindings}
+                  {schema}
+                  panel={AutomationBindingPanel}
+                  on:change={e => onChange({ [key]: e.detail })}
+                  context={$memoContext}
+                  value={inputData[key]}
+                />
+              </div>
+            {:else if value.customType === "code" && stepId === ActionStepID.EXECUTE_SCRIPT}
+              <!-- DEPRECATED -->
               <CodeEditorModal
                 on:hide={() => {
                   // Push any pending changes when the window closes
@@ -977,6 +1102,7 @@
                       ? queryLimit
                       : ""}
                     drawerLeft="260px"
+                    context={$memoContext}
                   />
                 </div>
               {/if}
