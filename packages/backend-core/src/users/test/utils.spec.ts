@@ -2,39 +2,39 @@ import { User, UserGroup } from "@budibase/types"
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
 import { getGlobalDB } from "../../context"
-import { isCreator } from "../utils"
+import { isCreatorSync, creatorsInList } from "../utils"
 
 const config = new DBTestConfiguration()
 
 describe("Users", () => {
-  it("User is a creator if it is configured as a global builder", async () => {
+  it("User is a creator if it is configured as a global builder", () => {
     const user: User = structures.users.user({ builder: { global: true } })
-    expect(await isCreator(user)).toBe(true)
+    expect(isCreatorSync(user, [])).toBe(true)
   })
 
-  it("User is a creator if it is configured as a global admin", async () => {
+  it("User is a creator if it is configured as a global admin", () => {
     const user: User = structures.users.user({ admin: { global: true } })
-    expect(await isCreator(user)).toBe(true)
+    expect(isCreatorSync(user, [])).toBe(true)
   })
 
-  it("User is a creator if it is configured with creator permission", async () => {
+  it("User is a creator if it is configured with creator permission", () => {
     const user: User = structures.users.user({ builder: { creator: true } })
-    expect(await isCreator(user)).toBe(true)
+    expect(isCreatorSync(user, [])).toBe(true)
   })
 
-  it("User is a creator if it is a builder in some application", async () => {
+  it("User is a creator if it is a builder in some application", () => {
     const user: User = structures.users.user({ builder: { apps: ["app1"] } })
-    expect(await isCreator(user)).toBe(true)
+    expect(isCreatorSync(user, [])).toBe(true)
   })
 
-  it("User is a creator if it has CREATOR permission in some application", async () => {
+  it("User is a creator if it has CREATOR permission in some application", () => {
     const user: User = structures.users.user({ roles: { app1: "CREATOR" } })
-    expect(await isCreator(user)).toBe(true)
+    expect(isCreatorSync(user, [])).toBe(true)
   })
 
-  it("User is a creator if it has ADMIN permission in some application", async () => {
+  it("User is a creator if it has ADMIN permission in some application", () => {
     const user: User = structures.users.user({ roles: { app1: "ADMIN" } })
-    expect(await isCreator(user)).toBe(true)
+    expect(isCreatorSync(user, [])).toBe(true)
   })
 
   it("User is a creator if it remains to a group with ADMIN permissions", async () => {
@@ -59,7 +59,7 @@ describe("Users", () => {
       await db.put(group)
       for (let user of users) {
         await db.put(user)
-        const creator = await isCreator(user)
+        const creator = (await creatorsInList([user]))[0]
         expect(creator).toBe(true)
       }
     })
