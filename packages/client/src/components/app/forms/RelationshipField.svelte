@@ -9,8 +9,7 @@
     RelationshipFieldMetadata,
     Row,
   } from "@budibase/types"
-  import type { FieldApi, FieldState } from "."
-  import type { FieldValidation } from "@/index"
+  import type { FieldApi, FieldState, FieldValidation } from "@/types"
 
   type ValueType = string | string[]
 

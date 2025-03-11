@@ -14,8 +14,6 @@ import {
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { APIClient } from "@budibase/frontend-core"
-import type { ActionTypes } from "@/constants"
 import { Readable } from "svelte/store"
 import {
   Screen,
@@ -27,8 +25,6 @@ import {
   Snippet,
   UIComponentError,
   CustomComponent,
-  FieldType,
-  FieldSchema,
 } from "@budibase/types"
 
 // Provide svelte and svelte/internal as globals for custom components
@@ -41,7 +37,7 @@ window.svelte = svelte
 // Initialise spectrum icons
 // eslint-disable-next-line local-rules/no-budibase-imports
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
-import { FieldApi, FieldState } from "./components/app"
+
 loadSpectrumIcons()
 
 // Extend global window scope
@@ -76,62 +72,7 @@ declare global {
   }
 }
 
-export interface SDK {
-  API: APIClient
-  styleable: any
-  Provider: any
-  ActionTypes: typeof ActionTypes
-  fetchDatasourceSchema: any
-  generateGoldenSample: any
-  builderStore: Readable<{
-    inBuilder: boolean
-  }> & {
-    actions: {
-      highlightSetting: (key: string) => void
-      addParentComponent: (
-        componentId: string,
-        fullAncestorType: string
-      ) => void
-      updateProp: (key: string, value: any) => void
-    }
-  }
-}
-
-export type Component = Readable<{
-  id: string
-  name: string
-  styles: any
-  editing: boolean
-  errorState: boolean
-}>
-
 export type Context = Readable<Record<string, any>>
-
-export interface FormContext {
-  formApi?: {
-    registerField: (
-      field: string,
-      type: FieldType,
-      defaultValue: string | undefined,
-      disabled: boolean,
-      readonly: boolean,
-      validation: FieldValidation | undefined,
-      formStep: number
-    ) => Readable<FormField>
-  }
-}
-
-export type FieldValidation = () => string | undefined
-
-export interface FormField {
-  fieldState: FieldState
-  fieldApi: FieldApi
-  fieldSchema: FieldSchema
-}
-
-export interface FieldGroupContext {
-  labelPosition: string
-}
 
 let app: ClientApp
 

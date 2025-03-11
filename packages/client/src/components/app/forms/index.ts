@@ -19,16 +19,3 @@ export { default as codescanner } from "./CodeScannerField.svelte"
 export { default as signaturesinglefield } from "./SignatureField.svelte"
 export { default as bbreferencefield } from "./BBReferenceField.svelte"
 export { default as bbreferencesinglefield } from "./BBReferenceSingleField.svelte"
-
-export interface FieldApi {
-  setValue(value: any): boolean
-  deregister(): void
-}
-
-export interface FieldState<T = any> {
-  value: T
-  fieldId: string
-  disabled: boolean
-  readonly: boolean
-  error?: string
-}
