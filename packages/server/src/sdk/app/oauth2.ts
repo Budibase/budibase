@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import { DocumentType, OAuth2Config, OAuth2Configs } from "@budibase/types"
 
 export async function fetch(): Promise<OAuth2Config[]> {
@@ -18,6 +18,11 @@ export async function create(config: OAuth2Config) {
     _id: DocumentType.OAUTH2_CONFIG,
     configs: {},
   }
+
+  if (doc.configs[config.name]) {
+    throw new HTTPError("Name already used", 400)
+  }
+
   doc.configs[config.name] = config
   await db.put(doc)
 }
