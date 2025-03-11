@@ -149,7 +149,6 @@
     }
   }
 
-  // Please write me a function to get the current number of seconds past the hour.
   $: promptLoading = false
   let popoverWidth = 300
   let suggestedCode: string | null = null
