@@ -54,6 +54,10 @@ const baseColumnDef = {
     type: "boolean",
     description: "Defines whether the column is automatically generated.",
   },
+  width: {
+    type: "number",
+    description: "Defines the width of the column in the data UI.",
+  },
 }
 
 const tableSchema = {
