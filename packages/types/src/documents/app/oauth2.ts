@@ -1,7 +1,9 @@
 import { Document } from "../document"
 
-export interface OAuth2Config {}
+export interface OAuth2Config {
+  name: string
+}
 
 export interface OAuth2Configs extends Document {
-  configs: OAuth2Config[]
+  configs: Record<string, OAuth2Config>
 }

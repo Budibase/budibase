@@ -1,11 +1,9 @@
-interface OAuth2Config {}
+interface OAuth2Config {
+  name: string
+}
 
 export interface FetchOAuth2ConfigsResponse {
   configs: OAuth2Config[]
 }
 
-export interface CreateOAuth2ConfigRequest {}
-
-export interface CreateOAuth2ConfigResponse {
-  config: OAuth2Config
-}
+export interface CreateOAuth2ConfigRequest extends OAuth2Config {}
