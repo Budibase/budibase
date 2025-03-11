@@ -842,17 +842,29 @@
                       "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                       "properties": {
                         "type": {
-                          "type": "string",
-                          "enum": [
-                            "string",
-                            "number",
-                            "object",
-                            "boolean"
-                          ]
+                          "type": "string"
                         },
                         "presence": {
-                          "type": "boolean",
-                          "description": "Defines whether the column is required or not."
+                          "oneOf": [
+                            {
+                              "type": "boolean",
+                              "description": "Defines whether the column is required or not."
+                            },
+                            {
+                              "type": "object",
+                              "description": "Defines whether the column is required or not.",
+                              "properties": {
+                                "allowEmpty": {
+                                  "type": "boolean",
+                                  "description": "Defines whether the value is allowed to be empty or not."
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "inclusion": {
+                          "type": "array",
+                          "description": "Defines the valid values for this column."
                         }
                       }
                     },
@@ -863,6 +875,10 @@
                     "autocolumn": {
                       "type": "boolean",
                       "description": "Defines whether the column is automatically generated."
+                    },
+                    "width": {
+                      "type": "number",
+                      "description": "Defines the width of the column in the data UI."
                     },
                     "fieldName": {
                       "type": "string",
@@ -914,17 +930,29 @@
                       "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                       "properties": {
                         "type": {
-                          "type": "string",
-                          "enum": [
-                            "string",
-                            "number",
-                            "object",
-                            "boolean"
-                          ]
+                          "type": "string"
                         },
                         "presence": {
-                          "type": "boolean",
-                          "description": "Defines whether the column is required or not."
+                          "oneOf": [
+                            {
+                              "type": "boolean",
+                              "description": "Defines whether the column is required or not."
+                            },
+                            {
+                              "type": "object",
+                              "description": "Defines whether the column is required or not.",
+                              "properties": {
+                                "allowEmpty": {
+                                  "type": "boolean",
+                                  "description": "Defines whether the value is allowed to be empty or not."
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "inclusion": {
+                          "type": "array",
+                          "description": "Defines the valid values for this column."
                         }
                       }
                     },
@@ -935,6 +963,10 @@
                     "autocolumn": {
                       "type": "boolean",
                       "description": "Defines whether the column is automatically generated."
+                    },
+                    "width": {
+                      "type": "number",
+                      "description": "Defines the width of the column in the data UI."
                     },
                     "formula": {
                       "type": "string",
@@ -965,8 +997,6 @@
                         "datetime",
                         "attachment",
                         "attachment_single",
-                        "link",
-                        "formula",
                         "auto",
                         "ai",
                         "json",
@@ -984,17 +1014,29 @@
                       "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                       "properties": {
                         "type": {
-                          "type": "string",
-                          "enum": [
-                            "string",
-                            "number",
-                            "object",
-                            "boolean"
-                          ]
+                          "type": "string"
                         },
                         "presence": {
-                          "type": "boolean",
-                          "description": "Defines whether the column is required or not."
+                          "oneOf": [
+                            {
+                              "type": "boolean",
+                              "description": "Defines whether the column is required or not."
+                            },
+                            {
+                              "type": "object",
+                              "description": "Defines whether the column is required or not.",
+                              "properties": {
+                                "allowEmpty": {
+                                  "type": "boolean",
+                                  "description": "Defines whether the value is allowed to be empty or not."
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "inclusion": {
+                          "type": "array",
+                          "description": "Defines the valid values for this column."
                         }
                       }
                     },
@@ -1005,6 +1047,10 @@
                     "autocolumn": {
                       "type": "boolean",
                       "description": "Defines whether the column is automatically generated."
+                    },
+                    "width": {
+                      "type": "number",
+                      "description": "Defines the width of the column in the data UI."
                     }
                   }
                 }
@@ -1052,17 +1098,29 @@
                           "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                           "properties": {
                             "type": {
-                              "type": "string",
-                              "enum": [
-                                "string",
-                                "number",
-                                "object",
-                                "boolean"
-                              ]
+                              "type": "string"
                             },
                             "presence": {
-                              "type": "boolean",
-                              "description": "Defines whether the column is required or not."
+                              "oneOf": [
+                                {
+                                  "type": "boolean",
+                                  "description": "Defines whether the column is required or not."
+                                },
+                                {
+                                  "type": "object",
+                                  "description": "Defines whether the column is required or not.",
+                                  "properties": {
+                                    "allowEmpty": {
+                                      "type": "boolean",
+                                      "description": "Defines whether the value is allowed to be empty or not."
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "inclusion": {
+                              "type": "array",
+                              "description": "Defines the valid values for this column."
                             }
                           }
                         },
@@ -1073,6 +1131,10 @@
                         "autocolumn": {
                           "type": "boolean",
                           "description": "Defines whether the column is automatically generated."
+                        },
+                        "width": {
+                          "type": "number",
+                          "description": "Defines the width of the column in the data UI."
                         },
                         "fieldName": {
                           "type": "string",
@@ -1124,17 +1186,29 @@
                           "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                           "properties": {
                             "type": {
-                              "type": "string",
-                              "enum": [
-                                "string",
-                                "number",
-                                "object",
-                                "boolean"
-                              ]
+                              "type": "string"
                             },
                             "presence": {
-                              "type": "boolean",
-                              "description": "Defines whether the column is required or not."
+                              "oneOf": [
+                                {
+                                  "type": "boolean",
+                                  "description": "Defines whether the column is required or not."
+                                },
+                                {
+                                  "type": "object",
+                                  "description": "Defines whether the column is required or not.",
+                                  "properties": {
+                                    "allowEmpty": {
+                                      "type": "boolean",
+                                      "description": "Defines whether the value is allowed to be empty or not."
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "inclusion": {
+                              "type": "array",
+                              "description": "Defines the valid values for this column."
                             }
                           }
                         },
@@ -1145,6 +1219,10 @@
                         "autocolumn": {
                           "type": "boolean",
                           "description": "Defines whether the column is automatically generated."
+                        },
+                        "width": {
+                          "type": "number",
+                          "description": "Defines the width of the column in the data UI."
                         },
                         "formula": {
                           "type": "string",
@@ -1175,8 +1253,6 @@
                             "datetime",
                             "attachment",
                             "attachment_single",
-                            "link",
-                            "formula",
                             "auto",
                             "ai",
                             "json",
@@ -1194,17 +1270,29 @@
                           "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                           "properties": {
                             "type": {
-                              "type": "string",
-                              "enum": [
-                                "string",
-                                "number",
-                                "object",
-                                "boolean"
-                              ]
+                              "type": "string"
                             },
                             "presence": {
-                              "type": "boolean",
-                              "description": "Defines whether the column is required or not."
+                              "oneOf": [
+                                {
+                                  "type": "boolean",
+                                  "description": "Defines whether the column is required or not."
+                                },
+                                {
+                                  "type": "object",
+                                  "description": "Defines whether the column is required or not.",
+                                  "properties": {
+                                    "allowEmpty": {
+                                      "type": "boolean",
+                                      "description": "Defines whether the value is allowed to be empty or not."
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "inclusion": {
+                              "type": "array",
+                              "description": "Defines the valid values for this column."
                             }
                           }
                         },
@@ -1215,6 +1303,10 @@
                         "autocolumn": {
                           "type": "boolean",
                           "description": "Defines whether the column is automatically generated."
+                        },
+                        "width": {
+                          "type": "number",
+                          "description": "Defines the width of the column in the data UI."
                         }
                       }
                     }
@@ -1273,17 +1365,29 @@
                             "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                             "properties": {
                               "type": {
-                                "type": "string",
-                                "enum": [
-                                  "string",
-                                  "number",
-                                  "object",
-                                  "boolean"
-                                ]
+                                "type": "string"
                               },
                               "presence": {
-                                "type": "boolean",
-                                "description": "Defines whether the column is required or not."
+                                "oneOf": [
+                                  {
+                                    "type": "boolean",
+                                    "description": "Defines whether the column is required or not."
+                                  },
+                                  {
+                                    "type": "object",
+                                    "description": "Defines whether the column is required or not.",
+                                    "properties": {
+                                      "allowEmpty": {
+                                        "type": "boolean",
+                                        "description": "Defines whether the value is allowed to be empty or not."
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "inclusion": {
+                                "type": "array",
+                                "description": "Defines the valid values for this column."
                               }
                             }
                           },
@@ -1294,6 +1398,10 @@
                           "autocolumn": {
                             "type": "boolean",
                             "description": "Defines whether the column is automatically generated."
+                          },
+                          "width": {
+                            "type": "number",
+                            "description": "Defines the width of the column in the data UI."
                           },
                           "fieldName": {
                             "type": "string",
@@ -1345,17 +1453,29 @@
                             "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                             "properties": {
                               "type": {
-                                "type": "string",
-                                "enum": [
-                                  "string",
-                                  "number",
-                                  "object",
-                                  "boolean"
-                                ]
+                                "type": "string"
                               },
                               "presence": {
-                                "type": "boolean",
-                                "description": "Defines whether the column is required or not."
+                                "oneOf": [
+                                  {
+                                    "type": "boolean",
+                                    "description": "Defines whether the column is required or not."
+                                  },
+                                  {
+                                    "type": "object",
+                                    "description": "Defines whether the column is required or not.",
+                                    "properties": {
+                                      "allowEmpty": {
+                                        "type": "boolean",
+                                        "description": "Defines whether the value is allowed to be empty or not."
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "inclusion": {
+                                "type": "array",
+                                "description": "Defines the valid values for this column."
                               }
                             }
                           },
@@ -1366,6 +1486,10 @@
                           "autocolumn": {
                             "type": "boolean",
                             "description": "Defines whether the column is automatically generated."
+                          },
+                          "width": {
+                            "type": "number",
+                            "description": "Defines the width of the column in the data UI."
                           },
                           "formula": {
                             "type": "string",
@@ -1396,8 +1520,6 @@
                               "datetime",
                               "attachment",
                               "attachment_single",
-                              "link",
-                              "formula",
                               "auto",
                               "ai",
                               "json",
@@ -1415,17 +1537,29 @@
                             "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
                             "properties": {
                               "type": {
-                                "type": "string",
-                                "enum": [
-                                  "string",
-                                  "number",
-                                  "object",
-                                  "boolean"
-                                ]
+                                "type": "string"
                               },
                               "presence": {
-                                "type": "boolean",
-                                "description": "Defines whether the column is required or not."
+                                "oneOf": [
+                                  {
+                                    "type": "boolean",
+                                    "description": "Defines whether the column is required or not."
+                                  },
+                                  {
+                                    "type": "object",
+                                    "description": "Defines whether the column is required or not.",
+                                    "properties": {
+                                      "allowEmpty": {
+                                        "type": "boolean",
+                                        "description": "Defines whether the value is allowed to be empty or not."
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "inclusion": {
+                                "type": "array",
+                                "description": "Defines the valid values for this column."
                               }
                             }
                           },
@@ -1436,6 +1570,10 @@
                           "autocolumn": {
                             "type": "boolean",
                             "description": "Defines whether the column is automatically generated."
+                          },
+                          "width": {
+                            "type": "number",
+                            "description": "Defines the width of the column in the data UI."
                           }
                         }
                       }
