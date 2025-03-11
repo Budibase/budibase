@@ -220,7 +220,18 @@
   const stepStore = writable({})
   $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, stepState, fetchedRows)
+  const updateSelectedRow = testData => {
+    selectedRow = testData?.row
+  }
+  $: updateSelectedRow(testData)
+
+  $: customStepLayouts(
+    $memoBlock,
+    schemaProperties,
+    stepState,
+    fetchedRows,
+    selectedRow
+  )
 
   const customStepLayouts = block => {
     if (
