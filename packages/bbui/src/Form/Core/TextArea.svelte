@@ -1,25 +1,22 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
+  import { FocusEventHandler } from "svelte/elements"
 
-  export let value = ""
-  export let placeholder = null
+  export let value: string | null = null
+  export let placeholder: string | null = null
   export let disabled = false
   export let readonly = false
-  export let id = null
-  export let height = null
-  export let minHeight = null
-  export const getCaretPosition = () => ({
-    start: textarea.selectionStart,
-    end: textarea.selectionEnd,
-  })
+  export let id: string | null = null
+  export let height: number | null = null
+  export let minHeight: number | null = null
   export let align = null
 
   let isFocused = false
-  let textarea
-  const dispatch = createEventDispatcher()
-  const onChange = event => {
-    dispatch("change", event.target.value)
+  let textarea: HTMLTextAreaElement
+  const dispatch = createEventDispatcher<{ change: string }>()
+  const onChange: FocusEventHandler<HTMLTextAreaElement> = event => {
+    dispatch("change", event.currentTarget.value)
     isFocused = false
   }
 
@@ -31,7 +28,7 @@
     return textarea.value
   }
 
-  const getStyleString = (attribute, value) => {
+  const getStyleString = (attribute: string, value: number | null) => {
     if (!attribute || value == null) {
       return ""
     }

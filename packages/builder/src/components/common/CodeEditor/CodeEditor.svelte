@@ -485,7 +485,12 @@
   </button>
 {/if}
 
-<Popover bind:this={popover} minWidth={popoverWidth} anchor={popoverAnchor}>
+<Popover
+  bind:this={popover}
+  minWidth={popoverWidth}
+  anchor={popoverAnchor}
+  align="left-outside"
+>
   {#if promptLoading}
     <div class="prompt-spinner">
       <Spinner size="20" color="white" />
