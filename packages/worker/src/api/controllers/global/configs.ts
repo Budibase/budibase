@@ -9,6 +9,7 @@ import {
   events,
   objectStore,
   tenancy,
+  ai,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
@@ -377,7 +378,9 @@ async function handleConfigType(type: ConfigType, config: Config) {
 }
 
 async function handleAIConfig(config: AIConfig) {
-  await pro.sdk.ai.enrichAIConfig(config)
+  if (await pro.features.isBudibaseAIEnabled()) {
+    ai.addBudibaseAIConfig(config)
+  }
   stripApiKeys(config)
 }
 

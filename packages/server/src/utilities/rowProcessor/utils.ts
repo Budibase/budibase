@@ -15,8 +15,8 @@ import {
 import { OperationFields } from "@budibase/shared-core"
 import tracer from "dd-trace"
 import { context } from "@budibase/backend-core"
-import * as pro from "@budibase/pro"
 import { coerce } from "./index"
+import { LargeLanguageModel } from "../../ai"
 
 interface FormulaOpts {
   dynamic?: boolean
@@ -126,9 +126,7 @@ export async function processAIColumns<T extends Row | Row[]>(
     const numRows = Array.isArray(inputRows) ? inputRows.length : 1
     span?.addTags({ table_id: table._id, numRows })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
-    const llmWrapper = await pro.ai.LargeLanguageModel.forCurrentTenant(
-      "gpt-4o-mini"
-    )
+    const llmWrapper = await LargeLanguageModel.forCurrentTenant("gpt-4o-mini")
     if (rows && llmWrapper.llm) {
       // Ensure we have snippet context
       await context.ensureSnippetContext()

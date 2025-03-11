@@ -1,4 +1,4 @@
-import { configs } from "@budibase/backend-core"
+import { ai, configs } from "@budibase/backend-core"
 import {
   ILargeLanguageModel,
   AIOperationEnum,
@@ -28,30 +28,10 @@ const ProviderMap = {
   Custom: models.OpenAI,
 }
 
-const BUDIBASE_AI_CONFIG_ID = "budibase_ai"
-
 type LLMConfigOptions = OpenAIConfigOptions & AnthropicConfigOptions
 
 function extractTextFromColumns(row: Row, columns: string[]) {
   return columns.map(column => row[column]).join(" ")
-}
-
-export async function enrichAIConfig(aiConfig: AIConfig) {
-  // Return the Budibase AI data source as part of the response if licensing allows
-  if (await features.isBudibaseAIEnabled()) {
-    aiConfig.config[BUDIBASE_AI_CONFIG_ID] = {
-      provider: "OpenAI",
-      active: true,
-      isDefault: Object.keys(aiConfig.config).every(
-        key => !aiConfig.config[key].isDefault
-      ),
-      defaultModel: process.env.BUDIBASE_AI_DEFAULT_MODEL || "gpt-4o-mini",
-      apiKey: process.env.OPENAI_API_KEY,
-      name: "Budibase AI",
-    }
-  }
-
-  return aiConfig
 }
 
 export class LargeLanguageModel {
@@ -87,8 +67,11 @@ export class LargeLanguageModel {
     if (!aiConfig) {
       aiConfig = { config: {} } as AIConfig
     }
-    const enriched = await enrichAIConfig(aiConfig)
-    const selectedConfig = this.determineDefault(enriched.config)
+    if (bbAIEnabled) {
+      ai.addBudibaseAIConfig(aiConfig)
+    }
+
+    const selectedConfig = this.determineDefault(aiConfig.config)
     if (!selectedConfig) {
       // no config exists - LLM can't be configured but a valid case
       return

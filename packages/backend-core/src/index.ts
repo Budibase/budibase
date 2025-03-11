@@ -1,3 +1,4 @@
+export * as ai from "./ai"
 export * as configs from "./configs"
 export * as events from "./events"
 export * as users from "./users"
