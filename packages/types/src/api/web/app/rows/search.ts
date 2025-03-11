@@ -8,11 +8,7 @@ import {
   SearchFilterKey,
 } from "../../../../sdk"
 import { Row } from "../../../../documents"
-import {
-  PaginationResponse,
-  SortOrder,
-  SortType,
-} from "../../../../api/web/pagination"
+import { PaginationResponse, SortOrder } from "../../../../api/web/pagination"
 import { z } from "zod"
 
 const fieldKey = z
@@ -70,7 +66,6 @@ const searchRowRequest = z.object({
   limit: z.number().optional(),
   sort: z.string().nullish(),
   sortOrder: z.nativeEnum(SortOrder).optional(),
-  sortType: z.nativeEnum(SortType).nullish(),
   version: z.string().optional(),
   disableEscaping: z.boolean().optional(),
   countRows: z.boolean().optional(),
@@ -83,7 +78,6 @@ export type SearchViewRowRequest = Pick<
   SearchRowRequest,
   | "sort"
   | "sortOrder"
-  | "sortType"
   | "limit"
   | "bookmark"
   | "paginate"
