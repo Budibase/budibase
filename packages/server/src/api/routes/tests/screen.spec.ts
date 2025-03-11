@@ -136,9 +136,15 @@ describe("/screens", () => {
           const res = await config.api.application.getDefinition(
             config.prodAppId!
           )
+
+          // Filter out sample screen
+          const screens = res.screens.filter(
+            s => s.name !== SAMPLE_DATA_SCREEN_NAME
+          )
+
           const screenIds = [screen._id!, screen1._id!]
-          expect(res.screens.length).toEqual(screenIds.length)
-          expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
+          expect(screens.length).toEqual(screenIds.length)
+          expect(screens.map(s => s._id).sort()).toEqual(screenIds.sort())
         }
       )
     })
