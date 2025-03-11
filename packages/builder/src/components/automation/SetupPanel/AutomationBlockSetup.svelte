@@ -391,49 +391,51 @@
         if (!isTestModal) {
           return []
         }
-        return [{
-          type: CoreSelect,
-          title: "Row",
-          props: {
-            disabled: !table,
-            placeholder: "Select a row",
-            options: fetchedRows,
-            loading: fetchLoading,
-            value: selectedRow,
-            autocomplete: true,
-            filter: false,
-            getOptionLabel: row => row?.[primaryDisplay] || "",
-            compare: (a, b) => a?.[primaryDisplay] === b?.[primaryDisplay],
-            onChange: e => {
-              if (isTestModal) {
-                onChange({
-                  id: e.detail?._id,
-                  revision: e.detail?._rev,
-                  row: e.detail,
-                  oldRow: e.detail,
-                  meta: {
-                    fields: inputData["meta"]?.fields || {},
-                    oldFields: e.detail?.meta?.fields || {},
-                  },
-                })
-              }
+        return [
+          {
+            type: CoreSelect,
+            title: "Row",
+            props: {
+              disabled: !table,
+              placeholder: "Select a row",
+              options: fetchedRows,
+              loading: fetchLoading,
+              value: selectedRow,
+              autocomplete: true,
+              filter: false,
+              getOptionLabel: row => row?.[primaryDisplay] || "",
+              compare: (a, b) => a?.[primaryDisplay] === b?.[primaryDisplay],
+              onChange: e => {
+                if (isTestModal) {
+                  onChange({
+                    id: e.detail?._id,
+                    revision: e.detail?._rev,
+                    row: e.detail,
+                    oldRow: e.detail,
+                    meta: {
+                      fields: inputData["meta"]?.fields || {},
+                      oldFields: e.detail?.meta?.fields || {},
+                    },
+                  })
+                }
+              },
             },
           },
-        },
-        {
-          type: InfoDisplay,
-          props: {
-            warning: true,
-            icon: "AlertCircleFilled",
-            body: `Be careful when testing this automation because your data may be modified or deleted.`,
+          {
+            type: InfoDisplay,
+            props: {
+              warning: true,
+              icon: "AlertCircleFilled",
+              body: `Be careful when testing this automation because your data may be modified or deleted.`,
+            },
           },
-        },
-        {
-          type: Divider,
-          props: {
-            noMargin: true,
+          {
+            type: Divider,
+            props: {
+              noMargin: true,
+            },
           },
-        }]
+        ]
       }
 
       stepLayouts[block.stepId] = {
