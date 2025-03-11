@@ -47,6 +47,9 @@ export async function getConfig<T extends Config>(
 export async function save(
   config: Config
 ): Promise<{ id: string; rev: string }> {
+  if (!config._id) {
+    config._id = generateConfigID(config.type)
+  }
   const db = context.getGlobalDB()
   return db.put(config)
 }

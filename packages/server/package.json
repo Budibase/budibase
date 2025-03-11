@@ -71,6 +71,7 @@
     "@koa/router": "13.1.0",
     "@socket.io/redis-adapter": "^8.2.1",
     "@types/xml2js": "^0.4.14",
+    "@anthropic-ai/sdk": "^0.27.3",
     "airtable": "0.12.2",
     "arangojs": "7.2.0",
     "archiver": "7.0.1",

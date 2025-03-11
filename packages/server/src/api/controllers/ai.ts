@@ -1,11 +1,14 @@
 import { env, features } from "@budibase/backend-core"
 import {
   FeatureFlag,
+  GenerateCronRequest,
+  GenerateCronResponse,
   GenerateJsRequest,
   GenerateJsResponse,
   UserCtx,
 } from "@budibase/types"
 import OpenAI from "openai"
+import { LargeLanguageModel, Prompts } from "../../ai"
 
 const MARKDOWN_CODE_BLOCK = /```(?:\w+)?\n([\s\S]+?)\n```/
 
@@ -56,4 +59,17 @@ generated elsewhere.
   }
 
   ctx.body = { code }
+}
+
+export async function generateCronExpression(
+  ctx: UserCtx<GenerateCronRequest, GenerateCronResponse>
+) {
+  const { prompt } = ctx.request.body
+  const llm = await LargeLanguageModel.forCurrentTenant("gpt-4o-mini")
+  const response = await llm.run(Prompts.generateCronExpression(prompt))
+  if (response?.startsWith("Error generating cron:")) {
+    ctx.throw(400, response)
+  } else {
+    ctx.body = { message: response }
+  }
 }
