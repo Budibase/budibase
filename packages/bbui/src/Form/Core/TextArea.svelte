@@ -1,7 +1,7 @@
 <script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { FocusEventHandler } from "svelte/elements"
+  import type { FocusEventHandler } from "svelte/elements"
 
   export let value: string | null = null
   export let placeholder: string | null = null
