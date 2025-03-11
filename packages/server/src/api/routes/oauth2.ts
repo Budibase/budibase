@@ -7,5 +7,10 @@ import * as controller from "../controllers/oauth2"
 const router: Router = new Router()
 
 router.get("/api/oauth2", authorized(PermissionType.BUILDER), controller.fetch)
+router.post(
+  "/api/oauth2",
+  authorized(PermissionType.BUILDER),
+  controller.create
+)
 
 export default router
