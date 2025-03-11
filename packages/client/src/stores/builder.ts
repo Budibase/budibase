@@ -115,7 +115,7 @@ const createBuilderStore = () => {
       component: string,
       parent: string,
       index: number,
-      props: Record<string, any>
+      props?: Record<string, any>
     ) => {
       eventStore.actions.dispatchEvent("drop-new-component", {
         component,
