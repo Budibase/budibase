@@ -7,7 +7,7 @@
   import Placeholder from "../Placeholder.svelte"
   import InnerForm from "./InnerForm.svelte"
   import type { FieldSchema, FieldType } from "@budibase/types"
-  import { FieldApi, FieldState, FieldValidation, FormField } from "@/types"
+  import type { FieldApi, FieldState, FieldValidation, FormField } from "@/types"
 
   interface FieldInfo {
     field: string
