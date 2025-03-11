@@ -22,25 +22,27 @@ const {
 } = setup.structures
 
 describe("/screens", () => {
+  let screen: Screen
   let config = setup.getConfig()
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
     await config.init()
+    screen = await config.createScreen()
   })
 
   describe("fetch", () => {
     it("should create the sample data screen", async () => {
       const screens = await config.api.screen.list()
-      expect(screens.length).toEqual(1)
-      expect(screens[0].name).toEqual(SAMPLE_DATA_SCREEN_NAME)
+      expect(screens.some(s => s.name === SAMPLE_DATA_SCREEN_NAME)).toEqual(
+        true
+      )
     })
 
     it("should be able to create a screen", async () => {
-      const screen = await config.createScreen()
       const screens = await config.api.screen.list()
-      expect(screens.length).toEqual(1)
+      expect(screens.length).toEqual(2)
       expect(screens.some(s => s._id === screen._id)).toEqual(true)
     })
 
