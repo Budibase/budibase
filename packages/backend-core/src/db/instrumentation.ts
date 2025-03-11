@@ -52,13 +52,13 @@ export class DDInstrumentedDatabase implements Database {
   }
 
   getMultiple<T extends Document>(
-    ids: string[],
+    ids?: string[],
     opts?: { allowMissing?: boolean | undefined } | undefined
   ): Promise<T[]> {
     return tracer.trace("db.getMultiple", async span => {
       span.addTags({
         db_name: this.name,
-        num_docs: ids.length,
+        num_docs: ids?.length || 0,
         allow_missing: opts?.allowMissing,
       })
       const docs = await this.db.getMultiple<T>(ids, opts)
