@@ -4,9 +4,12 @@ import {
   Ctx,
   FetchOAuth2ConfigsResponse,
 } from "@budibase/types"
+import sdk from "../../sdk"
 
-export function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
-  ctx.body = { configs: [] }
+export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
+  const configs = await sdk.oauth2.fetch()
+
+  ctx.body = { configs: (configs || []).map(c => ({})) }
 }
 
 export function create(
