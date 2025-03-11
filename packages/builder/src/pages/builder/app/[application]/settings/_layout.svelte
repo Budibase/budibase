@@ -44,6 +44,11 @@
             url={$url("./version")}
             active={$isActive("./version")}
           />
+          <SideNavItem
+            text="OAuth2"
+            url={$url("./oauth2")}
+            active={$isActive("./oauth2")}
+          />
           <div class="delete-action">
             <AbsTooltip
               position={TooltipPosition.Bottom}
