@@ -1,21 +1,21 @@
-<script>
+<script lang="ts">
   import Field from "./Field.svelte"
   import TextArea from "./Core/TextArea.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value = null
-  export let label = null
-  export let labelPosition = "above"
-  export let placeholder = null
+  export let value: string | undefined = undefined
+  export let label: string | undefined = undefined
+  export let labelPosition: string = "above"
+  export let placeholder: string | undefined = undefined
   export let disabled = false
-  export let error = null
-  export let getCaretPosition = null
-  export let height = null
-  export let minHeight = null
-  export let helpText = null
+  export let error: string | undefined = undefined
+  export let getCaretPosition: any = undefined
+  export let height: string | number | undefined = undefined
+  export let minHeight: string | number | undefined = undefined
+  export let helpText: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
-  const onChange = e => {
+  const onChange = (e: any) => {
     value = e.detail
     dispatch("change", e.detail)
   }
@@ -24,7 +24,6 @@
 <Field {helpText} {label} {labelPosition} {error}>
   <TextArea
     bind:getCaretPosition
-    {error}
     {disabled}
     {value}
     {placeholder}

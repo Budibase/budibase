@@ -10,7 +10,9 @@ export const API = createAPIClient({
   // Attach client specific headers
   attachHeaders: headers => {
     // Attach app ID header
-    headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
+    if (window["##BUDIBASE_APP_ID##"]) {
+      headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
+    }
 
     // Attach client header if not inside the builder preview
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
