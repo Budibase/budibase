@@ -1,9 +1,15 @@
 import * as triggers from "../../automations/triggers"
 import { sdk as coreSdk } from "@budibase/shared-core"
 import { DocumentType } from "../../db/utils"
-import { updateTestHistory, removeDeprecated } from "../../automations/utils"
+import { updateTestHistory } from "../../automations/utils"
 import { withTestFlag } from "../../utilities/redis"
-import { context, cache, events, db as dbCore } from "@budibase/backend-core"
+import {
+  context,
+  cache,
+  events,
+  db as dbCore,
+  HTTPError,
+} from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import {
   App,
@@ -28,19 +34,12 @@ import {
   TriggerAutomationResponse,
   TestAutomationRequest,
   TestAutomationResponse,
+  Table,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import env from "../../environment"
-
-async function getActionDefinitions() {
-  return removeDeprecated(await actionDefs())
-}
-
-function getTriggerDefinitions() {
-  return removeDeprecated(triggers.TRIGGER_DEFINITIONS)
-}
 
 /*************************
  *                       *
@@ -141,21 +140,21 @@ export async function clearLogError(
 export async function getActionList(
   ctx: UserCtx<void, GetAutomationActionDefinitionsResponse>
 ) {
-  ctx.body = await getActionDefinitions()
+  ctx.body = await actionDefs()
 }
 
 export async function getTriggerList(
   ctx: UserCtx<void, GetAutomationTriggerDefinitionsResponse>
 ) {
-  ctx.body = getTriggerDefinitions()
+  ctx.body = triggers.TRIGGER_DEFINITIONS
 }
 
 export async function getDefinitionList(
   ctx: UserCtx<void, GetAutomationStepDefinitionsResponse>
 ) {
   ctx.body = {
-    trigger: getTriggerDefinitions(),
-    action: await getActionDefinitions(),
+    trigger: triggers.TRIGGER_DEFINITIONS,
+    action: await actionDefs(),
   }
 }
 
@@ -239,14 +238,22 @@ export async function test(
   const { request, appId } = ctx
   const { body } = request
 
+  let table: Table | undefined
+  if (coreSdk.automations.isRowAction(automation) && body.row?.tableId) {
+    table = await sdk.tables.getTable(body.row?.tableId)
+    if (!table) {
+      throw new HTTPError("Table not found", 404)
+    }
+  }
+
   ctx.body = await withTestFlag(automation._id!, async () => {
     const occurredAt = new Date().getTime()
     await updateTestHistory(appId, automation, { ...body, occurredAt })
-
+    const input = prepareTestInput(body)
     const user = sdk.users.getUserContextBindings(ctx.user)
     return await triggers.externalTrigger(
       automation,
-      { ...prepareTestInput(body), appId, user },
+      { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
       { getResponses: true }
     )
   })

@@ -4,7 +4,7 @@
 
   export let title
   export let icon = ""
-  export let id
+  export let id = undefined
   export let href = "#"
   export let link = false
 
