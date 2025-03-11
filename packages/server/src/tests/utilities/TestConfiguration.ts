@@ -577,6 +577,18 @@ export default class TestConfiguration {
     return context.doInTenant(this.getTenantId(), task)
   }
 
+  doInApp<T>(task: () => T) {
+    return this.doInTenant(() => {
+      return context.doInAppContext(this.getAppId(), task)
+    })
+  }
+
+  doInProdApp<T>(task: () => T) {
+    return this.doInTenant(() => {
+      return context.doInAppContext(this.getProdAppId(), task)
+    })
+  }
+
   // API
 
   async generateApiKey(userId?: string) {

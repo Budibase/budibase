@@ -4,6 +4,7 @@ import { OpenAIStepInputs, OpenAIStepOutputs } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
 import * as pro from "@budibase/pro"
+import { LargeLanguageModel } from "../../ai"
 
 /**
  * Maintains backward compatibility with automation steps created before the introduction
@@ -46,9 +47,7 @@ export async function run({
 
     let llmWrapper
     if (budibaseAIEnabled || customConfigsEnabled) {
-      llmWrapper = await pro.ai.LargeLanguageModel.forCurrentTenant(
-        inputs.model
-      )
+      llmWrapper = await LargeLanguageModel.forCurrentTenant(inputs.model)
     }
 
     response = llmWrapper?.llm

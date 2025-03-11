@@ -10,23 +10,23 @@ import {
   Table,
   TableSourceType,
 } from "@budibase/types"
-import { generator } from "@budibase/backend-core/tests"
-
-const buildPromptMock = jest.fn()
-
-jest.mock("@budibase/pro", () => ({
-  ai: {
-    LargeLanguageModel: {
-      forCurrentTenant: async () => ({
-        llm: {},
-        run: jest.fn(() => "response from LLM"),
-        buildPromptFromAIOperation: buildPromptMock,
-      }),
-    },
-  },
-}))
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import nock from "nock"
+import { setEnv } from "@budibase/backend-core"
 
 describe("rowProcessor utility", () => {
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    await config.init()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
   describe("fixAutoColumnSubType", () => {
     const schema: FieldSchema = {
       name: "",
@@ -81,7 +81,30 @@ describe("rowProcessor utility", () => {
   })
 
   describe("processAIColumns", () => {
+    let lastPrompt: string | null = null
+
+    let cleanup: () => void
+    beforeAll(() => {
+      cleanup = setEnv({ OPENAI_API_KEY: "test-api" })
+      mocks.licenses.useBudibaseAI()
+    })
+
+    afterAll(() => {
+      cleanup()
+      mocks.licenses.useCloudFree()
+    })
+
+    beforeEach(() => {
+      lastPrompt = null
+      nock.cleanAll()
+      mockChatGPTResponse((prompt: string) => {
+        lastPrompt = prompt
+        return "response from LLM"
+      })
+    })
+
     it("ensures that bindable inputs are mapped and passed to to LLM prompt generation", async () => {
+      mocks.licenses.useBudibaseAI()
       const table: Table = {
         _id: generator.guid(),
         name: "AITestTable",
@@ -112,26 +135,18 @@ describe("rowProcessor utility", () => {
         },
       ]
 
-      const result = await processAIColumns(table, inputRows, {
-        contextRows: inputRows,
+      await config.doInApp(async () => {
+        const result = await processAIColumns(table, inputRows, {
+          contextRows: inputRows,
+        })
+        expect(result).toEqual([
+          {
+            aicol: "response from LLM",
+            product: "Car Battery",
+          },
+        ])
+        expect(lastPrompt).toEqual("Translate 'Car Battery' into German")
       })
-      expect(buildPromptMock).toHaveBeenCalledWith({
-        row: {
-          product: "Car Battery",
-        },
-        schema: {
-          name: "aicol",
-          operation: "PROMPT",
-          prompt: "Translate 'Car Battery' into German",
-          type: "ai",
-        },
-      })
-      expect(result).toEqual([
-        {
-          aicol: "response from LLM",
-          product: "Car Battery",
-        },
-      ])
     })
   })
 })
