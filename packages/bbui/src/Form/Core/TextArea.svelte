@@ -32,7 +32,7 @@
     if (!attribute || value == null) {
       return ""
     }
-    if (isNaN(value)) {
+    if (typeof value === "number" && isNaN(value)) {
       return `${attribute}:${value};`
     }
     return `${attribute}:${value}px;`

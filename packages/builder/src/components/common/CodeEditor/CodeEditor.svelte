@@ -334,16 +334,15 @@
         EditorView.inputHandler.of((view, from, to, insert) => {
           if (jsBindingWrapping && insert === "$") {
             let { text } = view.state.doc.lineAt(from)
-
             const left = from ? text.substring(0, from) : ""
             const right = to ? text.substring(to) : ""
-            const wrap = !left.includes('$("') || !right.includes('")')
+            const wrap =
+              (!left.includes('$("') || !right.includes('")')) &&
+              !(left.includes("`") && right.includes("`"))
+            const anchor = from + (wrap ? 3 : 1)
             const tr = view.state.update(
               {
                 changes: [{ from, insert: wrap ? '$("")' : "$" }],
-                selection: {
-                  anchor: from + (wrap ? 3 : 1),
-                },
               },
               {
                 scrollIntoView: true,
@@ -351,6 +350,19 @@
               }
             )
             view.dispatch(tr)
+            // the selection needs to fired after the dispatch - this seems
+            // to fix an issue with the cursor not moving when the editor is
+            // first loaded, the first usage of the editor is not ready
+            // for the anchor to move as well as perform a change
+            setTimeout(() => {
+              view.dispatch(
+                view.state.update({
+                  selection: {
+                    anchor,
+                  },
+                })
+              )
+            }, 1)
             return true
           }
           return false
@@ -519,6 +531,7 @@
   .code-editor {
     font-size: 12px;
     height: 100%;
+    cursor: text;
   }
   .code-editor :global(.cm-editor) {
     height: 100%;
