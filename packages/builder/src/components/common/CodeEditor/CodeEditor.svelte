@@ -483,36 +483,36 @@
   >
     Generate with AI ✨
   </button>
-{/if}
 
-<Popover
-  bind:this={popover}
-  minWidth={popoverWidth}
-  anchor={popoverAnchor}
-  align="left-outside"
->
-  {#if promptLoading}
-    <div class="prompt-spinner">
-      <Spinner size="20" color="white" />
-    </div>
-  {:else if suggestedCode}
-    <Button on:click={acceptSuggestion}>Accept</Button>
-    <Button on:click={rejectSuggestion}>Reject</Button>
-  {:else}
-    <TextArea
-      bind:this={promptInput}
-      placeholder="Type your prompt then press enter..."
-      on:keypress={event => {
-        if (event.getModifierState("Shift")) {
-          return
-        }
-        if (event.key === "Enter") {
-          generateJs(promptInput.contents())
-        }
-      }}
-    />
-  {/if}
-</Popover>
+  <Popover
+    bind:this={popover}
+    minWidth={popoverWidth}
+    anchor={popoverAnchor}
+    align="left-outside"
+  >
+    {#if promptLoading}
+      <div class="prompt-spinner">
+        <Spinner size="20" color="white" />
+      </div>
+    {:else if suggestedCode}
+      <Button on:click={acceptSuggestion}>Accept</Button>
+      <Button on:click={rejectSuggestion}>Reject</Button>
+    {:else}
+      <TextArea
+        bind:this={promptInput}
+        placeholder="Type your prompt then press enter..."
+        on:keypress={event => {
+          if (event.getModifierState("Shift")) {
+            return
+          }
+          if (event.key === "Enter") {
+            generateJs(promptInput.contents())
+          }
+        }}
+      />
+    {/if}
+  </Popover>
+{/if}
 
 <style>
   /* Editor */
