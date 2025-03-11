@@ -6,7 +6,7 @@
 </script>
 
 <script lang="ts">
-  import { Button, Input, Label, Popover, TextArea } from "@budibase/bbui"
+  import { Button, Label, Popover, TextArea } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
@@ -48,7 +48,7 @@
     indentLess,
   } from "@codemirror/commands"
   import { setDiagnostics } from "@codemirror/lint"
-  import { Compartment, EditorState, Text } from "@codemirror/state"
+  import { Compartment, EditorState } from "@codemirror/state"
   import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
@@ -92,11 +92,9 @@
   let popoverAnchor: HTMLElement
   let popover: Popover
   let promptInput: TextArea
-  let prompt = ""
   $: aiGenEnabled =
     featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
     mode.name === "javascript"
-  $: aiGenPopoverVisible = false
 
   $: {
     if (autofocus && isEditorInitialised) {
@@ -160,7 +158,6 @@
     previousContents = editor.state.doc.toString()
     promptLoading = true
     popoverWidth = 30
-    console.log(prompt)
     const { code } = await API.generateJs({ prompt })
     value = code
     editor.dispatch({
@@ -189,7 +186,6 @@
 
   const resetPopover = () => {
     popover.hide()
-    prompt = ""
     popoverWidth = 300
   }
 
