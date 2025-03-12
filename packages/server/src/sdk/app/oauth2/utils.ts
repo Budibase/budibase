@@ -9,6 +9,9 @@ export async function generateToken(id: string) {
   }
 
   const resp = await fetch(config.url, { method: "post" })
+  if (resp.status !== 200) {
+    throw new Error(`Error fetching oauth2 token: ${resp.statusText}`)
+  }
   const jsonResponse = await resp.json()
   return `${jsonResponse.token_type} ${jsonResponse.access_token}`
 }
