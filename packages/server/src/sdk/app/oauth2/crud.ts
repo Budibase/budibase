@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, HTTPError, utils } from "@budibase/backend-core"
 import {
   Database,
   DocumentType,
@@ -19,7 +19,9 @@ export async function fetch(): Promise<OAuth2Config[]> {
   return Object.values(result.configs)
 }
 
-export async function create(config: OAuth2Config) {
+export async function create(
+  config: Omit<OAuth2Config, "id">
+): Promise<OAuth2Config> {
   const db = context.getAppDB()
   const doc: OAuth2Configs = (await getDocument(db)) ?? {
     _id: DocumentType.OAUTH2_CONFIG,
@@ -30,8 +32,14 @@ export async function create(config: OAuth2Config) {
     throw new HTTPError("Name already used", 400)
   }
 
-  doc.configs[config.name] = config
+  const id = utils.newid()
+  doc.configs[id] = {
+    id,
+    ...config,
+  }
+
   await db.put(doc)
+  return doc.configs[id]
 }
 
 export async function get(id: string): Promise<OAuth2Config | undefined> {

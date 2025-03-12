@@ -1,5 +1,6 @@
 import {
   CreateOAuth2ConfigRequest,
+  CreateOAuth2ConfigResponse,
   FetchOAuth2ConfigsResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
@@ -15,7 +16,7 @@ export class OAuth2API extends TestAPI {
     body: CreateOAuth2ConfigRequest,
     expectations?: Expectations
   ) => {
-    return await this._post<CreateOAuth2ConfigRequest>("/api/oauth2", {
+    return await this._post<CreateOAuth2ConfigResponse>("/api/oauth2", {
       body,
       expectations: {
         status: expectations?.status ?? 201,

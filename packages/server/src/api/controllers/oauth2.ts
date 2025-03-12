@@ -1,5 +1,6 @@
 import {
   CreateOAuth2ConfigRequest,
+  CreateOAuth2ConfigResponse,
   Ctx,
   FetchOAuth2ConfigsResponse,
   OAuth2Config,
@@ -12,6 +13,7 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
 
   const response: FetchOAuth2ConfigsResponse = {
     configs: (configs || []).map(c => ({
+      id: c.id,
       name: c.name,
       url: c.url,
     })),
@@ -19,12 +21,15 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
   ctx.body = response
 }
 
-export async function create(ctx: Ctx<CreateOAuth2ConfigRequest, void>) {
-  const newConfig: RequiredKeys<OAuth2Config> = {
+export async function create(
+  ctx: Ctx<CreateOAuth2ConfigRequest, CreateOAuth2ConfigResponse>
+) {
+  const newConfig: RequiredKeys<Omit<OAuth2Config, "id">> = {
     name: ctx.request.body.name,
     url: ctx.request.body.url,
   }
 
-  await sdk.oauth2.create(newConfig)
+  const config = await sdk.oauth2.create(newConfig)
   ctx.status = 201
+  ctx.body = { config }
 }

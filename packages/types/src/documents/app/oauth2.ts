@@ -1,6 +1,7 @@
 import { Document } from "../document"
 
 export interface OAuth2Config {
+  id: string
   name: string
   url: string
 }

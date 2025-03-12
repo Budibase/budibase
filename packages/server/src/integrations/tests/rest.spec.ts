@@ -5,7 +5,6 @@ import {
   BasicRestAuthConfig,
   BearerRestAuthConfig,
   BodyType,
-  OAuth2RestAuthConfig,
   RestAuthType,
 } from "@budibase/types"
 import { Response } from "node-fetch"
@@ -278,11 +277,10 @@ describe("REST Integration", () => {
     })
 
     it("adds oAuth2 auth", async () => {
-      const oauthConfig = {
+      const { config: oauthConfig } = await config.api.oauth2.create({
         name: generator.guid(),
         url: generator.url(),
-      }
-      await config.api.oauth2.create(oauthConfig)
+      })
 
       const token = generator.guid()
 
@@ -300,7 +298,7 @@ describe("REST Integration", () => {
         config.appId,
         async () =>
           await integration.read({
-            authConfigId: oauthConfig.name,
+            authConfigId: oauthConfig.id,
             authConfigType: RestAuthType.OAUTH2,
           })
       )
