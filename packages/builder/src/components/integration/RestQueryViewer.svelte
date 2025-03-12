@@ -50,17 +50,27 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
-  import { Datasource, Query, TableSchema } from "@budibase/types"
+  import {
+    Datasource,
+    PreviewQueryResponse,
+    Query,
+    QuerySchema,
+  } from "@budibase/types"
 
   export let queryId: string
 
   let query: Query, datasource: Datasource
-  let breakQs = {},
-    requestBindings = {}
+  let breakQs: Record<string, string> = {},
+    requestBindings: Record<string, string> = {}
   let saveId: string | undefined, url: string
-  let response, schema: TableSchema, enabledHeaders: boolean
+  let response: PreviewQueryResponse,
+    schema: Record<string, string | QuerySchema>,
+    enabledHeaders: boolean
   let authConfigId: string
-  let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
+  let dynamicVariables: any,
+    addVariableModal: any,
+    varBinding: any,
+    globalDynamicBindings: any
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
 
@@ -221,7 +231,7 @@
       }
     })
 
-    Object.values(query.fields.headers).forEach(headerValue => {
+    Object.values(query.fields.headers ?? {}).forEach(headerValue => {
       if (forbiddenBindings.test(headerValue)) {
         throw bindingError
       }
@@ -248,7 +258,7 @@
         nestedSchemaFields = response.nestedSchemaFields
         notifications.success("Request sent successfully")
       }
-    } catch (error) {
+    } catch (error: any) {
       notifications.error(`Query Error: ${error.message}`)
     }
   }
@@ -269,7 +279,7 @@
     return id
   }
 
-  const buildAuthConfigs = datasource => {
+  const buildAuthConfigs = (datasource: Datasource) => {
     if (datasource?.config?.authConfigs) {
       return datasource.config.authConfigs.map(c => ({
         label: c.name,
@@ -282,7 +292,7 @@
   const schemaMenuItems = [
     {
       text: "Create dynamic variable",
-      onClick: input => {
+      onClick: (input: { name: string }) => {
         varBinding = `{{ data.0.[${input.name}] }}`
         addVariableModal.show()
       },
@@ -291,7 +301,7 @@
   const responseHeadersMenuItems = [
     {
       text: "Create dynamic variable",
-      onClick: input => {
+      onClick: (input: { name: string }) => {
         varBinding = `{{ info.headers.[${input.name}] }}`
         addVariableModal.show()
       },
