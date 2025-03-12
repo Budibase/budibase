@@ -157,7 +157,7 @@ function generateSchema(
       case FieldType.AUTO:
       case FieldType.JSON:
       case FieldType.INTERNAL:
-        throw `${column.type} is not a valid SQL type`
+        throw new Error(`${column.type} is not a valid SQL type`)
 
       default:
         utils.unreachable(columnType)
