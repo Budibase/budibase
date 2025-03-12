@@ -49,7 +49,7 @@ export interface OAuth2RestAuthConfig {
   _id: string
   name: string
   type: RestAuthType.OAUTH2
-  config: string
+  config: { id: string }
 }
 
 export type RestAuthConfig =

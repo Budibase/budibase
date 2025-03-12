@@ -27,6 +27,7 @@ import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
 import { utils } from "@budibase/shared-core"
+import sdk from "../sdk"
 
 const coreFields = {
   path: {
@@ -376,7 +377,7 @@ export class RestIntegration implements IntegrationBase {
     return input
   }
 
-  getAuthHeaders(authConfigId?: string): { [key: string]: any } {
+  async getAuthHeaders(authConfigId?: string): Promise<{ [key: string]: any }> {
     let headers: any = {}
 
     if (this.config.authConfigs && authConfigId) {
@@ -397,8 +398,9 @@ export class RestIntegration implements IntegrationBase {
             headers.Authorization = `Bearer ${config.token}`
             break
           case RestAuthType.OAUTH2:
-            // TODO
-            headers.Authorization = `Bearer ${config}`
+            headers.Authorization = `Bearer ${await sdk.oauth2.generateToken(
+              config.id
+            )}`
             break
           default:
             throw utils.unreachable(type)

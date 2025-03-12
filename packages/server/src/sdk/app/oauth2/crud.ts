@@ -1,9 +1,18 @@
 import { context, HTTPError } from "@budibase/backend-core"
-import { DocumentType, OAuth2Config, OAuth2Configs } from "@budibase/types"
+import {
+  Database,
+  DocumentType,
+  OAuth2Config,
+  OAuth2Configs,
+} from "@budibase/types"
+
+async function getDocument(db: Database = context.getAppDB()) {
+  const result = await db.tryGet<OAuth2Configs>(DocumentType.OAUTH2_CONFIG)
+  return result
+}
 
 export async function fetch(): Promise<OAuth2Config[]> {
-  const db = context.getAppDB()
-  const result = await db.tryGet<OAuth2Configs>(DocumentType.OAUTH2_CONFIG)
+  const result = await getDocument()
   if (!result) {
     return []
   }
@@ -12,9 +21,7 @@ export async function fetch(): Promise<OAuth2Config[]> {
 
 export async function create(config: OAuth2Config) {
   const db = context.getAppDB()
-  const doc: OAuth2Configs = (await db.tryGet<OAuth2Configs>(
-    DocumentType.OAUTH2_CONFIG
-  )) ?? {
+  const doc: OAuth2Configs = (await getDocument(db)) ?? {
     _id: DocumentType.OAUTH2_CONFIG,
     configs: {},
   }
@@ -25,4 +32,9 @@ export async function create(config: OAuth2Config) {
 
   doc.configs[config.name] = config
   await db.put(doc)
+}
+
+export async function get(id: string): Promise<OAuth2Config | undefined> {
+  const doc = await getDocument()
+  return doc?.configs?.[id]
 }

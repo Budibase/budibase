@@ -1,4 +1,5 @@
 import nock from "nock"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 import { RestIntegration } from "../rest"
 import {
   BasicRestAuthConfig,
@@ -7,7 +8,6 @@ import {
   RestAuthType,
 } from "@budibase/types"
 import { Response } from "node-fetch"
-import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 import { createServer } from "http"
 import { AddressInfo } from "net"
 
