@@ -136,7 +136,7 @@ export interface Database {
   get<T extends Document>(id?: string): Promise<T>
   tryGet<T extends Document>(id?: string): Promise<T | undefined>
   getMultiple<T extends Document>(
-    ids: string[],
+    ids?: string[],
     opts?: { allowMissing?: boolean; excludeDocs?: boolean }
   ): Promise<T[]>
   remove(idOrDoc: Document): Promise<Nano.DocumentDestroyResponse>
