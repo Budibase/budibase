@@ -45,17 +45,7 @@ export interface BearerRestAuthConfig {
   config: RestBearerAuthConfig
 }
 
-export interface OAuth2RestAuthConfig {
-  _id: string
-  name: string
-  type: RestAuthType.OAUTH2
-  config: { id: string }
-}
-
-export type RestAuthConfig =
-  | BasicRestAuthConfig
-  | BearerRestAuthConfig
-  | OAuth2RestAuthConfig
+export type RestAuthConfig = BasicRestAuthConfig | BearerRestAuthConfig
 
 export interface DynamicVariable {
   name: string

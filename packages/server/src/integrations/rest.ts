@@ -377,33 +377,36 @@ export class RestIntegration implements IntegrationBase {
     return input
   }
 
-  async getAuthHeaders(authConfigId?: string): Promise<{ [key: string]: any }> {
+  async getAuthHeaders(
+    authConfigId?: string,
+    authConfigType?: RestAuthType
+  ): Promise<{ [key: string]: any }> {
     let headers: any = {}
 
-    if (this.config.authConfigs && authConfigId) {
-      const authConfig = this.config.authConfigs.filter(
-        c => c._id === authConfigId
-      )[0]
-      // check the config still exists before proceeding
-      // if not - do nothing
-      if (authConfig) {
-        const { type, config } = authConfig
-        switch (type) {
-          case RestAuthType.BASIC:
-            headers.Authorization = `Basic ${Buffer.from(
-              `${config.username}:${config.password}`
-            ).toString("base64")}`
-            break
-          case RestAuthType.BEARER:
-            headers.Authorization = `Bearer ${config.token}`
-            break
-          case RestAuthType.OAUTH2:
-            headers.Authorization = `Bearer ${await sdk.oauth2.generateToken(
-              config.id
-            )}`
-            break
-          default:
-            throw utils.unreachable(type)
+    if (authConfigId) {
+      if (authConfigType === RestAuthType.OAUTH2) {
+        const token = await sdk.oauth2.generateToken(authConfigId)
+        headers.Authorization = `Bearer ${token}`
+      } else if (this.config.authConfigs) {
+        const authConfig = this.config.authConfigs.filter(
+          c => c._id === authConfigId
+        )[0]
+        // check the config still exists before proceeding
+        // if not - do nothing
+        if (authConfig) {
+          const { type, config } = authConfig
+          switch (type) {
+            case RestAuthType.BASIC:
+              headers.Authorization = `Basic ${Buffer.from(
+                `${config.username}:${config.password}`
+              ).toString("base64")}`
+              break
+            case RestAuthType.BEARER:
+              headers.Authorization = `Bearer ${config.token}`
+              break
+            default:
+              throw utils.unreachable(type)
+          }
         }
       }
     }
@@ -421,10 +424,11 @@ export class RestIntegration implements IntegrationBase {
       bodyType = BodyType.NONE,
       requestBody,
       authConfigId,
+      authConfigType,
       pagination,
       paginationValues,
     } = query
-    const authHeaders = await this.getAuthHeaders(authConfigId)
+    const authHeaders = await this.getAuthHeaders(authConfigId, authConfigType)
 
     this.headers = {
       ...(this.config.defaultHeaders || {}),

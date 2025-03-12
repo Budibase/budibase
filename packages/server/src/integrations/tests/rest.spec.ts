@@ -5,11 +5,13 @@ import {
   BasicRestAuthConfig,
   BearerRestAuthConfig,
   BodyType,
+  OAuth2RestAuthConfig,
   RestAuthType,
 } from "@budibase/types"
 import { Response } from "node-fetch"
 import { createServer } from "http"
 import { AddressInfo } from "net"
+import { generator } from "@budibase/backend-core/tests"
 
 const UUID_REGEX =
   "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
@@ -272,6 +274,24 @@ describe("REST Integration", () => {
         .get("/")
         .reply(200, { foo: "bar" })
       const { data } = await integration.read({ authConfigId: bearerAuth._id })
+      expect(data).toEqual({ foo: "bar" })
+    })
+
+    it("adds oAuth2 auth", async () => {
+      const oauthConfig = {
+        name: generator.guid(),
+      }
+      await config.api.oauth2.create(oauthConfig)
+
+      nock("https://example.com", {
+        reqheaders: { Authorization: "Bearer mytoken" },
+      })
+        .get("/")
+        .reply(200, { foo: "bar" })
+      const { data } = await integration.read({
+        authConfigId: oauthConfig.name,
+        authConfigType: RestAuthType.OAUTH2,
+      })
       expect(data).toEqual({ foo: "bar" })
     })
   })

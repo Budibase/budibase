@@ -17,7 +17,10 @@ export class OAuth2API extends TestAPI {
   ) => {
     return await this._post<CreateOAuth2ConfigRequest>("/api/oauth2", {
       body,
-      expectations,
+      expectations: {
+        status: expectations?.status ?? 201,
+        ...expectations,
+      },
     })
   }
 }
