@@ -198,6 +198,19 @@ async function addSampleDataScreen() {
   await db.put(screen)
 }
 
+function addSampleDataNavLinks(app: App) {
+  if (app.navigation) {
+    app.navigation.links = [
+      {
+        text: "Inventory",
+        url: "/inventory",
+        type: "link",
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+    ]
+  }
+}
+
 export const addSampleData = async (
   ctx: UserCtx<void, AddAppSampleDataResponse>
 ) => {
@@ -311,18 +324,6 @@ async function performAppCreate(
       await updateUserColumns(appId, db, ctx.user._id!)
     }
 
-    // Add link to sample data page if required
-    const newLinks = addSampleData
-      ? [
-          {
-            text: "Inventory",
-            url: "/inventory",
-            type: "link",
-            roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-          },
-        ]
-      : []
-
     const newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
@@ -344,7 +345,7 @@ async function performAppCreate(
         navWidth: "Large",
         navBackground: "var(--spectrum-global-color-static-blue-800)",
         navTextColor: "var(--spectrum-global-color-static-white)",
-        links: newLinks,
+        links: [],
       },
       theme: DefaultAppTheme,
       customTheme: {
@@ -356,6 +357,10 @@ async function performAppCreate(
         skeletonLoader: true,
       },
       creationVersion: undefined,
+    }
+
+    if (addSampleData) {
+      addSampleDataNavLinks(newApplication)
     }
 
     if (!isImport) {
@@ -406,8 +411,12 @@ async function performAppCreate(
 
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
-      await addSampleDataDocs()
-      await addSampleDataScreen()
+      try {
+        await addSampleDataDocs()
+        await addSampleDataScreen()
+      } catch (err) {
+        ctx.throw(400, "App created, but failed to add sample data")
+      }
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
