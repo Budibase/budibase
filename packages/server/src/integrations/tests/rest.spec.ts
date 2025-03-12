@@ -1,6 +1,11 @@
 import nock from "nock"
 import { RestIntegration } from "../rest"
-import { BodyType, RestAuthType } from "@budibase/types"
+import {
+  BasicRestAuthConfig,
+  BearerRestAuthConfig,
+  BodyType,
+  RestAuthType,
+} from "@budibase/types"
 import { Response } from "node-fetch"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 import { createServer } from "http"
@@ -224,7 +229,7 @@ describe("REST Integration", () => {
   })
 
   describe("authentication", () => {
-    const basicAuth = {
+    const basicAuth: BasicRestAuthConfig = {
       _id: "c59c14bd1898a43baa08da68959b24686",
       name: "basic-1",
       type: RestAuthType.BASIC,
@@ -234,7 +239,7 @@ describe("REST Integration", () => {
       },
     }
 
-    const bearerAuth = {
+    const bearerAuth: BearerRestAuthConfig = {
       _id: "0d91d732f34e4befabeff50b392a8ff3",
       name: "bearer-1",
       type: RestAuthType.BEARER,

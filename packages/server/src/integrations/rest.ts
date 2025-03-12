@@ -8,8 +8,6 @@ import {
   PaginationValues,
   QueryType,
   RestAuthType,
-  RestBasicAuthConfig,
-  RestBearerAuthConfig,
   RestConfig,
   RestQueryFields as RestQuery,
 } from "@budibase/types"
@@ -28,6 +26,7 @@ import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
+import { utils } from "@budibase/shared-core"
 
 const coreFields = {
   path: {
@@ -387,18 +386,22 @@ export class RestIntegration implements IntegrationBase {
       // check the config still exists before proceeding
       // if not - do nothing
       if (authConfig) {
-        let config
-        switch (authConfig.type) {
+        const { type, config } = authConfig
+        switch (type) {
           case RestAuthType.BASIC:
-            config = authConfig.config as RestBasicAuthConfig
             headers.Authorization = `Basic ${Buffer.from(
               `${config.username}:${config.password}`
             ).toString("base64")}`
             break
           case RestAuthType.BEARER:
-            config = authConfig.config as RestBearerAuthConfig
             headers.Authorization = `Bearer ${config.token}`
             break
+          case RestAuthType.OAUTH2:
+            // TODO
+            headers.Authorization = `Bearer ${config}`
+            break
+          default:
+            throw utils.unreachable(type)
         }
       }
     }
