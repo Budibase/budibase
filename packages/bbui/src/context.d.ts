@@ -1,9 +1,9 @@
 declare module "svelte" {
-  export function getContext(key: Context.Modal): {
+  export function getContext(key: "bbui-modal"): {
     hide: () => void
     cancel: () => void
   }
-  export function getContext(key: Context.Popover): {
+  export function getContext(key: "bbui-popover-root"): {
     show: () => void
     hide: () => void
   }
@@ -16,8 +16,3 @@ export default {
   Modal: "bbui-modal",
   PopoverRoot: "bbui-popover-root",
 } as const
-
-export namespace Context {
-  type Modal = "bbui-modal"
-  type PopoverRoot = "bbui-popover-root"
-}
