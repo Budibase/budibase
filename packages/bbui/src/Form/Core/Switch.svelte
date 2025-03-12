@@ -1,15 +1,16 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/switch/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
 
-  export let value = false
-  export let id = null
-  export let text = null
-  export let disabled = false
+  export let value: boolean = false
+  export let id: string | null = null
+  export let text: string | null = null
+  export let disabled: boolean = false
 
   const dispatch = createEventDispatcher()
-  const onChange = event => {
-    dispatch("change", event.target.checked)
+  const onChange = (event: Event) => {
+    const target = event.target as HTMLInputElement
+    dispatch("change", target.checked)
   }
 </script>
 
