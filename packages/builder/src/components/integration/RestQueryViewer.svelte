@@ -50,7 +50,7 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
-  import {
+  import type {
     Datasource,
     PreviewQueryResponse,
     Query,
