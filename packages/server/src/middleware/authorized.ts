@@ -34,7 +34,7 @@ const checkAuthorized = async (
   const isCreatorApi = permType === PermissionType.CREATOR
   const isBuilderApi = permType === PermissionType.BUILDER
   const isGlobalBuilder = users.isGlobalBuilder(ctx.user)
-  const isCreator = await users.isCreator(ctx.user)
+  const isCreator = await users.isCreatorAsync(ctx.user)
   const isBuilder = appId
     ? users.isBuilder(ctx.user, appId)
     : users.hasBuilderPermissions(ctx.user)

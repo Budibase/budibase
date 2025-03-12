@@ -24,7 +24,6 @@ import {
   SearchResponse,
   SearchViewRowRequest,
   SortOrder,
-  SortType,
   StaticQuotaName,
   Table,
   TableSchema,
@@ -154,7 +153,6 @@ if (descriptions.length) {
                 sort: {
                   field: "fieldToSort",
                   order: SortOrder.DESCENDING,
-                  type: SortType.STRING,
                 },
                 schema: {
                   id: { visible: true },
@@ -217,7 +215,6 @@ if (descriptions.length) {
               sort: {
                 field: "fieldToSort",
                 order: SortOrder.DESCENDING,
-                type: SortType.STRING,
               },
               schema: {
                 id: { visible: true },
@@ -1147,7 +1144,6 @@ if (descriptions.length) {
               sort: {
                 field: generator.word(),
                 order: SortOrder.DESCENDING,
-                type: SortType.STRING,
               },
               schema: {
                 id: { visible: true },
@@ -2826,34 +2822,44 @@ if (descriptions.length) {
             return total
           }
 
-          const assertRowUsage = async (expected: number) => {
-            const usage = await getRowUsage()
+          async function expectRowUsage<T>(
+            expected: number,
+            f: () => Promise<T>
+          ): Promise<T> {
+            const before = await getRowUsage()
+            const result = await f()
+            const after = await getRowUsage()
+            const usage = after - before
             expect(usage).toBe(expected)
+            return result
           }
 
           it("should be able to delete a row", async () => {
-            const createdRow = await config.api.row.save(table._id!, {})
-            const rowUsage = await getRowUsage()
-            await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
-            await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
+            const createdRow = await expectRowUsage(isInternal ? 1 : 0, () =>
+              config.api.row.save(table._id!, {})
+            )
+            await expectRowUsage(isInternal ? -1 : 0, () =>
+              config.api.row.bulkDelete(view.id, { rows: [createdRow] })
+            )
             await config.api.row.get(table._id!, createdRow._id!, {
               status: 404,
             })
           })
 
           it("should be able to delete multiple rows", async () => {
-            const rows = await Promise.all([
-              config.api.row.save(table._id!, {}),
-              config.api.row.save(table._id!, {}),
-              config.api.row.save(table._id!, {}),
-            ])
-            const rowUsage = await getRowUsage()
-
-            await config.api.row.bulkDelete(view.id, {
-              rows: [rows[0], rows[2]],
+            const rows = await expectRowUsage(isInternal ? 3 : 0, async () => {
+              return [
+                await config.api.row.save(table._id!, {}),
+                await config.api.row.save(table._id!, {}),
+                await config.api.row.save(table._id!, {}),
+              ]
             })
 
-            await assertRowUsage(isInternal ? rowUsage - 2 : rowUsage)
+            await expectRowUsage(isInternal ? -2 : 0, async () => {
+              await config.api.row.bulkDelete(view.id, {
+                rows: [rows[0], rows[2]],
+              })
+            })
 
             await config.api.row.get(table._id!, rows[0]._id!, {
               status: 404,
@@ -3143,7 +3149,6 @@ if (descriptions.length) {
             {
               field: string
               order?: SortOrder
-              type?: SortType
             },
             string[]
           ][] = [
@@ -3151,7 +3156,6 @@ if (descriptions.length) {
               {
                 field: "name",
                 order: SortOrder.ASCENDING,
-                type: SortType.STRING,
               },
               ["Alice", "Bob", "Charly", "Danny"],
             ],
@@ -3170,22 +3174,6 @@ if (descriptions.length) {
             ],
             [
               {
-                field: "name",
-                order: SortOrder.DESCENDING,
-                type: SortType.STRING,
-              },
-              ["Danny", "Charly", "Bob", "Alice"],
-            ],
-            [
-              {
-                field: "age",
-                order: SortOrder.ASCENDING,
-                type: SortType.NUMBER,
-              },
-              ["Danny", "Alice", "Charly", "Bob"],
-            ],
-            [
-              {
                 field: "age",
                 order: SortOrder.ASCENDING,
               },
@@ -3194,15 +3182,13 @@ if (descriptions.length) {
             [
               {
                 field: "age",
-                order: SortOrder.DESCENDING,
               },
-              ["Bob", "Charly", "Alice", "Danny"],
+              ["Danny", "Alice", "Charly", "Bob"],
             ],
             [
               {
                 field: "age",
                 order: SortOrder.DESCENDING,
-                type: SortType.NUMBER,
               },
               ["Bob", "Charly", "Alice", "Danny"],
             ],
@@ -3289,7 +3275,6 @@ if (descriptions.length) {
                   sort: {
                     field: "name",
                     order: SortOrder.ASCENDING,
-                    type: SortType.STRING,
                   },
                   schema: viewSchema,
                 })
@@ -3297,7 +3282,6 @@ if (descriptions.length) {
                 const response = await config.api.viewV2.search(view.id, {
                   sort: sortParams.field,
                   sortOrder: sortParams.order,
-                  sortType: sortParams.type,
                   query: {},
                 })
 

@@ -31,6 +31,10 @@ class AnalyticsHub {
     posthog.captureEvent(eventName, props)
   }
 
+  enableSessionRecording() {
+    posthog.enableSessionRecording()
+  }
+
   async logout() {
     posthog.logout()
   }

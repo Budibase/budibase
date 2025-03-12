@@ -4,17 +4,8 @@ import { automationQueue } from "./bullboard"
 import { updateEntityMetadata } from "../utilities"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
-import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import {
-  Automation,
-  AutomationActionStepId,
-  AutomationJob,
-  AutomationStepDefinition,
-  AutomationTriggerDefinition,
-  AutomationTriggerStepId,
-  MetadataType,
-} from "@budibase/types"
+import { Automation, AutomationJob, MetadataType } from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
@@ -111,23 +102,6 @@ export async function updateTestHistory(
       return metadata
     }
   )
-}
-
-export function removeDeprecated<
-  T extends
-    | Record<keyof typeof AutomationTriggerStepId, AutomationTriggerDefinition>
-    | Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
->(definitions: T): T {
-  const base: Record<
-    string,
-    AutomationTriggerDefinition | AutomationStepDefinition
-  > = cloneDeep(definitions)
-  for (let key of Object.keys(base)) {
-    if (base[key].deprecated) {
-      delete base[key]
-    }
-  }
-  return base as T
 }
 
 // end the repetition and the job itself

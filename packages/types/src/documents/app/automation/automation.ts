@@ -63,6 +63,7 @@ export enum AutomationActionStepId {
   EXECUTE_BASH = "EXECUTE_BASH",
   OUTGOING_WEBHOOK = "OUTGOING_WEBHOOK",
   EXECUTE_SCRIPT = "EXECUTE_SCRIPT",
+  EXECUTE_SCRIPT_V2 = "EXECUTE_SCRIPT_V2",
   EXECUTE_QUERY = "EXECUTE_QUERY",
   SERVER_LOG = "SERVER_LOG",
   DELAY = "DELAY",
@@ -135,15 +136,7 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
-  testData?: {
-    row?: Row
-    meta: {
-      [key: string]: unknown
-    }
-    id: string
-    revision: string
-    oldRow?: Row
-  }
+  testData?: AutomationTriggerResultOutputs
 }
 
 export interface BaseIOStructure {
