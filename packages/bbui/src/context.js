@@ -1,6 +1,4 @@
-const Context = {
+export default {
   Modal: "bbui-modal",
   PopoverRoot: "bbui-popover-root",
-} as const
-
-export default Context
+}

@@ -73,7 +73,12 @@
     })
   }
 
-  setContext(Context.Modal, { show, hide, toggle, cancel })
+  setContext(Context.Modal, {
+    show,
+    hide,
+    toggle,
+    cancel,
+  } as { show: () => void; hide: () => void; toggle: () => void; cancel: () => void })
 
   onMount(() => {
     document.addEventListener("keydown", handleKey)
