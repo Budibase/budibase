@@ -2753,15 +2753,14 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/handlebars-helpers@^0.13.2":
-  version "0.13.2"
-  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.13.2.tgz#73ab51c464e91fd955b429017648e0257060db77"
-  integrity sha512-/IGqyDcjN9AhKSagCsqQRavpraQRjGeSZeMb62yJiK0b/9r47BjzcOeuQbfRhwK1NlL2cSExNcrkWSxisbPvJQ==
+"@budibase/handlebars-helpers@^0.14.1":
+  version "0.14.1"
+  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.14.1.tgz#3da4bea9c85851a82b094f97a027f6fae8e6247f"
+  integrity sha512-1/zM++Eam/AFXA/wRY/H2PKxO4g+k3huTDymI2gvC0hYl1VYSfdDr4OUtG4J8WFOIf2CQ6CqP5k1qKEj7dWcAQ==
   dependencies:
     get-object "^0.2.0"
     get-value "^3.0.1"
     handlebars "^4.7.7"
-    handlebars-utils "^1.0.6"
     has-value "^2.0.2"
     html-tag "^2.0.0"
     is-glob "^4.0.1"
@@ -12792,14 +12791,6 @@ gtoken@^7.0.0:
     gaxios "^6.0.0"
     jws "^4.0.0"
 
-handlebars-utils@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/handlebars-utils/-/handlebars-utils-1.0.6.tgz#cb9db43362479054782d86ffe10f47abc76357f9"
-  integrity sha512-d5mmoQXdeEqSKMtQQZ9WkiUcO1E3tPbWxluCK9hVgIDPzQa9WsKo3Lbe/sGflTe7TomHEeZaOgwIkyIr1kfzkw==
-  dependencies:
-    kind-of "^6.0.0"
-    typeof-article "^0.1.1"
-
 handlebars@^4.7.7, handlebars@^4.7.8:
   version "4.7.8"
   resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.7.8.tgz#41c42c18b1be2365439188c77c6afae71c0cd9e9"
@@ -14867,7 +14858,7 @@ kill-port@^1.6.1:
     get-them-args "1.3.2"
     shell-exec "1.0.2"
 
-kind-of@6.0.3, kind-of@^3.0.2, kind-of@^3.1.0, kind-of@^6.0.0, kind-of@^6.0.2, kind-of@^6.0.3:
+kind-of@6.0.3, kind-of@^3.0.2, kind-of@^6.0.0, kind-of@^6.0.2, kind-of@^6.0.3:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
@@ -21324,13 +21315,6 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==
-
-typeof-article@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/typeof-article/-/typeof-article-0.1.1.tgz#9f07e733c3fbb646ffa9e61c08debacd460e06af"
-  integrity sha512-Vn42zdX3FhmUrzEmitX3iYyLb+Umwpmv8fkZRIknYh84lmdrwqZA5xYaoKiIj2Rc5i/5wcDrpUmZcbk1U51vTw==
-  dependencies:
-    kind-of "^3.1.0"
 
 typeof@^1.0.0:
   version "1.0.0"
