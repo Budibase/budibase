@@ -385,8 +385,7 @@ export class RestIntegration implements IntegrationBase {
 
     if (authConfigId) {
       if (authConfigType === RestAuthType.OAUTH2) {
-        const token = await sdk.oauth2.generateToken(authConfigId)
-        headers.Authorization = `Bearer ${token}`
+        headers.Authorization = await sdk.oauth2.generateToken(authConfigId)
       } else if (this.config.authConfigs) {
         const authConfig = this.config.authConfigs.filter(
           c => c._id === authConfigId

@@ -280,18 +280,30 @@ describe("REST Integration", () => {
     it("adds oAuth2 auth", async () => {
       const oauthConfig = {
         name: generator.guid(),
+        url: generator.url(),
       }
       await config.api.oauth2.create(oauthConfig)
 
+      const token = generator.guid()
+
+      const url = new URL(oauthConfig.url)
+      nock(url.origin)
+        .post(url.pathname)
+        .reply(200, { token_type: "Bearer", access_token: token })
+
       nock("https://example.com", {
-        reqheaders: { Authorization: "Bearer mytoken" },
+        reqheaders: { Authorization: `Bearer ${token}` },
       })
         .get("/")
         .reply(200, { foo: "bar" })
-      const { data } = await integration.read({
-        authConfigId: oauthConfig.name,
-        authConfigType: RestAuthType.OAUTH2,
-      })
+      const { data } = await config.doInContext(
+        config.appId,
+        async () =>
+          await integration.read({
+            authConfigId: oauthConfig.name,
+            authConfigType: RestAuthType.OAUTH2,
+          })
+      )
       expect(data).toEqual({ foo: "bar" })
     })
   })

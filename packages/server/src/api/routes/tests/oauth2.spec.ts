@@ -8,6 +8,7 @@ describe("/oauth2", () => {
   function makeOAuth2Config(): CreateOAuth2ConfigRequest {
     return {
       name: generator.guid(),
+      url: generator.url(),
     }
   }
 

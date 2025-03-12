@@ -1,5 +1,6 @@
 interface OAuth2Config {
   name: string
+  url: string
 }
 
 export interface FetchOAuth2ConfigsResponse {

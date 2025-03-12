@@ -13,6 +13,7 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
   const response: FetchOAuth2ConfigsResponse = {
     configs: (configs || []).map(c => ({
       name: c.name,
+      url: c.url,
     })),
   }
   ctx.body = response
@@ -21,6 +22,7 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
 export async function create(ctx: Ctx<CreateOAuth2ConfigRequest, void>) {
   const newConfig: RequiredKeys<OAuth2Config> = {
     name: ctx.request.body.name,
+    url: ctx.request.body.url,
   }
 
   await sdk.oauth2.create(newConfig)
