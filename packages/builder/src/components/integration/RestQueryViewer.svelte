@@ -67,7 +67,7 @@
     schema: Record<string, string | QuerySchema>,
     enabledHeaders: boolean
   let authConfigId: string
-  let dynamicVariables: any,
+  let dynamicVariables: Record<string, string>,
     addVariableModal: any,
     varBinding: any,
     globalDynamicBindings: any
@@ -534,10 +534,10 @@
             on:save={saveQuery}
           />
           <div class="controls">
-            <ConnectedQueryScreens sourceId={query._id} />
+            <ConnectedQueryScreens sourceId={query._id || ""} />
             <div class="access">
               <Label>Access</Label>
-              <AccessLevelSelect {query} {saveId} />
+              <AccessLevelSelect {query} />
             </div>
           </div>
         </div>
