@@ -13,11 +13,11 @@ export async function generateJs(
   ctx: UserCtx<GenerateJsRequest, GenerateJsResponse>
 ) {
   if (!(await features.isEnabled(FeatureFlag.AI_JS_GENERATION))) {
-    ctx.throw(400, "AI JS generation is disabled")
+    ctx.throw(500, "AI JS generation is disabled")
   }
 
   if (!env.OPENAI_API_KEY) {
-    ctx.throw(400, "OpenAI API key is not set")
+    ctx.throw(500, "OpenAI API key is not set")
   }
 
   const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })

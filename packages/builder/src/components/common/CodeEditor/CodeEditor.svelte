@@ -6,7 +6,13 @@
 </script>
 
 <script lang="ts">
-  import { Button, Label, Popover, TextArea } from "@budibase/bbui"
+  import {
+    Button,
+    Label,
+    notifications,
+    Popover,
+    TextArea,
+  } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
@@ -157,7 +163,19 @@
     previousContents = editor.state.doc.toString()
     promptLoading = true
     popoverWidth = 30
-    const { code } = await API.generateJs({ prompt })
+    let code = ""
+    try {
+      const resp = await API.generateJs({ prompt })
+      code = resp.code
+    } catch (e) {
+      console.error(e)
+      notifications.error("Unable to generate code, please try again later.")
+      code = previousContents
+      popoverWidth = 300
+      promptLoading = false
+      popover.hide()
+      return
+    }
     value = code
     editor.dispatch({
       changes: { from: 0, to: editor.state.doc.length, insert: code },

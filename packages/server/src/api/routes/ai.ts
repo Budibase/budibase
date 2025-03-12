@@ -4,6 +4,6 @@ import { auth } from "@budibase/backend-core"
 
 const router: Router = new Router()
 
-router.post("/api/ai/js", auth.builderOrAdmin, controller.generateJs)
+router.post("/api/ai/js", auth.builderOnly, controller.generateJs)
 
 export default router
