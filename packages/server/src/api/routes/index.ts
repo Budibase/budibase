@@ -1,4 +1,3 @@
-import aiRoutes from "./ai"
 import authRoutes from "./auth"
 import layoutRoutes from "./layout"
 import screenRoutes from "./screen"
@@ -39,7 +38,6 @@ const appBackupRoutes = pro.appBackups
 const environmentVariableRoutes = pro.environmentVariables
 
 export const mainRoutes: Router[] = [
-  aiRoutes,
   appBackupRoutes,
   backupRoutes,
   authRoutes,
