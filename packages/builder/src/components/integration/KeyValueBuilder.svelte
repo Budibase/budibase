@@ -51,11 +51,11 @@
     {}
   )
 
-  function buildFieldActivity(obj: any) {
+  function buildFieldActivity(obj: Record<string, boolean>) {
     if (!obj || typeof obj !== "object") {
       return []
     }
-    const array = Array(fields.length)
+    const array: boolean[] = Array(fields.length)
     for (let [key, value] of Object.entries(obj)) {
       const field = fields.find(el => el.name === key)
       if (field) {
@@ -80,7 +80,7 @@
 
   function changed() {
     fields = fields
-    const newActivity = {}
+    const newActivity: Record<string, boolean> = {}
     for (let idx = 0; idx < fields.length; idx++) {
       const fieldName = fields[idx].name
       if (fieldName) {
@@ -175,7 +175,7 @@
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
       {/if}
-      {#if menuItems?.length > 0 && showMenu}
+      {#if menuItems?.length && showMenu}
         <ActionMenu>
           <div slot="control" class="control icon">
             <Icon size="S" hoverable name="MoreSmallList" />
