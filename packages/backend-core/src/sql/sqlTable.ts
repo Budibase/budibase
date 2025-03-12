@@ -141,6 +141,7 @@ function generateSchema(
             .references(`${tableName}.${relatedPrimary}`)
         }
         break
+      case FieldType.SIGNATURE_SINGLE:
       case FieldType.ATTACHMENTS:
       case FieldType.ATTACHMENT_SINGLE:
         // single attachments are stored as an object, multi attachments
@@ -153,7 +154,6 @@ function generateSchema(
       case FieldType.AI:
         // This is allowed, but nothing to do on the external datasource
         break
-      case FieldType.SIGNATURE_SINGLE:
       case FieldType.AUTO:
       case FieldType.JSON:
       case FieldType.INTERNAL:
