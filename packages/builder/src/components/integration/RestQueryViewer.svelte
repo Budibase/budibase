@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
   import { environment } from "@/stores/portal"
@@ -50,15 +50,16 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+  import { Datasource, Query, TableSchema } from "@budibase/types"
 
-  export let queryId
+  export let queryId: string
 
-  let query, datasource
+  let query: Query, datasource: Datasource
   let breakQs = {},
     requestBindings = {}
-  let saveId, url
-  let response, schema, enabledHeaders
-  let authConfigId
+  let saveId: string | undefined, url: string
+  let response, schema: TableSchema, enabledHeaders: boolean
+  let authConfigId: string
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
@@ -103,7 +104,7 @@
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
-  function getSelectedQuery() {
+  function getSelectedQuery(): Query {
     return cloneDeep(
       $queries.list.find(q => q._id === queryId) || {
         datasourceId: $params.datasourceId,
@@ -114,18 +115,21 @@
           headers: {},
         },
         queryVerb: "read",
+        transformer: null,
+        schema: {},
+        name: "aaa",
       }
     )
   }
 
-  const cleanUrl = inputUrl =>
+  const cleanUrl = (inputUrl: string) =>
     url
       ?.replace(/(https)|(http)|[{}:]/g, "")
       ?.replaceAll(".", "_")
       ?.replaceAll("/", " ")
       ?.trim() || inputUrl
 
-  function checkQueryName(inputUrl = null) {
+  function checkQueryName(inputUrl = "") {
     if (query && (!query.name || query.flags.urlName)) {
       query.flags.urlName = true
       query.name = cleanUrl(inputUrl)
