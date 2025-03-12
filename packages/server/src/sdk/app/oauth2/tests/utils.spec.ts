@@ -45,13 +45,15 @@ describe("oauth2 utils", () => {
         const oauthConfig = await sdk.oauth2.create({
           name: generator.guid(),
           url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+          clientId: "my-client",
+          clientSecret: "my-secret",
         })
 
         const response = await generateToken(oauthConfig.id)
         return response
       })
 
-      expect(response).toBe("")
+      expect(response).toBe(expect.stringMatching(/^Bearer .+/))
     })
   })
 })
