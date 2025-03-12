@@ -4,6 +4,8 @@ import {
   DocumentType,
   OAuth2Config,
   OAuth2Configs,
+  SEPARATOR,
+  VirtualDocumentType,
 } from "@budibase/types"
 
 async function getDocument(db: Database = context.getAppDB()) {
@@ -28,11 +30,11 @@ export async function create(
     configs: {},
   }
 
-  if (doc.configs[config.name]) {
+  if (Object.values(doc.configs).find(c => c.name === config.name)) {
     throw new HTTPError("Name already used", 400)
   }
 
-  const id = utils.newid()
+  const id = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
   doc.configs[id] = {
     id,
     ...config,

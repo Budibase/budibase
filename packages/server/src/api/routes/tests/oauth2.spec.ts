@@ -1,4 +1,4 @@
-import { CreateOAuth2ConfigRequest } from "@budibase/types"
+import { CreateOAuth2ConfigRequest, VirtualDocumentType } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -15,6 +15,10 @@ describe("/oauth2", () => {
   beforeAll(async () => await config.init())
 
   beforeEach(async () => await config.newTenant())
+
+  const expectOAuth2ConfigId = expect.stringMatching(
+    `^${VirtualDocumentType.ROW_ACTION}_.+$`
+  )
 
   describe("fetch", () => {
     it("returns empty when no oauth are created", async () => {
@@ -34,7 +38,9 @@ describe("/oauth2", () => {
       expect(response).toEqual({
         configs: [
           {
+            id: expectOAuth2ConfigId,
             name: oauth2Config.name,
+            url: oauth2Config.url,
           },
         ],
       })
@@ -49,12 +55,17 @@ describe("/oauth2", () => {
       const response = await config.api.oauth2.fetch()
       expect(response.configs).toEqual([
         {
+          id: expectOAuth2ConfigId,
           name: oauth2Config.name,
+          url: oauth2Config.url,
         },
         {
+          id: expectOAuth2ConfigId,
           name: oauth2Config2.name,
+          url: oauth2Config2.url,
         },
       ])
+      expect(response.configs[0].id).not.toEqual(response.configs[1].id)
     })
 
     it("cannot create configurations with already existing names", async () => {
@@ -72,7 +83,9 @@ describe("/oauth2", () => {
       const response = await config.api.oauth2.fetch()
       expect(response.configs).toEqual([
         {
+          id: expectOAuth2ConfigId,
           name: oauth2Config.name,
+          url: oauth2Config.url,
         },
       ])
     })
