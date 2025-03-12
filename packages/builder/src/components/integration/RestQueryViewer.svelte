@@ -146,7 +146,7 @@
     }
   }
 
-  function buildUrl(base, qsObj) {
+  function buildUrl(base: string | undefined, qsObj: Record<string, string>) {
     if (!base) {
       return base
     }
@@ -268,7 +268,7 @@
     if (id) {
       // find the matching config on the datasource
       const matchedConfig = datasource?.config?.authConfigs?.filter(
-        c => c._id === id
+        (c: { _id?: string }) => c._id === id
       )[0]
       // clear the id if the config is not found (deleted)
       // i.e. just show 'None' in the dropdown
@@ -281,10 +281,12 @@
 
   const buildAuthConfigs = (datasource: Datasource) => {
     if (datasource?.config?.authConfigs) {
-      return datasource.config.authConfigs.map(c => ({
-        label: c.name,
-        value: c._id,
-      }))
+      return datasource.config.authConfigs.map(
+        (c: { name: string; _id: string }) => ({
+          label: c.name,
+          value: c._id,
+        })
+      )
     }
     return []
   }
@@ -309,14 +311,21 @@
   ]
 
   // convert dynamic variables list to simple key/val object
-  const getDynamicVariables = (datasource, queryId, matchFn) => {
+  const getDynamicVariables = (
+    datasource: Datasource,
+    queryId: string | undefined,
+    matchFn: (variable: any, queryId: any) => boolean
+  ) => {
     const variablesList = datasource?.config?.dynamicVariables
     if (variablesList && variablesList.length > 0) {
       const filtered = queryId
-        ? variablesList.filter(variable => matchFn(variable, queryId))
+        ? variablesList.filter((variable: any) => matchFn(variable, queryId))
         : variablesList
       return filtered.reduce(
-        (acc, next) => ({ ...acc, [next.name]: next.value }),
+        (acc: any, next: { name: string; value: string }) => ({
+          ...acc,
+          [next.name]: next.value,
+        }),
         {}
       )
     }
@@ -324,8 +333,8 @@
   }
 
   // convert dynamic variables object back to a list, enrich with query id
-  const rebuildVariables = queryId => {
-    let variables = []
+  const rebuildVariables = (queryId: string | undefined) => {
+    let variables: { name: string; value: string; queryId: string }[] = []
     if (dynamicVariables) {
       variables = Object.entries(dynamicVariables).map(entry => {
         return {
@@ -338,12 +347,17 @@
 
     let existing = datasource?.config?.dynamicVariables || []
     // remove existing query variables (for changes and deletions)
-    existing = existing.filter(variable => variable.queryId !== queryId)
+    existing = existing.filter(
+      (variable: { queryId: string }) => variable.queryId !== queryId
+    )
     // re-add the new query variables
     return [...existing, ...variables]
   }
 
-  const shouldShowVariables = (dynamicVariables, variablesReadOnly) => {
+  const shouldShowVariables = (
+    dynamicVariables: {},
+    variablesReadOnly: boolean
+  ) => {
     return !!(
       dynamicVariables &&
       // show when editable or when read only and not empty
@@ -351,7 +365,7 @@
     )
   }
 
-  const updateFlag = async (flag, value) => {
+  const updateFlag = async (flag: string, value: boolean) => {
     try {
       await flags.updateFlag(flag, value)
     } catch (error) {
@@ -360,11 +374,11 @@
   }
 
   const prettifyQueryRequestBody = (
-    query,
-    requestBindings,
-    dynamicVariables,
-    staticVariables,
-    restBindings
+    query: Query,
+    requestBindings: any,
+    dynamicVariables: any,
+    staticVariables: any,
+    restBindings: any[]
   ) => {
     let customRequestBindings = toBindingsArray(requestBindings, "Binding")
     let dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
@@ -389,14 +403,14 @@
     }
   }
 
-  const paramsChanged = evt => {
+  const paramsChanged = (evt: { detail: any }) => {
     breakQs = {}
     for (let param of evt.detail) {
       breakQs[param.name] = param.value
     }
   }
 
-  const urlChanged = evt => {
+  const urlChanged = (evt: { target: { value: string } }) => {
     breakQs = {}
     const qs = evt.target.value.split("?")[1]
     if (qs && qs.length > 0) {
@@ -479,12 +493,14 @@
       dynamicVariables = getDynamicVariables(
         datasource,
         query._id,
-        (variable, queryId) => variable.queryId === queryId
+        (variable: { queryId: string }, queryId: string) =>
+          variable.queryId === queryId
       )
       globalDynamicBindings = getDynamicVariables(
         datasource,
         query._id,
-        (variable, queryId) => variable.queryId !== queryId
+        (variable: { queryId: string }, queryId: string) =>
+          variable.queryId !== queryId
       )
     }
 
