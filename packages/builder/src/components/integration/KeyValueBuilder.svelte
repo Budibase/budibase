@@ -15,22 +15,22 @@
 
   let dispatch = createEventDispatcher()
 
-  export let defaults
-  export let object = defaults || {}
-  export let activity = {}
+  export let defaults: Record<string, string>
+  export let object: Record<string, string> = defaults || {}
+  export let activity: Record<string, boolean> = {}
   export let readOnly: boolean
   export let noAddButton: boolean
   export let name: string
   export let headings: boolean = false
-  export let options
-  export let toggle
+  export let options: any[]
+  export let toggle: boolean
   export let keyPlaceholder: string = "Key"
   export let valuePlaceholder: string = "Value"
-  export let valueHeading
-  export let keyHeading
-  export let tooltip
-  export let menuItems
-  export let showMenu = false
+  export let valueHeading: string | undefined = undefined
+  export let keyHeading: string | undefined = undefined
+  export let tooltip: string
+  export let menuItems: any[] | undefined
+  export let showMenu: boolean = false
   export let bindings: any[] = []
   export let allowHelpers: boolean = true
   export let customButtonText = null
@@ -38,7 +38,7 @@
   export let allowJS: boolean = false
   export let actionButtonDisabled: boolean = false
   export let compare = (option: string, value: string) => option === value
-  export let context = null
+  export let context: any = null
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
