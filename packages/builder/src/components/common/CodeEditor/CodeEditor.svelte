@@ -196,6 +196,7 @@
     previousContents = null
     resetPopover()
     dispatch("change", editor.state.doc.toString())
+    dispatch("blur", editor.state.doc.toString())
   }
 
   const rejectSuggestion = () => {
