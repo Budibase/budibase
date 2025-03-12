@@ -53,7 +53,7 @@ describe("oauth2 utils", () => {
         return response
       })
 
-      expect(response).toBe(expect.stringMatching(/^Bearer .+/))
+      expect(response).toEqual(expect.stringMatching(/^Bearer .+/))
     })
   })
 })
