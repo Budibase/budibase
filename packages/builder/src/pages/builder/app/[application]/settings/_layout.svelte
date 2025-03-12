@@ -30,6 +30,11 @@
             active={$isActive("./embed")}
           />
           <SideNavItem
+            text="PWA"
+            url={$url("./pwa")}
+            active={$isActive("./pwa")}
+          />
+          <SideNavItem
             text="Export/Import"
             url={$url("./exportImport")}
             active={$isActive("./exportImport")}

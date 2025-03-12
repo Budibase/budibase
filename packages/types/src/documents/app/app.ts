@@ -29,6 +29,7 @@ export interface App extends Document {
   snippets?: Snippet[]
   creationVersion?: string
   updatedBy?: string
+  pwa?: PWAManifest
 }
 
 export interface AppInstance {
@@ -81,4 +82,16 @@ export interface AppFeatures {
 
 export interface AutomationSettings {
   chainAutomations?: boolean
+}
+
+export interface PWAManifest {
+  name: string
+  short_name: string
+  description: string
+  icons: { src: string; sizes: string; type: string }[]
+  background_color: string
+  theme_color: string
+  display?: string
+  start_url?: string
+  scope?: string
 }

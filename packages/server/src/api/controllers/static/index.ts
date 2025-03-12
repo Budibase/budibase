@@ -32,6 +32,7 @@ import {
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
+  PWAManifest,
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
@@ -189,8 +190,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const sideNav = appInfo.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo?.theme)
-
+    const themeVariables = getThemeVariables(appInfo?.theme || {})
+    const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
+    const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
     if (!env.isJest()) {
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
       /*
@@ -223,8 +225,25 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
       const { head, html, css } = AppComponent.render({ props })
       const appHbs = loadHandlebarsFile(appHbsPath)
+
+      let extraHead = ""
+      if (hasPWA) {
+        extraHead = `<link rel="manifest" href="${manifestUrl}">`
+
+        extraHead += `<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="${
+          appInfo.pwa.short_name || appInfo.name
+        }">`
+        if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
+          let appleIconUrl = appInfo.pwa.icons[0].src
+          console.log(appleIconUrl)
+          extraHead += `<link rel="apple-touch-icon" sizes="180x180" href="${appleIconUrl}">`
+        }
+      }
+
       ctx.body = await processString(appHbs, {
-        head,
+        head: `${head}${extraHead}`,
         body: html,
         css: `:root{${themeVariables}} ${css.code}`,
         appId,
@@ -364,4 +383,60 @@ export const getSignedUploadURL = async function (
   }
 
   ctx.body = { signedUrl, publicUrl }
+}
+
+export const serveManifest = async function (ctx: UserCtx<void, any>) {
+  const appId = context.getAppId()
+  if (!appId) {
+    ctx.status = 404
+    ctx.body = { message: "App not found" }
+    return
+  }
+
+  try {
+    const db = context.getAppDB({ skip_setup: true })
+    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+
+    if (!appInfo.pwa) {
+      ctx.status = 404
+      ctx.body = { message: "PWA not configured for this app" }
+      return
+    }
+
+    const manifest: PWAManifest = {
+      name: appInfo.pwa.name || appInfo.name,
+      short_name: appInfo.pwa.short_name || appInfo.name,
+      description: appInfo.pwa.description || "",
+      start_url:
+        `/app${appInfo.url}#${appInfo.pwa.start_url}` || `/app/${appInfo.url}`,
+      display: appInfo.pwa.display || "standalone",
+      background_color: appInfo.pwa.background_color || "#FFFFFF",
+      theme_color: appInfo.pwa.theme_color || "#FFFFFF",
+      icons: [],
+    }
+
+    if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
+      manifest.icons = appInfo.pwa.icons.map(icon => {
+        let src = icon.src
+
+        if (src && src.startsWith("/") && !src.startsWith("//")) {
+          const origin = ctx.request.origin
+          src = `${origin}${src}`
+        }
+
+        return {
+          ...icon,
+          src,
+          type: icon.type || "image/png",
+        }
+      })
+    }
+
+    ctx.set("Content-Type", "application/json")
+    ctx.body = manifest
+  } catch (error) {
+    console.error("Error serving manifest:", error)
+    ctx.status = 500
+    ctx.body = { message: "Error generating manifest" }
+  }
 }

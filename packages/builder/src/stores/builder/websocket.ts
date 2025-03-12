@@ -101,6 +101,7 @@ export const createBuilderWebsocket = (appId: string) => {
   socket.onOther(
     BuilderSocketEvent.AppMetadataChange,
     ({ metadata }: { metadata: any }) => {
+      console.log("hello?")
       appStore.syncMetadata(metadata)
       themeStore.syncMetadata(metadata)
       navigationStore.syncMetadata(metadata)

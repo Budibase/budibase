@@ -6,6 +6,7 @@ import {
   AppIcon,
   AutomationSettings,
   Plugin,
+  PWAManifest,
 } from "@budibase/types"
 
 interface ClientFeatures {
@@ -46,6 +47,7 @@ interface AppMetaState {
   revertableVersion?: string
   upgradableVersion?: string
   icon?: AppIcon
+  pwa?: PWAManifest
 }
 
 export const INITIAL_APP_META_STATE: AppMetaState = {
@@ -79,6 +81,14 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
   usedPlugins: [],
   automations: {},
   routes: {},
+  pwa: {
+    name: "",
+    short_name: "",
+    description: "",
+    icons: [],
+    background_color: "",
+    theme_color: "",
+  },
 }
 
 export class AppMetaStore extends BudiStore<AppMetaState> {
@@ -96,7 +106,6 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     hasLock: boolean
   }) {
     const { application: app, clientLibPath, hasLock } = pkg
-
     this.update(state => ({
       ...state,
       name: app.name,
@@ -118,6 +127,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       initialised: true,
       automations: app.automations || {},
       hasAppPackage: true,
+      pwa: app.pwa,
     }))
   }
 
@@ -149,11 +159,21 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
   // Returned from socket
   syncMetadata(metadata: { name: string; url: string; icon?: AppIcon }) {
     const { name, url, icon } = metadata
+    console.log(name)
     this.update(state => ({
       ...state,
       name,
       url,
       icon,
+      pwa: {
+        ...state.pwa,
+        name,
+        short_name: state.pwa?.short_name || "",
+        description: state.pwa?.description || "",
+        icons: state.pwa?.icons || [],
+        background_color: state.pwa?.background_color || "",
+        theme_color: state.pwa?.theme_color || "",
+      },
     }))
   }
 }
