@@ -479,6 +479,8 @@
         FIELDS.FORMULA,
         FIELDS.BARCODEQR,
         FIELDS.BIGINT,
+        FIELDS.ATTACHMENT_SINGLE,
+        FIELDS.ATTACHMENTS,
       ]
 
       // Filter out multiple users for google sheets
