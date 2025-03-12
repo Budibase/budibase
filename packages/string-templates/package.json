@@ -21,7 +21,7 @@
     "manifest": "ts-node ./scripts/gen-collection-info.ts"
   },
   "dependencies": {
-    "@budibase/handlebars-helpers": "^0.13.2",
+    "@budibase/handlebars-helpers": "^0.14.1",
     "@budibase/vm-browserify": "^1.1.4",
     "dayjs": "^1.10.8",
     "handlebars": "^4.7.8",
