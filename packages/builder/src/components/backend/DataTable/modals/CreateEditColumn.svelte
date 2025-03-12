@@ -481,6 +481,7 @@
         FIELDS.BIGINT,
         FIELDS.ATTACHMENT_SINGLE,
         FIELDS.ATTACHMENTS,
+        FIELDS.SIGNATURE_SINGLE,
       ]
 
       // Filter out multiple users for google sheets
