@@ -424,7 +424,7 @@ export class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues,
     } = query
-    const authHeaders = this.getAuthHeaders(authConfigId)
+    const authHeaders = await this.getAuthHeaders(authConfigId)
 
     this.headers = {
       ...(this.config.defaultHeaders || {}),
