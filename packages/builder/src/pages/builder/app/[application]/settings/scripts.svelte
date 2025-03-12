@@ -13,11 +13,15 @@
     Select,
     Helpers,
     notifications,
+    Tag,
+    Tags,
+    ButtonGroup,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
   import { type AppScript } from "@budibase/types"
   import { getSequentialName } from "@/helpers/duplicate"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import { licensing, auth, admin } from "@/stores/portal"
 
   const schema = {
     name: {
@@ -36,6 +40,7 @@
 
   $: nameError = selectedScript?.name ? undefined : "Please enter a name"
   $: invalid = !!nameError
+  $: enabled = $licensing.customAppScriptsEnabled
 
   const addScript = () => {
     const name = getSequentialName($appStore.scripts, "Script ", {
@@ -86,19 +91,41 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading>Scripts</Heading>
-    <div class="header">
+    <div class="title">
+      <Heading>App scripts</Heading>
+      {#if !enabled}
+        <Tags>
+          <Tag icon="LockClosed">Enterprise</Tag>
+        </Tags>
+      {/if}
+    </div>
+    <div class="subtitle">
       <Body>
         Inject analytics, scripts or stylesheets into your app<br />
         <Link href="#">Learn more about script injection in the docs</Link>
       </Body>
-      {#if !selectedScript}
+      {#if !selectedScript && enabled}
         <Button cta on:click={addScript}>Add script</Button>
       {/if}
     </div>
   </Layout>
   <Divider />
-  {#if selectedScript}
+  {#if !enabled}
+    {#if $admin.cloud && !$auth.accountPortalAccess}
+      <Body>Contact your account holder to upgrade your plan.</Body>
+    {/if}
+    <ButtonGroup>
+      {#if $admin.cloud && $auth.accountPortalAccess}
+        <Button cta on:click={$licensing.goToUpgradePage}>Upgrade</Button>
+      {/if}
+      <Button
+        secondary
+        on:click={() => window.open("https://budibase.com/pricing/", "_blank")}
+      >
+        View plans
+      </Button>
+    </ButtonGroup>
+  {:else if selectedScript}
     <div class="form">
       <Label size="L">Name</Label>
       <Input bind:value={selectedScript.name} error={nameError} />
@@ -140,11 +167,16 @@
 />
 
 <style>
-  .header {
+  .title,
+  .subtitle {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+    gap: var(--spacing-l);
+  }
+  .subtitle {
+    justify-content: space-between;
   }
   .form {
     display: grid;

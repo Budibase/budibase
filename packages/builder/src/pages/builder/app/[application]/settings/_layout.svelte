@@ -45,7 +45,7 @@
             active={$isActive("./version")}
           />
           <SideNavItem
-            text="Scripts"
+            text="App scripts"
             url={$url("./scripts")}
             active={$isActive("./scripts")}
           />
