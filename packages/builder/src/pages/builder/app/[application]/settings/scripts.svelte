@@ -40,7 +40,7 @@
 
   $: nameError = selectedScript?.name ? undefined : "Please enter a name"
   $: invalid = !!nameError
-  $: enabled = $licensing.customAppScriptsEnabled
+  $: enabled = true || $licensing.customAppScriptsEnabled
 
   const addScript = () => {
     const name = getSequentialName($appStore.scripts, "Script ", {
@@ -126,6 +126,7 @@
       </Button>
     </ButtonGroup>
   {:else if selectedScript}
+    <Heading size="S">{isNew ? "Add new script" : "Edit script"}</Heading>
     <div class="form">
       <Label size="L">Name</Label>
       <Input bind:value={selectedScript.name} error={nameError} />
@@ -136,7 +137,11 @@
         placeholder={false}
       />
       <Label size="L">HTML</Label>
-      <TextArea bind:value={selectedScript.html} minHeight={200} />
+      <TextArea
+        bind:value={selectedScript.html}
+        minHeight={200}
+        placeholder="&lt;script&gt;...&lt;/script&gt;"
+      />
       <div />
       <div class="buttons">
         {#if !isNew}
