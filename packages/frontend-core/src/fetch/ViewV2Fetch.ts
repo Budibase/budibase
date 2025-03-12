@@ -1,4 +1,5 @@
 import {
+  SearchViewRowRequest,
   SortOrder,
   ViewDatasource,
   ViewV2Enriched,
@@ -40,8 +41,7 @@ export default class ViewV2Fetch extends BaseDataFetch<
   }
 
   async getData() {
-    const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
-      this.options
+    const { datasource, limit, sortColumn, sortOrder, paginate } = this.options
     const { cursor, query, definition } = get(this.store)
 
     // If this is a calculation view and we have no calculations, return nothing
@@ -68,14 +68,13 @@ export default class ViewV2Fetch extends BaseDataFetch<
     }
 
     try {
-      const request = {
+      const request: SearchViewRowRequest = {
         query,
         paginate,
         limit,
         bookmark: cursor,
         sort: sortColumn,
         sortOrder: sortOrder,
-        sortType,
       }
       if (paginate) {
         const res = await this.API.viewV2.fetch(datasource.id, {

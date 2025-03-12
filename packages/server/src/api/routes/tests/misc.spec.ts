@@ -1,11 +1,13 @@
-const setup = require("./utilities")
-const tableUtils = require("../../controllers/table/utils")
+import { handleDataImport } from "../../controllers/table/utils"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { AutoFieldSubType, FieldType, JsonFieldSubType } from "@budibase/types"
 
 describe("run misc tests", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -13,69 +15,67 @@ describe("run misc tests", () => {
 
   describe("/bbtel", () => {
     it("check if analytics enabled", async () => {
-      const res = await request
-        .get(`/api/bbtel`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(typeof res.body.enabled).toEqual("boolean")
+      const { enabled } = await config.api.misc.bbtel()
+      expect(enabled).toEqual(true)
     })
   })
 
   describe("/health", () => {
     it("should confirm healthy", async () => {
-      await request.get("/health").expect(200)
+      await config.api.misc.health()
     })
   })
 
   describe("/version", () => {
     it("should confirm version", async () => {
-      const res = await request.get("/version").expect(200)
-      const text = res.text
-      if (text.includes("alpha")) {
-        expect(text.split(".").length).toEqual(4)
+      const version = await config.api.misc.version()
+      if (version.includes("alpha")) {
+        expect(version.split(".").length).toEqual(4)
       } else {
-        expect(text.split(".").length).toEqual(3)
+        expect(version.split(".").length).toEqual(3)
       }
     })
   })
 
   describe("test table utilities", () => {
     it("should be able to import data", async () => {
-      return config.doInContext(null, async () => {
+      return config.doInContext("", async () => {
         const table = await config.createTable({
           name: "table",
           type: "table",
-          key: "name",
           schema: {
             a: {
-              type: "string",
+              type: FieldType.STRING,
+              name: "a",
               constraints: {
                 type: "string",
               },
             },
             b: {
-              type: "string",
+              name: "b",
+              type: FieldType.STRING,
               constraints: {
                 type: "string",
               },
             },
             c: {
-              type: "string",
+              name: "c",
+              type: FieldType.STRING,
               constraints: {
                 type: "string",
               },
             },
             d: {
-              type: "string",
+              name: "d",
+              type: FieldType.STRING,
               constraints: {
                 type: "string",
               },
             },
             e: {
               name: "Auto ID",
-              type: "number",
-              subtype: "autoID",
+              type: FieldType.NUMBER,
+              subtype: AutoFieldSubType.AUTO_ID,
               icon: "ri-magic-line",
               autocolumn: true,
               constraints: {
@@ -88,9 +88,9 @@ describe("run misc tests", () => {
               },
             },
             f: {
-              type: "array",
+              type: FieldType.ARRAY,
               constraints: {
-                type: "array",
+                type: JsonFieldSubType.ARRAY,
                 presence: {
                   allowEmpty: true,
                 },
@@ -100,7 +100,7 @@ describe("run misc tests", () => {
               sortable: false,
             },
             g: {
-              type: "options",
+              type: FieldType.OPTIONS,
               constraints: {
                 type: "string",
                 presence: false,
@@ -118,16 +118,18 @@ describe("run misc tests", () => {
           { a: "13", b: "14", c: "15", d: "16", g: "Omega" },
         ]
         // Shift specific row tests to the row spec
-        await tableUtils.handleDataImport(table, {
-          importRows,
-          user: { userId: "test" },
-        })
+        await handleDataImport(table, { importRows, userId: "test" })
 
         // 4 rows imported, the auto ID starts at 1
         // We expect the handleDataImport function to update the lastID
+
+        // @ts-expect-error - fields have type FieldSchema, not specific
+        // subtypes.
         expect(table.schema.e.lastID).toEqual(4)
 
         // Array/Multi - should have added a new value to the inclusion.
+        // @ts-expect-error - fields have type FieldSchema, not specific
+        // subtypes.
         expect(table.schema.f.constraints.inclusion).toEqual([
           "Four",
           "One",
@@ -136,6 +138,8 @@ describe("run misc tests", () => {
         ])
 
         // Options - should have a new value in the inclusion
+        // @ts-expect-error - fields have type FieldSchema, not specific
+        // subtypes.
         expect(table.schema.g.constraints.inclusion).toEqual([
           "Alpha",
           "Beta",
@@ -143,25 +147,25 @@ describe("run misc tests", () => {
           "Omega",
         ])
 
-        const rows = await config.getRows()
+        const rows = await config.api.row.fetch(table._id!)
         expect(rows.length).toEqual(4)
 
-        const rowOne = rows.find(row => row.e === 1)
+        const rowOne = rows.find(row => row.e === 1)!
         expect(rowOne.a).toEqual("1")
         expect(rowOne.f).toEqual(["One"])
         expect(rowOne.g).toEqual("Alpha")
 
-        const rowTwo = rows.find(row => row.e === 2)
+        const rowTwo = rows.find(row => row.e === 2)!
         expect(rowTwo.a).toEqual("5")
         expect(rowTwo.f).toEqual([])
         expect(rowTwo.g).toEqual(undefined)
 
-        const rowThree = rows.find(row => row.e === 3)
+        const rowThree = rows.find(row => row.e === 3)!
         expect(rowThree.a).toEqual("9")
         expect(rowThree.f).toEqual(["Two", "Four"])
         expect(rowThree.g).toEqual(undefined)
 
-        const rowFour = rows.find(row => row.e === 4)
+        const rowFour = rows.find(row => row.e === 4)!
         expect(rowFour.a).toEqual("13")
         expect(rowFour.f).toEqual(undefined)
         expect(rowFour.g).toEqual("Omega")

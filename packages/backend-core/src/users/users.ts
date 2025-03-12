@@ -22,7 +22,7 @@ import {
 } from "@budibase/types"
 import * as context from "../context"
 import { getGlobalDB } from "../context"
-import { isCreator } from "./utils"
+import { creatorsInList } from "./utils"
 import { UserDB } from "./db"
 import { dataFilters } from "@budibase/shared-core"
 
@@ -305,8 +305,8 @@ export async function getCreatorCount() {
   let creators = 0
   async function iterate(startPage?: string) {
     const page = await paginatedUsers({ bookmark: startPage })
-    const creatorsEval = await Promise.all(page.data.map(isCreator))
-    creators += creatorsEval.filter(creator => !!creator).length
+    const creatorsEval = await creatorsInList(page.data)
+    creators += creatorsEval.filter(creator => creator).length
     if (page.hasNextPage) {
       await iterate(page.nextPage)
     }
