@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="O">
   import {
     Icon,
     ActionButton,
@@ -15,21 +15,21 @@
 
   let dispatch = createEventDispatcher()
 
-  export let defaults: Record<string, string>
+  export let defaults: Record<string, string> | undefined = undefined
   export let object: Record<string, string> = defaults || {}
   export let activity: Record<string, boolean> = {}
   export let readOnly: boolean
-  export let noAddButton: boolean
-  export let name: string
+  export let noAddButton: boolean = false
+  export let name: string = ""
   export let headings: boolean = false
-  export let options: any[]
-  export let toggle: boolean
+  export let options: O[] | undefined = undefined
+  export let toggle: boolean = false
   export let keyPlaceholder: string = "Key"
   export let valuePlaceholder: string = "Value"
   export let valueHeading: string | undefined = undefined
   export let keyHeading: string | undefined = undefined
-  export let tooltip: string
-  export let menuItems: any[] | undefined
+  export let tooltip: string = ""
+  export let menuItems: any[] | undefined = undefined
   export let showMenu: boolean = false
   export let bindings: any[] = []
   export let allowHelpers: boolean = true
@@ -37,7 +37,7 @@
   export let keyBindings: boolean = false
   export let allowJS: boolean = false
   export let actionButtonDisabled: boolean = false
-  export let compare = (option: string, value: string) => option === value
+  export let compare = (option: O, value: O) => option === value
   export let context: any = null
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
