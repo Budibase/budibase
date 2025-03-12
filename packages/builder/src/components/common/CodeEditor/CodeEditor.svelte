@@ -59,7 +59,11 @@
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
-  import { FeatureFlag, type EditorMode } from "@budibase/types"
+  import {
+    type EnrichedBinding,
+    FeatureFlag,
+    type EditorMode,
+  } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
   import type { BindingCompletion, CodeValidator } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
@@ -80,6 +84,7 @@
   export let readonly = false
   export let readonlyLineNumbers = false
   export let dropdown = DropdownPosition.Relative
+  export let bindings: EnrichedBinding[] = []
 
   const dispatch = createEventDispatcher()
 
@@ -100,7 +105,8 @@
   let promptInput: TextArea
   $: aiGenEnabled =
     featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
-    mode.name === "javascript"
+    mode.name === "javascript" &&
+    !readonly
 
   $: {
     if (autofocus && isEditorInitialised) {
@@ -165,7 +171,7 @@
     popoverWidth = 30
     let code = ""
     try {
-      const resp = await API.generateJs({ prompt })
+      const resp = await API.generateJs({ prompt, bindings })
       code = resp.code
     } catch (e) {
       console.error(e)
@@ -189,6 +195,7 @@
     suggestedCode = null
     previousContents = null
     resetPopover()
+    dispatch("change", editor.state.doc.toString())
   }
 
   const rejectSuggestion = () => {
@@ -513,6 +520,11 @@
     bind:this={popover}
     minWidth={popoverWidth}
     anchor={popoverAnchor}
+    on:close={() => {
+      if (suggestedCode) {
+        acceptSuggestion()
+      }
+    }}
     align="left-outside"
   >
     {#if promptLoading}

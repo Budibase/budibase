@@ -144,6 +144,7 @@
         on:change={onChangeJSValue}
         on:blur
         completions={jsCompletions}
+        {bindings}
         mode={EditorModes.JS}
         bind:getCaretPosition
         bind:insertAtPos
