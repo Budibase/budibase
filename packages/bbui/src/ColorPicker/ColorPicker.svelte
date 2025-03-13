@@ -109,6 +109,15 @@
         "static-indigo-800",
         "static-magenta-800",
 
+        "static-red-1200",
+        "static-orange-1200",
+        "static-yellow-1200",
+        "static-green-1200",
+        "static-seafoam-1200",
+        "static-blue-1200",
+        "static-indigo-1200",
+        "static-magenta-1200",
+
         "static-white",
         "static-black",
       ],
@@ -155,9 +164,12 @@
         : "var(--spectrum-global-color-gray-50)"
     }
 
-    // Use contrasating check for the dim colours
+    // Use contrasting check for the dim colours
     if (value?.includes("-100")) {
       return "var(--spectrum-global-color-gray-900)"
+    }
+    if (value?.includes("-1200") || value?.includes("-800")) {
+      return "var(--spectrum-global-color-static-gray-50)"
     }
 
     // Use black check for static white

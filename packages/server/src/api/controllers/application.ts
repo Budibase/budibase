@@ -352,12 +352,14 @@ async function performAppCreate(
         navigation: "Top",
         title: name,
         navWidth: "Large",
-        navBackground: "var(--spectrum-global-color-static-blue-800)",
+        navBackground: "var(--spectrum-global-color-static-blue-1200)",
         navTextColor: "var(--spectrum-global-color-static-white)",
         links: [],
       },
       theme: DefaultAppTheme,
       customTheme: {
+        primaryColor: "var(--spectrum-global-color-static-blue-1200)",
+        primaryColorHover: "var(--spectrum-global-color-static-blue-800)",
         buttonBorderRadius: "16px",
       },
       features: {
