@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import SpectrumMDE from "./SpectrumMDE.svelte"
 
-  export let value = undefined
-  export let height = undefined
+  export let value: string | undefined = undefined
+  export let height: string | undefined = undefined
 
-  let mde
+  let mde: any
 
   // Keep the value up to date
   $: mde && mde.value(value || "")
