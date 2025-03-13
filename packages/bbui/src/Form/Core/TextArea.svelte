@@ -80,6 +80,7 @@
     on:focus={() => (focus = true)}
     on:blur={onBlur}
     on:blur
+    on:keypress
   >{value || ""}</textarea>
 </div>
 
