@@ -50,6 +50,7 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+  import AuthPicker from "./rest/AuthPicker.svelte"
 
   export let queryId
 
@@ -642,15 +643,11 @@
           <div class="auth-container">
             <div />
             <!-- spacer -->
-            <div class="auth-select">
-              <Select
-                label="Auth"
-                labelPosition="left"
-                placeholder="None"
-                bind:value={query.fields.authConfigId}
-                options={authConfigs}
-              />
-            </div>
+
+            <AuthPicker
+              bind:authConfigId={query.fields.authConfigId}
+              {authConfigs}
+            />
           </div>
         </Tabs>
       </Layout>
@@ -851,10 +848,6 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
-  }
-
-  .auth-select {
-    width: 200px;
   }
 
   .pagination {
