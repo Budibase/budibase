@@ -50,7 +50,7 @@ export interface SearchParams {
 
 // when searching for rows we want a more extensive search type that requires certain properties
 export interface RowSearchParams
-  extends WithRequired<Omit<SearchParams, "sortType">, "tableId" | "query"> {}
+  extends WithRequired<SearchParams, "tableId" | "query"> {}
 
 export interface SearchResponse<T> {
   rows: T[]
