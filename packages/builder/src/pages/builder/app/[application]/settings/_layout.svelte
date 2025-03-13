@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import { Content, SideNav, SideNavItem } from "@/components/portal/page"
   import { Page, Layout, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import { isOnlyUser, appStore } from "@/stores/builder"
 
-  let deleteModal
+  let deleteModal: DeleteModal
 </script>
 
 <!-- routify:options index=4 -->
@@ -53,7 +53,7 @@
             <AbsTooltip
               position={TooltipPosition.Bottom}
               text={$isOnlyUser
-                ? null
+                ? undefined
                 : "Unavailable - another user is editing this app"}
             >
               <SideNavItem
