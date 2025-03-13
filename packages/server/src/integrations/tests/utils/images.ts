@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import { join } from "path"
 
-const path = join(__dirname, "..", "..", "..", "..", "datasource-sha.env")
+const path = join(__dirname, "..", "..", "..", "..", "images-sha.env")
 dotenv.config({
   path,
 })
@@ -14,3 +14,4 @@ export const MONGODB_IMAGE = `mongo@${process.env.MONGODB_SHA}`
 export const MARIADB_IMAGE = `mariadb@${process.env.MARIADB_SHA}`
 export const ELASTICSEARCH_IMAGE = `elasticsearch@${process.env.ELASTICSEARCH_SHA}`
 export const DYNAMODB_IMAGE = `amazon/dynamodb-local@${process.env.DYNAMODB_SHA}`
+export const KEYCLOCK_IMAGE = process.env.KEYCLOCK_IMAGE || ""

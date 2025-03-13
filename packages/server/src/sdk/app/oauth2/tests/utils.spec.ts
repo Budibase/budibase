@@ -4,10 +4,9 @@ import sdk from "../../.."
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { generateToken } from "../utils"
 import path from "path"
+import { KEYCLOCK_IMAGE } from "../../../../integrations/tests/utils/images"
 
 const config = new TestConfiguration()
-
-const keyClockImage = `quay.io/keycloak/keycloak@sha256:2ce6c7c70994c70dbbd70b372a5422c3b4eebb32583175eac03751320609e52c`
 
 const volumePath = path.resolve(__dirname, "docker-volume")
 
@@ -19,7 +18,7 @@ describe("oauth2 utils", () => {
   beforeAll(async () => {
     await config.init()
 
-    container = await new GenericContainer(keyClockImage)
+    container = await new GenericContainer(KEYCLOCK_IMAGE)
       .withName("keycloak_testcontainer")
       .withReuse()
       .withExposedPorts(8080)
