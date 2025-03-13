@@ -24,6 +24,7 @@ import {
   SearchResponse,
   SearchViewRowRequest,
   SortOrder,
+  SortType,
   StaticQuotaName,
   Table,
   TableSchema,
@@ -153,6 +154,7 @@ if (descriptions.length) {
                 sort: {
                   field: "fieldToSort",
                   order: SortOrder.DESCENDING,
+                  type: SortType.STRING,
                 },
                 schema: {
                   id: { visible: true },
@@ -215,6 +217,7 @@ if (descriptions.length) {
               sort: {
                 field: "fieldToSort",
                 order: SortOrder.DESCENDING,
+                type: SortType.STRING,
               },
               schema: {
                 id: { visible: true },
@@ -1144,6 +1147,7 @@ if (descriptions.length) {
               sort: {
                 field: generator.word(),
                 order: SortOrder.DESCENDING,
+                type: SortType.STRING,
               },
               schema: {
                 id: { visible: true },
@@ -3149,6 +3153,7 @@ if (descriptions.length) {
             {
               field: string
               order?: SortOrder
+              type?: SortType
             },
             string[]
           ][] = [
@@ -3156,6 +3161,7 @@ if (descriptions.length) {
               {
                 field: "name",
                 order: SortOrder.ASCENDING,
+                type: SortType.STRING,
               },
               ["Alice", "Bob", "Charly", "Danny"],
             ],
@@ -3174,6 +3180,22 @@ if (descriptions.length) {
             ],
             [
               {
+                field: "name",
+                order: SortOrder.DESCENDING,
+                type: SortType.STRING,
+              },
+              ["Danny", "Charly", "Bob", "Alice"],
+            ],
+            [
+              {
+                field: "age",
+                order: SortOrder.ASCENDING,
+                type: SortType.NUMBER,
+              },
+              ["Danny", "Alice", "Charly", "Bob"],
+            ],
+            [
+              {
                 field: "age",
                 order: SortOrder.ASCENDING,
               },
@@ -3182,13 +3204,15 @@ if (descriptions.length) {
             [
               {
                 field: "age",
+                order: SortOrder.DESCENDING,
               },
-              ["Danny", "Alice", "Charly", "Bob"],
+              ["Bob", "Charly", "Alice", "Danny"],
             ],
             [
               {
                 field: "age",
                 order: SortOrder.DESCENDING,
+                type: SortType.NUMBER,
               },
               ["Bob", "Charly", "Alice", "Danny"],
             ],
@@ -3275,6 +3299,7 @@ if (descriptions.length) {
                   sort: {
                     field: "name",
                     order: SortOrder.ASCENDING,
+                    type: SortType.STRING,
                   },
                   schema: viewSchema,
                 })
@@ -3282,6 +3307,7 @@ if (descriptions.length) {
                 const response = await config.api.viewV2.search(view.id, {
                   sort: sortParams.field,
                   sortOrder: sortParams.order,
+                  sortType: sortParams.type,
                   query: {},
                 })
 
