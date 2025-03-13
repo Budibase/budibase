@@ -29,7 +29,8 @@ export default class TableFetch extends BaseDataFetch<TableDatasource, Table> {
   }
 
   async getData() {
-    const { datasource, limit, sortColumn, sortOrder, paginate } = this.options
+    const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
+      this.options
     const { tableId } = datasource
     const { cursor, query } = get(this.store)
 
@@ -40,6 +41,7 @@ export default class TableFetch extends BaseDataFetch<TableDatasource, Table> {
         limit,
         sort: sortColumn,
         sortOrder: sortOrder ?? SortOrder.ASCENDING,
+        sortType,
         paginate,
         bookmark: cursor,
       })

@@ -8,6 +8,7 @@ import {
   Row,
   SearchFilters,
   SortOrder,
+  SortType,
   TableSchema,
 } from "@budibase/types"
 import { APIClient } from "../api/types"
@@ -71,6 +72,8 @@ export default abstract class BaseDataFetch<
   options: DataFetchOptions<TQuery> & {
     datasource: TDatasource
 
+    sortType: SortType | null
+
     // Client side feature customisation
     clientSideSearching: boolean
     clientSideSorting: boolean
@@ -103,6 +106,7 @@ export default abstract class BaseDataFetch<
       // Sorting config
       sortColumn: null,
       sortOrder: SortOrder.ASCENDING,
+      sortType: null,
 
       // Pagination config
       paginate: true,
@@ -223,12 +227,31 @@ export default abstract class BaseDataFetch<
       this.options.sortColumn = this.getDefaultSortColumn(definition, schema)
     }
 
-    // If no sort order, default to ascending
-    if (!this.options.sortOrder) {
+    // If we don't have a sort column specified then just ensure we don't set
+    // any sorting params
+    if (!this.options.sortColumn) {
       this.options.sortOrder = SortOrder.ASCENDING
+      this.options.sortType = null
     } else {
-      // Ensure sortOrder matches the enum
-      this.options.sortOrder = this.options.sortOrder.toLowerCase() as SortOrder
+      // Otherwise determine what sort type to use base on sort column
+      this.options.sortType = SortType.STRING
+      const fieldSchema = schema?.[this.options.sortColumn]
+      if (
+        fieldSchema?.type === FieldType.NUMBER ||
+        fieldSchema?.type === FieldType.BIGINT ||
+        ("calculationType" in fieldSchema && fieldSchema?.calculationType)
+      ) {
+        this.options.sortType = SortType.NUMBER
+      }
+
+      // If no sort order, default to ascending
+      if (!this.options.sortOrder) {
+        this.options.sortOrder = SortOrder.ASCENDING
+      } else {
+        // Ensure sortOrder matches the enum
+        this.options.sortOrder =
+          this.options.sortOrder.toLowerCase() as SortOrder
+      }
     }
 
     // Build the query
@@ -271,6 +294,7 @@ export default abstract class BaseDataFetch<
     const {
       sortColumn,
       sortOrder,
+      sortType,
       limit,
       clientSideSearching,
       clientSideSorting,
@@ -287,8 +311,8 @@ export default abstract class BaseDataFetch<
     }
 
     // If we don't support sorting, do a client-side sort
-    if (!this.features.supportsSort && clientSideSorting && sortColumn) {
-      rows = sort(rows, sortColumn, sortOrder)
+    if (!this.features.supportsSort && clientSideSorting && sortType) {
+      rows = sort(rows, sortColumn as any, sortOrder, sortType)
     }
 
     // If we don't support pagination, do a client-side limit
