@@ -2,6 +2,7 @@ import fetch from "node-fetch"
 import { HttpError } from "koa"
 import { get } from "../oauth2"
 
+// TODO: check if caching is worth
 export async function generateToken(id: string) {
   const config = await get(id)
   if (!config) {
