@@ -1,19 +1,24 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/popover/dist/index-vars.css"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
   import Icon from "../Icon/Icon.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value
-  export let size = "M"
-  export let alignRight = false
+  export let value: string | undefined
+  export let size: "S" | "M" | "L" = "M"
+  export let alignRight: boolean = false
 
-  let open = false
+  let open: boolean = false
 
   const dispatch = createEventDispatcher()
 
-  const iconList = [
+  interface IconCategory {
+    label: string
+    icons: string[]
+  }
+
+  const iconList: IconCategory[] = [
     {
       label: "Icons",
       icons: [
@@ -45,12 +50,12 @@
     },
   ]
 
-  const onChange = value => {
+  const onChange = (value: string) => {
     dispatch("change", value)
     open = false
   }
 
-  const handleOutsideClick = event => {
+  const handleOutsideClick = (event: MouseEvent) => {
     if (open) {
       event.stopPropagation()
       open = false
@@ -77,11 +82,11 @@
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       class:spectrum-Popover--align-right={alignRight}
     >
-      {#each iconList as icon}
+      {#each iconList as iconList}
         <div class="category">
-          <div class="heading">{icon.label}</div>
+          <div class="heading">{iconList.label}</div>
           <div class="icons">
-            {#each icon.icons as icon}
+            {#each iconList.icons as icon}
               <div
                 on:click={() => {
                   onChange(icon)

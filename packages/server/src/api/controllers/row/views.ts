@@ -63,12 +63,14 @@ function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
     return {
       sort: request.sort,
       sortOrder: request.sortOrder,
+      sortType: request.sortType ?? undefined,
     }
   }
   if (view.sort) {
     return {
       sort: view.sort.field,
       sortOrder: view.sort.order,
+      sortType: view.sort.type,
     }
   }
 

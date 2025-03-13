@@ -9,6 +9,7 @@ import {
   UsageInScreensResponse,
 } from "@budibase/types"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
+import { SAMPLE_DATA_SCREEN_NAME } from "../../../constants/screens"
 
 const {
   basicScreen,
@@ -21,8 +22,8 @@ const {
 } = setup.structures
 
 describe("/screens", () => {
-  let config = setup.getConfig()
   let screen: Screen
+  let config = setup.getConfig()
 
   afterAll(setup.afterAll)
 
@@ -32,9 +33,16 @@ describe("/screens", () => {
   })
 
   describe("fetch", () => {
-    it("should be able to create a layout", async () => {
+    it("should create the sample data screen", async () => {
       const screens = await config.api.screen.list()
-      expect(screens.length).toEqual(1)
+      expect(screens.some(s => s.name === SAMPLE_DATA_SCREEN_NAME)).toEqual(
+        true
+      )
+    })
+
+    it("should be able to create a screen", async () => {
+      const screens = await config.api.screen.list()
+      expect(screens.length).toEqual(2)
       expect(screens.some(s => s._id === screen._id)).toEqual(true)
     })
 
@@ -92,8 +100,14 @@ describe("/screens", () => {
         const res = await config.api.application.getDefinition(
           config.getProdAppId()
         )
-        expect(res.screens.length).toEqual(screenIds.length)
-        expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
+
+        // Filter out sample screen
+        const screens = res.screens.filter(
+          s => s.name !== SAMPLE_DATA_SCREEN_NAME
+        )
+
+        expect(screens.length).toEqual(screenIds.length)
+        expect(screens.map(s => s._id).sort()).toEqual(screenIds.sort())
       })
     }
 
@@ -122,9 +136,15 @@ describe("/screens", () => {
           const res = await config.api.application.getDefinition(
             config.prodAppId!
           )
+
+          // Filter out sample screen
+          const screens = res.screens.filter(
+            s => s.name !== SAMPLE_DATA_SCREEN_NAME
+          )
+
           const screenIds = [screen._id!, screen1._id!]
-          expect(res.screens.length).toEqual(screenIds.length)
-          expect(res.screens.map(s => s._id).sort()).toEqual(screenIds.sort())
+          expect(screens.length).toEqual(screenIds.length)
+          expect(screens.map(s => s._id).sort()).toEqual(screenIds.sort())
         }
       )
     })
