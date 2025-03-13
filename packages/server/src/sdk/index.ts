@@ -13,6 +13,7 @@ import * as permissions from "./app/permissions"
 import * as rowActions from "./app/rowActions"
 import * as screens from "./app/screens"
 import * as common from "./app/common"
+import * as oauth2 from "./app/oauth2"
 
 const sdk = {
   backups,
@@ -30,6 +31,7 @@ const sdk = {
   links,
   rowActions,
   common,
+  oauth2,
 }
 
 // default export for TS
