@@ -9,17 +9,19 @@
     RelationshipFieldMetadata,
     Row,
   } from "@budibase/types"
-  import type { FieldApi, FieldState } from "."
+  import type { FieldApi, FieldState, FieldValidation } from "@/types"
+
+  type ValueType = string | string[]
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
   export let placeholder: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
-  export let validation: any
+  export let validation: FieldValidation | undefined = undefined
   export let autocomplete: boolean = true
-  export let defaultValue: string | string[] | undefined = undefined
-  export let onChange: any
+  export let defaultValue: ValueType | undefined = undefined
+  export let onChange: (_props: { value: ValueType }) => void
   export let filter: SearchFilter[]
   export let datasourceType: "table" | "user" = "table"
   export let primaryDisplay: string | undefined = undefined
@@ -88,14 +90,14 @@
   // Ensure backwards compatibility
   $: enrichedDefaultValue = enrichDefaultValue(defaultValue)
 
+  $: emptyValue = multiselect ? [] : undefined
   // We need to cast value to pass it down, as those components aren't typed
-  $: emptyValue = multiselect ? [] : null
-  $: displayValue = missingIDs.length ? emptyValue : (selectedValue as any)
+  $: displayValue = (missingIDs.length ? emptyValue : selectedValue) as any
 
   // Ensures that we flatten any objects so that only the IDs of the selected
   // rows are passed down. Not sure how this can be an object to begin with?
   const parseSelectedValue = (
-    value: any,
+    value: ValueType | undefined,
     multiselect: boolean
   ): undefined | string | string[] => {
     return multiselect ? flatten(value) : flatten(value)[0]
@@ -140,7 +142,7 @@
 
   // Builds a map of all available options, in a consistent structure
   const processOptions = (
-    realValue: any | any[],
+    realValue: ValueType | undefined,
     rows: Row[],
     primaryDisplay?: string
   ) => {
@@ -171,7 +173,7 @@
 
   // Parses a row-like structure into a properly shaped option
   const parseOption = (
-    option: any | BasicRelatedRow | Row,
+    option: string | BasicRelatedRow | Row,
     primaryDisplay?: string
   ): BasicRelatedRow | null => {
     if (!option || typeof option !== "object" || !option?._id) {
