@@ -40,6 +40,7 @@ export enum DocumentType {
   APP_MIGRATION_METADATA = "_design/migrations",
   SCIM_LOG = "scimlog",
   ROW_ACTIONS = "ra",
+  OAUTH2_CONFIG = "oauth2",
 }
 
 // Because DocumentTypes can overlap, we need to make sure that we search
