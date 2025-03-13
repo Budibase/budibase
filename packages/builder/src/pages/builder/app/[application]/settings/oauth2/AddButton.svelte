@@ -26,7 +26,7 @@
 
 <Button cta size="M" on:click={openModal}>Add OAuth2</Button>
 <Modal bind:this={modal}>
-  <ModalContent onConfirm={saveOAuth2Config}>
+  <ModalContent onConfirm={saveOAuth2Config} size="M">
     <Heading size="S">Create new OAuth2 connection</Heading>
     <Body size="S">
       The OAuth 2 authentication below uses the Client Credentials (machine to
@@ -39,6 +39,12 @@
       placeholder="E.g. www.google.com"
       bind:value={config.url}
     />
+    <div class="field-info">
+      <Body size="XS" color="var(--spectrum-global-color-gray-700)"
+        >The location where the flow sends the credentials. This field should be
+        a full URL.</Body
+      >
+    </div>
     <Input
       label="Client ID*"
       placeholder="Type here..."
@@ -51,3 +57,9 @@
     />
   </ModalContent>
 </Modal>
+
+<style>
+  .field-info {
+    margin-top: calc(var(--spacing-xl) * -1 + var(--spacing-s));
+  }
+</style>
