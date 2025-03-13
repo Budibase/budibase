@@ -1,4 +1,4 @@
-interface OAuth2ConfigResponse {
+export interface OAuth2ConfigResponse {
   id: string
   name: string
 }
