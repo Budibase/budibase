@@ -9,7 +9,6 @@
     Layout,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { onMount } from "svelte"
 
   export let authConfigId: string
   export let authConfigs: { label: string; value: string }[]
@@ -27,9 +26,10 @@
     $goto(`../../datasource/${datasourceId}?&tab=Authentication`)
   }
 
-  onMount(() => {
-    menu.show()
-  })
+  function selectConfiguration(id: string) {
+    authConfigId = id
+    menu.hide()
+  }
 </script>
 
 <ActionMenu align="right" bind:this={menu}>
@@ -64,7 +64,9 @@
     <div class="auth-options">
       <ActionGroup vertical compact>
         {#each authConfigs as config}
-          <ActionButton>{config.label}</ActionButton>
+          <ActionButton on:click={() => selectConfiguration(config.value)}>
+            {config.label}
+          </ActionButton>
         {/each}
       </ActionGroup>
     </div>
