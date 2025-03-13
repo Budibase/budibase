@@ -3,6 +3,7 @@
   import { oauth2 } from "@/stores/builder"
   import AddButton from "./AddButton.svelte"
   import { onMount } from "svelte"
+  import MoreMenuRenderer from "./MoreMenuRenderer.svelte"
 
   const schema = {
     name: {
@@ -12,7 +13,12 @@
       displayName: "Last used",
       sortable: false,
     },
+    more: {
+      width: "auto",
+      displayName: "",
+    },
   }
+  const customRenderers = [{ column: "more", component: MoreMenuRenderer }]
 
   onMount(() => {
     oauth2.fetch()
@@ -41,6 +47,8 @@
   data={configs}
   loading={$oauth2.loading}
   {schema}
+  {customRenderers}
+  allowEditRows={false}
   allowEditColumns={false}
   allowClickRows={false}
 />
