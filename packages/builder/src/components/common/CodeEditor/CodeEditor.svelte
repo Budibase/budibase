@@ -173,13 +173,22 @@
     try {
       const resp = await API.generateJs({ prompt, bindings })
       code = resp.code
+
+      if (code === "") {
+        throw new Error(
+          "we didn't understand your prompt, please phrase your request in another way"
+        )
+      }
     } catch (e) {
       console.error(e)
-      notifications.error("Unable to generate code, please try again later.")
+      if (e instanceof Error) {
+        notifications.error(`Unable to generate code: ${e.message}`)
+      } else {
+        notifications.error("Unable to generate code, please try again later.")
+      }
       code = previousContents
-      popoverWidth = 300
       promptLoading = false
-      popover.hide()
+      resetPopover()
       return
     }
     value = code
@@ -532,7 +541,7 @@
       <div class="prompt-spinner">
         <Spinner size="20" color="white" />
       </div>
-    {:else if suggestedCode}
+    {:else if suggestedCode !== null}
       <Button on:click={acceptSuggestion}>Accept</Button>
       <Button on:click={rejectSuggestion}>Reject</Button>
     {:else}
