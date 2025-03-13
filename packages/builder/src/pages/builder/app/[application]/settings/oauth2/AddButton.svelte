@@ -1,5 +1,6 @@
 <script lang="ts">
   import { oauth2 } from "@/stores/builder"
+  import type { CreateOAuth2Config } from "@/types"
   import {
     Body,
     Button,
@@ -9,8 +10,6 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
-  import { type CreateOAuth2ConfigRequest } from "@budibase/types"
-  import { onMount } from "svelte"
 
   let modal: Modal
 
@@ -18,15 +17,11 @@
     modal.show()
   }
 
-  let config: Partial<CreateOAuth2ConfigRequest> = {}
+  let config: Partial<CreateOAuth2Config> = {}
 
   $: saveOAuth2Config = async () => {
-    // TODO
+    await oauth2.create(config)
   }
-
-  onMount(() => {
-    modal.show()
-  })
 </script>
 
 <Button cta size="M" on:click={openModal}>Add OAuth2</Button>
