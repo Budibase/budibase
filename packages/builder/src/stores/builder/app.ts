@@ -159,7 +159,6 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
   // Returned from socket
   syncMetadata(metadata: { name: string; url: string; icon?: AppIcon }) {
     const { name, url, icon } = metadata
-    console.log(name)
     this.update(state => ({
       ...state,
       name,

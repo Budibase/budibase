@@ -235,10 +235,18 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 <meta name="apple-mobile-web-app-title" content="${
           appInfo.pwa.short_name || appInfo.name
         }">`
+
         if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
-          let appleIconUrl = appInfo.pwa.icons[0].src
-          console.log(appleIconUrl)
-          extraHead += `<link rel="apple-touch-icon" sizes="180x180" href="${appleIconUrl}">`
+          try {
+            const enrichedIcons = await objectStore.enrichPWAIcons([
+              appInfo.pwa.icons[0],
+            ])
+            if (enrichedIcons.length > 0) {
+              extraHead += `<link rel="apple-touch-icon" sizes="180x180" href="${enrichedIcons[0].src}">`
+            }
+          } catch (error) {
+            console.error("Error processing apple-touch-icon:", error)
+          }
         }
       }
 
@@ -407,8 +415,7 @@ export const serveManifest = async function (ctx: UserCtx<void, any>) {
       name: appInfo.pwa.name || appInfo.name,
       short_name: appInfo.pwa.short_name || appInfo.name,
       description: appInfo.pwa.description || "",
-      start_url:
-        `/app${appInfo.url}#${appInfo.pwa.start_url}` || `/app/${appInfo.url}`,
+      start_url: `/app${appInfo.url}`,
       display: appInfo.pwa.display || "standalone",
       background_color: appInfo.pwa.background_color || "#FFFFFF",
       theme_color: appInfo.pwa.theme_color || "#FFFFFF",
@@ -416,20 +423,11 @@ export const serveManifest = async function (ctx: UserCtx<void, any>) {
     }
 
     if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
-      manifest.icons = appInfo.pwa.icons.map(icon => {
-        let src = icon.src
-
-        if (src && src.startsWith("/") && !src.startsWith("//")) {
-          const origin = ctx.request.origin
-          src = `${origin}${src}`
-        }
-
-        return {
-          ...icon,
-          src,
-          type: icon.type || "image/png",
-        }
-      })
+      try {
+        manifest.icons = await objectStore.enrichPWAIcons(appInfo.pwa.icons)
+      } catch (error) {
+        console.error("Error processing manifest icons:", error)
+      }
     }
 
     ctx.set("Content-Type", "application/json")

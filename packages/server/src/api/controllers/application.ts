@@ -232,6 +232,13 @@ export async function fetchAppPackage(
     application.usedPlugins
   )
 
+  // Enrich PWA icon URLs if they exist
+  if (application.pwa?.icons && application.pwa.icons.length > 0) {
+    application.pwa.icons = await objectStore.enrichPWAIcons(
+      application.pwa.icons
+    )
+  }
+
   // Only filter screens if the user is not a builder
   if (!users.isBuilder(ctx.user, appId)) {
     const userRoleId = getUserRoleId(ctx)

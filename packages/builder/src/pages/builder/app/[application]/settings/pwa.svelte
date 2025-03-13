@@ -5,7 +5,6 @@
     Heading,
     Body,
     Input,
-    TextArea,
     ColorPicker,
     Button,
     Label,
@@ -27,8 +26,6 @@
     background_color: "#FFFFFF",
     theme_color: "#FFFFFF",
     display: "standalone",
-    start_url: "",
-    scope: "",
   }
 
   let saving = false
@@ -40,7 +37,6 @@
     { label: "Standalone", value: "standalone" },
     { label: "Fullscreen", value: "fullscreen" },
     { label: "Minimal UI", value: "minimal-ui" },
-    { label: "Browser", value: "browser" },
   ]
 
   // Get existing icon if available
@@ -92,20 +88,16 @@
   async function saveFiles() {
     if (iconFile) {
       const iconResp = await uploadIcon(iconFile)
-      if (iconResp[0]?.url) {
-        // Get the full absolute URL
-        let iconUrl = iconResp[0].url
-        // Ensure the URL is absolute
-        if (iconUrl.startsWith("/")) {
-          iconUrl = window.location.origin + iconUrl
-        }
+      if (iconResp[0]?.key) {
+        // Store the S3 key directly in the src field
+        const iconKey = iconResp[0].key
 
-        // Update the PWA config with the new icon URL
+        // Update the PWA config with the icon key as the src
         pwaConfig = {
           ...pwaConfig,
           icons: [
             {
-              src: iconUrl,
+              src: iconKey, // Store the S3 key directly in src
               sizes: "192x192",
               type: "image/png",
             },
@@ -357,25 +349,14 @@
         <Heading size="S">Manifest settings</Heading>
         <Body size="S">
           The manifest settings control how your app behaves once installed.
-          These settings define the app's entry point, navigation boundaries,
-          and how it appears on the user's device. Configuring these fields
-          ensures your app is treated as a native-like application.
+          These settings define how it appears on the user's device. Configuring
+          these fields ensures your app is treated as a native-like application.
         </Body>
-      </div>
-
-      <div class="field">
-        <Label size="L">Start URL</Label>
-        <Input bind:value={pwaConfig.start_url} placeholder="/" />
       </div>
 
       <div class="field">
         <Label size="L">Display mode</Label>
         <Select bind:value={pwaConfig.display} options={displayOptions} />
-      </div>
-
-      <div class="field">
-        <Label size="L">Scope</Label>
-        <Input bind:value={pwaConfig.scope} placeholder="/" />
       </div>
 
       <div class="actions">
