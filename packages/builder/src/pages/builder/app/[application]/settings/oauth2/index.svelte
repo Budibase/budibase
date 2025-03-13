@@ -1,7 +1,16 @@
 <script lang="ts">
-  import { Layout, Heading, Body, Divider, Button, Table } from "@budibase/bbui"
+  import { Layout, Heading, Body, Divider, Table } from "@budibase/bbui"
   import { oauth2 } from "@/stores/builder"
   import AddButton from "./AddButton.svelte"
+  import { onMount } from "svelte"
+
+  const schema = {
+    name: "",
+  }
+
+  onMount(() => {
+    oauth2.fetch()
+  })
 </script>
 
 <Layout noPadding>
@@ -17,7 +26,16 @@
   <Divider />
 </Layout>
 
-<Table data={$oauth2} />
+{#if $oauth2.configs.length}
+  <Table
+    data={$oauth2.configs}
+    loading={$oauth2.loading}
+    {schema}
+    disableSorting
+    allowEditColumns={false}
+    allowClickRows={false}
+  />
+{/if}
 
 <style>
   .header {

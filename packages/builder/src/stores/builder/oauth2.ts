@@ -7,14 +7,39 @@ interface Config {
   name: string
 }
 
-export class OAuth2Store extends BudiStore<Config[]> {
+interface OAuth2StoreState {
+  configs: Config[]
+  loading: boolean
+  error?: string
+}
+
+export class OAuth2Store extends BudiStore<OAuth2StoreState> {
   constructor() {
-    super([])
+    super({
+      configs: [],
+      loading: false,
+    })
   }
 
   async fetch() {
-    const configs = await API.oauth2.fetch()
-    this.store.set(configs.map(c => ({ id: c.id, name: c.name })))
+    this.store.update(store => ({
+      ...store,
+      loading: true,
+    }))
+    try {
+      const configs = await API.oauth2.fetch()
+      this.store.update(store => ({
+        ...store,
+        configs: configs.map(c => ({ id: c.id, name: c.name })),
+        loading: false,
+      }))
+    } catch (e: any) {
+      this.store.update(store => ({
+        ...store,
+        loading: false,
+        error: e.message,
+      }))
+    }
   }
 
   async create(config: CreateOAuth2Config) {
