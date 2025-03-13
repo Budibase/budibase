@@ -33,10 +33,10 @@
   export let value: string = ""
   export let allowHelpers = true
   export let allowSnippets = true
-  export let context = null
+  export let context: Record<any, any> | undefined = undefined
   export let autofocusEditor = false
   export let placeholder: string | undefined
-  export let height = 180
+  export let dropdown = DropdownPosition.Absolute
 
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
@@ -136,7 +136,7 @@
   }
 </script>
 
-<div class="code-panel" style="height:{height}px;">
+<div class="code-panel">
   <div class="editor">
     {#key jsCompletions}
       <CodeEditor
@@ -151,7 +151,7 @@
         placeholder={placeholder ||
           "Add bindings by typing $ or use the menu on the right"}
         jsBindingWrapping
-        dropdown={DropdownPosition.Absolute}
+        {dropdown}
       />
     {/key}
   </div>
@@ -160,6 +160,7 @@
 <style>
   .code-panel {
     display: flex;
+    height: 100%;
   }
 
   /* Editor */
