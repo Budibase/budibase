@@ -53,21 +53,19 @@ describe("oauth2 utils", () => {
       expect(response).toEqual(expect.stringMatching(/^Bearer .+/))
     })
 
-    it("handles wrong secrets", async () => {
+    it("handles wrong urls", async () => {
       await expect(
         config.doInContext(config.appId, async () => {
           const oauthConfig = await sdk.oauth2.create({
             name: generator.guid(),
-            url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+            url: `${keycloakUrl}/realms/wrong/protocol/openid-connect/token`,
             clientId: "my-client",
-            clientSecret: "wrong-secret",
+            clientSecret: "my-secret",
           })
 
           await generateToken(oauthConfig.id)
         })
-      ).rejects.toThrow(
-        "Error fetching oauth2 token: Invalid client or Invalid client credentials"
-      )
+      ).rejects.toThrow("Error fetching oauth2 token: Not Found")
     })
 
     it("handles wrong client ids", async () => {
@@ -78,6 +76,23 @@ describe("oauth2 utils", () => {
             url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
             clientId: "wrong-client-id",
             clientSecret: "my-secret",
+          })
+
+          await generateToken(oauthConfig.id)
+        })
+      ).rejects.toThrow(
+        "Error fetching oauth2 token: Invalid client or Invalid client credentials"
+      )
+    })
+
+    it("handles wrong secrets", async () => {
+      await expect(
+        config.doInContext(config.appId, async () => {
+          const oauthConfig = await sdk.oauth2.create({
+            name: generator.guid(),
+            url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+            clientId: "my-client",
+            clientSecret: "wrong-secret",
           })
 
           await generateToken(oauthConfig.id)
