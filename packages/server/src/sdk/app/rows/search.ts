@@ -46,6 +46,7 @@ export async function search(
       query: options.query,
       sort: options.sort,
       sortOrder: options.sortOrder,
+      sortType: options.sortType,
       limit: options.limit,
       bookmark: options.bookmark,
       paginate: options.paginate,
