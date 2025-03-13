@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
   import { createEventDispatcher, setContext, tick, onMount } from "svelte"
@@ -6,33 +6,37 @@
   import Portal from "svelte-portal"
   import Context from "../context"
 
-  export let fixed = false
-  export let inline = false
-  export let disableCancel = false
-  export let autoFocus = true
-  export let zIndex = 1001
+  export let fixed: boolean = false
+  export let inline: boolean = false
+  export let disableCancel: boolean = false
+  export let autoFocus: boolean = true
+  export let zIndex: number = 1001
 
-  const dispatch = createEventDispatcher()
-  let visible = fixed || inline
-  let modal
+  const dispatch = createEventDispatcher<{
+    show: void
+    hide: void
+    cancel: void
+  }>()
+  let visible: boolean = fixed || inline
+  let modal: HTMLElement | undefined
 
   $: dispatch(visible ? "show" : "hide")
 
-  export function show() {
+  export function show(): void {
     if (visible) {
       return
     }
     visible = true
   }
 
-  export function hide() {
+  export function hide(): void {
     if (!visible || fixed || inline) {
       return
     }
     visible = false
   }
 
-  export function toggle() {
+  export function toggle(): void {
     if (visible) {
       hide()
     } else {
@@ -40,7 +44,7 @@
     }
   }
 
-  export function cancel() {
+  export function cancel(): void {
     if (!visible || disableCancel) {
       return
     }
@@ -48,34 +52,33 @@
     hide()
   }
 
-  function handleKey(e) {
+  function handleKey(e: KeyboardEvent): void {
     if (visible && e.key === "Escape") {
       cancel()
     }
   }
 
-  async function focusModal(node) {
-    if (!autoFocus) {
-      return
-    }
-    await tick()
-
-    // Try to focus first input
-    const inputs = node.querySelectorAll("input")
-    if (inputs?.length) {
-      inputs[0].focus()
-    }
-
-    // Otherwise try to focus confirmation button
-    else if (modal) {
-      const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
-      if (confirm) {
-        confirm.focus()
+  function focusModal(node: HTMLElement): void {
+    if (!autoFocus) return
+    tick().then(() => {
+      const inputs = node.querySelectorAll("input")
+      if (inputs?.length) {
+        inputs[0].focus()
+      } else if (modal) {
+        const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
+        if (confirm) {
+          ;(confirm as HTMLElement).focus()
+        }
       }
-    }
+    })
   }
 
-  setContext(Context.Modal, { show, hide, toggle, cancel })
+  setContext(Context.Modal, {
+    show,
+    hide,
+    toggle,
+    cancel,
+  } as { show: () => void; hide: () => void; toggle: () => void; cancel: () => void })
 
   onMount(() => {
     document.addEventListener("keydown", handleKey)

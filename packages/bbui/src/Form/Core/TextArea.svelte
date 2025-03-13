@@ -1,32 +1,34 @@
 <script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
+  import type { FocusEventHandler } from "svelte/elements"
 
-  export let value = ""
-  export let placeholder: string | undefined = undefined
+  export let value: string | null = null
+  export let placeholder: string | null = null
   export let disabled = false
   export let readonly = false
-  export let id: string | undefined = undefined
-  export let height: string | number | undefined = undefined
-  export let minHeight: string | number | undefined = undefined
-  export const getCaretPosition = () => ({
-    start: textarea.selectionStart,
-    end: textarea.selectionEnd,
-  })
+  export let id: string | null = null
+  export let height: number | null = null
+  export let minHeight: number | null = null
   export let align = null
 
-  let focus = false
-  let textarea: any
-  const dispatch = createEventDispatcher()
-  const onChange = (event: any) => {
-    dispatch("change", event.target.value)
-    focus = false
+  let isFocused = false
+  let textarea: HTMLTextAreaElement
+  const dispatch = createEventDispatcher<{ change: string }>()
+  const onChange: FocusEventHandler<HTMLTextAreaElement> = event => {
+    dispatch("change", event.currentTarget.value)
+    isFocused = false
   }
 
-  const getStyleString = (
-    attribute: string,
-    value: string | number | undefined
-  ) => {
+  export function focus() {
+    textarea.focus()
+  }
+
+  export function contents() {
+    return textarea.value
+  }
+
+  const getStyleString = (attribute: string, value: number | null) => {
     if (!attribute || value == null) {
       return ""
     }
@@ -44,7 +46,7 @@
   style={`${heightString}${minHeightString}`}
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-disabled={disabled}
-  class:is-focused={focus}
+  class:is-focused={isFocused}
 >
   <!-- prettier-ignore -->
   <textarea
@@ -55,8 +57,9 @@
     {disabled}
     {readonly}
     {id}
-    on:focus={() => (focus = true)}
+    on:focus={() => (isFocused = true)}
     on:blur={onChange}
+    on:keypress
   >{value || ""}</textarea>
 </div>
 
