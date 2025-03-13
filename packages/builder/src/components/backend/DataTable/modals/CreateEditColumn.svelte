@@ -212,13 +212,12 @@
     (originalName &&
       SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
-  $: allowedTypes = getAllowedTypes(datasource, table).map(t => ({
+  $: orderedAllowedTypes = fixedTypeOrder.filter(ordered =>
+    getAllowedTypes(datasource, table).find(allowed => allowed.type === ordered.type)
+  ).map(t => ({
     fieldId: makeFieldId(t.type, t.subtype),
     ...t,
   }))
-  $: orderedAllowedTypes = fixedTypeOrder.filter(ordered =>
-    allowedTypes.find(allowed => allowed.type === ordered.type)
-  )
   $: defaultValueBindings = [
     {
       type: "context",
