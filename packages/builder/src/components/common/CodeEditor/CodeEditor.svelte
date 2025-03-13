@@ -6,7 +6,13 @@
 </script>
 
 <script lang="ts">
-  import { Label } from "@budibase/bbui"
+  import {
+    Button,
+    Label,
+    notifications,
+    Popover,
+    TextArea,
+  } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
@@ -53,11 +59,14 @@
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
-  import type { EditorMode } from "@budibase/types"
+  import { FeatureFlag, type EditorMode } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
   import type { BindingCompletion, CodeValidator } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
+  import { featureFlag } from "@/helpers"
+  import { API } from "@/api"
+  import Spinner from "../Spinner.svelte"
 
   export let label: string | undefined = undefined
   export let completions: BindingCompletion[] = []
@@ -85,6 +94,13 @@
   let currentTheme = $themeStore?.theme
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
+
+  let popoverAnchor: HTMLElement
+  let popover: Popover
+  let promptInput: TextArea
+  $: aiGenEnabled =
+    featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
+    mode.name === "javascript"
 
   $: {
     if (autofocus && isEditorInitialised) {
@@ -137,6 +153,57 @@
       })
       queuedRefresh = false
     }
+  }
+
+  $: promptLoading = false
+  let popoverWidth = 300
+  let suggestedCode: string | null = null
+  let previousContents: string | null = null
+  const generateJs = async (prompt: string) => {
+    previousContents = editor.state.doc.toString()
+    promptLoading = true
+    popoverWidth = 30
+    let code = ""
+    try {
+      const resp = await API.generateJs({ prompt })
+      code = resp.code
+    } catch (e) {
+      console.error(e)
+      notifications.error("Unable to generate code, please try again later.")
+      code = previousContents
+      popoverWidth = 300
+      promptLoading = false
+      popover.hide()
+      return
+    }
+    value = code
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: code },
+    })
+    suggestedCode = code
+    popoverWidth = 100
+    promptLoading = false
+  }
+
+  const acceptSuggestion = () => {
+    suggestedCode = null
+    previousContents = null
+    resetPopover()
+  }
+
+  const rejectSuggestion = () => {
+    suggestedCode = null
+    value = previousContents || ""
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: value },
+    })
+    previousContents = null
+    resetPopover()
+  }
+
+  const resetPopover = () => {
+    popover.hide()
+    popoverWidth = 300
   }
 
   // Export a function to expose caret position
@@ -428,6 +495,50 @@
   <div tabindex="-1" bind:this={textarea} />
 </div>
 
+{#if aiGenEnabled}
+  <button
+    bind:this={popoverAnchor}
+    class="ai-gen"
+    on:click={() => {
+      popover.show()
+      setTimeout(() => {
+        promptInput.focus()
+      }, 100)
+    }}
+  >
+    Generate with AI ✨
+  </button>
+
+  <Popover
+    bind:this={popover}
+    minWidth={popoverWidth}
+    anchor={popoverAnchor}
+    align="left-outside"
+  >
+    {#if promptLoading}
+      <div class="prompt-spinner">
+        <Spinner size="20" color="white" />
+      </div>
+    {:else if suggestedCode}
+      <Button on:click={acceptSuggestion}>Accept</Button>
+      <Button on:click={rejectSuggestion}>Reject</Button>
+    {:else}
+      <TextArea
+        bind:this={promptInput}
+        placeholder="Type your prompt then press enter..."
+        on:keypress={event => {
+          if (event.getModifierState("Shift")) {
+            return
+          }
+          if (event.key === "Enter") {
+            generateJs(promptInput.contents())
+          }
+        }}
+      />
+    {/if}
+  </Popover>
+{/if}
+
 <style>
   /* Editor */
   .code-editor {
@@ -632,5 +743,35 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+  .ai-gen {
+    right: 1px;
+    bottom: 1px;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+    padding: var(--spacing-s);
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    border-top: 1px solid var(--spectrum-alias-border-color);
+    border-top-left-radius: var(--spectrum-alias-border-radius-regular);
+    color: var(--spectrum-global-color-blue-700);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
+    height: calc(var(--spectrum-alias-item-height-m) - 2px);
+  }
+  .ai-gen:hover {
+    cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
+  }
+  .prompt-spinner {
+    padding: var(--spacing-m);
   }
 </style>
