@@ -7,6 +7,7 @@
     Divider,
     Heading,
     Input,
+    Link,
     Modal,
     ModalContent,
   } from "@budibase/bbui"
@@ -40,10 +41,10 @@
       bind:value={config.url}
     />
     <div class="field-info">
-      <Body size="XS" color="var(--spectrum-global-color-gray-700)"
-        >The location where the flow sends the credentials. This field should be
-        a full URL.</Body
-      >
+      <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+        The location where the flow sends the credentials. This field should be
+        a full URL.
+      </Body>
     </div>
     <Input
       label="Client ID*"
@@ -55,6 +56,13 @@
       placeholder="Type here..."
       bind:value={config.clientSecret}
     />
+    <Body size="S"
+      >To learn how to configure OAuth2, our documentation <Link
+        href="TODO"
+        target="_blank"
+        size="M">our documentation.</Link
+      ></Body
+    >
   </ModalContent>
 </Modal>
 
