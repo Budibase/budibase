@@ -11,8 +11,12 @@
     File,
     notifications,
     Select,
+    Tags,
+    Tag,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
+  import { licensing } from "@/stores/portal"
+
   import { API } from "@/api"
 
   // Only allow PNG files for better PWA compatibility
@@ -44,6 +48,8 @@
     pwaConfig.icons && pwaConfig.icons.length > 0
       ? { url: pwaConfig.icons[0].src, type: "image", name: "PWA Icon" }
       : null
+
+  $: pwaEnabled = $licensing.pwaEnabled
 
   const previewUrl = async localFile => {
     if (!localFile) {
@@ -239,7 +245,14 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading>Progressive Web App</Heading>
+    <div class="title-section">
+      <Heading>Progressive Web App</Heading>
+      {#if !pwaEnabled}
+        <Tags>
+          <Tag icon="LockClosed">Enterprise</Tag>
+        </Tags>
+      {/if}
+    </div>
     <Body>
       Transform your app into an installable, app-like experience with a
       Progressive Web App (PWA). Developers can configure app details, visuals,
@@ -249,11 +262,11 @@
   </Layout>
   <Divider />
 
-  <div class="form">
+  <div class="form" class:disabled={!pwaEnabled}>
     <div class="fields">
-      <!-- App details section -->
       <div class="section">
         <Heading size="S">App details</Heading>
+
         <Body size="S">
           Define the identity of your app, including its name, description, and
           how it will appear to users when installed.
@@ -265,6 +278,7 @@
         <Input
           bind:value={pwaConfig.name}
           placeholder="Full name of your app"
+          disabled={!pwaEnabled || saving}
         />
       </div>
 
@@ -273,6 +287,7 @@
         <Input
           bind:value={pwaConfig.short_name}
           placeholder="Short name for app icon"
+          disabled={!pwaEnabled || saving}
         />
       </div>
 
@@ -281,10 +296,10 @@
         <Input
           bind:value={pwaConfig.description}
           placeholder="Describe your app"
+          disabled={!pwaEnabled || saving}
         />
       </div>
       <Divider />
-      <!-- Appearance section -->
       <div class="section">
         <Heading size="S">Appearance</Heading>
         <Body size="S">
@@ -318,7 +333,7 @@
               }
             }}
             value={iconFile || icon}
-            disabled={saving}
+            disabled={!pwaEnabled || saving}
             allowClear={true}
           />
           <div class="icon-help">
@@ -332,6 +347,7 @@
         <ColorPicker
           value={pwaConfig.background_color}
           on:change={e => (pwaConfig.background_color = e.detail)}
+          disabled={!pwaEnabled || saving}
         />
       </div>
 
@@ -340,11 +356,11 @@
         <ColorPicker
           value={pwaConfig.theme_color}
           on:change={e => (pwaConfig.theme_color = e.detail)}
+          disabled={!pwaEnabled || saving}
         />
       </div>
       <Divider />
 
-      <!-- Manifest settings section -->
       <div class="section">
         <Heading size="S">Manifest settings</Heading>
         <Body size="S">
@@ -356,11 +372,15 @@
 
       <div class="field">
         <Label size="L">Display mode</Label>
-        <Select bind:value={pwaConfig.display} options={displayOptions} />
+        <Select
+          bind:value={pwaConfig.display}
+          options={displayOptions}
+          disabled={!pwaEnabled || saving}
+        />
       </div>
 
       <div class="actions">
-        <Button cta on:click={handleSubmit} disabled={saving}>
+        <Button cta on:click={handleSubmit} disabled={!pwaEnabled || saving}>
           {saving ? "Saving..." : "Save"}
         </Button>
       </div>
@@ -371,11 +391,21 @@
 <style>
   .form {
     max-width: 600px;
+    position: relative;
+  }
+
+  .disabled {
+    pointer-events: none;
   }
 
   .fields {
     display: grid;
     grid-gap: var(--spacing-l);
+    opacity: var(--form-opacity, 1);
+  }
+
+  .disabled .fields {
+    --form-opacity: 0.2;
   }
 
   .field {
@@ -389,6 +419,13 @@
     margin-top: var(--spacing-xl);
   }
 
+  .title-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--spacing-m);
+  }
   .icon-upload {
     display: flex;
     flex-direction: column;
