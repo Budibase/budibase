@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     ActionButton,
+    ActionGroup,
     ActionMenu,
     Body,
     Button,
@@ -55,10 +56,18 @@
     </div>
   </Layout>
   <Divider />
-  <Layout>
+  <Layout gap="S">
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
       Basic (Username & Password Authentication)
     </Body>
+
+    <div class="auth-options">
+      <ActionGroup vertical compact>
+        {#each authConfigs as config}
+          <ActionButton>{config.label}</ActionButton>
+        {/each}
+      </ActionGroup>
+    </div>
     <div>
       <Button secondary icon="Add" on:click={addBasicConfiguration}
         >Add Basic</Button
@@ -72,5 +81,14 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
+  }
+
+  .auth-options :global(.spectrum-ActionGroup) {
+    width: 100%;
+  }
+  .auth-options :global(.spectrum-ActionButton) {
+    justify-content: start;
+    cursor: pointer;
+    pointer-events: auto;
   }
 </style>
