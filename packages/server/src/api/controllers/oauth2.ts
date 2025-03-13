@@ -24,9 +24,12 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
 export async function create(
   ctx: Ctx<CreateOAuth2ConfigRequest, CreateOAuth2ConfigResponse>
 ) {
+  const { body } = ctx.request
   const newConfig: RequiredKeys<Omit<OAuth2Config, "id">> = {
-    name: ctx.request.body.name,
-    url: ctx.request.body.url,
+    name: body.name,
+    url: body.url,
+    clientId: ctx.clientId,
+    clientSecret: ctx.clientSecret,
   }
 
   const config = await sdk.oauth2.create(newConfig)

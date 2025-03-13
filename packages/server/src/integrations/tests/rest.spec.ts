@@ -277,14 +277,17 @@ describe("REST Integration", () => {
     })
 
     it("adds oAuth2 auth", async () => {
+      const oauth2Url = generator.url()
       const { config: oauthConfig } = await config.api.oauth2.create({
         name: generator.guid(),
-        url: generator.url(),
+        url: oauth2Url,
+        clientId: generator.guid(),
+        clientSecret: generator.hash(),
       })
 
       const token = generator.guid()
 
-      const url = new URL(oauthConfig.url)
+      const url = new URL(oauth2Url)
       nock(url.origin)
         .post(url.pathname)
         .reply(200, { token_type: "Bearer", access_token: token })

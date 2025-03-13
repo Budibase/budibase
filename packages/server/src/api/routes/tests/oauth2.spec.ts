@@ -9,6 +9,8 @@ describe("/oauth2", () => {
     return {
       name: generator.guid(),
       url: generator.url(),
+      clientId: generator.guid(),
+      clientSecret: generator.hash(),
     }
   }
 
