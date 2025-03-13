@@ -1,6 +1,7 @@
 import { Writable } from "svelte"
-import { Component, FieldGroupContext, FormContext, SDK } from "@/types"
+import { Component, FieldGroupContext, FormContext } from "@/types"
 import { Readable } from "svelte/store"
+import { SDK } from "@/index.ts"
 
 declare module "svelte" {
   export function getContext(key: "sdk"): SDK
