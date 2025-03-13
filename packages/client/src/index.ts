@@ -16,8 +16,6 @@ import {
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { APIClient } from "@budibase/frontend-core"
-import type { ActionTypes } from "@/constants"
 import { Readable } from "svelte/store"
 import {
   Screen,
@@ -30,6 +28,8 @@ import {
   UIComponentError,
   CustomComponent,
 } from "@budibase/types"
+import { ActionTypes } from "@/constants"
+import { APIClient } from "@budibase/frontend-core"
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
@@ -75,6 +75,8 @@ declare global {
   }
 }
 
+export type Context = Readable<Record<string, any>>
+
 export interface SDK {
   API: APIClient
   styleable: any
@@ -82,20 +84,10 @@ export interface SDK {
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
   generateGoldenSample: any
-  authStore: typeof authStore
-  environmentStore: typeof environmentStore
-  notificationStore: typeof notificationStore
-  appStore: typeof appStore
   builderStore: typeof builderStore
+  authStore: typeof authStore
+  notificationStore: typeof notificationStore
 }
-
-export type Component = Readable<{
-  id: string
-  styles: any
-  errorState: boolean
-}>
-
-export type Context = Readable<Record<string, any>>
 
 let app: ClientApp
 
