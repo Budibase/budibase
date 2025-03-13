@@ -37,7 +37,7 @@ const { ContextScopes } = Constants
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
-const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
+const CAPTURE_VAR_INSIDE_JS = /\$\((["'`])([^"'`]+)\1\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
 const UpdateReferenceAction = {
