@@ -5,12 +5,23 @@
   import { onMount } from "svelte"
 
   const schema = {
-    name: "",
+    name: {
+      sortable: false,
+    },
+    lastUsed: {
+      displayName: "Last used",
+      sortable: false,
+    },
   }
 
   onMount(() => {
     oauth2.fetch()
   })
+
+  $: configs = $oauth2.configs.map(c => ({
+    lastUsed: "Never used",
+    ...c,
+  }))
 </script>
 
 <Layout noPadding>
@@ -26,16 +37,13 @@
   <Divider />
 </Layout>
 
-{#if $oauth2.configs.length}
-  <Table
-    data={$oauth2.configs}
-    loading={$oauth2.loading}
-    {schema}
-    disableSorting
-    allowEditColumns={false}
-    allowClickRows={false}
-  />
-{/if}
+<Table
+  data={configs}
+  loading={$oauth2.loading}
+  {schema}
+  allowEditColumns={false}
+  allowClickRows={false}
+/>
 
 <style>
   .header {
