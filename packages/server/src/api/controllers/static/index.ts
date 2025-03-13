@@ -262,6 +262,21 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   }
 }
 
+const getAppScriptHTML = (
+  app: App,
+  location: "Head" | "Body",
+  nonce: string
+) => {
+  if (!app.scripts?.length) {
+    return ""
+  }
+  return app.scripts
+    .filter(script => script.location === location && script.html?.length)
+    .map(script => script.html)
+    .join("\n")
+    .replaceAll("<script", `<script nonce="${nonce}"`)
+}
+
 export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
@@ -273,9 +288,12 @@ export const serveBuilderPreview = async function (
     const templateLoc = join(__dirname, "templates")
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
+    const nonce = ctx.state.nonce || ""
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
-      nonce: ctx.state.nonce,
+      nonce,
+      headAppScripts: getAppScriptHTML(appInfo, "Head", nonce),
+      bodyAppScripts: getAppScriptHTML(appInfo, "Body", nonce),
     })
   } else {
     // just return the app info for jest to assert on
