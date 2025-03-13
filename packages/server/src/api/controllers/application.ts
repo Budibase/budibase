@@ -333,7 +333,7 @@ async function performAppCreate(
       await updateUserColumns(appId, db, ctx.user._id!)
     }
 
-    const newApplication: App = {
+    let newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
       appId,
@@ -420,6 +420,9 @@ async function performAppCreate(
         await addSampleDataDocs()
         await addSampleDataScreen()
         await addSampleDataNavLinks()
+
+        // Fetch the latest version of the app after these changes
+        newApplication = await sdk.applications.metadata.get()
       } catch (err) {
         ctx.throw(400, "App created, but failed to add sample data")
       }
@@ -849,9 +852,6 @@ export async function duplicateApp(
   }
 }
 
-// Accepts either a partial app doc or a function to update the existing doc,
-// which is required to update anything deeper than the top level without
-// overwriting more than intended.
 export async function updateAppPackage(
   appPackage: Partial<App>,
   appId: string
