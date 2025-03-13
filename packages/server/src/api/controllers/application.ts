@@ -198,17 +198,27 @@ async function addSampleDataScreen() {
   await db.put(screen)
 }
 
-function addSampleDataNavLinks(app: App) {
-  if (app.navigation) {
-    app.navigation.links = [
-      {
-        text: "Inventory",
-        url: "/inventory",
-        type: "link",
-        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-      },
-    ]
+async function addSampleDataNavLinks() {
+  const appId = context.getAppId()
+  if (!appId) {
+    throw "Missing app ID"
   }
+  const addLinks = (app: App) => {
+    if (!app.navigation) {
+      return app
+    }
+    if (!app.navigation.links) {
+      app.navigation.links = []
+    }
+    app.navigation.links.push({
+      text: "Inventory",
+      url: "/inventory",
+      type: "link",
+      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    })
+    return app
+  }
+  await updateAppPackage(addLinks, appId)
 }
 
 export const addSampleData = async (
@@ -359,10 +369,6 @@ async function performAppCreate(
       creationVersion: undefined,
     }
 
-    if (addSampleData) {
-      addSampleDataNavLinks(newApplication)
-    }
-
     if (!isImport) {
       newApplication.creationVersion = envCore.VERSION
     }
@@ -414,6 +420,7 @@ async function performAppCreate(
       try {
         await addSampleDataDocs()
         await addSampleDataScreen()
+        await addSampleDataNavLinks()
       } catch (err) {
         ctx.throw(400, "App created, but failed to add sample data")
       }
@@ -843,18 +850,24 @@ export async function duplicateApp(
   }
 }
 
+// Accepts either a partial app doc or a function to update the existing doc,
+// which is required to update anything deeper than the top level without
+// overwriting more than intended.
 export async function updateAppPackage(
-  appPackage: Partial<App>,
+  update: Partial<App> | ((app: App) => App),
   appId: string
 ) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await sdk.applications.metadata.get()
 
-    const newAppPackage: App = { ...application, ...appPackage }
-    if (appPackage._rev !== application._rev) {
-      newAppPackage._rev = application._rev
-    }
+    const newAppPackage: App =
+      typeof update === "function"
+        ? update(application)
+        : { ...application, ...update }
+
+    // Ensure our rev stays the same
+    newAppPackage._rev = application._rev
 
     // the locked by property is attached by server but generated from
     // Redis, shouldn't ever store it
