@@ -3,13 +3,16 @@
     ActionButton,
     ActionMenu,
     Body,
+    Button,
     Divider,
     Layout,
   } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
 
   export let authConfigId: string
   export let authConfigs: { label: string; value: string }[]
+  export let datasourceId: string
 
   let menu: ActionMenu
 
@@ -17,6 +20,10 @@
 
   function closeMenu() {
     menu.hide()
+  }
+
+  function addBasicConfiguration() {
+    $goto(`../../datasource/${datasourceId}?&tab=Authentication`)
   }
 
   onMount(() => {
@@ -52,6 +59,11 @@
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
       Basic (Username & Password Authentication)
     </Body>
+    <div>
+      <Button secondary icon="Add" on:click={addBasicConfiguration}
+        >Add Basic</Button
+      >
+    </div>
   </Layout>
 </ActionMenu>
 

@@ -647,6 +647,7 @@
             <AuthPicker
               bind:authConfigId={query.fields.authConfigId}
               {authConfigs}
+              datasourceId={datasource._id}
             />
           </div>
         </Tabs>
