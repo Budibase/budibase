@@ -56,7 +56,10 @@
     memo,
     fetchData,
   } from "@budibase/frontend-core"
-  import { getSchemaForDatasourcePlus } from "@/dataBinding"
+  import {
+    getSchemaForDatasourcePlus,
+    readableToRuntimeBinding,
+  } from "@/dataBinding"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import { onMount, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
@@ -220,7 +223,18 @@
   const stepStore = writable({})
   $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, stepState, fetchedRows)
+  const updateSelectedRow = testData => {
+    selectedRow = testData?.row
+  }
+  $: updateSelectedRow(testData)
+
+  $: customStepLayouts(
+    $memoBlock,
+    schemaProperties,
+    stepState,
+    fetchedRows,
+    selectedRow
+  )
 
   const customStepLayouts = block => {
     if (
@@ -387,6 +401,57 @@
         ]
       }
 
+      const getTestDataSelector = () => {
+        if (!isTestModal) {
+          return []
+        }
+        return [
+          {
+            type: CoreSelect,
+            title: "Row",
+            props: {
+              disabled: !table,
+              placeholder: "Select a row",
+              options: fetchedRows,
+              loading: fetchLoading,
+              value: selectedRow,
+              autocomplete: true,
+              filter: false,
+              getOptionLabel: row => row?.[primaryDisplay] || "",
+              compare: (a, b) => a?.[primaryDisplay] === b?.[primaryDisplay],
+              onChange: e => {
+                if (isTestModal) {
+                  onChange({
+                    id: e.detail?._id,
+                    revision: e.detail?._rev,
+                    row: e.detail,
+                    oldRow: e.detail,
+                    meta: {
+                      fields: inputData["meta"]?.fields || {},
+                      oldFields: e.detail?.meta?.fields || {},
+                    },
+                  })
+                }
+              },
+            },
+          },
+          {
+            type: InfoDisplay,
+            props: {
+              warning: true,
+              icon: "AlertCircleFilled",
+              body: `Be careful when testing this automation because your data may be modified or deleted.`,
+            },
+          },
+          {
+            type: Divider,
+            props: {
+              noMargin: true,
+            },
+          },
+        ]
+      }
+
       stepLayouts[block.stepId] = {
         row: {
           schema: schema["row"],
@@ -413,49 +478,7 @@
                 disabled: isTestModal,
               },
             },
-            {
-              type: CoreSelect,
-              title: "Row",
-              props: {
-                disabled: !table,
-                placeholder: "Select a row",
-                options: fetchedRows,
-                loading: fetchLoading,
-                value: selectedRow,
-                autocomplete: true,
-                filter: false,
-                getOptionLabel: row => row?.[primaryDisplay] || "",
-                compare: (a, b) => a?.[primaryDisplay] === b?.[primaryDisplay],
-                onChange: e => {
-                  if (isTestModal) {
-                    onChange({
-                      id: e.detail?._id,
-                      revision: e.detail?._rev,
-                      row: e.detail,
-                      oldRow: e.detail,
-                      meta: {
-                        fields: inputData["meta"]?.fields || {},
-                        oldFields: e.detail?.meta?.fields || {},
-                      },
-                    })
-                  }
-                },
-              },
-            },
-            {
-              type: InfoDisplay,
-              props: {
-                warning: true,
-                icon: "AlertCircleFilled",
-                body: `Be careful when testing this automation because your data may be modified or deleted.`,
-              },
-            },
-            {
-              type: Divider,
-              props: {
-                noMargin: true,
-              },
-            },
+            ...getTestDataSelector(),
             ...getIdConfig(),
             ...getRevConfig(),
             ...getRowTypeConfig(),
@@ -1014,7 +1037,10 @@
                   {bindings}
                   {schema}
                   panel={AutomationBindingPanel}
-                  on:change={e => onChange({ [key]: e.detail })}
+                  on:change={e =>
+                    onChange({
+                      [key]: readableToRuntimeBinding(bindings, e.detail),
+                    })}
                   context={$memoContext}
                   value={inputData[key]}
                 />

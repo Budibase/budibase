@@ -14,8 +14,6 @@ import {
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { APIClient } from "@budibase/frontend-core"
-import type { ActionTypes } from "@/constants"
 import { Readable } from "svelte/store"
 import {
   Screen,
@@ -39,6 +37,7 @@ window.svelte = svelte
 // Initialise spectrum icons
 // eslint-disable-next-line local-rules/no-budibase-imports
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
+
 loadSpectrumIcons()
 
 // Extend global window scope
@@ -72,32 +71,6 @@ declare global {
     svelte_internal: typeof internal
   }
 }
-
-export interface SDK {
-  API: APIClient
-  styleable: any
-  Provider: any
-  ActionTypes: typeof ActionTypes
-  fetchDatasourceSchema: any
-  generateGoldenSample: any
-  builderStore: Readable<{
-    inBuilder: boolean
-  }> & {
-    actions: {
-      highlightSetting: (key: string) => void
-      addParentComponent: (
-        componentId: string,
-        fullAncestorType: string
-      ) => void
-    }
-  }
-}
-
-export type Component = Readable<{
-  id: string
-  styles: any
-  errorState: boolean
-}>
 
 export type Context = Readable<Record<string, any>>
 

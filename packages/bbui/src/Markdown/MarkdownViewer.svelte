@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import SpectrumMDE from "./SpectrumMDE.svelte"
 
-  export let value
-  export let height
+  export let value: string | null = null
+  export let height: string | null = null
 
-  let mde
+  let mde: any
 
   // Keep the value up to date
   $: mde && mde.value(value || "")
