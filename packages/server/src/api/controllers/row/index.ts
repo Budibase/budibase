@@ -263,6 +263,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
     limit: searchRequest.limit,
     sort: searchRequest.sort ?? undefined,
     sortOrder: searchRequest.sortOrder,
+    sortType: searchRequest.sortType ?? undefined,
     countRows: searchRequest.countRows,
     version: searchRequest.version,
     disableEscaping: searchRequest.disableEscaping,

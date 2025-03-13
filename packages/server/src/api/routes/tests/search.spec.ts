@@ -38,7 +38,7 @@ import {
 import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
-import { dataFilters, InMemorySearchQuery } from "@budibase/shared-core"
+import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
 import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
@@ -200,26 +200,31 @@ if (descriptions.length) {
             const isView = sourceType === "view"
 
             class SearchAssertion {
-              constructor(
-                private readonly query: SearchRowRequest & {
-                  sortType?: SortType
-                }
-              ) {}
+              constructor(private readonly query: SearchRowRequest) {}
 
               private async performSearch(): Promise<SearchResponse<Row>> {
                 if (isInMemory) {
-                  const inMemoryQuery: RequiredKeys<InMemorySearchQuery> = {
+                  const inMemoryQuery: RequiredKeys<
+                    Omit<RowSearchParams, "tableId">
+                  > = {
                     sort: this.query.sort ?? undefined,
                     query: { ...this.query.query },
+                    paginate: this.query.paginate,
+                    bookmark: this.query.bookmark ?? undefined,
                     limit: this.query.limit,
                     sortOrder: this.query.sortOrder,
                     sortType: this.query.sortType ?? undefined,
+                    version: this.query.version,
+                    disableEscaping: this.query.disableEscaping,
                     countRows: this.query.countRows,
+                    viewId: undefined,
+                    fields: undefined,
+                    indexer: undefined,
+                    rows: undefined,
                   }
                   return dataFilters.search(_.cloneDeep(rows), inMemoryQuery)
                 } else {
-                  const { sortType, ...query } = this.query
-                  return config.api.row.search(tableOrViewId, query)
+                  return config.api.row.search(tableOrViewId, this.query)
                 }
               }
 
@@ -395,9 +400,7 @@ if (descriptions.length) {
               }
             }
 
-            function expectSearch(
-              query: SearchRowRequest & { sortType?: SortType }
-            ) {
+            function expectSearch(query: SearchRowRequest) {
               return new SearchAssertion(query)
             }
 
@@ -1116,26 +1119,25 @@ if (descriptions.length) {
                   }).toMatchExactly([{ name: "foo" }, { name: "bar" }])
                 })
 
-                isInMemory &&
-                  describe("sortType STRING", () => {
-                    it("sorts ascending", async () => {
-                      await expectSearch({
-                        query: {},
-                        sort: "name",
-                        sortType: SortType.STRING,
-                        sortOrder: SortOrder.ASCENDING,
-                      }).toMatchExactly([{ name: "bar" }, { name: "foo" }])
-                    })
-
-                    it("sorts descending", async () => {
-                      await expectSearch({
-                        query: {},
-                        sort: "name",
-                        sortType: SortType.STRING,
-                        sortOrder: SortOrder.DESCENDING,
-                      }).toMatchExactly([{ name: "foo" }, { name: "bar" }])
-                    })
+                describe("sortType STRING", () => {
+                  it("sorts ascending", async () => {
+                    await expectSearch({
+                      query: {},
+                      sort: "name",
+                      sortType: SortType.STRING,
+                      sortOrder: SortOrder.ASCENDING,
+                    }).toMatchExactly([{ name: "bar" }, { name: "foo" }])
                   })
+
+                  it("sorts descending", async () => {
+                    await expectSearch({
+                      query: {},
+                      sort: "name",
+                      sortType: SortType.STRING,
+                      sortOrder: SortOrder.DESCENDING,
+                    }).toMatchExactly([{ name: "foo" }, { name: "bar" }])
+                  })
+                })
 
                 !isInternal &&
                   !isInMemory &&
@@ -1317,26 +1319,25 @@ if (descriptions.length) {
                 })
               })
 
-              isInMemory &&
-                describe("sortType NUMBER", () => {
-                  it("sorts ascending", async () => {
-                    await expectSearch({
-                      query: {},
-                      sort: "age",
-                      sortType: SortType.NUMBER,
-                      sortOrder: SortOrder.ASCENDING,
-                    }).toMatchExactly([{ age: 1 }, { age: 10 }])
-                  })
-
-                  it("sorts descending", async () => {
-                    await expectSearch({
-                      query: {},
-                      sort: "age",
-                      sortType: SortType.NUMBER,
-                      sortOrder: SortOrder.DESCENDING,
-                    }).toMatchExactly([{ age: 10 }, { age: 1 }])
-                  })
+              describe("sortType NUMBER", () => {
+                it("sorts ascending", async () => {
+                  await expectSearch({
+                    query: {},
+                    sort: "age",
+                    sortType: SortType.NUMBER,
+                    sortOrder: SortOrder.ASCENDING,
+                  }).toMatchExactly([{ age: 1 }, { age: 10 }])
                 })
+
+                it("sorts descending", async () => {
+                  await expectSearch({
+                    query: {},
+                    sort: "age",
+                    sortType: SortType.NUMBER,
+                    sortOrder: SortOrder.DESCENDING,
+                  }).toMatchExactly([{ age: 10 }, { age: 1 }])
+                })
+              })
             })
 
             describe("dates", () => {
@@ -1472,26 +1473,25 @@ if (descriptions.length) {
                   }).toMatchExactly([{ dob: JAN_10TH }, { dob: JAN_1ST }])
                 })
 
-                isInMemory &&
-                  describe("sortType STRING", () => {
-                    it("sorts ascending", async () => {
-                      await expectSearch({
-                        query: {},
-                        sort: "dob",
-                        sortType: SortType.STRING,
-                        sortOrder: SortOrder.ASCENDING,
-                      }).toMatchExactly([{ dob: JAN_1ST }, { dob: JAN_10TH }])
-                    })
-
-                    it("sorts descending", async () => {
-                      await expectSearch({
-                        query: {},
-                        sort: "dob",
-                        sortType: SortType.STRING,
-                        sortOrder: SortOrder.DESCENDING,
-                      }).toMatchExactly([{ dob: JAN_10TH }, { dob: JAN_1ST }])
-                    })
+                describe("sortType STRING", () => {
+                  it("sorts ascending", async () => {
+                    await expectSearch({
+                      query: {},
+                      sort: "dob",
+                      sortType: SortType.STRING,
+                      sortOrder: SortOrder.ASCENDING,
+                    }).toMatchExactly([{ dob: JAN_1ST }, { dob: JAN_10TH }])
                   })
+
+                  it("sorts descending", async () => {
+                    await expectSearch({
+                      query: {},
+                      sort: "dob",
+                      sortType: SortType.STRING,
+                      sortOrder: SortOrder.DESCENDING,
+                    }).toMatchExactly([{ dob: JAN_10TH }, { dob: JAN_1ST }])
+                  })
+                })
               })
             })
 
@@ -1639,196 +1639,220 @@ if (descriptions.length) {
                     ])
                   })
 
-                  isInMemory &&
-                    describe("sortType STRING", () => {
-                      it("sorts ascending", async () => {
-                        await expectSearch({
-                          query: {},
-                          sort: "time",
-                          sortType: SortType.STRING,
-                          sortOrder: SortOrder.ASCENDING,
-                        }).toMatchExactly([
-                          { timeid: NULL_TIME__ID },
-                          { time: "00:00:00" },
-                          { time: "10:00:00" },
-                          { time: "10:45:00" },
-                          { time: "12:00:00" },
-                          { time: "15:30:00" },
-                        ])
-                      })
-
-                      it("sorts descending", async () => {
-                        await expectSearch({
-                          query: {},
-                          sort: "time",
-                          sortType: SortType.STRING,
-                          sortOrder: SortOrder.DESCENDING,
-                        }).toMatchExactly([
-                          { time: "15:30:00" },
-                          { time: "12:00:00" },
-                          { time: "10:45:00" },
-                          { time: "10:00:00" },
-                          { time: "00:00:00" },
-                          { timeid: NULL_TIME__ID },
-                        ])
-                      })
+                  describe("sortType STRING", () => {
+                    it("sorts ascending", async () => {
+                      await expectSearch({
+                        query: {},
+                        sort: "time",
+                        sortType: SortType.STRING,
+                        sortOrder: SortOrder.ASCENDING,
+                      }).toMatchExactly([
+                        { timeid: NULL_TIME__ID },
+                        { time: "00:00:00" },
+                        { time: "10:00:00" },
+                        { time: "10:45:00" },
+                        { time: "12:00:00" },
+                        { time: "15:30:00" },
+                      ])
                     })
+
+                    it("sorts descending", async () => {
+                      await expectSearch({
+                        query: {},
+                        sort: "time",
+                        sortType: SortType.STRING,
+                        sortOrder: SortOrder.DESCENDING,
+                      }).toMatchExactly([
+                        { time: "15:30:00" },
+                        { time: "12:00:00" },
+                        { time: "10:45:00" },
+                        { time: "10:00:00" },
+                        { time: "00:00:00" },
+                        { timeid: NULL_TIME__ID },
+                      ])
+                    })
+                  })
                 })
               })
 
-            !isInMemory &&
-              describe("datetime - date only", () => {
-                describe.each([true, false])(
-                  "saved with timestamp: %s",
-                  saveWithTimestamp => {
-                    describe.each([true, false])(
-                      "search with timestamp: %s",
-                      searchWithTimestamp => {
-                        const SAVE_SUFFIX = saveWithTimestamp
-                          ? "T00:00:00.000Z"
-                          : ""
-                        const SEARCH_SUFFIX = searchWithTimestamp
-                          ? "T00:00:00.000Z"
-                          : ""
+            describe("datetime - date only", () => {
+              describe.each([true, false])(
+                "saved with timestamp: %s",
+                saveWithTimestamp => {
+                  describe.each([true, false])(
+                    "search with timestamp: %s",
+                    searchWithTimestamp => {
+                      const SAVE_SUFFIX = saveWithTimestamp
+                        ? "T00:00:00.000Z"
+                        : ""
+                      const SEARCH_SUFFIX = searchWithTimestamp
+                        ? "T00:00:00.000Z"
+                        : ""
 
-                        const JAN_1ST = `2020-01-01`
-                        const JAN_10TH = `2020-01-10`
-                        const JAN_30TH = `2020-01-30`
-                        const UNEXISTING_DATE = `2020-01-03`
-                        const NULL_DATE__ID = `null_date__id`
+                      const JAN_1ST = `2020-01-01`
+                      const JAN_10TH = `2020-01-10`
+                      const JAN_30TH = `2020-01-30`
+                      const UNEXISTING_DATE = `2020-01-03`
+                      const NULL_DATE__ID = `null_date__id`
 
-                        beforeAll(async () => {
-                          tableOrViewId = await createTableOrView({
-                            dateid: {
-                              name: "dateid",
-                              type: FieldType.STRING,
+                      beforeAll(async () => {
+                        tableOrViewId = await createTableOrView({
+                          dateid: {
+                            name: "dateid",
+                            type: FieldType.STRING,
+                          },
+                          date: {
+                            name: "date",
+                            type: FieldType.DATETIME,
+                            dateOnly: true,
+                          },
+                        })
+
+                        await createRows([
+                          { dateid: NULL_DATE__ID, date: null },
+                          { date: `${JAN_1ST}${SAVE_SUFFIX}` },
+                          { date: `${JAN_10TH}${SAVE_SUFFIX}` },
+                        ])
+                      })
+
+                      describe("equal", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
+
+                        it("successfully finds an ISO8601 row", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_10TH}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_10TH }])
+                        })
+
+                        it("finds a row with ISO8601 timestamp", async () => {
+                          await expectQuery({
+                            equal: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
+                          }).toContainExactly([{ date: JAN_1ST }])
+                        })
+
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            equal: {
+                              date: `${UNEXISTING_DATE}${SEARCH_SUFFIX}`,
                             },
-                            date: {
-                              name: "date",
-                              type: FieldType.DATETIME,
-                              dateOnly: true,
-                            },
-                          })
+                          }).toFindNothing()
+                        })
+                      })
 
-                          await createRows([
-                            { dateid: NULL_DATE__ID, date: null },
-                            { date: `${JAN_1ST}${SAVE_SUFFIX}` },
-                            { date: `${JAN_10TH}${SAVE_SUFFIX}` },
+                      describe("notEqual", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            notEqual: {
+                              date: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                            },
+                          }).toContainExactly([
+                            { date: JAN_10TH },
+                            { dateid: NULL_DATE__ID },
                           ])
                         })
 
-                        describe("equal", () => {
-                          it("successfully finds a row", async () => {
-                            await expectQuery({
-                              equal: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
-                            }).toContainExactly([{ date: JAN_1ST }])
-                          })
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            notEqual: {
+                              date: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                            },
+                          }).toContainExactly([
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                            { dateid: NULL_DATE__ID },
+                          ])
+                        })
+                      })
 
-                          it("successfully finds an ISO8601 row", async () => {
-                            await expectQuery({
-                              equal: { date: `${JAN_10TH}${SEARCH_SUFFIX}` },
-                            }).toContainExactly([{ date: JAN_10TH }])
-                          })
-
-                          it("finds a row with ISO8601 timestamp", async () => {
-                            await expectQuery({
-                              equal: { date: `${JAN_1ST}${SEARCH_SUFFIX}` },
-                            }).toContainExactly([{ date: JAN_1ST }])
-                          })
-
-                          it("fails to find nonexistent row", async () => {
-                            await expectQuery({
-                              equal: {
-                                date: `${UNEXISTING_DATE}${SEARCH_SUFFIX}`,
-                              },
-                            }).toFindNothing()
-                          })
+                      describe("oneOf", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            oneOf: { date: [`${JAN_1ST}${SEARCH_SUFFIX}`] },
+                          }).toContainExactly([{ date: JAN_1ST }])
                         })
 
-                        describe("notEqual", () => {
-                          it("successfully finds a row", async () => {
-                            await expectQuery({
-                              notEqual: {
-                                date: `${JAN_1ST}${SEARCH_SUFFIX}`,
-                              },
-                            }).toContainExactly([
-                              { date: JAN_10TH },
-                              { dateid: NULL_DATE__ID },
-                            ])
-                          })
+                        it("fails to find nonexistent row", async () => {
+                          await expectQuery({
+                            oneOf: {
+                              date: [`${UNEXISTING_DATE}${SEARCH_SUFFIX}`],
+                            },
+                          }).toFindNothing()
+                        })
+                      })
 
-                          it("fails to find nonexistent row", async () => {
-                            await expectQuery({
-                              notEqual: {
-                                date: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                      describe("range", () => {
+                        it("successfully finds a row", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                                high: `${JAN_1ST}${SEARCH_SUFFIX}`,
                               },
-                            }).toContainExactly([
-                              { date: JAN_1ST },
-                              { date: JAN_10TH },
-                              { dateid: NULL_DATE__ID },
-                            ])
-                          })
+                            },
+                          }).toContainExactly([{ date: JAN_1ST }])
                         })
 
-                        describe("oneOf", () => {
-                          it("successfully finds a row", async () => {
-                            await expectQuery({
-                              oneOf: { date: [`${JAN_1ST}${SEARCH_SUFFIX}`] },
-                            }).toContainExactly([{ date: JAN_1ST }])
-                          })
-
-                          it("fails to find nonexistent row", async () => {
-                            await expectQuery({
-                              oneOf: {
-                                date: [`${UNEXISTING_DATE}${SEARCH_SUFFIX}`],
+                        it("successfully finds multiple rows", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_1ST}${SEARCH_SUFFIX}`,
+                                high: `${JAN_10TH}${SEARCH_SUFFIX}`,
                               },
-                            }).toFindNothing()
-                          })
+                            },
+                          }).toContainExactly([
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                          ])
                         })
 
-                        describe("range", () => {
-                          it("successfully finds a row", async () => {
-                            await expectQuery({
-                              range: {
-                                date: {
-                                  low: `${JAN_1ST}${SEARCH_SUFFIX}`,
-                                  high: `${JAN_1ST}${SEARCH_SUFFIX}`,
-                                },
+                        it("successfully finds no rows", async () => {
+                          await expectQuery({
+                            range: {
+                              date: {
+                                low: `${JAN_30TH}${SEARCH_SUFFIX}`,
+                                high: `${JAN_30TH}${SEARCH_SUFFIX}`,
                               },
-                            }).toContainExactly([{ date: JAN_1ST }])
-                          })
+                            },
+                          }).toFindNothing()
+                        })
+                      })
 
-                          it("successfully finds multiple rows", async () => {
-                            await expectQuery({
-                              range: {
-                                date: {
-                                  low: `${JAN_1ST}${SEARCH_SUFFIX}`,
-                                  high: `${JAN_10TH}${SEARCH_SUFFIX}`,
-                                },
-                              },
-                            }).toContainExactly([
-                              { date: JAN_1ST },
-                              { date: JAN_10TH },
-                            ])
-                          })
-
-                          it("successfully finds no rows", async () => {
-                            await expectQuery({
-                              range: {
-                                date: {
-                                  low: `${JAN_30TH}${SEARCH_SUFFIX}`,
-                                  high: `${JAN_30TH}${SEARCH_SUFFIX}`,
-                                },
-                              },
-                            }).toFindNothing()
-                          })
+                      describe("sort", () => {
+                        it("sorts ascending", async () => {
+                          await expectSearch({
+                            query: {},
+                            sort: "date",
+                            sortOrder: SortOrder.ASCENDING,
+                          }).toMatchExactly([
+                            { dateid: NULL_DATE__ID },
+                            { date: JAN_1ST },
+                            { date: JAN_10TH },
+                          ])
                         })
 
-                        describe("sort", () => {
+                        it("sorts descending", async () => {
+                          await expectSearch({
+                            query: {},
+                            sort: "date",
+                            sortOrder: SortOrder.DESCENDING,
+                          }).toMatchExactly([
+                            { date: JAN_10TH },
+                            { date: JAN_1ST },
+                            { dateid: NULL_DATE__ID },
+                          ])
+                        })
+
+                        describe("sortType STRING", () => {
                           it("sorts ascending", async () => {
                             await expectSearch({
                               query: {},
                               sort: "date",
+                              sortType: SortType.STRING,
                               sortOrder: SortOrder.ASCENDING,
                             }).toMatchExactly([
                               { dateid: NULL_DATE__ID },
@@ -1841,6 +1865,7 @@ if (descriptions.length) {
                             await expectSearch({
                               query: {},
                               sort: "date",
+                              sortType: SortType.STRING,
                               sortOrder: SortOrder.DESCENDING,
                             }).toMatchExactly([
                               { date: JAN_10TH },
@@ -1848,41 +1873,13 @@ if (descriptions.length) {
                               { dateid: NULL_DATE__ID },
                             ])
                           })
-
-                          isInMemory &&
-                            describe("sortType STRING", () => {
-                              it("sorts ascending", async () => {
-                                await expectSearch({
-                                  query: {},
-                                  sort: "date",
-                                  sortType: SortType.STRING,
-                                  sortOrder: SortOrder.ASCENDING,
-                                }).toMatchExactly([
-                                  { dateid: NULL_DATE__ID },
-                                  { date: JAN_1ST },
-                                  { date: JAN_10TH },
-                                ])
-                              })
-
-                              it("sorts descending", async () => {
-                                await expectSearch({
-                                  query: {},
-                                  sort: "date",
-                                  sortType: SortType.STRING,
-                                  sortOrder: SortOrder.DESCENDING,
-                                }).toMatchExactly([
-                                  { date: JAN_10TH },
-                                  { date: JAN_1ST },
-                                  { dateid: NULL_DATE__ID },
-                                ])
-                              })
-                            })
                         })
-                      }
-                    )
-                  }
-                )
-              })
+                      })
+                    }
+                  )
+                }
+              )
+            })
 
             isInternal &&
               !isInMemory &&
