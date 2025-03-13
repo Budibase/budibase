@@ -199,26 +199,25 @@ async function addSampleDataScreen() {
 }
 
 async function addSampleDataNavLinks() {
-  const appId = context.getAppId()
-  if (!appId) {
-    throw "Missing app ID"
+  const db = context.getAppDB()
+  let app = await sdk.applications.metadata.get()
+  if (!app.navigation) {
+    return
   }
-  const addLinks = (app: App) => {
-    if (!app.navigation) {
-      return app
-    }
-    if (!app.navigation.links) {
-      app.navigation.links = []
-    }
-    app.navigation.links.push({
-      text: "Inventory",
-      url: "/inventory",
-      type: "link",
-      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-    })
-    return app
+  if (!app.navigation.links) {
+    app.navigation.links = []
   }
-  await updateAppPackage(addLinks, appId)
+  app.navigation.links.push({
+    text: "Inventory",
+    url: "/inventory",
+    type: "link",
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+  })
+
+  await db.put(app)
+
+  // remove any cached metadata, so that it will be updated
+  await cache.app.invalidateAppMetadata(app.appId)
 }
 
 export const addSampleData = async (
@@ -854,20 +853,17 @@ export async function duplicateApp(
 // which is required to update anything deeper than the top level without
 // overwriting more than intended.
 export async function updateAppPackage(
-  update: Partial<App> | ((app: App) => App),
+  appPackage: Partial<App>,
   appId: string
 ) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await sdk.applications.metadata.get()
 
-    const newAppPackage: App =
-      typeof update === "function"
-        ? update(application)
-        : { ...application, ...update }
-
-    // Ensure our rev stays the same
-    newAppPackage._rev = application._rev
+    const newAppPackage: App = { ...application, ...appPackage }
+    if (appPackage._rev !== application._rev) {
+      newAppPackage._rev = application._rev
+    }
 
     // the locked by property is attached by server but generated from
     // Redis, shouldn't ever store it
