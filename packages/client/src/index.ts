@@ -87,6 +87,8 @@ export interface SDK {
   builderStore: typeof builderStore
   authStore: typeof authStore
   notificationStore: typeof notificationStore
+  environmentStore: typeof environmentStore
+  appStore: typeof appStore
 }
 
 let app: ClientApp
