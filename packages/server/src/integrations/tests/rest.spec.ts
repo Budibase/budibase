@@ -276,7 +276,7 @@ describe("REST Integration", () => {
       expect(data).toEqual({ foo: "bar" })
     })
 
-    it("adds oAuth2 auth", async () => {
+    it("adds OAuth2 auth", async () => {
       const oauth2Url = generator.url()
       const { config: oauthConfig } = await config.api.oauth2.create({
         name: generator.guid(),
