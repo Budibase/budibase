@@ -56,10 +56,7 @@
     memo,
     fetchData,
   } from "@budibase/frontend-core"
-  import {
-    getSchemaForDatasourcePlus,
-    readableToRuntimeBinding,
-  } from "@/dataBinding"
+  import { getSchemaForDatasourcePlus } from "@/dataBinding"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import { onMount, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
@@ -1037,10 +1034,7 @@
                   {bindings}
                   {schema}
                   panel={AutomationBindingPanel}
-                  on:change={e =>
-                    onChange({
-                      [key]: readableToRuntimeBinding(bindings, e.detail),
-                    })}
+                  on:change={e => onChange({ [key]: e.detail })}
                   context={$memoContext}
                   value={inputData[key]}
                 />
