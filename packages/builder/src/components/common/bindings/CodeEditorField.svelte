@@ -5,7 +5,10 @@
     encodeJSBinding,
     processObjectSync,
   } from "@budibase/string-templates"
-  import { runtimeToReadableBinding } from "@/dataBinding"
+  import {
+    runtimeToReadableBinding,
+    readableToRuntimeBinding,
+  } from "@/dataBinding"
   import CodeEditor, { DropdownPosition } from "../CodeEditor/CodeEditor.svelte"
   import {
     getHelperCompletions,
@@ -123,7 +126,7 @@
   }
 
   const updateValue = (val: any) => {
-    dispatch("change", val)
+    dispatch("change", readableToRuntimeBinding(bindings, val))
   }
 
   const onChangeJSValue = (e: { detail: string }) => {
