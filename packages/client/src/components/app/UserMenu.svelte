@@ -12,7 +12,8 @@
 
   export let compact: boolean = false
 
-  const { authStore, environmentStore, notificationStore } = getContext("sdk")
+  const { authStore, environmentStore, notificationStore, appStore } =
+    getContext("sdk")
 
   let profileModal: any
   let changePasswordModal: any
@@ -21,6 +22,7 @@
   $: isBuilder = sdk.users.hasBuilderPermissions($authStore)
   $: isSSO = $authStore != null && isSSOUser($authStore)
   $: isOwner = $authStore?.accountPortalAccess && $environmentStore.cloud
+  $: embedded = $appStore.embedded || $appStore.inIframe
 
   const getText = (user?: User | ContextUser): string => {
     if (!user) {
@@ -76,8 +78,14 @@
       </MenuItem>
     {/if}
 
-    <MenuItem icon="Apps" on:click={goToPortal}>Go to portal</MenuItem>
-    <MenuItem icon="LogOut" on:click={authStore.actions.logOut}>
+    <MenuItem icon="Apps" on:click={goToPortal} disabled={embedded}>
+      Go to portal
+    </MenuItem>
+    <MenuItem
+      icon="LogOut"
+      on:click={authStore.actions.logOut}
+      disabled={embedded}
+    >
       Log out
     </MenuItem>
   </ActionMenu>

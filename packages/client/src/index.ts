@@ -85,17 +85,8 @@ export interface SDK {
   authStore: typeof authStore
   environmentStore: typeof environmentStore
   notificationStore: typeof notificationStore
-  builderStore: Readable<{
-    inBuilder: boolean
-  }> & {
-    actions: {
-      highlightSetting: (key: string) => void
-      addParentComponent: (
-        componentId: string,
-        fullAncestorType: string
-      ) => void
-    }
-  }
+  appStore: typeof appStore
+  builderStore: typeof builderStore
 }
 
 export type Component = Readable<{
