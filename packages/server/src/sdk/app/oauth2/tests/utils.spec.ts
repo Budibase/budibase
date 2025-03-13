@@ -21,6 +21,7 @@ describe("oauth2 utils", () => {
 
     container = await new GenericContainer(keyClockImage)
       .withName("keycloak_testcontainer")
+      .withReuse()
       .withExposedPorts(8080)
       .withBindMounts([
         { source: volumePath, target: "/opt/keycloak/data/import/" },
@@ -33,10 +34,6 @@ describe("oauth2 utils", () => {
     keycloakUrl = `http://${container.getHost()}:${container.getMappedPort(
       8080
     )}`
-  })
-
-  afterAll(async () => {
-    await container.stop()
   })
 
   describe("generateToken", () => {
