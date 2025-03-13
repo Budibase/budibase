@@ -99,6 +99,31 @@
   const autoColumnInfo = getAutoColumnInformation()
   let optionsValid = true
 
+  // a fixed order for the types to stop them moving around
+  // we've never really guaranteed an order to these, which means that
+  // they can move around very easily
+  const fixedTypeOrder = [
+    FIELDS.STRING,
+    FIELDS.NUMBER,
+    FIELDS.OPTIONS,
+    FIELDS.ARRAY,
+    FIELDS.BOOLEAN,
+    FIELDS.DATETIME,
+    FIELDS.LINK,
+    FIELDS.AI,
+    FIELDS.LONGFORM,
+    FIELDS.USER,
+    FIELDS.USERS,
+    FIELDS.ATTACHMENT_SINGLE,
+    FIELDS.ATTACHMENTS,
+    FIELDS.FORMULA,
+    FIELDS.JSON,
+    FIELDS.BARCODEQR,
+    FIELDS.SIGNATURE_SINGLE,
+    FIELDS.BIGINT,
+    FIELDS.AUTO,
+  ]
+
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
   $: aiEnabled =
     $licensing.customAIConfigsEnabled || $licensing.budibaseAiEnabled
@@ -176,7 +201,7 @@
     !editableColumn.autocolumn
   $: hasDefault =
     editableColumn?.default != null && editableColumn?.default !== ""
-  $: externalTable = table.sourceType === DB_TYPE_EXTERNAL
+  $: isExternalTable = table.sourceType === DB_TYPE_EXTERNAL
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
     opt =>
@@ -187,10 +212,13 @@
     (originalName &&
       SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
-  $: allowedTypes = getAllowedTypes(datasource).map(t => ({
+  $: allowedTypes = getAllowedTypes(datasource, table).map(t => ({
     fieldId: makeFieldId(t.type, t.subtype),
     ...t,
   }))
+  $: orderedAllowedTypes = fixedTypeOrder.filter(ordered =>
+    allowedTypes.find(allowed => allowed.type === ordered.type)
+  )
   $: defaultValueBindings = [
     {
       type: "context",
@@ -209,6 +237,20 @@
     editableColumn.constraints?.inclusion || [],
     editableColumn.default
   )
+
+  const allTableFields = [
+    FIELDS.STRING,
+    FIELDS.NUMBER,
+    FIELDS.OPTIONS,
+    FIELDS.ARRAY,
+    FIELDS.BOOLEAN,
+    FIELDS.DATETIME,
+    FIELDS.LINK,
+    FIELDS.LONGFORM,
+    FIELDS.FORMULA,
+    FIELDS.BARCODEQR,
+    FIELDS.BIGINT,
+  ]
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
     // Storing the fields by complex field id
@@ -412,7 +454,11 @@
     deleteColName = ""
   }
 
-  function getAllowedTypes(datasource) {
+  function getAllowedTypes(datasource, table) {
+    const isSqlTable = table.sql
+    const isGoogleSheet =
+      table.sourceType === DB_TYPE_EXTERNAL &&
+      datasource?.source === SourceName.GOOGLE_SHEETS
     if (originalName) {
       let possibleTypes = SWITCHABLE_TYPES[field.type] || [editableColumn.type]
       if (helpers.schema.isDeprecatedSingleUserColumn(editableColumn)) {
@@ -442,59 +488,37 @@
         .map(([_, fieldDefinition]) => fieldDefinition)
     }
 
-    if (!externalTable) {
-      return [
-        FIELDS.STRING,
-        FIELDS.NUMBER,
-        FIELDS.OPTIONS,
-        FIELDS.ARRAY,
-        FIELDS.BOOLEAN,
-        FIELDS.DATETIME,
-        FIELDS.LINK,
-        ...(aiEnabled ? [FIELDS.AI] : []),
-        FIELDS.LONGFORM,
+    if (!isExternalTable) {
+      const fields = [
+        ...allTableFields,
         FIELDS.USER,
         FIELDS.USERS,
         FIELDS.ATTACHMENT_SINGLE,
         FIELDS.ATTACHMENTS,
-        FIELDS.FORMULA,
-        FIELDS.JSON,
-        FIELDS.BARCODEQR,
         FIELDS.SIGNATURE_SINGLE,
-        FIELDS.BIGINT,
+        FIELDS.JSON,
         FIELDS.AUTO,
       ]
-    } else {
-      let fields = [
-        FIELDS.STRING,
-        FIELDS.NUMBER,
-        FIELDS.OPTIONS,
-        FIELDS.ARRAY,
-        FIELDS.BOOLEAN,
-        FIELDS.DATETIME,
-        FIELDS.LINK,
-        FIELDS.LONGFORM,
+      if (aiEnabled) {
+        fields.push(FIELDS.AI)
+      }
+      return fields
+    }
+    if (isExternalTable && isSqlTable) {
+      return [
+        ...allTableFields,
         FIELDS.USER,
         FIELDS.USERS,
-        FIELDS.FORMULA,
-        FIELDS.BARCODEQR,
-        FIELDS.BIGINT,
         FIELDS.ATTACHMENT_SINGLE,
         FIELDS.ATTACHMENTS,
         FIELDS.SIGNATURE_SINGLE,
       ]
-
-      // Filter out multiple users for google sheets
-      if (datasource?.source === SourceName.GOOGLE_SHEETS) {
-        fields = fields.filter(x => x !== FIELDS.USERS)
-      }
-
-      // Filter out SQL-specific types for non-SQL datasources
-      if (!table.sql) {
-        fields = fields.filter(x => x !== FIELDS.LINK && x !== FIELDS.ARRAY)
-      }
-
-      return fields
+    } else if (isExternalTable && isGoogleSheet) {
+      // google-sheets supports minimum set (no attachments or user references)
+      return allTableFields
+    } else if (isExternalTable && !isSqlTable) {
+      // filter out SQL-specific types for non-SQL datasources
+      return allTableFields.filter(x => x !== FIELDS.LINK && x !== FIELDS.ARRAY)
     }
   }
 
@@ -542,10 +566,10 @@
       })
     }
     const newError = {}
-    const prohibited = externalTable
+    const prohibited = isExternalTable
       ? PROTECTED_EXTERNAL_COLUMNS
       : PROTECTED_INTERNAL_COLUMNS
-    if (!externalTable && fieldInfo.name?.startsWith("_")) {
+    if (!isExternalTable && fieldInfo.name?.startsWith("_")) {
       newError.name = `Column name cannot start with an underscore.`
     } else if (fieldInfo.name && !fieldInfo.name.match(ValidColumnNameRegex)) {
       newError.name = `Illegal character; must be alpha-numeric.`
@@ -614,7 +638,7 @@
     disabled={!typeEnabled}
     bind:value={editableColumn.fieldId}
     on:change={onHandleTypeChange}
-    options={allowedTypes}
+    options={orderedAllowedTypes}
     getOptionLabel={field => field.name}
     getOptionValue={field => field.fieldId}
     getOptionIcon={field => field.icon}
@@ -750,7 +774,7 @@
       {errors}
     />
   {:else if editableColumn.type === FieldType.FORMULA}
-    {#if !externalTable}
+    {#if !isExternalTable}
       <div class="split-label">
         <div class="label-length">
           <Label size="M">Formula Type</Label>
