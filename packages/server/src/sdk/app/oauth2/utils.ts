@@ -20,9 +20,13 @@ export async function generateToken(id: string) {
     }),
     redirect: "follow",
   })
-  if (resp.status !== 200) {
-    throw new Error(`Error fetching oauth2 token: ${resp.statusText}`)
-  }
+
   const jsonResponse = await resp.json()
+  if (!resp.ok) {
+    const message = jsonResponse.error_description ?? resp.statusText
+
+    throw new Error(`Error fetching oauth2 token: ${message}`)
+  }
+
   return `${jsonResponse.token_type} ${jsonResponse.access_token}`
 }
