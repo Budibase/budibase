@@ -5,10 +5,10 @@ import getValidRoute from "../getValidRoute"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
 
 const inline = async ({ tableOrView, permissions, screens }) => {
-  const heading = new Component("@budibase/standard-components/heading")
+  const heading = new Component("@budibase/standard-components/textv2")
     .instanceName("Table heading")
     .customProps({
-      text: tableOrView.name,
+      text: `## ${tableOrView.name}`,
     })
     .gridDesktopColSpan(1, 13)
     .gridDesktopRowSpan(1, 3)
