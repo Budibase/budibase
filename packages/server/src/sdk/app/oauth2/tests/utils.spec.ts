@@ -10,6 +10,8 @@ const config = new TestConfiguration()
 
 const volumePath = path.resolve(__dirname, "docker-volume")
 
+jest.setTimeout(30000)
+
 describe("oauth2 utils", () => {
   let container: StartedTestContainer
 
