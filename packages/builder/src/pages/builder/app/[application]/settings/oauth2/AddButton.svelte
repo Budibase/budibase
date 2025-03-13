@@ -13,7 +13,8 @@
     ModalContent,
     notifications,
   } from "@budibase/bbui"
-  import { z, ZodType } from "zod"
+  import type { ZodType } from "zod"
+  import { z } from "zod"
 
   let modal: Modal
 
