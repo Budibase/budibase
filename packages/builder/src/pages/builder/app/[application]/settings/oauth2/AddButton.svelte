@@ -20,7 +20,7 @@
   let config: Partial<CreateOAuth2Config> = {}
 
   $: saveOAuth2Config = async () => {
-    await oauth2.create(config)
+    await oauth2.create(config as any) // TODO
   }
 </script>
 
