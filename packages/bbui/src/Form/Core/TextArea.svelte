@@ -19,7 +19,7 @@
 
   const dispatch = createEventDispatcher()
 
-  let focus = false
+  let isFocused = false
   let textarea: HTMLTextAreaElement
   let scrollable = false
 
@@ -27,8 +27,16 @@
   $: minHeightString = getStyleString("min-height", minHeight)
   $: dispatch("scrollable", scrollable)
 
+  export function focus() {
+    textarea.focus()
+  }
+
+  export function contents() {
+    return textarea.value
+  }
+
   const onBlur = () => {
-    focus = false
+    isFocused = false
     updateValue()
   }
 
@@ -65,7 +73,7 @@
   style={`${heightString}${minHeightString}`}
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-disabled={disabled}
-  class:is-focused={focus}
+  class:is-focused={isFocused}
 >
   <!-- prettier-ignore -->
   <textarea
@@ -77,7 +85,7 @@
     {readonly}
     {id}
     on:input={onChange}
-    on:focus={() => (focus = true)}
+    on:focus={() => (isFocused = true)}
     on:blur={onBlur}
     on:blur
     on:keypress
