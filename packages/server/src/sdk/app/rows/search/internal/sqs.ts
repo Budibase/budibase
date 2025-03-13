@@ -1,6 +1,5 @@
 import {
   Aggregation,
-  AutoFieldSubType,
   CalculationType,
   DocumentType,
   EnrichedQueryJson,
@@ -424,11 +423,7 @@ export async function search(
       }
     } else if (sortField) {
       const sortType =
-        sortField.type === FieldType.NUMBER ||
-        (sortField.type === FieldType.AUTO &&
-          sortField.subtype === AutoFieldSubType.AUTO_ID)
-          ? SortType.NUMBER
-          : SortType.STRING
+        sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
       request.sort = {
         [mapToUserColumn(sortField.name)]: {
           direction: params.sortOrder || SortOrder.ASCENDING,
