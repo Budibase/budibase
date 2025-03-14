@@ -5,6 +5,7 @@
   export let body: string = ""
   export let okText: string = "Confirm"
   export let cancelText: string = "Cancel"
+  export let size: "S" | "M" | "L" | "XL" | undefined = undefined
   export let onOk: (() => void) | undefined = undefined
   export let onCancel: (() => void) | undefined = undefined
   export let warning: boolean = true
@@ -28,6 +29,7 @@
     {cancelText}
     {warning}
     {disabled}
+    {size}
   >
     <Body size="S">
       {body}

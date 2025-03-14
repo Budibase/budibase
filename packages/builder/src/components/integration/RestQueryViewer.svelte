@@ -1,5 +1,5 @@
 <script>
-  import { goto, params } from "@roxi/routify"
+  import { beforeUrlChange, goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import {
@@ -37,6 +37,7 @@
   } from "@/constants/backend"
   import JSONPreview from "@/components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import DynamicVariableModal from "./DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
@@ -474,6 +475,34 @@
       staticVariables,
       restBindings
     )
+  })
+
+  $beforeUrlChange(async () => {
+    if (!isModified) {
+      return true
+    }
+
+    return new Promise(resolve => {
+      const dialog = new ConfirmDialog({
+        target: document.body,
+        props: {
+          title: "Some updates are not saved",
+          body: "Some of your changes are not yet saved. Do you want to save them before leaving?",
+          okText: "Save and continue",
+          cancelText: "Discard and continue",
+          size: "M",
+          onOk: () => {
+            dialog.$destroy()
+            resolve(true)
+          },
+          onCancel: () => {
+            dialog.$destroy()
+            resolve(false)
+          },
+        },
+      })
+      dialog.show()
+    })
   })
 </script>
 
