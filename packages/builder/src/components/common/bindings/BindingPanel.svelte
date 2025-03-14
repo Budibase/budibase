@@ -359,6 +359,7 @@
               bind:getCaretPosition
               bind:insertAtPos
               {completions}
+              {bindings}
               {validations}
               autofocus={autofocusEditor}
               placeholder={placeholder ||
@@ -372,6 +373,7 @@
               value={jsValue ? decodeJSBinding(jsValue) : ""}
               on:change={onChangeJSValue}
               {completions}
+              {bindings}
               {validations}
               mode={EditorModes.JS}
               bind:getCaretPosition

@@ -1,8 +1,8 @@
 <script lang="ts">
   import SpectrumMDE from "./SpectrumMDE.svelte"
 
-  export let value: string | null = null
-  export let height: string | null = null
+  export let value: string | undefined = undefined
+  export let height: string | undefined = undefined
 
   let mde: any
 
@@ -40,6 +40,7 @@
     border: none;
     background: transparent;
     padding: 0;
+    color: inherit;
   }
   .markdown-viewer :global(.EasyMDEContainer) {
     background: transparent;
