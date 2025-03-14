@@ -22,7 +22,6 @@ describe("oauth2 utils", () => {
     const ports = await startContainer(
       new GenericContainer(KEYCLOAK_IMAGE)
         .withName("keycloak_testcontainer")
-        .withReuse()
         .withExposedPorts(8080)
         .withBindMounts([
           { source: volumePath, target: "/opt/keycloak/data/import/" },
