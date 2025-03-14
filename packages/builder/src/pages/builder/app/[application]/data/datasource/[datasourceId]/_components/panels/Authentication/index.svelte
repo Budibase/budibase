@@ -4,6 +4,7 @@
   import Panel from "../Panel.svelte"
   import Tooltip from "../Tooltip.svelte"
   import { integrations } from "@/stores/builder"
+  import { notifications } from "@budibase/bbui"
 
   export let datasource
   $: updatedDatasource = cloneDeep(datasource)
