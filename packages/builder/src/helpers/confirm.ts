@@ -1,11 +1,16 @@
 import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
+export enum ConfirmOutput {}
+
 export async function confirm(props: {
   title: string
   body?: string
   okText?: string
   cancelText?: string
   size?: "S" | "M" | "L" | "XL"
+  onConfirm?: () => void
+  onCancel?: () => void
+  onClose?: () => void
 }) {
   return await new Promise(resolve => {
     const dialog = new ConfirmDialog({
@@ -18,11 +23,15 @@ export async function confirm(props: {
         size: props.size,
         onOk: () => {
           dialog.$destroy()
-          resolve(true)
+          resolve(props.onConfirm?.() || true)
         },
         onCancel: () => {
           dialog.$destroy()
-          resolve(false)
+          resolve(props.onCancel?.() || false)
+        },
+        onClose: () => {
+          dialog.$destroy()
+          resolve(props.onClose?.() || false)
         },
       },
     })

@@ -484,26 +484,29 @@
       return true
     }
 
-    const shouldSave = await confirm({
+    return await confirm({
       title: "Some updates are not saved",
       body: "Some of your changes are not yet saved. Do you want to save them before leaving?",
       okText: "Save and continue",
       cancelText: "Discard and continue",
       size: "M",
+      onConfirm: async () => {
+        const saveResult = await saveQuery()
+        if (!saveResult.ok) {
+          // We can't leave as the query was not properly saved
+          return false
+        }
+
+        return true
+      },
+      onCancel: () => {
+        // Leave without saving anything
+        return true
+      },
+      onClose: () => {
+        return false
+      },
     })
-
-    if (!shouldSave) {
-      // Leave without saving anything
-      return true
-    }
-
-    const saveResult = await saveQuery()
-    if (!saveResult.ok) {
-      // We can't leave as the query was not properly saved
-      return false
-    }
-
-    return true
   })
 </script>
 
