@@ -105,8 +105,8 @@
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
-  $: isModified =
-    JSON.stringify(originalQuery) !== JSON.stringify(buildQuery(query))
+  $: builtQuery = buildQuery(query, runtimeUrlQueries)
+  $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -153,12 +153,12 @@
     return qs.length === 0 ? newUrl : `${newUrl}?${qs}`
   }
 
-  function buildQuery(fromQuery = query) {
+  function buildQuery(fromQuery, urlQueries) {
     if (!fromQuery) {
       return
     }
     const newQuery = cloneDeep(fromQuery)
-    const queryString = restUtils.buildQueryString(runtimeUrlQueries)
+    const queryString = restUtils.buildQueryString(urlQueries)
 
     newQuery.parameters = restUtils.keyValueToQueryParameters(requestBindings)
     newQuery.fields.requestBody =
@@ -177,7 +177,7 @@
   }
 
   async function saveQuery() {
-    const toSave = buildQuery()
+    const toSave = builtQuery
     try {
       const isNew = !query._rev
       const { _id } = await queries.save(toSave.datasourceId, toSave)
@@ -236,7 +236,7 @@
   async function runQuery() {
     try {
       await validateQuery()
-      response = await queries.preview(buildQuery())
+      response = await queries.preview(builtQuery)
       if (response.rows.length === 0) {
         notifications.info("Request did not return any data")
       } else {
@@ -490,7 +490,7 @@
       restBindings
     )
 
-    originalQuery = _.cloneDeep(buildQuery())
+    originalQuery = _.cloneDeep(buildQuery(query, runtimeUrlQueries))
   })
 </script>
 
