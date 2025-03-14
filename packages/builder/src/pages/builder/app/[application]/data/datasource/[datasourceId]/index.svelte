@@ -1,4 +1,5 @@
 <script>
+  import { params } from "@roxi/routify"
   import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
   import { datasources, integrations } from "@/stores/builder"
   import ICONS from "@/components/backend/DatasourceNavigator/icons"
@@ -15,7 +16,7 @@
   import { admin } from "@/stores/portal"
   import { IntegrationTypes } from "@/constants/backend"
 
-  let selectedPanel = null
+  let selectedPanel = $params.tab ?? null
   let panelOptions = []
 
   $: datasource = $datasources.selected
