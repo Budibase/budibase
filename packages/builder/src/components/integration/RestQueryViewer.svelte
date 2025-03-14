@@ -25,7 +25,7 @@
     EditorModes,
   } from "@/components/common/CodeMirrorEditor.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
-  import { capitalise } from "@/helpers"
+  import { capitalise, confirm } from "@/helpers"
   import { onMount } from "svelte"
   import restUtils from "@/helpers/data/utils"
   import {
@@ -37,7 +37,6 @@
   } from "@/constants/backend"
   import JSONPreview from "@/components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import DynamicVariableModal from "./DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
@@ -485,26 +484,12 @@
       return true
     }
 
-    const shouldSave = await new Promise(resolve => {
-      const dialog = new ConfirmDialog({
-        target: document.body,
-        props: {
-          title: "Some updates are not saved",
-          body: "Some of your changes are not yet saved. Do you want to save them before leaving?",
-          okText: "Save and continue",
-          cancelText: "Discard and continue",
-          size: "M",
-          onOk: () => {
-            dialog.$destroy()
-            resolve(true)
-          },
-          onCancel: () => {
-            dialog.$destroy()
-            resolve(false)
-          },
-        },
-      })
-      dialog.show()
+    const shouldSave = await confirm({
+      title: "Some updates are not saved",
+      body: "Some of your changes are not yet saved. Do you want to save them before leaving?",
+      okText: "Save and continue",
+      cancelText: "Discard and continue",
+      size: "M",
     })
 
     if (!shouldSave) {
