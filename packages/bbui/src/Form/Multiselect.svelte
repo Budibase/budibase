@@ -17,7 +17,7 @@
   export let autoWidth = false
   export let autocomplete = false
   export let searchTerm: string | undefined = undefined
-  export let customPopoverHeight: number | undefined = undefined
+  export let customPopoverHeight: string | undefined = undefined
   export let helpText: string | undefined = undefined
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
