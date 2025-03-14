@@ -546,7 +546,7 @@
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
           <Button
-            disabled={!isModified || saving}
+            disabled={!query.name || !isModified || saving}
             cta
             on:click={saveQuery}
             tooltip={!hasSchema
