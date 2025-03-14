@@ -358,8 +358,8 @@ async function performAppCreate(
       },
       theme: DefaultAppTheme,
       customTheme: {
-        primaryColor: "var(--spectrum-global-color-static-blue-1200)",
-        primaryColorHover: "var(--spectrum-global-color-static-blue-800)",
+        primaryColor: "var(--spectrum-global-color-blue-700)",
+        primaryColorHover: "var(--spectrum-global-color-blue-600)",
         buttonBorderRadius: "16px",
       },
       features: {
