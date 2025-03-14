@@ -105,7 +105,7 @@
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
-  $: builtQuery = buildQuery(query, runtimeUrlQueries)
+  $: builtQuery = buildQuery(query, runtimeUrlQueries, requestBindings)
   $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 
   function getSelectedQuery() {
@@ -153,7 +153,7 @@
     return qs.length === 0 ? newUrl : `${newUrl}?${qs}`
   }
 
-  function buildQuery(fromQuery, urlQueries) {
+  function buildQuery(fromQuery, urlQueries, requestBindings) {
     if (!fromQuery) {
       return
     }
@@ -490,7 +490,9 @@
       restBindings
     )
 
-    originalQuery = _.cloneDeep(buildQuery(query, runtimeUrlQueries))
+    originalQuery = _.cloneDeep(
+      buildQuery(query, runtimeUrlQueries, requestBindings)
+    )
   })
 </script>
 

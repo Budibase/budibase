@@ -13,7 +13,7 @@
   import { lowercase } from "@/helpers"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
-  let dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher()
 
   export let defaults
   export let object = defaults || {}
@@ -47,10 +47,12 @@
   }))
   let fieldActivity = buildFieldActivity(activity)
 
-  $: object = fields.reduce(
-    (acc, next) => ({ ...acc, [next.name]: next.value }),
-    {}
-  )
+  $: object = fields.reduce((acc, next) => {
+    if (next.name) {
+      acc[next.name] = next.value
+    }
+    return acc
+  }, {})
 
   function buildFieldActivity(obj) {
     if (!obj || typeof obj !== "object") {
@@ -78,16 +80,19 @@
   }
 
   function changed() {
+    // Required for reactivity
     fields = fields
     const newActivity = {}
+    const trimmedFields = []
     for (let idx = 0; idx < fields.length; idx++) {
       const fieldName = fields[idx].name
       if (fieldName) {
         newActivity[fieldName] = fieldActivity[idx]
+        trimmedFields.push(fields[idx])
       }
     }
     activity = newActivity
-    dispatch("change", fields)
+    dispatch("change", trimmedFields)
   }
 
   function isJsonArray(value) {
