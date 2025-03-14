@@ -6,7 +6,6 @@ import {
   RangeOperator,
   ArrayOperator,
 } from "../../sdk"
-import { WithRequired } from "../../shared"
 
 type AllOr = {
   operator: "allOr"
