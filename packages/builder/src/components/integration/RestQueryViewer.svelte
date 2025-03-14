@@ -63,7 +63,6 @@
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
-  let originalQuery
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -105,6 +104,7 @@
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
+  $: originalQuery = originalQuery ?? _.cloneDeep(query)
   $: builtQuery = buildQuery(query, runtimeUrlQueries, requestBindings)
   $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 
@@ -198,6 +198,10 @@
         staticVariables,
         restBindings
       )
+
+      // Force rebuilding original query
+      originalQuery = null
+
       if (isNew) {
         $goto(`../../${_id}`)
       }
@@ -488,10 +492,6 @@
       globalDynamicBindings,
       staticVariables,
       restBindings
-    )
-
-    originalQuery = _.cloneDeep(
-      buildQuery(query, runtimeUrlQueries, requestBindings)
     )
   })
 </script>

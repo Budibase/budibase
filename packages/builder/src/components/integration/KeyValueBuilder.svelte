@@ -47,9 +47,14 @@
   }))
   let fieldActivity = buildFieldActivity(activity)
 
-  $: object = fields.reduce((acc, next) => {
-    if (next.name) {
-      acc[next.name] = next.value
+  $: fullObject = fields.reduce((acc, next) => {
+    acc[next.name] = next.value
+    return acc
+  }, {})
+
+  $: object = Object.entries(fullObject).reduce((acc, [key, next]) => {
+    if (key) {
+      acc[key] = next
     }
     return acc
   }, {})
@@ -107,7 +112,7 @@
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
-{#if Object.keys(object || {}).length > 0}
+{#if Object.keys(fullObject || {}).length > 0}
   {#if headings}
     <div class="container" class:container-active={toggle}>
       <Label {tooltip}>{keyHeading || keyPlaceholder}</Label>
