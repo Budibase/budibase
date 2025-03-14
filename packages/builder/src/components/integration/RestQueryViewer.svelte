@@ -50,6 +50,7 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+  import _ from "lodash"
 
   export let queryId
 
@@ -62,6 +63,7 @@
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
+  let originalQuery
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -102,6 +104,9 @@
   $: hasSchema = Object.keys(schema || {}).length !== 0
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
+
+  $: isModified =
+    JSON.stringify(originalQuery) !== JSON.stringify(buildQuery(query))
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -148,8 +153,11 @@
     return qs.length === 0 ? newUrl : `${newUrl}?${qs}`
   }
 
-  function buildQuery() {
-    const newQuery = cloneDeep(query)
+  function buildQuery(fromQuery = query) {
+    if (!fromQuery) {
+      return
+    }
+    const newQuery = cloneDeep(fromQuery)
     const queryString = restUtils.buildQueryString(runtimeUrlQueries)
 
     newQuery.parameters = restUtils.keyValueToQueryParameters(requestBindings)
@@ -158,7 +166,7 @@
         ? readableToRuntimeMap(mergedBindings, newQuery.fields.requestBody)
         : readableToRuntimeBinding(mergedBindings, newQuery.fields.requestBody)
 
-    newQuery.fields.path = url.split("?")[0]
+    newQuery.fields.path = url?.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
@@ -481,6 +489,8 @@
       staticVariables,
       restBindings
     )
+
+    originalQuery = _.cloneDeep(buildQuery())
   })
 </script>
 
@@ -532,7 +542,7 @@
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
           <Button
-            disabled={!query.name}
+            disabled={!isModified}
             cta
             on:click={saveQuery}
             tooltip={!hasSchema
