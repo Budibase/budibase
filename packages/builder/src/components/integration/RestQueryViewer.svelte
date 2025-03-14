@@ -504,7 +504,9 @@
             on:save={saveQuery}
           />
           <div class="controls">
-            <ConnectedQueryScreens sourceId={query._id} />
+            {#if query._id}
+              <ConnectedQueryScreens sourceId={query._id} />
+            {/if}
             <div class="access">
               <Label>Access</Label>
               <AccessLevelSelect {query} {saveId} />
