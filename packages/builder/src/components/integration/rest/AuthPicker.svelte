@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
 
-  export let authConfigId: string
+  export let authConfigId: string | undefined
   export let authConfigs: { label: string; value: string }[]
   export let datasourceId: string
 
@@ -27,7 +27,11 @@
   }
 
   function selectConfiguration(id: string) {
-    authConfigId = id
+    if (authConfigId === id) {
+      authConfigId = undefined
+    } else {
+      authConfigId = id
+    }
     menu.hide()
   }
 </script>
@@ -66,7 +70,11 @@
         <!-- Hack to first config margin to not work as expected -->
         <div class="spectrum-ActionGroup-item hidden" />
         {#each authConfigs as config}
-          <ActionButton on:click={() => selectConfiguration(config.value)}>
+          <ActionButton
+            on:click={() => selectConfiguration(config.value)}
+            selected={config.value === authConfigId}
+            accentColor="#066CE7"
+          >
             {config.label}
           </ActionButton>
         {/each}
