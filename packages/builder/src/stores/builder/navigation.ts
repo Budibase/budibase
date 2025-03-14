@@ -15,7 +15,7 @@ export class NavigationStore extends BudiStore<AppNavigation> {
     super(INITIAL_NAVIGATION_STATE)
   }
 
-  syncAppNavigation(nav: AppNavigation) {
+  syncAppNavigation(nav?: AppNavigation) {
     this.update(state => ({
       ...state,
       ...nav,

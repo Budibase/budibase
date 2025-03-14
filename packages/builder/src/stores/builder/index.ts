@@ -37,6 +37,9 @@ import { flags } from "./flags"
 import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 import { appPublished } from "./published"
+import { oauth2 } from "./oauth2"
+
+import { FetchAppPackageResponse } from "@budibase/types"
 
 export {
   componentTreeNodesStore,
@@ -77,6 +80,7 @@ export {
   screenComponentsList,
   screenComponentErrors,
   screenComponentErrorList,
+  oauth2,
 }
 
 export const reset = () => {
@@ -106,7 +110,7 @@ const resetBuilderHistory = () => {
   automationHistoryStore.reset()
 }
 
-export const initialise = async pkg => {
+export const initialise = async (pkg: FetchAppPackageResponse) => {
   const { application } = pkg
   // must be first operation to make sure subsequent requests have correct app ID
   appStore.syncAppPackage(pkg)
