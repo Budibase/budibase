@@ -42,14 +42,6 @@
   import ModalBindableInput from "@/components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "@/components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
-  import type {
-    AutoFieldSubType,
-    Datasource,
-    FieldSchema,
-    FieldSchemaConfig,
-    Table,
-    UIField,
-  } from "@budibase/types"
   import {
     BBReferenceFieldSubType,
     FieldType,
@@ -61,6 +53,15 @@
   import ServerBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
   import { getUserBindings } from "@/dataBinding"
+  import type {
+    Table,
+    Datasource,
+    FieldSchema,
+    UIField,
+    AutoFieldSubType,
+    FormulaResponseType,
+    FieldSchemaConfig,
+  } from "@budibase/types"
 
   export let field: FieldSchema
 
@@ -85,8 +86,9 @@
   let deleteColName: string | undefined
   let jsonSchemaModal: any
   let editableColumn: FieldSchemaConfig = {
-    type: FIELDS.STRING.type,
+    type: FieldType.STRING,
     constraints: FIELDS.STRING.constraints as any,
+    name: "",
     // Initial value for column name in other table for linked records
     fieldName: $tables.selected?.name || "",
   }
@@ -356,7 +358,7 @@
     }
 
     savingColumn = true
-    let saveColumn: FieldSchemaConfig = cloneDeep(editableColumn)
+    let saveColumn = cloneDeep(editableColumn)
 
     delete saveColumn.fieldId
 
@@ -382,13 +384,13 @@
 
     // Ensure primary display columns are always required and don't have default values
     if (hasPrimaryDisplay) {
-      saveColumn.constraints.presence = { allowEmpty: false }
+      saveColumn.constraints!.presence = { allowEmpty: false }
       delete saveColumn.default
     }
 
     // Ensure the field is not required if we have a default value
     if (saveColumn.default) {
-      saveColumn.constraints.presence = false
+      saveColumn.constraints!.presence = false
     }
 
     try {
@@ -413,13 +415,17 @@
   }
 
   function cancelEdit() {
-    editableColumn.name = originalName
+    if (originalName) {
+      editableColumn.name = originalName
+    }
     gridDispatch("close-edit-column")
   }
 
   async function deleteColumn() {
     try {
-      editableColumn.name = deleteColName
+      if (deleteColName) {
+        editableColumn.name = deleteColName
+      }
       if (editableColumn.name === $tables.selected?.primaryDisplay) {
         notifications.error("You cannot delete the display column")
       } else {
@@ -440,12 +446,19 @@
 
   function handleTypeChange(type?: string) {
     // remove any extra fields that may not be related to this type
-    delete editableColumn.autocolumn
-    delete editableColumn.subtype
-    delete editableColumn.tableId
-    delete editableColumn.relationshipType
-    delete editableColumn.formulaType
-    delete editableColumn.responseType
+    const columnsToClear = [
+      "autocolumn",
+      "subtype",
+      "tableId",
+      "relationshipType",
+      "formulaType",
+      "responseType",
+    ]
+    for (let column of columnsToClear) {
+      if (column in editableColumn) {
+        delete editableColumn[column as keyof FieldSchema]
+      }
+    }
     editableColumn.constraints = {}
 
     // Add in defaults and initial definition
@@ -455,7 +468,11 @@
     }
 
     editableColumn.type = definition.type
-    editableColumn.subtype = definition.subtype
+    if (definition.subtype) {
+      // @ts-expect-error the setting of sub-type here doesn't fit our definition with
+      // FieldSchema, there is no type checking, it simply sets it if it is provided
+      editableColumn.subtype = definition.subtype
+    }
 
     // Default relationships many to many
     if (editableColumn.type === FieldType.LINK) {
@@ -465,12 +482,12 @@
       editableColumn.responseType =
         field && "responseType" in field
           ? field.responseType
-          : FIELDS.STRING.type
+          : (FIELDS.STRING.type as FormulaResponseType)
     }
   }
 
   function setRequired(req: boolean) {
-    editableColumn.constraints.presence = req ? { allowEmpty: false } : false
+    editableColumn.constraints!.presence = req ? { allowEmpty: false } : false
     required = req
   }
 
@@ -568,7 +585,7 @@
     throw new Error("No valid allowed types found")
   }
 
-  function checkConstraints(fieldToCheck: FieldSchemaConfig) {
+  function checkConstraints(fieldToCheck: FieldSchema) {
     if (!fieldToCheck) {
       return
     }
@@ -599,7 +616,7 @@
     }
   }
 
-  function checkErrors(fieldInfo: FieldSchemaConfig) {
+  function checkErrors(fieldInfo: FieldSchema) {
     if (!editableColumn) {
       return
     }
@@ -632,7 +649,11 @@
       newError.subtype = `Auto Column requires a type.`
     }
 
-    if (fieldInfo.fieldName && fieldInfo.tableId) {
+    if (
+      fieldInfo.type === FieldType.LINK &&
+      fieldInfo.fieldName &&
+      fieldInfo.tableId
+    ) {
       const relatedTable = $tables.list.find(
         tbl => tbl._id === fieldInfo.tableId
       )
@@ -890,9 +911,11 @@
           title="Formula"
           value={editableColumn.formula}
           on:change={e => {
-            editableColumn = {
-              ...editableColumn,
-              formula: e.detail,
+            if (editableColumn.type === FieldType.FORMULA) {
+              editableColumn = {
+                ...editableColumn,
+                formula: e.detail,
+              }
             }
           }}
           bindings={getBindings({ table })}

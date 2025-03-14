@@ -4,6 +4,8 @@ import {
   RelationshipType,
   FormulaType,
   FieldConstraints,
+  type FieldSchema,
+  type FormulaResponseType,
 } from "../"
 
 export interface UIField {
@@ -32,27 +34,13 @@ export interface UIField {
 // this object contains, or what type it is currently set to, meaning that our
 // strict FieldSchema isn't really usable here, the strict fieldSchema only occurs
 // when the table is saved, but in the UI in can be in a real mix of states
-export type FieldSchemaConfig = Partial<
-  Omit<BaseFieldSchema, "type" | "subtype" | "constraints">
-> & {
-  type: FieldType
-  subtype?: string
-  // used when configuring a relationship
-  fieldName?: string
-  fieldId?: string
-  tableId?: string
-  relationshipType?: RelationshipType
-  formulaType?: FormulaType
-  responseType?: string
-  useRichText?: boolean
-  default?: string | string[]
-  optionColors?: string[]
-  // constraints are always present when constructing/editing columns, even if empty
+export type FieldSchemaConfig = FieldSchema & {
   constraints: FieldConstraints
-  dateOnly?: boolean
-  timeOnly?: boolean
-  ignoreTimezones?: boolean
-  formula?: string
+  fieldName?: string
+  responseType?: FormulaResponseType
+  default?: any
+  fieldId?: string
+  optionColors?: string[]
   schema?: any
-  json?: any
+  json?: string
 }
