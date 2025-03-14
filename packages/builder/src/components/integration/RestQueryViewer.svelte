@@ -184,8 +184,6 @@
       const isNew = !query._rev
       const { _id } = await queries.save(toSave.datasourceId, toSave)
       saveId = _id
-      query = getSelectedQuery()
-      notifications.success(`Request saved successfully`)
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save({
@@ -193,6 +191,13 @@
           datasource,
         })
       }
+
+      notifications.success(`Request saved successfully`)
+      if (isNew) {
+        $goto(`../../${_id}`)
+      }
+
+      query = getSelectedQuery()
       prettifyQueryRequestBody(
         query,
         requestBindings,
@@ -203,10 +208,6 @@
 
       // Force rebuilding original query
       originalQuery = null
-
-      if (isNew) {
-        $goto(`../../${_id}`)
-      }
     } catch (err) {
       notifications.error(`Error saving query`)
     } finally {
