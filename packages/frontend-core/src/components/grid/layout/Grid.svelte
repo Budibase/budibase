@@ -219,7 +219,7 @@
     --grid-background-alt: var(--spectrum-global-color-gray-100);
     --header-cell-background: var(
       --custom-header-cell-background,
-      var(--grid-background-alt)
+      var(--spectrum-global-color-gray-100)
     );
     --cell-background: var(--grid-background);
     --cell-background-hover: var(--grid-background-alt);
