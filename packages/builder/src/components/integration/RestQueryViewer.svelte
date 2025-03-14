@@ -392,13 +392,6 @@
     }
   }
 
-  const paramsChanged = evt => {
-    breakQs = {}
-    for (let param of evt.detail) {
-      breakQs[param.name] = param.value
-    }
-  }
-
   const urlChanged = evt => {
     breakQs = {}
     const qs = evt.target.value.split("?")[1]
@@ -575,16 +568,13 @@
             />
           </Tab>
           <Tab title="Params">
-            {#key breakQs}
-              <KeyValueBuilder
-                on:change={paramsChanged}
-                object={breakQs}
-                name="param"
-                headings
-                bindings={mergedBindings}
-                bindingDrawerLeft="260px"
-              />
-            {/key}
+            <KeyValueBuilder
+              bind:object={breakQs}
+              name="param"
+              headings
+              bindings={mergedBindings}
+              bindingDrawerLeft="260px"
+            />
           </Tab>
           <Tab title="Headers">
             <KeyValueBuilder
