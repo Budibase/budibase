@@ -63,6 +63,8 @@
 
     <div class="auth-options">
       <ActionGroup vertical compact>
+        <!-- Hack to first config margin to not work as expected -->
+        <div class="spectrum-ActionGroup-item hidden" />
         {#each authConfigs as config}
           <ActionButton on:click={() => selectConfiguration(config.value)}>
             {config.label}
@@ -79,6 +81,9 @@
 </ActionMenu>
 
 <style>
+  .hidden {
+    display: none;
+  }
   .header-container {
     width: 100%;
     display: flex;
