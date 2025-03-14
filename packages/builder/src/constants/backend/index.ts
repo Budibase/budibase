@@ -6,6 +6,7 @@ import {
   Hosting,
 } from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
+import { UIField } from "@budibase/types"
 
 const { TypeIconMap } = Constants
 
@@ -27,7 +28,7 @@ export const AUTO_COLUMN_DISPLAY_NAMES: Record<
   UPDATED_AT: "Updated At",
 }
 
-export const FIELDS = {
+export const FIELDS: Record<string, UIField> = {
   STRING: {
     name: "Text",
     type: FieldType.STRING,

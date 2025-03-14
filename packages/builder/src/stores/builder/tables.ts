@@ -148,13 +148,11 @@ export class TableStore extends DerivedBudiStore<
   async saveField({
     originalName,
     field,
-    primaryDisplay = false,
-    indexes,
+    hasPrimaryDisplay = false,
   }: {
-    originalName: string
+    originalName?: string
     field: FieldSchema
-    primaryDisplay: boolean
-    indexes: Record<string, any>
+    hasPrimaryDisplay: boolean
   }) {
     const draft: SaveTableRequest = cloneDeep(get(this.derivedStore).selected!)
 
@@ -169,7 +167,7 @@ export class TableStore extends DerivedBudiStore<
     }
 
     // Optionally set display column
-    if (primaryDisplay) {
+    if (hasPrimaryDisplay) {
       draft.primaryDisplay = field.name
     } else if (draft.primaryDisplay === originalName) {
       const fields = Object.keys(draft.schema)
@@ -177,9 +175,6 @@ export class TableStore extends DerivedBudiStore<
       draft.primaryDisplay = fields.filter(
         name => name !== originalName || name !== field.name
       )[0]
-    }
-    if (indexes) {
-      draft.indexes = indexes
     }
     draft.schema = {
       ...draft.schema,

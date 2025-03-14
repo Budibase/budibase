@@ -79,6 +79,7 @@
       <Heading size="M">Reset your password</Heading>
       <Body size="M">Must contain at least 12 characters</Body>
       <PasswordRepeatInput
+        bind:passwordForm={form}
         bind:password
         bind:error={passwordError}
         minLength={$admin.passwordMinLength || 12}
