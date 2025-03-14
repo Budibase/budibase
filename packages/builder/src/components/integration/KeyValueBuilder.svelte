@@ -15,24 +15,23 @@
 
   let dispatch = createEventDispatcher()
 
-  export let defaults
+  export let defaults = undefined
   export let object = defaults || {}
   export let activity = {}
-  export let readOnly
-  export let noAddButton
-  export let name
+  export let readOnly = false
+  export let noAddButton = false
+  export let name = ""
   export let headings = false
-  export let options
-  export let toggle
+  export let options = undefined
+  export let toggle = false
   export let keyPlaceholder = "Key"
   export let valuePlaceholder = "Value"
-  export let valueHeading
-  export let keyHeading
-  export let tooltip
-  export let menuItems
+  export let valueHeading = ""
+  export let keyHeading = ""
+  export let tooltip = ""
+  export let menuItems = []
   export let showMenu = false
   export let bindings = []
-  export let bindingDrawerLeft
   export let allowHelpers = true
   export let customButtonText = null
   export let keyBindings = false
@@ -132,7 +131,6 @@
           value={field.name}
           {allowJS}
           {allowHelpers}
-          drawerLeft={bindingDrawerLeft}
           {context}
         />
       {:else}
@@ -159,7 +157,6 @@
           value={field.value}
           {allowJS}
           {allowHelpers}
-          drawerLeft={bindingDrawerLeft}
           {context}
         />
       {:else}

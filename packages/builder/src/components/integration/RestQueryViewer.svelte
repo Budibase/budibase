@@ -553,7 +553,6 @@
                 ...globalDynamicRequestBindings,
                 ...dataSourceStaticBindings,
               ]}
-              bindingDrawerLeft="260px"
             />
           </Tab>
           <Tab title="Params">
@@ -564,7 +563,6 @@
                 name="param"
                 headings
                 bindings={mergedBindings}
-                bindingDrawerLeft="260px"
               />
             {/key}
           </Tab>
@@ -576,7 +574,6 @@
               name="header"
               headings
               bindings={mergedBindings}
-              bindingDrawerLeft="260px"
             />
           </Tab>
           <Tab title="Body">
