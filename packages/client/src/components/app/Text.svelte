@@ -41,7 +41,4 @@
   div :global(img) {
     max-width: 100%;
   }
-  div :global(.editor-preview-full) {
-    height: auto;
-  }
 </style>
