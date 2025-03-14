@@ -1,6 +1,8 @@
-import { writable, type Writable } from "svelte/store"
+import { get, writable, type Writable } from "svelte/store"
 import { API } from "@/api"
-import { Integration } from "@budibase/types"
+import { Datasource, Integration } from "@budibase/types"
+import { integrationForDatasource } from "@/stores/selectors"
+import { datasources } from "./datasources"
 
 type IntegrationsState = Record<string, Integration>
 
@@ -25,9 +27,15 @@ const createIntegrationsStore = () => {
     store.set(integrations)
   }
 
+  const saveDatasource = async (datasource: Datasource) => {
+    const integration = integrationForDatasource(get(store), datasource)
+    await datasources.save({ datasource, integration })
+  }
+
   return {
     ...store,
     init,
+    saveDatasource,
   }
 }
 

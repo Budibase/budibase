@@ -152,6 +152,7 @@
     <div class="field-wrap json-field">
       <CodeEditor
         value={readableValue}
+        {bindings}
         on:blur={e => {
           onChange({
             row: {

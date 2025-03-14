@@ -106,6 +106,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
       type: FieldType.NUMBER,
       subtype: AutoFieldSubType.AUTO_ID,
       icon: "ri-magic-line",
+      width: 120,
       autocolumn: true,
       constraints: {
         type: FieldType.NUMBER,
@@ -128,6 +129,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
         },
       },
       name: "Item Name",
+      width: 160,
     },
     "Item Tags": {
       type: FieldType.ARRAY,
@@ -150,6 +152,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
       },
       name: "Notes",
       useRichText: null,
+      width: 220,
     },
     Status: {
       type: FieldType.ARRAY,
@@ -161,6 +164,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
         inclusion: ["Available", "Repair", "Broken"],
       },
       name: "Status",
+      width: 110,
       sortable: false,
     },
     SKU: {
@@ -171,6 +175,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
         presence: false,
       },
       name: "SKU",
+      width: 130,
     },
     "Purchase Date": {
       type: FieldType.DATETIME,
@@ -197,6 +202,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
         },
       },
       name: "Purchase Price",
+      width: 160,
     },
     ...AUTO_COLUMNS,
   },
