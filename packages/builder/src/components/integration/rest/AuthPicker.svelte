@@ -9,6 +9,7 @@
     Layout,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
+  import { appStore } from "@/stores/builder"
 
   export let authConfigId: string | undefined
   export let authConfigs: { label: string; value: string }[]
@@ -23,7 +24,9 @@
   }
 
   function addBasicConfiguration() {
-    $goto(`../../datasource/${datasourceId}?&tab=Authentication`)
+    $goto(
+      `/builder/app/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
+    )
   }
 
   function selectConfiguration(id: string) {
