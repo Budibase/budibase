@@ -4,7 +4,7 @@ import sdk from "../../.."
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { generateToken } from "../utils"
 import path from "path"
-import { KEYCLOCK_IMAGE } from "../../../../integrations/tests/utils/images"
+import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 
 const config = new TestConfiguration()
 
@@ -20,7 +20,7 @@ describe("oauth2 utils", () => {
   beforeAll(async () => {
     await config.init()
 
-    container = await new GenericContainer(KEYCLOCK_IMAGE)
+    container = await new GenericContainer(KEYCLOAK_IMAGE)
       .withName("keycloak_testcontainer")
       .withReuse()
       .withExposedPorts(8080)
