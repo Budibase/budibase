@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { ContextUser } from "../../sdk"
 
 // SSO
 
@@ -32,7 +33,7 @@ export interface UserSSO {
 
 export type SSOUser = User & UserSSO
 
-export function isSSOUser(user: User): user is SSOUser {
+export function isSSOUser(user: User | ContextUser): user is SSOUser {
   return !!(user as SSOUser).providerType
 }
 

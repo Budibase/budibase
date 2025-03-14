@@ -1,6 +1,7 @@
 import ClientApp from "./components/ClientApp.svelte"
 import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
+  authStore,
   builderStore,
   appStore,
   blockStore,
@@ -11,6 +12,7 @@ import {
   hoverStore,
   stateStore,
   routeStore,
+  notificationStore,
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
@@ -26,6 +28,8 @@ import {
   UIComponentError,
   CustomComponent,
 } from "@budibase/types"
+import { ActionTypes } from "@/constants"
+import { APIClient } from "@budibase/frontend-core"
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
@@ -37,7 +41,6 @@ window.svelte = svelte
 // Initialise spectrum icons
 // eslint-disable-next-line local-rules/no-budibase-imports
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
-
 loadSpectrumIcons()
 
 // Extend global window scope
@@ -73,6 +76,20 @@ declare global {
 }
 
 export type Context = Readable<Record<string, any>>
+
+export interface SDK {
+  API: APIClient
+  styleable: any
+  Provider: any
+  ActionTypes: typeof ActionTypes
+  fetchDatasourceSchema: any
+  generateGoldenSample: any
+  builderStore: typeof builderStore
+  authStore: typeof authStore
+  notificationStore: typeof notificationStore
+  environmentStore: typeof environmentStore
+  appStore: typeof appStore
+}
 
 let app: ClientApp
 

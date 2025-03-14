@@ -59,7 +59,11 @@
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
-  import { FeatureFlag, type EditorMode } from "@budibase/types"
+  import {
+    type EnrichedBinding,
+    FeatureFlag,
+    type EditorMode,
+  } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
   import type { BindingCompletion, CodeValidator } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
@@ -80,6 +84,7 @@
   export let readonly = false
   export let readonlyLineNumbers = false
   export let dropdown = DropdownPosition.Relative
+  export let bindings: EnrichedBinding[] = []
 
   const dispatch = createEventDispatcher()
 
@@ -100,7 +105,8 @@
   let promptInput: TextArea
   $: aiGenEnabled =
     featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
-    mode.name === "javascript"
+    mode.name === "javascript" &&
+    !readonly
 
   $: {
     if (autofocus && isEditorInitialised) {
@@ -165,15 +171,24 @@
     popoverWidth = 30
     let code = ""
     try {
-      const resp = await API.generateJs({ prompt })
+      const resp = await API.generateJs({ prompt, bindings })
       code = resp.code
+
+      if (code === "") {
+        throw new Error(
+          "we didn't understand your prompt, please phrase your request in another way"
+        )
+      }
     } catch (e) {
       console.error(e)
-      notifications.error("Unable to generate code, please try again later.")
+      if (e instanceof Error) {
+        notifications.error(`Unable to generate code: ${e.message}`)
+      } else {
+        notifications.error("Unable to generate code, please try again later.")
+      }
       code = previousContents
-      popoverWidth = 300
       promptLoading = false
-      popover.hide()
+      resetPopover()
       return
     }
     value = code
@@ -189,6 +204,8 @@
     suggestedCode = null
     previousContents = null
     resetPopover()
+    dispatch("change", editor.state.doc.toString())
+    dispatch("blur", editor.state.doc.toString())
   }
 
   const rejectSuggestion = () => {
@@ -513,13 +530,18 @@
     bind:this={popover}
     minWidth={popoverWidth}
     anchor={popoverAnchor}
+    on:close={() => {
+      if (suggestedCode) {
+        acceptSuggestion()
+      }
+    }}
     align="left-outside"
   >
     {#if promptLoading}
       <div class="prompt-spinner">
         <Spinner size="20" color="white" />
       </div>
-    {:else if suggestedCode}
+    {:else if suggestedCode !== null}
       <Button on:click={acceptSuggestion}>Accept</Button>
       <Button on:click={rejectSuggestion}>Reject</Button>
     {:else}
