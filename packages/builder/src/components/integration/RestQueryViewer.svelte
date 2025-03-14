@@ -56,7 +56,7 @@
   let query, datasource
   let breakQs = {},
     requestBindings = {}
-  let saveId, url
+  let saveId
   let response, schema, enabledHeaders
   let authConfigId
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
@@ -91,7 +91,7 @@
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
-  $: url = buildUrl(url, breakQs)
+  $: url = buildUrl(query?.fields?.path, breakQs)
   $: checkQueryName(url)
   $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
   $: isGet = query?.queryVerb === "read"
@@ -126,7 +126,8 @@
       ?.trim() || inputUrl
 
   function checkQueryName(inputUrl = null) {
-    if (query && (!query.name || query.flags.urlName)) {
+    if (query && (!query.name || query.flags?.urlName)) {
+      query.flags ??= {}
       query.flags.urlName = true
       query.name = cleanUrl(inputUrl)
     }
@@ -426,7 +427,6 @@
     ) {
       query.fields.path = `${datasource.config.url}/${path ? path : ""}`
     }
-    url = buildUrl(query.fields.path, breakQs)
     requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
     authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
@@ -524,7 +524,7 @@
           <div class="url">
             <Input
               on:blur={urlChanged}
-              bind:value={url}
+              bind:value={query.fields.path}
               placeholder="http://www.api.com/endpoint"
             />
           </div>
