@@ -65,21 +65,23 @@
       Basic (Username & Password Authentication)
     </Body>
 
-    <div class="auth-options">
-      <ActionGroup vertical compact>
-        <!-- Hack to first config margin to not work as expected -->
-        <div class="spectrum-ActionGroup-item hidden" />
-        {#each authConfigs as config}
-          <ActionButton
-            on:click={() => selectConfiguration(config.value)}
-            selected={config.value === authConfigId}
-            accentColor="#066CE7"
-          >
-            {config.label}
-          </ActionButton>
-        {/each}
-      </ActionGroup>
-    </div>
+    {#if authConfigs.length}
+      <div class="auth-options">
+        <ActionGroup vertical compact>
+          <!-- Hack to first config margin to not work as expected -->
+          <div class="spectrum-ActionGroup-item hidden" />
+          {#each authConfigs as config}
+            <ActionButton
+              on:click={() => selectConfiguration(config.value)}
+              selected={config.value === authConfigId}
+              accentColor="#066CE7"
+            >
+              {config.label}
+            </ActionButton>
+          {/each}
+        </ActionGroup>
+      </div>
+    {/if}
     <div>
       <Button secondary icon="Add" on:click={addBasicConfiguration}
         >Add Basic</Button
