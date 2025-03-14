@@ -1,10 +1,11 @@
 import { generator } from "@budibase/backend-core/tests"
-import { GenericContainer, StartedTestContainer, Wait } from "testcontainers"
+import { GenericContainer, Wait } from "testcontainers"
 import sdk from "../../.."
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { generateToken } from "../utils"
 import path from "path"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
+import { startContainer } from "../../../../integrations/tests/utils"
 
 const config = new TestConfiguration()
 
@@ -13,28 +14,32 @@ const volumePath = path.resolve(__dirname, "docker-volume")
 jest.setTimeout(60000)
 
 describe("oauth2 utils", () => {
-  let container: StartedTestContainer
-
   let keycloakUrl: string
 
   beforeAll(async () => {
     await config.init()
 
-    container = await new GenericContainer(KEYCLOAK_IMAGE)
-      .withName("keycloak_testcontainer")
-      .withReuse()
-      .withExposedPorts(8080)
-      .withBindMounts([
-        { source: volumePath, target: "/opt/keycloak/data/import/" },
-      ])
-      .withCommand(["start-dev", "--import-realm"])
-      .withWaitStrategy(Wait.forLogMessage("Listening on: http://0.0.0.0:8080"))
-      .withStartupTimeout(60000)
-      .start()
+    const ports = await startContainer(
+      new GenericContainer(KEYCLOAK_IMAGE)
+        .withName("keycloak_testcontainer")
+        .withReuse()
+        .withExposedPorts(8080)
+        .withBindMounts([
+          { source: volumePath, target: "/opt/keycloak/data/import/" },
+        ])
+        .withCommand(["start-dev", "--import-realm"])
+        .withWaitStrategy(
+          Wait.forLogMessage("Listening on: http://0.0.0.0:8080")
+        )
+        .withStartupTimeout(60000)
+    )
 
-    keycloakUrl = `http://${container.getHost()}:${container.getMappedPort(
-      8080
-    )}`
+    const port = ports.find(x => x.container === 8080)?.host
+    if (!port) {
+      throw new Error("Keycloak port not found")
+    }
+
+    keycloakUrl = `http://127.0.0.1:${port}`
   })
 
   describe("generateToken", () => {
