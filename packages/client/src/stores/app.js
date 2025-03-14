@@ -6,6 +6,7 @@ const initialState = {
   isDevApp: false,
   clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
   embedded: false,
+  inIframe: window.self !== window.top,
 }
 
 const createAppStore = () => {

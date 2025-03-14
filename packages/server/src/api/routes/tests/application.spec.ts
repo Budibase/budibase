@@ -127,10 +127,26 @@ describe("/applications", () => {
   })
 
   describe("create", () => {
-    it("creates empty app", async () => {
+    const checkScreenCount = async (expectedCount: number) => {
+      const res = await config.api.application.getDefinition(
+        config.getProdAppId()
+      )
+      expect(res.screens.length).toEqual(expectedCount)
+    }
+
+    const checkTableCount = async (expectedCount: number) => {
+      const tables = await config.api.table.fetch()
+      expect(tables.length).toEqual(expectedCount)
+    }
+
+    it("creates empty app with sample data", async () => {
       const app = await config.api.application.create({ name: utils.newid() })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
+
+      // Ensure we created sample resources
+      await checkScreenCount(1)
+      await checkTableCount(5)
     })
 
     it("creates app from template", async () => {
@@ -149,6 +165,11 @@ describe("/applications", () => {
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.templateImported).toHaveBeenCalledTimes(1)
+
+      // Ensure we did not create sample data. This template includes exactly
+      // this many of each resource.
+      await checkScreenCount(1)
+      await checkTableCount(5)
     })
 
     it("creates app from file", async () => {
@@ -160,6 +181,11 @@ describe("/applications", () => {
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.fileImported).toHaveBeenCalledTimes(1)
+
+      // Ensure we did not create sample data. This file includes exactly
+      // this many of each resource.
+      await checkScreenCount(1)
+      await checkTableCount(5)
     })
 
     it("should apply authorization to endpoint", async () => {
