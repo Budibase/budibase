@@ -82,6 +82,7 @@ export enum InternalTable {
 export enum VirtualDocumentType {
   VIEW = "view",
   ROW_ACTION = "row_action",
+  OAUTH2_CONFIG = "oauth2",
 }
 
 // Because VirtualDocumentTypes can overlap, we need to make sure that we search
