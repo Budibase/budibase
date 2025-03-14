@@ -63,6 +63,7 @@
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
+  let saving
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -178,6 +179,7 @@
 
   async function saveQuery() {
     const toSave = builtQuery
+    saving = true
     try {
       const isNew = !query._rev
       const { _id } = await queries.save(toSave.datasourceId, toSave)
@@ -207,6 +209,8 @@
       }
     } catch (err) {
       notifications.error(`Error saving query`)
+    } finally {
+      saving = false
     }
   }
 
@@ -544,7 +548,7 @@
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
           <Button
-            disabled={!isModified}
+            disabled={!isModified || saving}
             cta
             on:click={saveQuery}
             tooltip={!hasSchema
