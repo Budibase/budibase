@@ -2,6 +2,7 @@
   import { FancyForm, FancyInput } from "@budibase/bbui"
   import { createValidationStore, requiredValidator } from "../utils/validation"
 
+  export let passwordForm
   export let password
   export let error
   export let minLength = "12"
@@ -35,7 +36,7 @@
     firstPasswordError
 </script>
 
-<FancyForm>
+<FancyForm bind:this={passwordForm}>
   <FancyInput
     label="Password"
     type="password"
