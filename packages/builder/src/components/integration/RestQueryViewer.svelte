@@ -59,7 +59,6 @@
     requestBindings = {}
   let saveId
   let response, schema, enabledHeaders
-  let authConfigId
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
@@ -170,7 +169,6 @@
 
     newQuery.fields.path = url?.split("?")[0]
     newQuery.fields.queryString = queryString
-    newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
     newQuery.schema = schema || {}
     newQuery.nestedSchemaFields = nestedSchemaFields || {}
@@ -268,22 +266,6 @@
     } catch (error) {
       notifications.error(`Query Error: ${error.message}`)
     }
-  }
-
-  const getAuthConfigId = () => {
-    let id = query.fields.authConfigId
-    if (id) {
-      // find the matching config on the datasource
-      const matchedConfig = datasource?.config?.authConfigs?.filter(
-        c => c._id === id
-      )[0]
-      // clear the id if the config is not found (deleted)
-      // i.e. just show 'None' in the dropdown
-      if (!matchedConfig) {
-        id = undefined
-      }
-    }
-    return id
   }
 
   const buildAuthConfigs = datasource => {
@@ -441,7 +423,6 @@
       query.fields.path = `${datasource.config.url}/${path ? path : ""}`
     }
     requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
-    authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
       query.fields.disabledHeaders = {}
     }
@@ -667,7 +648,7 @@
                 label="Auth"
                 labelPosition="left"
                 placeholder="None"
-                bind:value={authConfigId}
+                bind:value={query.fields.authConfigId}
                 options={authConfigs}
               />
             </div>
