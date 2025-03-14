@@ -50,7 +50,6 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
-  import _ from "lodash"
 
   export let queryId
 
@@ -105,7 +104,7 @@
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
-  $: originalQuery = originalQuery ?? _.cloneDeep(query)
+  $: originalQuery = originalQuery ?? cloneDeep(query)
   $: builtQuery = buildQuery(query, runtimeUrlQueries, requestBindings)
   $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 
