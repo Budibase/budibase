@@ -209,11 +209,14 @@
       originalQuery = null
 
       queryNameLabel.disableEditingState()
+      return { ok: true }
     } catch (err) {
       notifications.error(`Error saving query`)
     } finally {
       saving = false
     }
+
+    return { ok: false }
   }
 
   const validateQuery = async () => {
@@ -482,7 +485,7 @@
       return true
     }
 
-    return new Promise(resolve => {
+    const shouldSave = await new Promise(resolve => {
       const dialog = new ConfirmDialog({
         target: document.body,
         props: {
@@ -503,6 +506,19 @@
       })
       dialog.show()
     })
+
+    if (!shouldSave) {
+      // Leave without saving anything
+      return true
+    }
+
+    const saveResult = await saveQuery()
+    if (!saveResult.ok) {
+      // We can't leave as the query was not properly saved
+      return false
+    }
+
+    return true
   })
 </script>
 
