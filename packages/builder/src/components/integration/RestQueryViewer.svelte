@@ -64,6 +64,7 @@
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
   let saving
+  let queryNameLabel
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -208,6 +209,8 @@
 
       // Force rebuilding original query
       originalQuery = null
+
+      queryNameLabel.disableEditingState()
     } catch (err) {
       notifications.error(`Error saving query`)
     } finally {
@@ -507,6 +510,7 @@
       <Layout gap="S">
         <div class="top-bar">
           <EditableLabel
+            bind:this={queryNameLabel}
             type="heading"
             bind:value={query.name}
             defaultValue="Untitled"
