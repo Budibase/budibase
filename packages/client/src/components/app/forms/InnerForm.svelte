@@ -47,7 +47,7 @@
 
   // For internal use only, to disable context when being used with standalone
   // fields
-  export let provideContext = true
+  export let provideContext: boolean = true
 
   // We export this store so that when we remount the inner form we can still
   // persist what step we're on
@@ -195,11 +195,11 @@
     registerField: (
       field: string,
       type: FieldType,
-      defaultValue = null,
-      fieldDisabled = false,
-      fieldReadOnly = false,
+      defaultValue: string | null = null,
+      fieldDisabled: boolean = false,
+      fieldReadOnly: boolean = false,
       validationRules: UIFieldValidationRule[],
-      step = 1
+      step: number = 1
     ) => {
       if (!field) {
         return

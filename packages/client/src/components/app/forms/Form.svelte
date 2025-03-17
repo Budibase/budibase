@@ -14,11 +14,11 @@
 
   // Not exposed as a builder setting. Used internally to disable validation
   // for fields rendered in things like search blocks.
-  export let disableSchemaValidation = false
+  export let disableSchemaValidation: boolean = false
 
   // Not exposed as a builder setting. Used internally to allow searching on
   // auto columns.
-  export let editAutoColumns = false
+  export let editAutoColumns: boolean = false
 
   const context = getContext("context")
   const component = getContext("component")
