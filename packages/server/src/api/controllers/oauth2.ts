@@ -52,3 +52,12 @@ export async function edit(
   const config = await sdk.oauth2.update(toUpdate)
   ctx.body = { config }
 }
+
+export async function remove(
+  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
+) {
+  const configToRemove = ctx.params.id
+
+  await sdk.oauth2.remove(configToRemove)
+  ctx.status = 204
+}

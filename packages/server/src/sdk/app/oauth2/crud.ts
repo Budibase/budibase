@@ -57,7 +57,7 @@ export async function update(config: OAuth2Config): Promise<OAuth2Config> {
   }
 
   if (!doc.configs[config.id]) {
-    throw new HTTPError(`OAuth2 config with id '${config.id}' not found.`, 400)
+    throw new HTTPError(`OAuth2 config with id '${config.id}' not found.`, 404)
   }
 
   if (
@@ -74,4 +74,20 @@ export async function update(config: OAuth2Config): Promise<OAuth2Config> {
 
   await db.put(doc)
   return doc.configs[config.id]
+}
+
+export async function remove(configId: string): Promise<void> {
+  const db = context.getAppDB()
+  const doc: OAuth2Configs = (await getDocument(db)) ?? {
+    _id: DocumentType.OAUTH2_CONFIG,
+    configs: {},
+  }
+
+  if (!doc.configs[configId]) {
+    throw new HTTPError(`OAuth2 config with id '${configId}' not found.`, 404)
+  }
+
+  delete doc.configs[configId]
+
+  await db.put(doc)
 }
