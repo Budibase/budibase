@@ -17,6 +17,10 @@ import { RowActionAPI } from "./rowAction"
 import { AutomationAPI } from "./automation"
 import { PluginAPI } from "./plugin"
 import { WebhookAPI } from "./webhook"
+import { EnvironmentAPI } from "./environment"
+import { UserPublicAPI } from "./public/user"
+import { MiscAPI } from "./misc"
+import { OAuth2API } from "./oauth2"
 
 export default class API {
   application: ApplicationAPI
@@ -24,7 +28,10 @@ export default class API {
   automation: AutomationAPI
   backup: BackupAPI
   datasource: DatasourceAPI
+  environment: EnvironmentAPI
   legacyView: LegacyViewAPI
+  misc: MiscAPI
+  oauth2: OAuth2API
   permission: PermissionAPI
   plugin: PluginAPI
   query: QueryAPI
@@ -38,13 +45,20 @@ export default class API {
   viewV2: ViewV2API
   webhook: WebhookAPI
 
+  public: {
+    user: UserPublicAPI
+  }
+
   constructor(config: TestConfiguration) {
     this.application = new ApplicationAPI(config)
     this.attachment = new AttachmentAPI(config)
     this.automation = new AutomationAPI(config)
     this.backup = new BackupAPI(config)
     this.datasource = new DatasourceAPI(config)
+    this.environment = new EnvironmentAPI(config)
     this.legacyView = new LegacyViewAPI(config)
+    this.misc = new MiscAPI(config)
+    this.oauth2 = new OAuth2API(config)
     this.permission = new PermissionAPI(config)
     this.plugin = new PluginAPI(config)
     this.query = new QueryAPI(config)
@@ -57,5 +71,8 @@ export default class API {
     this.user = new UserAPI(config)
     this.viewV2 = new ViewV2API(config)
     this.webhook = new WebhookAPI(config)
+    this.public = {
+      user: new UserPublicAPI(config),
+    }
   }
 }

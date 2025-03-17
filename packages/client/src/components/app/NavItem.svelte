@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte"
   import active from "svelte-spa-router/active"
   import { Icon } from "@budibase/bbui"
+  import { builderStore, screenStore } from "@/stores"
 
   export let type
   export let url
@@ -16,7 +17,16 @@
 
   let renderKey
 
-  $: expanded = !!$navStateStore[text]
+  $: isBuilderActive = testUrl => {
+    return (
+      $builderStore.inBuilder &&
+      testUrl &&
+      testUrl === $screenStore.activeScreen?.routing?.route
+    )
+  }
+  $: builderActive = isBuilderActive(url)
+  $: containsActiveLink = (subLinks || []).some(x => isBuilderActive(x.url))
+  $: expanded = !!$navStateStore[text] || containsActiveLink
   $: renderLeftNav = leftNav || mobile
   $: icon = !renderLeftNav || expanded ? "ChevronDown" : "ChevronRight"
 
@@ -47,7 +57,7 @@
       href="#{url}"
       on:click={onClickLink}
       use:active={url}
-      class:active={false}
+      class:builderActive
     >
       {text}
     </a>
@@ -73,6 +83,9 @@
                 href="#{subLink.url}"
                 on:click={onClickLink}
                 use:active={subLink.url}
+                class:active={false}
+                class:builderActive={isBuilderActive(subLink.url)}
+                class="sublink"
               >
                 {subLink.text}
               </a>
@@ -91,22 +104,29 @@
 <style>
   /* Generic styles */
   a,
+  .dropdown .text {
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  a,
   .text span {
     opacity: 0.75;
     color: var(--navTextColor);
-    font-size: var(--spectrum-global-dimension-font-size-200);
+    font-size: var(--spectrum-global-dimension-font-size-150);
     transition: opacity 130ms ease-out;
-    font-weight: 600;
     user-select: none;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  a.active {
+  a.active:not(.sublink),
+  a.builderActive:not(.sublink),
+  .dropdown.left a.sublink.active,
+  .dropdown.left a.sublink.builderActive {
+    background: rgba(0, 0, 0, 0.15);
     opacity: 1;
   }
   a:hover,
-  .dropdown:not(.left.expanded):hover .text,
-  .text:hover {
+  .text:hover span {
     cursor: pointer;
     opacity: 1;
   }
@@ -166,9 +186,5 @@
   .dropdown.left.expanded .sublinks-wrapper,
   .dropdown.dropdown.left.expanded .sublinks {
     display: contents;
-  }
-  .dropdown.left a {
-    padding-top: 0;
-    padding-bottom: 0;
   }
 </style>

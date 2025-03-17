@@ -8,11 +8,13 @@
   export let invalid: boolean = false
   export let disabled: boolean = false
   export let closable: boolean = false
+  export let emphasized: boolean = false
 </script>
 
 <div
   class:is-invalid={invalid}
   class:is-disabled={disabled}
+  class:is-emphasized={emphasized}
   class="spectrum-Tags-item"
   role="listitem"
 >
@@ -39,5 +41,10 @@
   .spectrum-Tags-item {
     margin-bottom: 0;
     margin-top: 0;
+  }
+
+  .is-emphasized {
+    border-color: var(--spectrum-global-color-blue-700);
+    color: var(--spectrum-global-color-blue-700);
   }
 </style>

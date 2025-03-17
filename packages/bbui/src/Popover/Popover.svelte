@@ -18,7 +18,7 @@
   import type { KeyboardEventHandler } from "svelte/elements"
   import { PopoverAlignment } from "../constants"
 
-  export let anchor: HTMLElement
+  export let anchor: HTMLElement | undefined
   export let align: PopoverAlignment | `${PopoverAlignment}` =
     PopoverAlignment.Right
   export let portalTarget: string | undefined = undefined

@@ -1,42 +1,60 @@
 <script lang="ts">
   import { getContext, onDestroy } from "svelte"
+  import type { Readable } from "svelte/store"
   import { writable } from "svelte/store"
   import { Icon } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import Placeholder from "../Placeholder.svelte"
   import InnerForm from "./InnerForm.svelte"
+  import type { FieldSchema, FieldType } from "@budibase/types"
+  import type {
+    FieldApi,
+    FieldState,
+    FieldValidation,
+    FormField,
+  } from "@/types"
+
+  interface FieldInfo {
+    field: string
+    type: FieldType
+    defaultValue: string | undefined
+    disabled: boolean
+    readonly: boolean
+    validation?: FieldValidation
+    formStep: number
+  }
 
   export let label: string | undefined = undefined
   export let field: string | undefined = undefined
-  export let fieldState: any
-  export let fieldApi: any
-  export let fieldSchema: any
+  export let fieldState: FieldState | undefined
+  export let fieldApi: FieldApi | undefined
+  export let fieldSchema: FieldSchema | undefined
   export let defaultValue: string | undefined = undefined
-  export let type: any
+  export let type: FieldType
   export let disabled = false
   export let readonly = false
-  export let validation: any
+  export let validation: FieldValidation | undefined
   export let span = 6
   export let helpText: string | undefined = undefined
 
   // Get contexts
-  const formContext: any = getContext("form")
-  const formStepContext: any = getContext("form-step")
-  const fieldGroupContext: any = getContext("field-group")
+  const formContext = getContext("form")
+  const formStepContext = getContext("form-step")
+  const fieldGroupContext = getContext("field-group")
   const { styleable, builderStore, Provider } = getContext("sdk")
-  const component: any = getContext("component")
+  const component = getContext("component")
 
   // Register field with form
   const formApi = formContext?.formApi
   const labelPos = fieldGroupContext?.labelPosition || "above"
 
-  let formField: any
+  let formField: Readable<FormField> | undefined
   let touched = false
-  let labelNode: any
+  let labelNode: HTMLElement | undefined
 
   // Memoize values required to register the field to avoid loops
   const formStep = formStepContext || writable(1)
-  const fieldInfo = memo({
+  const fieldInfo = memo<FieldInfo>({
     field: field || $component.name,
     type,
     defaultValue,
@@ -65,16 +83,22 @@
   $: $component.editing && labelNode?.focus()
 
   // Update form properties in parent component on every store change
-  $: unsubscribe = formField?.subscribe((value: any) => {
-    fieldState = value?.fieldState
-    fieldApi = value?.fieldApi
-    fieldSchema = value?.fieldSchema
-  })
+  $: unsubscribe = formField?.subscribe(
+    (value?: {
+      fieldState: FieldState
+      fieldApi: FieldApi
+      fieldSchema: FieldSchema
+    }) => {
+      fieldState = value?.fieldState
+      fieldApi = value?.fieldApi
+      fieldSchema = value?.fieldSchema
+    }
+  )
 
   // Determine label class from position
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
-  const registerField = (info: any) => {
+  const registerField = (info: FieldInfo) => {
     formField = formApi?.registerField(
       info.field,
       info.type,
@@ -86,10 +110,10 @@
     )
   }
 
-  const updateLabel = (e: any) => {
+  const updateLabel = (e: Event) => {
     if (touched) {
-      // @ts-expect-error and TODO updateProp isn't recognised - need builder TS conversion
-      builderStore.actions.updateProp("label", e.target.textContent)
+      const label = e.target as HTMLLabelElement
+      builderStore.actions.updateProp("label", label.textContent)
     }
     touched = false
   }

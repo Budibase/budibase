@@ -8,11 +8,10 @@
     notifications,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { auth, organisation } from "@/stores/portal"
+  import { auth, organisation, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+  import { TestimonialPage, PasswordRepeatInput } from "@budibase/frontend-core"
   import { onMount } from "svelte"
-  import PasswordRepeatInput from "../../../components/common/users/PasswordRepeatInput.svelte"
 
   const resetCode = $params["?code"]
   let form
@@ -83,6 +82,7 @@
         bind:passwordForm={form}
         bind:password
         bind:error={passwordError}
+        minLength={$admin.passwordMinLength || 12}
       />
       <Button secondary cta on:click={reset}>
         {#if loading}

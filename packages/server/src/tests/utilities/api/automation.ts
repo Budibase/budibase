@@ -133,4 +133,11 @@ export class AutomationAPI extends TestAPI {
       }
     )
   }
+
+  deleteAll = async (expectations?: Expectations): Promise<void> => {
+    const { automations } = await this.fetch()
+    await Promise.all(
+      automations.map(automation => this.delete(automation, expectations))
+    )
+  }
 }
