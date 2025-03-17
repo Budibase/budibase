@@ -40,9 +40,7 @@
   }
 
   function addOAuth2Configuration() {
-    $goto(
-      `/builder/app/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
-    )
+    $goto(`/builder/app/${$appStore.appId}/settings/oauth2`)
   }
 
   function selectConfiguration(id: string) {
