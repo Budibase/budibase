@@ -1,11 +1,11 @@
-import { CreateOAuth2ConfigRequest, VirtualDocumentType } from "@budibase/types"
+import { UpsertOAuth2ConfigRequest, VirtualDocumentType } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 
 describe("/oauth2", () => {
   let config = setup.getConfig()
 
-  function makeOAuth2Config(): CreateOAuth2ConfigRequest {
+  function makeOAuth2Config(): UpsertOAuth2ConfigRequest {
     return {
       name: generator.guid(),
       url: generator.url(),
