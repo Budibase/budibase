@@ -57,7 +57,15 @@ export async function update(config: OAuth2Config): Promise<OAuth2Config> {
   }
 
   if (!doc.configs[config.id]) {
-    throw new HTTPError(`OAuth2 config with id '${config.id}' not found`, 400)
+    throw new HTTPError(`OAuth2 config with id '${config.id}' not found.`, 400)
+  }
+
+  if (
+    Object.values(doc.configs).find(
+      c => c.name === config.name && c.id !== config.id
+    )
+  ) {
+    throw new HTTPError("Name is not available.", 400)
   }
 
   doc.configs[config.id] = {
