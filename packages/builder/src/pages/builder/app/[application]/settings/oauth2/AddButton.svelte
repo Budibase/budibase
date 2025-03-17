@@ -28,10 +28,10 @@
 
   $: saveOAuth2Config = async () => {
     const validator = z.object({
-      name: z.string().min(1),
-      url: z.string().min(1),
-      clientId: z.string().min(1),
-      clientSecret: z.string().min(1),
+      name: z.string().min(1, "Required"),
+      url: z.string().min(1, "Required").url(),
+      clientId: z.string().min(1, "Required"),
+      clientSecret: z.string().min(1, "Required"),
     }) satisfies ZodType<CreateOAuth2Config>
 
     const validationResult = validator.safeParse(config)
@@ -45,7 +45,6 @@
         }
         return acc
       }, {})
-      notifications.error("OAuth2 configuration is not valid")
       return keepOpen
     }
 
