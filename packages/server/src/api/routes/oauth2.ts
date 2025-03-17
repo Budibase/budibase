@@ -18,5 +18,10 @@ router.put(
   oAuth2ConfigValidator(),
   controller.edit
 )
+router.delete(
+  "/api/oauth2/:id",
+  authorized(PermissionType.BUILDER),
+  controller.remove
+)
 
 export default router

@@ -35,4 +35,10 @@ export class OAuth2API extends TestAPI {
       expectations,
     })
   }
+
+  delete = async (id: string, expectations?: Expectations) => {
+    return await this._delete<void>(`/api/oauth2/${id}`, {
+      expectations,
+    })
+  }
 }
