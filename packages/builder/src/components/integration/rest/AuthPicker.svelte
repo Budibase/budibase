@@ -3,23 +3,43 @@
     ActionButton,
     Body,
     Button,
+    Divider,
     List,
     ListItem,
     PopoverAlignment,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { appStore } from "@/stores/builder"
+  import { appStore, oauth2 } from "@/stores/builder"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { featureFlag } from "@/helpers"
+  import { FeatureFlag } from "@budibase/types"
+  import { onMount } from "svelte"
+
+  type Config = { label: string; value: string }
 
   export let authConfigId: string | undefined
-  export let authConfigs: { label: string; value: string }[]
+  export let authConfigs: Config[]
   export let datasourceId: string
 
   let popover: DetailPopover
+  let allConfigs: Config[]
 
-  $: authConfig = authConfigs.find(c => c.value === authConfigId)
+  $: allConfigs = [
+    ...authConfigs,
+    ...$oauth2.configs.map(c => ({
+      label: c.name,
+      value: c.id,
+    })),
+  ]
+  $: authConfig = allConfigs.find(c => c.value === authConfigId)
 
   function addBasicConfiguration() {
+    $goto(
+      `/builder/app/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
+    )
+  }
+
+  function addOAuth2Configuration() {
     $goto(
       `/builder/app/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`
     )
@@ -35,6 +55,12 @@
   }
 
   $: title = !authConfig ? "Authentication" : `Auth: ${authConfig.label}`
+
+  $: oauth2Enabled = featureFlag.isEnabled(FeatureFlag.OAUTH2_CONFIG)
+
+  onMount(() => {
+    oauth2.fetch()
+  })
 </script>
 
 <DetailPopover bind:this={popover} {title} align={PopoverAlignment.Right}>
@@ -68,4 +94,29 @@
       >Add Basic</Button
     >
   </div>
+
+  {#if oauth2Enabled}
+    <Divider />
+
+    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+      OAuth 2.0 (Token-Based Authentication)
+    </Body>
+
+    {#if $oauth2.configs.length}
+      <List>
+        {#each $oauth2.configs as config}
+          <ListItem
+            title={config.name}
+            on:click={() => selectConfiguration(config.id)}
+            selected={config.id === authConfigId}
+          />
+        {/each}
+      </List>
+    {/if}
+    <div>
+      <Button secondary icon="Add" on:click={addOAuth2Configuration}
+        >Add OAuth2</Button
+      >
+    </div>
+  {/if}
 </DetailPopover>
