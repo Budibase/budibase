@@ -15,7 +15,7 @@ router.post(
 router.put(
   "/api/oauth2/:id",
   authorized(PermissionType.BUILDER),
-  createOAauth2ConfigValidator(),
+  oAuth2ConfigValidator(),
   controller.create
 )
 

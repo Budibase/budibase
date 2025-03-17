@@ -1,6 +1,6 @@
 import {
-  CreateOAuth2ConfigRequest,
-  CreateOAuth2ConfigResponse,
+  UpsertOAuth2ConfigRequest,
+  UpsertOAuth2ConfigResponse,
   Ctx,
   FetchOAuth2ConfigsResponse,
   OAuth2Config,
@@ -22,7 +22,7 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
 }
 
 export async function create(
-  ctx: Ctx<CreateOAuth2ConfigRequest, CreateOAuth2ConfigResponse>
+  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
   const newConfig: RequiredKeys<Omit<OAuth2Config, "id">> = {
@@ -38,7 +38,7 @@ export async function create(
 }
 
 export async function edit(
-  ctx: Ctx<CreateOAuth2ConfigRequest, CreateOAuth2ConfigResponse>
+  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
   const toUpdate: RequiredKeys<OAuth2Config> = {
