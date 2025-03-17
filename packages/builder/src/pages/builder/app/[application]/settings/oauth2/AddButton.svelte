@@ -28,10 +28,10 @@
 
   $: saveOAuth2Config = async () => {
     const validator = z.object({
-      name: z.string().min(1, "Required"),
-      url: z.string().min(1, "Required").url(),
-      clientId: z.string().min(1, "Required"),
-      clientSecret: z.string().min(1, "Required"),
+      name: z.string().trim().min(1, "Required"),
+      url: z.string().trim().min(1, "Required").url(),
+      clientId: z.string().trim().min(1, "Required"),
+      clientSecret: z.string().trim().min(1, "Required"),
     }) satisfies ZodType<CreateOAuth2Config>
 
     const validationResult = validator.safeParse(config)
