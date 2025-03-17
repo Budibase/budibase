@@ -1,11 +1,20 @@
 <script lang="ts">
-  import { ActionMenu, Icon, MenuItem } from "@budibase/bbui"
+  import { oauth2 } from "@/stores/builder"
+  import { ActionMenu, Icon, MenuItem, notifications } from "@budibase/bbui"
+  import type { OAuth2Config } from "@budibase/types"
+
+  export let row: OAuth2Config
 
   function onEdit() {
     // TODO
   }
-  function onDelete() {
-    // TODO
+  async function onDelete() {
+    try {
+      await oauth2.delete(row.id)
+      notifications.success(`Config '${row.name}' deleted successfully`)
+    } catch (e: any) {
+      notifications.error("Error deleting config")
+    }
   }
 </script>
 

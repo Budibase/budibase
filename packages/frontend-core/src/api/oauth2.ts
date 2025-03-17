@@ -11,12 +11,12 @@ export interface OAuth2Endpoints {
   create: (
     config: UpsertOAuth2ConfigRequest
   ) => Promise<UpsertOAuth2ConfigResponse>
+  delete: (id: string) => Promise<void>
 }
 
 export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
   /**
    * Gets all OAuth2 configurations for the app.
-   * @param tableId the ID of the table
    */
   fetch: async () => {
     return (
@@ -40,6 +40,16 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
       body: {
         ...config,
       },
+    })
+  },
+
+  /**
+   * Deletes an OAuth2 configuration by its id.
+   * @param id the ID of the OAuth2 config
+   */
+  delete: async id => {
+    return await API.delete<void, void>({
+      url: `/api/oauth2/${id}`,
     })
   },
 })

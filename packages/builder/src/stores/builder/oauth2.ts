@@ -46,6 +46,11 @@ export class OAuth2Store extends BudiStore<OAuth2StoreState> {
     await API.oauth2.create(config)
     await this.fetch()
   }
+
+  async delete(id: string) {
+    await API.oauth2.delete(id)
+    await this.fetch()
+  }
 }
 
 export const oauth2 = new OAuth2Store()
