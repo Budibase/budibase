@@ -23,15 +23,27 @@
   }
 
   let config: Partial<CreateOAuth2Config> = {}
-
   let errors: Record<string, string> = {}
 
-  $: saveOAuth2Config = async () => {
+  let hasBeenSubmitted = false
+
+  const requiredString = (errorMessage: string) =>
+    z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
+
+  const validateConfig = (config: Partial<CreateOAuth2Config>) => {
     const validator = z.object({
-      name: z.string().trim().min(1, "Required"),
-      url: z.string().trim().min(1, "Required").url(),
-      clientId: z.string().trim().min(1, "Required"),
-      clientSecret: z.string().trim().min(1, "Required"),
+      name: requiredString("Name is required.").refine(
+        val =>
+          !$oauth2.configs
+            .map(c => c.name.toLowerCase())
+            .includes(val.toLowerCase()),
+        {
+          message: "This name is already taken.",
+        }
+      ),
+      url: requiredString("Url is required.").url(),
+      clientId: requiredString("Client ID is required."),
+      clientSecret: requiredString("Client secret is required."),
     }) satisfies ZodType<CreateOAuth2Config>
 
     const validationResult = validator.safeParse(config)
@@ -45,6 +57,15 @@
         }
         return acc
       }, {})
+    }
+
+    return validationResult
+  }
+
+  $: saveOAuth2Config = async () => {
+    hasBeenSubmitted = true
+    const validationResult = validateConfig(config)
+    if (validationResult.error) {
       return keepOpen
     }
 
@@ -55,6 +76,8 @@
       return keepOpen
     }
   }
+
+  $: hasBeenSubmitted && validateConfig(config)
 </script>
 
 <Button cta size="M" on:click={openModal}>Add OAuth2</Button>
