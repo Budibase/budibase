@@ -20,12 +20,13 @@
 
   function openModal() {
     config = {}
+    errors = {}
+    hasBeenSubmitted = false
     modal.show()
   }
 
   let config: Partial<CreateOAuth2Config> = {}
   let errors: Record<string, string> = {}
-
   let hasBeenSubmitted = false
 
   const requiredString = (errorMessage: string) =>
