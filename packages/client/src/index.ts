@@ -16,7 +16,6 @@ import {
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { Readable } from "svelte/store"
 import {
   Screen,
   Theme,
@@ -77,8 +76,6 @@ declare global {
   }
 }
 
-export type Context = Readable<Record<string, any>>
-
 export interface SDK {
   API: APIClient
   styleable: any
@@ -93,13 +90,6 @@ export interface SDK {
   environmentStore: typeof environmentStore
   appStore: typeof appStore
 }
-
-export type Component = Readable<{
-  id: string
-  styles: any
-  errorState: boolean
-  path: string[]
-}>
 
 let app: ClientApp
 
