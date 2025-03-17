@@ -12,10 +12,6 @@
 
   $: authConfig = authConfigs.find(c => c.value === authConfigId)
 
-  function closeMenu() {
-    popover.hide()
-  }
-
   function addBasicConfiguration() {
     $goto(
       `/builder/app/${$appStore.appId}/data/datasource/${datasourceId}?&tab=Authentication`

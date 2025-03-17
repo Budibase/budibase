@@ -89,14 +89,13 @@
   /* Selection is only meant for standalone list items (non stacked) so we just set a fixed border radius */
   .list-item.selected {
     background-color: var(--spectrum-global-color-blue-100);
-    border-color: var(--spectrum-global-color-blue-100);
+    border: 1px solid var(--spectrum-global-color-blue-400);
   }
   .list-item.selected:after {
     content: "";
     position: absolute;
     height: 100%;
     width: 100%;
-    border: 1px solid var(--spectrum-global-color-blue-400);
     pointer-events: none;
     top: 0;
     left: 0;
