@@ -50,6 +50,5 @@ export async function edit(
   }
 
   const config = await sdk.oauth2.update(toUpdate)
-  ctx.status = 201
   ctx.body = { config }
 }
