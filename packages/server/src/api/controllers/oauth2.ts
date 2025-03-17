@@ -28,8 +28,8 @@ export async function create(
   const newConfig: RequiredKeys<Omit<OAuth2Config, "id">> = {
     name: body.name,
     url: body.url,
-    clientId: ctx.clientId,
-    clientSecret: ctx.clientSecret,
+    clientId: body.clientId,
+    clientSecret: body.clientSecret,
   }
 
   const config = await sdk.oauth2.create(newConfig)
