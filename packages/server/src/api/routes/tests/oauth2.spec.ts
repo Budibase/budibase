@@ -6,7 +6,6 @@ import {
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 import _ from "lodash/fp"
-import sdk from "packages/server/src/sdk"
 
 describe("/oauth2", () => {
   let config = setup.getConfig()
@@ -22,6 +21,8 @@ describe("/oauth2", () => {
 
   beforeAll(async () => await config.init())
 
+  beforeEach(async () => await config.newTenant())
+
   const expectOAuth2ConfigId = expect.stringMatching(
     `^${VirtualDocumentType.OAUTH2_CONFIG}_.+$`
   )
@@ -36,8 +37,6 @@ describe("/oauth2", () => {
   })
 
   describe("create", () => {
-    beforeEach(async () => await config.newTenant())
-
     it("can create a new configuration", async () => {
       const oauth2Config = makeOAuth2Config()
       await config.api.oauth2.create(oauth2Config, { status: 201 })
@@ -102,12 +101,11 @@ describe("/oauth2", () => {
   describe("update", () => {
     let existingConfigs: OAuth2Config[] = []
 
-    beforeAll(async () => {
-      await config.newTenant()
-
+    beforeEach(async () => {
+      existingConfigs = []
       for (let i = 0; i < 10; i++) {
         const oauth2Config = makeOAuth2Config()
-        const result = await config.api.oauth2.create(makeOAuth2Config())
+        const result = await config.api.oauth2.create(oauth2Config)
 
         existingConfigs.push({ ...oauth2Config, id: result.config.id })
       }
@@ -131,6 +129,30 @@ describe("/oauth2", () => {
             url: configData.url,
           },
         ])
+      )
+    })
+
+    it("throw if config not found", async () => {
+      await config.api.oauth2.update("unexisting", makeOAuth2Config(), {
+        status: 400,
+        body: { message: "OAuth2 config with id 'unexisting' not found." },
+      })
+    })
+
+    it("throws if trying to use an existing name", async () => {
+      const [config1, config2] = _.sampleSize(2, existingConfigs)
+      const { id: configId, ...configData } = config1
+
+      await config.api.oauth2.update(
+        configId,
+        {
+          ...configData,
+          name: config2.name,
+        },
+        {
+          status: 400,
+          body: { message: "Name is not available." },
+        }
       )
     })
   })
