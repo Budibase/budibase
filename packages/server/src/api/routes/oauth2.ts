@@ -16,7 +16,7 @@ router.put(
   "/api/oauth2/:id",
   authorized(PermissionType.BUILDER),
   oAuth2ConfigValidator(),
-  controller.create
+  controller.edit
 )
 
 export default router

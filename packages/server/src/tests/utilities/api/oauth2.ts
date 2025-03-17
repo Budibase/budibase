@@ -24,4 +24,15 @@ export class OAuth2API extends TestAPI {
       },
     })
   }
+
+  update = async (
+    id: string,
+    body: UpsertOAuth2ConfigRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._put<UpsertOAuth2ConfigResponse>(`/api/oauth2/${id}`, {
+      body,
+      expectations,
+    })
+  }
 }
