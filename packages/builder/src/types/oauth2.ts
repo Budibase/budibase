@@ -1,3 +1,3 @@
-import { CreateOAuth2ConfigRequest } from "@budibase/types"
+import { UpsertOAuth2ConfigRequest } from "@budibase/types"
 
-export interface CreateOAuth2Config extends CreateOAuth2ConfigRequest {}
+export interface CreateOAuth2Config extends UpsertOAuth2ConfigRequest {}
