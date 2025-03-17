@@ -1,16 +1,16 @@
 import {
   FetchOAuth2ConfigsResponse,
-  CreateOAuth2ConfigResponse,
   OAuth2ConfigResponse,
-  CreateOAuth2ConfigRequest,
+  UpsertOAuth2ConfigRequest,
+  UpsertOAuth2ConfigResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface OAuth2Endpoints {
   fetch: () => Promise<OAuth2ConfigResponse[]>
   create: (
-    config: CreateOAuth2ConfigRequest
-  ) => Promise<CreateOAuth2ConfigResponse>
+    config: UpsertOAuth2ConfigRequest
+  ) => Promise<UpsertOAuth2ConfigResponse>
 }
 
 export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
@@ -33,8 +33,8 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
    */
   create: async config => {
     return await API.post<
-      CreateOAuth2ConfigRequest,
-      CreateOAuth2ConfigResponse
+      UpsertOAuth2ConfigRequest,
+      UpsertOAuth2ConfigResponse
     >({
       url: `/api/oauth2`,
       body: {
