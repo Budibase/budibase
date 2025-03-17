@@ -12,7 +12,6 @@
     TableSchema,
     UIFieldValidationRule,
   } from "@budibase/types"
-  import Tab from "@budibase/bbui/src/Tabs/Tab.svelte"
 
   type FieldInfo<T = any> = {
     name: string
