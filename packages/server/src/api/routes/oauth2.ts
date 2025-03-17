@@ -6,7 +6,7 @@ import authorized from "../../middleware/authorized"
 import * as controller from "../controllers/oauth2"
 import Joi from "joi"
 
-function createOAauth2ConfigValidator() {
+function oAuth2ConfigValidator() {
   return middleware.joiValidator.body(
     Joi.object({
       name: Joi.string().required(),
@@ -14,7 +14,7 @@ function createOAauth2ConfigValidator() {
       clientId: Joi.string().required(),
       clientSecret: Joi.string().required(),
     }),
-    { allowUnknown: true }
+    { allowUnknown: false }
   )
 }
 
@@ -24,7 +24,7 @@ router.get("/api/oauth2", authorized(PermissionType.BUILDER), controller.fetch)
 router.post(
   "/api/oauth2",
   authorized(PermissionType.BUILDER),
-  createOAauth2ConfigValidator(),
+  oAuth2ConfigValidator(),
   controller.create
 )
 router.put(
