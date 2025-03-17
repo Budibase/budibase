@@ -63,6 +63,7 @@
   let nestedSchemaFields = {}
   let saving
   let queryNameLabel
+  let mounted = false
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -104,8 +105,10 @@
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
-  $: originalQuery = originalQuery ?? cloneDeep(query)
   $: builtQuery = buildQuery(query, runtimeUrlQueries, requestBindings)
+  $: originalQuery = mounted
+    ? originalQuery ?? cloneDeep(builtQuery)
+    : undefined
   $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 
   function getSelectedQuery() {
@@ -477,6 +480,8 @@
       staticVariables,
       restBindings
     )
+
+    mounted = true
   })
 
   $beforeUrlChange(async () => {
