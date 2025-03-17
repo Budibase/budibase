@@ -7,9 +7,11 @@
     Divider,
     Heading,
     Input,
+    keepOpen,
     Link,
     Modal,
     ModalContent,
+    notifications,
   } from "@budibase/bbui"
 
   let modal: Modal
@@ -21,7 +23,12 @@
   let config: Partial<CreateOAuth2Config> = {}
 
   $: saveOAuth2Config = async () => {
-    await oauth2.create(config as any) // TODO
+    try {
+      await oauth2.create(config as any) // TODO
+    } catch (e: any) {
+      notifications.error(e.message)
+      return keepOpen
+    }
   }
 </script>
 
