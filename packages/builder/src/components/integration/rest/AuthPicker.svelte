@@ -12,12 +12,13 @@
   import { appStore, oauth2 } from "@/stores/builder"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { featureFlag } from "@/helpers"
-  import { FeatureFlag } from "@budibase/types"
+  import { FeatureFlag, RestAuthType } from "@budibase/types"
   import { onMount } from "svelte"
 
   type Config = { label: string; value: string }
 
   export let authConfigId: string | undefined
+  export let authConfigType: RestAuthType | undefined
   export let authConfigs: Config[]
   export let datasourceId: string
 
@@ -43,11 +44,13 @@
     $goto(`/builder/app/${$appStore.appId}/settings/oauth2`)
   }
 
-  function selectConfiguration(id: string) {
+  function selectConfiguration(id: string, type?: RestAuthType) {
     if (authConfigId === id) {
       authConfigId = undefined
+      authConfigType = undefined
     } else {
       authConfigId = id
+      authConfigType = type
     }
     popover.hide()
   }
@@ -105,7 +108,7 @@
         {#each $oauth2.configs as config}
           <ListItem
             title={config.name}
-            on:click={() => selectConfiguration(config.id)}
+            on:click={() => selectConfiguration(config.id, RestAuthType.OAUTH2)}
             selected={config.id === authConfigId}
           />
         {/each}
