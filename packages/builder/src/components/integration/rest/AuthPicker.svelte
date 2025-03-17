@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { ActionButton, Body, Button, List, ListItem } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Body,
+    Button,
+    List,
+    ListItem,
+    PopoverAlignment,
+  } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { appStore } from "@/stores/builder"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
@@ -30,7 +37,7 @@
   $: title = !authConfig ? "Authentication" : `Auth: ${authConfig.label}`
 </script>
 
-<DetailPopover bind:this={popover} {title}>
+<DetailPopover bind:this={popover} {title} align={PopoverAlignment.Right}>
   <div slot="anchor">
     <ActionButton icon="LockClosed" quiet selected>
       {#if !authConfig}
