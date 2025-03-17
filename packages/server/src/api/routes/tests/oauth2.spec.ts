@@ -19,7 +19,7 @@ describe("/oauth2", () => {
   beforeEach(async () => await config.newTenant())
 
   const expectOAuth2ConfigId = expect.stringMatching(
-    `^${VirtualDocumentType.ROW_ACTION}_.+$`
+    `^${VirtualDocumentType.OAUTH2_CONFIG}_.+$`
   )
 
   describe("fetch", () => {

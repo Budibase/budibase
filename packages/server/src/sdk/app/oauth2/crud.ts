@@ -34,7 +34,7 @@ export async function create(
     throw new HTTPError("Name already used", 400)
   }
 
-  const id = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
+  const id = `${VirtualDocumentType.OAUTH2_CONFIG}${SEPARATOR}${utils.newid()}`
   doc.configs[id] = {
     id,
     ...config,
