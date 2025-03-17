@@ -19,6 +19,7 @@
   let modal: Modal
 
   function openModal() {
+    config = {}
     modal.show()
   }
 
