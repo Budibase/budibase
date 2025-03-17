@@ -48,3 +48,22 @@ export async function get(id: string): Promise<OAuth2Config | undefined> {
   const doc = await getDocument()
   return doc?.configs?.[id]
 }
+
+export async function update(config: OAuth2Config): Promise<OAuth2Config> {
+  const db = context.getAppDB()
+  const doc: OAuth2Configs = (await getDocument(db)) ?? {
+    _id: DocumentType.OAUTH2_CONFIG,
+    configs: {},
+  }
+
+  if (!doc.configs[config.id]) {
+    throw new HTTPError(`OAuth2 config with id '${config.id}' not found`, 400)
+  }
+
+  doc.configs[config.id] = {
+    ...config,
+  }
+
+  await db.put(doc)
+  return doc.configs[config.id]
+}

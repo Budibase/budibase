@@ -36,3 +36,20 @@ export async function create(
   ctx.status = 201
   ctx.body = { config }
 }
+
+export async function edit(
+  ctx: Ctx<CreateOAuth2ConfigRequest, CreateOAuth2ConfigResponse>
+) {
+  const { body } = ctx.request
+  const toUpdate: RequiredKeys<OAuth2Config> = {
+    id: ctx.params.id,
+    name: body.name,
+    url: body.url,
+    clientId: ctx.clientId,
+    clientSecret: ctx.clientSecret,
+  }
+
+  const config = await sdk.oauth2.update(toUpdate)
+  ctx.status = 201
+  ctx.body = { config }
+}
