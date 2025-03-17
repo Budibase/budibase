@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionButton, ActionGroup, Body, Button } from "@budibase/bbui"
+  import { ActionButton, Body, Button, List, ListItem } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { appStore } from "@/stores/builder"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
@@ -50,21 +50,15 @@
   </Body>
 
   {#if authConfigs.length}
-    <div class="auth-options">
-      <ActionGroup vertical compact>
-        <!-- Hack to first config margin to not work as expected -->
-        <div class="spectrum-ActionGroup-item hidden" />
-        {#each authConfigs as config}
-          <ActionButton
-            on:click={() => selectConfiguration(config.value)}
-            selected={config.value === authConfigId}
-            accentColor="#066CE7"
-          >
-            {config.label}
-          </ActionButton>
-        {/each}
-      </ActionGroup>
-    </div>
+    <List>
+      {#each authConfigs as config}
+        <ListItem
+          title={config.label}
+          on:click={() => selectConfiguration(config.value)}
+          selected={config.value === authConfigId}
+        />
+      {/each}
+    </List>
   {/if}
   <div>
     <Button secondary icon="Add" on:click={addBasicConfiguration}
@@ -72,23 +66,3 @@
     >
   </div>
 </DetailPopover>
-
-<style>
-  .hidden {
-    display: none;
-  }
-  .header-container {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .auth-options :global(.spectrum-ActionGroup) {
-    width: 100%;
-  }
-  .auth-options :global(.spectrum-ActionButton) {
-    justify-content: start;
-    cursor: pointer;
-    pointer-events: auto;
-  }
-</style>
