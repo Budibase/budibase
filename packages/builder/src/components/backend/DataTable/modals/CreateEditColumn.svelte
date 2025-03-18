@@ -1,40 +1,42 @@
-<script>
+<script lang="ts">
   import {
-    Input,
-    Button,
-    Label,
-    Select,
-    Multiselect,
-    Toggle,
-    Icon,
-    DatePicker,
-    Modal,
-    notifications,
-    Layout,
     AbsTooltip,
+    Button,
+    DatePicker,
+    Icon,
+    Input,
+    Label,
+    Layout,
+    Modal,
+    Multiselect,
+    notifications,
     ProgressCircle,
+    Select,
+    Toggle,
+    TooltipPosition,
+    TooltipType,
   } from "@budibase/bbui"
   import {
+    canHaveDefaultColumn,
+    helpers,
+    PROTECTED_EXTERNAL_COLUMNS,
+    PROTECTED_INTERNAL_COLUMNS,
     SWITCHABLE_TYPES,
     ValidColumnNameRegex,
-    helpers,
-    PROTECTED_INTERNAL_COLUMNS,
-    PROTECTED_EXTERNAL_COLUMNS,
-    canHaveDefaultColumn,
   } from "@budibase/shared-core"
   import { makePropSafe } from "@budibase/string-templates"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { tables, datasources } from "@/stores/builder"
+  import { datasources, tables } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "@/constants"
   import {
-    FIELDS,
-    RelationshipType,
-    PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
+    FIELDS,
+    PrettyRelationshipDefinitions,
+    RelationshipType,
   } from "@/constants/backend"
-  import { getAutoColumnInformation, buildAutoColumn } from "@/helpers/utils"
+  import { buildAutoColumn, getAutoColumnInformation } from "@/helpers/utils"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import AIFieldConfiguration from "@/components/common/AIFieldConfiguration.svelte"
   import ModalBindableInput from "@/components/common/bindings/ModalBindableInput.svelte"
@@ -43,42 +45,52 @@
   import {
     BBReferenceFieldSubType,
     FieldType,
+    FormulaType,
     SourceName,
   } from "@budibase/types"
   import RelationshipSelector from "@/components/common/RelationshipSelector.svelte"
-  import { RowUtils, canBeDisplayColumn } from "@budibase/frontend-core"
+  import { canBeDisplayColumn, RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
   import { getUserBindings } from "@/dataBinding"
+  import type {
+    Table,
+    Datasource,
+    FieldSchema,
+    UIField,
+    AutoFieldSubType,
+    FormulaResponseType,
+    FieldSchemaConfig,
+  } from "@budibase/types"
 
-  export let field
+  export let field: FieldSchema
 
   const dispatch = createEventDispatcher()
-  const { dispatch: gridDispatch, rows } = getContext("grid")
+  const { dispatch: gridDispatch, rows } = getContext("grid") as any
   const SafeID = `${makePropSafe("user")}.${makePropSafe("_id")}`
   const SingleUserDefault = `{{ ${SafeID} }}`
   const MultiUserDefault = `{{ js "${btoa(`return [$("${SafeID}")]`)}" }}`
 
   let mounted = false
-  let originalName
-  let linkEditDisabled
-  let primaryDisplay
-  let indexes = [...($tables.selected.indexes || [])]
-  let isCreating = undefined
+  let originalName: string | undefined
+  let linkEditDisabled: boolean = false
+  let hasPrimaryDisplay: boolean
+  let isCreating: boolean | undefined
   let relationshipPart1 = PrettyRelationshipDefinitions.MANY
   let relationshipPart2 = PrettyRelationshipDefinitions.ONE
-  let relationshipTableIdPrimary = null
-  let relationshipTableIdSecondary = null
-  let table = $tables.selected
-  let confirmDeleteDialog
-  let savingColumn
-  let deleteColName
-  let jsonSchemaModal
-  let editableColumn = {
-    type: FIELDS.STRING.type,
-    constraints: FIELDS.STRING.constraints,
+  let relationshipTableIdPrimary: string | undefined
+  let relationshipTableIdSecondary: string | undefined
+  let table: Table | undefined = $tables.selected
+  let confirmDeleteDialog: any
+  let savingColumn: boolean
+  let deleteColName: string | undefined
+  let jsonSchemaModal: any
+  let editableColumn: FieldSchemaConfig = {
+    type: FieldType.STRING,
+    constraints: FIELDS.STRING.constraints as any,
+    name: "",
     // Initial value for column name in other table for linked records
-    fieldName: $tables.selected.name,
+    fieldName: $tables.selected?.name || "",
   }
   let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
   let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
@@ -126,15 +138,15 @@
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
   $: aiEnabled =
-    $licensing.customAIConfigsEnabled || $licensing.budibaseAiEnabled
-  $: if (primaryDisplay) {
+    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
+  $: if (hasPrimaryDisplay && editableColumn.constraints) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
   $: {
     // this parses any changes the user has made when creating a new internal relationship
     // into what we expect the schema to look like
     if (editableColumn.type === FieldType.LINK) {
-      relationshipTableIdPrimary = table._id
+      relationshipTableIdPrimary = table?._id
       if (relationshipPart1 === PrettyRelationshipDefinitions.ONE) {
         relationshipOpts2 = relationshipOpts2.filter(
           opt => opt !== PrettyRelationshipDefinitions.ONE
@@ -154,36 +166,44 @@
       editableColumn.relationshipType = Object.entries(relationshipMap).find(
         ([_, parts]) =>
           parts.part1 === relationshipPart1 && parts.part2 === relationshipPart2
-      )?.[0]
-      // Set the tableId based on the selected table
-      editableColumn.tableId = relationshipTableIdSecondary
+      )?.[0] as RelationshipType
+      if (relationshipTableIdSecondary) {
+        // Set the tableId based on the selected table
+        editableColumn.tableId = relationshipTableIdSecondary
+      }
     }
   }
   $: initialiseField(field, savingColumn)
   $: checkConstraints(editableColumn)
   $: required =
-    primaryDisplay ||
+    hasPrimaryDisplay ||
     editableColumn?.constraints?.presence === true ||
-    editableColumn?.constraints?.presence?.allowEmpty === false
+    (editableColumn?.constraints?.presence as any)?.allowEmpty === false
   $: uneditable =
     $tables.selected?._id === TableNames.USERS &&
-    UNEDITABLE_USER_FIELDS.includes(editableColumn.name)
+    UNEDITABLE_USER_FIELDS.includes(editableColumn.name || "")
   $: invalid =
     !editableColumn?.name ||
     (editableColumn?.type === FieldType.LINK && !editableColumn?.tableId) ||
-    Object.keys(errors).length !== 0 ||
+    Object.keys(errors || {}).length !== 0 ||
     !optionsValid
   $: errors = checkErrors(editableColumn)
   $: datasource = $datasources.list.find(
     source => source._id === table?.sourceId
-  )
+  ) as Datasource | undefined
   $: tableAutoColumnsTypes = getTableAutoColumnTypes($tables?.selected)
-  $: availableAutoColumns = Object.keys(autoColumnInfo).reduce((acc, key) => {
-    if (!tableAutoColumnsTypes.includes(key)) {
-      acc[key] = autoColumnInfo[key]
-    }
-    return acc
-  }, {})
+  $: availableAutoColumns = Object.keys(autoColumnInfo).reduce(
+    (acc: Record<string, { enabled: boolean; name: string }>, key: string) => {
+      if (!tableAutoColumnsTypes.includes(key)) {
+        const subtypeKey = key as AutoFieldSubType
+        if (autoColumnInfo[subtypeKey]) {
+          acc[key] = autoColumnInfo[subtypeKey]
+        }
+      }
+      return acc
+    },
+    {}
+  )
   $: availableAutoColumnKeys = availableAutoColumns
     ? Object.keys(availableAutoColumns)
     : []
@@ -201,22 +221,21 @@
     !editableColumn.autocolumn
   $: hasDefault =
     editableColumn?.default != null && editableColumn?.default !== ""
-  $: isExternalTable = table.sourceType === DB_TYPE_EXTERNAL
+  $: isExternalTable = table?.sourceType === DB_TYPE_EXTERNAL
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
     opt =>
-      opt.sourceType === table.sourceType && table.sourceId === opt.sourceId
+      opt.sourceType === table?.sourceType && table.sourceId === opt.sourceId
   )
   $: typeEnabled =
     !originalName ||
     (originalName &&
       SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
+  $: allowedTypes = getAllowedTypes(datasource, table)
   $: orderedAllowedTypes = fixedTypeOrder
     .filter(ordered =>
-      getAllowedTypes(datasource, table).find(
-        allowed => allowed.type === ordered.type
-      )
+      allowedTypes.find(allowed => allowed.type === ordered.type)
     )
     .map(t => ({
       fieldId: makeFieldId(t.type, t.subtype),
@@ -255,7 +274,9 @@
     FIELDS.BIGINT,
   ]
 
-  const fieldDefinitions = Object.values(FIELDS).reduce(
+  const fieldDefinitions: Record<string, UIField> = Object.values(
+    FIELDS
+  ).reduce(
     // Storing the fields by complex field id
     (acc, field) => ({
       ...acc,
@@ -264,7 +285,7 @@
     {}
   )
 
-  function makeFieldId(type, subtype, autocolumn) {
+  function makeFieldId(type: string, subtype?: string, autocolumn?: boolean) {
     // don't make field IDs for auto types
     if (type === FieldType.AUTO || autocolumn) {
       return type.toUpperCase()
@@ -278,23 +299,29 @@
     }
   }
 
-  const initialiseField = (field, savingColumn) => {
+  const initialiseField = (
+    field: FieldSchema | undefined,
+    savingColumn: boolean
+  ) => {
     isCreating = !field
     if (field && !savingColumn) {
-      editableColumn = cloneDeep(field)
-      originalName = editableColumn.name ? editableColumn.name + "" : null
+      editableColumn = cloneDeep(field) as FieldSchemaConfig
+      originalName = editableColumn.name ? editableColumn.name + "" : undefined
       linkEditDisabled = originalName != null
-      primaryDisplay =
-        $tables.selected.primaryDisplay == null ||
-        $tables.selected.primaryDisplay === editableColumn.name
+      hasPrimaryDisplay =
+        $tables.selected?.primaryDisplay == null ||
+        $tables.selected?.primaryDisplay === editableColumn.name
 
       // Here we are setting the relationship values based on the editableColumn
       // This part of the code is used when viewing an existing field hence the check
       // for the tableId
       if (editableColumn.type === FieldType.LINK && editableColumn.tableId) {
-        relationshipTableIdPrimary = table._id
+        relationshipTableIdPrimary = table?._id
         relationshipTableIdSecondary = editableColumn.tableId
-        if (editableColumn.relationshipType in relationshipMap) {
+        if (
+          editableColumn.relationshipType &&
+          editableColumn.relationshipType in relationshipMap
+        ) {
           const { part1, part2 } =
             relationshipMap[editableColumn.relationshipType]
           relationshipPart1 = part1
@@ -312,18 +339,21 @@
     }
   }
 
-  const getTableAutoColumnTypes = table => {
-    return Object.keys(table?.schema).reduce((acc, key) => {
-      let fieldSchema = table?.schema[key]
-      if (fieldSchema.autocolumn) {
-        acc.push(fieldSchema.subtype)
-      }
-      return acc
-    }, [])
+  const getTableAutoColumnTypes = (table: Table | undefined) => {
+    return Object.keys(table?.schema || {}).reduce(
+      (acc: string[], key: string) => {
+        let fieldSchema = table?.schema[key]
+        if (fieldSchema?.autocolumn && fieldSchema?.subtype) {
+          acc.push(fieldSchema.subtype)
+        }
+        return acc
+      },
+      []
+    )
   }
 
   async function saveColumn() {
-    if (errors?.length) {
+    if (Object.keys(errors || {}).length) {
       return
     }
 
@@ -332,14 +362,18 @@
 
     delete saveColumn.fieldId
 
-    if (saveColumn.type === FieldType.AUTO) {
+    if (
+      $tables.selected &&
+      saveColumn.name &&
+      saveColumn.type === FieldType.AUTO
+    ) {
       saveColumn = buildAutoColumn(
         $tables.selected.name,
         saveColumn.name,
-        saveColumn.subtype
-      )
+        saveColumn.subtype as AutoFieldSubType
+      ) as FieldSchemaConfig
     }
-    if (saveColumn.type !== FieldType.LINK) {
+    if ("fieldName" in saveColumn && saveColumn.type !== FieldType.LINK) {
       delete saveColumn.fieldName
     }
 
@@ -349,22 +383,21 @@
     }
 
     // Ensure primary display columns are always required and don't have default values
-    if (primaryDisplay) {
-      saveColumn.constraints.presence = { allowEmpty: false }
+    if (hasPrimaryDisplay) {
+      saveColumn.constraints!.presence = { allowEmpty: false }
       delete saveColumn.default
     }
 
     // Ensure the field is not required if we have a default value
     if (saveColumn.default) {
-      saveColumn.constraints.presence = false
+      saveColumn.constraints!.presence = false
     }
 
     try {
       await tables.saveField({
         originalName,
-        field: saveColumn,
-        primaryDisplay,
-        indexes,
+        field: saveColumn as FieldSchema,
+        hasPrimaryDisplay,
       })
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
@@ -374,7 +407,7 @@
       } else {
         notifications.success("Column created successfully")
       }
-    } catch (err) {
+    } catch (err: any) {
       notifications.error(`Error saving column: ${err.message}`)
     } finally {
       savingColumn = false
@@ -382,65 +415,83 @@
   }
 
   function cancelEdit() {
-    editableColumn.name = originalName
+    if (originalName) {
+      editableColumn.name = originalName
+    }
     gridDispatch("close-edit-column")
   }
 
   async function deleteColumn() {
     try {
-      editableColumn.name = deleteColName
-      if (editableColumn.name === $tables.selected.primaryDisplay) {
+      if (deleteColName) {
+        editableColumn.name = deleteColName
+      }
+      if (editableColumn.name === $tables.selected?.primaryDisplay) {
         notifications.error("You cannot delete the display column")
       } else {
-        await tables.deleteField(editableColumn)
+        await tables.deleteField({ name: editableColumn.name! })
         notifications.success(`Column ${editableColumn.name} deleted`)
         confirmDeleteDialog.hide()
         dispatch("updatecolumns")
         gridDispatch("close-edit-column")
       }
-    } catch (error) {
+    } catch (error: any) {
       notifications.error(`Error deleting column: ${error.message}`)
     }
   }
 
-  function onHandleTypeChange(event) {
+  function onHandleTypeChange(event: any) {
     handleTypeChange(event.detail)
   }
 
-  function handleTypeChange(type) {
+  function handleTypeChange(type?: string) {
     // remove any extra fields that may not be related to this type
-    delete editableColumn.autocolumn
-    delete editableColumn.subtype
-    delete editableColumn.tableId
-    delete editableColumn.relationshipType
-    delete editableColumn.formulaType
-    delete editableColumn.constraints
-    delete editableColumn.responseType
+    const columnsToClear = [
+      "autocolumn",
+      "subtype",
+      "tableId",
+      "relationshipType",
+      "formulaType",
+      "responseType",
+    ]
+    for (let column of columnsToClear) {
+      if (column in editableColumn) {
+        delete editableColumn[column as keyof FieldSchema]
+      }
+    }
+    editableColumn.constraints = {}
 
     // Add in defaults and initial definition
-    const definition = fieldDefinitions[type?.toUpperCase()]
+    const definition = fieldDefinitions[type?.toUpperCase() || ""]
     if (definition?.constraints) {
       editableColumn.constraints = cloneDeep(definition.constraints)
     }
 
     editableColumn.type = definition.type
-    editableColumn.subtype = definition.subtype
+    if (definition.subtype) {
+      // @ts-expect-error the setting of sub-type here doesn't fit our definition with
+      // FieldSchema, there is no type checking, it simply sets it if it is provided
+      editableColumn.subtype = definition.subtype
+    }
 
     // Default relationships many to many
     if (editableColumn.type === FieldType.LINK) {
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     } else if (editableColumn.type === FieldType.FORMULA) {
-      editableColumn.formulaType = "dynamic"
-      editableColumn.responseType = field?.responseType || FIELDS.STRING.type
+      editableColumn.formulaType = FormulaType.DYNAMIC
+      editableColumn.responseType =
+        field && "responseType" in field
+          ? field.responseType
+          : (FIELDS.STRING.type as FormulaResponseType)
     }
   }
 
-  function setRequired(req) {
-    editableColumn.constraints.presence = req ? { allowEmpty: false } : false
+  function setRequired(req: boolean) {
+    editableColumn.constraints!.presence = req ? { allowEmpty: false } : false
     required = req
   }
 
-  function onChangeRequired(e) {
+  function onChangeRequired(e: any) {
     setRequired(e.detail)
   }
 
@@ -457,14 +508,21 @@
     deleteColName = ""
   }
 
-  function getAllowedTypes(datasource, table) {
-    const isSqlTable = table.sql
+  function getAllowedTypes(
+    datasource: Datasource | undefined,
+    table: Table | undefined
+  ): UIField[] {
+    const isSqlTable = table?.sql
     const isGoogleSheet =
-      table.sourceType === DB_TYPE_EXTERNAL &&
+      table?.sourceType === DB_TYPE_EXTERNAL &&
       datasource?.source === SourceName.GOOGLE_SHEETS
     if (originalName) {
       let possibleTypes = SWITCHABLE_TYPES[field.type] || [editableColumn.type]
-      if (helpers.schema.isDeprecatedSingleUserColumn(editableColumn)) {
+      if (
+        helpers.schema.isDeprecatedSingleUserColumn(
+          editableColumn as FieldSchema
+        )
+      ) {
         // This will handle old single users columns
         return [
           {
@@ -523,9 +581,11 @@
       // filter out SQL-specific types for non-SQL datasources
       return allTableFields.filter(x => x !== FIELDS.LINK && x !== FIELDS.ARRAY)
     }
+
+    throw new Error("No valid allowed types found")
   }
 
-  function checkConstraints(fieldToCheck) {
+  function checkConstraints(fieldToCheck: FieldSchema) {
     if (!fieldToCheck) {
       return
     }
@@ -556,11 +616,11 @@
     }
   }
 
-  function checkErrors(fieldInfo) {
+  function checkErrors(fieldInfo: FieldSchema) {
     if (!editableColumn) {
-      return {}
+      return
     }
-    function inUse(tbl, column, ogName = null) {
+    function inUse(tbl?: Table, column?: string, ogName?: string) {
       const parsedColumn = column ? column.toLowerCase().trim() : column
 
       return Object.keys(tbl?.schema || {}).some(key => {
@@ -568,7 +628,8 @@
         return lowerKey !== ogName?.toLowerCase() && lowerKey === parsedColumn
       })
     }
-    const newError = {}
+    const newError: { name?: string; subtype?: string; relatedName?: string } =
+      {}
     const prohibited = isExternalTable
       ? PROTECTED_EXTERNAL_COLUMNS
       : PROTECTED_INTERNAL_COLUMNS
@@ -588,28 +649,49 @@
       newError.subtype = `Auto Column requires a type.`
     }
 
-    if (fieldInfo.fieldName && fieldInfo.tableId) {
+    if (
+      fieldInfo.type === FieldType.LINK &&
+      fieldInfo.fieldName &&
+      fieldInfo.tableId
+    ) {
       const relatedTable = $tables.list.find(
         tbl => tbl._id === fieldInfo.tableId
       )
       if (inUse(relatedTable, fieldInfo.fieldName) && !originalName) {
-        newError.relatedName = `Column name already in use in table ${relatedTable.name}`
+        newError.relatedName = `Column name already in use in table ${relatedTable?.name}`
       }
     }
     return newError
   }
 
-  const sanitiseDefaultValue = (type, options, defaultValue) => {
+  const sanitiseDefaultValue = (
+    type: FieldType,
+    options: string[],
+    defaultValue?: string[] | string
+  ) => {
     if (!defaultValue?.length) {
       return
     }
     // Delete default value for options fields if the option is no longer available
-    if (type === FieldType.OPTIONS && !options.includes(defaultValue)) {
+    if (
+      type === FieldType.OPTIONS &&
+      typeof defaultValue === "string" &&
+      !options.includes(defaultValue)
+    ) {
       delete editableColumn.default
     }
     // Filter array default values to only valid options
-    if (type === FieldType.ARRAY) {
+    if (type === FieldType.ARRAY && Array.isArray(defaultValue)) {
       editableColumn.default = defaultValue.filter(x => options.includes(x))
+    }
+  }
+
+  function handleNameInput(evt: any) {
+    if (
+      !uneditable &&
+      !(linkEditDisabled && editableColumn.type === FieldType.LINK)
+    ) {
+      editableColumn.name = evt.target.value
     }
   }
 
@@ -623,21 +705,14 @@
     <Input
       value={editableColumn.name}
       autofocus
-      on:input={e => {
-        if (
-          !uneditable &&
-          !(linkEditDisabled && editableColumn.type === FieldType.LINK)
-        ) {
-          editableColumn.name = e.target.value
-        }
-      }}
+      on:input={handleNameInput}
       disabled={uneditable ||
         (linkEditDisabled && editableColumn.type === FieldType.LINK)}
       error={errors?.name}
     />
   {/if}
   <Select
-    placeholder={null}
+    placeholder={undefined}
     disabled={!typeEnabled}
     bind:value={editableColumn.fieldId}
     on:change={onHandleTypeChange}
@@ -653,7 +728,7 @@
     }}
   />
 
-  {#if editableColumn.type === FieldType.STRING}
+  {#if editableColumn.type === FieldType.STRING && editableColumn.constraints.length}
     <Input
       type="number"
       label="Max Length"
@@ -670,8 +745,8 @@
       <div class="tooltip-alignment">
         <Label size="M">Formatting</Label>
         <AbsTooltip
-          position="top"
-          type="info"
+          position={TooltipPosition.Top}
+          type={TooltipType.Info}
           text={"Rich text includes support for images, link"}
         >
           <Icon size="XS" name="InfoOutline" />
@@ -694,26 +769,30 @@
       <div class="label-length">
         <Label size="M">Earliest</Label>
       </div>
-      <div class="input-length">
-        <DatePicker
-          bind:value={editableColumn.constraints.datetime.earliest}
-          enableTime={!editableColumn.dateOnly}
-          timeOnly={editableColumn.timeOnly}
-        />
-      </div>
+      {#if editableColumn.constraints.datetime}
+        <div class="input-length">
+          <DatePicker
+            bind:value={editableColumn.constraints.datetime.earliest}
+            enableTime={!editableColumn.dateOnly}
+            timeOnly={editableColumn.timeOnly}
+          />
+        </div>
+      {/if}
     </div>
 
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Latest</Label>
       </div>
-      <div class="input-length">
-        <DatePicker
-          bind:value={editableColumn.constraints.datetime.latest}
-          enableTime={!editableColumn.dateOnly}
-          timeOnly={editableColumn.timeOnly}
-        />
-      </div>
+      {#if editableColumn.constraints.datetime}
+        <div class="input-length">
+          <DatePicker
+            bind:value={editableColumn.constraints.datetime.latest}
+            enableTime={!editableColumn.dateOnly}
+            timeOnly={editableColumn.timeOnly}
+          />
+        </div>
+      {/if}
     </div>
     {#if !editableColumn.timeOnly}
       {#if datasource?.source !== SourceName.ORACLE && datasource?.source !== SourceName.SQL_SERVER && !editableColumn.dateOnly}
@@ -721,10 +800,10 @@
           <div class="row">
             <Label>Time zones</Label>
             <AbsTooltip
-              position="top"
-              type="info"
+              position={TooltipPosition.Top}
+              type={TooltipType.Info}
               text={isCreating
-                ? null
+                ? undefined
                 : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
             >
               <Icon size="XS" name="InfoOutline" />
@@ -743,25 +822,30 @@
       <div class="label-length">
         <Label size="M">Min Value</Label>
       </div>
-      <div class="input-length">
-        <Input
-          type="number"
-          bind:value={editableColumn.constraints.numericality
-            .greaterThanOrEqualTo}
-        />
-      </div>
+      {#if editableColumn.constraints.numericality}
+        <div class="input-length">
+          <Input
+            type="number"
+            bind:value={editableColumn.constraints.numericality
+              .greaterThanOrEqualTo}
+          />
+        </div>
+      {/if}
     </div>
 
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Max Value</Label>
       </div>
-      <div class="input-length">
-        <Input
-          type="number"
-          bind:value={editableColumn.constraints.numericality.lessThanOrEqualTo}
-        />
-      </div>
+      {#if editableColumn.constraints.numericality}
+        <div class="input-length">
+          <Input
+            type="number"
+            bind:value={editableColumn.constraints.numericality
+              .lessThanOrEqualTo}
+          />
+        </div>
+      {/if}
     </div>
   {:else if editableColumn.type === FieldType.LINK && !editableColumn.autocolumn}
     <RelationshipSelector
@@ -827,9 +911,11 @@
           title="Formula"
           value={editableColumn.formula}
           on:change={e => {
-            editableColumn = {
-              ...editableColumn,
-              formula: e.detail,
+            if (editableColumn.type === FieldType.FORMULA) {
+              editableColumn = {
+                ...editableColumn,
+                formula: e.detail,
+              }
             }
           }}
           bindings={getBindings({ table })}
@@ -838,7 +924,7 @@
         />
       </div>
     </div>
-  {:else if editableColumn.type === FieldType.AI}
+  {:else if editableColumn.type === FieldType.AI && table}
     <AIFieldConfiguration
       aiField={editableColumn}
       context={rowGoldenSample}
@@ -846,9 +932,7 @@
       schema={table.schema}
     />
   {:else if editableColumn.type === FieldType.JSON}
-    <Button primary text on:click={openJsonSchemaEditor}>
-      Open schema editor
-    </Button>
+    <Button primary on:click={openJsonSchemaEditor}>Open schema editor</Button>
   {/if}
   {#if editableColumn.type === FieldType.AUTO || editableColumn.autocolumn}
     <Select
@@ -869,8 +953,7 @@
         <Toggle
           value={required}
           on:change={onChangeRequired}
-          disabled={primaryDisplay || hasDefault}
-          thin
+          disabled={hasPrimaryDisplay || hasDefault}
           text="Required"
         />
       {/if}
@@ -925,7 +1008,7 @@
 
 <div class="action-buttons">
   {#if !uneditable && originalName != null}
-    <Button quiet warning text on:click={confirmDelete}>Delete</Button>
+    <Button quiet warning on:click={confirmDelete}>Delete</Button>
   {/if}
   <Button secondary newStyles on:click={cancelEdit}>Cancel</Button>
   <Button
