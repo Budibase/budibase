@@ -20,7 +20,7 @@
   export let searchTerm: string | null = null
   export let customPopoverHeight: string | undefined = undefined
   export let open: boolean = false
-  export let loading: boolean
+  export let loading: boolean = false
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
 
