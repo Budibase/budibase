@@ -45,6 +45,7 @@ import {
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
+import { addApp } from "@budibase/pro/dist/sdk/quotas"
 
 export const toggleBetaUiFeature = async function (
   ctx: Ctx<void, ToggleBetaFeatureResponse>
@@ -154,6 +155,21 @@ const requiresMigration = async (ctx: Ctx) => {
   return latestMigrationApplied !== latestMigration
 }
 
+const getAppScriptHTML = (
+  app: App,
+  location: "Head" | "Body",
+  nonce: string
+) => {
+  if (!app.scripts?.length) {
+    return ""
+  }
+  return app.scripts
+    .filter(script => script.location === location && script.html?.length)
+    .map(script => script.html)
+    .join("\n")
+    .replaceAll("<script", `<script nonce="${nonce}"`)
+}
+
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   if (ctx.url.includes("apple-touch-icon.png")) {
     ctx.redirect("/builder/bblogo.png")
@@ -190,6 +206,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
     const themeVariables = getThemeVariables(appInfo?.theme)
+    const addAppScripts =
+      ctx?.user?.license?.features?.includes(Feature.CUSTOM_APP_SCRIPTS) ||
+      false
 
     if (!env.isJest()) {
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
@@ -200,7 +219,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * I've created a type which expects what the app will expect to receive.
        */
       const nonce = ctx.state.nonce || ""
-      const props: BudibaseAppProps = {
+      let props: BudibaseAppProps = {
         title: branding?.platformTitle || `${appInfo.name}`,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
@@ -220,8 +239,12 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
             : "",
         appMigrating: needMigrations,
         nonce,
-        headAppScripts: getAppScriptHTML(appInfo, "Head", nonce),
-        bodyAppScripts: getAppScriptHTML(appInfo, "Body", nonce),
+      }
+
+      // Add custom app scripts if enabled
+      if (addAppScripts) {
+        props.headAppScripts = getAppScriptHTML(appInfo, "Head", nonce)
+        props.bodyAppScripts = getAppScriptHTML(appInfo, "Body", nonce)
       }
 
       const { head, html, css } = AppComponent.render({ props })
@@ -265,21 +288,6 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   }
 }
 
-const getAppScriptHTML = (
-  app: App,
-  location: "Head" | "Body",
-  nonce: string
-) => {
-  if (!app.scripts?.length) {
-    return ""
-  }
-  return app.scripts
-    .filter(script => script.location === location && script.html?.length)
-    .map(script => script.html)
-    .join("\n")
-    .replaceAll("<script", `<script nonce="${nonce}"`)
-}
-
 export const serveBuilderPreview = async function (
   ctx: Ctx<void, ServeBuilderPreviewResponse>
 ) {
@@ -292,12 +300,21 @@ export const serveBuilderPreview = async function (
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
     const nonce = ctx.state.nonce || ""
-    ctx.body = await processString(previewHbs, {
+    const addAppScripts =
+      ctx?.user?.license?.features?.includes(Feature.CUSTOM_APP_SCRIPTS) ||
+      false
+    let props: any = {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
       nonce,
-      headAppScripts: getAppScriptHTML(appInfo, "Head", nonce),
-      bodyAppScripts: getAppScriptHTML(appInfo, "Body", nonce),
-    })
+    }
+
+    // Add custom app scripts if enabled
+    if (addAppScripts) {
+      props.headAppScripts = getAppScriptHTML(appInfo, "Head", nonce)
+      props.bodyAppScripts = getAppScriptHTML(appInfo, "Body", nonce)
+    }
+
+    ctx.body = await processString(previewHbs, props)
   } else {
     // just return the app info for jest to assert on
     ctx.body = { ...appInfo, builderPreview: true }

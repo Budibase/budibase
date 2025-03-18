@@ -90,7 +90,7 @@
   </style>
 
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-  {@html props.headAppScripts}
+  {@html props.headAppScripts || ""}
 </svelte:head>
 
 <body id="app">
@@ -140,5 +140,5 @@
   </script>
 
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-  {@html props.bodyAppScripts}
+  {@html props.bodyAppScripts || ""}
 </body>
