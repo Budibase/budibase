@@ -199,6 +199,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
+      const nonce = ctx.state.nonce || ""
       const props: BudibaseAppProps = {
         title: branding?.platformTitle || `${appInfo.name}`,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
@@ -218,7 +219,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         appMigrating: needMigrations,
-        nonce: ctx.state.nonce,
+        nonce,
+        headAppScripts: getAppScriptHTML(appInfo, "Head", nonce),
+        bodyAppScripts: getAppScriptHTML(appInfo, "Body", nonce),
       }
 
       const { head, html, css } = AppComponent.render({ props })
