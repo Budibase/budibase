@@ -21,6 +21,7 @@ export async function confirm(props: {
         okText: props.okText,
         cancelText: props.cancelText,
         size: props.size,
+        warning: false,
         onOk: () => {
           dialog.$destroy()
           resolve(props.onConfirm?.() || true)
