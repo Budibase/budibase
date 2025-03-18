@@ -65,7 +65,10 @@ export async function update(config: OAuth2Config): Promise<OAuth2Config> {
       c => c.name === config.name && c.id !== config.id
     )
   ) {
-    throw new HTTPError("Name is not available.", 400)
+    throw new HTTPError(
+      `OAuth2 config with name '${config.name}' is already taken.`,
+      400
+    )
   }
 
   doc.configs[config.id] = {
