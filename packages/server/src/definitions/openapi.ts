@@ -226,15 +226,22 @@ export interface components {
               type?: "link";
               /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
               constraints?: {
-                /** @enum {string} */
-                type?: "string" | "number" | "object" | "boolean";
-                /** @description Defines whether the column is required or not. */
-                presence?: boolean;
+                type?: string;
+                presence?:
+                  | boolean
+                  | {
+                      /** @description Defines whether the value is allowed to be empty or not. */
+                      allowEmpty?: boolean;
+                    };
+                /** @description Defines the valid values for this column. */
+                inclusion?: unknown[];
               };
               /** @description The name of the column. */
               name?: string;
               /** @description Defines whether the column is automatically generated. */
               autocolumn?: boolean;
+              /** @description Defines the width of the column in the data UI. */
+              width?: number;
               /** @description The name of the column which a relationship column is related to in another table. */
               fieldName?: string;
               /** @description The ID of the table which a relationship column is related to. */
@@ -261,15 +268,22 @@ export interface components {
               type?: "formula";
               /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
               constraints?: {
-                /** @enum {string} */
-                type?: "string" | "number" | "object" | "boolean";
-                /** @description Defines whether the column is required or not. */
-                presence?: boolean;
+                type?: string;
+                presence?:
+                  | boolean
+                  | {
+                      /** @description Defines whether the value is allowed to be empty or not. */
+                      allowEmpty?: boolean;
+                    };
+                /** @description Defines the valid values for this column. */
+                inclusion?: unknown[];
               };
               /** @description The name of the column. */
               name?: string;
               /** @description Defines whether the column is automatically generated. */
               autocolumn?: boolean;
+              /** @description Defines the width of the column in the data UI. */
+              width?: number;
               /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
               formula?: string;
               /**
@@ -280,7 +294,7 @@ export interface components {
             }
           | {
               /**
-               * @description Defines the type of the column, most explain themselves, a link column is a relationship.
+               * @description Defines the type of the column
                * @enum {string}
                */
               type?:
@@ -293,8 +307,6 @@ export interface components {
                 | "datetime"
                 | "attachment"
                 | "attachment_single"
-                | "link"
-                | "formula"
                 | "auto"
                 | "ai"
                 | "json"
@@ -306,15 +318,22 @@ export interface components {
                 | "bb_reference_single";
               /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
               constraints?: {
-                /** @enum {string} */
-                type?: "string" | "number" | "object" | "boolean";
-                /** @description Defines whether the column is required or not. */
-                presence?: boolean;
+                type?: string;
+                presence?:
+                  | boolean
+                  | {
+                      /** @description Defines whether the value is allowed to be empty or not. */
+                      allowEmpty?: boolean;
+                    };
+                /** @description Defines the valid values for this column. */
+                inclusion?: unknown[];
               };
               /** @description The name of the column. */
               name?: string;
               /** @description Defines whether the column is automatically generated. */
               autocolumn?: boolean;
+              /** @description Defines the width of the column in the data UI. */
+              width?: number;
             };
       };
     };
@@ -335,15 +354,22 @@ export interface components {
                 type?: "link";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
-                  /** @enum {string} */
-                  type?: "string" | "number" | "object" | "boolean";
-                  /** @description Defines whether the column is required or not. */
-                  presence?: boolean;
+                  type?: string;
+                  presence?:
+                    | boolean
+                    | {
+                        /** @description Defines whether the value is allowed to be empty or not. */
+                        allowEmpty?: boolean;
+                      };
+                  /** @description Defines the valid values for this column. */
+                  inclusion?: unknown[];
                 };
                 /** @description The name of the column. */
                 name?: string;
                 /** @description Defines whether the column is automatically generated. */
                 autocolumn?: boolean;
+                /** @description Defines the width of the column in the data UI. */
+                width?: number;
                 /** @description The name of the column which a relationship column is related to in another table. */
                 fieldName?: string;
                 /** @description The ID of the table which a relationship column is related to. */
@@ -373,15 +399,22 @@ export interface components {
                 type?: "formula";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
-                  /** @enum {string} */
-                  type?: "string" | "number" | "object" | "boolean";
-                  /** @description Defines whether the column is required or not. */
-                  presence?: boolean;
+                  type?: string;
+                  presence?:
+                    | boolean
+                    | {
+                        /** @description Defines whether the value is allowed to be empty or not. */
+                        allowEmpty?: boolean;
+                      };
+                  /** @description Defines the valid values for this column. */
+                  inclusion?: unknown[];
                 };
                 /** @description The name of the column. */
                 name?: string;
                 /** @description Defines whether the column is automatically generated. */
                 autocolumn?: boolean;
+                /** @description Defines the width of the column in the data UI. */
+                width?: number;
                 /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
                 formula?: string;
                 /**
@@ -392,7 +425,7 @@ export interface components {
               }
             | {
                 /**
-                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
+                 * @description Defines the type of the column
                  * @enum {string}
                  */
                 type?:
@@ -405,8 +438,6 @@ export interface components {
                   | "datetime"
                   | "attachment"
                   | "attachment_single"
-                  | "link"
-                  | "formula"
                   | "auto"
                   | "ai"
                   | "json"
@@ -418,15 +449,22 @@ export interface components {
                   | "bb_reference_single";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
-                  /** @enum {string} */
-                  type?: "string" | "number" | "object" | "boolean";
-                  /** @description Defines whether the column is required or not. */
-                  presence?: boolean;
+                  type?: string;
+                  presence?:
+                    | boolean
+                    | {
+                        /** @description Defines whether the value is allowed to be empty or not. */
+                        allowEmpty?: boolean;
+                      };
+                  /** @description Defines the valid values for this column. */
+                  inclusion?: unknown[];
                 };
                 /** @description The name of the column. */
                 name?: string;
                 /** @description Defines whether the column is automatically generated. */
                 autocolumn?: boolean;
+                /** @description Defines the width of the column in the data UI. */
+                width?: number;
               };
         };
         /** @description The ID of the table. */
@@ -449,15 +487,22 @@ export interface components {
                 type?: "link";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
-                  /** @enum {string} */
-                  type?: "string" | "number" | "object" | "boolean";
-                  /** @description Defines whether the column is required or not. */
-                  presence?: boolean;
+                  type?: string;
+                  presence?:
+                    | boolean
+                    | {
+                        /** @description Defines whether the value is allowed to be empty or not. */
+                        allowEmpty?: boolean;
+                      };
+                  /** @description Defines the valid values for this column. */
+                  inclusion?: unknown[];
                 };
                 /** @description The name of the column. */
                 name?: string;
                 /** @description Defines whether the column is automatically generated. */
                 autocolumn?: boolean;
+                /** @description Defines the width of the column in the data UI. */
+                width?: number;
                 /** @description The name of the column which a relationship column is related to in another table. */
                 fieldName?: string;
                 /** @description The ID of the table which a relationship column is related to. */
@@ -487,15 +532,22 @@ export interface components {
                 type?: "formula";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
-                  /** @enum {string} */
-                  type?: "string" | "number" | "object" | "boolean";
-                  /** @description Defines whether the column is required or not. */
-                  presence?: boolean;
+                  type?: string;
+                  presence?:
+                    | boolean
+                    | {
+                        /** @description Defines whether the value is allowed to be empty or not. */
+                        allowEmpty?: boolean;
+                      };
+                  /** @description Defines the valid values for this column. */
+                  inclusion?: unknown[];
                 };
                 /** @description The name of the column. */
                 name?: string;
                 /** @description Defines whether the column is automatically generated. */
                 autocolumn?: boolean;
+                /** @description Defines the width of the column in the data UI. */
+                width?: number;
                 /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
                 formula?: string;
                 /**
@@ -506,7 +558,7 @@ export interface components {
               }
             | {
                 /**
-                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
+                 * @description Defines the type of the column
                  * @enum {string}
                  */
                 type?:
@@ -519,8 +571,6 @@ export interface components {
                   | "datetime"
                   | "attachment"
                   | "attachment_single"
-                  | "link"
-                  | "formula"
                   | "auto"
                   | "ai"
                   | "json"
@@ -532,15 +582,22 @@ export interface components {
                   | "bb_reference_single";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
-                  /** @enum {string} */
-                  type?: "string" | "number" | "object" | "boolean";
-                  /** @description Defines whether the column is required or not. */
-                  presence?: boolean;
+                  type?: string;
+                  presence?:
+                    | boolean
+                    | {
+                        /** @description Defines whether the value is allowed to be empty or not. */
+                        allowEmpty?: boolean;
+                      };
+                  /** @description Defines the valid values for this column. */
+                  inclusion?: unknown[];
                 };
                 /** @description The name of the column. */
                 name?: string;
                 /** @description Defines whether the column is automatically generated. */
                 autocolumn?: boolean;
+                /** @description Defines the width of the column in the data UI. */
+                width?: number;
               };
         };
         /** @description The ID of the table. */

@@ -1059,6 +1059,7 @@
                         inputData[key] = e.detail
                       }}
                       completions={stepCompletions}
+                      {bindings}
                       mode={codeMode}
                       autocompleteEnabled={codeMode !== EditorModes.JS}
                       bind:getCaretPosition
