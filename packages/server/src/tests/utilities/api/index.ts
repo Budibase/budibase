@@ -19,6 +19,8 @@ import { PluginAPI } from "./plugin"
 import { WebhookAPI } from "./webhook"
 import { EnvironmentAPI } from "./environment"
 import { UserPublicAPI } from "./public/user"
+import { MiscAPI } from "./misc"
+import { OAuth2API } from "./oauth2"
 
 export default class API {
   application: ApplicationAPI
@@ -28,6 +30,8 @@ export default class API {
   datasource: DatasourceAPI
   environment: EnvironmentAPI
   legacyView: LegacyViewAPI
+  misc: MiscAPI
+  oauth2: OAuth2API
   permission: PermissionAPI
   plugin: PluginAPI
   query: QueryAPI
@@ -53,6 +57,8 @@ export default class API {
     this.datasource = new DatasourceAPI(config)
     this.environment = new EnvironmentAPI(config)
     this.legacyView = new LegacyViewAPI(config)
+    this.misc = new MiscAPI(config)
+    this.oauth2 = new OAuth2API(config)
     this.permission = new PermissionAPI(config)
     this.plugin = new PluginAPI(config)
     this.query = new QueryAPI(config)

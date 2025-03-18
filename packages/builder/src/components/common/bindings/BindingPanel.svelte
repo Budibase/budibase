@@ -354,11 +354,12 @@
         {#if mode === BindingMode.Text}
           {#key completions}
             <CodeEditor
-              value={hbsValue}
+              value={hbsValue || ""}
               on:change={onChangeHBSValue}
               bind:getCaretPosition
               bind:insertAtPos
               {completions}
+              {bindings}
               {validations}
               autofocus={autofocusEditor}
               placeholder={placeholder ||
@@ -369,9 +370,10 @@
         {:else if mode === BindingMode.JavaScript}
           {#key completions}
             <CodeEditor
-              value={jsValue ? decodeJSBinding(jsValue) : jsValue}
+              value={jsValue ? decodeJSBinding(jsValue) : ""}
               on:change={onChangeJSValue}
               {completions}
+              {bindings}
               {validations}
               mode={EditorModes.JS}
               bind:getCaretPosition

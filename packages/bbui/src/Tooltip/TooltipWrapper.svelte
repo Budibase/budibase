@@ -3,7 +3,7 @@
   import AbsTooltip from "./AbsTooltip.svelte"
 
   export let tooltip: string = ""
-  export let size: "S" | "M" = "M"
+  export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = true
 </script>
 

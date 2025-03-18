@@ -28,13 +28,13 @@
     Constants,
     Utils,
     RoleUtils,
+    emailValidator,
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import { API } from "@/api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
-  import { emailValidator } from "@/helpers/validation"
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"

@@ -1,7 +1,6 @@
-import { capitalise } from "@/helpers"
 import { object, string, number } from "yup"
 import { writable, get } from "svelte/store"
-import { notifications } from "@budibase/bbui"
+import { Helpers, notifications } from "@budibase/bbui"
 
 export const createValidationStore = () => {
   const DEFAULT = {
@@ -77,7 +76,7 @@ export const createValidationStore = () => {
       const [fieldError] = error.errors
       if (fieldError) {
         validation.update(store => {
-          store.errors[propertyName] = capitalise(fieldError)
+          store.errors[propertyName] = Helpers.capitalise(fieldError)
           store.valid = false
           return store
         })
@@ -120,7 +119,7 @@ export const createValidationStore = () => {
       } else {
         error.inner.forEach(err => {
           validation.update(store => {
-            store.errors[err.path] = capitalise(err.message)
+            store.errors[err.path] = Helpers.capitalise(err.message)
             return store
           })
         })
