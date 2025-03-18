@@ -30,7 +30,13 @@ export class OAuth2Store extends BudiStore<OAuth2StoreState> {
       const configs = await API.oauth2.fetch()
       this.store.update(store => ({
         ...store,
-        configs: configs.map(c => ({ id: c.id, name: c.name })),
+        configs: configs.map(c => ({
+          id: c.id,
+          name: c.name,
+          url: c.url,
+          clientId: c.clientId,
+          clientSecret: c.clientSecret,
+        })),
         loading: false,
       }))
     } catch (e: any) {

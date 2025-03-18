@@ -1,12 +1,21 @@
 <script lang="ts">
   import { oauth2 } from "@/stores/builder"
-  import { ActionMenu, Icon, MenuItem, notifications } from "@budibase/bbui"
+  import {
+    ActionMenu,
+    Icon,
+    MenuItem,
+    Modal,
+    notifications,
+  } from "@budibase/bbui"
   import type { OAuth2Config } from "@budibase/types"
+  import OAuth2ConfigModalContent from "./OAuth2ConfigModalContent.svelte"
 
   export let row: OAuth2Config
 
+  let modal: Modal
+
   function onEdit() {
-    // TODO
+    modal.show()
   }
   async function onDelete() {
     try {
@@ -25,3 +34,7 @@
   <MenuItem on:click={onEdit} icon="Edit">Edit</MenuItem>
   <MenuItem on:click={onDelete} icon="Delete">Delete</MenuItem>
 </ActionMenu>
+
+<Modal bind:this={modal}>
+  <OAuth2ConfigModalContent config={row} />
+</Modal>
