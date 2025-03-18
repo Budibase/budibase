@@ -182,7 +182,9 @@ describe("/oauth2", () => {
         },
         {
           status: 400,
-          body: { message: "Name is not available." },
+          body: {
+            message: `OAuth2 config with name '${config2.name}' is already taken.`,
+          },
         }
       )
     })

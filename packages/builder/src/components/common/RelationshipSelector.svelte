@@ -11,8 +11,8 @@
   export let errors
   export let relationshipOpts1
   export let relationshipOpts2
-  export let primaryTableChanged
-  export let secondaryTableChanged
+  export let primaryTableChanged = undefined
+  export let secondaryTableChanged = undefined
   export let primaryDisabled = true
 </script>
 
