@@ -8,8 +8,6 @@ import {
   PaginationValues,
   QueryType,
   RestAuthType,
-  RestBasicAuthConfig,
-  RestBearerAuthConfig,
   RestConfig,
   RestQueryFields as RestQuery,
 } from "@budibase/types"
@@ -28,6 +26,8 @@ import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
+import { utils } from "@budibase/shared-core"
+import sdk from "../sdk"
 
 const coreFields = {
   path: {
@@ -377,29 +377,41 @@ export class RestIntegration implements IntegrationBase {
     return input
   }
 
-  getAuthHeaders(authConfigId?: string): { [key: string]: any } {
-    let headers: any = {}
+  async getAuthHeaders(
+    authConfigId?: string,
+    authConfigType?: RestAuthType
+  ): Promise<{ [key: string]: any }> {
+    if (!authConfigId) {
+      return {}
+    }
 
-    if (this.config.authConfigs && authConfigId) {
-      const authConfig = this.config.authConfigs.filter(
-        c => c._id === authConfigId
-      )[0]
-      // check the config still exists before proceeding
-      // if not - do nothing
-      if (authConfig) {
-        let config
-        switch (authConfig.type) {
-          case RestAuthType.BASIC:
-            config = authConfig.config as RestBasicAuthConfig
-            headers.Authorization = `Basic ${Buffer.from(
-              `${config.username}:${config.password}`
-            ).toString("base64")}`
-            break
-          case RestAuthType.BEARER:
-            config = authConfig.config as RestBearerAuthConfig
-            headers.Authorization = `Bearer ${config.token}`
-            break
-        }
+    if (authConfigType === RestAuthType.OAUTH2) {
+      return { Authorization: await sdk.oauth2.generateToken(authConfigId) }
+    }
+
+    if (!this.config.authConfigs) {
+      return {}
+    }
+
+    let headers: any = {}
+    const authConfig = this.config.authConfigs.filter(
+      c => c._id === authConfigId
+    )[0]
+    // check the config still exists before proceeding
+    // if not - do nothing
+    if (authConfig) {
+      const { type, config } = authConfig
+      switch (type) {
+        case RestAuthType.BASIC:
+          headers.Authorization = `Basic ${Buffer.from(
+            `${config.username}:${config.password}`
+          ).toString("base64")}`
+          break
+        case RestAuthType.BEARER:
+          headers.Authorization = `Bearer ${config.token}`
+          break
+        default:
+          throw utils.unreachable(type)
       }
     }
 
@@ -416,10 +428,11 @@ export class RestIntegration implements IntegrationBase {
       bodyType = BodyType.NONE,
       requestBody,
       authConfigId,
+      authConfigType,
       pagination,
       paginationValues,
     } = query
-    const authHeaders = this.getAuthHeaders(authConfigId)
+    const authHeaders = await this.getAuthHeaders(authConfigId, authConfigType)
 
     this.headers = {
       ...(this.config.defaultHeaders || {}),
