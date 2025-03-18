@@ -49,7 +49,7 @@
   </div>
 
   <Body size="S" color="var(--spectrum-global-color-gray-700)">
-    Basic (Username & Password Authentication)
+    Basic & Bearer Authentication
   </Body>
 
   {#if authConfigs.length}
@@ -65,7 +65,7 @@
   {/if}
   <div>
     <Button secondary icon="Add" on:click={addBasicConfiguration}
-      >Add Basic</Button
+      >Add config</Button
     >
   </div>
 </DetailPopover>
