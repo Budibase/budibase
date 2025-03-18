@@ -76,7 +76,6 @@ import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
-import { SIGNED_FILE_PREFIX } from "@budibase/backend-core/src/objectStore"
 import { createSampleDataTableScreen } from "../../constants/screens"
 
 // utility function, need to do away with this
@@ -885,7 +884,7 @@ export async function updateAppPackage(
     if (appPackage.pwa && application.pwa) {
       if (appPackage.pwa.icons) {
         appPackage.pwa.icons = appPackage.pwa.icons.map((icon, i) =>
-          icon.src.startsWith(SIGNED_FILE_PREFIX) &&
+          icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
           application?.pwa?.icons?.[i]
             ? { ...icon, src: application?.pwa?.icons?.[i].src }
             : icon
@@ -893,7 +892,7 @@ export async function updateAppPackage(
       }
       if (appPackage.pwa.screenshots) {
         appPackage.pwa.screenshots = appPackage.pwa.screenshots.map((shot, i) =>
-          shot.src.startsWith(SIGNED_FILE_PREFIX) &&
+          shot.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
           application?.pwa?.screenshots?.[i]
             ? { ...shot, src: application?.pwa?.screenshots?.[i].src }
             : shot

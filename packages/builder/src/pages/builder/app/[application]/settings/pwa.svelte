@@ -15,7 +15,6 @@
     Tag,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
-  import { licensing } from "@/stores/portal"
 
   import { API } from "@/api"
 
@@ -146,7 +145,6 @@
   }
 
   function ensureHexFormat(color) {
-    console.log("color", color)
     if (!color) return "#FFFFFF"
 
     if (color.startsWith("#")) return color
@@ -188,8 +186,6 @@
           .trim()
       )
 
-      console.log("computedValue", computedValue)
-
       if (computedValue) {
         return computedValue
       }
@@ -201,7 +197,6 @@
     }
   }
 
-  $: console.log("pwaConfig", pwaConfig)
   const handleSubmit = async () => {
     try {
       saving = true
@@ -245,9 +240,8 @@
     </div>
     <Body>
       Transform your app into an installable, app-like experience with a
-      Progressive Web App (PWA). Developers can configure app details, visuals,
-      and notifications to create a branded, professional experience for their
-      users.
+      Progressive Web App (PWA). Developers can configure app details and
+      visuals to create a branded, professional experience for their users.
     </Body>
   </Layout>
   <Divider />
