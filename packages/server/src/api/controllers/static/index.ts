@@ -45,7 +45,6 @@ import {
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
-import { addApp } from "@budibase/pro/dist/sdk/quotas"
 
 export const toggleBetaUiFeature = async function (
   ctx: Ctx<void, ToggleBetaFeatureResponse>
