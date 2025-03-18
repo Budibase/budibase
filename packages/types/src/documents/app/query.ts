@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { RestAuthType } from "./datasource"
 import { Row } from "./row"
 
 export interface QuerySchema {
@@ -56,6 +57,7 @@ export interface RestQueryFields {
   bodyType?: BodyType
   method?: string
   authConfigId?: string
+  authConfigType?: RestAuthType
   pagination?: PaginationConfig
   paginationValues?: PaginationValues
 }
