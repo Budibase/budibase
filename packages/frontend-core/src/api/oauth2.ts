@@ -11,6 +11,10 @@ export interface OAuth2Endpoints {
   create: (
     config: UpsertOAuth2ConfigRequest
   ) => Promise<UpsertOAuth2ConfigResponse>
+  update: (
+    id: string,
+    config: UpsertOAuth2ConfigRequest
+  ) => Promise<UpsertOAuth2ConfigResponse>
   delete: (id: string) => Promise<void>
 }
 
@@ -41,6 +45,22 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
         ...config,
       },
     })
+  },
+
+  /**
+   * Updates an existing OAuth2 configuration.
+   * @param name the name of the row action
+   * @param tableId the ID of the table
+   */
+  update: async (id, config) => {
+    return await API.put<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>(
+      {
+        url: `/api/oauth2/${id}`,
+        body: {
+          ...config,
+        },
+      }
+    )
   },
 
   /**

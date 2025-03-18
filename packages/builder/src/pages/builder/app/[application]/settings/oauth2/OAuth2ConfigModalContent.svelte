@@ -1,6 +1,6 @@
 <script lang="ts">
   import { oauth2 } from "@/stores/builder"
-  import type { OAuth2Config } from "@/types"
+  import type { OAuth2Config, UpsertOAuth2Config } from "@/types"
   import {
     Body,
     Divider,
@@ -18,8 +18,6 @@
 
   let errors: Record<string, string> = {}
   let hasBeenSubmitted = false
-
-  $: isNew = !config
 
   $: data = (config as Partial<OAuth2Config>) ?? {}
 
@@ -41,7 +39,7 @@
       url: requiredString("Url is required.").url(),
       clientId: requiredString("Client ID is required."),
       clientSecret: requiredString("Client secret is required."),
-    }) satisfies ZodType<OAuth2Config>
+    }) satisfies ZodType<UpsertOAuth2Config>
 
     const validationResult = validator.safeParse(config)
     errors = {}
@@ -67,7 +65,13 @@
     }
 
     try {
-      await oauth2.create(validationResult.data)
+      if (!config) {
+        await oauth2.create(validationResult.data)
+        notifications.success("Settings created.")
+      } else {
+        await oauth2.edit(config.id, validationResult.data)
+        notifications.success("Settings saved.")
+      }
     } catch (e: any) {
       notifications.error(e.message)
       return keepOpen
