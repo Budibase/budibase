@@ -5,18 +5,27 @@ import {
   FetchOAuth2ConfigsResponse,
   OAuth2Config,
   RequiredKeys,
+  OAuth2ConfigResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
+
+function toFetchOAuth2ConfigsResponse(
+  config: OAuth2Config
+): OAuth2ConfigResponse {
+  return {
+    id: config.id,
+    name: config.name,
+    url: config.url,
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
+  }
+}
 
 export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
   const configs = await sdk.oauth2.fetch()
 
   const response: FetchOAuth2ConfigsResponse = {
-    configs: (configs || []).map(c => ({
-      id: c.id,
-      name: c.name,
-      url: c.url,
-    })),
+    configs: (configs || []).map(toFetchOAuth2ConfigsResponse),
   }
   ctx.body = response
 }
@@ -28,13 +37,15 @@ export async function create(
   const newConfig: RequiredKeys<Omit<OAuth2Config, "id">> = {
     name: body.name,
     url: body.url,
-    clientId: ctx.clientId,
-    clientSecret: ctx.clientSecret,
+    clientId: body.clientId,
+    clientSecret: body.clientSecret,
   }
 
   const config = await sdk.oauth2.create(newConfig)
   ctx.status = 201
-  ctx.body = { config }
+  ctx.body = {
+    config: toFetchOAuth2ConfigsResponse(config),
+  }
 }
 
 export async function edit(
@@ -50,7 +61,9 @@ export async function edit(
   }
 
   const config = await sdk.oauth2.update(toUpdate)
-  ctx.body = { config }
+  ctx.body = {
+    config: toFetchOAuth2ConfigsResponse(config),
+  }
 }
 
 export async function remove(
