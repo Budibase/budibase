@@ -1,3 +1,5 @@
+import { PWAManifestImage } from "@budibase/types"
+
 const URL_REGEX_SLASH = /\/|\\/g
 
 export function getAppUrl(opts?: { name?: string; url?: string }) {
@@ -14,4 +16,18 @@ export function getAppUrl(opts?: { name?: string; url?: string }) {
     url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
   }
   return url as string
+}
+
+export function preserveKey(
+  original: PWAManifestImage[] | undefined,
+  updated: PWAManifestImage[] | undefined
+) {
+  if (original && original.length > 0) {
+    if (!updated || updated.length === 0) return original
+    const isEnriched =
+      updated[0].src.startsWith("/files/signed") ||
+      updated[0].src.startsWith("http")
+    if (isEnriched) return original
+  }
+  return updated
 }

@@ -75,6 +75,7 @@ import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
+import { SIGNED_FILE_PREFIX } from "@budibase/backend-core/src/objectStore"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -234,8 +235,15 @@ export async function fetchAppPackage(
 
   // Enrich PWA icon URLs if they exist
   if (application.pwa?.icons && application.pwa.icons.length > 0) {
-    application.pwa.icons = await objectStore.enrichPWAIcons(
+    application.pwa.icons = await objectStore.enrichPWAImages(
       application.pwa.icons
+    )
+  }
+
+  // Enrich PWA screenshot URLs if they exist
+  if (application.pwa?.screenshots && application.pwa.screenshots.length > 0) {
+    application.pwa.screenshots = await objectStore.enrichPWAImages(
+      application.pwa.screenshots
     )
   }
 
@@ -821,6 +829,25 @@ export async function updateAppPackage(
     const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
+    }
+
+    if (appPackage.pwa && application.pwa) {
+      if (appPackage.pwa.icons) {
+        appPackage.pwa.icons = appPackage.pwa.icons.map((icon, i) =>
+          icon.src.startsWith(SIGNED_FILE_PREFIX) &&
+          application?.pwa?.icons?.[i]
+            ? { ...icon, src: application?.pwa?.icons?.[i].src }
+            : icon
+        )
+      }
+      if (appPackage.pwa.screenshots) {
+        appPackage.pwa.screenshots = appPackage.pwa.screenshots.map((shot, i) =>
+          shot.src.startsWith(SIGNED_FILE_PREFIX) &&
+          application?.pwa?.screenshots?.[i]
+            ? { ...shot, src: application?.pwa?.screenshots?.[i].src }
+            : shot
+        )
+      }
     }
 
     // the locked by property is attached by server but generated from

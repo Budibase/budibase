@@ -3,7 +3,7 @@ import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
 import qs from "querystring"
 import { DEFAULT_TENANT_ID, getTenantId } from "../../context"
-import { PWAManifestIcon } from "@budibase/types"
+import { PWAManifestImage } from "@budibase/types"
 
 export function clientLibraryPath(appId: string) {
   return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
@@ -53,27 +53,27 @@ export async function getAppFileUrl(s3Key: string) {
   }
 }
 
-export async function enrichPWAIcons(
-  icons: PWAManifestIcon[]
-): Promise<PWAManifestIcon[]> {
-  if (!icons || icons.length === 0) {
+export async function enrichPWAImages(
+  images: PWAManifestImage[]
+): Promise<PWAManifestImage[]> {
+  if (!images || images.length === 0) {
     return []
   }
 
   try {
     return await Promise.all(
-      icons.map(async icon => {
-        let src = icon.src
+      images.map(async image => {
+        let src = image.src
         src = await getAppFileUrl(src)
         return {
-          ...icon,
+          ...image,
           src,
-          type: icon.type || "image/png",
+          type: image.type || "image/png",
         }
       })
     )
   } catch (error) {
-    console.error("Error enriching PWA icons:", error)
-    return icons
+    console.error("Error enriching PWA images:", error)
+    return images
   }
 }

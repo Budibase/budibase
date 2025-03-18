@@ -238,7 +238,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
         if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
           try {
-            const enrichedIcons = await objectStore.enrichPWAIcons([
+            const enrichedIcons = await objectStore.enrichPWAImages([
               appInfo.pwa.icons[0],
             ])
             if (enrichedIcons.length > 0) {
@@ -424,9 +424,19 @@ export const serveManifest = async function (ctx: UserCtx<void, any>) {
 
     if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
       try {
-        manifest.icons = await objectStore.enrichPWAIcons(appInfo.pwa.icons)
+        manifest.icons = await objectStore.enrichPWAImages(appInfo.pwa.icons)
       } catch (error) {
         console.error("Error processing manifest icons:", error)
+      }
+    }
+
+    if (appInfo.pwa.screenshots && appInfo.pwa.screenshots.length > 0) {
+      try {
+        manifest.screenshots = await objectStore.enrichPWAImages(
+          appInfo.pwa.screenshots
+        )
+      } catch (error) {
+        console.error("Error processing manifest screenshots:", error)
       }
     }
 

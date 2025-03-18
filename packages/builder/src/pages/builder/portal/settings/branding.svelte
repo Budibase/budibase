@@ -61,7 +61,7 @@
   $: logo = config.logoUrl
     ? { url: config.logoUrl, type: "image", name: "Logo" }
     : null
-
+  $: console.log(logo)
   $: favicon = config.faviconUrl
     ? { url: config.faviconUrl, type: "image", name: "Favicon" }
     : null
@@ -169,7 +169,7 @@
 
     await saveFiles()
     trimFields()
-
+    console.log("config", config)
     try {
       // Update settings
       await organisation.save(config)

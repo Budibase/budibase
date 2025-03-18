@@ -88,7 +88,8 @@ export interface PWAManifest {
   name: string
   short_name: string
   description: string
-  icons: PWAManifestIcon[]
+  icons: PWAManifestImage[]
+  screenshots?: PWAManifestImage[]
   background_color: string
   theme_color: string
   display?: string
@@ -96,7 +97,7 @@ export interface PWAManifest {
   scope?: string
 }
 
-export interface PWAManifestIcon {
+export interface PWAManifestImage {
   src: string
   sizes: string
   type: string
