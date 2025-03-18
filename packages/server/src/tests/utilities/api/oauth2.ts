@@ -1,6 +1,6 @@
 import {
-  CreateOAuth2ConfigRequest,
-  CreateOAuth2ConfigResponse,
+  UpsertOAuth2ConfigRequest,
+  UpsertOAuth2ConfigResponse,
   FetchOAuth2ConfigsResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
@@ -13,15 +13,32 @@ export class OAuth2API extends TestAPI {
   }
 
   create = async (
-    body: CreateOAuth2ConfigRequest,
+    body: UpsertOAuth2ConfigRequest,
     expectations?: Expectations
   ) => {
-    return await this._post<CreateOAuth2ConfigResponse>("/api/oauth2", {
+    return await this._post<UpsertOAuth2ConfigResponse>("/api/oauth2", {
       body,
       expectations: {
         status: expectations?.status ?? 201,
         ...expectations,
       },
+    })
+  }
+
+  update = async (
+    id: string,
+    body: UpsertOAuth2ConfigRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._put<UpsertOAuth2ConfigResponse>(`/api/oauth2/${id}`, {
+      body,
+      expectations,
+    })
+  }
+
+  delete = async (id: string, expectations?: Expectations) => {
+    return await this._delete<void>(`/api/oauth2/${id}`, {
+      expectations,
     })
   }
 }
