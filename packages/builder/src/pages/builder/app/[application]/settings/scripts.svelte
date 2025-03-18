@@ -40,7 +40,7 @@
 
   $: nameError = selectedScript?.name ? undefined : "Please enter a name"
   $: invalid = !!nameError
-  $: enabled = true || $licensing.customAppScriptsEnabled
+  $: enabled = $licensing.customAppScriptsEnabled
 
   const addScript = () => {
     const name = getSequentialName($appStore.scripts, "Script ", {
