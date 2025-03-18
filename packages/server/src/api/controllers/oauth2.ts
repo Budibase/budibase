@@ -57,8 +57,8 @@ export async function edit(
     id: ctx.params.id,
     name: body.name,
     url: body.url,
-    clientId: ctx.clientId,
-    clientSecret: ctx.clientSecret,
+    clientId: body.clientId,
+    clientSecret: body.clientSecret,
   }
 
   const config = await sdk.oauth2.update(toUpdate)
