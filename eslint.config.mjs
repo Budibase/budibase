@@ -47,6 +47,9 @@ export default [
 
       parserOptions: {
         allowImportExportEverywhere: true,
+        svelteFeatures: {
+          experimentalGenerics: true,
+        },
       },
     },
 
