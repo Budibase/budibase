@@ -1,13 +1,14 @@
-<script>
+<script lang="ts">
   import { FancyForm, FancyInput } from "@budibase/bbui"
   import { createValidationStore, requiredValidator } from "../utils/validation"
 
-  export let password
-  export let error
+  export let passwordForm: FancyForm | undefined = undefined
+  export let password: string
+  export let error: string
   export let minLength = "12"
 
-  const validatePassword = value => {
-    if (!value || value.length < minLength) {
+  const validatePassword = (value: string | undefined) => {
+    if (!value || value.length < parseInt(minLength)) {
       return `Please enter at least ${minLength} characters. We recommend using machine generated or random passwords.`
     }
     return null
@@ -35,7 +36,7 @@
     firstPasswordError
 </script>
 
-<FancyForm>
+<FancyForm bind:this={passwordForm}>
   <FancyInput
     label="Password"
     type="password"
