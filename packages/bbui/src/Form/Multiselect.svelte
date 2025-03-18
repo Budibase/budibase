@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="Option">
   import { createEventDispatcher } from "svelte"
   import Multiselect from "./Core/Multiselect.svelte"
   import Field from "./Field.svelte"
@@ -10,7 +10,7 @@
   export let labelPosition = "above"
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
-  export let options: any[] = []
+  export let options: Option[] = []
   export let getOptionLabel = (option: any) => option
   export let getOptionValue = (option: any) => option
   export let sort = false
