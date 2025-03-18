@@ -11,6 +11,7 @@
     ModalContent,
     notifications,
   } from "@budibase/bbui"
+  import { PASSWORD_REPLACEMENT } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
 
@@ -79,6 +80,8 @@
   }
 
   $: hasBeenSubmitted && validateConfig(data)
+
+  $: isProtectedPassword = config?.clientSecret === PASSWORD_REPLACEMENT
 </script>
 
 <ModalContent onConfirm={saveOAuth2Config} size="M">
@@ -114,7 +117,7 @@
     error={errors.clientId}
   />
   <Input
-    type="password"
+    type={!isProtectedPassword ? "password" : "text"}
     label="Client secret*"
     placeholder="Type here..."
     bind:value={data.clientSecret}
