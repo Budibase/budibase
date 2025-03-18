@@ -110,18 +110,26 @@ export interface SCIMInnerConfig {
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
-export type AIProvider = "OpenAI" | "Anthropic" | "TogetherAI" | "Custom"
+export type AIProvider =
+  | "OpenAI"
+  | "Anthropic"
+  | "AzureOpenAI"
+  | "TogetherAI"
+  | "Custom"
+
+export interface ProviderConfig {
+  provider: AIProvider
+  isDefault: boolean
+  isBudibaseAI?: boolean
+  name: string
+  active: boolean
+  baseUrl?: string
+  apiKey?: string
+  defaultModel?: string
+}
 
 export interface AIInnerConfig {
-  [key: string]: {
-    provider: AIProvider
-    isDefault: boolean
-    name: string
-    active: boolean
-    baseUrl?: string
-    apiKey?: string
-    defaultModel?: string
-  }
+  [key: string]: ProviderConfig
 }
 
 export interface AIConfig extends Config<AIInnerConfig> {}

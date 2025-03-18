@@ -17,4 +17,5 @@ export interface License {
   plan: PurchasedPlan
   billing?: Billing
   testClockId?: string
+  tenantId?: string
 }

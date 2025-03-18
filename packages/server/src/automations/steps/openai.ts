@@ -41,18 +41,9 @@ export async function run({
 
   try {
     let response
-    const customConfigsEnabled = await pro.features.isAICustomConfigsEnabled()
-    const budibaseAIEnabled = await pro.features.isBudibaseAIEnabled()
-
-    let llmWrapper
-    if (budibaseAIEnabled || customConfigsEnabled) {
-      llmWrapper = await pro.ai.LargeLanguageModel.forCurrentTenant(
-        inputs.model
-      )
-    }
-
-    response = llmWrapper?.llm
-      ? await llmWrapper.run(inputs.prompt)
+    const llm = await pro.ai.getLLM(inputs.model)
+    response = llm
+      ? (await llm.prompt(inputs.prompt)).message
       : await legacyOpenAIPrompt(inputs)
 
     return {
