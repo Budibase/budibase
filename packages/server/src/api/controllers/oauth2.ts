@@ -6,6 +6,7 @@ import {
   OAuth2Config,
   RequiredKeys,
   OAuth2ConfigResponse,
+  PASSWORD_REPLACEMENT,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -17,7 +18,7 @@ function toFetchOAuth2ConfigsResponse(
     name: config.name,
     url: config.url,
     clientId: config.clientId,
-    clientSecret: config.clientSecret,
+    clientSecret: PASSWORD_REPLACEMENT,
   }
 }
 
