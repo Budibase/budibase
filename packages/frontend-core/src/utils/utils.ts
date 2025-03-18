@@ -397,14 +397,19 @@ export function parseFilter(filter: UISearchFilter) {
 
   const update = cloneDeep(filter)
 
-  update.groups = update.groups
-    ?.map(group => {
-      group.filters = group.filters?.filter((filter: any) => {
-        return filter.field && filter.operator
+  if (update.groups) {
+    update.groups = update.groups
+      .map(group => {
+        if (group.filters) {
+          group.filters = group.filters.filter((filter: any) => {
+            return filter.field && filter.operator
+          })
+          return group.filters?.length ? group : null
+        }
+        return group
       })
-      return group.filters?.length ? group : null
-    })
-    .filter((group): group is SearchFilterGroup => !!group)
+      .filter((group): group is SearchFilterGroup => !!group)
+  }
 
   return update
 }

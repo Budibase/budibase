@@ -381,32 +381,37 @@ export class RestIntegration implements IntegrationBase {
     authConfigId?: string,
     authConfigType?: RestAuthType
   ): Promise<{ [key: string]: any }> {
-    let headers: any = {}
+    if (!authConfigId) {
+      return {}
+    }
 
-    if (authConfigId) {
-      if (authConfigType === RestAuthType.OAUTH2) {
-        headers.Authorization = await sdk.oauth2.generateToken(authConfigId)
-      } else if (this.config.authConfigs) {
-        const authConfig = this.config.authConfigs.filter(
-          c => c._id === authConfigId
-        )[0]
-        // check the config still exists before proceeding
-        // if not - do nothing
-        if (authConfig) {
-          const { type, config } = authConfig
-          switch (type) {
-            case RestAuthType.BASIC:
-              headers.Authorization = `Basic ${Buffer.from(
-                `${config.username}:${config.password}`
-              ).toString("base64")}`
-              break
-            case RestAuthType.BEARER:
-              headers.Authorization = `Bearer ${config.token}`
-              break
-            default:
-              throw utils.unreachable(type)
-          }
-        }
+    if (authConfigType === RestAuthType.OAUTH2) {
+      return { Authorization: await sdk.oauth2.generateToken(authConfigId) }
+    }
+
+    if (!this.config.authConfigs) {
+      return {}
+    }
+
+    let headers: any = {}
+    const authConfig = this.config.authConfigs.filter(
+      c => c._id === authConfigId
+    )[0]
+    // check the config still exists before proceeding
+    // if not - do nothing
+    if (authConfig) {
+      const { type, config } = authConfig
+      switch (type) {
+        case RestAuthType.BASIC:
+          headers.Authorization = `Basic ${Buffer.from(
+            `${config.username}:${config.password}`
+          ).toString("base64")}`
+          break
+        case RestAuthType.BEARER:
+          headers.Authorization = `Bearer ${config.token}`
+          break
+        default:
+          throw utils.unreachable(type)
       }
     }
 
