@@ -117,6 +117,7 @@
       error={errors.clientId}
     />
     <Input
+      type="password"
       label="Client secret*"
       placeholder="Type here..."
       bind:value={config.clientSecret}

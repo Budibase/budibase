@@ -41,17 +41,17 @@
     >
   </Layout>
   <Divider />
-</Layout>
 
-<Table
-  data={configs}
-  loading={$oauth2.loading}
-  {schema}
-  {customRenderers}
-  allowEditRows={false}
-  allowEditColumns={false}
-  allowClickRows={false}
-/>
+  <Table
+    data={configs}
+    loading={$oauth2.loading}
+    {schema}
+    {customRenderers}
+    allowEditRows={false}
+    allowEditColumns={false}
+    allowClickRows={false}
+  />
+</Layout>
 
 <style>
   .header {
