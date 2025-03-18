@@ -1,5 +1,5 @@
 <script>
-  import { goto, params } from "@roxi/routify"
+  import { beforeUrlChange, goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import {
@@ -25,7 +25,7 @@
     EditorModes,
   } from "@/components/common/CodeMirrorEditor.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
-  import { capitalise } from "@/helpers"
+  import { capitalise, confirm } from "@/helpers"
   import { onMount } from "svelte"
   import restUtils from "@/helpers/data/utils"
   import {
@@ -63,6 +63,7 @@
   let nestedSchemaFields = {}
   let saving
   let queryNameLabel
+  let mounted = false
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -104,8 +105,10 @@
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
-  $: originalQuery = originalQuery ?? cloneDeep(query)
   $: builtQuery = buildQuery(query, runtimeUrlQueries, requestBindings)
+  $: originalQuery = mounted
+    ? originalQuery ?? cloneDeep(builtQuery)
+    : undefined
   $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 
   function getSelectedQuery() {
@@ -208,11 +211,14 @@
       originalQuery = null
 
       queryNameLabel.disableEditingState()
+      return { ok: true }
     } catch (err) {
       notifications.error(`Error saving query`)
     } finally {
       saving = false
     }
+
+    return { ok: false }
   }
 
   const validateQuery = async () => {
@@ -474,6 +480,38 @@
       staticVariables,
       restBindings
     )
+
+    mounted = true
+  })
+
+  $beforeUrlChange(async () => {
+    if (!isModified) {
+      return true
+    }
+
+    return await confirm({
+      title: "Some updates are not saved",
+      body: "Some of your changes are not yet saved. Do you want to save them before leaving?",
+      okText: "Save and continue",
+      cancelText: "Discard and continue",
+      size: "M",
+      onConfirm: async () => {
+        const saveResult = await saveQuery()
+        if (!saveResult.ok) {
+          // We can't leave as the query was not properly saved
+          return false
+        }
+
+        return true
+      },
+      onCancel: () => {
+        // Leave without saving anything
+        return true
+      },
+      onClose: () => {
+        return false
+      },
+    })
   })
 </script>
 
