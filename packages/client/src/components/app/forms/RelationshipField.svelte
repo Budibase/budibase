@@ -1,5 +1,4 @@
 <script context="module" lang="ts">
-  type ValueType = any
   type BasicRelatedRow = { _id: string; primaryDisplay: string }
   type OptionsMap = Record<string, BasicRelatedRow>
 </script>
