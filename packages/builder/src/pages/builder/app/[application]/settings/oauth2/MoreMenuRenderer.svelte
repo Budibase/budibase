@@ -45,5 +45,5 @@
 </ActionMenu>
 
 <Modal bind:this={modal}>
-  <OAuth2ConfigModalContent config={row} />
+  <OAuth2ConfigModalContent config={{ ...row }} />
 </Modal>
