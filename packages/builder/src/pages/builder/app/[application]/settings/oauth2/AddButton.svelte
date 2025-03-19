@@ -86,15 +86,22 @@
 <Modal bind:this={modal}>
   <ModalContent onConfirm={saveOAuth2Config} size="M">
     <Heading size="S">Create new OAuth2 connection</Heading>
+
     <Body size="S">
       The OAuth 2 authentication below uses the Client Credentials (machine to
       machine) grant type.
     </Body>
     <Divider noGrid noMargin />
-    <Input error={errors.name} />
+    <Input
+      label="Name*"
+      placeholder="Type here..."
+      bind:value={config.name}
+      error={errors.name}
+    />
     <Input
       label="Service URL*"
       placeholder="E.g. www.google.com"
+      bind:value={config.url}
       error={errors.url}
     />
     <div class="field-info">
