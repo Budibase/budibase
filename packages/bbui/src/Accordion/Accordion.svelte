@@ -4,13 +4,11 @@
   export let itemName
   export let initialOpen
   export let header
+  export let bold = true
 
-  let isOpen
+  let isOpen = initialOpen
 
   function getOpenClass(isOpen) {
-    if (isOpen === undefined) {
-      isOpen = initialOpen
-    }
     return isOpen ? "is-open" : ""
   }
 </script>
@@ -21,6 +19,7 @@
       <button
         class="spectrum-Accordion-itemHeader"
         type="button"
+        style="--font-weight: {bold ? 'bold' : 'normal'}"
         on:click={() => (isOpen = !isOpen)}
       >
         {header}
@@ -52,7 +51,8 @@
   }
   .spectrum-Accordion-itemHeader {
     text-transform: none;
-    font-weight: bold;
+    font-weight: var(--font-weight);
     font-size: 0.875rem;
+    min-height: auto;
   }
 </style>
