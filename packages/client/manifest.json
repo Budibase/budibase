@@ -8058,5 +8058,42 @@
         "showInBar": true
       }
     ]
+  },
+  "pdf": {
+    "name": "PDF Generator",
+    "icon": "Document",
+    "hasChildren": true,
+    "showEmptyState": false,
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "start"
+    },
+    "size": {
+      "width": 800,
+      "height": 1200
+    },
+    "description": "A component to render PDFs from other Budibase components",
+    "settings": [
+      {
+        "type": "text",
+        "label": "File name",
+        "key": "fileName"
+      },
+      {
+        "type": "boolean",
+        "label": "Landscape",
+        "key": "landscape"
+      },
+      {
+        "type": "boolean",
+        "label": "Footer",
+        "key": "footer"
+      },
+      {
+        "type": "number",
+        "label": "Pages",
+        "key": "pageCount"
+      }
+    ]
   }
 }

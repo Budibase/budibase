@@ -8,7 +8,8 @@
       "formblock",
       "multistepformblock",
       "chartblock",
-      "rowexplorer"
+      "rowexplorer",
+      "pdf"
     ]
   },
   {
