@@ -13,6 +13,8 @@
   export let fileSizeLimit = BYTES_IN_MB * 20
   export let id = null
   export let previewUrl = null
+  export let hideButton = false
+  export let multiple = false
 
   const fieldId = id || uuid()
   const BYTES_IN_KB = 1000
@@ -23,6 +25,20 @@
   let fileInput
 
   $: inputAccept = Array.isArray(extensions) ? extensions.join(",") : "*"
+  $: files = Array.isArray(value) ? value : value ? [value] : []
+  $: previews = Array.isArray(previewUrl)
+    ? previewUrl
+    : previewUrl
+    ? [previewUrl]
+    : []
+
+  function formatFileSize(size) {
+    if (!size) return ""
+    if (size <= BYTES_IN_MB) {
+      return `${Math.round(size / BYTES_IN_KB)} KB`
+    }
+    return `${(size / BYTES_IN_MB).toFixed(1)} MB`
+  }
 
   async function processFile(targetFile) {
     if (handleFileTooLarge && targetFile?.size >= fileSizeLimit) {
@@ -33,11 +49,20 @@
   }
 
   function handleFile(evt) {
-    processFile(evt.target.files[0])
+    if (multiple && evt.target.files.length > 1) {
+      dispatch("multipleFiles", Array.from(evt.target.files))
+    } else {
+      processFile(evt.target.files[0])
+    }
   }
 
-  function clearFile() {
-    dispatch("change", null)
+  function clearFile(index) {
+    if (multiple) {
+      const newFiles = files.filter((_, i) => i !== index)
+      dispatch("change", newFiles.length ? newFiles : null)
+    } else {
+      dispatch("change", null)
+    }
   }
 </script>
 
@@ -48,34 +73,37 @@
   accept={inputAccept}
   bind:this={fileInput}
   on:change={handleFile}
+  {multiple}
 />
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="field">
-  {#if value}
-    <div class="file-view">
-      {#if previewUrl}
-        <img class="preview" alt="" src={previewUrl} />
-      {/if}
-      <div class="filename">{value.name}</div>
-      {#if value.size}
-        <div class="filesize">
-          {#if value.size <= BYTES_IN_MB}
-            {`${value.size / BYTES_IN_KB} KB`}
-          {:else}
-            {`${value.size / BYTES_IN_MB} MB`}
-          {/if}
-        </div>
-      {/if}
-      {#if !disabled || (allowClear === true && disabled)}
-        <div class="delete-button" on:click={clearFile}>
-          <Icon name="Close" size="XS" />
-        </div>
-      {/if}
+  <div class="files-list">
+    {#each files as file, index}
+      <div class="file-view">
+        {#if previews[index]}
+          <img class="preview" alt="" src={previews[index]} />
+        {/if}
+        <div class="filename">{file.name || `File ${index + 1}`}</div>
+        {#if file.size}
+          <div class="filesize">{formatFileSize(file.size)}</div>
+        {/if}
+        {#if !disabled || (allowClear === true && disabled)}
+          <div class="delete-button" on:click={() => clearFile(index)}>
+            <Icon name="Close" size="XS" />
+          </div>
+        {/if}
+      </div>
+    {/each}
+  </div>
+  {#if !hideButton}
+    <div class="upload-button">
+      <ActionButton {disabled} on:click={fileInput.click()}
+        >{title}</ActionButton
+      >
     </div>
   {/if}
-  <ActionButton {disabled} on:click={fileInput.click()}>{title}</ActionButton>
 </div>
 
 <style>
@@ -83,6 +111,14 @@
     display: flex;
     gap: var(--spacing-m);
   }
+
+  .files-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: var(--spacing-s);
+  }
+
   .file-view {
     display: flex;
     gap: var(--spacing-l);
@@ -90,6 +126,7 @@
     border: 1px solid var(--spectrum-alias-border-color);
     border-radius: var(--spectrum-global-dimension-size-50);
     padding: 0px var(--spectrum-alias-item-padding-m);
+    height: 30px;
   }
   input[type="file"] {
     display: none;

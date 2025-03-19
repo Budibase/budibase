@@ -15,11 +15,17 @@
   export let value = null
   export let tooltip = null
   export let helpText = null
+  export let hideButton = false
+  export let multiple = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
     dispatch("change", e.detail)
+  }
+
+  const onMultipleFiles = e => {
+    dispatch("multipleFiles", e.detail)
   }
 </script>
 
@@ -33,6 +39,9 @@
     {previewUrl}
     {handleFileTooLarge}
     {extensions}
+    {hideButton}
+    {multiple}
     on:change={onChange}
+    on:multipleFiles={onMultipleFiles}
   />
 </Field>

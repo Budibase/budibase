@@ -15,10 +15,21 @@
     Tag,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
-
   import { API } from "@/api"
 
-  const imageExtensions = [".png"]
+  const IMAGE_EXTENSIONS = [".png"]
+  const DISPLAY_OPTIONS = [
+    { label: "Standalone", value: "standalone" },
+    { label: "Fullscreen", value: "fullscreen" },
+    { label: "Minimal UI", value: "minimal-ui" },
+  ]
+
+  let saving = false
+  let iconFile
+  let iconPreview
+  let screenshotFiles = []
+  let screenshotPreviews = []
+  let pwaEnabled = true
 
   let pwaConfig = $appStore.pwa || {
     name: "",
@@ -31,50 +42,27 @@
     display: "standalone",
   }
 
-  let saving = false
-  let iconFile = null
-  let iconPreview = null
-  let screenshotFile = null
-  let screenshotPreview = null
+  $: icon = pwaConfig.icons?.[0]?.src
+    ? { url: pwaConfig.icons[0].src, type: "image", name: "PWA Icon" }
+    : null
 
-  const displayOptions = [
-    { label: "Standalone", value: "standalone" },
-    { label: "Fullscreen", value: "fullscreen" },
-    { label: "Minimal UI", value: "minimal-ui" },
-  ]
-
-  // Get existing icon if available
-  $: icon =
-    pwaConfig.icons && pwaConfig.icons.length > 0
-      ? { url: pwaConfig.icons[0].src, type: "image", name: "PWA Icon" }
-      : null
-
-  // Get existing screenshots
-  $: screenshot =
-    pwaConfig.screenshots && pwaConfig.screenshots.length > 0
-      ? {
-          url: pwaConfig.screenshots[0].src,
+  $: screenshots =
+    pwaConfig.screenshots?.length > 0
+      ? pwaConfig.screenshots.map(screenshot => ({
+          url: screenshot.src,
           type: "image",
           name: "PWA Screenshot",
-        }
-      : null
+        }))
+      : []
 
-  $: pwaEnabled = true
-
-  const previewUrl = async localFile => {
-    if (!localFile) {
-      return Promise.resolve(null)
-    }
+  const previewUrl = file => {
+    if (!file) return Promise.resolve(null)
 
     return new Promise(resolve => {
-      let reader = new FileReader()
+      const reader = new FileReader()
       try {
-        reader.onload = e => {
-          resolve({
-            result: e.target.result,
-          })
-        }
-        reader.readAsDataURL(localFile)
+        reader.onload = e => resolve({ result: e.target.result })
+        reader.readAsDataURL(file)
       } catch (error) {
         console.error(error)
         resolve(null)
@@ -83,70 +71,24 @@
   }
 
   $: previewUrl(iconFile).then(response => {
-    if (response) {
-      iconPreview = response.result
-    }
+    if (response) iconPreview = response.result
   })
 
-  $: previewUrl(screenshotFile).then(response => {
-    if (response) {
-      screenshotPreview = response.result
-    }
-  })
+  async function handleMultipleScreenshots(files) {
+    screenshotFiles = files
+    screenshotPreviews = new Array(files.length).fill(null)
 
-  async function uploadFile(file) {
-    let response = {}
-    try {
-      let data = new FormData()
-      data.append("file", file)
-      response = await API.uploadBuilderAttachment(data)
-    } catch (error) {
-      notifications.error("Error uploading file")
-    }
-    return response
-  }
-
-  async function saveFiles() {
-    if (iconFile) {
-      const iconResp = await uploadFile(iconFile)
-      if (iconResp[0]?.key) {
-        const iconKey = iconResp[0].key
-
-        pwaConfig = {
-          ...pwaConfig,
-          icons: [
-            {
-              src: iconKey,
-              sizes: "192x192",
-              type: "image/png",
-            },
-          ],
-        }
-      }
-    }
-
-    if (screenshotFile) {
-      const screenshotResp = await uploadFile(screenshotFile)
-      if (screenshotResp[0]?.key) {
-        const screenshotKey = screenshotResp[0].key
-
-        pwaConfig = {
-          ...pwaConfig,
-          screenshots: [
-            {
-              src: screenshotKey,
-              sizes: "1280x720",
-              type: "image/png",
-            },
-          ],
-        }
+    for (let i = 0; i < files.length; i++) {
+      const preview = await previewUrl(files[i])
+      if (preview) {
+        screenshotPreviews[i] = preview.result
+        screenshotPreviews = [...screenshotPreviews]
       }
     }
   }
 
   function ensureHexFormat(color) {
     if (!color) return "#FFFFFF"
-
     if (color.startsWith("#")) return color
 
     const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
@@ -170,54 +112,84 @@
 
   function getCssVariableValue(cssVar) {
     try {
-      if (cssVar && cssVar.startsWith("#")) {
-        return cssVar
-      }
+      if (cssVar?.startsWith("#")) return cssVar
 
-      const varMatch = cssVar.match(/var\((.*?)\)/)
-      if (!varMatch) {
-        return ensureHexFormat(cssVar)
-      }
+      const varMatch = cssVar?.match(/var\((.*?)\)/)
+      if (!varMatch) return ensureHexFormat(cssVar)
 
       const varName = varMatch[1]
-      const computedValue = ensureHexFormat(
+      return ensureHexFormat(
         getComputedStyle(document.documentElement)
           .getPropertyValue(varName)
           .trim()
       )
-
-      if (computedValue) {
-        return computedValue
-      }
-
-      return "#FFFFFF"
     } catch (error) {
       console.error("Error converting CSS variable:", error)
       return "#FFFFFF"
     }
   }
 
+  async function uploadFile(file) {
+    try {
+      const data = new FormData()
+      data.append("file", file)
+      return await API.uploadBuilderAttachment(data)
+    } catch (error) {
+      notifications.error("Error uploading file")
+      return {}
+    }
+  }
+
+  async function saveFiles() {
+    if (iconFile) {
+      const iconResp = await uploadFile(iconFile)
+      if (iconResp[0]?.key) {
+        pwaConfig.icons = [
+          {
+            src: iconResp[0].key,
+            sizes: "192x192",
+            type: "image/png",
+          },
+        ]
+      }
+    }
+
+    if (screenshotFiles.length > 0) {
+      const uploadedScreenshots = []
+
+      for (const file of screenshotFiles) {
+        const screenshotResp = await uploadFile(file)
+        if (screenshotResp[0]?.key) {
+          uploadedScreenshots.push({
+            src: screenshotResp[0].key,
+            sizes: "1280x720",
+            type: "image/png",
+          })
+        }
+      }
+      pwaConfig.screenshots = uploadedScreenshots
+    }
+  }
+
   const handleSubmit = async () => {
     try {
       saving = true
-
       await saveFiles()
-
-      const bgColor = getCssVariableValue(pwaConfig.background_color)
-      const themeColor = getCssVariableValue(pwaConfig.theme_color)
 
       const pwaConfigToSave = {
         ...pwaConfig,
-        background_color: bgColor,
-        theme_color: themeColor,
+        background_color: getCssVariableValue(pwaConfig.background_color),
+        theme_color: getCssVariableValue(pwaConfig.theme_color),
       }
 
       await API.saveAppMetadata($appStore.appId, { pwa: pwaConfigToSave })
+      appStore.update(state => ({ ...state, pwa: pwaConfigToSave }))
 
-      appStore.update(state => ({
-        ...state,
-        pwa: pwaConfigToSave,
-      }))
+      // Clear file upload state after successful save
+      screenshotFiles = []
+      screenshotPreviews = []
+      iconFile = null
+      iconPreview = null
 
       notifications.success("PWA settings saved successfully")
     } catch (error) {
@@ -248,9 +220,9 @@
 
   <div class="form" class:disabled={!pwaEnabled}>
     <div class="fields">
+      <!-- App Details Section -->
       <div class="section">
         <Heading size="S">App details</Heading>
-
         <Body size="S">
           Define the identity of your app, including its name, description, and
           how it will appear to users when installed.
@@ -290,6 +262,8 @@
         </div>
       </div>
       <Divider />
+
+      <!-- Appearance Section -->
       <div class="section">
         <Heading size="S">Appearance</Heading>
         <Body size="S">
@@ -304,10 +278,9 @@
         <div>
           <File
             title="Upload icon"
-            handleFileTooLarge={() => {
-              notifications.warn("File too large. 20mb limit")
-            }}
-            extensions={imageExtensions}
+            handleFileTooLarge={() =>
+              notifications.warn("File too large. 20mb limit")}
+            extensions={IMAGE_EXTENSIONS}
             previewUrl={iconPreview || icon?.url}
             on:change={e => {
               if (e.detail) {
@@ -316,10 +289,7 @@
               } else {
                 iconFile = null
                 iconPreview = null
-                pwaConfig = {
-                  ...pwaConfig,
-                  icons: [],
-                }
+                pwaConfig.icons = []
               }
             }}
             value={iconFile || icon}
@@ -330,31 +300,20 @@
       </div>
 
       <div class="field">
-        <Label size="L">Screenshot</Label>
+        <Label size="L">Screenshots</Label>
         <div>
           <File
             title="Upload screenshots"
-            handleFileTooLarge={() => {
-              notifications.warn("File too large. 20mb limit")
-            }}
-            extensions={imageExtensions}
-            previewUrl={screenshotPreview || screenshot?.url}
-            on:change={e => {
-              if (e.detail) {
-                screenshotFile = e.detail
-                screenshotPreview = null
-              } else {
-                screenshotFile = null
-                screenshotPreview = null
-                pwaConfig = {
-                  ...pwaConfig,
-                  screenshots: [],
-                }
-              }
-            }}
-            value={screenshotFile || screenshot}
+            handleFileTooLarge={() =>
+              notifications.warn("File too large. 20mb limit")}
+            extensions={IMAGE_EXTENSIONS}
+            multiple
+            value={screenshotFiles.length ? screenshotFiles : screenshots}
+            previewUrl={screenshotFiles.length
+              ? screenshotPreviews
+              : screenshots.map(s => s.url)}
+            on:multipleFiles={e => handleMultipleScreenshots(e.detail)}
             disabled={!pwaEnabled}
-            allowClear={true}
           />
           <div class="optional-text">(Optional)</div>
         </div>
@@ -365,9 +324,7 @@
         <div>
           <ColorPicker
             value={pwaConfig.background_color}
-            on:change={e => {
-              pwaConfig.background_color = e.detail
-            }}
+            on:change={e => (pwaConfig.background_color = e.detail)}
             disabled={!pwaEnabled}
           />
         </div>
@@ -385,6 +342,7 @@
       </div>
       <Divider />
 
+      <!-- Manifest Settings Section -->
       <div class="section">
         <Heading size="S">Manifest settings</Heading>
         <Body size="S">
@@ -399,7 +357,7 @@
         <div>
           <Select
             bind:value={pwaConfig.display}
-            options={displayOptions}
+            options={DISPLAY_OPTIONS}
             disabled={!pwaEnabled}
           />
         </div>
@@ -445,6 +403,12 @@
     max-width: 300px;
   }
 
+  .optional-text {
+    font-size: 0.8em;
+    color: var(--spectrum-global-color-gray-700);
+    margin-top: var(--spacing-xs);
+  }
+
   .section {
     margin-top: var(--spacing-xl);
   }
@@ -455,12 +419,6 @@
     align-items: center;
     justify-content: flex-start;
     gap: var(--spacing-m);
-  }
-
-  .optional-text {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-700);
-    margin-top: 4px;
   }
 
   .actions {
