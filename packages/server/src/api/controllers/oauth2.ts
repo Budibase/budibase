@@ -1,6 +1,6 @@
 import {
-  CreateOAuth2ConfigRequest,
-  CreateOAuth2ConfigResponse,
+  UpsertOAuth2ConfigRequest,
+  UpsertOAuth2ConfigResponse,
   Ctx,
   FetchOAuth2ConfigsResponse,
   OAuth2Config,
@@ -22,7 +22,7 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
 }
 
 export async function create(
-  ctx: Ctx<CreateOAuth2ConfigRequest, CreateOAuth2ConfigResponse>
+  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
   const newConfig: RequiredKeys<Omit<OAuth2Config, "id">> = {
@@ -35,4 +35,29 @@ export async function create(
   const config = await sdk.oauth2.create(newConfig)
   ctx.status = 201
   ctx.body = { config }
+}
+
+export async function edit(
+  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
+) {
+  const { body } = ctx.request
+  const toUpdate: RequiredKeys<OAuth2Config> = {
+    id: ctx.params.id,
+    name: body.name,
+    url: body.url,
+    clientId: ctx.clientId,
+    clientSecret: ctx.clientSecret,
+  }
+
+  const config = await sdk.oauth2.update(toUpdate)
+  ctx.body = { config }
+}
+
+export async function remove(
+  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
+) {
+  const configToRemove = ctx.params.id
+
+  await sdk.oauth2.remove(configToRemove)
+  ctx.status = 204
 }
