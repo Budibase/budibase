@@ -88,6 +88,15 @@ export async function validate(
     clientSecret: body.clientSecret,
   }
 
+  if (config.clientSecret === PASSWORD_REPLACEMENT && body.id) {
+    const existingConfig = await sdk.oauth2.get(body.id)
+    if (!existingConfig) {
+      ctx.throw(`OAuth2 config with id '${body.id}' not found.`, 404)
+    }
+
+    config.clientSecret = existingConfig.clientSecret
+  }
+
   const validation = await sdk.oauth2.validateConfig(config)
   ctx.status = 201
   ctx.body = validation

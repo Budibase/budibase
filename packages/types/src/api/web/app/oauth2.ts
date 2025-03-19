@@ -22,6 +22,7 @@ export interface UpsertOAuth2ConfigResponse {
 }
 
 export interface ValidateConfigRequest {
+  id?: string
   url: string
   clientId: string
   clientSecret: string

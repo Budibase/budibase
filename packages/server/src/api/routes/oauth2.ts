@@ -39,7 +39,7 @@ router.delete(
   controller.remove
 )
 router.post(
-  "/api/oauth2/:id/validate",
+  "/api/oauth2/validate",
   authorized(PermissionType.BUILDER),
   controller.validate
 )
