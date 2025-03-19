@@ -95,6 +95,7 @@
         url: configData.url,
         clientId: configData.clientId,
         clientSecret: configData.clientSecret,
+        method: configData.method,
       })
       if (!connectionValidation.valid) {
         let message = "Connection settings could not be validated"

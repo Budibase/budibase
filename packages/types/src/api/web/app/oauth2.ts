@@ -30,6 +30,7 @@ export interface ValidateConfigRequest {
   url: string
   clientId: string
   clientSecret: string
+  method: OAuth2CredentialsMethod
 }
 
 export interface ValidateConfigResponse {

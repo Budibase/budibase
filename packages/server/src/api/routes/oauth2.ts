@@ -6,16 +6,30 @@ import authorized from "../../middleware/authorized"
 import * as controller from "../controllers/oauth2"
 import Joi from "joi"
 
+const baseValidation = {
+  url: Joi.string().required(),
+  clientId: Joi.string().required(),
+  clientSecret: Joi.string().required(),
+  method: Joi.string()
+    .required()
+    .valid(...Object.values(OAuth2CredentialsMethod)),
+}
+
 function oAuth2ConfigValidator() {
   return middleware.joiValidator.body(
     Joi.object({
       name: Joi.string().required(),
-      url: Joi.string().required(),
-      clientId: Joi.string().required(),
-      clientSecret: Joi.string().required(),
-      method: Joi.string()
-        .required()
-        .valid(...Object.values(OAuth2CredentialsMethod)),
+      ...baseValidation,
+    }),
+    { allowUnknown: false }
+  )
+}
+
+function oAuth2ConfigValidationValidator() {
+  return middleware.joiValidator.body(
+    Joi.object({
+      id: Joi.string().required(),
+      ...baseValidation,
     }),
     { allowUnknown: false }
   )
@@ -44,6 +58,7 @@ router.delete(
 router.post(
   "/api/oauth2/validate",
   authorized(PermissionType.BUILDER),
+  oAuth2ConfigValidationValidator(),
   controller.validate
 )
 
