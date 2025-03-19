@@ -20,3 +20,15 @@ export interface UpsertOAuth2ConfigRequest {
 export interface UpsertOAuth2ConfigResponse {
   config: OAuth2ConfigResponse
 }
+
+export interface ValidateConfigRequest {
+  id?: string
+  url: string
+  clientId: string
+  clientSecret: string
+}
+
+export interface ValidateConfigResponse {
+  valid: boolean
+  message?: string
+}

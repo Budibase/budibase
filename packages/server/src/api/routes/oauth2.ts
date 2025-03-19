@@ -38,5 +38,10 @@ router.delete(
   authorized(PermissionType.BUILDER),
   controller.remove
 )
+router.post(
+  "/api/oauth2/validate",
+  authorized(PermissionType.BUILDER),
+  controller.validate
+)
 
 export default router

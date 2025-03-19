@@ -7,6 +7,8 @@ import {
   RequiredKeys,
   OAuth2ConfigResponse,
   PASSWORD_REPLACEMENT,
+  ValidateConfigResponse,
+  ValidateConfigRequest,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -74,4 +76,28 @@ export async function remove(
 
   await sdk.oauth2.remove(configToRemove)
   ctx.status = 204
+}
+
+export async function validate(
+  ctx: Ctx<ValidateConfigRequest, ValidateConfigResponse>
+) {
+  const { body } = ctx.request
+  const config = {
+    url: body.url,
+    clientId: body.clientId,
+    clientSecret: body.clientSecret,
+  }
+
+  if (config.clientSecret === PASSWORD_REPLACEMENT && body.id) {
+    const existingConfig = await sdk.oauth2.get(body.id)
+    if (!existingConfig) {
+      ctx.throw(`OAuth2 config with id '${body.id}' not found.`, 404)
+    }
+
+    config.clientSecret = existingConfig.clientSecret
+  }
+
+  const validation = await sdk.oauth2.validateConfig(config)
+  ctx.status = 201
+  ctx.body = validation
 }

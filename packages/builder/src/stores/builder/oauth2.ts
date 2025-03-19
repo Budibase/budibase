@@ -1,6 +1,7 @@
 import { API } from "@/api"
 import { BudiStore } from "@/stores/BudiStore"
 import { OAuth2Config, UpsertOAuth2Config } from "@/types"
+import { ValidateConfigRequest } from "@budibase/types"
 
 interface OAuth2StoreState {
   configs: OAuth2Config[]
@@ -56,6 +57,10 @@ export class OAuth2Store extends BudiStore<OAuth2StoreState> {
   async delete(id: string) {
     await API.oauth2.delete(id)
     await this.fetch()
+  }
+
+  async validate(config: ValidateConfigRequest) {
+    return await API.oauth2.validate(config)
   }
 }
 
