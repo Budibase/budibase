@@ -48,3 +48,49 @@ export async function get(id: string): Promise<OAuth2Config | undefined> {
   const doc = await getDocument()
   return doc?.configs?.[id]
 }
+
+export async function update(config: OAuth2Config): Promise<OAuth2Config> {
+  const db = context.getAppDB()
+  const doc: OAuth2Configs = (await getDocument(db)) ?? {
+    _id: DocumentType.OAUTH2_CONFIG,
+    configs: {},
+  }
+
+  if (!doc.configs[config.id]) {
+    throw new HTTPError(`OAuth2 config with id '${config.id}' not found.`, 404)
+  }
+
+  if (
+    Object.values(doc.configs).find(
+      c => c.name === config.name && c.id !== config.id
+    )
+  ) {
+    throw new HTTPError(
+      `OAuth2 config with name '${config.name}' is already taken.`,
+      400
+    )
+  }
+
+  doc.configs[config.id] = {
+    ...config,
+  }
+
+  await db.put(doc)
+  return doc.configs[config.id]
+}
+
+export async function remove(configId: string): Promise<void> {
+  const db = context.getAppDB()
+  const doc: OAuth2Configs = (await getDocument(db)) ?? {
+    _id: DocumentType.OAUTH2_CONFIG,
+    configs: {},
+  }
+
+  if (!doc.configs[configId]) {
+    throw new HTTPError(`OAuth2 config with id '${configId}' not found.`, 404)
+  }
+
+  delete doc.configs[configId]
+
+  await db.put(doc)
+}
