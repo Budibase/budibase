@@ -1,8 +1,12 @@
 import fetch, { RequestInit } from "node-fetch"
 import { HttpError } from "koa"
 import { get } from "../oauth2"
-import { OAuth2CredentialsMethod } from "@budibase/types"
+import { Document, OAuth2CredentialsMethod } from "@budibase/types"
 import { cache, context, docIds } from "@budibase/backend-core"
+
+interface OAuth2LogDocument extends Document {
+  lastUsage: number
+}
 
 const { DocWritethrough } = cache.docWritethrough
 
@@ -44,7 +48,7 @@ async function fetchToken(config: {
 }
 
 const trackUsage = async (id: string) => {
-  const writethrough = new DocWritethrough(
+  const writethrough = new DocWritethrough<OAuth2LogDocument>(
     context.getAppDB(),
     docIds.generateOAuth2LogID(id)
   )
@@ -92,4 +96,20 @@ export async function validateConfig(config: {
   } catch (e: any) {
     return { valid: false, message: e.message }
   }
+}
+
+export async function getLastUsages(ids: string[]) {
+  const docs = await context
+    .getAppDB()
+    .getMultiple<OAuth2LogDocument>(ids.map(docIds.generateOAuth2LogID), {
+      allowMissing: true,
+    })
+  const result = ids.reduce<Record<string, number>>((acc, id) => {
+    const doc = docs.find(d => d._id === docIds.generateOAuth2LogID(id))
+    if (doc) {
+      acc[id] = doc.lastUsage
+    }
+    return acc
+  }, {})
+  return result
 }
