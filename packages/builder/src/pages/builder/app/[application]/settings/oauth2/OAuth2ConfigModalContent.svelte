@@ -95,7 +95,7 @@
         notifications.success("Settings saved.")
       }
     } catch (e: any) {
-      notifications.error(e.message)
+      notifications.error(`Failed to save config - ${e.message}`)
       return keepOpen
     }
   }

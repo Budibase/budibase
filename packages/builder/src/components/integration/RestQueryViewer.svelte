@@ -684,6 +684,7 @@
 
             <AuthPicker
               bind:authConfigId={query.fields.authConfigId}
+              bind:authConfigType={query.fields.authConfigType}
               {authConfigs}
               datasourceId={datasource._id}
             />
