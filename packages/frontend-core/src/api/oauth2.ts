@@ -3,6 +3,8 @@ import {
   OAuth2ConfigResponse,
   UpsertOAuth2ConfigRequest,
   UpsertOAuth2ConfigResponse,
+  ValidateConfigRequest,
+  ValidateConfigResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -16,6 +18,7 @@ export interface OAuth2Endpoints {
     config: UpsertOAuth2ConfigRequest
   ) => Promise<UpsertOAuth2ConfigResponse>
   delete: (id: string) => Promise<void>
+  validate: (config: ValidateConfigRequest) => Promise<ValidateConfigResponse>
 }
 
 export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
@@ -32,8 +35,6 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
 
   /**
    * Creates a OAuth2 configuration.
-   * @param name the name of the row action
-   * @param tableId the ID of the table
    */
   create: async config => {
     return await API.post<
@@ -49,8 +50,6 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
 
   /**
    * Updates an existing OAuth2 configuration.
-   * @param name the name of the row action
-   * @param tableId the ID of the table
    */
   update: async (id, config) => {
     return await API.put<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>(
@@ -70,6 +69,16 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
   delete: async id => {
     return await API.delete<void, void>({
       url: `/api/oauth2/${id}`,
+    })
+  },
+  validate: async function (
+    config: ValidateConfigRequest
+  ): Promise<ValidateConfigResponse> {
+    return await API.post<ValidateConfigRequest, ValidateConfigResponse>({
+      url: `/api/oauth2/validate`,
+      body: {
+        ...config,
+      },
     })
   },
 })

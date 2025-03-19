@@ -70,12 +70,28 @@
       return keepOpen
     }
 
+    const { data: configData } = validationResult
     try {
+      const connectionValidation = await oauth2.validate({
+        id: config?.id,
+        url: configData.url,
+        clientId: configData.clientId,
+        clientSecret: configData.clientSecret,
+      })
+      if (!connectionValidation.valid) {
+        let message = "Connection settings could not be validated"
+        if (connectionValidation.message) {
+          message += `: ${connectionValidation.message}`
+        }
+        notifications.error(message)
+        return keepOpen
+      }
+
       if (isCreation) {
-        await oauth2.create(validationResult.data)
+        await oauth2.create(configData)
         notifications.success("Settings created.")
       } else {
-        await oauth2.edit(config!.id, validationResult.data)
+        await oauth2.edit(config!.id, configData)
         notifications.success("Settings saved.")
       }
     } catch (e: any) {
