@@ -37,7 +37,7 @@
       value: OAuth2CredentialsMethod.HEADER,
     },
     {
-      label: "Post",
+      label: "POST",
       value: OAuth2CredentialsMethod.BODY,
     },
   ]
@@ -149,7 +149,7 @@
   <div class="field-info">
     <Body size="XS" color="var(--spectrum-global-color-gray-700)">
       Basic will use the Authorisation Bearer header for each connection, while
-      Post will include the credentials in the body of the request under the
+      POST will include the credentials in the body of the request under the
       access_token property.
     </Body>
   </div>
