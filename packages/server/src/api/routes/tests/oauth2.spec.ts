@@ -1,5 +1,6 @@
 import {
   OAuth2Config,
+  OAuth2CredentialsMethod,
   PASSWORD_REPLACEMENT,
   UpsertOAuth2ConfigRequest,
   VirtualDocumentType,
@@ -17,6 +18,7 @@ describe("/oauth2", () => {
       url: generator.url(),
       clientId: generator.guid(),
       clientSecret: generator.hash(),
+      method: generator.pickone(Object.values(OAuth2CredentialsMethod)),
     }
   }
 
@@ -54,6 +56,7 @@ describe("/oauth2", () => {
             url: c.url,
             clientId: c.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
+            method: c.method,
           }))
         ),
       })
@@ -74,6 +77,7 @@ describe("/oauth2", () => {
             url: oauth2Config.url,
             clientId: oauth2Config.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
+            method: oauth2Config.method,
           },
         ],
       })
@@ -93,6 +97,7 @@ describe("/oauth2", () => {
           url: oauth2Config.url,
           clientId: oauth2Config.clientId,
           clientSecret: PASSWORD_REPLACEMENT,
+          method: oauth2Config.method,
         },
         {
           id: expectOAuth2ConfigId,
@@ -100,6 +105,7 @@ describe("/oauth2", () => {
           url: oauth2Config2.url,
           clientId: oauth2Config2.clientId,
           clientSecret: PASSWORD_REPLACEMENT,
+          method: oauth2Config2.method,
         },
       ])
       expect(response.configs[0].id).not.toEqual(response.configs[1].id)
@@ -125,6 +131,7 @@ describe("/oauth2", () => {
           url: oauth2Config.url,
           clientId: oauth2Config.clientId,
           clientSecret: PASSWORD_REPLACEMENT,
+          method: oauth2Config.method,
         },
       ])
     })
@@ -161,6 +168,7 @@ describe("/oauth2", () => {
             url: configData.url,
             clientId: configData.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
+            method: configData.method,
           },
         ])
       )

@@ -10,8 +10,12 @@
     Link,
     ModalContent,
     notifications,
+    Select,
   } from "@budibase/bbui"
-  import { PASSWORD_REPLACEMENT } from "@budibase/types"
+  import {
+    OAuth2CredentialsMethod,
+    PASSWORD_REPLACEMENT,
+  } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
 
@@ -26,6 +30,17 @@
   $: title = isCreation
     ? "Create new OAuth2 connection"
     : "Edit OAuth2 connection"
+
+  const methods = [
+    {
+      label: "Basic",
+      value: OAuth2CredentialsMethod.HEADER,
+    },
+    {
+      label: "POST",
+      value: OAuth2CredentialsMethod.BODY,
+    },
+  ]
 
   const requiredString = (errorMessage: string) =>
     z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
@@ -45,6 +60,9 @@
       url: requiredString("Url is required.").url(),
       clientId: requiredString("Client ID is required."),
       clientSecret: requiredString("Client secret is required."),
+      method: z.nativeEnum(OAuth2CredentialsMethod, {
+        message: "Authentication method is required.",
+      }),
     }) satisfies ZodType<UpsertOAuth2Config>
 
     const validationResult = validator.safeParse(config)
@@ -77,6 +95,7 @@
         url: configData.url,
         clientId: configData.clientId,
         clientSecret: configData.clientSecret,
+        method: configData.method,
       })
       if (!connectionValidation.valid) {
         let message = "Connection settings could not be validated"
@@ -119,6 +138,21 @@
     bind:value={data.name}
     error={errors.name}
   />
+  <Select
+    label="Authentication method*"
+    options={methods}
+    getOptionLabel={o => o.label}
+    getOptionValue={o => o.value}
+    bind:value={data.method}
+    error={errors.method}
+  />
+  <div class="field-info">
+    <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+      Basic will use the Authorisation Bearer header for each connection, while
+      POST will include the credentials in the body of the request under the
+      access_token property.
+    </Body>
+  </div>
   <Input
     label="Service URL*"
     placeholder="E.g. www.google.com"

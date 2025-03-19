@@ -1,9 +1,12 @@
+import { OAuth2CredentialsMethod } from "@budibase/types"
+
 export interface OAuth2ConfigResponse {
   id: string
   name: string
   url: string
   clientId: string
   clientSecret: string
+  method: OAuth2CredentialsMethod
 }
 
 export interface FetchOAuth2ConfigsResponse {
@@ -15,6 +18,7 @@ export interface UpsertOAuth2ConfigRequest {
   url: string
   clientId: string
   clientSecret: string
+  method: OAuth2CredentialsMethod
 }
 
 export interface UpsertOAuth2ConfigResponse {
@@ -26,6 +30,7 @@ export interface ValidateConfigRequest {
   url: string
   clientId: string
   clientSecret: string
+  method: OAuth2CredentialsMethod
 }
 
 export interface ValidateConfigResponse {
