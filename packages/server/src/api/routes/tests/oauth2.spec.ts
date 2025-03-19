@@ -1,5 +1,6 @@
 import {
   OAuth2Config,
+  PASSWORD_REPLACEMENT,
   UpsertOAuth2ConfigRequest,
   VirtualDocumentType,
 } from "@budibase/types"
@@ -52,7 +53,7 @@ describe("/oauth2", () => {
             name: c.name,
             url: c.url,
             clientId: c.clientId,
-            clientSecret: c.clientSecret,
+            clientSecret: PASSWORD_REPLACEMENT,
           }))
         ),
       })
@@ -72,7 +73,7 @@ describe("/oauth2", () => {
             name: oauth2Config.name,
             url: oauth2Config.url,
             clientId: oauth2Config.clientId,
-            clientSecret: oauth2Config.clientSecret,
+            clientSecret: PASSWORD_REPLACEMENT,
           },
         ],
       })
@@ -91,14 +92,14 @@ describe("/oauth2", () => {
           name: oauth2Config.name,
           url: oauth2Config.url,
           clientId: oauth2Config.clientId,
-          clientSecret: oauth2Config.clientSecret,
+          clientSecret: PASSWORD_REPLACEMENT,
         },
         {
           id: expectOAuth2ConfigId,
           name: oauth2Config2.name,
           url: oauth2Config2.url,
           clientId: oauth2Config2.clientId,
-          clientSecret: oauth2Config2.clientSecret,
+          clientSecret: PASSWORD_REPLACEMENT,
         },
       ])
       expect(response.configs[0].id).not.toEqual(response.configs[1].id)
@@ -123,7 +124,7 @@ describe("/oauth2", () => {
           name: oauth2Config.name,
           url: oauth2Config.url,
           clientId: oauth2Config.clientId,
-          clientSecret: oauth2Config.clientSecret,
+          clientSecret: PASSWORD_REPLACEMENT,
         },
       ])
     })
@@ -158,6 +159,8 @@ describe("/oauth2", () => {
             id: configId,
             name: "updated name",
             url: configData.url,
+            clientId: configData.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
           },
         ])
       )
