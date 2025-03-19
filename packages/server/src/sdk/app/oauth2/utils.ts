@@ -2,7 +2,6 @@ import fetch, { RequestInit } from "node-fetch"
 import { HttpError } from "koa"
 import { get } from "../oauth2"
 import { OAuth2CredentialsMethod } from "@budibase/types"
-import { encoding } from "packages/pro/src/sdk/utils"
 
 async function fetchToken(config: {
   url: string
