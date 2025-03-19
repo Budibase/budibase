@@ -1,5 +1,6 @@
 import {
   OAuth2Config,
+  PASSWORD_REPLACEMENT,
   UpsertOAuth2ConfigRequest,
   VirtualDocumentType,
 } from "@budibase/types"
@@ -34,6 +35,29 @@ describe("/oauth2", () => {
         configs: [],
       })
     })
+
+    it("returns all created configs", async () => {
+      const existingConfigs = []
+      for (let i = 0; i < 10; i++) {
+        const oauth2Config = makeOAuth2Config()
+        const result = await config.api.oauth2.create(oauth2Config)
+        existingConfigs.push({ ...oauth2Config, id: result.config.id })
+      }
+
+      const response = await config.api.oauth2.fetch()
+      expect(response.configs).toHaveLength(existingConfigs.length)
+      expect(response).toEqual({
+        configs: expect.arrayContaining(
+          existingConfigs.map(c => ({
+            id: c.id,
+            name: c.name,
+            url: c.url,
+            clientId: c.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
+          }))
+        ),
+      })
+    })
   })
 
   describe("create", () => {
@@ -48,6 +72,8 @@ describe("/oauth2", () => {
             id: expectOAuth2ConfigId,
             name: oauth2Config.name,
             url: oauth2Config.url,
+            clientId: oauth2Config.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
           },
         ],
       })
@@ -65,11 +91,15 @@ describe("/oauth2", () => {
           id: expectOAuth2ConfigId,
           name: oauth2Config.name,
           url: oauth2Config.url,
+          clientId: oauth2Config.clientId,
+          clientSecret: PASSWORD_REPLACEMENT,
         },
         {
           id: expectOAuth2ConfigId,
           name: oauth2Config2.name,
           url: oauth2Config2.url,
+          clientId: oauth2Config2.clientId,
+          clientSecret: PASSWORD_REPLACEMENT,
         },
       ])
       expect(response.configs[0].id).not.toEqual(response.configs[1].id)
@@ -93,6 +123,8 @@ describe("/oauth2", () => {
           id: expectOAuth2ConfigId,
           name: oauth2Config.name,
           url: oauth2Config.url,
+          clientId: oauth2Config.clientId,
+          clientSecret: PASSWORD_REPLACEMENT,
         },
       ])
     })
@@ -127,6 +159,8 @@ describe("/oauth2", () => {
             id: configId,
             name: "updated name",
             url: configData.url,
+            clientId: configData.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
           },
         ])
       )

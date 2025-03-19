@@ -1,6 +1,9 @@
 export interface OAuth2ConfigResponse {
   id: string
   name: string
+  url: string
+  clientId: string
+  clientSecret: string
 }
 
 export interface FetchOAuth2ConfigsResponse {
