@@ -28,9 +28,6 @@ async function fetchToken(config: {
         "utf-8"
       ).toString("base64")}`,
     }
-    fetchConfig.body = new URLSearchParams({
-      grant_type: "client_credentials",
-    })
   } else {
     fetchConfig.body = new URLSearchParams({
       grant_type: "client_credentials",
