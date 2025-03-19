@@ -29,7 +29,11 @@
           await oauth2.delete(row.id)
           notifications.success(`Config '${row.name}' deleted successfully`)
         } catch (e: any) {
-          notifications.error("Error deleting config")
+          let message = "Error deleting config"
+          if (e.message) {
+            message += ` - ${e.message}`
+          }
+          notifications.error(message)
         }
       },
     })
