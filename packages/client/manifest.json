@@ -7454,6 +7454,53 @@
       }
     ]
   },
+  "accordion": {
+    "name": "Accordion",
+    "friendlyName": "Accordion",
+    "description": "A collapsible Budibase container component",
+    "icon": "TreeExpandAll",
+    "hasChildren": true,
+    "illegalChildren": ["modal", "sidepanel"],
+    "showSettingsBar": true,
+    "new": true,
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "start"
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "placeholder": "Label",
+        "key": "label"
+      },
+      {
+        "type": "boolean",
+        "label": "Bold",
+        "key": "bold",
+        "showInBar": true,
+        "barIcon": "TagBold",
+        "barTitle": "Bold text",
+        "barSeparator": false
+      },
+      {
+        "type": "select",
+        "label": "Default State",
+        "key": "initialOpen",
+        "defaultValue": true,
+        "options": [
+          {
+            "label": "Open",
+            "value": true
+          },
+          {
+            "label": "Closed",
+            "value": false
+          }
+        ]
+      }
+    ]
+  },
   "rowexplorer": {
     "block": true,
     "name": "Row Explorer Block",
