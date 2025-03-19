@@ -31,3 +31,30 @@ export async function generateToken(id: string) {
 
   return `${jsonResponse.token_type} ${jsonResponse.access_token}`
 }
+
+export async function validateConfig(config: {
+  url: string
+  clientId: string
+  clientSecret: string
+}): Promise<{ valid: boolean; message?: string }> {
+  const resp = await fetch(config.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+    }),
+    redirect: "follow",
+  })
+
+  const jsonResponse = await resp.json()
+  if (!resp.ok) {
+    const message = jsonResponse.error_description ?? resp.statusText
+    return { valid: false, message }
+  }
+
+  return { valid: true }
+}
