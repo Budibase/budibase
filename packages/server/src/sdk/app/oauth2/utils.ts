@@ -37,24 +37,28 @@ export async function validateConfig(config: {
   clientId: string
   clientSecret: string
 }): Promise<{ valid: boolean; message?: string }> {
-  const resp = await fetch(config.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: config.clientId,
-      client_secret: config.clientSecret,
-    }),
-    redirect: "follow",
-  })
+  try {
+    const resp = await fetch(config.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+      }),
+      redirect: "follow",
+    })
 
-  const jsonResponse = await resp.json()
-  if (!resp.ok) {
-    const message = jsonResponse.error_description ?? resp.statusText
-    return { valid: false, message }
+    const jsonResponse = await resp.json()
+    if (!resp.ok) {
+      const message = jsonResponse.error_description ?? resp.statusText
+      return { valid: false, message }
+    }
+
+    return { valid: true }
+  } catch (e: any) {
+    return { valid: false, message: e.message }
   }
-
-  return { valid: true }
 }
