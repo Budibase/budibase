@@ -22,6 +22,11 @@
 
   $: data = (config as Partial<OAuth2Config>) ?? {}
 
+  $: isCreation = !config
+  $: title = isCreation
+    ? "Create new OAuth2 connection"
+    : "Edit OAuth2 connection"
+
   const requiredString = (errorMessage: string) =>
     z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
 
@@ -66,11 +71,11 @@
     }
 
     try {
-      if (!config) {
+      if (isCreation) {
         await oauth2.create(validationResult.data)
         notifications.success("Settings created.")
       } else {
-        await oauth2.edit(config.id, validationResult.data)
+        await oauth2.edit(config!.id, validationResult.data)
         notifications.success("Settings saved.")
       }
     } catch (e: any) {
@@ -85,7 +90,7 @@
 </script>
 
 <ModalContent onConfirm={saveOAuth2Config} size="M">
-  <Heading size="S">Create new OAuth2 connection</Heading>
+  <Heading size="S">{title}</Heading>
 
   <Body size="S">
     The OAuth 2 authentication below uses the Client Credentials (machine to
