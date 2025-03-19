@@ -1,8 +1,8 @@
 import fetch, { RequestInit } from "node-fetch"
 import { HttpError } from "koa"
 import { get } from "../oauth2"
-import { DocumentType, OAuth2CredentialsMethod } from "@budibase/types"
-import { cache, context } from "@budibase/backend-core"
+import { OAuth2CredentialsMethod } from "@budibase/types"
+import { cache, context, docIds } from "@budibase/backend-core"
 
 const { DocWritethrough } = cache.docWritethrough
 
@@ -46,9 +46,11 @@ async function fetchToken(config: {
 const trackUsage = async (id: string) => {
   const writethrough = new DocWritethrough(
     context.getAppDB(),
-    DocumentType.OAUTH2_CONFIG_USAGES
+    docIds.generateOAuth2LogID(id)
   )
-  await writethrough.patch({ [id]: Date.now() })
+  await writethrough.patch({
+    lastUsage: Date.now(),
+  })
 }
 
 // TODO: check if caching is worth
