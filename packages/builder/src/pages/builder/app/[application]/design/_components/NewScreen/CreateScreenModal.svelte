@@ -53,7 +53,7 @@
         // Otherwise choose a datasource
         datasourceModal.show()
       }
-    } else if (mode === AutoScreenTypes.BLANK) {
+    } else if (mode === AutoScreenTypes.BLANK || mode === AutoScreenTypes.PDF) {
       screenDetailsModal.show()
     } else {
       throw new Error("Invalid mode provided")
