@@ -1,6 +1,5 @@
 import {
   FetchOAuth2ConfigsResponse,
-  OAuth2ConfigResponse,
   UpsertOAuth2ConfigRequest,
   UpsertOAuth2ConfigResponse,
   ValidateConfigRequest,
@@ -9,7 +8,7 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface OAuth2Endpoints {
-  fetch: () => Promise<OAuth2ConfigResponse[]>
+  fetch: () => Promise<FetchOAuth2ConfigsResponse["configs"]>
   create: (
     config: UpsertOAuth2ConfigRequest
   ) => Promise<UpsertOAuth2ConfigResponse>

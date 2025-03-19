@@ -4,6 +4,7 @@
   import AddButton from "./AddButton.svelte"
   import { onMount } from "svelte"
   import MoreMenuRenderer from "./MoreMenuRenderer.svelte"
+  import { durationFromNow } from "@/helpers"
 
   const schema = {
     name: {
@@ -24,10 +25,12 @@
     oauth2.fetch()
   })
 
-  $: configs = $oauth2.configs.map(c => ({
-    lastUsed: "Never used",
-    ...c,
-  }))
+  $: configs = $oauth2.configs.map(c => {
+    return {
+      ...c,
+      lastUsed: c.lastUsage ? `${durationFromNow(c.lastUsage)}` : "Never used",
+    }
+  })
 </script>
 
 <Layout noPadding>

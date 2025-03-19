@@ -1,7 +1,7 @@
 import { API } from "@/api"
 import { BudiStore } from "@/stores/BudiStore"
 import { OAuth2Config, UpsertOAuth2Config } from "@/types"
-import { ValidateConfigRequest } from "@budibase/types"
+import { RequiredKeys, ValidateConfigRequest } from "@budibase/types"
 
 interface OAuth2StoreState {
   configs: OAuth2Config[]
@@ -26,13 +26,14 @@ export class OAuth2Store extends BudiStore<OAuth2StoreState> {
       const configs = await API.oauth2.fetch()
       this.store.update(store => ({
         ...store,
-        configs: configs.map(c => ({
+        configs: configs.map<RequiredKeys<OAuth2Config>>(c => ({
           id: c.id,
           name: c.name,
           url: c.url,
           clientId: c.clientId,
           clientSecret: c.clientSecret,
           method: c.method,
+          lastUsage: c.lastUsage,
         })),
         loading: false,
       }))
