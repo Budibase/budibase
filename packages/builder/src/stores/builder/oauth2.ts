@@ -32,6 +32,7 @@ export class OAuth2Store extends BudiStore<OAuth2StoreState> {
           url: c.url,
           clientId: c.clientId,
           clientSecret: c.clientSecret,
+          method: c.method,
         })),
         loading: false,
       }))

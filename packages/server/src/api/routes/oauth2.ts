@@ -1,5 +1,5 @@
 import Router from "@koa/router"
-import { PermissionType } from "@budibase/types"
+import { OAuth2CredentialsMethod, PermissionType } from "@budibase/types"
 import { middleware } from "@budibase/backend-core"
 import authorized from "../../middleware/authorized"
 
@@ -13,6 +13,9 @@ function oAuth2ConfigValidator() {
       url: Joi.string().required(),
       clientId: Joi.string().required(),
       clientSecret: Joi.string().required(),
+      method: Joi.string()
+        .required()
+        .valid(...Object.values(OAuth2CredentialsMethod)),
     }),
     { allowUnknown: false }
   )
