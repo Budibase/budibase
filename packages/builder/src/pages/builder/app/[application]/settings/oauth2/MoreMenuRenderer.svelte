@@ -9,6 +9,7 @@
   } from "@budibase/bbui"
   import type { OAuth2Config } from "@budibase/types"
   import OAuth2ConfigModalContent from "./OAuth2ConfigModalContent.svelte"
+  import { confirm } from "@/helpers"
 
   export let row: OAuth2Config
 
@@ -18,12 +19,20 @@
     modal.show()
   }
   async function onDelete() {
-    try {
-      await oauth2.delete(row.id)
-      notifications.success(`Config '${row.name}' deleted successfully`)
-    } catch (e: any) {
-      notifications.error("Error deleting config")
-    }
+    await confirm({
+      title: "Confirm Deletion",
+      body: `Deleting "${row.name}" cannot be undone. Are you sure?`,
+      okText: "Delete Configuration",
+      warning: true,
+      onConfirm: async () => {
+        try {
+          await oauth2.delete(row.id)
+          notifications.success(`Config '${row.name}' deleted successfully`)
+        } catch (e: any) {
+          notifications.error("Error deleting config")
+        }
+      },
+    })
   }
 </script>
 
