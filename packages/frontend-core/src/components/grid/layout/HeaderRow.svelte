@@ -36,7 +36,7 @@
 
 <style>
   .header {
-    background: var(--grid-background-alt);
+    background: var(--header-cell-background);
     border-bottom: var(--cell-border);
     position: relative;
     height: var(--default-row-height);

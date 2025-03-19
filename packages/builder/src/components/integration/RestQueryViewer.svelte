@@ -1,5 +1,5 @@
 <script>
-  import { goto, params } from "@roxi/routify"
+  import { beforeUrlChange, goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import {
@@ -25,7 +25,7 @@
     EditorModes,
   } from "@/components/common/CodeMirrorEditor.svelte"
   import RestBodyInput from "./RestBodyInput.svelte"
-  import { capitalise } from "@/helpers"
+  import { capitalise, confirm } from "@/helpers"
   import { onMount } from "svelte"
   import restUtils from "@/helpers/data/utils"
   import {
@@ -50,18 +50,21 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+  import AuthPicker from "./rest/AuthPicker.svelte"
 
   export let queryId
 
   let query, datasource
   let breakQs = {},
     requestBindings = {}
-  let saveId, url
+  let saveId
   let response, schema, enabledHeaders
-  let authConfigId
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
   let nestedSchemaFields = {}
+  let saving
+  let queryNameLabel
+  let mounted = false
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -91,7 +94,7 @@
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
-  $: url = buildUrl(url, breakQs)
+  $: url = buildUrl(query?.fields?.path, breakQs)
   $: checkQueryName(url)
   $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
   $: isGet = query?.queryVerb === "read"
@@ -102,6 +105,12 @@
   $: hasSchema = Object.keys(schema || {}).length !== 0
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
+
+  $: builtQuery = buildQuery(query, runtimeUrlQueries, requestBindings)
+  $: originalQuery = mounted
+    ? originalQuery ?? cloneDeep(builtQuery)
+    : undefined
+  $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -126,7 +135,8 @@
       ?.trim() || inputUrl
 
   function checkQueryName(inputUrl = null) {
-    if (query && (!query.name || query.flags.urlName)) {
+    if (query && (!query.name || query.flags?.urlName)) {
+      query.flags ??= {}
       query.flags.urlName = true
       query.name = cleanUrl(inputUrl)
     }
@@ -147,9 +157,12 @@
     return qs.length === 0 ? newUrl : `${newUrl}?${qs}`
   }
 
-  function buildQuery() {
-    const newQuery = cloneDeep(query)
-    const queryString = restUtils.buildQueryString(runtimeUrlQueries)
+  function buildQuery(fromQuery, urlQueries, requestBindings) {
+    if (!fromQuery) {
+      return
+    }
+    const newQuery = cloneDeep(fromQuery)
+    const queryString = restUtils.buildQueryString(urlQueries)
 
     newQuery.parameters = restUtils.keyValueToQueryParameters(requestBindings)
     newQuery.fields.requestBody =
@@ -157,9 +170,8 @@
         ? readableToRuntimeMap(mergedBindings, newQuery.fields.requestBody)
         : readableToRuntimeBinding(mergedBindings, newQuery.fields.requestBody)
 
-    newQuery.fields.path = url.split("?")[0]
+    newQuery.fields.path = url?.split("?")[0]
     newQuery.fields.queryString = queryString
-    newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
     newQuery.schema = schema || {}
     newQuery.nestedSchemaFields = nestedSchemaFields || {}
@@ -168,13 +180,12 @@
   }
 
   async function saveQuery() {
-    const toSave = buildQuery()
+    const toSave = builtQuery
+    saving = true
     try {
       const isNew = !query._rev
       const { _id } = await queries.save(toSave.datasourceId, toSave)
       saveId = _id
-      query = getSelectedQuery()
-      notifications.success(`Request saved successfully`)
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save({
@@ -182,6 +193,13 @@
           datasource,
         })
       }
+
+      notifications.success(`Request saved successfully`)
+      if (isNew) {
+        $goto(`../../${_id}`)
+      }
+
+      query = getSelectedQuery()
       prettifyQueryRequestBody(
         query,
         requestBindings,
@@ -189,12 +207,19 @@
         staticVariables,
         restBindings
       )
-      if (isNew) {
-        $goto(`../../${_id}`)
-      }
+
+      // Force rebuilding original query
+      originalQuery = null
+
+      queryNameLabel.disableEditingState()
+      return { ok: true }
     } catch (err) {
       notifications.error(`Error saving query`)
+    } finally {
+      saving = false
     }
+
+    return { ok: false }
   }
 
   const validateQuery = async () => {
@@ -227,7 +252,7 @@
   async function runQuery() {
     try {
       await validateQuery()
-      response = await queries.preview(buildQuery())
+      response = await queries.preview(builtQuery)
       if (response.rows.length === 0) {
         notifications.info("Request did not return any data")
       } else {
@@ -247,22 +272,6 @@
     } catch (error) {
       notifications.error(`Query Error: ${error.message}`)
     }
-  }
-
-  const getAuthConfigId = () => {
-    let id = query.fields.authConfigId
-    if (id) {
-      // find the matching config on the datasource
-      const matchedConfig = datasource?.config?.authConfigs?.filter(
-        c => c._id === id
-      )[0]
-      // clear the id if the config is not found (deleted)
-      // i.e. just show 'None' in the dropdown
-      if (!matchedConfig) {
-        id = undefined
-      }
-    }
-    return id
   }
 
   const buildAuthConfigs = datasource => {
@@ -375,13 +384,6 @@
     }
   }
 
-  const paramsChanged = evt => {
-    breakQs = {}
-    for (let param of evt.detail) {
-      breakQs[param.name] = param.value
-    }
-  }
-
   const urlChanged = evt => {
     breakQs = {}
     const qs = evt.target.value.split("?")[1]
@@ -426,9 +428,7 @@
     ) {
       query.fields.path = `${datasource.config.url}/${path ? path : ""}`
     }
-    url = buildUrl(query.fields.path, breakQs)
     requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
-    authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
       query.fields.disabledHeaders = {}
     }
@@ -481,6 +481,38 @@
       staticVariables,
       restBindings
     )
+
+    mounted = true
+  })
+
+  $beforeUrlChange(async () => {
+    if (!isModified) {
+      return true
+    }
+
+    return await confirm({
+      title: "Some updates are not saved",
+      body: "Some of your changes are not yet saved. Do you want to save them before leaving?",
+      okText: "Save and continue",
+      cancelText: "Discard and continue",
+      size: "M",
+      onConfirm: async () => {
+        const saveResult = await saveQuery()
+        if (!saveResult.ok) {
+          // We can't leave as the query was not properly saved
+          return false
+        }
+
+        return true
+      },
+      onCancel: () => {
+        // Leave without saving anything
+        return true
+      },
+      onClose: () => {
+        return false
+      },
+    })
   })
 </script>
 
@@ -497,6 +529,7 @@
       <Layout gap="S">
         <div class="top-bar">
           <EditableLabel
+            bind:this={queryNameLabel}
             type="heading"
             bind:value={query.name}
             defaultValue="Untitled"
@@ -504,7 +537,9 @@
             on:save={saveQuery}
           />
           <div class="controls">
-            <ConnectedQueryScreens sourceId={query._id} />
+            {#if query._id}
+              <ConnectedQueryScreens sourceId={query._id} />
+            {/if}
             <div class="access">
               <Label>Access</Label>
               <AccessLevelSelect {query} {saveId} />
@@ -524,13 +559,13 @@
           <div class="url">
             <Input
               on:blur={urlChanged}
-              bind:value={url}
+              bind:value={query.fields.path}
               placeholder="http://www.api.com/endpoint"
             />
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
           <Button
-            disabled={!query.name}
+            disabled={!query.name || !isModified || saving}
             cta
             on:click={saveQuery}
             tooltip={!hasSchema
@@ -557,16 +592,13 @@
             />
           </Tab>
           <Tab title="Params">
-            {#key breakQs}
-              <KeyValueBuilder
-                on:change={paramsChanged}
-                object={breakQs}
-                name="param"
-                headings
-                bindings={mergedBindings}
-                bindingDrawerLeft="260px"
-              />
-            {/key}
+            <KeyValueBuilder
+              bind:object={breakQs}
+              name="param"
+              headings
+              bindings={mergedBindings}
+              bindingDrawerLeft="260px"
+            />
           </Tab>
           <Tab title="Headers">
             <KeyValueBuilder
@@ -649,15 +681,13 @@
           <div class="auth-container">
             <div />
             <!-- spacer -->
-            <div class="auth-select">
-              <Select
-                label="Auth"
-                labelPosition="left"
-                placeholder="None"
-                bind:value={authConfigId}
-                options={authConfigs}
-              />
-            </div>
+
+            <AuthPicker
+              bind:authConfigId={query.fields.authConfigId}
+              bind:authConfigType={query.fields.authConfigType}
+              {authConfigs}
+              datasourceId={datasource._id}
+            />
           </div>
         </Tabs>
       </Layout>
@@ -858,10 +888,6 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
-  }
-
-  .auth-select {
-    width: 200px;
   }
 
   .pagination {

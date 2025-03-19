@@ -1,105 +1,55 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
+  import { MarkdownViewer } from "@budibase/bbui"
 
-  const { styleable, builderStore } = getContext("sdk")
+  export let text: string = ""
+  export let color: string | undefined = undefined
+  export let align: "left" | "center" | "right" | "justify" = "left"
+
   const component = getContext("component")
+  const { styleable } = getContext("sdk")
 
-  export let text
-  export let color
-  export let align
-  export let bold
-  export let italic
-  export let underline
-  export let size
+  // Add in certain settings to styles
+  $: styles = enrichStyles($component.styles, color, align)
 
-  let node
-  let touched = false
-
-  $: $component.editing && node?.focus()
-  $: placeholder = $builderStore.inBuilder && !text && !$component.editing
-  $: componentText = getComponentText(text, $builderStore, $component)
-  $: sizeClass = `spectrum-Body--size${size || "M"}`
-  $: alignClass = `align--${align || "left"}`
-
-  // Add color styles to main styles object, otherwise the styleable helper
-  // overrides the color when it's passed as inline style.
-  $: styles = enrichStyles($component.styles, color)
-
-  const getComponentText = (text, builderState, componentState) => {
-    if (!builderState.inBuilder || componentState.editing) {
-      return text || ""
+  const enrichStyles = (
+    styles: any,
+    colorStyle: typeof color,
+    alignStyle: typeof align
+  ) => {
+    let additions: Record<string, string> = {
+      "text-align": alignStyle,
     }
-    return text || componentState.name || "Placeholder text"
-  }
-
-  const enrichStyles = (styles, color) => {
-    if (!color) {
-      return styles
+    if (colorStyle) {
+      additions.color = colorStyle
     }
     return {
       ...styles,
       normal: {
-        ...styles?.normal,
-        color,
+        ...styles.normal,
+        ...additions,
       },
     }
   }
-
-  // Convert contenteditable HTML to text and save
-  const updateText = e => {
-    if (touched) {
-      builderStore.actions.updateProp("text", e.target.textContent)
-    }
-    touched = false
-  }
 </script>
 
-{#key $component.editing}
-  <p
-    bind:this={node}
-    contenteditable={$component.editing}
-    use:styleable={styles}
-    class:placeholder
-    class:bold
-    class:italic
-    class:underline
-    class="spectrum-Body {sizeClass} {alignClass}"
-    on:blur={$component.editing ? updateText : null}
-    on:input={() => (touched = true)}
-  >
-    {componentText}
-  </p>
-{/key}
+<div use:styleable={styles}>
+  <MarkdownViewer value={text} />
+</div>
 
 <style>
-  p {
-    display: inline-block;
-    white-space: pre-wrap;
-    margin: 0;
+  div :global(img) {
+    max-width: 100%;
   }
-  .placeholder {
-    font-style: italic;
-    color: var(--spectrum-global-color-gray-600);
+  div :global(.editor-preview-full) {
+    height: auto;
   }
-  .bold {
+  div :global(h1),
+  div :global(h2),
+  div :global(h3),
+  div :global(h4),
+  div :global(h5),
+  div :global(h6) {
     font-weight: 600;
-  }
-  .italic {
-    font-style: italic;
-  }
-  .underline {
-    text-decoration: underline;
-  }
-  .align--left {
-    text-align: left;
-  }
-  .align--center {
-    text-align: center;
-  }
-  .align--right {
-    text-align: right;
-  }
-  .align--justify {
-    text-align: justify;
   }
 </style>

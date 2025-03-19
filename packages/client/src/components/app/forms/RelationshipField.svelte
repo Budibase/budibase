@@ -1,17 +1,26 @@
-<script lang="ts">
+<script context="module" lang="ts">
+  type BasicRelatedRow = { _id: string; primaryDisplay: string }
+  type OptionsMap = Record<string, BasicRelatedRow>
+</script>
+
+<script lang="ts" generics="ValueType extends string | string[]">
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
-  import { BasicOperator, FieldType, InternalTable } from "@budibase/types"
+  import {
+    BasicOperator,
+    EmptyFilterOption,
+    FieldType,
+    InternalTable,
+    UILogicalOperator,
+    type LegacyFilter,
+    type SearchFilterGroup,
+    type UISearchFilter,
+  } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
-  import type {
-    SearchFilter,
-    RelationshipFieldMetadata,
-    Row,
-  } from "@budibase/types"
+  import type { RelationshipFieldMetadata, Row } from "@budibase/types"
   import type { FieldApi, FieldState, FieldValidation } from "@/types"
-
-  type ValueType = string | string[]
+  import { utils } from "@budibase/shared-core"
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
@@ -22,7 +31,7 @@
   export let autocomplete: boolean = true
   export let defaultValue: ValueType | undefined = undefined
   export let onChange: (_props: { value: ValueType }) => void
-  export let filter: SearchFilter[]
+  export let filter: UISearchFilter | LegacyFilter[] | undefined = undefined
   export let datasourceType: "table" | "user" = "table"
   export let primaryDisplay: string | undefined = undefined
   export let span: number | undefined = undefined
@@ -32,14 +41,10 @@
     | FieldType.BB_REFERENCE
     | FieldType.BB_REFERENCE_SINGLE = FieldType.LINK
 
-  type BasicRelatedRow = { _id: string; primaryDisplay: string }
-  type OptionsMap = Record<string, BasicRelatedRow>
-
   const { API } = getContext("sdk")
 
   // Field state
   let fieldState: FieldState<string | string[]> | undefined
-
   let fieldApi: FieldApi
   let fieldSchema: RelationshipFieldMetadata | undefined
 
@@ -52,20 +57,29 @@
   let optionsMap: OptionsMap = {}
   let loadingMissingOptions: boolean = false
 
+  // Reset the available options when our base filter changes
+  $: filter, (optionsMap = {})
+
   // Determine if we can select multiple rows or not
   $: multiselect =
     [FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
     fieldSchema?.relationshipType !== "one-to-many"
 
   // Get the proper string representation of the value
-  $: realValue = fieldState?.value
+  $: realValue = fieldState?.value as ValueType
   $: selectedValue = parseSelectedValue(realValue, multiselect)
   $: selectedIDs = getSelectedIDs(selectedValue)
 
   // If writable, we use a fetch to load options
   $: linkedTableId = fieldSchema?.tableId
   $: writable = !disabled && !readonly
-  $: fetch = createFetch(writable, datasourceType, filter, linkedTableId)
+  $: migratedFilter = migrateFilter(filter)
+  $: fetch = createFetch(
+    writable,
+    datasourceType,
+    migratedFilter,
+    linkedTableId
+  )
 
   // Attempt to determine the primary display field to use
   $: tableDefinition = $fetch?.definition
@@ -90,8 +104,8 @@
   // Ensure backwards compatibility
   $: enrichedDefaultValue = enrichDefaultValue(defaultValue)
 
-  $: emptyValue = multiselect ? [] : undefined
   // We need to cast value to pass it down, as those components aren't typed
+  $: emptyValue = multiselect ? [] : undefined
   $: displayValue = (missingIDs.length ? emptyValue : selectedValue) as any
 
   // Ensures that we flatten any objects so that only the IDs of the selected
@@ -107,7 +121,7 @@
   const createFetch = (
     writable: boolean,
     dsType: typeof datasourceType,
-    filter: SearchFilter[],
+    filter: UISearchFilter | undefined,
     linkedTableId?: string
   ) => {
     const datasource =
@@ -176,9 +190,16 @@
     option: string | BasicRelatedRow | Row,
     primaryDisplay?: string
   ): BasicRelatedRow | null => {
+    // For plain strings, check if we already have this option available
+    if (typeof option === "string" && optionsMap[option]) {
+      return optionsMap[option]
+    }
+
+    // Otherwise ensure we have a valid option object
     if (!option || typeof option !== "object" || !option?._id) {
       return null
     }
+
     // If this is a basic related row shape (_id and PD only) then just use
     // that
     if (Object.keys(option).length === 2 && "primaryDisplay" in option) {
@@ -300,24 +321,54 @@
     return val.includes(",") ? val.split(",") : val
   }
 
+  // We may need to migrate the filter structure, in the case of this being
+  // an old app with LegacyFilter[] saved
+  const migrateFilter = (
+    filter: UISearchFilter | LegacyFilter[] | undefined
+  ): UISearchFilter | undefined => {
+    if (Array.isArray(filter)) {
+      return utils.processSearchFilters(filter)
+    }
+    return filter
+  }
+
   // Searches for new options matching the given term
   async function searchOptions(searchTerm: string, primaryDisplay?: string) {
     if (!primaryDisplay) {
       return
     }
-
-    // Ensure we match all filters, rather than any
-    let newFilter = filter
-    if (searchTerm) {
-      // @ts-expect-error this doesn't fit types, but don't want to change it yet
-      newFilter = (newFilter || []).filter(x => x.operator !== "allOr")
-      newFilter.push({
-        // Use a big numeric prefix to avoid clashing with an existing filter
-        field: `999:${primaryDisplay}`,
-        operator: BasicOperator.STRING,
-        value: searchTerm,
-      })
+    let newFilter: UISearchFilter | undefined = undefined
+    let searchFilter: SearchFilterGroup = {
+      logicalOperator: UILogicalOperator.ALL,
+      filters: [
+        {
+          field: primaryDisplay,
+          operator: BasicOperator.STRING,
+          value: searchTerm,
+        },
+      ],
     }
+
+    // Determine the new filter to apply to the fetch
+    if (searchTerm && migratedFilter) {
+      // If we have both a search term and existing filter, filter by both
+      newFilter = {
+        logicalOperator: UILogicalOperator.ALL,
+        groups: [searchFilter, migratedFilter],
+        onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      }
+    } else if (searchTerm) {
+      // If we just have a search term them use that
+      newFilter = {
+        logicalOperator: UILogicalOperator.ALL,
+        groups: [searchFilter],
+        onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      }
+    } else {
+      // Otherwise use the supplied filter untouched
+      newFilter = migratedFilter
+    }
+
     await fetch?.update({
       filter: newFilter,
     })
@@ -389,7 +440,6 @@
       bind:searchTerm
       bind:open
       on:change={handleChange}
-      on:loadMore={() => fetch?.nextPage()}
     />
   {/if}
 </Field>

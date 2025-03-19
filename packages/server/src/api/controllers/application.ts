@@ -16,6 +16,7 @@ import {
   DocumentType,
   generateAppID,
   generateDevAppID,
+  generateScreenID,
   getLayoutParams,
   getScreenParams,
 } from "../../db/utils"
@@ -75,6 +76,7 @@ import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
+import { createSampleDataTableScreen } from "../../constants/screens"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -176,11 +178,8 @@ async function createInstance(appId: string, template: AppTemplate) {
   return { _id: appId }
 }
 
-export const addSampleData = async (
-  ctx: UserCtx<void, AddAppSampleDataResponse>
-) => {
+async function addSampleDataDocs() {
   const db = context.getAppDB()
-
   try {
     // Check if default datasource exists before creating it
     await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
@@ -190,7 +189,41 @@ export const addSampleData = async (
     // add in the default db data docs - tables, datasource, rows and links
     await db.bulkDocs([...defaultDbDocs])
   }
+}
 
+async function addSampleDataScreen() {
+  const db = context.getAppDB()
+  let screen = createSampleDataTableScreen()
+  screen._id = generateScreenID()
+  await db.put(screen)
+}
+
+async function addSampleDataNavLinks() {
+  const db = context.getAppDB()
+  let app = await sdk.applications.metadata.get()
+  if (!app.navigation) {
+    return
+  }
+  if (!app.navigation.links) {
+    app.navigation.links = []
+  }
+  app.navigation.links.push({
+    text: "Inventory",
+    url: "/inventory",
+    type: "link",
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+  })
+
+  await db.put(app)
+
+  // remove any cached metadata, so that it will be updated
+  await cache.app.invalidateAppMetadata(app.appId)
+}
+
+export const addSampleData = async (
+  ctx: UserCtx<void, AddAppSampleDataResponse>
+) => {
+  await addSampleDataDocs()
   ctx.body = { message: "Sample tables added." }
 }
 
@@ -261,7 +294,7 @@ async function performAppCreate(
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
-  let useTemplate
+  let useTemplate = false
   if (typeof body.useTemplate === "string") {
     useTemplate = body.useTemplate === "true"
   } else if (typeof body.useTemplate === "boolean") {
@@ -293,12 +326,14 @@ async function performAppCreate(
   return await context.doInAppContext(appId, async () => {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
+    const isImport = !!instanceConfig.file
+    const addSampleData = !isImport && !useTemplate
 
     if (instanceConfig.useTemplate && !instanceConfig.file) {
       await updateUserColumns(appId, db, ctx.user._id!)
     }
 
-    const newApplication: App = {
+    let newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
       appId,
@@ -317,11 +352,14 @@ async function performAppCreate(
         navigation: "Top",
         title: name,
         navWidth: "Large",
-        navBackground: "var(--spectrum-global-color-gray-100)",
+        navBackground: "var(--spectrum-global-color-static-blue-1200)",
+        navTextColor: "var(--spectrum-global-color-static-white)",
         links: [],
       },
       theme: DefaultAppTheme,
       customTheme: {
+        primaryColor: "var(--spectrum-global-color-blue-700)",
+        primaryColorHover: "var(--spectrum-global-color-blue-600)",
         buttonBorderRadius: "16px",
       },
       features: {
@@ -332,7 +370,6 @@ async function performAppCreate(
       creationVersion: undefined,
     }
 
-    const isImport = !!instanceConfig.file
     if (!isImport) {
       newApplication.creationVersion = envCore.VERSION
     }
@@ -377,6 +414,20 @@ async function performAppCreate(
 
     if (!env.USE_LOCAL_COMPONENT_LIBS) {
       await uploadAppFiles(appId)
+    }
+
+    // Add sample datasource and example screen for non-templates/non-imports
+    if (addSampleData) {
+      try {
+        await addSampleDataDocs()
+        await addSampleDataScreen()
+        await addSampleDataNavLinks()
+
+        // Fetch the latest version of the app after these changes
+        newApplication = await sdk.applications.metadata.get()
+      } catch (err) {
+        ctx.throw(400, "App created, but failed to add sample data")
+      }
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()

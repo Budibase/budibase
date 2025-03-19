@@ -1,6 +1,6 @@
-<script>
-  export let text
-  export let url
+<script lang="ts">
+  export let text = ""
+  export let url = ""
   export let active = false
   export let disabled = false
 </script>

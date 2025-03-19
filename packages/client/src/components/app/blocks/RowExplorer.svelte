@@ -190,7 +190,7 @@
         }}
       />
       <BlockComponent
-        type="text"
+        type="textv2"
         order={1}
         props={{
           text: "Select a row to view its fields",

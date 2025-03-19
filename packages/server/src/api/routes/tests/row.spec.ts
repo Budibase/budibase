@@ -2195,94 +2195,93 @@ if (descriptions.length) {
         })
       })
 
-      isInternal &&
-        describe("attachments and signatures", () => {
-          const coreAttachmentEnrichment = async (
-            schema: TableSchema,
-            field: string,
-            attachmentCfg: string | string[]
-          ) => {
-            const testTable = await config.api.table.save(
-              defaultTable({
-                schema,
-              })
-            )
-            const attachmentToStoreKey = (attachmentId: string) => {
-              return {
-                key: `${config.getAppId()}/attachments/${attachmentId}`,
-              }
-            }
-            const draftRow = {
-              name: "test",
-              description: "test",
-              [field]:
-                typeof attachmentCfg === "string"
-                  ? attachmentToStoreKey(attachmentCfg)
-                  : attachmentCfg.map(attachmentToStoreKey),
-              tableId: testTable._id,
-            }
-            const row = await config.api.row.save(testTable._id!, draftRow)
-
-            await withEnv({ SELF_HOSTED: "true" }, async () => {
-              return context.doInAppContext(config.getAppId(), async () => {
-                const enriched: Row[] = await outputProcessing(testTable, [row])
-                const [targetRow] = enriched
-                const attachmentEntries = Array.isArray(targetRow[field])
-                  ? targetRow[field]
-                  : [targetRow[field]]
-
-                for (const entry of attachmentEntries) {
-                  const attachmentId = entry.key.split("/").pop()
-                  expect(entry.url.split("?")[0]).toBe(
-                    `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-                  )
-                }
-              })
+      describe("attachments and signatures", () => {
+        const coreAttachmentEnrichment = async (
+          schema: TableSchema,
+          field: string,
+          attachmentCfg: string | string[]
+        ) => {
+          const testTable = await config.api.table.save(
+            defaultTable({
+              schema,
             })
+          )
+          const attachmentToStoreKey = (attachmentId: string) => {
+            return {
+              key: `${config.getAppId()}/attachments/${attachmentId}`,
+            }
           }
+          const draftRow = {
+            name: "test",
+            description: "test",
+            [field]:
+              typeof attachmentCfg === "string"
+                ? attachmentToStoreKey(attachmentCfg)
+                : attachmentCfg.map(attachmentToStoreKey),
+            tableId: testTable._id,
+          }
+          const row = await config.api.row.save(testTable._id!, draftRow)
 
-          it("should allow enriching single attachment rows", async () => {
-            await coreAttachmentEnrichment(
-              {
-                attachment: {
-                  type: FieldType.ATTACHMENT_SINGLE,
-                  name: "attachment",
-                  constraints: { presence: false },
-                },
-              },
-              "attachment",
-              `${uuid.v4()}.csv`
-            )
-          })
+          await withEnv({ SELF_HOSTED: "true" }, async () => {
+            return context.doInAppContext(config.getAppId(), async () => {
+              const enriched: Row[] = await outputProcessing(testTable, [row])
+              const [targetRow] = enriched
+              const attachmentEntries = Array.isArray(targetRow[field])
+                ? targetRow[field]
+                : [targetRow[field]]
 
-          it("should allow enriching attachment list rows", async () => {
-            await coreAttachmentEnrichment(
-              {
-                attachments: {
-                  type: FieldType.ATTACHMENTS,
-                  name: "attachments",
-                  constraints: { type: "array", presence: false },
-                },
-              },
-              "attachments",
-              [`${uuid.v4()}.csv`]
-            )
+              for (const entry of attachmentEntries) {
+                const attachmentId = entry.key.split("/").pop()
+                expect(entry.url.split("?")[0]).toBe(
+                  `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+                )
+              }
+            })
           })
+        }
 
-          it("should allow enriching signature rows", async () => {
-            await coreAttachmentEnrichment(
-              {
-                signature: {
-                  type: FieldType.SIGNATURE_SINGLE,
-                  name: "signature",
-                  constraints: { presence: false },
-                },
+        it("should allow enriching single attachment rows", async () => {
+          await coreAttachmentEnrichment(
+            {
+              attachment: {
+                type: FieldType.ATTACHMENT_SINGLE,
+                name: "attachment",
+                constraints: { presence: false },
               },
-              "signature",
-              `${uuid.v4()}.png`
-            )
-          })
+            },
+            "attachment",
+            `${uuid.v4()}.csv`
+          )
         })
+
+        it("should allow enriching attachment list rows", async () => {
+          await coreAttachmentEnrichment(
+            {
+              attachments: {
+                type: FieldType.ATTACHMENTS,
+                name: "attachments",
+                constraints: { type: "array", presence: false },
+              },
+            },
+            "attachments",
+            [`${uuid.v4()}.csv`]
+          )
+        })
+
+        it("should allow enriching signature rows", async () => {
+          await coreAttachmentEnrichment(
+            {
+              signature: {
+                type: FieldType.SIGNATURE_SINGLE,
+                name: "signature",
+                constraints: { presence: false },
+              },
+            },
+            "signature",
+            `${uuid.v4()}.png`
+          )
+        })
+      })
 
       describe("exportRows", () => {
         beforeEach(async () => {

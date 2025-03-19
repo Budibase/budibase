@@ -1,24 +1,31 @@
 <script lang="ts">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import type { FocusEventHandler } from "svelte/elements"
 
-  export let value: string | null = null
-  export let placeholder: string | null = null
-  export let disabled = false
-  export let readonly = false
-  export let id: string | null = null
-  export let height: number | null = null
-  export let minHeight: number | null = null
+  export let value: string | undefined = ""
+  export let placeholder: string | undefined = undefined
+  export let disabled: boolean = false
+  export let readonly: boolean = false
+  export let id: string | undefined = undefined
+  export let height: string | number | undefined = undefined
+  export let minHeight: string | number | undefined = undefined
   export let align = null
+  export let updateOnChange: boolean = false
+
+  export const getCaretPosition = () => ({
+    start: textarea.selectionStart,
+    end: textarea.selectionEnd,
+  })
+
+  const dispatch = createEventDispatcher()
 
   let isFocused = false
   let textarea: HTMLTextAreaElement
-  const dispatch = createEventDispatcher<{ change: string }>()
-  const onChange: FocusEventHandler<HTMLTextAreaElement> = event => {
-    dispatch("change", event.currentTarget.value)
-    isFocused = false
-  }
+  let scrollable = false
+
+  $: heightString = getStyleString("height", height)
+  $: minHeightString = getStyleString("min-height", minHeight)
+  $: dispatch("scrollable", scrollable)
 
   export function focus() {
     textarea.focus()
@@ -28,18 +35,38 @@
     return textarea.value
   }
 
-  const getStyleString = (attribute: string, value: number | null) => {
-    if (!attribute || value == null) {
+  const onBlur = () => {
+    isFocused = false
+    updateValue()
+  }
+
+  const onChange = () => {
+    scrollable = textarea.clientHeight < textarea.scrollHeight
+    if (!updateOnChange) {
+      return
+    }
+    updateValue()
+  }
+
+  const updateValue = () => {
+    if (readonly || disabled) {
+      return
+    }
+    dispatch("change", textarea.value)
+  }
+
+  const getStyleString = (
+    attribute: string,
+    value: string | number | undefined
+  ) => {
+    if (value == null) {
       return ""
     }
-    if (typeof value === "number" && isNaN(value)) {
+    if (typeof value !== "number" || isNaN(value)) {
       return `${attribute}:${value};`
     }
     return `${attribute}:${value}px;`
   }
-
-  $: heightString = getStyleString("height", height)
-  $: minHeightString = getStyleString("min-height", minHeight)
 </script>
 
 <div
@@ -57,8 +84,10 @@
     {disabled}
     {readonly}
     {id}
+    on:input={onChange}
     on:focus={() => (isFocused = true)}
-    on:blur={onChange}
+    on:blur={onBlur}
+    on:blur
     on:keypress
   >{value || ""}</textarea>
 </div>
