@@ -384,6 +384,24 @@ export function isAppTrigger(
   return step.stepId === AutomationTriggerStepId.APP
 }
 
+export function isFilterStep(
+  step: AutomationStep | AutomationTrigger
+): step is FilterStep {
+  return step.stepId === AutomationActionStepId.FILTER
+}
+
+export function isLoopStep(
+  step: AutomationStep | AutomationTrigger
+): step is LoopStep {
+  return step.stepId === AutomationActionStepId.LOOP
+}
+
+export function isActionStep(
+  step: AutomationStep | AutomationTrigger
+): step is AutomationStep {
+  return step.type === AutomationStepType.ACTION
+}
+
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs

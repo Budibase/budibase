@@ -9,7 +9,7 @@
     Tags,
     Tag,
   } from "@budibase/bbui"
-  import { AutomationActionStepId } from "@budibase/types"
+  import { AutomationActionStepId, BlockDefinitionTypes } from "@budibase/types"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { admin, licensing } from "@/stores/portal"
   import { externalActions } from "./ExternalActions"
@@ -110,15 +110,20 @@
 
     try {
       const newBlock = automationStore.actions.constructBlock(
-        "ACTION",
+        BlockDefinitionTypes.ACTION,
         action.stepId,
         action
       )
-
       await automationStore.actions.addBlockToAutomation(
         newBlock,
         blockRef ? blockRef.pathTo : block.pathTo
       )
+
+      // Determine presence of the block before focusing
+      const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
+      const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
+      await automationStore.actions.selectNode(createdBlockLoc?.id)
+
       modal.hide()
     } catch (error) {
       console.error(error)

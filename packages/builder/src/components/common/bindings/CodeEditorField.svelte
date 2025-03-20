@@ -126,16 +126,16 @@
   }
 
   const updateValue = (val: any) => {
-    dispatch("change", readableToRuntimeBinding(bindings, val))
+    if (!val) {
+      dispatch("change", null)
+    }
+    const update = readableToRuntimeBinding(bindings, encodeJSBinding(val))
+    dispatch("change", update)
   }
 
-  const onChangeJSValue = (e: { detail: string }) => {
-    if (!e.detail?.trim()) {
-      // Don't bother saving empty values as JS
-      updateValue(null)
-    } else {
-      updateValue(encodeJSBinding(e.detail))
-    }
+  const onBlurJSValue = (e: { detail: string }) => {
+    // Don't bother saving empty values as JS
+    updateValue(e.detail?.trim())
   }
 </script>
 
@@ -144,8 +144,7 @@
     {#key jsCompletions}
       <CodeEditor
         value={jsValue || ""}
-        on:change={onChangeJSValue}
-        on:blur
+        on:blur={onBlurJSValue}
         completions={jsCompletions}
         {bindings}
         mode={EditorModes.JS}

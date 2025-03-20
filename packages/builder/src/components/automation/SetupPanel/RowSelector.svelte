@@ -25,6 +25,7 @@
   export let isTestModal
   export let context = {}
   export let componentWidth
+  export let fullWidth = false
 
   const typeToField = Object.values(FIELDS).reduce((acc, field) => {
     acc[field.type] = field
@@ -239,7 +240,7 @@
   {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
     <PropField
       label={field}
-      fullWidth={isFullWidth(schema.type)}
+      fullWidth={fullWidth || isFullWidth(schema.type)}
       {componentWidth}
     >
       <div class="prop-control-wrap">
@@ -266,24 +267,30 @@
     class:empty={Object.is(editableFields, {})}
     bind:this={popoverAnchor}
   >
-    <ActionButton
-      icon="Add"
-      on:click={() => {
-        customPopover.show()
-      }}
-      disabled={!schemaFields}
-      >Add fields
-    </ActionButton>
-    <ActionButton
-      icon="Remove"
-      on:click={() => {
-        dispatch("change", {
-          meta: { fields: {} },
-          row: {},
-        })
-      }}
-      >Clear
-    </ActionButton>
+    <PropField {componentWidth} {fullWidth}>
+      <div class="prop-control-wrap">
+        <ActionButton
+          on:click={() => {
+            customPopover.show()
+          }}
+          disabled={!schemaFields}
+        >
+          Edit fields
+        </ActionButton>
+        {#if schemaFields.length}
+          <ActionButton
+            on:click={() => {
+              dispatch("change", {
+                meta: { fields: {} },
+                row: {},
+              })
+            }}
+          >
+            Clear
+          </ActionButton>
+        {/if}
+      </div>
+    </PropField>
   </div>
 {/if}
 
@@ -348,12 +355,5 @@
   /* Override for general json field override */
   .prop-control-wrap :global(.icon.json-slot-icon) {
     right: 1px !important;
-  }
-
-  .add-fields-btn {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: var(--spacing-s);
   }
 </style>
