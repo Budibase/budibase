@@ -38,7 +38,6 @@
   export let openLogoLinkInNewTab
   export let textAlign
   export let embedded = false
-  export let variant = undefined
 
   const NavigationClasses = {
     Top: "top",
@@ -214,7 +213,6 @@
   class="component layout layout--{typeClass}"
   class:desktop={!mobile}
   class:mobile={!!mobile}
-  class:pdf={variant === "pdf"}
   data-id={screenId}
   data-name="Screen"
   data-icon="WebPage"
