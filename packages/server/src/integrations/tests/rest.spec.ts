@@ -5,6 +5,7 @@ import {
   BasicRestAuthConfig,
   BearerRestAuthConfig,
   BodyType,
+  OAuth2CredentialsMethod,
   RestAuthType,
 } from "@budibase/types"
 import { Response } from "node-fetch"
@@ -276,20 +277,67 @@ describe("REST Integration", () => {
       expect(data).toEqual({ foo: "bar" })
     })
 
-    it("adds OAuth2 auth", async () => {
+    it("adds OAuth2 auth (via header)", async () => {
       const oauth2Url = generator.url()
+      const secret = generator.hash()
       const { config: oauthConfig } = await config.api.oauth2.create({
         name: generator.guid(),
         url: oauth2Url,
         clientId: generator.guid(),
-        clientSecret: generator.hash(),
+        clientSecret: secret,
+        method: OAuth2CredentialsMethod.HEADER,
       })
 
       const token = generator.guid()
 
       const url = new URL(oauth2Url)
       nock(url.origin)
-        .post(url.pathname)
+        .post(url.pathname, {
+          grant_type: "client_credentials",
+        })
+        .basicAuth({ user: oauthConfig.clientId, pass: secret })
+        .reply(200, { token_type: "Bearer", access_token: token })
+
+      nock("https://example.com", {
+        reqheaders: { Authorization: `Bearer ${token}` },
+      })
+        .get("/")
+        .reply(200, { foo: "bar" })
+      const { data } = await config.doInContext(
+        config.appId,
+        async () =>
+          await integration.read({
+            authConfigId: oauthConfig.id,
+            authConfigType: RestAuthType.OAUTH2,
+          })
+      )
+      expect(data).toEqual({ foo: "bar" })
+    })
+
+    it("adds OAuth2 auth (via body)", async () => {
+      const oauth2Url = generator.url()
+      const secret = generator.hash()
+      const { config: oauthConfig } = await config.api.oauth2.create({
+        name: generator.guid(),
+        url: oauth2Url,
+        clientId: generator.guid(),
+        clientSecret: secret,
+        method: OAuth2CredentialsMethod.BODY,
+      })
+
+      const token = generator.guid()
+
+      const url = new URL(oauth2Url)
+      nock(url.origin, {
+        reqheaders: {
+          "content-Type": "application/x-www-form-urlencoded",
+        },
+      })
+        .post(url.pathname, {
+          grant_type: "client_credentials",
+          client_id: oauthConfig.clientId,
+          client_secret: secret,
+        })
         .reply(200, { token_type: "Bearer", access_token: token })
 
       nock("https://example.com", {

@@ -11,6 +11,7 @@ export async function confirm(props: {
   onConfirm?: () => void
   onCancel?: () => void
   onClose?: () => void
+  warning?: boolean
 }) {
   return await new Promise(resolve => {
     const dialog = new ConfirmDialog({
@@ -21,7 +22,7 @@ export async function confirm(props: {
         okText: props.okText,
         cancelText: props.cancelText,
         size: props.size,
-        warning: false,
+        warning: props.warning,
         onOk: () => {
           dialog.$destroy()
           resolve(props.onConfirm?.() || true)
