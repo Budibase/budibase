@@ -17,6 +17,7 @@
   export let helpText: string | undefined = undefined
   export let hideButton: boolean = false
   export let multiple: boolean = false
+  export let directory: boolean = false
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent) => {
@@ -40,6 +41,7 @@
     {extensions}
     {hideButton}
     {multiple}
+    {directory}
     on:change={onChange}
     on:multipleFiles={onMultipleFiles}
   />

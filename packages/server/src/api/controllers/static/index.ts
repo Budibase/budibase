@@ -38,6 +38,7 @@ import {
   ServeClientLibraryResponse,
   ToggleBetaFeatureResponse,
   UserCtx,
+  PWAManifestImage,
 } from "@budibase/types"
 import {
   getAppMigrationVersion,
@@ -238,11 +239,37 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
         if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
           try {
-            const enrichedIcons = await objectStore.enrichPWAImages([
-              appInfo.pwa.icons[0],
-            ])
-            if (enrichedIcons.length > 0) {
-              extraHead += `<link rel="apple-touch-icon" sizes="180x180" href="${enrichedIcons[0].src}">`
+            // Enrich all icons
+            const enrichedIcons = await objectStore.enrichPWAImages(
+              appInfo.pwa.icons
+            )
+
+            // First, try to find an iOS 180x180 icon
+            let appleTouchIcon = enrichedIcons.find(
+              icon => icon.platform === "ios" && icon.sizes === "180x180"
+            )
+
+            // If not found, try any iOS icon
+            if (!appleTouchIcon) {
+              appleTouchIcon = enrichedIcons.find(
+                icon => icon.platform === "ios"
+              )
+            }
+
+            // If still not found, try a 180x180 icon of any platform
+            if (!appleTouchIcon) {
+              appleTouchIcon = enrichedIcons.find(
+                icon => icon.sizes === "180x180"
+              )
+            }
+
+            // Finally, fallback to the first icon
+            if (!appleTouchIcon && enrichedIcons.length > 0) {
+              appleTouchIcon = enrichedIcons[0]
+            }
+
+            if (appleTouchIcon) {
+              extraHead += `<link rel="apple-touch-icon" sizes="${appleTouchIcon.sizes}" href="${appleTouchIcon.src}">`
             }
           } catch (error) {
             console.error("Error processing apple-touch-icon:", error)
@@ -393,7 +420,7 @@ export const getSignedUploadURL = async function (
   ctx.body = { signedUrl, publicUrl }
 }
 
-export const serveManifest = async function (ctx: UserCtx<void, any>) {
+export async function serveManifest(ctx: UserCtx<void, any>) {
   const appId = context.getAppId()
   if (!appId) {
     ctx.status = 404
@@ -424,7 +451,53 @@ export const serveManifest = async function (ctx: UserCtx<void, any>) {
 
     if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
       try {
-        manifest.icons = await objectStore.enrichPWAImages(appInfo.pwa.icons)
+        // Enrich all icons with their URLs
+        const enrichedIcons = await objectStore.enrichPWAImages(
+          appInfo.pwa.icons
+        )
+
+        // Group icons by platform if available
+        const platformGroups: Record<string, PWAManifestImage[]> = {}
+        const generalIcons: PWAManifestImage[] = []
+
+        // Sort icons into platform groups
+        enrichedIcons.forEach(icon => {
+          if (icon.platform) {
+            if (!platformGroups[icon.platform]) {
+              platformGroups[icon.platform] = []
+            }
+            platformGroups[icon.platform].push(icon)
+          } else {
+            generalIcons.push(icon)
+          }
+        })
+
+        // Default icons list (all icons or general ones if we have platform groups)
+        manifest.icons =
+          Object.keys(platformGroups).length > 0
+            ? generalIcons.length > 0
+              ? generalIcons
+              : enrichedIcons
+            : enrichedIcons
+
+        // Add platform specific icon lists if available
+        if (Object.keys(platformGroups).length > 0) {
+          // For iOS
+          if (platformGroups.ios) {
+            manifest.icons_ios = platformGroups.ios
+          }
+
+          // For Android
+          if (platformGroups.android) {
+            manifest.icons_android = platformGroups.android
+          }
+
+          // For Windows
+          if (platformGroups.windows || platformGroups.windows11) {
+            manifest.icons_windows =
+              platformGroups.windows || platformGroups.windows11
+          }
+        }
       } catch (error) {
         console.error("Error processing manifest icons:", error)
       }

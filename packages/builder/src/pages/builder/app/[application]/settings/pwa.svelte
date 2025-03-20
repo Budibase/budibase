@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Layout,
     Divider,
@@ -17,7 +17,6 @@
   import { appStore } from "@/stores/builder"
   import { API } from "@/api"
 
-  const IMAGE_EXTENSIONS = [".png"]
   const DISPLAY_OPTIONS = [
     { label: "Standalone", value: "standalone" },
     { label: "Fullscreen", value: "fullscreen" },
@@ -25,11 +24,10 @@
   ]
 
   let saving = false
-  let iconFile
-  let iconPreview
-  let screenshotFiles = []
-  let screenshotPreviews = []
+  let screenshotFiles: any[] = []
+  let screenshotPreviews: string[] = []
   let pwaEnabled = true
+  let pwaBuilderIcons: any = null
 
   let pwaConfig = $appStore.pwa || {
     name: "",
@@ -42,52 +40,7 @@
     display: "standalone",
   }
 
-  $: icon = pwaConfig.icons?.[0]?.src
-    ? { url: pwaConfig.icons[0].src, type: "image", name: "PWA Icon" }
-    : null
-
-  $: screenshots =
-    pwaConfig.screenshots?.length > 0
-      ? pwaConfig.screenshots.map(screenshot => ({
-          url: screenshot.src,
-          type: "image",
-          name: "PWA Screenshot",
-        }))
-      : []
-
-  const previewUrl = file => {
-    if (!file) return Promise.resolve(null)
-
-    return new Promise(resolve => {
-      const reader = new FileReader()
-      try {
-        reader.onload = e => resolve({ result: e.target.result })
-        reader.readAsDataURL(file)
-      } catch (error) {
-        console.error(error)
-        resolve(null)
-      }
-    })
-  }
-
-  $: previewUrl(iconFile).then(response => {
-    if (response) iconPreview = response.result
-  })
-
-  async function handleMultipleScreenshots(files) {
-    screenshotFiles = files
-    screenshotPreviews = new Array(files.length).fill(null)
-
-    for (let i = 0; i < files.length; i++) {
-      const preview = await previewUrl(files[i])
-      if (preview) {
-        screenshotPreviews[i] = preview.result
-        screenshotPreviews = [...screenshotPreviews]
-      }
-    }
-  }
-
-  function ensureHexFormat(color) {
+  function ensureHexFormat(color: string) {
     if (!color) return "#FFFFFF"
     if (color.startsWith("#")) return color
 
@@ -110,7 +63,7 @@
     return "#FFFFFF"
   }
 
-  function getCssVariableValue(cssVar) {
+  function getCssVariableValue(cssVar: string) {
     try {
       if (cssVar?.startsWith("#")) return cssVar
 
@@ -129,7 +82,7 @@
     }
   }
 
-  async function uploadFile(file) {
+  async function uploadFile(file: any) {
     try {
       const data = new FormData()
       data.append("file", file)
@@ -140,41 +93,132 @@
     }
   }
 
-  async function saveFiles() {
-    if (iconFile) {
-      const iconResp = await uploadFile(iconFile)
-      if (iconResp[0]?.key) {
-        pwaConfig.icons = [
-          {
-            src: iconResp[0].key,
-            sizes: "192x192",
-            type: "image/png",
-          },
-        ]
+  async function handlePWABuilderFolder(files: any) {
+    try {
+      const filesArray = Array.from(files)
+      const iconsJsonFile = filesArray.find(
+        (file: any) =>
+          file.name === "icons.json" ||
+          file.webkitRelativePath?.endsWith("/icons.json")
+      )
+
+      if (!iconsJsonFile) {
+        notifications.error(
+          "No icons.json found. Please upload a PWA Builder folder."
+        )
+        return
       }
-    }
+      const iconsJsonFileContent = await iconsJsonFile.text()
+      const iconsData = JSON.parse(iconsJsonFileContent)
 
-    if (screenshotFiles.length > 0) {
-      const uploadedScreenshots = []
+      if (!iconsData.icons || !Array.isArray(iconsData.icons)) {
+        notifications.error("Invalid icons.json format")
+        return
+      }
 
-      for (const file of screenshotFiles) {
-        const screenshotResp = await uploadFile(file)
-        if (screenshotResp[0]?.key) {
-          uploadedScreenshots.push({
-            src: screenshotResp[0].key,
-            sizes: "1280x720",
-            type: "image/png",
+      const imageFiles = filesArray.filter((file: any) =>
+        file.name.endsWith(".png")
+      )
+
+      const fileMap: Record<string, any> = {}
+      imageFiles.forEach((file: any) => {
+        if (file.webkitRelativePath) {
+          const path = file.webkitRelativePath.split("/").slice(1).join("/")
+          fileMap[path] = file
+        } else {
+          fileMap[file.name] = file
+        }
+      })
+
+      const iconsToUpload: Array<{
+        file: any
+        sizes: string
+        type: string
+      }> = []
+
+      for (const icon of iconsData.icons) {
+        const file = fileMap[icon.src]
+        if (file) {
+          iconsToUpload.push({
+            file,
+            sizes: icon.sizes,
+            type: icon.type || "image/png",
           })
         }
       }
-      pwaConfig.screenshots = uploadedScreenshots
+
+      if (iconsToUpload.length === 0) {
+        notifications.error("No matching icon files found")
+        return
+      }
+
+      // Upload all icon files
+      const uploadPromises = iconsToUpload.map(item => uploadFile(item.file))
+      const uploadResults = await Promise.all(uploadPromises)
+
+      // Create manifest entries
+      pwaConfig.icons = uploadResults
+        .map((result, index) => {
+          if (!result || !result[0] || !result[0].key) {
+            return null
+          }
+          return {
+            src: result[0].key,
+            sizes: iconsToUpload[index].sizes,
+            type: iconsToUpload[index].type,
+            platform: iconsToUpload[index].platform,
+          }
+        })
+        .filter(Boolean)
+
+      notifications.success(
+        `Processed ${pwaConfig.icons.length} icons from PWA Builder`
+      )
+      pwaBuilderIcons = { name: "PWA Builder Icons", type: "folder" }
+    } catch (error: any) {
+      console.error("Error processing PWA Builder folder:", error)
+      notifications.error(
+        "Failed to process PWA Builder folder: " +
+          (error.message || "Unknown error")
+      )
+    }
+  }
+
+  async function handleMultipleScreenshots(files: any) {
+    try {
+      screenshotFiles = Array.from(files)
+
+      // Upload screenshots
+      const uploadPromises = screenshotFiles.map(file => uploadFile(file))
+      const uploadResults = await Promise.all(uploadPromises)
+
+      // Create screenshot entries
+      const uploadedScreenshots = uploadResults
+        .map(result => {
+          if (!result || !result[0] || !result[0].key) return null
+          return {
+            src: result[0].key,
+            sizes: "1280x720",
+            type: "image/png",
+          }
+        })
+        .filter(Boolean)
+
+      if (uploadedScreenshots.length > 0) {
+        pwaConfig.screenshots = uploadedScreenshots
+        notifications.success(
+          `Uploaded ${uploadedScreenshots.length} screenshots`
+        )
+      }
+    } catch (error) {
+      console.error("Error processing screenshots:", error)
+      notifications.error("Failed to upload screenshots")
     }
   }
 
   const handleSubmit = async () => {
     try {
       saving = true
-      await saveFiles()
 
       const pwaConfigToSave = {
         ...pwaConfig,
@@ -184,12 +228,6 @@
 
       await API.saveAppMetadata($appStore.appId, { pwa: pwaConfigToSave })
       appStore.update(state => ({ ...state, pwa: pwaConfigToSave }))
-
-      // Clear file upload state after successful save
-      screenshotFiles = []
-      screenshotPreviews = []
-      iconFile = null
-      iconPreview = null
 
       notifications.success("PWA settings saved successfully")
     } catch (error) {
@@ -274,27 +312,22 @@
       </div>
 
       <div class="field">
-        <Label size="L">App icon</Label>
+        <Label size="L">App icons</Label>
         <div>
           <File
-            title="Upload icon"
+            title="Upload PWA Builder folder"
             handleFileTooLarge={() =>
-              notifications.warn("File too large. 20mb limit")}
-            extensions={IMAGE_EXTENSIONS}
-            previewUrl={iconPreview || icon?.url}
-            on:change={e => {
-              if (e.detail) {
-                iconFile = e.detail
-                iconPreview = null
-              } else {
-                iconFile = null
-                iconPreview = null
-                pwaConfig.icons = []
+              notifications.error("File too large. 20mb limit")}
+            extensions={[".png", ".json"]}
+            multiple
+            directory
+            on:multipleFiles={e => {
+              if (e.detail && e.detail.length > 0) {
+                handlePWABuilderFolder(e.detail)
               }
             }}
-            value={iconFile || icon}
+            value={pwaBuilderIcons}
             disabled={!pwaEnabled}
-            allowClear={true}
           />
         </div>
       </div>
@@ -305,38 +338,35 @@
           <File
             title="Upload screenshots"
             handleFileTooLarge={() =>
-              notifications.warn("File too large. 20mb limit")}
-            extensions={IMAGE_EXTENSIONS}
+              notifications.error("File too large. 20mb limit")}
+            extensions={[".png"]}
             multiple
-            value={screenshotFiles.length ? screenshotFiles : screenshots}
-            previewUrl={screenshotFiles.length
-              ? screenshotPreviews
-              : screenshots.map(s => s.url)}
-            on:multipleFiles={e => handleMultipleScreenshots(e.detail)}
-            disabled={!pwaEnabled}
+            on:multipleFiles={e => {
+              if (e.detail && e.detail.length > 0) {
+                handleMultipleScreenshots(e.detail)
+              }
+            }}
           />
           <div class="optional-text">(Optional)</div>
         </div>
       </div>
 
       <div class="field">
-        <Label size="L">Background colour</Label>
+        <Label size="L">Background color</Label>
         <div>
           <ColorPicker
             value={pwaConfig.background_color}
             on:change={e => (pwaConfig.background_color = e.detail)}
-            disabled={!pwaEnabled}
           />
         </div>
       </div>
 
       <div class="field">
-        <Label size="L">Theme colour</Label>
+        <Label size="L">Theme color</Label>
         <div>
           <ColorPicker
             value={pwaConfig.theme_color}
             on:change={e => (pwaConfig.theme_color = e.detail)}
-            disabled={!pwaEnabled}
           />
         </div>
       </div>
@@ -407,6 +437,15 @@
     font-size: 0.8em;
     color: var(--spectrum-global-color-gray-700);
     margin-top: var(--spacing-xs);
+  }
+
+  .optional-text ul {
+    margin-top: var(--spacing-xs);
+    padding-left: var(--spacing-l);
+  }
+
+  .optional-text li {
+    margin-bottom: var(--spacing-xs);
   }
 
   .section {
