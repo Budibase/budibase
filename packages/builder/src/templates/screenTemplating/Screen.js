@@ -81,3 +81,25 @@ export class Screen extends BaseStructure {
     return this
   }
 }
+
+export class PDFScreen extends Screen {
+  constructor() {
+    super()
+    this._json.variant = "pdf"
+    this._json.width = "Max"
+    this._json.showNavigation = false
+    this._json.props = {
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/pdf",
+      _styles: {
+        normal: {},
+        hover: {},
+        active: {},
+        selected: {},
+      },
+      _children: [],
+      _instanceName: "",
+      title: "PDF Editor",
+    }
+  }
+}

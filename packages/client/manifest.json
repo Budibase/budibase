@@ -8076,23 +8076,15 @@
     "settings": [
       {
         "type": "text",
-        "label": "File name",
-        "key": "fileName"
+        "label": "PDF title",
+        "key": "fileName",
+        "defaultValue": "Report"
       },
       {
-        "type": "boolean",
-        "label": "Landscape",
-        "key": "landscape"
-      },
-      {
-        "type": "boolean",
-        "label": "Footer",
-        "key": "footer"
-      },
-      {
-        "type": "number",
-        "label": "Pages",
-        "key": "pageCount"
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Download PDF"
       }
     ]
   }

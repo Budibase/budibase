@@ -102,7 +102,7 @@
   }
 
   const createBlankScreen = async ({ route }) => {
-    const screenTemplates = screenTemplating.blank({ route, screens })
+    const screenTemplates = screenTemplating.pdf({ route, screens })
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }

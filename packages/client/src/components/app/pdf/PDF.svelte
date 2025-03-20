@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
   import { Heading, Button } from "@budibase/bbui"
   import { htmlToPdf, Orientations } from "./pdf"
@@ -6,16 +6,18 @@
   const component = getContext("component")
   const { styleable, Block, BlockComponent } = getContext("sdk")
 
-  export let fileName
-  export let pageCount = 1
-  export let footer = false
-  export let margin = 60
-  export let landscape = false
+  export let fileName: string | undefined
+  export let buttonText: string | undefined
+
+  const landscape = false
+  const pageCount = 1
+  const footer = true
+  const margin = 60
 
   let rendering = false
-  let progress = 1
 
   $: safeName = fileName || "Report"
+  $: safeButtonText = buttonText || "Download PDF"
   $: safeCount = Math.max(pageCount || 1, pageCount)
   $: pageRefs = new Array(safeCount)
 
@@ -28,8 +30,9 @@
         margin,
         orientation: landscape ? Orientations.LANDSCAPE : Orientations.PORTRAIT,
         footer,
-        progressCallback: page => {
-          progress = page
+        progressCallback: (page: number) => {
+          // eslint-disable-next-line no-console
+          console.log("Rendering page", page, "of", pageCount)
         },
       })
     } catch (error) {
@@ -41,50 +44,58 @@
 </script>
 
 <Block>
-  <div class="container" class:landscape use:styleable={$component.styles}>
-    <div class="title">
-      <Heading size="M">{safeName}</Heading>
-      <Button disabled={rendering} cta on:click={generatePDF}>
-        {#if rendering}
-          Rendering page {progress} of {safeCount}
-        {:else}
-          Download PDF
-        {/if}
-      </Button>
-    </div>
-    {#each pageRefs as ref, pageNumber}
-      <div class="page">
-        <div
-          dir="ltr"
-          class="spectrum spectrum--lightest spectrum--medium pageContent"
-          bind:this={ref}
-        >
-          <BlockComponent
-            type="container"
-            props={{
-              layout: "grid",
-            }}
-            styles={{
-              normal: {
-                height: "721.48pt",
-              },
-            }}
-          >
-            <slot />
-          </BlockComponent>
-        </div>
-        {#if footer}
-          <div class="footer" style="--margin: {margin}pt;">
-            <div>{safeName}</div>
-            <div>Page {pageNumber + 1} of {pageCount}</div>
-          </div>
-        {/if}
+  <div class="wrapper">
+    <div class="container" class:landscape use:styleable={$component.styles}>
+      <div class="title">
+        <Heading size="M">{safeName}</Heading>
+        <Button disabled={rendering} cta on:click={generatePDF}>
+          {safeButtonText}
+        </Button>
       </div>
-    {/each}
+      {#each pageRefs as ref, pageNumber}
+        <div class="page">
+          <div
+            dir="ltr"
+            class="spectrum spectrum--lightest spectrum--medium pageContent"
+            bind:this={ref}
+          >
+            <BlockComponent
+              type="container"
+              props={{
+                layout: "grid",
+              }}
+              styles={{
+                normal: {
+                  height: "721.48pt",
+                },
+              }}
+            >
+              <slot />
+            </BlockComponent>
+          </div>
+          {#if footer}
+            <div class="footer" style="--margin: {margin}pt;">
+              <div>{safeName}</div>
+              <div>Page {pageNumber + 1} of {pageCount}</div>
+            </div>
+          {/if}
+        </div>
+      {/each}
+    </div>
   </div>
 </Block>
 
 <style>
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+  }
   .container {
     display: flex;
     flex-direction: column;
