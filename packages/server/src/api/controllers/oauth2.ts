@@ -1,6 +1,4 @@
 import {
-  UpsertOAuth2ConfigRequest,
-  UpsertOAuth2ConfigResponse,
   Ctx,
   FetchOAuth2ConfigsResponse,
   OAuth2Config,
@@ -8,6 +6,10 @@ import {
   PASSWORD_REPLACEMENT,
   ValidateConfigResponse,
   ValidateConfigRequest,
+  InsertOAuth2ConfigRequest,
+  InsertOAuth2ConfigResponse,
+  UpdateOAuth2ConfigRequest,
+  UpdateOAuth2ConfigResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -15,7 +17,8 @@ function toFetchOAuth2ConfigsResponse(
   config: OAuth2Config
 ): OAuth2ConfigResponse {
   return {
-    id: config._id!,
+    _id: config._id!,
+    _rev: config._rev!,
     name: config.name,
     url: config.url,
     clientId: config.clientId,
@@ -34,7 +37,7 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
 }
 
 export async function create(
-  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
+  ctx: Ctx<InsertOAuth2ConfigRequest, InsertOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
   const newConfig = {
@@ -53,11 +56,12 @@ export async function create(
 }
 
 export async function edit(
-  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
+  ctx: Ctx<UpdateOAuth2ConfigRequest, UpdateOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
   const toUpdate = {
     _id: body._id,
+    _rev: body._rev,
     name: body.name,
     url: body.url,
     clientId: body.clientId,
@@ -71,12 +75,10 @@ export async function edit(
   }
 }
 
-export async function remove(
-  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
-) {
-  const configToRemove = ctx.params.id
+export async function remove(ctx: Ctx<void, void>) {
+  const { id, rev } = ctx.params
 
-  await sdk.oauth2.remove(configToRemove)
+  await sdk.oauth2.remove(id, rev)
   ctx.status = 204
 }
 
@@ -91,10 +93,10 @@ export async function validate(
     method: body.method,
   }
 
-  if (config.clientSecret === PASSWORD_REPLACEMENT && body.id) {
-    const existingConfig = await sdk.oauth2.get(body.id)
+  if (config.clientSecret === PASSWORD_REPLACEMENT && body._id) {
+    const existingConfig = await sdk.oauth2.get(body._id)
     if (!existingConfig) {
-      ctx.throw(`OAuth2 config with id '${body.id}' not found.`, 404)
+      ctx.throw(`OAuth2 config with id '${body._id}' not found.`, 404)
     }
 
     config.clientSecret = existingConfig.clientSecret

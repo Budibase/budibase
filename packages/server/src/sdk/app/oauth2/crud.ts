@@ -75,5 +75,12 @@ export async function update(
 
 export async function remove(configId: string, _rev: string): Promise<void> {
   const db = context.getAppDB()
-  await db.remove(configId, _rev)
+  try {
+    await db.remove(configId, _rev)
+  } catch (e: any) {
+    if (e.status === 404) {
+      throw new HTTPError(`OAuth2 config with id '${configId}' not found.`, 404)
+    }
+    throw e
+  }
 }
