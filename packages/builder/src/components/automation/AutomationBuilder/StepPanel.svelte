@@ -27,8 +27,8 @@
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
-  const memoAutomation = memo<Automation>($selectedAutomation.data)
-  const memoBlock = memo<AutomationStep | AutomationTrigger>()
+  const memoAutomation = memo<Automation | undefined>($selectedAutomation.data)
+  const memoBlock = memo<AutomationStep | AutomationTrigger | undefined>()
   const memoContext = memo({} as AutomationContext)
 
   let role: string | undefined
