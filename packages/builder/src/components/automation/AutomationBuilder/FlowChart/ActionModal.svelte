@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     ModalContent,
     Layout,
@@ -14,6 +14,7 @@
   import { admin, licensing } from "@/stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
+  import type { AutomationStepDefinition } from "@budibase/types"
 
   export let block
   export let modal
@@ -21,7 +22,7 @@
   let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   let triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
-  let selectedAction
+  let selectedAction: string | undefined
   let actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
     ([key, action]) => {
       return key !== AutomationActionStepId.BRANCH && action.deprecated !== true
@@ -34,10 +35,10 @@
 
   $: blockRef = $selectedAutomation.blockRefs?.[block.id]
   $: lastStep = blockRef?.terminating
-  $: pathSteps = block.id
+  $: pathSteps = block.id && $selectedAutomation?.data
     ? automationStore.actions.getPathSteps(
         blockRef.pathTo,
-        $selectedAutomation?.data
+        $selectedAutomation.data
       )
     : []
 
@@ -48,7 +49,7 @@
   const disabled = () => {
     return {
       SEND_EMAIL_SMTP: {
-        disabled: !$admin.checklist?.smtp?.checked,
+        disabled: !$admin.checklist?.smtp?.checked || $admin.checklist?.smtp.fallback,
         message: "Please configure SMTP",
       },
       COLLECT: {
@@ -62,6 +63,11 @@
     }
   }
 
+  const checkDisabled = (idx: string) => {
+    const disabledActions = disabled()
+    return disabledActions[idx as keyof typeof disabledActions]
+  }
+
   const collectDisabledMessage = () => {
     if (collectBlockExists) {
       return "Only one Collect step allowed"
@@ -71,7 +77,7 @@
     }
   }
 
-  const external = actions.reduce((acc, elm) => {
+  const external = actions.reduce((acc: Record<string, AutomationStepDefinition>, elm) => {
     const [k, v] = elm
     if (!v.internal && !v.custom) {
       acc[k] = v
@@ -79,25 +85,22 @@
     return acc
   }, {})
 
-  const internal = actions.reduce((acc, elm) => {
+  const internal = actions.reduce((acc: Record<string, AutomationStepDefinition>, elm) => {
     const [k, v] = elm
     if (v.internal) {
       acc[k] = v
     }
     delete acc.LOOP
 
+    const stepId = $selectedAutomation.data?.definition.trigger.stepId
     // Filter out Collect block if not App Action or Webhook
-    if (
-      !collectBlockAllowedSteps.includes(
-        $selectedAutomation.data.definition.trigger.stepId
-      )
-    ) {
+    if (stepId && !collectBlockAllowedSteps.includes(stepId)) {
       delete acc.COLLECT
     }
     return acc
   }, {})
 
-  const plugins = actions.reduce((acc, elm) => {
+  const plugins = actions.reduce((acc: Record<string, AutomationStepDefinition>, elm) => {
     const [k, v] = elm
     if (v.custom) {
       acc[k] = v
@@ -105,7 +108,7 @@
     return acc
   }, {})
 
-  const selectAction = async action => {
+  const selectAction = async (action: AutomationStepDefinition) => {
     selectedAction = action.name
 
     try {
@@ -124,6 +127,10 @@
       console.error(error)
       notifications.error("Error saving automation")
     }
+  }
+
+  const getExternalAction = (stepId: string) => {
+    return externalActions[stepId as keyof typeof externalActions]
   }
 </script>
 
@@ -149,8 +156,8 @@
             <img
               width={20}
               height={20}
-              src={externalActions[action.stepId].icon}
-              alt={externalActions[action.stepId].name}
+              src={getExternalAction(action.stepId).icon}
+              alt={getExternalAction(action.stepId).name}
             />
             <span class="icon-spacing">
               <Body size="XS">
@@ -167,7 +174,7 @@
     <Detail size="S">Actions</Detail>
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
-        {@const isDisabled = disabled()[idx] && disabled()[idx].disabled}
+        {@const isDisabled = checkDisabled(idx) && checkDisabled(idx).disabled}
         <div
           class="item"
           class:disabled={isDisabled}
@@ -184,7 +191,7 @@
                 </Tags>
               </div>
             {:else if isDisabled}
-              <Icon name="Help" tooltip={disabled()[idx].message} />
+              <Icon name="Help" tooltip={checkDisabled(idx).message} />
             {:else if action.new}
               <Tags>
                 <Tag emphasized>New</Tag>

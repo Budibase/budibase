@@ -586,6 +586,7 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
             checked: !!smtpConfig,
             label: "Set up email",
             link: "/builder/portal/settings/email",
+            fallback: smtpConfig?.fallback || false,
           },
           adminUser: {
             checked: userExists,
