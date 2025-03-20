@@ -11,8 +11,8 @@
     getThemeClassNames,
     DefaultAppTheme,
   } from "@budibase/shared-core"
-  import { Theme } from "@budibase/types"
-  import { PopoverAlignment } from "../constants"
+  import type { Theme } from "@budibase/types"
+  import type { PopoverAlignment } from "../constants"
 
   export let value: string | undefined = undefined
   export let size: "S" | "M" | "L" = "M"
