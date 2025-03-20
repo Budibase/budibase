@@ -1,9 +1,9 @@
 import {
+  DocumentType,
   OAuth2Config,
   OAuth2CredentialsMethod,
   PASSWORD_REPLACEMENT,
   UpsertOAuth2ConfigRequest,
-  VirtualDocumentType,
 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
@@ -27,7 +27,7 @@ describe("/oauth2", () => {
   beforeEach(async () => await config.newTenant())
 
   const expectOAuth2ConfigId = expect.stringMatching(
-    `^${VirtualDocumentType.OAUTH2_CONFIG}_.+$`
+    `^${DocumentType.OAUTH2_CONFIG}_.+$`
   )
 
   describe("fetch", () => {
@@ -90,24 +90,26 @@ describe("/oauth2", () => {
       await config.api.oauth2.create(oauth2Config2, { status: 201 })
 
       const response = await config.api.oauth2.fetch()
-      expect(response.configs).toEqual([
-        {
-          id: expectOAuth2ConfigId,
-          name: oauth2Config.name,
-          url: oauth2Config.url,
-          clientId: oauth2Config.clientId,
-          clientSecret: PASSWORD_REPLACEMENT,
-          method: oauth2Config.method,
-        },
-        {
-          id: expectOAuth2ConfigId,
-          name: oauth2Config2.name,
-          url: oauth2Config2.url,
-          clientId: oauth2Config2.clientId,
-          clientSecret: PASSWORD_REPLACEMENT,
-          method: oauth2Config2.method,
-        },
-      ])
+      expect(response.configs).toEqual(
+        expect.arrayContaining([
+          {
+            id: expectOAuth2ConfigId,
+            name: oauth2Config.name,
+            url: oauth2Config.url,
+            clientId: oauth2Config.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
+            method: oauth2Config.method,
+          },
+          {
+            id: expectOAuth2ConfigId,
+            name: oauth2Config2.name,
+            url: oauth2Config2.url,
+            clientId: oauth2Config2.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
+            method: oauth2Config2.method,
+          },
+        ])
+      )
       expect(response.configs[0].id).not.toEqual(response.configs[1].id)
     })
 
@@ -118,7 +120,7 @@ describe("/oauth2", () => {
       await config.api.oauth2.create(oauth2Config2, {
         status: 400,
         body: {
-          message: "Name already used",
+          message: `OAuth2 config with name '${oauth2Config.name}' is already taken.`,
           status: 400,
         },
       })

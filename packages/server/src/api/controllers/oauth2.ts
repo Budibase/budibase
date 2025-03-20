@@ -4,7 +4,6 @@ import {
   Ctx,
   FetchOAuth2ConfigsResponse,
   OAuth2Config,
-  RequiredKeys,
   OAuth2ConfigResponse,
   PASSWORD_REPLACEMENT,
   ValidateConfigResponse,
@@ -16,7 +15,7 @@ function toFetchOAuth2ConfigsResponse(
   config: OAuth2Config
 ): OAuth2ConfigResponse {
   return {
-    id: config.id,
+    id: config._id!,
     name: config.name,
     url: config.url,
     clientId: config.clientId,
@@ -38,7 +37,7 @@ export async function create(
   ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
-  const newConfig: RequiredKeys<Omit<OAuth2Config, "id">> = {
+  const newConfig = {
     name: body.name,
     url: body.url,
     clientId: body.clientId,
@@ -57,8 +56,8 @@ export async function edit(
   ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
-  const toUpdate: RequiredKeys<OAuth2Config> = {
-    id: ctx.params.id,
+  const toUpdate = {
+    _id: body._id,
     name: body.name,
     url: body.url,
     clientId: body.clientId,

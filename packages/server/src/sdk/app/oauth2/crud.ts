@@ -28,7 +28,7 @@ export async function fetch(): Promise<OAuth2Config[]> {
 }
 
 export async function create(
-  config: Omit<OAuth2Config, "id">
+  config: Omit<OAuth2Config, "_id" | "_rev" | "createdAt" | "updatedAt">
 ): Promise<OAuth2Config> {
   const db = context.getAppDB()
 
