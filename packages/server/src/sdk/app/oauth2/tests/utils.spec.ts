@@ -2,7 +2,7 @@ import { generator } from "@budibase/backend-core/tests"
 import { GenericContainer, Wait } from "testcontainers"
 import sdk from "../../.."
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { generateToken } from "../utils"
+import { getToken } from "../utils"
 import path from "path"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import { startContainer } from "../../../../integrations/tests/utils"
@@ -43,7 +43,7 @@ describe("oauth2 utils", () => {
   })
 
   describe.each(Object.values(OAuth2CredentialsMethod))(
-    "generateToken (in %s)",
+    "getToken (in %s)",
     method => {
       it("successfully generates tokens", async () => {
         const response = await config.doInContext(config.appId, async () => {
@@ -55,7 +55,7 @@ describe("oauth2 utils", () => {
             method,
           })
 
-          const response = await generateToken(oauthConfig.id)
+          const response = await getToken(oauthConfig.id)
           return response
         })
 
@@ -73,7 +73,7 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig.id)
+            await getToken(oauthConfig.id)
           })
         ).rejects.toThrow("Error fetching oauth2 token: Not Found")
       })
@@ -89,7 +89,7 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig.id)
+            await getToken(oauthConfig.id)
           })
         ).rejects.toThrow(
           "Error fetching oauth2 token: Invalid client or Invalid client credentials"
@@ -107,7 +107,7 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig.id)
+            await getToken(oauthConfig.id)
           })
         ).rejects.toThrow(
           "Error fetching oauth2 token: Invalid client or Invalid client credentials"

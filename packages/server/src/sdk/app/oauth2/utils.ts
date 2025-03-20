@@ -58,7 +58,7 @@ const trackUsage = async (id: string) => {
 }
 
 // TODO: check if caching is worth
-export async function generateToken(id: string) {
+export async function getToken(id: string) {
   const config = await get(id)
   if (!config) {
     throw new HttpError(`oAuth config ${id} count not be found`)
