@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Popover from "../Popover/Popover.svelte"
   import Layout from "../Layout/Layout.svelte"
   import { createEventDispatcher } from "svelte"
@@ -11,15 +11,17 @@
     getThemeClassNames,
     DefaultAppTheme,
   } from "@budibase/shared-core"
+  import type { Theme } from "@budibase/types"
+  import type { PopoverAlignment } from "../constants"
 
-  export let value
-  export let size = "M"
-  export let spectrumTheme
-  export let offset
-  export let align
+  export let value: string | undefined = undefined
+  export let size: "S" | "M" | "L" = "M"
+  export let spectrumTheme: Theme | undefined = undefined
+  export let offset: number | undefined = undefined
+  export let align: PopoverAlignment | undefined = undefined
 
-  let dropdown
-  let preview
+  let dropdown: Popover | undefined
+  let preview: HTMLElement | undefined
 
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
@@ -124,7 +126,7 @@
     },
   ]
 
-  const getThemeClasses = theme => {
+  const getThemeClasses = (theme: Theme | undefined) => {
     if (!theme) {
       return ""
     }
@@ -132,12 +134,12 @@
     return getThemeClassNames(theme)
   }
 
-  const onChange = value => {
+  const onChange = (value: string | null) => {
     dispatch("change", value)
-    dropdown.hide()
+    dropdown?.hide()
   }
 
-  const getCustomValue = value => {
+  const getCustomValue = (value: string | undefined) => {
     if (!value) {
       return value
     }
@@ -152,11 +154,11 @@
     return found ? null : value
   }
 
-  const prettyPrint = color => {
+  const prettyPrint = (color: string) => {
     return capitalise(color.split("-").join(" "))
   }
 
-  const getCheckColor = value => {
+  const getCheckColor = (value: string | undefined) => {
     // Use dynamic color for theme grays
     if (value?.includes("-gray-")) {
       return /^.*(gray-(50|75|100|200|300|400|500))\)$/.test(value)
@@ -187,7 +189,7 @@
   bind:this={preview}
   class="preview size--{size || 'M'}"
   on:click={() => {
-    dropdown.toggle()
+    dropdown?.toggle()
   }}
 >
   <div

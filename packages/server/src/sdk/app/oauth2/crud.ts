@@ -4,6 +4,7 @@ import {
   DocumentType,
   OAuth2Config,
   OAuth2Configs,
+  PASSWORD_REPLACEMENT,
   SEPARATOR,
   VirtualDocumentType,
 } from "@budibase/types"
@@ -73,6 +74,10 @@ export async function update(config: OAuth2Config): Promise<OAuth2Config> {
 
   doc.configs[config.id] = {
     ...config,
+    clientSecret:
+      config.clientSecret === PASSWORD_REPLACEMENT
+        ? doc.configs[config.id].clientSecret
+        : config.clientSecret,
   }
 
   await db.put(doc)

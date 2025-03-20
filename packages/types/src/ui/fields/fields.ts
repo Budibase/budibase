@@ -3,7 +3,7 @@ import {
   FieldConstraints,
   type FieldSchema,
   type FormulaResponseType,
-} from "../"
+} from "../../"
 
 export interface UIField {
   name: string

@@ -16,7 +16,6 @@ import {
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { Readable } from "svelte/store"
 import {
   Screen,
   Theme,
@@ -27,6 +26,8 @@ import {
   Snippet,
   UIComponentError,
   CustomComponent,
+  Table,
+  DataFetchDatasource,
 } from "@budibase/types"
 import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
@@ -75,14 +76,13 @@ declare global {
   }
 }
 
-export type Context = Readable<Record<string, any>>
-
 export interface SDK {
   API: APIClient
   styleable: any
   Provider: any
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
+  fetchDatasourceDefinition: (datasource: DataFetchDatasource) => Promise<Table>
   generateGoldenSample: any
   builderStore: typeof builderStore
   authStore: typeof authStore
