@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
   import { Heading, Button } from "@budibase/bbui"
   import { htmlToPdf, Orientations } from "./pdf"
 
@@ -10,16 +10,21 @@
   export let buttonText: string | undefined
 
   const landscape = false
-  const pageCount = 1
-  const footer = true
   const margin = 60
+  const PageHeightPt = 841.89
+  const InnerPageHeightPt = 721.48
+  const InnerPageHeightPx = 963.97
+  const PxToPtFactor = InnerPageHeightPx / InnerPageHeightPt
 
   let rendering = false
+  let pageCount = 1
+  let innerRef: HTMLElement
 
   $: safeName = fileName || "Report"
   $: safeButtonText = buttonText || "Download PDF"
   $: safeCount = Math.max(pageCount || 1, pageCount)
   $: pageRefs = new Array(safeCount)
+  $: height = PageHeightPt + (pageCount - 1) * InnerPageHeightPt
 
   const generatePDF = async () => {
     rendering = true
@@ -29,7 +34,7 @@
         fileName: safeName,
         margin,
         orientation: landscape ? Orientations.LANDSCAPE : Orientations.PORTRAIT,
-        footer,
+        footer: false,
         progressCallback: (page: number) => {
           // eslint-disable-next-line no-console
           console.log("Rendering page", page, "of", pageCount)
@@ -41,6 +46,22 @@
     }
     rendering = false
   }
+
+  const pxToPt = (px: number) => {
+    return px / PxToPtFactor
+  }
+
+  onMount(() => {
+    const observer = new ResizeObserver(() => {
+      const heightPt = pxToPt(innerRef.getBoundingClientRect().height)
+      pageCount = Math.max(1, Math.ceil(heightPt / InnerPageHeightPt))
+    })
+    observer.observe(innerRef)
+
+    return () => {
+      observer.disconnect()
+    }
+  })
 </script>
 
 <Block>
@@ -52,35 +73,27 @@
           {safeButtonText}
         </Button>
       </div>
-      {#each pageRefs as ref, pageNumber}
-        <div class="page">
-          <div
-            dir="ltr"
-            class="spectrum spectrum--lightest spectrum--medium pageContent"
-            bind:this={ref}
+      <div class="page" style="min-height:{height}pt;">
+        <div
+          dir="ltr"
+          class="spectrum spectrum--lightest spectrum--medium pageContent"
+          bind:this={innerRef}
+        >
+          <BlockComponent
+            type="container"
+            props={{
+              layout: "grid",
+            }}
+            styles={{
+              normal: {
+                height: "721.48pt",
+              },
+            }}
           >
-            <BlockComponent
-              type="container"
-              props={{
-                layout: "grid",
-              }}
-              styles={{
-                normal: {
-                  height: "721.48pt",
-                },
-              }}
-            >
-              <slot />
-            </BlockComponent>
-          </div>
-          {#if footer}
-            <div class="footer" style="--margin: {margin}pt;">
-              <div>{safeName}</div>
-              <div>Page {pageNumber + 1} of {pageCount}</div>
-            </div>
-          {/if}
+            <slot />
+          </BlockComponent>
         </div>
-      {/each}
+      </div>
     </div>
   </div>
 </Block>
@@ -115,7 +128,6 @@
   }
   .page {
     width: 595.28pt;
-    height: 841.89pt;
     padding: 60pt;
     background-color: white;
     flex: 0 0 auto;
