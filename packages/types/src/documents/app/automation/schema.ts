@@ -7,6 +7,7 @@ import {
   InputOutputBlock,
   AutomationTriggerStepId,
   AutomationEventType,
+  AutomationIOType,
 } from "./automation"
 import {
   CollectStepInputs,
@@ -402,6 +403,12 @@ export function isActionStep(
   return step.type === AutomationStepType.ACTION
 }
 
+export function isCronTrigger(
+  trigger: AutomationStep | AutomationTrigger
+): trigger is CronTrigger {
+  return trigger.stepId === AutomationTriggerStepId.CRON
+}
+
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs
@@ -418,7 +425,9 @@ export type AutomationTriggerDefinition = Omit<
 
 export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
   T extends AutomationTriggerStepId.APP
-    ? void | Record<string, any>
+    ?
+        | void
+        | (Record<string, any> & { fields?: Record<string, AutomationIOType> })
     : T extends AutomationTriggerStepId.CRON
     ? CronTriggerInputs
     : T extends AutomationTriggerStepId.ROW_ACTION

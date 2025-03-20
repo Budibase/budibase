@@ -931,7 +931,7 @@ const automationActions = (store: AutomationStore) => ({
           schema = Object.fromEntries(
             Object.keys(inputs.fields || {}).map(key => [
               key,
-              { type: inputs.fields[key] },
+              { type: inputs.fields?.[key] },
             ])
           )
         }
