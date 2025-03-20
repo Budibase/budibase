@@ -55,7 +55,7 @@ describe("oauth2 utils", () => {
             method,
           })
 
-          const response = await generateToken(oauthConfig.id)
+          const response = await generateToken(oauthConfig._id)
           return response
         })
 
@@ -73,7 +73,7 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig.id)
+            await generateToken(oauthConfig._id)
           })
         ).rejects.toThrow("Error fetching oauth2 token: Not Found")
       })
@@ -89,7 +89,7 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig.id)
+            await generateToken(oauthConfig._id)
           })
         ).rejects.toThrow(
           "Error fetching oauth2 token: Invalid client or Invalid client credentials"
@@ -107,7 +107,7 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig.id)
+            await generateToken(oauthConfig._id)
           })
         ).rejects.toThrow(
           "Error fetching oauth2 token: Invalid client or Invalid client credentials"

@@ -7,6 +7,8 @@ import {
   WithRequired,
 } from "@budibase/types"
 
+type CreatedOAuthConfig = WithRequired<OAuth2Config, "_id" | "_rev">
+
 async function guardName(name: string, id?: string) {
   const existingConfigs = await fetch()
 
@@ -18,18 +20,22 @@ async function guardName(name: string, id?: string) {
   }
 }
 
-export async function fetch(): Promise<OAuth2Config[]> {
+export async function fetch(): Promise<CreatedOAuthConfig[]> {
   const db = context.getAppDB()
   const docs = await db.allDocs<OAuth2Config>(
     docIds.getOAuth2ConfigParams(null, { include_docs: true })
   )
-  const result = docs.rows.map(r => r.doc!)
+  const result = docs.rows.map(r => ({
+    ...r.doc!,
+    _id: r.doc!._id!,
+    _rev: r.doc!._rev!,
+  }))
   return result
 }
 
 export async function create(
   config: Omit<OAuth2Config, "_id" | "_rev" | "createdAt" | "updatedAt">
-): Promise<OAuth2Config> {
+): Promise<CreatedOAuthConfig> {
   const db = context.getAppDB()
 
   await guardName(config.name)
@@ -39,8 +45,8 @@ export async function create(
     ...config,
   })
   return {
-    _id: response.id,
-    _rev: response.rev,
+    _id: response.id!,
+    _rev: response.rev!,
     ...config,
   }
 }
@@ -51,8 +57,8 @@ export async function get(id: string): Promise<OAuth2Config | undefined> {
 }
 
 export async function update(
-  config: WithRequired<OAuth2Config, "_id" | "_rev">
-): Promise<OAuth2Config> {
+  config: CreatedOAuthConfig
+): Promise<CreatedOAuthConfig> {
   const db = context.getAppDB()
   await guardName(config.name, config._id)
 
