@@ -307,7 +307,7 @@ describe("REST Integration", () => {
         config.appId,
         async () =>
           await integration.read({
-            authConfigId: oauthConfig.id,
+            authConfigId: oauthConfig._id,
             authConfigType: RestAuthType.OAUTH2,
           })
       )
@@ -349,7 +349,7 @@ describe("REST Integration", () => {
         config.appId,
         async () =>
           await integration.read({
-            authConfigId: oauthConfig.id,
+            authConfigId: oauthConfig._id,
             authConfigType: RestAuthType.OAUTH2,
           })
       )
