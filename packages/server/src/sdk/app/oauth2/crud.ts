@@ -20,7 +20,9 @@ async function guardName(name: string, id?: string) {
 
 export async function fetch(): Promise<OAuth2Config[]> {
   const db = context.getAppDB()
-  const docs = await db.allDocs<OAuth2Config>(docIds.getOAuth2ConfigParams())
+  const docs = await db.allDocs<OAuth2Config>(
+    docIds.getOAuth2ConfigParams(null, { include_docs: true })
+  )
   const result = docs.rows.map(r => r.doc!)
   return result
 }
@@ -33,7 +35,7 @@ export async function create(
   await guardName(config.name)
 
   const response = await db.put({
-    id: `${DocumentType.OAUTH2_CONFIG}${SEPARATOR}${utils.newid()}`,
+    _id: `${DocumentType.OAUTH2_CONFIG}${SEPARATOR}${utils.newid()}`,
     ...config,
   })
   return {
