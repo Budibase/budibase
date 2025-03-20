@@ -28,7 +28,7 @@ const updateSchema = Joi.object({
 })
 
 const validationSchema = Joi.object({
-  name: Joi.string().required(),
+  _id: Joi.string().required(),
   ...baseSchema,
 })
 

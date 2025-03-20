@@ -1,8 +1,10 @@
 import {
   FetchOAuth2ConfigsResponse,
+  InsertOAuth2ConfigRequest,
+  InsertOAuth2ConfigResponse,
   OAuth2ConfigResponse,
-  UpsertOAuth2ConfigRequest,
-  UpsertOAuth2ConfigResponse,
+  UpdateOAuth2ConfigRequest,
+  UpdateOAuth2ConfigResponse,
   ValidateConfigRequest,
   ValidateConfigResponse,
 } from "@budibase/types"
@@ -11,12 +13,11 @@ import { BaseAPIClient } from "./types"
 export interface OAuth2Endpoints {
   fetch: () => Promise<OAuth2ConfigResponse[]>
   create: (
-    config: UpsertOAuth2ConfigRequest
-  ) => Promise<UpsertOAuth2ConfigResponse>
+    config: InsertOAuth2ConfigRequest
+  ) => Promise<InsertOAuth2ConfigResponse>
   update: (
-    id: string,
-    config: UpsertOAuth2ConfigRequest
-  ) => Promise<UpsertOAuth2ConfigResponse>
+    config: UpdateOAuth2ConfigRequest
+  ) => Promise<UpdateOAuth2ConfigResponse>
   delete: (id: string) => Promise<void>
   validate: (config: ValidateConfigRequest) => Promise<ValidateConfigResponse>
 }
@@ -38,8 +39,8 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
    */
   create: async config => {
     return await API.post<
-      UpsertOAuth2ConfigRequest,
-      UpsertOAuth2ConfigResponse
+      InsertOAuth2ConfigRequest,
+      InsertOAuth2ConfigResponse
     >({
       url: `/api/oauth2`,
       body: {
@@ -51,10 +52,10 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
   /**
    * Updates an existing OAuth2 configuration.
    */
-  update: async (id, config) => {
-    return await API.put<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>(
+  update: async config => {
+    return await API.put<UpdateOAuth2ConfigRequest, UpdateOAuth2ConfigResponse>(
       {
-        url: `/api/oauth2/${id}`,
+        url: `/api/oauth2`,
         body: {
           ...config,
         },
