@@ -90,7 +90,7 @@
     width: 100%;
     height: 100%;
     overflow-y: auto;
-    padding: 40px;
+    padding: 64px;
     display: flex;
     flex-direction: row;
     justify-content: center;
