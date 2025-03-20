@@ -13,9 +13,9 @@ import {
   rowSelectionStore,
   sidePanelStore,
   modalStore,
-} from "stores"
-import { API } from "api"
-import { ActionTypes } from "constants"
+} from "@/stores"
+import { API } from "@/api"
+import { ActionTypes } from "@/constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
 
@@ -421,6 +421,28 @@ const showNotificationHandler = action => {
 
 const promptUserHandler = () => {}
 
+const copyToClipboardHandler = async action => {
+  const { textToCopy, showNotification, notificationMessage } =
+    action.parameters
+
+  if (!textToCopy) {
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(textToCopy)
+    if (showNotification) {
+      const message = notificationMessage || "Copied to clipboard"
+      notificationStore.actions.success(message, true, 3000)
+    }
+  } catch (err) {
+    console.error("Failed to copy text: ", err)
+    notificationStore.actions.error("Failed to copy to clipboard")
+  }
+
+  return { copied: textToCopy }
+}
+
 const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
@@ -514,6 +536,7 @@ const handlerMap = {
   ["Close Modal"]: closeModalHandler,
   ["Download File"]: downloadFileHandler,
   ["Row Action"]: rowActionHandler,
+  ["Copy To Clipboard"]: copyToClipboardHandler,
 }
 
 const confirmTextMap = {

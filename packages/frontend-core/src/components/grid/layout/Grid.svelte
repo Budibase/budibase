@@ -217,6 +217,10 @@
     --accent-color: var(--primaryColor, var(--spectrum-global-color-blue-400));
     --grid-background: var(--spectrum-global-color-gray-50);
     --grid-background-alt: var(--spectrum-global-color-gray-100);
+    --header-cell-background: var(
+      --custom-header-cell-background,
+      var(--spectrum-global-color-gray-100)
+    );
     --cell-background: var(--grid-background);
     --cell-background-hover: var(--grid-background-alt);
     --cell-background-alt: var(--cell-background);
@@ -246,7 +250,10 @@
     cursor: grabbing !important;
   }
   .grid.stripe {
-    --cell-background-alt: var(--spectrum-global-color-gray-75);
+    --cell-background-alt: var(
+      --custom-stripe-cell-background,
+      var(--spectrum-global-color-gray-75)
+    );
   }
 
   /* Data layers */
@@ -352,11 +359,18 @@
 
   /* Overrides for quiet */
   .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)),
-  .grid.quiet :global(.sticky-column .row > .cell),
-  .grid.quiet :global(.new-row .row > .cell:not(:last-child)) {
+  .grid.quiet :global(.sticky-column .row .cell),
+  .grid.quiet :global(.new-row .row > .cell:not(:last-child)),
+  .grid.quiet :global(.header-cell:not(:last-child) .cell) {
     border-right: none;
   }
   .grid.quiet :global(.sticky-column:before) {
     display: none;
+  }
+  .grid.quiet:not(.stripe) {
+    --header-cell-background: var(
+      --custom-header-cell-background,
+      var(--grid-background)
+    );
   }
 </style>

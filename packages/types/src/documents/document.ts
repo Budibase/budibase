@@ -40,6 +40,7 @@ export enum DocumentType {
   APP_MIGRATION_METADATA = "_design/migrations",
   SCIM_LOG = "scimlog",
   ROW_ACTIONS = "ra",
+  OAUTH2_CONFIG = "oauth2",
 }
 
 // Because DocumentTypes can overlap, we need to make sure that we search
@@ -81,6 +82,7 @@ export enum InternalTable {
 export enum VirtualDocumentType {
   VIEW = "view",
   ROW_ACTION = "row_action",
+  OAUTH2_CONFIG = "oauth2",
 }
 
 // Because VirtualDocumentTypes can overlap, we need to make sure that we search

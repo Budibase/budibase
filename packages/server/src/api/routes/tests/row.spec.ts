@@ -1,9 +1,6 @@
 import * as setup from "./utilities"
 
-import {
-  DatabaseName,
-  datasourceDescribe,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
@@ -80,7 +77,7 @@ function encodeJS(binding: string) {
   return `{{ js "${Buffer.from(binding).toString("base64")}"}}`
 }
 
-const descriptions = datasourceDescribe({ exclude: [DatabaseName.MONGODB] })
+const descriptions = datasourceDescribe({ plus: true })
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -169,18 +166,6 @@ if (descriptions.length) {
         )
       }
 
-      const resetRowUsage = async () => {
-        await config.doInContext(
-          undefined,
-          async () =>
-            await quotas.setUsage(
-              0,
-              StaticQuotaName.ROWS,
-              QuotaUsageType.STATIC
-            )
-        )
-      }
-
       const getRowUsage = async () => {
         const { total } = await config.doInContext(undefined, () =>
           quotas.getCurrentUsageValues(
@@ -191,19 +176,27 @@ if (descriptions.length) {
         return total
       }
 
-      const assertRowUsage = async (expected: number) => {
-        const usage = await getRowUsage()
+      async function expectRowUsage(expected: number, f: () => Promise<void>) {
+        const before = await getRowUsage()
+        await f()
+        const after = await getRowUsage()
+        const usage = after - before
 
         // Because our quota tracking is not perfect, we allow a 10% margin of
-        // error.  This is to account for the fact that parallel writes can result
-        // in some quota updates getting lost. We don't have any need to solve this
-        // right now, so we just allow for some error.
+        // error.  This is to account for the fact that parallel writes can
+        // result in some quota updates getting lost. We don't have any need
+        // to solve this right now, so we just allow for some error.
         if (expected === 0) {
           expect(usage).toEqual(0)
           return
         }
-        expect(usage).toBeGreaterThan(expected * 0.9)
-        expect(usage).toBeLessThan(expected * 1.1)
+        if (usage < 0) {
+          expect(usage).toBeGreaterThan(expected * 1.1)
+          expect(usage).toBeLessThan(expected * 0.9)
+        } else {
+          expect(usage).toBeGreaterThan(expected * 0.9)
+          expect(usage).toBeLessThan(expected * 1.1)
+        }
       }
 
       const defaultRowFields = isInternal
@@ -218,91 +211,86 @@ if (descriptions.length) {
         table = await config.api.table.save(defaultTable())
       })
 
-      beforeEach(async () => {
-        await resetRowUsage()
-      })
-
       describe("create", () => {
         it("creates a new row successfully", async () => {
-          const rowUsage = await getRowUsage()
-          const row = await config.api.row.save(table._id!, {
-            name: "Test Contact",
+          await expectRowUsage(isInternal ? 1 : 0, async () => {
+            const row = await config.api.row.save(table._id!, {
+              name: "Test Contact",
+            })
+            expect(row.name).toEqual("Test Contact")
+            expect(row._rev).toBeDefined()
           })
-          expect(row.name).toEqual("Test Contact")
-          expect(row._rev).toBeDefined()
-          await assertRowUsage(isInternal ? rowUsage + 1 : rowUsage)
         })
 
         it("fails to create a row for a table that does not exist", async () => {
-          const rowUsage = await getRowUsage()
-          await config.api.row.save("1234567", {}, { status: 404 })
-          await assertRowUsage(rowUsage)
+          await expectRowUsage(0, async () => {
+            await config.api.row.save("1234567", {}, { status: 404 })
+          })
         })
 
         it("fails to create a row if required fields are missing", async () => {
-          const rowUsage = await getRowUsage()
-          const table = await config.api.table.save(
-            saveTableRequest({
-              schema: {
-                required: {
-                  type: FieldType.STRING,
-                  name: "required",
-                  constraints: {
-                    type: "string",
-                    presence: true,
-                  },
-                },
-              },
-            })
-          )
-          await config.api.row.save(
-            table._id!,
-            {},
-            {
-              status: 500,
-              body: {
-                validationErrors: {
-                  required: ["can't be blank"],
-                },
-              },
-            }
-          )
-          await assertRowUsage(rowUsage)
-        })
-
-        isInternal &&
-          it("increment row autoId per create row request", async () => {
-            const rowUsage = await getRowUsage()
-
-            const newTable = await config.api.table.save(
+          await expectRowUsage(0, async () => {
+            const table = await config.api.table.save(
               saveTableRequest({
                 schema: {
-                  "Row ID": {
-                    name: "Row ID",
-                    type: FieldType.NUMBER,
-                    subtype: AutoFieldSubType.AUTO_ID,
-                    icon: "ri-magic-line",
-                    autocolumn: true,
+                  required: {
+                    type: FieldType.STRING,
+                    name: "required",
                     constraints: {
-                      type: "number",
+                      type: "string",
                       presence: true,
-                      numericality: {
-                        greaterThanOrEqualTo: "",
-                        lessThanOrEqualTo: "",
-                      },
                     },
                   },
                 },
               })
             )
+            await config.api.row.save(
+              table._id!,
+              {},
+              {
+                status: 500,
+                body: {
+                  validationErrors: {
+                    required: ["can't be blank"],
+                  },
+                },
+              }
+            )
+          })
+        })
 
-            let previousId = 0
-            for (let i = 0; i < 10; i++) {
-              const row = await config.api.row.save(newTable._id!, {})
-              expect(row["Row ID"]).toBeGreaterThan(previousId)
-              previousId = row["Row ID"]
-            }
-            await assertRowUsage(isInternal ? rowUsage + 10 : rowUsage)
+        isInternal &&
+          it("increment row autoId per create row request", async () => {
+            await expectRowUsage(isInternal ? 10 : 0, async () => {
+              const newTable = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    "Row ID": {
+                      name: "Row ID",
+                      type: FieldType.NUMBER,
+                      subtype: AutoFieldSubType.AUTO_ID,
+                      icon: "ri-magic-line",
+                      autocolumn: true,
+                      constraints: {
+                        type: "number",
+                        presence: true,
+                        numericality: {
+                          greaterThanOrEqualTo: "",
+                          lessThanOrEqualTo: "",
+                        },
+                      },
+                    },
+                  },
+                })
+              )
+
+              let previousId = 0
+              for (let i = 0; i < 10; i++) {
+                const row = await config.api.row.save(newTable._id!, {})
+                expect(row["Row ID"]).toBeGreaterThan(previousId)
+                previousId = row["Row ID"]
+              }
+            })
           })
 
         isInternal &&
@@ -988,16 +976,16 @@ if (descriptions.length) {
       describe("update", () => {
         it("updates an existing row successfully", async () => {
           const existing = await config.api.row.save(table._id!, {})
-          const rowUsage = await getRowUsage()
 
-          const res = await config.api.row.save(table._id!, {
-            _id: existing._id,
-            _rev: existing._rev,
-            name: "Updated Name",
+          await expectRowUsage(0, async () => {
+            const res = await config.api.row.save(table._id!, {
+              _id: existing._id,
+              _rev: existing._rev,
+              name: "Updated Name",
+            })
+
+            expect(res.name).toEqual("Updated Name")
           })
-
-          expect(res.name).toEqual("Updated Name")
-          await assertRowUsage(rowUsage)
         })
 
         !isInternal &&
@@ -1180,23 +1168,22 @@ if (descriptions.length) {
         it("should update only the fields that are supplied", async () => {
           const existing = await config.api.row.save(table._id!, {})
 
-          const rowUsage = await getRowUsage()
+          await expectRowUsage(0, async () => {
+            const row = await config.api.row.patch(table._id!, {
+              _id: existing._id!,
+              _rev: existing._rev!,
+              tableId: table._id!,
+              name: "Updated Name",
+            })
 
-          const row = await config.api.row.patch(table._id!, {
-            _id: existing._id!,
-            _rev: existing._rev!,
-            tableId: table._id!,
-            name: "Updated Name",
+            expect(row.name).toEqual("Updated Name")
+            expect(row.description).toEqual(existing.description)
+
+            const savedRow = await config.api.row.get(table._id!, row._id!)
+
+            expect(savedRow.description).toEqual(existing.description)
+            expect(savedRow.name).toEqual("Updated Name")
           })
-
-          expect(row.name).toEqual("Updated Name")
-          expect(row.description).toEqual(existing.description)
-
-          const savedRow = await config.api.row.get(table._id!, row._id!)
-
-          expect(savedRow.description).toEqual(existing.description)
-          expect(savedRow.name).toEqual("Updated Name")
-          await assertRowUsage(rowUsage)
         })
 
         it("should update only the fields that are supplied and emit the correct oldRow", async () => {
@@ -1227,20 +1214,19 @@ if (descriptions.length) {
 
         it("should throw an error when given improper types", async () => {
           const existing = await config.api.row.save(table._id!, {})
-          const rowUsage = await getRowUsage()
 
-          await config.api.row.patch(
-            table._id!,
-            {
-              _id: existing._id!,
-              _rev: existing._rev!,
-              tableId: table._id!,
-              name: 1,
-            },
-            { status: 400 }
-          )
-
-          await assertRowUsage(rowUsage)
+          await expectRowUsage(0, async () => {
+            await config.api.row.patch(
+              table._id!,
+              {
+                _id: existing._id!,
+                _rev: existing._rev!,
+                tableId: table._id!,
+                name: 1,
+              },
+              { status: 400 }
+            )
+          })
         })
 
         it("should not overwrite links if those links are not set", async () => {
@@ -1455,25 +1441,25 @@ if (descriptions.length) {
 
         it("should be able to delete a row", async () => {
           const createdRow = await config.api.row.save(table._id!, {})
-          const rowUsage = await getRowUsage()
 
-          const res = await config.api.row.bulkDelete(table._id!, {
-            rows: [createdRow],
+          await expectRowUsage(isInternal ? -1 : 0, async () => {
+            const res = await config.api.row.bulkDelete(table._id!, {
+              rows: [createdRow],
+            })
+            expect(res[0]._id).toEqual(createdRow._id)
           })
-          expect(res[0]._id).toEqual(createdRow._id)
-          await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
         })
 
         it("should be able to delete a row with ID only", async () => {
           const createdRow = await config.api.row.save(table._id!, {})
-          const rowUsage = await getRowUsage()
 
-          const res = await config.api.row.bulkDelete(table._id!, {
-            rows: [createdRow._id!],
+          await expectRowUsage(isInternal ? -1 : 0, async () => {
+            const res = await config.api.row.bulkDelete(table._id!, {
+              rows: [createdRow._id!],
+            })
+            expect(res[0]._id).toEqual(createdRow._id)
+            expect(res[0].tableId).toEqual(table._id!)
           })
-          expect(res[0]._id).toEqual(createdRow._id)
-          expect(res[0].tableId).toEqual(table._id!)
-          await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
         })
 
         it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
@@ -1563,31 +1549,29 @@ if (descriptions.length) {
         })
 
         it("should return no errors on valid row", async () => {
-          const rowUsage = await getRowUsage()
+          await expectRowUsage(0, async () => {
+            const res = await config.api.row.validate(table._id!, {
+              name: "ivan",
+            })
 
-          const res = await config.api.row.validate(table._id!, {
-            name: "ivan",
+            expect(res.valid).toBe(true)
+            expect(Object.keys(res.errors)).toEqual([])
           })
-
-          expect(res.valid).toBe(true)
-          expect(Object.keys(res.errors)).toEqual([])
-          await assertRowUsage(rowUsage)
         })
 
         it("should errors on invalid row", async () => {
-          const rowUsage = await getRowUsage()
+          await expectRowUsage(0, async () => {
+            const res = await config.api.row.validate(table._id!, { name: 1 })
 
-          const res = await config.api.row.validate(table._id!, { name: 1 })
-
-          if (isInternal) {
-            expect(res.valid).toBe(false)
-            expect(Object.keys(res.errors)).toEqual(["name"])
-          } else {
-            // Validation for external is not implemented, so it will always return valid
-            expect(res.valid).toBe(true)
-            expect(Object.keys(res.errors)).toEqual([])
-          }
-          await assertRowUsage(rowUsage)
+            if (isInternal) {
+              expect(res.valid).toBe(false)
+              expect(Object.keys(res.errors)).toEqual(["name"])
+            } else {
+              // Validation for external is not implemented, so it will always return valid
+              expect(res.valid).toBe(true)
+              expect(Object.keys(res.errors)).toEqual([])
+            }
+          })
         })
       })
 
@@ -1599,15 +1583,15 @@ if (descriptions.length) {
         it("should be able to delete a bulk set of rows", async () => {
           const row1 = await config.api.row.save(table._id!, {})
           const row2 = await config.api.row.save(table._id!, {})
-          const rowUsage = await getRowUsage()
 
-          const res = await config.api.row.bulkDelete(table._id!, {
-            rows: [row1, row2],
+          await expectRowUsage(isInternal ? -2 : 0, async () => {
+            const res = await config.api.row.bulkDelete(table._id!, {
+              rows: [row1, row2],
+            })
+
+            expect(res.length).toEqual(2)
+            await config.api.row.get(table._id!, row1._id!, { status: 404 })
           })
-
-          expect(res.length).toEqual(2)
-          await config.api.row.get(table._id!, row1._id!, { status: 404 })
-          await assertRowUsage(isInternal ? rowUsage - 2 : rowUsage)
         })
 
         it("should be able to delete a variety of row set types", async () => {
@@ -1616,41 +1600,42 @@ if (descriptions.length) {
             config.api.row.save(table._id!, {}),
             config.api.row.save(table._id!, {}),
           ])
-          const rowUsage = await getRowUsage()
 
-          const res = await config.api.row.bulkDelete(table._id!, {
-            rows: [row1, row2._id!, { _id: row3._id }],
+          await expectRowUsage(isInternal ? -3 : 0, async () => {
+            const res = await config.api.row.bulkDelete(table._id!, {
+              rows: [row1, row2._id!, { _id: row3._id }],
+            })
+
+            expect(res.length).toEqual(3)
+            await config.api.row.get(table._id!, row1._id!, { status: 404 })
           })
-
-          expect(res.length).toEqual(3)
-          await config.api.row.get(table._id!, row1._id!, { status: 404 })
-          await assertRowUsage(isInternal ? rowUsage - 3 : rowUsage)
         })
 
         it("should accept a valid row object and delete the row", async () => {
           const row1 = await config.api.row.save(table._id!, {})
-          const rowUsage = await getRowUsage()
 
-          const res = await config.api.row.delete(table._id!, row1 as DeleteRow)
+          await expectRowUsage(isInternal ? -1 : 0, async () => {
+            const res = await config.api.row.delete(
+              table._id!,
+              row1 as DeleteRow
+            )
 
-          expect(res.id).toEqual(row1._id)
-          await config.api.row.get(table._id!, row1._id!, { status: 404 })
-          await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
+            expect(res.id).toEqual(row1._id)
+            await config.api.row.get(table._id!, row1._id!, { status: 404 })
+          })
         })
 
         it.each([{ not: "valid" }, { rows: 123 }, "invalid"])(
           "should ignore malformed/invalid delete request: %s",
           async (request: any) => {
-            const rowUsage = await getRowUsage()
-
-            await config.api.row.delete(table._id!, request, {
-              status: 400,
-              body: {
-                message: "Invalid delete rows request",
-              },
+            await expectRowUsage(0, async () => {
+              await config.api.row.delete(table._id!, request, {
+                status: 400,
+                body: {
+                  message: "Invalid delete rows request",
+                },
+              })
             })
-
-            await assertRowUsage(rowUsage)
           }
         )
       })
@@ -1736,31 +1721,29 @@ if (descriptions.length) {
             })
           )
 
-          const rowUsage = await getRowUsage()
+          await expectRowUsage(isInternal ? 2 : 0, async () => {
+            await config.api.row.bulkImport(table._id!, {
+              rows: [
+                {
+                  name: "Row 1",
+                  description: "Row 1 description",
+                },
+                {
+                  name: "Row 2",
+                  description: "Row 2 description",
+                },
+              ],
+            })
 
-          await config.api.row.bulkImport(table._id!, {
-            rows: [
-              {
-                name: "Row 1",
-                description: "Row 1 description",
-              },
-              {
-                name: "Row 2",
-                description: "Row 2 description",
-              },
-            ],
+            const rows = await config.api.row.fetch(table._id!)
+            expect(rows.length).toEqual(2)
+
+            rows.sort((a, b) => a.name.localeCompare(b.name))
+            expect(rows[0].name).toEqual("Row 1")
+            expect(rows[0].description).toEqual("Row 1 description")
+            expect(rows[1].name).toEqual("Row 2")
+            expect(rows[1].description).toEqual("Row 2 description")
           })
-
-          const rows = await config.api.row.fetch(table._id!)
-          expect(rows.length).toEqual(2)
-
-          rows.sort((a, b) => a.name.localeCompare(b.name))
-          expect(rows[0].name).toEqual("Row 1")
-          expect(rows[0].description).toEqual("Row 1 description")
-          expect(rows[1].name).toEqual("Row 2")
-          expect(rows[1].description).toEqual("Row 2 description")
-
-          await assertRowUsage(isInternal ? rowUsage + 2 : rowUsage)
         })
 
         isInternal &&
@@ -1785,35 +1768,33 @@ if (descriptions.length) {
               description: "Existing description",
             })
 
-            const rowUsage = await getRowUsage()
+            await expectRowUsage(2, async () => {
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  {
+                    name: "Row 1",
+                    description: "Row 1 description",
+                  },
+                  { ...existingRow, name: "Updated existing row" },
+                  {
+                    name: "Row 2",
+                    description: "Row 2 description",
+                  },
+                ],
+                identifierFields: ["_id"],
+              })
 
-            await config.api.row.bulkImport(table._id!, {
-              rows: [
-                {
-                  name: "Row 1",
-                  description: "Row 1 description",
-                },
-                { ...existingRow, name: "Updated existing row" },
-                {
-                  name: "Row 2",
-                  description: "Row 2 description",
-                },
-              ],
-              identifierFields: ["_id"],
+              const rows = await config.api.row.fetch(table._id!)
+              expect(rows.length).toEqual(3)
+
+              rows.sort((a, b) => a.name.localeCompare(b.name))
+              expect(rows[0].name).toEqual("Row 1")
+              expect(rows[0].description).toEqual("Row 1 description")
+              expect(rows[1].name).toEqual("Row 2")
+              expect(rows[1].description).toEqual("Row 2 description")
+              expect(rows[2].name).toEqual("Updated existing row")
+              expect(rows[2].description).toEqual("Existing description")
             })
-
-            const rows = await config.api.row.fetch(table._id!)
-            expect(rows.length).toEqual(3)
-
-            rows.sort((a, b) => a.name.localeCompare(b.name))
-            expect(rows[0].name).toEqual("Row 1")
-            expect(rows[0].description).toEqual("Row 1 description")
-            expect(rows[1].name).toEqual("Row 2")
-            expect(rows[1].description).toEqual("Row 2 description")
-            expect(rows[2].name).toEqual("Updated existing row")
-            expect(rows[2].description).toEqual("Existing description")
-
-            await assertRowUsage(rowUsage + 2)
           })
 
         isInternal &&
@@ -1838,36 +1819,34 @@ if (descriptions.length) {
               description: "Existing description",
             })
 
-            const rowUsage = await getRowUsage()
+            await expectRowUsage(3, async () => {
+              await config.api.row.bulkImport(table._id!, {
+                rows: [
+                  {
+                    name: "Row 1",
+                    description: "Row 1 description",
+                  },
+                  { ...existingRow, name: "Updated existing row" },
+                  {
+                    name: "Row 2",
+                    description: "Row 2 description",
+                  },
+                ],
+              })
 
-            await config.api.row.bulkImport(table._id!, {
-              rows: [
-                {
-                  name: "Row 1",
-                  description: "Row 1 description",
-                },
-                { ...existingRow, name: "Updated existing row" },
-                {
-                  name: "Row 2",
-                  description: "Row 2 description",
-                },
-              ],
+              const rows = await config.api.row.fetch(table._id!)
+              expect(rows.length).toEqual(4)
+
+              rows.sort((a, b) => a.name.localeCompare(b.name))
+              expect(rows[0].name).toEqual("Existing row")
+              expect(rows[0].description).toEqual("Existing description")
+              expect(rows[1].name).toEqual("Row 1")
+              expect(rows[1].description).toEqual("Row 1 description")
+              expect(rows[2].name).toEqual("Row 2")
+              expect(rows[2].description).toEqual("Row 2 description")
+              expect(rows[3].name).toEqual("Updated existing row")
+              expect(rows[3].description).toEqual("Existing description")
             })
-
-            const rows = await config.api.row.fetch(table._id!)
-            expect(rows.length).toEqual(4)
-
-            rows.sort((a, b) => a.name.localeCompare(b.name))
-            expect(rows[0].name).toEqual("Existing row")
-            expect(rows[0].description).toEqual("Existing description")
-            expect(rows[1].name).toEqual("Row 1")
-            expect(rows[1].description).toEqual("Row 1 description")
-            expect(rows[2].name).toEqual("Row 2")
-            expect(rows[2].description).toEqual("Row 2 description")
-            expect(rows[3].name).toEqual("Updated existing row")
-            expect(rows[3].description).toEqual("Existing description")
-
-            await assertRowUsage(rowUsage + 3)
           })
 
         // Upserting isn't yet supported in MSSQL / Oracle, see:
@@ -2190,120 +2169,119 @@ if (descriptions.length) {
               return { linkedTable, firstRow, secondRow }
             }
           )
-          const rowUsage = await getRowUsage()
 
-          // test basic enrichment
-          const resBasic = await config.api.row.get(
-            linkedTable._id!,
-            secondRow._id!
-          )
-          expect(resBasic.link.length).toBe(1)
-          expect(resBasic.link[0]).toEqual({
-            _id: firstRow._id,
-            primaryDisplay: firstRow.name,
+          await expectRowUsage(0, async () => {
+            // test basic enrichment
+            const resBasic = await config.api.row.get(
+              linkedTable._id!,
+              secondRow._id!
+            )
+            expect(resBasic.link.length).toBe(1)
+            expect(resBasic.link[0]).toEqual({
+              _id: firstRow._id,
+              primaryDisplay: firstRow.name,
+            })
+
+            // test full enrichment
+            const resEnriched = await config.api.row.getEnriched(
+              linkedTable._id!,
+              secondRow._id!
+            )
+            expect(resEnriched.link.length).toBe(1)
+            expect(resEnriched.link[0]._id).toBe(firstRow._id)
+            expect(resEnriched.link[0].name).toBe("Test Contact")
+            expect(resEnriched.link[0].description).toBe("original description")
           })
-
-          // test full enrichment
-          const resEnriched = await config.api.row.getEnriched(
-            linkedTable._id!,
-            secondRow._id!
-          )
-          expect(resEnriched.link.length).toBe(1)
-          expect(resEnriched.link[0]._id).toBe(firstRow._id)
-          expect(resEnriched.link[0].name).toBe("Test Contact")
-          expect(resEnriched.link[0].description).toBe("original description")
-          await assertRowUsage(rowUsage)
         })
       })
 
-      isInternal &&
-        describe("attachments and signatures", () => {
-          const coreAttachmentEnrichment = async (
-            schema: TableSchema,
-            field: string,
-            attachmentCfg: string | string[]
-          ) => {
-            const testTable = await config.api.table.save(
-              defaultTable({
-                schema,
-              })
-            )
-            const attachmentToStoreKey = (attachmentId: string) => {
-              return {
-                key: `${config.getAppId()}/attachments/${attachmentId}`,
-              }
-            }
-            const draftRow = {
-              name: "test",
-              description: "test",
-              [field]:
-                typeof attachmentCfg === "string"
-                  ? attachmentToStoreKey(attachmentCfg)
-                  : attachmentCfg.map(attachmentToStoreKey),
-              tableId: testTable._id,
-            }
-            const row = await config.api.row.save(testTable._id!, draftRow)
-
-            await withEnv({ SELF_HOSTED: "true" }, async () => {
-              return context.doInAppContext(config.getAppId(), async () => {
-                const enriched: Row[] = await outputProcessing(testTable, [row])
-                const [targetRow] = enriched
-                const attachmentEntries = Array.isArray(targetRow[field])
-                  ? targetRow[field]
-                  : [targetRow[field]]
-
-                for (const entry of attachmentEntries) {
-                  const attachmentId = entry.key.split("/").pop()
-                  expect(entry.url.split("?")[0]).toBe(
-                    `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-                  )
-                }
-              })
+      describe("attachments and signatures", () => {
+        const coreAttachmentEnrichment = async (
+          schema: TableSchema,
+          field: string,
+          attachmentCfg: string | string[]
+        ) => {
+          const testTable = await config.api.table.save(
+            defaultTable({
+              schema,
             })
+          )
+          const attachmentToStoreKey = (attachmentId: string) => {
+            return {
+              key: `${config.getAppId()}/attachments/${attachmentId}`,
+            }
           }
+          const draftRow = {
+            name: "test",
+            description: "test",
+            [field]:
+              typeof attachmentCfg === "string"
+                ? attachmentToStoreKey(attachmentCfg)
+                : attachmentCfg.map(attachmentToStoreKey),
+            tableId: testTable._id,
+          }
+          const row = await config.api.row.save(testTable._id!, draftRow)
 
-          it("should allow enriching single attachment rows", async () => {
-            await coreAttachmentEnrichment(
-              {
-                attachment: {
-                  type: FieldType.ATTACHMENT_SINGLE,
-                  name: "attachment",
-                  constraints: { presence: false },
-                },
-              },
-              "attachment",
-              `${uuid.v4()}.csv`
-            )
-          })
+          await withEnv({ SELF_HOSTED: "true" }, async () => {
+            return context.doInAppContext(config.getAppId(), async () => {
+              const enriched: Row[] = await outputProcessing(testTable, [row])
+              const [targetRow] = enriched
+              const attachmentEntries = Array.isArray(targetRow[field])
+                ? targetRow[field]
+                : [targetRow[field]]
 
-          it("should allow enriching attachment list rows", async () => {
-            await coreAttachmentEnrichment(
-              {
-                attachments: {
-                  type: FieldType.ATTACHMENTS,
-                  name: "attachments",
-                  constraints: { type: "array", presence: false },
-                },
-              },
-              "attachments",
-              [`${uuid.v4()}.csv`]
-            )
+              for (const entry of attachmentEntries) {
+                const attachmentId = entry.key.split("/").pop()
+                expect(entry.url.split("?")[0]).toBe(
+                  `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+                )
+              }
+            })
           })
+        }
 
-          it("should allow enriching signature rows", async () => {
-            await coreAttachmentEnrichment(
-              {
-                signature: {
-                  type: FieldType.SIGNATURE_SINGLE,
-                  name: "signature",
-                  constraints: { presence: false },
-                },
+        it("should allow enriching single attachment rows", async () => {
+          await coreAttachmentEnrichment(
+            {
+              attachment: {
+                type: FieldType.ATTACHMENT_SINGLE,
+                name: "attachment",
+                constraints: { presence: false },
               },
-              "signature",
-              `${uuid.v4()}.png`
-            )
-          })
+            },
+            "attachment",
+            `${uuid.v4()}.csv`
+          )
         })
+
+        it("should allow enriching attachment list rows", async () => {
+          await coreAttachmentEnrichment(
+            {
+              attachments: {
+                type: FieldType.ATTACHMENTS,
+                name: "attachments",
+                constraints: { type: "array", presence: false },
+              },
+            },
+            "attachments",
+            [`${uuid.v4()}.csv`]
+          )
+        })
+
+        it("should allow enriching signature rows", async () => {
+          await coreAttachmentEnrichment(
+            {
+              signature: {
+                type: FieldType.SIGNATURE_SINGLE,
+                name: "signature",
+                constraints: { presence: false },
+              },
+            },
+            "signature",
+            `${uuid.v4()}.png`
+          )
+        })
+      })
 
       describe("exportRows", () => {
         beforeEach(async () => {
@@ -2518,15 +2496,14 @@ if (descriptions.length) {
               csvString: exportedValue,
             })
 
-            const stringified = (value: string) =>
-              JSON.stringify(value).replace(/"/g, "'")
+            const stringified = (value: string) => JSON.stringify(value)
 
             const matchingObject = (
               key: string,
               value: any,
               isArray: boolean
             ) => {
-              const objectMatcher = `{'${key}':'${value[key]}'.*?}`
+              const objectMatcher = `{"${key}":"${value[key]}".*?}`
               if (isArray) {
                 return expect.stringMatching(
                   new RegExp(`^\\[${objectMatcher}\\]$`)

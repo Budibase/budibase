@@ -4,6 +4,7 @@ import * as createRow from "./steps/createRow"
 import * as updateRow from "./steps/updateRow"
 import * as deleteRow from "./steps/deleteRow"
 import * as executeScript from "./steps/executeScript"
+import * as executeScriptV2 from "./steps/executeScriptV2"
 import * as executeQuery from "./steps/executeQuery"
 import * as outgoingWebhook from "./steps/outgoingWebhook"
 import * as serverLog from "./steps/serverLog"
@@ -27,6 +28,8 @@ import {
   Hosting,
   ActionImplementation,
   AutomationStepDefinition,
+  AutomationStepInputs,
+  AutomationStepOutputs,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
@@ -42,6 +45,7 @@ const ACTION_IMPLS: ActionImplType = {
   DELETE_ROW: deleteRow.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
   EXECUTE_SCRIPT: executeScript.run,
+  EXECUTE_SCRIPT_V2: executeScriptV2.run,
   EXECUTE_QUERY: executeQuery.run,
   SERVER_LOG: serverLog.run,
   DELAY: delay.run,
@@ -68,6 +72,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   DELETE_ROW: automations.steps.deleteRow.definition,
   OUTGOING_WEBHOOK: automations.steps.outgoingWebhook.definition,
   EXECUTE_SCRIPT: automations.steps.executeScript.definition,
+  EXECUTE_SCRIPT_V2: automations.steps.executeScriptV2.definition,
   EXECUTE_QUERY: automations.steps.executeQuery.definition,
   SERVER_LOG: automations.steps.serverLog.definition,
   DELAY: automations.steps.delay.definition,
@@ -120,11 +125,15 @@ export async function getActionDefinitions(): Promise<
 }
 
 /* istanbul ignore next */
-export async function getAction(
-  stepId: AutomationActionStepId
-): Promise<ActionImplementation<any, any> | undefined> {
+export async function getAction<
+  TStep extends AutomationActionStepId,
+  TInputs = AutomationStepInputs<TStep>,
+  TOutputs = AutomationStepOutputs<TStep>
+>(stepId: TStep): Promise<ActionImplementation<TInputs, TOutputs> | undefined> {
   if (ACTION_IMPLS[stepId as keyof ActionImplType] != null) {
-    return ACTION_IMPLS[stepId as keyof ActionImplType]
+    return ACTION_IMPLS[
+      stepId as keyof ActionImplType
+    ] as unknown as ActionImplementation<TInputs, TOutputs>
   }
 
   // must be a plugin

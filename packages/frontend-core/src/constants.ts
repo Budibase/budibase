@@ -106,16 +106,14 @@ export const Roles = {
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
   CREATOR: "CREATOR",
+  GROUP: "GROUP",
 }
 
 export const EventPublishType = {
   ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
 }
 
-export const ContextScopes = {
-  Local: "local",
-  Global: "global",
-}
+export { ComponentContextScopes as ContextScopes } from "@budibase/types"
 
 export const TypeIconMap = {
   [FieldType.STRING]: "Text",
@@ -168,3 +166,9 @@ export const FieldPermissions = {
   READONLY: "readonly",
   HIDDEN: "hidden",
 }
+
+// one or more word characters and whitespace
+export const APP_NAME_REGEX = /^[\w\s]+$/
+
+// zero or more non-whitespace characters
+export const APP_URL_REGEX = /^[0-9a-zA-Z-_]+$/

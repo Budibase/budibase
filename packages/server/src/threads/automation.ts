@@ -1,18 +1,13 @@
 import { default as threadUtils } from "./utils"
 import { Job } from "bull"
-import {
-  disableCronById,
-  isErrorInOutput,
-  isRecurring,
-} from "../automations/utils"
+import { disableCronById } from "../automations/utils"
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
-import { replaceFakeBindings } from "../automations/loopUtils"
-import { dataFilters, helpers, utils } from "@budibase/shared-core"
+import { dataFilters, helpers } from "@budibase/shared-core"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { automations } from "@budibase/shared-core"
-import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
+import { MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
 import {
   Automation,
@@ -25,54 +20,164 @@ import {
   AutomationStepStatus,
   BranchSearchFilters,
   BranchStep,
-  isLogicalSearchOperator,
   LoopStep,
-  UserBindings,
-  isBasicSearchOperator,
   ContextEmitter,
+  LoopStepType,
+  AutomationTriggerResult,
+  AutomationResults,
+  AutomationStepResult,
+  isLogicalFilter,
+  Branch,
 } from "@budibase/types"
-import {
-  AutomationContext,
-  AutomationResponse,
-  TriggerOutput,
-} from "../definitions/automations"
+import { AutomationContext } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
-import { context, logging, configs } from "@budibase/backend-core"
+import { context, logging, configs, utils } from "@budibase/backend-core"
 import {
   findHBSBlocks,
   processObject,
   processStringSync,
 } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
-import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 import tracer from "dd-trace"
+import { isPlainObject } from "lodash"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
-function getLoopIterations(loopStep: LoopStep) {
-  const binding = loopStep.inputs.binding
-  if (!binding) {
-    return 0
+function matchesLoopFailureCondition(step: LoopStep, currentItem: any) {
+  const { failure } = step.inputs
+  if (!failure) {
+    return false
   }
-  try {
-    const json = typeof binding === "string" ? JSON.parse(binding) : binding
-    if (Array.isArray(json)) {
-      return json.length
-    }
-  } catch (err) {
-    // ignore error - wasn't able to parse
+
+  if (isPlainObject(currentItem)) {
+    return Object.values(currentItem).some(e => e === failure)
   }
-  if (typeof binding === "string") {
-    return automationUtils.stringSplit(binding).length
-  }
-  return 0
+
+  return currentItem === failure
 }
 
-export async function enrichBaseContext(context: Record<string, any>) {
+// Returns an array of the things to loop over for a given LoopStep.  This
+// function handles the various ways that a LoopStep can be configured, parsing
+// the input and returning an array of items to loop over.
+function getLoopIterable(step: LoopStep): any[] {
+  const option = step.inputs.option
+  let input = step.inputs.binding
+
+  if (option === LoopStepType.ARRAY && typeof input === "string") {
+    if (input === "") {
+      input = []
+    } else {
+      input = JSON.parse(input)
+    }
+  }
+
+  if (option === LoopStepType.STRING && Array.isArray(input)) {
+    input = input.join(",")
+  }
+
+  if (option === LoopStepType.STRING && typeof input === "string") {
+    input = automationUtils.stringSplit(input)
+  }
+
+  return Array.isArray(input) ? input : [input]
+}
+
+function getLoopMaxIterations(loopStep: LoopStep): number {
+  const loopMaxIterations =
+    typeof loopStep.inputs.iterations === "string"
+      ? parseInt(loopStep.inputs.iterations)
+      : loopStep.inputs.iterations
+  return Math.min(
+    loopMaxIterations || env.AUTOMATION_MAX_ITERATIONS,
+    env.AUTOMATION_MAX_ITERATIONS
+  )
+}
+
+function stepSuccess(
+  step: Readonly<AutomationStep>,
+  outputs: Readonly<Record<string, any>>,
+  inputs?: Readonly<Record<string, any>>
+): AutomationStepResult {
+  return {
+    id: step.id,
+    stepId: step.stepId,
+    inputs: inputs || step.inputs,
+    outputs: {
+      success: true,
+      ...outputs,
+    },
+  }
+}
+
+function stepFailure(
+  step: Readonly<AutomationStep>,
+  outputs: Readonly<Record<string, any>>,
+  inputs?: Readonly<Record<string, any>>
+): AutomationStepResult {
+  return {
+    id: step.id,
+    stepId: step.stepId,
+    inputs: inputs || step.inputs,
+    outputs: {
+      success: false,
+      ...outputs,
+    },
+  }
+}
+
+function stepStopped(step: AutomationStep): AutomationStepResult {
+  return {
+    id: step.id,
+    stepId: step.stepId,
+    inputs: step.inputs,
+    outputs: STOPPED_STATUS,
+  }
+}
+
+async function branchMatches(
+  ctx: AutomationContext,
+  branch: Readonly<Branch>
+): Promise<boolean> {
+  const toFilter: Record<string, any> = {}
+
+  // Because we allow bindings on both the left and right of each condition in
+  // automation branches, we can't pass the BranchSearchFilters directly to
+  // dataFilters.runQuery as-is. We first need to walk the filter tree and
+  // evaluate all of the bindings.
+  const evaluateBindings = (fs: Readonly<BranchSearchFilters>) => {
+    const filters = cloneDeep(fs)
+    for (const filter of Object.values(filters)) {
+      if (!filter) {
+        continue
+      }
+
+      if (isLogicalFilter(filter)) {
+        filter.conditions = filter.conditions.map(evaluateBindings)
+      } else {
+        for (const [field, value] of Object.entries(filter)) {
+          toFilter[field] = processStringSync(field, ctx)
+          if (typeof value === "string" && findHBSBlocks(value).length > 0) {
+            filter[field] = processStringSync(value, ctx)
+          }
+        }
+      }
+    }
+
+    return filters
+  }
+
+  const result = dataFilters.runQuery(
+    [toFilter],
+    evaluateBindings(branch.condition)
+  )
+  return result.length > 0
+}
+
+async function enrichBaseContext(context: AutomationContext) {
   context.env = await sdkUtils.getEnvironmentVariables()
 
   try {
@@ -83,650 +188,428 @@ export async function enrichBaseContext(context: Record<string, any>) {
       company: config.company,
     }
   } catch (e) {
-    // if settings doc doesn't exist, make the settings blank
     context.settings = {}
   }
-
-  return context
 }
 
-/**
- * The automation orchestrator is a class responsible for executing automations.
- * It handles the context of the automation and makes sure each step gets the correct
- * inputs and handles any outputs.
- */
+// Because the trigger appears twice in an AutomationResult, once as .trigger
+// and again as .steps[0], this function makes sure that the two are kept in
+// sync when setting trigger output.
+function setTriggerOutput(result: AutomationResults, outputs: any) {
+  result.trigger.outputs = {
+    ...result.trigger.outputs,
+    ...outputs,
+  }
+  result.steps[0] = result.trigger
+}
+
 class Orchestrator {
-  private chainCount: number
-  private appId: string
-  private automation: Automation
+  private readonly job: AutomationJob
   private emitter: ContextEmitter
-  private context: AutomationContext
-  private job: Job
-  private loopStepOutputs: LoopStep[]
   private stopped: boolean
-  private executionOutput: AutomationResponse
-  private currentUser: UserBindings | undefined
 
-  constructor(job: AutomationJob) {
-    let automation = job.data.automation
-    let triggerOutput = job.data.event
-    const metadata = triggerOutput.metadata
-    this.chainCount = metadata ? metadata.automationChainCount! : 0
-    this.appId = triggerOutput.appId as string
+  constructor(job: Readonly<AutomationJob>) {
     this.job = job
-    const triggerStepId = automation.definition.trigger.stepId
-    triggerOutput = this.cleanupTriggerOutputs(triggerStepId, triggerOutput)
-    // remove from context
-    delete triggerOutput.appId
-    delete triggerOutput.metadata
-    // step zero is never used as the template string is zero indexed for customer facing
-    this.context = {
-      steps: [{}],
-      stepsById: {},
-      stepsByName: {},
-      trigger: triggerOutput,
-    }
-
-    this.automation = automation
-    // create an emitter which has the chain count for this automation run in it, so it can block
-    // excessive chaining if required
-    this.emitter = new AutomationEmitter(this.chainCount + 1)
-    this.executionOutput = { trigger: {}, steps: [] }
-    // setup the execution output
-    const triggerId = automation.definition.trigger.id
-    this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
-    this.loopStepOutputs = []
     this.stopped = false
-    this.currentUser = triggerOutput.user
+
+    // create an emitter which has the chain count for this automation run in
+    // it, so it can block excessive chaining if required
+    const chainCount = job.data.event.metadata?.automationChainCount || 0
+    this.emitter = new AutomationEmitter(chainCount + 1)
   }
 
-  cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
-    if (stepId === CRON_STEP_ID && !triggerOutput.timestamp) {
-      triggerOutput.timestamp = Date.now()
-    }
-    return triggerOutput
+  get automation(): Automation {
+    return this.job.data.automation
   }
 
-  async getStepFunctionality(stepId: AutomationActionStepId) {
-    let step = await actions.getAction(stepId)
-    if (step == null) {
-      throw `Cannot find automation step by name ${stepId}`
+  get appId(): string {
+    return this.job.data.event.appId!
+  }
+
+  isCron(): boolean {
+    return this.automation.definition.trigger.stepId === CRON_STEP_ID
+  }
+
+  async stopCron(reason: string, opts?: { result: AutomationResults }) {
+    if (!this.isCron()) {
+      return
     }
-    return step
+
+    const msg = `CRON disabled reason=${reason} - ${this.appId}/${this.automation._id}`
+    logging.logWarn(msg)
+
+    await disableCronById(this.job.id)
+
+    const { result } = opts || {}
+    if (result) {
+      setTriggerOutput(result, {
+        success: false,
+        status: AutomationStatus.STOPPED_ERROR,
+      })
+      await this.logResult(result)
+    }
+  }
+
+  private async logResult(result: AutomationResults) {
+    await storeLog(this.automation, result)
   }
 
   async getMetadata(): Promise<AutomationMetadata> {
     const metadataId = generateAutomationMetadataID(this.automation._id!)
     const db = context.getAppDB()
-    let metadata: AutomationMetadata
-    try {
-      metadata = await db.get(metadataId)
-    } catch (err) {
-      metadata = {
-        _id: metadataId,
-        errorCount: 0,
-      }
-    }
-    return metadata
+    const metadata = await db.tryGet<AutomationMetadata>(metadataId)
+    return metadata || { _id: metadataId, errorCount: 0 }
   }
 
-  async stopCron(reason: string) {
-    if (!this.job.opts.repeat) {
-      return
-    }
-    logging.logWarn(
-      `CRON disabled reason=${reason} - ${this.appId}/${this.automation._id}`
-    )
-    const automation = this.automation
-    const trigger = automation.definition.trigger
-    await disableCronById(this.job.id)
-    this.updateExecutionOutput(
-      trigger.id,
-      trigger.stepId,
-      {},
-      {
-        status: AutomationStatus.STOPPED_ERROR,
-        success: false,
-      }
-    )
-    await storeLog(automation, this.executionOutput)
-  }
-
-  async checkIfShouldStop(metadata: AutomationMetadata): Promise<boolean> {
-    if (!metadata.errorCount || !this.job.opts.repeat) {
-      return false
-    }
-    if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
-      await this.stopCron("errors")
-      return true
-    }
-    return false
-  }
-
-  async updateMetadata(metadata: AutomationMetadata) {
-    const output = this.executionOutput,
-      automation = this.automation
-    if (!output || !isRecurring(automation)) {
-      return
-    }
-    const count = metadata.errorCount
-    const isError = isErrorInOutput(output)
-    // nothing to do in this scenario, escape
-    if (!count && !isError) {
-      return
-    }
-    if (isError) {
-      metadata.errorCount = count ? count + 1 : 1
-    } else {
-      metadata.errorCount = 0
-    }
+  async incrementErrorCount() {
     const db = context.getAppDB()
-    try {
-      await db.put(metadata)
-    } catch (err) {
-      logging.logAlertWithInfo(
-        "Failed to write automation metadata",
-        db.name,
-        automation._id!,
-        err
-      )
-    }
-  }
+    let err: Error | undefined = undefined
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const metadata = await this.getMetadata()
+      metadata.errorCount ||= 0
+      metadata.errorCount++
 
-  updateExecutionOutput(id: string, stepId: string, inputs: any, outputs: any) {
-    const stepObj = { id, stepId, inputs, outputs }
-    // replacing trigger when disabling CRON
-    if (
-      stepId === CRON_STEP_ID &&
-      outputs.status === AutomationStatus.STOPPED_ERROR
-    ) {
-      this.executionOutput.trigger = stepObj
-      this.executionOutput.steps = [stepObj]
-      return
-    }
-    // first entry is always the trigger (constructor)
-    if (
-      this.executionOutput.steps.length === 0 ||
-      this.executionOutput.trigger.id === id
-    ) {
-      this.executionOutput.trigger = stepObj
-    }
-    this.executionOutput.steps.push(stepObj)
-  }
-
-  updateContextAndOutput(
-    currentLoopStepIndex: number | undefined,
-    step: AutomationStep,
-    output: any,
-    result: { success: boolean; status: string }
-  ) {
-    if (currentLoopStepIndex === undefined) {
-      throw new Error("No loop step number provided.")
-    }
-    this.executionOutput.steps.splice(currentLoopStepIndex, 0, {
-      id: step.id,
-      stepId: step.stepId,
-      outputs: {
-        ...output,
-        success: result.success,
-        status: result.status,
-      },
-      inputs: step.inputs,
-    })
-    this.context.steps.splice(currentLoopStepIndex, 0, {
-      ...output,
-      success: result.success,
-      status: result.status,
-    })
-  }
-
-  async execute(): Promise<AutomationResponse | undefined> {
-    return tracer.trace(
-      "Orchestrator.execute",
-      { resource: "automation" },
-      async span => {
-        span?.addTags({
-          appId: this.appId,
-          automationId: this.automation._id,
-        })
-
-        await enrichBaseContext(this.context)
-        this.context.user = this.currentUser
-
-        let metadata
-
-        // check if this is a recurring automation,
-        if (isProdAppID(this.appId) && isRecurring(this.automation)) {
-          span?.addTags({ recurring: true })
-          metadata = await this.getMetadata()
-          const shouldStop = await this.checkIfShouldStop(metadata)
-          if (shouldStop) {
-            span?.addTags({ shouldStop: true })
-            return
-          }
-        }
-        const start = performance.now()
-
-        await this.executeSteps(this.automation.definition.steps)
-
-        const end = performance.now()
-        const executionTime = end - start
-
-        console.info(
-          `Automation ID: ${this.automation._id} Execution time: ${executionTime} milliseconds`,
-          {
-            _logKey: "automation",
-            executionTime,
-          }
-        )
-
-        try {
-          await storeLog(this.automation, this.executionOutput)
-        } catch (e: any) {
-          if (e.status === 413 && e.request?.data) {
-            // if content is too large we shouldn't log it
-            delete e.request.data
-            e.request.data = { message: "removed due to large size" }
-          }
-          logging.logAlert("Error writing automation log", e)
-        }
-        if (
-          isProdAppID(this.appId) &&
-          isRecurring(this.automation) &&
-          metadata
-        ) {
-          await this.updateMetadata(metadata)
-        }
-        return this.executionOutput
+      try {
+        await db.put(metadata)
+        return metadata.errorCount
+      } catch (error: any) {
+        err = error
+        await helpers.wait(1000 + Math.random() * 1000)
       }
+    }
+
+    logging.logAlertWithInfo(
+      "Failed to update error count in automation metadata",
+      db.name,
+      this.automation._id!,
+      err
     )
+    return undefined
+  }
+
+  private isProdApp(): boolean {
+    return isProdAppID(this.appId)
+  }
+
+  hasErrored(context: AutomationContext): boolean {
+    return context._error === true
+  }
+
+  async execute(): Promise<AutomationResults> {
+    return await tracer.trace("execute", async span => {
+      span.addTags({ appId: this.appId, automationId: this.automation._id })
+
+      const data = cloneDeep(this.job.data)
+      delete data.event.appId
+      delete data.event.metadata
+
+      if (this.isCron() && !data.event.timestamp) {
+        data.event.timestamp = Date.now()
+      }
+
+      const trigger: AutomationTriggerResult = {
+        id: data.automation.definition.trigger.id,
+        stepId: data.automation.definition.trigger.stepId,
+        inputs: null,
+        outputs: data.event,
+      }
+      const result: AutomationResults = { trigger, steps: [trigger] }
+
+      const ctx: AutomationContext = {
+        trigger: trigger.outputs,
+        steps: { "0": trigger.outputs },
+        stepsByName: {},
+        stepsById: {},
+        user: trigger.outputs.user,
+        _error: false,
+        _stepIndex: 1,
+      }
+      await enrichBaseContext(ctx)
+
+      const timeout =
+        this.job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
+
+      try {
+        await helpers.withTimeout(timeout, async () => {
+          const [stepOutputs, executionTime] = await utils.time(() =>
+            this.executeSteps(ctx, data.automation.definition.steps)
+          )
+
+          result.steps.push(...stepOutputs)
+
+          console.info(
+            `Automation ID: ${
+              this.automation._id
+            } Execution time: ${executionTime.toMs()} milliseconds`,
+            {
+              _logKey: "automation",
+              executionTime,
+            }
+          )
+        })
+      } catch (e: any) {
+        if (e.errno === "ETIME") {
+          span?.addTags({ timedOut: true })
+          console.warn(`Automation execution timed out after ${timeout}ms`)
+        } else {
+          throw e
+        }
+      }
+
+      let errorCount = 0
+      if (this.isProdApp() && this.isCron() && this.hasErrored(ctx)) {
+        errorCount = (await this.incrementErrorCount()) || 0
+      }
+
+      if (errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
+        await this.stopCron("errors", { result })
+        span?.addTags({ shouldStop: true })
+      } else {
+        await this.logResult(result)
+      }
+
+      return result
+    })
   }
 
   private async executeSteps(
-    steps: AutomationStep[],
-    pathIdx?: number
-  ): Promise<void> {
-    return tracer.trace(
-      "Orchestrator.executeSteps",
-      { resource: "automation" },
-      async span => {
-        let stepIndex = 0
-        const timeout =
-          this.job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
+    ctx: AutomationContext,
+    steps: AutomationStep[]
+  ): Promise<AutomationStepResult[]> {
+    return await tracer.trace("executeSteps", async () => {
+      let stepIndex = 0
+      const results: AutomationStepResult[] = []
 
-        try {
-          await helpers.withTimeout(
-            timeout,
-            (async () => {
-              while (stepIndex < steps.length) {
-                const step = steps[stepIndex]
-                if (step.stepId === AutomationActionStepId.BRANCH) {
-                  // stepIndex for current step context offset
-                  // pathIdx relating to the full list of steps in the run
-                  await this.executeBranchStep(step, stepIndex + (pathIdx || 0))
-                  stepIndex++
-                } else if (step.stepId === AutomationActionStepId.LOOP) {
-                  stepIndex = await this.executeLoopStep(
-                    step,
-                    steps,
-                    stepIndex,
-                    pathIdx
-                  )
-                } else {
-                  if (!this.stopped) {
-                    await this.executeStep(step)
-                  }
-                  stepIndex++
-                }
-              }
-            })()
-          )
-        } catch (error: any) {
-          if (error.errno === "ETIME") {
-            span?.addTags({ timedOut: true })
-            console.warn(`Automation execution timed out after ${timeout}ms`)
+      function addToContext(
+        step: AutomationStep,
+        result: AutomationStepResult
+      ) {
+        ctx.steps[step.id] = result.outputs
+        ctx.steps[step.name || step.id] = result.outputs
+
+        ctx.stepsById[step.id] = result.outputs
+        ctx.stepsByName[step.name || step.id] = result.outputs
+
+        ctx._stepIndex ||= 0
+        ctx.steps[ctx._stepIndex] = result.outputs
+        ctx._stepIndex++
+
+        if (result.outputs.success === false) {
+          ctx._error = true
+        }
+
+        results.push(result)
+      }
+
+      while (stepIndex < steps.length) {
+        if (this.stopped) {
+          break
+        }
+
+        const step = steps[stepIndex]
+        switch (step.stepId) {
+          case AutomationActionStepId.BRANCH: {
+            results.push(...(await this.executeBranchStep(ctx, step)))
+            stepIndex++
+            break
+          }
+          case AutomationActionStepId.LOOP: {
+            const stepToLoop = steps[stepIndex + 1]
+            addToContext(
+              stepToLoop,
+              await this.executeLoopStep(ctx, step, stepToLoop)
+            )
+            // We increment by 2 here because the way loops work is that the
+            // step immediately following the loop step is what gets looped.
+            // So when we're done looping, to advance correctly we need to
+            // skip the step that was looped.
+            stepIndex += 2
+            break
+          }
+          default: {
+            addToContext(step, await this.executeStep(ctx, step))
+            stepIndex++
+            break
           }
         }
       }
-    )
+
+      return results
+    })
   }
 
   private async executeLoopStep(
-    loopStep: LoopStep,
-    steps: AutomationStep[],
-    stepIdx: number,
-    pathIdx?: number
-  ): Promise<number> {
-    await processObject(loopStep.inputs, this.mergeContexts(this.context))
-    const iterations = getLoopIterations(loopStep)
-    let stepToLoopIndex = stepIdx + 1
-    let pathStepIdx = (pathIdx || stepIdx) + 1
+    ctx: AutomationContext,
+    step: LoopStep,
+    stepToLoop: AutomationStep
+  ): Promise<AutomationStepResult> {
+    return await tracer.trace("executeLoopStep", async span => {
+      await processObject(step.inputs, ctx)
 
-    let iterationCount = 0
-    let shouldCleanup = true
-    let reachedMaxIterations = false
-
-    for (let loopStepIndex = 0; loopStepIndex < iterations; loopStepIndex++) {
+      const maxIterations = getLoopMaxIterations(step)
+      const items: Record<string, any>[] = []
+      let iterations = 0
+      let iterable: any[] = []
       try {
-        loopStep.inputs.binding = automationUtils.typecastForLooping(
-          loopStep.inputs
-        )
+        iterable = getLoopIterable(step)
       } catch (err) {
-        this.updateContextAndOutput(
-          pathStepIdx + 1,
-          steps[stepToLoopIndex],
-          {},
-          {
-            status: AutomationErrors.INCORRECT_TYPE,
-            success: false,
-          }
-        )
-        shouldCleanup = false
-        break
+        span.addTags({
+          status: AutomationStepStatus.INCORRECT_TYPE,
+          iterations,
+        })
+        return stepFailure(stepToLoop, {
+          status: AutomationStepStatus.INCORRECT_TYPE,
+        })
       }
-      const maxIterations = automationUtils.ensureMaxIterationsAsNumber(
-        loopStep.inputs.iterations
+
+      for (; iterations < iterable.length; iterations++) {
+        const currentItem = iterable[iterations]
+
+        if (iterations === maxIterations) {
+          span.addTags({
+            status: AutomationStepStatus.MAX_ITERATIONS,
+            iterations,
+          })
+          return stepFailure(stepToLoop, {
+            status: AutomationStepStatus.MAX_ITERATIONS,
+            iterations,
+            items,
+          })
+        }
+
+        if (matchesLoopFailureCondition(step, currentItem)) {
+          span.addTags({
+            status: AutomationStepStatus.FAILURE_CONDITION,
+            iterations,
+          })
+          return stepFailure(stepToLoop, {
+            status: AutomationStepStatus.FAILURE_CONDITION,
+            iterations,
+            items,
+          })
+        }
+
+        ctx.loop = { currentItem }
+        const result = await this.executeStep(ctx, stepToLoop)
+        items.push(result.outputs)
+        ctx.loop = undefined
+      }
+
+      const status =
+        iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
+      return stepSuccess(stepToLoop, { status, iterations, items })
+    })
+  }
+
+  private async executeBranchStep(
+    ctx: AutomationContext,
+    step: BranchStep
+  ): Promise<AutomationStepResult[]> {
+    return await tracer.trace("executeBranchStep", async span => {
+      const { branches, children } = step.inputs
+
+      for (const branch of branches) {
+        if (await branchMatches(ctx, branch)) {
+          span.addTags({ branchName: branch.name, branchId: branch.id })
+          return [
+            stepSuccess(step, {
+              branchName: branch.name,
+              status: `${branch.name} branch taken`,
+              branchId: `${branch.id}`,
+            }),
+            ...(await this.executeSteps(ctx, children?.[branch.id] || [])),
+          ]
+        }
+      }
+
+      span.addTags({ status: AutomationStatus.NO_CONDITION_MET })
+      return [stepFailure(step, { status: AutomationStatus.NO_CONDITION_MET })]
+    })
+  }
+
+  private async executeStep(
+    ctx: AutomationContext,
+    step: Readonly<AutomationStep>
+  ): Promise<AutomationStepResult> {
+    return await tracer.trace(step.stepId, async span => {
+      span.addTags({
+        step: {
+          stepId: step.stepId,
+          id: step.id,
+          name: step.name,
+          type: step.type,
+          title: step.stepTitle,
+          internal: step.internal,
+          deprecated: step.deprecated,
+        },
+        inputsKeys: Object.keys(step.inputs),
+      })
+
+      if (this.stopped) {
+        span.addTags({ stopped: true })
+        return stepStopped(step)
+      }
+
+      const fn = await actions.getAction(step.stepId)
+      if (fn == null) {
+        throw new Error(`Cannot find automation step by name ${step.stepId}`)
+      }
+
+      let inputs = cloneDeep(step.inputs)
+      if (step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2) {
+        // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
+        // "..." }}` template, and expects to receive it that way in the
+        // function that runs it. So we skip this next bit for that step.
+        inputs = await processObject(inputs, ctx)
+      }
+
+      inputs = automationUtils.cleanInputValues(
+        inputs,
+        step.schema.inputs.properties
       )
+
+      const outputs = await fn({
+        inputs,
+        appId: this.appId,
+        emitter: this.emitter,
+        context: ctx,
+      })
 
       if (
-        loopStepIndex === env.AUTOMATION_MAX_ITERATIONS ||
-        (loopStep.inputs.iterations && loopStepIndex === maxIterations)
+        step.stepId === AutomationActionStepId.FILTER &&
+        "result" in outputs &&
+        outputs.result === false
       ) {
-        reachedMaxIterations = true
-        shouldCleanup = true
-        break
+        this.stopped = true
+        ;(outputs as any).status = AutomationStatus.STOPPED
       }
 
-      let isFailure = false
-      const currentItem = this.getCurrentLoopItem(loopStep, loopStepIndex)
-      if (currentItem && typeof currentItem === "object") {
-        isFailure = Object.keys(currentItem).some(value => {
-          return currentItem[value] === loopStep?.inputs.failure
-        })
-      } else {
-        isFailure = currentItem && currentItem === loopStep.inputs.failure
-      }
-
-      if (isFailure) {
-        this.updateContextAndOutput(
-          pathStepIdx + 1,
-          steps[stepToLoopIndex],
-          {
-            items: this.loopStepOutputs,
-            iterations: loopStepIndex,
-          },
-          {
-            status: AutomationErrors.FAILURE_CONDITION,
-            success: false,
-          }
-        )
-        shouldCleanup = false
-        break
-      }
-
-      this.context.steps[pathStepIdx] = {
-        currentItem: this.getCurrentLoopItem(loopStep, loopStepIndex),
-      }
-
-      stepToLoopIndex = stepIdx + 1
-
-      await this.executeStep(steps[stepToLoopIndex], stepToLoopIndex)
-      iterationCount++
-    }
-
-    if (shouldCleanup) {
-      let tempOutput =
-        iterations === 0
-          ? {
-              status: AutomationStepStatus.NO_ITERATIONS,
-              success: true,
-            }
-          : {
-              success: true,
-              items: this.loopStepOutputs,
-              iterations: iterationCount,
-            }
-
-      if (reachedMaxIterations && iterations !== 0) {
-        tempOutput.status = AutomationStepStatus.MAX_ITERATIONS
-      }
-
-      // Loop Step clean up
-      this.executionOutput.steps.splice(pathStepIdx, 0, {
-        id: steps[stepToLoopIndex].id,
-        stepId: steps[stepToLoopIndex].stepId,
-        outputs: tempOutput,
-        inputs: steps[stepToLoopIndex].inputs,
-      })
-
-      this.context.stepsById[steps[stepToLoopIndex].id] = tempOutput
-      const stepName = steps[stepToLoopIndex].name || steps[stepToLoopIndex].id
-      this.context.stepsByName[stepName] = tempOutput
-      this.context.steps[this.context.steps.length] = tempOutput
-      this.context.steps = this.context.steps.filter(
-        item => !item.hasOwnProperty.call(item, "currentItem")
-      )
-
-      this.loopStepOutputs = []
-    }
-
-    return stepToLoopIndex + 1
-  }
-  private async executeBranchStep(
-    branchStep: BranchStep,
-    pathIdx?: number
-  ): Promise<void> {
-    const { branches, children } = branchStep.inputs
-
-    for (const branch of branches) {
-      const condition = await this.evaluateBranchCondition(branch.condition)
-      if (condition) {
-        const branchStatus = {
-          branchName: branch.name,
-          status: `${branch.name} branch taken`,
-          branchId: `${branch.id}`,
-          success: true,
-        }
-
-        this.updateExecutionOutput(
-          branchStep.id,
-          branchStep.stepId,
-          branchStep.inputs,
-          branchStatus
-        )
-        this.context.steps[this.context.steps.length] = branchStatus
-        this.context.stepsById[branchStep.id] = branchStatus
-
-        const branchSteps = children?.[branch.id] || []
-        // A final +1 to accomodate the branch step itself
-        await this.executeSteps(branchSteps, (pathIdx || 0) + 1)
-        return
-      }
-    }
-
-    this.stopped = true
-    this.updateExecutionOutput(
-      branchStep.id,
-      branchStep.stepId,
-      branchStep.inputs,
-      {
-        success: false,
-        status: AutomationStatus.NO_CONDITION_MET,
-      }
-    )
-  }
-
-  private async evaluateBranchCondition(
-    conditions: BranchSearchFilters
-  ): Promise<boolean> {
-    const toFilter: Record<string, any> = {}
-
-    const recurseSearchFilters = (
-      filters: BranchSearchFilters
-    ): BranchSearchFilters => {
-      for (const filterKey of Object.keys(
-        filters
-      ) as (keyof typeof filters)[]) {
-        if (!filters[filterKey]) {
-          continue
-        }
-
-        if (isLogicalSearchOperator(filterKey)) {
-          filters[filterKey].conditions = filters[filterKey].conditions.map(
-            condition => recurseSearchFilters(condition)
-          )
-        } else if (isBasicSearchOperator(filterKey)) {
-          for (const [field, value] of Object.entries(filters[filterKey])) {
-            const fromContext = processStringSync(
-              field,
-              this.mergeContexts(this.context)
-            )
-            toFilter[field] = fromContext
-
-            if (typeof value === "string" && findHBSBlocks(value).length > 0) {
-              const processedVal = processStringSync(
-                value,
-                this.mergeContexts(this.context)
-              )
-
-              filters[filterKey][field] = processedVal
-            }
-          }
-        } else {
-          // We want to types to complain if we extend BranchSearchFilters, but not to throw if the request comes with some extra data. It will just be ignored
-          utils.unreachable(filterKey, { doNotThrow: true })
-        }
-      }
-
-      return filters
-    }
-
-    const processedConditions = recurseSearchFilters(conditions)
-
-    const result = dataFilters.runQuery([toFilter], processedConditions)
-    return result.length > 0
-  }
-  private async executeStep(
-    step: AutomationStep,
-    loopIteration?: number
-  ): Promise<void> {
-    return tracer.trace(
-      "Orchestrator.execute.step",
-      { resource: "automation" },
-      async span => {
-        span?.addTags({
-          resource: "automation",
-          step: {
-            stepId: step.stepId,
-            id: step.id,
-            name: step.name,
-            type: step.type,
-            title: step.stepTitle,
-            internal: step.internal,
-            deprecated: step.deprecated,
-          },
-        })
-
-        if (this.stopped) {
-          this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
-          return
-        }
-
-        let originalStepInput = cloneDeep(step.inputs)
-        if (loopIteration !== undefined) {
-          originalStepInput = replaceFakeBindings(
-            originalStepInput,
-            loopIteration
-          )
-        }
-
-        const stepFn = await this.getStepFunctionality(step.stepId)
-        let inputs = await processObject(
-          originalStepInput,
-          this.mergeContexts(this.context)
-        )
-        inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
-
-        const outputs = await stepFn({
-          inputs: inputs,
-          appId: this.appId,
-          emitter: this.emitter,
-          context: this.mergeContexts(this.context),
-        })
-        this.handleStepOutput(step, outputs, loopIteration)
-      }
-    )
-  }
-
-  private getCurrentLoopItem(loopStep: LoopStep, index: number): any {
-    if (!loopStep) return null
-    if (
-      typeof loopStep.inputs.binding === "string" &&
-      loopStep.inputs.option === "String"
-    ) {
-      return automationUtils.stringSplit(loopStep.inputs.binding)[index]
-    } else if (Array.isArray(loopStep.inputs.binding)) {
-      return loopStep.inputs.binding[index]
-    }
-    return null
-  }
-
-  private mergeContexts(context: AutomationContext) {
-    const mergeContexts = {
-      ...context,
-      steps: {
-        ...context.steps,
-        ...context.stepsById,
-        ...context.stepsByName,
-      },
-    }
-    return mergeContexts
-  }
-
-  private handleStepOutput(
-    step: AutomationStep,
-    outputs: any,
-    loopIteration: number | undefined
-  ): void {
-    if (step.stepId === AutomationActionStepId.FILTER && !outputs.result) {
-      this.stopped = true
-      this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
-        ...outputs,
-        ...STOPPED_STATUS,
-      })
-    } else if (loopIteration !== undefined) {
-      this.loopStepOutputs = this.loopStepOutputs || []
-      this.loopStepOutputs.push(outputs)
-    } else {
-      this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
-      this.context.steps[this.context.steps.length] = outputs
-      this.context.stepsById![step.id] = outputs
-      const stepName = step.name || step.id
-      this.context.stepsByName![stepName] = outputs
-    }
+      span.addTags({ outputsKeys: Object.keys(outputs) })
+      return stepSuccess(step, outputs, inputs)
+    })
   }
 }
 
 export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   const appId = job.data.event.appId
-  const automationId = job.data.automation._id
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
+
+  const automationId = job.data.automation._id
   if (!automationId) {
     throw new Error("Unable to execute, event doesn't contain automation ID.")
   }
+
   return context.doInAutomationContext({
     appId,
     automationId,
     task: async () => {
       const envVars = await sdkUtils.getEnvironmentVariables()
-      // put into automation thread for whole context
       await context.doInEnvironmentContext(envVars, async () => {
-        const automationOrchestrator = new Orchestrator(job)
+        const orchestrator = new Orchestrator(job)
         try {
-          const response = await automationOrchestrator.execute()
-          callback(null, response)
+          callback(null, await orchestrator.execute())
         } catch (err) {
           callback(err)
         }
@@ -737,39 +620,29 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
 
 export async function executeInThread(
   job: Job<AutomationData>
-): Promise<AutomationResponse> {
+): Promise<AutomationResults> {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
 
-  const timeoutPromise = new Promise((resolve, reject) => {
-    setTimeout(() => {
-      reject(new Error("Timeout exceeded"))
-    }, job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT)
-  })
-
-  return (await context.doInAppContext(appId, async () => {
+  return await context.doInAppContext(appId, async () => {
     await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
-    // put into automation thread for whole context
     return await context.doInEnvironmentContext(envVars, async () => {
-      const automationOrchestrator = new Orchestrator(job)
-      return await Promise.race([
-        automationOrchestrator.execute(),
-        timeoutPromise,
-      ])
+      const orchestrator = new Orchestrator(job)
+      return orchestrator.execute()
     })
-  })) as AutomationResponse
+  })
 }
 
-export const removeStalled = async (job: Job) => {
+export const removeStalled = async (job: Job<AutomationData>) => {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   await context.doInAppContext(appId, async () => {
-    const automationOrchestrator = new Orchestrator(job)
-    await automationOrchestrator.stopCron("stalled")
+    const orchestrator = new Orchestrator(job)
+    await orchestrator.stopCron("stalled")
   })
 }

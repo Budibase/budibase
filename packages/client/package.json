@@ -5,7 +5,7 @@
   "module": "dist/budibase-client.js",
   "main": "dist/budibase-client.js",
   "type": "module",
-  "svelte": "src/index.js",
+  "svelte": "src/index.ts",
   "exports": {
     ".": {
       "import": "./dist/budibase-client.js",
@@ -16,7 +16,8 @@
   },
   "scripts": {
     "build": "vite build",
-    "dev": "vite build --watch --mode=dev"
+    "dev": "vite build --watch --mode=dev",
+    "check:types": "yarn svelte-check"
   },
   "dependencies": {
     "@budibase/bbui": "*",
@@ -28,7 +29,7 @@
     "apexcharts": "^3.48.0",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
-    "html5-qrcode": "^2.2.1",
+    "html5-qrcode": "^2.3.8",
     "leaflet": "^1.7.1",
     "sanitize-html": "^2.13.0",
     "screenfull": "^6.0.1",

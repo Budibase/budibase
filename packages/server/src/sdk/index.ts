@@ -7,10 +7,13 @@ import { default as queries } from "./app/queries"
 import { default as rows } from "./app/rows"
 import { default as links } from "./app/links"
 import { default as users } from "./users"
-import { default as plugins } from "./plugins"
+import * as plugins from "./plugins"
 import * as views from "./app/views"
 import * as permissions from "./app/permissions"
 import * as rowActions from "./app/rowActions"
+import * as screens from "./app/screens"
+import * as common from "./app/common"
+import * as oauth2 from "./app/oauth2"
 
 const sdk = {
   backups,
@@ -22,10 +25,13 @@ const sdk = {
   datasources,
   queries,
   plugins,
+  screens,
   views,
   permissions,
   links,
   rowActions,
+  common,
+  oauth2,
 }
 
 // default export for TS

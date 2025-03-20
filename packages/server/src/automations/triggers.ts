@@ -22,6 +22,7 @@ import {
   UserBindings,
   AutomationResults,
   DidNotTriggerResponse,
+  Table,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
@@ -154,6 +155,7 @@ interface AutomationTriggerParams {
   timeout?: number
   appId?: string
   user?: UserBindings
+  table?: Table
 }
 
 export async function externalTrigger(
@@ -182,11 +184,12 @@ export async function externalTrigger(
     // values are likely to be submitted as strings, so we shall convert to correct type
     const coercedFields: any = {}
     const fields = automation.definition.trigger.inputs.fields
-    for (let key of Object.keys(fields || {})) {
+    for (const key of Object.keys(fields || {})) {
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields
   }
+
   // row actions and webhooks flatten the fields down
   else if (
     sdk.automations.isRowAction(automation) ||
@@ -198,6 +201,7 @@ export async function externalTrigger(
       fields: {},
     }
   }
+
   const data: AutomationData = { automation, event: params }
 
   const shouldTrigger = await checkTriggerFilters(automation, {

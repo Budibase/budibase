@@ -1,19 +1,21 @@
-import { automations } from "@budibase/shared-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { FilterCondition } from "@budibase/types"
 
-const FilterConditions = automations.steps.filter.FilterConditions
-
-function stringToFilterCondition(condition: "==" | "!=" | ">" | "<"): string {
+function stringToFilterCondition(
+  condition: "==" | "!=" | ">" | "<"
+): FilterCondition {
   switch (condition) {
     case "==":
-      return FilterConditions.EQUAL
+      return FilterCondition.EQUAL
     case "!=":
-      return FilterConditions.NOT_EQUAL
+      return FilterCondition.NOT_EQUAL
     case ">":
-      return FilterConditions.GREATER_THAN
+      return FilterCondition.GREATER_THAN
     case "<":
-      return FilterConditions.LESS_THAN
+      return FilterCondition.LESS_THAN
+    default:
+      throw new Error(`Unsupported condition: ${condition}`)
   }
 }
 
@@ -24,6 +26,7 @@ describe("test the filter logic", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
@@ -42,10 +45,10 @@ describe("test the filter logic", () => {
     [new Date().toISOString(), ">", new Date(-10000).toISOString()],
   ]
   it.each(pass)("should pass %p %p %p", async (field, condition, value) => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .filter({ field, condition: stringToFilterCondition(condition), value })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.result).toEqual(true)
     expect(result.steps[0].outputs.success).toEqual(true)
@@ -60,10 +63,10 @@ describe("test the filter logic", () => {
     [{}, "==", {}],
   ]
   it.each(fail)("should fail %p %p %p", async (field, condition, value) => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .filter({ field, condition: stringToFilterCondition(condition), value })
-      .run()
+      .test({ fields: {} })
 
     expect(result.steps[0].outputs.result).toEqual(false)
     expect(result.steps[0].outputs.success).toEqual(true)

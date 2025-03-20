@@ -32,10 +32,11 @@ import {
   AuthToken,
   SCIMConfig,
   ConfigType,
+  SMTPConfig,
+  SMTPInnerConfig,
 } from "@budibase/types"
 import API from "./api"
 import jwt, { Secret } from "jsonwebtoken"
-import cloneDeep from "lodash/fp/cloneDeep"
 
 class TestConfiguration {
   server: any
@@ -247,34 +248,6 @@ class TestConfiguration {
     return { message: "Admin user only endpoint.", status: 403 }
   }
 
-  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
-    let cleanup = this.setEnv(newEnvVars)
-    try {
-      await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setEnv(newEnvVars: Partial<typeof env>): () => void {
-    const oldEnv = cloneDeep(env)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      env._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        env._set(key, value)
-      }
-    }
-  }
-
   // USERS
 
   async createDefaultUser() {
@@ -377,9 +350,15 @@ class TestConfiguration {
 
   // CONFIGS - SMTP
 
-  async saveSmtpConfig() {
+  async saveSmtpConfig(config?: SMTPInnerConfig) {
     await this.deleteConfig(Config.SMTP)
-    await this._req(structures.configs.smtp(), null, controllers.config.save)
+
+    let smtpConfig: SMTPConfig = structures.configs.smtp()
+    if (config) {
+      smtpConfig = { type: ConfigType.SMTP, config }
+    }
+
+    await this._req(smtpConfig, null, controllers.config.save)
   }
 
   async saveEtherealSmtpConfig() {

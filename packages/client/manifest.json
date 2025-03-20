@@ -1048,6 +1048,7 @@
   },
   "text": {
     "name": "Paragraph",
+    "deprecated": true,
     "description": "A component for displaying paragraph text.",
     "icon": "TextParagraph",
     "illegalChildren": ["section"],
@@ -1171,6 +1172,7 @@
   },
   "heading": {
     "name": "Headline",
+    "deprecated": true,
     "icon": "TextBold",
     "description": "A component for displaying heading text",
     "illegalChildren": ["section"],
@@ -1455,7 +1457,8 @@
         "type": "icon",
         "label": "Icon",
         "key": "icon",
-        "required": true
+        "required": true,
+        "defaultValue": "ri-star-fill"
       },
       {
         "type": "select",
@@ -3088,13 +3091,21 @@
       {
         "type": "tableConditions",
         "label": "Conditions",
-        "key": "conditions"
+        "key": "conditions",
+        "contextAccess": {
+          "global": true,
+          "self": false
+        }
       },
       {
         "type": "text",
         "label": "Format",
         "key": "format",
-        "info": "Changing format will display values as text"
+        "info": "Changing format will display values as text",
+        "contextAccess": {
+          "global": false,
+          "self": true
+        }
       }
     ]
   },
@@ -4482,6 +4493,12 @@
             "value": "environment"
           }
         ]
+      },
+      {
+        "type": "text",
+        "label": "Zoom level",
+        "key": "defaultZoom",
+        "defaultValue": "1"
       },
       {
         "type": "event",
@@ -7689,6 +7706,15 @@
     "name": "Table",
     "icon": "Table",
     "styles": ["size"],
+    "cssVariables": [{
+      "label": "Header color",
+      "variable": "--custom-header-cell-background",
+      "type": "color"
+    }, {
+      "label": "Stripe color",
+      "variable": "--custom-stripe-cell-background",
+      "type": "color"
+    }],
     "size": {
       "width": 600,
       "height": 400
@@ -7796,7 +7822,7 @@
       },
       {
         "type": "boolean",
-        "label": "High contrast",
+        "label": "Striped rows",
         "key": "stripeRows",
         "defaultValue": false
       },
@@ -8097,5 +8123,62 @@
         }
       ]
     }
+  },
+  "textv2": {
+    "name": "Text",
+    "description": "A component for displaying text",
+    "icon": "Text",
+    "size": {
+      "width": 400,
+      "height": 24
+    },
+    "settings": [
+      {
+        "type": "text/multiline",
+        "label": "Text (Markdown supported)",
+        "key": "text",
+        "wide": true
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true
+      }
+    ]
   }
 }

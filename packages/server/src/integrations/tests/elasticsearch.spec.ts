@@ -1,83 +1,81 @@
-import { default as ElasticSearchIntegration } from "../elasticsearch"
+import { Datasource } from "@budibase/types"
+import { ElasticsearchConfig, ElasticSearchIntegration } from "../elasticsearch"
+import { generator } from "@budibase/backend-core/tests"
+import { DatabaseName, datasourceDescribe } from "./utils"
 
-jest.mock("@elastic/elasticsearch")
+const describes = datasourceDescribe({ only: [DatabaseName.ELASTICSEARCH] })
 
-class TestConfiguration {
-  integration: any
+if (describes.length) {
+  describe.each(describes)("Elasticsearch Integration", ({ dsProvider }) => {
+    let datasource: Datasource
+    let integration: ElasticSearchIntegration
 
-  constructor(config: any = {}) {
-    this.integration = new ElasticSearchIntegration.integration(config)
-  }
+    let index: string
+
+    beforeAll(async () => {
+      const ds = await dsProvider()
+      datasource = ds.datasource!
+    })
+
+    beforeEach(() => {
+      index = generator.guid()
+      integration = new ElasticSearchIntegration(
+        datasource.config! as ElasticsearchConfig
+      )
+    })
+
+    it("can create a record", async () => {
+      await integration.create({
+        index,
+        json: { name: "Hello" },
+        extra: { refresh: "true" },
+      })
+      const records = await integration.read({
+        index,
+        json: { query: { match_all: {} } },
+      })
+      expect(records).toEqual([{ name: "Hello" }])
+    })
+
+    it("can update a record", async () => {
+      const create = await integration.create({
+        index,
+        json: { name: "Hello" },
+        extra: { refresh: "true" },
+      })
+
+      await integration.update({
+        id: create._id,
+        index,
+        json: { doc: { name: "World" } },
+        extra: { refresh: "true" },
+      })
+
+      const records = await integration.read({
+        index,
+        json: { query: { match_all: {} } },
+      })
+      expect(records).toEqual([{ name: "World" }])
+    })
+
+    it("can delete a record", async () => {
+      const create = await integration.create({
+        index,
+        json: { name: "Hello" },
+        extra: { refresh: "true" },
+      })
+
+      await integration.delete({
+        id: create._id,
+        index,
+        extra: { refresh: "true" },
+      })
+
+      const records = await integration.read({
+        index,
+        json: { query: { match_all: {} } },
+      })
+      expect(records).toEqual([])
+    })
+  })
 }
-
-describe("Elasticsearch Integration", () => {
-  let config: any
-  let indexName = "Users"
-
-  beforeEach(() => {
-    config = new TestConfiguration()
-  })
-
-  it("calls the create method with the correct params", async () => {
-    const body = {
-      name: "Hello",
-    }
-    await config.integration.create({
-      index: indexName,
-      json: body,
-    })
-    expect(config.integration.client.index).toHaveBeenCalledWith({
-      index: indexName,
-      body,
-    })
-  })
-
-  it("calls the read method with the correct params", async () => {
-    const body = {
-      query: {
-        term: {
-          name: "kimchy",
-        },
-      },
-    }
-    const response = await config.integration.read({
-      index: indexName,
-      json: body,
-    })
-    expect(config.integration.client.search).toHaveBeenCalledWith({
-      index: indexName,
-      body,
-    })
-    expect(response).toEqual(expect.any(Array))
-  })
-
-  it("calls the update method with the correct params", async () => {
-    const body = {
-      name: "updated",
-    }
-
-    const response = await config.integration.update({
-      id: "1234",
-      index: indexName,
-      json: body,
-    })
-
-    expect(config.integration.client.update).toHaveBeenCalledWith({
-      id: "1234",
-      index: indexName,
-      body,
-    })
-    expect(response).toEqual(expect.any(Array))
-  })
-
-  it("calls the delete method with the correct params", async () => {
-    const body = {
-      id: "1234",
-    }
-
-    const response = await config.integration.delete(body)
-
-    expect(config.integration.client.delete).toHaveBeenCalledWith(body)
-    expect(response).toEqual(expect.any(Array))
-  })
-})

@@ -3,11 +3,11 @@ import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
 import { orgStore } from "./org"
-import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
+import { dndIndex, dndParent, dndSource } from "./dnd.ts"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
-import { DNDPlaceholderID, ScreenslotID, ScreenslotType } from "constants"
+import { DNDPlaceholderID, ScreenslotID, ScreenslotType } from "@/constants"
 
 const createScreenStore = () => {
   const store = derived(
@@ -18,8 +18,7 @@ const createScreenStore = () => {
       orgStore,
       dndParent,
       dndIndex,
-      dndIsNewComponent,
-      dndBounds,
+      dndSource,
     ],
     ([
       $appStore,
@@ -28,8 +27,7 @@ const createScreenStore = () => {
       $orgStore,
       $dndParent,
       $dndIndex,
-      $dndIsNewComponent,
-      $dndBounds,
+      $dndSource,
     ]) => {
       let activeLayout, activeScreen
       let screens
@@ -37,11 +35,6 @@ const createScreenStore = () => {
         // Use builder defined definitions if inside the builder preview
         activeScreen = Helpers.cloneDeep($builderStore.screen)
         screens = [activeScreen]
-
-        // Legacy - allow the builder to specify a layout
-        if ($builderStore.layout) {
-          activeLayout = $builderStore.layout
-        }
 
         // Attach meta
         const errors = $builderStore.componentErrors || {}
@@ -85,7 +78,7 @@ const createScreenStore = () => {
 
         // Remove selected component from tree if we are moving an existing
         // component
-        if (!$dndIsNewComponent && selectedParent) {
+        if (!$dndSource.isNew && selectedParent) {
           selectedParent._children = selectedParent._children?.filter(
             x => x._id !== selectedComponentId
           )
@@ -97,11 +90,11 @@ const createScreenStore = () => {
           _id: DNDPlaceholderID,
           _styles: {
             normal: {
-              width: `${$dndBounds?.width || 400}px`,
-              height: `${$dndBounds?.height || 200}px`,
+              width: `${$dndSource?.bounds?.width || 400}px`,
+              height: `${$dndSource?.bounds?.height || 200}px`,
               opacity: 0,
-              "--default-width": $dndBounds?.width || 400,
-              "--default-height": $dndBounds?.height || 200,
+              "--default-width": $dndSource?.bounds?.width || 400,
+              "--default-height": $dndSource?.bounds?.height || 200,
             },
           },
           static: true,
@@ -198,3 +191,7 @@ const createScreenStore = () => {
 }
 
 export const screenStore = createScreenStore()
+
+export const isGridScreen = derived(screenStore, $screenStore => {
+  return $screenStore.activeScreen?.props?.layout === "grid"
+})

@@ -23,18 +23,17 @@
     snippetAutoComplete,
     EditorModes,
     bindingsToCompletions,
+    jsHelperAutocomplete,
   } from "../CodeEditor"
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
-  import SnippetSidePanel from "./SnippetSidePanel.svelte"
   import { BindingHelpers } from "./utils"
   import { capitalise } from "@/helpers"
   import { Utils, JsonFormatter } from "@budibase/frontend-core"
   import { licensing } from "@/stores/portal"
-  import { BindingMode, SidePanel } from "@budibase/types"
+  import { BindingMode } from "@budibase/types"
   import type {
     EnrichedBinding,
-    BindingCompletion,
     Snippet,
     Helper,
     CaretPositionFn,
@@ -42,7 +41,9 @@
     JSONValue,
   } from "@budibase/types"
   import type { Log } from "@budibase/string-templates"
-  import type { CompletionContext } from "@codemirror/autocomplete"
+  import type { CodeValidator } from "@/types"
+
+  type SidePanel = "Bindings" | "Evaluation"
 
   const dispatch = createEventDispatcher()
 
@@ -55,10 +56,10 @@
   export let context = null
   export let snippets: Snippet[] | null = null
   export let autofocusEditor = false
-  export let placeholder = null
+  export let placeholder: string | null = null
   export let showTabBar = true
 
-  let mode: BindingMode | null
+  let mode: BindingMode
   let sidePanel: SidePanel | null
   let initialValueJS = value?.startsWith?.("{{ js ")
   let jsValue: string | null = initialValueJS ? value : null
@@ -71,14 +72,13 @@
   let expressionError: string | undefined
   let evaluating = false
 
-  $: useSnippets = allowSnippets && !$licensing.isFreePlan
+  const SidePanelIcons: Record<SidePanel, string> = {
+    Bindings: "FlashOn",
+    Evaluation: "Play",
+  }
+
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
-  $: sidePanelOptions = getSidePanelOptions(
-    bindings,
-    context,
-    allowSnippets,
-    mode
-  )
+  $: sidePanelOptions = getSidePanelOptions(bindings, context)
   $: enrichedBindings = enrichBindings(bindings, context, snippets)
   $: usingJS = mode === BindingMode.JavaScript
   $: editorMode =
@@ -88,41 +88,44 @@
     | null
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestEval(runtimeExpression, context, snippets)
-  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
-  $: hbsCompletions = getHBSCompletions(bindingCompletions)
-  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, useSnippets)
+
+  $: bindingOptions = bindingsToCompletions(enrichedBindings, editorMode)
+  $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
+  $: snippetsOptions =
+    usingJS && allowSnippets && !$licensing.isFreePlan && snippets?.length
+      ? snippets
+      : []
+
+  $: completions = !usingJS
+    ? [hbAutocomplete([...bindingOptions, ...helperOptions])]
+    : [
+        jsAutocomplete(bindingOptions),
+        jsHelperAutocomplete(helperOptions),
+        snippetAutoComplete(snippetsOptions),
+      ]
+
+  $: validations = {
+    ...bindingOptions.reduce<CodeValidator>((validations, option) => {
+      validations[option.label] = {
+        arguments: [],
+      }
+      return validations
+    }, {}),
+    ...helperOptions.reduce<CodeValidator>((validations, option) => {
+      validations[option.label] = {
+        arguments: option.args,
+        requiresBlock: option.requiresBlock,
+      }
+      return validations
+    }, {}),
+  }
+
   $: {
     // Ensure a valid side panel option is always selected
     if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
       sidePanel = sidePanelOptions[0]
     }
-  }
-
-  const getHBSCompletions = (bindingCompletions: BindingCompletion[]) => {
-    return [
-      hbAutocomplete([
-        ...bindingCompletions,
-        ...getHelperCompletions(EditorModes.Handlebars),
-      ]),
-    ]
-  }
-
-  const getJSCompletions = (
-    bindingCompletions: BindingCompletion[],
-    snippets: Snippet[] | null,
-    useSnippets?: boolean
-  ) => {
-    const completions: ((_: CompletionContext) => any)[] = [
-      jsAutocomplete([
-        ...bindingCompletions,
-        ...getHelperCompletions(EditorModes.JS),
-      ]),
-    ]
-    if (useSnippets && snippets) {
-      completions.push(snippetAutoComplete(snippets))
-    }
-    return completions
   }
 
   const getModeOptions = (allowHBS: boolean, allowJS: boolean) => {
@@ -136,21 +139,13 @@
     return options
   }
 
-  const getSidePanelOptions = (
-    bindings: EnrichedBinding[],
-    context: any,
-    useSnippets: boolean,
-    mode: BindingMode | null
-  ) => {
-    let options = []
+  const getSidePanelOptions = (bindings: EnrichedBinding[], context: any) => {
+    let options: SidePanel[] = []
     if (bindings?.length) {
-      options.push(SidePanel.Bindings)
+      options.push("Bindings")
     }
     if (context && Object.keys(context).length > 0) {
-      options.push(SidePanel.Evaluation)
-    }
-    if (useSnippets && mode === BindingMode.JavaScript) {
-      options.push(SidePanel.Snippets)
+      options.push("Evaluation")
     }
     return options
   }
@@ -204,7 +199,7 @@
     bindings: EnrichedBinding[],
     context: any,
     snippets: Snippet[] | null
-  ) => {
+  ): EnrichedBinding[] => {
     // Create a single big array to enrich in one go
     const bindingStrings = bindings.map(binding => {
       if (binding.runtimeBinding.startsWith('trim "')) {
@@ -281,7 +276,7 @@
     jsValue = null
     hbsValue = null
     updateValue(null)
-    mode = targetMode
+    mode = targetMode!
     targetMode = null
   }
 
@@ -341,14 +336,15 @@
             {/each}
           </div>
           <div class="side-tabs">
-            {#each sidePanelOptions as panel}
+            {#each sidePanelOptions as panelOption}
               <ActionButton
                 size="M"
                 quiet
-                selected={sidePanel === panel}
-                on:click={() => changeSidePanel(panel)}
+                selected={sidePanel === panelOption}
+                on:click={() => changeSidePanel(panelOption)}
+                tooltip={panelOption}
               >
-                <Icon name={panel} size="S" />
+                <Icon name={SidePanelIcons[panelOption]} size="S" />
               </ActionButton>
             {/each}
           </div>
@@ -356,13 +352,15 @@
       {/if}
       <div class="editor">
         {#if mode === BindingMode.Text}
-          {#key hbsCompletions}
+          {#key completions}
             <CodeEditor
-              value={hbsValue}
+              value={hbsValue || ""}
               on:change={onChangeHBSValue}
               bind:getCaretPosition
               bind:insertAtPos
-              completions={hbsCompletions}
+              {completions}
+              {bindings}
+              {validations}
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing {{ or use the menu on the right"}
@@ -370,18 +368,20 @@
             />
           {/key}
         {:else if mode === BindingMode.JavaScript}
-          {#key jsCompletions}
+          {#key completions}
             <CodeEditor
-              value={jsValue ? decodeJSBinding(jsValue) : jsValue}
+              value={jsValue ? decodeJSBinding(jsValue) : ""}
               on:change={onChangeJSValue}
-              completions={jsCompletions}
+              {completions}
+              {bindings}
+              {validations}
               mode={EditorModes.JS}
               bind:getCaretPosition
               bind:insertAtPos
               autofocus={autofocusEditor}
               placeholder={placeholder ||
                 "Add bindings by typing $ or use the menu on the right"}
-              jsBindingWrapping
+              jsBindingWrapping={completions.length > 0}
             />
           {/key}
         {/if}
@@ -412,16 +412,19 @@
       </div>
     </div>
     <div class="side" class:visible={!!sidePanel}>
-      {#if sidePanel === SidePanel.Bindings}
+      {#if sidePanel === "Bindings"}
         <BindingSidePanel
           bindings={enrichedBindings}
           {allowHelpers}
+          {allowSnippets}
           {context}
           addHelper={onSelectHelper}
           addBinding={onSelectBinding}
-          mode={editorMode}
+          {addSnippet}
+          {mode}
+          {snippets}
         />
-      {:else if sidePanel === SidePanel.Evaluation}
+      {:else if sidePanel === "Evaluation"}
         <EvaluationSidePanel
           {expressionResult}
           {expressionError}
@@ -429,8 +432,6 @@
           {evaluating}
           expression={editorValue ? editorValue : ""}
         />
-      {:else if sidePanel === SidePanel.Snippets}
-        <SnippetSidePanel {addSnippet} {snippets} />
       {/if}
     </div>
   </div>

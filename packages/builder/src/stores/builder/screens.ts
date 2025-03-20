@@ -490,7 +490,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     // Flatten the recursive component tree
     const components = findAllMatchingComponents(
       screen.props,
-      (x: Component) => x
+      (x: Component) => !!x
     )
 
     // Iterate over all components and run checks
@@ -499,6 +499,13 @@ export class ScreenStore extends BudiStore<ScreenState> {
         screen,
       })
     })
+  }
+
+  /**
+   * Provides a list of screens that are used by a given source ID (table, view, datasource, query)
+   */
+  async usageInScreens(sourceId: string) {
+    return API.usageInScreens(sourceId)
   }
 }
 

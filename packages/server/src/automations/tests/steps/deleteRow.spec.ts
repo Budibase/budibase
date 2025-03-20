@@ -13,6 +13,7 @@ describe("test the delete row action", () => {
     await config.init()
     table = await config.api.table.save(basicTable())
     row = await config.api.row.save(table._id!, {})
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
@@ -20,14 +21,14 @@ describe("test the delete row action", () => {
   })
 
   it("should be able to run the delete row action", async () => {
-    await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    await createAutomationBuilder(config)
+      .onAppAction()
       .deleteRow({
         tableId: table._id!,
         id: row._id!,
         revision: row._rev,
       })
-      .run()
+      .test({ fields: {} })
 
     await config.api.row.get(table._id!, row._id!, {
       status: 404,
@@ -35,23 +36,23 @@ describe("test the delete row action", () => {
   })
 
   it("should check invalid inputs return an error", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .deleteRow({ tableId: "", id: "", revision: "" })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.success).toEqual(false)
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .deleteRow({
         tableId: "invalid",
         id: "invalid",
         revision: "invalid",
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.success).toEqual(false)
   })

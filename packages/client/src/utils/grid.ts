@@ -1,6 +1,6 @@
 import { GridSpacing, GridRowHeight } from "@/constants"
-import { builderStore } from "stores"
-import { buildStyleString } from "utils/styleable.js"
+import { builderStore } from "@/stores"
+import { buildStyleString } from "@/utils/styleable.js"
 
 interface GridMetadata {
   id: string
@@ -37,46 +37,54 @@ interface GridMetadata {
  */
 
 // Enum representing the different CSS variables we use for grid metadata
-export const GridParams = {
-  HAlign: "h-align",
-  VAlign: "v-align",
-  ColStart: "col-start",
-  ColEnd: "col-end",
-  RowStart: "row-start",
-  RowEnd: "row-end",
+export enum GridParams {
+  HAlign = "h-align",
+  VAlign = "v-align",
+  ColStart = "col-start",
+  ColEnd = "col-end",
+  RowStart = "row-start",
+  RowEnd = "row-end",
 }
 
 // Classes used in selectors inside grid containers to control child styles
-export const GridClasses = {
-  DesktopFill: "grid-desktop-grow",
-  MobileFill: "grid-mobile-grow",
+export enum GridClasses {
+  DesktopFill = "grid-desktop-grow",
+  MobileFill = "grid-mobile-grow",
 }
 
 // Enum for device preview type, included in grid CSS variables
-export const Devices = {
-  Desktop: "desktop",
-  Mobile: "mobile",
+export enum Devices {
+  Desktop = "desktop",
+  Mobile = "mobile",
 }
 
-export const GridDragModes = {
-  Resize: "resize",
-  Move: "move",
+export enum GridDragMode {
+  Resize = "resize",
+  Move = "move",
 }
 
 // Builds a CSS variable name for a certain piece of grid metadata
 export const getGridVar = (device: string, param: string) =>
   `--grid-${device}-${param}`
 
+export interface GridEvent extends DragEvent {
+  target: HTMLElement
+  dataTransfer: DataTransfer
+}
+
 // Determines whether a JS event originated from immediately within a grid
-export const isGridEvent = (e: Event & { target: HTMLElement }): boolean => {
+export const isGridEvent = (e: Event): e is GridEvent => {
+  if (!(e.target instanceof HTMLElement)) {
+    return false
+  }
+  const componentParent = e.target.closest?.(".component")?.parentNode as
+    | HTMLElement
+    | undefined
+  const gridDOMCandidate = componentParent?.closest(".component")
+    ?.childNodes[0] as HTMLElement | undefined
   return (
     e.target.dataset?.indicator === "true" ||
-    // @ts-expect-error: api is not properly typed
-    e.target
-      .closest?.(".component")
-      // @ts-expect-error
-      ?.parentNode.closest(".component")
-      ?.childNodes[0]?.classList?.contains("grid")
+    !!gridDOMCandidate?.classList?.contains("grid")
   )
 }
 

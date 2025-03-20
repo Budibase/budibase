@@ -13,7 +13,7 @@
   import { lowercase } from "@/helpers"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
-  let dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher()
 
   export let defaults
   export let object = defaults || {}
@@ -39,6 +39,7 @@
   export let allowJS = false
   export let actionButtonDisabled = false
   export let compare = (option, value) => option === value
+  export let context = null
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -46,10 +47,17 @@
   }))
   let fieldActivity = buildFieldActivity(activity)
 
-  $: object = fields.reduce(
-    (acc, next) => ({ ...acc, [next.name]: next.value }),
-    {}
-  )
+  $: fullObject = fields.reduce((acc, next) => {
+    acc[next.name] = next.value
+    return acc
+  }, {})
+
+  $: object = Object.entries(fullObject).reduce((acc, [key, next]) => {
+    if (key) {
+      acc[key] = next
+    }
+    return acc
+  }, {})
 
   function buildFieldActivity(obj) {
     if (!obj || typeof obj !== "object") {
@@ -77,16 +85,19 @@
   }
 
   function changed() {
+    // Required for reactivity
     fields = fields
     const newActivity = {}
+    const trimmedFields = []
     for (let idx = 0; idx < fields.length; idx++) {
       const fieldName = fields[idx].name
       if (fieldName) {
         newActivity[fieldName] = fieldActivity[idx]
+        trimmedFields.push(fields[idx])
       }
     }
     activity = newActivity
-    dispatch("change", fields)
+    dispatch("change", trimmedFields)
   }
 
   function isJsonArray(value) {
@@ -101,7 +112,7 @@
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
-{#if Object.keys(object || {}).length > 0}
+{#if Object.keys(fullObject || {}).length > 0}
   {#if headings}
     <div class="container" class:container-active={toggle}>
       <Label {tooltip}>{keyHeading || keyPlaceholder}</Label>
@@ -132,6 +143,7 @@
           {allowJS}
           {allowHelpers}
           drawerLeft={bindingDrawerLeft}
+          {context}
         />
       {:else}
         <Input readonly={readOnly} bind:value={field.name} on:blur={changed} />
@@ -158,6 +170,7 @@
           {allowJS}
           {allowHelpers}
           drawerLeft={bindingDrawerLeft}
+          {context}
         />
       {:else}
         <Input

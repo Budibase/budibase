@@ -1,3 +1,4 @@
+import { SendEmailResponse } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as workerRequests from "../../../utilities/workerRequests"
 
@@ -5,27 +6,29 @@ jest.mock("../../../utilities/workerRequests", () => ({
   sendSmtpEmail: jest.fn(),
 }))
 
-function generateResponse(to: string, from: string) {
+function generateResponse(to: string, from: string): SendEmailResponse {
   return {
-    success: true,
-    response: {
-      accepted: [to],
-      envelope: {
-        from: from,
-        to: [to],
-      },
-      message: `Email sent to ${to}.`,
+    message: `Email sent to ${to}.`,
+    accepted: [to],
+    envelope: {
+      from: from,
+      to: [to],
     },
+    messageId: "messageId",
+    pending: [],
+    rejected: [],
+    response: "response",
   }
 }
 
-import * as setup from "../utilities"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("test the outgoing webhook action", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
@@ -60,13 +63,14 @@ describe("test the outgoing webhook action", () => {
       ...invite,
     }
     let resp = generateResponse(inputs.to, inputs.from)
-    const res = await setup.runStep(
-      config,
-      setup.actions.SEND_EMAIL_SMTP.stepId,
-      inputs
-    )
-    expect(res.response).toEqual(resp)
-    expect(res.success).toEqual(true)
+
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(inputs)
+      .test({ fields: {} })
+
+    expect(steps[0].outputs.response).toEqual(resp)
+    expect(steps[0].outputs.success).toEqual(true)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledTimes(1)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith({
       to: "user1@example.com",
@@ -75,7 +79,11 @@ describe("test the outgoing webhook action", () => {
       contents: "testing",
       cc: "cc",
       bcc: "bcc",
-      invite,
+      invite: {
+        ...invite,
+        startTime: invite.startTime.toISOString(),
+        endTime: invite.endTime.toISOString(),
+      },
       automation: true,
       attachments: [
         { url: "attachment1", filename: "attachment1.txt" },

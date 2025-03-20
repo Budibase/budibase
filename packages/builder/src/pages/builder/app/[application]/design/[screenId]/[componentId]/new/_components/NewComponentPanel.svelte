@@ -13,6 +13,16 @@
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
 
+  // Smallest possible 1x1 transparent GIF
+  const ghost = new Image(1, 1)
+  ghost.src =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+
+  // Aliases for other strings to match to when searching
+  const aliases = {
+    text: ["headline", "paragraph"],
+  }
+
   let searchString
   let searchRef
   let selectedIndex
@@ -143,11 +153,12 @@
   }
 
   const filterStructure = (structure, allowedComponents, search) => {
-    selectedIndex = search ? 0 : null
-    componentList = []
     if (!structure?.length) {
       return []
     }
+    search = search?.toLowerCase()
+    selectedIndex = search ? 0 : null
+    componentList = []
 
     // Return only items which match the search string
     let filteredStructure = []
@@ -156,8 +167,12 @@
         const name = child.name.toLowerCase()
 
         // Check if the component matches the search string
-        if (search && !name.includes(search.toLowerCase())) {
-          return false
+        if (search) {
+          const nameMatch = name.includes(search)
+          const aliasMatch = (aliases[name] || []).some(x => x.includes(search))
+          if (!nameMatch && !aliasMatch) {
+            return false
+          }
         }
 
         // Check if the component is allowed as a child
@@ -217,7 +232,8 @@
     }
   })
 
-  const onDragStart = component => {
+  const onDragStart = (e, component) => {
+    e.dataTransfer.setDragImage(ghost, 0, 0)
     previewStore.startDrag(component)
   }
 
@@ -250,13 +266,12 @@
             {#each category.children as component}
               <div
                 draggable="true"
-                on:dragstart={() => onDragStart(component.component)}
+                on:dragstart={e => onDragStart(e, component.component)}
                 on:dragend={onDragEnd}
                 class="component"
                 class:selected={selectedIndex === orderMap[component.component]}
                 on:click={() => addComponent(component.component)}
-                on:mouseover={() => (selectedIndex = null)}
-                on:focus
+                on:mouseenter={() => (selectedIndex = null)}
               >
                 <Icon name={component.icon} />
                 <Body size="XS">{component.name}</Body>
@@ -308,7 +323,6 @@
   }
   .component:hover {
     background: var(--spectrum-global-color-gray-300);
-    cursor: pointer;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;

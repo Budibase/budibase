@@ -47,6 +47,9 @@ export default [
 
       parserOptions: {
         allowImportExportEverywhere: true,
+        svelteFeatures: {
+          experimentalGenerics: true,
+        },
       },
     },
 
@@ -93,6 +96,15 @@ export default [
         parser: "@typescript-eslint/parser",
         allowImportExportEverywhere: true,
       },
+    },
+
+    plugins: {
+      ...config.plugins,
+      "@typescript-eslint": tseslint.plugin,
+    },
+    rules: {
+      ...config.rules,
+      "@typescript-eslint/consistent-type-imports": "error",
     },
   })),
   ...tseslint.configs.strict.map(config => ({

@@ -1,3 +1,4 @@
+import { Table } from "@budibase/types"
 import { SortOrder } from "../../../api"
 import {
   SearchFilters,
@@ -7,8 +8,20 @@ import {
 } from "../../../sdk"
 import { HttpMethod } from "../query"
 import { Row } from "../row"
-import { LoopStepType, EmailAttachment, AutomationResults } from "./automation"
-import { AutomationStep, AutomationStepOutputs } from "./schema"
+import {
+  LoopStepType,
+  EmailAttachment,
+  AutomationResults,
+  AutomationStepResult,
+} from "./automation"
+import { AutomationStep } from "./schema"
+
+export enum FilterCondition {
+  EQUAL = "EQUAL",
+  NOT_EQUAL = "NOT_EQUAL",
+  GREATER_THAN = "GREATER_THAN",
+  LESS_THAN = "LESS_THAN",
+}
 
 export type BaseAutomationOutputs = {
   success?: boolean
@@ -92,7 +105,7 @@ export type ExecuteScriptStepOutputs = BaseAutomationOutputs & {
 
 export type FilterStepInputs = {
   field: any
-  condition: string
+  condition: FilterCondition
   value: any
 }
 
@@ -110,7 +123,7 @@ export type LoopStepInputs = {
 }
 
 export type LoopStepOutputs = {
-  items: AutomationStepOutputs[]
+  items: AutomationStepResult[]
   success: boolean
   iterations: number
 }
@@ -253,10 +266,6 @@ export type OutgoingWebhookStepInputs = {
   headers: string | Record<string, string>
 }
 
-export type AppActionTriggerInputs = {
-  fields: object
-}
-
 export type AppActionTriggerOutputs = {
   fields: object
 }
@@ -297,6 +306,7 @@ export type RowUpdatedTriggerOutputs = {
   row: Row
   id: string
   revision?: string
+  oldRow?: Row
 }
 
 export type WebhookTriggerInputs = {
@@ -304,6 +314,17 @@ export type WebhookTriggerInputs = {
   triggerUrl: string
 }
 
-export type WebhookTriggerOutputs = {
-  fields: Record<string, any>
+export type WebhookTriggerOutputs = Record<string, any> & {
+  body: Record<string, any>
+}
+
+export type RowActionTriggerInputs = {
+  tableId: string
+}
+
+export type RowActionTriggerOutputs = {
+  row: Row
+  id: string
+  revision?: string
+  table: Table
 }

@@ -147,6 +147,7 @@
           {componentInstance}
           {componentDefinition}
           {bindings}
+          {componentBindings}
         />
       {/if}
     </Panel>

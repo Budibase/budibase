@@ -1,5 +1,18 @@
+<script context="module" lang="ts">
+  export const DropdownPosition = {
+    Relative: "top",
+    Absolute: "right",
+  }
+</script>
+
 <script lang="ts">
-  import { Label } from "@budibase/bbui"
+  import {
+    Button,
+    Label,
+    notifications,
+    Popover,
+    TextArea,
+  } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
@@ -40,15 +53,28 @@
     indentMore,
     indentLess,
   } from "@codemirror/commands"
+  import { setDiagnostics } from "@codemirror/lint"
   import { Compartment, EditorState } from "@codemirror/state"
+  import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
-  import type { EditorMode } from "@budibase/types"
+  import {
+    type EnrichedBinding,
+    FeatureFlag,
+    type EditorMode,
+  } from "@budibase/types"
+  import { tooltips } from "@codemirror/view"
+  import type { BindingCompletion, CodeValidator } from "@/types"
+  import { validateHbsTemplate } from "./validator/hbs"
+  import { validateJsTemplate } from "./validator/js"
+  import { featureFlag } from "@/helpers"
+  import { API } from "@/api"
+  import Spinner from "../Spinner.svelte"
 
   export let label: string | undefined = undefined
-  // TODO: work out what best type fits this
-  export let completions: any[] = []
+  export let completions: BindingCompletion[] = []
+  export let validations: CodeValidator | null = null
   export let mode: EditorMode = EditorModes.Handlebars
   export let value: string | null = ""
   export let placeholder: string | null = null
@@ -57,11 +83,14 @@
   export let jsBindingWrapping = true
   export let readonly = false
   export let readonlyLineNumbers = false
+  export let dropdown = DropdownPosition.Relative
+  export let bindings: EnrichedBinding[] = []
 
   const dispatch = createEventDispatcher()
 
   let textarea: HTMLDivElement
   let editor: EditorView
+  let editorEle: HTMLDivElement
   let mounted = false
   let isEditorInitialised = false
   let queuedRefresh = false
@@ -70,6 +99,14 @@
   let currentTheme = $themeStore?.theme
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
+
+  let popoverAnchor: HTMLElement
+  let popover: Popover
+  let promptInput: TextArea
+  $: aiGenEnabled =
+    featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
+    mode.name === "javascript" &&
+    !readonly
 
   $: {
     if (autofocus && isEditorInitialised) {
@@ -112,7 +149,6 @@
       queuedRefresh = true
       return
     }
-
     if (
       editor &&
       value &&
@@ -123,6 +159,68 @@
       })
       queuedRefresh = false
     }
+  }
+
+  $: promptLoading = false
+  let popoverWidth = 300
+  let suggestedCode: string | null = null
+  let previousContents: string | null = null
+  const generateJs = async (prompt: string) => {
+    previousContents = editor.state.doc.toString()
+    promptLoading = true
+    popoverWidth = 30
+    let code = ""
+    try {
+      const resp = await API.generateJs({ prompt, bindings })
+      code = resp.code
+
+      if (code === "") {
+        throw new Error(
+          "we didn't understand your prompt, please phrase your request in another way"
+        )
+      }
+    } catch (e) {
+      console.error(e)
+      if (e instanceof Error) {
+        notifications.error(`Unable to generate code: ${e.message}`)
+      } else {
+        notifications.error("Unable to generate code, please try again later.")
+      }
+      code = previousContents
+      promptLoading = false
+      resetPopover()
+      return
+    }
+    value = code
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: code },
+    })
+    suggestedCode = code
+    popoverWidth = 100
+    promptLoading = false
+  }
+
+  const acceptSuggestion = () => {
+    suggestedCode = null
+    previousContents = null
+    resetPopover()
+    dispatch("change", editor.state.doc.toString())
+    dispatch("blur", editor.state.doc.toString())
+  }
+
+  const rejectSuggestion = () => {
+    suggestedCode = null
+    value = previousContents || ""
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: value },
+    })
+    previousContents = null
+    resetPopover()
+  }
+
+  const resetPopover = () => {
+    popover.hide()
+    popoverWidth = 300
   }
 
   // Export a function to expose caret position
@@ -247,7 +345,7 @@
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
   // TODO: work out type for base
-  const buildExtensions = (base: any[]) => {
+  const buildExtensions = (base: Extension[]) => {
     let complete = [...base]
 
     if (autocompleteEnabled) {
@@ -266,16 +364,15 @@
         EditorView.inputHandler.of((view, from, to, insert) => {
           if (jsBindingWrapping && insert === "$") {
             let { text } = view.state.doc.lineAt(from)
-
             const left = from ? text.substring(0, from) : ""
             const right = to ? text.substring(to) : ""
-            const wrap = !left.includes('$("') || !right.includes('")')
+            const wrap =
+              (!left.includes('$("') || !right.includes('")')) &&
+              !(left.includes("`") && right.includes("`"))
+            const anchor = from + (wrap ? 3 : 1)
             const tr = view.state.update(
               {
                 changes: [{ from, insert: wrap ? '$("")' : "$" }],
-                selection: {
-                  anchor: from + (wrap ? 3 : 1),
-                },
               },
               {
                 scrollIntoView: true,
@@ -283,6 +380,19 @@
               }
             )
             view.dispatch(tr)
+            // the selection needs to fired after the dispatch - this seems
+            // to fix an issue with the cursor not moving when the editor is
+            // first loaded, the first usage of the editor is not ready
+            // for the anchor to move as well as perform a change
+            setTimeout(() => {
+              view.dispatch(
+                view.state.update({
+                  selection: {
+                    anchor,
+                  },
+                })
+              )
+            }, 1)
             return true
           }
           return false
@@ -339,18 +449,50 @@
     return complete
   }
 
+  function validate(
+    value: string | null,
+    editor: EditorView | undefined,
+    mode: EditorMode,
+    validations: CodeValidator | null
+  ) {
+    if (!value || !validations || !editor) {
+      return
+    }
+
+    if (mode === EditorModes.Handlebars) {
+      const diagnostics = validateHbsTemplate(value, validations)
+      editor.dispatch(setDiagnostics(editor.state, diagnostics))
+    } else if (mode === EditorModes.JS) {
+      const diagnostics = validateJsTemplate(value, validations)
+      editor.dispatch(setDiagnostics(editor.state, diagnostics))
+    }
+  }
+
+  $: validate(value, editor, mode, validations)
+
   const initEditor = () => {
     const baseExtensions = buildBaseExtensions()
 
     editor = new EditorView({
-      doc: value?.toString(),
-      extensions: buildExtensions(baseExtensions),
+      doc: String(value),
+      extensions: buildExtensions([
+        ...baseExtensions,
+        dropdown == DropdownPosition.Absolute
+          ? tooltips({
+              position: "absolute",
+            })
+          : [],
+      ]),
       parent: textarea,
     })
   }
 
   onMount(async () => {
     mounted = true
+    // Capture scrolling
+    editorEle.addEventListener("wheel", e => {
+      e.stopPropagation()
+    })
   })
 
   onDestroy(() => {
@@ -366,15 +508,65 @@
   </div>
 {/if}
 
-<div class={`code-editor ${mode?.name || ""}`}>
+<div class={`code-editor ${mode?.name || ""}`} bind:this={editorEle}>
   <div tabindex="-1" bind:this={textarea} />
 </div>
+
+{#if aiGenEnabled}
+  <button
+    bind:this={popoverAnchor}
+    class="ai-gen"
+    on:click={() => {
+      popover.show()
+      setTimeout(() => {
+        promptInput.focus()
+      }, 100)
+    }}
+  >
+    Generate with AI ✨
+  </button>
+
+  <Popover
+    bind:this={popover}
+    minWidth={popoverWidth}
+    anchor={popoverAnchor}
+    on:close={() => {
+      if (suggestedCode) {
+        acceptSuggestion()
+      }
+    }}
+    align="left-outside"
+  >
+    {#if promptLoading}
+      <div class="prompt-spinner">
+        <Spinner size="20" color="white" />
+      </div>
+    {:else if suggestedCode !== null}
+      <Button on:click={acceptSuggestion}>Accept</Button>
+      <Button on:click={rejectSuggestion}>Reject</Button>
+    {:else}
+      <TextArea
+        bind:this={promptInput}
+        placeholder="Type your prompt then press enter..."
+        on:keypress={event => {
+          if (event.getModifierState("Shift")) {
+            return
+          }
+          if (event.key === "Enter") {
+            generateJs(promptInput.contents())
+          }
+        }}
+      />
+    {/if}
+  </Popover>
+{/if}
 
 <style>
   /* Editor */
   .code-editor {
     font-size: 12px;
     height: 100%;
+    cursor: text;
   }
   .code-editor :global(.cm-editor) {
     height: 100%;
@@ -534,12 +726,11 @@
 
   /* Live binding value / helper container */
   .code-editor :global(.cm-completionInfo) {
-    margin-left: var(--spacing-s);
+    margin: 0px var(--spacing-s);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-s);
     background-color: var(--spectrum-global-color-gray-50);
     padding: var(--spacing-m);
-    margin-top: -2px;
   }
 
   /* Wrapper around helpers */
@@ -564,6 +755,7 @@
     white-space: pre;
     text-overflow: ellipsis;
     overflow: hidden;
+    overflow-y: auto;
     max-height: 480px;
   }
   .code-editor :global(.binding__example.helper) {
@@ -573,5 +765,35 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+  .ai-gen {
+    right: 1px;
+    bottom: 1px;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+    padding: var(--spacing-s);
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    border-top: 1px solid var(--spectrum-alias-border-color);
+    border-top-left-radius: var(--spectrum-alias-border-radius-regular);
+    color: var(--spectrum-global-color-blue-700);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
+    height: calc(var(--spectrum-alias-item-height-m) - 2px);
+  }
+  .ai-gen:hover {
+    cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
+  }
+  .prompt-spinner {
+    padding: var(--spacing-m);
   }
 </style>

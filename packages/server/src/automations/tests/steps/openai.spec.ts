@@ -16,6 +16,7 @@ describe("test the openai action", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   beforeEach(() => {
@@ -57,10 +58,10 @@ describe("test the openai action", () => {
     // means it goes through the "legacy" path which requires you to set your
     // own API key. We don't count this against your quota.
     const result = await expectAIUsage(0, () =>
-      createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      createAutomationBuilder(config)
+        .onAppAction()
         .openai({ prompt: "Hello, world", model: Model.GPT_4O_MINI })
-        .run()
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual("This is a test")
@@ -69,10 +70,10 @@ describe("test the openai action", () => {
 
   it("should present the correct error message when a prompt is not provided", async () => {
     const result = await expectAIUsage(0, () =>
-      createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      createAutomationBuilder(config)
+        .onAppAction()
         .openai({ prompt: "", model: Model.GPT_4O_MINI })
-        .run()
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual(
@@ -85,10 +86,10 @@ describe("test the openai action", () => {
     mockChatGPTError()
 
     const result = await expectAIUsage(0, () =>
-      createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      createAutomationBuilder(config)
+        .onAppAction()
         .openai({ prompt: "Hello, world", model: Model.GPT_4O_MINI })
-        .run()
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual(
@@ -108,10 +109,10 @@ describe("test the openai action", () => {
     // calculation we use to approximate cost. This uses Budibase's OpenAI API
     // key, so we charge users for it.
     const result = await expectAIUsage(14, () =>
-      createAutomationBuilder({ config })
-        .appAction({ fields: {} })
+      createAutomationBuilder(config)
+        .onAppAction()
         .openai({ model: Model.GPT_4O_MINI, prompt: "Hello, world" })
-        .run()
+        .test({ fields: {} })
     )
 
     expect(result.steps[0].outputs.response).toEqual("This is a test")

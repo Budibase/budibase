@@ -25,9 +25,12 @@
   noWrap={tooltipWrap}
 >
   <div class="icon" class:newStyles>
+    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
     <svg
       on:contextmenu
       on:click
+      on:mouseover
+      on:mouseleave
       class:hoverable
       class:disabled
       class="spectrum-Icon spectrum-Icon--size{size}"

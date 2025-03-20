@@ -35,10 +35,18 @@ import {
   WebhookActionType,
   BuiltinPermissionID,
   DeepPartial,
+  FilterCondition,
+  AutomationTriggerResult,
+  CreateEnvironmentVariableRequest,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
+export {
+  createTableScreen,
+  createQueryScreen,
+  createViewScreen,
+} from "../../constants/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -217,10 +225,8 @@ export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
         icon: "test",
         description: "test",
         type: AutomationStepType.TRIGGER,
+        inputs: {},
         id: "test",
-        inputs: {
-          fields: {},
-        },
         schema: {
           inputs: {
             properties: {},
@@ -369,7 +375,11 @@ export function filterAutomation(opts?: DeepPartial<Automation>): Automation {
           type: AutomationStepType.ACTION,
           internal: true,
           stepId: AutomationActionStepId.FILTER,
-          inputs: { field: "name", value: "test", condition: "EQ" },
+          inputs: {
+            field: "name",
+            value: "test",
+            condition: FilterCondition.EQUAL,
+          },
           schema: BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT.schema,
         },
       ],
@@ -434,15 +444,24 @@ export function updateRowAutomationWithFilters(
 export function basicAutomationResults(
   automationId: string
 ): AutomationResults {
+  const trigger: AutomationTriggerResult = {
+    id: "trigger",
+    stepId: AutomationTriggerStepId.APP,
+    outputs: {},
+  }
   return {
     automationId,
     status: AutomationStatus.SUCCESS,
-    trigger: "trigger" as any,
+    trigger,
     steps: [
+      trigger,
       {
+        id: "step1",
         stepId: AutomationActionStepId.SERVER_LOG,
         inputs: {},
-        outputs: {},
+        outputs: {
+          success: true,
+        },
       },
     ],
   }
@@ -485,6 +504,15 @@ export function basicDatasource(): { datasource: Datasource } {
       name: "Test",
       source: SourceName.POSTGRES,
       config: {},
+    },
+  }
+}
+
+export function basicDatasourcePlus(): { datasource: Datasource } {
+  return {
+    datasource: {
+      ...basicDatasource().datasource,
+      plus: true,
     },
   }
 }
@@ -547,7 +575,7 @@ export function basicEnvironmentVariable(
   name: string,
   prod: string,
   dev?: string
-) {
+): CreateEnvironmentVariableRequest {
   return {
     name,
     production: prod,

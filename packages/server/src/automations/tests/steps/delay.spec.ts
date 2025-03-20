@@ -6,6 +6,7 @@ describe("test the delay logic", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
@@ -16,10 +17,10 @@ describe("test the delay logic", () => {
     const time = 100
     const before = performance.now()
 
-    await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    await createAutomationBuilder(config)
+      .onAppAction()
       .delay({ time })
-      .run()
+      .test({ fields: {} })
 
     const now = performance.now()
 

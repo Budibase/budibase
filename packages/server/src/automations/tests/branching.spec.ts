@@ -1,5 +1,5 @@
 import * as automation from "../index"
-import { Table, AutomationStatus } from "@budibase/types"
+import { Table, AutomationStatus, EmptyFilterOption } from "@budibase/types"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
@@ -24,8 +24,8 @@ describe("Branching automations", () => {
     const branch2LogId = "33333333-3333-3333-3333-333333333333"
     const branch2Id = "44444444-4444-4444-4444-444444444444"
 
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog(
         { text: "Starting automation" },
         { stepName: "FirstLog", stepId: firstLogId }
@@ -76,15 +76,15 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[3].outputs.status).toContain("branch1 branch taken")
     expect(results.steps[4].outputs.message).toContain("Branch 1.1")
   })
 
   it("should execute correct branch based on string equality", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: { status: "active" } })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .branch({
         activeBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Active user" }),
@@ -100,7 +100,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .test({ fields: { status: "active" } })
     expect(results.steps[0].outputs.status).toContain(
       "activeBranch branch taken"
     )
@@ -108,8 +108,8 @@ describe("Branching automations", () => {
   })
 
   it("should handle multiple conditions with AND operator", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: { status: "active", role: "admin" } })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .branch({
         activeAdminBranch: {
           steps: stepBuilder =>
@@ -130,14 +130,14 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .test({ fields: { status: "active", role: "admin" } })
 
     expect(results.steps[1].outputs.message).toContain("Active admin user")
   })
 
   it("should handle multiple conditions with OR operator", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: { status: "test", role: "user" } })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .branch({
         specialBranch: {
           steps: stepBuilder => stepBuilder.serverLog({ text: "Special user" }),
@@ -162,14 +162,14 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .test({ fields: { status: "test", role: "user" } })
 
     expect(results.steps[1].outputs.message).toContain("Special user")
   })
 
   it("should stop the branch automation when no conditions are met", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: { status: "test", role: "user" } })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .createRow({ row: { name: "Test", tableId: table._id } })
       .branch({
         specialBranch: {
@@ -195,7 +195,7 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .test({ fields: { status: "test", role: "user" } })
 
     expect(results.steps[1].outputs.status).toEqual(
       AutomationStatus.NO_CONDITION_MET
@@ -204,8 +204,8 @@ describe("Branching automations", () => {
   })
 
   it("evaluate multiple conditions", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: { test_trigger: true } })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
       .branch({
         specialBranch: {
@@ -239,14 +239,14 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .test({ fields: { test_trigger: true } })
 
     expect(results.steps[2].outputs.message).toContain("Special user")
   })
 
   it("evaluate multiple conditions with interpolated text", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: { test_trigger: true } })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog({ text: "Starting automation" }, { stepId: "aN6znRYHG" })
       .branch({
         specialBranch: {
@@ -276,8 +276,27 @@ describe("Branching automations", () => {
           },
         },
       })
-      .run()
+      .test({ fields: { test_trigger: true } })
 
     expect(results.steps[2].outputs.message).toContain("Special user")
+  })
+
+  it("should not fail with empty conditions", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .branch({
+        specialBranch: {
+          steps: stepBuilder => stepBuilder.serverLog({ text: "Hello!" }),
+          condition: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        },
+      })
+      .test({ fields: { test_trigger: true } })
+
+    expect(results.steps[0].outputs.success).toEqual(false)
+    expect(results.steps[0].outputs.status).toEqual(
+      AutomationStatus.NO_CONDITION_MET
+    )
   })
 })

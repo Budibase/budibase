@@ -1,4 +1,3 @@
-import * as automation from "../../index"
 import { Table, Webhook, WebhookActionType } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { mocks } from "@budibase/backend-core/tests"
@@ -6,14 +5,14 @@ import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 mocks.licenses.useSyncAutomations()
 
-describe("Branching automations", () => {
+describe("Webhook trigger test", () => {
   const config = new TestConfiguration()
   let table: Table
   let webhook: Webhook
 
   async function createWebhookAutomation() {
-    const automation = await createAutomationBuilder({ config })
-      .webhook({ fields: { parameter: "string" } })
+    const { automation } = await createAutomationBuilder(config)
+      .onWebhook({ body: { parameter: "string" } })
       .createRow({
         row: { tableId: table._id!, name: "{{ trigger.parameter }}" },
       })
@@ -37,8 +36,8 @@ describe("Branching automations", () => {
   }
 
   beforeEach(async () => {
-    await automation.init()
     await config.init()
+    await config.api.automation.deleteAll()
     table = await config.createTable()
   })
 

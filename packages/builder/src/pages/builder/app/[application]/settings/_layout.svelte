@@ -1,11 +1,15 @@
-<script>
+<script lang="ts">
   import { Content, SideNav, SideNavItem } from "@/components/portal/page"
   import { Page, Layout, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import { isOnlyUser, appStore } from "@/stores/builder"
+  import { featureFlag } from "@/helpers"
+  import { FeatureFlag } from "@budibase/types"
 
-  let deleteModal
+  let deleteModal: DeleteModal
+
+  $: oauth2Enabled = featureFlag.isEnabled(FeatureFlag.OAUTH2_CONFIG)
 </script>
 
 <!-- routify:options index=4 -->
@@ -44,11 +48,18 @@
             url={$url("./version")}
             active={$isActive("./version")}
           />
+          {#if oauth2Enabled}
+            <SideNavItem
+              text="OAuth2"
+              url={$url("./oauth2")}
+              active={$isActive("./oauth2")}
+            />
+          {/if}
           <div class="delete-action">
             <AbsTooltip
               position={TooltipPosition.Bottom}
               text={$isOnlyUser
-                ? null
+                ? undefined
                 : "Unavailable - another user is editing this app"}
             >
               <SideNavItem

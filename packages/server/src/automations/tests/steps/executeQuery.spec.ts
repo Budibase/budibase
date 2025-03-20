@@ -6,9 +6,11 @@ import {
 } from "../../../integrations/tests/utils"
 import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {
@@ -24,6 +26,7 @@ if (descriptions.length) {
         const ds = await dsProvider()
         datasource = ds.datasource!
         client = ds.client!
+        await config.api.automation.deleteAll()
       })
 
       beforeEach(async () => {
@@ -41,39 +44,34 @@ if (descriptions.length) {
       })
 
       it("should be able to execute a query", async () => {
-        let res = await setup.runStep(
-          config,
-          setup.actions.EXECUTE_QUERY.stepId,
-          {
-            query: { queryId: query._id },
-          }
-        )
-        expect(res.response).toEqual([{ a: "string", b: 1 }])
-        expect(res.success).toEqual(true)
+        const { steps } = await createAutomationBuilder(config)
+          .onAppAction()
+          .executeQuery({ query: { queryId: query._id! } })
+          .test({ fields: {} })
+
+        expect(steps[0].outputs.response).toEqual([{ a: "string", b: 1 }])
+        expect(steps[0].outputs.success).toEqual(true)
       })
 
       it("should handle a null query value", async () => {
-        let res = await setup.runStep(
-          config,
-          setup.actions.EXECUTE_QUERY.stepId,
-          {
-            query: null,
-          }
-        )
-        expect(res.response.message).toEqual("Invalid inputs")
-        expect(res.success).toEqual(false)
+        const { steps } = await createAutomationBuilder(config)
+          .onAppAction()
+          // @ts-expect-error - intentionally passing null
+          .executeQuery({ query: { queryId: null } })
+          .test({ fields: {} })
+
+        expect(steps[0].outputs.response).toStartWith("Error:")
+        expect(steps[0].outputs.success).toEqual(false)
       })
 
       it("should handle an error executing a query", async () => {
-        let res = await setup.runStep(
-          config,
-          setup.actions.EXECUTE_QUERY.stepId,
-          {
-            query: { queryId: "wrong_id" },
-          }
-        )
-        expect(res.response).toBeDefined()
-        expect(res.success).toEqual(false)
+        const { steps } = await createAutomationBuilder(config)
+          .onAppAction()
+          .executeQuery({ query: { queryId: "wrong_id" } })
+          .test({ fields: {} })
+
+        expect(steps[0].outputs.response).toStartWith("Error:")
+        expect(steps[0].outputs.success).toEqual(false)
       })
     }
   )

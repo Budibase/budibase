@@ -1,9 +1,9 @@
-import { derived, get } from "svelte/store"
+import { derived, get, readable, Readable } from "svelte/store"
 import { API } from "@/api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
-import { licensing } from "@/stores/portal"
+import { licensing, organisation, environment } from "@/stores/portal"
 import { tables, appStore } from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 import {
@@ -15,7 +15,6 @@ import {
 import {
   AutomationTriggerStepId,
   AutomationEventType,
-  AutomationStepType,
   AutomationActionStepId,
   Automation,
   AutomationStep,
@@ -26,13 +25,28 @@ import {
   UILogicalOperator,
   EmptyFilterOption,
   AutomationIOType,
-  AutomationStepSchema,
-  AutomationTriggerSchema,
   BranchPath,
   BlockDefinitions,
+  isBranchStep,
+  isTrigger,
+  isRowUpdateTrigger,
+  isRowSaveTrigger,
+  isAppTrigger,
+  BranchStep,
+  GetAutomationTriggerDefinitionsResponse,
+  GetAutomationActionDefinitionsResponse,
+  AppSelfResponse,
+  TestAutomationResponse,
+  isAutomationResults,
+  RowActionTriggerOutputs,
+  WebhookTriggerOutputs,
+  AutomationCustomIOType,
+  AutomationTriggerResultOutputs,
+  AutomationTriggerResult,
+  AutomationStepType,
 } from "@budibase/types"
-import { ActionStepID } from "@/constants/backend/automations"
-import { FIELDS } from "@/constants/backend"
+import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
+import { FIELDS as COLUMNS } from "@/constants/backend"
 import { sdk } from "@budibase/shared-core"
 import { rowActions } from "./rowActions"
 import { getNewStepName } from "@/helpers/automations/nameHelpers"
@@ -41,10 +55,11 @@ import { BudiStore, DerivedBudiStore } from "@/stores/BudiStore"
 
 interface AutomationState {
   automations: Automation[]
-  testResults: any | null
+  testResults?: TestAutomationResponse
   showTestPanel: boolean
   blockDefinitions: BlockDefinitions
   selectedAutomationId: string | null
+  appSelf?: AppSelfResponse
 }
 
 interface DerivedAutomationState extends AutomationState {
@@ -54,7 +69,6 @@ interface DerivedAutomationState extends AutomationState {
 
 const initialAutomationState: AutomationState = {
   automations: [],
-  testResults: null,
   showTestPanel: false,
   blockDefinitions: {
     TRIGGER: {},
@@ -65,16 +79,19 @@ const initialAutomationState: AutomationState = {
 }
 
 const getFinalDefinitions = (
-  triggers: Record<string, any>,
-  actions: Record<string, any>
+  triggers: GetAutomationTriggerDefinitionsResponse,
+  actions: GetAutomationActionDefinitionsResponse
 ): BlockDefinitions => {
-  const creatable: Record<string, any> = {}
-  Object.entries(triggers).forEach(entry => {
-    if (entry[0] === AutomationTriggerStepId.ROW_ACTION) {
-      return
+  const creatable: Partial<GetAutomationTriggerDefinitionsResponse> = {}
+  for (const [key, trigger] of Object.entries(triggers)) {
+    if (key === AutomationTriggerStepId.ROW_ACTION) {
+      continue
     }
-    creatable[entry[0]] = entry[1]
-  })
+    if (trigger.deprecated === true) {
+      continue
+    }
+    creatable[key as keyof GetAutomationTriggerDefinitionsResponse] = trigger
+  }
   return {
     TRIGGER: triggers,
     CREATABLE_TRIGGER: creatable,
@@ -83,6 +100,116 @@ const getFinalDefinitions = (
 }
 
 const automationActions = (store: AutomationStore) => ({
+  /**
+   * Generates a derived store acting as an evaluation context
+   * for bindings in automations
+   *
+   * @returns {Readable<AutomationContext>}
+   */
+  generateContext: (): Readable<AutomationContext> => {
+    return derived(
+      [organisation, store.selected, environment, tables],
+      ([$organisation, $selectedAutomation, $env, $tables]) => {
+        const { platformUrl: url, company, logoUrl: logo } = $organisation
+
+        const results: TestAutomationResponse | undefined =
+          $selectedAutomation?.testResults
+
+        const testData: AutomationTriggerResultOutputs | undefined =
+          $selectedAutomation.data?.testData
+        const triggerDef = $selectedAutomation.data?.definition?.trigger
+
+        const isWebhook = triggerDef?.stepId === TriggerStepID.WEBHOOK
+        const isRowAction = triggerDef?.stepId === TriggerStepID.ROW_ACTION
+        const rowActionTableId = triggerDef?.inputs?.tableId
+        const rowActionTable = rowActionTableId
+          ? $tables.list.find(table => table._id === rowActionTableId)
+          : undefined
+
+        let triggerData: AutomationTriggerResultOutputs | undefined
+
+        if (results && isAutomationResults(results)) {
+          const automationTrigger: AutomationTriggerResult | undefined =
+            results?.trigger
+
+          const outputs: AutomationTriggerResultOutputs | undefined =
+            automationTrigger?.outputs
+          triggerData = outputs ? outputs : undefined
+
+          if (triggerData) {
+            if (isRowAction && rowActionTable) {
+              const rowTrigger = triggerData as RowActionTriggerOutputs
+              // Row action table must always be retrieved as it is never
+              // returned in the test results
+              rowTrigger.table = rowActionTable
+            } else if (isWebhook) {
+              const webhookTrigger = triggerData as WebhookTriggerOutputs
+              // Ensure it displays in the event that the configuration have been skipped
+              webhookTrigger.body = webhookTrigger.body ?? {}
+            }
+          }
+
+          // Clean up unnecessary data from the context
+          // Meta contains UI/UX config data. Non-bindable
+          delete triggerData?.meta
+        } else {
+          // Substitute test data in place of the trigger data if the test hasn't been run
+          triggerData = testData
+        }
+
+        // AppSelf context required to mirror server user context
+        const userContext = $selectedAutomation.appSelf || {}
+
+        // Extract step results from a valid response
+        const stepResults =
+          results && isAutomationResults(results) ? results?.steps : []
+
+        return {
+          user: userContext,
+          // Merge in the trigger data.
+          ...(triggerData ? { trigger: { ...triggerData } } : {}),
+          // This will initially be empty for each step but will populate
+          // upon running the test.
+          steps: stepResults.reduce(
+            (acc: Record<string, any>, res: Record<string, any>) => {
+              acc[res.id] = res.outputs
+              return acc
+            },
+            {}
+          ),
+          env: ($env?.variables || []).reduce(
+            (acc: Record<string, any>, variable: Record<string, any>) => {
+              acc[variable.name] = ""
+              return acc
+            },
+            {}
+          ),
+          settings: { url, company, logo },
+        }
+      }
+    )
+  },
+
+  /**
+   * Initialise the automation evaluation context
+   */
+  initContext: () => {
+    store.context = store.actions.generateContext()
+  },
+  /**
+   * Fetches the app user context used for live evaluation
+   * This matches the context used on the server
+   * @returns {AppSelfResponse | null}
+   */
+  initAppSelf: async (): Promise<AppSelfResponse | null> => {
+    // Fetch and update the app self if it hasn't been set
+    const appSelfResponse = await API.fetchSelf()
+    store.update(state => ({
+      ...state,
+      ...(appSelfResponse ? { appSelf: appSelfResponse } : {}),
+    }))
+    return appSelfResponse
+  },
   /**
    * Move a given block from one location on the tree to another.
    *
@@ -279,9 +406,12 @@ const automationActions = (store: AutomationStore) => ({
    * Build a sequential list of all steps on the step path provided
    *
    * @param {Array<Object>} pathWay e.g. [{stepIdx:2},{branchIdx:0, stepIdx:2},...]
-   * @returns {Array<Object>} all steps encountered on the provided path
+   * @returns {Array<AutomationStep | AutomationTrigger>} all steps encountered on the provided path
    */
-  getPathSteps: (pathWay: Array<BranchPath>, automation: Automation) => {
+  getPathSteps: (
+    pathWay: Array<BranchPath>,
+    automation: Automation
+  ): Array<AutomationStep | AutomationTrigger> => {
     // Base Steps, including trigger
     const steps = [
       automation.definition.trigger,
@@ -291,16 +421,16 @@ const automationActions = (store: AutomationStore) => ({
     let result: (AutomationStep | AutomationTrigger)[] = []
     pathWay.forEach(path => {
       const { stepIdx, branchIdx } = path
-      let last = result.length ? result[result.length - 1] : []
       if (!result.length) {
         // Preceeding steps.
         result = steps.slice(0, stepIdx + 1)
         return
       }
-      if (last && "inputs" in last) {
+      let last = result[result.length - 1]
+      if (isBranchStep(last)) {
         if (Number.isInteger(branchIdx)) {
           const branchId = last.inputs.branches[branchIdx].id
-          const children = last.inputs.children[branchId]
+          const children = last.inputs.children?.[branchId] || []
           const stepChildren = children.slice(0, stepIdx + 1)
           // Preceeding steps.
           result = result.concat(stepChildren)
@@ -473,23 +603,28 @@ const automationActions = (store: AutomationStore) => ({
           id: block.id,
         },
       ]
-      const branches: Branch[] = block.inputs?.branches || []
 
-      branches.forEach((branch, bIdx) => {
-        block.inputs?.children[branch.id].forEach(
-          (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
-            const ended =
-              array.length - 1 === sIdx && !bBlock.inputs?.branches?.length
-            treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
-          }
-        )
-      })
+      if (isBranchStep(block)) {
+        const branches = block.inputs?.branches || []
+        const children = block.inputs?.children || {}
+
+        branches.forEach((branch, bIdx) => {
+          children[branch.id].forEach(
+            (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
+              const ended = array.length - 1 === sIdx
+              treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
+            }
+          )
+        })
+
+        terminating = terminating && !branches.length
+      }
 
       store.actions.registerBlock(
         blockRefs,
         block,
         pathToCurrentNode,
-        terminating && !branches.length
+        terminating
       )
     }
 
@@ -497,7 +632,6 @@ const automationActions = (store: AutomationStore) => ({
     blocks.forEach((block, idx, array) => {
       treeTraverse(block, null, idx, null, array.length - 1 === idx)
     })
-
     return blockRefs
   },
 
@@ -524,41 +658,72 @@ const automationActions = (store: AutomationStore) => ({
     let bindings: any[] = []
     const addBinding = (
       name: string,
-      value: any,
+      schema: any,
       icon: string,
       idx: number,
       isLoopBlock: boolean,
-      bindingName?: string
+      pathBlock: AutomationStep | AutomationTrigger,
+      bindingName: string
     ) => {
       if (!name) return
+
       const runtimeBinding = store.actions.determineRuntimeBinding(
         name,
         idx,
         isLoopBlock,
-        bindingName,
         automation,
         currentBlock,
         pathSteps
       )
+
+      // Skip binding if its invalid
+      if (!runtimeBinding) {
+        return
+      }
+
+      const readableBinding = store.actions.determineReadableBinding(
+        name,
+        pathBlock
+      )
+
       const categoryName = store.actions.determineCategoryName(
         idx,
         isLoopBlock,
         bindingName,
         loopBlockCount
       )
-      bindings.push(
-        store.actions.createBindingObject(
-          name,
-          value,
-          icon,
-          idx,
-          loopBlockCount,
-          isLoopBlock,
-          runtimeBinding,
-          categoryName,
-          bindingName
-        )
+
+      const isStep = !isLoopBlock && idx !== 0
+      const defaultReadable =
+        bindingName && isStep ? `steps.${bindingName}.${name}` : runtimeBinding
+
+      // Check if the schema matches any column types.
+      const column = Object.values(COLUMNS).find(
+        col =>
+          col.type === schema.type &&
+          ("subtype" in col ? col.subtype === schema.subtype : true)
       )
+
+      // Automation types and column types can collide e.g. "array"
+      // Exclude where necessary
+      const ignoreColumnType = schema.customType === AutomationCustomIOType.ROWS
+
+      // Shown in the bindable menus
+      const displayType = ignoreColumnType ? schema.type : column?.name
+
+      bindings.push({
+        readableBinding: readableBinding || defaultReadable,
+        runtimeBinding,
+        type: schema.type,
+        description: schema.description,
+        icon,
+        category: categoryName,
+        display: {
+          type: displayType,
+          name,
+          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
+        },
+      })
     }
 
     let loopBlockCount = 0
@@ -575,7 +740,6 @@ const automationActions = (store: AutomationStore) => ({
           pathBlock.stepId === ActionStepID.LOOP &&
           pathBlock.blockToLoop in blocks
       }
-      const isTrigger = pathBlock.type === AutomationStepType.TRIGGER
 
       if (isLoopBlock && loopBlockCount == 0) {
         schema = {
@@ -586,17 +750,14 @@ const automationActions = (store: AutomationStore) => ({
         }
       }
 
-      const icon = isTrigger
+      const icon = isTrigger(pathBlock)
         ? pathBlock.icon
         : isLoopBlock
         ? "Reuse"
         : pathBlock.icon
 
-      if (blockIdx === 0 && isTrigger) {
-        if (
-          pathBlock.event === AutomationEventType.ROW_UPDATE ||
-          pathBlock.event === AutomationEventType.ROW_SAVE
-        ) {
+      if (blockIdx === 0 && isTrigger(pathBlock)) {
+        if (isRowUpdateTrigger(pathBlock) || isRowSaveTrigger(pathBlock)) {
           let table: any = get(tables).list.find(
             (table: Table) => table._id === pathBlock.inputs.tableId
           )
@@ -608,7 +769,7 @@ const automationActions = (store: AutomationStore) => ({
             }
           }
           delete schema.row
-        } else if (pathBlock.event === AutomationEventType.APP_TRIGGER) {
+        } else if (isAppTrigger(pathBlock)) {
           schema = Object.fromEntries(
             Object.keys(pathBlock.inputs.fields || []).map(key => [
               key,
@@ -630,8 +791,17 @@ const automationActions = (store: AutomationStore) => ({
           console.error("Loop block missing.")
         }
       }
+
       Object.entries(schema).forEach(([name, value]) => {
-        addBinding(name, value, icon, blockIdx, isLoopBlock, bindingName)
+        addBinding(
+          name,
+          value,
+          icon,
+          blockIdx,
+          isLoopBlock,
+          pathBlock,
+          bindingName
+        )
       })
     }
 
@@ -642,23 +812,60 @@ const automationActions = (store: AutomationStore) => ({
     return bindings
   },
 
+  determineReadableBinding: (
+    name: string,
+    block: AutomationStep | AutomationTrigger
+  ) => {
+    const rowTriggers = [
+      TriggerStepID.ROW_UPDATED,
+      TriggerStepID.ROW_SAVED,
+      TriggerStepID.ROW_DELETED,
+      TriggerStepID.ROW_ACTION,
+    ]
+
+    const isTrigger = block.type === AutomationStepType.TRIGGER
+    const isAppTrigger = block.stepId === AutomationTriggerStepId.APP
+    const isRowTrigger = rowTriggers.includes(block.stepId)
+
+    let readableBinding = ""
+    if (isTrigger) {
+      if (isAppTrigger) {
+        readableBinding = `trigger.fields.${name}`
+      } else if (isRowTrigger) {
+        let noRowKeywordBindings = ["id", "revision", "oldRow"]
+        readableBinding = noRowKeywordBindings.includes(name)
+          ? `trigger.${name}`
+          : `trigger.row.${name}`
+      } else {
+        readableBinding = `trigger.${name}`
+      }
+    }
+
+    return readableBinding
+  },
+
   determineRuntimeBinding: (
     name: string,
     idx: number,
     isLoopBlock: boolean,
-    bindingName: string | undefined,
     automation: Automation,
     currentBlock: AutomationStep | AutomationTrigger | undefined,
     pathSteps: (AutomationStep | AutomationTrigger)[]
   ) => {
-    let runtimeName: string | null
+    let runtimeName: string
+
+    // Legacy support for EXECUTE_SCRIPT steps
+    const isJSScript =
+      currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT
 
     /* Begin special cases for generating custom schemas based on triggers */
     if (
       idx === 0 &&
       automation.definition.trigger?.event === AutomationEventType.APP_TRIGGER
     ) {
-      return `trigger.fields.${name}`
+      return isJSScript
+        ? `trigger.fields["${name}"]`
+        : `trigger.fields.[${name}]`
     }
 
     if (
@@ -668,26 +875,28 @@ const automationActions = (store: AutomationStore) => ({
         automation.definition.trigger?.event === AutomationEventType.ROW_SAVE)
     ) {
       let noRowKeywordBindings = ["id", "revision", "oldRow"]
-      if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
+      if (!noRowKeywordBindings.includes(name)) {
+        return isJSScript ? `trigger.row["${name}"]` : `trigger.row.[${name}]`
+      }
     }
     /* End special cases for generating custom schemas based on triggers */
 
     if (isLoopBlock) {
       runtimeName = `loop.${name}`
     } else if (idx === 0) {
-      runtimeName = `trigger.${name}`
-    } else if (currentBlock?.stepId === AutomationActionStepId.EXECUTE_SCRIPT) {
+      runtimeName = `trigger.[${name}]`
+    } else if (isJSScript) {
       const stepId = pathSteps[idx].id
       if (!stepId) {
         notifications.error("Error generating binding: Step ID not found.")
-        return null
+        return
       }
       runtimeName = `steps["${stepId}"].${name}`
     } else {
       const stepId = pathSteps[idx].id
       if (!stepId) {
         notifications.error("Error generating binding: Step ID not found.")
-        return null
+        return
       }
       runtimeName = `steps.${stepId}.${name}`
     }
@@ -706,40 +915,6 @@ const automationActions = (store: AutomationStore) => ({
     return bindingName
       ? `${bindingName} outputs`
       : `Step ${idx - loopBlockCount} outputs`
-  },
-
-  createBindingObject: (
-    name: string,
-    value: any,
-    icon: string,
-    idx: number,
-    loopBlockCount: number,
-    isLoopBlock: boolean,
-    runtimeBinding: string | null,
-    categoryName: string,
-    bindingName?: string
-  ) => {
-    const field = Object.values(FIELDS).find(
-      field =>
-        field.type === value.type &&
-        ("subtype" in field ? field.subtype === value.subtype : true)
-    )
-    return {
-      readableBinding:
-        bindingName && !isLoopBlock && idx !== 0
-          ? `steps.${bindingName}.${name}`
-          : runtimeBinding,
-      runtimeBinding,
-      type: value.type,
-      description: value.description,
-      icon,
-      category: categoryName,
-      display: {
-        type: field?.name || value.type,
-        name,
-        rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
-      },
-    }
   },
 
   processBlockInputs: async (
@@ -793,19 +968,14 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   test: async (automation: Automation, testData: any) => {
-    let result: any
+    let result: TestAutomationResponse
     try {
       result = await API.testAutomation(automation._id!, testData)
     } catch (err: any) {
       const message = err.message || err.status || JSON.stringify(err)
       throw `Automation test failed - ${message}`
     }
-    if (!result?.trigger && !result?.steps?.length && !result?.message) {
-      if (result?.err?.code === "usage_limit_exceeded") {
-        throw "You have exceeded your automation quota"
-      }
-      throw "Something went wrong testing your automation"
-    }
+
     store.update(state => {
       state.testResults = result
       return state
@@ -915,8 +1085,10 @@ const automationActions = (store: AutomationStore) => ({
     ]
 
     let cache:
-      | AutomationStepSchema<AutomationActionStepId>
-      | AutomationTriggerSchema<AutomationTriggerStepId>
+      | AutomationStep
+      | AutomationTrigger
+      | AutomationStep[]
+      | undefined = undefined
 
     pathWay.forEach((path, pathIdx, array) => {
       const { stepIdx, branchIdx } = path
@@ -938,9 +1110,13 @@ const automationActions = (store: AutomationStore) => ({
         }
         return
       }
-      if (Number.isInteger(branchIdx)) {
+      if (
+        Number.isInteger(branchIdx) &&
+        !Array.isArray(cache) &&
+        isBranchStep(cache)
+      ) {
         const branchId = cache.inputs.branches[branchIdx].id
-        const children = cache.inputs.children[branchId]
+        const children = cache.inputs.children?.[branchId] || []
 
         if (final) {
           insertBlock(children, stepIdx)
@@ -1090,7 +1266,7 @@ const automationActions = (store: AutomationStore) => ({
   branchLeft: async (
     pathTo: Array<any>,
     automation: Automation,
-    block: AutomationStep
+    block: BranchStep
   ) => {
     const update = store.actions.shiftBranch(pathTo, block)
     if (update) {
@@ -1113,7 +1289,7 @@ const automationActions = (store: AutomationStore) => ({
   branchRight: async (
     pathTo: Array<BranchPath>,
     automation: Automation,
-    block: AutomationStep
+    block: BranchStep
   ) => {
     const update = store.actions.shiftBranch(pathTo, block, 1)
     if (update) {
@@ -1133,7 +1309,7 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Number} direction - the direction of the swap. Defaults to -1 for left, add 1 for right
    * @returns
    */
-  shiftBranch: (pathTo: Array<any>, block: AutomationStep, direction = -1) => {
+  shiftBranch: (pathTo: Array<any>, block: BranchStep, direction = -1) => {
     let newBlock = cloneDeep(block)
     const branchPath = pathTo.at(-1)
     const targetIdx = branchPath.branchIdx
@@ -1387,7 +1563,7 @@ const automationActions = (store: AutomationStore) => ({
     }
     store.update(state => {
       state.selectedAutomationId = id
-      state.testResults = null
+      delete state.testResults
       state.showTestPanel = false
       return state
     })
@@ -1427,28 +1603,13 @@ const automationActions = (store: AutomationStore) => ({
   },
 })
 
-class AutomationStore extends BudiStore<AutomationState> {
-  history: HistoryStore<Automation>
-  actions: ReturnType<typeof automationActions>
-
-  constructor() {
-    super(initialAutomationState)
-    this.actions = automationActions(this)
-    this.history = createHistoryStore({
-      getDoc: this.actions.getDefinition.bind(this),
-      selectDoc: this.actions.select.bind(this),
-    })
-
-    // Then wrap save and delete with history
-    const originalSave = this.actions.save.bind(this.actions)
-    const originalDelete = this.actions.delete.bind(this.actions)
-    this.actions.save = this.history.wrapSaveDoc(originalSave)
-    this.actions.delete = this.history.wrapDeleteDoc(originalDelete)
-  }
+export interface AutomationContext {
+  user: AppSelfResponse | null
+  trigger?: AutomationTriggerResultOutputs
+  steps: Record<string, AutomationStep>
+  env: Record<string, any>
+  settings: Record<string, any>
 }
-
-export const automationStore = new AutomationStore()
-export const automationHistoryStore = automationStore.history
 
 export class SelectedAutomationStore extends DerivedBudiStore<
   AutomationState,
@@ -1510,4 +1671,49 @@ export class SelectedAutomationStore extends DerivedBudiStore<
     super(initialAutomationState, makeDerivedStore)
   }
 }
-export const selectedAutomation = new SelectedAutomationStore(automationStore)
+
+class AutomationStore extends BudiStore<AutomationState> {
+  history: HistoryStore<Automation>
+  actions: ReturnType<typeof automationActions>
+  selected: SelectedAutomationStore
+  context: Readable<AutomationContext> | undefined
+
+  constructor() {
+    super(initialAutomationState)
+    this.actions = automationActions(this)
+    this.history = createHistoryStore({
+      getDoc: this.actions.getDefinition.bind(this),
+      selectDoc: this.actions.select.bind(this),
+    })
+
+    // Then wrap save and delete with history
+    const originalSave = this.actions.save.bind(this.actions)
+    const originalDelete = this.actions.delete.bind(this.actions)
+    this.actions.save = this.history.wrapSaveDoc(originalSave)
+    this.actions.delete = this.history.wrapDeleteDoc(originalDelete)
+
+    this.selected = new SelectedAutomationStore(this)
+  }
+}
+
+export const automationStore = new AutomationStore()
+
+export const automationHistoryStore = automationStore.history
+export const selectedAutomation = automationStore.selected
+
+// Define an empty evaluate context at the start
+const emptyContext: AutomationContext = {
+  user: {},
+  steps: {},
+  env: {},
+  settings: {},
+}
+
+// Page layout kicks off initialisation, subscription happens within the page
+export const evaluationContext: Readable<AutomationContext> = readable(
+  emptyContext,
+  set => {
+    const unsubscribe = automationStore.context?.subscribe(set) ?? (() => {})
+    return () => unsubscribe()
+  }
+)

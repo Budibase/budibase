@@ -6,6 +6,7 @@ describe("test the server log action", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
@@ -13,10 +14,10 @@ describe("test the server log action", () => {
   })
 
   it("should be able to log the text", async () => {
-    const result = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog({ text: "Hello World" })
-      .run()
+      .test({ fields: {} })
     expect(result.steps[0].outputs.message).toEqual(
       `App ${config.getAppId()} - Hello World`
     )

@@ -1,6 +1,6 @@
 <script>
-  import Block from "components/Block.svelte"
-  import BlockComponent from "components/BlockComponent.svelte"
+  import Block from "@/components/Block.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { generate } from "shortid"
   import { get } from "svelte/store"
@@ -190,7 +190,7 @@
         }}
       />
       <BlockComponent
-        type="text"
+        type="textv2"
         order={1}
         props={{
           text: "Select a row to view its fields",

@@ -1,8 +1,8 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
   import { Helpers } from "@budibase/bbui"
   import { getContext, setContext } from "svelte"
-  import { builderStore } from "stores"
+  import { builderStore } from "@/stores"
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
   import { get, writable } from "svelte/store"
@@ -148,7 +148,10 @@
               }}
               order={0}
             >
-              <BlockComponent type="heading" props={{ text: step.title }} />
+              <BlockComponent
+                type="textv2"
+                props={{ text: `## ${step.title}` }}
+              />
               {#if buttonPosition === "top"}
                 <BlockComponent
                   type="buttongroup"
@@ -157,7 +160,7 @@
               {/if}
             </BlockComponent>
           </BlockComponent>
-          <BlockComponent type="text" props={{ text: step.desc }} order={1} />
+          <BlockComponent type="textv2" props={{ text: step.desc }} order={1} />
 
           <BlockComponent type="container" order={2}>
             <div

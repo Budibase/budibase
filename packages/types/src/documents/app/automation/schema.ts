@@ -45,13 +45,18 @@ import {
   OpenAIStepInputs,
   OpenAIStepOutputs,
   LoopStepInputs,
-  AppActionTriggerInputs,
   CronTriggerInputs,
   RowUpdatedTriggerInputs,
   RowCreatedTriggerInputs,
   RowDeletedTriggerInputs,
   BranchStepInputs,
   BaseAutomationOutputs,
+  AppActionTriggerOutputs,
+  CronTriggerOutputs,
+  RowDeletedTriggerOutputs,
+  RowCreatedTriggerOutputs,
+  RowUpdatedTriggerOutputs,
+  WebhookTriggerOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -76,6 +81,10 @@ export type ActionImplementations<T extends Hosting> = {
     ExecuteQueryStepOutputs
   >
   [AutomationActionStepId.EXECUTE_SCRIPT]: ActionImplementation<
+    ExecuteScriptStepInputs,
+    ExecuteScriptStepOutputs
+  >
+  [AutomationActionStepId.EXECUTE_SCRIPT_V2]: ActionImplementation<
     ExecuteScriptStepInputs,
     ExecuteScriptStepOutputs
   >
@@ -150,6 +159,7 @@ export interface AutomationStepSchemaBase {
   type: AutomationStepType
   internal?: boolean
   deprecated?: boolean
+  new?: boolean
   blockToLoop?: string
   schema: {
     inputs: InputOutputBlock
@@ -158,24 +168,6 @@ export interface AutomationStepSchemaBase {
   custom?: boolean
   features?: Partial<Record<AutomationFeature, boolean>>
 }
-
-export type AutomationStepOutputs =
-  | CollectStepOutputs
-  | CreateRowStepOutputs
-  | DelayStepOutputs
-  | DeleteRowStepOutputs
-  | ExecuteQueryStepOutputs
-  | ExecuteScriptStepOutputs
-  | FilterStepOutputs
-  | QueryRowsStepOutputs
-  | BaseAutomationOutputs
-  | BashStepOutputs
-  | ExternalAppStepOutputs
-  | OpenAIStepOutputs
-  | ServerLogStepOutputs
-  | TriggerAutomationStepOutputs
-  | UpdateRowStepOutputs
-  | ZapierStepOutputs
 
 export type AutomationStepInputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -189,6 +181,8 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
     : T extends AutomationActionStepId.EXECUTE_QUERY
     ? ExecuteQueryStepInputs
     : T extends AutomationActionStepId.EXECUTE_SCRIPT
+    ? ExecuteScriptStepInputs
+    : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
     ? ExecuteScriptStepInputs
     : T extends AutomationActionStepId.FILTER
     ? FilterStepInputs
@@ -224,11 +218,56 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
     ? BranchStepInputs
     : never
 
+export type AutomationStepOutputs<T extends AutomationActionStepId> =
+  T extends AutomationActionStepId.COLLECT
+    ? CollectStepOutputs
+    : T extends AutomationActionStepId.CREATE_ROW
+    ? CreateRowStepOutputs
+    : T extends AutomationActionStepId.DELAY
+    ? DelayStepOutputs
+    : T extends AutomationActionStepId.DELETE_ROW
+    ? DeleteRowStepOutputs
+    : T extends AutomationActionStepId.EXECUTE_QUERY
+    ? ExecuteQueryStepOutputs
+    : T extends AutomationActionStepId.EXECUTE_SCRIPT
+    ? ExecuteScriptStepOutputs
+    : T extends AutomationActionStepId.FILTER
+    ? FilterStepOutputs
+    : T extends AutomationActionStepId.QUERY_ROWS
+    ? QueryRowsStepOutputs
+    : T extends AutomationActionStepId.SEND_EMAIL_SMTP
+    ? BaseAutomationOutputs
+    : T extends AutomationActionStepId.SERVER_LOG
+    ? ServerLogStepOutputs
+    : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
+    ? TriggerAutomationStepOutputs
+    : T extends AutomationActionStepId.UPDATE_ROW
+    ? UpdateRowStepOutputs
+    : T extends AutomationActionStepId.OUTGOING_WEBHOOK
+    ? ExternalAppStepOutputs
+    : T extends AutomationActionStepId.discord
+    ? ExternalAppStepOutputs
+    : T extends AutomationActionStepId.slack
+    ? ExternalAppStepOutputs
+    : T extends AutomationActionStepId.zapier
+    ? ZapierStepOutputs
+    : T extends AutomationActionStepId.integromat
+    ? ExternalAppStepOutputs
+    : T extends AutomationActionStepId.n8n
+    ? ExternalAppStepOutputs
+    : T extends AutomationActionStepId.EXECUTE_BASH
+    ? BashStepOutputs
+    : T extends AutomationActionStepId.OPENAI
+    ? OpenAIStepOutputs
+    : T extends AutomationActionStepId.LOOP
+    ? BaseAutomationOutputs
+    : never
+
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
   id: string
   stepId: TStep
-  inputs: AutomationStepInputs<TStep> & Record<string, any> // The record union to be removed once the types are fixed
+  inputs: AutomationStepInputs<TStep>
 }
 
 export type CollectStep = AutomationStepSchema<AutomationActionStepId.COLLECT>
@@ -246,6 +285,9 @@ export type ExecuteQueryStep =
 
 export type ExecuteScriptStep =
   AutomationStepSchema<AutomationActionStepId.EXECUTE_SCRIPT>
+
+export type ExecuteScriptV2Step =
+  AutomationStepSchema<AutomationActionStepId.EXECUTE_SCRIPT_V2>
 
 export type FilterStep = AutomationStepSchema<AutomationActionStepId.FILTER>
 
@@ -293,6 +335,7 @@ export type AutomationStep =
   | DeleteRowStep
   | ExecuteQueryStep
   | ExecuteScriptStep
+  | ExecuteScriptV2Step
   | FilterStep
   | QueryRowsStep
   | SendEmailSmtpStep
@@ -310,6 +353,36 @@ export type AutomationStep =
   | OpenAIStep
   | BranchStep
 
+export function isBranchStep(
+  step: AutomationStep | AutomationTrigger
+): step is BranchStep {
+  return step.stepId === AutomationActionStepId.BRANCH
+}
+
+export function isTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is AutomationTrigger {
+  return step.type === AutomationStepType.TRIGGER
+}
+
+export function isRowUpdateTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is RowUpdatedTrigger {
+  return step.stepId === AutomationTriggerStepId.ROW_UPDATED
+}
+
+export function isRowSaveTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is RowSavedTrigger {
+  return step.stepId === AutomationTriggerStepId.ROW_SAVED
+}
+
+export function isAppTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is AppActionTrigger {
+  return step.stepId === AutomationTriggerStepId.APP
+}
+
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs
@@ -326,7 +399,7 @@ export type AutomationTriggerDefinition = Omit<
 
 export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
   T extends AutomationTriggerStepId.APP
-    ? AppActionTriggerInputs
+    ? void | Record<string, any>
     : T extends AutomationTriggerStepId.CRON
     ? CronTriggerInputs
     : T extends AutomationTriggerStepId.ROW_ACTION
@@ -339,6 +412,23 @@ export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
     ? RowUpdatedTriggerInputs
     : T extends AutomationTriggerStepId.WEBHOOK
     ? Record<string, any>
+    : never
+
+export type AutomationTriggerOutputs<T extends AutomationTriggerStepId> =
+  T extends AutomationTriggerStepId.APP
+    ? AppActionTriggerOutputs
+    : T extends AutomationTriggerStepId.CRON
+    ? CronTriggerOutputs
+    : T extends AutomationTriggerStepId.ROW_ACTION
+    ? Record<string, any>
+    : T extends AutomationTriggerStepId.ROW_DELETED
+    ? RowDeletedTriggerOutputs
+    : T extends AutomationTriggerStepId.ROW_SAVED
+    ? RowCreatedTriggerOutputs
+    : T extends AutomationTriggerStepId.ROW_UPDATED
+    ? RowUpdatedTriggerOutputs
+    : T extends AutomationTriggerStepId.WEBHOOK
+    ? WebhookTriggerOutputs
     : never
 
 export interface AutomationTriggerSchema<

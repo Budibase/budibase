@@ -9,6 +9,11 @@ import {
 
 import { Database, aql } from "arangojs"
 
+/**
+ * @deprecated 3rd March 2025
+ * datasource disabled - this datasource is marked for deprecation and removal
+ */
+
 interface ArangodbConfig {
   url: string
   username: string

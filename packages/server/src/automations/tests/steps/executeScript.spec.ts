@@ -13,6 +13,7 @@ describe("Execute Script Automations", () => {
     await config.init()
     table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, {})
+    await config.api.automation.deleteAll()
   })
 
   afterAll(() => {
@@ -20,33 +21,33 @@ describe("Execute Script Automations", () => {
   })
 
   it("should execute a basic script and return the result", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .executeScript({ code: "return 2 + 2" })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.value).toEqual(4)
   })
 
   it("should access bindings from previous steps", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: { data: [1, 2, 3] } })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .executeScript(
         {
           code: "return trigger.fields.data.map(x => x * 2)",
         },
         { stepId: "binding-script-step" }
       )
-      .run()
+      .test({ fields: { data: [1, 2, 3] } })
 
     expect(results.steps[0].outputs.value).toEqual([2, 4, 6])
   })
 
   it("should handle script execution errors gracefully", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .executeScript({ code: "return nonexistentVariable.map(x => x)" })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.response).toContain(
       "ReferenceError: nonexistentVariable is not defined"
@@ -55,8 +56,8 @@ describe("Execute Script Automations", () => {
   })
 
   it("should handle conditional logic in scripts", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: { value: 10 } })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .executeScript({
         code: `
             if (trigger.fields.value > 5) {
@@ -66,14 +67,14 @@ describe("Execute Script Automations", () => {
             }
           `,
       })
-      .run()
+      .test({ fields: { value: 10 } })
 
     expect(results.steps[0].outputs.value).toEqual("Value is greater than 5")
   })
 
   it("should use multiple steps and validate script execution", async () => {
-    const results = await createAutomationBuilder({ config })
-      .appAction({ fields: {} })
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
       .serverLog(
         { text: "Starting multi-step automation" },
         { stepId: "start-log-step" }
@@ -94,7 +95,7 @@ describe("Execute Script Automations", () => {
       .serverLog({
         text: `Final result is {{ steps.ScriptingStep1.value }}`,
       })
-      .run()
+      .test({ fields: {} })
 
     expect(results.steps[0].outputs.message).toContain(
       "Starting multi-step automation"

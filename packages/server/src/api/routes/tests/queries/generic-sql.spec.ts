@@ -9,7 +9,8 @@ import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {
@@ -182,7 +183,7 @@ if (descriptions.length) {
               },
             })
 
-            await config.api.application.publish(config.getAppId())
+            await config.api.application.publish()
             const prodQuery = await config.api.query.getProd(query._id!)
 
             expect(prodQuery._id).toEqual(query._id)
