@@ -134,7 +134,7 @@
     return getThemeClassNames(theme)
   }
 
-  const onChange = (value: string | null) => {
+  const onChange = (value: string | undefined) => {
     dispatch("change", value)
     dropdown?.hide()
   }
@@ -243,7 +243,7 @@
             size="S"
             name="Close"
             hoverable
-            on:click={() => onChange(null)}
+            on:click={() => onChange(undefined)}
           />
         </div>
       </div>
