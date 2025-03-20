@@ -206,7 +206,7 @@ export const getPluginParams = (pluginId?: string | null, otherProps = {}) => {
  */
 export const getOAuth2ConfigParams = (
   configId?: string | null,
-  otherProps = {}
+  otherProps: Partial<DatabaseQueryOpts> = {}
 ) => {
   return getDocParams(DocumentType.OAUTH2_CONFIG, configId, otherProps)
 }
