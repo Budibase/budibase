@@ -156,8 +156,8 @@ export interface FieldConstraints {
     message?: string
   }
   numericality?: {
-    greaterThanOrEqualTo: string | null
-    lessThanOrEqualTo: string | null
+    greaterThanOrEqualTo?: string | null
+    lessThanOrEqualTo?: string | null
   }
   presence?:
     | boolean
@@ -165,8 +165,8 @@ export interface FieldConstraints {
         allowEmpty?: boolean
       }
   datetime?: {
-    latest: string
-    earliest: string
+    latest?: string
+    earliest?: string
   }
 }
 
@@ -197,7 +197,7 @@ export interface BigIntFieldMetadata extends BaseFieldSchema {
   default?: string
 }
 
-interface BaseFieldSchema extends UIFieldMetadata {
+export interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
   sortable?: boolean
