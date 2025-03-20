@@ -1,4 +1,4 @@
-import { context, HTTPError, utils } from "@budibase/backend-core"
+import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
   Database,
   DocumentType,
@@ -98,4 +98,9 @@ export async function remove(configId: string): Promise<void> {
   delete doc.configs[configId]
 
   await db.put(doc)
+
+  const usageLog = await db.tryGet(docIds.generateOAuth2LogID(configId))
+  if (usageLog) {
+    await db.remove(usageLog)
+  }
 }

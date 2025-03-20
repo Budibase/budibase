@@ -28,7 +28,7 @@ function oAuth2ConfigValidator() {
 function oAuth2ConfigValidationValidator() {
   return middleware.joiValidator.body(
     Joi.object({
-      id: Joi.string().required(),
+      id: Joi.string(),
       ...baseValidation,
     }),
     { allowUnknown: false }
