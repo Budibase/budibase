@@ -1,28 +1,29 @@
-<script>
+<script lang="ts">
   import ActionButton from "../../ActionButton/ActionButton.svelte"
   import { uuid } from "../../helpers"
   import Icon from "../../Icon/Icon.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value = null
-  export let title = "Upload file"
-  export let disabled = false
-  export let allowClear = null
-  export let extensions = null
-  export let handleFileTooLarge = null
-  export let fileSizeLimit = BYTES_IN_MB * 20
-  export let id = null
-  export let previewUrl = null
-  export let hideButton = false
-  export let multiple = false
+  const BYTES_IN_MB = 1000000
+
+  export let value: File | undefined = undefined
+  export let title: string = "Upload file"
+  export let disabled: boolean = false
+  export let allowClear: boolean | undefined = undefined
+  export let extensions: string[] | undefined = undefined
+  export let handleFileTooLarge: ((_file: File) => void) | undefined = undefined
+  export let fileSizeLimit: number = BYTES_IN_MB * 20
+  export let id: string | undefined = undefined
+  export let previewUrl: string | undefined = undefined
+  export let hideButton: boolean = false
+  export let multiple: boolean = false
 
   const fieldId = id || uuid()
   const BYTES_IN_KB = 1000
-  const BYTES_IN_MB = 1000000
 
   const dispatch = createEventDispatcher()
 
-  let fileInput
+  let fileInput: HTMLInputElement | undefined
 
   $: inputAccept = Array.isArray(extensions) ? extensions.join(",") : "*"
   $: files = Array.isArray(value) ? value : value ? [value] : []
@@ -32,7 +33,7 @@
     ? [previewUrl]
     : []
 
-  function formatFileSize(size) {
+  function formatFileSize(size: number) {
     if (!size) return ""
     if (size <= BYTES_IN_MB) {
       return `${Math.round(size / BYTES_IN_KB)} KB`
@@ -40,23 +41,26 @@
     return `${(size / BYTES_IN_MB).toFixed(1)} MB`
   }
 
-  async function processFile(targetFile) {
-    if (handleFileTooLarge && targetFile?.size >= fileSizeLimit) {
-      handleFileTooLarge(targetFile)
-      return
+  async function processFile(targetFile: File | undefined) {
+    if (targetFile) {
+      if (handleFileTooLarge && targetFile.size >= fileSizeLimit) {
+        handleFileTooLarge(targetFile)
+        return
+      }
+      dispatch("change", targetFile)
     }
-    dispatch("change", targetFile)
   }
 
-  function handleFile(evt) {
-    if (multiple && evt.target.files.length > 1) {
-      dispatch("multipleFiles", Array.from(evt.target.files))
+  function handleFile(evt: Event) {
+    const target = evt.target as HTMLInputElement
+    if (multiple && target.files?.length) {
+      dispatch("multipleFiles", Array.from(target.files))
     } else {
-      processFile(evt.target.files[0])
+      processFile(target.files?.[0])
     }
   }
 
-  function clearFile(index) {
+  function clearFile(index: number) {
     if (multiple) {
       const newFiles = files.filter((_, i) => i !== index)
       dispatch("change", newFiles.length ? newFiles : null)
@@ -99,9 +103,9 @@
   </div>
   {#if !hideButton}
     <div class="upload-button">
-      <ActionButton {disabled} on:click={fileInput.click()}
-        >{title}</ActionButton
-      >
+      <ActionButton {disabled} on:click={() => fileInput?.click()}>
+        {title}
+      </ActionButton>
     </div>
   {/if}
 </div>
