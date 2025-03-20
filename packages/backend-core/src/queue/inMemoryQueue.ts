@@ -1,5 +1,5 @@
 import events from "events"
-import { newid } from "../utils"
+import { newid, timeout } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 import { helpers } from "@budibase/shared-core"
 import { Job, JobId, JobInformation } from "bull"
@@ -118,6 +118,12 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       if (jobId && message.opts?.removeOnComplete) {
         this._queuedJobIds.delete(jobId)
       }
+
+      const indexToRemove = this._messages.indexOf(message)
+      if (indexToRemove === -1) {
+        throw "Failed deleting a processed message"
+      }
+      this._messages.splice(indexToRemove, 1)
     })
   }
 
@@ -247,6 +253,16 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     return this._messages
       .filter(job => job.opts?.repeat != null)
       .map(job => jobToJobInformation(job as Job))
+  }
+
+  async whenCurrentJobsFinished() {
+    do {
+      await timeout(50)
+    } while (this.hasRunningJobs())
+  }
+
+  private hasRunningJobs() {
+    return this._addCount > this._runCount
   }
 }
 

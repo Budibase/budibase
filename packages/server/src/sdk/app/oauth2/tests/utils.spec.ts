@@ -1,4 +1,4 @@
-import { generator } from "@budibase/backend-core/tests"
+import { generator, utils as testUtils } from "@budibase/backend-core/tests"
 import { GenericContainer, Wait } from "testcontainers"
 import sdk from "../../.."
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
@@ -7,6 +7,8 @@ import path from "path"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import { startContainer } from "../../../../integrations/tests/utils"
 import { OAuth2CredentialsMethod } from "@budibase/types"
+import { cache, context, docIds } from "@budibase/backend-core"
+import tk from "timekeeper"
 
 const config = new TestConfiguration()
 
@@ -112,6 +114,41 @@ describe("oauth2 utils", () => {
         ).rejects.toThrow(
           "Error fetching oauth2 token: Invalid client or Invalid client credentials"
         )
+      })
+
+      describe("track usages", () => {
+        beforeAll(() => {
+          tk.freeze(Date.now())
+        })
+
+        it("tracks usages on generation", async () => {
+          const oauthConfig = await config.doInContext(config.appId, () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "my-client",
+              clientSecret: "my-secret",
+              method,
+            })
+          )
+
+          await config.doInContext(config.appId, () => getToken(oauthConfig.id))
+          await testUtils.queue.processMessages(
+            cache.docWritethrough.DocWritethroughProcessor.queue
+          )
+
+          const usageLog = await config.doInContext(config.appId, () =>
+            context
+              .getAppDB()
+              .tryGet(docIds.generateOAuth2LogID(oauthConfig.id))
+          )
+
+          expect(usageLog).toEqual(
+            expect.objectContaining({
+              lastUsage: Date.now(),
+            })
+          )
+        })
       })
     }
   )
