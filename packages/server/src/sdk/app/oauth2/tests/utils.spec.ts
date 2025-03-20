@@ -149,6 +149,33 @@ describe("oauth2 utils", () => {
             })
           )
         })
+
+        it("does not track on failed usages", async () => {
+          const oauthConfig = await config.doInContext(config.appId, () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "wrong-client",
+              clientSecret: "my-secret",
+              method,
+            })
+          )
+
+          await expect(
+            config.doInContext(config.appId, () => getToken(oauthConfig.id))
+          ).rejects.toThrow()
+          await testUtils.queue.processMessages(
+            cache.docWritethrough.DocWritethroughProcessor.queue
+          )
+
+          const usageLog = await config.doInContext(config.appId, () =>
+            context
+              .getAppDB()
+              .tryGet(docIds.generateOAuth2LogID(oauthConfig.id))
+          )
+
+          expect(usageLog).toBeUndefined()
+        })
       })
     }
   )
