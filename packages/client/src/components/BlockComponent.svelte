@@ -5,8 +5,8 @@
   import Component from "@/components/Component.svelte"
 
   export let type
-  export let props
-  export let styles
+  export let props = undefined
+  export let styles = undefined
   export let context = undefined
   export let name = undefined
   export let order = 0
