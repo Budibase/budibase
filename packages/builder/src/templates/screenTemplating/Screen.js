@@ -1,5 +1,6 @@
 import { BaseStructure } from "../BaseStructure"
 import { Helpers } from "@budibase/bbui"
+import { ScreenVariant } from "@budibase/types"
 
 export class Screen extends BaseStructure {
   constructor() {
@@ -85,7 +86,7 @@ export class Screen extends BaseStructure {
 export class PDFScreen extends Screen {
   constructor() {
     super()
-    this._json.variant = "pdf"
+    this._json.variant = ScreenVariant.PDF
     this._json.width = "Max"
     this._json.showNavigation = false
     this._json.props = {
