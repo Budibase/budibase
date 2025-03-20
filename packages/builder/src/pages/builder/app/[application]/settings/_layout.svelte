@@ -34,7 +34,7 @@
             active={$isActive("./embed")}
           />
           <SideNavItem
-            text="PWA"
+            text="Progressive Web App"
             url={$url("./pwa")}
             active={$isActive("./pwa")}
           />

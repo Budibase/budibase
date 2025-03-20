@@ -158,15 +158,11 @@
 
       // Create manifest entries
       pwaConfig.icons = uploadResults
-        .map((result, index) => {
-          if (!result || !result[0] || !result[0].key) {
-            return null
-          }
+        .map((result: any, index: number) => {
           return {
             src: result[0].key,
             sizes: iconsToUpload[index].sizes,
             type: iconsToUpload[index].type,
-            platform: iconsToUpload[index].platform,
           }
         })
         .filter(Boolean)
@@ -194,8 +190,7 @@
 
       // Create screenshot entries
       const uploadedScreenshots = uploadResults
-        .map(result => {
-          if (!result || !result[0] || !result[0].key) return null
+        .map((result: any) => {
           return {
             src: result[0].key,
             sizes: "1280x720",
@@ -437,15 +432,6 @@
     font-size: 0.8em;
     color: var(--spectrum-global-color-gray-700);
     margin-top: var(--spacing-xs);
-  }
-
-  .optional-text ul {
-    margin-top: var(--spacing-xs);
-    padding-left: var(--spacing-l);
-  }
-
-  .optional-text li {
-    margin-bottom: var(--spacing-xs);
   }
 
   .section {
