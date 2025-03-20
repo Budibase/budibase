@@ -92,14 +92,12 @@
   {#if blockRef}
     {#if isTriggerBlock}
       <span class="block-type">
-        <ActionButton size="S" active={false} icon="Workflow" hoverable={false}>
+        <ActionButton size="S" active={false} icon="Workflow">
           Trigger
         </ActionButton>
       </span>
     {:else if blockRef.looped}
-      <ActionButton size="S" active={false} icon="Reuse" hoverable={false}>
-        Looping
-      </ActionButton>
+      <ActionButton size="S" active={false} icon="Reuse">Looping</ActionButton>
     {:else}
       <span />
     {/if}
