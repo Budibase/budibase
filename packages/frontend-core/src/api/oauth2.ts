@@ -18,7 +18,7 @@ export interface OAuth2Endpoints {
   update: (
     config: UpdateOAuth2ConfigRequest
   ) => Promise<UpdateOAuth2ConfigResponse>
-  delete: (id: string) => Promise<void>
+  delete: (id: string, rev: string) => Promise<void>
   validate: (config: ValidateConfigRequest) => Promise<ValidateConfigResponse>
 }
 
@@ -66,10 +66,11 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
   /**
    * Deletes an OAuth2 configuration by its id.
    * @param id the ID of the OAuth2 config
+   * @param rev the rev of the OAuth2 config
    */
-  delete: async id => {
+  delete: async (id, rev) => {
     return await API.delete<void, void>({
-      url: `/api/oauth2/${id}`,
+      url: `/api/oauth2/${id}/${rev}`,
     })
   },
   validate: async function (
