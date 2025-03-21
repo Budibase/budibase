@@ -8064,6 +8064,7 @@
     "icon": "Document",
     "hasChildren": true,
     "showEmptyState": false,
+    "illegalChildren": ["sidepanel", "modal", "gridblock"],
     "grid": {
       "hAlign": "center",
       "vAlign": "start"

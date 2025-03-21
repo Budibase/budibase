@@ -24,6 +24,7 @@
   $: safeButtonText = buttonText || "Download PDF"
   $: heightPx = pageCount * innerPageHeightPx + doubleMarginPx
   $: pageStyle = `--height:${heightPx}px; --margin:${marginPt}pt;`
+  $: gridMinHeight = pageCount * DesiredRows * GridRowHeight
 
   const generatePDF = async () => {
     rendering = true
@@ -47,12 +48,20 @@
   }
 
   onMount(() => {
-    const observer = new ResizeObserver(() => {
-      const height = ref.getBoundingClientRect().height
-      pageCount = Math.max(1, Math.ceil(height / innerPageHeightPx))
+    // Observe required content rows and use this to determine required pages
+    const gridDOMID = `${$component.id}-grid-dom`
+    const grid = document.getElementsByClassName(gridDOMID)[0] as HTMLElement
+    const mutationObserver = new MutationObserver(() => {
+      const rows = parseInt(grid.dataset.requiredRows || "1")
+      pageCount = Math.max(1, Math.ceil(rows / DesiredRows))
     })
-    observer.observe(ref)
-    return observer.disconnect
+    mutationObserver.observe(grid, {
+      attributes: true,
+      attributeFilter: ["data-required-rows"],
+    })
+    return () => {
+      mutationObserver.disconnect()
+    }
   })
 </script>
 
@@ -67,7 +76,7 @@
       </div>
       <div class="page" style={pageStyle}>
         {#if pageCount > 1}
-          {#each new Array(pageCount) as _, idx}
+          {#each { length: pageCount } as _, idx}
             <div
               class="divider"
               class:last={idx === pageCount - 1}
@@ -80,7 +89,16 @@
           class="spectrum spectrum--lightest spectrum--medium pageContent"
           bind:this={ref}
         >
-          <BlockComponent type="container" props={{ layout: "grid" }}>
+          <BlockComponent
+            type="container"
+            props={{ layout: "grid" }}
+            styles={{
+              normal: {
+                height: `${gridMinHeight}px`,
+              },
+            }}
+            context="grid"
+          >
             <slot />
           </BlockComponent>
         </div>
@@ -147,12 +165,12 @@
     top: calc(var(--top) + var(--margin));
     background: transparent;
   }
-  .divider::after {
-    position: absolute;
-    top: -32px;
-    right: 24px;
-    content: var(--idx);
-    color: var(--spectrum-global-color-static-gray-400);
-    text-align: right;
-  }
+  /*.divider::after {*/
+  /*  position: absolute;*/
+  /*  top: -32px;*/
+  /*  right: 24px;*/
+  /*  content: var(--idx);*/
+  /*  color: var(--spectrum-global-color-static-gray-400);*/
+  /*  text-align: right;*/
+  /*}*/
 </style>
