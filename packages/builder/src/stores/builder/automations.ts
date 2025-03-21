@@ -77,13 +77,6 @@ import {
 } from "@/types/automations"
 import { TableNames } from "@/constants"
 
-// Define an empty evaluate context at the start
-const emptyContext: AutomationContext = {
-  user: {},
-  steps: {},
-  settings: {},
-}
-
 const initialAutomationState: AutomationState = {
   automations: [],
   showTestModal: false,
@@ -117,117 +110,111 @@ const getFinalDefinitions = (
 }
 
 const automationActions = (store: AutomationStore) => ({
-  /**
-   * Generates a derived store acting as an evaluation context
-   * for bindings in automations
-   *
-   * @returns {Readable<AutomationContext>}
-   */
-  generateContext: (): Readable<AutomationContext> => {
-    return derived(
-      [organisation, store.selected, environment, tables],
-      ([$organisation, $selectedAutomation, $env, $tables]) => {
-        const { platformUrl: url, company, logoUrl: logo } = $organisation
+  // generateContext: (): Readable<AutomationContext> => {
+  //   return derived(
+  //     [organisation, store.selected, environment, tables],
+  //     ([$organisation, $selectedAutomation, $env, $tables]) => {
+  //       const { platformUrl: url, company, logoUrl: logo } = $organisation
 
-        const results: TestAutomationResponse | undefined =
-          $selectedAutomation?.testResults
+  //       const results: TestAutomationResponse | undefined =
+  //         $selectedAutomation?.testResults
 
-        const testData: AutomationTriggerResultOutputs | undefined =
-          $selectedAutomation.data?.testData
+  //       const testData: AutomationTriggerResultOutputs | undefined =
+  //         $selectedAutomation.data?.testData
 
-        const triggerDef = $selectedAutomation.data?.definition?.trigger
+  //       const triggerDef = $selectedAutomation.data?.definition?.trigger
 
-        const isWebhook = triggerDef?.stepId === AutomationTriggerStepId.WEBHOOK
-        const isRowAction =
-          triggerDef?.stepId === AutomationTriggerStepId.ROW_ACTION
+  //       const isWebhook = triggerDef?.stepId === AutomationTriggerStepId.WEBHOOK
+  //       const isRowAction =
+  //         triggerDef?.stepId === AutomationTriggerStepId.ROW_ACTION
 
-        const triggerInputs = triggerDef
-          ? (triggerDef.inputs as AutomationTriggerInputs<
-              typeof triggerDef.stepId
-            >)
-          : undefined
+  //       const triggerInputs = triggerDef
+  //         ? (triggerDef.inputs as AutomationTriggerInputs<
+  //             typeof triggerDef.stepId
+  //           >)
+  //         : undefined
 
-        let triggerData: AutomationTriggerResultOutputs | undefined
+  //       let triggerData: AutomationTriggerResultOutputs | undefined
 
-        if (results && isAutomationResults(results)) {
-          const automationTrigger: AutomationTriggerResult | undefined =
-            results?.trigger
+  //       if (results && isAutomationResults(results)) {
+  //         const automationTrigger: AutomationTriggerResult | undefined =
+  //           results?.trigger
 
-          const outputs: AutomationTriggerResultOutputs | undefined =
-            automationTrigger?.outputs
-          triggerData = outputs ? outputs : undefined
+  //         const outputs: AutomationTriggerResultOutputs | undefined =
+  //           automationTrigger?.outputs
+  //         triggerData = outputs ? outputs : undefined
 
-          if (triggerData) {
-            if (isRowAction) {
-              const rowActionInputs: RowActionTriggerInputs =
-                triggerInputs as RowActionTriggerInputs
-              const rowActionTableId = rowActionInputs.tableId
-              const rowActionTable = $tables.list.find(
-                table => table._id === rowActionTableId
-              )
+  //         if (triggerData) {
+  //           if (isRowAction) {
+  //             const rowActionInputs: RowActionTriggerInputs =
+  //               triggerInputs as RowActionTriggerInputs
+  //             const rowActionTableId = rowActionInputs.tableId
+  //             const rowActionTable = $tables.list.find(
+  //               table => table._id === rowActionTableId
+  //             )
 
-              const rowTriggerOutputs = triggerData as RowActionTriggerOutputs
+  //             const rowTriggerOutputs = triggerData as RowActionTriggerOutputs
 
-              if (rowActionTable) {
-                // Row action table must always be retrieved as it is never
-                // returned in the test results
-                rowTriggerOutputs.table = rowActionTable
-              }
-            } else if (isWebhook) {
-              const webhookTrigger = triggerData as WebhookTriggerOutputs
-              // Ensure it displays in the event that the configuration was been skipped
-              webhookTrigger.body = webhookTrigger.body ?? {}
-            }
-          }
+  //             if (rowActionTable) {
+  //               // Row action table must always be retrieved as it is never
+  //               // returned in the test results
+  //               rowTriggerOutputs.table = rowActionTable
+  //             }
+  //           } else if (isWebhook) {
+  //             const webhookTrigger = triggerData as WebhookTriggerOutputs
+  //             // Ensure it displays in the event that the configuration was been skipped
+  //             webhookTrigger.body = webhookTrigger.body ?? {}
+  //           }
+  //         }
 
-          // Clean up unnecessary data from the context
-          // Meta contains UI/UX config data. Non-bindable
-          delete triggerData?.meta
-        } else {
-          // Substitute test data in place of the trigger data if the test hasn't been run
-          triggerData = testData
-        }
+  //         // Clean up unnecessary data from the context
+  //         // Meta contains UI/UX config data. Non-bindable
+  //         delete triggerData?.meta
+  //       } else {
+  //         // Substitute test data in place of the trigger data if the test hasn't been run
+  //         triggerData = testData
+  //       }
 
-        // AppSelf context required to mirror server user context
-        const userContext = $selectedAutomation.appSelf || {}
+  //       // AppSelf context required to mirror server user context
+  //       const userContext = $selectedAutomation.appSelf || {}
 
-        // Extract step results from a valid response
-        const stepResults =
-          results && isAutomationResults(results) ? results?.steps : []
+  //       // Extract step results from a valid response
+  //       const stepResults =
+  //         results && isAutomationResults(results) ? results?.steps : []
 
-        // Env vars require a license. In the event they are empty or unavailable
-        // the UI wont display an empty section in the context
-        const envVars = $env?.variables.length
-          ? $env?.variables.reduce(
-              (acc: Record<string, any>, variable: Record<string, any>) => {
-                acc[variable.name] = ""
-                return acc
-              },
-              {}
-            )
-          : undefined
+  //       // Env vars require a license. In the event they are empty or unavailable
+  //       // the UI wont display an empty section in the context
+  //       const envVars = $env?.variables.length
+  //         ? $env?.variables.reduce(
+  //             (acc: Record<string, any>, variable: Record<string, any>) => {
+  //               acc[variable.name] = ""
+  //               return acc
+  //             },
+  //             {}
+  //           )
+  //         : undefined
 
-        // Result data from a completed test run
-        // Initially contain info around
-        const stepContext = stepResults.reduce(
-          (acc: Record<string, any>, res: Record<string, any>) => {
-            acc[res.id] = res.outputs
-            return acc
-          },
-          {}
-        )
+  //       // Result data from a completed test run
+  //       // Initially contain info around
+  //       const stepContext = stepResults.reduce(
+  //         (acc: Record<string, any>, res: Record<string, any>) => {
+  //           acc[res.id] = res.outputs
+  //           return acc
+  //         },
+  //         {}
+  //       )
 
-        return {
-          user: userContext,
-          // Merge in the trigger data.
-          ...(triggerData ? { trigger: { ...triggerData } } : {}),
-          steps: stepContext,
-          ...(envVars ? { env: envVars } : {}),
-          settings: { url, company, logo },
-        }
-      }
-    )
-  },
+  //       return {
+  //         user: userContext,
+  //         // Merge in the trigger data.
+  //         ...(triggerData ? { trigger: { ...triggerData } } : {}),
+  //         steps: stepContext,
+  //         ...(envVars ? { env: envVars } : {}),
+  //         settings: { url, company, logo },
+  //       }
+  //     }
+  //   )
+  // },
 
   /**
    * @param {Automation} auto
@@ -307,12 +294,6 @@ const automationActions = (store: AutomationStore) => ({
     }
   },
 
-  /**
-   * Initialise the automation evaluation context
-   */
-  initContext: () => {
-    store.context = store.actions.generateContext()
-  },
   /**
    * Fetches the app user context used for live evaluation
    * This matches the context used on the server. Only expose
@@ -2206,7 +2187,6 @@ class AutomationStore extends BudiStore<AutomationState> {
   history: HistoryStore<Automation>
   actions: ReturnType<typeof automationActions>
   selected: SelectedAutomationStore
-  context: Readable<AutomationContext> = readable(emptyContext)
 
   constructor() {
     super(initialAutomationState)
@@ -2231,11 +2211,124 @@ export const automationStore = new AutomationStore()
 export const automationHistoryStore = automationStore.history
 export const selectedAutomation = automationStore.selected
 
-// Automation flow kicks off initialisation, subscription happens within the page
-export const evaluationContext: Readable<AutomationContext> = readable(
-  emptyContext,
-  set => {
-    const unsubscribe = automationStore.context?.subscribe(set) ?? (() => {})
-    return () => unsubscribe()
-  }
+/**
+ * Pad out a base default context for subscribers
+ */
+const emptyContext: AutomationContext = {
+  user: {},
+  steps: {},
+  settings: {
+    url: "",
+    company: "",
+    logo: "",
+  },
+}
+
+/**
+ * Generates a derived store acting as an evaluation context
+ * for bindings in automations
+ *
+ * @returns {Readable<AutomationContext>}
+ */
+export const evaluationContext: Readable<AutomationContext> = derived(
+  [organisation, automationStore.selected, environment, tables],
+  ([$organisation, $selectedAutomation, $env, $tables]): AutomationContext => {
+    const { platformUrl: url, company, logoUrl: logo } = $organisation
+
+    const results: TestAutomationResponse | undefined =
+      $selectedAutomation?.testResults
+
+    const testData: AutomationTriggerResultOutputs | undefined =
+      $selectedAutomation.data?.testData
+
+    const triggerDef = $selectedAutomation.data?.definition?.trigger
+
+    const isWebhook = triggerDef?.stepId === AutomationTriggerStepId.WEBHOOK
+    const isRowAction =
+      triggerDef?.stepId === AutomationTriggerStepId.ROW_ACTION
+
+    const triggerInputs = triggerDef
+      ? (triggerDef.inputs as AutomationTriggerInputs<typeof triggerDef.stepId>)
+      : undefined
+
+    let triggerData: AutomationTriggerResultOutputs | undefined
+
+    if (results && isAutomationResults(results)) {
+      const automationTrigger: AutomationTriggerResult | undefined =
+        results?.trigger
+
+      const outputs: AutomationTriggerResultOutputs | undefined =
+        automationTrigger?.outputs
+      triggerData = outputs ? outputs : undefined
+
+      if (triggerData) {
+        if (isRowAction) {
+          const rowActionInputs: RowActionTriggerInputs =
+            triggerInputs as RowActionTriggerInputs
+          const rowActionTableId = rowActionInputs.tableId
+          const rowActionTable = $tables.list.find(
+            table => table._id === rowActionTableId
+          )
+
+          const rowTriggerOutputs = triggerData as RowActionTriggerOutputs
+
+          if (rowActionTable) {
+            // Row action table must always be retrieved as it is never
+            // returned in the test results
+            rowTriggerOutputs.table = rowActionTable
+          }
+        } else if (isWebhook) {
+          const webhookTrigger = triggerData as WebhookTriggerOutputs
+          // Ensure it displays in the event that the configuration was been skipped
+          webhookTrigger.body = webhookTrigger.body ?? {}
+        }
+      }
+
+      // Clean up unnecessary data from the context
+      // Meta contains UI/UX config data. Non-bindable
+      delete triggerData?.meta
+    } else {
+      // Substitute test data in place of the trigger data if the test hasn't been run
+      triggerData = testData
+    }
+
+    // AppSelf context required to mirror server user context
+    const userContext = $selectedAutomation.appSelf || {}
+
+    // Extract step results from a valid response
+    const stepResults =
+      results && isAutomationResults(results) ? results?.steps : []
+
+    // Env vars require a license. In the event they are empty or unavailable
+    // the UI wont display an empty section in the context
+    const envVars = $env?.variables.length
+      ? $env?.variables.reduce(
+          (acc: Record<string, any>, variable: Record<string, any>) => {
+            acc[variable.name] = ""
+            return acc
+          },
+          {}
+        )
+      : undefined
+
+    // Result data from a completed test run
+    // Initially contain info around
+    const stepContext = stepResults.reduce(
+      (acc: Record<string, any>, res: Record<string, any>) => {
+        acc[res.id] = res.outputs
+        return acc
+      },
+      {}
+    )
+
+    return {
+      user: userContext,
+      // Merge in the trigger data.
+      ...(triggerData ? { trigger: { ...triggerData } } : {}),
+      steps: stepContext,
+      ...(envVars ? { env: envVars } : {}),
+      settings: { url, company, logo },
+    }
+  },
+  emptyContext
 )

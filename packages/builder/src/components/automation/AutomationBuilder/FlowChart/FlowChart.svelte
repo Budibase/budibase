@@ -84,9 +84,6 @@
     } catch (error) {
       console.error(error)
     }
-
-    // Init the binding evaluation context
-    automationStore.actions.initContext()
   })
 </script>
 
