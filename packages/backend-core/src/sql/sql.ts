@@ -188,6 +188,16 @@ class InternalBuilder {
     return this.table.schema[column]
   }
 
+  private requiresJsonAsStringClient(): boolean {
+    const requiresJsonAsString = [
+      SqlClient.MS_SQL,
+      SqlClient.MY_SQL,
+      SqlClient.MARIADB,
+      SqlClient.ORACLE,
+    ]
+    return requiresJsonAsString.includes(this.client)
+  }
+
   private quoteChars(): [string, string] {
     const wrapped = this.knexClient.wrapIdentifier("foo", {})
     return [wrapped[0], wrapped[wrapped.length - 1]]
@@ -382,7 +392,7 @@ class InternalBuilder {
     }
 
     // MS-SQL doesn't allow an object to be passed in
-    if (this.client === SqlClient.MS_SQL && isJsonColumn(schema)) {
+    if (this.requiresJsonAsStringClient() && isJsonColumn(schema)) {
       return JSON.stringify(input)
     }
 
