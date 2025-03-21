@@ -1,6 +1,6 @@
 <script lang="ts">
   import { oauth2 } from "@/stores/builder"
-  import type { OAuth2Config, UpsertOAuth2Config } from "@/types"
+  import type { OAuth2Config } from "@/types"
   import {
     Body,
     Divider,
@@ -12,6 +12,7 @@
     notifications,
     Select,
   } from "@budibase/bbui"
+  import type { InsertOAuth2ConfigRequest } from "@budibase/types"
   import {
     OAuth2CredentialsMethod,
     PASSWORD_REPLACEMENT,
@@ -50,7 +51,7 @@
       name: requiredString("Name is required.").refine(
         val =>
           !$oauth2.configs
-            .filter(c => c.id !== config.id)
+            .filter(c => c._id !== config._id)
             .map(c => c.name.toLowerCase())
             .includes(val.toLowerCase()),
         {
@@ -63,7 +64,7 @@
       method: z.nativeEnum(OAuth2CredentialsMethod, {
         message: "Authentication method is required.",
       }),
-    }) satisfies ZodType<UpsertOAuth2Config>
+    }) satisfies ZodType<InsertOAuth2ConfigRequest>
 
     const validationResult = validator.safeParse(config)
     errors = {}
@@ -91,7 +92,7 @@
     const { data: configData } = validationResult
     try {
       const connectionValidation = await oauth2.validate({
-        id: config?.id,
+        _id: config?._id,
         url: configData.url,
         clientId: configData.clientId,
         clientSecret: configData.clientSecret,
@@ -110,7 +111,11 @@
         await oauth2.create(configData)
         notifications.success("Settings created.")
       } else {
-        await oauth2.edit(config!.id, configData)
+        await oauth2.edit({
+          ...configData,
+          _id: config!._id,
+          _rev: config!._rev,
+        })
         notifications.success("Settings saved.")
       }
     } catch (e: any) {
