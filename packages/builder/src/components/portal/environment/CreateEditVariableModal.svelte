@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     ModalContent,
     Button,
@@ -14,23 +14,23 @@
 
   const modalContext = getContext(Context.Modal)
 
-  export let save
-  export let row
+  export let save: any
+  export let row: any
 
-  let deleteDialog
+  let deleteDialog: ConfirmDialog
   let name = row?.name || ""
-  let productionValue
-  let developmentValue
+  let productionValue: string
+  let developmentValue: string
   let useProductionValue = true
 
   const HasSpacesRegex = /[\\"\s]/
 
-  const deleteVariable = async name => {
+  const deleteVariable = async (name: string) => {
     try {
       await environment.deleteVariable(name)
       modalContext.hide()
       notifications.success("Environment variable deleted")
-    } catch (err) {
+    } catch (err: any) {
       notifications.error(err.message)
     }
   }
@@ -43,7 +43,7 @@
         development: developmentValue,
       })
       notifications.success("Environment variable saved")
-    } catch (err) {
+    } catch (err: any) {
       notifications.error(`Error saving environment variable - ${err.message}`)
     }
   }
@@ -58,7 +58,7 @@
     disabled={row}
     label="Name"
     bind:value={name}
-    error={HasSpacesRegex.test(name) && "Must not include spaces"}
+    error={HasSpacesRegex.test(name) ? "Must not include spaces" : undefined}
   />
   <div>
     <Heading size="XS">Production</Heading>
