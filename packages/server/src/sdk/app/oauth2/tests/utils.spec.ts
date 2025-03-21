@@ -7,7 +7,7 @@ import path from "path"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import { startContainer } from "../../../../integrations/tests/utils"
 import { OAuth2CredentialsMethod } from "@budibase/types"
-import { cache, context, docIds } from "@budibase/backend-core"
+import { cache } from "@budibase/backend-core"
 import tk from "timekeeper"
 
 const config = new TestConfiguration()
@@ -140,16 +140,10 @@ describe("oauth2 utils", () => {
           )
 
           const usageLog = await config.doInContext(config.appId, () =>
-            context
-              .getAppDB()
-              .tryGet(docIds.generateOAuth2LogID(oauthConfig._id))
+            sdk.oauth2.getLastUsages([oauthConfig._id])
           )
 
-          expect(usageLog).toEqual(
-            expect.objectContaining({
-              lastUsage: Date.now(),
-            })
-          )
+          expect(usageLog[oauthConfig._id]).toEqual(Date.now())
         })
 
         it("does not track on failed usages", async () => {
@@ -171,12 +165,46 @@ describe("oauth2 utils", () => {
           )
 
           const usageLog = await config.doInContext(config.appId, () =>
-            context
-              .getAppDB()
-              .tryGet(docIds.generateOAuth2LogID(oauthConfig._id))
+            sdk.oauth2.getLastUsages([oauthConfig._id])
           )
 
-          expect(usageLog).toBeUndefined()
+          expect(usageLog[oauthConfig._id]).toBeUndefined()
+        })
+
+        it("tracks usages between prod and dev, keeping always the latest", async () => {
+          const oauthConfig = await config.doInContext(config.appId, () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "my-client",
+              clientSecret: "my-secret",
+              method,
+            })
+          )
+
+          await config.doInContext(config.appId, () =>
+            getToken(oauthConfig._id)
+          )
+
+          await config.publish()
+
+          tk.travel(Date.now() + 100)
+          await config.doInContext(config.prodAppId, () =>
+            getToken(oauthConfig._id)
+          )
+          await testUtils.queue.processMessages(
+            cache.docWritethrough.DocWritethroughProcessor.queue
+          )
+
+          for (const appId of [config.appId, config.prodAppId]) {
+            const usageLog = await config.doInContext(appId, () =>
+              sdk.oauth2.getLastUsages([oauthConfig._id])
+            )
+
+            expect(usageLog).toEqual({
+              [oauthConfig._id]: Date.now(),
+            })
+          }
         })
       })
     }

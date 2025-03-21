@@ -99,15 +99,27 @@ export async function validateConfig(config: {
 }
 
 export async function getLastUsages(ids: string[]) {
-  const docs = await context
+  const devDocs = await context
     .getAppDB()
     .getMultiple<OAuth2LogDocument>(ids.map(docIds.generateOAuth2LogID), {
       allowMissing: true,
     })
+
+  const prodDocs = await context
+    .getProdAppDB()
+    .getMultiple<OAuth2LogDocument>(ids.map(docIds.generateOAuth2LogID), {
+      allowMissing: true,
+    })
+
   const result = ids.reduce<Record<string, number>>((acc, id) => {
-    const doc = docs.find(d => d._id === docIds.generateOAuth2LogID(id))
-    if (doc) {
-      acc[id] = doc.lastUsage
+    const devDoc = devDocs.find(d => d._id === docIds.generateOAuth2LogID(id))
+    if (devDoc) {
+      acc[id] = devDoc.lastUsage
+    }
+
+    const prodDoc = prodDocs.find(d => d._id === docIds.generateOAuth2LogID(id))
+    if (prodDoc && (!acc[id] || acc[id] < prodDoc.lastUsage)) {
+      acc[id] = prodDoc.lastUsage
     }
     return acc
   }, {})
