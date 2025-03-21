@@ -172,8 +172,8 @@
             <img
               width={20}
               height={20}
-              src={getExternalAction(action.stepId).icon}
-              alt={getExternalAction(action.stepId).name}
+              src={getExternalAction(action.stepId)?.icon}
+              alt={getExternalAction(action.stepId)?.name}
             />
             <span class="icon-spacing">
               <Body size="XS">
