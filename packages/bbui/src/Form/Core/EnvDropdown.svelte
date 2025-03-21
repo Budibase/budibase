@@ -3,10 +3,11 @@
   import { createEventDispatcher, onMount } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Divider from "../../Divider/Divider.svelte"
+  import { EnvDropdownType } from "@/types"
 
   export let value: string | number | undefined = undefined
   export let placeholder: string | undefined = undefined
-  export let type: "text" | "number" | "password" = "text"
+  export let type: EnvDropdownType = "text"
   export let disabled: boolean = false
   export let id: string | undefined = undefined
   export let readonly: boolean = false

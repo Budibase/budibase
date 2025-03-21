@@ -11,7 +11,8 @@
         "../*/src/index.js",
         "../*",
         "../../node_modules/@budibase/*"
-      ]
+      ],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["./src/**/*"],
