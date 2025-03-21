@@ -1,8 +1,9 @@
 import fetch, { RequestInit } from "node-fetch"
 import { HttpError } from "koa"
 import { get } from "../oauth2"
-import { Document, OAuth2CredentialsMethod } from "@budibase/types"
+import { Document, OAuth2CredentialsMethod, SourceName } from "@budibase/types"
 import { cache, context, docIds } from "@budibase/backend-core"
+import sdk from "../.."
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
@@ -123,5 +124,37 @@ export async function getLastUsages(ids: string[]) {
     }
     return acc
   }, {})
+  return result
+}
+
+export async function getConnectedSources(ids: string[]) {
+  const result: Record<string, { name: string; id: string; type: string }[]> =
+    {}
+
+  const allRestDatasources = (await sdk.datasources.fetch()).filter(
+    d => d.source === SourceName.REST
+  )
+  const allQueries = await sdk.queries.fetch()
+  for (const id of ids) {
+    const connectedRests = allQueries.filter(
+      q =>
+        allRestDatasources.map(x => x._id!).includes(q.datasourceId) &&
+        q.fields.authConfigId === id
+    )
+
+    sdk.queries.fetch()
+    if (connectedRests.length) {
+      result[id] ??= []
+
+      result[id].push(
+        ...connectedRests.map(x => ({
+          id: x._id!,
+          name: x.name!,
+          type: "REST",
+        }))
+      )
+    }
+  }
+
   return result
 }

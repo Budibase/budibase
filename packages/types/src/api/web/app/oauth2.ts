@@ -11,7 +11,10 @@ export interface OAuth2ConfigResponse {
 }
 
 export interface FetchOAuth2ConfigsResponse {
-  configs: (OAuth2ConfigResponse & { lastUsage?: string })[]
+  configs: (OAuth2ConfigResponse & {
+    lastUsage?: string
+    connectedDatasources?: { name: string; id: string; type: string }[]
+  })[]
 }
 
 export interface InsertOAuth2ConfigRequest {

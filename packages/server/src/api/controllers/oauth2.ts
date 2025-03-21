@@ -32,12 +32,17 @@ export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
 
   const timestamps = await sdk.oauth2.getLastUsages(configs.map(c => c._id))
 
+  const connectedDatasources = await sdk.oauth2.getConnectedSources(
+    configs.map(c => c._id)
+  )
+
   const response: FetchOAuth2ConfigsResponse = {
     configs: (configs || []).map(c => ({
       ...toFetchOAuth2ConfigsResponse(c),
       lastUsage: timestamps[c._id]
         ? new Date(timestamps[c._id]).toISOString()
         : undefined,
+      connectedDatasources: connectedDatasources[c._id],
     })),
   }
 
