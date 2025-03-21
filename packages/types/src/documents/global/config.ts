@@ -16,6 +16,7 @@ export interface SMTPInnerConfig {
     pass: string
   }
   connectionTimeout?: any
+  fallback?: boolean
 }
 
 export interface SMTPConfig extends Config<SMTPInnerConfig> {}
