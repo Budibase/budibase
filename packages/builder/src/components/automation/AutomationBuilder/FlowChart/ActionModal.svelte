@@ -35,12 +35,13 @@
 
   $: blockRef = $selectedAutomation.blockRefs?.[block.id]
   $: lastStep = blockRef?.terminating
-  $: pathSteps = block.id && $selectedAutomation?.data
-    ? automationStore.actions.getPathSteps(
-        blockRef.pathTo,
-        $selectedAutomation.data
-      )
-    : []
+  $: pathSteps =
+    block.id && $selectedAutomation?.data
+      ? automationStore.actions.getPathSteps(
+          blockRef.pathTo,
+          $selectedAutomation.data
+        )
+      : []
 
   $: collectBlockExists = pathSteps?.some(
     step => step.stepId === ActionStepID.COLLECT
@@ -49,7 +50,8 @@
   const disabled = () => {
     return {
       SEND_EMAIL_SMTP: {
-        disabled: !$admin.checklist?.smtp?.checked || $admin.checklist?.smtp.fallback,
+        disabled:
+          !$admin.checklist?.smtp?.checked || $admin.checklist?.smtp.fallback,
         message: "Please configure SMTP",
       },
       COLLECT: {
@@ -77,36 +79,45 @@
     }
   }
 
-  const external = actions.reduce((acc: Record<string, AutomationStepDefinition>, elm) => {
-    const [k, v] = elm
-    if (!v.internal && !v.custom) {
-      acc[k] = v
-    }
-    return acc
-  }, {})
+  const external = actions.reduce(
+    (acc: Record<string, AutomationStepDefinition>, elm) => {
+      const [k, v] = elm
+      if (!v.internal && !v.custom) {
+        acc[k] = v
+      }
+      return acc
+    },
+    {}
+  )
 
-  const internal = actions.reduce((acc: Record<string, AutomationStepDefinition>, elm) => {
-    const [k, v] = elm
-    if (v.internal) {
-      acc[k] = v
-    }
-    delete acc.LOOP
+  const internal = actions.reduce(
+    (acc: Record<string, AutomationStepDefinition>, elm) => {
+      const [k, v] = elm
+      if (v.internal) {
+        acc[k] = v
+      }
+      delete acc.LOOP
 
-    const stepId = $selectedAutomation.data?.definition.trigger.stepId
-    // Filter out Collect block if not App Action or Webhook
-    if (stepId && !collectBlockAllowedSteps.includes(stepId)) {
-      delete acc.COLLECT
-    }
-    return acc
-  }, {})
+      const stepId = $selectedAutomation.data?.definition.trigger.stepId
+      // Filter out Collect block if not App Action or Webhook
+      if (stepId && !collectBlockAllowedSteps.includes(stepId)) {
+        delete acc.COLLECT
+      }
+      return acc
+    },
+    {}
+  )
 
-  const plugins = actions.reduce((acc: Record<string, AutomationStepDefinition>, elm) => {
-    const [k, v] = elm
-    if (v.custom) {
-      acc[k] = v
-    }
-    return acc
-  }, {})
+  const plugins = actions.reduce(
+    (acc: Record<string, AutomationStepDefinition>, elm) => {
+      const [k, v] = elm
+      if (v.custom) {
+        acc[k] = v
+      }
+      return acc
+    },
+    {}
+  )
 
   const selectAction = async (action: AutomationStepDefinition) => {
     selectedAction = action.name
