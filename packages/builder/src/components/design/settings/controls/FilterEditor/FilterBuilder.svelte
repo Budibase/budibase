@@ -7,15 +7,15 @@
     readableToRuntimeBinding,
   } from "@/dataBinding"
 
-  export let schemaFields
-  export let filters
+  export let schemaFields = undefined
+  export let filters = undefined
   export let bindings = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
-  export let allowOnEmpty
-  export let datasource
-  export let builderType
-  export let docsURL
+  export let allowOnEmpty = undefined
+  export let datasource = undefined
+  export let builderType = undefined
+  export let docsURL = undefined
   export let evaluationContext = {}
 </script>
 

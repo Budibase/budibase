@@ -38,6 +38,7 @@
   export let compare: any = undefined
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
+  export let loading: boolean | undefined = false
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<any>) => {
@@ -56,6 +57,7 @@
 <Field {helpText} {label} {labelPosition} {error} {tooltip}>
   <Select
     {quiet}
+    {loading}
     {disabled}
     {readonly}
     {value}

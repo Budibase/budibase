@@ -14,14 +14,15 @@
   export let value = ""
   export let bindings = []
   export let title = "Bindings"
-  export let placeholder
-  export let label
+  export let placeholder = undefined
+  export let label = undefined
   export let disabled = false
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
-  export let type
-  export let schema
+  export let type = undefined
+  export let schema = undefined
+
   export let allowHBS = true
   export let context = {}
 
@@ -230,7 +231,6 @@
   }
 
   .icon {
-    right: 1px;
     bottom: 1px;
     position: absolute;
     justify-content: center;
@@ -239,8 +239,6 @@
     flex-direction: row;
     box-sizing: border-box;
     border-left: 1px solid var(--spectrum-alias-border-color);
-    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
-    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
     width: 31px;
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);
