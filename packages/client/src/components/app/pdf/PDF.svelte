@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext, onMount, tick } from "svelte"
   import { Heading, Button } from "@budibase/bbui"
-  import { htmlToPdf, pxToPt, A4HeightPx } from "./pdf"
+  import { htmlToPdf, pxToPt, A4HeightPx, type PDFOptions } from "./pdf"
   import { GridRowHeight } from "@/constants"
 
   const component = getContext("component")
@@ -10,50 +10,54 @@
   export let fileName: string | undefined
   export let buttonText: string | undefined
 
-  // Config
+  // Derive dimension calculations
   const DesiredRows = 40
-  const InnerPageHeightPx = GridRowHeight * DesiredRows
-  const DoubleMarginPx = A4HeightPx - InnerPageHeightPx
-  const MarginPt = pxToPt(DoubleMarginPx / 2)
+  const innerPageHeightPx = GridRowHeight * DesiredRows
+  const doubleMarginPx = A4HeightPx - innerPageHeightPx
+  const marginPt = pxToPt(doubleMarginPx / 2)
 
   let rendering = false
   let pageCount = 1
-  let innerRef: HTMLElement
+  let ref: HTMLElement
 
   $: safeName = fileName || "Report"
   $: safeButtonText = buttonText || "Download PDF"
-  $: heightPx = pageCount * InnerPageHeightPx + DoubleMarginPx
+  $: heightPx = pageCount * innerPageHeightPx + doubleMarginPx
+  $: pageStyle = `--height:${heightPx}px; --margin:${marginPt}pt;`
 
   const generatePDF = async () => {
     rendering = true
     await tick()
     try {
-      await htmlToPdf(innerRef, {
+      const opts: PDFOptions = {
         fileName: safeName,
-        margin: MarginPt,
+        marginPt,
         footer: true,
-      })
+      }
+      await htmlToPdf(ref, opts)
     } catch (error) {
       console.error("Error rendering PDF", error)
     }
     rendering = false
   }
 
+  const getDividerStyle = (idx: number) => {
+    const top = (idx + 1) * innerPageHeightPx + doubleMarginPx / 2
+    return `--idx:"${idx + 1}"; --top:${top}px;`
+  }
+
   onMount(() => {
     const observer = new ResizeObserver(() => {
-      const height = innerRef.getBoundingClientRect().height
-      pageCount = Math.max(1, Math.ceil(height / InnerPageHeightPx))
+      const height = ref.getBoundingClientRect().height
+      pageCount = Math.max(1, Math.ceil(height / innerPageHeightPx))
     })
-    observer.observe(innerRef)
-
-    return () => {
-      observer.disconnect()
-    }
+    observer.observe(ref)
+    return observer.disconnect
   })
 </script>
 
 <Block>
-  <div class="wrapper" style="--margin:{MarginPt}pt;">
+  <div class="wrapper" style="--margin:{marginPt}pt;">
     <div class="container" use:styleable={$component.styles}>
       <div class="title">
         <Heading size="M">{safeName}</Heading>
@@ -61,28 +65,22 @@
           {safeButtonText}
         </Button>
       </div>
-      <div class="page" style="--height:{heightPx}px; --margin:{MarginPt}pt;">
+      <div class="page" style={pageStyle}>
         {#if pageCount > 1}
           {#each new Array(pageCount) as _, idx}
             <div
               class="divider"
               class:last={idx === pageCount - 1}
-              style="--idx:'{idx + 1}'; --top:{(idx + 1) * InnerPageHeightPx +
-                DoubleMarginPx / 2}px;"
+              style={getDividerStyle(idx)}
             />
           {/each}
         {/if}
         <div
           dir="ltr"
           class="spectrum spectrum--lightest spectrum--medium pageContent"
-          bind:this={innerRef}
+          bind:this={ref}
         >
-          <BlockComponent
-            type="container"
-            props={{
-              layout: "grid",
-            }}
-          >
+          <BlockComponent type="container" props={{ layout: "grid" }}>
             <slot />
           </BlockComponent>
         </div>
