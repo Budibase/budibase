@@ -14,7 +14,7 @@
   export let updateOnChange = true
   export let autofocus: boolean = false
   export let variables: { name: string }[] = []
-  export let showModal: () => void = () => {}
+  export let showModal: () => void
   export let helpText: string | undefined = undefined
   export let environmentVariablesEnabled: boolean = false
   export let handleUpgradePanel: () => void = () => {}
