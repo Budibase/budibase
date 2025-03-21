@@ -1,4 +1,4 @@
-import { derived, get, readable, Readable } from "svelte/store"
+import { derived, get, Readable } from "svelte/store"
 import { API } from "@/api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
