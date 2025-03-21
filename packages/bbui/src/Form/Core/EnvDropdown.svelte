@@ -4,19 +4,19 @@
   import clickOutside from "../../Actions/click_outside"
   import Divider from "../../Divider/Divider.svelte"
 
-  export let value: string | number | null = null
-  export let placeholder: string | null = null
-  export let type: "text" | "number" = "text"
+  export let value: string | number | undefined = undefined
+  export let placeholder: string | undefined = undefined
+  export let type: "text" | "number" | "password" = "text"
   export let disabled: boolean = false
-  export let id: string | null = null
+  export let id: string | undefined = undefined
   export let readonly: boolean = false
   export let updateOnChange: boolean = true
   export let align: string | undefined = undefined
   export let autofocus: boolean = false
   export let variables
-  export let showModal
+  export let showModal: () => void
   export let environmentVariablesEnabled
-  export let handleUpgradePanel
+  export let handleUpgradePanel: () => void
   const dispatch = createEventDispatcher()
 
   let field: HTMLInputElement

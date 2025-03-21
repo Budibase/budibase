@@ -5,19 +5,19 @@
 
   export let value: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let labelPosition = "above"
-  export let placeholder = null
-  export let type: "text" | "number" = "text"
+  export let labelPosition: string = "above"
+  export let placeholder: string | undefined = undefined
+  export let type: "text" | "number" | "password" = "text"
   export let disabled = false
   export let readonly = false
   export let error: string | undefined = undefined
   export let updateOnChange = true
-  export let autofocus
-  export let variables
-  export let showModal
+  export let autofocus: boolean = false
+  export let variables: { name: string }[] = []
+  export let showModal: () => void = () => {}
   export let helpText: string | undefined = undefined
-  export let environmentVariablesEnabled
-  export let handleUpgradePanel
+  export let environmentVariablesEnabled: boolean = false
+  export let handleUpgradePanel: () => void = () => {}
   const dispatch = createEventDispatcher()
   const onChange = (e: any) => {
     value = e.detail
