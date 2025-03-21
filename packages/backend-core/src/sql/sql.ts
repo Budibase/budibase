@@ -391,8 +391,12 @@ class InternalBuilder {
       return null
     }
 
-    // MS-SQL doesn't allow an object to be passed in
-    if (this.requiresJsonAsStringClient() && isJsonColumn(schema)) {
+    // some database don't allow an object to be passed in
+    if (
+      this.requiresJsonAsStringClient() &&
+      isJsonColumn(schema) &&
+      typeof input === "object"
+    ) {
       return JSON.stringify(input)
     }
 
