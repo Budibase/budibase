@@ -386,7 +386,7 @@ export class RestIntegration implements IntegrationBase {
     }
 
     if (authConfigType === RestAuthType.OAUTH2) {
-      return { Authorization: await sdk.oauth2.generateToken(authConfigId) }
+      return { Authorization: await sdk.oauth2.getToken(authConfigId) }
     }
 
     if (!this.config.authConfigs) {

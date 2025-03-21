@@ -30,9 +30,17 @@ function toFetchOAuth2ConfigsResponse(
 export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
   const configs = await sdk.oauth2.fetch()
 
+  const timestamps = await sdk.oauth2.getLastUsages(configs.map(c => c._id))
+
   const response: FetchOAuth2ConfigsResponse = {
-    configs: (configs || []).map(toFetchOAuth2ConfigsResponse),
+    configs: (configs || []).map(c => ({
+      ...toFetchOAuth2ConfigsResponse(c),
+      lastUsage: timestamps[c._id]
+        ? new Date(timestamps[c._id]).toISOString()
+        : undefined,
+    })),
   }
+
   ctx.body = response
 }
 
