@@ -18,7 +18,6 @@
 
   let rendering = false
   let pageCount = 1
-  let nextPageCount = 1
   let ref: HTMLElement
   let gridRef: HTMLElement
 
@@ -50,16 +49,9 @@
   }
 
   const handleGridMutation = () => {
-    if (gridRef.classList.contains("highlight")) {
-      // If we're actively dragging then we can grow but not shrink the page
-      // count, to avoid jumping
-      const rows = parseInt(gridRef.dataset.requiredRows || "1")
-      nextPageCount = Math.max(1, Math.ceil(rows / DesiredRows))
-      if (nextPageCount > pageCount) {
-        pageCount = nextPageCount
-      }
-    } else {
-      // Once we stop dragging, apply this new page count
+    const rows = parseInt(gridRef.dataset.requiredRows || "1")
+    const nextPageCount = Math.max(1, Math.ceil(rows / DesiredRows))
+    if (nextPageCount > pageCount || !gridRef.classList.contains("highlight")) {
       pageCount = nextPageCount
     }
   }
