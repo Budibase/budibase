@@ -2,7 +2,7 @@
   import Field from "./Field.svelte"
   import EnvDropdown from "./Core/EnvDropdown.svelte"
   import { createEventDispatcher } from "svelte"
-  import { EnvDropdownType } from "@/types"
+  import type { EnvDropdownType } from "@/types"
 
   export let value: string | undefined = undefined
   export let label: string | undefined = undefined
