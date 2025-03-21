@@ -132,7 +132,9 @@ describe("oauth2 utils", () => {
             })
           )
 
-          await config.doInContext(config.appId, () => getToken(oauthConfig.id))
+          await config.doInContext(config.appId, () =>
+            getToken(oauthConfig._id)
+          )
           await testUtils.queue.processMessages(
             cache.docWritethrough.DocWritethroughProcessor.queue
           )
@@ -140,7 +142,7 @@ describe("oauth2 utils", () => {
           const usageLog = await config.doInContext(config.appId, () =>
             context
               .getAppDB()
-              .tryGet(docIds.generateOAuth2LogID(oauthConfig.id))
+              .tryGet(docIds.generateOAuth2LogID(oauthConfig._id))
           )
 
           expect(usageLog).toEqual(
@@ -162,7 +164,7 @@ describe("oauth2 utils", () => {
           )
 
           await expect(
-            config.doInContext(config.appId, () => getToken(oauthConfig.id))
+            config.doInContext(config.appId, () => getToken(oauthConfig._id))
           ).rejects.toThrow()
           await testUtils.queue.processMessages(
             cache.docWritethrough.DocWritethroughProcessor.queue
@@ -171,7 +173,7 @@ describe("oauth2 utils", () => {
           const usageLog = await config.doInContext(config.appId, () =>
             context
               .getAppDB()
-              .tryGet(docIds.generateOAuth2LogID(oauthConfig.id))
+              .tryGet(docIds.generateOAuth2LogID(oauthConfig._id))
           )
 
           expect(usageLog).toBeUndefined()
