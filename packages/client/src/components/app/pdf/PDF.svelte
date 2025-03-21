@@ -18,7 +18,9 @@
 
   let rendering = false
   let pageCount = 1
+  let nextPageCount = 1
   let ref: HTMLElement
+  let gridRef: HTMLElement
 
   $: safeName = fileName || "Report"
   $: safeButtonText = buttonText || "Download PDF"
@@ -47,17 +49,29 @@
     return `--idx:"${idx + 1}"; --top:${top}px;`
   }
 
+  const handleGridMutation = () => {
+    if (gridRef.classList.contains("highlight")) {
+      // If we're actively dragging then we can grow but not shrink the page
+      // count, to avoid jumping
+      const rows = parseInt(gridRef.dataset.requiredRows || "1")
+      nextPageCount = Math.max(1, Math.ceil(rows / DesiredRows))
+      if (nextPageCount > pageCount) {
+        pageCount = nextPageCount
+      }
+    } else {
+      // Once we stop dragging, apply this new page count
+      pageCount = nextPageCount
+    }
+  }
+
   onMount(() => {
     // Observe required content rows and use this to determine required pages
     const gridDOMID = `${$component.id}-grid-dom`
-    const grid = document.getElementsByClassName(gridDOMID)[0] as HTMLElement
-    const mutationObserver = new MutationObserver(() => {
-      const rows = parseInt(grid.dataset.requiredRows || "1")
-      pageCount = Math.max(1, Math.ceil(rows / DesiredRows))
-    })
-    mutationObserver.observe(grid, {
+    gridRef = document.getElementsByClassName(gridDOMID)[0] as HTMLElement
+    const mutationObserver = new MutationObserver(handleGridMutation)
+    mutationObserver.observe(gridRef, {
       attributes: true,
-      attributeFilter: ["data-required-rows"],
+      attributeFilter: ["data-required-rows", "class"],
     })
     return () => {
       mutationObserver.disconnect()
