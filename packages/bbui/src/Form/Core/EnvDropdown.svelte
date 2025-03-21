@@ -124,7 +124,7 @@
       disabled={!!hbsValue.length || disabled}
       {readonly}
       {id}
-      value={hbsValue.length ? `{{ ${hbsValue[0]} }}` : value}
+      value={(hbsValue.length ? `{{ ${hbsValue[0]} }}` : value) ?? ""}
       placeholder={placeholder || ""}
       on:click
       on:blur
