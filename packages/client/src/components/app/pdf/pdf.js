@@ -40,9 +40,33 @@ export async function htmlToPdf(el, opts = {}) {
 
       // Custom params
       htmlScale: opts.htmlScale,
-      progressCallback: opts.progressCallback,
     }
 
-    html2pdf().set(options).from(el).save().then(resolve)
+    let worker = html2pdf().set(options).from(el).toPdf()
+
+    // Add footer if required
+    if (opts.footer) {
+      worker = worker.get("pdf").then(pdf => {
+        const totalPages = pdf.internal.getNumberOfPages()
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i)
+          pdf.setFontSize(10)
+          pdf.setTextColor(200)
+          pdf.text(
+            `Page ${i} of ${totalPages}`,
+            pdf.internal.pageSize.getWidth() - options.margin,
+            pdf.internal.pageSize.getHeight() - options.margin / 2,
+            "right"
+          )
+          pdf.text(
+            options.filename.replace(".pdf", ""),
+            options.margin,
+            pdf.internal.pageSize.getHeight() - options.margin / 2
+          )
+        }
+      })
+    }
+
+    worker.save().then(resolve)
   })
 }

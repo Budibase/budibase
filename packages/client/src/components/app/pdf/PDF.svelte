@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, onMount } from "svelte"
+  import { getContext, onMount, tick } from "svelte"
   import { Heading, Button } from "@budibase/bbui"
   import { htmlToPdf, pxToPt, A4HeightPx } from "./pdf"
   import { GridRowHeight } from "@/constants"
@@ -26,20 +26,15 @@
 
   const generatePDF = async () => {
     rendering = true
+    await tick()
     try {
       await htmlToPdf(innerRef, {
         fileName: safeName,
         margin: MarginPt,
-        orientation: "portrait",
-        footer: false,
-        progressCallback: (page: number) => {
-          // eslint-disable-next-line no-console
-          console.log("Rendering page", page, "of", pageCount)
-        },
+        footer: true,
       })
     } catch (error) {
-      console.error("Error rendering PDF:")
-      console.error(error)
+      console.error("Error rendering PDF", error)
     }
     rendering = false
   }
@@ -58,7 +53,7 @@
 </script>
 
 <Block>
-  <div class="wrapper">
+  <div class="wrapper" style="--margin:{MarginPt}pt;">
     <div class="container" use:styleable={$component.styles}>
       <div class="title">
         <Heading size="M">{safeName}</Heading>
@@ -68,10 +63,11 @@
       </div>
       <div class="page" style="--height:{heightPx}px; --margin:{MarginPt}pt;">
         {#if pageCount > 1}
-          {#each new Array(pageCount - 1) as _, idx}
+          {#each new Array(pageCount) as _, idx}
             <div
               class="divider"
-              style="--top:{(idx + 1) * InnerPageHeightPx +
+              class:last={idx === pageCount - 1}
+              style="--idx:'{idx + 1}'; --top:{(idx + 1) * InnerPageHeightPx +
                 DoubleMarginPx / 2}px;"
             />
           {/each}
@@ -142,10 +138,23 @@
   }
   .divider {
     width: 100%;
-    height: 1px;
+    height: 2px;
     background: var(--spectrum-global-color-static-gray-400);
     position: absolute;
     left: 0;
     top: var(--top);
+    transform: translateY(-50%);
+  }
+  .divider.last {
+    top: calc(var(--top) + var(--margin));
+    background: transparent;
+  }
+  .divider::after {
+    position: absolute;
+    top: -32px;
+    right: 24px;
+    content: var(--idx);
+    color: var(--spectrum-global-color-static-gray-400);
+    text-align: right;
   }
 </style>
