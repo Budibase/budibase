@@ -109,6 +109,12 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         try {
           await retryFunc(resp)
           this._emitter.emit("completed", message as Job<T>)
+
+          const indexToRemove = this._messages.indexOf(message)
+          if (indexToRemove === -1) {
+            throw "Failed deleting a processed message"
+          }
+          this._messages.splice(indexToRemove, 1)
         } catch (e: any) {
           console.error(e)
         }
@@ -118,12 +124,6 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       if (jobId && message.opts?.removeOnComplete) {
         this._queuedJobIds.delete(jobId)
       }
-
-      const indexToRemove = this._messages.indexOf(message)
-      if (indexToRemove === -1) {
-        throw "Failed deleting a processed message"
-      }
-      this._messages.splice(indexToRemove, 1)
     })
   }
 
