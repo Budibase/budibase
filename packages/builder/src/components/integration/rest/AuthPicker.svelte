@@ -29,7 +29,7 @@
     ...authConfigs,
     ...$oauth2.configs.map(c => ({
       label: c.name,
-      value: c.id,
+      value: c._id,
     })),
   ]
   $: authConfig = allConfigs.find(c => c.value === authConfigId)
@@ -108,8 +108,9 @@
         {#each $oauth2.configs as config}
           <ListItem
             title={config.name}
-            on:click={() => selectConfiguration(config.id, RestAuthType.OAUTH2)}
-            selected={config.id === authConfigId}
+            on:click={() =>
+              selectConfiguration(config._id, RestAuthType.OAUTH2)}
+            selected={config._id === authConfigId}
           />
         {/each}
       </List>

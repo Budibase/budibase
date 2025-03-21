@@ -6,4 +6,5 @@ export type Component = Readable<{
   styles: any
   editing: boolean
   errorState: boolean
+  path: string[]
 }>
