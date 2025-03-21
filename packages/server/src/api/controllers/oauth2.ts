@@ -59,6 +59,11 @@ export async function edit(
   ctx: Ctx<UpdateOAuth2ConfigRequest, UpdateOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
+
+  if (ctx.params.id !== body._id) {
+    ctx.throw("Path and body ids do not match", 400)
+  }
+
   const toUpdate = {
     _id: body._id,
     _rev: body._rev,

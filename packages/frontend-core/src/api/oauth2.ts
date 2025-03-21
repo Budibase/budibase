@@ -55,7 +55,7 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
   update: async config => {
     return await API.put<UpdateOAuth2ConfigRequest, UpdateOAuth2ConfigResponse>(
       {
-        url: `/api/oauth2`,
+        url: `/api/oauth2/${config._id}`,
         body: {
           ...config,
         },

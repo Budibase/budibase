@@ -48,7 +48,7 @@ router.post(
   controller.create
 )
 router.put(
-  "/api/oauth2",
+  "/api/oauth2/:id",
   authorized(PermissionType.BUILDER),
   oAuth2ConfigValidator(updateSchema),
   controller.edit

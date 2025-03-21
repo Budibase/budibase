@@ -31,10 +31,13 @@ export class OAuth2API extends TestAPI {
     body: UpdateOAuth2ConfigRequest,
     expectations?: Expectations
   ) => {
-    return await this._put<UpdateOAuth2ConfigResponse>(`/api/oauth2`, {
-      body,
-      expectations,
-    })
+    return await this._put<UpdateOAuth2ConfigResponse>(
+      `/api/oauth2/${body._id}`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 
   delete = async (id: string, rev: string, expectations?: Expectations) => {
