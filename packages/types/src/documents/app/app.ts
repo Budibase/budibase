@@ -29,6 +29,7 @@ export interface App extends Document {
   snippets?: Snippet[]
   creationVersion?: string
   updatedBy?: string
+  scripts?: AppScript[]
 }
 
 export interface AppInstance {
@@ -81,4 +82,11 @@ export interface AppFeatures {
 
 export interface AutomationSettings {
   chainAutomations?: boolean
+}
+
+export interface AppScript {
+  id: string
+  name: string
+  location: "Head" | "Body"
+  html?: string
 }

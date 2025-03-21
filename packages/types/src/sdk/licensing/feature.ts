@@ -13,6 +13,7 @@ export enum Feature {
   APP_BUILDERS = "appBuilders",
   OFFLINE = "offline",
   EXPANDED_PUBLIC_API = "expandedPublicApi",
+  CUSTOM_APP_SCRIPTS = "customAppScripts",
   // deprecated - no longer licensed
   VIEW_PERMISSIONS = "viewPermissions",
   VIEW_READONLY_COLUMNS = "viewReadonlyColumns",
