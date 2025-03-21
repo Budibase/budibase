@@ -116,6 +116,15 @@ function stringifyArray(value: any[], quoteStyle = '"'): string {
   return `[${value.join(",")}]`
 }
 
+function isJsonColumn(
+  field: FieldSchema
+): field is JsonFieldMetadata | BBReferenceFieldMetadata {
+  return (
+    JsonTypes.includes(field.type) &&
+    !helpers.schema.isDeprecatedSingleUserColumn(field)
+  )
+}
+
 const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
   [BasicOperator.EQUAL]: false,
   [BasicOperator.NOT_EQUAL]: true,
@@ -370,6 +379,11 @@ class InternalBuilder {
     }
     if (input == undefined) {
       return null
+    }
+
+    // MS-SQL doesn't allow an object to be passed in
+    if (this.client === SqlClient.MS_SQL && isJsonColumn(schema)) {
+      return JSON.stringify(input)
     }
 
     if (
@@ -1869,7 +1883,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   ): T[] {
     const tableName = this.getTableName(table, aliases)
     for (const [name, field] of Object.entries(table.schema)) {
-      if (!this._isJsonColumn(field)) {
+      if (!isJsonColumn(field)) {
         continue
       }
       const fullName = `${tableName}.${name}` as keyof T
@@ -1883,15 +1897,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       }
     }
     return results
-  }
-
-  _isJsonColumn(
-    field: FieldSchema
-  ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
-    return (
-      JsonTypes.includes(field.type) &&
-      !helpers.schema.isDeprecatedSingleUserColumn(field)
-    )
   }
 
   log(query: string, values?: SqlQueryBinding) {
