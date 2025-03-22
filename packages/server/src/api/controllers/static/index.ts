@@ -32,11 +32,13 @@ import {
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
+  PWAManifest,
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
   ToggleBetaFeatureResponse,
   UserCtx,
+  PWAManifestImage,
 } from "@budibase/types"
 import {
   getAppMigrationVersion,
@@ -189,8 +191,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const sideNav = appInfo.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo?.theme)
-
+    const themeVariables = getThemeVariables(appInfo?.theme || {})
+    const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
+    const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
     if (!env.isJest()) {
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
       /*
@@ -223,8 +226,59 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
       const { head, html, css } = AppComponent.render({ props })
       const appHbs = loadHandlebarsFile(appHbsPath)
+
+      let extraHead = ""
+      if (hasPWA) {
+        extraHead = `<link rel="manifest" href="${manifestUrl}">`
+
+        extraHead += `<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="${
+          appInfo.pwa.short_name || appInfo.name
+        }">`
+
+        if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
+          try {
+            // Enrich all icons
+            const enrichedIcons = await objectStore.enrichPWAImages(
+              appInfo.pwa.icons
+            )
+
+            // First, try to find an iOS 180x180 icon
+            let appleTouchIcon = enrichedIcons.find(
+              icon => icon.platform === "ios" && icon.sizes === "180x180"
+            )
+
+            // If not found, try any iOS icon
+            if (!appleTouchIcon) {
+              appleTouchIcon = enrichedIcons.find(
+                icon => icon.platform === "ios"
+              )
+            }
+
+            // If still not found, try a 180x180 icon of any platform
+            if (!appleTouchIcon) {
+              appleTouchIcon = enrichedIcons.find(
+                icon => icon.sizes === "180x180"
+              )
+            }
+
+            // Finally, fallback to the first icon
+            if (!appleTouchIcon && enrichedIcons.length > 0) {
+              appleTouchIcon = enrichedIcons[0]
+            }
+
+            if (appleTouchIcon) {
+              extraHead += `<link rel="apple-touch-icon" sizes="${appleTouchIcon.sizes}" href="${appleTouchIcon.src}">`
+            }
+          } catch (error) {
+            console.error("Error processing apple-touch-icon:", error)
+          }
+        }
+      }
+
       ctx.body = await processString(appHbs, {
-        head,
+        head: `${head}${extraHead}`,
         body: html,
         css: `:root{${themeVariables}} ${css.code}`,
         appId,
@@ -364,4 +418,106 @@ export const getSignedUploadURL = async function (
   }
 
   ctx.body = { signedUrl, publicUrl }
+}
+
+export async function serveManifest(ctx: UserCtx<void, any>) {
+  const appId = context.getAppId()
+  if (!appId) {
+    ctx.status = 404
+    ctx.body = { message: "App not found" }
+    return
+  }
+
+  try {
+    const db = context.getAppDB({ skip_setup: true })
+    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+
+    if (!appInfo.pwa) {
+      ctx.status = 404
+      ctx.body = { message: "PWA not configured for this app" }
+      return
+    }
+
+    const manifest: PWAManifest = {
+      name: appInfo.pwa.name || appInfo.name,
+      short_name: appInfo.pwa.short_name || appInfo.name,
+      description: appInfo.pwa.description || "",
+      start_url: `/app${appInfo.url}`,
+      display: appInfo.pwa.display || "standalone",
+      background_color: appInfo.pwa.background_color || "#FFFFFF",
+      theme_color: appInfo.pwa.theme_color || "#FFFFFF",
+      icons: [],
+    }
+
+    if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
+      try {
+        // Enrich all icons with their URLs
+        const enrichedIcons = await objectStore.enrichPWAImages(
+          appInfo.pwa.icons
+        )
+
+        // Group icons by platform if available
+        const platformGroups: Record<string, PWAManifestImage[]> = {}
+        const generalIcons: PWAManifestImage[] = []
+
+        // Sort icons into platform groups
+        enrichedIcons.forEach(icon => {
+          if (icon.platform) {
+            if (!platformGroups[icon.platform]) {
+              platformGroups[icon.platform] = []
+            }
+            platformGroups[icon.platform].push(icon)
+          } else {
+            generalIcons.push(icon)
+          }
+        })
+
+        // Default icons list (all icons or general ones if we have platform groups)
+        manifest.icons =
+          Object.keys(platformGroups).length > 0
+            ? generalIcons.length > 0
+              ? generalIcons
+              : enrichedIcons
+            : enrichedIcons
+
+        // Add platform specific icon lists if available
+        if (Object.keys(platformGroups).length > 0) {
+          // For iOS
+          if (platformGroups.ios) {
+            manifest.icons_ios = platformGroups.ios
+          }
+
+          // For Android
+          if (platformGroups.android) {
+            manifest.icons_android = platformGroups.android
+          }
+
+          // For Windows
+          if (platformGroups.windows || platformGroups.windows11) {
+            manifest.icons_windows =
+              platformGroups.windows || platformGroups.windows11
+          }
+        }
+      } catch (error) {
+        console.error("Error processing manifest icons:", error)
+      }
+    }
+
+    if (appInfo.pwa.screenshots && appInfo.pwa.screenshots.length > 0) {
+      try {
+        manifest.screenshots = await objectStore.enrichPWAImages(
+          appInfo.pwa.screenshots
+        )
+      } catch (error) {
+        console.error("Error processing manifest screenshots:", error)
+      }
+    }
+
+    ctx.set("Content-Type", "application/json")
+    ctx.body = manifest
+  } catch (error) {
+    console.error("Error serving manifest:", error)
+    ctx.status = 500
+    ctx.body = { message: "Error generating manifest" }
+  }
 }

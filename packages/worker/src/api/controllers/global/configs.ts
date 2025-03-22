@@ -304,6 +304,7 @@ export async function save(
 
   try {
     body._id = configs.generateConfigID(type)
+    console.log("body", JSON.stringify(body, null, 2))
     const response = await configs.save(body)
     await cache.bustCache(cache.CacheKey.CHECKLIST)
     await cache.bustCache(cache.CacheKey.ANALYTICS_ENABLED)

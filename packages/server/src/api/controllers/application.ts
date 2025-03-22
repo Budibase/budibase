@@ -265,6 +265,20 @@ export async function fetchAppPackage(
     application.usedPlugins
   )
 
+  // Enrich PWA icon URLs if they exist
+  if (application.pwa?.icons && application.pwa.icons.length > 0) {
+    application.pwa.icons = await objectStore.enrichPWAImages(
+      application.pwa.icons
+    )
+  }
+
+  // Enrich PWA screenshot URLs if they exist
+  if (application.pwa?.screenshots && application.pwa.screenshots.length > 0) {
+    application.pwa.screenshots = await objectStore.enrichPWAImages(
+      application.pwa.screenshots
+    )
+  }
+
   // Only filter screens if the user is not a builder
   if (!users.isBuilder(ctx.user, appId)) {
     const userRoleId = getUserRoleId(ctx)
@@ -319,7 +333,7 @@ async function performAppCreate(
       path: body.file?.path,
     }
   }
-
+  console.log("instanceConfig", instanceConfig)
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
 
@@ -865,6 +879,25 @@ export async function updateAppPackage(
     const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
+    }
+
+    if (appPackage.pwa && application.pwa) {
+      if (appPackage.pwa.icons) {
+        appPackage.pwa.icons = appPackage.pwa.icons.map((icon, i) =>
+          icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
+          application?.pwa?.icons?.[i]
+            ? { ...icon, src: application?.pwa?.icons?.[i].src }
+            : icon
+        )
+      }
+      if (appPackage.pwa.screenshots) {
+        appPackage.pwa.screenshots = appPackage.pwa.screenshots.map((shot, i) =>
+          shot.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
+          application?.pwa?.screenshots?.[i]
+            ? { ...shot, src: application?.pwa?.screenshots?.[i].src }
+            : shot
+        )
+      }
     }
 
     // the locked by property is attached by server but generated from

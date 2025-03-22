@@ -15,11 +15,18 @@
   export let value: File | undefined = undefined
   export let tooltip: string | undefined = undefined
   export let helpText: string | undefined = undefined
+  export let hideButton: boolean = false
+  export let multiple: boolean = false
+  export let directory: boolean = false
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent) => {
     value = e.detail
     dispatch("change", e.detail)
+  }
+
+  const onMultipleFiles = (e: CustomEvent) => {
+    dispatch("multipleFiles", e.detail)
   }
 </script>
 
@@ -32,6 +39,10 @@
     {previewUrl}
     {handleFileTooLarge}
     {extensions}
+    {hideButton}
+    {multiple}
+    {directory}
     on:change={onChange}
+    on:multipleFiles={onMultipleFiles}
   />
 </Field>
