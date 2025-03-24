@@ -103,6 +103,7 @@
         clientId: configData.clientId,
         clientSecret: configData.clientSecret,
         method: configData.method,
+        grantType: configData.grantType,
       })
       if (!connectionValidation.valid) {
         let message = "Connection settings could not be validated"

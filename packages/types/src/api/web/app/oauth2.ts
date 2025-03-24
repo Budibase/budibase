@@ -49,6 +49,7 @@ export interface ValidateConfigRequest {
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
 }
 
 export interface ValidateConfigResponse {
