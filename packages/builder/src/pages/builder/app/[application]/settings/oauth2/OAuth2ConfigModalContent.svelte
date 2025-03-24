@@ -1,4 +1,5 @@
 <script lang="ts">
+  import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
   import { oauth2 } from "@/stores/builder"
   import type { OAuth2Config } from "@/types"
   import {
@@ -195,13 +196,13 @@
       full URL.
     </Body>
   </div>
-  <Input
+  <EnvVariableInput
     label="Client ID*"
     placeholder="Type here..."
     bind:value={data.clientId}
     error={errors.clientId}
   />
-  <Input
+  <EnvVariableInput
     type={!isProtectedPassword ? "password" : "text"}
     label="Client secret*"
     placeholder="Type here..."
