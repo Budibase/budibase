@@ -134,7 +134,9 @@
 
   $: hasBeenSubmitted && validateConfig(data)
 
-  $: isProtectedPassword = config?.clientSecret === PASSWORD_REPLACEMENT
+  $: isProtectedPassword =
+    config?.clientSecret === PASSWORD_REPLACEMENT ||
+    config?.clientSecret.match(/{{\s*env\.[^\s]+\s*}}/)
 </script>
 
 <ModalContent onConfirm={saveOAuth2Config} size="M">
