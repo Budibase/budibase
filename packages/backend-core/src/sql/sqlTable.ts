@@ -141,19 +141,23 @@ function generateSchema(
             .references(`${tableName}.${relatedPrimary}`)
         }
         break
+      case FieldType.SIGNATURE_SINGLE:
+      case FieldType.ATTACHMENTS:
+      case FieldType.ATTACHMENT_SINGLE:
+        // single attachments are stored as an object, multi attachments
+        // are stored as an array
+        schema.json(key)
+        break
       case FieldType.FORMULA:
         // This is allowed, but nothing to do on the external datasource
         break
       case FieldType.AI:
         // This is allowed, but nothing to do on the external datasource
         break
-      case FieldType.ATTACHMENTS:
-      case FieldType.ATTACHMENT_SINGLE:
-      case FieldType.SIGNATURE_SINGLE:
       case FieldType.AUTO:
       case FieldType.JSON:
       case FieldType.INTERNAL:
-        throw `${column.type} is not a valid SQL type`
+        throw new Error(`${column.type} is not a valid SQL type`)
 
       default:
         utils.unreachable(columnType)

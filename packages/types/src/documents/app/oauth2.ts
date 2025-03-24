@@ -1,9 +1,14 @@
 import { Document } from "../document"
 
-export interface OAuth2Config {
-  name: string
+export enum OAuth2CredentialsMethod {
+  HEADER = "HEADER",
+  BODY = "BODY",
 }
 
-export interface OAuth2Configs extends Document {
-  configs: Record<string, OAuth2Config>
+export interface OAuth2Config extends Document {
+  name: string
+  url: string
+  clientId: string
+  clientSecret: string
+  method: OAuth2CredentialsMethod
 }

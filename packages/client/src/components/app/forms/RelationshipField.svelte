@@ -1,10 +1,9 @@
 <script context="module" lang="ts">
-  type ValueType = string | string[]
   type BasicRelatedRow = { _id: string; primaryDisplay: string }
   type OptionsMap = Record<string, BasicRelatedRow>
 </script>
 
-<script lang="ts">
+<script lang="ts" generics="ValueType extends string | string[]">
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
   import {
     BasicOperator,
@@ -67,7 +66,7 @@
     fieldSchema?.relationshipType !== "one-to-many"
 
   // Get the proper string representation of the value
-  $: realValue = fieldState?.value
+  $: realValue = fieldState?.value as ValueType
   $: selectedValue = parseSelectedValue(realValue, multiselect)
   $: selectedIDs = getSelectedIDs(selectedValue)
 

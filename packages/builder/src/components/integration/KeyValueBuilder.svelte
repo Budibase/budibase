@@ -88,16 +88,14 @@
     // Required for reactivity
     fields = fields
     const newActivity = {}
-    const trimmedFields = []
     for (let idx = 0; idx < fields.length; idx++) {
       const fieldName = fields[idx].name
       if (fieldName) {
         newActivity[fieldName] = fieldActivity[idx]
-        trimmedFields.push(fields[idx])
       }
     }
     activity = newActivity
-    dispatch("change", trimmedFields)
+    dispatch("change", fields)
   }
 
   function isJsonArray(value) {
