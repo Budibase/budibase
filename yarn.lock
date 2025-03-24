@@ -2795,28 +2795,6 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@npm:@budibase/pro@latest":
-  version "3.4.22"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.4.22.tgz#943f23cb7056041bc1f433ee60b3d093145e7a4a"
-  integrity sha512-Du3iZsmRLopfoi2SvxQyY1P2Su3Nw0WbITOrKmZFsVLjZ9MzzTZs0Ph/SJHzrfJpM7rn9+8788BLSf3Z3l9KcQ==
-  dependencies:
-    "@anthropic-ai/sdk" "^0.27.3"
-    "@budibase/backend-core" "*"
-    "@budibase/shared-core" "*"
-    "@budibase/string-templates" "*"
-    "@budibase/types" "*"
-    "@koa/router" "13.1.0"
-    bull "4.10.1"
-    dd-trace "5.26.0"
-    joi "17.6.0"
-    jsonwebtoken "9.0.2"
-    lru-cache "^7.14.1"
-    memorystream "^0.3.1"
-    node-fetch "2.6.7"
-    openai "4.59.0"
-    scim-patch "^0.8.1"
-    scim2-parse-filter "^0.2.8"
-
 "@budibase/vm-browserify@^1.1.4":
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/@budibase/vm-browserify/-/vm-browserify-1.1.4.tgz#eecb001bd9521cb7647e26fb4d2d29d0a4dce262"
