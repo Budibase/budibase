@@ -3,6 +3,7 @@ import {
   InsertOAuth2ConfigRequest,
   OAuth2ConfigResponse,
   OAuth2CredentialsMethod,
+  OAuth2GrantType,
   PASSWORD_REPLACEMENT,
 } from "@budibase/types"
 import * as setup from "./utilities"
@@ -19,6 +20,7 @@ describe("/oauth2", () => {
       clientId: generator.guid(),
       clientSecret: generator.hash(),
       method: generator.pickone(Object.values(OAuth2CredentialsMethod)),
+      grantType: generator.pickone(Object.values(OAuth2GrantType)),
     }
   }
 
@@ -58,6 +60,7 @@ describe("/oauth2", () => {
             clientId: c.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
             method: c.method,
+            grantType: c.grantType,
           }))
         ),
       })
@@ -80,6 +83,7 @@ describe("/oauth2", () => {
             clientId: oauth2Config.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
             method: oauth2Config.method,
+            grantType: oauth2Config.grantType,
           },
         ],
       })
@@ -102,6 +106,7 @@ describe("/oauth2", () => {
             clientId: oauth2Config.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
             method: oauth2Config.method,
+            grantType: oauth2Config.grantType,
           },
           {
             _id: expectOAuth2ConfigId,
@@ -111,6 +116,7 @@ describe("/oauth2", () => {
             clientId: oauth2Config2.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
             method: oauth2Config2.method,
+            grantType: oauth2Config2.grantType,
           },
         ])
       )
@@ -139,6 +145,7 @@ describe("/oauth2", () => {
           clientId: oauth2Config.clientId,
           clientSecret: PASSWORD_REPLACEMENT,
           method: oauth2Config.method,
+          grantType: oauth2Config.grantType,
         },
       ])
     })
@@ -177,6 +184,7 @@ describe("/oauth2", () => {
             clientId: configData.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
             method: configData.method,
+            grantType: configData.grantType,
           },
         ])
       )

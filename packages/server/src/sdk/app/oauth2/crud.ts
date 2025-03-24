@@ -89,4 +89,9 @@ export async function remove(configId: string, _rev: string): Promise<void> {
     }
     throw e
   }
+
+  const usageLog = await db.tryGet(docIds.generateOAuth2LogID(configId))
+  if (usageLog) {
+    await db.remove(usageLog)
+  }
 }
