@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Label, EnvDropdown } from "@budibase/bbui"
   import { environment, licensing } from "@/stores/portal"
 
