@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import ObjectField from "./fields/Object.svelte"
   import BooleanField from "./fields/Boolean.svelte"
   import LongFormField from "./fields/LongForm.svelte"
@@ -6,15 +6,23 @@
   import StringField from "./fields/String.svelte"
   import SelectField from "./fields/Select.svelte"
 
-  export let type
-  export let value
-  export let error
-  export let name
-  export let config
-  export let showModal = () => {}
+  type InputType =
+    | "string"
+    | "boolean"
+    | "object"
+    | "longForm"
+    | "fieldGroup"
+    | "select"
+
+  export let type: InputType
+  export let value: any
+  export let error: string
+  export let name: string
+  export let config: any
+
   export let placeholder
 
-  const selectComponent = type => {
+  const selectComponent = (type: InputType) => {
     if (type === "object") {
       return ObjectField
     } else if (type === "boolean") {
@@ -40,7 +48,6 @@
   {error}
   {name}
   {config}
-  {showModal}
   {placeholder}
   on:blur
   on:change
