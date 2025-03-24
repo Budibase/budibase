@@ -6,6 +6,7 @@ import {
   BearerRestAuthConfig,
   BodyType,
   OAuth2CredentialsMethod,
+  OAuth2GrantType,
   RestAuthType,
 } from "@budibase/types"
 import { Response } from "node-fetch"
@@ -286,6 +287,7 @@ describe("REST Integration", () => {
         clientId: generator.guid(),
         clientSecret: secret,
         method: OAuth2CredentialsMethod.HEADER,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
 
       const token = generator.guid()
@@ -323,6 +325,7 @@ describe("REST Integration", () => {
         clientId: generator.guid(),
         clientSecret: secret,
         method: OAuth2CredentialsMethod.BODY,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       })
 
       const token = generator.guid()
