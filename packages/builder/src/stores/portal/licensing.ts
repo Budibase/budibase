@@ -37,6 +37,8 @@ interface LicensingState {
   customAIConfigsEnabled: boolean
   auditLogsEnabled: boolean
   customAppScriptsEnabled: boolean
+  syncAutomationsEnabled: boolean
+  triggerAutomationRunEnabled: boolean
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
   // derived quota metrics for percentages used
@@ -77,6 +79,8 @@ class LicensingStore extends BudiStore<LicensingState> {
       customAIConfigsEnabled: false,
       auditLogsEnabled: false,
       customAppScriptsEnabled: false,
+      syncAutomationsEnabled: false,
+      triggerAutomationRunEnabled: false,
       // the currently used quotas from the db
       quotaUsage: undefined,
       // derived quota metrics for percentages used

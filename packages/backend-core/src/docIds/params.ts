@@ -200,3 +200,13 @@ export function getStartEndKeyURL(baseKey: any, tenantId?: string) {
 export const getPluginParams = (pluginId?: string | null, otherProps = {}) => {
   return getDocParams(DocumentType.PLUGIN, pluginId, otherProps)
 }
+
+/**
+ * Gets parameters for retrieving OAuth2 configs, this is a utility function for the getDocParams function.
+ */
+export const getOAuth2ConfigParams = (
+  configId?: string | null,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) => {
+  return getDocParams(DocumentType.OAUTH2_CONFIG, configId, otherProps)
+}

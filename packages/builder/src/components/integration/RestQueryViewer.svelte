@@ -179,7 +179,7 @@
     return newQuery
   }
 
-  async function saveQuery() {
+  async function saveQuery(redirectIfNew = true) {
     const toSave = builtQuery
     saving = true
     try {
@@ -195,7 +195,7 @@
       }
 
       notifications.success(`Request saved successfully`)
-      if (isNew) {
+      if (isNew && redirectIfNew) {
         $goto(`../../${_id}`)
       }
 
@@ -497,7 +497,7 @@
       cancelText: "Discard and continue",
       size: "M",
       onConfirm: async () => {
-        const saveResult = await saveQuery()
+        const saveResult = await saveQuery(false)
         if (!saveResult.ok) {
           // We can't leave as the query was not properly saved
           return false
@@ -684,6 +684,7 @@
 
             <AuthPicker
               bind:authConfigId={query.fields.authConfigId}
+              bind:authConfigType={query.fields.authConfigType}
               {authConfigs}
               datasourceId={datasource._id}
             />
