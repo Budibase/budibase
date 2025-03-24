@@ -1,20 +1,23 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import {
-    ModalContent,
-    Layout,
-    Select,
-    Body,
-    Input,
-    EnvDropdown,
-    Modal,
-    notifications,
-  } from "@budibase/bbui"
+  import { ModalContent, Layout, Select, Body, Input } from "@budibase/bbui"
   import { AUTH_TYPE_LABELS, AUTH_TYPES } from "./authTypes"
   import { BindableCombobox } from "@/components/common/bindings"
   import { getAuthBindings, getEnvironmentBindings } from "@/dataBinding"
   import { environment, licensing, auth } from "@/stores/portal"
-  import CreateEditVariableModal from "@/components/portal/environment/CreateEditVariableModal.svelte"
+  import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
+
+  interface FormData {
+    name?: string
+    type?: string
+    basic: {
+      username?: string
+      password?: string
+    }
+    bearer: {
+      token?: string
+    }
+  }
 
   export let configs
   export let currentConfig
@@ -48,9 +51,6 @@
 
   let hasErrors = false
   let hasChanged = false
-
-  let createVariableModal: Modal
-  let formFieldkey: string
 
   onMount(async () => {
     try {
@@ -179,16 +179,6 @@
     }
   }
 
-  const save = async (data: any) => {
-    try {
-      await environment.createVariable(data)
-      form.basic[formFieldkey] = `{{ env.${data.name} }}`
-      createVariableModal.hide()
-    } catch (err: any) {
-      notifications.error(`Failed to create variable: ${err.message}`)
-    }
-  }
-
   const onFieldChange = () => {
     checkErrors()
     checkChanged()
@@ -196,16 +186,6 @@
 
   const onConfirmInternal = () => {
     onConfirm(constructConfig())
-  }
-
-  async function handleUpgradePanel() {
-    await environment.upgradePanelOpened()
-    $licensing.goToUpgradePage()
-  }
-
-  function showModal(key: any) {
-    formFieldkey = key
-    createVariableModal.show()
   }
 </script>
 
@@ -242,28 +222,21 @@
       error={blurred.type ? errors.type : undefined}
     />
     {#if form.type === AUTH_TYPES.BASIC}
-      <EnvDropdown
+      <EnvVariableInput
         label="Username"
         bind:value={form.basic.username}
         on:change={onFieldChange}
         on:blur={() => (blurred.basic.username = true)}
-        error={blurred.basic.username ? errors.basic.username : null}
-        showModal={() => showModal("configKey")}
-        variables={$environment.variables}
-        environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
-        {handleUpgradePanel}
+        error={blurred.basic.username ? errors.basic.username : undefined}
       />
-      <EnvDropdown
+
+      <EnvVariableInput
         label="Password"
         type="password"
         bind:value={form.basic.password}
         on:change={onFieldChange}
         on:blur={() => (blurred.basic.password = true)}
-        error={blurred.basic.password ? errors.basic.password : null}
-        showModal={() => showModal("configKey")}
-        variables={$environment.variables}
-        environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
-        {handleUpgradePanel}
+        error={blurred.basic.password ? errors.basic.password : undefined}
       />
     {/if}
     {#if form.type === AUTH_TYPES.BEARER}
@@ -291,7 +264,3 @@
     {/if}
   </Layout>
 </ModalContent>
-
-<Modal bind:this={createVariableModal}>
-  <CreateEditVariableModal {save} />
-</Modal>

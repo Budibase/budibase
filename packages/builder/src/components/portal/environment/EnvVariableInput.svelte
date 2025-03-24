@@ -9,7 +9,8 @@
   import CreateEditVariableModal from "./CreateEditVariableModal.svelte"
   import type { CreateEnvironmentVariableRequest } from "@budibase/types"
 
-  export let type: EnvDropdownType
+  export let label: string = ""
+  export let type: EnvDropdownType = "text"
   export let value: string | undefined = undefined
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
@@ -32,9 +33,11 @@
   }
 </script>
 
+{value}
 <EnvDropdown
   on:change
   on:blur
+  {label}
   type={type === "port" ? "string" : type}
   {value}
   {error}
