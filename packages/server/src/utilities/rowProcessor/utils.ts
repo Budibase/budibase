@@ -156,7 +156,7 @@ export async function processAIColumns<T extends Row | Row[]>(
             const llmResponse = await llm.operation(aiSchema, row)
             return {
               ...row,
-              [column]: llmResponse,
+              [column]: llmResponse.message,
             }
           })
         })
