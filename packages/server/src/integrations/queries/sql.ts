@@ -2,13 +2,16 @@ import { findHBSBlocks } from "@budibase/string-templates"
 import { DatasourcePlus, SourceName } from "@budibase/types"
 import sdk from "../../sdk"
 
+const MYSQL_CONST_CHAR_REGEX = new RegExp(`"[^"]*"|'[^']*'`, "g")
+const CONST_CHAR_REGEX = new RegExp(`'[^']*'`, "g")
+
 function getConstCharRegex(sourceName: SourceName) {
   // MySQL clients support ANSI_QUOTES mode off, this is by default
   // but " and ' count as string literals
   if (sourceName === SourceName.MYSQL) {
-    return new RegExp(`"[^"]*"|'[^']*'`, "g")
+    return MYSQL_CONST_CHAR_REGEX
   } else {
-    return new RegExp(`'[^']*'`, "g")
+    return CONST_CHAR_REGEX
   }
 }
 
