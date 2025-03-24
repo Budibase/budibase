@@ -28,6 +28,8 @@
 
   $: data = (config as Partial<OAuth2Config>) ?? {}
 
+  $: data.grantType ??= OAuth2GrantType.CLIENT_CREDENTIALS
+
   $: isCreation = !config
   $: title = isCreation
     ? "Create new OAuth2 connection"
