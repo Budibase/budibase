@@ -99,6 +99,7 @@ export async function validate(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   if (config.clientSecret === PASSWORD_REPLACEMENT && body._id) {
