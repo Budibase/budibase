@@ -33,13 +33,12 @@
   }
 </script>
 
-{value}
 <EnvDropdown
   on:change
   on:blur
+  bind:value
   {label}
   type={type === "port" ? "string" : type}
-  {value}
   {error}
   {placeholder}
   variables={$environment.variables}
