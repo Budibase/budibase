@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte"
   import {
     ModalContent,
@@ -21,17 +21,17 @@
   export let onConfirm
   export let onRemove
 
-  let form = {
+  let form: any = {
     basic: {},
     bearer: {},
   }
 
-  let errors = {
+  let errors: any = {
     basic: {},
     bearer: {},
   }
 
-  let blurred = {
+  let blurred: any = {
     basic: {},
     bearer: {},
   }
@@ -39,8 +39,8 @@
   let hasErrors = false
   let hasChanged = false
 
-  let createVariableModal
-  let formFieldkey
+  let createVariableModal: Modal
+  let formFieldkey: string
 
   onMount(async () => {
     try {
@@ -79,7 +79,7 @@
    * map the form into a new config to save by type
    */
   const constructConfig = () => {
-    const newConfig = {
+    const newConfig: any = {
       name: form.name,
       type: form.type,
     }
@@ -123,7 +123,7 @@
         errors.name =
           // check for duplicate excluding the current config
           configs.find(
-            c => c.name === form.name && c.name !== currentConfig?.name
+            (c: any) => c.name === form.name && c.name !== currentConfig?.name
           ) !== undefined
             ? "Name must be unique"
             : null
@@ -169,12 +169,12 @@
     }
   }
 
-  const save = async data => {
+  const save = async (data: any) => {
     try {
       await environment.createVariable(data)
       form.basic[formFieldkey] = `{{ env.${data.name} }}`
       createVariableModal.hide()
-    } catch (err) {
+    } catch (err: any) {
       notifications.error(`Failed to create variable: ${err.message}`)
     }
   }
@@ -193,7 +193,7 @@
     $licensing.goToUpgradePage()
   }
 
-  function showModal(key) {
+  function showModal(key: any) {
     formFieldkey = key
     createVariableModal.show()
   }
@@ -274,10 +274,8 @@
           blurred.bearer.token = true
           onFieldChange()
         }}
-        allowJS={false}
         placeholder="Token"
         appendBindingsAsOptions={true}
-        drawerEnabled={false}
         error={blurred.bearer.token ? errors.bearer.token : null}
       />
     {/if}
