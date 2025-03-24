@@ -46,6 +46,7 @@ export async function create(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   const config = await sdk.oauth2.create(newConfig)
@@ -72,6 +73,7 @@ export async function edit(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   const config = await sdk.oauth2.update(toUpdate)
