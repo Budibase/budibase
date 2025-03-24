@@ -21,17 +21,27 @@
   export let onConfirm
   export let onRemove
 
-  let form: any = {
+  let form: FormData = {
     basic: {},
     bearer: {},
   }
 
-  let errors: any = {
+  let errors: FormData = {
     basic: {},
     bearer: {},
   }
 
-  let blurred: any = {
+  let blurred: {
+    name?: boolean
+    type?: boolean
+    basic: {
+      username?: boolean
+      password?: boolean
+    }
+    bearer: {
+      token?: boolean
+    }
+  } = {
     basic: {},
     bearer: {},
   }
@@ -126,7 +136,7 @@
             (c: any) => c.name === form.name && c.name !== currentConfig?.name
           ) !== undefined
             ? "Name must be unique"
-            : null
+            : undefined
       }
       // Name required
       else {
@@ -137,17 +147,17 @@
 
     // TYPE
     const typeError = () => {
-      errors.type = form.type ? null : "Type is required"
+      errors.type = form.type ? undefined : "Type is required"
       return !!errors.type
     }
 
     // BASIC AUTH
     const basicAuthErrors = () => {
       errors.basic.username = form.basic.username
-        ? null
+        ? undefined
         : "Username is required"
       errors.basic.password = form.basic.password
-        ? null
+        ? undefined
         : "Password is required"
 
       return !!(errors.basic.username || errors.basic.password || commonError)
@@ -155,7 +165,7 @@
 
     // BEARER TOKEN
     const bearerTokenErrors = () => {
-      errors.bearer.token = form.bearer.token ? null : "Token is required"
+      errors.bearer.token = form.bearer.token ? undefined : "Token is required"
       return !!(errors.bearer.token || commonError)
     }
 
@@ -221,7 +231,7 @@
       bind:value={form.name}
       on:change={onFieldChange}
       on:blur={() => (blurred.name = true)}
-      error={blurred.name ? errors.name : null}
+      error={blurred.name ? errors.name : undefined}
     />
     <Select
       label="Type"
@@ -229,7 +239,7 @@
       on:change={onFieldChange}
       options={AUTH_TYPE_LABELS}
       on:blur={() => (blurred.type = true)}
-      error={blurred.type ? errors.type : null}
+      error={blurred.type ? errors.type : undefined}
     />
     {#if form.type === AUTH_TYPES.BASIC}
       <EnvDropdown
