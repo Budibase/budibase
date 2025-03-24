@@ -3,7 +3,7 @@
   import { createEventDispatcher, onMount } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Divider from "../../Divider/Divider.svelte"
-  import type { EnvDropdownType } from "@/types"
+  import type { EnvDropdownType } from "../../types"
 
   export let value: string | number | undefined = undefined
   export let placeholder: string | undefined = undefined
