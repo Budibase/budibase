@@ -116,6 +116,15 @@ function stringifyArray(value: any[], quoteStyle = '"'): string {
   return `[${value.join(",")}]`
 }
 
+function isJsonColumn(
+  field: FieldSchema
+): field is JsonFieldMetadata | BBReferenceFieldMetadata {
+  return (
+    JsonTypes.includes(field.type) &&
+    !helpers.schema.isDeprecatedSingleUserColumn(field)
+  )
+}
+
 const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
   [BasicOperator.EQUAL]: false,
   [BasicOperator.NOT_EQUAL]: true,
@@ -177,6 +186,16 @@ class InternalBuilder {
   getFieldSchema(key: string): FieldSchema | undefined {
     const { column } = this.splitter.run(key)
     return this.table.schema[column]
+  }
+
+  private requiresJsonAsStringClient(): boolean {
+    const requiresJsonAsString = [
+      SqlClient.MS_SQL,
+      SqlClient.MY_SQL,
+      SqlClient.MARIADB,
+      SqlClient.ORACLE,
+    ]
+    return requiresJsonAsString.includes(this.client)
   }
 
   private quoteChars(): [string, string] {
@@ -370,6 +389,15 @@ class InternalBuilder {
     }
     if (input == undefined) {
       return null
+    }
+
+    // some database don't allow an object to be passed in
+    if (
+      this.requiresJsonAsStringClient() &&
+      isJsonColumn(schema) &&
+      typeof input === "object"
+    ) {
+      return JSON.stringify(input)
     }
 
     if (
@@ -1869,7 +1897,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   ): T[] {
     const tableName = this.getTableName(table, aliases)
     for (const [name, field] of Object.entries(table.schema)) {
-      if (!this._isJsonColumn(field)) {
+      if (!isJsonColumn(field)) {
         continue
       }
       const fullName = `${tableName}.${name}` as keyof T
@@ -1883,15 +1911,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       }
     }
     return results
-  }
-
-  _isJsonColumn(
-    field: FieldSchema
-  ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
-    return (
-      JsonTypes.includes(field.type) &&
-      !helpers.schema.isDeprecatedSingleUserColumn(field)
-    )
   }
 
   log(query: string, values?: SqlQueryBinding) {
