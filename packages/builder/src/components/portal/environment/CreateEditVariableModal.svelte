@@ -15,7 +15,7 @@
   const modalContext = getContext(Context.Modal)
 
   export let save: any
-  export let row: any
+  export let row: { name: string } | undefined = undefined
 
   let deleteDialog: ConfirmDialog
   let name = row?.name || ""
@@ -55,7 +55,7 @@
   title={!row ? "Add new environment variable" : "Edit environment variable"}
 >
   <Input
-    disabled={row}
+    disabled={!!row}
     label="Name"
     bind:value={name}
     error={HasSpacesRegex.test(name) ? "Must not include spaces" : undefined}
@@ -100,12 +100,12 @@
 <ConfirmDialog
   bind:this={deleteDialog}
   onOk={() => {
-    deleteVariable(row.name)
+    deleteVariable(name)
   }}
   okText="Delete Environment Variable"
   title="Confirm Deletion"
 >
   Are you sure you wish to delete the environment variable
-  <i>{row.name}?</i>
+  <i>{name}?</i>
   This action cannot be undone.
 </ConfirmDialog>
