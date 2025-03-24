@@ -16,11 +16,10 @@
 
   export let type: InputType
   export let value: any
-  export let error: string
+  export let error: string | null
   export let name: string
-  export let config: any
-
-  export let placeholder
+  export let config: any = undefined
+  export let placeholder: string | undefined = undefined
 
   const selectComponent = (type: InputType) => {
     if (type === "object") {
