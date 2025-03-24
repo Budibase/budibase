@@ -12,7 +12,7 @@ export interface OAuth2ConfigResponse {
 }
 
 export interface FetchOAuth2ConfigsResponse {
-  configs: OAuth2ConfigResponse[]
+  configs: (OAuth2ConfigResponse & { lastUsage?: string })[]
 }
 
 export interface InsertOAuth2ConfigRequest {

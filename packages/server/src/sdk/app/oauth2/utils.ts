@@ -1,7 +1,18 @@
 import fetch, { RequestInit } from "node-fetch"
 import { HttpError } from "koa"
 import { get } from "../oauth2"
-import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
+import {
+  Document,
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+} from "@budibase/types"
+import { cache, context, docIds } from "@budibase/backend-core"
+
+interface OAuth2LogDocument extends Document {
+  lastUsage: number
+}
+
+const { DocWritethrough } = cache.docWritethrough
 
 async function fetchToken(config: {
   url: string
@@ -41,8 +52,18 @@ async function fetchToken(config: {
   return resp
 }
 
+const trackUsage = async (id: string) => {
+  const writethrough = new DocWritethrough<OAuth2LogDocument>(
+    context.getAppDB(),
+    docIds.generateOAuth2LogID(id)
+  )
+  await writethrough.patch({
+    lastUsage: Date.now(),
+  })
+}
+
 // TODO: check if caching is worth
-export async function generateToken(id: string) {
+export async function getToken(id: string) {
   const config = await get(id)
   if (!config) {
     throw new HttpError(`oAuth config ${id} count not be found`)
@@ -57,6 +78,7 @@ export async function generateToken(id: string) {
     throw new Error(`Error fetching oauth2 token: ${message}`)
   }
 
+  await trackUsage(id)
   return `${jsonResponse.token_type} ${jsonResponse.access_token}`
 }
 
@@ -80,4 +102,32 @@ export async function validateConfig(config: {
   } catch (e: any) {
     return { valid: false, message: e.message }
   }
+}
+
+export async function getLastUsages(ids: string[]) {
+  const devDocs = await context
+    .getAppDB()
+    .getMultiple<OAuth2LogDocument>(ids.map(docIds.generateOAuth2LogID), {
+      allowMissing: true,
+    })
+
+  const prodDocs = await context
+    .getProdAppDB()
+    .getMultiple<OAuth2LogDocument>(ids.map(docIds.generateOAuth2LogID), {
+      allowMissing: true,
+    })
+
+  const result = ids.reduce<Record<string, number>>((acc, id) => {
+    const devDoc = devDocs.find(d => d._id === docIds.generateOAuth2LogID(id))
+    if (devDoc) {
+      acc[id] = devDoc.lastUsage
+    }
+
+    const prodDoc = prodDocs.find(d => d._id === docIds.generateOAuth2LogID(id))
+    if (prodDoc && (!acc[id] || acc[id] < prodDoc.lastUsage)) {
+      acc[id] = prodDoc.lastUsage
+    }
+    return acc
+  }, {})
+  return result
 }
