@@ -1,12 +1,14 @@
-import { generator } from "@budibase/backend-core/tests"
+import { generator, utils as testUtils } from "@budibase/backend-core/tests"
 import { GenericContainer, Wait } from "testcontainers"
 import sdk from "../../.."
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { generateToken } from "../utils"
+import { getToken } from "../utils"
 import path from "path"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import { startContainer } from "../../../../integrations/tests/utils"
 import { OAuth2CredentialsMethod } from "@budibase/types"
+import { cache } from "@budibase/backend-core"
+import tk from "timekeeper"
 
 const config = new TestConfiguration()
 
@@ -43,7 +45,7 @@ describe("oauth2 utils", () => {
   })
 
   describe.each(Object.values(OAuth2CredentialsMethod))(
-    "generateToken (in %s)",
+    "getToken (in %s)",
     method => {
       it("successfully generates tokens", async () => {
         const response = await config.doInContext(config.appId, async () => {
@@ -55,7 +57,7 @@ describe("oauth2 utils", () => {
             method,
           })
 
-          const response = await generateToken(oauthConfig._id)
+          const response = await getToken(oauthConfig._id)
           return response
         })
 
@@ -73,7 +75,7 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig._id)
+            await getToken(oauthConfig._id)
           })
         ).rejects.toThrow("Error fetching oauth2 token: Not Found")
       })
@@ -89,7 +91,7 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig._id)
+            await getToken(oauthConfig._id)
           })
         ).rejects.toThrow(
           "Error fetching oauth2 token: Invalid client or Invalid client credentials"
@@ -107,11 +109,103 @@ describe("oauth2 utils", () => {
               method,
             })
 
-            await generateToken(oauthConfig._id)
+            await getToken(oauthConfig._id)
           })
         ).rejects.toThrow(
           "Error fetching oauth2 token: Invalid client or Invalid client credentials"
         )
+      })
+
+      describe("track usages", () => {
+        beforeAll(() => {
+          tk.freeze(Date.now())
+        })
+
+        it("tracks usages on generation", async () => {
+          const oauthConfig = await config.doInContext(config.appId, () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "my-client",
+              clientSecret: "my-secret",
+              method,
+            })
+          )
+
+          await config.doInContext(config.appId, () =>
+            getToken(oauthConfig._id)
+          )
+          await testUtils.queue.processMessages(
+            cache.docWritethrough.DocWritethroughProcessor.queue
+          )
+
+          const usageLog = await config.doInContext(config.appId, () =>
+            sdk.oauth2.getLastUsages([oauthConfig._id])
+          )
+
+          expect(usageLog[oauthConfig._id]).toEqual(Date.now())
+        })
+
+        it("does not track on failed usages", async () => {
+          const oauthConfig = await config.doInContext(config.appId, () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "wrong-client",
+              clientSecret: "my-secret",
+              method,
+            })
+          )
+
+          await expect(
+            config.doInContext(config.appId, () => getToken(oauthConfig._id))
+          ).rejects.toThrow()
+          await testUtils.queue.processMessages(
+            cache.docWritethrough.DocWritethroughProcessor.queue
+          )
+
+          const usageLog = await config.doInContext(config.appId, () =>
+            sdk.oauth2.getLastUsages([oauthConfig._id])
+          )
+
+          expect(usageLog[oauthConfig._id]).toBeUndefined()
+        })
+
+        it("tracks usages between prod and dev, keeping always the latest", async () => {
+          const oauthConfig = await config.doInContext(config.appId, () =>
+            sdk.oauth2.create({
+              name: generator.guid(),
+              url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+              clientId: "my-client",
+              clientSecret: "my-secret",
+              method,
+            })
+          )
+
+          await config.doInContext(config.appId, () =>
+            getToken(oauthConfig._id)
+          )
+
+          await config.publish()
+
+          tk.travel(Date.now() + 100)
+          await config.doInContext(config.prodAppId, () =>
+            getToken(oauthConfig._id)
+          )
+          await testUtils.queue.processMessages(
+            cache.docWritethrough.DocWritethroughProcessor.queue
+          )
+
+          for (const appId of [config.appId, config.prodAppId]) {
+            const usageLog = await config.doInContext(appId, () =>
+              sdk.oauth2.getLastUsages([oauthConfig._id])
+            )
+
+            expect(usageLog).toEqual({
+              [oauthConfig._id]: Date.now(),
+            })
+          }
+        })
       })
     }
   )
