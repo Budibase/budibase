@@ -1,7 +1,11 @@
 import fetch, { RequestInit } from "node-fetch"
 import { HttpError } from "koa"
 import { get } from "../oauth2"
-import { Document, OAuth2CredentialsMethod } from "@budibase/types"
+import {
+  Document,
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+} from "@budibase/types"
 import { cache, context, docIds } from "@budibase/backend-core"
 
 interface OAuth2LogDocument extends Document {
@@ -15,6 +19,7 @@ async function fetchToken(config: {
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
 }) {
   const fetchConfig: RequestInit = {
     method: "POST",
@@ -37,7 +42,7 @@ async function fetchToken(config: {
     }
   } else {
     fetchConfig.body = new URLSearchParams({
-      grant_type: "client_credentials",
+      grant_type: config.grantType,
       client_id: config.clientId,
       client_secret: config.clientSecret,
     })
@@ -82,6 +87,7 @@ export async function validateConfig(config: {
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
 }): Promise<{ valid: boolean; message?: string }> {
   try {
     const resp = await fetchToken(config)

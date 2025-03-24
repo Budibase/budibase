@@ -24,6 +24,7 @@ function toFetchOAuth2ConfigsResponse(
     clientId: config.clientId,
     clientSecret: PASSWORD_REPLACEMENT,
     method: config.method,
+    grantType: config.grantType,
   }
 }
 
@@ -54,6 +55,7 @@ export async function create(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   const config = await sdk.oauth2.create(newConfig)
@@ -80,6 +82,7 @@ export async function edit(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   const config = await sdk.oauth2.update(toUpdate)
@@ -104,6 +107,7 @@ export async function validate(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   if (config.clientSecret === PASSWORD_REPLACEMENT && body._id) {
