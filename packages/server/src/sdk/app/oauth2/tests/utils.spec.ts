@@ -7,7 +7,6 @@ import path from "path"
 import { KEYCLOAK_IMAGE } from "../../../../integrations/tests/utils/images"
 import { startContainer } from "../../../../integrations/tests/utils"
 import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
-import { method } from "lodash"
 
 const config = new TestConfiguration()
 
