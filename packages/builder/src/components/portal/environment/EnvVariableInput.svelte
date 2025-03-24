@@ -38,7 +38,7 @@
   on:blur
   bind:value
   {label}
-  type={type === "port" ? "string" : type}
+  type={type === "port" ? "text" : type}
   {error}
   {placeholder}
   variables={$environment.variables}
