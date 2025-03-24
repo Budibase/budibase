@@ -15,6 +15,7 @@
   import type { InsertOAuth2ConfigRequest } from "@budibase/types"
   import {
     OAuth2CredentialsMethod,
+    OAuth2GrantType,
     PASSWORD_REPLACEMENT,
   } from "@budibase/types"
   import type { ZodType } from "zod"
@@ -63,6 +64,9 @@
       clientSecret: requiredString("Client secret is required."),
       method: z.nativeEnum(OAuth2CredentialsMethod, {
         message: "Authentication method is required.",
+      }),
+      grantType: z.nativeEnum(OAuth2GrantType, {
+        message: "Grant type is required.",
       }),
     }) satisfies ZodType<InsertOAuth2ConfigRequest>
 
@@ -156,6 +160,24 @@
       Basic will use the Authorisation Bearer header for each connection, while
       POST will include the credentials in the body of the request under the
       access_token property.
+    </Body>
+  </div>
+
+  <Select
+    label="Grant type*"
+    options={[
+      {
+        label: "Client credentials",
+        value: OAuth2GrantType.CLIENT_CREDENTIALS,
+      },
+    ]}
+    bind:value={data.grantType}
+    error={errors.grantType}
+    disabled
+  />
+  <div class="field-info">
+    <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+      Only client credentials mode is supported currently.
     </Body>
   </div>
   <Input
