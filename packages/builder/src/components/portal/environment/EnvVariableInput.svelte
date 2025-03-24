@@ -8,6 +8,7 @@
   import { environment, licensing } from "@/stores/portal"
   import CreateEditVariableModal from "./CreateEditVariableModal.svelte"
   import type { CreateEnvironmentVariableRequest } from "@budibase/types"
+  import { onMount } from "svelte"
 
   export let label: string = ""
   export let type: EnvDropdownType = "text"
@@ -31,6 +32,15 @@
       notifications.error(`Failed to create variable: ${err.message}`)
     }
   }
+
+  onMount(async () => {
+    try {
+      // load the environment variables
+      await environment.loadVariables()
+    } catch (error) {
+      notifications.error(`Error getting environment variables - ${error}`)
+    }
+  })
 </script>
 
 <EnvDropdown

@@ -4,7 +4,7 @@
   import { AUTH_TYPE_LABELS, AUTH_TYPES } from "./authTypes"
   import { BindableCombobox } from "@/components/common/bindings"
   import { getAuthBindings, getEnvironmentBindings } from "@/dataBinding"
-  import { environment, licensing, auth } from "@/stores/portal"
+  import { licensing } from "@/stores/portal"
   import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
 
   interface FormData {
@@ -53,15 +53,6 @@
   let hasChanged = false
 
   onMount(async () => {
-    try {
-      await environment.loadVariables()
-      if ($auth.user) {
-        await licensing.init()
-      }
-    } catch (err) {
-      console.error(err)
-    }
-
     if (currentConfig) {
       deconstructConfig()
     }

@@ -24,7 +24,6 @@
     auth,
     admin,
     licensing,
-    environment,
     enrichedApps,
     sortBy,
   } from "@/stores/portal"
@@ -162,7 +161,6 @@
 
   onMount(async () => {
     try {
-      await environment.loadVariables()
       // If the portal is loaded from an external URL with a template param
       const initInfo = await auth.getInitInfo()
       if (initInfo?.init_template) {
