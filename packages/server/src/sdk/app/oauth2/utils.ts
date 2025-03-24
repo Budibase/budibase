@@ -7,12 +7,26 @@ import {
   OAuth2GrantType,
 } from "@budibase/types"
 import { cache, context, docIds } from "@budibase/backend-core"
+import { processEnvironmentVariable } from "../../utils"
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
 }
 
 const { DocWritethrough } = cache.docWritethrough
+
+async function resolveEnvironmentVariables(config: {
+  url: string
+  clientId: string
+  clientSecret: string
+  method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
+}) {
+  config.clientId = await processEnvironmentVariable(config.clientId)
+  config.clientSecret = await processEnvironmentVariable(config.clientSecret)
+
+  return config
+}
 
 async function fetchToken(config: {
   url: string
@@ -21,6 +35,8 @@ async function fetchToken(config: {
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
 }) {
+  config = await resolveEnvironmentVariables(config)
+
   const fetchConfig: RequestInit = {
     method: "POST",
     headers: {
