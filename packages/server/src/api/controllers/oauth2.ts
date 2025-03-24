@@ -24,6 +24,7 @@ function toFetchOAuth2ConfigsResponse(
     clientId: config.clientId,
     clientSecret: PASSWORD_REPLACEMENT,
     method: config.method,
+    grantType: config.grantType,
   }
 }
 

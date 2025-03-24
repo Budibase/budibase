@@ -8,6 +8,7 @@ export interface OAuth2ConfigResponse {
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
 }
 
 export interface FetchOAuth2ConfigsResponse {
