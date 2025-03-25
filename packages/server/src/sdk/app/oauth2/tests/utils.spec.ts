@@ -69,6 +69,53 @@ describe("oauth2 utils", () => {
       expect(response).toEqual(expect.stringMatching(/^Bearer .+/))
     })
 
+    it("uses cached value if available", async () => {
+      const oauthConfig = await config.doInContext(config.appId, () =>
+        sdk.oauth2.create({
+          name: generator.guid(),
+          url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+          clientId: "my-client",
+          clientSecret: "my-secret",
+          method,
+          grantType,
+        })
+      )
+
+      const firstToken = await config.doInContext(config.appId, () =>
+        getToken(oauthConfig._id)
+      )
+      const secondToken = await config.doInContext(config.appId, () =>
+        getToken(oauthConfig._id)
+      )
+
+      expect(firstToken).toEqual(secondToken)
+    })
+
+    it("refetches value if cache expired", async () => {
+      const oauthConfig = await config.doInContext(config.appId, () =>
+        sdk.oauth2.create({
+          name: generator.guid(),
+          url: `${keycloakUrl}/realms/myrealm/protocol/openid-connect/token`,
+          clientId: "my-client",
+          clientSecret: "my-secret",
+          method,
+          grantType,
+        })
+      )
+
+      const firstToken = await config.doInContext(config.appId, () =>
+        getToken(oauthConfig._id)
+      )
+      await config.doInContext(config.appId, () =>
+        sdk.oauth2.cleanStoredToken(oauthConfig._id)
+      )
+      const secondToken = await config.doInContext(config.appId, () =>
+        getToken(oauthConfig._id)
+      )
+
+      expect(firstToken).not.toEqual(secondToken)
+    })
+
     it("handles wrong urls", async () => {
       await expect(
         config.doInContext(config.appId, async () => {
