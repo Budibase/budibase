@@ -1,19 +1,10 @@
 <script>
-  import {
-    keepOpen,
-    Modal,
-    notifications,
-    Body,
-    Layout,
-    ModalContent,
-  } from "@budibase/bbui"
+  import { keepOpen, Body, Layout, ModalContent } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
-  import CreateEditVariableModal from "@/components/portal/environment/CreateEditVariableModal.svelte"
   import ConfigInput from "./ConfigInput.svelte"
   import { createValidatedConfigStore } from "./stores/validatedConfig"
   import { createValidatedNameStore } from "./stores/validatedName"
   import { get } from "svelte/store"
-  import { environment } from "@/stores/portal"
 
   export let integration
   export let config
@@ -39,24 +30,6 @@
 
     return keepOpen
   }
-
-  let createVariableModal
-  let configValueSetterCallback = () => {}
-
-  const showModal = setter => {
-    configValueSetterCallback = setter
-    createVariableModal.show()
-  }
-
-  async function saveVariable(data) {
-    try {
-      await environment.createVariable(data)
-      configValueSetterCallback(`{{ env.${data.name} }}`)
-      createVariableModal.hide()
-    } catch (err) {
-      notifications.error(`Failed to create variable: ${err.message}`)
-    }
-  }
 </script>
 
 <ModalContent
@@ -79,7 +52,6 @@
       value={$nameStore.name}
       error={$nameStore.error}
       name="Name"
-      showModal={() => showModal(nameStore.updateValue)}
       on:blur={nameStore.markActive}
       on:change={e => nameStore.updateValue(e.detail)}
     />
@@ -94,15 +66,9 @@
         {name}
         {config}
         {placeholder}
-        showModal={() =>
-          showModal(newValue => configStore.updateFieldValue(key, newValue))}
         on:blur={() => configStore.markFieldActive(key)}
         on:change={e => configStore.updateFieldValue(key, e.detail)}
       />
     {/if}
   {/each}
 </ModalContent>
-
-<Modal bind:this={createVariableModal}>
-  <CreateEditVariableModal save={saveVariable} />
-</Modal>
