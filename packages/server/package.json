@@ -182,6 +182,9 @@
     "yargs": "^13.2.4",
     "zod": "^3.23.8"
   },
+  "resolutions": {
+    "@budibase/pro": "npm:@budibase/pro@latest"
+  },
   "nx": {
     "targets": {
       "dev": {

@@ -1,4 +1,4 @@
-import { OAuth2CredentialsMethod } from "@budibase/types"
+import { OAuth2CredentialsMethod, OAuth2GrantType } from "@budibase/types"
 
 export interface OAuth2ConfigResponse {
   _id: string
@@ -8,6 +8,7 @@ export interface OAuth2ConfigResponse {
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
 }
 
 export interface FetchOAuth2ConfigsResponse {
@@ -20,6 +21,7 @@ export interface InsertOAuth2ConfigRequest {
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
 }
 
 export interface InsertOAuth2ConfigResponse {
@@ -34,6 +36,7 @@ export interface UpdateOAuth2ConfigRequest {
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
 }
 
 export interface UpdateOAuth2ConfigResponse {
@@ -46,6 +49,7 @@ export interface ValidateConfigRequest {
   clientId: string
   clientSecret: string
   method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
 }
 
 export interface ValidateConfigResponse {
