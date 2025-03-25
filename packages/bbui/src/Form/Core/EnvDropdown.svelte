@@ -25,11 +25,10 @@
   let iconFocused = false
   let open = false
 
-  //eslint-disable-next-line
-  const STRIP_NAME_REGEX = /(\w+?)(?=\ })/g
+  const STRIP_NAME_REGEX = /{{\s*env\.([^\s]+)\s*}}/g
 
   // Strips the name out of the value which is {{ env.Variable }} resulting in an array like ["Variable"]
-  $: hbsValue = String(value)?.match(STRIP_NAME_REGEX) || []
+  $: hbsValue = (String(value) && STRIP_NAME_REGEX.exec(String(value))) || []
 
   const updateValue = (newValue: any) => {
     if (readonly) {
@@ -125,7 +124,7 @@
       disabled={!!hbsValue.length || disabled}
       {readonly}
       {id}
-      value={(hbsValue.length ? `{{ ${hbsValue[0]} }}` : value) ?? ""}
+      value={(hbsValue.length ? `{{ ${hbsValue[1]} }}` : value) ?? ""}
       placeholder={placeholder || ""}
       on:click
       on:blur
