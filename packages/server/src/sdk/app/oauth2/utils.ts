@@ -7,6 +7,7 @@ import {
   OAuth2GrantType,
 } from "@budibase/types"
 import { cache, context, docIds } from "@budibase/backend-core"
+import { processEnvironmentVariable } from "../../utils"
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
@@ -21,6 +22,8 @@ async function fetchToken(config: {
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
 }) {
+  config = await processEnvironmentVariable(config)
+
   const fetchConfig: RequestInit = {
     method: "POST",
     headers: {
