@@ -139,3 +139,7 @@ export async function getLastUsages(ids: string[]) {
   }, {})
   return result
 }
+
+export async function cleanStoredToken(id: string) {
+  await cache.destroy(cache.CacheKey.OAUTH2_TOKEN(id), { useTenancy: true })
+}
