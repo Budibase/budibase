@@ -64,22 +64,31 @@ const trackUsage = async (id: string) => {
 
 // TODO: check if caching is worth
 export async function getToken(id: string) {
-  const config = await get(id)
-  if (!config) {
-    throw new HttpError(`oAuth config ${id} count not be found`)
-  }
+  const token = await cache.withCache(
+    cache.CacheKey.OAUTH2_TOKEN(id),
+    10,
+    async () => {
+      const config = await get(id)
+      if (!config) {
+        throw new HttpError(`oAuth config ${id} count not be found`)
+      }
 
-  const resp = await fetchToken(config)
+      const resp = await fetchToken(config)
 
-  const jsonResponse = await resp.json()
-  if (!resp.ok) {
-    const message = jsonResponse.error_description ?? resp.statusText
+      const jsonResponse = await resp.json()
+      if (!resp.ok) {
+        const message = jsonResponse.error_description ?? resp.statusText
 
-    throw new Error(`Error fetching oauth2 token: ${message}`)
-  }
+        throw new Error(`Error fetching oauth2 token: ${message}`)
+      }
+
+      const token = `${jsonResponse.token_type} ${jsonResponse.access_token}`
+      return token
+    }
+  )
 
   await trackUsage(id)
-  return `${jsonResponse.token_type} ${jsonResponse.access_token}`
+  return token
 }
 
 export async function validateConfig(config: {
