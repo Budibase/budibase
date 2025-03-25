@@ -30,5 +30,8 @@ export const destroy = (...args: Parameters<typeof GENERIC.delete>) =>
 export const withCache = <T>(
   ...args: Parameters<typeof GENERIC.withCache<T>>
 ) => GENERIC.withCache(...args)
+export const withCacheWithDynamicTTL = <T>(
+  ...args: Parameters<typeof GENERIC.withCacheWithDynamicTTL<T>>
+) => GENERIC.withCacheWithDynamicTTL(...args)
 export const bustCache = (...args: Parameters<typeof GENERIC.bustCache>) =>
   GENERIC.bustCache(...args)

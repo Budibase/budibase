@@ -6,7 +6,7 @@ import {
   OAuth2CredentialsMethod,
   OAuth2GrantType,
 } from "@budibase/types"
-import { cache, context, docIds } from "@budibase/backend-core"
+import { cache, context, docIds, Duration } from "@budibase/backend-core"
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
@@ -62,11 +62,9 @@ const trackUsage = async (id: string) => {
   })
 }
 
-// TODO: check if caching is worth
 export async function getToken(id: string) {
-  const token = await cache.withCache(
+  const token = await cache.withCacheWithDynamicTTL(
     cache.CacheKey.OAUTH2_TOKEN(id),
-    10,
     async () => {
       const config = await get(id)
       if (!config) {
@@ -83,7 +81,8 @@ export async function getToken(id: string) {
       }
 
       const token = `${jsonResponse.token_type} ${jsonResponse.access_token}`
-      return token
+      const ttl = jsonResponse.expires_in ?? Duration.fromHours(1).toSeconds()
+      return { value: token, ttl }
     }
   )
 
