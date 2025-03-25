@@ -160,7 +160,8 @@
       const outputs = (blockResults as AutomationStepResult)?.outputs
       if (outputs.success) return
       issues.push({
-        message: `Could not complete the row request: ${outputs.response}`,
+        message: `Could not complete the row request: 
+          ${outputs.response?.message || JSON.stringify(outputs.response)}`,
         type: BlockStatusType.ERROR,
         source: BlockStatusSource.AUTOMATION_RESULTS,
       })
@@ -180,7 +181,7 @@
   }
 
   const copyContext = (e: JSONViewerClickEvent) => {
-    Helpers.copyToClipboard(JSON.stringify(e.detail))
+    Helpers.copyToClipboard(JSON.stringify(e.detail?.value))
     notifications.success("Copied to clipboard")
   }
 
@@ -284,7 +285,6 @@
         <span class="info">
           This step was not executed as part of the test run
         </span>
-        <Icon name="Info" />
       </div>
     {:else}
       <div class="content">

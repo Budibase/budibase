@@ -173,7 +173,6 @@
     use:resizableHandle
   />
 </div>
-<!-- <Divider noMargin /> -->
 
 <div class="panel data">
   <BlockData
@@ -210,9 +209,9 @@
     display: flex;
     flex-direction: column;
     min-height: 200px;
-    max-height: 430px;
+    max-height: 550px;
     transition: height 300ms ease-out, max-height 300ms ease-out;
-    height: 300px;
+    height: 400px;
     box-sizing: border-box;
   }
   .config.panel .content {
