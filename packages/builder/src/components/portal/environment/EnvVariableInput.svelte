@@ -24,13 +24,9 @@
   }
 
   async function saveVariable(data: CreateEnvironmentVariableRequest) {
-    try {
-      await environment.createVariable(data)
-      value = `{{ env.${data.name} }}`
-      modal.hide()
-    } catch (err: any) {
-      notifications.error(`Failed to create variable: ${err.message}`)
-    }
+    await environment.createVariable(data)
+    value = `{{ env.${data.name} }}`
+    modal.hide()
   }
 
   onMount(async () => {
