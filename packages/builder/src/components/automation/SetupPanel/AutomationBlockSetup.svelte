@@ -23,6 +23,7 @@
 
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, tables, evaluationContext } from "@/stores/builder"
+  import { environment } from "@/stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import {
     BindingSidePanel,
@@ -57,7 +58,7 @@
   } from "@budibase/frontend-core"
   import { getSchemaForDatasourcePlus } from "@/dataBinding"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
-  import { createEventDispatcher } from "svelte"
+  import { onMount, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
   import { cloneDeep } from "lodash/fp"
   import {
@@ -771,6 +772,14 @@
     }
     return params
   }
+
+  onMount(async () => {
+    try {
+      await environment.loadVariables()
+    } catch (error) {
+      console.error(error)
+    }
+  })
 </script>
 
 <div class="step-fields">

@@ -88,6 +88,9 @@
       font-weight: 400;
     }
   </style>
+
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+  {@html props.headAppScripts || ""}
 </svelte:head>
 
 <body id="app">
@@ -135,4 +138,7 @@
       document.getElementById("error").style.display = "flex"
     }
   </script>
+
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+  {@html props.bodyAppScripts || ""}
 </body>
