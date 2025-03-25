@@ -418,7 +418,7 @@ export class RestIntegration implements IntegrationBase {
     return headers
   }
 
-  async _req(query: RestQuery, retry401 = true) {
+  async _req(query: RestQuery, retry401 = true): Promise<ParsedResponse> {
     const {
       path = "",
       queryString = "",
@@ -486,7 +486,7 @@ export class RestIntegration implements IntegrationBase {
       retry401
     ) {
       await sdk.oauth2.cleanStoredToken(authConfigId!)
-      return this._req(query, false)
+      return await this._req(query, false)
     }
     return await this.parseResponse(response, pagination)
   }
