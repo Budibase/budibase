@@ -261,9 +261,13 @@ export class UserDB {
       }
     }
 
-    const change = dbUser ? 0 : 1 // no change if there is existing user
-
+    let change = 1
     let creatorsChange = 0
+    if (opts.isAccountHolder || dbUser) {
+      change = 0
+      creatorsChange = 1
+    }
+
     if (dbUser) {
       const [isDbUserCreator, isUserCreator] = await creatorsInList([
         dbUser,
