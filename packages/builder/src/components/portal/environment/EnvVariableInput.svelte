@@ -26,7 +26,7 @@
   async function saveVariable(data: CreateEnvironmentVariableRequest) {
     try {
       await environment.createVariable(data)
-      //   configValueSetterCallback(`{{ env.${data.name} }}`)
+      value = `{{ env.${data.name} }}`
       modal.hide()
     } catch (err: any) {
       notifications.error(`Failed to create variable: ${err.message}`)
