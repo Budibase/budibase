@@ -65,7 +65,7 @@
 </script>
 
 <DetailPopover bind:this={popover} {title} align={PopoverAlignment.Right}>
-  <div slot="anchor" class:display-new={!authConfig}>
+  <div slot="anchor" class:display-new={!authConfig && oauth2Enabled}>
     <ActionButton icon="LockClosed" quiet selected>
       {#if !authConfig}
         Authentication
