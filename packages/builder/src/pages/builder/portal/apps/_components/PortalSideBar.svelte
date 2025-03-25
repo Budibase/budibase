@@ -6,7 +6,8 @@
   import AppNavItem from "./AppNavItem.svelte"
 
   let searchString
-  let opened
+  let onAllAgents
+  let openedApp
 
   $: filteredApps = $enrichedApps.filter(app => {
     return (
@@ -29,18 +30,41 @@
     <NavItem
       icon="WebPages"
       text="All apps"
-      on:click={() => $goto("./")}
-      selected={!$params.appId}
+      on:click={() => {
+        onAllAgents = false
+        $goto("./")
+      }}
+      selected={!$params.appId && !onAllAgents}
     />
     {#each filteredApps as app}
       <span
         class="side-bar-app-entry"
         class:favourite={app.favourite}
-        class:actionsOpen={opened == app.appId}
+        class:actionsOpen={openedApp == app.appId}
       >
         <AppNavItem {app} />
       </span>
     {/each}
+  </div>
+  <div class="side-bar-controls">
+    <NavHeader
+      title="Agents"
+      placeholder="Search for AI agents"
+      bind:value={searchString}
+      onAdd={() => $goto("./create")}
+    />
+  </div>
+  <div class="side-bar-nav">
+    <NavItem
+      icon="Algorithm"
+      text="All agents"
+      on:click={() => {
+        openedApp = undefined
+        onAllAgents = true
+        $goto("./agents")
+      }}
+      selected={!$params.appId && !openedApp && onAllAgents}
+    />
   </div>
 </div>
 
@@ -78,7 +102,7 @@
   }
 
   .side-bar-nav {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     overflow: auto;
     overflow-x: hidden;
   }
