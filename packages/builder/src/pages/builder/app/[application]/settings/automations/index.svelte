@@ -177,7 +177,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading>Automations</Heading>
-    <Body size="S">See your automation history and edit advanced settings</Body>
+    <Body>See your automation history and edit advanced settings</Body>
   </Layout>
   <Divider />
 
@@ -258,7 +258,6 @@
         data={runHistory}
         {customRenderers}
         placeholderText="No history found"
-        border={false}
       />
       <div class="pagination">
         <Pagination

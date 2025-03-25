@@ -24,15 +24,24 @@ function toFetchOAuth2ConfigsResponse(
     clientId: config.clientId,
     clientSecret: PASSWORD_REPLACEMENT,
     method: config.method,
+    grantType: config.grantType,
   }
 }
 
 export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
   const configs = await sdk.oauth2.fetch()
 
+  const timestamps = await sdk.oauth2.getLastUsages(configs.map(c => c._id))
+
   const response: FetchOAuth2ConfigsResponse = {
-    configs: (configs || []).map(toFetchOAuth2ConfigsResponse),
+    configs: (configs || []).map(c => ({
+      ...toFetchOAuth2ConfigsResponse(c),
+      lastUsage: timestamps[c._id]
+        ? new Date(timestamps[c._id]).toISOString()
+        : undefined,
+    })),
   }
+
   ctx.body = response
 }
 
@@ -46,6 +55,7 @@ export async function create(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   const config = await sdk.oauth2.create(newConfig)
@@ -72,6 +82,7 @@ export async function edit(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   const config = await sdk.oauth2.update(toUpdate)
@@ -96,6 +107,7 @@ export async function validate(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   if (config.clientSecret === PASSWORD_REPLACEMENT && body._id) {

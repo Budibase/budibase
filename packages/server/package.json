@@ -85,7 +85,7 @@
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
     "dayjs": "^1.10.8",
-    "dd-trace": "5.26.0",
+    "dd-trace": "5.43.0",
     "dotenv": "8.2.0",
     "form-data": "4.0.0",
     "global-agent": "3.0.0",
@@ -181,6 +181,9 @@
     "update-dotenv": "1.1.1",
     "yargs": "^13.2.4",
     "zod": "^3.23.8"
+  },
+  "resolutions": {
+    "@budibase/pro": "npm:@budibase/pro@latest"
   },
   "nx": {
     "targets": {
