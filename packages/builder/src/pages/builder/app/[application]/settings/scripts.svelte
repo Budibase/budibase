@@ -102,7 +102,9 @@
     <div class="subtitle">
       <Body>
         Inject analytics, scripts or stylesheets into your app<br />
-        <Link href="#">Learn more about script injection in the docs</Link>
+        <Link href="https://docs.budibase.com/docs/app-scripts" target="_blank">
+          Learn more about script injection in the docs
+        </Link>
       </Body>
       {#if !selectedScript && enabled}
         <Button cta on:click={addScript}>Add script</Button>
