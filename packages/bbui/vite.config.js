@@ -23,7 +23,6 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@budibase/shared-core": path.resolve(__dirname, "../shared-core/src"),
         "@budibase/types": path.resolve(__dirname, "../types/src"),
-        "@": path.resolve(__dirname, "src"),
       },
     },
   }
