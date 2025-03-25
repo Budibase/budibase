@@ -6,7 +6,7 @@ import {
   OAuth2CredentialsMethod,
   OAuth2GrantType,
 } from "@budibase/types"
-import { cache, context, docIds, Duration } from "@budibase/backend-core"
+import { cache, context, docIds } from "@budibase/backend-core"
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
@@ -81,7 +81,7 @@ export async function getToken(id: string) {
       }
 
       const token = `${jsonResponse.token_type} ${jsonResponse.access_token}`
-      const ttl = jsonResponse.expires_in ?? Duration.fromHours(1).toSeconds()
+      const ttl = jsonResponse.expires_in ?? -1
       return { value: token, ttl }
     }
   )
