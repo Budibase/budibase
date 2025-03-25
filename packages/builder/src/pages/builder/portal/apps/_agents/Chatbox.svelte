@@ -36,7 +36,7 @@
   .background {
     padding: var(--spacing-l);
     border-radius: 10px;
-    background-color: rgba(50, 50, 50, 0.85);
+    background-color: var(--grey-3);
   }
 
   .systemBackground {

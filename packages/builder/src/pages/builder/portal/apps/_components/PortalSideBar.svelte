@@ -1,14 +1,14 @@
 <script>
   import { sideBarCollapsed, enrichedApps } from "@/stores/portal"
-  import { params, goto } from "@roxi/routify"
+  import { params, goto, page } from "@roxi/routify"
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
 
   let searchString
-  let onAllAgents
+  let onAllAgents = $page.path.endsWith("/agents")
   let openedApp
-
+  
   $: filteredApps = $enrichedApps.filter(app => {
     return (
       !searchString ||

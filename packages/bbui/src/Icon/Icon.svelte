@@ -3,7 +3,7 @@
   import { TooltipPosition, TooltipType } from "../constants"
 
   export let name: string = "Add"
-  export let size: "XS" | "S" | "M" | "L" | "XL" = "M"
+  export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" = "M"
   export let hidden: boolean = false
   export let hoverable: boolean = false
   export let disabled: boolean = false
