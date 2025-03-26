@@ -213,7 +213,7 @@
   />
   <Body size="S"
     >To learn how to configure OAuth2, our documentation <Link
-      href="TODO"
+      href="https://docs.budibase.com/docs/rest-oauth2"
       target="_blank"
       size="M">our documentation.</Link
     ></Body
