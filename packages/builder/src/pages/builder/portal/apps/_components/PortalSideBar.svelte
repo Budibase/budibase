@@ -8,7 +8,7 @@
   let searchString
   let onAllAgents = $page.path.endsWith("/agents")
   let openedApp
-  
+
   $: filteredApps = $enrichedApps.filter(app => {
     return (
       !searchString ||
