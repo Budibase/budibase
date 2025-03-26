@@ -386,7 +386,7 @@ export class RestIntegration implements IntegrationBase {
     }
 
     if (authConfigType === RestAuthType.OAUTH2) {
-      return { Authorization: await sdk.oauth2.generateToken(authConfigId) }
+      return { Authorization: await sdk.oauth2.getToken(authConfigId) }
     }
 
     if (!this.config.authConfigs) {
@@ -418,7 +418,7 @@ export class RestIntegration implements IntegrationBase {
     return headers
   }
 
-  async _req(query: RestQuery) {
+  async _req(query: RestQuery, retry401 = true): Promise<ParsedResponse> {
     const {
       path = "",
       queryString = "",
@@ -480,6 +480,14 @@ export class RestIntegration implements IntegrationBase {
       throw new Error("Cannot connect to URL.")
     }
     const response = await fetch(url, input)
+    if (
+      response.status === 401 &&
+      authConfigType === RestAuthType.OAUTH2 &&
+      retry401
+    ) {
+      await sdk.oauth2.cleanStoredToken(authConfigId!)
+      return await this._req(query, false)
+    }
     return await this.parseResponse(response, pagination)
   }
 

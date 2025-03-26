@@ -1,4 +1,5 @@
 <script lang="ts">
+  import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
   import { oauth2 } from "@/stores/builder"
   import type { OAuth2Config } from "@/types"
   import {
@@ -15,6 +16,7 @@
   import type { InsertOAuth2ConfigRequest } from "@budibase/types"
   import {
     OAuth2CredentialsMethod,
+    OAuth2GrantType,
     PASSWORD_REPLACEMENT,
   } from "@budibase/types"
   import type { ZodType } from "zod"
@@ -26,6 +28,8 @@
   let hasBeenSubmitted = false
 
   $: data = (config as Partial<OAuth2Config>) ?? {}
+
+  $: data.grantType ??= OAuth2GrantType.CLIENT_CREDENTIALS
 
   $: isCreation = !config
   $: title = isCreation
@@ -64,6 +68,9 @@
       method: z.nativeEnum(OAuth2CredentialsMethod, {
         message: "Authentication method is required.",
       }),
+      grantType: z.nativeEnum(OAuth2GrantType, {
+        message: "Grant type is required.",
+      }),
     }) satisfies ZodType<InsertOAuth2ConfigRequest>
 
     const validationResult = validator.safeParse(config)
@@ -97,6 +104,7 @@
         clientId: configData.clientId,
         clientSecret: configData.clientSecret,
         method: configData.method,
+        grantType: configData.grantType,
       })
       if (!connectionValidation.valid) {
         let message = "Connection settings could not be validated"
@@ -126,7 +134,9 @@
 
   $: hasBeenSubmitted && validateConfig(data)
 
-  $: isProtectedPassword = config?.clientSecret === PASSWORD_REPLACEMENT
+  $: isProtectedPassword =
+    config?.clientSecret === PASSWORD_REPLACEMENT ||
+    config?.clientSecret.match(/{{\s*env\.[^\s]+\s*}}/)
 </script>
 
 <ModalContent onConfirm={saveOAuth2Config} size="M">
@@ -158,6 +168,24 @@
       access_token property.
     </Body>
   </div>
+
+  <Select
+    label="Grant type*"
+    options={[
+      {
+        label: "Client credentials",
+        value: OAuth2GrantType.CLIENT_CREDENTIALS,
+      },
+    ]}
+    bind:value={data.grantType}
+    error={errors.grantType}
+    disabled
+  />
+  <div class="field-info">
+    <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+      Only client credentials mode is supported currently.
+    </Body>
+  </div>
   <Input
     label="Service URL*"
     placeholder="E.g. www.google.com"
@@ -170,13 +198,13 @@
       full URL.
     </Body>
   </div>
-  <Input
+  <EnvVariableInput
     label="Client ID*"
     placeholder="Type here..."
     bind:value={data.clientId}
     error={errors.clientId}
   />
-  <Input
+  <EnvVariableInput
     type={!isProtectedPassword ? "password" : "text"}
     label="Client secret*"
     placeholder="Type here..."
@@ -185,7 +213,7 @@
   />
   <Body size="S"
     >To learn how to configure OAuth2, our documentation <Link
-      href="TODO"
+      href="https://docs.budibase.com/docs/rest-oauth2"
       target="_blank"
       size="M">our documentation.</Link
     ></Body

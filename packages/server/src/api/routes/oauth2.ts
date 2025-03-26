@@ -1,5 +1,9 @@
 import Router from "@koa/router"
-import { OAuth2CredentialsMethod, PermissionType } from "@budibase/types"
+import {
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+  PermissionType,
+} from "@budibase/types"
 import { middleware } from "@budibase/backend-core"
 import authorized from "../../middleware/authorized"
 
@@ -13,6 +17,9 @@ const baseSchema = {
   method: Joi.string()
     .required()
     .valid(...Object.values(OAuth2CredentialsMethod)),
+  grantType: Joi.string()
+    .required()
+    .valid(...Object.values(OAuth2GrantType)),
 }
 
 const insertSchema = Joi.object({
