@@ -7,6 +7,7 @@ import {
   OAuth2GrantType,
 } from "@budibase/types"
 import { cache, context, docIds } from "@budibase/backend-core"
+import { processEnvironmentVariable } from "../../utils"
 
 interface OAuth2LogDocument extends Document {
   lastUsage: number
@@ -21,6 +22,8 @@ async function fetchToken(config: {
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
 }) {
+  config = await processEnvironmentVariable(config)
+
   const fetchConfig: RequestInit = {
     method: "POST",
     headers: {
@@ -62,24 +65,32 @@ const trackUsage = async (id: string) => {
   })
 }
 
-// TODO: check if caching is worth
 export async function getToken(id: string) {
-  const config = await get(id)
-  if (!config) {
-    throw new HttpError(`oAuth config ${id} count not be found`)
-  }
+  const token = await cache.withCacheWithDynamicTTL(
+    cache.CacheKey.OAUTH2_TOKEN(id),
+    async () => {
+      const config = await get(id)
+      if (!config) {
+        throw new HttpError(`oAuth config ${id} count not be found`)
+      }
 
-  const resp = await fetchToken(config)
+      const resp = await fetchToken(config)
 
-  const jsonResponse = await resp.json()
-  if (!resp.ok) {
-    const message = jsonResponse.error_description ?? resp.statusText
+      const jsonResponse = await resp.json()
+      if (!resp.ok) {
+        const message = jsonResponse.error_description ?? resp.statusText
 
-    throw new Error(`Error fetching oauth2 token: ${message}`)
-  }
+        throw new Error(`Error fetching oauth2 token: ${message}`)
+      }
+
+      const token = `${jsonResponse.token_type} ${jsonResponse.access_token}`
+      const ttl = jsonResponse.expires_in ?? -1
+      return { value: token, ttl }
+    }
+  )
 
   await trackUsage(id)
-  return `${jsonResponse.token_type} ${jsonResponse.access_token}`
+  return token
 }
 
 export async function validateConfig(config: {
@@ -130,4 +141,8 @@ export async function getLastUsages(ids: string[]) {
     return acc
   }, {})
   return result
+}
+
+export async function cleanStoredToken(id: string) {
+  await cache.destroy(cache.CacheKey.OAUTH2_TOKEN(id), { useTenancy: true })
 }
