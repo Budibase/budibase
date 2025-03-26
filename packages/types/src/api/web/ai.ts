@@ -8,3 +8,11 @@ export interface GenerateJsRequest {
 export interface GenerateJsResponse {
   code: string
 }
+
+export interface GenerateTablesRequest {
+  prompt: string
+}
+
+export interface GenerateTablesResponse {
+  response?: string
+}

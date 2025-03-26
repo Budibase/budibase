@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { API } from "@/api"
   import {
     tables,
@@ -15,9 +15,12 @@
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import CreationPage from "@/components/common/CreationPage.svelte"
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
+  import AiTableCreationModal from "./_components/AITableCreationModal.svelte"
+  import { onMount } from "svelte"
 
-  let internalTableModal
-  let externalDatasourceModal
+  let internalTableModal: CreateInternalTableModal
+  let externalDatasourceModal: CreateExternalDatasourceModal
+  let aiTablesModal: AiTableCreationModal
 
   let sampleDataLoading = false
   let externalDatasourceLoading = false
@@ -37,6 +40,10 @@
       notifications.error("Error creating datasource")
     }
   }
+
+  onMount(() => {
+    aiTablesModal.show()
+  })
 </script>
 
 <CreateInternalTableModal bind:this={internalTableModal} />
@@ -45,6 +52,8 @@
   bind:loading={externalDatasourceLoading}
   bind:this={externalDatasourceModal}
 />
+
+<AiTableCreationModal bind:this={aiTablesModal} />
 
 <CreationPage
   showClose={hasData($datasources, $tables)}
@@ -60,7 +69,7 @@
 
   <div class="options">
     <DatasourceOption
-      on:click={internalTableModal.show}
+      on:click={() => internalTableModal.show()}
       title="Create new table"
       description="Non-relational"
       {disabled}
@@ -82,6 +91,14 @@
       {disabled}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+    </DatasourceOption>
+    <DatasourceOption
+      on:click={() => aiTablesModal.show()}
+      title="Generate it using AI"
+      description="Non-relational"
+      {disabled}
+    >
+      <Icon name="MagicWand" size="M" />
     </DatasourceOption>
   </div>
 
