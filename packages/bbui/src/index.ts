@@ -17,7 +17,6 @@ export { default as Toggle } from "./Form/Toggle.svelte"
 export { default as RadioGroup } from "./Form/RadioGroup.svelte"
 export { default as Checkbox } from "./Form/Checkbox.svelte"
 export { default as InputDropdown } from "./Form/InputDropdown.svelte"
-export { default as PickerDropdown } from "./Form/PickerDropdown.svelte"
 export { default as EnvDropdown } from "./Form/EnvDropdown.svelte"
 export { default as Multiselect } from "./Form/Multiselect.svelte"
 export { default as Search } from "./Form/Search.svelte"
@@ -87,8 +86,6 @@ export { default as MarkdownEditor } from "./Markdown/MarkdownEditor.svelte"
 export { default as MarkdownViewer } from "./Markdown/MarkdownViewer.svelte"
 export { default as List } from "./List/List.svelte"
 export { default as ListItem } from "./List/ListItem.svelte"
-export { default as IconSideNav } from "./IconSideNav/IconSideNav.svelte"
-export { default as IconSideNavItem } from "./IconSideNav/IconSideNavItem.svelte"
 export { default as Accordion } from "./Accordion/Accordion.svelte"
 export { default as AbsTooltip } from "./Tooltip/AbsTooltip.svelte"
 
@@ -114,3 +111,5 @@ export { banner, BANNER_TYPES } from "./Stores/banner"
 
 // Helpers
 export * as Helpers from "./helpers"
+
+export type * from "./types"

@@ -11,6 +11,7 @@
     Tags,
     Tag,
     Table,
+    ButtonGroup,
   } from "@budibase/bbui"
   import { backups, licensing, auth, admin } from "@/stores/portal"
   import { appStore } from "@/stores/builder"
@@ -180,25 +181,17 @@
     {#if !$auth.accountPortalAccess && $admin.cloud}
       <Body>Contact your account holder to upgrade your plan.</Body>
     {/if}
-    <div class="pro-buttons">
-      {#if $auth.accountPortalAccess}
-        <Button
-          primary
-          disabled={!$auth.accountPortalAccess && $admin.cloud}
-          on:click={$licensing.goToUpgradePage()}
-        >
-          Upgrade
-        </Button>
+    <ButtonGroup>
+      {#if $admin.cloud && $auth.accountPortalAccess}
+        <Button primary on:click={$licensing.goToUpgradePage}>Upgrade</Button>
       {/if}
       <Button
         secondary
-        on:click={() => {
-          window.open("https://budibase.com/pricing/", "_blank")
-        }}
+        on:click={() => window.open("https://budibase.com/pricing/", "_blank")}
       >
         View plans
       </Button>
-    </div>
+    </ButtonGroup>
   {:else if !backupData?.length && !loading && !filterOpt && !dateRange?.length}
     <div class="center">
       <Layout noPadding gap="S" justifyItems="center">
@@ -311,12 +304,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--spacing-m);
-  }
-
-  .pro-buttons {
-    display: flex;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
   }
 
   .center {

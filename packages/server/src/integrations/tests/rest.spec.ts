@@ -1,10 +1,18 @@
 import nock from "nock"
-import { RestIntegration } from "../rest"
-import { BodyType, RestAuthType } from "@budibase/types"
-import { Response } from "node-fetch"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { RestIntegration } from "../rest"
+import {
+  BasicRestAuthConfig,
+  BearerRestAuthConfig,
+  BodyType,
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+  RestAuthType,
+} from "@budibase/types"
+import { Response } from "node-fetch"
 import { createServer } from "http"
 import { AddressInfo } from "net"
+import { generator } from "@budibase/backend-core/tests"
 
 const UUID_REGEX =
   "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
@@ -224,7 +232,7 @@ describe("REST Integration", () => {
   })
 
   describe("authentication", () => {
-    const basicAuth = {
+    const basicAuth: BasicRestAuthConfig = {
       _id: "c59c14bd1898a43baa08da68959b24686",
       name: "basic-1",
       type: RestAuthType.BASIC,
@@ -234,7 +242,7 @@ describe("REST Integration", () => {
       },
     }
 
-    const bearerAuth = {
+    const bearerAuth: BearerRestAuthConfig = {
       _id: "0d91d732f34e4befabeff50b392a8ff3",
       name: "bearer-1",
       type: RestAuthType.BEARER,
@@ -268,6 +276,190 @@ describe("REST Integration", () => {
         .reply(200, { foo: "bar" })
       const { data } = await integration.read({ authConfigId: bearerAuth._id })
       expect(data).toEqual({ foo: "bar" })
+    })
+
+    function nockTokenCredentials(
+      oauth2Url: string,
+      clientId: string,
+      password: string,
+      resultCode: number,
+      resultBody: any
+    ) {
+      const url = new URL(oauth2Url)
+      const token = generator.guid()
+      nock(url.origin)
+        .post(url.pathname, {
+          grant_type: "client_credentials",
+        })
+        .basicAuth({ user: clientId, pass: password })
+        .reply(200, { token_type: "Bearer", access_token: token })
+
+      return nock("https://example.com", {
+        reqheaders: { Authorization: `Bearer ${token}` },
+      })
+        .get("/")
+        .reply(resultCode, resultBody)
+    }
+
+    it("adds OAuth2 auth (via header)", async () => {
+      const oauth2Url = generator.url()
+      const secret = generator.hash()
+      const { config: oauthConfig } = await config.api.oauth2.create({
+        name: generator.guid(),
+        url: oauth2Url,
+        clientId: generator.guid(),
+        clientSecret: secret,
+        method: OAuth2CredentialsMethod.HEADER,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+      })
+
+      nockTokenCredentials(oauth2Url, oauthConfig.clientId, secret, 200, {
+        foo: "bar",
+      })
+
+      const { data, info } = await config.doInContext(
+        config.appId,
+        async () =>
+          await integration.read({
+            authConfigId: oauthConfig._id,
+            authConfigType: RestAuthType.OAUTH2,
+          })
+      )
+      expect(data).toEqual({ foo: "bar" })
+      expect(info.code).toEqual(200)
+    })
+
+    it("adds OAuth2 auth (via body)", async () => {
+      const oauth2Url = generator.url()
+      const secret = generator.hash()
+      const { config: oauthConfig } = await config.api.oauth2.create({
+        name: generator.guid(),
+        url: oauth2Url,
+        clientId: generator.guid(),
+        clientSecret: secret,
+        method: OAuth2CredentialsMethod.BODY,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+      })
+
+      const token = generator.guid()
+
+      const url = new URL(oauth2Url)
+      nock(url.origin, {
+        reqheaders: {
+          "content-Type": "application/x-www-form-urlencoded",
+        },
+      })
+        .post(url.pathname, {
+          grant_type: "client_credentials",
+          client_id: oauthConfig.clientId,
+          client_secret: secret,
+        })
+        .reply(200, { token_type: "Bearer", access_token: token })
+
+      nock("https://example.com", {
+        reqheaders: { Authorization: `Bearer ${token}` },
+      })
+        .get("/")
+        .reply(200, { foo: "bar" })
+
+      const { data, info } = await config.doInContext(
+        config.appId,
+        async () =>
+          await integration.read({
+            authConfigId: oauthConfig._id,
+            authConfigType: RestAuthType.OAUTH2,
+          })
+      )
+      expect(data).toEqual({ foo: "bar" })
+      expect(info.code).toEqual(200)
+    })
+
+    it("handles OAuth2 auth cached expired token", async () => {
+      const oauth2Url = generator.url()
+      const secret = generator.hash()
+      const { config: oauthConfig } = await config.api.oauth2.create({
+        name: generator.guid(),
+        url: oauth2Url,
+        clientId: generator.guid(),
+        clientSecret: secret,
+        method: OAuth2CredentialsMethod.HEADER,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+      })
+
+      nockTokenCredentials(oauth2Url, oauthConfig.clientId, secret, 401, {})
+      const token2Request = nockTokenCredentials(
+        oauth2Url,
+        oauthConfig.clientId,
+        secret,
+        200,
+        {
+          foo: "bar",
+        }
+      )
+
+      const { data, info } = await config.doInContext(
+        config.appId,
+        async () =>
+          await integration.read({
+            authConfigId: oauthConfig._id,
+            authConfigType: RestAuthType.OAUTH2,
+          })
+      )
+
+      expect(data).toEqual({ foo: "bar" })
+      expect(info.code).toEqual(200)
+      expect(token2Request.isDone()).toBe(true)
+    })
+
+    it("does not loop when handling OAuth2 auth cached expired token", async () => {
+      const oauth2Url = generator.url()
+      const secret = generator.hash()
+      const { config: oauthConfig } = await config.api.oauth2.create({
+        name: generator.guid(),
+        url: oauth2Url,
+        clientId: generator.guid(),
+        clientSecret: secret,
+        method: OAuth2CredentialsMethod.HEADER,
+        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+      })
+
+      const firstRequest = nockTokenCredentials(
+        oauth2Url,
+        oauthConfig.clientId,
+        secret,
+        401,
+        {}
+      )
+      const secondRequest = nockTokenCredentials(
+        oauth2Url,
+        oauthConfig.clientId,
+        secret,
+        401,
+        {}
+      )
+      const thirdRequest = nockTokenCredentials(
+        oauth2Url,
+        oauthConfig.clientId,
+        secret,
+        200,
+        { foo: "bar" }
+      )
+
+      const { data, info } = await config.doInContext(
+        config.appId,
+        async () =>
+          await integration.read({
+            authConfigId: oauthConfig._id,
+            authConfigType: RestAuthType.OAUTH2,
+          })
+      )
+
+      expect(info.code).toEqual(401)
+      expect(data).toEqual({})
+
+      expect(firstRequest.isDone()).toBe(true)
+      expect(secondRequest.isDone()).toBe(true)
+      expect(thirdRequest.isDone()).toBe(false)
     })
   })
 

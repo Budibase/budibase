@@ -3,10 +3,10 @@
   import Switch from "./Core/Switch.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value: boolean | undefined = undefined
-  export let label: string | undefined = undefined
+  export let value = undefined
+  export let label = null
   export let labelPosition = "above"
-  export let text = null
+  export let text = undefined
   export let disabled = false
   export let error: string | undefined = undefined
   export let helpText: string | undefined = undefined

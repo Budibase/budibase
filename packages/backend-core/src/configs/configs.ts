@@ -245,6 +245,7 @@ export async function getSMTPConfig(
         user: env.SMTP_USER!,
         pass: env.SMTP_PASSWORD!,
       },
+      fallback: true,
     }
   }
 }

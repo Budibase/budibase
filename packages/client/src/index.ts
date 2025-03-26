@@ -1,6 +1,7 @@
 import ClientApp from "./components/ClientApp.svelte"
 import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
+  authStore,
   builderStore,
   appStore,
   blockStore,
@@ -11,12 +12,10 @@ import {
   hoverStore,
   stateStore,
   routeStore,
+  notificationStore,
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { APIClient } from "@budibase/frontend-core"
-import type { ActionTypes } from "@/constants"
-import { Readable } from "svelte/store"
 import {
   Screen,
   Theme,
@@ -27,7 +26,11 @@ import {
   Snippet,
   UIComponentError,
   CustomComponent,
+  Table,
+  DataFetchDatasource,
 } from "@budibase/types"
+import { ActionTypes } from "@/constants"
+import { APIClient } from "@budibase/frontend-core"
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
@@ -79,27 +82,14 @@ export interface SDK {
   Provider: any
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
+  fetchDatasourceDefinition: (datasource: DataFetchDatasource) => Promise<Table>
   generateGoldenSample: any
-  builderStore: Readable<{
-    inBuilder: boolean
-  }> & {
-    actions: {
-      highlightSetting: (key: string) => void
-      addParentComponent: (
-        componentId: string,
-        fullAncestorType: string
-      ) => void
-    }
-  }
+  builderStore: typeof builderStore
+  authStore: typeof authStore
+  notificationStore: typeof notificationStore
+  environmentStore: typeof environmentStore
+  appStore: typeof appStore
 }
-
-export type Component = Readable<{
-  id: string
-  styles: any
-  errorState: boolean
-}>
-
-export type Context = Readable<Record<string, any>>
 
 let app: ClientApp
 

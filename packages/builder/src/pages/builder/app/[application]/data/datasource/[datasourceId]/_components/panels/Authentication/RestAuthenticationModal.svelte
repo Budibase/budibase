@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte"
   import {
     ModalContent,
@@ -6,32 +6,52 @@
     Select,
     Body,
     Input,
-    EnvDropdown,
-    Modal,
     notifications,
   } from "@budibase/bbui"
   import { AUTH_TYPE_LABELS, AUTH_TYPES } from "./authTypes"
   import { BindableCombobox } from "@/components/common/bindings"
   import { getAuthBindings, getEnvironmentBindings } from "@/dataBinding"
-  import { environment, licensing, auth } from "@/stores/portal"
-  import CreateEditVariableModal from "@/components/portal/environment/CreateEditVariableModal.svelte"
+  import { environment, licensing } from "@/stores/portal"
+  import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
+
+  interface FormData {
+    name?: string
+    type?: string
+    basic: {
+      username?: string
+      password?: string
+    }
+    bearer: {
+      token?: string
+    }
+  }
 
   export let configs
   export let currentConfig
   export let onConfirm
   export let onRemove
 
-  let form = {
+  let form: FormData = {
     basic: {},
     bearer: {},
   }
 
-  let errors = {
+  let errors: FormData = {
     basic: {},
     bearer: {},
   }
 
-  let blurred = {
+  let blurred: {
+    name?: boolean
+    type?: boolean
+    basic: {
+      username?: boolean
+      password?: boolean
+    }
+    bearer: {
+      token?: boolean
+    }
+  } = {
     basic: {},
     bearer: {},
   }
@@ -39,19 +59,7 @@
   let hasErrors = false
   let hasChanged = false
 
-  let createVariableModal
-  let formFieldkey
-
   onMount(async () => {
-    try {
-      await environment.loadVariables()
-      if ($auth.user) {
-        await licensing.init()
-      }
-    } catch (err) {
-      console.error(err)
-    }
-
     if (currentConfig) {
       deconstructConfig()
     }
@@ -79,7 +87,7 @@
    * map the form into a new config to save by type
    */
   const constructConfig = () => {
-    const newConfig = {
+    const newConfig: any = {
       name: form.name,
       type: form.type,
     }
@@ -123,10 +131,10 @@
         errors.name =
           // check for duplicate excluding the current config
           configs.find(
-            c => c.name === form.name && c.name !== currentConfig?.name
+            (c: any) => c.name === form.name && c.name !== currentConfig?.name
           ) !== undefined
             ? "Name must be unique"
-            : null
+            : undefined
       }
       // Name required
       else {
@@ -137,17 +145,17 @@
 
     // TYPE
     const typeError = () => {
-      errors.type = form.type ? null : "Type is required"
+      errors.type = form.type ? undefined : "Type is required"
       return !!errors.type
     }
 
     // BASIC AUTH
     const basicAuthErrors = () => {
       errors.basic.username = form.basic.username
-        ? null
+        ? undefined
         : "Username is required"
       errors.basic.password = form.basic.password
-        ? null
+        ? undefined
         : "Password is required"
 
       return !!(errors.basic.username || errors.basic.password || commonError)
@@ -155,7 +163,7 @@
 
     // BEARER TOKEN
     const bearerTokenErrors = () => {
-      errors.bearer.token = form.bearer.token ? null : "Token is required"
+      errors.bearer.token = form.bearer.token ? undefined : "Token is required"
       return !!(errors.bearer.token || commonError)
     }
 
@@ -169,16 +177,6 @@
     }
   }
 
-  const save = async data => {
-    try {
-      await environment.createVariable(data)
-      form.basic[formFieldkey] = `{{ env.${data.name} }}`
-      createVariableModal.hide()
-    } catch (err) {
-      notifications.error(`Failed to create variable: ${err.message}`)
-    }
-  }
-
   const onFieldChange = () => {
     checkErrors()
     checkChanged()
@@ -188,15 +186,13 @@
     onConfirm(constructConfig())
   }
 
-  async function handleUpgradePanel() {
-    await environment.upgradePanelOpened()
-    $licensing.goToUpgradePage()
-  }
-
-  function showModal(key) {
-    formFieldkey = key
-    createVariableModal.show()
-  }
+  onMount(async () => {
+    try {
+      await environment.loadVariables()
+    } catch (error) {
+      notifications.error(`Error getting environment variables - ${error}`)
+    }
+  })
 </script>
 
 <ModalContent
@@ -221,7 +217,7 @@
       bind:value={form.name}
       on:change={onFieldChange}
       on:blur={() => (blurred.name = true)}
-      error={blurred.name ? errors.name : null}
+      error={blurred.name ? errors.name : undefined}
     />
     <Select
       label="Type"
@@ -229,31 +225,24 @@
       on:change={onFieldChange}
       options={AUTH_TYPE_LABELS}
       on:blur={() => (blurred.type = true)}
-      error={blurred.type ? errors.type : null}
+      error={blurred.type ? errors.type : undefined}
     />
     {#if form.type === AUTH_TYPES.BASIC}
-      <EnvDropdown
+      <EnvVariableInput
         label="Username"
         bind:value={form.basic.username}
         on:change={onFieldChange}
         on:blur={() => (blurred.basic.username = true)}
-        error={blurred.basic.username ? errors.basic.username : null}
-        showModal={() => showModal("configKey")}
-        variables={$environment.variables}
-        environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
-        {handleUpgradePanel}
+        error={blurred.basic.username ? errors.basic.username : undefined}
       />
-      <EnvDropdown
+
+      <EnvVariableInput
         label="Password"
         type="password"
         bind:value={form.basic.password}
         on:change={onFieldChange}
         on:blur={() => (blurred.basic.password = true)}
-        error={blurred.basic.password ? errors.basic.password : null}
-        showModal={() => showModal("configKey")}
-        variables={$environment.variables}
-        environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
-        {handleUpgradePanel}
+        error={blurred.basic.password ? errors.basic.password : undefined}
       />
     {/if}
     {#if form.type === AUTH_TYPES.BEARER}
@@ -274,16 +263,10 @@
           blurred.bearer.token = true
           onFieldChange()
         }}
-        allowJS={false}
         placeholder="Token"
         appendBindingsAsOptions={true}
-        drawerEnabled={false}
         error={blurred.bearer.token ? errors.bearer.token : null}
       />
     {/if}
   </Layout>
 </ModalContent>
-
-<Modal bind:this={createVariableModal}>
-  <CreateEditVariableModal {save} />
-</Modal>

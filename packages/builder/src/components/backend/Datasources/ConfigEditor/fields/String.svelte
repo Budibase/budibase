@@ -1,33 +1,23 @@
-<script>
-  import { Label, EnvDropdown } from "@budibase/bbui"
-  import { environment, licensing } from "@/stores/portal"
+<script lang="ts">
+  import { Label } from "@budibase/bbui"
+  import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
 
   export let type
   export let name
   export let value
   export let error
   export let placeholder
-  export let showModal = () => {}
-
-  async function handleUpgradePanel() {
-    await environment.upgradePanelOpened()
-    $licensing.goToUpgradePage()
-  }
 </script>
 
 <div class="form-row">
   <Label>{name}</Label>
-  <EnvDropdown
+  <EnvVariableInput
     on:change
     on:blur
     type={type === "port" ? "string" : type}
     {value}
     {error}
     {placeholder}
-    variables={$environment.variables}
-    environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
-    {showModal}
-    {handleUpgradePanel}
   />
 </div>
 

@@ -11,3 +11,5 @@ export {
 } from "./helpers"
 export * as featureFlag from "./featureFlags"
 export * as bindings from "./bindings"
+export * from "./confirm"
+export * from "./date"

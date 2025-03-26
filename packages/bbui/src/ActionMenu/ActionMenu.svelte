@@ -2,13 +2,13 @@
   import { setContext, getContext } from "svelte"
   import Popover from "../Popover/Popover.svelte"
   import Menu from "../Menu/Menu.svelte"
-  import { PopoverAlignment } from "../constants"
+  import type { PopoverAlignment } from "../constants"
 
   export let disabled: boolean = false
   export let align: `${PopoverAlignment}` = "left"
   export let portalTarget: string | undefined = undefined
   export let openOnHover: boolean = false
-  export let animate: boolean | undefined = undefined
+  export let animate: boolean | undefined = true
   export let offset: number | undefined = undefined
 
   const actionMenuContext = getContext("actionMenu")

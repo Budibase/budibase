@@ -1,31 +1,30 @@
 import {
-  Datasource,
+  ArrayOperator,
+  BasicOperator,
   BBReferenceFieldSubType,
+  Datasource,
+  EmptyFilterOption,
+  FieldConstraints,
   FieldType,
   FormulaType,
+  isArraySearchOperator,
+  isBasicSearchOperator,
+  isLogicalSearchOperator,
+  isRangeSearchOperator,
   LegacyFilter,
+  LogicalOperator,
+  RangeOperator,
+  RowSearchParams,
+  SearchFilter,
+  SearchFilterOperator,
   SearchFilters,
   SearchQueryFields,
-  ArrayOperator,
-  SearchFilterOperator,
-  SortType,
-  FieldConstraints,
-  SortOrder,
-  EmptyFilterOption,
   SearchResponse,
+  SortOrder,
+  SortType,
   Table,
-  BasicOperator,
-  RangeOperator,
-  LogicalOperator,
-  isLogicalSearchOperator,
-  UISearchFilter,
   UILogicalOperator,
-  isBasicSearchOperator,
-  isArraySearchOperator,
-  isRangeSearchOperator,
-  SearchFilter,
-  WithRequired,
-  SearchParams,
+  UISearchFilter,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -445,6 +444,7 @@ export function buildQuery(
     return {}
   }
 
+  // Migrate legacy filters if required
   if (Array.isArray(filter)) {
     filter = processSearchFilters(filter)
     if (!filter) {
@@ -452,10 +452,7 @@ export function buildQuery(
     }
   }
 
-  const operator = logicalOperatorFromUI(
-    filter.logicalOperator || UILogicalOperator.ALL
-  )
-
+  // Determine top level empty filter behaviour
   const query: SearchFilters = {}
   if (filter.onEmptyFilter) {
     query.onEmptyFilter = filter.onEmptyFilter
@@ -463,8 +460,24 @@ export function buildQuery(
     query.onEmptyFilter = EmptyFilterOption.RETURN_ALL
   }
 
+  // Default to matching all groups/filters
+  const operator = logicalOperatorFromUI(
+    filter.logicalOperator || UILogicalOperator.ALL
+  )
+
   query[operator] = {
     conditions: (filter.groups || []).map(group => {
+      // Check if we contain more groups
+      if (group.groups) {
+        const searchFilter = buildQuery(group)
+
+        // We don't define this properly in the types, but certain fields should
+        // not be present in these nested search filters
+        delete searchFilter.onEmptyFilter
+        return searchFilter
+      }
+
+      // Otherwise handle filters
       const { allOr, onEmptyFilter, filters } = splitFiltersArray(
         group.filters || []
       )
@@ -472,7 +485,7 @@ export function buildQuery(
         query.onEmptyFilter = onEmptyFilter
       }
 
-      // logicalOperator takes precendence over allOr
+      // logicalOperator takes precedence over allOr
       let operator = allOr ? LogicalOperator.OR : LogicalOperator.AND
       if (group.logicalOperator) {
         operator = logicalOperatorFromUI(group.logicalOperator)
@@ -522,19 +535,9 @@ export function fixupFilterArrays(filters: SearchFilters) {
   return filters
 }
 
-type SearchQuery = WithRequired<
-  Pick<
-    SearchParams,
-    "query" | "sort" | "sortOrder" | "sortType" | "limit" | "countRows"
-  >,
-  "query"
->
-
-export type InMemorySearchQuery = SearchQuery
-
 export function search<T extends Record<string, any>>(
   docs: T[],
-  query: SearchQuery
+  query: Omit<RowSearchParams, "tableId">
 ): SearchResponse<T> {
   let result = runQuery(docs, query.query)
   if (query.sort) {

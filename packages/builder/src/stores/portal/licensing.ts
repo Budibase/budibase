@@ -36,6 +36,9 @@ interface LicensingState {
   budibaseAIEnabled: boolean
   customAIConfigsEnabled: boolean
   auditLogsEnabled: boolean
+  customAppScriptsEnabled: boolean
+  syncAutomationsEnabled: boolean
+  triggerAutomationRunEnabled: boolean
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
   // derived quota metrics for percentages used
@@ -75,6 +78,9 @@ class LicensingStore extends BudiStore<LicensingState> {
       budibaseAIEnabled: false,
       customAIConfigsEnabled: false,
       auditLogsEnabled: false,
+      customAppScriptsEnabled: false,
+      syncAutomationsEnabled: false,
+      triggerAutomationRunEnabled: false,
       // the currently used quotas from the db
       quotaUsage: undefined,
       // derived quota metrics for percentages used
@@ -178,6 +184,9 @@ class LicensingStore extends BudiStore<LicensingState> {
     const customAIConfigsEnabled = features.includes(
       Constants.Features.AI_CUSTOM_CONFIGS
     )
+    const customAppScriptsEnabled = features.includes(
+      Constants.Features.CUSTOM_APP_SCRIPTS
+    )
     this.update(state => {
       return {
         ...state,
@@ -198,6 +207,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         syncAutomationsEnabled,
         triggerAutomationRunEnabled,
         perAppBuildersEnabled,
+        customAppScriptsEnabled,
       }
     })
   }

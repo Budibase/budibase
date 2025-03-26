@@ -1,11 +1,12 @@
 import {
   Aggregation,
-  AutoFieldSubType,
   CalculationType,
   DocumentType,
   EnrichedQueryJson,
   FieldType,
   isLogicalSearchOperator,
+  LockName,
+  LockType,
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
@@ -31,6 +32,7 @@ import {
 } from "../../../tables/internal/sqs"
 import {
   context,
+  locks,
   sql,
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
@@ -421,11 +423,7 @@ export async function search(
       }
     } else if (sortField) {
       const sortType =
-        sortField.type === FieldType.NUMBER ||
-        (sortField.type === FieldType.AUTO &&
-          sortField.subtype === AutoFieldSubType.AUTO_ID)
-          ? SortType.NUMBER
-          : SortType.STRING
+        sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
       request.sort = {
         [mapToUserColumn(sortField.name)]: {
           direction: params.sortOrder || SortOrder.ASCENDING,
@@ -514,7 +512,14 @@ export async function search(
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
-      await sdk.tables.sqs.syncDefinition()
+      await locks.doWithLock(
+        {
+          type: LockType.AUTO_EXTEND,
+          name: LockName.SQS_SYNC_DEFINITIONS,
+          resource: context.getAppId(),
+        },
+        sdk.tables.sqs.syncDefinition
+      )
       return search(options, source, { retrying: true })
     }
     // previously the internal table didn't error when a column didn't exist in search

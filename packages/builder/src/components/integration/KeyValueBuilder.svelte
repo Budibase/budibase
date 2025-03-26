@@ -13,7 +13,7 @@
   import { lowercase } from "@/helpers"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 
-  let dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher()
 
   export let defaults: Record<string, string> | undefined = undefined
   export let object: Record<string, string> = defaults || {}
@@ -46,10 +46,17 @@
   }))
   let fieldActivity = buildFieldActivity(activity)
 
-  $: object = fields.reduce(
-    (acc, next) => ({ ...acc, [next.name]: next.value }),
-    {}
-  )
+  $: fullObject = fields.reduce((acc, next) => {
+    acc[next.name] = next.value
+    return acc
+  }, {})
+
+  $: object = Object.entries(fullObject).reduce((acc, [key, next]) => {
+    if (key) {
+      acc[key] = next
+    }
+    return acc
+  }, {})
 
   function buildFieldActivity(obj: Record<string, boolean>) {
     if (!obj || typeof obj !== "object") {
@@ -79,6 +86,7 @@
   }
 
   function changed() {
+    // Required for reactivity
     fields = fields
     const newActivity: Record<string, boolean> = {}
     for (let idx = 0; idx < fields.length; idx++) {
@@ -103,7 +111,7 @@
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
-{#if Object.keys(object || {}).length > 0}
+{#if Object.keys(fullObject || {}).length > 0}
   {#if headings}
     <div class="container" class:container-active={toggle}>
       <Label {tooltip}>{keyHeading || keyPlaceholder}</Label>
