@@ -117,6 +117,7 @@ export type AIProvider =
   | "AzureOpenAI"
   | "TogetherAI"
   | "Custom"
+  | "BudibaseAI"
 
 export interface ProviderConfig {
   provider: AIProvider
