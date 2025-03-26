@@ -33,6 +33,7 @@ router
   .get("/api/assets/client", controller.serveClientLibrary)
   .get("/api/apps/:appId/manifest.json", controller.serveManifest)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
+  .post("/api/pwa/process-zip", authorized(BUILDER), controller.processPWAZip)
   .post("/api/beta/:feature", controller.toggleBetaUiFeature)
   .post(
     "/api/attachments/:tableId/upload",

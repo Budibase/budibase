@@ -47,6 +47,9 @@ import {
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
+import path from "path"
+import extract from "extract-zip"
+import { tmpdir } from "os"
 
 export const toggleBetaUiFeature = async function (
   ctx: Ctx<void, ToggleBetaFeatureResponse>
@@ -140,6 +143,55 @@ export const uploadFile = async function (
   )
 }
 
+export async function processPWAZip(ctx: UserCtx) {
+  const file = ctx.request.files?.file
+  console.log("file", file)
+  if (!file || Array.isArray(file)) {
+    ctx.throw(400, "No file or multiple files provided")
+  }
+
+  const tempDir = join(tmpdir(), `pwa-${Date.now()}`)
+  try {
+    await fs.promises.mkdir(tempDir, { recursive: true })
+
+    await extract(file.path, { dir: tempDir })
+    const iconsJsonPath = join(tempDir, "icons.json")
+
+    if (!iconsJsonPath) {
+      ctx.throw(400, "Invalid zip structure - missing icons.json")
+    }
+
+    const iconsContent = await fs.promises.readFile(iconsJsonPath, "utf-8")
+    const iconsData = JSON.parse(iconsContent)
+
+    const icons = []
+    const baseDir = path.dirname(iconsJsonPath)
+
+    for (const icon of iconsData.icons) {
+      const extension = path.extname(icon.src)
+      const key = `${context.getProdAppId()}/pwa/${uuid.v4()}${extension}`
+
+      const result = await objectStore.upload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: key,
+        path: path.join(baseDir, icon.src),
+        type: icon.type || "image/png",
+      })
+
+      if (result.Key) {
+        icons.push({
+          src: result.Key,
+          sizes: icon.sizes,
+          type: icon.type || "image/png",
+        })
+      }
+    }
+    ctx.body = { icons }
+  } catch (error: any) {
+    ctx.throw(500, `Error processing zip: ${error.message}`)
+  }
+}
+
 const requiresMigration = async (ctx: Ctx) => {
   const appId = context.getAppId()
   if (!appId) {
@@ -230,10 +282,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       let extraHead = ""
       if (hasPWA) {
         extraHead = `<link rel="manifest" href="${manifestUrl}">`
-
         extraHead += `<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="${
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-title" content="${
           appInfo.pwa.short_name || appInfo.name
         }">`
 
@@ -244,26 +295,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
               appInfo.pwa.icons
             )
 
-            // First, try to find an iOS 180x180 icon
             let appleTouchIcon = enrichedIcons.find(
-              icon => icon.platform === "ios" && icon.sizes === "180x180"
+              icon => icon.sizes === "180x180"
             )
 
-            // If not found, try any iOS icon
-            if (!appleTouchIcon) {
-              appleTouchIcon = enrichedIcons.find(
-                icon => icon.platform === "ios"
-              )
-            }
-
-            // If still not found, try a 180x180 icon of any platform
-            if (!appleTouchIcon) {
-              appleTouchIcon = enrichedIcons.find(
-                icon => icon.sizes === "180x180"
-              )
-            }
-
-            // Finally, fallback to the first icon
             if (!appleTouchIcon && enrichedIcons.length > 0) {
               appleTouchIcon = enrichedIcons[0]
             }
@@ -272,7 +307,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
               extraHead += `<link rel="apple-touch-icon" sizes="${appleTouchIcon.sizes}" href="${appleTouchIcon.src}">`
             }
           } catch (error) {
-            console.error("Error processing apple-touch-icon:", error)
+            console.error("Error enriching PWA icons:", error)
           }
         }
       }
@@ -451,68 +486,12 @@ export async function serveManifest(ctx: UserCtx<void, any>) {
 
     if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
       try {
-        // Enrich all icons with their URLs
-        const enrichedIcons = await objectStore.enrichPWAImages(
-          appInfo.pwa.icons
-        )
-
-        // Group icons by platform if available
-        const platformGroups: Record<string, PWAManifestImage[]> = {}
-        const generalIcons: PWAManifestImage[] = []
-
-        // Sort icons into platform groups
-        enrichedIcons.forEach(icon => {
-          if (icon.platform) {
-            if (!platformGroups[icon.platform]) {
-              platformGroups[icon.platform] = []
-            }
-            platformGroups[icon.platform].push(icon)
-          } else {
-            generalIcons.push(icon)
-          }
-        })
-
-        // Default icons list (all icons or general ones if we have platform groups)
-        manifest.icons =
-          Object.keys(platformGroups).length > 0
-            ? generalIcons.length > 0
-              ? generalIcons
-              : enrichedIcons
-            : enrichedIcons
-
-        // Add platform specific icon lists if available
-        if (Object.keys(platformGroups).length > 0) {
-          // For iOS
-          if (platformGroups.ios) {
-            manifest.icons_ios = platformGroups.ios
-          }
-
-          // For Android
-          if (platformGroups.android) {
-            manifest.icons_android = platformGroups.android
-          }
-
-          // For Windows
-          if (platformGroups.windows || platformGroups.windows11) {
-            manifest.icons_windows =
-              platformGroups.windows || platformGroups.windows11
-          }
-        }
+        manifest.icons = await objectStore.enrichPWAImages(appInfo.pwa.icons)
       } catch (error) {
         console.error("Error processing manifest icons:", error)
       }
     }
-
-    if (appInfo.pwa.screenshots && appInfo.pwa.screenshots.length > 0) {
-      try {
-        manifest.screenshots = await objectStore.enrichPWAImages(
-          appInfo.pwa.screenshots
-        )
-      } catch (error) {
-        console.error("Error processing manifest screenshots:", error)
-      }
-    }
-
+    console.log(JSON.stringify(manifest))
     ctx.set("Content-Type", "application/json")
     ctx.body = manifest
   } catch (error) {

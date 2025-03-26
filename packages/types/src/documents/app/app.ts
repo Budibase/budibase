@@ -93,16 +93,11 @@ export interface PWAManifest {
   background_color: string
   theme_color: string
   display?: string
-  start_url?: string
-  scope?: string
-  icons_ios?: PWAManifestImage[]
-  icons_android?: PWAManifestImage[]
-  icons_windows?: PWAManifestImage[]
+  start_url: string
 }
 
 export interface PWAManifestImage {
   src: string
   sizes: string
   type: string
-  platform?: string
 }

@@ -17,7 +17,6 @@
   export let previewUrl: string | undefined = undefined
   export let hideButton: boolean = false
   export let multiple: boolean = false
-  export let directory: boolean = false
 
   const fieldId = id || uuid()
   const BYTES_IN_KB = 1000
@@ -79,8 +78,6 @@
   bind:this={fileInput}
   on:change={handleFile}
   {multiple}
-  mozdirectory={directory}
-  {directory}
 />
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

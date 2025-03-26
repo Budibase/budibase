@@ -881,25 +881,6 @@ export async function updateAppPackage(
       newAppPackage._rev = application._rev
     }
 
-    if (appPackage.pwa && application.pwa) {
-      if (appPackage.pwa.icons) {
-        appPackage.pwa.icons = appPackage.pwa.icons.map((icon, i) =>
-          icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
-          application?.pwa?.icons?.[i]
-            ? { ...icon, src: application?.pwa?.icons?.[i].src }
-            : icon
-        )
-      }
-      if (appPackage.pwa.screenshots) {
-        appPackage.pwa.screenshots = appPackage.pwa.screenshots.map((shot, i) =>
-          shot.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
-          application?.pwa?.screenshots?.[i]
-            ? { ...shot, src: application?.pwa?.screenshots?.[i].src }
-            : shot
-        )
-      }
-    }
-
     // the locked by property is attached by server but generated from
     // Redis, shouldn't ever store it
     delete newAppPackage.lockedBy

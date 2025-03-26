@@ -24,8 +24,6 @@
   ]
 
   let saving = false
-  let screenshotFiles: any[] = []
-  let screenshotPreviews: string[] = []
   let pwaEnabled = true
   let pwaBuilderIcons: any = null
 
@@ -38,6 +36,7 @@
     background_color: "#FFFFFF",
     theme_color: "#FFFFFF",
     display: "standalone",
+    start_url: "",
   }
 
   function ensureHexFormat(color: string) {
@@ -82,132 +81,26 @@
     }
   }
 
-  async function uploadFile(file: any) {
+  async function handlePWAZip(file: File) {
     try {
       const data = new FormData()
-      data.append("file", file)
-      return await API.uploadBuilderAttachment(data)
-    } catch (error) {
-      notifications.error("Error uploading file")
-      return {}
-    }
-  }
+      data.append("file", file as any)
+      const result = await API.uploadPWAZip(data)
 
-  async function handlePWABuilderFolder(files: any) {
-    try {
-      const filesArray = Array.from(files)
-      const iconsJsonFile = filesArray.find(
-        (file: any) =>
-          file.name === "icons.json" ||
-          file.webkitRelativePath?.endsWith("/icons.json")
-      )
-
-      if (!iconsJsonFile) {
-        notifications.error(
-          "No icons.json found. Please upload a PWA Builder folder."
-        )
-        return
-      }
-      const iconsJsonFileContent = await iconsJsonFile.text()
-      const iconsData = JSON.parse(iconsJsonFileContent)
-
-      if (!iconsData.icons || !Array.isArray(iconsData.icons)) {
-        notifications.error("Invalid icons.json format")
-        return
-      }
-
-      const imageFiles = filesArray.filter((file: any) =>
-        file.name.endsWith(".png")
-      )
-
-      const fileMap: Record<string, any> = {}
-      imageFiles.forEach((file: any) => {
-        if (file.webkitRelativePath) {
-          const path = file.webkitRelativePath.split("/").slice(1).join("/")
-          fileMap[path] = file
-        } else {
-          fileMap[file.name] = file
-        }
-      })
-
-      const iconsToUpload: Array<{
-        file: any
-        sizes: string
-        type: string
-      }> = []
-
-      for (const icon of iconsData.icons) {
-        const file = fileMap[icon.src]
-        if (file) {
-          iconsToUpload.push({
-            file,
-            sizes: icon.sizes,
-            type: icon.type || "image/png",
-          })
-        }
-      }
-
-      if (iconsToUpload.length === 0) {
-        notifications.error("No matching icon files found")
-        return
-      }
-
-      // Upload all icon files
-      const uploadPromises = iconsToUpload.map(item => uploadFile(item.file))
-      const uploadResults = await Promise.all(uploadPromises)
-
-      // Create manifest entries
-      pwaConfig.icons = uploadResults
-        .map((result: any, index: number) => {
-          return {
-            src: result[0].key,
-            sizes: iconsToUpload[index].sizes,
-            type: iconsToUpload[index].type,
-          }
-        })
-        .filter(Boolean)
-
+      pwaConfig.icons = result.icons
       notifications.success(
         `Processed ${pwaConfig.icons.length} icons from PWA Builder`
       )
-      pwaBuilderIcons = { name: "PWA Builder Icons", type: "folder" }
+      pwaBuilderIcons = {
+        name: file instanceof File ? file.name : "PWA Icons",
+        type: "file",
+      }
     } catch (error: any) {
-      console.error("Error processing PWA Builder folder:", error)
+      console.error("Error processing PWA Builder zip:", error)
       notifications.error(
-        "Failed to process PWA Builder folder: " +
+        "Failed to process PWA Builder zip: " +
           (error.message || "Unknown error")
       )
-    }
-  }
-
-  async function handleMultipleScreenshots(files: any) {
-    try {
-      screenshotFiles = Array.from(files)
-
-      // Upload screenshots
-      const uploadPromises = screenshotFiles.map(file => uploadFile(file))
-      const uploadResults = await Promise.all(uploadPromises)
-
-      // Create screenshot entries
-      const uploadedScreenshots = uploadResults
-        .map((result: any) => {
-          return {
-            src: result[0].key,
-            sizes: "1280x720",
-            type: "image/png",
-          }
-        })
-        .filter(Boolean)
-
-      if (uploadedScreenshots.length > 0) {
-        pwaConfig.screenshots = uploadedScreenshots
-        notifications.success(
-          `Uploaded ${uploadedScreenshots.length} screenshots`
-        )
-      }
-    } catch (error) {
-      console.error("Error processing screenshots:", error)
-      notifications.error("Failed to upload screenshots")
     }
   }
 
@@ -310,39 +203,14 @@
         <Label size="L">App icons</Label>
         <div>
           <File
-            title="Upload PWA Builder folder"
+            title="Upload PWA Builder zip"
             handleFileTooLarge={() =>
               notifications.error("File too large. 20mb limit")}
-            extensions={[".png", ".json"]}
-            multiple
-            directory
-            on:multipleFiles={e => {
-              if (e.detail && e.detail.length > 0) {
-                handlePWABuilderFolder(e.detail)
-              }
-            }}
+            extensions={[".zip"]}
+            on:change={e => e.detail && handlePWAZip(e.detail)}
             value={pwaBuilderIcons}
             disabled={!pwaEnabled}
           />
-        </div>
-      </div>
-
-      <div class="field">
-        <Label size="L">Screenshots</Label>
-        <div>
-          <File
-            title="Upload screenshots"
-            handleFileTooLarge={() =>
-              notifications.error("File too large. 20mb limit")}
-            extensions={[".png"]}
-            multiple
-            on:multipleFiles={e => {
-              if (e.detail && e.detail.length > 0) {
-                handleMultipleScreenshots(e.detail)
-              }
-            }}
-          />
-          <div class="optional-text">(Optional)</div>
         </div>
       </div>
 
@@ -426,12 +294,6 @@
 
   .field > div {
     max-width: 300px;
-  }
-
-  .optional-text {
-    font-size: 0.8em;
-    color: var(--spectrum-global-color-gray-700);
-    margin-top: var(--spacing-xs);
   }
 
   .section {
