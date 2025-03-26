@@ -12,7 +12,7 @@ export interface Query extends Document {
   datasourceId: string
   name: string
   parameters: QueryParameter[]
-  fields: RestQueryFields
+  fields: RestQueryFields & SQLQueryFields & MongoQueryFields
   transformer: string | null
   schema: Record<string, QuerySchema | string>
   nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>
@@ -60,7 +60,27 @@ export interface RestQueryFields {
   authConfigType?: RestAuthType
   pagination?: PaginationConfig
   paginationValues?: PaginationValues
+}
+export interface SQLQueryFields {
   sql?: string
+}
+
+export interface MongoQueryFields {
+  extra?: {
+    collection?: string
+    actionType:
+      | "findOne"
+      | "find"
+      | "updateOne"
+      | "updateMany"
+      | "findOneAndUpdate"
+      | "count"
+      | "distinct"
+      | "insertOne"
+      | "deleteOne"
+      | "deleteMany"
+  }
+  json?: object | string
 }
 
 export interface PaginationConfig {

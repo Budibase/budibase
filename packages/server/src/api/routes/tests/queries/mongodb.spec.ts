@@ -764,7 +764,7 @@ if (descriptions.length) {
         const verbs = ["read", "create", "update", "delete"]
         for (const verb of verbs) {
           const query = await createQuery({
-            fields: { json: {}, extra: { actionType: "invalid" } },
+            fields: { json: {}, extra: { actionType: "invalid" as any } },
             queryVerb: verb,
           })
           await config.api.query.execute(query._id!, undefined, { status: 400 })
