@@ -52,7 +52,7 @@
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import AuthPicker from "./rest/AuthPicker.svelte"
 
-  export let queryId: string
+  export let queryId
 
   let query, datasource
   let breakQs = {},
@@ -123,14 +123,11 @@
           headers: {},
         },
         queryVerb: "read",
-        transformer: null,
-        schema: {},
-        name: "aaa",
       }
     )
   }
 
-  const cleanUrl = (inputUrl: string) =>
+  const cleanUrl = inputUrl =>
     url
       ?.replace(/(https)|(http)|[{}:]/g, "")
       ?.replaceAll(".", "_")
@@ -145,7 +142,7 @@
     }
   }
 
-  function buildUrl(base: string | undefined, qsObj: Record<string, string>) {
+  function buildUrl(base, qsObj) {
     if (!base) {
       return base
     }
@@ -245,7 +242,7 @@
       }
     })
 
-    Object.values(query.fields.headers ?? {}).forEach(headerValue => {
+    Object.values(query.fields.headers).forEach(headerValue => {
       if (forbiddenBindings.test(headerValue)) {
         throw bindingError
       }
@@ -272,19 +269,17 @@
         nestedSchemaFields = response.nestedSchemaFields
         notifications.success("Request sent successfully")
       }
-    } catch (error: any) {
+    } catch (error) {
       notifications.error(`Query Error: ${error.message}`)
     }
   }
 
   const buildAuthConfigs = datasource => {
     if (datasource?.config?.authConfigs) {
-      return datasource.config.authConfigs.map(
-        (c: { name: string; _id: string }) => ({
-          label: c.name,
-          value: c._id,
-        })
-      )
+      return datasource.config.authConfigs.map(c => ({
+        label: c.name,
+        value: c._id,
+      }))
     }
     return []
   }
@@ -292,7 +287,7 @@
   const schemaMenuItems = [
     {
       text: "Create dynamic variable",
-      onClick: (input: { name: string }) => {
+      onClick: input => {
         varBinding = `{{ data.0.[${input.name}] }}`
         addVariableModal.show()
       },
@@ -301,7 +296,7 @@
   const responseHeadersMenuItems = [
     {
       text: "Create dynamic variable",
-      onClick: (input: { name: string }) => {
+      onClick: input => {
         varBinding = `{{ info.headers.[${input.name}] }}`
         addVariableModal.show()
       },
@@ -309,21 +304,14 @@
   ]
 
   // convert dynamic variables list to simple key/val object
-  const getDynamicVariables = (
-    datasource: Datasource,
-    queryId: string | undefined,
-    matchFn: (variable: any, queryId: any) => boolean
-  ) => {
+  const getDynamicVariables = (datasource, queryId, matchFn) => {
     const variablesList = datasource?.config?.dynamicVariables
     if (variablesList && variablesList.length > 0) {
       const filtered = queryId
-        ? variablesList.filter((variable: any) => matchFn(variable, queryId))
+        ? variablesList.filter(variable => matchFn(variable, queryId))
         : variablesList
       return filtered.reduce(
-        (acc: any, next: { name: string; value: string }) => ({
-          ...acc,
-          [next.name]: next.value,
-        }),
+        (acc, next) => ({ ...acc, [next.name]: next.value }),
         {}
       )
     }
@@ -331,8 +319,8 @@
   }
 
   // convert dynamic variables object back to a list, enrich with query id
-  const rebuildVariables = (queryId: string | undefined) => {
-    let variables: { name: string; value: string; queryId: string }[] = []
+  const rebuildVariables = queryId => {
+    let variables = []
     if (dynamicVariables) {
       variables = Object.entries(dynamicVariables).map(entry => {
         return {
@@ -345,17 +333,12 @@
 
     let existing = datasource?.config?.dynamicVariables || []
     // remove existing query variables (for changes and deletions)
-    existing = existing.filter(
-      (variable: { queryId: string }) => variable.queryId !== queryId
-    )
+    existing = existing.filter(variable => variable.queryId !== queryId)
     // re-add the new query variables
     return [...existing, ...variables]
   }
 
-  const shouldShowVariables = (
-    dynamicVariables: {},
-    variablesReadOnly: boolean
-  ) => {
+  const shouldShowVariables = (dynamicVariables, variablesReadOnly) => {
     return !!(
       dynamicVariables &&
       // show when editable or when read only and not empty
@@ -363,7 +346,7 @@
     )
   }
 
-  const updateFlag = async (flag: string, value: boolean) => {
+  const updateFlag = async (flag, value) => {
     try {
       await flags.updateFlag(flag, value)
     } catch (error) {
@@ -372,11 +355,11 @@
   }
 
   const prettifyQueryRequestBody = (
-    query: Query,
-    requestBindings: any,
-    dynamicVariables: any,
-    staticVariables: any,
-    restBindings: any[]
+    query,
+    requestBindings,
+    dynamicVariables,
+    staticVariables,
+    restBindings
   ) => {
     let customRequestBindings = toBindingsArray(requestBindings, "Binding")
     let dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
@@ -475,14 +458,12 @@
       dynamicVariables = getDynamicVariables(
         datasource,
         query._id,
-        (variable: { queryId: string }, queryId: string) =>
-          variable.queryId === queryId
+        (variable, queryId) => variable.queryId === queryId
       )
       globalDynamicBindings = getDynamicVariables(
         datasource,
         query._id,
-        (variable: { queryId: string }, queryId: string) =>
-          variable.queryId !== queryId
+        (variable, queryId) => variable.queryId !== queryId
       )
     }
 
@@ -554,7 +535,7 @@
             {/if}
             <div class="access">
               <Label>Access</Label>
-              <AccessLevelSelect {query} />
+              <AccessLevelSelect {query} {saveId} />
             </div>
           </div>
         </div>
