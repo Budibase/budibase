@@ -1,21 +1,35 @@
-<script>
-  import { Heading, Body, Layout, Page, Icon } from "@budibase/bbui"
+<script lang="ts">
+  import { Heading, Layout, Page, Icon } from "@budibase/bbui"
   import Chatbox from "./_agents/Chatbox.svelte"
   import BBAI from "@/components/common/Icons/BBAI.svelte"
+  import { API } from "@/api"
 
-  let textarea
+  let textarea: any
   let inputValue = ""
+  let loading: boolean = false
 
-  const fakeMessages = [
-    { message: "hello", isSystem: false },
-    { message: "How are you today?", isSystem: true },
-    { message: "Doing well, can you help me?", isSystem: false },
-    { message: "Sure I can! Just tell me a little bit about the problem you have.", isSystem: true },
-  ]
+  let messages: { message: string, isSystem: boolean }[] = []
 
   function textChange() {
     textarea.height = "auto"
     textarea.height = textarea.scrollHeight + "px"
+  }
+
+  async function prompt() {
+    messages.push({
+      message: inputValue,
+      isSystem: false,
+    })
+    inputValue = ""
+    messages = messages
+    loading = true
+    const res = await API.agentChat(inputValue)
+    messages.push({
+      message: res.response,
+      isSystem: true,
+    })
+    loading = false
+    messages = messages
   }
 </script>
 
@@ -26,7 +40,7 @@
       <Heading size="L">Budibase Agents</Heading>
     </div>
     <div class="wrapper">
-      <Chatbox messages={fakeMessages}></Chatbox>
+      <Chatbox bind:messages={messages}></Chatbox>
       <div class="input-container">
           <pre
             class="input"
@@ -34,7 +48,11 @@
           >{inputValue + '\n'}</pre>
         <textarea bind:value={inputValue} bind:this={textarea} class="input spectrum-Textfield-input" on:input={textChange}></textarea>
         <div class="run-icon">
-          <Icon name="PlayCircle" size="XXL" hoverable />
+          {#if !loading}
+            <Icon name="PlayCircle" size="XXL" hoverable on:click={prompt} />
+          {:else}
+            <BBAI size="36px" animate />
+          {/if}
         </div>
       </div>
     </div>

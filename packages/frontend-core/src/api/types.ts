@@ -33,6 +33,7 @@ import { TemplateEndpoints } from "./templates"
 import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
+import { AgentEndpoints } from "./agents"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -103,6 +104,7 @@ export type APIError = {
 
 export type APIClient = BaseAPIClient &
   AIEndpoints &
+  AgentEndpoints &
   AnalyticsEndpoints &
   AppEndpoints &
   AttachmentEndpoints &
