@@ -3,7 +3,7 @@
   import { permissions } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
   import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
-  import type { Query } from "@budibase/types"
+  import { PermissionLevel, type Query } from "@budibase/types"
 
   export let query: Query
   export let label
@@ -12,12 +12,12 @@
 
   let roleId: string, loaded: boolean, fetched: Query | undefined
 
-  async function updateRole(role, id) {
+  async function updateRole(role: string) {
     try {
       roleId = role
-      const queryId = query?._id || id
+      const queryId = query._id
       if (roleId && queryId) {
-        for (let level of ["read", "write"]) {
+        for (let level of [PermissionLevel.READ, PermissionLevel.WRITE]) {
           await permissions.save({
             level,
             role,
