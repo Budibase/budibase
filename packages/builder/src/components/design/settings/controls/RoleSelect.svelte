@@ -12,9 +12,9 @@
   bind:value
   on:change
   options={$roles}
-  getOptionLabel={role => role.uiMetadata.displayName}
+  getOptionLabel={role => role.uiMetadata?.displayName}
   getOptionValue={role => role._id}
-  getOptionColour={role => role.uiMetadata.color}
+  getOptionColour={role => role.uiMetadata?.color}
   {placeholder}
   {error}
   {autoWidth}

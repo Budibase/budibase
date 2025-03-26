@@ -3,7 +3,7 @@
   import Switch from "./Core/Switch.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value: boolean | undefined = undefined
+  export let value: boolean | null | undefined = undefined
   export let label: string | undefined = undefined
   export let labelPosition: "above" = "above"
   export let text: string | undefined = undefined
@@ -19,5 +19,11 @@
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>
-  <Switch {disabled} {text} {value} on:change={onChange} on:click />
+  <Switch
+    {disabled}
+    {text}
+    value={value ?? undefined}
+    on:change={onChange}
+    on:click
+  />
 </Field>

@@ -3,7 +3,7 @@
   import { permissions } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
   import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
-  import { Query } from "@budibase/types"
+  import type { Query } from "@budibase/types"
 
   export let query: Query
   export let label

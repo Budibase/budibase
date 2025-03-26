@@ -46,17 +46,20 @@
   }))
   let fieldActivity = buildFieldActivity(activity)
 
-  $: fullObject = fields.reduce((acc, next) => {
+  $: fullObject = fields.reduce<Record<string, string>>((acc, next) => {
     acc[next.name] = next.value
     return acc
   }, {})
 
-  $: object = Object.entries(fullObject).reduce((acc, [key, next]) => {
-    if (key) {
-      acc[key] = next
-    }
-    return acc
-  }, {})
+  $: object = Object.entries(fullObject).reduce<Record<string, string>>(
+    (acc, [key, next]) => {
+      if (key) {
+        acc[key] = next
+      }
+      return acc
+    },
+    {}
+  )
 
   function buildFieldActivity(obj: Record<string, boolean>) {
     if (!obj || typeof obj !== "object") {

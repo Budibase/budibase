@@ -60,6 +60,7 @@ export interface RestQueryFields {
   authConfigType?: RestAuthType
   pagination?: PaginationConfig
   paginationValues?: PaginationValues
+  sql?: string
 }
 
 export interface PaginationConfig {
