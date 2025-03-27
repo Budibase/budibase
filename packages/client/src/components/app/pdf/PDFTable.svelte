@@ -8,7 +8,7 @@
     UISearchFilter,
     UserDatasource,
   } from "@budibase/types"
-  import { fetchData, QueryUtils } from "@budibase/frontend-core/src"
+  import { fetchData, QueryUtils, stringifyRow } from "@budibase/frontend-core"
   import { getContext } from "svelte"
 
   type ProviderDatasource = Exclude<
@@ -39,6 +39,9 @@
   $: schema = sanitizeSchema($fetch.schema, columns)
   $: columnCount = Object.keys(schema).length
   $: rowCount = $fetch.rows?.length || 0
+  $: stringifiedRows = ($fetch?.rows || []).map(row =>
+    stringifyRow(row, schema)
+  )
 
   const createFetch = (datasource: ProviderDatasource) => {
     return fetchData({
@@ -95,7 +98,7 @@
       {#each Object.keys(schema) as col}
         <div class="cell header">{schema[col].displayName}</div>
       {/each}
-      {#each $fetch.rows as row}
+      {#each stringifiedRows as row}
         {#each Object.keys(schema) as col}
           <div class="cell">{row[col]}</div>
         {/each}
