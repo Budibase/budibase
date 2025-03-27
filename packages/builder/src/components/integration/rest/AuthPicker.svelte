@@ -29,7 +29,7 @@
     ...authConfigs,
     ...$oauth2.configs.map(c => ({
       label: c.name,
-      value: c.id,
+      value: c._id,
     })),
   ]
   $: authConfig = allConfigs.find(c => c.value === authConfigId)
@@ -65,7 +65,7 @@
 </script>
 
 <DetailPopover bind:this={popover} {title} align={PopoverAlignment.Right}>
-  <div slot="anchor">
+  <div slot="anchor" class:display-new={!authConfig && oauth2Enabled}>
     <ActionButton icon="LockClosed" quiet selected>
       {#if !authConfig}
         Authentication
@@ -108,8 +108,9 @@
         {#each $oauth2.configs as config}
           <ListItem
             title={config.name}
-            on:click={() => selectConfiguration(config.id, RestAuthType.OAUTH2)}
-            selected={config.id === authConfigId}
+            on:click={() =>
+              selectConfiguration(config._id, RestAuthType.OAUTH2)}
+            selected={config._id === authConfigId}
           />
         {/each}
       </List>
@@ -121,3 +122,16 @@
     </div>
   {/if}
 </DetailPopover>
+
+<style>
+  .display-new :global(.spectrum-ActionButton)::before {
+    content: "NEW";
+    font-size: 10px;
+    background: var(--bb-indigo);
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin-right: var(--spacing-s);
+    color: white;
+    font-weight: bold;
+  }
+</style>

@@ -1,4 +1,4 @@
-import { AnyDocument, Database } from "@budibase/types"
+import { AnyDocument, Database, Document, DocumentType } from "@budibase/types"
 
 import { JobQueue, Queue, createQueue } from "../queue"
 import * as dbUtils from "../db"
@@ -57,6 +57,10 @@ export class DocWritethroughProcessor {
     docId: string
     data: Record<string, any>
   }) {
+    // HACK - for now drop SCIM events
+    if (docId.startsWith(DocumentType.SCIM_LOG)) {
+      return
+    }
     const db = dbUtils.getDB(dbName)
     let doc: AnyDocument | undefined
     try {
@@ -70,7 +74,7 @@ export class DocWritethroughProcessor {
   }
 }
 
-export class DocWritethrough {
+export class DocWritethrough<T extends Document = Document> {
   private db: Database
   private _docId: string
 
@@ -83,7 +87,7 @@ export class DocWritethrough {
     return this._docId
   }
 
-  async patch(data: Record<string, any>) {
+  async patch(data: Partial<T>) {
     await DocWritethroughProcessor.queue.add({
       dbName: this.db.name,
       docId: this.docId,

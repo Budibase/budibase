@@ -1,7 +1,7 @@
 <script>
   import { beforeUrlChange, goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
-  import { environment } from "@/stores/portal"
+
   import {
     Banner,
     Body,
@@ -179,7 +179,7 @@
     return newQuery
   }
 
-  async function saveQuery() {
+  async function saveQuery(redirectIfNew = true) {
     const toSave = builtQuery
     saving = true
     try {
@@ -195,7 +195,8 @@
       }
 
       notifications.success(`Request saved successfully`)
-      if (isNew) {
+      if (isNew && redirectIfNew) {
+        isModified = false
         $goto(`../../${_id}`)
       }
 
@@ -407,13 +408,6 @@
       notifications.error("Error getting datasources")
     }
 
-    try {
-      // load the environment variables
-      await environment.loadVariables()
-    } catch (error) {
-      notifications.error(`Error getting environment variables - ${error}`)
-    }
-
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
@@ -497,7 +491,7 @@
       cancelText: "Discard and continue",
       size: "M",
       onConfirm: async () => {
-        const saveResult = await saveQuery()
+        const saveResult = await saveQuery(false)
         if (!saveResult.ok) {
           // We can't leave as the query was not properly saved
           return false

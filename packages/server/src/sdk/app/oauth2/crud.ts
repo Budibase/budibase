@@ -1,101 +1,97 @@
-import { context, HTTPError, utils } from "@budibase/backend-core"
+import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
-  Database,
   DocumentType,
   OAuth2Config,
-  OAuth2Configs,
   PASSWORD_REPLACEMENT,
   SEPARATOR,
-  VirtualDocumentType,
+  WithRequired,
 } from "@budibase/types"
 
-async function getDocument(db: Database = context.getAppDB()) {
-  const result = await db.tryGet<OAuth2Configs>(DocumentType.OAUTH2_CONFIG)
-  return result
-}
+type CreatedOAuthConfig = WithRequired<OAuth2Config, "_id" | "_rev">
 
-export async function fetch(): Promise<OAuth2Config[]> {
-  const result = await getDocument()
-  if (!result) {
-    return []
-  }
-  return Object.values(result.configs)
-}
+async function guardName(name: string, id?: string) {
+  const existingConfigs = await fetch()
 
-export async function create(
-  config: Omit<OAuth2Config, "id">
-): Promise<OAuth2Config> {
-  const db = context.getAppDB()
-  const doc: OAuth2Configs = (await getDocument(db)) ?? {
-    _id: DocumentType.OAUTH2_CONFIG,
-    configs: {},
-  }
-
-  if (Object.values(doc.configs).find(c => c.name === config.name)) {
-    throw new HTTPError("Name already used", 400)
-  }
-
-  const id = `${VirtualDocumentType.OAUTH2_CONFIG}${SEPARATOR}${utils.newid()}`
-  doc.configs[id] = {
-    id,
-    ...config,
-  }
-
-  await db.put(doc)
-  return doc.configs[id]
-}
-
-export async function get(id: string): Promise<OAuth2Config | undefined> {
-  const doc = await getDocument()
-  return doc?.configs?.[id]
-}
-
-export async function update(config: OAuth2Config): Promise<OAuth2Config> {
-  const db = context.getAppDB()
-  const doc: OAuth2Configs = (await getDocument(db)) ?? {
-    _id: DocumentType.OAUTH2_CONFIG,
-    configs: {},
-  }
-
-  if (!doc.configs[config.id]) {
-    throw new HTTPError(`OAuth2 config with id '${config.id}' not found.`, 404)
-  }
-
-  if (
-    Object.values(doc.configs).find(
-      c => c.name === config.name && c.id !== config.id
-    )
-  ) {
+  if (existingConfigs.find(c => c.name === name && c._id !== id)) {
     throw new HTTPError(
-      `OAuth2 config with name '${config.name}' is already taken.`,
+      `OAuth2 config with name '${name}' is already taken.`,
       400
     )
   }
+}
 
-  doc.configs[config.id] = {
+export async function fetch(): Promise<CreatedOAuthConfig[]> {
+  const db = context.getAppDB()
+  const docs = await db.allDocs<OAuth2Config>(
+    docIds.getOAuth2ConfigParams(null, { include_docs: true })
+  )
+  const result = docs.rows.map(r => ({
+    ...r.doc!,
+    _id: r.doc!._id!,
+    _rev: r.doc!._rev!,
+  }))
+  return result
+}
+
+export async function create(
+  config: Omit<OAuth2Config, "_id" | "_rev" | "createdAt" | "updatedAt">
+): Promise<CreatedOAuthConfig> {
+  const db = context.getAppDB()
+
+  await guardName(config.name)
+
+  const response = await db.put({
+    _id: `${DocumentType.OAUTH2_CONFIG}${SEPARATOR}${utils.newid()}`,
+    ...config,
+  })
+  return {
+    _id: response.id!,
+    _rev: response.rev!,
+    ...config,
+  }
+}
+
+export async function get(id: string): Promise<OAuth2Config | undefined> {
+  const db = context.getAppDB()
+  return await db.tryGet(id)
+}
+
+export async function update(
+  config: CreatedOAuthConfig
+): Promise<CreatedOAuthConfig> {
+  const db = context.getAppDB()
+  await guardName(config.name, config._id)
+
+  const existing = await get(config._id)
+  if (!existing) {
+    throw new HTTPError(`OAuth2 config with id '${config._id}' not found.`, 404)
+  }
+
+  const toUpdate = {
     ...config,
     clientSecret:
       config.clientSecret === PASSWORD_REPLACEMENT
-        ? doc.configs[config.id].clientSecret
+        ? existing.clientSecret
         : config.clientSecret,
   }
 
-  await db.put(doc)
-  return doc.configs[config.id]
+  const result = await db.put(toUpdate)
+  return { ...toUpdate, _rev: result.rev }
 }
 
-export async function remove(configId: string): Promise<void> {
+export async function remove(configId: string, _rev: string): Promise<void> {
   const db = context.getAppDB()
-  const doc: OAuth2Configs = (await getDocument(db)) ?? {
-    _id: DocumentType.OAUTH2_CONFIG,
-    configs: {},
+  try {
+    await db.remove(configId, _rev)
+  } catch (e: any) {
+    if (e.status === 404) {
+      throw new HTTPError(`OAuth2 config with id '${configId}' not found.`, 404)
+    }
+    throw e
   }
 
-  if (!doc.configs[configId]) {
-    throw new HTTPError(`OAuth2 config with id '${configId}' not found.`, 404)
+  const usageLog = await db.tryGet(docIds.generateOAuth2LogID(configId))
+  if (usageLog) {
+    await db.remove(usageLog)
   }
-
-  delete doc.configs[configId]
-
-  await db.put(doc)
 }

@@ -1,9 +1,10 @@
 import {
-  OAuth2Config,
+  DocumentType,
+  InsertOAuth2ConfigRequest,
+  OAuth2ConfigResponse,
   OAuth2CredentialsMethod,
+  OAuth2GrantType,
   PASSWORD_REPLACEMENT,
-  UpsertOAuth2ConfigRequest,
-  VirtualDocumentType,
 } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
@@ -12,13 +13,14 @@ import _ from "lodash/fp"
 describe("/oauth2", () => {
   let config = setup.getConfig()
 
-  function makeOAuth2Config(): UpsertOAuth2ConfigRequest {
+  function makeOAuth2Config(): InsertOAuth2ConfigRequest {
     return {
       name: generator.guid(),
       url: generator.url(),
       clientId: generator.guid(),
       clientSecret: generator.hash(),
       method: generator.pickone(Object.values(OAuth2CredentialsMethod)),
+      grantType: generator.pickone(Object.values(OAuth2GrantType)),
     }
   }
 
@@ -27,7 +29,7 @@ describe("/oauth2", () => {
   beforeEach(async () => await config.newTenant())
 
   const expectOAuth2ConfigId = expect.stringMatching(
-    `^${VirtualDocumentType.OAUTH2_CONFIG}_.+$`
+    `^${DocumentType.OAUTH2_CONFIG}_.+$`
   )
 
   describe("fetch", () => {
@@ -43,7 +45,7 @@ describe("/oauth2", () => {
       for (let i = 0; i < 10; i++) {
         const oauth2Config = makeOAuth2Config()
         const result = await config.api.oauth2.create(oauth2Config)
-        existingConfigs.push({ ...oauth2Config, id: result.config.id })
+        existingConfigs.push(result.config)
       }
 
       const response = await config.api.oauth2.fetch()
@@ -51,12 +53,14 @@ describe("/oauth2", () => {
       expect(response).toEqual({
         configs: expect.arrayContaining(
           existingConfigs.map(c => ({
-            id: c.id,
+            _id: c._id,
+            _rev: c._rev,
             name: c.name,
             url: c.url,
             clientId: c.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
             method: c.method,
+            grantType: c.grantType,
           }))
         ),
       })
@@ -72,12 +76,14 @@ describe("/oauth2", () => {
       expect(response).toEqual({
         configs: [
           {
-            id: expectOAuth2ConfigId,
+            _id: expectOAuth2ConfigId,
+            _rev: expect.stringMatching(/^1-\w+/),
             name: oauth2Config.name,
             url: oauth2Config.url,
             clientId: oauth2Config.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
             method: oauth2Config.method,
+            grantType: oauth2Config.grantType,
           },
         ],
       })
@@ -90,25 +96,31 @@ describe("/oauth2", () => {
       await config.api.oauth2.create(oauth2Config2, { status: 201 })
 
       const response = await config.api.oauth2.fetch()
-      expect(response.configs).toEqual([
-        {
-          id: expectOAuth2ConfigId,
-          name: oauth2Config.name,
-          url: oauth2Config.url,
-          clientId: oauth2Config.clientId,
-          clientSecret: PASSWORD_REPLACEMENT,
-          method: oauth2Config.method,
-        },
-        {
-          id: expectOAuth2ConfigId,
-          name: oauth2Config2.name,
-          url: oauth2Config2.url,
-          clientId: oauth2Config2.clientId,
-          clientSecret: PASSWORD_REPLACEMENT,
-          method: oauth2Config2.method,
-        },
-      ])
-      expect(response.configs[0].id).not.toEqual(response.configs[1].id)
+      expect(response.configs).toEqual(
+        expect.arrayContaining([
+          {
+            _id: expectOAuth2ConfigId,
+            _rev: expect.stringMatching(/^1-\w+/),
+            name: oauth2Config.name,
+            url: oauth2Config.url,
+            clientId: oauth2Config.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
+            method: oauth2Config.method,
+            grantType: oauth2Config.grantType,
+          },
+          {
+            _id: expectOAuth2ConfigId,
+            _rev: expect.stringMatching(/^1-\w+/),
+            name: oauth2Config2.name,
+            url: oauth2Config2.url,
+            clientId: oauth2Config2.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
+            method: oauth2Config2.method,
+            grantType: oauth2Config2.grantType,
+          },
+        ])
+      )
+      expect(response.configs[0]._id).not.toEqual(response.configs[1]._id)
     })
 
     it("cannot create configurations with already existing names", async () => {
@@ -118,7 +130,7 @@ describe("/oauth2", () => {
       await config.api.oauth2.create(oauth2Config2, {
         status: 400,
         body: {
-          message: "Name already used",
+          message: `OAuth2 config with name '${oauth2Config.name}' is already taken.`,
           status: 400,
         },
       })
@@ -126,19 +138,21 @@ describe("/oauth2", () => {
       const response = await config.api.oauth2.fetch()
       expect(response.configs).toEqual([
         {
-          id: expectOAuth2ConfigId,
+          _id: expectOAuth2ConfigId,
+          _rev: expect.stringMatching(/^1-\w+/),
           name: oauth2Config.name,
           url: oauth2Config.url,
           clientId: oauth2Config.clientId,
           clientSecret: PASSWORD_REPLACEMENT,
           method: oauth2Config.method,
+          grantType: oauth2Config.grantType,
         },
       ])
     })
   })
 
   describe("update", () => {
-    let existingConfigs: OAuth2Config[] = []
+    let existingConfigs: OAuth2ConfigResponse[] = []
 
     beforeEach(async () => {
       existingConfigs = []
@@ -146,14 +160,14 @@ describe("/oauth2", () => {
         const oauth2Config = makeOAuth2Config()
         const result = await config.api.oauth2.create(oauth2Config)
 
-        existingConfigs.push({ ...oauth2Config, id: result.config.id })
+        existingConfigs.push(result.config)
       }
     })
 
     it("can update an existing configuration", async () => {
-      const { id: configId, ...configData } = _.sample(existingConfigs)!
+      const configData = _.sample(existingConfigs)!
 
-      await config.api.oauth2.update(configId, {
+      await config.api.oauth2.update({
         ...configData,
         name: "updated name",
       })
@@ -163,19 +177,26 @@ describe("/oauth2", () => {
       expect(response.configs).toEqual(
         expect.arrayContaining([
           {
-            id: configId,
+            _id: configData._id,
+            _rev: expect.not.stringMatching(configData._rev),
             name: "updated name",
             url: configData.url,
             clientId: configData.clientId,
             clientSecret: PASSWORD_REPLACEMENT,
             method: configData.method,
+            grantType: configData.grantType,
           },
         ])
       )
     })
 
     it("throw if config not found", async () => {
-      await config.api.oauth2.update("unexisting", makeOAuth2Config(), {
+      const toUpdate = {
+        ...makeOAuth2Config(),
+        _id: "unexisting",
+        _rev: "unexisting",
+      }
+      await config.api.oauth2.update(toUpdate, {
         status: 404,
         body: { message: "OAuth2 config with id 'unexisting' not found." },
       })
@@ -183,12 +204,10 @@ describe("/oauth2", () => {
 
     it("throws if trying to use an existing name", async () => {
       const [config1, config2] = _.sampleSize(2, existingConfigs)
-      const { id: configId, ...configData } = config1
 
       await config.api.oauth2.update(
-        configId,
         {
-          ...configData,
+          ...config1,
           name: config2.name,
         },
         {
@@ -202,7 +221,7 @@ describe("/oauth2", () => {
   })
 
   describe("delete", () => {
-    let existingConfigs: OAuth2Config[] = []
+    let existingConfigs: OAuth2ConfigResponse[] = []
 
     beforeEach(async () => {
       existingConfigs = []
@@ -210,22 +229,26 @@ describe("/oauth2", () => {
         const oauth2Config = makeOAuth2Config()
         const result = await config.api.oauth2.create(oauth2Config)
 
-        existingConfigs.push({ ...oauth2Config, id: result.config.id })
+        existingConfigs.push(result.config)
       }
     })
 
     it("can delete an existing configuration", async () => {
-      const { id: configId } = _.sample(existingConfigs)!
+      const configToDelete = _.sample(existingConfigs)!
 
-      await config.api.oauth2.delete(configId, { status: 204 })
+      await config.api.oauth2.delete(configToDelete._id, configToDelete._rev, {
+        status: 204,
+      })
 
       const response = await config.api.oauth2.fetch()
       expect(response.configs).toHaveLength(existingConfigs.length - 1)
-      expect(response.configs.find(c => c.id === configId)).toBeUndefined()
+      expect(
+        response.configs.find(c => c._id === configToDelete._id)
+      ).toBeUndefined()
     })
 
     it("throw if config not found", async () => {
-      await config.api.oauth2.delete("unexisting", {
+      await config.api.oauth2.delete("unexisting", "rev", {
         status: 404,
         body: { message: "OAuth2 config with id 'unexisting' not found." },
       })

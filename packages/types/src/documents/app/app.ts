@@ -30,6 +30,7 @@ export interface App extends Document {
   creationVersion?: string
   updatedBy?: string
   pwa?: PWAManifest
+  scripts?: AppScript[]
 }
 
 export interface AppInstance {
@@ -100,4 +101,11 @@ export interface PWAManifestImage {
   src: string
   sizes: string
   type: string
+}
+
+export interface AppScript {
+  id: string
+  name: string
+  location: "Head" | "Body"
+  html?: string
 }

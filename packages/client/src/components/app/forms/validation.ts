@@ -1,6 +1,11 @@
 import dayjs from "dayjs"
-import { FieldTypes } from "../../../constants"
 import { Helpers } from "@budibase/bbui"
+import {
+  FieldConstraints,
+  FieldType,
+  Table,
+  UIFieldValidationRule,
+} from "@budibase/types"
 
 /**
  * Creates a validation function from a combination of schema-level constraints
@@ -12,19 +17,19 @@ import { Helpers } from "@budibase/bbui"
  * @returns {function} a validator function which accepts test values
  */
 export const createValidatorFromConstraints = (
-  schemaConstraints,
-  customRules,
-  field,
-  definition
+  schemaConstraints: FieldConstraints | null | undefined,
+  customRules: UIFieldValidationRule[],
+  field: string,
+  definition: Table | undefined
 ) => {
-  let rules = []
+  let rules: UIFieldValidationRule[] = []
 
   // Convert schema constraints into validation rules
   if (schemaConstraints) {
     // Required constraint
     if (
       field === definition?.primaryDisplay ||
-      schemaConstraints.presence?.allowEmpty === false ||
+      (schemaConstraints.presence as any)?.allowEmpty === false ||
       schemaConstraints.presence === true
     ) {
       rules.push({
@@ -106,7 +111,7 @@ export const createValidatorFromConstraints = (
   rules = rules.concat(customRules || [])
 
   // Evaluate each constraint
-  return value => {
+  return (value: any) => {
     for (let rule of rules) {
       const error = evaluateRule(rule, value)
       if (error) {
@@ -124,7 +129,7 @@ export const createValidatorFromConstraints = (
  * @param value the value to validate against
  * @returns {null|*} an error if validation fails or null if it passes
  */
-const evaluateRule = (rule, value) => {
+const evaluateRule = (rule: UIFieldValidationRule, value: any) => {
   if (!rule) {
     return null
   }
@@ -150,14 +155,14 @@ const evaluateRule = (rule, value) => {
  * @param type the type to parse
  * @returns {boolean|string|*|number|null|array} the parsed value, or null if invalid
  */
-const parseType = (value, type) => {
+const parseType = (value: any, type: `${FieldType}`) => {
   // Treat nulls or empty strings as null
   if (!exists(value) || !type) {
     return null
   }
 
   // Parse as string
-  if (type === FieldTypes.STRING) {
+  if (type === FieldType.STRING) {
     if (typeof value === "string" || Array.isArray(value)) {
       return value
     }
@@ -168,7 +173,7 @@ const parseType = (value, type) => {
   }
 
   // Parse as number
-  if (type === FieldTypes.NUMBER) {
+  if (type === FieldType.NUMBER) {
     if (isNaN(value)) {
       return null
     }
@@ -176,7 +181,7 @@ const parseType = (value, type) => {
   }
 
   // Parse as date
-  if (type === FieldTypes.DATETIME) {
+  if (type === FieldType.DATETIME) {
     if (value instanceof Date) {
       return value.getTime()
     }
@@ -185,7 +190,7 @@ const parseType = (value, type) => {
   }
 
   // Parse as boolean
-  if (type === FieldTypes.BOOLEAN) {
+  if (type === FieldType.BOOLEAN) {
     if (typeof value === "string") {
       return value.toLowerCase() === "true"
     }
@@ -193,7 +198,7 @@ const parseType = (value, type) => {
   }
 
   // Parse attachments, treating no elements as null
-  if (type === FieldTypes.ATTACHMENTS) {
+  if (type === FieldType.ATTACHMENTS) {
     if (!Array.isArray(value) || !value.length) {
       return null
     }
@@ -202,8 +207,8 @@ const parseType = (value, type) => {
 
   // Parse attachment/signature single, treating no key as null
   if (
-    type === FieldTypes.ATTACHMENT_SINGLE ||
-    type === FieldTypes.SIGNATURE_SINGLE
+    type === FieldType.ATTACHMENT_SINGLE ||
+    type === FieldType.SIGNATURE_SINGLE
   ) {
     if (!value?.key) {
       return null
@@ -212,7 +217,7 @@ const parseType = (value, type) => {
   }
 
   // Parse links, treating no elements as null
-  if (type === FieldTypes.LINK) {
+  if (type === FieldType.LINK) {
     if (!Array.isArray(value) || !value.length) {
       return null
     }
@@ -220,7 +225,7 @@ const parseType = (value, type) => {
   }
 
   // Parse array, treating no elements as null
-  if (type === FieldTypes.ARRAY) {
+  if (type === FieldType.ARRAY) {
     if (!Array.isArray(value) || !value.length) {
       return null
     }
@@ -229,7 +234,7 @@ const parseType = (value, type) => {
 
   // For JSON we don't touch the value at all as we want to verify it in its
   // raw form
-  if (type === FieldTypes.JSON) {
+  if (type === FieldType.JSON) {
     return value
   }
 
@@ -238,69 +243,74 @@ const parseType = (value, type) => {
 }
 
 // Evaluates a required constraint
-const requiredHandler = value => {
+const requiredHandler = (value: any) => {
   return value != null
 }
 
 // Evaluates a min length constraint
-const minLengthHandler = (value, rule) => {
+const minLengthHandler = (value: any, rule: UIFieldValidationRule) => {
   const limit = parseType(rule.value, "number")
   return value == null || value.length >= limit
 }
 
 // Evaluates a max length constraint
-const maxLengthHandler = (value, rule) => {
+const maxLengthHandler = (value: any, rule: UIFieldValidationRule) => {
   const limit = parseType(rule.value, "number")
   return value == null || value.length <= limit
 }
 
 // Evaluates a max file size (MB) constraint
-const maxFileSizeHandler = (value, rule) => {
+const maxFileSizeHandler = (value: any, rule: UIFieldValidationRule) => {
   const limit = parseType(rule.value, "number")
-  const check = attachment => attachment.size / 1000000 > limit
+  const check = (attachment: { size: number }) =>
+    attachment.size / 1000000 > limit
   return value == null || !(value?.key ? check(value) : value.some(check))
 }
 
 // Evaluates a max total upload size (MB) constraint
-const maxUploadSizeHandler = (value, rule) => {
-  const limit = parseType(rule.value, "number")
+const maxUploadSizeHandler = (value: any, rule: UIFieldValidationRule) => {
+  const limit: number = parseType(rule.value, "number")
   return (
     value == null ||
     (value?.key
       ? value.size / 1000000 <= limit
-      : value.reduce((acc, currentItem) => acc + currentItem.size, 0) /
+      : value.reduce(
+          (acc: number, currentItem: { size: number }) =>
+            acc + currentItem.size,
+          0
+        ) /
           1000000 <=
         limit)
   )
 }
 
 // Evaluates a min value constraint
-const minValueHandler = (value, rule) => {
+const minValueHandler = (value: any, rule: UIFieldValidationRule) => {
   // Use same type as the value so that things can be compared
   const limit = parseType(rule.value, rule.type)
   return value == null || value >= limit
 }
 
 // Evaluates a max value constraint
-const maxValueHandler = (value, rule) => {
+const maxValueHandler = (value: any, rule: UIFieldValidationRule) => {
   // Use same type as the value so that things can be compared
   const limit = parseType(rule.value, rule.type)
   return value == null || value <= limit
 }
 
 // Evaluates an inclusion constraint
-const inclusionHandler = (value, rule) => {
-  return value == null || rule.value.includes(value)
+const inclusionHandler = (value: any, rule: UIFieldValidationRule) => {
+  return value == null || (rule.value as any).includes(value)
 }
 
 // Evaluates an equal constraint
-const equalHandler = (value, rule) => {
+const equalHandler = (value: any, rule: UIFieldValidationRule) => {
   const ruleValue = parseType(rule.value, rule.type)
   return value === ruleValue
 }
 
 // Evaluates a not equal constraint
-const notEqualHandler = (value, rule) => {
+const notEqualHandler = (value: any, rule: UIFieldValidationRule) => {
   const ruleValue = parseType(rule.value, rule.type)
   if (value == null && ruleValue == null) {
     return true
@@ -309,7 +319,7 @@ const notEqualHandler = (value, rule) => {
 }
 
 // Evaluates a regex constraint
-const regexHandler = (value, rule) => {
+const regexHandler = (value: any, rule: UIFieldValidationRule) => {
   const regex = parseType(rule.value, "string")
   if (!value) {
     value = ""
@@ -318,23 +328,23 @@ const regexHandler = (value, rule) => {
 }
 
 // Evaluates a not regex constraint
-const notRegexHandler = (value, rule) => {
+const notRegexHandler = (value: any, rule: UIFieldValidationRule) => {
   return !regexHandler(value, rule)
 }
 
 // Evaluates a contains constraint
-const containsHandler = (value, rule) => {
+const containsHandler = (value: any, rule: UIFieldValidationRule) => {
   const expectedValue = parseType(rule.value, "string")
   return value && value.includes(expectedValue)
 }
 
 // Evaluates a not contains constraint
-const notContainsHandler = (value, rule) => {
+const notContainsHandler = (value: any, rule: UIFieldValidationRule) => {
   return !containsHandler(value, rule)
 }
 
 // Evaluates a constraint that the value must be a valid json object
-const jsonHandler = value => {
+const jsonHandler = (value: any) => {
   if (typeof value !== "object" || Array.isArray(value)) {
     return false
   }
@@ -372,6 +382,6 @@ const handlerMap = {
  * @param value the value to test
  * @returns {boolean} whether the value exists or not
  */
-const exists = value => {
+const exists = <T = any>(value: T | null | undefined): value is T => {
   return value != null && value !== ""
 }
