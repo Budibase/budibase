@@ -30,4 +30,12 @@ export const SWITCHABLE_TYPES: SwitchableTypes = {
     FieldType.LONGFORM,
   ],
   [FieldType.NUMBER]: [FieldType.NUMBER, FieldType.BOOLEAN],
+  [FieldType.JSON]: [
+    FieldType.JSON,
+    FieldType.ARRAY,
+    FieldType.ATTACHMENTS,
+    FieldType.ATTACHMENT_SINGLE,
+    FieldType.BB_REFERENCE,
+    FieldType.SIGNATURE_SINGLE,
+  ],
 }
