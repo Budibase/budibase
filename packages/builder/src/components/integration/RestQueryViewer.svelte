@@ -196,6 +196,7 @@
 
       notifications.success(`Request saved successfully`)
       if (isNew && redirectIfNew) {
+        isModified = false
         $goto(`../../${_id}`)
       }
 
