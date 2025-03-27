@@ -11,13 +11,19 @@ import sdk from "../../sdk"
 import { generateDatasourceID } from "../../db/utils"
 import fs from "fs"
 import path from "path"
+import { createHash } from "crypto"
 
 export async function generateTables(
   ctx: UserCtx<GenerateTablesRequest, GenerateTablesResponse>
 ) {
+  const { prompt, useCached } = ctx.request.body
+
   const llm = await getLLM()
   llm!.maxTokens = 1200
-  const response = await llm?.generateTables(ctx.request.body.prompt)
+
+  const cacheKey = createHash("md5").update(prompt).digest("hex")
+
+  const response = await llm?.generateTables(prompt, useCached ? cacheKey : "")
 
   const count = (await sdk.datasources.fetch()).length
   const { id: dsId } = await context.getAppDB().put({
@@ -31,10 +37,12 @@ export async function generateTables(
 
   console.warn(response?.message)
 
-  fs.writeFileSync(
-    path.join(process.env.PWD!, `../../llm-output/response_${Date.now()}.json`),
-    response?.message || ""
-  )
+  if (!useCached) {
+    fs.writeFileSync(
+      path.join(process.env.PWD!, `../../llm-output/${cacheKey}.json`),
+      response?.message || ""
+    )
+  }
 
   const json = JSON.parse(response!.message || "")
   const createdTables: GenerateTablesResponse["createdTables"] = []

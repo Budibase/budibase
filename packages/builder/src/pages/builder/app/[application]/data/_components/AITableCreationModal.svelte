@@ -1,23 +1,32 @@
 <script lang="ts">
   import { API } from "@/api"
   import { datasources, tables } from "@/stores/builder"
-  import { Modal, ModalContent, notifications, TextArea } from "@budibase/bbui"
+  import {
+    Modal,
+    ModalContent,
+    notifications,
+    TextArea,
+    Toggle,
+  } from "@budibase/bbui"
+  import type { GenerateTablesRequest } from "@budibase/types"
   import { goto } from "@roxi/routify"
 
   let modal: Modal
-  let prompt: string =
-    "I need a ticketing system where employees can submit tickets. A ticket has a title, description, priority, status, and an assigned technician"
-  let result: string
+
+  let modalData: GenerateTablesRequest = {
+    prompt:
+      "I need a ticketing system where employees can submit tickets. A ticket has a title, description, priority, status, and an assigned technician",
+    addData: true,
+    useCached: true,
+  }
 
   export function show() {
     modal.show()
   }
 
   export async function generate() {
-    result = ""
     try {
-      const { response, createdTables } = await API.generateTables({ prompt })
-      result = response ?? ""
+      const { createdTables } = await API.generateTables(modalData)
 
       const [tableToRedirect] = createdTables.sort((a, b) =>
         a.name.localeCompare(b.name)
@@ -41,7 +50,8 @@
     onConfirm={generate}
     showCancelButton={false}
   >
-    <TextArea label="Table Name" bind:value={prompt} />
-    <TextArea label="Result" value={result} disabled minHeight={350} />
+    <TextArea label="Table Name" bind:value={modalData.prompt} />
+    <Toggle label="Add data" bind:value={modalData.addData} />
+    <Toggle label="Use cached" bind:value={modalData.useCached} />
   </ModalContent>
 </Modal>

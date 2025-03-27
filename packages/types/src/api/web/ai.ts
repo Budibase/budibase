@@ -11,6 +11,8 @@ export interface GenerateJsResponse {
 
 export interface GenerateTablesRequest {
   prompt: string
+  addData: boolean
+  useCached: boolean
 }
 
 export interface GenerateTablesResponse {
