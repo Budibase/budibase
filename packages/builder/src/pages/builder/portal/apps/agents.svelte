@@ -8,11 +8,17 @@
   let inputValue = ""
   let loading: boolean = false
 
-  let messages: { message: string, isSystem: boolean }[] = []
+  let messages: { message: string, isSystem: boolean, isError?: boolean }[] = []
 
   function textChange() {
     textarea.height = "auto"
     textarea.height = textarea.scrollHeight + "px"
+  }
+
+  async function handleKeyDown(event: any) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      await prompt()
+    }
   }
 
   async function prompt() {
@@ -23,11 +29,20 @@
     inputValue = ""
     messages = messages
     loading = true
-    const res = await API.agentChat(inputValue)
-    messages.push({
-      message: res.response,
-      isSystem: true,
-    })
+    try {
+      const res = await API.agentChat(inputValue)
+      messages.push({
+        message: res.response,
+        isSystem: true,
+      })
+    } catch (err: any) {
+      messages.push({
+        message: err.message,
+        isSystem: true,
+        isError: true,
+      })
+    }
+
     loading = false
     messages = messages
   }
@@ -46,7 +61,7 @@
             class="input"
             aria-hidden="true"
           >{inputValue + '\n'}</pre>
-        <textarea bind:value={inputValue} bind:this={textarea} class="input spectrum-Textfield-input" on:input={textChange}></textarea>
+        <textarea bind:value={inputValue} bind:this={textarea} class="input spectrum-Textfield-input" on:input={textChange} on:keydown={handleKeyDown} />
         <div class="run-icon">
           {#if !loading}
             <Icon name="PlayCircle" size="XXL" hoverable on:click={prompt} />
