@@ -17,8 +17,8 @@ export async function agentChat(
     return ctx.throw(401, "No model available, cannot chat")
   }
   const prompt = new ai.Prompt()
-  prompt.user(ctx.request.body.userPrompt)
   prompt.system(agentSystemPrompt())
+  prompt.user(ctx.request.body.userPrompt)
   const response = await model.prompt(prompt)
   ctx.body = {
     response: !response.message ? "No response." : response.message,

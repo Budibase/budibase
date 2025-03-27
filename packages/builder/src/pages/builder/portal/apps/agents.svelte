@@ -26,11 +26,11 @@
       message: inputValue,
       isSystem: false,
     })
-    inputValue = ""
     messages = messages
     loading = true
     try {
       const res = await API.agentChat(inputValue)
+      inputValue = ""
       messages.push({
         message: res.response,
         isSystem: true,
