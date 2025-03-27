@@ -139,17 +139,17 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
   }
 }
 
-export function isInvalidISODateString(str: string) {
+export function isValidISODateString(str: string) {
   const trimmedValue = str.trim()
   if (!ISO_DATE_REGEX.test(trimmedValue)) {
-    return true
+    return false
   }
-  let d = new Date(trimmedValue)
-  return isNaN(d.getTime())
+  const d = new Date(trimmedValue)
+  return !isNaN(d.getTime())
 }
 
-export function isValidISODateString(str: string) {
-  return ISO_DATE_REGEX.test(str.trim())
+export function isInvalidISODateString(str: string) {
+  return !isValidISODateString(str)
 }
 
 export function isValidFilter(value: any) {
