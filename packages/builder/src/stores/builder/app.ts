@@ -185,7 +185,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       icon,
       pwa: {
         ...state.pwa,
-        name,
+        name: state.pwa?.name || "",
         short_name: state.pwa?.short_name || "",
         description: state.pwa?.description || "",
         icons: state.pwa?.icons || [],

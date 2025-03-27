@@ -38,7 +38,6 @@ import {
   ServeClientLibraryResponse,
   ToggleBetaFeatureResponse,
   UserCtx,
-  PWAManifestImage,
 } from "@budibase/types"
 import {
   getAppMigrationVersion,
