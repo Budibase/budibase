@@ -1,6 +1,12 @@
 <script lang="ts">
   import { API } from "@/api"
-  import { keepOpen, Modal, ModalContent, TextArea } from "@budibase/bbui"
+  import {
+    keepOpen,
+    Modal,
+    ModalContent,
+    notifications,
+    TextArea,
+  } from "@budibase/bbui"
 
   let modal: Modal
   let prompt: string =
@@ -16,8 +22,8 @@
     try {
       const { response } = await API.generateTables({ prompt })
       result = response ?? ""
-    } catch {
-      // TODO
+    } catch (e: any) {
+      notifications.error(e.message)
     }
     return keepOpen
   }
