@@ -22,7 +22,7 @@ export function afterAll() {
 }
 
 export function getTestQueue(): queue.InMemoryQueue<AutomationData> {
-  return getQueue() as unknown as queue.InMemoryQueue<AutomationData>
+  return getQueue().getBullQueue() as unknown as queue.InMemoryQueue<AutomationData>
 }
 
 export function triggerCron(message: Job<AutomationData>) {
@@ -48,7 +48,7 @@ export async function runInProd(fn: any) {
 
 export async function captureAllAutomationRemovals(f: () => Promise<unknown>) {
   const messages: Job<AutomationData>[] = []
-  const queue = getQueue()
+  const queue = getQueue().getBullQueue()
 
   const messageListener = async (message: Job<AutomationData>) => {
     messages.push(message)
@@ -82,7 +82,7 @@ export async function captureAutomationRemovals(
 
 export async function captureAllAutomationMessages(f: () => Promise<unknown>) {
   const messages: Job<AutomationData>[] = []
-  const queue = getQueue()
+  const queue = getQueue().getBullQueue()
 
   const messageListener = async (message: Job<AutomationData>) => {
     messages.push(message)
@@ -122,7 +122,7 @@ export async function captureAllAutomationResults(
   f: () => Promise<unknown>
 ): Promise<queue.TestQueueMessage<AutomationData>[]> {
   const runs: queue.TestQueueMessage<AutomationData>[] = []
-  const queue = getQueue()
+  const queue = getQueue().getBullQueue()
   let messagesOutstanding = 0
 
   const completedListener = async (
