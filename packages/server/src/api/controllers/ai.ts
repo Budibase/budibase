@@ -16,16 +16,20 @@ import { createHash } from "crypto"
 export async function generateTables(
   ctx: UserCtx<GenerateTablesRequest, GenerateTablesResponse>
 ) {
-  const { prompt, useCached } = ctx.request.body
+  const { prompt, useCached, addData } = ctx.request.body
 
   const llm = await getLLM()
   llm!.maxTokens = 1200
 
   const cacheKey = `${createHash("md5").update(prompt).digest("hex")}_${
-    useCached ? 1 : 0
+    addData ? 1 : 0
   }`
 
-  const response = await llm?.generateTables(prompt, useCached ? cacheKey : "")
+  const response = await llm?.generateTables(
+    prompt,
+    useCached ? cacheKey : "",
+    addData
+  )
 
   const count = (await sdk.datasources.fetch()).length
   const { id: dsId } = await context.getAppDB().put({
