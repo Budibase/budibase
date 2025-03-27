@@ -70,7 +70,7 @@ function jobTags(job: Job) {
     "job.attemptsMade": job.attemptsMade,
     "job.timestamp": job.timestamp,
     "job.data.sizeBytes": sizeof(job.data),
-    ...jobOptsTags(job.opts),
+    ...jobOptsTags(job.opts || {}),
   }
 }
 

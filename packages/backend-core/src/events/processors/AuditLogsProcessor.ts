@@ -31,7 +31,7 @@ export default class AuditLogsProcessor implements EventProcessor {
       }
     )
     return AuditLogsProcessor.auditLogQueue.process(async job => {
-      return doInTenant(job.data.tenantId, async () => {
+      await doInTenant(job.data.tenantId, async () => {
         let properties = job.data.properties
         if (properties.audited) {
           properties = {
