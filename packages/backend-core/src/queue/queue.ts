@@ -69,7 +69,6 @@ function jobTags(job: Job) {
     "job.id": job.id,
     "job.attemptsMade": job.attemptsMade,
     "job.timestamp": job.timestamp,
-    "job.sizeBytes": sizeof(job),
     "job.data.sizeBytes": sizeof(job.data),
     ...jobOptsTags(job.opts),
   }
