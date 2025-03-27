@@ -1,12 +1,8 @@
 <script lang="ts">
   import { API } from "@/api"
-  import {
-    keepOpen,
-    Modal,
-    ModalContent,
-    notifications,
-    TextArea,
-  } from "@budibase/bbui"
+  import { datasources, tables } from "@/stores/builder"
+  import { Modal, ModalContent, notifications, TextArea } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
 
   let modal: Modal
   let prompt: string =
@@ -20,12 +16,20 @@
   export async function generate() {
     result = ""
     try {
-      const { response } = await API.generateTables({ prompt })
+      const { response, createdTables } = await API.generateTables({ prompt })
       result = response ?? ""
+
+      const [tableToRedirect] = createdTables.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
+
+      notifications.success(`Tables created successfully.`)
+      await datasources.fetch()
+      await tables.fetch()
+      $goto(`./table/${tableToRedirect.id}`)
     } catch (e: any) {
       notifications.error(e.message)
     }
-    return keepOpen
   }
 </script>
 

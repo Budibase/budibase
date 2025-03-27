@@ -16,7 +16,6 @@
   import CreationPage from "@/components/common/CreationPage.svelte"
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableCreationModal from "./_components/AITableCreationModal.svelte"
-  import { onMount } from "svelte"
 
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
@@ -40,10 +39,6 @@
       notifications.error("Error creating datasource")
     }
   }
-
-  onMount(() => {
-    aiTablesModal.show()
-  })
 </script>
 
 <CreateInternalTableModal bind:this={internalTableModal} />

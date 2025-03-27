@@ -37,17 +37,18 @@ export async function generateTables(
   )
 
   const json = JSON.parse(response!.message || "")
+  const createdTables: GenerateTablesResponse["createdTables"] = []
   for (const table of json) {
-    await tableController.create(
-      {
-        request: { body: { ...table, sourceId: dsId } },
-        user: ctx.user,
-      } as any,
-      async () => {}
-    )
+    const saveCtx = {
+      request: { body: { ...table, sourceId: dsId } },
+      user: ctx.user,
+    } as any
+    await tableController.create(saveCtx, async () => {})
+    createdTables.push({ id: saveCtx.body._id, name: saveCtx.body.name })
   }
 
   ctx.body = {
     response: response?.message ?? undefined,
+    createdTables,
   }
 }
