@@ -13,9 +13,12 @@
 
   export async function generate() {
     result = ""
-
-    const { response } = await API.generateTables({ prompt })
-    result = response ?? ""
+    try {
+      const { response } = await API.generateTables({ prompt })
+      result = response ?? ""
+    } catch {
+      // TODO
+    }
     return keepOpen
   }
 </script>
