@@ -128,6 +128,7 @@ export enum FieldType {
 export const JsonTypes = [
   FieldType.ATTACHMENT_SINGLE,
   FieldType.ATTACHMENTS,
+  FieldType.SIGNATURE_SINGLE,
   // only BB_REFERENCE is JSON, it's an array, BB_REFERENCE_SINGLE is a string type
   FieldType.BB_REFERENCE,
   FieldType.JSON,
