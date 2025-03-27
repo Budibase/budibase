@@ -326,7 +326,7 @@ async function performAppCreate(
       path: body.file?.path,
     }
   }
-  console.log("instanceConfig", instanceConfig)
+
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
 
