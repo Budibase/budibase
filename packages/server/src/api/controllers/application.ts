@@ -272,13 +272,6 @@ export async function fetchAppPackage(
     )
   }
 
-  // Enrich PWA screenshot URLs if they exist
-  if (application.pwa?.screenshots && application.pwa.screenshots.length > 0) {
-    application.pwa.screenshots = await objectStore.enrichPWAImages(
-      application.pwa.screenshots
-    )
-  }
-
   // Only filter screens if the user is not a builder
   if (!users.isBuilder(ctx.user, appId)) {
     const userRoleId = getUserRoleId(ctx)
@@ -879,6 +872,18 @@ export async function updateAppPackage(
     const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
+    }
+
+    // Make sure that when saving down pwa settings, we don't override the keys with the enriched url
+    if (appPackage.pwa && application.pwa) {
+      if (appPackage.pwa.icons) {
+        appPackage.pwa.icons = appPackage.pwa.icons.map((icon, i) =>
+          icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
+          application?.pwa?.icons?.[i]
+            ? { ...icon, src: application?.pwa?.icons?.[i].src }
+            : icon
+        )
+      }
     }
 
     // the locked by property is attached by server but generated from

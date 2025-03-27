@@ -63,11 +63,9 @@ export async function enrichPWAImages(
   try {
     return await Promise.all(
       images.map(async image => {
-        let src = image.src
-        src = await getAppFileUrl(src)
         return {
           ...image,
-          src,
+          src: await getAppFileUrl(image.src),
           type: image.type || "image/png",
         }
       })
