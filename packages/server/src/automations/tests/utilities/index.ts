@@ -22,7 +22,7 @@ export function afterAll() {
 }
 
 export function getTestQueue(): queue.InMemoryQueue<AutomationData> {
-  return getQueue() as unknown as queue.InMemoryQueue<AutomationData>
+  return getQueue().getBullQueue() as unknown as queue.InMemoryQueue<AutomationData>
 }
 
 export function triggerCron(message: Job<AutomationData>) {
