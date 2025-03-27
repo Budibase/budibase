@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db, HTTPError, sql } from "@budibase/backend-core"
+import { isInvalidISODateString } from "@budibase/backend-core/src/sql/utils"
 
 type Rows = Array<Row>
 
@@ -106,7 +107,7 @@ export function validate(
       } else if (
         // If provided must be a valid date
         columnType === FieldType.DATETIME &&
-        isNaN(new Date(columnData).getTime())
+        isInvalidISODateString(columnData)
       ) {
         results.schemaValidation[columnName] = false
       } else if (

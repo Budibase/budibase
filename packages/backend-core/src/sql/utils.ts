@@ -142,7 +142,7 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
 export function isInvalidISODateString(str: string) {
   const trimmedValue = str.trim()
   if (!ISO_DATE_REGEX.test(trimmedValue)) {
-    return false
+    return true
   }
   let d = new Date(trimmedValue)
   return isNaN(d.getTime())
