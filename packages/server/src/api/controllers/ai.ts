@@ -21,7 +21,9 @@ export async function generateTables(
   const llm = await getLLM()
   llm!.maxTokens = 1200
 
-  const cacheKey = createHash("md5").update(prompt).digest("hex")
+  const cacheKey = `${createHash("md5").update(prompt).digest("hex")}_${
+    useCached ? 1 : 0
+  }`
 
   const response = await llm?.generateTables(prompt, useCached ? cacheKey : "")
 
@@ -46,7 +48,7 @@ export async function generateTables(
 
   const json = JSON.parse(response!.message || "")
   const createdTables: GenerateTablesResponse["createdTables"] = []
-  for (const table of json) {
+  for (const table of json.structure) {
     const saveCtx = {
       request: { body: { ...table, sourceId: dsId } },
       user: ctx.user,
