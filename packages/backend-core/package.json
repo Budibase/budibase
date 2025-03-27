@@ -56,6 +56,7 @@
     "koa-pino-logger": "4.0.0",
     "lodash": "4.17.21",
     "node-fetch": "2.6.7",
+    "object-sizeof": "2.6.1",
     "passport-google-oauth": "2.0.0",
     "passport-local": "1.0.0",
     "passport-oauth2-refresh": "^2.1.0",
