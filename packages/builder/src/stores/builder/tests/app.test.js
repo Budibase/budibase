@@ -66,6 +66,7 @@ describe("Application Meta Store", () => {
       appId,
       url,
       features,
+      pwa,
       componentLibraries,
     } = app
 
@@ -88,6 +89,7 @@ describe("Application Meta Store", () => {
       hasLock,
       initialised: true,
       hasAppPackage: true,
+      pwa,
     })
   })
 
