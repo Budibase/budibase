@@ -173,6 +173,11 @@ export class BudibaseQueue<T> {
           span.addTags(this.opts.jobTags(job.data))
         }
 
+        tracer.dogstatsd.distribution(
+          "queue.process.sizeBytes",
+          sizeof(job.data),
+          this.metricTags()
+        )
         await this.withMetrics("queue.process", () => cb(job))
       })
     }
@@ -186,7 +191,11 @@ export class BudibaseQueue<T> {
 
   async add(data: T, opts?: JobOptions): Promise<Job<T>> {
     return await tracer.trace("queue.add", async span => {
-      span.addTags({ "queue.name": this.jobQueue, ...jobOptsTags(opts || {}) })
+      span.addTags({
+        "queue.name": this.jobQueue,
+        "job.data.sizeBytes": sizeof(data),
+        ...jobOptsTags(opts || {}),
+      })
       if (this.opts.jobTags) {
         span.addTags(this.opts.jobTags(data))
       }
@@ -196,6 +205,11 @@ export class BudibaseQueue<T> {
         spanId: span.context().toSpanId(),
       }
 
+      tracer.dogstatsd.distribution(
+        "queue.add.sizeBytes",
+        sizeof(data),
+        this.metricTags()
+      )
       return await this.withMetrics("queue.add", () =>
         this.queue.add(data, opts)
       )
