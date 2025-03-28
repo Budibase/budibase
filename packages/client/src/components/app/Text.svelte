@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { MarkdownViewer } from "@budibase/bbui"
 
-  export let text: string = ""
+  export let text: any = ""
   export let color: string | undefined = undefined
   export let align: "left" | "center" | "right" | "justify" = "left"
 
@@ -11,6 +11,9 @@
 
   // Add in certain settings to styles
   $: styles = enrichStyles($component.styles, color, align)
+
+  // Ensure we're always passing in a string value to the markdown editor
+  $: safeText = stringify(text)
 
   const enrichStyles = (
     styles: any,
@@ -31,10 +34,24 @@
       },
     }
   }
+
+  const stringify = (text: any): string => {
+    if (text == null) {
+      return ""
+    }
+    if (typeof text !== "string") {
+      try {
+        return JSON.stringify(text)
+      } catch (e) {
+        return ""
+      }
+    }
+    return text
+  }
 </script>
 
 <div use:styleable={styles}>
-  <MarkdownViewer value={text} />
+  <MarkdownViewer value={safeText} />
 </div>
 
 <style>
