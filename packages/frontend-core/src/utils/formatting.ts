@@ -52,10 +52,13 @@ const stringifyField = (value: any, schema: FieldSchema): string => {
     case FieldType.ATTACHMENT_SINGLE:
     case FieldType.ATTACHMENTS:
     case FieldType.AUTO:
-    case FieldType.JSON:
     case FieldType.LINK:
     case FieldType.SIGNATURE_SINGLE:
       return ""
+
+    // Stringify JSON blobs
+    case FieldType.JSON:
+      return value ? JSON.stringify(value) : ""
 
     // User is the only BB reference subtype right now
     case FieldType.BB_REFERENCE:
@@ -114,7 +117,10 @@ const stringifyField = (value: any, schema: FieldSchema): string => {
 export const stringifyRow = (row: Row, schema: TableSchema): StringifiedRow => {
   let stringified: StringifiedRow = {}
   Object.entries(schema).forEach(([field, fieldSchema]) => {
-    stringified[field] = stringifyField(row[field], fieldSchema)
+    stringified[field] = stringifyField(
+      Helpers.deepGet(row, field),
+      fieldSchema
+    )
   })
   return stringified
 }

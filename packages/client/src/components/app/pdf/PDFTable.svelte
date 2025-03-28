@@ -8,7 +8,12 @@
     UISearchFilter,
     UserDatasource,
   } from "@budibase/types"
-  import { fetchData, QueryUtils, stringifyRow } from "@budibase/frontend-core"
+  import {
+    fetchData,
+    QueryUtils,
+    stringifyRow,
+    SchemaUtils,
+  } from "@budibase/frontend-core"
   import { getContext } from "svelte"
 
   type ProviderDatasource = Exclude<
@@ -88,7 +93,8 @@
       sanitized = pruned
     }
 
-    return sanitized
+    // Add nested JSON fields
+    return SchemaUtils.addNestedJSONSchemaFields(sanitized)
   }
 </script>
 
@@ -114,7 +120,7 @@
   }
   .table {
     display: grid;
-    grid-template-columns: repeat(var(--cols), minmax(20px, auto));
+    grid-template-columns: repeat(var(--cols), minmax(40px, auto));
     grid-template-rows: repeat(var(--rows), max-content);
     overflow: hidden;
     background: white;
