@@ -19,6 +19,7 @@ export enum Feature {
   VIEW_READONLY_COLUMNS = "viewReadonlyColumns",
   BUDIBASE_AI = "budibaseAI",
   AI_CUSTOM_CONFIGS = "aiCustomConfigs",
+  PWA = "pwa",
 }
 
 export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }
