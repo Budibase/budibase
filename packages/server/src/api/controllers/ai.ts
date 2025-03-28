@@ -1,4 +1,5 @@
 import {
+  DocumentType,
   GenerateTablesRequest,
   GenerateTablesResponse,
   SourceName,
@@ -6,9 +7,8 @@ import {
 } from "@budibase/types"
 import { getLLM } from "packages/pro/src/ai"
 import * as tableController from "./public/tables"
-import { context } from "@budibase/backend-core"
+import { context, utils } from "@budibase/backend-core"
 import sdk from "../../sdk"
-import { generateDatasourceID } from "../../db/utils"
 import fs from "fs"
 import path from "path"
 import { createHash } from "crypto"
@@ -33,7 +33,7 @@ export async function generateTables(
 
   const count = (await sdk.datasources.fetch()).length
   const { id: dsId } = await context.getAppDB().put({
-    _id: generateDatasourceID(),
+    _id: `${DocumentType.DATASOURCE}_bb_internal_${utils.newid()}`,
     name: `Test ${count}`,
     type: "budibase",
 
