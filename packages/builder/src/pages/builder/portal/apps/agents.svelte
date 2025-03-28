@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Heading, Layout, Page, Icon } from "@budibase/bbui"
+  import { Heading, Layout, Page, Icon, Tags, Tag } from "@budibase/bbui"
   import Chatbox from "./_agents/Chatbox.svelte"
   import BBAI from "@/components/common/Icons/BBAI.svelte"
   import { API } from "@/api"
@@ -54,6 +54,14 @@
       <BBAI />
       <Heading size="L">Budibase Agents</Heading>
     </div>
+    <div class="app-tags">
+      <Tags>
+        <Tag emphasized>Hello</Tag>
+        <Tag emphasized>Hello</Tag>
+        <Tag emphasized>Hello</Tag>
+      </Tags>
+      <Icon name="AddCircle" hoverable />
+    </div>
     <div class="wrapper">
       <Chatbox bind:messages={messages}></Chatbox>
       <div class="input-container">
@@ -78,6 +86,11 @@
   .heading {
     display: flex;
     align-items: center;
+    gap: var(--spacing-l);
+  }
+
+  .app-tags {
+    display: flex;
     gap: var(--spacing-l);
   }
 
