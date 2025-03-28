@@ -53,12 +53,24 @@ export async function generateTables(
   const json = JSON.parse(response!.message || "")
   const createdTables: GenerateTablesResponse["createdTables"] = []
   for (const table of json.structure) {
-    const saveCtx = {
+    const createTableCtx = {
       request: { body: { ...table, sourceId: dsId } },
       user: ctx.user,
     } as any
-    await tableController.create(saveCtx, async () => {})
-    createdTables.push({ id: saveCtx.body._id, name: saveCtx.body.name })
+    await tableController.create(createTableCtx, async () => {})
+    const createdTable = createTableCtx.body
+    createdTables.push({ id: createdTable._id, name: createdTable.name })
+
+    const dataToAdd = json.data[table.name]
+    for (const entry of dataToAdd || []) {
+      await sdk.rows.save(
+        createdTable._id,
+        {
+          ...entry,
+        },
+        ctx.user._id
+      )
+    }
   }
 
   ctx.body = {
