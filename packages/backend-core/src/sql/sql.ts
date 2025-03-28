@@ -6,6 +6,7 @@ import {
   isInvalidISODateString,
   isValidFilter,
   isValidISODateString,
+  isValidTime,
   sqlLog,
   validateManyToMany,
 } from "./utils"
@@ -417,11 +418,17 @@ class InternalBuilder {
     }
 
     if (typeof input === "string" && schema.type === FieldType.DATETIME) {
-      if (isInvalidISODateString(input)) {
-        return null
-      }
-      if (isValidISODateString(input)) {
-        return new Date(input.trim())
+      if (schema.timeOnly) {
+        if (!isValidTime(input)) {
+          return null
+        }
+      } else {
+        if (isInvalidISODateString(input)) {
+          return null
+        }
+        if (isValidISODateString(input)) {
+          return new Date(input.trim())
+        }
       }
     }
     return input

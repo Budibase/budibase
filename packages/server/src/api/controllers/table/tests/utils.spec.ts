@@ -1,4 +1,9 @@
-import { AIOperationEnum, AutoFieldSubType, FieldType } from "@budibase/types"
+import {
+  AIOperationEnum,
+  AutoFieldSubType,
+  FieldType,
+  JsonFieldSubType,
+} from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { importToRows } from "../utils"
 
@@ -148,6 +153,34 @@ describe("utils", () => {
             autoId: 3,
             name: "Claire",
             aicol: "test",
+          }),
+        ])
+      })
+    })
+
+    it("coerces strings into arrays for array fields", async () => {
+      await config.doInContext(config.appId, async () => {
+        const table = await config.createTable({
+          name: "table",
+          type: "table",
+          schema: {
+            colours: {
+              name: "colours",
+              type: FieldType.ARRAY,
+              constraints: {
+                type: JsonFieldSubType.ARRAY,
+                inclusion: ["red"],
+              },
+            },
+          },
+        })
+
+        const data = [{ colours: "red" }]
+
+        const result = await importToRows(data, table, config.user?._id)
+        expect(result).toEqual([
+          expect.objectContaining({
+            colours: ["red"],
           }),
         ])
       })
