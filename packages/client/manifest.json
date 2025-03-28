@@ -8142,6 +8142,12 @@
         "label": "Columns",
         "key": "columns",
         "resetOn": "datasource"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 20
       }
     ]
   }

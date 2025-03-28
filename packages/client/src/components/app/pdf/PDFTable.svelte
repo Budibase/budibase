@@ -8,12 +8,7 @@
     UISearchFilter,
     UserDatasource,
   } from "@budibase/types"
-  import {
-    fetchData,
-    QueryUtils,
-    stringifyRow,
-    SchemaUtils,
-  } from "@budibase/frontend-core"
+  import { fetchData, QueryUtils, stringifyRow } from "@budibase/frontend-core"
   import { getContext } from "svelte"
 
   type ProviderDatasource = Exclude<
@@ -28,6 +23,7 @@
   export let sortColumn: string | undefined = undefined
   export let sortOrder: SortOrder | undefined = undefined
   export let columns: ChosenColumns = undefined
+  export let limit: number = 20
 
   const component = getContext("component")
   const { styleable, API } = getContext("sdk")
@@ -38,8 +34,7 @@
     query,
     sortColumn,
     sortOrder,
-    limit: 100,
-    paginate: false,
+    limit,
   })
   $: schema = sanitizeSchema($fetch.schema, columns)
   $: columnCount = Object.keys(schema).length
@@ -56,6 +51,8 @@
         query,
         sortColumn,
         sortOrder,
+        limit,
+        paginate: false,
       },
     })
   }
