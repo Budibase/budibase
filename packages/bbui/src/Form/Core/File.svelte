@@ -6,7 +6,10 @@
 
   const BYTES_IN_MB = 1000000
 
-  export let value: File | undefined = undefined
+  export let value:
+    | File
+    | { name: string; type: string; size?: number }
+    | undefined = undefined
   export let title: string = "Upload file"
   export let disabled: boolean = false
   export let allowClear: boolean | undefined = undefined

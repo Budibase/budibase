@@ -25,7 +25,7 @@
 
   let saving = false
   let pwaEnabled = true
-  let pwaBuilderIcons: any = null
+  let uploadingIcons = false
 
   let pwaConfig = $appStore.pwa || {
     name: "",
@@ -39,38 +39,24 @@
     start_url: "",
   }
 
-  function ensureHexFormat(color: string) {
-    if (!color) return "#FFFFFF"
-    if (color.startsWith("#")) return color
-
-    const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-    if (rgbMatch) {
-      const r = parseInt(rgbMatch[1]).toString(16).padStart(2, "0")
-      const g = parseInt(rgbMatch[2]).toString(16).padStart(2, "0")
-      const b = parseInt(rgbMatch[3]).toString(16).padStart(2, "0")
-      return `#${r}${g}${b}`.toUpperCase()
-    }
-
-    const rgbaMatch = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/)
-    if (rgbaMatch) {
-      const r = parseInt(rgbaMatch[1]).toString(16).padStart(2, "0")
-      const g = parseInt(rgbaMatch[2]).toString(16).padStart(2, "0")
-      const b = parseInt(rgbaMatch[3]).toString(16).padStart(2, "0")
-      return `#${r}${g}${b}`.toUpperCase()
-    }
-
-    return "#FFFFFF"
-  }
+  $: iconCount = pwaConfig.icons?.length || 0
+  $: iconFileDisplay = iconCount
+    ? {
+        name: `${iconCount} icons uploaded`,
+        type: "file",
+      }
+    : undefined
 
   function getCssVariableValue(cssVar: string) {
     try {
       if (cssVar?.startsWith("#")) return cssVar
 
       const varMatch = cssVar?.match(/var\((.*?)\)/)
-      if (!varMatch) return ensureHexFormat(cssVar)
+      if (!varMatch) return "#FFFFFF"
 
-      const varName = varMatch[1]
-      return ensureHexFormat(
+      const varName = varMatch?.[1]
+      return (
+        varName &&
         getComputedStyle(document.documentElement)
           .getPropertyValue(varName)
           .trim()
@@ -82,7 +68,10 @@
   }
 
   async function handlePWAZip(file: File) {
+    if (!file) return
+
     try {
+      uploadingIcons = true
       const data = new FormData()
       data.append("file", file as any)
       const result = await API.uploadPWAZip(data)
@@ -91,16 +80,14 @@
       notifications.success(
         `Processed ${pwaConfig.icons.length} icons from PWA Builder`
       )
-      pwaBuilderIcons = {
-        name: file instanceof File ? file.name : "PWA Icons",
-        type: "file",
-      }
     } catch (error: any) {
       console.error("Error processing PWA Builder zip:", error)
       notifications.error(
         "Failed to process PWA Builder zip: " +
           (error.message || "Unknown error")
       )
+    } finally {
+      uploadingIcons = false
     }
   }
 
@@ -208,8 +195,8 @@
               notifications.error("File too large. 20mb limit")}
             extensions={[".zip"]}
             on:change={e => e.detail && handlePWAZip(e.detail)}
-            value={pwaBuilderIcons}
-            disabled={!pwaEnabled}
+            value={iconFileDisplay}
+            disabled={!pwaEnabled || uploadingIcons}
           />
         </div>
       </div>
@@ -257,7 +244,7 @@
       </div>
 
       <div class="actions">
-        <Button cta on:click={handleSubmit} disabled={!pwaEnabled}>
+        <Button cta on:click={handleSubmit} disabled={!pwaEnabled || saving}>
           {saving ? "Saving..." : "Save"}
         </Button>
       </div>

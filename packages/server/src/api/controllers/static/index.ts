@@ -144,9 +144,12 @@ export const uploadFile = async function (
 
 export async function processPWAZip(ctx: UserCtx) {
   const file = ctx.request.files?.file
-  console.log("file", file)
   if (!file || Array.isArray(file)) {
     ctx.throw(400, "No file or multiple files provided")
+  }
+
+  if (!file.path || !file.name?.toLowerCase().endsWith(".zip")) {
+    ctx.throw(400, "Invalid file - must be a zip file")
   }
 
   const tempDir = join(tmpdir(), `pwa-${Date.now()}`)
@@ -156,35 +159,60 @@ export async function processPWAZip(ctx: UserCtx) {
     await extract(file.path, { dir: tempDir })
     const iconsJsonPath = join(tempDir, "icons.json")
 
-    if (!iconsJsonPath) {
+    if (!fs.existsSync(iconsJsonPath)) {
       ctx.throw(400, "Invalid zip structure - missing icons.json")
     }
 
-    const iconsContent = await fs.promises.readFile(iconsJsonPath, "utf-8")
-    const iconsData = JSON.parse(iconsContent)
+    let iconsData
+    try {
+      const iconsContent = await fs.promises.readFile(iconsJsonPath, "utf-8")
+      iconsData = JSON.parse(iconsContent)
+    } catch (error) {
+      ctx.throw(400, "Invalid icons.json file - could not parse JSON")
+    }
+
+    if (!iconsData.icons || !Array.isArray(iconsData.icons)) {
+      ctx.throw(400, "Invalid icons.json file - missing icons array")
+    }
 
     const icons = []
     const baseDir = path.dirname(iconsJsonPath)
+    const appId = context.getProdAppId()
 
     for (const icon of iconsData.icons) {
-      const extension = path.extname(icon.src)
-      const key = `${context.getProdAppId()}/pwa/${uuid.v4()}${extension}`
+      if (!icon.src || !icon.sizes || !fs.existsSync(join(baseDir, icon.src))) {
+        continue
+      }
 
-      const result = await objectStore.upload({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: key,
-        path: path.join(baseDir, icon.src),
-        type: icon.type || "image/png",
-      })
+      const extension = path.extname(icon.src) || ".png"
+      const key = `${appId}/pwa/${uuid.v4()}${extension}`
+      const mimeType =
+        icon.type || (extension === ".png" ? "image/png" : "image/jpeg")
 
-      if (result.Key) {
-        icons.push({
-          src: result.Key,
-          sizes: icon.sizes,
-          type: icon.type || "image/png",
+      try {
+        const result = await objectStore.upload({
+          bucket: ObjectStoreBuckets.APPS,
+          filename: key,
+          path: join(baseDir, icon.src),
+          type: mimeType,
         })
+
+        if (result.Key) {
+          icons.push({
+            src: result.Key,
+            sizes: icon.sizes,
+            type: mimeType,
+          })
+        }
+      } catch (uploadError) {
+        console.error(`Failed to upload icon ${icon.src}:`, uploadError)
       }
     }
+
+    if (icons.length === 0) {
+      ctx.throw(400, "No valid icons found in the zip file")
+    }
+
     ctx.body = { icons }
   } catch (error: any) {
     ctx.throw(500, `Error processing zip: ${error.message}`)
@@ -521,16 +549,42 @@ export async function serveManifest(ctx: UserCtx<void, any>) {
       background_color: appInfo.pwa.background_color || "#FFFFFF",
       theme_color: appInfo.pwa.theme_color || "#FFFFFF",
       icons: [],
+      screenshots: [],
     }
 
     if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
       try {
         manifest.icons = await objectStore.enrichPWAImages(appInfo.pwa.icons)
+
+        const desktopScreenshot = manifest.icons.find(
+          icon => icon.sizes === "1240x600" || icon.sizes === "2480x1200"
+        )
+        if (desktopScreenshot) {
+          manifest.screenshots?.push({
+            src: desktopScreenshot.src,
+            sizes: desktopScreenshot.sizes,
+            type: "image/png",
+            form_factor: "wide",
+            label: "Desktop view",
+          })
+        }
+
+        const mobileScreenshot = manifest.icons.find(
+          icon => icon.sizes === "620x620" || icon.sizes === "1024x1024"
+        )
+        if (mobileScreenshot) {
+          manifest.screenshots?.push({
+            src: mobileScreenshot.src,
+            sizes: mobileScreenshot.sizes,
+            type: "image/png",
+            label: "Mobile view",
+          })
+        }
       } catch (error) {
         console.error("Error processing manifest icons:", error)
       }
     }
-    console.log(JSON.stringify(manifest))
+
     ctx.set("Content-Type", "application/json")
     ctx.body = manifest
   } catch (error) {

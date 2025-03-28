@@ -101,6 +101,8 @@ export interface PWAManifestImage {
   src: string
   sizes: string
   type: string
+  form_factor?: "wide" | "narrow" | undefined
+  label?: string
 }
 
 export interface AppScript {
