@@ -76,19 +76,21 @@
       }
     })
 
-    // Clean out unselected columns
-    if (columns?.length) {
-      let pruned: Schema = {}
-      for (let col of columns) {
-        if (sanitized[col.name]) {
-          pruned[col.name] = {
-            ...sanitized[col.name],
-            displayName: col.displayName || sanitized[col.name].displayName,
-          }
+    // Clean out unselected columns.
+    // Default to first 3 columns if none specified, as we are width contrained.
+    if (!columns?.length) {
+      columns = Object.values(sanitized).slice(0, 3)
+    }
+    let pruned: Schema = {}
+    for (let col of columns) {
+      if (sanitized[col.name]) {
+        pruned[col.name] = {
+          ...sanitized[col.name],
+          displayName: col.displayName || sanitized[col.name].displayName,
         }
       }
-      sanitized = pruned
     }
+    sanitized = pruned
 
     return sanitized
   }
@@ -131,6 +133,9 @@
     padding: var(--spacing-xs) var(--spacing-s);
     overflow: hidden;
     word-break: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
   .cell.header {
     font-weight: 600;

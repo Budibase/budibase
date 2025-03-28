@@ -21,6 +21,7 @@
   export let allowCellEditing = true
   export let allowReorder = true
   export let getSchemaFields = getSearchableFields
+  export let placeholder = "All columns"
 
   const dispatch = createEventDispatcher()
 
@@ -45,7 +46,7 @@
 
   const getText = value => {
     if (!value?.length) {
-      return "All columns"
+      return placeholder
     }
     let text = `${value.length} column`
     if (value.length !== 1) {

@@ -8038,7 +8038,7 @@
             "value": "18px"
           },
           {
-            "label": "Extra Large",
+            "label": "Extra large",
             "value": "24px"
           }
         ]
@@ -8167,7 +8167,8 @@
         "type": "columns/toplevel",
         "label": "Columns",
         "key": "columns",
-        "resetOn": "datasource"
+        "resetOn": "datasource",
+        "placeholder": "First 3 columns"
       },
       {
         "type": "number",
