@@ -29,7 +29,6 @@ router.param("file", async (file: any, ctx: any, next: any) => {
 })
 
 router
-  .get("/builder/:file*", controller.serveBuilder)
   .get("/api/assets/client", controller.serveClientLibrary)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
   .post("/api/beta/:feature", controller.toggleBetaUiFeature)
