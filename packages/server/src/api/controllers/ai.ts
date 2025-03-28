@@ -27,7 +27,7 @@ export async function generateTables(
 
   const response = await llm?.generateTables(
     prompt,
-    useCached ? cacheKey : "",
+    useCached ? `${cacheKey}/latest` : "",
     addData
   )
 
@@ -44,8 +44,13 @@ export async function generateTables(
   console.warn(response?.message)
 
   if (!useCached) {
+    const dir = path.join(process.env.PWD!, `../../llm-output/${cacheKey}`)
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir)
+    }
+    fs.writeFileSync(path.join(dir, "latest.json"), response?.message || "")
     fs.writeFileSync(
-      path.join(process.env.PWD!, `../../llm-output/${cacheKey}.json`),
+      path.join(dir, `${Date.now()}.json`),
       response?.message || ""
     )
   }
