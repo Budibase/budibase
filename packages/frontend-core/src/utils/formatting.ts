@@ -1,8 +1,5 @@
 import {
-  BBReferenceFieldMetadata,
   BBReferenceFieldSubType,
-  BBReferenceSingleFieldMetadata,
-  DateFieldMetadata,
   FieldSchema,
   FieldType,
   Row,
@@ -48,13 +45,39 @@ const stringifyValue = (value: any): string => {
 
 const stringifyField = (value: any, schema: FieldSchema): string => {
   switch (schema.type) {
-    // TODO
-    case FieldType.ATTACHMENT_SINGLE:
-    case FieldType.ATTACHMENTS:
+    // Auto should not exist as it should always be typed by its underlying
+    // real type, like date or user
     case FieldType.AUTO:
-    case FieldType.LINK:
-    case FieldType.SIGNATURE_SINGLE:
       return ""
+
+    // Just state whether signatures exist or not
+    case FieldType.SIGNATURE_SINGLE:
+      return value ? "Yes" : "No"
+
+    // Extract attachment names
+    case FieldType.ATTACHMENT_SINGLE:
+    case FieldType.ATTACHMENTS: {
+      if (!value) {
+        return ""
+      }
+      const arrayValue = Array.isArray(value) ? value : [value]
+      return arrayValue
+        .map(x => x.name)
+        .filter(x => !!x)
+        .join(", ")
+    }
+
+    // Extract primary displays from relationships
+    case FieldType.LINK: {
+      if (!value) {
+        return ""
+      }
+      const arrayValue = Array.isArray(value) ? value : [value]
+      return arrayValue
+        .map(x => x.primaryDisplay)
+        .filter(x => !!x)
+        .join(", ")
+    }
 
     // Stringify JSON blobs
     case FieldType.JSON:

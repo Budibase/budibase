@@ -207,6 +207,8 @@ export interface BaseFieldSchema extends UIFieldMetadata {
   autocolumn?: boolean
   autoReason?: AutoReason.FOREIGN_KEY
   subtype?: never
+  // added when enriching nested JSON fields into schema
+  nestedJSON?: boolean
 }
 
 interface OtherFieldMetadata extends BaseFieldSchema {

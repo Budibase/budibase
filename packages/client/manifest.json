@@ -8138,7 +8138,7 @@
         "dependsOn": "sortColumn"
       },
       {
-        "type": "columns/basic",
+        "type": "columns/toplevel",
         "label": "Columns",
         "key": "columns",
         "resetOn": "datasource"

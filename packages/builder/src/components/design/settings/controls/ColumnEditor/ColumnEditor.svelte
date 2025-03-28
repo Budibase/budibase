@@ -10,10 +10,17 @@
   } from "@/dataBinding"
   import { selectedScreen, tables } from "@/stores/builder"
 
-  export let componentInstance
+  const getSearchableFields = (schema, tableList) => {
+    return search.getFields(tableList, Object.values(schema || {}), {
+      allowLinks: true,
+    })
+  }
+
+  export let componentInstance = undefined
   export let value = []
   export let allowCellEditing = true
   export let allowReorder = true
+  export let getSchemaFields = getSearchableFields
 
   const dispatch = createEventDispatcher()
 
@@ -28,13 +35,7 @@
     : enrichedSchemaFields?.map(field => field.name)
   $: sanitisedValue = getValidColumns(value, options)
   $: updateBoundValue(sanitisedValue)
-  $: enrichedSchemaFields = search.getFields(
-    $tables.list,
-    Object.values(schema || {}),
-    {
-      allowLinks: true,
-    }
-  )
+  $: enrichedSchemaFields = getSchemaFields(schema, $tables.list)
 
   $: {
     value = (value || []).filter(

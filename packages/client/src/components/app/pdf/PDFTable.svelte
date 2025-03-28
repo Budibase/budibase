@@ -93,8 +93,7 @@
       sanitized = pruned
     }
 
-    // Add nested JSON fields
-    return SchemaUtils.addNestedJSONSchemaFields(sanitized)
+    return sanitized
   }
 </script>
 
