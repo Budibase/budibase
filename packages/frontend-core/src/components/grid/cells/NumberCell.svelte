@@ -1,8 +1,5 @@
-<script context="module">
-  const NumberFormatter = Intl.NumberFormat()
-</script>
-
 <script>
+  import { formatNumber } from "@budibase/frontend-core"
   import TextCell from "./TextCell.svelte"
 
   export let api
@@ -12,18 +9,6 @@
     const float = parseFloat(value)
     const newValue = isNaN(float) ? null : float
     onChange(newValue)
-  }
-
-  const formatNumber = value => {
-    const type = typeof value
-    if (type !== "string" && type !== "number") {
-      return ""
-    }
-    if (type === "string" && !value.trim().length) {
-      return ""
-    }
-    const res = NumberFormatter.format(value)
-    return res === "NaN" ? value : res
   }
 </script>
 

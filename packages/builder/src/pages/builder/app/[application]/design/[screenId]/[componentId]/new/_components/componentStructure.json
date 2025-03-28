@@ -23,6 +23,7 @@
       "dataprovider",
       "repeater",
       "gridblock",
+      "pdftable",
       "spreadsheet",
       "dynamicfilter",
       "daterangepicker"
