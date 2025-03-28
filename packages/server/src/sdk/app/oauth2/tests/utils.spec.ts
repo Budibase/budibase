@@ -190,7 +190,7 @@ describe("oauth2 utils", () => {
 
         await config.doInContext(config.appId, () => getToken(oauthConfig._id))
         await testUtils.queue.processMessages(
-          cache.docWritethrough.DocWritethroughProcessor.queue
+          cache.docWritethrough.DocWritethroughProcessor.queue.getBullQueue()
         )
 
         const usageLog = await config.doInContext(config.appId, () =>
@@ -216,7 +216,7 @@ describe("oauth2 utils", () => {
           config.doInContext(config.appId, () => getToken(oauthConfig._id))
         ).rejects.toThrow()
         await testUtils.queue.processMessages(
-          cache.docWritethrough.DocWritethroughProcessor.queue
+          cache.docWritethrough.DocWritethroughProcessor.queue.getBullQueue()
         )
 
         const usageLog = await config.doInContext(config.appId, () =>
@@ -247,7 +247,7 @@ describe("oauth2 utils", () => {
           getToken(oauthConfig._id)
         )
         await testUtils.queue.processMessages(
-          cache.docWritethrough.DocWritethroughProcessor.queue
+          cache.docWritethrough.DocWritethroughProcessor.queue.getBullQueue()
         )
 
         for (const appId of [config.appId, config.prodAppId]) {
