@@ -80,11 +80,6 @@ export const toggleBetaUiFeature = async function (
   }
 }
 
-export const serveBuilder = async function (ctx: Ctx<void, void>) {
-  const builderPath = join(TOP_LEVEL_PATH, "builder")
-  await send(ctx, ctx.file, { root: builderPath })
-}
-
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
 ) {
