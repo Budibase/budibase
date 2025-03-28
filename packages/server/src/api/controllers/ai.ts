@@ -48,6 +48,7 @@ export async function generateTables(
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir)
     }
+    fs.writeFileSync(path.join(dir, "prompt.txt"), prompt)
     fs.writeFileSync(path.join(dir, "latest.json"), response?.message || "")
     fs.writeFileSync(
       path.join(dir, `${Date.now()}.json`),
@@ -66,7 +67,7 @@ export async function generateTables(
     const createdTable = createTableCtx.body
     createdTables.push({ id: createdTable._id, name: createdTable.name })
 
-    const dataToAdd = json.data[table.name]
+    const dataToAdd = json.data?.[table.name]
     for (const entry of dataToAdd || []) {
       await sdk.rows.save(
         createdTable._id,
