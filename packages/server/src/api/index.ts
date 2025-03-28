@@ -8,7 +8,7 @@ import { middleware as pro } from "@budibase/pro"
 import { apiEnabled, automationsEnabled } from "../features"
 import migrations from "../middleware/appMigrations"
 import { automationQueue } from "../automations"
-import { serveBuilderAssets } from "./controllers/assets"
+import assetRouter from "./routes/assets"
 
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
@@ -47,7 +47,8 @@ if (apiEnabled()) {
     .redirect("/", "/builder")
 
   // send assets before middleware
-  router.get("/builder/:file*", serveBuilderAssets)
+  router.use(assetRouter.routes())
+  router.use(assetRouter.allowedMethods())
 
   router
     .use(
