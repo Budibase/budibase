@@ -8019,6 +8019,32 @@
       },
       {
         "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "14px",
+        "showInBar": true,
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": "12px"
+          },
+          {
+            "label": "Medium",
+            "value": "14px"
+          },
+          {
+            "label": "Large",
+            "value": "18px"
+          },
+          {
+            "label": "Extra Large",
+            "value": "24px"
+          }
+        ]
+      },
+      {
+        "type": "select",
         "label": "Alignment",
         "key": "align",
         "defaultValue": "left",
