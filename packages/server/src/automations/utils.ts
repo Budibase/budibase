@@ -107,12 +107,14 @@ export async function updateTestHistory(
 // end the repetition and the job itself
 export async function disableAllCrons(appId: any) {
   const promises = []
-  const jobs = await automationQueue.getRepeatableJobs()
+  const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
   for (let job of jobs) {
     if (job.key.includes(`${appId}_cron`)) {
-      promises.push(automationQueue.removeRepeatableByKey(job.key))
+      promises.push(
+        automationQueue.getBullQueue().removeRepeatableByKey(job.key)
+      )
       if (job.id) {
-        promises.push(automationQueue.removeJobs(job.id))
+        promises.push(automationQueue.getBullQueue().removeJobs(job.id))
       }
     }
   }
@@ -121,10 +123,10 @@ export async function disableAllCrons(appId: any) {
 }
 
 export async function disableCronById(jobId: JobId) {
-  const jobs = await automationQueue.getRepeatableJobs()
+  const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
   for (const job of jobs) {
     if (job.id === jobId) {
-      await automationQueue.removeRepeatableByKey(job.key)
+      await automationQueue.getBullQueue().removeRepeatableByKey(job.key)
     }
   }
   console.log(`jobId=${jobId} disabled`)
