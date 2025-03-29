@@ -7,7 +7,7 @@
   const dispatch = createEventDispatcher()
 
   export let value
-  export let isTrigger
+  export let isTrigger = false
   export let disabled = false
 
   $: filteredTables = $tables.list.filter(table => {

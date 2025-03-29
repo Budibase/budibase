@@ -148,18 +148,18 @@ export interface BaseIOStructure {
   dependsOn?: string
   enum?: string[]
   pretty?: string[]
-  properties?: {
-    [key: string]: BaseIOStructure
-  }
+  properties?: AutomationIOProps
   required?: string[]
   readonly?: true
 }
 
 export interface InputOutputBlock {
-  properties: {
-    [key: string]: BaseIOStructure
-  }
+  properties: AutomationIOProps
   required?: string[]
+}
+
+export interface AutomationIOProps {
+  [key: string]: BaseIOStructure
 }
 
 export enum AutomationFeature {

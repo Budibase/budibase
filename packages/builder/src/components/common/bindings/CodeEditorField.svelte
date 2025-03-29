@@ -36,10 +36,10 @@
   export let value: string = ""
   export let allowHelpers = true
   export let allowSnippets = true
-  export let context = null
+  export let context: Record<any, any> | undefined = undefined
   export let autofocusEditor = false
-  export let placeholder = null
-  export let height = 180
+  export let placeholder: string | undefined
+  export let dropdown = DropdownPosition.Absolute
 
   let getCaretPosition: CaretPositionFn | undefined
   let insertAtPos: InsertAtPositionFn | undefined
@@ -126,26 +126,25 @@
   }
 
   const updateValue = (val: any) => {
-    dispatch("change", readableToRuntimeBinding(bindings, val))
+    if (!val) {
+      dispatch("change", null)
+    }
+    const update = readableToRuntimeBinding(bindings, encodeJSBinding(val))
+    dispatch("change", update)
   }
 
-  const onChangeJSValue = (e: { detail: string }) => {
-    if (!e.detail?.trim()) {
-      // Don't bother saving empty values as JS
-      updateValue(null)
-    } else {
-      updateValue(encodeJSBinding(e.detail))
-    }
+  const onBlurJSValue = (e: { detail: string }) => {
+    // Don't bother saving empty values as JS
+    updateValue(e.detail?.trim())
   }
 </script>
 
-<div class="code-panel" style="height:{height}px;">
+<div class="code-panel">
   <div class="editor">
     {#key jsCompletions}
       <CodeEditor
         value={jsValue || ""}
-        on:change={onChangeJSValue}
-        on:blur
+        on:blur={onBlurJSValue}
         completions={jsCompletions}
         {bindings}
         mode={EditorModes.JS}
@@ -155,7 +154,7 @@
         placeholder={placeholder ||
           "Add bindings by typing $ or use the menu on the right"}
         jsBindingWrapping
-        dropdown={DropdownPosition.Absolute}
+        {dropdown}
       />
     {/key}
   </div>
@@ -164,6 +163,7 @@
 <style>
   .code-panel {
     display: flex;
+    height: 100%;
   }
 
   /* Editor */

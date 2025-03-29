@@ -7,6 +7,7 @@ import {
   InputOutputBlock,
   AutomationTriggerStepId,
   AutomationEventType,
+  AutomationIOType,
 } from "./automation"
 import {
   CollectStepInputs,
@@ -57,6 +58,7 @@ import {
   RowCreatedTriggerOutputs,
   RowUpdatedTriggerOutputs,
   WebhookTriggerOutputs,
+  RowActionTriggerInputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -383,6 +385,30 @@ export function isAppTrigger(
   return step.stepId === AutomationTriggerStepId.APP
 }
 
+export function isFilterStep(
+  step: AutomationStep | AutomationTrigger
+): step is FilterStep {
+  return step.stepId === AutomationActionStepId.FILTER
+}
+
+export function isLoopStep(
+  step: AutomationStep | AutomationTrigger
+): step is LoopStep {
+  return step.stepId === AutomationActionStepId.LOOP
+}
+
+export function isActionStep(
+  step: AutomationStep | AutomationTrigger
+): step is AutomationStep {
+  return step.type === AutomationStepType.ACTION
+}
+
+export function isCronTrigger(
+  trigger: AutomationStep | AutomationTrigger
+): trigger is CronTrigger {
+  return trigger.stepId === AutomationTriggerStepId.CRON
+}
+
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
   inputs: EmptyInputs
@@ -399,11 +425,13 @@ export type AutomationTriggerDefinition = Omit<
 
 export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
   T extends AutomationTriggerStepId.APP
-    ? void | Record<string, any>
+    ?
+        | void
+        | (Record<string, any> & { fields?: Record<string, AutomationIOType> })
     : T extends AutomationTriggerStepId.CRON
     ? CronTriggerInputs
     : T extends AutomationTriggerStepId.ROW_ACTION
-    ? Record<string, any>
+    ? RowActionTriggerInputs
     : T extends AutomationTriggerStepId.ROW_DELETED
     ? RowDeletedTriggerInputs
     : T extends AutomationTriggerStepId.ROW_SAVED
@@ -439,7 +467,7 @@ export interface AutomationTriggerSchema<
   event?: AutomationEventType
   cronJobId?: string
   stepId: TTrigger
-  inputs: AutomationTriggerInputs<TTrigger> & Record<string, any> // The record union to be removed once the types are fixed
+  inputs: AutomationTriggerInputs<AutomationTriggerStepId>
 }
 
 export type AutomationTrigger =

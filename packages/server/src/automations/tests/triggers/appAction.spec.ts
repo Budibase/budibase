@@ -1,7 +1,7 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationResults } from "../utilities"
-import { Automation } from "@budibase/types"
+import { Automation, AutomationIOType } from "@budibase/types"
 
 describe("app action trigger", () => {
   const config = new TestConfiguration()
@@ -48,7 +48,11 @@ describe("app action trigger", () => {
   it("should correct coerce values based on the schema", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onAppAction({
-        fields: { text: "string", number: "number", boolean: "boolean" },
+        fields: {
+          text: AutomationIOType.STRING,
+          number: AutomationIOType.NUMBER,
+          boolean: AutomationIOType.BOOLEAN,
+        },
       })
       .serverLog({
         text: "{{ fields.text }} {{ fields.number }} {{ fields.boolean }}",

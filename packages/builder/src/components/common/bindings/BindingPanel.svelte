@@ -49,11 +49,11 @@
 
   export let bindings: EnrichedBinding[] = []
   export let value: string = ""
-  export let allowHBS = true
-  export let allowJS = false
+  export let allowHBS: boolean | undefined = true
+  export let allowJS: boolean | undefined = false
   export let allowHelpers = true
   export let allowSnippets = true
-  export let context = null
+  export let context: Record<any, any> | undefined = undefined
   export let snippets: Snippet[] | null = null
   export let autofocusEditor = false
   export let placeholder: string | null = null
@@ -128,7 +128,7 @@
     }
   }
 
-  const getModeOptions = (allowHBS: boolean, allowJS: boolean) => {
+  const getModeOptions = (allowHBS = true, allowJS = false) => {
     let options = []
     if (allowHBS) {
       options.push(BindingMode.Text)
