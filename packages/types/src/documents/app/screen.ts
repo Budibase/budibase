@@ -15,6 +15,10 @@ export interface ScreenRouting {
   homeScreen?: boolean
 }
 
+export enum ScreenVariant {
+  PDF = "pdf",
+}
+
 export interface Screen extends Document {
   layoutId?: string
   showNavigation?: boolean
@@ -24,6 +28,7 @@ export interface Screen extends Document {
   name?: string
   pluginAdded?: boolean
   onLoad?: EventHandler[]
+  variant?: ScreenVariant
 }
 
 export interface ScreenRoutesViewOutput extends Document {

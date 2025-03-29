@@ -71,4 +71,5 @@ export const AutoScreenTypes = {
   BLANK: "blank",
   TABLE: "table",
   FORM: "form",
+  PDF: "pdf",
 }
