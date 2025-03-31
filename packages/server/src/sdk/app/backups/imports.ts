@@ -6,6 +6,7 @@ import {
   AutomationTriggerStepId,
   RowAttachment,
   FieldType,
+  WebhookTriggerInputs,
 } from "@budibase/types"
 import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
@@ -99,7 +100,7 @@ async function updateAutomations(prodAppId: string, db: Database) {
     if (
       automation.definition.trigger?.stepId === AutomationTriggerStepId.WEBHOOK
     ) {
-      const old = automation.definition.trigger.inputs
+      const old = automation.definition.trigger.inputs as WebhookTriggerInputs
       automation.definition.trigger.inputs = {
         schemaUrl: old.schemaUrl.replace(oldDevAppId, devAppId),
         triggerUrl: old.triggerUrl.replace(oldProdAppId, prodAppId),

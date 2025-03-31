@@ -16,6 +16,9 @@ import {
   FieldType,
   FilterCondition,
   isDidNotTriggerResponse,
+  RowActionTriggerInputs,
+  RowCreatedTriggerInputs,
+  RowDeletedTriggerInputs,
   SettingsConfig,
   Table,
 } from "@budibase/types"
@@ -259,7 +262,10 @@ describe("/automations", () => {
     it("tests the automation successfully", async () => {
       let table = await config.createTable()
       let automation = newAutomation()
-      automation.definition.trigger.inputs.tableId = table._id
+      const triggerInputs = automation.definition.trigger
+        .inputs as RowCreatedTriggerInputs
+      triggerInputs.tableId = table._id!
+
       automation.definition.steps[0].inputs = {
         row: {
           name: "{{trigger.row.name}}",
@@ -487,22 +493,28 @@ describe("/automations", () => {
         .serverLog({ text: "test" })
         .save()
 
-      automation.definition.trigger.inputs.tableId = "newTableId"
+      const triggerInputs = automation.definition.trigger
+        .inputs as RowDeletedTriggerInputs
+
+      triggerInputs.tableId = "newTableId"
       const { automation: updatedAutomation } =
         await config.api.automation.update(automation)
 
-      expect(updatedAutomation.definition.trigger.inputs.tableId).toEqual(
-        "newTableId"
-      )
+      const updatedTriggerInputs = updatedAutomation.definition.trigger
+        .inputs as RowDeletedTriggerInputs
+
+      expect(updatedTriggerInputs.tableId).toEqual("newTableId")
     })
 
     it("cannot update a readonly field", async () => {
       const { automation } = await createAutomationBuilder(config)
-        .onRowAction({ tableId: "tableId" })
+        .onRowAction({ tableId: "tableId", rowActionId: "someId" })
         .serverLog({ text: "test" })
         .save()
 
-      automation.definition.trigger.inputs.tableId = "newTableId"
+      const triggerInputs = automation.definition.trigger
+        .inputs as RowActionTriggerInputs
+      triggerInputs.tableId = "newTableId"
       await config.api.automation.update(automation, {
         status: 400,
         body: {
