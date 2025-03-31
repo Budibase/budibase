@@ -1,8 +1,8 @@
 <script lang="ts">
   import { getContext } from "svelte"
-  import type { Row } from "@budibase/types"
+  import type { Row, TableDatasource, ViewDatasource } from "@budibase/types"
 
-  export let datasourceId: string
+  export let datasource: TableDatasource | ViewDatasource
   export let rowId: string
 
   const component = getContext("component")
@@ -10,6 +10,8 @@
 
   let row: Row | undefined
 
+  $: datasourceId =
+    datasource.type === "table" ? datasource.tableId : datasource.id
   $: fetchRow(datasourceId, rowId)
 
   const fetchRow = async (datasourceId: string, rowId: string) => {
@@ -26,3 +28,12 @@
     <slot />
   </Provider>
 </div>
+
+<style>
+  div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+</style>
