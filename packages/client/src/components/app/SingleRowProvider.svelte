@@ -24,7 +24,7 @@
 </script>
 
 <div use:styleable={$component.styles}>
-  <Provider data={row}>
+  <Provider data={row ?? null}>
     <slot />
   </Provider>
 </div>
