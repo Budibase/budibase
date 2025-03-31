@@ -23,13 +23,7 @@ export const mockAnthropicResponse: MockLLMResponseFn = (
         try {
           content = answer(prompt)
         } catch (e) {
-          return [
-            500,
-            {
-              message: "Error in mock response function",
-              error: e,
-            },
-          ]
+          return [500, "Internal Server Error"]
         }
       } else {
         content = answer

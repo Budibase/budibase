@@ -246,13 +246,18 @@ describe("AI", () => {
 
       !selfHostOnly &&
         describe("POST /api/ai/chat", () => {
-          let cleanup: () => void
+          let envCleanup: () => void
+          let featureCleanup: () => void
           beforeAll(() => {
-            cleanup = setEnv({ SELF_HOSTED: false })
+            envCleanup = setEnv({ SELF_HOSTED: false })
+            featureCleanup = features.testutils.setFeatureFlags("*", {
+              AI_JS_GENERATION: true,
+            })
           })
 
           afterAll(() => {
-            cleanup()
+            featureCleanup()
+            envCleanup()
           })
 
           beforeEach(() => {
