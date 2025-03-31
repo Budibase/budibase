@@ -21,6 +21,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
 import fs from "fs"
+import fsp from "fs/promises"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 import {
@@ -149,7 +150,7 @@ export async function processPWAZip(ctx: UserCtx) {
 
   const tempDir = join(tmpdir(), `pwa-${Date.now()}`)
   try {
-    await fs.promises.mkdir(tempDir, { recursive: true })
+    await fsp.mkdir(tempDir, { recursive: true })
 
     await extract(file.path, { dir: tempDir })
     const iconsJsonPath = join(tempDir, "icons.json")
@@ -160,7 +161,7 @@ export async function processPWAZip(ctx: UserCtx) {
 
     let iconsData
     try {
-      const iconsContent = await fs.promises.readFile(iconsJsonPath, "utf-8")
+      const iconsContent = await fsp.readFile(iconsJsonPath, "utf-8")
       iconsData = JSON.parse(iconsContent)
     } catch (error) {
       ctx.throw(400, "Invalid icons.json file - could not parse JSON")
