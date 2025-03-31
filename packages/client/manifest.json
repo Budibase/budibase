@@ -8121,7 +8121,7 @@
     "styles": ["size"],
     "size": {
       "width": 600,
-      "height": 400
+      "height": 304
     },
     "grid": {
       "hAlign": "stretch",
@@ -8174,7 +8174,7 @@
         "type": "number",
         "label": "Limit",
         "key": "limit",
-        "defaultValue": 20
+        "defaultValue": 10
       }
     ]
   }
