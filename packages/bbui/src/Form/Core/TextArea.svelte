@@ -75,6 +75,7 @@
   class:is-disabled={disabled}
   class:is-focused={isFocused}
 >
+  <!-- We need to ignore prettier here as we want no whitespace -->
   <!-- prettier-ignore -->
   <textarea
     bind:this={textarea}
@@ -90,6 +91,7 @@
     on:blur
     on:keypress
   >{value || ""}</textarea>
+  <slot />
 </div>
 
 <style>

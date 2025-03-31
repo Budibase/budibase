@@ -21,6 +21,7 @@ import { EnvironmentAPI } from "./environment"
 import { UserPublicAPI } from "./public/user"
 import { MiscAPI } from "./misc"
 import { OAuth2API } from "./oauth2"
+import { AssetsAPI } from "./assets"
 
 export default class API {
   application: ApplicationAPI
@@ -44,6 +45,7 @@ export default class API {
   user: UserAPI
   viewV2: ViewV2API
   webhook: WebhookAPI
+  assets: AssetsAPI
 
   public: {
     user: UserPublicAPI
@@ -71,6 +73,7 @@ export default class API {
     this.user = new UserAPI(config)
     this.viewV2 = new ViewV2API(config)
     this.webhook = new WebhookAPI(config)
+    this.assets = new AssetsAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
     }
