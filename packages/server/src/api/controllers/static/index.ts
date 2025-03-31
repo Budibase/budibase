@@ -328,7 +328,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       const appHbs = loadHandlebarsFile(appHbsPath)
 
       let extraHead = ""
-      if (hasPWA) {
+      if (hasPWA && (await pro.features.isPWAEnabled())) {
         extraHead = `<link rel="manifest" href="${manifestUrl}">`
         extraHead += `<meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content=${
@@ -517,7 +517,7 @@ export const getSignedUploadURL = async function (
   ctx.body = { signedUrl, publicUrl }
 }
 
-export async function serveManifest(ctx: UserCtx<void, any>) {
+export async function servePwaManifest(ctx: UserCtx<void, any>) {
   const appId = context.getAppId()
   if (!appId) {
     ctx.status = 404

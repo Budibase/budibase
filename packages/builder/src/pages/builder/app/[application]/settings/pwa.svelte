@@ -15,6 +15,8 @@
     Tag,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
+  import { licensing } from "@/stores/portal"
+
   import { API } from "@/api"
 
   const DISPLAY_OPTIONS = [
@@ -24,7 +26,7 @@
   ]
 
   let saving = false
-  let pwaEnabled = true
+  let pwaEnabled = $licensing.pwaEnabled
   let uploadingIcons = false
 
   let pwaConfig = $appStore.pwa || {
