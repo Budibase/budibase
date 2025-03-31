@@ -26,6 +26,7 @@
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./overlay/PeekScreenDisplay.svelte"
+  import InstallPrompt from "./overlay/InstallPrompt.svelte"
   import UserBindingsProvider from "./context/UserBindingsProvider.svelte"
   import DeviceBindingsProvider from "./context/DeviceBindingsProvider.svelte"
   import StateBindingsProvider from "./context/StateBindingsProvider.svelte"
@@ -93,6 +94,15 @@
 
   // Load app config
   onMount(async () => {
+    // Register service worker
+    if ("serviceWorker" in navigator) {
+      try {
+        await navigator.serviceWorker.register("/service-worker.js")
+      } catch (error) {
+        console.error("Service worker registration failed:", error)
+      }
+    }
+
     document.fonts.ready.then(() => {
       fontsLoaded = true
     })
@@ -246,6 +256,7 @@
                                 <NotificationDisplay />
                                 <ConfirmationDisplay />
                                 <PeekScreenDisplay />
+                                <InstallPrompt />
                               </CustomThemeWrapper>
                             {/if}
 
