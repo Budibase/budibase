@@ -329,7 +329,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       const appHbs = loadHandlebarsFile(appHbsPath)
 
       let extraHead = ""
-      if (hasPWA && (await pro.features.isPWAEnabled())) {
+      const pwaEnabled = true // await pro.features.isPWAEnabled()
+      if (hasPWA && pwaEnabled) {
         extraHead = `<link rel="manifest" href="${manifestUrl}">`
         extraHead += `<meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content=${
