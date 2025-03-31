@@ -125,9 +125,13 @@ export async function generateTables(
   }
 
   if (addData) {
-    const createdData: Record<string, Record<string, string>> = {}
+    const createdData: Record<string, string> = {}
+    const toUpdateLinks: {
+      tableId: string
+      rowId: string
+      data: Record<string, string>
+    }[] = []
     for (const table of json.structure) {
-      createdData[table.name] = {}
       const dataToAdd = json.data?.[table.name]
 
       const linksOverride: Record<string, null> = {}
@@ -138,7 +142,7 @@ export async function generateTables(
       }
 
       for (const entry of dataToAdd || []) {
-        await sdk.rows.save(
+        const createdRow = await sdk.rows.save(
           table._id!,
           {
             ...entry,
@@ -147,7 +151,46 @@ export async function generateTables(
           },
           ctx.user._id
         )
+
+        createdData[entry._id] = createdRow.row._id!
+
+        const overridenLinks = Object.keys(linksOverride).reduce<
+          Record<string, string>
+        >((acc, l) => {
+          if (entry[l]) {
+            acc[l] = entry[l]
+          }
+          return acc
+        }, {})
+
+        if (Object.keys(overridenLinks)) {
+          toUpdateLinks.push({
+            tableId: createdRow.table._id!,
+            rowId: createdRow.row._id!,
+            data: overridenLinks,
+          })
+        }
       }
+    }
+
+    for (const data of toUpdateLinks) {
+      const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
+
+      const updatedLinks = Object.keys(data.data).reduce<
+        Record<string, string>
+      >((acc, d) => {
+        acc[d] = createdData[data.data[d]]
+        return acc
+      }, {})
+
+      await sdk.rows.save(
+        data.tableId,
+        {
+          ...persistedRow,
+          ...updatedLinks,
+        },
+        ctx.user._id
+      )
     }
   }
 
