@@ -125,13 +125,25 @@ export async function generateTables(
   }
 
   if (addData) {
+    const createdData: Record<string, Record<string, string>> = {}
     for (const table of json.structure) {
+      createdData[table.name] = {}
       const dataToAdd = json.data?.[table.name]
+
+      const linksOverride: Record<string, null> = {}
+      for (const fieldKey of Object.keys(table.schema).filter(
+        f => table.schema[f].type === FieldType.LINK
+      )) {
+        linksOverride[fieldKey] = null
+      }
+
       for (const entry of dataToAdd || []) {
         await sdk.rows.save(
           table._id!,
           {
             ...entry,
+            ...linksOverride,
+            _id: undefined,
           },
           ctx.user._id
         )
