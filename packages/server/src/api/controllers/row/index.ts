@@ -147,7 +147,7 @@ export async function find(ctx: UserCtx<void, FindRowResponse>) {
   try {
     ctx.body = await sdk.rows.find(sourceId, rowId)
   } catch (e) {
-    ctx.throw(400, "That row couldn't be found")
+    ctx.throw(404, "That row couldn't be found")
   }
 }
 
