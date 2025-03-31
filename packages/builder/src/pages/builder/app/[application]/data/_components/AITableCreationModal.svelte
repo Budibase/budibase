@@ -15,7 +15,7 @@
 
   let modalData: GenerateTablesRequest = {
     prompt:
-      "I need a ticketing system where employees can submit tickets. A ticket has a title, description, priority, status, and an assigned technician",
+      "I need a ticketing system where users can submit tickets. A ticket has a title, description, priority, status, and an assigned technician",
     addData: true,
     useCached: true,
   }
