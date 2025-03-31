@@ -1,5 +1,87 @@
 import { ai } from "@budibase/pro"
-import { UserCtx, ChatAgentRequest, ChatAgentResponse } from "@budibase/types"
+import { db } from "@budibase/backend-core"
+import {
+  UserCtx,
+  ChatAgentRequest,
+  ChatAgentResponse,
+  Automation,
+  AllDocsResponse,
+  DocumentType,
+} from "@budibase/types"
+import { JSONSchema4, JSONSchema4TypeName } from "json-schema"
+
+const JsonSchemaTypes = [
+  "string",
+  "number",
+  "integer",
+  "boolean",
+  "object",
+  "array",
+  "null",
+  "any",
+]
+
+async function getAutomations(
+  appIds: string[]
+): Promise<Record<string, Automation[]>> {
+  const appAutomations: Promise<AllDocsResponse<Automation>>[] = []
+  for (let appId of appIds) {
+    const appDb = db.getDB(db.getProdAppID(appId))
+    appAutomations.push(
+      appDb.allDocs<Automation>(
+        db.getDocParams(DocumentType.AUTOMATION, null, {
+          include_docs: true,
+        })
+      )
+    )
+  }
+  const allAutomations = (await Promise.all(appAutomations)).map(res =>
+    res.rows.map(row => row.doc!)
+  )
+  const appAutomationMap: Record<string, Automation[]> = {}
+  for (const automations of allAutomations) {
+    const idx = allAutomations.indexOf(automations)
+    appAutomationMap[appIds[idx]] = automations
+  }
+  return appAutomationMap
+}
+
+function automationSchemaToJsonSchema(automation: Automation): JSONSchema4 {
+  const inputSchema = automation.definition.trigger.schema.inputs
+  const properties: Record<string, JSONSchema4> = {}
+  for (const [key, props] of Object.entries(inputSchema.properties)) {
+    let type: JSONSchema4TypeName = "any"
+    if (props.type && JsonSchemaTypes.includes(props.type)) {
+      type = props.type as JSONSchema4TypeName
+    }
+    properties[key] = {
+      title: props.title,
+      type: type,
+      description: props.description,
+      enum: props.enum,
+      required: props.required,
+    }
+  }
+  return {
+    properties,
+  }
+}
+
+function addAutomationTools(
+  prompt: ai.Prompt,
+  automations: Record<string, Automation[]>
+) {
+  // TODO: can app ID be used to provide more info
+  for (let appId of Object.keys(automations)) {
+    for (let automation of automations[appId]) {
+      prompt = prompt.tool(automation.name, {
+        parameters: automationSchemaToJsonSchema(automation),
+        strict: true,
+      })
+    }
+  }
+  return prompt
+}
 
 function agentSystemPrompt() {
   return `You are a helpful support agent, using workflows to solve problems for users.
@@ -16,9 +98,14 @@ export async function agentChat(
   if (!model) {
     return ctx.throw(401, "No model available, cannot chat")
   }
-  const prompt = new ai.Prompt()
+  let prompt = new ai.Prompt([])
+  const { userPrompt, appIds } = ctx.request.body
+  if (appIds && appIds.length) {
+    const automations = await getAutomations(appIds)
+    prompt = addAutomationTools(prompt, automations)
+  }
   prompt.system(agentSystemPrompt())
-  prompt.user(ctx.request.body.userPrompt)
+  prompt.user(userPrompt)
   const response = await model.prompt(prompt)
   ctx.body = {
     response: !response.message ? "No response." : response.message,

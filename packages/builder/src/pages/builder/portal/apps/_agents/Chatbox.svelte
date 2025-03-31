@@ -1,11 +1,19 @@
 <script lang="ts">
-  export let messages: { message: string, isSystem?: boolean, isError?: boolean }[] = []
+  export let messages: {
+    message: string
+    isSystem?: boolean
+    isError?: boolean
+  }[] = []
 </script>
 
 <div class="chatbox">
   {#each messages as message}
     <div class="message" class:system={message.isSystem}>
-      <div class="background" class:systemBackground={message.isSystem} class:errorBackground={message.isError}>
+      <div
+        class="background"
+        class:systemBackground={message.isSystem}
+        class:errorBackground={message.isError}
+      >
         {message.message}
       </div>
     </div>

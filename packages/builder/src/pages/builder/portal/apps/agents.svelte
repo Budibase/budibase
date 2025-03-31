@@ -1,14 +1,21 @@
 <script lang="ts">
-  import { Heading, Layout, Page, Icon, Tags, Tag } from "@budibase/bbui"
+  import { Heading, Layout, Page, Icon, Multiselect } from "@budibase/bbui"
   import Chatbox from "./_agents/Chatbox.svelte"
   import BBAI from "@/components/common/Icons/BBAI.svelte"
+  import { appsStore } from "@/stores/portal"
   import { API } from "@/api"
 
   let textarea: any
   let inputValue = ""
   let loading: boolean = false
+  let appContext: string[] = []
 
-  let messages: { message: string, isSystem: boolean, isError?: boolean }[] = []
+  $: appOptions = $appsStore.apps.map(app => ({
+    name: app.name,
+    value: app.appId,
+  }))
+
+  let messages: { message: string; isSystem: boolean; isError?: boolean }[] = []
 
   function textChange() {
     textarea.height = "auto"
@@ -55,21 +62,26 @@
       <Heading size="L">Budibase Agents</Heading>
     </div>
     <div class="app-tags">
-      <Tags>
-        <Tag emphasized>Hello</Tag>
-        <Tag emphasized>Hello</Tag>
-        <Tag emphasized>Hello</Tag>
-      </Tags>
-      <Icon name="AddCircle" hoverable />
+      <Multiselect
+        bind:value={appContext}
+        placeholder="App context"
+        autoWidth
+        options={appOptions}
+        getOptionLabel={opt => opt.name}
+        getOptionValue={opt => opt.value}
+      />
     </div>
     <div class="wrapper">
-      <Chatbox bind:messages={messages}></Chatbox>
+      <Chatbox bind:messages />
       <div class="input-container">
-          <pre
-            class="input"
-            aria-hidden="true"
-          >{inputValue + '\n'}</pre>
-        <textarea bind:value={inputValue} bind:this={textarea} class="input spectrum-Textfield-input" on:input={textChange} on:keydown={handleKeyDown} />
+        <pre class="input" aria-hidden="true">{inputValue + "\n"}</pre>
+        <textarea
+          bind:value={inputValue}
+          bind:this={textarea}
+          class="input spectrum-Textfield-input"
+          on:input={textChange}
+          on:keydown={handleKeyDown}
+        />
         <div class="run-icon">
           {#if !loading}
             <Icon name="PlayCircle" size="XXL" hoverable on:click={prompt} />
