@@ -8116,7 +8116,7 @@
     ]
   },
   "pdftable": {
-    "name": "Plain Table",
+    "name": "PDF Table",
     "icon": "Table",
     "styles": ["size"],
     "size": {
