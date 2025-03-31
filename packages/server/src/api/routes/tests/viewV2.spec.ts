@@ -38,10 +38,7 @@ import {
   FormulaType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import {
-  datasourceDescribe,
-  DatabaseName,
-} from "../../../integrations/tests/utils"
+import { datasourceDescribe } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { context, db, events, roles, setEnv } from "@budibase/backend-core"
