@@ -12,7 +12,7 @@
 
   $: appOptions = $appsStore.apps.map(app => ({
     name: app.name,
-    value: app.appId,
+    value: app.devId,
   }))
 
   let messages: { message: string; isSystem: boolean; isError?: boolean }[] = []
@@ -36,7 +36,7 @@
     messages = messages
     loading = true
     try {
-      const res = await API.agentChat(inputValue)
+      const res = await API.agentChat(inputValue, appContext)
       inputValue = ""
       messages.push({
         message: res.response,

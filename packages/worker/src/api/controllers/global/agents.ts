@@ -26,7 +26,7 @@ async function getAutomations(
 ): Promise<Record<string, Automation[]>> {
   const appAutomations: Promise<AllDocsResponse<Automation>>[] = []
   for (let appId of appIds) {
-    const appDb = db.getDB(db.getProdAppID(appId))
+    const appDb = db.getDB(db.getProdAppID(appId), { skip_setup: true })
     appAutomations.push(
       appDb.allDocs<Automation>(
         db.getDocParams(DocumentType.AUTOMATION, null, {
@@ -63,7 +63,9 @@ function automationSchemaToJsonSchema(automation: Automation): JSONSchema4 {
     }
   }
   return {
+    type: "object",
     properties,
+    required: Object.keys(properties),
   }
 }
 
@@ -76,7 +78,6 @@ function addAutomationTools(
     for (let automation of automations[appId]) {
       prompt = prompt.tool(automation.name, {
         parameters: automationSchemaToJsonSchema(automation),
-        strict: true,
       })
     }
   }
@@ -88,7 +89,9 @@ function agentSystemPrompt() {
   The user is asking you for help with a support query.
   
   Your reply MUST be short and concise, answering the user's query as quickly and
-  easily as possible.`
+  easily as possible.
+  
+  If asked you can supply the list of "automations" to the user, this is the list of tool names available.`
 }
 
 export async function agentChat(
