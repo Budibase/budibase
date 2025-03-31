@@ -60,12 +60,12 @@ export async function generateTables(
   }
 
   const json = JSON.parse(response!.message || "") as {
-    structure: Table[]
+    tables: Table[]
     data: Record<string, any[]>
   }
   const createdTables: GenerateTablesResponse["createdTables"] = []
 
-  for (const table of json.structure) {
+  for (const table of Object.values(json.tables)) {
     const createTableCtx = {
       request: {
         body: {
@@ -84,7 +84,7 @@ export async function generateTables(
     table._id = createdTable._id
   }
 
-  for (const table of json.structure) {
+  for (const table of Object.values(json.tables)) {
     for (const fieldKey of Object.keys(table.schema).filter(
       f => table.schema[f].type === FieldType.LINK
     )) {
@@ -97,7 +97,7 @@ export async function generateTables(
     }
   }
 
-  for (const table of json.structure) {
+  for (const table of Object.values(json.tables)) {
     const readTableCtx = {
       params: { tableId: table._id },
       user: ctx.user,
@@ -131,7 +131,7 @@ export async function generateTables(
       rowId: string
       data: Record<string, string>
     }[] = []
-    for (const table of json.structure) {
+    for (const table of Object.values(json.tables)) {
       const dataToAdd = json.data?.[table.name]
 
       const linksOverride: Record<string, null> = {}
