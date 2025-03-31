@@ -3,6 +3,7 @@
     automationStore,
     automationHistoryStore,
     selectedAutomation,
+    appStore,
   } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import TestDataModal from "./TestDataModal.svelte"
@@ -19,6 +20,9 @@
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import DraggableCanvas from "../DraggableCanvas.svelte"
+  import { onMount } from "svelte"
+  import { environment } from "@/stores/portal"
+  import Count from "../../SetupPanel/Count.svelte"
 
   export let automation
 
@@ -30,6 +34,10 @@
   let blockRefs = {}
   let treeEle
   let draggable
+
+  let prodErrors
+
+  $: $automationStore.showTestModal === true && testDataModal.show()
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -63,53 +71,65 @@
       notifications.error("Error deleting automation")
     }
   }
+
+  onMount(async () => {
+    try {
+      await automationStore.actions.initAppSelf()
+      await environment.loadVariables()
+      const response = await automationStore.actions.getLogs({
+        automationId: automation._id,
+        status: "error",
+      })
+      prodErrors = response?.data?.length || 0
+    } catch (error) {
+      console.error(error)
+    }
+  })
 </script>
 
-<div class="header" class:scrolling>
-  <div class="header-left">
-    <UndoRedoControl store={automationHistoryStore} showButtonGroup />
-
-    <div class="zoom">
-      <div class="group">
-        <ActionButton icon="Add" quiet on:click={draggable.zoomIn} />
-        <ActionButton icon="Remove" quiet on:click={draggable.zoomOut} />
-      </div>
+<div class="automation-heading">
+  <div class="actions-left">
+    <div class="automation-name">
+      {automation.name}
     </div>
-
-    <Button
-      secondary
-      on:click={() => {
-        draggable.zoomToFit()
-      }}
-    >
-      Zoom to fit
-    </Button>
   </div>
-  <div class="controls">
-    <Button
-      icon={"Play"}
-      cta
+  <div class="actions-right">
+    <ActionButton
+      icon="Play"
+      quiet
       disabled={!automation?.definition?.trigger}
       on:click={() => {
-        testDataModal.show()
+        automationStore.update(state => ({ ...state, showTestModal: true }))
       }}
     >
       Run test
-    </Button>
-    <div class="buttons">
-      {#if !$automationStore.showTestPanel && $automationStore.testResults}
-        <Button
-          secondary
-          icon={"Multiple"}
-          disabled={!$automationStore.testResults}
-          on:click={() => {
-            $automationStore.showTestPanel = true
-          }}
-        >
-          Test details
-        </Button>
-      {/if}
-    </div>
+    </ActionButton>
+    <Count
+      count={prodErrors}
+      tooltip={"There are errors in production"}
+      hoverable={false}
+    >
+      <ActionButton
+        icon="Folder"
+        quiet
+        selected={prodErrors}
+        on:click={() => {
+          const params = new URLSearchParams({
+            ...(prodErrors ? { open: "error" } : {}),
+            automationId: automation._id,
+          })
+          window.open(
+            `/builder/app/${
+              $appStore.appId
+            }/settings/automations?${params.toString()}`,
+            "_blank"
+          )
+        }}
+      >
+        Logs
+      </ActionButton>
+    </Count>
+
     {#if !isRowAction}
       <div class="toggle-active setting-spacing">
         <Toggle
@@ -126,33 +146,59 @@
   </div>
 </div>
 
-<div class="root" bind:this={treeEle}>
-  <DraggableCanvas
-    bind:this={draggable}
-    draggableClasses={[
-      "main-content",
-      "content",
-      "block",
-      "branched",
-      "branch",
-      "flow-item",
-      "branch-wrap",
-    ]}
-  >
-    <span class="main-content" slot="content">
-      {#if Object.keys(blockRefs).length}
-        {#each blocks as block, idx (block.id)}
-          <StepNode
-            step={blocks[idx]}
-            stepIdx={idx}
-            isLast={blocks?.length - 1 === idx}
-            automation={$memoAutomation}
-            blocks={blockRefs}
-          />
-        {/each}
-      {/if}
-    </span>
-  </DraggableCanvas>
+<div class="main-flow">
+  <div class="canvas-heading" class:scrolling>
+    <div class="canvas-controls">
+      <div class="canvas-heading-left">
+        <UndoRedoControl store={automationHistoryStore} showButtonGroup />
+
+        <div class="zoom">
+          <div class="group">
+            <ActionButton icon="Add" quiet on:click={draggable.zoomIn} />
+            <ActionButton icon="Remove" quiet on:click={draggable.zoomOut} />
+          </div>
+        </div>
+
+        <Button
+          secondary
+          on:click={() => {
+            draggable.zoomToFit()
+          }}
+        >
+          Zoom to fit
+        </Button>
+      </div>
+    </div>
+  </div>
+
+  <div class="root" bind:this={treeEle}>
+    <DraggableCanvas
+      bind:this={draggable}
+      draggableClasses={[
+        "main-content",
+        "content",
+        "block",
+        "branched",
+        "branch",
+        "flow-item",
+        "branch-wrap",
+      ]}
+    >
+      <span class="main-content" slot="content">
+        {#if Object.keys(blockRefs).length}
+          {#each blocks as block, idx (block.id)}
+            <StepNode
+              step={blocks[idx]}
+              stepIdx={idx}
+              isLast={blocks?.length - 1 === idx}
+              automation={$memoAutomation}
+              blocks={blockRefs}
+            />
+          {/each}
+        {/if}
+      </span>
+    </DraggableCanvas>
+  </div>
 </div>
 
 <ConfirmDialog
@@ -166,11 +212,50 @@
   This action cannot be undone.
 </ConfirmDialog>
 
-<Modal bind:this={testDataModal} width="30%" zIndex={5}>
+<Modal
+  bind:this={testDataModal}
+  zIndex={5}
+  on:hide={() => {
+    automationStore.update(state => ({ ...state, showTestModal: false }))
+  }}
+>
   <TestDataModal />
 </Modal>
 
 <style>
+  .main-flow {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .canvas-heading {
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+    pointer-events: none;
+  }
+
+  .automation-heading {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: var(--background);
+    padding: var(--spacing-m) var(--spacing-l);
+    box-sizing: border-box;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .automation-heading .actions-right {
+    display: flex;
+    gap: var(--spacing-xl);
+  }
+
+  .automation-name :global(.spectrum-Heading) {
+    font-weight: 600;
+  }
+
   .toggle-active :global(.spectrum-Switch) {
     margin: 0px;
   }
@@ -181,12 +266,12 @@
     align-items: center;
   }
 
-  .header-left {
+  .canvas-heading-left {
     display: flex;
     gap: var(--spacing-l);
   }
 
-  .header-left :global(div) {
+  .canvas-heading-left :global(div) {
     border-right: none;
   }
 
@@ -207,48 +292,29 @@
     box-sizing: border-box;
   }
 
-  .header.scrolling {
+  .canvas-heading.scrolling {
     background: var(--background);
     border-bottom: var(--border-light);
     z-index: 1;
   }
 
-  .header {
-    z-index: 1;
+  .canvas-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-l);
-    flex: 0 0 60px;
     padding-right: var(--spacing-xl);
-    position: absolute;
     width: 100%;
     box-sizing: border-box;
     pointer-events: none;
   }
 
-  .header > * {
+  .canvas-controls > * {
     pointer-events: auto;
   }
 
-  .controls {
-    display: flex;
-    gap: var(--spacing-l);
-  }
-
-  .controls .toggle-active :global(.spectrum-Switch-label) {
+  .toggle-active :global(.spectrum-Switch-label) {
     margin-right: 0px;
-  }
-
-  .buttons {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: var(--spacing-s);
-  }
-
-  .buttons:hover {
-    cursor: pointer;
   }
 
   .group {
@@ -266,17 +332,17 @@
     border-bottom-right-radius: 0;
   }
 
-  .header-left .group :global(.spectrum-Button),
-  .header-left .group :global(.spectrum-ActionButton),
-  .header-left .group :global(.spectrum-Icon) {
+  .canvas-heading-left .group :global(.spectrum-Button),
+  .canvas-heading-left .group :global(.spectrum-ActionButton),
+  .canvas-heading-left .group :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
-  .header-left .group :global(.spectrum-Button),
-  .header-left .group :global(.spectrum-ActionButton) {
+  .canvas-heading-left .group :global(.spectrum-Button),
+  .canvas-heading-left .group :global(.spectrum-ActionButton) {
     background: var(--spectrum-global-color-gray-200) !important;
   }
-  .header-left .group :global(.spectrum-Button:hover),
-  .header-left .group :global(.spectrum-ActionButton:hover) {
+  .canvas-heading-left .group :global(.spectrum-Button:hover),
+  .canvas-heading-left .group :global(.spectrum-ActionButton:hover) {
     background: var(--spectrum-global-color-gray-300) !important;
   }
 </style>

@@ -28,7 +28,7 @@ export const definition: AutomationStepDefinition = {
             },
           },
           customType: AutomationCustomIOType.AUTOMATION_FIELDS,
-          title: "automatioFields",
+          title: "Automation Fields",
           required: ["automationId"],
         },
         timeout: {
