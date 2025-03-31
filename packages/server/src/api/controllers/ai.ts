@@ -173,7 +173,7 @@ export async function generateTables(
       }
     }
 
-    for (const data of toUpdateLinks) {
+    for (const data of toUpdateLinks.filter(d => Object.keys(d.data).length)) {
       const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
 
       const updatedLinks = Object.keys(data.data).reduce<
