@@ -1,8 +1,15 @@
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, features, setEnv } from "@budibase/backend-core"
-import { AIInnerConfig, ConfigType, ProviderConfig } from "@budibase/types"
+import { configs, env, features, setEnv } from "@budibase/backend-core"
+import {
+  AIInnerConfig,
+  ConfigType,
+  License,
+  PlanModel,
+  PlanType,
+  ProviderConfig,
+} from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
@@ -22,6 +29,7 @@ interface TestSetup {
   name: string
   setup: SetupFn
   mockLLMResponse: MockLLMResponseFn
+  selfHostOnly?: boolean
 }
 
 function budibaseAI(): SetupFn {
@@ -81,6 +89,7 @@ const providers: TestSetup[] = [
       })
     },
     mockLLMResponse: mockChatGPTResponse,
+    selfHostOnly: true,
   },
   {
     name: "OpenAI API key with custom config",
@@ -119,7 +128,7 @@ describe("AI", () => {
 
   describe.each(providers)(
     "provider: $name",
-    ({ setup, mockLLMResponse }: TestSetup) => {
+    ({ setup, mockLLMResponse, selfHostOnly }: TestSetup) => {
       let cleanup: () => Promise<void> | void
       beforeAll(async () => {
         cleanup = await setup(config)
@@ -199,6 +208,116 @@ describe("AI", () => {
           await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
         })
       })
+
+      describe("POST /api/ai/cron", () => {
+        it("handles correct cron response", async () => {
+          mockLLMResponse("0 0 * * *")
+
+          const { message } = await config.api.ai.generateCron({
+            prompt: "test",
+          })
+          expect(message).toBe("0 0 * * *")
+        })
+
+        it("handles expected LLM error", async () => {
+          mockLLMResponse("Error generating cron: skill issue")
+
+          await config.api.ai.generateCron(
+            {
+              prompt: "test",
+            },
+            { status: 400 }
+          )
+        })
+
+        it("handles unexpected LLM error", async () => {
+          mockLLMResponse(() => {
+            throw new Error("LLM error")
+          })
+
+          await config.api.ai.generateCron(
+            {
+              prompt: "test",
+            },
+            { status: 500 }
+          )
+        })
+      })
+
+      !selfHostOnly &&
+        describe("POST /api/ai/chat", () => {
+          let cleanup: () => void
+          beforeAll(() => {
+            cleanup = setEnv({ SELF_HOSTED: false })
+          })
+
+          afterAll(() => {
+            cleanup()
+          })
+
+          beforeEach(() => {
+            const license: License = {
+              plan: {
+                type: PlanType.FREE,
+                model: PlanModel.PER_USER,
+                usesInvoicing: false,
+              },
+              features: [],
+              quotas: {} as any,
+              tenantId: config.tenantId,
+            }
+            nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(200, license)
+          })
+
+          it("handles correct chat response", async () => {
+            mockLLMResponse("Hi there!")
+            const { message } = await config.api.ai.chat({
+              messages: [{ role: "user", content: "Hello!" }],
+              licenseKey: "test-key",
+            })
+            expect(message).toBe("Hi there!")
+          })
+
+          it("handles chat response error", async () => {
+            mockLLMResponse(() => {
+              throw new Error("LLM error")
+            })
+            await config.api.ai.chat(
+              {
+                messages: [{ role: "user", content: "Hello!" }],
+                licenseKey: "test-key",
+              },
+              { status: 500 }
+            )
+          })
+
+          it("handles no license", async () => {
+            nock.cleanAll()
+            nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(404)
+            await config.api.ai.chat(
+              {
+                messages: [{ role: "user", content: "Hello!" }],
+                licenseKey: "test-key",
+              },
+              {
+                status: 403,
+              }
+            )
+          })
+
+          it("handles no license key", async () => {
+            await config.api.ai.chat(
+              {
+                messages: [{ role: "user", content: "Hello!" }],
+                // @ts-expect-error - intentionally wrong
+                licenseKey: undefined,
+              },
+              {
+                status: 403,
+              }
+            )
+          })
+        })
     }
   )
 })

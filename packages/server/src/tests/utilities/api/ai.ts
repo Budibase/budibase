@@ -7,6 +7,7 @@ import {
   GenerateJsResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
+import { constants } from "@budibase/backend-core"
 
 export class AIAPI extends TestAPI {
   generateJs = async (
@@ -30,11 +31,16 @@ export class AIAPI extends TestAPI {
   }
 
   chat = async (
-    req: ChatCompletionRequest,
+    req: ChatCompletionRequest & { licenseKey: string },
     expectations?: Expectations
   ): Promise<ChatCompletionResponse> => {
+    const headers: Record<string, string> = {}
+    if (req.licenseKey) {
+      headers[constants.Header.LICENSE_KEY] = req.licenseKey
+    }
     return await this._post<ChatCompletionResponse>(`/api/ai/chat`, {
       body: req,
+      headers,
       expectations,
     })
   }
