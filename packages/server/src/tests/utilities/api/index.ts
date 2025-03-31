@@ -22,8 +22,10 @@ import { UserPublicAPI } from "./public/user"
 import { MiscAPI } from "./misc"
 import { OAuth2API } from "./oauth2"
 import { AssetsAPI } from "./assets"
+import { AIAPI } from "./ai"
 
 export default class API {
+  ai: AIAPI
   application: ApplicationAPI
   attachment: AttachmentAPI
   automation: AutomationAPI
@@ -52,6 +54,7 @@ export default class API {
   }
 
   constructor(config: TestConfiguration) {
+    this.ai = new AIAPI(config)
     this.application = new ApplicationAPI(config)
     this.attachment = new AttachmentAPI(config)
     this.automation = new AutomationAPI(config)

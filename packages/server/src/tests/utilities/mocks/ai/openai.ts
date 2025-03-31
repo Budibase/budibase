@@ -1,11 +1,8 @@
 import nock from "nock"
+import { MockLLMResponseFn, MockLLMResponseOpts } from "."
 
 let chatID = 1
 const SPACE_REGEX = /\s+/g
-
-interface MockChatGPTResponseOpts {
-  host?: string
-}
 
 interface Message {
   role: string
@@ -47,19 +44,30 @@ interface ChatCompletionResponse {
   usage: Usage
 }
 
-export function mockChatGPTResponse(
+export const mockChatGPTResponse: MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
-  opts?: MockChatGPTResponseOpts
-) {
+  opts?: MockLLMResponseOpts
+) => {
   return nock(opts?.host || "https://api.openai.com")
     .post("/v1/chat/completions")
-    .reply(200, (uri: string, requestBody: ChatCompletionRequest) => {
-      const messages = requestBody.messages
+    .reply((uri: string, body: nock.Body) => {
+      const req = body as ChatCompletionRequest
+      const messages = req.messages
       const prompt = messages[0].content
 
       let content
       if (typeof answer === "function") {
-        content = answer(prompt)
+        try {
+          content = answer(prompt)
+        } catch (e) {
+          return [
+            500,
+            {
+              message: "Error in mock response function",
+              error: e,
+            },
+          ]
+        }
       } else {
         content = answer
       }
@@ -76,7 +84,7 @@ export function mockChatGPTResponse(
         id: `chatcmpl-${chatID}`,
         object: "chat.completion",
         created: Math.floor(Date.now() / 1000),
-        model: requestBody.model,
+        model: req.model,
         system_fingerprint: `fp_${chatID}`,
         choices: [
           {
@@ -97,14 +105,7 @@ export function mockChatGPTResponse(
           },
         },
       }
-      return response
+      return [200, response]
     })
-    .persist()
-}
-
-export function mockChatGPTError() {
-  return nock("https://api.openai.com")
-    .post("/v1/chat/completions")
-    .reply(500, "Internal Server Error")
     .persist()
 }

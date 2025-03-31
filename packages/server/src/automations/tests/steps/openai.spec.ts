@@ -2,10 +2,7 @@ import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import { Model, MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
 import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
-import {
-  mockChatGPTError,
-  mockChatGPTResponse,
-} from "../../../tests/utilities/mocks/openai"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
 import { mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
@@ -83,7 +80,9 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    mockChatGPTError()
+    mockChatGPTResponse(() => {
+      throw new Error("oh no")
+    })
 
     const result = await expectAIUsage(0, () =>
       createAutomationBuilder(config)
