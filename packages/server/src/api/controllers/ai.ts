@@ -114,7 +114,7 @@ export async function generateTables(
             ...readTableCtx.body.schema,
             ...table.schema,
           },
-          displayName: table.primaryDisplay,
+          primaryDisplay: table.primaryDisplay,
         },
       },
       params: { tableId: table._id },
