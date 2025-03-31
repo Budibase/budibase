@@ -2276,6 +2276,25 @@ if (descriptions.length) {
           expect(updated.attachment.key).toBe(newAttachment.key)
         })
 
+        it("should allow updating signature row", async () => {
+          const { table, row } = await coreAttachmentEnrichment(
+            {
+              signature: {
+                type: FieldType.SIGNATURE_SINGLE,
+                name: "signature",
+                constraints: { presence: false },
+              },
+            },
+            "signature",
+            `${uuid.v4()}.png`
+          )
+
+          const newSignature = generateAttachment(`${uuid.v4()}.png`)
+          row["signature"] = newSignature
+          const updated = await config.api.row.save(table._id!, row)
+          expect(updated.signature.key).toBe(newSignature.key)
+        })
+
         it("should allow enriching attachment list rows", async () => {
           await coreAttachmentEnrichment(
             {
