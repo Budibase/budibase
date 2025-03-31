@@ -114,6 +114,7 @@
     inputmode={getInputMode(type)}
     autocomplete={autocompleteValue}
   />
+  <slot />
 </div>
 
 <style>

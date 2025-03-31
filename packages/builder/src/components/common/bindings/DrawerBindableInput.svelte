@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Icon, Input, Drawer, Button, CoreTextArea } from "@budibase/bbui"
+  import { Icon, Input, Drawer, Button, TextArea } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -67,7 +67,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="control" class:multiline class:disabled class:scrollable>
   <svelte:component
-    this={multiline ? CoreTextArea : Input}
+    this={multiline ? TextArea : Input}
     {label}
     {disabled}
     readonly={isJS}
@@ -78,18 +78,19 @@
     {placeholder}
     {updateOnChange}
     {autocomplete}
-  />
-  {#if !disabled && !disableBindings}
-    <div
-      class="icon"
-      on:click={() => {
-        builderStore.propertyFocus(key)
-        bindingDrawer.show()
-      }}
-    >
-      <Icon size="S" name="FlashOn" />
-    </div>
-  {/if}
+  >
+    {#if !disabled && !disableBindings}
+      <div
+        class="icon"
+        on:click={() => {
+          builderStore.propertyFocus(key)
+          bindingDrawer.show()
+        }}
+      >
+        <Icon size="S" name="FlashOn" />
+      </div>
+    {/if}
+  </svelte:component>
 </div>
 <Drawer
   on:drawerHide={onDrawerHide}

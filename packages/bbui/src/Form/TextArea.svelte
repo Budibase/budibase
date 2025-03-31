@@ -7,11 +7,13 @@
   export let label: string | undefined = undefined
   export let labelPosition = "above"
   export let placeholder: string | undefined = undefined
-  export let disabled = false
+  export let readonly: boolean = false
+  export let disabled: boolean = false
   export let error: string | undefined = undefined
   export let height: number | undefined = undefined
   export let minHeight: number | undefined = undefined
   export let helpText: string | undefined = undefined
+  export let updateOnChange: boolean = false
 
   let textarea: TextArea
   export function focus() {
@@ -33,11 +35,16 @@
   <TextArea
     bind:this={textarea}
     {disabled}
+    {readonly}
     {value}
     {placeholder}
     {height}
     {minHeight}
+    {updateOnChange}
     on:change={onChange}
     on:keypress
-  />
+    on:scrollable
+  >
+    <slot />
+  </TextArea>
 </Field>
