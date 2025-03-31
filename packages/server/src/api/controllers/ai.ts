@@ -125,11 +125,11 @@ export async function generateTables(
   }
 
   if (addData) {
-    const createdData: Record<string, string> = {}
+    const createdData: Record<string, Record<string, string>> = {}
     const toUpdateLinks: {
       tableId: string
       rowId: string
-      data: Record<string, string>
+      data: Record<string, { rowId: string; tableId: string }>
     }[] = []
     for (const table of Object.values(json.tables)) {
       const dataToAdd = json.data?.[table.name]
@@ -152,13 +152,17 @@ export async function generateTables(
           ctx.user._id
         )
 
-        createdData[entry._id] = createdRow.row._id!
+        createdData[table._id!] ??= {}
+        createdData[table._id!][entry._id] = createdRow.row._id!
 
         const overridenLinks = Object.keys(linksOverride).reduce<
-          Record<string, string>
+          Record<string, { rowId: string; tableId: string }>
         >((acc, l) => {
           if (entry[l]) {
-            acc[l] = entry[l]
+            acc[l] = {
+              tableId: (table.schema[l] as RelationshipFieldMetadata).tableId,
+              rowId: entry[l],
+            }
           }
           return acc
         }, {})
@@ -179,7 +183,7 @@ export async function generateTables(
       const updatedLinks = Object.keys(data.data).reduce<
         Record<string, string>
       >((acc, d) => {
-        acc[d] = createdData[data.data[d]]
+        acc[d] = createdData[data.data[d].tableId][data.data[d].rowId]
         return acc
       }, {})
 
