@@ -35,9 +35,13 @@ import {
   ViewV2,
   ViewV2Schema,
   ViewV2Type,
+  FormulaType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import { datasourceDescribe } from "../../../integrations/tests/utils"
+import {
+  datasourceDescribe,
+  DatabaseName,
+} from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { context, db, events, roles, setEnv } from "@budibase/backend-core"
@@ -3864,6 +3868,45 @@ if (descriptions.length) {
               expect(rows).toHaveLength(1)
               expect(rows[0].count).toEqual(2)
             })
+
+            isInternal &&
+              it("should be able to max a static formula field", async () => {
+                const table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      string: {
+                        type: FieldType.STRING,
+                        name: "string",
+                      },
+                      formula: {
+                        type: FieldType.FORMULA,
+                        name: "formula",
+                        formulaType: FormulaType.STATIC,
+                        responseType: FieldType.NUMBER,
+                        formula: "{{ string }}",
+                      },
+                    },
+                  })
+                )
+                await config.api.row.save(table._id!, {
+                  string: "1",
+                })
+                const view = await config.api.viewV2.create({
+                  tableId: table._id!,
+                  name: generator.guid(),
+                  type: ViewV2Type.CALCULATION,
+                  schema: {
+                    maxFormula: {
+                      visible: true,
+                      calculationType: CalculationType.MAX,
+                      field: "formula",
+                    },
+                  },
+                })
+                const { rows } = await config.api.row.search(view.id)
+                expect(rows.length).toEqual(1)
+                expect(rows[0].maxFormula).toEqual(1)
+              })
 
             it("should not be able to COUNT(DISTINCT ...) against a non-existent field", async () => {
               await config.api.viewV2.create(
