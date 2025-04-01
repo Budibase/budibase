@@ -3888,6 +3888,9 @@ if (descriptions.length) {
                 await config.api.row.save(table._id!, {
                   string: "1",
                 })
+                await config.api.row.save(table._id!, {
+                  string: "2",
+                })
                 const view = await config.api.viewV2.create({
                   tableId: table._id!,
                   name: generator.guid(),
@@ -3902,7 +3905,7 @@ if (descriptions.length) {
                 })
                 const { rows } = await config.api.row.search(view.id)
                 expect(rows.length).toEqual(1)
-                expect(rows[0].maxFormula).toEqual(1)
+                expect(rows[0].maxFormula).toEqual(2)
               })
 
             it("should not be able to COUNT(DISTINCT ...) against a non-existent field", async () => {
