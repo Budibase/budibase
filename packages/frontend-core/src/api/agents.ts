@@ -2,16 +2,19 @@ import { ChatAgentRequest, ChatAgentResponse } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
-  agentChat: (prompt: string, appIds: string[]) => Promise<ChatAgentResponse>
+  agentChat: (
+    messages: { message: string; system?: boolean }[],
+    appIds: string[]
+  ) => Promise<ChatAgentResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   /**
    * Generates a cron expression from a prompt
    */
-  agentChat: async (prompt, appIds) => {
+  agentChat: async (messages, appIds) => {
     const body: ChatAgentRequest = {
-      userPrompt: prompt,
+      messages,
       appIds,
     }
     return await API.post({

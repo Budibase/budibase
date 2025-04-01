@@ -1,12 +1,14 @@
-import { ai } from "@budibase/pro"
+import { ai, LLMToolCall } from "@budibase/pro"
 import { db } from "@budibase/backend-core"
 import {
-  UserCtx,
+  AllDocsResponse,
+  Automation,
+  AutomationIOType,
+  AutomationTriggerStepId,
   ChatAgentRequest,
   ChatAgentResponse,
-  Automation,
-  AllDocsResponse,
   DocumentType,
+  UserCtx,
 } from "@budibase/types"
 import { JSONSchema4, JSONSchema4TypeName } from "json-schema"
 
@@ -46,20 +48,55 @@ async function getAutomations(
   return appAutomationMap
 }
 
+function getJsonSchemaType(automationType?: AutomationIOType): {
+  type: JSONSchema4TypeName
+  description?: string
+} {
+  if (
+    automationType === AutomationIOType.DATE ||
+    automationType === AutomationIOType.DATETIME
+  ) {
+    return {
+      type: "string",
+      description: "Date represented as an ISO date string",
+    }
+  } else if (!automationType || !JsonSchemaTypes.includes(automationType)) {
+    return { type: "string" }
+  } else {
+    return { type: automationType as JSONSchema4TypeName }
+  }
+}
+
 function automationSchemaToJsonSchema(automation: Automation): JSONSchema4 {
+  const trigger = automation.definition.trigger
   const inputSchema = automation.definition.trigger.schema.inputs
   const properties: Record<string, JSONSchema4> = {}
-  for (const [key, props] of Object.entries(inputSchema.properties)) {
-    let type: JSONSchema4TypeName = "any"
-    if (props.type && JsonSchemaTypes.includes(props.type)) {
-      type = props.type as JSONSchema4TypeName
+  // app action automations get their fields from user inputs not the schema
+  if (trigger.stepId === AutomationTriggerStepId.APP) {
+    const appActionInputs =
+      trigger.inputs && "fields" in trigger.inputs ? trigger.inputs.fields : {}
+    const fields: Record<string, JSONSchema4> = {}
+    for (let key of Object.keys(appActionInputs)) {
+      fields[key] = {
+        title: key,
+        ...getJsonSchemaType(appActionInputs[key]),
+      }
     }
-    properties[key] = {
-      title: props.title,
-      type: type,
-      description: props.description,
-      enum: props.enum,
-      required: props.required,
+    properties["fields"] = {
+      title: "fields",
+      type: "object",
+      required: Object.keys(fields),
+      properties: fields,
+    }
+  } else {
+    for (const [key, props] of Object.entries(inputSchema.properties)) {
+      properties[key] = {
+        title: props.title,
+        description: props.description,
+        enum: props.enum,
+        required: props.required,
+        ...getJsonSchemaType(props.type),
+      }
     }
   }
   return {
@@ -69,6 +106,17 @@ function automationSchemaToJsonSchema(automation: Automation): JSONSchema4 {
   }
 }
 
+function buildToolName(appId: string, automationName: string) {
+  return `${db.getProdAppID(appId)}${db.SEPARATOR}${automationName}`
+}
+
+function splitToolName(toolName: string) {
+  const splitToolName = toolName.split(db.SEPARATOR)
+  const appId = splitToolName.slice(0, 2).join(db.SEPARATOR)
+  const automationName = splitToolName.slice(2).join(db.SEPARATOR)
+  return { appId, automationName }
+}
+
 function addAutomationTools(
   prompt: ai.Prompt,
   automations: Record<string, Automation[]>
@@ -76,9 +124,12 @@ function addAutomationTools(
   // TODO: can app ID be used to provide more info
   for (let appId of Object.keys(automations)) {
     for (let automation of automations[appId]) {
-      prompt = prompt.tool(ai.sanitiseToolName(automation.name), {
-        parameters: automationSchemaToJsonSchema(automation),
-      })
+      prompt = prompt.tool(
+        ai.sanitiseToolName(buildToolName(appId, automation.name)),
+        {
+          parameters: automationSchemaToJsonSchema(automation),
+        }
+      )
     }
   }
   return prompt
@@ -96,6 +147,15 @@ function agentSystemPrompt() {
   If asked you can supply the list of "automations" to the user, this is the list of tool names available.`
 }
 
+async function automationToolCall(
+  call: LLMToolCall
+): Promise<{ response: string; appId: string }> {
+  // TODO: call the automation endpoint on the app
+  const func = call.function
+  const { appId, automationName } = splitToolName(func.name)
+  return { response: `I've ran the ${automationName} workflow.`, appId }
+}
+
 export async function agentChat(
   ctx: UserCtx<ChatAgentRequest, ChatAgentResponse>
 ) {
@@ -104,15 +164,30 @@ export async function agentChat(
     return ctx.throw(401, "No model available, cannot chat")
   }
   let prompt = new ai.Prompt([])
-  const { userPrompt, appIds } = ctx.request.body
+  const { messages, appIds } = ctx.request.body
   if (appIds && appIds.length) {
     const automations = await getAutomations(appIds)
     prompt = addAutomationTools(prompt, automations)
   }
   prompt.system(agentSystemPrompt())
-  prompt.user(userPrompt)
+  for (let message of messages) {
+    if (message.system) {
+      prompt.system(message.message)
+    } else {
+      prompt.user(message.message)
+    }
+  }
   const response = await model.prompt(prompt)
-  ctx.body = {
-    response: !response.message ? "No response." : response.message,
+  if (response.toolCalls?.length) {
+    const toolsCalled = await Promise.all(
+      response.toolCalls.map(call => automationToolCall(call))
+    )
+    ctx.body = {
+      toolsCalled,
+    }
+  } else {
+    ctx.body = {
+      response: !response.message ? "No response." : response.message,
+    }
   }
 }

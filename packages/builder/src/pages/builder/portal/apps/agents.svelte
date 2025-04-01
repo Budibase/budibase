@@ -12,10 +12,10 @@
 
   $: appOptions = $appsStore.apps.map(app => ({
     name: app.name,
-    value: app.devId,
+    value: app.devId!,
   }))
 
-  let messages: { message: string; isSystem: boolean; isError?: boolean }[] = []
+  let messages: { message: string; system: boolean; isError?: boolean }[] = []
 
   function textChange() {
     textarea.height = "auto"
@@ -31,21 +31,21 @@
   async function prompt() {
     messages.push({
       message: inputValue,
-      isSystem: false,
+      system: false,
     })
     messages = messages
     loading = true
     try {
-      const res = await API.agentChat(inputValue, appContext)
+      const res = await API.agentChat(messages.map(m => ({ message: m.message, system: m.system })), appContext)
       inputValue = ""
       messages.push({
         message: res.response,
-        isSystem: true,
+        system: true,
       })
     } catch (err: any) {
       messages.push({
         message: err.message,
-        isSystem: true,
+        system: true,
         isError: true,
       })
     }

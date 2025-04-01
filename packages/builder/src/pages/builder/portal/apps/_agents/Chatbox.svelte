@@ -3,17 +3,17 @@
 
   export let messages: {
     message: string
-    isSystem?: boolean
+    system?: boolean
     isError?: boolean
   }[] = []
 </script>
 
 <div class="chatbox">
   {#each messages as message}
-    <div class="message" class:system={message.isSystem}>
+    <div class="message" class:system={message.system}>
       <div
         class="background"
-        class:systemBackground={message.isSystem}
+        class:systemBackground={message.system}
         class:errorBackground={message.isError}
       >
         <MarkdownViewer value={message.message} />

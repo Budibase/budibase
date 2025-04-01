@@ -14,6 +14,7 @@ export enum AutomationIOType {
   ARRAY = "array",
   JSON = "json",
   DATE = "date",
+  DATETIME = "datetime",
   ATTACHMENT = "attachment",
 }
 
