@@ -44,7 +44,7 @@ import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
 
