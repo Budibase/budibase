@@ -16,6 +16,5 @@ export interface GenerateTablesRequest {
 }
 
 export interface GenerateTablesResponse {
-  response?: string
   createdTables: { id: string; name: string }[]
 }

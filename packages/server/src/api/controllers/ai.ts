@@ -199,7 +199,6 @@ export async function generateTables(
   }
 
   ctx.body = {
-    response: response?.message ?? undefined,
     createdTables,
   }
 }
