@@ -25,7 +25,7 @@
     if (outcome === "accepted") {
       showButton = false
     } else if (outcome === "dismissed") {
-=      localStorage.setItem(STORAGE_KEY, "true")
+      localStorage.setItem(STORAGE_KEY, "true")
       showButton = false
     }
 
