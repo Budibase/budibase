@@ -63,7 +63,7 @@
           <img alt="A form containing data" src={pdf} width="185" />
         </div>
         <div class="text">
-          <Body size="M">PDF Editor</Body>
+          <Body size="M">PDF</Body>
           <Body size="XS">Create, edit and export your PDF</Body>
         </div>
       </div>
