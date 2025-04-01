@@ -4,6 +4,7 @@ import {
   GenerateTablesRequest,
   GenerateTablesResponse,
   SourceName,
+  TableSchema,
   TableSourceType,
   UserCtx,
 } from "@budibase/types"
@@ -26,7 +27,7 @@ export async function generateTables(
     addData ? 1 : 0
   }`
 
-  const response = await llm?.generateTables(
+  const response = await llm!.generateTables(
     prompt,
     useCached ? `${cacheKey}/latest` : "",
     addData
@@ -57,7 +58,7 @@ export async function generateTables(
 
   const createdTables: GenerateTablesResponse["createdTables"] = []
 
-  for (const table of response!.tables) {
+  for (const table of response.tables) {
     const { _id, ...structure } = table.structure
     const createdTable = await sdk.tables.create({
       ...structure,
@@ -72,7 +73,7 @@ export async function generateTables(
     table.structure._id = createdTable._id!
   }
 
-  for (const table of Object.values(response!.tables)) {
+  for (const table of Object.values(response.tables)) {
     for (const field of table.structure.schema.filter(
       f => f.type === FieldType.LINK
     )) {
@@ -85,32 +86,45 @@ export async function generateTables(
     }
   }
 
-  // for (const table of Object.values(json.tables)) {
-  //   const readTableCtx = {
-  //     params: { tableId: table._id },
-  //     user: ctx.user,
-  //     throw: ctx.throw,
-  //   } as any
+  for (const { structure: table } of Object.values(response.tables)) {
+    const storedTable = await sdk.tables.getTable(table._id)
 
-  //   await tableController.read(readTableCtx, async () => {})
+    await sdk.tables.update({
+      ...storedTable,
+      schema: {
+        ...storedTable.schema,
+        ...table.schema.reduce<TableSchema>((acc, field) => {
+          acc[field.name] = field
+          return acc
+        }, {}),
+      },
+      primaryDisplay: table.primaryDisplay,
+    })
+    // const readTableCtx = {
+    //   params: { tableId: table._id },
+    //   user: ctx.user,
+    //   throw: ctx.throw,
+    // } as any
 
-  //   const updateTableCtx = {
-  //     request: {
-  //       body: {
-  //         ...readTableCtx.body,
-  //         schema: {
-  //           ...readTableCtx.body.schema,
-  //           ...table.schema,
-  //         },
-  //         primaryDisplay: table.primaryDisplay,
-  //       },
-  //     },
-  //     params: { tableId: table._id },
-  //     user: ctx.user,
-  //     throw: ctx.throw,
-  //   } as any
-  //   await tableController.update(updateTableCtx, async () => {})
-  // }
+    // await tableController.read(readTableCtx, async () => {})
+
+    // const updateTableCtx = {
+    //   request: {
+    //     body: {
+    //       ...readTableCtx.body,
+    //       schema: {
+    //         ...readTableCtx.body.schema,
+    //         ...table.schema,
+    //       },
+    //       primaryDisplay: table.primaryDisplay,
+    //     },
+    //   },
+    //   params: { tableId: table._id },
+    //   user: ctx.user,
+    //   throw: ctx.throw,
+    // } as any
+    // await tableController.update(updateTableCtx, async () => {})
+  }
 
   // if (addData) {
   //   const createdData: Record<string, Record<string, string>> = {}
