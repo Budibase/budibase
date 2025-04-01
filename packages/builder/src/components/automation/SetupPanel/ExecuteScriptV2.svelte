@@ -7,7 +7,6 @@
   import { type EnrichedBinding, FieldType } from "@budibase/types"
   import CodeEditorField from "@/components/common/bindings/CodeEditorField.svelte"
   import { DropdownPosition } from "@/components/common/CodeEditor/CodeEditor.svelte"
-  import DrawerBindableCodeEditorField from "@/components/common/bindings/DrawerBindableCodeEditorField.svelte"
 
   export let value: string
   export let context: Record<any, any> | undefined = undefined
