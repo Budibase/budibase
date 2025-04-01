@@ -140,13 +140,13 @@ export async function generateTables(
             acc[l] = {
               tableId: (table.structure.schema.find(f => f.name === l) as any)
                 .tableId,
-              rowId: entry.id,
+              rowId: entry.values.find(f => f.key === l)!.value as any,
             }
           }
           return acc
         }, {})
 
-        if (Object.keys(overridenLinks)) {
+        if (Object.keys(overridenLinks).length) {
           toUpdateLinks.push({
             tableId: createdRow.table._id!,
             rowId: createdRow.row._id!,
@@ -156,25 +156,25 @@ export async function generateTables(
       }
     }
 
-    //   for (const data of toUpdateLinks.filter(d => Object.keys(d.data).length)) {
-    //     const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
+    for (const data of toUpdateLinks) {
+      const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
 
-    //     const updatedLinks = Object.keys(data.data).reduce<
-    //       Record<string, string>
-    //     >((acc, d) => {
-    //       acc[d] = createdData[data.data[d].tableId][data.data[d].rowId]
-    //       return acc
-    //     }, {})
+      const updatedLinks = Object.keys(data.data).reduce<
+        Record<string, string>
+      >((acc, d) => {
+        acc[d] = createdData[data.data[d].tableId][data.data[d].rowId]
+        return acc
+      }, {})
 
-    //     await sdk.rows.save(
-    //       data.tableId,
-    //       {
-    //         ...persistedRow,
-    //         ...updatedLinks,
-    //       },
-    //       ctx.user._id
-    //     )
-    //   }
+      await sdk.rows.save(
+        data.tableId,
+        {
+          ...persistedRow,
+          ...updatedLinks,
+        },
+        ctx.user._id
+      )
+    }
   }
 
   ctx.body = {
