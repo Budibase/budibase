@@ -103,7 +103,7 @@
           {/each}
         {/if}
         <div
-          class="spectrum spectrum--medium spectrum--lightest pageContent"
+          class="spectrum spectrum--medium spectrum--light pageContent"
           bind:this={ref}
         >
           <CustomThemeWrapper popoverRoot={false}>
@@ -170,6 +170,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    background: white;
   }
   .divider {
     width: 100%;
