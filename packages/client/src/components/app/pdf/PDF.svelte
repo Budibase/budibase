@@ -46,10 +46,13 @@
   }
 
   const preprocessCSS = () => {
-    const els = document.getElementsByClassName(
-      "grid-child"
-    ) as unknown as HTMLElement[]
+    const els = document.getElementsByClassName("grid-child")
     for (let el of els) {
+      if (!(el instanceof HTMLElement)) {
+        return
+      }
+      // Get the computed values and assign them back to the style, simplifying
+      // the CSS that gets handled by HTML2PDF
       const styles = window.getComputedStyle(el)
       el.style.setProperty("grid-column-end", styles.gridColumnEnd, "important")
     }
@@ -185,12 +188,4 @@
     top: calc(var(--top) + var(--margin));
     background: transparent;
   }
-  /*.divider::after {*/
-  /*  position: absolute;*/
-  /*  top: -32px;*/
-  /*  right: 24px;*/
-  /*  content: var(--idx);*/
-  /*  color: var(--spectrum-global-color-static-gray-400);*/
-  /*  text-align: right;*/
-  /*}*/
 </style>
