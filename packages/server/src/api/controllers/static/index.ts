@@ -467,6 +467,22 @@ export const serveClientLibrary = async function (
   }
 }
 
+export const serveServiceWorker = async function (ctx: Ctx) {
+  const serviceWorkerContent = `
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+// Minimal fetch handler
+self.addEventListener('fetch', event => {
+  event.respondWith(fetch(event.request));
+});
+`
+
+  ctx.set("Content-Type", "application/javascript")
+  ctx.body = serviceWorkerContent
+}
+
 export const getSignedUploadURL = async function (
   ctx: Ctx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
 ) {

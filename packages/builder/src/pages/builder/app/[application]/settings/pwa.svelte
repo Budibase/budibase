@@ -26,7 +26,7 @@
   ]
 
   let saving = false
-  let pwaEnabled = $licensing.pwaEnabled
+  let pwaEnabled = true
   let uploadingIcons = false
 
   let pwaConfig = $appStore.pwa || {

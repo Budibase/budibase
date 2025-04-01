@@ -24,6 +24,7 @@ router
     controller.uploadFile
   )
   .get("/app/preview", authorized(BUILDER), controller.serveBuilderPreview)
+  .get("/app/service-worker.js", controller.serveServiceWorker)
   .get("/app/:appUrl/:path*", controller.serveApp)
   .get("/:appId/:path*", controller.serveApp)
   .post(

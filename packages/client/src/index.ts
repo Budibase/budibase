@@ -32,6 +32,13 @@ import {
 import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
 
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault()
+    window.deferredPwaPrompt = e
+  })
+}
+
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
 // @ts-ignore
@@ -66,6 +73,9 @@ declare global {
 
     // Other flags
     MIGRATING_APP: boolean
+
+    // PWA install prompt
+    deferredPwaPrompt: any
 
     // Client additions
     handleBuilderRuntimeEvent: (type: string, data: any) => void
