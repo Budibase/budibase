@@ -46,7 +46,7 @@ import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
 import { isDate } from "../../../utilities"
 import nock from "nock"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
