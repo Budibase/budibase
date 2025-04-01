@@ -46,7 +46,6 @@
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
   import EmbedProvider from "./context/EmbedProvider.svelte"
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
-  import { ScreenVariant } from "@budibase/types"
 
   // Provide contexts
   setContext("sdk", SDK)
