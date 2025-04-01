@@ -7,6 +7,7 @@
   import { type EnrichedBinding, FieldType } from "@budibase/types"
   import CodeEditorField from "@/components/common/bindings/CodeEditorField.svelte"
   import { DropdownPosition } from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import DrawerBindableCodeEditorField from "@/components/common/bindings/DrawerBindableCodeEditorField.svelte"
 
   export let value: string
   export let context: Record<any, any> | undefined = undefined
@@ -27,6 +28,7 @@
     allowHBS={false}
     updateOnChange={false}
     {context}
+    showComponent
   >
     <div class="field-wrap code-editor">
       <CodeEditorField
@@ -57,8 +59,8 @@
 
   .scriptv2-wrapper :global(.icon.slot-icon),
   .scriptv2-wrapper :global(.text-area-slot-icon) {
-    right: 1px;
-    top: 1px;
+    right: 1px !important;
+    top: 1px !important;
     border-top-right-radius: var(--spectrum-alias-border-radius-regular);
     border-bottom-left-radius: var(--spectrum-alias-border-radius-regular);
     border-right: 0px;

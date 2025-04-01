@@ -22,6 +22,7 @@
   export let updateOnChange = true
   export let type = undefined
   export let schema = undefined
+  export let showComponent = false
 
   export let allowHBS = true
   export let context = {}
@@ -150,7 +151,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="control" class:disabled>
-  {#if !isValid(value)}
+  {#if !isValid(value) && !showComponent}
     <Input
       {label}
       {disabled}
