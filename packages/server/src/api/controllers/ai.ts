@@ -57,6 +57,7 @@ export async function generateTables(
   }
 
   const createdTables: GenerateTablesResponse["createdTables"] = []
+  const tableIds: Record<string, string> = {}
 
   for (const table of response.tables) {
     const createdTable = await sdk.tables.create({
@@ -69,7 +70,7 @@ export async function generateTables(
     })
 
     createdTables.push({ id: createdTable._id!, name: createdTable.name })
-    table.structure._id = createdTable._id!
+    tableIds[table.structure.name] = createdTable._id!
   }
 
   for (const table of Object.values(response.tables)) {
@@ -86,7 +87,7 @@ export async function generateTables(
   }
 
   for (const { structure: table } of Object.values(response.tables)) {
-    const storedTable = await sdk.tables.getTable(table._id)
+    const storedTable = await sdk.tables.getTable(tableIds[table.name])
 
     await sdk.tables.update({
       ...storedTable,
@@ -117,8 +118,9 @@ export async function generateTables(
       }
 
       for (const entry of table.data || []) {
+        const tableId = tableIds[table.structure.name]
         const createdRow = await sdk.rows.save(
-          table.structure._id,
+          tableId,
           {
             ...entry.values.reduce<Record<string, any>>((acc, v) => {
               acc[v.key] = v.value
@@ -130,8 +132,8 @@ export async function generateTables(
           ctx.user._id
         )
 
-        createdData[table.structure._id] ??= {}
-        createdData[table.structure._id][entry.id] = createdRow.row._id!
+        createdData[tableId] ??= {}
+        createdData[tableId][entry.id] = createdRow.row._id!
 
         const overridenLinks = Object.keys(linksOverride).reduce<
           Record<string, { rowId: string; tableId: string }>
