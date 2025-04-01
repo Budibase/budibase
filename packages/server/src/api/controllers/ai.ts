@@ -84,6 +84,12 @@ export async function generateTables(
       }
       field.tableId = linkedTable.id
     }
+
+    for (const field of table.structure.schema.filter(
+      f => f.type === FieldType.FORMULA
+    )) {
+      field.formula = `{{ js "${btoa(field.formula)}" }}`
+    }
   }
 
   for (const { structure: table } of Object.values(response.tables)) {
