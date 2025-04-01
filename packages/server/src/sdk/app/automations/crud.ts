@@ -40,7 +40,7 @@ function cleanAutomationInputs(automation: Automation) {
     if (step == null) {
       continue
     }
-    for (const key of Object.keys(step.inputs)) {
+    for (const key of Object.keys(step.inputs || {})) {
       const inputName = key as keyof typeof step.inputs
       if (!step.inputs[inputName] || step.inputs[inputName] === "") {
         delete step.inputs[inputName]
