@@ -20,7 +20,7 @@ export async function generateTables(
 ) {
   const { prompt, useCached, addData } = ctx.request.body
 
-  const llm = await getLLM()
+  const llm = await getLLM("gpt-4o")
   llm!.maxTokens = 1200
 
   const cacheKey = `${createHash("md5").update(prompt).digest("hex")}_${
