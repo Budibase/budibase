@@ -59,9 +59,8 @@ export async function generateTables(
   const createdTables: GenerateTablesResponse["createdTables"] = []
 
   for (const table of response.tables) {
-    const { _id, ...structure } = table.structure
     const createdTable = await sdk.tables.create({
-      ...structure,
+      ...table.structure,
       sourceId: dsId,
       schema: {},
       primaryDisplay: undefined,
@@ -100,105 +99,83 @@ export async function generateTables(
       },
       primaryDisplay: table.primaryDisplay,
     })
-    // const readTableCtx = {
-    //   params: { tableId: table._id },
-    //   user: ctx.user,
-    //   throw: ctx.throw,
-    // } as any
-
-    // await tableController.read(readTableCtx, async () => {})
-
-    // const updateTableCtx = {
-    //   request: {
-    //     body: {
-    //       ...readTableCtx.body,
-    //       schema: {
-    //         ...readTableCtx.body.schema,
-    //         ...table.schema,
-    //       },
-    //       primaryDisplay: table.primaryDisplay,
-    //     },
-    //   },
-    //   params: { tableId: table._id },
-    //   user: ctx.user,
-    //   throw: ctx.throw,
-    // } as any
-    // await tableController.update(updateTableCtx, async () => {})
   }
 
-  // if (addData) {
-  //   const createdData: Record<string, Record<string, string>> = {}
-  //   const toUpdateLinks: {
-  //     tableId: string
-  //     rowId: string
-  //     data: Record<string, { rowId: string; tableId: string }>
-  //   }[] = []
-  //   for (const table of Object.values(json.tables)) {
-  //     const dataToAdd = json.data?.[table.name]
+  if (addData) {
+    const createdData: Record<string, Record<string, string>> = {}
+    const toUpdateLinks: {
+      tableId: string
+      rowId: string
+      data: Record<string, { rowId: string; tableId: string }>
+    }[] = []
+    for (const table of Object.values(response.tables)) {
+      const linksOverride: Record<string, null> = {}
+      for (const field of table.structure.schema.filter(
+        f => f.type === FieldType.LINK
+      )) {
+        linksOverride[field.name] = null
+      }
 
-  //     const linksOverride: Record<string, null> = {}
-  //     for (const fieldKey of Object.keys(table.schema).filter(
-  //       f => table.schema[f].type === FieldType.LINK
-  //     )) {
-  //       linksOverride[fieldKey] = null
-  //     }
+      for (const entry of table.data || []) {
+        const createdRow = await sdk.rows.save(
+          table.structure._id,
+          {
+            ...entry.values.reduce<Record<string, any>>((acc, v) => {
+              acc[v.key] = v.value
+              return acc
+            }, {}),
+            ...linksOverride,
+            _id: undefined,
+          },
+          ctx.user._id
+        )
 
-  //     for (const entry of dataToAdd || []) {
-  //       const createdRow = await sdk.rows.save(
-  //         table._id!,
-  //         {
-  //           ...entry,
-  //           ...linksOverride,
-  //           _id: undefined,
-  //         },
-  //         ctx.user._id
-  //       )
+        createdData[table.structure._id] ??= {}
+        createdData[table.structure._id][entry.id] = createdRow.row._id!
 
-  //       createdData[table._id!] ??= {}
-  //       createdData[table._id!][entry._id] = createdRow.row._id!
+        const overridenLinks = Object.keys(linksOverride).reduce<
+          Record<string, { rowId: string; tableId: string }>
+        >((acc, l) => {
+          if (entry.values.find(f => f.key === l)) {
+            acc[l] = {
+              tableId: (table.structure.schema.find(f => f.name === l) as any)
+                .tableId,
+              rowId: entry.id,
+            }
+          }
+          return acc
+        }, {})
 
-  //       const overridenLinks = Object.keys(linksOverride).reduce<
-  //         Record<string, { rowId: string; tableId: string }>
-  //       >((acc, l) => {
-  //         if (entry[l]) {
-  //           acc[l] = {
-  //             tableId: (table.schema[l] as RelationshipFieldMetadata).tableId,
-  //             rowId: entry[l],
-  //           }
-  //         }
-  //         return acc
-  //       }, {})
+        if (Object.keys(overridenLinks)) {
+          toUpdateLinks.push({
+            tableId: createdRow.table._id!,
+            rowId: createdRow.row._id!,
+            data: overridenLinks,
+          })
+        }
+      }
+    }
 
-  //       if (Object.keys(overridenLinks)) {
-  //         toUpdateLinks.push({
-  //           tableId: createdRow.table._id!,
-  //           rowId: createdRow.row._id!,
-  //           data: overridenLinks,
-  //         })
-  //       }
-  //     }
-  //   }
+    //   for (const data of toUpdateLinks.filter(d => Object.keys(d.data).length)) {
+    //     const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
 
-  //   for (const data of toUpdateLinks.filter(d => Object.keys(d.data).length)) {
-  //     const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
+    //     const updatedLinks = Object.keys(data.data).reduce<
+    //       Record<string, string>
+    //     >((acc, d) => {
+    //       acc[d] = createdData[data.data[d].tableId][data.data[d].rowId]
+    //       return acc
+    //     }, {})
 
-  //     const updatedLinks = Object.keys(data.data).reduce<
-  //       Record<string, string>
-  //     >((acc, d) => {
-  //       acc[d] = createdData[data.data[d].tableId][data.data[d].rowId]
-  //       return acc
-  //     }, {})
-
-  //     await sdk.rows.save(
-  //       data.tableId,
-  //       {
-  //         ...persistedRow,
-  //         ...updatedLinks,
-  //       },
-  //       ctx.user._id
-  //     )
-  //   }
-  // }
+    //     await sdk.rows.save(
+    //       data.tableId,
+    //       {
+    //         ...persistedRow,
+    //         ...updatedLinks,
+    //       },
+    //       ctx.user._id
+    //     )
+    //   }
+  }
 
   ctx.body = {
     createdTables,
