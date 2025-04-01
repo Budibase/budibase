@@ -8180,5 +8180,37 @@
         "defaultValue": 10
       }
     ]
+  },
+  "singlerowprovider": {
+    "name": "Single Row Provider",
+    "icon": "SQLQuery",
+    "hasChildren": true,
+    "actions": ["RefreshDatasource"],
+    "size": {
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "table",
+        "label": "Datasource",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Row ID",
+        "key": "rowId",
+        "required": true,
+        "resetOn": "datasource"
+      }
+    ],
+    "context": {
+      "type": "schema"
+    }
   }
 }

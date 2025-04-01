@@ -144,11 +144,6 @@
       }
     })
 
-    // Swap blocks and plugins
-    let tmp = enrichedStructure[1]
-    enrichedStructure[1] = enrichedStructure[0]
-    enrichedStructure[0] = tmp
-
     return enrichedStructure
   }
 
