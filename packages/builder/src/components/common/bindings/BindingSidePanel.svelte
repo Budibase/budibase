@@ -21,15 +21,15 @@
   import SnippetDrawer from "./SnippetDrawer.svelte"
   import UpgradeButton from "@/pages/builder/portal/_components/UpgradeButton.svelte"
 
-  export let addHelper: (_helper: Helper, _js?: boolean) => void
-  export let addBinding: (_binding: EnrichedBinding) => void
-  export let addSnippet: (_snippet: Snippet) => void
-  export let bindings: EnrichedBinding[]
-  export let snippets: Snippet[] | null
-  export let mode: BindingMode
-  export let allowHelpers: boolean
-  export let allowSnippets: boolean
-  export let context = null
+  export let addHelper: (_helper: Helper, _js?: boolean) => void = () => {}
+  export let addBinding: (_binding: EnrichedBinding) => void = () => {}
+  export let addSnippet: (_snippet: Snippet) => void = () => {}
+  export let bindings: EnrichedBinding[] | undefined
+  export let snippets: Snippet[] | null = null
+  export let mode: BindingMode | undefined = BindingMode.Text
+  export let allowHelpers: boolean = true
+  export let allowSnippets: boolean = true
+  export let context: Record<any, any> | undefined = undefined
 
   let search = ""
   let searching = false
@@ -93,7 +93,7 @@
     search
   )
 
-  function onModeChange(_mode: BindingMode) {
+  function onModeChange(_mode: BindingMode | undefined) {
     selectedCategory = null
   }
   $: onModeChange(mode)
