@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "lib": ["ESNext"],
     "baseUrl": ".",

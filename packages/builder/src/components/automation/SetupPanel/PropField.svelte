@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import { Label } from "@budibase/bbui"
 
-  export let label
-  export let labelTooltip
-  export let fullWidth = false
-  export let componentWidth = 320
+  export let label: string | undefined = ""
+  export let labelTooltip: string | undefined = ""
+  export let fullWidth: boolean | undefined = false
+  export let componentWidth: number | undefined = 320
 </script>
 
 <div
