@@ -5,6 +5,7 @@
 
   onMount(() => {
     window.addEventListener("beforeinstallprompt", e => {
+      console.log("[PWA] beforeinstallprompt fired!", e)
       e.preventDefault()
       deferredPrompt = e
       showButton = true
