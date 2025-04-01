@@ -6,13 +6,20 @@
   export let rowId: string
 
   const component = getContext("component")
-  const { styleable, API, Provider } = getContext("sdk")
+  const { styleable, API, Provider, ActionTypes } = getContext("sdk")
 
   let row: Row | undefined
 
   $: datasourceId =
     datasource.type === "table" ? datasource.tableId : datasource.id
   $: fetchRow(datasourceId, rowId)
+  $: actions = [
+    {
+      type: ActionTypes.RefreshDatasource,
+      callback: () => fetchRow(datasourceId, rowId),
+      metadata: { dataSource: datasource },
+    },
+  ]
 
   const fetchRow = async (datasourceId: string, rowId: string) => {
     try {
@@ -24,7 +31,7 @@
 </script>
 
 <div use:styleable={$component.styles}>
-  <Provider data={row ?? null}>
+  <Provider {actions} data={row ?? null}>
     <slot />
   </Provider>
 </div>

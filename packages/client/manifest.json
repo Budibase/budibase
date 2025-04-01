@@ -8182,6 +8182,7 @@
     "name": "Single Row Provider",
     "icon": "SQLQuery",
     "hasChildren": true,
+    "actions": ["RefreshDatasource"],
     "size": {
       "width": 500,
       "height": 200
@@ -8201,7 +8202,8 @@
         "type": "text",
         "label": "Row ID",
         "key": "rowId",
-        "required": true
+        "required": true,
+        "resetOn": "datasource"
       }
     ],
     "context": {
