@@ -8138,6 +8138,7 @@
         "type": "filter",
         "label": "Filtering",
         "key": "filter",
+        "resetOn": "datasource",
         "dependsOn": {
           "setting": "datasource.type",
           "value": "custom",
@@ -8149,6 +8150,7 @@
         "label": "Sort column",
         "key": "sortColumn",
         "placeholder": "Default",
+        "resetOn": "datasource",
         "dependsOn": {
           "setting": "datasource.type",
           "value": "custom",
@@ -8159,6 +8161,7 @@
         "type": "select",
         "label": "Sort order",
         "key": "sortOrder",
+        "resetOn": "datasource",
         "options": ["Ascending", "Descending"],
         "defaultValue": "Ascending",
         "dependsOn": "sortColumn"
