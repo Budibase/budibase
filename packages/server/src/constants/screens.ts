@@ -365,7 +365,11 @@ export function createSampleDataTableScreen(): Screen {
           _component: "@budibase/standard-components/textv2",
           _styles: {
             normal: {
+              "--grid-desktop-col-start": 1,
               "--grid-desktop-col-end": 3,
+              "--grid-desktop-row-start": 1,
+              "--grid-desktop-row-end": 3,
+              "--grid-mobile-col-end": 7,
             },
             hover: {},
             active: {},
@@ -384,6 +388,7 @@ export function createSampleDataTableScreen(): Screen {
               "--grid-desktop-row-start": 1,
               "--grid-desktop-row-end": 3,
               "--grid-desktop-h-align": "end",
+              "--grid-mobile-col-start": 7,
             },
             hover: {},
             active: {},

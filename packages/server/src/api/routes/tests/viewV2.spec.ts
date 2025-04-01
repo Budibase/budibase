@@ -41,7 +41,7 @@ import { datasourceDescribe } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { context, db, events, roles, setEnv } from "@budibase/backend-core"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
 
 const descriptions = datasourceDescribe({ plus: true })
