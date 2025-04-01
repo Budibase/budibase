@@ -4,6 +4,7 @@ import {
   canGroupBy,
   FieldType,
   isNumeric,
+  isNumericStaticFormula,
   PermissionLevel,
   RelationSchemaField,
   RenameColumn,
@@ -176,7 +177,11 @@ async function guardCalculationViewSchema(
     }
 
     const isCount = schema.calculationType === CalculationType.COUNT
-    if (!isCount && !isNumeric(targetSchema.type)) {
+    if (
+      !isCount &&
+      !isNumeric(targetSchema.type) &&
+      !isNumericStaticFormula(targetSchema)
+    ) {
       throw new HTTPError(
         `Calculation field "${name}" references field "${schema.field}" which is not a numeric field`,
         400
