@@ -121,7 +121,7 @@
     grid-template-columns: repeat(var(--cols), minmax(40px, auto));
     grid-template-rows: repeat(var(--rows), max-content);
     overflow: hidden;
-    background: white;
+    background: var(--spectrum-global-color-gray-50);
   }
   .table.valid {
     border-left: 1px solid var(--border-color);
