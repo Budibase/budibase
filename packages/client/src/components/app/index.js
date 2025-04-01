@@ -36,11 +36,11 @@ export { default as sidepanel } from "./SidePanel.svelte"
 export { default as modal } from "./Modal.svelte"
 export { default as gridblock } from "./GridBlock.svelte"
 export { default as textv2 } from "./Text.svelte"
-export { default as pdf } from "./pdf/PDF.svelte"
 export * from "./charts"
 export * from "./forms"
 export * from "./blocks"
 export * from "./dynamic-filter"
+export * from "./pdf"
 
 // Deprecated component left for compatibility in old apps
 export * from "./deprecated/table"
