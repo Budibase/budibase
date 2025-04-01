@@ -46,6 +46,16 @@
       default:
         screenComponentSettings = [
           {
+            key: "width",
+            label: "Width",
+            control: Select,
+            props: {
+              options: ["Extra small", "Small", "Medium", "Large", "Max"],
+              placeholder: "Default",
+              disabled: !!screen.layoutId,
+            },
+          },
+          {
             key: "props.layout",
             label: "Layout",
             defaultValue: "flex",
@@ -108,16 +118,6 @@
         key: "onLoad",
         label: "On screen load",
         control: ButtonActionEditor,
-      },
-      {
-        key: "width",
-        label: "Width",
-        control: Select,
-        props: {
-          options: ["Extra small", "Small", "Medium", "Large", "Max"],
-          placeholder: "Default",
-          disabled: !!screen.layoutId,
-        },
       },
       ...screenComponentSettings,
       {
