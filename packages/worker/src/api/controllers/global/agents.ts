@@ -106,17 +106,6 @@ function automationSchemaToJsonSchema(automation: Automation): JSONSchema4 {
   }
 }
 
-function buildToolName(appId: string, automationName: string) {
-  return `${db.getProdAppID(appId)}${db.SEPARATOR}${automationName}`
-}
-
-function splitToolName(toolName: string) {
-  const splitToolName = toolName.split(db.SEPARATOR)
-  const appId = splitToolName.slice(0, 2).join(db.SEPARATOR)
-  const automationName = splitToolName.slice(2).join(db.SEPARATOR)
-  return { appId, automationName }
-}
-
 function addAutomationTools(
   prompt: ai.Prompt,
   automations: Record<string, Automation[]>
@@ -124,12 +113,10 @@ function addAutomationTools(
   // TODO: can app ID be used to provide more info
   for (let appId of Object.keys(automations)) {
     for (let automation of automations[appId]) {
-      prompt = prompt.tool(
-        ai.sanitiseToolName(buildToolName(appId, automation.name)),
-        {
-          parameters: automationSchemaToJsonSchema(automation),
-        }
-      )
+      prompt = prompt.tool(ai.sanitiseToolName(automation._id!), {
+        parameters: automationSchemaToJsonSchema(automation),
+        description: automation.name,
+      })
     }
   }
   return prompt
@@ -147,13 +134,36 @@ function agentSystemPrompt() {
   If asked you can supply the list of "automations" to the user, this is the list of tool names available.`
 }
 
+function findAutomation(
+  automations: Record<string, Automation[]>,
+  automationId: string
+) {
+  for (let appId of Object.keys(automations)) {
+    const appAutomations = automations[appId]
+    const automation = appAutomations.find(
+      automation => automation._id === automationId
+    )
+    if (automation) {
+      return { automation, appId }
+    }
+  }
+}
+
 async function automationToolCall(
-  call: LLMToolCall
-): Promise<{ response: string; appId: string }> {
+  call: LLMToolCall,
+  automations: Record<string, Automation[]>
+): Promise<{ response: string; appId?: string }> {
   // TODO: call the automation endpoint on the app
   const func = call.function
-  const { appId, automationName } = splitToolName(func.name)
-  return { response: `I've ran the ${automationName} workflow.`, appId }
+  const found = findAutomation(automations, func.name)
+  if (!found) {
+    return { response: "No tool found" }
+  }
+  const automation = found.automation
+  return {
+    response: `I've ran the ${automation.name} workflow.`,
+    appId: found.appId,
+  }
 }
 
 export async function agentChat(
@@ -165,8 +175,9 @@ export async function agentChat(
   }
   let prompt = new ai.Prompt([])
   const { messages, appIds } = ctx.request.body
+  let automations: Record<string, Automation[]> = {}
   if (appIds && appIds.length) {
-    const automations = await getAutomations(appIds)
+    automations = await getAutomations(appIds)
     prompt = addAutomationTools(prompt, automations)
   }
   prompt.system(agentSystemPrompt())
@@ -180,9 +191,10 @@ export async function agentChat(
   const response = await model.prompt(prompt)
   if (response.toolCalls?.length) {
     const toolsCalled = await Promise.all(
-      response.toolCalls.map(call => automationToolCall(call))
+      response.toolCalls.map(call => automationToolCall(call, automations))
     )
     ctx.body = {
+      response: toolsCalled.map(tool => tool.response).join(", "),
       toolsCalled,
     }
   } else {

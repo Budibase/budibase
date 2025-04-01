@@ -3,6 +3,7 @@ export interface ChatAgentRequest {
   appIds: string[]
 }
 
-export type ChatAgentResponse =
-  | { response: string }
-  | { toolsCalled: { response: string; appId: string }[] }
+export interface ChatAgentResponse {
+  response: string
+  toolsCalled?: { response: string; appId?: string }[]
+}
