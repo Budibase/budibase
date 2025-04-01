@@ -58,7 +58,7 @@
     // Get initial set of allowed components
     let allowedComponents = []
     const definition = componentStore.getDefinition(component?._component)
-    if (definition.legalDirectChildren?.length) {
+    if (definition?.legalDirectChildren?.length) {
       allowedComponents = definition.legalDirectChildren.map(x => {
         return `@budibase/standard-components/${x}`
       })
@@ -67,7 +67,7 @@
     }
 
     // Build up list of illegal children from ancestors
-    let illegalChildren = definition.illegalChildren || []
+    let illegalChildren = definition?.illegalChildren || []
     path.forEach(ancestor => {
       // Sidepanels and modals can be nested anywhere in the component tree, but really they are always rendered at the top level.
       // Because of this, it doesn't make sense to carry over any parent illegal children to them, so the array is reset here.
