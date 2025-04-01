@@ -157,6 +157,12 @@ export async function doInTenant<T>(
   return newContext(updates, task)
 }
 
+// We allow self-host licensed users to make use of some Budicloud services
+// (e.g. Budibase AI). When they do this, they use their license key as an API
+// key. We use that license key to identify the tenant ID, and we set the
+// context to be self-host using cloud. This affects things like where their
+// quota documents get stored (because we want to avoid creating a new global
+// DB for each self-host tenant).
 export async function doInSelfHostTenantUsingCloud<T>(
   tenantId: string,
   task: () => T
