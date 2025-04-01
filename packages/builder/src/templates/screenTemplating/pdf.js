@@ -6,11 +6,7 @@ import { Roles } from "@/constants/backend"
 const pdf = ({ route, screens }) => {
   const validRoute = getValidRoute(screens, route, Roles.BASIC)
 
-  const template = new PDFScreen()
-    .instanceName("PDF Editor")
-    .role(Roles.BASIC)
-    .route(validRoute)
-    .json()
+  const template = new PDFScreen().role(Roles.BASIC).route(validRoute).json()
 
   return [
     {

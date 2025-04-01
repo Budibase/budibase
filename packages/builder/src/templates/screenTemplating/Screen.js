@@ -99,8 +99,8 @@ export class PDFScreen extends Screen {
         selected: {},
       },
       _children: [],
-      _instanceName: "",
-      title: "PDF Editor",
+      _instanceName: "PDF",
+      title: "PDF",
     }
   }
 }

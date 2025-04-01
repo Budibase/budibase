@@ -3,6 +3,7 @@
   import { Heading, Button } from "@budibase/bbui"
   import { htmlToPdf, pxToPt, A4HeightPx, type PDFOptions } from "./pdf"
   import { GridRowHeight } from "@/constants"
+  import CustomThemeWrapper from "@/components/CustomThemeWrapper.svelte"
 
   const component = getContext("component")
   const { styleable, Block, BlockComponent } = getContext("sdk")
@@ -30,6 +31,7 @@
   const generatePDF = async () => {
     rendering = true
     await tick()
+    preprocessCSS()
     try {
       const opts: PDFOptions = {
         fileName: safeName,
@@ -41,6 +43,19 @@
       console.error("Error rendering PDF", error)
     }
     rendering = false
+  }
+
+  const preprocessCSS = () => {
+    const els = document.getElementsByClassName("grid-child")
+    for (let el of els) {
+      if (!(el instanceof HTMLElement)) {
+        return
+      }
+      // Get the computed values and assign them back to the style, simplifying
+      // the CSS that gets handled by HTML2PDF
+      const styles = window.getComputedStyle(el)
+      el.style.setProperty("grid-column-end", styles.gridColumnEnd, "important")
+    }
   }
 
   const getDividerStyle = (idx: number) => {
@@ -91,22 +106,23 @@
           {/each}
         {/if}
         <div
-          dir="ltr"
-          class="spectrum spectrum--lightest spectrum--medium pageContent"
+          class="spectrum spectrum--medium spectrum--light pageContent"
           bind:this={ref}
         >
-          <BlockComponent
-            type="container"
-            props={{ layout: "grid" }}
-            styles={{
-              normal: {
-                height: `${gridMinHeight}px`,
-              },
-            }}
-            context="grid"
-          >
-            <slot />
-          </BlockComponent>
+          <CustomThemeWrapper popoverRoot={false}>
+            <BlockComponent
+              type="container"
+              props={{ layout: "grid" }}
+              styles={{
+                normal: {
+                  height: `${gridMinHeight}px`,
+                },
+              }}
+              context="grid"
+            >
+              <slot />
+            </BlockComponent>
+          </CustomThemeWrapper>
         </div>
       </div>
     </div>
@@ -157,6 +173,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    background: white;
   }
   .divider {
     width: 100%;
@@ -171,12 +188,4 @@
     top: calc(var(--top) + var(--margin));
     background: transparent;
   }
-  /*.divider::after {*/
-  /*  position: absolute;*/
-  /*  top: -32px;*/
-  /*  right: 24px;*/
-  /*  content: var(--idx);*/
-  /*  color: var(--spectrum-global-color-static-gray-400);*/
-  /*  text-align: right;*/
-  /*}*/
 </style>
