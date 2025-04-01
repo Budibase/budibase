@@ -157,6 +157,27 @@ export async function doInTenant<T>(
   return newContext(updates, task)
 }
 
+export async function doInSelfHostTenantUsingCloud<T>(
+  tenantId: string,
+  task: () => T
+): Promise<T> {
+  const updates = { tenantId, isSelfHostUsingCloud: true }
+  return newContext(updates, task)
+}
+
+export function isSelfHostUsingCloud() {
+  const context = Context.get()
+  return !!context?.isSelfHostUsingCloud
+}
+
+export function getSelfHostCloudDB() {
+  const context = Context.get()
+  if (!context || !context.isSelfHostUsingCloud) {
+    throw new Error("Self-host cloud DB not found")
+  }
+  return getDB(StaticDatabases.SELF_HOST_CLOUD.name)
+}
+
 export async function doInAppContext<T>(
   appId: string,
   task: () => T
@@ -325,6 +346,11 @@ export function getGlobalDB(): Database {
   if (!context || (env.MULTI_TENANCY && !context.tenantId)) {
     throw new Error("Global DB not found")
   }
+  if (context.isSelfHostUsingCloud) {
+    throw new Error(
+      "Global DB not found - self-host users using cloud don't have a global DB"
+    )
+  }
   return getDB(baseGlobalDBName(context?.tenantId))
 }
 
@@ -343,6 +369,11 @@ export function getAppDB(opts?: any): Database {
   const appId = getAppId()
   if (!appId) {
     throw new Error("Unable to retrieve app DB - no app ID.")
+  }
+  if (isSelfHostUsingCloud()) {
+    throw new Error(
+      "App DB not found - self-host users using cloud don't have app DBs"
+    )
   }
   return getDB(appId, opts)
 }
