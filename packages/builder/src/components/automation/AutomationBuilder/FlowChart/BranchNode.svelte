@@ -3,30 +3,28 @@
   import {
     Drawer,
     DrawerContent,
-    ActionButton,
     Icon,
-    Layout,
     Body,
     Divider,
-    TooltipPosition,
-    TooltipType,
     Button,
     Modal,
     ModalContent,
   } from "@budibase/bbui"
   import PropField from "@/components/automation/SetupPanel/PropField.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
-  import FlowItemHeader from "./FlowItemHeader.svelte"
   import FlowItemActions from "./FlowItemActions.svelte"
+  import FlowItemStatus from "./FlowItemStatus.svelte"
   import {
     automationStore,
     selectedAutomation,
     evaluationContext,
+    contextMenuStore,
   } from "@/stores/builder"
   import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
+  import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -41,7 +39,6 @@
   const memoContext = memo({})
 
   let drawer
-  let open = true
   let confirmDeleteModal
 
   $: memoContext.set($evaluationContext)
@@ -60,6 +57,65 @@
   $: branchBlockRef = {
     branchNode: true,
     pathTo: (pathTo || []).concat({ branchIdx, branchStepId: step.id }),
+  }
+
+  const getContextMenuItems = () => {
+    return [
+      {
+        icon: "Delete",
+        name: "Delete",
+        keyBind: null,
+        visible: true,
+        disabled: false,
+        callback: async () => {
+          const branchSteps = step.inputs?.children[branch.id]
+          if (branchSteps.length) {
+            confirmDeleteModal.show()
+          } else {
+            await automationStore.actions.deleteBranch(
+              branchBlockRef.pathTo,
+              $selectedAutomation.data
+            )
+          }
+        },
+      },
+      {
+        icon: "ArrowLeft",
+        name: "Move left",
+        keyBind: null,
+        visible: true,
+        disabled: branchIdx == 0,
+        callback: async () => {
+          automationStore.actions.branchLeft(
+            branchBlockRef.pathTo,
+            $selectedAutomation.data,
+            step
+          )
+        },
+      },
+      {
+        icon: "ArrowRight",
+        name: "Move right",
+        keyBind: null,
+        visible: true,
+        disabled: isLast,
+        callback: async () => {
+          automationStore.actions.branchRight(
+            branchBlockRef.pathTo,
+            $selectedAutomation.data,
+            step
+          )
+        },
+      },
+    ]
+  }
+
+  const openContextMenu = e => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const items = getContextMenuItems()
+    contextMenuStore.open(branch.id, items, { x: e.clientX, y: e.clientY })
   }
 </script>
 
@@ -112,7 +168,7 @@
   </DrawerContent>
 </Drawer>
 
-<div class="flow-item">
+<div class="flow-item branch">
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class={`block branch-node hoverable`}
@@ -121,96 +177,64 @@
       e.stopPropagation()
     }}
   >
-    <FlowItemHeader
-      {automation}
-      {open}
-      itemName={branch.name}
-      block={step}
-      deleteStep={async () => {
-        const branchSteps = step.inputs?.children[branch.id]
-        if (branchSteps.length) {
-          confirmDeleteModal.show()
-        } else {
-          await automationStore.actions.deleteBranch(
-            branchBlockRef.pathTo,
-            $selectedAutomation.data
-          )
-        }
-      }}
-      on:update={async e => {
-        let stepUpdate = cloneDeep(step)
-        let branchUpdate = stepUpdate.inputs?.branches.find(
-          stepBranch => stepBranch.id == branch.id
-        )
-        branchUpdate.name = e.detail
+    <div class="block-float">
+      <FlowItemStatus
+        block={step}
+        {automation}
+        {branch}
+        hideStatus={$view?.dragging}
+      />
+    </div>
+    <div class="blockSection">
+      <div class="heading">
+        <BlockHeader
+          {automation}
+          block={step}
+          itemName={branch.name}
+          on:update={async e => {
+            let stepUpdate = cloneDeep(step)
+            let branchUpdate = stepUpdate.inputs?.branches.find(
+              stepBranch => stepBranch.id == branch.id
+            )
+            branchUpdate.name = e.detail
 
-        const updatedAuto = automationStore.actions.updateStep(
-          pathTo,
-          $selectedAutomation.data,
-          stepUpdate
-        )
-        await automationStore.actions.save(updatedAuto)
-      }}
-      on:toggle={() => (open = !open)}
-    >
-      <div slot="custom-actions" class="branch-actions">
-        <Icon
-          on:click={() => {
-            automationStore.actions.branchLeft(
-              branchBlockRef.pathTo,
+            const updatedAuto = automationStore.actions.updateStep(
+              pathTo,
               $selectedAutomation.data,
-              step
+              stepUpdate
             )
+            await automationStore.actions.save(updatedAuto)
           }}
-          tooltip={"Move left"}
-          tooltipType={TooltipType.Info}
-          tooltipPosition={TooltipPosition.Top}
-          hoverable
-          disabled={branchIdx == 0}
-          name="ArrowLeft"
         />
-        <Icon
-          on:click={() => {
-            automationStore.actions.branchRight(
-              branchBlockRef.pathTo,
-              $selectedAutomation.data,
-              step
-            )
-          }}
-          tooltip={"Move right"}
-          tooltipType={TooltipType.Info}
-          tooltipPosition={TooltipPosition.Top}
-          hoverable
-          disabled={isLast}
-          name="ArrowRight"
-        />
+        <div class="actions">
+          <Icon
+            name="Info"
+            tooltip="Branch sequencing checks each option in order and follows the first one that matches the rules."
+          />
+          <Icon
+            on:click={e => {
+              openContextMenu(e)
+            }}
+            size="S"
+            hoverable
+            name="MoreSmallList"
+          />
+        </div>
       </div>
-    </FlowItemHeader>
-    {#if open}
-      <Divider noMargin />
-      <div class="blockSection">
-        <!-- Content body for possible slot -->
-        <Layout noPadding>
-          <PropField label="Only run when">
-            <ActionButton fullWidth on:click={drawer.show}>
-              {editableConditionUI?.groups?.length
-                ? "Update condition"
-                : "Add condition"}
-            </ActionButton>
-          </PropField>
-          <div class="footer">
-            <Icon
-              name="InfoOutline"
-              size="S"
-              color="var(--spectrum-global-color-gray-700)"
-            />
-            <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-              Only the first branch which matches its condition will run
-            </Body>
-          </div>
-        </Layout>
-      </div>
-    {/if}
+    </div>
+
+    <Divider noMargin />
+    <div class="blockSection filter-button">
+      <PropField label="Only run when:" fullWidth>
+        <div style="width: 100%">
+          <Button secondary on:click={drawer.show}>
+            {editableConditionUI?.groups?.length
+              ? "Update condition"
+              : "Add condition"}
+          </Button>
+        </div>
+      </PropField>
+    </div>
   </div>
 
   <div class="separator" />
@@ -227,6 +251,9 @@
 </div>
 
 <style>
+  .filter-button :global(.spectrum-Button) {
+    width: 100%;
+  }
   .branch-actions {
     display: flex;
     gap: var(--spacing-l);
@@ -264,7 +291,7 @@
     display: inline-block;
   }
   .block {
-    width: 480px;
+    width: 360px;
     font-size: 16px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
@@ -288,5 +315,31 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+
+  .branch-node {
+    position: relative;
+  }
+
+  .block-float {
+    pointer-events: none;
+    width: 100%;
+    position: absolute;
+    top: -35px;
+    left: 0px;
+  }
+
+  .blockSection .heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+  }
+
+  .blockSection .heading .actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
   }
 </style>
