@@ -3,6 +3,7 @@
   import { Heading, Button } from "@budibase/bbui"
   import { htmlToPdf, pxToPt, A4HeightPx, type PDFOptions } from "./pdf"
   import { GridRowHeight } from "@/constants"
+  import CustomThemeWrapper from "@/components/CustomThemeWrapper.svelte"
 
   const component = getContext("component")
   const { styleable, Block, BlockComponent } = getContext("sdk")
@@ -30,6 +31,7 @@
   const generatePDF = async () => {
     rendering = true
     await tick()
+    preprocessCSS()
     try {
       const opts: PDFOptions = {
         fileName: safeName,
@@ -41,6 +43,16 @@
       console.error("Error rendering PDF", error)
     }
     rendering = false
+  }
+
+  const preprocessCSS = () => {
+    const els = document.getElementsByClassName(
+      "grid-child"
+    ) as unknown as HTMLElement[]
+    for (let el of els) {
+      const styles = window.getComputedStyle(el)
+      el.style.setProperty("grid-column-end", styles.gridColumnEnd, "important")
+    }
   }
 
   const getDividerStyle = (idx: number) => {
@@ -90,19 +102,24 @@
             />
           {/each}
         {/if}
-        <div class="pageContent" bind:this={ref}>
-          <BlockComponent
-            type="container"
-            props={{ layout: "grid" }}
-            styles={{
-              normal: {
-                height: `${gridMinHeight}px`,
-              },
-            }}
-            context="grid"
-          >
-            <slot />
-          </BlockComponent>
+        <div
+          class="spectrum spectrum--medium spectrum--lightest pageContent"
+          bind:this={ref}
+        >
+          <CustomThemeWrapper popoverRoot={false}>
+            <BlockComponent
+              type="container"
+              props={{ layout: "grid" }}
+              styles={{
+                normal: {
+                  height: `${gridMinHeight}px`,
+                },
+              }}
+              context="grid"
+            >
+              <slot />
+            </BlockComponent>
+          </CustomThemeWrapper>
         </div>
       </div>
     </div>
