@@ -29,7 +29,6 @@ interface TestSetup {
   name: string
   setup: SetupFn
   mockLLMResponse: MockLLMResponseFn
-  selfHostOnly?: boolean
 }
 
 function budibaseAI(): SetupFn {
@@ -80,7 +79,7 @@ function customAIConfig(providerConfig: Partial<ProviderConfig>): SetupFn {
   }
 }
 
-const providers: TestSetup[] = [
+const allProviders: TestSetup[] = [
   {
     name: "OpenAI API key",
     setup: async () => {
@@ -89,7 +88,6 @@ const providers: TestSetup[] = [
       })
     },
     mockLLMResponse: mockChatGPTResponse,
-    selfHostOnly: true,
   },
   {
     name: "OpenAI API key with custom config",
@@ -126,9 +124,9 @@ describe("AI", () => {
     nock.cleanAll()
   })
 
-  describe.each(providers)(
+  describe.each(allProviders)(
     "provider: $name",
-    ({ setup, mockLLMResponse, selfHostOnly }: TestSetup) => {
+    ({ setup, mockLLMResponse }: TestSetup) => {
       let cleanup: () => Promise<void> | void
       beforeAll(async () => {
         cleanup = await setup(config)
@@ -243,86 +241,104 @@ describe("AI", () => {
           )
         })
       })
-
-      !selfHostOnly &&
-        describe("POST /api/ai/chat", () => {
-          let envCleanup: () => void
-          let featureCleanup: () => void
-          beforeAll(() => {
-            envCleanup = setEnv({ SELF_HOSTED: false })
-            featureCleanup = features.testutils.setFeatureFlags("*", {
-              AI_JS_GENERATION: true,
-            })
-          })
-
-          afterAll(() => {
-            featureCleanup()
-            envCleanup()
-          })
-
-          beforeEach(() => {
-            const license: License = {
-              plan: {
-                type: PlanType.FREE,
-                model: PlanModel.PER_USER,
-                usesInvoicing: false,
-              },
-              features: [],
-              quotas: {} as any,
-              tenantId: config.tenantId,
-            }
-            nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(200, license)
-          })
-
-          it("handles correct chat response", async () => {
-            mockLLMResponse("Hi there!")
-            const { message } = await config.api.ai.chat({
-              messages: [{ role: "user", content: "Hello!" }],
-              licenseKey: "test-key",
-            })
-            expect(message).toBe("Hi there!")
-          })
-
-          it("handles chat response error", async () => {
-            mockLLMResponse(() => {
-              throw new Error("LLM error")
-            })
-            await config.api.ai.chat(
-              {
-                messages: [{ role: "user", content: "Hello!" }],
-                licenseKey: "test-key",
-              },
-              { status: 500 }
-            )
-          })
-
-          it("handles no license", async () => {
-            nock.cleanAll()
-            nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(404)
-            await config.api.ai.chat(
-              {
-                messages: [{ role: "user", content: "Hello!" }],
-                licenseKey: "test-key",
-              },
-              {
-                status: 403,
-              }
-            )
-          })
-
-          it("handles no license key", async () => {
-            await config.api.ai.chat(
-              {
-                messages: [{ role: "user", content: "Hello!" }],
-                // @ts-expect-error - intentionally wrong
-                licenseKey: undefined,
-              },
-              {
-                status: 403,
-              }
-            )
-          })
-        })
     }
   )
+})
+
+describe("BudibaseAI", () => {
+  const config = new TestConfiguration()
+  let cleanup: () => void | Promise<void>
+  beforeAll(async () => {
+    await config.init()
+    cleanup = await budibaseAI()(config)
+  })
+
+  afterAll(async () => {
+    if ("then" in cleanup) {
+      await cleanup()
+    } else {
+      cleanup()
+    }
+    config.end()
+  })
+
+  describe("POST /api/ai/chat", () => {
+    let envCleanup: () => void
+    let featureCleanup: () => void
+    beforeAll(() => {
+      envCleanup = setEnv({ SELF_HOSTED: false })
+      featureCleanup = features.testutils.setFeatureFlags("*", {
+        AI_JS_GENERATION: true,
+      })
+    })
+
+    afterAll(() => {
+      featureCleanup()
+      envCleanup()
+    })
+
+    beforeEach(() => {
+      nock.cleanAll()
+      const license: License = {
+        plan: {
+          type: PlanType.FREE,
+          model: PlanModel.PER_USER,
+          usesInvoicing: false,
+        },
+        features: [],
+        quotas: {} as any,
+        tenantId: config.tenantId,
+      }
+      nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(200, license)
+    })
+
+    it("handles correct chat response", async () => {
+      mockChatGPTResponse("Hi there!")
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        licenseKey: "test-key",
+      })
+      expect(message).toBe("Hi there!")
+    })
+
+    it("handles chat response error", async () => {
+      mockChatGPTResponse(() => {
+        throw new Error("LLM error")
+      })
+      await config.api.ai.chat(
+        {
+          messages: [{ role: "user", content: "Hello!" }],
+          licenseKey: "test-key",
+        },
+        { status: 500 }
+      )
+    })
+
+    it("handles no license", async () => {
+      nock.cleanAll()
+      nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(404)
+      await config.api.ai.chat(
+        {
+          messages: [{ role: "user", content: "Hello!" }],
+          licenseKey: "test-key",
+        },
+        {
+          status: 403,
+        }
+      )
+    })
+
+    it("handles no license key", async () => {
+      await config.api.ai.chat(
+        {
+          messages: [{ role: "user", content: "Hello!" }],
+          // @ts-expect-error - intentionally wrong
+          licenseKey: undefined,
+        },
+        {
+          status: 403,
+        }
+      )
+    })
+  })
 })
