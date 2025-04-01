@@ -76,7 +76,7 @@ function addAutomationTools(
   // TODO: can app ID be used to provide more info
   for (let appId of Object.keys(automations)) {
     for (let automation of automations[appId]) {
-      prompt = prompt.tool(automation.name, {
+      prompt = prompt.tool(ai.sanitiseToolName(automation.name), {
         parameters: automationSchemaToJsonSchema(automation),
       })
     }
@@ -90,6 +90,8 @@ function agentSystemPrompt() {
   
   Your reply MUST be short and concise, answering the user's query as quickly and
   easily as possible.
+  
+  You MUST use markdown for any formatting in your response message.
   
   If asked you can supply the list of "automations" to the user, this is the list of tool names available.`
 }

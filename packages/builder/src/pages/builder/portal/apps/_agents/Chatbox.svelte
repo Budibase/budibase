@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { MarkdownViewer } from "@budibase/bbui"
+
   export let messages: {
     message: string
     isSystem?: boolean
@@ -14,7 +16,7 @@
         class:systemBackground={message.isSystem}
         class:errorBackground={message.isError}
       >
-        {message.message}
+        <MarkdownViewer value={message.message} />
       </div>
     </div>
   {/each}
