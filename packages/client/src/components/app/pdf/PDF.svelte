@@ -90,11 +90,7 @@
             />
           {/each}
         {/if}
-        <div
-          dir="ltr"
-          class="spectrum spectrum--lightest spectrum--medium pageContent"
-          bind:this={ref}
-        >
+        <div class="pageContent" bind:this={ref}>
           <BlockComponent
             type="container"
             props={{ layout: "grid" }}

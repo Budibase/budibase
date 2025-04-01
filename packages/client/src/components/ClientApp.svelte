@@ -46,6 +46,7 @@
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
   import EmbedProvider from "./context/EmbedProvider.svelte"
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
+  import { ScreenVariant } from "@budibase/types"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -55,6 +56,12 @@
   let dataLoaded = false
   let permissionError = false
   let embedNoScreens = false
+
+  // Get theme class names, which is always lightest for LDFs
+  $: isPDFScreen = $screenStore.activeScreen?.variant === ScreenVariant.PDF
+  $: themeClassNames = isPDFScreen
+    ? "spectrum--light"
+    : getThemeClassNames($themeStore.theme)
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
@@ -157,7 +164,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {getThemeClassNames($themeStore.theme)}"
+    class="spectrum spectrum--medium {themeClassNames}"
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
   >
