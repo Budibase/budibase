@@ -50,7 +50,7 @@
     onConfirm={generate}
     showCancelButton={false}
   >
-    <TextArea label="Table Name" bind:value={modalData.prompt} />
+    <TextArea label="Prompt" bind:value={modalData.prompt} />
     <Toggle label="Add data" bind:value={modalData.addData} />
     <Toggle label="Use cached" bind:value={modalData.useCached} />
   </ModalContent>
