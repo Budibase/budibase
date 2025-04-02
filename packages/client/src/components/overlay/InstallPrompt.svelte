@@ -5,9 +5,9 @@
   const STORAGE_KEY_PREFIX = "pwa-install-declined"
 
   let showButton = false
-
+  $: pwaEnabled = $featuresStore.pwaEnabled
   function checkForDeferredPrompt() {
-    if (!$featuresStore.pwaEnabled) {
+    if (!pwaEnabled) {
       return false
     }
 
@@ -58,7 +58,7 @@
   .install-prompt {
     position: fixed;
     bottom: 5px;
-    left: 20px;
+    right: 20px;
     z-index: 1000;
   }
 

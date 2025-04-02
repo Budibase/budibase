@@ -94,7 +94,7 @@
 
   // Load app config
   onMount(async () => {
-    if ("serviceWorker" in navigator && $featuresStore.pwaEnabled) {
+    if ("serviceWorker" in navigator) {
       try {
         await navigator.serviceWorker.register("/app/service-worker.js", {
           scope: "/app/",
