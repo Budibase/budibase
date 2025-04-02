@@ -5,6 +5,7 @@
     Heading,
     Body,
     Input,
+    Icon,
     ColorPicker,
     Button,
     Label,
@@ -15,7 +16,7 @@
     Tag,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
-
+  import { licensing } from "@/stores/portal"
   import { API } from "@/api"
 
   const DISPLAY_OPTIONS = [
@@ -24,7 +25,7 @@
     { label: "Minimal UI", value: "minimal-ui" },
   ]
 
-  let pwaEnabled = true
+  let pwaEnabled = $licensing.pwaEnabled
   let uploadingIcons = false
 
   let pwaConfig = $appStore.pwa || {
@@ -177,7 +178,16 @@
       </div>
 
       <div class="field">
-        <Label size="L">App icons</Label>
+        <div
+          style="display: flex; align-items: center; gap: var(--spacing-xs);"
+        >
+          <Label size="L">App icons</Label>
+          <Icon
+            size="XS"
+            name="Info"
+            tooltip="Please check our docs for details on a valid ZIP file"
+          />
+        </div>
         <div>
           <File
             title="Upload PWA Builder zip"

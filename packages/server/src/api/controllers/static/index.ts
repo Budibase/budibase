@@ -329,7 +329,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       const appHbs = loadHandlebarsFile(appHbsPath)
 
       let extraHead = ""
-      const pwaEnabled = true // await pro.features.isPWAEnabled()
+      const pwaEnabled = await pro.features.isPWAEnabled()
       if (hasPWA && pwaEnabled) {
         extraHead = `<link rel="manifest" href="${manifestUrl}">`
         extraHead += `<meta name="mobile-web-app-capable" content="yes">
