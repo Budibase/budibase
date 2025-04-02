@@ -8019,6 +8019,32 @@
       },
       {
         "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "14px",
+        "showInBar": true,
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": "12px"
+          },
+          {
+            "label": "Medium",
+            "value": "14px"
+          },
+          {
+            "label": "Large",
+            "value": "18px"
+          },
+          {
+            "label": "Extra large",
+            "value": "24px"
+          }
+        ]
+      },
+      {
+        "type": "select",
         "label": "Alignment",
         "key": "align",
         "defaultValue": "left",
@@ -8058,5 +8084,133 @@
         "showInBar": true
       }
     ]
+  },
+  "pdf": {
+    "name": "PDF Generator",
+    "icon": "Document",
+    "hasChildren": true,
+    "showEmptyState": false,
+    "illegalChildren": ["sidepanel", "modal", "gridblock"],
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "start"
+    },
+    "size": {
+      "width": 800,
+      "height": 1200
+    },
+    "description": "A component to render PDFs from other Budibase components",
+    "settings": [
+      {
+        "type": "text",
+        "label": "PDF title",
+        "key": "fileName",
+        "defaultValue": "Report"
+      },
+      {
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Download PDF"
+      }
+    ]
+  },
+  "pdftable": {
+    "name": "PDF Table",
+    "icon": "Table",
+    "styles": ["size"],
+    "size": {
+      "width": 600,
+      "height": 304
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter",
+        "resetOn": "datasource",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "sortColumn",
+        "placeholder": "Default",
+        "resetOn": "datasource",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "sortOrder",
+        "resetOn": "datasource",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending",
+        "dependsOn": "sortColumn"
+      },
+      {
+        "type": "columns/toplevel",
+        "label": "Columns",
+        "key": "columns",
+        "resetOn": "datasource",
+        "placeholder": "First 3 columns"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 10
+      }
+    ]
+  },
+  "singlerowprovider": {
+    "name": "Single Row Provider",
+    "icon": "SQLQuery",
+    "hasChildren": true,
+    "actions": ["RefreshDatasource"],
+    "size": {
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "table",
+        "label": "Datasource",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Row ID",
+        "key": "rowId",
+        "required": true,
+        "resetOn": "datasource"
+      }
+    ],
+    "context": {
+      "type": "schema"
+    }
   }
 }

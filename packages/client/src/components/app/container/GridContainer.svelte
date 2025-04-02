@@ -135,12 +135,18 @@
   use:styleable={$styles}
   data-cols={GridColumns}
   data-col-size={colSize}
+  data-required-rows={requiredRows}
   on:click={onClick}
 >
   {#if inBuilder}
-    <div class="underlay">
-      {#each { length: GridColumns * rows } as _, idx}
-        <div class="placeholder" class:first-col={idx % GridColumns === 0} />
+    <div class="underlay-h">
+      {#each { length: rows } as _}
+        <div class="placeholder-h" />
+      {/each}
+    </div>
+    <div class="underlay-v">
+      {#each { length: GridColumns } as _}
+        <div class="placeholder-v" />
       {/each}
     </div>
   {/if}
@@ -151,7 +157,8 @@
 
 <style>
   .grid,
-  .underlay {
+  .underlay-h,
+  .underlay-v {
     height: var(--height) !important;
     min-height: var(--min-height) !important;
     max-height: none !important;
@@ -161,37 +168,45 @@
     grid-template-columns: repeat(var(--cols), calc(var(--col-size) * 1px));
     position: relative;
   }
-  .underlay {
+  .clickable {
+    cursor: pointer;
+  }
+
+  /* Underlay grid lines */
+  .underlay-h,
+  .underlay-v {
+    z-index: 0;
     display: none;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    border-top: 1px solid var(--spectrum-global-color-gray-900);
     opacity: 0.1;
     pointer-events: none;
   }
-  .underlay {
-    z-index: 0;
-  }
-  .placeholder {
+  .placeholder-h {
     border-bottom: 1px solid var(--spectrum-global-color-gray-900);
+    grid-column: 1 / -1;
+  }
+  .placeholder-h:first-child {
+    border-top: 1px solid var(--spectrum-global-color-gray-900);
+  }
+  .placeholder-v {
     border-right: 1px solid var(--spectrum-global-color-gray-900);
+    grid-row: 1 / -1;
   }
-  .placeholder.first-col {
+  .placeholder-v:first-child {
     border-left: 1px solid var(--spectrum-global-color-gray-900);
-  }
-  .clickable {
-    cursor: pointer;
   }
 
   /* Highlight grid lines when resizing children */
-  :global(.grid.highlight > .underlay) {
+  :global(.grid.highlight > .underlay-h),
+  :global(.grid.highlight > .underlay-v) {
     display: grid;
   }
 
-  /* Highlight sibling borders when resizing childern */
+  /* Highlight sibling borders when resizing children */
   :global(.grid.highlight > .component:not(.dragging)) {
     outline: 2px solid var(--spectrum-global-color-static-blue-200);
     pointer-events: none !important;

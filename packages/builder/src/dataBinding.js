@@ -26,7 +26,7 @@ import {
   getJsHelperList,
 } from "@budibase/string-templates"
 import { TableNames } from "./constants"
-import { JSONUtils, Constants } from "@budibase/frontend-core"
+import { JSONUtils, Constants, SchemaUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "@/components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
@@ -1026,25 +1026,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // Check for any JSON fields so we can add any top level properties
     if (schema) {
-      let jsonAdditions = {}
-      Object.keys(schema).forEach(fieldKey => {
-        const fieldSchema = schema[fieldKey]
-        if (fieldSchema?.type === "json") {
-          const jsonSchema = JSONUtils.convertJSONSchemaToTableSchema(
-            fieldSchema,
-            {
-              squashObjects: true,
-            }
-          )
-          Object.keys(jsonSchema).forEach(jsonKey => {
-            jsonAdditions[`${fieldKey}.${jsonKey}`] = {
-              type: jsonSchema[jsonKey].type,
-              nestedJSON: true,
-            }
-          })
-        }
-      })
-      schema = { ...schema, ...jsonAdditions }
+      schema = SchemaUtils.addNestedJSONSchemaFields(schema)
     }
 
     // Determine if we should add ID and rev to the schema

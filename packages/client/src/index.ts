@@ -31,6 +31,8 @@ import {
 } from "@budibase/types"
 import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
+import BlockComponent from "./components/BlockComponent.svelte"
+import Block from "./components/Block.svelte"
 
 if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", e => {
@@ -99,6 +101,8 @@ export interface SDK {
   notificationStore: typeof notificationStore
   environmentStore: typeof environmentStore
   appStore: typeof appStore
+  Block: typeof Block
+  BlockComponent: typeof BlockComponent
 }
 
 let app: ClientApp

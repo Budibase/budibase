@@ -4,8 +4,10 @@
   import blank from "./images/blank.svg"
   import table from "./images/tableInline.svg"
   import form from "./images/formUpdate.svg"
+  import pdf from "./images/pdf.svg"
   import CreateScreenModal from "./CreateScreenModal.svelte"
   import { screenStore } from "@/stores/builder"
+  import { AutoScreenTypes } from "@/constants"
 
   export let onClose = null
 
@@ -27,32 +29,54 @@
     </div>
 
     <div class="cards">
-      <div class="card" on:click={() => createScreenModal.show("blank")}>
+      <div
+        class="card"
+        on:click={() => createScreenModal.show(AutoScreenTypes.BLANK)}
+      >
         <div class="image">
           <img alt="A blank screen" src={blank} />
         </div>
         <div class="text">
-          <Body size="S">Blank</Body>
+          <Body size="M">Blank</Body>
           <Body size="XS">Add an empty blank screen</Body>
         </div>
       </div>
 
-      <div class="card" on:click={() => createScreenModal.show("table")}>
+      <div
+        class="card"
+        on:click={() => createScreenModal.show(AutoScreenTypes.TABLE)}
+      >
         <div class="image">
           <img alt="A table of data" src={table} />
         </div>
         <div class="text">
-          <Body size="S">Table</Body>
+          <Body size="M">Table</Body>
           <Body size="XS">List rows in a table</Body>
         </div>
       </div>
 
-      <div class="card" on:click={() => createScreenModal.show("form")}>
+      <div
+        class="card"
+        on:click={() => createScreenModal.show(AutoScreenTypes.PDF)}
+      >
+        <div class="image">
+          <img alt="A form containing data" src={pdf} width="185" />
+        </div>
+        <div class="text">
+          <Body size="M">PDF</Body>
+          <Body size="XS">Create, edit and export your PDF</Body>
+        </div>
+      </div>
+
+      <div
+        class="card"
+        on:click={() => createScreenModal.show(AutoScreenTypes.FORM)}
+      >
         <div class="image">
           <img alt="A form containing data" src={form} />
         </div>
         <div class="text">
-          <Body size="S">Form</Body>
+          <Body size="M">Form</Body>
           <Body size="XS">Capture data from your users</Body>
         </div>
       </div>
@@ -111,14 +135,13 @@
   .text {
     border: 1px solid var(--grey-4);
     border-radius: 0 0 4px 4px;
-    padding: 8px 16px 13px 16px;
-  }
-
-  .text :global(p:nth-child(1)) {
-    margin-bottom: 6px;
+    padding: 12px 16px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .text :global(p:nth-child(2)) {
-    color: var(--grey-6);
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
