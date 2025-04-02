@@ -50,7 +50,11 @@ export async function generateTables(
   })
 
   if (!useCached) {
-    const dir = path.join(process.env.PWD!, `../../llm-output/${cacheKey}`)
+    const baseDir = path.join(objectStore.budibaseTempDir(), "llm-output")
+    if (!fs.existsSync(baseDir)) {
+      fs.mkdirSync(baseDir)
+    }
+    const dir = path.join(baseDir, cacheKey)
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir)
     }
