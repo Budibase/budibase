@@ -12,7 +12,6 @@ describe("configs", () => {
 
   const setDbPlatformUrl = async (dbUrl: string) => {
     const settingsConfig = {
-      _id: configs.generateConfigID(ConfigType.SETTINGS),
       type: ConfigType.SETTINGS,
       config: {
         platformUrl: dbUrl,
