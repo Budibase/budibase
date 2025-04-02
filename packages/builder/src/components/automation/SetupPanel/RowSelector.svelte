@@ -246,6 +246,9 @@
   const drawerValue = fieldValue => {
     return Array.isArray(fieldValue) ? fieldValue.join(",") : fieldValue
   }
+
+  // The element controls their own binding drawer
+  const customDrawer = ["string", "number", "barcodeqr", "bigint"]
 </script>
 
 {#each schemaFields || [] as [field, schema]}
@@ -255,7 +258,7 @@
       fullWidth={fullWidth || isFullWidth(schema.type)}
       {componentWidth}
     >
-      {#if ["string", "number", "barcodeqr"].includes(schema.type)}
+      {#if customDrawer.includes(schema.type)}
         <div class="prop-control-wrap">
           <RowSelectorTypes
             {isTestModal}
