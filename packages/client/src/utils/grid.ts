@@ -116,6 +116,9 @@ export const gridLayout = (node: HTMLDivElement, metadata: GridMetadata) => {
       return
     }
 
+    // Add a unique class to elements we mutate so we can easily find them later
+    node.classList.add("grid-child")
+
     // Callback to select the component when clicking on the wrapper
     selectComponent = (e: Event) => {
       e.stopPropagation()
