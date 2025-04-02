@@ -53,7 +53,7 @@
         // Otherwise choose a datasource
         datasourceModal.show()
       }
-    } else if (mode === AutoScreenTypes.BLANK) {
+    } else if (mode === AutoScreenTypes.BLANK || mode === AutoScreenTypes.PDF) {
       screenDetailsModal.show()
     } else {
       throw new Error("Invalid mode provided")
@@ -101,8 +101,11 @@
     }
   }
 
-  const createBlankScreen = async ({ route }) => {
-    const screenTemplates = screenTemplating.blank({ route, screens })
+  const createBasicScreen = async ({ route }) => {
+    const screenTemplates =
+      mode === AutoScreenTypes.BLANK
+        ? screenTemplating.blank({ route, screens })
+        : screenTemplating.pdf({ route, screens })
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
@@ -243,7 +246,7 @@
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>
-  <ScreenDetailsModal onConfirm={createBlankScreen} />
+  <ScreenDetailsModal onConfirm={createBasicScreen} />
 </Modal>
 
 <Modal bind:this={formTypeModal}>

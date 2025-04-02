@@ -4,22 +4,24 @@ import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
 import { findAllMatchingComponents } from "@/helpers/components"
 import {
-  layoutStore,
   appStore,
   componentStore,
+  layoutStore,
   navigationStore,
+  previewStore,
   selectedComponent,
 } from "@/stores/builder"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
-  FetchAppPackageResponse,
-  DeleteScreenResponse,
-  Screen,
   Component,
-  SaveScreenResponse,
   ComponentDefinition,
+  DeleteScreenResponse,
+  FetchAppPackageResponse,
+  SaveScreenResponse,
+  Screen,
+  ScreenVariant,
 } from "@budibase/types"
 
 interface ScreenState {
@@ -115,6 +117,14 @@ export class ScreenStore extends BudiStore<ScreenState> {
       state.selectedScreenId = screen._id
       return state
     })
+
+    // If this is a PDF screen, ensure we're on desktop
+    if (
+      screen.variant === ScreenVariant.PDF &&
+      get(previewStore).previewDevice !== "desktop"
+    ) {
+      previewStore.setDevice("desktop")
+    }
   }
 
   /**
