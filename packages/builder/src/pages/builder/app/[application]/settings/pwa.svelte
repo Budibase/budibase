@@ -41,12 +41,7 @@
   }
 
   $: iconCount = pwaConfig.icons?.length || 0
-  $: iconFileDisplay = iconCount
-    ? {
-        name: `${iconCount} icons uploaded`,
-        type: "file",
-      }
-    : undefined
+  $: iconStatusText = iconCount ? `${iconCount} icons uploaded` : undefined
 
   function getCssVariableValue(cssVar: string) {
     try {
@@ -69,7 +64,10 @@
   }
 
   async function handlePWAZip(file: File) {
-    if (!file) return
+    if (!file) {
+      notifications.error("No file selected")
+      return
+    }
 
     try {
       uploadingIcons = true
@@ -196,7 +194,7 @@
               notifications.error("File too large. 20mb limit")}
             extensions={[".zip"]}
             on:change={e => e.detail && handlePWAZip(e.detail)}
-            value={iconFileDisplay}
+            statusText={iconStatusText}
             disabled={!pwaEnabled || uploadingIcons}
           />
         </div>

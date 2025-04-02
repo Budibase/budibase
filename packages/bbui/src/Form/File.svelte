@@ -12,8 +12,8 @@
   export let extensions: string[] | undefined = undefined
   export let error: string | undefined = undefined
   export let title: string | undefined = undefined
-  export let value: File | { name: string; type: string } | undefined =
-    undefined
+  export let value: File | undefined = undefined
+  export let statusText: string | undefined = undefined
   export let tooltip: string | undefined = undefined
   export let helpText: string | undefined = undefined
 
@@ -30,6 +30,7 @@
     {allowClear}
     {title}
     {value}
+    {statusText}
     {previewUrl}
     {handleFileTooLarge}
     {extensions}

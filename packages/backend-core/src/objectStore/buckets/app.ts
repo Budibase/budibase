@@ -56,7 +56,7 @@ export async function getAppFileUrl(s3Key: string) {
 export async function enrichPWAImages(
   images: PWAManifestImage[]
 ): Promise<PWAManifestImage[]> {
-  if (!images || images.length === 0) {
+  if (images.length === 0) {
     return []
   }
 
