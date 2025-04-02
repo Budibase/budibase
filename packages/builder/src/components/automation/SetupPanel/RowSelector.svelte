@@ -258,7 +258,7 @@
       fullWidth={fullWidth || isFullWidth(schema.type)}
       {componentWidth}
     >
-      {#if customDrawer.includes(schema.type)}
+      {#if customDrawer.includes(schema.type) || isTestModal}
         <div class="prop-control-wrap">
           <RowSelectorTypes
             {isTestModal}
