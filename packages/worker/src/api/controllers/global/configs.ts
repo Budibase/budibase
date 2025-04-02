@@ -428,14 +428,15 @@ export async function publicSettings(
 
     const brandingPromise = pro.branding.getBrandingConfig(config)
 
-    // enrich the logo url - empty url means deleted
-    if (config.logoUrl && config.logoUrl !== "") {
-      // pre-signed URLs are promises, but evaluate locally with nominal performance
-      config.logoUrl = await objectStore.getGlobalFileUrl(
-        "settings",
-        "logoUrl",
-        config.logoUrlEtag
-      )
+    const getLogoUrl = () => {
+      // enrich the logo url - empty url means deleted
+      if (config.logoUrl && config.logoUrl !== "") {
+        return objectStore.getGlobalFileUrl(
+          "settings",
+          "logoUrl",
+          config.logoUrlEtag
+        )
+      }
     }
 
     // google
@@ -460,6 +461,7 @@ export async function publicSettings(
       oidcConfig,
       oidcCallbackUrl,
       isSSOEnforced,
+      logoUrl,
     ] = await Promise.all([
       brandingPromise,
       googleDatasourcePromise,
@@ -467,6 +469,7 @@ export async function publicSettings(
       oidcConfigPromise,
       oidcCallbackUrlPromise,
       isSSOEnforcedPromise,
+      getLogoUrl(),
     ])
 
     // enrich the favicon url - empty url means deleted
@@ -481,6 +484,9 @@ export async function publicSettings(
 
     const oidc = oidcConfig?.activated || false
     const googleDatasourceConfigured = !!googleDatasource
+    if (logoUrl) {
+      config.logoUrl = logoUrl
+    }
 
     ctx.body = {
       type: ConfigType.SETTINGS,
