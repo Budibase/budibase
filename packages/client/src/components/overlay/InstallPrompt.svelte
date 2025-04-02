@@ -5,6 +5,8 @@
   const STORAGE_KEY = "pwa-install-declined"
 
   function checkForDeferredPrompt() {
+    console.log("Checking for deferred prompt")
+
     if (localStorage.getItem(STORAGE_KEY) === "true") {
       return false
     }

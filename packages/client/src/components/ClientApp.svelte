@@ -94,6 +94,7 @@
 
   onMount(async () => {
     if ("serviceWorker" in navigator) {
+      console.log("Service worker supported")
       try {
         await navigator.serviceWorker.register("/app/service-worker.js", {
           scope: "/app/",
