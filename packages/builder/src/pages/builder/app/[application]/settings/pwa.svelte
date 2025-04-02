@@ -24,7 +24,6 @@
     { label: "Minimal UI", value: "minimal-ui" },
   ]
 
-  let saving = false
   let pwaEnabled = true
   let uploadingIcons = false
 
@@ -80,11 +79,7 @@
         `Processed ${pwaConfig.icons.length} icons from PWA Builder`
       )
     } catch (error: any) {
-      console.error("Error processing PWA Builder zip:", error)
-      notifications.error(
-        "Failed to process PWA Builder zip: " +
-          (error.message || "Unknown error")
-      )
+      notifications.error("Failed to process PWA Builder zip: " + error.message)
     } finally {
       uploadingIcons = false
     }
@@ -92,8 +87,6 @@
 
   const handleSubmit = async () => {
     try {
-      saving = true
-
       const pwaConfigToSave = {
         ...pwaConfig,
         background_color: getCssVariableValue(pwaConfig.background_color),
@@ -106,8 +99,6 @@
       notifications.success("PWA settings saved successfully")
     } catch (error) {
       notifications.error("Error saving PWA settings")
-    } finally {
-      saving = false
     }
   }
 </script>
@@ -243,9 +234,7 @@
       </div>
 
       <div class="actions">
-        <Button cta on:click={handleSubmit} disabled={!pwaEnabled || saving}>
-          {saving ? "Saving..." : "Save"}
-        </Button>
+        <Button cta on:click={handleSubmit} disabled={!pwaEnabled}>Save</Button>
       </div>
     </div>
   </div>

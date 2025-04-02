@@ -201,7 +201,7 @@ export async function processPWAZip(ctx: UserCtx) {
           })
         }
       } catch (uploadError) {
-        console.error(`Failed to upload icon ${icon.src}:`, uploadError)
+        throw new Error(`Failed to upload icon ${icon.src}: ${uploadError}`)
       }
     }
 
@@ -359,7 +359,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
               extraHead += `<link rel="apple-touch-icon" sizes="${appleTouchIcon.sizes}" href="${appleTouchIcon.src}">`
             }
           } catch (error) {
-            console.error("Error enriching PWA icons:", error)
+            throw new Error("Error enriching PWA icons: " + error)
           }
         }
       }
@@ -594,14 +594,13 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
           })
         }
       } catch (error) {
-        console.error("Error processing manifest icons:", error)
+        throw new Error("Error processing manifest icons: " + error)
       }
     }
 
     ctx.set("Content-Type", "application/json")
     ctx.body = manifest
   } catch (error) {
-    console.error("Error serving manifest:", error)
     ctx.status = 500
     ctx.body = { message: "Error generating manifest" }
   }

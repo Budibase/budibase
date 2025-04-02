@@ -92,6 +92,7 @@
 
   let fontsLoaded = false
 
+  // Load app config
   onMount(async () => {
     if ("serviceWorker" in navigator) {
       try {
