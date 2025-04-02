@@ -1,3 +1,4 @@
+import * as uuid from "uuid"
 import {
   DocumentType,
   FieldType,
@@ -6,14 +7,19 @@ import {
   SourceName,
   TableSchema,
   TableSourceType,
+  Upload,
   UserCtx,
 } from "@budibase/types"
 import { getLLM } from "packages/pro/src/ai"
-import { context, utils } from "@budibase/backend-core"
+import { context, objectStore, utils } from "@budibase/backend-core"
 import sdk from "../../sdk"
-import fs from "fs"
-import path from "path"
+import fs, { mkdirSync } from "fs"
+import path, { join } from "path"
 import { createHash } from "crypto"
+import { pipeline } from "stream"
+import { promisify } from "util"
+import fetch from "node-fetch"
+import { ObjectStoreBuckets } from "../../constants"
 
 export async function generateTables(
   ctx: UserCtx<GenerateTablesRequest, GenerateTablesResponse>
@@ -123,8 +129,21 @@ export async function generateTables(
         linksOverride[field.name] = null
       }
 
+      const attachmentColumns = table.structure.schema.filter(
+        f => f.type === FieldType.ATTACHMENT_SINGLE
+      )
+
       for (const entry of table.data || []) {
         const tableId = tableIds[table.structure.name]
+
+        const attachmentData: Record<string, any> = {}
+        for (const column of attachmentColumns) {
+          const attachment = await downloadFile(
+            entry.values.find(f => f.key === column.name)!.value as string
+          )
+          attachmentData[column.name] = attachment
+        }
+
         const createdRow = await sdk.rows.save(
           tableId,
           {
@@ -133,6 +152,7 @@ export async function generateTables(
               return acc
             }, {}),
             ...linksOverride,
+            ...attachmentData,
             _id: undefined,
           },
           ctx.user._id
@@ -187,5 +207,41 @@ export async function generateTables(
 
   ctx.body = {
     createdTables,
+  }
+}
+
+async function downloadFile(url: string): Promise<Upload> {
+  const res = await fetch(url)
+
+  const tmpPath = join(objectStore.budibaseTempDir(), "ai-downloads")
+
+  if (!fs.existsSync(tmpPath)) {
+    mkdirSync(tmpPath)
+  }
+
+  const extension = [...res.url.split(".")].pop()!.split("?")[0]
+
+  const destination = path.resolve(tmpPath, `${uuid.v4()}${extension}`)
+  const fileStream = fs.createWriteStream(destination, { flags: "wx" })
+
+  await promisify(pipeline)(res.body, fileStream)
+
+  const processedFileName = path.basename(destination)
+
+  const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+
+  const response = await objectStore.upload({
+    bucket: ObjectStoreBuckets.APPS,
+    filename: s3Key,
+    path: destination,
+    type: "image/jpeg",
+  })
+
+  return {
+    size: fileStream.bytesWritten,
+    name: processedFileName,
+    url: await objectStore.getAppFileUrl(s3Key),
+    extension,
+    key: response.Key!,
   }
 }
