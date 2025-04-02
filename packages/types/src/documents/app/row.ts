@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { FieldSchema, FormulaType } from "./table"
 
 export enum FieldType {
   /**
@@ -128,6 +129,7 @@ export enum FieldType {
 export const JsonTypes = [
   FieldType.ATTACHMENT_SINGLE,
   FieldType.ATTACHMENTS,
+  FieldType.SIGNATURE_SINGLE,
   // only BB_REFERENCE is JSON, it's an array, BB_REFERENCE_SINGLE is a string type
   FieldType.BB_REFERENCE,
   FieldType.JSON,
@@ -144,6 +146,15 @@ export const NumericTypes = [FieldType.NUMBER, FieldType.BIGINT]
 
 export function isNumeric(type: FieldType) {
   return NumericTypes.includes(type)
+}
+
+export function isNumericStaticFormula(schema: FieldSchema) {
+  return (
+    schema.type === FieldType.FORMULA &&
+    schema.formulaType === FormulaType.STATIC &&
+    schema.responseType &&
+    isNumeric(schema.responseType)
+  )
 }
 
 export const GroupByTypes = [

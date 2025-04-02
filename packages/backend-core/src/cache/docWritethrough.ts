@@ -1,6 +1,6 @@
-import { AnyDocument, Database, Document } from "@budibase/types"
+import { AnyDocument, Database, Document, DocumentType } from "@budibase/types"
 
-import { JobQueue, Queue, createQueue } from "../queue"
+import { BudibaseQueue, JobQueue } from "../queue"
 import * as dbUtils from "../db"
 
 interface ProcessDocMessage {
@@ -13,11 +13,11 @@ const PERSIST_MAX_ATTEMPTS = 100
 let processor: DocWritethroughProcessor | undefined
 
 export class DocWritethroughProcessor {
-  private static _queue: Queue
+  private static _queue: BudibaseQueue<ProcessDocMessage>
 
   public static get queue() {
     if (!DocWritethroughProcessor._queue) {
-      DocWritethroughProcessor._queue = createQueue<ProcessDocMessage>(
+      DocWritethroughProcessor._queue = new BudibaseQueue<ProcessDocMessage>(
         JobQueue.DOC_WRITETHROUGH_QUEUE,
         {
           jobOptions: {
@@ -57,6 +57,10 @@ export class DocWritethroughProcessor {
     docId: string
     data: Record<string, any>
   }) {
+    // HACK - for now drop SCIM events
+    if (docId.startsWith(DocumentType.SCIM_LOG)) {
+      return
+    }
     const db = dbUtils.getDB(dbName)
     let doc: AnyDocument | undefined
     try {

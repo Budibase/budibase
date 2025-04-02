@@ -196,6 +196,7 @@
 
       notifications.success(`Request saved successfully`)
       if (isNew && redirectIfNew) {
+        isModified = false
         $goto(`../../${_id}`)
       }
 
@@ -581,7 +582,6 @@
                 ...globalDynamicRequestBindings,
                 ...dataSourceStaticBindings,
               ]}
-              bindingDrawerLeft="260px"
             />
           </Tab>
           <Tab title="Params">
@@ -590,7 +590,6 @@
               name="param"
               headings
               bindings={mergedBindings}
-              bindingDrawerLeft="260px"
             />
           </Tab>
           <Tab title="Headers">
@@ -601,7 +600,6 @@
               name="header"
               headings
               bindings={mergedBindings}
-              bindingDrawerLeft="260px"
             />
           </Tab>
           <Tab title="Body">

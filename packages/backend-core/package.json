@@ -56,6 +56,7 @@
     "koa-pino-logger": "4.0.0",
     "lodash": "4.17.21",
     "node-fetch": "2.6.7",
+    "object-sizeof": "2.6.1",
     "passport-google-oauth": "2.0.0",
     "passport-local": "1.0.0",
     "passport-oauth2-refresh": "^2.1.0",
@@ -68,7 +69,7 @@
     "rotating-file-stream": "3.1.0",
     "sanitize-s3-objectkey": "0.0.1",
     "semver": "^7.5.4",
-    "tar-fs": "2.1.1",
+    "tar-fs": "2.1.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

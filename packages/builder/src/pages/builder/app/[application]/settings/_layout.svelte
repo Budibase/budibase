@@ -4,12 +4,8 @@
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import { isOnlyUser, appStore } from "@/stores/builder"
-  import { featureFlag } from "@/helpers"
-  import { FeatureFlag } from "@budibase/types"
 
   let deleteModal: DeleteModal
-
-  $: oauth2Enabled = featureFlag.isEnabled(FeatureFlag.OAUTH2_CONFIG)
 </script>
 
 <!-- routify:options index=4 -->
@@ -48,13 +44,11 @@
             url={$url("./version")}
             active={$isActive("./version")}
           />
-          {#if oauth2Enabled}
-            <SideNavItem
-              text="OAuth2"
-              url={$url("./oauth2")}
-              active={$isActive("./oauth2")}
-            />
-          {/if}
+          <SideNavItem
+            text="OAuth2"
+            url={$url("./oauth2")}
+            active={$isActive("./oauth2")}
+          />
           <SideNavItem
             text="App scripts"
             url={$url("./scripts")}

@@ -8,24 +8,30 @@ import {
 } from "@budibase/types"
 import { EventProcessor } from "./types"
 import { getAppId, doInTenant, getTenantId } from "../../context"
-import BullQueue from "bull"
-import { createQueue, JobQueue } from "../../queue"
+import { BudibaseQueue, JobQueue } from "../../queue"
 import { isAudited } from "../../utils"
 import env from "../../environment"
 
 export default class AuditLogsProcessor implements EventProcessor {
   static auditLogsEnabled = false
-  static auditLogQueue: BullQueue.Queue<AuditLogQueueEvent>
+  static auditLogQueue: BudibaseQueue<AuditLogQueueEvent>
 
   // can't use constructor as need to return promise
   static init(fn: AuditLogFn) {
     AuditLogsProcessor.auditLogsEnabled = true
     const writeAuditLogs = fn
-    AuditLogsProcessor.auditLogQueue = createQueue<AuditLogQueueEvent>(
-      JobQueue.AUDIT_LOG
+    AuditLogsProcessor.auditLogQueue = new BudibaseQueue<AuditLogQueueEvent>(
+      JobQueue.AUDIT_LOG,
+      {
+        jobTags: (event: AuditLogQueueEvent) => {
+          return {
+            "event.name": event.event,
+          }
+        },
+      }
     )
     return AuditLogsProcessor.auditLogQueue.process(async job => {
-      return doInTenant(job.data.tenantId, async () => {
+      await doInTenant(job.data.tenantId, async () => {
         let properties = job.data.properties
         if (properties.audited) {
           properties = {

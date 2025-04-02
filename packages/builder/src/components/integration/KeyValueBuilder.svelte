@@ -18,7 +18,7 @@
   export let defaults: Record<string, string> | undefined = undefined
   export let object: Record<string, string> = defaults || {}
   export let activity: Record<string, boolean> = {}
-  export let readOnly: boolean
+  export let readOnly: boolean = false
   export let noAddButton: boolean = false
   export let name: string = ""
   export let headings: boolean = false
@@ -26,10 +26,10 @@
   export let toggle: boolean = false
   export let keyPlaceholder: string = "Key"
   export let valuePlaceholder: string = "Value"
-  export let valueHeading: string | undefined = undefined
-  export let keyHeading: string | undefined = undefined
+  export let valueHeading: string = ""
+  export let keyHeading: string = ""
   export let tooltip: string = ""
-  export let menuItems: any[] | undefined = undefined
+  export let menuItems: any[] = []
   export let showMenu: boolean = false
   export let bindings: any[] = []
   export let allowHelpers: boolean = true

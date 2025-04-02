@@ -5,6 +5,7 @@ import { GoogleSpreadsheet } from "google-spreadsheet"
 // keep this out of Budibase types, don't want to expose context info
 export type ContextMap = {
   tenantId?: string
+  isSelfHostUsingCloud?: boolean
   appId?: string
   identity?: IdentityContext
   environmentVariables?: Record<string, string>

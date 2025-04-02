@@ -8,6 +8,7 @@ import { middleware as pro } from "@budibase/pro"
 import { apiEnabled, automationsEnabled } from "../features"
 import migrations from "../middleware/appMigrations"
 import { automationQueue } from "../automations"
+import assetRouter from "./routes/assets"
 
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
@@ -16,7 +17,7 @@ export const router: Router = new Router()
 
 router.get("/health", async ctx => {
   if (automationsEnabled()) {
-    if (!(await automationQueue.isReady())) {
+    if (!(await automationQueue.getBullQueue().isReady())) {
       ctx.status = 503
       return
     }
@@ -44,6 +45,12 @@ if (apiEnabled()) {
     )
     // re-direct before any middlewares occur
     .redirect("/", "/builder")
+
+  // send assets before middleware
+  router.use(assetRouter.routes())
+  router.use(assetRouter.allowedMethods())
+
+  router
     .use(
       auth.buildAuthMiddleware([], {
         publicAllowed: true,
