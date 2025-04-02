@@ -18,7 +18,7 @@
   import { appStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import { API } from "@/api"
-
+  import { rgbToHex } from "@/helpers/utils"
   const DISPLAY_OPTIONS = [
     { label: "Standalone", value: "standalone" },
     { label: "Fullscreen", value: "fullscreen" },
@@ -51,12 +51,13 @@
       if (!varMatch) return "#FFFFFF"
 
       const varName = varMatch?.[1]
-      return (
+      const cssValue =
         varName &&
         getComputedStyle(document.documentElement)
           .getPropertyValue(varName)
           .trim()
-      )
+
+      return rgbToHex(cssValue || "#FFFFFF")
     } catch (error) {
       console.error("Error converting CSS variable:", error)
       return "#FFFFFF"
