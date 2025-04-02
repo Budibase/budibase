@@ -93,6 +93,7 @@
   let fontsLoaded = false
 
   onMount(async () => {
+    console.log("Mounting ClientApp")
     if ("serviceWorker" in navigator) {
       console.log("Service worker supported")
       try {
