@@ -1,6 +1,7 @@
 <script lang="ts">
   import { API } from "@/api"
   import { datasources, tables } from "@/stores/builder"
+  import { admin } from "@/stores/portal"
   import {
     Modal,
     ModalContent,
@@ -17,7 +18,7 @@
     prompt:
       "I need a ticketing system where users can submit tickets. A ticket has a title, description, priority, status, and an assigned technician",
     addData: true,
-    useCached: true,
+    useCached: $admin.isDev,
   }
 
   export function show() {
@@ -52,6 +53,8 @@
   >
     <TextArea label="Prompt" bind:value={modalData.prompt} />
     <Toggle label="Add data" bind:value={modalData.addData} />
-    <Toggle label="Use cached" bind:value={modalData.useCached} />
+    {#if $admin.isDev}
+      <Toggle label="Use cached" bind:value={modalData.useCached} />
+    {/if}
   </ModalContent>
 </Modal>
