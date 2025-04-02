@@ -1,12 +1,16 @@
 <script>
   import { onMount } from "svelte"
-  import { appStore } from "@/stores"
+  import { appStore, featuresStore } from "@/stores"
 
   const STORAGE_KEY_PREFIX = "pwa-install-declined"
 
   let showButton = false
 
   function checkForDeferredPrompt() {
+    if (!$featuresStore.pwaEnabled) {
+      return false
+    }
+
     const appId = $appStore.appId
     const storageKey = `${STORAGE_KEY_PREFIX}-${appId}`
 
@@ -14,7 +18,7 @@
       return false
     }
 
-    if (window.deferredPwaPrompt) {
+    if (typeof window !== "undefined" && window.deferredPwaPrompt) {
       showButton = true
       return true
     }
@@ -46,7 +50,7 @@
 
 {#if showButton}
   <div class="install-prompt">
-    <button class="install-button" on:click={installPWA}>Install App</button>
+    <button class="openMenu" on:click={installPWA}>Install App</button>
   </div>
 {/if}
 
@@ -56,22 +60,21 @@
     bottom: 5px;
     left: 20px;
     z-index: 1000;
-    display: flex;
-    align-items: center;
   }
 
-  .install-button {
-    padding: 10px 15px;
-    background-color: #4f46e5;
+  .openMenu {
+    cursor: pointer;
+    background-color: var(--bb-indigo);
+    border-radius: 100px;
     color: white;
     border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    transition: background-color 130ms ease-out;
   }
 
-  .install-button:hover {
-    background-color: #4338ca;
+  .openMenu:hover {
+    background-color: var(--bb-indigo-light);
   }
 </style>

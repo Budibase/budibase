@@ -33,12 +33,16 @@ import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
 import BlockComponent from "./components/BlockComponent.svelte"
 import Block from "./components/Block.svelte"
+import { featuresStore } from "./stores"
 
 if (typeof window !== "undefined") {
-  window.addEventListener("beforeinstallprompt", e => {
-    e.preventDefault()
-    window.deferredPwaPrompt = e
-  })
+  const features = get(featuresStore)
+  if (features.pwaEnabled) {
+    window.addEventListener("beforeinstallprompt", e => {
+      e.preventDefault()
+      window.deferredPwaPrompt = e
+    })
+  }
 }
 
 // Provide svelte and svelte/internal as globals for custom components
