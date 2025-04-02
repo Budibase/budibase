@@ -1,17 +1,20 @@
 <script>
   import { onMount } from "svelte"
+  import { appStore } from "@/stores"
+
+  const STORAGE_KEY_PREFIX = "pwa-install-declined"
 
   let showButton = false
-  const STORAGE_KEY = "pwa-install-declined"
 
   function checkForDeferredPrompt() {
-    console.log("Checking for deferred prompt")
+    const appId = $appStore.appId
+    const storageKey = `${STORAGE_KEY_PREFIX}-${appId}`
 
-    if (localStorage.getItem(STORAGE_KEY) === "true") {
+    if (localStorage.getItem(storageKey) === "true") {
       return false
     }
 
-    if (typeof window !== "undefined" && window.deferredPwaPrompt) {
+    if (window.deferredPwaPrompt) {
       showButton = true
       return true
     }
@@ -27,7 +30,9 @@
     if (outcome === "accepted") {
       showButton = false
     } else if (outcome === "dismissed") {
-      localStorage.setItem(STORAGE_KEY, "true")
+      const appId = $appStore.appId
+      const storageKey = `${STORAGE_KEY_PREFIX}-${appId}`
+      localStorage.setItem(storageKey, "true")
       showButton = false
     }
 
