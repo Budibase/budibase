@@ -10,7 +10,9 @@ import {
   navigationStore,
   previewStore,
   selectedComponent,
+  webpageStore,
 } from "@/stores/builder"
+import { selectedWebpage } from "@/stores/builder/webpage"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
@@ -20,9 +22,13 @@ import {
   DeleteScreenResponse,
   FetchAppPackageResponse,
   SaveScreenResponse,
-  Screen,
+  Screen as ScreenType,
   ScreenVariant,
 } from "@budibase/types"
+
+interface Screen extends ScreenType {
+  webpage: string
+}
 
 interface ScreenState {
   screens: Screen[]
@@ -89,7 +95,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
   syncAppScreens(pkg: FetchAppPackageResponse) {
     this.update(state => ({
       ...state,
-      screens: [...pkg.screens],
+      screens: [...pkg.screens.map(s => ({ ...s, webpage: "app_default" }))],
     }))
   }
 
@@ -218,6 +224,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    */
   async saveScreen(screen: Screen) {
     const appState = get(appStore)
+    const webpageState = get(webpageStore)
 
     // Validate screen structure if the app supports it
     if (appState.features?.componentValidation) {
@@ -229,7 +236,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Save screen
     const creatingNewScreen = screen._id === undefined
-    const savedScreen = await API.saveScreen(screen)
+    const savedScreen = {
+      ...(await API.saveScreen(screen)),
+      webpage: webpageState.selected!._id,
+    }
 
     // Update state
     this.update(state => {
@@ -521,35 +531,48 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
 export const screenStore = new ScreenStore()
 
-export const selectedScreen = derived(screenStore, $store => {
-  return $store.screens.find(screen => screen._id === $store.selectedScreenId)
-})
+export const selectedScreen = derived(
+  [screenStore, selectedWebpage],
+  ([$store, $selectedWebpage]) => {
+    return $store.screens.find(
+      screen =>
+        screen._id === $store.selectedScreenId &&
+        screen.webpage === $selectedWebpage._id
+    )
+  }
+)
 
-export const sortedScreens = derived(screenStore, $screenStore => {
-  return $screenStore.screens.slice().sort((a, b) => {
-    // Sort by role first
-    const roleA = RoleUtils.getRolePriority(a.routing.roleId)
-    const roleB = RoleUtils.getRolePriority(b.routing.roleId)
-    if (roleA !== roleB) {
-      return roleA > roleB ? -1 : 1
-    }
-    // Then put home screens first
-    const homeA = !!a.routing.homeScreen
-    const homeB = !!b.routing.homeScreen
-    if (homeA !== homeB) {
-      return homeA ? -1 : 1
-    }
-    // Then sort alphabetically by each URL param
-    const aParams = a.routing.route.split("/")
-    const bParams = b.routing.route.split("/")
-    let minParams = Math.min(aParams.length, bParams.length)
-    for (let i = 0; i < minParams; i++) {
-      if (aParams[i] === bParams[i]) {
-        continue
-      }
-      return aParams[i] < bParams[i] ? -1 : 1
-    }
-    // Then sort by the fewest amount of URL params
-    return aParams.length < bParams.length ? -1 : 1
-  })
-})
+export const sortedScreens = derived(
+  [screenStore, selectedWebpage],
+  ([$screenStore, $selectedWebpage]) => {
+    return $screenStore.screens
+      .filter(s => s.webpage === $selectedWebpage._id)
+      .slice()
+      .sort((a, b) => {
+        // Sort by role first
+        const roleA = RoleUtils.getRolePriority(a.routing.roleId)
+        const roleB = RoleUtils.getRolePriority(b.routing.roleId)
+        if (roleA !== roleB) {
+          return roleA > roleB ? -1 : 1
+        }
+        // Then put home screens first
+        const homeA = !!a.routing.homeScreen
+        const homeB = !!b.routing.homeScreen
+        if (homeA !== homeB) {
+          return homeA ? -1 : 1
+        }
+        // Then sort alphabetically by each URL param
+        const aParams = a.routing.route.split("/")
+        const bParams = b.routing.route.split("/")
+        let minParams = Math.min(aParams.length, bParams.length)
+        for (let i = 0; i < minParams; i++) {
+          if (aParams[i] === bParams[i]) {
+            continue
+          }
+          return aParams[i] < bParams[i] ? -1 : 1
+        }
+        // Then sort by the fewest amount of URL params
+        return aParams.length < bParams.length ? -1 : 1
+      })
+  }
+)

@@ -1,6 +1,7 @@
 import { Helpers } from "@budibase/bbui"
 import { BudiStore } from "../BudiStore"
 import { appStore } from "./app"
+import { derived } from "svelte/store"
 
 interface Webpage {
   _id: string
@@ -46,6 +47,20 @@ class WebpageStore extends BudiStore<WebpageState> {
       }
     })
   }
+
+  select(appId: string) {
+    this.store.update(state => {
+      const app = state.items.find(i => i._id === appId)
+      return {
+        ...state,
+        selected: app,
+      }
+    })
+  }
 }
 
 export const webpageStore = new WebpageStore()
+
+export const selectedWebpage = derived(webpageStore, $webpageStore => {
+  return $webpageStore.selected!
+})

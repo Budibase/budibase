@@ -4,6 +4,8 @@
   import { ActionButton, Tab, Tabs } from "@budibase/bbui"
 
   function onAppClick(appId: string) {
+    webpageStore.select(appId)
+
     if ($screenStore.screens.length > 0) {
       $redirect(`./${appId}/${$screenStore.screens[0]._id}`)
     } else {
