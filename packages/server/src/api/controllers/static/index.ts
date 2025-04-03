@@ -469,7 +469,7 @@ export const serveClientLibrary = async function (
 
 export const serveServiceWorker = async function (ctx: Ctx) {
   const serviceWorkerContent = `
-  self.addEventListener('install', () => {
+    self.addEventListener('install', () => {
     self.skipWaiting();
   });`
 
