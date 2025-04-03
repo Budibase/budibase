@@ -1,12 +1,16 @@
 <script>
-  import { redirect } from "@roxi/routify"
+  import { redirect, url } from "@roxi/routify"
   import { screenStore } from "@/stores/builder"
+
+  const app = "app_default"
 
   $: {
     if ($screenStore.screens.length > 0) {
-      $redirect(`./${$screenStore.screens[0]._id}`)
+      $redirect(`./${app}/${$screenStore.screens[0]._id}`)
     } else {
-      $redirect("./new")
+      $redirect(`./${app}/new`)
     }
   }
 </script>
+
+hello {$url()}
