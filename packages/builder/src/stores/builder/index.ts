@@ -38,6 +38,7 @@ import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 import { appPublished } from "./published"
 import { oauth2 } from "./oauth2"
+import { webpageStore } from "./webpage"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 
@@ -81,6 +82,7 @@ export {
   screenComponentErrors,
   screenComponentErrorList,
   oauth2,
+  webpageStore,
 }
 
 export const reset = () => {

@@ -1,25 +1,24 @@
 <script lang="ts">
   import { redirect } from "@roxi/routify"
-  import { screenStore } from "@/stores/builder"
+  import { screenStore, webpageStore } from "@/stores/builder"
   import { ActionButton, Tab, Tabs } from "@budibase/bbui"
 
-  $: apps = [
-    { name: "Default app", id: "app_default" },
-    { name: "App 1", id: "app_1" },
-  ]
-
-  function onAppClick(id: string) {
+  function onAppClick(appId: string) {
     if ($screenStore.screens.length > 0) {
-      $redirect(`./${id}/${$screenStore.screens[0]._id}`)
+      $redirect(`./${appId}/${$screenStore.screens[0]._id}`)
     } else {
-      $redirect(`./${id}/new`)
+      $redirect(`./${appId}/new`)
     }
+  }
+
+  function addNew() {
+    webpageStore.add()
   }
 </script>
 
-<Tabs selected="TODO">
-  {#each apps as app}
-    <Tab title={app.name} on:click={() => onAppClick(app.id)} />
+<Tabs selected={$webpageStore.selected?.name || ""}>
+  {#each $webpageStore.items as app}
+    <Tab id={app._id} title={app.name} on:click={() => onAppClick(app._id)} />
   {/each}
-  <ActionButton icon="Add">Add new app</ActionButton>
+  <ActionButton icon="Add" on:click={addNew}>Add new app</ActionButton>
 </Tabs>
