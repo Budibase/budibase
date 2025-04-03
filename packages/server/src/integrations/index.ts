@@ -19,6 +19,7 @@ import {
   Integration,
   PluginType,
   IntegrationBase,
+  DatasourcePlus,
 } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
@@ -48,6 +49,13 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
 }
 
 type IntegrationBaseConstructor = new (...args: any[]) => IntegrationBase
+type DatasourcePlusConstructor = new (...args: any[]) => DatasourcePlus
+
+export function isDatasourcePlusConstructor(
+  integration: IntegrationBaseConstructor
+): integration is DatasourcePlusConstructor {
+  return !!integration.prototype.query
+}
 
 const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
   {
