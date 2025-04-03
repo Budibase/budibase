@@ -1,5 +1,5 @@
 <script>
-  import { redirect, url } from "@roxi/routify"
+  import { redirect } from "@roxi/routify"
   import { screenStore } from "@/stores/builder"
 
   const app = "app_default"
@@ -12,5 +12,3 @@
     }
   }
 </script>
-
-hello {$url()}
