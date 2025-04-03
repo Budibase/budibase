@@ -18,7 +18,6 @@ import {
   DatasourcePlusQueryResponse,
   BBReferenceFieldSubType,
   EnrichedQueryJson,
-  TableSchema,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import {
