@@ -1,20 +1,21 @@
 <script lang="ts">
   import { redirect } from "@roxi/routify"
-  import { screenStore, webpageStore } from "@/stores/builder"
+  import { webpageStore } from "@/stores/builder"
   import { ActionButton, Tab, Tabs } from "@budibase/bbui"
 
-  function onAppClick(appId: string) {
-    webpageStore.select(appId)
+  async function onAppClick(appId: string) {
+    const screenId = await webpageStore.select(appId)
 
-    if ($screenStore.screens.length > 0) {
-      $redirect(`./${appId}/${$screenStore.screens[0]._id}`)
+    if (screenId) {
+      $redirect(`./${appId}/${screenId}`)
     } else {
       $redirect(`./${appId}/new`)
     }
   }
 
   function addNew() {
-    webpageStore.add()
+    const appId = webpageStore.add()
+    $redirect(`./${appId}/new`)
   }
 </script>
 

@@ -1,7 +1,8 @@
 import { Helpers } from "@budibase/bbui"
 import { BudiStore } from "../BudiStore"
 import { appStore } from "./app"
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
+import { screenStore } from "./screens"
 
 interface Webpage {
   _id: string
@@ -35,9 +36,9 @@ class WebpageStore extends BudiStore<WebpageState> {
   }
 
   add() {
+    const id = `app_${Helpers.uuid()}`
     this.store.update(state => {
       const count = state.items.length + 1
-      const id = `app_${Helpers.uuid()}`
 
       const newApp = { name: `New app ${count}`, _id: id }
       return {
@@ -46,9 +47,10 @@ class WebpageStore extends BudiStore<WebpageState> {
         selected: newApp,
       }
     })
+    return id
   }
 
-  select(appId: string) {
+  async select(appId: string) {
     this.store.update(state => {
       const app = state.items.find(i => i._id === appId)
       return {
@@ -56,6 +58,10 @@ class WebpageStore extends BudiStore<WebpageState> {
         selected: app,
       }
     })
+
+    const screens = get(screenStore).screens.filter(s => s.webpage === appId)
+
+    return screens[0]?._id
   }
 }
 
