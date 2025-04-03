@@ -13,7 +13,7 @@
     isNumeric,
     isNumericStaticFormula,
   } from "@budibase/types"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/app_[appId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { getContext } from "svelte"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
 

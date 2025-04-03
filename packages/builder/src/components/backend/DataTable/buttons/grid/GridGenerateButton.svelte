@@ -12,7 +12,7 @@
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import MagicWand from "./magic-wand.svg"
   import { AutoScreenTypes } from "@/constants"
-  import CreateScreenModal from "@/pages/builder/app/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
+  import CreateScreenModal from "@/pages/builder/app/[application]/design/app_[appId]/_components/NewScreen/CreateScreenModal.svelte"
   import { getSequentialName } from "@/helpers/duplicate"
 
   const { datasource } = getContext("grid")

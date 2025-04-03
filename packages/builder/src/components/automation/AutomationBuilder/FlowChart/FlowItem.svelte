@@ -10,7 +10,7 @@
   import DragHandle from "@/components/design/settings/controls/DraggableList/drag-handle.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/app_[appId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
 
   export let block
