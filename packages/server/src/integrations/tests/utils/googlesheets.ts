@@ -545,7 +545,7 @@ export class GoogleSheetsMock {
       throw new Error(`Sheet ${range.sheetId} not found`)
     }
 
-    if (!range.startRowIndex || !range.endRowIndex) {
+    if (range.startRowIndex === undefined || range.endRowIndex === undefined) {
       throw new Error("Range must have start and end row indexes")
     }
 
