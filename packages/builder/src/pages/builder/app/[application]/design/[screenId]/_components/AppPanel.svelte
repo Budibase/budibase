@@ -1,10 +1,13 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { screenStore, appStore } from "@/stores/builder"
+  import { screenStore, appStore, selectedScreen } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
   import { Divider } from "@budibase/bbui"
+  import { ScreenVariant } from "@budibase/types"
+
+  $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
 </script>
 
 <div class="app-panel">
@@ -14,10 +17,12 @@
       <UndoRedoControl store={screenStore.history} />
     </div>
     <div class="header-right">
-      {#if $appStore.clientFeatures.devicePreview}
-        <DevicePreviewSelect />
+      {#if !isPDF}
+        {#if $appStore.clientFeatures.devicePreview}
+          <DevicePreviewSelect />
+        {/if}
+        <Divider vertical />
       {/if}
-      <Divider vertical />
       <ScreenErrorsButton />
     </div>
   </div>
