@@ -13,6 +13,7 @@
     componentTreeNodesStore,
     screenComponentErrors,
     snippets,
+    webpageStore,
   } from "@/stores/builder"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { Layout, Heading, Body, Icon, notifications } from "@budibase/bbui"
@@ -46,6 +47,7 @@
 
   $: previewData = {
     appId: $appStore.appId,
+    webpageId: $webpageStore.selected?._id,
     layout,
     screen,
     selectedComponentId,

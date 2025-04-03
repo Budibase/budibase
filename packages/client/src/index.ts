@@ -59,6 +59,7 @@ declare global {
   interface Window {
     // Data from builder
     "##BUDIBASE_APP_ID##"?: string
+    "##BUDIBASE_WEBPAGE_ID##"?: string
     "##BUDIBASE_IN_BUILDER##"?: true
     "##BUDIBASE_PREVIEW_SCREEN##"?: Screen
     "##BUDIBASE_SELECTED_COMPONENT_ID##"?: string
@@ -128,7 +129,10 @@ const loadBudibase = async () => {
 
   // Set app ID - this window flag is set by both the preview and the real
   // server rendered app HTML
-  appStore.actions.setAppId(window["##BUDIBASE_APP_ID##"])
+  appStore.actions.setAppId(
+    window["##BUDIBASE_APP_ID##"],
+    window["##BUDIBASE_WEBPAGE_ID##"]
+  )
 
   // Set the flag used to determine if the app is being loaded via an iframe
   appStore.actions.setAppEmbedded(

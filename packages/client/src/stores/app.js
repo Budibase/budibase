@@ -3,6 +3,7 @@ import { get, writable, derived } from "svelte/store"
 
 const initialState = {
   appId: null,
+  webpageId: null,
   isDevApp: false,
   clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
   embedded: false,
@@ -21,11 +22,12 @@ const createAppStore = () => {
   // Fetches the app definition including screens, layouts and theme
   const fetchAppDefinition = async () => {
     const appId = get(store)?.appId
+    const webpageId = get(store)?.webpageId
     if (!appId) {
       throw "Cannot fetch app definition without app ID set"
     }
     try {
-      const appDefinition = await API.fetchAppPackage(appId)
+      const appDefinition = await API.fetchAppPackage(appId, webpageId)
       store.set({
         ...initialState,
         ...appDefinition,
@@ -37,12 +39,13 @@ const createAppStore = () => {
   }
 
   // Sets the initial app ID
-  const setAppId = id => {
+  const setAppId = (id, webpageId) => {
     store.update(state => {
       if (state) {
         state.appId = id
+        state.webpageId = webpageId
       } else {
-        state = { appId: id }
+        state = { appId: id, webpageId }
       }
       return state
     })

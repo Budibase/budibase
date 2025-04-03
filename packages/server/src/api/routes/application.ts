@@ -21,7 +21,10 @@ router
   )
   .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
   .get("/api/applications", controller.fetch)
-  .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)
+  .get(
+    "/api/applications/:appId/:webpageId/appPackage",
+    controller.fetchAppPackage
+  )
   .put(
     "/api/applications/:appId",
     authorized(permissions.BUILDER),
