@@ -28,6 +28,7 @@ const environment = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
+  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   // urls
   MINIO_URL: process.env.MINIO_URL,
   COUCH_DB_URL: process.env.COUCH_DB_URL,

@@ -131,6 +131,10 @@ function agentSystemPrompt() {
   
   You MUST use markdown for any formatting in your response message.
   
+  Do not tell the user about the format of the parameters, for example if a date is required to be
+  supplied in ISO format, you should convert it to that, allowing the user to provide the date
+  in any human readable format.
+  
   If asked you can supply the list of "automations" to the user, this is the list of tool names available.`
 }
 
