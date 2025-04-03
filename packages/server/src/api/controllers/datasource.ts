@@ -1,5 +1,4 @@
 import { getQueryParams, getTableParams } from "../../db/utils"
-import { getIntegration } from "../../integrations"
 import { invalidateCachedVariable } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
@@ -173,14 +172,6 @@ export async function update(
   )
   await events.datasource.updated(datasource)
   datasource._rev = response.rev
-
-  // Drain connection pools when configuration is changed
-  if (datasource.source && !isBudibaseSource) {
-    const source = await getIntegration(datasource.source)
-    if (source && source.pool) {
-      await source.pool.end()
-    }
-  }
 
   ctx.message = "Datasource saved successfully."
   ctx.body = {
