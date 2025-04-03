@@ -106,7 +106,9 @@ export async function getDefinitions() {
   }
 }
 
-export async function getIntegration(integration: SourceName) {
+export async function getIntegration(
+  integration: SourceName
+): Promise<IntegrationBaseConstructor> {
   if (INTEGRATIONS[integration]) {
     return INTEGRATIONS[integration]
   }

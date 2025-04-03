@@ -8,6 +8,8 @@ export interface QuerySchema {
   subtype?: string
 }
 
+export type QueryVerb = "read" | "create" | "update" | "delete"
+
 export interface Query extends Document {
   datasourceId: string
   name: string
@@ -17,7 +19,7 @@ export interface Query extends Document {
   schema: Record<string, QuerySchema | string>
   nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>
   readable: boolean
-  queryVerb: string
+  queryVerb: QueryVerb
   // flag to state whether the default bindings are empty strings (old behaviour) or null
   nullDefaultSupport?: boolean
 }
