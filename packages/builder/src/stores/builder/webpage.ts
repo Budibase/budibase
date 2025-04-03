@@ -1,6 +1,5 @@
 import { Helpers } from "@budibase/bbui"
 import { BudiStore } from "../BudiStore"
-import { appStore } from "./app"
 import { derived, get } from "svelte/store"
 import { screenStore } from "./screens"
 
@@ -16,23 +15,10 @@ interface WebpageState {
 
 class WebpageStore extends BudiStore<WebpageState> {
   constructor() {
-    super({ items: [] })
-
-    appStore.subscribe($appStore => {
-      const item = localStorage.getItem(this.getKey($appStore.appId))
-      if (!item) {
-        const app = { name: "Default app", _id: "app_default" }
-        this.store.update(state => ({
-          ...state,
-          items: [app],
-          selected: app,
-        }))
-      }
+    super({
+      items: [{ name: "Default app", _id: "app_default" }],
+      selected: { name: "Default app", _id: "app_default" },
     })
-  }
-
-  private getKey(id: string) {
-    return `bb_webpage_${id}`
   }
 
   add() {
