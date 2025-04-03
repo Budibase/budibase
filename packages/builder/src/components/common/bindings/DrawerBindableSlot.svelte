@@ -22,6 +22,7 @@
   export let updateOnChange = true
   export let type = undefined
   export let schema = undefined
+  export let showComponent = false
 
   export let allowHBS = true
   export let context = {}
@@ -150,7 +151,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="control" class:disabled>
-  {#if !isValid(value) && !$$slots.default}
+  {#if !isValid(value) && !showComponent}
     <Input
       {label}
       {disabled}
@@ -162,7 +163,7 @@
       {updateOnChange}
     />
     <div
-      class="icon"
+      class="icon close"
       on:click={() => {
         if (!isJS) {
           dispatch("change", "")
@@ -212,22 +213,27 @@
   }
 
   .slot-icon {
-    right: 31px;
+    right: 31px !important;
     border-right: 1px solid var(--spectrum-alias-border-color);
-    border-top-right-radius: 0px;
-    border-bottom-right-radius: 0px;
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
   }
 
-  .text-area-slot-icon {
-    border-bottom: 1px solid var(--spectrum-alias-border-color);
-    border-bottom-right-radius: 0px;
-    top: 1px;
+  .icon.close {
+    right: 1px !important;
+    border-right: none;
+    border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
   }
+
+  .text-area-slot-icon,
   .json-slot-icon {
+    right: 1px !important;
     border-bottom: 1px solid var(--spectrum-alias-border-color);
-    border-bottom-right-radius: 0px;
+    border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 0px !important;
+    border-bottom-left-radius: 4px !important;
     top: 1px;
-    right: 0px;
   }
 
   .icon {

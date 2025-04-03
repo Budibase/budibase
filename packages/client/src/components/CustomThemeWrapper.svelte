@@ -8,7 +8,7 @@
   const id = Helpers.uuid()
 
   if (popoverRoot) {
-    setContext(Context.PopoverRoot, `#id`)
+    setContext(Context.PopoverRoot, `#${id}`)
   }
 </script>
 
