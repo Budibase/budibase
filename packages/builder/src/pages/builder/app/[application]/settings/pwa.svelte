@@ -77,11 +77,10 @@
       const result = await API.uploadPWAZip(data)
 
       pwaConfig.icons = result.icons
-      notifications.success(
-        `Processed ${pwaConfig.icons.length} icons from PWA Builder`
-      )
+      notifications.success(`Processed ${pwaConfig.icons.length} icons`)
     } catch (error: any) {
-      notifications.error("Failed to process PWA Builder zip: " + error.message)
+      console.log(error)
+      notifications.error("Failed to process zip: " + error.message)
     } finally {
       uploadingIcons = false
     }
@@ -191,7 +190,7 @@
         </div>
         <div>
           <File
-            title="Upload PWA Builder zip"
+            title="Upload zip"
             handleFileTooLarge={() =>
               notifications.error("File too large. 20mb limit")}
             extensions={[".zip"]}
