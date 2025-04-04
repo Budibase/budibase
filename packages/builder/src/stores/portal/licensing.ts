@@ -40,6 +40,7 @@ interface LicensingState {
   customAppScriptsEnabled: boolean
   syncAutomationsEnabled: boolean
   triggerAutomationRunEnabled: boolean
+  pdfEnabled: boolean
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
   // derived quota metrics for percentages used
@@ -83,6 +84,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       customAppScriptsEnabled: false,
       syncAutomationsEnabled: false,
       triggerAutomationRunEnabled: false,
+      pdfEnabled: false,
       // the currently used quotas from the db
       quotaUsage: undefined,
       // derived quota metrics for percentages used
@@ -190,6 +192,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     const customAppScriptsEnabled = features.includes(
       Constants.Features.CUSTOM_APP_SCRIPTS
     )
+    const pdfEnabled = features.includes(Constants.Features.PDF)
     this.update(state => {
       return {
         ...state,
@@ -212,6 +215,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         triggerAutomationRunEnabled,
         perAppBuildersEnabled,
         customAppScriptsEnabled,
+        pdfEnabled,
       }
     })
   }
