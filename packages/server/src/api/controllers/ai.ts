@@ -130,7 +130,7 @@ async function generateDataDelegate(
       )
 
       createdData[tableId] ??= {}
-      createdData[tableId][entry.id] = createdRow.row._id!
+      createdData[tableId][entry._id] = createdRow.row._id!
 
       const overridenLinks = Object.keys(linksOverride).reduce<
         Record<string, { rowId: string; tableId: string }>
