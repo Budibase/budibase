@@ -263,10 +263,16 @@ describe("BudibaseAI", () => {
   })
 
   describe("POST /api/ai/chat", () => {
+    let licenseKey = "test-key"
+    let internalApiKey = "api-key"
+
     let envCleanup: () => void
     let featureCleanup: () => void
     beforeAll(() => {
-      envCleanup = setEnv({ SELF_HOSTED: false })
+      envCleanup = setEnv({
+        SELF_HOSTED: false,
+        INTERNAL_API_KEY: internalApiKey,
+      })
       featureCleanup = features.testutils.setFeatureFlags("*", {
         AI_JS_GENERATION: true,
       })
@@ -289,14 +295,16 @@ describe("BudibaseAI", () => {
         quotas: {} as any,
         tenantId: config.tenantId,
       }
-      nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(200, license)
+      nock(env.ACCOUNT_PORTAL_URL)
+        .get(`/api/license/${licenseKey}`)
+        .reply(200, license)
     })
 
     it("handles correct chat response", async () => {
       mockChatGPTResponse("Hi there!")
       const { message } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
-        licenseKey: "test-key",
+        licenseKey: licenseKey,
       })
       expect(message).toBe("Hi there!")
     })
@@ -316,7 +324,7 @@ describe("BudibaseAI", () => {
 
     it("handles no license", async () => {
       nock.cleanAll()
-      nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(404)
+      nock(env.ACCOUNT_PORTAL_URL).get(`/api/license/${licenseKey}`).reply(404)
       await config.api.ai.chat(
         {
           messages: [{ role: "user", content: "Hello!" }],
