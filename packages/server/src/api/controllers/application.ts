@@ -259,7 +259,9 @@ export async function fetchAppPackage(
   const application = await sdk.applications.metadata.get()
   const layouts = await getLayouts()
   let screens = (await getScreens()).filter(
-    s => s.webpage === webpageId || (!s.webpage && webpageId === "app_default")
+    s =>
+      s.webpage === webpageId ||
+      (!s.webpage && ["app_default", "undefined"].includes(webpageId))
   )
   const license = await licensing.cache.getCachedLicense()
 
