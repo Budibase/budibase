@@ -1,6 +1,6 @@
 import * as email from "../../../utilities/email"
 import env from "../../../environment"
-import { googleCallbackUrl, oidcCallbackUrl } from "./auth"
+import * as auth from "./auth"
 import {
   cache,
   configs,
@@ -420,19 +420,57 @@ export async function publicSettings(
 ) {
   try {
     // settings
-    const configDoc = await configs.getSettingsConfigDoc()
+    const [configDoc, googleConfig] = await Promise.all([
+      configs.getSettingsConfigDoc(),
+      configs.getGoogleConfig(),
+    ])
     const config = configDoc.config
 
-    const branding = await pro.branding.getBrandingConfig(config)
+    const brandingPromise = pro.branding.getBrandingConfig(config)
 
-    // enrich the logo url - empty url means deleted
-    if (config.logoUrl && config.logoUrl !== "") {
-      config.logoUrl = await objectStore.getGlobalFileUrl(
-        "settings",
-        "logoUrl",
-        config.logoUrlEtag
-      )
+    const getLogoUrl = () => {
+      // enrich the logo url - empty url means deleted
+      if (config.logoUrl && config.logoUrl !== "") {
+        return objectStore.getGlobalFileUrl(
+          "settings",
+          "logoUrl",
+          config.logoUrlEtag
+        )
+      }
     }
+
+    // google
+    const googleDatasourcePromise = configs.getGoogleDatasourceConfig()
+    const preActivated = googleConfig && googleConfig.activated == null
+    const google = preActivated || !!googleConfig?.activated
+    const googleCallbackUrlPromise = auth.googleCallbackUrl(googleConfig)
+
+    // oidc
+    const oidcConfigPromise = configs.getOIDCConfig()
+    const oidcCallbackUrlPromise = auth.oidcCallbackUrl()
+
+    // sso enforced
+    const isSSOEnforcedPromise = pro.features.isSSOEnforced({ config })
+
+    // performance all async work at same time, there is no need for all of these
+    // operations to occur in sync, slowing the endpoint down significantly
+    const [
+      branding,
+      googleDatasource,
+      googleCallbackUrl,
+      oidcConfig,
+      oidcCallbackUrl,
+      isSSOEnforced,
+      logoUrl,
+    ] = await Promise.all([
+      brandingPromise,
+      googleDatasourcePromise,
+      googleCallbackUrlPromise,
+      oidcConfigPromise,
+      oidcCallbackUrlPromise,
+      isSSOEnforcedPromise,
+      getLogoUrl(),
+    ])
 
     // enrich the favicon url - empty url means deleted
     const faviconUrl =
@@ -444,21 +482,11 @@ export async function publicSettings(
           )
         : undefined
 
-    // google
-    const googleConfig = await configs.getGoogleConfig()
-    const googleDatasourceConfigured =
-      !!(await configs.getGoogleDatasourceConfig())
-    const preActivated = googleConfig && googleConfig.activated == null
-    const google = preActivated || !!googleConfig?.activated
-    const _googleCallbackUrl = await googleCallbackUrl(googleConfig)
-
-    // oidc
-    const oidcConfig = await configs.getOIDCConfig()
     const oidc = oidcConfig?.activated || false
-    const _oidcCallbackUrl = await oidcCallbackUrl()
-
-    // sso enforced
-    const isSSOEnforced = await pro.features.isSSOEnforced({ config })
+    const googleDatasourceConfigured = !!googleDatasource
+    if (logoUrl) {
+      config.logoUrl = logoUrl
+    }
 
     ctx.body = {
       type: ConfigType.SETTINGS,
@@ -472,8 +500,8 @@ export async function publicSettings(
         googleDatasourceConfigured,
         oidc,
         isSSOEnforced,
-        oidcCallbackUrl: _oidcCallbackUrl,
-        googleCallbackUrl: _googleCallbackUrl,
+        oidcCallbackUrl,
+        googleCallbackUrl,
       },
     }
   } catch (err: any) {
