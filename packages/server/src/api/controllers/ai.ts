@@ -5,6 +5,7 @@ import {
   GenerateTablesRequest,
   GenerateTablesResponse,
   SourceName,
+  Table,
   TableSchema,
   TableSourceType,
   Upload,
@@ -87,7 +88,8 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
 
 async function generateDataDelegate(
   data: Record<string, Record<string, any>>,
-  userId: string
+  userId: string,
+  tables: Record<string, Table>
 ) {
   const createdData: Record<string, Record<string, string>> = {}
   const toUpdateLinks: {
@@ -95,8 +97,8 @@ async function generateDataDelegate(
     rowId: string
     data: Record<string, { rowId: string; tableId: string }>
   }[] = []
-  for (const tableId of Object.keys(data)) {
-    const table = await sdk.tables.getTable(tableId)
+  for (const tableName of Object.keys(data)) {
+    const table = tables[tableName]
     const linksOverride: Record<string, null> = {}
     for (const field of Object.values(table.schema).filter(
       f => f.type === FieldType.LINK
@@ -108,13 +110,14 @@ async function generateDataDelegate(
       .filter(f => f.type === FieldType.ATTACHMENT_SINGLE)
       .map(c => c.name)
 
-    for (const entry of [data[tableId]]) {
+    for (const entry of [data[tableName]]) {
       const attachmentData: Record<string, any> = {}
       for (const column of attachmentColumns) {
         const attachment = await downloadFile(entry[column])
         attachmentData[column] = attachment
       }
 
+      const tableId = tables[tableName]._id!
       const createdRow = await sdk.rows.save(
         tableId,
         {
