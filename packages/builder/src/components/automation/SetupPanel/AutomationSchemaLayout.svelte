@@ -184,6 +184,8 @@
     },
     [SchemaFieldTypes.QUERY_PARAMS]: {
       comp: QueryParamSelector,
+      fullWidth: true,
+      title: "Query*",
     },
     [SchemaFieldTypes.CODE]: {
       comp: ExecuteScript,
@@ -281,7 +283,9 @@
     }
     const type = getFieldType(field, block)
     const config = type ? SchemaTypes[type] : null
-    const title = getFieldLabel(key, field, requiredProperties?.includes(key))
+    const title =
+      config?.title ||
+      getFieldLabel(key, field, requiredProperties?.includes(key))
     const value = getInputValue(inputData, key)
     const meta = getInputValue(inputData, "meta")
 

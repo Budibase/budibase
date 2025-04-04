@@ -1,9 +1,10 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { queries } from "@/stores/builder"
-  import { Select, Label } from "@budibase/bbui"
+  import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import PropField from "./PropField.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -28,7 +29,6 @@
 </script>
 
 <div class="schema-field">
-  <Label>Query</Label>
   <div class="field-width">
     <Select
       on:change={onChangeQuery}
@@ -42,26 +42,23 @@
 
 {#if parameters.length}
   {#each parameters as field}
-    <div class="schema-field">
-      <Label>{field.name}</Label>
-      <div class="field-width">
-        <DrawerBindableInput
-          panel={AutomationBindingPanel}
-          extraThin
-          value={value[field.name]}
-          on:change={e => onChange(e, field)}
-          type="string"
-          {bindings}
-          updateOnChange={false}
-        />
-      </div>
-    </div>
+    <PropField label={field.name} fullWidth>
+      <DrawerBindableInput
+        panel={AutomationBindingPanel}
+        extraThin
+        value={value[field.name]}
+        on:change={e => onChange(e, field)}
+        type="string"
+        {bindings}
+        updateOnChange={false}
+      />
+    </PropField>
   {/each}
 {/if}
 
 <style>
   .field-width {
-    width: 320px;
+    width: 100%;
   }
 
   .schema-field {
