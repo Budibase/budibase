@@ -21,15 +21,16 @@ export class AgentsStore extends BudiStore<AgentStore> {
   }
 
   async init() {
-    const history = await this.fetchHistory()
+    await this.fetchHistory()
+  }
+
+  async fetchHistory() {
+    const history = await API.fetchHistory()
     this.update(state => {
       state.history = history
       return state
     })
-  }
-
-  async fetchHistory() {
-    return await API.fetchHistory()
+    return history
   }
 
   async saveHistory(history: SaveAgentHistoryRequest) {
@@ -43,6 +44,13 @@ export class AgentsStore extends BudiStore<AgentStore> {
   setCurrentHistoryId(historyId: string) {
     this.update(state => {
       state.currentHistoryId = historyId
+      return state
+    })
+  }
+
+  clearCurrentHistoryId() {
+    this.update(state => {
+      state.currentHistoryId = undefined
       return state
     })
   }

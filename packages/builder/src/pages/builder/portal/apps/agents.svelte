@@ -27,10 +27,19 @@
 
   let messages: AgentMessage[] = []
 
-  function historyChanged(history: AgentHistory) {
-    activeHistoryId = history._id!
-    messages = history.messages
-    appContext = history.appIds
+  function historyChanged(history?: AgentHistory) {
+    // if no history, this is a new chat
+    if (!history) {
+      activeHistoryId = undefined
+      messages = []
+      appContext = []
+    }
+    // we're loading an existing chat
+    else {
+      activeHistoryId = history._id!
+      messages = history.messages
+      appContext = history.appIds
+    }
   }
 
   function textChange() {
@@ -80,10 +89,6 @@
     await agentsStore.fetchHistory()
   }
 
-  function setCurrentHistory(history: AgentHistory) {
-    agentsStore.setCurrentHistoryId(history._id!)
-  }
-
   onMount(async () => {
     await agentsStore.init()
   })
@@ -95,21 +100,8 @@
       <BBAI />
       <Heading size="L">Budibase Agents</Heading>
     </div>
-    <div class="split">
-      <div class="all-history">
-        {#each $agentsStore.history as history}
-          <div
-            class="history"
-            class:selected-history={history._id === currentHistory?._id}
-            on:click={() => setCurrentHistory(history)}
-          >
-            <Heading size="XS">{history.title}</Heading>
-          </div>
-        {/each}
-      </div>
-      <div class="chat">
-        <Chatbox bind:messages />
-      </div>
+    <div class="chat">
+      <Chatbox bind:messages />
     </div>
     <div class="input-wrapper">
       <div class="input-container">
@@ -155,39 +147,11 @@
     gap: var(--spacing-l);
   }
 
-  .history {
-    border-radius: 10px;
-    height: auto;
-    padding: 10px;
-  }
-
-  .selected-history {
-    background-color: var(--grey-3);
-  }
-
-  .all-history {
-    padding: 20px;
-    border-radius: 10px;
-    background-color: var(--grey-2);
-    width: 15%;
-    min-height: 60vh;
-    display: flex;
-    flex-direction: column;
-  }
-
   .chat {
     padding: 20px;
     border-radius: 10px;
-    width: 85%;
     min-height: 60vh;
     padding-bottom: 20vh;
-  }
-
-  .split {
-    display: flex;
-    width: 100%;
-    min-height: 100%;
-    gap: var(--spacing-m);
   }
 
   .input-container {
@@ -212,8 +176,8 @@
   .input-wrapper {
     position: fixed;
     bottom: 50px;
-    right: 400px;
-    width: calc(100vw - (260px + (400px * 2)));
+    right: 300px;
+    width: calc(100vw - (260px + (300px * 2)));
   }
 
   textarea {

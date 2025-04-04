@@ -1,12 +1,12 @@
 <script>
-  import { sideBarCollapsed, enrichedApps } from "@/stores/portal"
+  import { sideBarCollapsed, enrichedApps, agentsStore } from "@/stores/portal"
   import { params, goto, page } from "@roxi/routify"
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
 
   let searchString
-  let onAllAgents = $page.path.endsWith("/agents")
+  let onAgents = $page.path.endsWith("/agents")
   let openedApp
 
   $: filteredApps = $enrichedApps.filter(app => {
@@ -31,10 +31,10 @@
       icon="WebPages"
       text="All apps"
       on:click={() => {
-        onAllAgents = false
+        onAgents = false
         $goto("./")
       }}
-      selected={!$params.appId && !onAllAgents}
+      selected={!$params.appId && !onAgents}
     />
     {#each filteredApps as app}
       <span
@@ -48,8 +48,8 @@
   </div>
   <div class="side-bar-controls">
     <NavHeader
-      title="Agents"
-      placeholder="Search for AI agents"
+      title="Chats"
+      placeholder="Search for agent chats"
       bind:value={searchString}
       onAdd={() => $goto("./create")}
     />
@@ -57,14 +57,34 @@
   <div class="side-bar-nav">
     <NavItem
       icon="Algorithm"
-      text="All agents"
+      text="All chats"
       on:click={() => {
         openedApp = undefined
-        onAllAgents = true
+        onAgents = true
+        agentsStore.clearCurrentHistoryId()
         $goto("./agents")
       }}
-      selected={!$params.appId && !openedApp && onAllAgents}
+      selected={!$params.appId && !openedApp && !$agentsStore.currentHistoryId && onAgents}
     />
+    {#each $agentsStore.history as history}
+      {@const selected = $agentsStore.currentHistoryId === history._id}
+        <span
+          class="side-bar-app-entry"
+          class:actionsOpen={selected}
+        >
+        <NavItem
+          icon="Branch1"
+          text={history.title}
+          on:click={() => {
+            onAgents = true
+            openedApp = undefined
+            agentsStore.setCurrentHistoryId(history._id)
+            $goto("./agents")
+          }}
+          selected={selected}
+        />
+      </span>
+    {/each}
   </div>
 </div>
 

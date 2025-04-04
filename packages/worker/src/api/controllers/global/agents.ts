@@ -260,6 +260,13 @@ export async function save(
       return ctx.throw(401, "No model available, cannot generate title")
     }
     prompt.system(agentHistoryTitleSystemPrompt())
+    for (let message of history.messages) {
+      if (message.system) {
+        prompt.system(message.message)
+      } else {
+        prompt.user(message.message)
+      }
+    }
     const titleResult = await model.prompt(prompt)
     history.title = titleResult.message!
   }
