@@ -5,5 +5,8 @@ export interface ChatAgentRequest {
 
 export interface ChatAgentResponse {
   response: string
-  toolsCalled?: { response: string; appId?: string }[]
+  toolsCalled?: {
+    response: { message: string; output?: any }
+    appId?: string
+  }[]
 }

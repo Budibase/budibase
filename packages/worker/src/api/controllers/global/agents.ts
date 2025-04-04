@@ -9,7 +9,9 @@ import {
   ChatAgentResponse,
   DocumentType,
   UserCtx,
+  ContextUser,
 } from "@budibase/types"
+import { triggerAutomation } from "../../../utilities/apps"
 import { JSONSchema4, JSONSchema4TypeName } from "json-schema"
 
 const JsonSchemaTypes = [
@@ -122,7 +124,7 @@ function addAutomationTools(
   return prompt
 }
 
-function agentSystemPrompt() {
+function agentSystemPrompt(user: ContextUser) {
   return `You are a helpful support agent, using workflows to solve problems for users.
   The user is asking you for help with a support query.
   
@@ -135,7 +137,12 @@ function agentSystemPrompt() {
   supplied in ISO format, you should convert it to that, allowing the user to provide the date
   in any human readable format.
   
-  If asked you can supply the list of "automations" to the user, this is the list of tool names available.`
+  If asked you can supply the list of "automations" to the user, this is the list of tool names available.
+  
+  Information about the user making the request can be found below: 
+  \`\`\`
+  ${JSON.stringify(user)}
+  \`\`\``
 }
 
 function findAutomation(
@@ -156,17 +163,32 @@ function findAutomation(
 async function automationToolCall(
   call: LLMToolCall,
   automations: Record<string, Automation[]>
-): Promise<{ response: string; appId?: string }> {
-  // TODO: call the automation endpoint on the app
+): Promise<{ response: { message: string; output?: any }; appId?: string }> {
   const func = call.function
   const found = findAutomation(automations, func.name)
   if (!found) {
-    return { response: "No tool found" }
+    return { response: { message: "No tool found" } }
   }
   const automation = found.automation
-  return {
-    response: `I've ran the ${automation.name} workflow.`,
-    appId: found.appId,
+  try {
+    const json = JSON.parse(func.arguments)
+    const response = await triggerAutomation(
+      found.appId,
+      found.automation._id!,
+      json
+    )
+
+    return {
+      response: {
+        message: `I've ran the ${automation.name} workflow.`,
+        output: response && response.value ? response.value : response,
+      },
+      appId: found.appId,
+    }
+  } catch (err: any) {
+    throw new Error(
+      `Invalid JSON received for tool ${func.name} arguments - ${err.message}`
+    )
   }
 }
 
@@ -184,7 +206,7 @@ export async function agentChat(
     automations = await getAutomations(appIds)
     prompt = addAutomationTools(prompt, automations)
   }
-  prompt.system(agentSystemPrompt())
+  prompt.system(agentSystemPrompt(ctx.user))
   for (let message of messages) {
     if (message.system) {
       prompt.system(message.message)
@@ -198,7 +220,12 @@ export async function agentChat(
       response.toolCalls.map(call => automationToolCall(call, automations))
     )
     ctx.body = {
-      response: toolsCalled.map(tool => tool.response).join(", "),
+      response: toolsCalled
+        .map(
+          tool =>
+            `${tool.response.message} - ${JSON.stringify(tool.response.output)}`
+        )
+        .join(", "),
       toolsCalled,
     }
   } else {
