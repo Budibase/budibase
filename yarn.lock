@@ -2788,6 +2788,28 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
+"@budibase/pro@*":
+  version "3.8.5"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.8.5.tgz#c609dc24f15a9315103f12b081d76495baeed1e7"
+  integrity sha512-isZMUle2SuHK3CAU3n0mdqCL7rIyj1+wH3VKChehmLZ5QlYBvfnimCzbHQ3T1MsWLfcSW1+Jt1iuaxtxJljhWA==
+  dependencies:
+    "@anthropic-ai/sdk" "^0.27.3"
+    "@budibase/backend-core" "*"
+    "@budibase/shared-core" "*"
+    "@budibase/string-templates" "*"
+    "@budibase/types" "*"
+    "@koa/router" "13.1.0"
+    bull "4.10.1"
+    dd-trace "5.43.0"
+    joi "17.6.0"
+    jsonwebtoken "9.0.2"
+    lru-cache "^7.14.1"
+    memorystream "^0.3.1"
+    node-fetch "2.6.7"
+    openai "4.59.0"
+    scim-patch "^0.8.1"
+    scim2-parse-filter "^0.2.8"
+
 "@budibase/vm-browserify@^1.1.4":
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/@budibase/vm-browserify/-/vm-browserify-1.1.4.tgz#eecb001bd9521cb7647e26fb4d2d29d0a4dce262"
@@ -17816,7 +17838,7 @@ pgpass@1.x:
   dependencies:
     split2 "^4.1.0"
 
-picocolors@^1.0.0, picocolors@^1.0.1, picocolors@^1.1.1:
+picocolors@^1.0.0, picocolors@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.1.1.tgz#3d321af3eab939b083c8f929a1d12cda81c26b6b"
   integrity sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==
@@ -18062,16 +18084,7 @@ postcss-values-parser@^6.0.2:
     is-url-superb "^4.0.0"
     quote-unquote "^1.0.0"
 
-postcss@^8.1.7, postcss@^8.3.11, postcss@^8.4.12, postcss@^8.4.27:
-  version "8.4.41"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.41.tgz#d6104d3ba272d882fe18fc07d15dc2da62fa2681"
-  integrity sha512-TesUflQ0WKZqAvg52PWL6kHgLKP6xB6heTOdoYM0Wt2UHyxNa4K25EZZMgKns3BH1RLVbZCREPpLY0rhnNoHVQ==
-  dependencies:
-    nanoid "^3.3.7"
-    picocolors "^1.0.1"
-    source-map-js "^1.2.0"
-
-postcss@^8.4.38, postcss@^8.4.39, postcss@^8.4.48:
+postcss@^8.1.7, postcss@^8.3.11, postcss@^8.4.12, postcss@^8.4.27, postcss@^8.4.38, postcss@^8.4.39, postcss@^8.4.48:
   version "8.4.49"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.49.tgz#4ea479048ab059ab3ae61d082190fabfd994fe19"
   integrity sha512-OCVPnIObs4N29kxTjzLfUryOkvZEq+pf8jTF0lg8E7uETuWHA+v7j3c/xJmiqpX450191LlmZfUKkXxkTry7nA==
@@ -21033,11 +21046,6 @@ timekeeper@2.2.0:
   resolved "https://registry.yarnpkg.com/timekeeper/-/timekeeper-2.2.0.tgz#9645731fce9e3280a18614a57a9d1b72af3ca368"
   integrity sha512-W3AmPTJWZkRwu+iSNxPIsLZ2ByADsOLbbLxe46UJyWj3mlYLlwucKiq+/dPm0l9wTzqoF3/2PH0AGFCebjq23A==
 
-timekeeper@^2.2.0:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/timekeeper/-/timekeeper-2.3.1.tgz#2deb6e0b95d93625fda84c18d47f84a99e4eba01"
-  integrity sha512-LeQRS7/4JcC0PgdSFnfUiStQEdiuySlCj/5SJ18D+T1n9BoY7PxKFfCwLulpHXoLUFr67HxBddQdEX47lDGx1g==
-
 tiny-glob@^0.2.9:
   version "0.2.9"
   resolved "https://registry.yarnpkg.com/tiny-glob/-/tiny-glob-0.2.9.tgz#2212d441ac17928033b110f8b3640683129d31e2"
@@ -21272,7 +21280,7 @@ tsconfig-paths@^3.10.1, tsconfig-paths@^3.15.0:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tsconfig-paths@^4.1.2, tsconfig-paths@^4.2.0:
+tsconfig-paths@^4.1.2:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-4.2.0.tgz#ef78e19039133446d244beac0fd6a1632e2d107c"
   integrity sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==
@@ -21907,9 +21915,9 @@ vite-plugin-static-copy@^0.17.0:
     picocolors "^1.0.0"
 
 "vite@^3.0.0 || ^4.0.0", vite@^4.5.0:
-  version "4.5.3"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-4.5.3.tgz#d88a4529ea58bae97294c7e2e6f0eab39a50fb1a"
-  integrity sha512-kQL23kMeX92v3ph7IauVkXkikdDRsYMGTVl5KY2E9OY4ONLvkHf04MDTbnfo6NKxZiDLWzVpP5oTa8hQD8U3dg==
+  version "4.5.12"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-4.5.12.tgz#48f48dbcf789722765e91bc32a99cb66c628eadc"
+  integrity sha512-qrMwavANtSz91nDy3zEiUHMtL09x0mniQsSMvDkNxuCBM1W5vriJ22hEmwTth6DhLSWsZnHBT0yHFAQXt6efGA==
   dependencies:
     esbuild "^0.18.10"
     postcss "^8.4.27"
