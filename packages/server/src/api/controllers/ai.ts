@@ -87,7 +87,7 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
 }
 
 async function generateDataDelegate(
-  data: Record<string, Record<string, any>>,
+  data: Record<string, Record<string, any>[]>,
   userId: string,
   tables: Record<string, Table>
 ) {
@@ -110,7 +110,7 @@ async function generateDataDelegate(
       .filter(f => f.type === FieldType.ATTACHMENT_SINGLE)
       .map(c => c.name)
 
-    for (const entry of [data[tableName]]) {
+    for (const entry of data[tableName]) {
       const attachmentData: Record<string, any> = {}
       for (const column of attachmentColumns) {
         const attachment = await downloadFile(entry[column])
