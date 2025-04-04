@@ -1,4 +1,3 @@
-import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { context, objectStore } from "@budibase/backend-core"
 import { App, DocumentType } from "@budibase/types"
 import { getRequest, getConfig, afterAll as _afterAll } from "./utilities"
