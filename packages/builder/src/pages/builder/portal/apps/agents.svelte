@@ -14,12 +14,16 @@
   let appContext: string[] = []
   let activeHistoryId: string | undefined
 
-  $: currentHistory = $agentsStore.history.find(history => history._id === $agentsStore.currentHistoryId)
+  $: currentHistory = $agentsStore.history.find(
+    history => history._id === $agentsStore.currentHistoryId
+  )
   $: appOptions = $appsStore.apps.map(app => ({
     name: app.name,
     value: app.devId!,
   }))
-  $: currentHistory?._id !== activeHistoryId ? historyChanged(currentHistory!) : undefined
+  $: currentHistory?._id !== activeHistoryId
+    ? historyChanged(currentHistory!)
+    : undefined
 
   let messages: AgentMessage[] = []
 
@@ -48,7 +52,10 @@
     messages = messages
     loading = true
     try {
-      const res = await API.agentChat(messages.map(m => ({ message: m.message, system: m.system })), appContext)
+      const res = await API.agentChat(
+        messages.map(m => ({ message: m.message, system: m.system })),
+        appContext
+      )
       inputValue = ""
       messages.push({
         message: res.response,
@@ -91,8 +98,12 @@
     <div class="split">
       <div class="all-history">
         {#each $agentsStore.history as history}
-          <div class="history" class:selected-history={history._id === currentHistory?._id} on:click={() => setCurrentHistory(history)}>
-          <Heading size="XS">{history.title}</Heading>
+          <div
+            class="history"
+            class:selected-history={history._id === currentHistory?._id}
+            on:click={() => setCurrentHistory(history)}
+          >
+            <Heading size="XS">{history.title}</Heading>
           </div>
         {/each}
       </div>
