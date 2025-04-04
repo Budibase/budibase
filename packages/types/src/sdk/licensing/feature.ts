@@ -14,6 +14,7 @@ export enum Feature {
   OFFLINE = "offline",
   EXPANDED_PUBLIC_API = "expandedPublicApi",
   CUSTOM_APP_SCRIPTS = "customAppScripts",
+  PDF = "pdf",
   // deprecated - no longer licensed
   VIEW_PERMISSIONS = "viewPermissions",
   VIEW_READONLY_COLUMNS = "viewReadonlyColumns",
