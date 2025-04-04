@@ -50,7 +50,7 @@
 
 {#if showButton}
   <div class="install-prompt">
-    <button class="openMenu" on:click={installPWA}>Install App</button>
+    <button class="openMenu" on:click={installPWA}>Install app</button>
   </div>
 {/if}
 
