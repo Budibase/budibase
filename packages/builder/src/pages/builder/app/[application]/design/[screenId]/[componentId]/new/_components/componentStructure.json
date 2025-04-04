@@ -25,6 +25,7 @@
       "gridblock",
       "spreadsheet",
       "dynamicfilter",
+      "filter",
       "daterangepicker"
     ]
   },

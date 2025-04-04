@@ -25,6 +25,7 @@ import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import GridColumnEditor from "./controls/GridColumnConfiguration/GridColumnConfiguration.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
+import FilterConfiguration from "./controls/FilterConfiguration/FilterConfiguration.svelte"
 import ButtonConfiguration from "./controls/ButtonConfiguration/ButtonConfiguration.svelte"
 import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
 import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
@@ -32,6 +33,7 @@ import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
 import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
+import EmbeddedDatasourceSelect from "./controls/EmbeddedDatasourceSelect.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -41,6 +43,7 @@ const componentMap = {
   radio: RadioGroup,
   dataSource: DataSourceSelect,
   "dataSource/s3": S3DataSourceSelect,
+  "dataSource/embedded": EmbeddedDatasourceSelect,
   dataProvider: DataProviderSelect,
   boolean: Checkbox,
   number: Stepper,
@@ -58,6 +61,7 @@ const componentMap = {
   "filter/relationship": RelationshipFilterEditor,
   url: URLSelect,
   fieldConfiguration: FieldConfiguration,
+  filterConfiguration: FilterConfiguration,
   buttonConfiguration: ButtonConfiguration,
   stepConfiguration: FormStepConfiguration,
   formStepControls: FormStepControls,
