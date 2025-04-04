@@ -29,3 +29,13 @@ export interface GenerateCronRequest {
 export interface GenerateCronResponse {
   message?: string
 }
+
+export interface GenerateTablesRequest {
+  prompt: string
+  addData: boolean
+  useCached: boolean
+}
+
+export interface GenerateTablesResponse {
+  createdTables: { id: string; name: string }[]
+}

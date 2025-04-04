@@ -47,6 +47,9 @@ export function isExternalTable(table: Table) {
   if (
     table?.sourceId &&
     table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR) &&
+    !table.sourceId.startsWith(
+      DocumentType.DATASOURCE + SEPARATOR + "bb_internal_"
+    ) &&
     table?.sourceId !== DEFAULT_BB_DATASOURCE_ID
   ) {
     return true
