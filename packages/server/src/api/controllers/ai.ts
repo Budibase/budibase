@@ -37,7 +37,7 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
 
   for (const table of data.tables) {
     const createdTable = await sdk.tables.create({
-      ...table.structure,
+      ...table,
       sourceId: dsId,
       schema: {},
       primaryDisplay: undefined,
@@ -46,13 +46,11 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
     })
 
     createdTables.push({ id: createdTable._id!, name: createdTable.name })
-    tableIds[table.structure.name] = createdTable._id!
+    tableIds[table.name] = createdTable._id!
   }
 
   for (const table of Object.values(data.tables)) {
-    for (const field of table.structure.schema.filter(
-      f => f.type === FieldType.LINK
-    )) {
+    for (const field of table.schema.filter(f => f.type === FieldType.LINK)) {
       // const field =  table.schema[fieldKey] as RelationshipFieldMetadata
       const linkedTable = createdTables.find(t => t.name === field.tableId)
       if (!linkedTable) {
@@ -61,14 +59,14 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
       field.tableId = linkedTable.id
     }
 
-    for (const field of table.structure.schema.filter(
+    for (const field of table.schema.filter(
       f => f.type === FieldType.FORMULA
     )) {
       field.formula = `{{ js "${btoa(field.formula)}" }}`
     }
   }
 
-  for (const { structure: table } of Object.values(data.tables)) {
+  for (const table of Object.values(data.tables)) {
     const storedTable = await sdk.tables.getTable(tableIds[table.name])
 
     await sdk.tables.update({
