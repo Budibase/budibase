@@ -254,10 +254,13 @@ export async function fetchAppDefinition(
 export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
+  const webpageId = ctx.params.webpageId
   const appId = context.getAppId()
   const application = await sdk.applications.metadata.get()
   const layouts = await getLayouts()
-  let screens = await getScreens()
+  let screens = (await getScreens()).filter(
+    s => s.webpage === webpageId || (!s.webpage && webpageId === "app_default")
+  )
   const license = await licensing.cache.getCachedLicense()
 
   // Enrich plugin URLs

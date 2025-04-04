@@ -22,13 +22,9 @@ import {
   DeleteScreenResponse,
   FetchAppPackageResponse,
   SaveScreenResponse,
-  Screen as ScreenType,
+  Screen,
   ScreenVariant,
 } from "@budibase/types"
-
-interface Screen extends ScreenType {
-  webpage: string
-}
 
 interface ScreenState {
   screens: Screen[]
@@ -236,10 +232,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Save screen
     const creatingNewScreen = screen._id === undefined
-    const savedScreen = {
-      ...(await API.saveScreen(screen)),
+    const savedScreen = await API.saveScreen({
+      ...screen,
       webpage: webpageState.selected!._id,
-    }
+    })
 
     // Update state
     this.update(state => {
