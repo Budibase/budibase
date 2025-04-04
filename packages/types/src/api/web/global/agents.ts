@@ -1,5 +1,7 @@
+import { AgentMessage, AgentHistory } from "../../../documents"
+
 export interface ChatAgentRequest {
-  messages: { message: string; system?: boolean }[]
+  messages: AgentMessage[]
   appIds: string[]
 }
 
@@ -10,3 +12,11 @@ export interface ChatAgentResponse {
     appId?: string
   }[]
 }
+
+export interface SaveAgentHistoryRequest extends Omit<AgentHistory, "title"> {
+  title?: string
+}
+
+export interface SaveAgentHistoryResponse extends AgentHistory {}
+
+export type FetchAgentHistoryResponse = AgentHistory[]

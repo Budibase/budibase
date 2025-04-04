@@ -1,5 +1,5 @@
 import { ai, LLMToolCall } from "@budibase/pro"
-import { db } from "@budibase/backend-core"
+import { db, context, docIds } from "@budibase/backend-core"
 import {
   AllDocsResponse,
   Automation,
@@ -10,6 +10,10 @@ import {
   DocumentType,
   UserCtx,
   ContextUser,
+  SaveAgentHistoryRequest,
+  SaveAgentHistoryResponse,
+  FetchAgentHistoryResponse,
+  AgentHistory,
 } from "@budibase/types"
 import { triggerAutomation } from "../../../utilities/apps"
 import { JSONSchema4, JSONSchema4TypeName } from "json-schema"
@@ -145,6 +149,12 @@ function agentSystemPrompt(user: ContextUser) {
   \`\`\``
 }
 
+function agentHistoryTitleSystemPrompt() {
+  return `You will be provided with a set of history, a conversation between a user and an AI. Using this
+  information generate a title for the conversation, this should start with a capital letter and MUST be 
+  less than five words.`
+}
+
 function findAutomation(
   automations: Record<string, Automation[]>,
   automationId: string
@@ -233,4 +243,55 @@ export async function agentChat(
       response: !response.message ? "No response." : response.message,
     }
   }
+}
+
+export async function save(
+  ctx: UserCtx<SaveAgentHistoryRequest, SaveAgentHistoryResponse>
+) {
+  const db = context.getGlobalDB()
+  const history = ctx.request.body
+  if (!history._id) {
+    history._id = docIds.generateAgentHistoryID()
+  }
+  if (!history.title) {
+    let prompt = new ai.Prompt([])
+    const model = await ai.getLLM()
+    if (!model) {
+      return ctx.throw(401, "No model available, cannot generate title")
+    }
+    prompt.system(agentHistoryTitleSystemPrompt())
+    const titleResult = await model.prompt(prompt)
+    history.title = titleResult.message!
+  }
+  const historyDoc: AgentHistory = {
+    _id: history._id,
+    _rev: history._rev,
+    messages: history.messages,
+    title: history.title,
+    appIds: history.appIds,
+  }
+  const res = await db.put(historyDoc)
+  ctx.body = {
+    ...historyDoc,
+    _rev: res.rev,
+  }
+}
+
+export async function remove(ctx: UserCtx<void, void>) {
+  const db = context.getGlobalDB()
+  const historyId = ctx.params.historyId
+  await db.remove(historyId)
+  ctx.status = 201
+}
+
+export async function fetchHistory(
+  ctx: UserCtx<void, FetchAgentHistoryResponse>
+) {
+  const db = context.getGlobalDB()
+  const history = await db.allDocs<AgentHistory>(
+    docIds.getDocParams(DocumentType.AGENT_HISTORY, undefined, {
+      include_docs: true,
+    })
+  )
+  ctx.body = history.rows.map(row => row.doc!)
 }
