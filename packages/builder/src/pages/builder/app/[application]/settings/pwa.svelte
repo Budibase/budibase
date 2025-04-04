@@ -14,11 +14,12 @@
     Select,
     Tags,
     Tag,
+    Helpers,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import { API } from "@/api"
-  import { rgbToHex } from "@/helpers/utils"
+
   const DISPLAY_OPTIONS = [
     { label: "Standalone", value: "standalone" },
     { label: "Fullscreen", value: "fullscreen" },
@@ -57,7 +58,7 @@
           .getPropertyValue(varName)
           .trim()
 
-      return rgbToHex(cssValue || "#FFFFFF")
+      return Helpers.rgbToHex(cssValue || "#FFFFFF")
     } catch (error) {
       console.error("Error converting CSS variable:", error)
       return "#FFFFFF"
@@ -79,7 +80,6 @@
       pwaConfig.icons = result.icons
       notifications.success(`Processed ${pwaConfig.icons.length} icons`)
     } catch (error: any) {
-      console.log(error)
       notifications.error("Failed to process zip: " + error.message)
     } finally {
       uploadingIcons = false

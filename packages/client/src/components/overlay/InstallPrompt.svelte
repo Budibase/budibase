@@ -58,7 +58,7 @@
   .install-prompt {
     position: fixed;
     bottom: 5px;
-    right: 20px;
+    right: 10px;
     z-index: 1000;
   }
 

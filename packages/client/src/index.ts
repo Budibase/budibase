@@ -34,6 +34,7 @@ import { APIClient } from "@budibase/frontend-core"
 import BlockComponent from "./components/BlockComponent.svelte"
 import Block from "./components/Block.svelte"
 
+// Set up global PWA install prompt handler
 if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault()

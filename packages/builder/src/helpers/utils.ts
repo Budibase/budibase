@@ -94,21 +94,3 @@ export function checkForCollectStep(automation: Automation) {
     step => step.stepId === ActionStepID.COLLECT
   )
 }
-
-export function rgbToHex(rgbStr: string | undefined): string {
-  if (rgbStr?.startsWith("#")) return rgbStr
-
-  const rgbMatch = rgbStr?.match(
-    /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/
-  )
-  if (!rgbMatch) return rgbStr || "#FFFFFF"
-
-  const r = parseInt(rgbMatch[1])
-  const g = parseInt(rgbMatch[2])
-  const b = parseInt(rgbMatch[3])
-
-  return `#${((1 << 24) | (r << 16) | (g << 8) | b)
-    .toString(16)
-    .slice(1)
-    .toUpperCase()}`
-}
