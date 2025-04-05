@@ -41,6 +41,7 @@ const createFeaturesStore = () => {
       aiEnabled:
         license?.features?.includes(Feature.AI_CUSTOM_CONFIGS) ||
         license?.features?.includes(Feature.BUDIBASE_AI),
+      pwaEnabled: license?.features?.includes(Feature.PWA),
     }
   })
 }

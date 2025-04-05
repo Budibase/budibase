@@ -7,6 +7,7 @@
   const BYTES_IN_MB = 1000000
 
   export let value: File | undefined = undefined
+  export let statusText: string | undefined = undefined
   export let title: string = "Upload file"
   export let disabled: boolean = false
   export let allowClear: boolean | undefined = undefined
@@ -57,7 +58,16 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="field">
-  {#if value}
+  {#if statusText}
+    <div class="file-view status">
+      <div class="filename">{statusText}</div>
+      {#if !disabled || (allowClear === true && disabled)}
+        <div class="delete-button" on:click={clearFile}>
+          <Icon name="Close" size="XS" />
+        </div>
+      {/if}
+    </div>
+  {:else if value}
     <div class="file-view">
       {#if previewUrl}
         <img class="preview" alt="" src={previewUrl} />
@@ -96,6 +106,9 @@
     border: 1px solid var(--spectrum-alias-border-color);
     border-radius: var(--spectrum-global-dimension-size-50);
     padding: 0px var(--spectrum-alias-item-padding-m);
+  }
+  .file-view.status {
+    background-color: var(--spectrum-global-color-gray-100);
   }
   input[type="file"] {
     display: none;

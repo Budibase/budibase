@@ -257,6 +257,7 @@ export const generateAppPackage = ({
       icon: {},
       type: "app",
     },
+    pwa: {},
     clientLibPath: `https://cdn.budibase.net/${appId}/budibase-client.js?v=${version}`,
     hasLock: true,
   }

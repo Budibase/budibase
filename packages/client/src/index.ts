@@ -34,6 +34,14 @@ import { APIClient } from "@budibase/frontend-core"
 import BlockComponent from "./components/BlockComponent.svelte"
 import Block from "./components/Block.svelte"
 
+// Set up global PWA install prompt handler
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault()
+    window.deferredPwaPrompt = e
+  })
+}
+
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
 // @ts-ignore
@@ -68,6 +76,9 @@ declare global {
 
     // Other flags
     MIGRATING_APP: boolean
+
+    // PWA install prompt
+    deferredPwaPrompt: any
 
     // Client additions
     handleBuilderRuntimeEvent: (type: string, data: any) => void

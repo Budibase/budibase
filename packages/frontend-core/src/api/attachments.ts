@@ -22,6 +22,9 @@ export interface AttachmentEndpoints {
     data: any
   ) => Promise<ProcessAttachmentResponse>
   uploadBuilderAttachment: (data: any) => Promise<ProcessAttachmentResponse>
+  uploadPWAZip: (
+    data: FormData
+  ) => Promise<{ icons: Array<{ src: string; sizes: string; type: string }> }>
   externalUpload: (
     datasourceId: string,
     bucket: string,
@@ -74,6 +77,14 @@ export const buildAttachmentEndpoints = (
     uploadBuilderAttachment: async data => {
       return await API.post({
         url: "/api/attachments/process",
+        body: data,
+        json: false,
+      })
+    },
+
+    uploadPWAZip: async data => {
+      return await API.post({
+        url: "/api/pwa/process-zip",
         body: data,
         json: false,
       })
