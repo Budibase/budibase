@@ -1,6 +1,6 @@
 import * as setup from "../utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { Datasource, SourceName } from "@budibase/types"
+import { BodyType, Datasource, SourceName } from "@budibase/types"
 import { getCachedVariable } from "../../../../threads/utils"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
@@ -259,7 +259,7 @@ describe("rest", () => {
       readable: true,
       fields: {
         path: "www.example.com",
-        bodyType: "text",
+        bodyType: BodyType.TEXT,
         queryString: "&testParam={{testParam}}",
         requestBody:
           "This is plain text and this is my email: {{[user].[email]}}. This is a test param: {{testParam}}",
@@ -305,7 +305,7 @@ describe("rest", () => {
       readable: true,
       fields: {
         path: "www.example.com",
-        bodyType: "json",
+        bodyType: BodyType.JSON,
         queryString: "&testParam={{testParam}}",
         requestBody:
           '{"email":"{{[user].[email]}}","queryCode":{{testParam}},"userRef":"{{userRef}}"}',
@@ -350,7 +350,7 @@ describe("rest", () => {
       readable: true,
       fields: {
         path: "www.example.com",
-        bodyType: "xml",
+        bodyType: BodyType.XML,
         queryString: "&testParam={{testParam}}",
         requestBody:
           "<note> <email>{{[user].[email]}}</email> <code>{{testParam}}</code> " +
@@ -399,7 +399,7 @@ describe("rest", () => {
       readable: true,
       fields: {
         path: "www.example.com",
-        bodyType: "form",
+        bodyType: BodyType.FORM_DATA,
         queryString: "&testParam={{testParam}}",
         requestBody:
           '{"email":"{{[user].[email]}}","queryCode":{{testParam}},"userRef":"{{userRef}}"}',
@@ -445,7 +445,7 @@ describe("rest", () => {
       readable: true,
       fields: {
         path: "www.example.com",
-        bodyType: "encoded",
+        bodyType: BodyType.ENCODED,
         queryString: "&testParam={{testParam}}",
         requestBody:
           '{"email":"{{[user].[email]}}","queryCode":{{testParam}},"userRef":"{{userRef}}"}',
