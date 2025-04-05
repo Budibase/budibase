@@ -761,7 +761,7 @@ if (descriptions.length) {
       })
 
       it("should throw an error if the incorrect actionType is specified", async () => {
-        const verbs = ["read", "create", "update", "delete"]
+        const verbs = ["read", "create", "update", "delete"] as const
         for (const verb of verbs) {
           const query = await createQuery({
             fields: { json: {}, extra: { actionType: "invalid" } },

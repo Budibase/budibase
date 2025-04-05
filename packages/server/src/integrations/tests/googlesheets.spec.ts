@@ -787,4 +787,143 @@ describe("Google Sheets Integration", () => {
       expect(ids.length).toEqual(50)
     })
   })
+
+  describe("queries", () => {
+    let table: Table
+    let rows: Row[]
+    beforeEach(async () => {
+      table = await config.api.table.save({
+        name: "Test Table",
+        type: "table",
+        sourceId: datasource._id!,
+        sourceType: TableSourceType.EXTERNAL,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+
+      rows = []
+      rows.push(
+        await config.api.row.save(table._id!, {
+          name: "Test Contact 1",
+          description: "original description 1",
+        })
+      )
+      rows.push(
+        await config.api.row.save(table._id!, {
+          name: "Test Contact 2",
+          description: "original description 2",
+        })
+      )
+    })
+
+    describe("read", () => {
+      it("should be able to read data from a sheet", async () => {
+        const { rows } = await config.api.query.preview({
+          fields: {
+            sheet: table.name,
+          },
+          datasourceId: datasource._id!,
+          parameters: [],
+          transformer: null,
+          queryVerb: "read",
+          name: datasource.name!,
+          schema: {},
+          readable: true,
+        })
+
+        expect(rows).toHaveLength(2)
+        expect(rows[0].name).toEqual("Test Contact 2")
+        expect(rows[0].description).toEqual("original description 2")
+        expect(rows[1].name).toEqual("Test Contact 1")
+        expect(rows[1].description).toEqual("original description 1")
+      })
+    })
+
+    describe("update", () => {
+      it("should be able to update data in a sheet", async () => {
+        await config.api.query.preview({
+          fields: {
+            sheet: table.name,
+            rowIndex: "2",
+            row: { name: "updated name", description: "updated description" },
+          },
+          datasourceId: datasource._id!,
+          parameters: [],
+          transformer: null,
+          queryVerb: "update",
+          name: datasource.name!,
+          schema: {},
+          readable: true,
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+
+        expect(rows).toHaveLength(2)
+        expect(rows[0].name).toEqual("updated name")
+        expect(rows[0].description).toEqual("updated description")
+        expect(rows[1].name).toEqual("Test Contact 1")
+        expect(rows[1].description).toEqual("original description 1")
+      })
+    })
+
+    describe("create", () => {
+      it("should be able to create new rows", async () => {
+        await config.api.query.preview({
+          fields: {
+            sheet: table.name,
+            row: { name: "new name", description: "new description" },
+          },
+          datasourceId: datasource._id!,
+          parameters: [],
+          transformer: null,
+          queryVerb: "create",
+          name: datasource.name!,
+          schema: {},
+          readable: true,
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(3)
+        expect(rows[0].name).toEqual("new name")
+        expect(rows[0].description).toEqual("new description")
+      })
+    })
+
+    describe("delete", () => {
+      it("should be able to delete rows", async () => {
+        await config.api.query.preview({
+          fields: {
+            sheet: table.name,
+            rowIndex: "2",
+          },
+          datasourceId: datasource._id!,
+          parameters: [],
+          transformer: null,
+          queryVerb: "delete",
+          name: datasource.name!,
+          schema: {},
+          readable: true,
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(1)
+        expect(rows[0].name).toEqual("Test Contact 1")
+        expect(rows[0].description).toEqual("original description 1")
+      })
+    })
+  })
 })

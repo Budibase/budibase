@@ -14,11 +14,7 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
-import {
-  getDefinitions,
-  getDefinition,
-  getIntegration,
-} from "../../../integrations"
+import { getDefinitions, getDefinition } from "../../../integrations"
 import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
@@ -328,14 +324,6 @@ export async function save(
   )
   await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
-
-  // Drain connection pools when configuration is changed
-  if (datasource.source) {
-    const source = await getIntegration(datasource.source)
-    if (source && source.pool) {
-      await source.pool.end()
-    }
-  }
 
   return { datasource, errors }
 }
