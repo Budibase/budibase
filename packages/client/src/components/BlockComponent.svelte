@@ -1,20 +1,20 @@
 <script>
   import { getContext, onDestroy } from "svelte"
   import { generate } from "shortid"
-  import { builderStore } from "../stores/builder"
+  import { builderStore } from "@/stores/builder"
   import Component from "@/components/Component.svelte"
 
   export let type
-  export let props
-  export let styles
-  export let context
-  export let name
+  export let props = undefined
+  export let styles = undefined
+  export let context = undefined
+  export let name = undefined
   export let order = 0
   export let containsSlot = false
 
   // ID is only exposed as a prop so that it can be bound to from parent
   // block components
-  export let id
+  export let id = undefined
 
   const component = getContext("component")
   const block = getContext("block")
