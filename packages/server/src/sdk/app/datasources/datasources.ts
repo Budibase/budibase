@@ -14,7 +14,11 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
-import { getDefinitions, getDefinition } from "../../../integrations"
+import {
+  getDefinitions,
+  getDefinition,
+  getIntegration,
+} from "../../../integrations"
 import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
@@ -292,6 +296,9 @@ export async function save(
   datasource: Datasource,
   opts?: { fetchSchema?: boolean; tablesFilter?: string[] }
 ): Promise<{ datasource: Datasource; errors: Record<string, string> }> {
+  // getIntegration throws an error if the integration is not found
+  await getIntegration(datasource.source)
+
   const db = context.getAppDB()
   const plus = datasource.plus
 
