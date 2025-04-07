@@ -1,22 +1,23 @@
-<script>
+<script lang="ts">
   import { Label, notifications } from "@budibase/bbui"
   import { permissions } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
   import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
+  import { PermissionLevel, type Query } from "@budibase/types"
 
-  export let query
+  export let query: Query
   export let label
 
   $: getPermissions(query)
 
-  let roleId, loaded, fetched
+  let roleId: string, loaded: boolean, fetched: Query | undefined
 
-  async function updateRole(role, id) {
+  async function updateRole(role: string) {
     try {
       roleId = role
-      const queryId = query?._id || id
+      const queryId = query._id
       if (roleId && queryId) {
-        for (let level of ["read", "write"]) {
+        for (let level of [PermissionLevel.READ, PermissionLevel.WRITE]) {
           await permissions.save({
             level,
             role,
@@ -29,7 +30,7 @@
     }
   }
 
-  async function getPermissions(queryToFetch) {
+  async function getPermissions(queryToFetch: Query) {
     if (fetched?._id === queryToFetch?._id) {
       loaded = true
       return
