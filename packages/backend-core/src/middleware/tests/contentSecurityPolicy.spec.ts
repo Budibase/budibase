@@ -3,7 +3,6 @@ import contentSecurityPolicy from "../contentSecurityPolicy"
 import { app } from "../../cache"
 import { Feature, App } from "@budibase/types"
 import { users, licenses } from "../../../tests/core/utilities/structures"
-import { doInAppContext } from "../../context"
 
 jest.mock("crypto", () => ({
   randomBytes: jest.fn(),
