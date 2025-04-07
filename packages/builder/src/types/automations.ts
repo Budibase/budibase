@@ -149,6 +149,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
     SchemaFieldTypes.AUTOMATION_FIELDS,
   [AutomationCustomIOType.WEBHOOK_URL]: SchemaFieldTypes.WEBHOOK_URL,
   [AutomationCustomIOType.QUERY_LIMIT]: SchemaFieldTypes.QUERY_LIMIT,
+  [AutomationCustomIOType.QUERY_PARAMS]: SchemaFieldTypes.QUERY_PARAMS,
   ["fields"]: SchemaFieldTypes.FIELDS,
 }
 
