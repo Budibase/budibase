@@ -212,8 +212,14 @@ export async function generateTables(
   }
 }
 
-async function downloadFile(url: string): Promise<Upload> {
-  const res = await fetch(url)
+async function downloadFile(
+  file: string | { fileName: string; extension: string; content: string }
+): Promise<Upload> {
+  if (typeof file === "object") {
+    return createFile(file)
+  }
+
+  const res = await fetch(file)
 
   const tmpPath = join(objectStore.budibaseTempDir(), "ai-downloads")
 
@@ -244,6 +250,40 @@ async function downloadFile(url: string): Promise<Upload> {
     name: processedFileName,
     url: await objectStore.getAppFileUrl(s3Key),
     extension,
+    key: response.Key!,
+  }
+}
+
+async function createFile(file: {
+  fileName: string
+  extension: string
+  content: string
+}): Promise<Upload> {
+  const tmpPath = join(objectStore.budibaseTempDir(), "ai-downloads")
+
+  if (!fs.existsSync(tmpPath)) {
+    mkdirSync(tmpPath)
+  }
+
+  const destination = path.resolve(tmpPath, `${file.fileName}${file.extension}`)
+
+  fs.writeFileSync(destination, file.content)
+
+  const processedFileName = path.basename(destination)
+  const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+
+  const response = await objectStore.upload({
+    bucket: ObjectStoreBuckets.APPS,
+    filename: s3Key,
+    path: destination,
+    type: "text/plain",
+  })
+
+  return {
+    size: fs.readFileSync(destination).byteLength,
+    name: processedFileName,
+    url: await objectStore.getAppFileUrl(s3Key),
+    extension: file.extension,
     key: response.Key!,
   }
 }
