@@ -1,7 +1,7 @@
 import crypto from "crypto"
 import { app } from "../cache"
 import { Feature } from "@budibase/types"
-import { env as coreEnv } from "@budibase/backend-core"
+import coreEnv from "../environment"
 
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
