@@ -16,6 +16,7 @@
     Tag,
     Tags,
     ButtonGroup,
+    Icon,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
   import { type AppScript } from "@budibase/types"
@@ -143,6 +144,17 @@
         bind:value={selectedScript.html}
         minHeight={200}
         placeholder="&lt;script&gt;...&lt;/script&gt;"
+      />
+      <Label size="L">
+        CSP whitelist<br />
+        <Link href="https://docs.budibase.com/docs/app-scripts" target="_blank">
+          Learn more
+        </Link>
+      </Label>
+      <TextArea
+        bind:value={selectedScript.cspWhitelist}
+        minHeight={100}
+        placeholder="https://external.api.com&#013;https://*.domain.com"
       />
       <div />
       <div class="buttons">

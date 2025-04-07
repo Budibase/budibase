@@ -1,4 +1,6 @@
 import crypto from "crypto"
+import { app } from "../cache"
+import { Feature } from "@budibase/types"
 
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
@@ -89,14 +91,37 @@ const CSP_DIRECTIVES = {
 export async function contentSecurityPolicy(ctx: any, next: any) {
   try {
     const nonce = crypto.randomBytes(16).toString("base64")
-
-    const directives = { ...CSP_DIRECTIVES }
+    ctx.state.nonce = nonce
+    let directives = { ...CSP_DIRECTIVES }
     directives["script-src"] = [
       ...CSP_DIRECTIVES["script-src"],
       `'nonce-${nonce}'`,
     ]
 
-    ctx.state.nonce = nonce
+    // Add custom app CSP whitelist
+    const licensed = ctx.user?.license?.features.includes(
+      Feature.CUSTOM_APP_SCRIPTS
+    )
+    if (licensed && ctx.appId) {
+      try {
+        const appMetadata = await app.getAppMetadata(ctx.appId)
+        if ("name" in appMetadata) {
+          for (let script of appMetadata.scripts || []) {
+            const inclusions = (script.cspWhitelist || "")
+              .split(",")
+              .filter(url => !!url?.trim().length)
+            directives["default-src"] = [
+              ...directives["default-src"],
+              ...inclusions,
+            ]
+          }
+        }
+      } catch (err) {
+        console.error(
+          `Error occurred in Content-Security-Policy middleware: ${err}`
+        )
+      }
+    }
 
     const cspHeader = Object.entries(directives)
       .map(([key, sources]) => `${key} ${sources.join(" ")}`)

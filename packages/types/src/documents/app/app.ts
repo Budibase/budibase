@@ -89,4 +89,5 @@ export interface AppScript {
   name: string
   location: "Head" | "Body"
   html?: string
+  cspWhitelist?: string
 }

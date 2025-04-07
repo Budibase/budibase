@@ -1,5 +1,10 @@
 import Router from "@koa/router"
-import { auth, middleware, env as envCore } from "@budibase/backend-core"
+import {
+  auth,
+  middleware,
+  env as envCore,
+  env as coreEnv,
+} from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
 import cleanup from "../middleware/cleanup"
 import zlib from "zlib"
@@ -66,9 +71,13 @@ if (apiEnabled()) {
     )
     .use(pro.licensing())
     .use(currentApp)
-    .use(auth.auditLog)
-    .use(migrations)
-    .use(cleanup)
+
+  // Add CSP as soon as possible - depends on licensing and currentApp
+  if (!coreEnv.DISABLE_CONTENT_SECURITY_POLICY) {
+    router.use(middleware.csp)
+  }
+
+  router.use(auth.auditLog).use(migrations).use(cleanup)
 
   // authenticated routes
   for (let route of mainRoutes) {
