@@ -1,6 +1,7 @@
 import crypto from "crypto"
 import { app } from "../cache"
 import { Feature } from "@budibase/types"
+import { env as coreEnv } from "@budibase/backend-core"
 
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
@@ -102,7 +103,7 @@ export async function contentSecurityPolicy(ctx: any, next: any) {
     const licensed = ctx.user?.license?.features.includes(
       Feature.CUSTOM_APP_SCRIPTS
     )
-    if (licensed && ctx.appId) {
+    if (licensed && ctx.appId && !coreEnv.isTest()) {
       try {
         const appMetadata = await app.getAppMetadata(ctx.appId)
         if ("name" in appMetadata) {

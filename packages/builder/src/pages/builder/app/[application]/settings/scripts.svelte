@@ -16,7 +16,6 @@
     Tag,
     Tags,
     ButtonGroup,
-    Icon,
   } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
   import { type AppScript } from "@budibase/types"
