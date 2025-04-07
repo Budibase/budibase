@@ -195,7 +195,7 @@ export async function generateTables(
   if (!llm) {
     ctx.throw("LLM not available")
   }
-  llm.maxTokens = 5000
+  llm.maxTokens = 2000
 
   const createdTables = await llm!.generateTables(
     prompt,
