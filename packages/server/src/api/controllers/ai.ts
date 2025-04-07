@@ -106,15 +106,25 @@ async function generateDataDelegate(
       linksOverride[field.name] = null
     }
 
-    const attachmentColumns = Object.values(table.schema)
-      .filter(f => f.type === FieldType.ATTACHMENT_SINGLE)
-      .map(c => c.name)
+    const attachmentColumns = Object.values(table.schema).filter(f =>
+      [FieldType.ATTACHMENTS, FieldType.ATTACHMENT_SINGLE].includes(f.type)
+    )
 
     for (const entry of data[tableName]) {
       const attachmentData: Record<string, any> = {}
       for (const column of attachmentColumns) {
-        const attachment = await downloadFile(entry[column])
-        attachmentData[column] = attachment
+        attachmentData[column.name] = []
+        if (!Array.isArray(entry[column.name])) {
+          entry[column.name] = [entry[column.name]]
+        }
+        for (const attachmentValue of entry[column.name]) {
+          const attachment = await downloadFile(attachmentValue)
+          attachmentData[column.name].push(attachment)
+        }
+
+        if (column.type === FieldType.ATTACHMENT_SINGLE) {
+          attachmentData[column.name] = attachmentData[column.name][0]
+        }
       }
 
       const tableId = tables[tableName]._id!
