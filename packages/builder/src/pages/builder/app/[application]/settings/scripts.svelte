@@ -146,7 +146,10 @@
       />
       <Label size="L">
         CSP whitelist<br />
-        <Link href="https://docs.budibase.com/docs/app-scripts" target="_blank">
+        <Link
+          href="https://docs.budibase.com/docs/app-scripts#domain-whitelisting-for-content-security-policy-csp"
+          target="_blank"
+        >
           Learn more
         </Link>
       </Label>
