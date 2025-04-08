@@ -16,7 +16,6 @@ import {
 } from "@/stores"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
-import { Readable } from "svelte/store"
 import {
   Screen,
   Theme,
@@ -27,9 +26,21 @@ import {
   Snippet,
   UIComponentError,
   CustomComponent,
+  Table,
+  DataFetchDatasource,
 } from "@budibase/types"
 import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
+import BlockComponent from "./components/BlockComponent.svelte"
+import Block from "./components/Block.svelte"
+
+// Set up global PWA install prompt handler
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault()
+    window.deferredPwaPrompt = e
+  })
+}
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
@@ -66,6 +77,9 @@ declare global {
     // Other flags
     MIGRATING_APP: boolean
 
+    // PWA install prompt
+    deferredPwaPrompt: any
+
     // Client additions
     handleBuilderRuntimeEvent: (type: string, data: any) => void
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
@@ -75,20 +89,21 @@ declare global {
   }
 }
 
-export type Context = Readable<Record<string, any>>
-
 export interface SDK {
   API: APIClient
   styleable: any
   Provider: any
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
+  fetchDatasourceDefinition: (datasource: DataFetchDatasource) => Promise<Table>
   generateGoldenSample: any
   builderStore: typeof builderStore
   authStore: typeof authStore
   notificationStore: typeof notificationStore
   environmentStore: typeof environmentStore
   appStore: typeof appStore
+  Block: typeof Block
+  BlockComponent: typeof BlockComponent
 }
 
 let app: ClientApp

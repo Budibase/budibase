@@ -279,6 +279,7 @@ describe("configs", () => {
 
       expect(checklist.apps.checked).toBeFalsy()
       expect(checklist.smtp.checked).toBeTruthy()
+      expect(checklist.smtp.fallback).toBeFalsy()
       expect(checklist.adminUser.checked).toBeTruthy()
     })
   })

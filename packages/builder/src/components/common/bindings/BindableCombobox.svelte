@@ -9,10 +9,10 @@
 
   export let value = ""
   export let bindings = []
-  export let placeholder
+  export let placeholder = undefined
   export let label
   export let disabled = false
-  export let options
+  export let options = undefined
   export let appendBindingsAsOptions = true
   export let error
 

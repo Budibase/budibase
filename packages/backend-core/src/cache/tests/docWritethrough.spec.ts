@@ -18,7 +18,9 @@ import {
 const initialTime = Date.now()
 
 async function waitForQueueCompletion() {
-  await utils.queue.processMessages(DocWritethroughProcessor.queue)
+  await utils.queue.processMessages(
+    DocWritethroughProcessor.queue.getBullQueue()
+  )
 }
 
 beforeAll(() => utils.queue.useRealQueues())

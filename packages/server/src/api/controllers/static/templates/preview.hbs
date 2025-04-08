@@ -108,6 +108,9 @@
     window.addEventListener("message", receiveMessage)
     window.parent.postMessage({ type: "ready" })
   </script>
+  {{ headAppScripts }}
 </head>
-<body></body>
+<body>
+  {{ bodyAppScripts }}
+</body>
 </html>

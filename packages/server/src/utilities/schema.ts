@@ -106,7 +106,7 @@ export function validate(
       } else if (
         // If provided must be a valid date
         columnType === FieldType.DATETIME &&
-        isNaN(new Date(columnData).getTime())
+        sql.utils.isInvalidISODateString(columnData)
       ) {
         results.schemaValidation[columnName] = false
       } else if (

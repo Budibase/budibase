@@ -1,7 +1,9 @@
 import {
-  UpsertOAuth2ConfigRequest,
-  UpsertOAuth2ConfigResponse,
+  InsertOAuth2ConfigRequest,
+  InsertOAuth2ConfigResponse,
   FetchOAuth2ConfigsResponse,
+  UpdateOAuth2ConfigRequest,
+  UpdateOAuth2ConfigResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -13,10 +15,10 @@ export class OAuth2API extends TestAPI {
   }
 
   create = async (
-    body: UpsertOAuth2ConfigRequest,
+    body: InsertOAuth2ConfigRequest,
     expectations?: Expectations
   ) => {
-    return await this._post<UpsertOAuth2ConfigResponse>("/api/oauth2", {
+    return await this._post<InsertOAuth2ConfigResponse>("/api/oauth2", {
       body,
       expectations: {
         status: expectations?.status ?? 201,
@@ -26,18 +28,20 @@ export class OAuth2API extends TestAPI {
   }
 
   update = async (
-    id: string,
-    body: UpsertOAuth2ConfigRequest,
+    body: UpdateOAuth2ConfigRequest,
     expectations?: Expectations
   ) => {
-    return await this._put<UpsertOAuth2ConfigResponse>(`/api/oauth2/${id}`, {
-      body,
-      expectations,
-    })
+    return await this._put<UpdateOAuth2ConfigResponse>(
+      `/api/oauth2/${body._id}`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 
-  delete = async (id: string, expectations?: Expectations) => {
-    return await this._delete<void>(`/api/oauth2/${id}`, {
+  delete = async (id: string, rev: string, expectations?: Expectations) => {
+    return await this._delete<void>(`/api/oauth2/${id}/${rev}`, {
       expectations,
     })
   }

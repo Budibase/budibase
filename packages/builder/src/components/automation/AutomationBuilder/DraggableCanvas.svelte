@@ -134,9 +134,6 @@
   // Size of the view port
   let viewDims = {}
 
-  // Edge around the draggable content
-  let contentDragPadding = 200
-
   // Auto scroll
   let scrollInterval
 
@@ -234,7 +231,7 @@
           : {}),
       }))
 
-      offsetX = offsetX - xBump
+      offsetX -= xBump
     } else if (e.ctrlKey || e.metaKey) {
       // Scale the content on scrolling
       let updatedScale
@@ -261,7 +258,7 @@
             }
           : {}),
       }))
-      offsetY = offsetY - yBump
+      offsetY -= yBump
     }
   }
 
@@ -335,8 +332,8 @@
                 scrollX: state.scrollX + xInterval,
                 scrollY: state.scrollY + yInterval,
               }))
-              offsetX = offsetX + xInterval
-              offsetY = offsetY + yInterval
+              offsetX += xInterval
+              offsetY += yInterval
             }
           }
 
@@ -488,22 +485,35 @@
   const viewToFocusEle = () => {
     if ($focusElement) {
       const viewWidth = viewDims.width
+      const viewHeight = viewDims.height
 
       // The amount to shift the content in order to center the trigger on load.
-      // The content is also padded with `contentDragPadding`
       // The sidebar offset factors into the left positioning of the content here.
       const targetX =
         contentWrap.getBoundingClientRect().x -
         $focusElement.x +
-        (viewWidth / 2 - $focusElement.width / 2)
+        (viewWidth - $focusElement.width) / 2
+
+      const targetY =
+        contentWrap.getBoundingClientRect().y -
+        $focusElement.y +
+        (viewHeight - $focusElement.height) / 2
 
       // Update the content position state
       // Shift the content up slightly to accommodate the padding
       contentPos.update(state => ({
         ...state,
         x: targetX,
-        y: -(contentDragPadding / 2),
+        y: Number.isInteger($focusElement.targetY)
+          ? $focusElement.targetY
+          : targetY,
       }))
+
+      // Be sure to set the initial offset correctly
+      offsetX = targetX
+      offsetY = Number.isInteger($focusElement.targetY)
+        ? $focusElement.targetY
+        : targetY
     }
   }
 
@@ -550,7 +560,6 @@
   aria-label="Viewport for building automations"
   on:mouseup={onMouseUp}
   on:mousemove={Utils.domDebounce(onMouseMove)}
-  style={`--dragPadding: ${contentDragPadding}px;`}
 >
   <svg class="draggable-background" style={`--dotSize: ${dotSize};`}>
     <!-- Small 2px offset to tuck the points under the viewport on load-->
@@ -617,7 +626,6 @@
     transform-origin: 50% 50%;
     transform: scale(var(--scale));
     user-select: none;
-    padding: var(--dragPadding);
   }
 
   .content-wrap {

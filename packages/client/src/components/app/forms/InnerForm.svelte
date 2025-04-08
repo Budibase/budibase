@@ -1,31 +1,62 @@
-<script>
+<script lang="ts">
   import { setContext, getContext } from "svelte"
+  import type { Readable, Writable } from "svelte/store"
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
+  import type {
+    DataFetchDatasource,
+    FieldSchema,
+    FieldType,
+    Table,
+    TableSchema,
+    UIFieldValidationRule,
+  } from "@budibase/types"
 
-  export let dataSource = undefined
-  export let disabled = false
-  export let readonly = false
-  export let initialValues = undefined
-  export let size = undefined
-  export let schema = undefined
-  export let definition = undefined
-  export let disableSchemaValidation = false
-  export let editAutoColumns = false
+  type FieldInfo<T = any> = {
+    name: string
+    step: number
+    type: `${FieldType}`
+    fieldState: {
+      fieldId: string
+      value: T
+      defaultValue: T
+      disabled: boolean
+      readonly: boolean
+      validator: ((_value: T) => string | null) | null
+      error: string | null | undefined
+      lastUpdate: number
+    }
+    fieldApi: {
+      setValue(_value: T): void
+      validate(): boolean
+      reset(): void
+    }
+    fieldSchema: FieldSchema | {}
+  }
+
+  export let dataSource: DataFetchDatasource | undefined = undefined
+  export let disabled: boolean = false
+  export let readonly: boolean = false
+  export let initialValues: Record<string, any> | undefined = undefined
+  export let size: "Medium" | "Large" | undefined = undefined
+  export let schema: TableSchema | undefined = undefined
+  export let definition: Table | undefined = undefined
+  export let disableSchemaValidation: boolean = false
+  export let editAutoColumns: boolean = false
 
   // For internal use only, to disable context when being used with standalone
   // fields
-  export let provideContext = true
+  export let provideContext: boolean = true
 
   // We export this store so that when we remount the inner form we can still
   // persist what step we're on
-  export let currentStep
+  export let currentStep: Writable<number>
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
 
-  let fields = []
+  let fields: Writable<FieldInfo>[] = []
   const formState = writable({
     values: {},
     errors: {},
@@ -75,19 +106,24 @@
 
   // Generates a derived store from an array of fields, comprised of a map of
   // extracted values from the field array
-  const deriveFieldProperty = (fieldStores, getProp) => {
+  const deriveFieldProperty = (
+    fieldStores: Readable<FieldInfo>[],
+    getProp: (_field: FieldInfo) => any
+  ) => {
     return derived(fieldStores, fieldValues => {
-      const reducer = (map, field) => ({ ...map, [field.name]: getProp(field) })
-      return fieldValues.reduce(reducer, {})
+      return fieldValues.reduce(
+        (map, field) => ({ ...map, [field.name]: getProp(field) }),
+        {}
+      )
     })
   }
 
   // Derives any enrichments which need to be made so that bindings work for
   // special data types like attachments. Relationships are currently not
   // handled as we don't have the primaryDisplay field that is required.
-  const deriveBindingEnrichments = fieldStores => {
+  const deriveBindingEnrichments = (fieldStores: Readable<FieldInfo>[]) => {
     return derived(fieldStores, fieldValues => {
-      let enrichments = {}
+      const enrichments: Record<string, string> = {}
       fieldValues.forEach(field => {
         if (field.type === "attachment") {
           const value = field.fieldState.value
@@ -104,7 +140,11 @@
 
   // Derive the overall form value and deeply set all field paths so that we
   // can support things like JSON fields.
-  const deriveFormValue = (initialValues, values, enrichments) => {
+  const deriveFormValue = (
+    initialValues: Record<string, any> | undefined,
+    values: Record<string, any>,
+    enrichments: Record<string, string>
+  ) => {
     let formValue = Helpers.cloneDeep(initialValues || {})
 
     // We need to sort the keys to avoid a JSON field overwriting a nested field
@@ -118,7 +158,7 @@
         }
       })
       .sort((a, b) => {
-        return a.lastUpdate > b.lastUpdate
+        return a.lastUpdate - b.lastUpdate
       })
 
     // Merge all values and enrichments into a single value
@@ -132,12 +172,16 @@
   }
 
   // Searches the field array for a certain field
-  const getField = name => {
-    return fields.find(field => get(field).name === name)
+  const getField = (name: string) => {
+    return fields.find(field => get(field).name === name)!
   }
 
   // Sanitises a value by ensuring it doesn't contain any invalid data
-  const sanitiseValue = (value, schema, type) => {
+  const sanitiseValue = (
+    value: any,
+    schema: FieldSchema | undefined,
+    type: `${FieldType}`
+  ) => {
     // Check arrays - remove any values not present in the field schema and
     // convert any values supplied to strings
     if (Array.isArray(value) && type === "array" && schema) {
@@ -149,13 +193,13 @@
 
   const formApi = {
     registerField: (
-      field,
-      type,
-      defaultValue = null,
-      fieldDisabled = false,
-      fieldReadOnly = false,
-      validationRules,
-      step = 1
+      field: string,
+      type: FieldType,
+      defaultValue: string | null = null,
+      fieldDisabled: boolean = false,
+      fieldReadOnly: boolean = false,
+      validationRules: UIFieldValidationRule[],
+      step: number = 1
     ) => {
       if (!field) {
         return
@@ -200,7 +244,7 @@
       const isAutoColumn = !!schema?.[field]?.autocolumn
 
       // Construct field info
-      const fieldInfo = writable({
+      const fieldInfo = writable<FieldInfo>({
         name: field,
         type,
         step: step || 1,
@@ -210,7 +254,8 @@
           error: initialError,
           disabled:
             disabled || fieldDisabled || (isAutoColumn && !editAutoColumns),
-          readonly: readonly || fieldReadOnly || schema?.[field]?.readonly,
+          readonly:
+            readonly || fieldReadOnly || (schema?.[field] as any)?.readonly,
           defaultValue,
           validator,
           lastUpdate: Date.now(),
@@ -254,7 +299,13 @@
         get(field).fieldApi.reset()
       })
     },
-    changeStep: ({ type, number }) => {
+    changeStep: ({
+      type,
+      number,
+    }: {
+      type: "next" | "prev" | "first" | "specific"
+      number: any
+    }) => {
       if (type === "next") {
         currentStep.update(step => step + 1)
       } else if (type === "prev") {
@@ -265,12 +316,12 @@
         currentStep.set(parseInt(number))
       }
     },
-    setStep: step => {
+    setStep: (step: number) => {
       if (step) {
         currentStep.set(step)
       }
     },
-    setFieldValue: (fieldName, value) => {
+    setFieldValue: (fieldName: string, value: any) => {
       const field = getField(fieldName)
       if (!field) {
         return
@@ -278,7 +329,7 @@
       const { fieldApi } = get(field)
       fieldApi.setValue(value)
     },
-    resetField: fieldName => {
+    resetField: (fieldName: string) => {
       const field = getField(fieldName)
       if (!field) {
         return
@@ -289,9 +340,9 @@
   }
 
   // Creates an API for a specific field
-  const makeFieldApi = field => {
+  const makeFieldApi = (field: string) => {
     // Sets the value for a certain field and invokes validation
-    const setValue = (value, skipCheck = false) => {
+    const setValue = (value: any, skipCheck = false) => {
       const fieldInfo = getField(field)
       const { fieldState } = get(fieldInfo)
       const { validator } = fieldState
@@ -328,36 +379,6 @@
       })
     }
 
-    // Updates the validator rules for a certain field
-    const updateValidation = validationRules => {
-      const fieldInfo = getField(field)
-      const { fieldState } = get(fieldInfo)
-      const { value, error } = fieldState
-
-      // Create new validator
-      const schemaConstraints = disableSchemaValidation
-        ? null
-        : schema?.[field]?.constraints
-      const validator = createValidatorFromConstraints(
-        schemaConstraints,
-        validationRules,
-        field,
-        definition
-      )
-
-      // Update validator
-      fieldInfo.update(state => {
-        state.fieldState.validator = validator
-        return state
-      })
-
-      // If there is currently an error, run the validator again in case
-      // the error should be cleared by the new validation rules
-      if (error) {
-        setValue(value, true)
-      }
-    }
-
     // We don't want to actually remove the field state when deregistering, just
     // remove any errors and validation
     const deregister = () => {
@@ -370,7 +391,7 @@
     }
 
     // Updates the disabled state of a certain field
-    const setDisabled = fieldDisabled => {
+    const setDisabled = (fieldDisabled: boolean) => {
       const fieldInfo = getField(field)
 
       // Auto columns are always disabled
@@ -386,7 +407,6 @@
     return {
       setValue,
       reset,
-      updateValidation,
       setDisabled,
       deregister,
       validate: () => {
@@ -412,7 +432,15 @@
   // register their fields to step 1
   setContext("form-step", writable(1))
 
-  const handleUpdateFieldValue = ({ type, field, value }) => {
+  const handleUpdateFieldValue = ({
+    type,
+    field,
+    value,
+  }: {
+    type: "set" | "reset"
+    field: string
+    value: any
+  }) => {
     if (type === "set") {
       formApi.setFieldValue(field, value)
     } else {
@@ -420,16 +448,19 @@
     }
   }
 
-  const handleScrollToField = ({ field }) => {
-    if (!field.fieldState) {
-      field = get(getField(field))
+  const handleScrollToField = (props: { field: FieldInfo | string }) => {
+    let field
+    if (typeof props.field === "string") {
+      field = get(getField(props.field))
+    } else {
+      field = props.field
     }
     const fieldId = field.fieldState.fieldId
     const fieldElement = document.getElementById(fieldId)
     if (fieldElement) {
       fieldElement.focus({ preventScroll: true })
     }
-    const label = document.querySelector(`label[for="${fieldId}"]`)
+    const label = document.querySelector<HTMLElement>(`label[for="${fieldId}"]`)
     if (label) {
       label.style.scrollMargin = "100px"
       label.scrollIntoView({ behavior: "smooth", block: "nearest" })

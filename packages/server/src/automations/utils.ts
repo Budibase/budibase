@@ -1,17 +1,21 @@
 import { Thread, ThreadType } from "../threads"
-import { automations } from "@budibase/shared-core"
 import { automationQueue } from "./bullboard"
 import { updateEntityMetadata } from "../utilities"
 import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { quotas } from "@budibase/pro"
-import { Automation, AutomationJob, MetadataType } from "@budibase/types"
+import {
+  Automation,
+  AutomationJob,
+  CronTriggerInputs,
+  isCronTrigger,
+  MetadataType,
+} from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
 import { JobId } from "bull"
 
-const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 let Runner: Thread
 if (automationsEnabled()) {
   Runner = new Thread(ThreadType.AUTOMATION)
@@ -60,7 +64,11 @@ export async function processEvent(job: AutomationJob) {
     const task = async () => {
       try {
         return await tracer.trace("task", async () => {
-          if (isCronTrigger(job.data.automation) && !job.data.event.timestamp) {
+          const trigger = job.data.automation
+            ? job.data.automation.definition.trigger
+            : null
+          const isCron = trigger && isCronTrigger(trigger)
+          if (isCron && !job.data.event.timestamp) {
             // Requires the timestamp at run time
             job.data.event.timestamp = Date.now()
           }
@@ -107,12 +115,14 @@ export async function updateTestHistory(
 // end the repetition and the job itself
 export async function disableAllCrons(appId: any) {
   const promises = []
-  const jobs = await automationQueue.getRepeatableJobs()
+  const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
   for (let job of jobs) {
     if (job.key.includes(`${appId}_cron`)) {
-      promises.push(automationQueue.removeRepeatableByKey(job.key))
+      promises.push(
+        automationQueue.getBullQueue().removeRepeatableByKey(job.key)
+      )
       if (job.id) {
-        promises.push(automationQueue.removeJobs(job.id))
+        promises.push(automationQueue.getBullQueue().removeJobs(job.id))
       }
     }
   }
@@ -121,10 +131,10 @@ export async function disableAllCrons(appId: any) {
 }
 
 export async function disableCronById(jobId: JobId) {
-  const jobs = await automationQueue.getRepeatableJobs()
+  const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
   for (const job of jobs) {
     if (job.id === jobId) {
-      await automationQueue.removeRepeatableByKey(job.key)
+      await automationQueue.getBullQueue().removeRepeatableByKey(job.key)
     }
   }
   console.log(`jobId=${jobId} disabled`)
@@ -145,17 +155,14 @@ export async function clearMetadata() {
   await db.bulkDocs(automationMetadata)
 }
 
-export function isCronTrigger(auto: Automation) {
-  return (
-    auto &&
-    auto.definition.trigger &&
-    auto.definition.trigger.stepId === CRON_STEP_ID
-  )
-}
-
 export function isRebootTrigger(auto: Automation) {
   const trigger = auto ? auto.definition.trigger : null
-  return isCronTrigger(auto) && trigger?.inputs.cron === REBOOT_CRON
+  const isCron = trigger && isCronTrigger(trigger)
+  if (!isCron) {
+    return false
+  }
+  const inputs = trigger?.inputs as CronTriggerInputs
+  return inputs.cron === REBOOT_CRON
 }
 
 /**
@@ -169,12 +176,13 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
 
   // need to create cron job
   if (
-    isCronTrigger(automation) &&
+    trigger &&
+    isCronTrigger(trigger) &&
     !isRebootTrigger(automation) &&
-    !automation.disabled &&
-    trigger?.inputs.cron
+    !automation.disabled
   ) {
-    const cronExp = trigger.inputs.cron
+    const inputs = trigger.inputs as CronTriggerInputs
+    const cronExp = inputs.cron
     const validation = helpers.cron.validate(cronExp)
     if (!validation.valid) {
       throw new Error(

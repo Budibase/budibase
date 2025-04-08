@@ -1,5 +1,5 @@
 import events from "events"
-import { newid } from "../utils"
+import { newid, timeout } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 import { helpers } from "@budibase/shared-core"
 import { Job, JobId, JobInformation } from "bull"
@@ -96,12 +96,17 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
 
       let resp = func(message)
 
-      async function retryFunc(fnc: any) {
+      async function retryFunc(fnc: any, attempt = 0) {
         try {
           await fnc
         } catch (e: any) {
-          await helpers.wait(50)
-          await retryFunc(func(message))
+          attempt++
+          if (attempt < 3) {
+            await helpers.wait(100 * attempt)
+            await retryFunc(func(message), attempt)
+          } else {
+            throw e
+          }
         }
       }
 
@@ -109,6 +114,12 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         try {
           await retryFunc(resp)
           this._emitter.emit("completed", message as Job<T>)
+
+          const indexToRemove = this._messages.indexOf(message)
+          if (indexToRemove === -1) {
+            throw "Failed deleting a processed message"
+          }
+          this._messages.splice(indexToRemove, 1)
         } catch (e: any) {
           console.error(e)
         }
@@ -247,6 +258,16 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     return this._messages
       .filter(job => job.opts?.repeat != null)
       .map(job => jobToJobInformation(job as Job))
+  }
+
+  async whenCurrentJobsFinished() {
+    do {
+      await timeout(50)
+    } while (this.hasRunningJobs())
+  }
+
+  private hasRunningJobs() {
+    return this._addCount > this._runCount
   }
 }
 

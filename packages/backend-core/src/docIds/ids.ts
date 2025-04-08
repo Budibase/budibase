@@ -124,3 +124,7 @@ export const generateDevInfoID = (userId: string) => {
 export const generatePluginID = (name: string) => {
   return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
 }
+
+export const generateOAuth2LogID = (id: string) => {
+  return `${DocumentType.OAUTH2_CONFIG_LOG}${SEPARATOR}${id}`
+}

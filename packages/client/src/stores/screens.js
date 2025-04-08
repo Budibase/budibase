@@ -8,6 +8,7 @@ import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
 import { DNDPlaceholderID, ScreenslotID, ScreenslotType } from "@/constants"
+import { ScreenVariant } from "@budibase/types"
 
 const createScreenStore = () => {
   const store = derived(
@@ -193,5 +194,8 @@ const createScreenStore = () => {
 export const screenStore = createScreenStore()
 
 export const isGridScreen = derived(screenStore, $screenStore => {
-  return $screenStore.activeScreen?.props?.layout === "grid"
+  return (
+    $screenStore.activeScreen?.props?.layout === "grid" ||
+    $screenStore.activeScreen?.variant === ScreenVariant.PDF
+  )
 })

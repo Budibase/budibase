@@ -20,9 +20,11 @@
     "name": "Data",
     "icon": "Data",
     "children": [
+      "singlerowprovider",
       "dataprovider",
       "repeater",
       "gridblock",
+      "pdftable",
       "spreadsheet",
       "dynamicfilter",
       "daterangepicker"

@@ -196,8 +196,6 @@
   }
 
   // Metadata to pass into grid action to apply CSS
-  const checkGrid = x =>
-    x?._component?.endsWith("/container") && x?.layout === "grid"
   $: insideGrid = checkGrid(parent)
   $: isGrid = checkGrid(instance)
   $: gridMetadata = {
@@ -599,6 +597,18 @@
       ...normalContext,
       ...additionalContext,
     }
+  }
+
+  const checkGrid = x => {
+    // Check for a grid container
+    if (x?._component?.endsWith("/container") && x?.layout === "grid") {
+      return true
+    }
+    // Check for a PDF (always grid)
+    if (x?._component?.endsWith("/pdf")) {
+      return true
+    }
+    return false
   }
 
   onMount(() => {

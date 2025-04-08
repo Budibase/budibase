@@ -7,15 +7,15 @@
   import { createEventDispatcher } from "svelte"
   import { capitalise } from "@/helpers"
 
-  export let value
-  export let error
+  export let value = undefined
+  export let error = undefined
   export let placeholder = null
   export let autoWidth = false
   export let quiet = false
   export let allowPublic = true
   export let allowRemove = false
   export let disabled = false
-  export let align
+  export let align = undefined
   export let footer = null
   export let allowedRoles = null
   export let allowCreator = false
@@ -135,7 +135,6 @@
     {autoWidth}
     {quiet}
     {disabled}
-    {align}
     {footer}
     bind:value
     on:change={onChange}

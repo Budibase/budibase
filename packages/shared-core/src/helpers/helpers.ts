@@ -10,7 +10,7 @@ import { User } from "@budibase/types"
  * @param key the key
  * @return the value or null if a value was not found for this key
  */
-export const deepGet = (obj: { [x: string]: any }, key: string) => {
+export const deepGet = (obj: Record<string, any> | undefined, key: string) => {
   if (!obj || !key) {
     return null
   }

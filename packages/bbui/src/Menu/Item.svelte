@@ -3,7 +3,7 @@
   import Icon from "../Icon/Icon.svelte"
 
   const dispatch = createEventDispatcher()
-  const actionMenu = getContext("actionMenu") as { hideAll: () => void }
+  const actionMenu = getContext("actionMenu")
 
   export let icon: string | undefined = undefined
   export let disabled: boolean | undefined = undefined

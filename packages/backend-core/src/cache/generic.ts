@@ -2,14 +2,15 @@ import BaseCache from "./base"
 
 const GENERIC = new BaseCache()
 
-export enum CacheKey {
-  CHECKLIST = "checklist",
-  INSTALLATION = "installation",
-  ANALYTICS_ENABLED = "analyticsEnabled",
-  UNIQUE_TENANT_ID = "uniqueTenantId",
-  EVENTS = "events",
-  BACKFILL_METADATA = "backfillMetadata",
-  EVENTS_RATE_LIMIT = "eventsRateLimit",
+export const CacheKey = {
+  CHECKLIST: "checklist",
+  INSTALLATION: "installation",
+  ANALYTICS_ENABLED: "analyticsEnabled",
+  UNIQUE_TENANT_ID: "uniqueTenantId",
+  EVENTS: "events",
+  BACKFILL_METADATA: "backfillMetadata",
+  EVENTS_RATE_LIMIT: "eventsRateLimit",
+  OAUTH2_TOKEN: (configId: string) => `oauth2Token_${configId}`,
 }
 
 export enum TTL {
@@ -29,5 +30,8 @@ export const destroy = (...args: Parameters<typeof GENERIC.delete>) =>
 export const withCache = <T>(
   ...args: Parameters<typeof GENERIC.withCache<T>>
 ) => GENERIC.withCache(...args)
+export const withCacheWithDynamicTTL = <T>(
+  ...args: Parameters<typeof GENERIC.withCacheWithDynamicTTL<T>>
+) => GENERIC.withCacheWithDynamicTTL(...args)
 export const bustCache = (...args: Parameters<typeof GENERIC.bustCache>) =>
   GENERIC.bustCache(...args)

@@ -14,14 +14,21 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query, SourceName, Row } from "@budibase/types"
+import {
+  Datasource,
+  Query,
+  SourceName,
+  Row,
+  QueryVerb,
+  DatasourcePlus,
+} from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
 
 class QueryRunner {
   datasource: Datasource
-  queryVerb: string
+  queryVerb: QueryVerb
   queryId: string
   fields: any
   parameters: any
@@ -112,9 +119,17 @@ class QueryRunner {
     let query: Record<string, any>
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = await interpolateSQL(fieldsClone, enrichedContext, integration, {
-        nullDefaultSupport,
-      })
+      query = await interpolateSQL(
+        datasource.source,
+        fieldsClone,
+        enrichedContext,
+        // Bit hacky because currently all of our SQL datasources are
+        // DatasourcePluses.
+        integration as DatasourcePlus,
+        {
+          nullDefaultSupport,
+        }
+      )
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
@@ -124,7 +139,14 @@ class QueryRunner {
       query.paginationValues = this.pagination
     }
 
-    let output = threadUtils.formatResponse(await integration[queryVerb](query))
+    const fn = integration[queryVerb]
+    if (!fn) {
+      throw new Error(
+        `Datasource integration does not support verb: ${queryVerb}`
+      )
+    }
+
+    let output = threadUtils.formatResponse(await fn.bind(integration)(query))
     let rows = output as Row[],
       info = undefined,
       extra = undefined,
@@ -193,7 +215,7 @@ class QueryRunner {
     })
     const keys: string[] = [...keysSet]
 
-    if (integration.end) {
+    if ("end" in integration && typeof integration.end === "function") {
       integration.end()
     }
 
