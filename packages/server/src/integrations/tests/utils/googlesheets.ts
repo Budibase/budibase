@@ -540,9 +540,28 @@ export class GoogleSheetsMock {
       throw new Error("Only row-based deletes are supported")
     }
 
-    this.iterateRange(range, cell => {
-      cell.userEnteredValue = this.createValue(null)
-    })
+    const sheet = this.getSheetById(range.sheetId)
+    if (!sheet) {
+      throw new Error(`Sheet ${range.sheetId} not found`)
+    }
+
+    if (range.startRowIndex === undefined || range.endRowIndex === undefined) {
+      throw new Error("Range must have start and end row indexes")
+    }
+
+    const totalRows = sheet.data[0].rowData.length
+    if (totalRows < range.endRowIndex) {
+      throw new Error(
+        `Cannot delete range ${JSON.stringify(range)} from sheet ${
+          sheet.properties.title
+        }. Only ${totalRows} rows exist.`
+      )
+    }
+
+    const rowsToDelete = range.endRowIndex - range.startRowIndex
+    sheet.data[0].rowData.splice(range.startRowIndex, rowsToDelete)
+    sheet.data[0].rowMetadata.splice(range.startRowIndex, rowsToDelete)
+    sheet.properties.gridProperties.rowCount -= rowsToDelete
   }
 
   private handleDeleteSheet(request: DeleteSheetRequest) {

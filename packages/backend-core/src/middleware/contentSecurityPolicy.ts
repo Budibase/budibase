@@ -86,7 +86,7 @@ const CSP_DIRECTIVES = {
     "https://js.intercomcdn.com",
     "https://cdn.budi.live",
   ],
-  "worker-src": ["blob:"],
+  "worker-src": ["blob:", "'self'"],
 }
 
 const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
