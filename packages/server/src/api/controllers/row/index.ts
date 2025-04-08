@@ -144,9 +144,11 @@ export async function find(ctx: UserCtx<void, FindRowResponse>) {
   const { tableId, viewId } = utils.getSourceId(ctx)
   const sourceId = viewId || tableId
   const rowId = ctx.params.rowId
-
-  const response = await sdk.rows.find(sourceId, rowId)
-  ctx.body = response
+  try {
+    ctx.body = await sdk.rows.find(sourceId, rowId)
+  } catch (e) {
+    ctx.throw(404, "That row couldn't be found")
+  }
 }
 
 function isDeleteRows(input: any): input is DeleteRows {

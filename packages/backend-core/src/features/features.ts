@@ -143,6 +143,7 @@ export class FlagSet<T extends { [name: string]: boolean }> {
         const personProperties: Record<string, string> = { tenantId }
         const posthogFlags = await posthog.getAllFlags(userId, {
           personProperties,
+          onlyEvaluateLocally: true,
         })
 
         for (const [name, value] of Object.entries(posthogFlags)) {

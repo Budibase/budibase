@@ -5,12 +5,13 @@
   export let text: any = ""
   export let color: string | undefined = undefined
   export let align: "left" | "center" | "right" | "justify" = "left"
+  export let size: string | undefined = "14px"
 
   const component = getContext("component")
   const { styleable } = getContext("sdk")
 
   // Add in certain settings to styles
-  $: styles = enrichStyles($component.styles, color, align)
+  $: styles = enrichStyles($component.styles, color, align, size)
 
   // Ensure we're always passing in a string value to the markdown editor
   $: safeText = stringify(text)
@@ -18,10 +19,12 @@
   const enrichStyles = (
     styles: any,
     colorStyle: typeof color,
-    alignStyle: typeof align
+    alignStyle: typeof align,
+    size: string | undefined
   ) => {
     let additions: Record<string, string> = {
       "text-align": alignStyle,
+      "font-size": size || "14px",
     }
     if (colorStyle) {
       additions.color = colorStyle

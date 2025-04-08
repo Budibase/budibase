@@ -1,5 +1,6 @@
 import { BaseStructure } from "../BaseStructure"
 import { Helpers } from "@budibase/bbui"
+import { ScreenVariant } from "@budibase/types"
 
 export class Screen extends BaseStructure {
   constructor() {
@@ -79,5 +80,27 @@ export class Screen extends BaseStructure {
       this._json.props[key] = props[key]
     }
     return this
+  }
+}
+
+export class PDFScreen extends Screen {
+  constructor() {
+    super()
+    this._json.variant = ScreenVariant.PDF
+    this._json.width = "Max"
+    this._json.showNavigation = false
+    this._json.props = {
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/pdf",
+      _styles: {
+        normal: {},
+        hover: {},
+        active: {},
+        selected: {},
+      },
+      _children: [],
+      _instanceName: "PDF",
+      title: "PDF",
+    }
   }
 }

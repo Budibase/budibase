@@ -26,6 +26,7 @@
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./overlay/PeekScreenDisplay.svelte"
+  import InstallPrompt from "./overlay/InstallPrompt.svelte"
   import UserBindingsProvider from "./context/UserBindingsProvider.svelte"
   import DeviceBindingsProvider from "./context/DeviceBindingsProvider.svelte"
   import StateBindingsProvider from "./context/StateBindingsProvider.svelte"
@@ -246,6 +247,7 @@
                                 <NotificationDisplay />
                                 <ConfirmationDisplay />
                                 <PeekScreenDisplay />
+                                <InstallPrompt />
                               </CustomThemeWrapper>
                             {/if}
 
