@@ -532,9 +532,7 @@ export const getSignedUploadURL = async function (
 export async function servePwaManifest(ctx: UserCtx<void, any>) {
   const appId = context.getAppId()
   if (!appId) {
-    ctx.status = 404
-    ctx.body = { message: "App not found" }
-    return
+    ctx.throw(404)
   }
 
   try {
@@ -542,9 +540,7 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
     const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
     if (!appInfo.pwa) {
-      ctx.status = 404
-      ctx.body = { message: "PWA not configured for this app" }
-      return
+      ctx.throw(404)
     }
 
     const manifest: PWAManifest = {
@@ -567,7 +563,7 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
           icon => icon.sizes === "1240x600" || icon.sizes === "2480x1200"
         )
         if (desktopScreenshot) {
-          manifest.screenshots?.push({
+          manifest.screenshots.push({
             src: desktopScreenshot.src,
             sizes: desktopScreenshot.sizes,
             type: "image/png",
@@ -580,7 +576,7 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
           icon => icon.sizes === "620x620" || icon.sizes === "1024x1024"
         )
         if (mobileScreenshot) {
-          manifest.screenshots?.push({
+          manifest.screenshots.push({
             src: mobileScreenshot.src,
             sizes: mobileScreenshot.sizes,
             type: "image/png",

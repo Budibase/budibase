@@ -90,7 +90,7 @@ export interface PWAManifest {
   short_name: string
   description: string
   icons: PWAManifestImage[]
-  screenshots?: PWAManifestImage[]
+  screenshots: PWAManifestImage[]
   background_color: string
   theme_color: string
   display?: string

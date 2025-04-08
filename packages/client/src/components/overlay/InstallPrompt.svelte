@@ -43,7 +43,17 @@
     window.deferredPwaPrompt = null
   }
 
-  onMount(() => {
+  onMount(async () => {
+    if ("serviceWorker" in navigator) {
+      try {
+        await navigator.serviceWorker.register("/app/service-worker.js", {
+          scope: "/app/",
+        })
+      } catch (error) {
+        console.error("Service worker registration failed:", error)
+      }
+    }
+
     checkForDeferredPrompt()
   })
 </script>
