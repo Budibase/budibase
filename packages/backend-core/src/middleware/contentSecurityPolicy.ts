@@ -1,6 +1,7 @@
 import crypto from "crypto"
 import { app } from "../cache"
 import { Feature, Ctx } from "@budibase/types"
+import { Middleware, Next } from "koa"
 
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
@@ -88,7 +89,7 @@ const CSP_DIRECTIVES = {
   "worker-src": ["blob:"],
 }
 
-export async function contentSecurityPolicy(ctx: Ctx, next: any) {
+const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   const nonce = crypto.randomBytes(16).toString("base64")
   ctx.state.nonce = nonce
   let directives = { ...CSP_DIRECTIVES }
@@ -128,6 +129,6 @@ export async function contentSecurityPolicy(ctx: Ctx, next: any) {
     .join("; ")
   ctx.set("Content-Security-Policy", cspHeader)
   await next()
-}
+}) as Middleware
 
 export default contentSecurityPolicy
