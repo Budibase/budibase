@@ -296,6 +296,9 @@ export async function save(
   datasource: Datasource,
   opts?: { fetchSchema?: boolean; tablesFilter?: string[] }
 ): Promise<{ datasource: Datasource; errors: Record<string, string> }> {
+  // getIntegration throws an error if the integration is not found
+  await getIntegration(datasource.source)
+
   const db = context.getAppDB()
   const plus = datasource.plus
 
@@ -328,14 +331,6 @@ export async function save(
   )
   await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
-
-  // Drain connection pools when configuration is changed
-  if (datasource.source) {
-    const source = await getIntegration(datasource.source)
-    if (source && source.pool) {
-      await source.pool.end()
-    }
-  }
 
   return { datasource, errors }
 }
