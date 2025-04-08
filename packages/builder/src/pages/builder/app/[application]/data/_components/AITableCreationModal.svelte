@@ -15,10 +15,9 @@
   let modal: Modal
 
   let modalData: GenerateTablesRequest = {
-    prompt:
-      "I need a ticketing system where users can submit tickets. A ticket has a title, description, priority, status, and an assigned technician",
+    prompt: "",
     addData: true,
-    useCached: $admin.isDev,
+    useCached: $admin.isDev && false,
   }
 
   export function show() {
