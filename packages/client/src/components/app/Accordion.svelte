@@ -6,6 +6,6 @@
   export let label
 </script>
 
-<Accordion header={label} {bold} {initialOpen}>
+<Accordion header={label || ""} {bold} {initialOpen}>
   <slot />
 </Accordion>

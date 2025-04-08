@@ -7465,9 +7465,13 @@
     "illegalChildren": ["modal", "sidepanel"],
     "showSettingsBar": true,
     "new": true,
+    "size": {
+      "width": 500,
+      "height": 200
+    },
     "grid": {
       "hAlign": "stretch",
-      "vAlign": "start"
+      "vAlign": "stretch"
     },
     "settings": [
       {
