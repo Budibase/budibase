@@ -72,7 +72,8 @@
       "codescanner",
       "signaturesinglefield",
       "bbreferencesinglefield",
-      "bbreferencefield"
+      "bbreferencefield",
+      "ratingfield"
     ]
   },
   {
