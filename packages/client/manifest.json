@@ -8288,11 +8288,6 @@
         }
       },
       {
-        "type": "validation",
-        "key": "validation",
-        "label": "Validation"
-      },
-      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -8319,6 +8314,11 @@
             "key": "value"
           }
         ]
+      },
+      {
+        "type": "validation/number",
+        "label": "Validation",
+        "key": "validation"
       }
     ],
     "context": {
