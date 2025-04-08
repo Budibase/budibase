@@ -28,6 +28,13 @@
 
   let pwaEnabled = $licensing.pwaEnabled
   let uploadingIcons = false
+  let errors = {
+    name: false,
+    short_name: false,
+    icons: false,
+    description: false,
+  }
+  let attemptedSubmit = false
 
   let pwaConfig = $appStore.pwa || {
     name: "",
@@ -43,6 +50,17 @@
 
   $: iconCount = pwaConfig.icons?.length || 0
   $: iconStatusText = iconCount ? `${iconCount} icons uploaded` : undefined
+  $: formIsValid =
+    pwaConfig.name &&
+    pwaConfig.short_name &&
+    iconCount > 0 &&
+    pwaConfig.description
+  $: errors = {
+    name: attemptedSubmit && !pwaConfig.name,
+    short_name: attemptedSubmit && !pwaConfig.short_name,
+    icons: attemptedSubmit && iconCount === 0,
+    description: attemptedSubmit && !pwaConfig.description,
+  }
 
   function getCssVariableValue(cssVar: string) {
     try {
@@ -87,6 +105,12 @@
   }
 
   const handleSubmit = async () => {
+    attemptedSubmit = true
+
+    if (!formIsValid) {
+      return
+    }
+
     try {
       const pwaConfigToSave = {
         ...pwaConfig,
@@ -185,7 +209,7 @@
           <Icon
             size="XS"
             name="Info"
-            tooltip="Please check our docs for details on a valid ZIP file"
+            tooltip="Please check our documentation for details on a valid ZIP file"
           />
         </div>
         <div>
@@ -196,6 +220,7 @@
             extensions={[".zip"]}
             on:change={e => e.detail && handlePWAZip(e.detail)}
             statusText={iconStatusText}
+            error={errors.icons ? "App icons are required" : undefined}
             disabled={!pwaEnabled || uploadingIcons}
           />
         </div>
@@ -244,7 +269,11 @@
       </div>
 
       <div class="actions">
-        <Button cta on:click={handleSubmit} disabled={!pwaEnabled}>Save</Button>
+        <Button
+          cta
+          on:click={handleSubmit}
+          disabled={!pwaEnabled || !formIsValid}>Save</Button
+        >
       </div>
     </div>
   </div>
