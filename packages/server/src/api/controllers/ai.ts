@@ -119,7 +119,9 @@ async function generateDataDelegate(
         }
         for (const attachmentValue of entry[column.name]) {
           const attachment = await downloadFile(attachmentValue)
-          attachmentData[column.name].push(attachment)
+          if (attachment) {
+            attachmentData[column.name].push(attachment)
+          }
         }
 
         if (column.type === FieldType.ATTACHMENT_SINGLE) {
@@ -214,43 +216,48 @@ export async function generateTables(
 
 async function downloadFile(
   file: string | { fileName: string; extension: string; content: string }
-): Promise<Upload> {
+): Promise<Upload | undefined> {
   if (typeof file === "object") {
     return createFile(file)
   }
 
-  const res = await fetch(file)
+  try {
+    const res = await fetch(file)
 
-  const tmpPath = join(objectStore.budibaseTempDir(), "ai-downloads")
+    const tmpPath = join(objectStore.budibaseTempDir(), "ai-downloads")
 
-  if (!fs.existsSync(tmpPath)) {
-    mkdirSync(tmpPath)
-  }
+    if (!fs.existsSync(tmpPath)) {
+      mkdirSync(tmpPath)
+    }
 
-  const extension = [...res.url.split(".")].pop()!.split("?")[0]
+    const extension = [...res.url.split(".")].pop()!.split("?")[0]
 
-  const destination = path.resolve(tmpPath, `${uuid.v4()}${extension}`)
-  const fileStream = fs.createWriteStream(destination, { flags: "wx" })
+    const destination = path.resolve(tmpPath, `${uuid.v4()}${extension}`)
+    const fileStream = fs.createWriteStream(destination, { flags: "wx" })
 
-  await promisify(pipeline)(res.body, fileStream)
+    await promisify(pipeline)(res.body, fileStream)
 
-  const processedFileName = path.basename(destination)
+    const processedFileName = path.basename(destination)
 
-  const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+    const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
 
-  const response = await objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: s3Key,
-    path: destination,
-    type: "image/jpeg",
-  })
+    const response = await objectStore.upload({
+      bucket: ObjectStoreBuckets.APPS,
+      filename: s3Key,
+      path: destination,
+      type: "image/jpeg",
+    })
 
-  return {
-    size: fileStream.bytesWritten,
-    name: processedFileName,
-    url: await objectStore.getAppFileUrl(s3Key),
-    extension,
-    key: response.Key!,
+    return {
+      size: fileStream.bytesWritten,
+      name: processedFileName,
+      url: await objectStore.getAppFileUrl(s3Key),
+      extension,
+      key: response.Key!,
+    }
+  } catch (e) {
+    console.error("Error downloading file", e)
+    return
   }
 }
 
