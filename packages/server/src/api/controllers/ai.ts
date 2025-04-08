@@ -191,7 +191,7 @@ export async function generateTables(
 ) {
   const { prompt, useCached, addData } = ctx.request.body
 
-  const llm = await ai.getLLM()
+  const llm = await ai.getLLM("gpt-4o")
   if (!llm) {
     ctx.throw("LLM not available")
   }
