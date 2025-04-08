@@ -38,7 +38,7 @@
       },
     },
     [FIELDS.OPTIONS.type]: {
-      label: "Options",
+      label: "Single-select",
       value: FIELDS.OPTIONS.type,
       config: {
         type: FIELDS.OPTIONS.type,
