@@ -1,8 +1,9 @@
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
   import Field from "./Field.svelte"
+  import { FieldType } from "@budibase/types"
+  import type { FieldSchema } from "@budibase/types"
   import type { FieldApi, FieldState, FieldValidation } from "@/types"
-  import { FieldSchema, FieldType } from "@budibase/types"
 
   type Size = "XS" | "S" | "M" | "L" | "XL" | "Custom"
   type IconType = "Star" | "Heart"
@@ -26,7 +27,7 @@
   export let variant: ColourVariant = "Primary"
 
   export let validation: FieldValidation
-  export let onChange: (event: { value: number }) => void
+  export let onChange: (_event: { value: number }) => void
 
   let hoverRating: number | null = null
   let fieldState: FieldState
