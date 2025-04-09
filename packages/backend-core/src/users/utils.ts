@@ -57,7 +57,7 @@ function isCreatorByGroupMembership(
   )
   if (userGroups && userGroups.length > 0) {
     return userGroups.some(group =>
-      Object.values(group.roles || {}).includes(BUILTIN_ROLE_IDS.ADMIN)
+      Object.values(group.roles || {}).includes(BUILTIN_ROLE_IDS.CREATOR)
     )
   }
   return false

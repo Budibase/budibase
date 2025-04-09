@@ -26,6 +26,7 @@ export const BUILTIN_ROLE_IDS = {
   POWER: "POWER",
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
+  CREATOR: "CREATOR",
 }
 
 const BUILTIN_IDS = {
