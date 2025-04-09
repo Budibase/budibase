@@ -32,9 +32,9 @@ describe("Users", () => {
     expect(isCreatorSync(user, [])).toBe(true)
   })
 
-  it("User is a creator if it has ADMIN permission in some application", () => {
+  it("User is a not a creator if it has ADMIN permission in some application", () => {
     const user: User = structures.users.user({ roles: { app1: "ADMIN" } })
-    expect(isCreatorSync(user, [])).toBe(true)
+    expect(isCreatorSync(user, [])).toBe(false)
   })
 
   it("User is a creator if it remains to a group with ADMIN permissions", async () => {
