@@ -58,7 +58,7 @@
     "joi": "17.6.0",
     "jsonwebtoken": "9.0.2",
     "knex": "2.4.2",
-    "koa": "2.15.4",
+    "koa": "2.16.1",
     "koa-body": "4.2.0",
     "koa-compress": "4.0.1",
     "koa-passport": "4.1.4",
