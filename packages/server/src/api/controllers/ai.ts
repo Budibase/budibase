@@ -52,7 +52,6 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
 
   for (const table of Object.values(data.tables)) {
     for (const field of table.schema.filter(f => f.type === FieldType.LINK)) {
-      // const field =  table.schema[fieldKey] as RelationshipFieldMetadata
       const linkedTable = createdTables.find(t => t.name === field.tableId)
       if (!linkedTable) {
         throw `Table ${field.tableId} not found in the json response.`
