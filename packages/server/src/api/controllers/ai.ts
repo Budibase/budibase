@@ -4,6 +4,7 @@ import {
   FieldType,
   GenerateTablesRequest,
   GenerateTablesResponse,
+  RelationshipType,
   SourceName,
   Table,
   TableSchema,
@@ -79,8 +80,18 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
           if (field.type === FieldType.LINK) {
             // Avoid circular references
             if (!processedRelationships.includes(field.relationshipId)) {
+              // Reversing relationship type, as the name is confusing for the AI gets it in the wrong order
+              const map = {
+                [RelationshipType.MANY_TO_ONE]: RelationshipType.ONE_TO_MANY,
+                [RelationshipType.ONE_TO_MANY]: RelationshipType.MANY_TO_ONE,
+                [RelationshipType.MANY_TO_MANY]: RelationshipType.MANY_TO_MANY,
+              }
               const { reverseFieldName, relationshipId, ...rest } = field
-              acc[field.name] = { ...rest, fieldName: reverseFieldName }
+              acc[field.name] = {
+                ...rest,
+                fieldName: reverseFieldName,
+                relationshipType: map[field.relationshipType] as any,
+              }
               processedRelationships.push(relationshipId)
             }
           } else {
