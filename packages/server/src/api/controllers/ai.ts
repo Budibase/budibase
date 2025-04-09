@@ -116,7 +116,7 @@ async function generateDataDelegate(
   const toUpdateLinks: {
     tableId: string
     rowId: string
-    data: Record<string, { rowId: string; tableId: string }>
+    data: Record<string, { rowId: string[]; tableId: string }>
   }[] = []
   for (const tableName of Object.keys(data)) {
     const table = tables[tableName]
@@ -166,7 +166,7 @@ async function generateDataDelegate(
       createdData[tableId][entry._id] = createdRow.row._id!
 
       const overridenLinks = Object.keys(linksOverride).reduce<
-        Record<string, { rowId: string; tableId: string }>
+        Record<string, { rowId: string[]; tableId: string }>
       >((acc, l) => {
         if (entry[l]) {
           acc[l] = {
@@ -190,9 +190,14 @@ async function generateDataDelegate(
   for (const data of toUpdateLinks) {
     const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
 
-    const updatedLinks = Object.keys(data.data).reduce<Record<string, string>>(
+    const updatedLinks = Object.keys(data.data).reduce<Record<string, any>>(
       (acc, d) => {
-        acc[d] = createdData[data.data[d].tableId][data.data[d].rowId]
+        acc[d] = [
+          ...(persistedRow[d] || []),
+          ...data.data[d].rowId.map(
+            rid => createdData[data.data[d].tableId][rid]
+          ),
+        ]
         return acc
       },
       {}
