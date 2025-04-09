@@ -74,7 +74,12 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
       schema: {
         ...storedTable.schema,
         ...table.schema.reduce<TableSchema>((acc, field) => {
-          acc[field.name] = field
+          if (field.type === FieldType.LINK) {
+            const { reverseFieldName, relationshipId, ...rest } = field
+            acc[field.name] = { ...rest, fieldName: reverseFieldName }
+          } else {
+            acc[field.name] = field
+          }
           return acc
         }, {}),
       },
