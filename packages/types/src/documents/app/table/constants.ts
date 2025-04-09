@@ -39,6 +39,10 @@ export enum BBReferenceFieldSubType {
   USERS = "users",
 }
 
+export enum AttachmentSubType {
+  IMAGE = "image",
+}
+
 export type SupportedSqlTypes =
   | FieldType.STRING
   | FieldType.BARCODEQR
