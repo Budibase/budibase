@@ -5,6 +5,7 @@ import { configs, env, features, setEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   ConfigType,
+  Feature,
   License,
   PlanModel,
   PlanType,
@@ -291,7 +292,7 @@ describe("BudibaseAI", () => {
           model: PlanModel.PER_USER,
           usesInvoicing: false,
         },
-        features: [],
+        features: [Feature.BUDIBASE_AI],
         quotas: {} as any,
         tenantId: config.tenantId,
       }
