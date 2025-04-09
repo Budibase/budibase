@@ -37,7 +37,7 @@ describe("Users", () => {
     expect(isCreatorSync(user, [])).toBe(false)
   })
 
-  it("User is a creator if it remains to a group with ADMIN permissions", async () => {
+  it("User is a not a creator if it remains to a group with ADMIN permissions", async () => {
     const usersInGroup = 10
     const groupId = "gr_17abffe89e0b40268e755b952f101a59"
     const group: UserGroup = {
@@ -60,7 +60,7 @@ describe("Users", () => {
       for (let user of users) {
         await db.put(user)
         const creator = (await creatorsInList([user]))[0]
-        expect(creator).toBe(true)
+        expect(creator).toBe(false)
       }
     })
   })
