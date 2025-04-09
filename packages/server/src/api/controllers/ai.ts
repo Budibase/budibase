@@ -66,6 +66,8 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
     }
   }
 
+  const processedRelationships: string[] = []
+
   for (const table of Object.values(data.tables)) {
     const storedTable = await sdk.tables.getTable(tableIds[table.name])
 
@@ -75,8 +77,12 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
         ...storedTable.schema,
         ...table.schema.reduce<TableSchema>((acc, field) => {
           if (field.type === FieldType.LINK) {
-            const { reverseFieldName, relationshipId, ...rest } = field
-            acc[field.name] = { ...rest, fieldName: reverseFieldName }
+            // Avoid circular references
+            if (!processedRelationships.includes(field.relationshipId)) {
+              const { reverseFieldName, relationshipId, ...rest } = field
+              acc[field.name] = { ...rest, fieldName: reverseFieldName }
+              processedRelationships.push(relationshipId)
+            }
           } else {
             acc[field.name] = field
           }
