@@ -10,50 +10,46 @@
 
 <div class="chatbox">
   {#each messages as message}
-    <div class="message" class:system={message.system}>
-      <div
-        class="background"
-        class:systemBackground={message.system}
-        class:errorBackground={message.isError}
-      >
-        <MarkdownViewer value={message.message} />
-      </div>
+    <div
+      class="message"
+      class:system={message.system}
+      class:error={message.isError}
+    >
+      <MarkdownViewer value={message.message} />
     </div>
   {/each}
 </div>
 
 <style>
-  div {
-    font-size: 18px;
-  }
-
   .chatbox {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: 24px;
+    width: 800px;
+    margin: 0 auto;
+    flex: 1 1 auto;
+    padding-bottom: 24px;
   }
 
   .message {
     display: flex;
-    justify-content: flex-end;
-  }
-
-  .system {
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .background {
+    align-self: flex-end;
+    max-width: 80%;
     padding: var(--spacing-l);
-    border-radius: 10px;
+    border-radius: 20px;
     background-color: var(--grey-3);
+    font-size: 16px;
+    color: var(--spectrum-global-color-gray-900);
   }
 
-  .systemBackground {
-    background-color: transparent !important;
+  .message.system {
+    align-self: flex-start;
+    background: none;
+    padding-left: 0;
   }
 
-  .errorBackground {
+  .message.error {
     background-color: rgba(255, 99, 71, 0.85) !important;
+    padding-left: 20px;
   }
 </style>
