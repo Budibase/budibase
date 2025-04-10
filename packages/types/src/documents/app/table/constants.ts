@@ -14,6 +14,7 @@ export type FieldSubType =
   | AutoFieldSubType
   | JsonFieldSubType
   | BBReferenceFieldSubType
+  | AttachmentSubType
 
 export enum AutoFieldSubType {
   CREATED_BY = "createdBy",
