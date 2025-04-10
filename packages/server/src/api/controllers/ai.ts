@@ -4,7 +4,6 @@ import {
   FieldType,
   GenerateTablesRequest,
   GenerateTablesResponse,
-  RelationshipType,
   SourceName,
   Table,
   TableSchema,
@@ -23,7 +22,9 @@ import { promisify } from "util"
 import fetch from "node-fetch"
 import { ObjectStoreBuckets } from "../../constants"
 
-async function generateTablesDelegate(data: ai.GenerationStructure) {
+async function generateTablesDelegate(
+  tables: { name: string; primaryDisplay: string; schema: TableSchema }[]
+) {
   const count = (await sdk.datasources.fetch()).length
   const { id: dsId } = await context.getAppDB().put({
     _id: `${DocumentType.DATASOURCE}_bb_internal_${utils.newid()}`,
@@ -37,7 +38,7 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
   const createdTables: GenerateTablesResponse["createdTables"] = []
   const tableIds: Record<string, string> = {}
 
-  for (const table of data.tables) {
+  for (const table of tables) {
     const createdTable = await sdk.tables.create({
       ...table,
       sourceId: dsId,
@@ -51,54 +52,28 @@ async function generateTablesDelegate(data: ai.GenerationStructure) {
     tableIds[table.name] = createdTable._id!
   }
 
-  for (const table of Object.values(data.tables)) {
-    for (const field of table.schema.filter(f => f.type === FieldType.LINK)) {
-      const linkedTable = createdTables.find(t => t.name === field.tableId)
-      if (!linkedTable) {
-        throw `Table ${field.tableId} not found in the json response.`
+  for (const table of tables) {
+    for (const field of Object.values(table.schema)) {
+      if (field.type === FieldType.LINK) {
+        const linkedTable = createdTables.find(t => t.name === field.tableId)
+        if (!linkedTable) {
+          throw `Table ${field.tableId} not found in the json response.`
+        }
+        field.tableId = linkedTable.id
+      } else if (field.type === FieldType.FORMULA) {
+        field.formula = `{{ js "${btoa(field.formula)}" }}`
       }
-      field.tableId = linkedTable.id
-    }
-
-    for (const field of table.schema.filter(
-      f => f.type === FieldType.FORMULA
-    )) {
-      field.formula = `{{ js "${btoa(field.formula)}" }}`
     }
   }
 
-  const processedRelationships: string[] = []
-
-  for (const table of Object.values(data.tables)) {
+  for (const table of tables) {
     const storedTable = await sdk.tables.getTable(tableIds[table.name])
 
     await sdk.tables.update({
       ...storedTable,
       schema: {
         ...storedTable.schema,
-        ...table.schema.reduce<TableSchema>((acc, field) => {
-          if (field.type === FieldType.LINK) {
-            // Avoid circular references
-            if (!processedRelationships.includes(field.relationshipId)) {
-              // Reversing relationship type, as the name is confusing for the AI gets it in the wrong order
-              const map = {
-                [RelationshipType.MANY_TO_ONE]: RelationshipType.ONE_TO_MANY,
-                [RelationshipType.ONE_TO_MANY]: RelationshipType.MANY_TO_ONE,
-                [RelationshipType.MANY_TO_MANY]: RelationshipType.MANY_TO_MANY,
-              }
-              const { reverseFieldName, relationshipId, ...rest } = field
-              acc[field.name] = {
-                ...rest,
-                fieldName: reverseFieldName,
-                relationshipType: map[field.relationshipType] as any,
-              }
-              processedRelationships.push(relationshipId)
-            }
-          } else {
-            acc[field.name] = field
-          }
-          return acc
-        }, {}),
+        ...table.schema,
       },
       primaryDisplay: table.primaryDisplay,
     })
