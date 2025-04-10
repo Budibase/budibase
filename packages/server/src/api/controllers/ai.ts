@@ -199,11 +199,10 @@ export async function generateTables(
     getTablesDelegate: sdk.tables.getTables,
     generateDataDelegate,
   })
-  const createdTables = await tableGenerator.generate({
-    userPrompt: prompt,
-    addData,
-    userId: ctx.userId,
-  })
+  if (addData) {
+    tableGenerator.withData(ctx.user._id || "")
+  }
+  const createdTables = await tableGenerator.generate(prompt)
 
   ctx.body = {
     createdTables,
