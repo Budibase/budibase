@@ -21,6 +21,7 @@
   let containerWidth = "auto"
   let containerHeight = "35px"
   let promptText = ""
+  let animateBorder = false
 
   function adjustContainerHeight() {
     if (promptInput && buttonElement) {
@@ -38,6 +39,7 @@
 
     previousContents = value
     promptLoading = true
+    animateBorder = true
     try {
       const resp = await API.generateJs({ prompt, bindings })
       const code = resp.code
@@ -55,6 +57,7 @@
       )
     } finally {
       promptLoading = false
+      // Leave the border visible but stop animating
     }
   }
 
@@ -75,11 +78,13 @@
     promptText = ""
     suggestedCode = null
     previousContents = null
+    animateBorder = false
   }
 
   function toggleExpand() {
     if (!expanded) {
       expanded = true
+      animateBorder = true
       // Calculate width based on size of CodeEditor parent
       containerWidth = parentWidth
         ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
@@ -130,6 +135,7 @@
     bind:this={buttonElement}
     class="spectrum-ActionButton fade"
     class:expanded
+    class:animate-border={animateBorder}
     on:click={!expanded ? toggleExpand : undefined}
   >
     <div class="button-content-wrapper">
@@ -189,30 +195,52 @@
     bottom: 10px;
     width: var(--container-width);
     height: var(--container-height);
-    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-end;
     overflow: visible;
-    z-index: 1;
   }
 
   .spectrum-ActionButton::before {
     content: "";
-    background: conic-gradient(
-      transparent 270deg,
-      #6e56ff,
-      #9f8fff,
-      transparent
-    );
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     aspect-ratio: 1;
     width: 100%;
-    animation: rotate 3s linear infinite;
     border-radius: inherit;
+    opacity: 0;
+  }
+
+  .animate-border::before {
+    animation: border-fade-in 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes border-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .spectrum-ActionButton:not(.expanded)::before {
+    background: conic-gradient(
+      transparent 230deg,
+      #6e56ff,
+      #9f8fff,
+      transparent 320deg
+    );
+  }
+
+  .spectrum-ActionButton.expanded::before {
+    background: conic-gradient(
+      transparent 250deg,
+      #6e56ff,
+      #9f8fff,
+      transparent 300deg
+    );
   }
 
   .spectrum-ActionButton::after {
@@ -225,15 +253,6 @@
     height: calc(100% - 2 * var(--offset));
     width: calc(100% - 2 * var(--offset));
     border-radius: inherit;
-  }
-
-  @keyframes rotate {
-    from {
-      transform: translate(-50%, -50%) scale(1.4) rotate(0turn);
-    }
-    to {
-      transform: translate(-50%, -50%) scale(1.4) rotate(1turn);
-    }
   }
 
   .floating-actions {
@@ -303,6 +322,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     transition: opacity 0.2s ease-out;
+    margin-right: var(--spacing-xs);
   }
 
   .prompt-input {
@@ -331,7 +351,7 @@
 
   .action-buttons {
     display: flex;
-    gap: var(--spacing-l);
+    gap: var(--spacing-s);
     z-index: 4;
     flex-shrink: 0;
   }
