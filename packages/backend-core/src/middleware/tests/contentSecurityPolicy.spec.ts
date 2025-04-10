@@ -132,4 +132,49 @@ describe("contentSecurityPolicy middleware", () => {
     expect(app.getAppMetadata).toHaveBeenCalledWith(appId)
     expect(next).toHaveBeenCalled()
   })
+
+  it("should filter out invalid domains", async () => {
+    const appId = "app_foo"
+    const validDomain = "https://*.foo.bar"
+    const invalidDomain = "https:*&*(£$:\n;"
+
+    // Ctx setup to let us try and use CSP whitelist
+    ctx.appId = appId
+    ctx.user = users.user()
+    ctx.user.license = licenses.license({
+      features: [Feature.CUSTOM_APP_SCRIPTS],
+    })
+
+    // @ts-ignore
+    app.getAppMetadata.mockImplementation(function (): App {
+      return {
+        appId,
+        type: "foo",
+        version: "1",
+        componentLibraries: [],
+        name: "foo",
+        url: "/foo",
+        template: undefined,
+        instance: { _id: appId },
+        tenantId: ctx.user.tenantId,
+        status: "foo",
+        scripts: [
+          {
+            id: "foo",
+            name: "Test",
+            location: "Head",
+            cspWhitelist: validDomain + "\n" + invalidDomain,
+          },
+        ],
+      }
+    })
+
+    await contentSecurityPolicy(ctx, next)
+
+    const cspHeader = ctx.set.mock.calls[0][1]
+    expect(cspHeader).toContain(`default-src 'self' ${validDomain};`)
+    expect(cspHeader).not.toContain(invalidDomain)
+    expect(app.getAppMetadata).toHaveBeenCalledWith(appId)
+    expect(next).toHaveBeenCalled()
+  })
 })
