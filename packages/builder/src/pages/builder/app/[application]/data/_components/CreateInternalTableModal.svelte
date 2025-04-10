@@ -6,7 +6,7 @@
   let modal
   let promptUpload = false
 
-  export function show({ promptUpload: newPromptUpload = false }) {
+  export function show({ promptUpload: newPromptUpload = false } = {}) {
     promptUpload = newPromptUpload
     modal.show()
   }

@@ -30,6 +30,7 @@ import Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
 import rowActionRoutes from "./rowAction"
 import oauth2Routes from "./oauth2"
+import aiRoutes from "./ai"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
@@ -74,4 +75,5 @@ export const mainRoutes: Router[] = [
   // these need to be handled last as they still use /api/:tableId
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,
+  aiRoutes,
 ]

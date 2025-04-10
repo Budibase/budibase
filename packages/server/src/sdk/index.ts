@@ -14,6 +14,7 @@ import * as rowActions from "./app/rowActions"
 import * as screens from "./app/screens"
 import * as common from "./app/common"
 import * as oauth2 from "./app/oauth2"
+import * as ai from "./app/ai"
 
 const sdk = {
   backups,
@@ -32,6 +33,7 @@ const sdk = {
   rowActions,
   common,
   oauth2,
+  ai,
 }
 
 // default export for TS
