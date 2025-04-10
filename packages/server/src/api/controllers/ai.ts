@@ -200,7 +200,7 @@ export async function generateTables(
   }
   llm.maxTokens = 2000
 
-  const createdTables = await llm!.generateTables(
+  const createdTables = await llm.generateTables(
     prompt,
     addData,
     ctx.userId,
