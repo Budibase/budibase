@@ -36,9 +36,9 @@ export async function generateRows(
         for (const attachmentValue of entry[column.name]) {
           let attachment
           if (typeof attachmentValue === "object") {
-            attachment = await uploadUrl(attachmentValue)
-          } else {
             attachment = await uploadFile(attachmentValue)
+          } else {
+            attachment = await uploadUrl(attachmentValue)
           }
           if (attachment) {
             attachmentData[column.name].push(attachment)
