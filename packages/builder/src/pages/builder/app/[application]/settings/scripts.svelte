@@ -144,6 +144,20 @@
         minHeight={200}
         placeholder="&lt;script&gt;...&lt;/script&gt;"
       />
+      <Label size="L">
+        CSP whitelist<br />
+        <Link
+          href="https://docs.budibase.com/docs/app-scripts#domain-whitelisting-for-content-security-policy-csp"
+          target="_blank"
+        >
+          Learn more
+        </Link>
+      </Label>
+      <TextArea
+        bind:value={selectedScript.cspWhitelist}
+        minHeight={100}
+        placeholder="https://external.api.com&#013;https://*.domain.com"
+      />
       <div />
       <div class="buttons">
         {#if !isNew}
