@@ -80,7 +80,7 @@
   function toggleExpand() {
     if (!expanded) {
       expanded = true
-      // Dynamic width based on parent size, with minimum and maximum constraints
+      // Calculate width based on size of CodeEditor parent
       containerWidth = parentWidth
         ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
         : "300px"
@@ -132,19 +132,28 @@
     class:expanded
     on:click={!expanded ? toggleExpand : undefined}
   >
-    <img src={BBAI} alt="AI" class="ai-icon" />
+    <div class="button-content-wrapper">
+      <img src={BBAI} alt="AI" class="ai-icon" />
+      {#if expanded}
+        <textarea
+          bind:this={promptInput}
+          bind:value={promptText}
+          class="prompt-input"
+          placeholder="Generate Javascript..."
+          on:keydown={handleKeyPress}
+          on:input={adjustContainerHeight}
+          disabled={suggestedCode !== null}
+          readonly={suggestedCode !== null}
+          rows="1"
+        />
+      {:else}
+        <span class="spectrum-ActionButton-label ai-gen-text">
+          Generate with AI
+        </span>
+      {/if}
+    </div>
+
     {#if expanded}
-      <textarea
-        bind:this={promptInput}
-        bind:value={promptText}
-        class="prompt-input"
-        placeholder="Generate Javascript..."
-        on:keydown={handleKeyPress}
-        on:input={adjustContainerHeight}
-        disabled={suggestedCode !== null}
-        readonly={suggestedCode !== null}
-        rows="1"
-      />
       <div class="action-buttons">
         <Icon
           color={promptLoading
@@ -167,10 +176,6 @@
           }}
         />
       </div>
-    {:else}
-      <span class="spectrum-ActionButton-label ai-gen-text">
-        Generate with AI
-      </span>
     {/if}
   </button>
 </div>
@@ -207,6 +212,7 @@
     aspect-ratio: 1;
     width: 100%;
     animation: rotate 3s linear infinite;
+    border-radius: inherit;
   }
 
   .spectrum-ActionButton::after {
@@ -218,6 +224,7 @@
     inset: var(--offset);
     height: calc(100% - 2 * var(--offset));
     width: calc(100% - 2 * var(--offset));
+    border-radius: inherit;
   }
 
   @keyframes rotate {
@@ -255,15 +262,17 @@
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     box-sizing: border-box;
     padding: var(--spacing-s);
     border: 1px solid var(--spectrum-alias-border-color);
-    border-radius: var(--spectrum-alias-border-radius-regular);
+    border-radius: 30px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
     height: 100%;
     overflow: hidden;
+    cursor: pointer;
+    background-color: var(--spectrum-global-color-gray-75);
   }
 
   .spectrum-ActionButton:hover {
@@ -272,7 +281,10 @@
   }
 
   .spectrum-ActionButton.expanded {
-    border-radius: var(--spectrum-alias-border-radius-regular);
+    border-radius: 30px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.2s ease-out;
   }
 
   .fade {
@@ -320,7 +332,17 @@
   .action-buttons {
     display: flex;
     gap: var(--spacing-l);
-    padding-right: var(--spacing-s);
     z-index: 4;
+    flex-shrink: 0;
+  }
+
+  .button-content-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    flex-grow: 1;
+    min-width: 0;
   }
 </style>
