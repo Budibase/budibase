@@ -21,6 +21,8 @@ import { pipeline } from "stream"
 import { promisify } from "util"
 import fetch from "node-fetch"
 import { ObjectStoreBuckets } from "../../constants"
+import { uploadUrl } from "../../utilities"
+import { uploadFile } from "../../utilities/fileUtils"
 
 async function generateTablesDelegate(
   tables: { name: string; primaryDisplay: string; schema: TableSchema }[]
@@ -114,7 +116,12 @@ async function generateDataDelegate(
           entry[column.name] = [entry[column.name]]
         }
         for (const attachmentValue of entry[column.name]) {
-          const attachment = await downloadFile(attachmentValue)
+          let attachment
+          if (typeof attachmentValue === "object") {
+            attachment = await uploadUrl(attachmentValue)
+          } else {
+            attachment = await uploadFile(attachmentValue)
+          }
           if (attachment) {
             attachmentData[column.name].push(attachment)
           }
@@ -206,86 +213,5 @@ export async function generateTables(
 
   ctx.body = {
     createdTables,
-  }
-}
-
-async function downloadFile(
-  file: string | { fileName: string; extension: string; content: string }
-): Promise<Upload | undefined> {
-  if (typeof file === "object") {
-    return createFile(file)
-  }
-
-  try {
-    const res = await fetch(file)
-
-    const tmpPath = join(objectStore.budibaseTempDir(), "ai-downloads")
-
-    if (!fs.existsSync(tmpPath)) {
-      mkdirSync(tmpPath)
-    }
-
-    const extension = [...res.url.split(".")].pop()!.split("?")[0]
-
-    const destination = path.resolve(tmpPath, `${uuid.v4()}${extension}`)
-    const fileStream = fs.createWriteStream(destination, { flags: "wx" })
-
-    await promisify(pipeline)(res.body, fileStream)
-
-    const processedFileName = path.basename(destination)
-
-    const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
-
-    const response = await objectStore.upload({
-      bucket: ObjectStoreBuckets.APPS,
-      filename: s3Key,
-      path: destination,
-      type: "image/jpeg",
-    })
-
-    return {
-      size: fileStream.bytesWritten,
-      name: processedFileName,
-      url: await objectStore.getAppFileUrl(s3Key),
-      extension,
-      key: response.Key!,
-    }
-  } catch (e) {
-    console.error("Error downloading file", e)
-    return
-  }
-}
-
-async function createFile(file: {
-  fileName: string
-  extension: string
-  content: string
-}): Promise<Upload> {
-  const tmpPath = join(objectStore.budibaseTempDir(), "ai-downloads")
-
-  if (!fs.existsSync(tmpPath)) {
-    mkdirSync(tmpPath)
-  }
-
-  const destination = path.resolve(tmpPath, `${file.fileName}${file.extension}`)
-
-  fs.writeFileSync(destination, file.content)
-
-  const processedFileName = path.basename(destination)
-  const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
-
-  const response = await objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: s3Key,
-    path: destination,
-    type: "text/plain",
-  })
-
-  return {
-    size: fs.readFileSync(destination).byteLength,
-    name: processedFileName,
-    url: await objectStore.getAppFileUrl(s3Key),
-    extension: file.extension,
-    key: response.Key!,
   }
 }
