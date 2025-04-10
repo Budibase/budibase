@@ -89,6 +89,8 @@ const CSP_DIRECTIVES = {
   "worker-src": ["blob:", "'self'"],
 }
 
+const CSPDomainRegex = /^[A-Za-z0-9-*:/.]+$/
+
 const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   const nonce = crypto.randomBytes(16).toString("base64")
   ctx.state.nonce = nonce
@@ -108,8 +110,8 @@ const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
       if ("name" in appMetadata) {
         for (let script of appMetadata.scripts || []) {
           const inclusions = (script.cspWhitelist || "")
-            .split(",")
-            .filter(url => !!url?.trim().length)
+            .split("\n")
+            .filter(domain => CSPDomainRegex.test(domain))
           directives["default-src"] = [
             ...directives["default-src"],
             ...inclusions,
