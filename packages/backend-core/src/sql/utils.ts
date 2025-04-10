@@ -47,6 +47,7 @@ export function isExternalTable(table: Table) {
   if (
     table?.sourceId &&
     table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR) &&
+    // TODO handle properly when the product part is defined
     !table.sourceId.startsWith(
       DocumentType.DATASOURCE + SEPARATOR + "bb_internal_"
     ) &&
