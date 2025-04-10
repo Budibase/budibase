@@ -7635,15 +7635,18 @@
     "name": "Table",
     "icon": "Table",
     "styles": ["size"],
-    "cssVariables": [{
-      "label": "Header color",
-      "variable": "--custom-header-cell-background",
-      "type": "color"
-    }, {
-      "label": "Stripe color",
-      "variable": "--custom-stripe-cell-background",
-      "type": "color"
-    }],
+    "cssVariables": [
+      {
+        "label": "Header color",
+        "variable": "--custom-header-cell-background",
+        "type": "color"
+      },
+      {
+        "label": "Stripe color",
+        "variable": "--custom-stripe-cell-background",
+        "type": "color"
+      }
+    ],
     "size": {
       "width": 600,
       "height": 400
@@ -8262,6 +8265,122 @@
     ],
     "context": {
       "type": "schema"
+    }
+  },
+  "ratingfield": {
+    "name": "Rating Field",
+    "icon": "Star",
+    "styles": ["size"],
+    "editable": true,
+    "new": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/number",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "number",
+        "label": "Number of stars",
+        "key": "numberOfStars",
+        "min": 1,
+        "max": 25,
+        "defaultValue": 5
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": ["XS", "S", "M", "L", "XL", "Custom"],
+        "defaultValue": "L"
+      },
+      {
+        "type": "number",
+        "label": "Custom size (px)",
+        "key": "customSize",
+        "min": 1,
+        "max": 72,
+        "defaultValue": 32,
+        "dependsOn": {
+          "setting": "size",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "select",
+        "label": "Icon type",
+        "key": "type",
+        "options": ["Star", "Heart"],
+        "defaultValue": "Star"
+      },
+      {
+        "type": "select",
+        "label": "Colour variant",
+        "key": "variant",
+        "options": ["Primary", "Secondary", "Mono", "Gold", "Red", "Custom"],
+        "defaultValue": "Primary"
+      },
+      {
+        "type": "color",
+        "label": "Custom colour",
+        "key": "colour",
+        "dependsOn": {
+          "setting": "variant",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "validation/number",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
+        }
+      ]
     }
   }
 }
