@@ -626,7 +626,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     sheet: string
     rowIndex: number
     row: any
-    table: Table
+    table?: Table
   }) {
     try {
       await this.connect()
@@ -644,13 +644,15 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
             row.set(key, "")
           }
 
-          const { type, subtype, constraints } = query.table.schema[key]
-          const isDeprecatedSingleUser =
-            type === FieldType.BB_REFERENCE &&
-            subtype === BBReferenceFieldSubType.USER &&
-            constraints?.type !== "array"
-          if (isDeprecatedSingleUser && Array.isArray(row.get(key))) {
-            row.set(key, row.get(key)[0])
+          if (query.table) {
+            const { type, subtype, constraints } = query.table.schema[key]
+            const isDeprecatedSingleUser =
+              type === FieldType.BB_REFERENCE &&
+              subtype === BBReferenceFieldSubType.USER &&
+              constraints?.type !== "array"
+            if (isDeprecatedSingleUser && Array.isArray(row.get(key))) {
+              row.set(key, row.get(key)[0])
+            }
           }
         }
         await row.save()
