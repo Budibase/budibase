@@ -33,7 +33,6 @@ export interface GenerateCronResponse {
 export interface GenerateTablesRequest {
   prompt: string
   addData: boolean
-  useCached: boolean
 }
 
 export interface GenerateTablesResponse {

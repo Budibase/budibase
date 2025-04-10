@@ -192,7 +192,7 @@ async function generateDataDelegate(
 export async function generateTables(
   ctx: UserCtx<GenerateTablesRequest, GenerateTablesResponse>
 ) {
-  const { prompt, useCached, addData } = ctx.request.body
+  const { prompt, addData } = ctx.request.body
 
   const llm = await ai.getLLM("gpt-4o")
   if (!llm) {
@@ -202,7 +202,6 @@ export async function generateTables(
 
   const createdTables = await llm!.generateTables(
     prompt,
-    useCached,
     addData,
     ctx.userId,
     generateTablesDelegate,

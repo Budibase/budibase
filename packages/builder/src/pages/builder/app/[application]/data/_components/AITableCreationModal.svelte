@@ -1,7 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
   import { datasources, tables } from "@/stores/builder"
-  import { admin } from "@/stores/portal"
   import {
     Modal,
     ModalContent,
@@ -17,7 +16,6 @@
   let modalData: GenerateTablesRequest = {
     prompt: "",
     addData: true,
-    useCached: $admin.isDev && false,
   }
 
   export function show() {
@@ -52,8 +50,5 @@
   >
     <TextArea label="Prompt" bind:value={modalData.prompt} />
     <Toggle label="Add data" bind:value={modalData.addData} />
-    {#if $admin.isDev}
-      <Toggle label="Use cached" bind:value={modalData.useCached} />
-    {/if}
   </ModalContent>
 </Modal>
