@@ -194,20 +194,16 @@ export async function generateTables(
 ) {
   const { prompt, addData } = ctx.request.body
 
-  const llm = await ai.getLLM("gpt-4o")
-  if (!llm) {
-    ctx.throw("LLM not available")
-  }
-  llm.maxTokens = 2000
-
-  const createdTables = await llm.generateTables(
-    prompt,
-    addData,
-    ctx.userId,
+  const tableGenerator = new ai.TableGeneration({
     generateTablesDelegate,
-    sdk.tables.getTables,
-    generateDataDelegate
-  )
+    getTablesDelegate: sdk.tables.getTables,
+    generateDataDelegate,
+  })
+  const createdTables = await tableGenerator.generate({
+    userPrompt: prompt,
+    addData,
+    userId: ctx.userId,
+  })
 
   ctx.body = {
     createdTables,
