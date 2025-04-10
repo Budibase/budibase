@@ -318,7 +318,7 @@ describe("BudibaseAI", () => {
       )
     }
 
-    it.only("handles correct chat response", async () => {
+    it("handles correct chat response", async () => {
       let usage = await getQuotaUsage()
       expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
