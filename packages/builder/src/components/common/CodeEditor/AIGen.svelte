@@ -152,6 +152,7 @@
             : "var(--spectrum-global-color-gray-600)"}
           size="S"
           hoverable
+          hoverColor="#6E56FF"
           name={promptLoading ? "StopCircle" : "PlayCircle"}
           on:click={() => generateJs(promptText)}
         />
@@ -159,6 +160,7 @@
           hoverable
           size="S"
           name="Close"
+          hoverColor="#6E56FF"
           on:click={e => {
             e.stopPropagation()
             if (!suggestedCode && !promptLoading) toggleExpand()
@@ -190,6 +192,43 @@
     z-index: 1;
   }
 
+  .spectrum-ActionButton::before {
+    content: "";
+    background: conic-gradient(
+      transparent 270deg,
+      #6e56ff,
+      #9f8fff,
+      transparent
+    );
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    aspect-ratio: 1;
+    width: 100%;
+    animation: rotate 3s linear infinite;
+  }
+
+  .spectrum-ActionButton::after {
+    content: "";
+    background: inherit;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    inset: var(--offset);
+    height: calc(100% - 2 * var(--offset));
+    width: calc(100% - 2 * var(--offset));
+  }
+
+  @keyframes rotate {
+    from {
+      transform: translate(-50%, -50%) scale(1.4) rotate(0turn);
+    }
+    to {
+      transform: translate(-50%, -50%) scale(1.4) rotate(1turn);
+    }
+  }
+
   .floating-actions {
     position: absolute;
     display: flex;
@@ -212,6 +251,7 @@
   }
 
   .spectrum-ActionButton {
+    --offset: 1px;
     position: relative;
     display: flex;
     align-items: center;
@@ -223,6 +263,7 @@
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
     height: 100%;
+    overflow: hidden;
   }
 
   .spectrum-ActionButton:hover {
