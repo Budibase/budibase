@@ -1,13 +1,7 @@
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import {
-  configs,
-  env,
-  features,
-  setEnv,
-  StaticDatabases,
-} from "@budibase/backend-core"
+import { configs, env, features, setEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   ConfigType,
@@ -16,7 +10,6 @@ import {
   PlanModel,
   PlanType,
   ProviderConfig,
-  QuotaUsage,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
