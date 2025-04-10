@@ -1,7 +1,13 @@
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, features, setEnv } from "@budibase/backend-core"
+import {
+  configs,
+  env,
+  features,
+  setEnv,
+  StaticDatabases,
+} from "@budibase/backend-core"
 import {
   AIInnerConfig,
   ConfigType,
@@ -10,11 +16,13 @@ import {
   PlanModel,
   PlanType,
   ProviderConfig,
+  QuotaUsage,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
+import { quotas } from "@budibase/pro"
 
 function dedent(str: string) {
   return str
@@ -301,13 +309,29 @@ describe("BudibaseAI", () => {
         .reply(200, license)
     })
 
-    it("handles correct chat response", async () => {
+    async function getQuotaUsage() {
+      return await context.doInSelfHostTenantUsingCloud(
+        config.getTenantId(),
+        async () => {
+          return await quotas.getQuotaUsage()
+        }
+      )
+    }
+
+    it.only("handles correct chat response", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
       mockChatGPTResponse("Hi there!")
       const { message } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         licenseKey: licenseKey,
       })
       expect(message).toBe("Hi there!")
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
 
     it("handles chat response error", async () => {
