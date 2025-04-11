@@ -113,7 +113,7 @@
     display: flex;
     align-items: center;
     margin-top: 12px;
-    margin-bottom: 36px;
+    margin-bottom: 24px;
     gap: 8px;
   }
   .subHeading :global(p) {
