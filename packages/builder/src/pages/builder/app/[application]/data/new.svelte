@@ -58,9 +58,11 @@
       <Icon name="Info" size="S" />
     </AbsTooltip>
   </div>
-  <AiTableGeneration />
 
-  <div class="options">
+  <div class="options bb-options">
+    <div class="ai-generation">
+      <AiTableGeneration />
+    </div>
     <DatasourceOption
       on:click={internalTableModal.show}
       title="Create new table"
@@ -128,5 +130,11 @@
     justify-content: center;
     margin-bottom: 48px;
     max-width: 1050px;
+  }
+  .bb-options {
+    max-width: calc(3 * 235px + 2 * 24px); /* 3 columns + 2 gaps */
+  }
+  .options .ai-generation {
+    grid-column: 1 / -1;
   }
 </style>
