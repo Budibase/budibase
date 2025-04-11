@@ -41,7 +41,6 @@
 
 <style>
   .ai-generation {
-    width: 753px;
     display: grid;
     gap: 10px;
 
