@@ -104,6 +104,7 @@
     on:focus
     on:input
     on:keyup
+    on:keydown
     on:blur={onBlur}
     on:focus={onFocus}
     on:input={onInput}

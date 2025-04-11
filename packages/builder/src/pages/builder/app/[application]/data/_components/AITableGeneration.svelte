@@ -2,16 +2,28 @@
   import { API } from "@/api"
   import { ActionButton, Input } from "@budibase/bbui"
 
+  let prompt: string
+
   async function submitPrompt(message: string) {
     await API.generateTables(message)
   }
-<script>
-  import { Input } from "@budibase/bbui"
+
+  async function onInputKeydown(e: KeyboardEvent) {
+    if (e.repeat || e.key !== "Enter") {
+      return
+    }
+
+    await submitPrompt(prompt)
+  }
 </script>
 
 <div class="ai-generation">
   <div class="ai-generation-prompt">
-    <Input placeholder="Generate data using AI..." />
+    <Input
+      bind:value={prompt}
+      placeholder="Generate data using AI..."
+      on:keydown={onInputKeydown}
+    />
   </div>
 
   {#each ["Create a table called tickets with title, description, status fields", "Create a table called students with name and address fields"] as prompt}

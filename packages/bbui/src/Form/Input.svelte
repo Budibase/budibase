@@ -41,6 +41,7 @@
     on:blur
     on:focus
     on:keyup
+    on:keydown
   >
     <slot />
   </TextField>
