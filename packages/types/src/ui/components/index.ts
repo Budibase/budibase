@@ -25,6 +25,7 @@ export interface ComponentDefinition {
   requiredAncestors?: string[]
   illegalChildren: string[]
   icon?: string
+  new?: boolean
   size?: {
     width: number
     height: number
