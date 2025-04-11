@@ -7,7 +7,7 @@
   } from "@/stores/builder"
 
   import { hasData } from "@/stores/selectors"
-  import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
+  import { notifications, Body, Icon, AbsTooltip, Input } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
   import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
   import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
@@ -58,7 +58,9 @@
     </AbsTooltip>
   </div>
   <div class="ai-generation">
-    <div class="ai-generation-prompt">Generate data using AI...</div>
+    <div class="ai-generation-prompt">
+      <Input placeholder="Generate data using AI..." />
+    </div>
     <div class="ai-generation-prompt-example">
       Create a table called tickets with title, description, status fields
     </div>
@@ -148,10 +150,9 @@
   }
 
   .ai-generation-prompt {
-    padding: 12px;
-
     grid-column: 1 / -1;
-
+  }
+  .ai-generation-prompt :global(.spectrum-Textfield-input) {
     background: #1d1d1d;
     border-radius: 20px;
   }
