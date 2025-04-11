@@ -30,27 +30,29 @@
       disabled={!isEnabled}
     />
   </div>
-
-  {#if isEnabled}
-    {#each ["Create a table called tickets with title, description, status fields", "Create a table called students with name and address fields"] as prompt}
-      <ActionButton on:click={() => submitPrompt(prompt)}>{prompt}</ActionButton
-      >
-    {/each}
-  {/if}
+  <div class="ai-generation-examples">
+    {#if isEnabled}
+      {#each ["Create a table called tickets with title, description, status fields", "Create a table called students with name and address fields"] as prompt}
+        <ActionButton on:click={() => submitPrompt(prompt)}
+          >{prompt}</ActionButton
+        >
+      {/each}
+    {/if}
+  </div>
 </div>
 
 <style>
   .ai-generation {
-    display: grid;
-    gap: 10px;
-
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
     margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .ai-generation-prompt {
-    grid-column: 1 / -1;
+  .ai-generation-examples {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   }
   .ai-generation :global(.spectrum-Textfield-input),
   .ai-generation :global(.spectrum-ActionButton) {
