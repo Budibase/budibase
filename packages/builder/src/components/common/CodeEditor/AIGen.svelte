@@ -8,8 +8,7 @@
   export let bindings: EnrichedBinding[] = []
   export let value: string | null = ""
   export let parentWidth: number | null = null
-
-  const dispatch = createEventDispatcher()
+  export const dispatch = createEventDispatcher()
 
   let buttonContainer: HTMLElement
   let promptInput: HTMLTextAreaElement
@@ -19,7 +18,7 @@
   let previousContents: string | null = null
   let expanded = false
   let containerWidth = "auto"
-  let containerHeight = "35px"
+  let containerHeight = "40px"
   let promptText = ""
   let animateBorder = false
 
@@ -57,7 +56,6 @@
       )
     } finally {
       promptLoading = false
-      // Leave the border visible but stop animating
     }
   }
 
@@ -92,7 +90,6 @@
       containerHeight = "40px"
       setTimeout(() => {
         promptInput?.focus()
-        adjustContainerHeight()
       }, 250)
     } else {
       resetExpand()
@@ -199,16 +196,47 @@
     overflow: visible;
   }
 
+  .spectrum-ActionButton {
+    --offset: 1px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: var(--spacing-s);
+    border: 1px solid var(--spectrum-alias-border-color);
+    border-radius: 30px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: pointer;
+    background-color: var(--spectrum-global-color-gray-75);
+  }
+
   .spectrum-ActionButton::before {
     content: "";
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    aspect-ratio: 1;
-    width: 100%;
+    top: -1px;
+    left: -1px;
+    width: calc(100% + 2px);
+    height: calc(100% + 2px);
     border-radius: inherit;
-    opacity: 0;
+    background: linear-gradient(
+      125deg,
+      transparent -10%,
+      #6e56ff 5%,
+      #9f8fff 15%,
+      #9f8fff 25%,
+      transparent 35%,
+      transparent 110%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .spectrum-ActionButton:not(.animate-border)::before {
+    content: none;
   }
 
   .animate-border::before {
@@ -223,24 +251,6 @@
     to {
       opacity: 1;
     }
-  }
-
-  .spectrum-ActionButton:not(.expanded)::before {
-    background: conic-gradient(
-      transparent 230deg,
-      #6e56ff,
-      #9f8fff,
-      transparent 320deg
-    );
-  }
-
-  .spectrum-ActionButton.expanded::before {
-    background: conic-gradient(
-      transparent 250deg,
-      #6e56ff,
-      #9f8fff,
-      transparent 300deg
-    );
   }
 
   .spectrum-ActionButton::after {
@@ -274,24 +284,6 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-
-  .spectrum-ActionButton {
-    --offset: 1px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-sizing: border-box;
-    padding: var(--spacing-s);
-    border: 1px solid var(--spectrum-alias-border-color);
-    border-radius: 30px;
-    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    cursor: pointer;
-    background-color: var(--spectrum-global-color-gray-75);
   }
 
   .spectrum-ActionButton:hover {
@@ -333,20 +325,15 @@
     font-size: var(--font-size-s);
     font-family: var(--font-sans);
     color: var(--spectrum-alias-text-color);
-    padding: 0;
-    margin: 0;
     min-width: 0;
     resize: none;
     overflow: hidden;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.4;
+    line-height: 1.2;
     min-height: 10px !important;
   }
 
   .prompt-input::placeholder {
     color: var(--spectrum-global-color-gray-600);
-    font-style: italic;
   }
 
   .action-buttons {
