@@ -270,7 +270,7 @@
     display: flex;
     gap: var(--spacing-s);
     bottom: calc(100% + 5px);
-    left: 0;
+    left: 5px;
     z-index: 2;
     animation: fade-in 0.2s ease-out forwards;
   }
