@@ -47,7 +47,7 @@
 
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
-    margin-bottom: 36px;
+    margin-bottom: 24px;
   }
 
   .ai-generation-prompt {
