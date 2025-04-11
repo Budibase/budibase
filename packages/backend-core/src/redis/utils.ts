@@ -110,7 +110,7 @@ export function getRedisOptions() {
 }
 
 export function addDbPrefix(db: string, key: string) {
-  if (key.includes(db)) {
+  if (key.startsWith(`${db}${SEPARATOR}`)) {
     return key
   }
   return `${db}${SEPARATOR}${key}`
