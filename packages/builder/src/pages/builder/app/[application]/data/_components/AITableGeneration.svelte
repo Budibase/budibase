@@ -1,3 +1,10 @@
+<script lang="ts">
+  import { API } from "@/api"
+  import { ActionButton, Input } from "@budibase/bbui"
+
+  async function submitPrompt(message: string) {
+    await API.generateTables(message)
+  }
 <script>
   import { Input } from "@budibase/bbui"
 </script>
@@ -6,12 +13,10 @@
   <div class="ai-generation-prompt">
     <Input placeholder="Generate data using AI..." />
   </div>
-  <div class="ai-generation-prompt-example">
-    Create a table called tickets with title, description, status fields
-  </div>
-  <div class="ai-generation-prompt-example">
-    Create a table called students with name and address fields
-  </div>
+
+  {#each ["Create a table called tickets with title, description, status fields", "Create a table called students with name and address fields"] as prompt}
+    <ActionButton on:click={() => submitPrompt(prompt)}>{prompt}</ActionButton>
+  {/each}
 </div>
 
 <style>
@@ -28,16 +33,9 @@
   .ai-generation-prompt {
     grid-column: 1 / -1;
   }
-  .ai-generation-prompt :global(.spectrum-Textfield-input) {
+  .ai-generation :global(.spectrum-Textfield-input),
+  .ai-generation :global(.spectrum-ActionButton) {
     background: #1d1d1d;
     border-radius: 20px;
-  }
-
-  .ai-generation-prompt-example {
-    padding: 2px 8px;
-    gap: 10px;
-
-    border: 1px solid #393939;
-    border-radius: 14px;
   }
 </style>

@@ -1,9 +1,11 @@
 import { GenerateJsRequest, GenerateJsResponse } from "@budibase/types"
 import { BaseAPIClient } from "./types"
+import { sleep } from "../utils/utils"
 
 export interface AIEndpoints {
   generateCronExpression: (prompt: string) => Promise<{ message: string }>
   generateJs: (req: GenerateJsRequest) => Promise<GenerateJsResponse>
+  generateTables: (prompt: string) => Promise<void>
 }
 
 export const buildAIEndpoints = (API: BaseAPIClient): AIEndpoints => ({
@@ -22,5 +24,9 @@ export const buildAIEndpoints = (API: BaseAPIClient): AIEndpoints => ({
       url: "/api/ai/js",
       body: req,
     })
+  },
+  generateTables: async prompt => {
+    console.warn({ prompt })
+    await sleep(1000)
   },
 })
