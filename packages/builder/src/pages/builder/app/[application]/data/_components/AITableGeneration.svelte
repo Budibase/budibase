@@ -1,8 +1,12 @@
 <script lang="ts">
   import { API } from "@/api"
+  import { featureFlag } from "@/helpers"
   import { ActionButton, Input } from "@budibase/bbui"
+  import { FeatureFlag } from "@budibase/types"
 
   let prompt: string
+
+  $: isEnabled = featureFlag.isEnabled(FeatureFlag.AI_TABLE_GENERATION)
 
   async function submitPrompt(message: string) {
     await API.generateTables(message)
@@ -23,17 +27,21 @@
       bind:value={prompt}
       placeholder="Generate data using AI..."
       on:keydown={onInputKeydown}
+      disabled={!isEnabled}
     />
   </div>
 
-  {#each ["Create a table called tickets with title, description, status fields", "Create a table called students with name and address fields"] as prompt}
-    <ActionButton on:click={() => submitPrompt(prompt)}>{prompt}</ActionButton>
-  {/each}
+  {#if isEnabled}
+    {#each ["Create a table called tickets with title, description, status fields", "Create a table called students with name and address fields"] as prompt}
+      <ActionButton on:click={() => submitPrompt(prompt)}>{prompt}</ActionButton
+      >
+    {/each}
+  {/if}
 </div>
 
 <style>
   .ai-generation {
-    max-width: 753px;
+    width: 753px;
     display: grid;
     gap: 10px;
 
