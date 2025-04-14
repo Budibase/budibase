@@ -4,7 +4,6 @@ import env from "../environment"
 import { getExistingAccounts, getFirstPlatformUser } from "./lookup"
 import { EmailUnavailableError } from "../errors"
 import { sdk } from "@budibase/shared-core"
-import { BUILTIN_ROLE_IDS } from "../security/roles"
 import * as context from "../context"
 
 // extract from shared-core to make easily accessible from backend-core
@@ -57,7 +56,7 @@ function isCreatorByGroupMembership(
   )
   if (userGroups && userGroups.length > 0) {
     return userGroups.some(group =>
-      Object.values(group.roles || {}).includes(BUILTIN_ROLE_IDS.ADMIN)
+      Object.values(group.roles || {}).includes("CREATOR")
     )
   }
   return false

@@ -71,7 +71,11 @@
       notifications.success("Successfully activated")
     } catch (e) {
       console.error(e)
-      notifications.error("Error activating license key")
+      if (e?.status === 409) {
+        notifications.error(e.message)
+      } else {
+        notifications.error("Error activating license key")
+      }
     }
   }
 
