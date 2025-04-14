@@ -8,7 +8,7 @@ import {
   auth as authCore,
 } from "@budibase/backend-core"
 import env from "../../../environment"
-import { groups } from "@budibase/pro"
+import { ai, groups } from "@budibase/pro"
 import {
   DevInfo,
   FetchAPIKeyResponse,
@@ -115,11 +115,20 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
 
   // add the feature flags for this tenant
   const flags = await features.flags.fetch()
+  const llmConfig = await ai.getLLMConfig()
+  const sanitisedLLMConfig = llmConfig
+    ? {
+        provider: llmConfig.provider,
+        model: llmConfig.model,
+        measureUsage: llmConfig.measureUsage,
+      }
+    : undefined
 
   ctx.body = {
     ...enrichedUser,
     ...sessionAttributes,
     flags,
+    llm: sanitisedLLMConfig,
   }
 }
 
