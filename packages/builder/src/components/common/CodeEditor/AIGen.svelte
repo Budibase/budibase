@@ -9,7 +9,7 @@
   export let value: string | null = ""
   export let parentWidth: number | null = null
   export const dispatch = createEventDispatcher<{
-    update: { code: string | null }
+    update: { code: string }
     accept: void
     reject: { code: string | null }
   }>()

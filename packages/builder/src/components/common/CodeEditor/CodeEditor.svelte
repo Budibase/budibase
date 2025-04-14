@@ -479,9 +479,9 @@
     }}
     on:reject={event => {
       const { code } = event.detail
-      value = code
+      value = code || ""
       editor.dispatch({
-        changes: { from: 0, to: editor.state.doc.length, insert: code },
+        changes: { from: 0, to: editor.state.doc.length, insert: code || "" },
       })
     }}
   />
