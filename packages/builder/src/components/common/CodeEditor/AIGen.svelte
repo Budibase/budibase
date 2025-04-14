@@ -351,5 +351,6 @@
     overflow: hidden;
     flex-grow: 1;
     min-width: 0;
+    margin-right: var(--spacing-s);
   }
 </style>
