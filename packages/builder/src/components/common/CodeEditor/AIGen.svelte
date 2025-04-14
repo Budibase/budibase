@@ -4,6 +4,7 @@
   import { API } from "@/api"
   import type { EnrichedBinding } from "@budibase/types"
   import BBAI from "assets/bb-ai.svg"
+  import analytics, { Events } from "@/analytics"
 
   export let bindings: EnrichedBinding[] = []
   export let value: string | null = ""
@@ -64,11 +65,19 @@
   }
 
   function acceptSuggestion() {
+    analytics.captureEvent(Events.AI_JS_ACCEPTED, {
+      code: suggestedCode,
+      prompt: promptText,
+    })
     dispatch("accept")
     resetExpand()
   }
 
   function rejectSuggestion() {
+    analytics.captureEvent(Events.AI_JS_REJECTED, {
+      code: suggestedCode,
+      prompt: promptText,
+    })
     dispatch("reject", { code: previousContents })
     resetExpand()
   }
