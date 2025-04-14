@@ -2,9 +2,12 @@ import { API } from "@/api"
 import PosthogClient from "./PosthogClient"
 import { Events, EventSource } from "./constants"
 
-const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
+const posthog = new PosthogClient(process.env.POSTHOG_TOKEN!)
 
 class AnalyticsHub {
+  private initialised: boolean
+  private clients: PosthogClient[]
+
   constructor() {
     this.clients = [posthog]
     this.initialised = false
@@ -21,13 +24,13 @@ class AnalyticsHub {
     }
   }
 
-  identify(id) {
+  identify(id: string) {
     posthog.identify(id)
   }
 
-  captureException(_err) {}
+  captureException(_err: any) {}
 
-  captureEvent(eventName, props = {}) {
+  captureEvent(eventName: string, props = {}) {
     posthog.captureEvent(eventName, props)
   }
 
