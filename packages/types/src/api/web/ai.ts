@@ -11,6 +11,7 @@ export interface ChatCompletionRequest {
 
 export interface ChatCompletionResponse {
   message?: string
+  tokensUsed?: number
 }
 
 export interface GenerateJsRequest {
