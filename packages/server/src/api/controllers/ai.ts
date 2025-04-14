@@ -11,7 +11,7 @@ export async function generateTables(
 ) {
   const { prompt, addData } = ctx.request.body
 
-  const tableGenerator = new ai.TableGeneration({
+  const tableGenerator = await ai.TableGeneration.init({
     generateTablesDelegate: sdk.ai.helpers.generateTables,
     getTablesDelegate: sdk.tables.getTables,
     generateDataDelegate: sdk.ai.helpers.generateRows,
