@@ -8,7 +8,11 @@
   export let bindings: EnrichedBinding[] = []
   export let value: string | null = ""
   export let parentWidth: number | null = null
-  export const dispatch = createEventDispatcher()
+  export const dispatch = createEventDispatcher<{
+    update: { code: string | null }
+    accept: void
+    reject: { code: string | null }
+  }>()
 
   let buttonContainer: HTMLElement
   let promptInput: HTMLTextAreaElement
