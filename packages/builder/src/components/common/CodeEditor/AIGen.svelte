@@ -9,7 +9,7 @@
     Body,
     Link,
   } from "@budibase/bbui"
-  import { auth, admin } from "@/stores/portal"
+  import { auth, admin, licensing } from "@/stores/portal"
 
   import { createEventDispatcher } from "svelte"
   import { API } from "@/api"
@@ -36,14 +36,15 @@
   let containerWidth = "auto"
   let promptText = ""
   let animateBorder = false
-  let creditsExceeded = false // TODO: Make this computed when quota is implemented
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
-  $: aiEnabled = false
+  $: aiEnabled = $auth?.user?.llm
   $: expanded = expandedOnly ? true : expanded
+  $: creditsExceeded = $licensing.aiCreditsExceeded
+  $: disabled = suggestedCode !== null || !aiEnabled || creditsExceeded
   $: if (expandedOnly) {
     containerWidth = calculateExpandedWidth()
   }
@@ -153,8 +154,7 @@
         src={BBAI}
         alt="AI"
         class="ai-icon"
-        class:disabled={expanded &&
-          (suggestedCode !== null || !aiEnabled || creditsExceeded)}
+        class:disabled={expanded && disabled}
         on:click={!expandedOnly
           ? e => {
               e.stopPropagation()
@@ -170,7 +170,7 @@
           class="prompt-input"
           placeholder="Generate Javascript..."
           on:keydown={handleKeyPress}
-          disabled={suggestedCode !== null || !aiEnabled || creditsExceeded}
+          {disabled}
           readonly={suggestedCode !== null}
         />
       {:else}
