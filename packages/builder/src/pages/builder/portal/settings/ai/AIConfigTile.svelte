@@ -6,7 +6,7 @@
   import TogetherAILogo from "./logos/TogetherAI.svelte"
   import AzureOpenAILogo from "./logos/AzureOpenAI.svelte"
   import { Providers } from "./constants"
-  import { ProviderConfig } from "@budibase/types"
+  import type { ProviderConfig } from "@budibase/types"
   const logos = {
     ["Budibase AI"]: BudibaseLogo,
     [Providers.OpenAI.name]: OpenAILogo,

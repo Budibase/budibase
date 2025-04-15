@@ -16,7 +16,11 @@
   import { API } from "@/api"
   import AIConfigModal from "./ConfigModal.svelte"
   import AIConfigTile from "./AIConfigTile.svelte"
-  import { AIConfig, ConfigType, ProviderConfig } from "@budibase/types"
+  import {
+    type AIConfig,
+    ConfigType,
+    type ProviderConfig,
+  } from "@budibase/types"
 
   let modal: Modal
   let fullAIConfig: AIConfig
