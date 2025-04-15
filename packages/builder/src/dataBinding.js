@@ -1319,8 +1319,8 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
 
 // If converting readable to runtime we need to ensure we don't replace words
 // which are substrings of other words - e.g. a binding of `a` would turn
-// `hah` into `h[a]h` which is obviously wrong. To avoid this we can strip all
-// expanded versions of the binding, then ensure the binding still exists.
+// `hah` into `h[a]h` which is obviously wrong. To avoid this we can remove all
+// expanded versions of the binding to be replaced.
 const excludeExtensions = (string, binding) => {
   // Regex to find prefixed bindings (e.g. exclude xfoo for foo)
   const regex1 = new RegExp(`[a-zA-Z0-9-_]+${binding}[a-zA-Z0-9-_]*`, "g")
