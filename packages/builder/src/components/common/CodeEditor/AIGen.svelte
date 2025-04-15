@@ -18,13 +18,15 @@
 
   export let bindings: EnrichedBinding[] = []
   export let value: string | null = ""
+  export let expandedOnly: boolean = false
+
   export let parentWidth: number | null = null
   export const dispatch = createEventDispatcher<{
     update: { code: string }
     accept: void
     reject: { code: string | null }
   }>()
-  $: console.log($auth.user?.llm)
+
   let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
   let promptLoading = false
@@ -37,7 +39,6 @@
   let creditsExceeded = false // TODO: Make this computed when quota is implemented
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
-  export let expandedOnly: boolean = false
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
