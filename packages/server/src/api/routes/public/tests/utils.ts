@@ -1,6 +1,10 @@
 import * as setup from "../../tests/utilities"
 import { checkSlashesInUrl } from "../../../../utilities"
 import supertest from "supertest"
+import { User } from "@budibase/types"
+import environment from "../../../../environment"
+import nock from "nock"
+import { generator } from "@budibase/backend-core/tests"
 
 export type HttpMethod = "post" | "get" | "put" | "delete" | "patch"
 
@@ -90,4 +94,44 @@ export function generateMakeRequestWithFormData(
     expect(res.body).toBeDefined()
     return res
   }
+}
+
+export function mockWorkerUserAPI(...seedUsers: User[]) {
+  const users: Record<string, User> = {
+    ...seedUsers.reduce((acc, user) => {
+      acc[user._id!] = user
+      return acc
+    }, {} as Record<string, User>),
+  }
+
+  nock(environment.WORKER_URL!)
+    .get(new RegExp(`/api/global/users/.*`))
+    .reply(200, (uri, body) => {
+      const id = uri.split("/").pop()
+      return users[id!]
+    })
+    .persist()
+
+  nock(environment.WORKER_URL!)
+    .post(`/api/global/users`)
+    .reply(200, (uri, body) => {
+      const newUser = body as User
+      if (!newUser._id) {
+        newUser._id = `us_${generator.guid()}`
+      }
+      users[newUser._id!] = newUser
+      return newUser
+    })
+    .persist()
+
+  nock(environment.WORKER_URL!)
+    .put(new RegExp(`/api/global/users/.*`))
+    .reply(200, (uri, body) => {
+      const id = uri.split("/").pop()!
+      const updatedUser = body as User
+      const existingUser = users[id] || {}
+      users[id] = { ...existingUser, ...updatedUser }
+      return users[id]
+    })
+    .persist()
 }

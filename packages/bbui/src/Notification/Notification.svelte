@@ -1,17 +1,17 @@
-<script>
+<script lang="ts">
   import { ActionButton } from "../"
 
   import { createEventDispatcher } from "svelte"
 
-  export let type = "info"
-  export let icon = "Info"
-  export let message = ""
-  export let dismissable = false
-  export let actionMessage = null
-  export let action = null
-  export let wide = false
+  export let type: string = "info"
+  export let icon: string = "Info"
+  export let message: string = ""
+  export let dismissable: boolean = false
+  export let actionMessage: string | null = null
+  export let action: ((_dismiss: () => void) => void) | null = null
+  export let wide: boolean = false
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ dismiss: void }>()
 </script>
 
 <div class="spectrum-Toast spectrum-Toast--{type}" class:wide>

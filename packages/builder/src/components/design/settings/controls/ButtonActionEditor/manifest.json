@@ -183,6 +183,17 @@
       "name": "Row Action",
       "type": "data",
       "component": "RowAction"
+    },
+    {
+      "name": "Copy To Clipboard",
+      "type": "data",
+      "component": "CopyToClipboard",
+      "context": [
+        {
+          "label": "Copied text",
+          "value": "copied"
+        }
+      ]
     }
   ]
 }

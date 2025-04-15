@@ -1,6 +1,5 @@
 // @ts-ignore
-// eslint-disable-next-line local-rules/no-budibase-imports
-import { iifeWrapper } from "@budibase/string-templates/iife"
+import { iifeWrapper } from "@budibase/string-templates"
 
 export default new Proxy(
   {},

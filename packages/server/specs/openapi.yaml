@@ -752,20 +752,28 @@ components:
                     properties:
                       type:
                         type: string
-                        enum:
-                          - string
-                          - number
-                          - object
-                          - boolean
                       presence:
-                        type: boolean
-                        description: Defines whether the column is required or not.
+                        oneOf:
+                          - type: boolean
+                            description: Defines whether the column is required or not.
+                          - type: object
+                            description: Defines whether the column is required or not.
+                            properties:
+                              allowEmpty:
+                                type: boolean
+                                description: Defines whether the value is allowed to be empty or not.
+                      inclusion:
+                        type: array
+                        description: Defines the valid values for this column.
                   name:
                     type: string
                     description: The name of the column.
                   autocolumn:
                     type: boolean
                     description: Defines whether the column is automatically generated.
+                  width:
+                    type: number
+                    description: Defines the width of the column in the data UI.
                   fieldName:
                     type: string
                     description: The name of the column which a relationship column is related to in
@@ -812,20 +820,28 @@ components:
                     properties:
                       type:
                         type: string
-                        enum:
-                          - string
-                          - number
-                          - object
-                          - boolean
                       presence:
-                        type: boolean
-                        description: Defines whether the column is required or not.
+                        oneOf:
+                          - type: boolean
+                            description: Defines whether the column is required or not.
+                          - type: object
+                            description: Defines whether the column is required or not.
+                            properties:
+                              allowEmpty:
+                                type: boolean
+                                description: Defines whether the value is allowed to be empty or not.
+                      inclusion:
+                        type: array
+                        description: Defines the valid values for this column.
                   name:
                     type: string
                     description: The name of the column.
                   autocolumn:
                     type: boolean
                     description: Defines whether the column is automatically generated.
+                  width:
+                    type: number
+                    description: Defines the width of the column in the data UI.
                   formula:
                     type: string
                     description: Defines a Handlebars or JavaScript formula to use, note that
@@ -851,8 +867,6 @@ components:
                       - datetime
                       - attachment
                       - attachment_single
-                      - link
-                      - formula
                       - auto
                       - ai
                       - json
@@ -871,20 +885,28 @@ components:
                     properties:
                       type:
                         type: string
-                        enum:
-                          - string
-                          - number
-                          - object
-                          - boolean
                       presence:
-                        type: boolean
-                        description: Defines whether the column is required or not.
+                        oneOf:
+                          - type: boolean
+                            description: Defines whether the column is required or not.
+                          - type: object
+                            description: Defines whether the column is required or not.
+                            properties:
+                              allowEmpty:
+                                type: boolean
+                                description: Defines whether the value is allowed to be empty or not.
+                      inclusion:
+                        type: array
+                        description: Defines the valid values for this column.
                   name:
                     type: string
                     description: The name of the column.
                   autocolumn:
                     type: boolean
                     description: Defines whether the column is automatically generated.
+                  width:
+                    type: number
+                    description: Defines the width of the column in the data UI.
     tableOutput:
       type: object
       properties:
@@ -921,20 +943,28 @@ components:
                         properties:
                           type:
                             type: string
-                            enum:
-                              - string
-                              - number
-                              - object
-                              - boolean
                           presence:
-                            type: boolean
-                            description: Defines whether the column is required or not.
+                            oneOf:
+                              - type: boolean
+                                description: Defines whether the column is required or not.
+                              - type: object
+                                description: Defines whether the column is required or not.
+                                properties:
+                                  allowEmpty:
+                                    type: boolean
+                                    description: Defines whether the value is allowed to be empty or not.
+                          inclusion:
+                            type: array
+                            description: Defines the valid values for this column.
                       name:
                         type: string
                         description: The name of the column.
                       autocolumn:
                         type: boolean
                         description: Defines whether the column is automatically generated.
+                      width:
+                        type: number
+                        description: Defines the width of the column in the data UI.
                       fieldName:
                         type: string
                         description: The name of the column which a relationship column is related to in
@@ -981,20 +1011,28 @@ components:
                         properties:
                           type:
                             type: string
-                            enum:
-                              - string
-                              - number
-                              - object
-                              - boolean
                           presence:
-                            type: boolean
-                            description: Defines whether the column is required or not.
+                            oneOf:
+                              - type: boolean
+                                description: Defines whether the column is required or not.
+                              - type: object
+                                description: Defines whether the column is required or not.
+                                properties:
+                                  allowEmpty:
+                                    type: boolean
+                                    description: Defines whether the value is allowed to be empty or not.
+                          inclusion:
+                            type: array
+                            description: Defines the valid values for this column.
                       name:
                         type: string
                         description: The name of the column.
                       autocolumn:
                         type: boolean
                         description: Defines whether the column is automatically generated.
+                      width:
+                        type: number
+                        description: Defines the width of the column in the data UI.
                       formula:
                         type: string
                         description: Defines a Handlebars or JavaScript formula to use, note that
@@ -1020,8 +1058,6 @@ components:
                           - datetime
                           - attachment
                           - attachment_single
-                          - link
-                          - formula
                           - auto
                           - ai
                           - json
@@ -1040,20 +1076,28 @@ components:
                         properties:
                           type:
                             type: string
-                            enum:
-                              - string
-                              - number
-                              - object
-                              - boolean
                           presence:
-                            type: boolean
-                            description: Defines whether the column is required or not.
+                            oneOf:
+                              - type: boolean
+                                description: Defines whether the column is required or not.
+                              - type: object
+                                description: Defines whether the column is required or not.
+                                properties:
+                                  allowEmpty:
+                                    type: boolean
+                                    description: Defines whether the value is allowed to be empty or not.
+                          inclusion:
+                            type: array
+                            description: Defines the valid values for this column.
                       name:
                         type: string
                         description: The name of the column.
                       autocolumn:
                         type: boolean
                         description: Defines whether the column is automatically generated.
+                      width:
+                        type: number
+                        description: Defines the width of the column in the data UI.
             _id:
               description: The ID of the table.
               type: string
@@ -1097,20 +1141,28 @@ components:
                           properties:
                             type:
                               type: string
-                              enum:
-                                - string
-                                - number
-                                - object
-                                - boolean
                             presence:
-                              type: boolean
-                              description: Defines whether the column is required or not.
+                              oneOf:
+                                - type: boolean
+                                  description: Defines whether the column is required or not.
+                                - type: object
+                                  description: Defines whether the column is required or not.
+                                  properties:
+                                    allowEmpty:
+                                      type: boolean
+                                      description: Defines whether the value is allowed to be empty or not.
+                            inclusion:
+                              type: array
+                              description: Defines the valid values for this column.
                         name:
                           type: string
                           description: The name of the column.
                         autocolumn:
                           type: boolean
                           description: Defines whether the column is automatically generated.
+                        width:
+                          type: number
+                          description: Defines the width of the column in the data UI.
                         fieldName:
                           type: string
                           description: The name of the column which a relationship column is related to in
@@ -1157,20 +1209,28 @@ components:
                           properties:
                             type:
                               type: string
-                              enum:
-                                - string
-                                - number
-                                - object
-                                - boolean
                             presence:
-                              type: boolean
-                              description: Defines whether the column is required or not.
+                              oneOf:
+                                - type: boolean
+                                  description: Defines whether the column is required or not.
+                                - type: object
+                                  description: Defines whether the column is required or not.
+                                  properties:
+                                    allowEmpty:
+                                      type: boolean
+                                      description: Defines whether the value is allowed to be empty or not.
+                            inclusion:
+                              type: array
+                              description: Defines the valid values for this column.
                         name:
                           type: string
                           description: The name of the column.
                         autocolumn:
                           type: boolean
                           description: Defines whether the column is automatically generated.
+                        width:
+                          type: number
+                          description: Defines the width of the column in the data UI.
                         formula:
                           type: string
                           description: Defines a Handlebars or JavaScript formula to use, note that
@@ -1196,8 +1256,6 @@ components:
                             - datetime
                             - attachment
                             - attachment_single
-                            - link
-                            - formula
                             - auto
                             - ai
                             - json
@@ -1216,20 +1274,28 @@ components:
                           properties:
                             type:
                               type: string
-                              enum:
-                                - string
-                                - number
-                                - object
-                                - boolean
                             presence:
-                              type: boolean
-                              description: Defines whether the column is required or not.
+                              oneOf:
+                                - type: boolean
+                                  description: Defines whether the column is required or not.
+                                - type: object
+                                  description: Defines whether the column is required or not.
+                                  properties:
+                                    allowEmpty:
+                                      type: boolean
+                                      description: Defines whether the value is allowed to be empty or not.
+                            inclusion:
+                              type: array
+                              description: Defines the valid values for this column.
                         name:
                           type: string
                           description: The name of the column.
                         autocolumn:
                           type: boolean
                           description: Defines whether the column is automatically generated.
+                        width:
+                          type: number
+                          description: Defines the width of the column in the data UI.
               _id:
                 description: The ID of the table.
                 type: string

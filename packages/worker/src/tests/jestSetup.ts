@@ -12,8 +12,7 @@ nock.enableNetConnect(host => {
   return (
     host.includes("localhost") ||
     host.includes("127.0.0.1") ||
-    host.includes("::1") ||
-    host.includes("ethereal.email") // used in realEmail.spec.ts
+    host.includes("::1")
   )
 })
 

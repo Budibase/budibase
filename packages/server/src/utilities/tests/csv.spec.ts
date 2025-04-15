@@ -29,5 +29,34 @@ describe("csv", () => {
         expect(Object.keys(r)).toEqual(["id", "optional", "title"])
       )
     })
+
+    const possibleDelimeters = [",", ";", ":", "|", "~", "\t", " "]
+
+    const csvArray = [
+      ["id", "title"],
+      ["1", "aaa"],
+      ["2", "bbb"],
+      ["3", "c ccc"],
+      ["", ""],
+      [":5", "eee5:e"],
+    ]
+
+    test.each(possibleDelimeters)(
+      "Should parse with delimiter %s",
+      async delimiter => {
+        const csvString = csvArray
+          .map(row => row.map(col => `"${col}"`).join(delimiter))
+          .join("\n")
+        const result = await jsonFromCsvString(csvString)
+
+        expect(result).toEqual([
+          { id: "1", title: "aaa" },
+          { id: "2", title: "bbb" },
+          { id: "3", title: "c ccc" },
+          { id: null, title: null },
+          { id: ":5", title: "eee5:e" },
+        ])
+      }
+    )
   })
 })

@@ -11,6 +11,16 @@
   --bb-forest-green: #053835;
   --bb-beige: #f6efea;
 
+  /* Custom spectrum additions */
+  --spectrum-global-color-static-red-1200: #740000;
+  --spectrum-global-color-static-orange-1200: #612300;
+  --spectrum-global-color-static-yellow-1200: #483300;
+  --spectrum-global-color-static-green-1200: #053f27;
+  --spectrum-global-color-static-seafoam-1200: #123c3a;
+  --spectrum-global-color-static-blue-1200: #003571;
+  --spectrum-global-color-static-indigo-1200: #262986;
+  --spectrum-global-color-static-magenta-1200: #700037;
+
   --grey-1: #fafafa;
   --grey-2: #f5f5f5;
   --grey-3: #eeeeee;

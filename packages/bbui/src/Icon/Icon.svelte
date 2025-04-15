@@ -1,23 +1,21 @@
 <script lang="ts">
-  import {
-    default as AbsTooltip,
-    TooltipPosition,
-    TooltipType,
-  } from "../Tooltip/AbsTooltip.svelte"
+  import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
+  import { TooltipPosition, TooltipType } from "../constants"
 
   export let name: string = "Add"
+  export let size: "XS" | "S" | "M" | "L" | "XL" | "Custom" = "M"
   export let hidden: boolean = false
-  export let size = "M"
   export let hoverable: boolean = false
   export let disabled: boolean = false
   export let color: string | undefined = undefined
   export let hoverColor: string | undefined = undefined
   export let tooltip: string | undefined = undefined
-  export let tooltipPosition = TooltipPosition.Bottom
+  export let tooltipPosition: TooltipPosition = TooltipPosition.Bottom
   export let tooltipType = TooltipType.Default
   export let tooltipColor: string | undefined = undefined
   export let tooltipWrap: boolean = true
   export let newStyles: boolean = false
+  export let customSize: number | undefined = undefined
 </script>
 
 <AbsTooltip
@@ -28,20 +26,25 @@
   noWrap={tooltipWrap}
 >
   <div class="icon" class:newStyles>
+    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
     <svg
       on:contextmenu
       on:click
+      on:mouseover
+      on:mouseleave
       class:hoverable
       class:disabled
       class="spectrum-Icon spectrum-Icon--size{size}"
       focusable="false"
       aria-hidden={hidden}
       aria-label={name}
-      style={`${color ? `color: ${color};` : ""} ${
+      style={`${color ? `color: ${color};` : ""} 
+      ${
         hoverColor
           ? `--hover-color: ${hoverColor}`
           : "--hover-color: var(--spectrum-alias-icon-color-selected-hover)"
-      }`}
+      }; 
+      ${customSize ? `width: ${customSize}px; height: ${customSize}px;` : ""}`}
     >
       <use
         style="pointer-events: none;"
@@ -81,17 +84,6 @@
     color: var(--spectrum-global-color-gray-500) !important;
     pointer-events: none !important;
   }
-
-  .tooltip {
-    position: absolute;
-    pointer-events: none;
-    left: 50%;
-    bottom: calc(100% + 4px);
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 1;
-  }
-
   .spectrum-Icon--sizeXS {
     width: var(--spectrum-global-dimension-size-150);
     height: var(--spectrum-global-dimension-size-150);

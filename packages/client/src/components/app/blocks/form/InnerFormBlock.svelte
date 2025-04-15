@@ -1,6 +1,6 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
-  import Placeholder from "components/app/Placeholder.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
+  import Placeholder from "@/components/app/Placeholder.svelte"
   import { getContext } from "svelte"
   import FormBlockComponent from "../FormBlockComponent.svelte"
 
@@ -74,11 +74,11 @@
             order={0}
           >
             <BlockComponent
-              type="heading"
-              props={{ text: title || "" }}
+              type="textv2"
+              props={{ text: title ? `## ${title}` : "" }}
               order={0}
             />
-            {#if buttonPosition == "top"}
+            {#if buttonPosition === "top"}
               <BlockComponent
                 type="buttongroup"
                 props={{
@@ -93,7 +93,7 @@
         </BlockComponent>
       {/if}
       {#if description}
-        <BlockComponent type="text" props={{ text: description }} order={1} />
+        <BlockComponent type="textv2" props={{ text: description }} order={1} />
       {/if}
       <BlockComponent type="container">
         <div class="form-block fields" class:mobile={$context.device.mobile}>

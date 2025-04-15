@@ -1,4 +1,9 @@
-import { AutomationResults, LoopStepType, UserBindings } from "@budibase/types"
+import {
+  AutomationStepResultOutputs,
+  AutomationTriggerResultOutputs,
+  LoopStepType,
+  UserBindings,
+} from "@budibase/types"
 
 export interface LoopInput {
   option: LoopStepType
@@ -13,19 +18,22 @@ export interface TriggerOutput {
   timestamp?: number
 }
 
-export interface AutomationContext extends AutomationResults {
-  steps: any[]
-  stepsById: Record<string, any>
-  stepsByName: Record<string, any>
+export interface AutomationContext {
+  trigger: AutomationTriggerResultOutputs
+  steps: Record<
+    string,
+    AutomationStepResultOutputs | AutomationTriggerResultOutputs
+  >
+  stepsByName: Record<string, AutomationStepResultOutputs>
+  stepsById: Record<string, AutomationStepResultOutputs>
   env?: Record<string, string>
   user?: UserBindings
-  trigger: any
   settings?: {
     url?: string
     logo?: string
     company?: string
   }
+  loop?: { currentItem: any }
+  _stepIndex: number
+  _error: boolean
 }
-
-export interface AutomationResponse
-  extends Omit<AutomationContext, "stepsByName" | "stepsById"> {}

@@ -1,28 +1,48 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/tabs/dist/index-vars.css"
   import { writable } from "svelte/store"
   import { onMount, setContext, createEventDispatcher } from "svelte"
 
-  export let selected
-  export let vertical = false
-  export let noPadding = false
-  // added as a separate option as noPadding is used for vertical padding
-  export let noHorizPadding = false
-  export let quiet = false
-  export let emphasized = false
-  export let onTop = false
-  export let size = "M"
-  export let beforeSwitch = null
+  interface TabInfo {
+    width?: number
+    height?: number
+    left?: number
+    top?: number
+  }
 
-  let thisSelected = undefined
+  interface TabState {
+    title: string
+    id: string
+    emphasized: boolean
+    info?: TabInfo
+  }
+
+  export let selected: string
+  export let vertical: boolean = false
+  export let noPadding: boolean = false
+  // added as a separate option as noPadding is used for vertical padding
+  export let noHorizPadding: boolean = false
+  export let quiet: boolean = false
+  export let emphasized: boolean = false
+  export let onTop: boolean = false
+  export let size: "S" | "M" | "L" = "M"
+  export let beforeSwitch: ((_title: string) => boolean) | null = null
+
+  let thisSelected: string | undefined = undefined
+  let container: HTMLElement | undefined
 
   let _id = id()
-  const tab = writable({ title: selected, id: _id, emphasized })
+  const tab = writable<TabState>({ title: selected, id: _id, emphasized })
   setContext("tab", tab)
 
-  let container
+  let top: string | undefined
+  let left: string | undefined
+  let width: string | undefined
+  let height: string | undefined
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{
+    select: string
+  }>()
 
   $: {
     if (thisSelected !== selected) {
@@ -44,29 +64,34 @@
     }
     if ($tab.title !== thisSelected) {
       tab.update(state => {
-        state.title = thisSelected
+        state.title = thisSelected as string
         return state
       })
     }
   }
 
-  let top, left, width, height
-  $: calculateIndicatorLength($tab)
-  $: calculateIndicatorOffset($tab)
+  $: $tab && calculateIndicatorLength()
+  $: $tab && calculateIndicatorOffset()
 
   function calculateIndicatorLength() {
     if (!vertical) {
-      width = $tab.info?.width + "px"
+      width = ($tab.info?.width ?? 0) + "px"
     } else {
-      height = $tab.info?.height + 4 + "px"
+      height = ($tab.info?.height ?? 0) + 4 + "px"
     }
   }
 
   function calculateIndicatorOffset() {
     if (!vertical) {
-      left = $tab.info?.left - container?.getBoundingClientRect().left + "px"
+      left =
+        ($tab.info?.left ?? 0) -
+        (container?.getBoundingClientRect().left ?? 0) +
+        "px"
     } else {
-      top = $tab.info?.top - container?.getBoundingClientRect().top + "px"
+      top =
+        ($tab.info?.top ?? 0) -
+        (container?.getBoundingClientRect().top ?? 0) +
+        "px"
     }
   }
 
@@ -75,7 +100,7 @@
     calculateIndicatorOffset()
   })
 
-  function id() {
+  function id(): string {
     return "_" + Math.random().toString(36).slice(2, 9)
   }
 </script>

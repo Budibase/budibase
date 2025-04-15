@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
   import Context from "../context"
 
-  const { hide } = getContext(Context.Modal)
+  const { hide } = getContext(Context.Modal) as { hide: () => void }
 
-  let count = 0
-  const clicks = 5
+  let count: number = 0
+  const clicks: number = 5
   $: if (count === clicks) hide()
   $: remaining = clicks - count
 

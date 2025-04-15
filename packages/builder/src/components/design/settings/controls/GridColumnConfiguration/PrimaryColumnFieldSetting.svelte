@@ -8,6 +8,7 @@
 
   export let item
   export let anchor
+  export let bindings
 
   let draggableStore = writable({
     selected: null,
@@ -48,6 +49,7 @@
       componentInstance={item}
       {parseSettings}
       on:change
+      {bindings}
     >
       <div slot="header" class="type-icon">
         <Icon name={icon} />

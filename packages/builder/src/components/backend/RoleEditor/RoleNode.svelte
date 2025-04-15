@@ -43,7 +43,7 @@
 
   const validateDescription = description => {
     if (!description?.length) {
-      return "Please enter a name"
+      return "Please enter a description"
     }
     return null
   }

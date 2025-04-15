@@ -16,6 +16,7 @@ import { LayoutEndpoints } from "./layouts"
 import { LicensingEndpoints } from "./licensing"
 import { LogEndpoints } from "./logs"
 import { MigrationEndpoints } from "./migrations"
+import { OAuth2Endpoints } from "./oauth2"
 import { OtherEndpoints } from "./other"
 import { PermissionEndpoints } from "./permissions"
 import { PluginEndpoins } from "./plugins"
@@ -132,4 +133,8 @@ export type APIClient = BaseAPIClient &
   TableEndpoints &
   TemplateEndpoints &
   UserEndpoints &
-  ViewEndpoints & { rowActions: RowActionEndpoints; viewV2: ViewV2Endpoints }
+  ViewEndpoints & {
+    rowActions: RowActionEndpoints
+    viewV2: ViewV2Endpoints
+    oauth2: OAuth2Endpoints
+  }

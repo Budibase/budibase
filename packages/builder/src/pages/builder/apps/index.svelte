@@ -24,13 +24,13 @@
   import { goto } from "@roxi/routify"
   import { AppStatus } from "@/constants"
   import { gradient } from "@/actions"
-  import ProfileModal from "@/components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
+  import { ProfileModal, ChangePasswordModal } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
   import { UserAvatar } from "@budibase/frontend-core"
   import { helpers, sdk } from "@budibase/shared-core"
+  import { API } from "@/api"
 
   let loaded = false
   let userInfoModal
@@ -105,8 +105,8 @@
             <img class="logo" alt="logo" src={$organisation.logoUrl || Logo} />
             <ActionMenu align="right">
               <div slot="control" class="avatar">
-                <UserAvatar user={$auth.user} showTooltip={false} />
-                <Icon size="XL" name="ChevronDown" />
+                <UserAvatar size="M" user={$auth.user} showTooltip={false} />
+                <Icon size="L" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
                 My profile
@@ -201,10 +201,14 @@
     </Page>
   </div>
   <Modal bind:this={userInfoModal}>
-    <ProfileModal />
+    <ProfileModal {API} user={$auth.user} on:save={() => auth.getSelf()} />
   </Modal>
   <Modal bind:this={changePasswordModal}>
-    <ChangePasswordModal />
+    <ChangePasswordModal
+      {API}
+      passwordMinLength={$admin.passwordMinLength}
+      on:save={() => auth.getSelf()}
+    />
   </Modal>
 {/if}
 
@@ -239,6 +243,7 @@
     grid-template-columns: auto auto;
     place-items: center;
     grid-gap: var(--spacing-xs);
+    transition: filter 130ms ease-out;
   }
   .avatar:hover {
     cursor: pointer;

@@ -15,6 +15,10 @@ export interface ScreenRouting {
   homeScreen?: boolean
 }
 
+export enum ScreenVariant {
+  PDF = "pdf",
+}
+
 export interface Screen extends Document {
   layoutId?: string
   showNavigation?: boolean
@@ -23,6 +27,8 @@ export interface Screen extends Document {
   props: ScreenProps
   name?: string
   pluginAdded?: boolean
+  onLoad?: EventHandler[]
+  variant?: ScreenVariant
 }
 
 export interface ScreenRoutesViewOutput extends Document {
@@ -36,3 +42,14 @@ export type ScreenRoutingJson = Record<
     subpaths: Record<string, any>
   }
 >
+
+export interface EventHandler {
+  parameters: {
+    key: string
+    type: string
+    value: string
+    persist: any | null
+  }
+  "##eventHandlerType": string
+  id: string
+}

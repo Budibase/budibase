@@ -6,9 +6,9 @@
     Layout,
     keepOpen,
   } from "@budibase/bbui"
-  import { createValidationStore } from "@/helpers/validation/yup"
+  import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
   import { writable, get } from "svelte/store"
-  import * as appValidation from "@/helpers/validation/yup/app"
+  import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import { appsStore, auth } from "@/stores/portal"
   import { onMount } from "svelte"
   import { API } from "@/api"

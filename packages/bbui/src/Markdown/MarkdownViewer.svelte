@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import SpectrumMDE from "./SpectrumMDE.svelte"
 
-  export let value
-  export let height
+  export let value: string | undefined = undefined
+  export let height: string | undefined = undefined
 
-  let mde
+  let mde: any
 
   // Keep the value up to date
   $: mde && mde.value(value || "")
@@ -40,6 +40,7 @@
     border: none;
     background: transparent;
     padding: 0;
+    color: inherit;
   }
   .markdown-viewer :global(.EasyMDEContainer) {
     background: transparent;

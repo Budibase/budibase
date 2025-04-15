@@ -33,7 +33,7 @@
         {/each}
       </div>
     </div>
-    <Layout gap="XS" paddingX="L" paddingY="XL">
+    <Layout gap="XS" paddingX="XL" paddingY="XL">
       {#if activeTab === "theme"}
         <ThemePanel />
       {:else}

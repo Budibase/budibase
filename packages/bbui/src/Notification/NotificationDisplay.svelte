@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/toast/dist/index-vars.css"
   import Portal from "svelte-portal"
   import { notifications } from "../Stores/notifications"

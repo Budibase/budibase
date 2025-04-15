@@ -183,24 +183,14 @@
       toggleAddComponent()
     } else if (type === "highlight-setting") {
       builderStore.highlightSetting(data.setting, "error")
-
-      // Also scroll setting into view
-      const selector = `#${data.setting}-prop-control`
-      const element = document.querySelector(selector)?.parentElement
-      if (element) {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        })
-      }
     } else if (type === "eject-block") {
       const { id, definition } = data
       await componentStore.handleEjectBlock(id, definition)
     } else if (type === "reload-plugin") {
       await componentStore.refreshDefinitions()
     } else if (type === "drop-new-component") {
-      const { component, parent, index } = data
-      await componentStore.create(component, null, parent, index)
+      const { component, parent, index, props } = data
+      await componentStore.create(component, props, parent, index)
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
       await componentStore.addParent(componentId, parentType)

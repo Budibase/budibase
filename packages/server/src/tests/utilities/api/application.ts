@@ -33,7 +33,13 @@ export class ApplicationAPI extends TestAPI {
     await this._delete(`/api/applications/${appId}`, { expectations })
   }
 
-  publish = async (appId: string): Promise<PublishResponse> => {
+  publish = async (
+    appId?: string,
+    expectations?: Expectations
+  ): Promise<PublishResponse> => {
+    if (!appId) {
+      appId = this.config.getAppId()
+    }
     return await this._post<PublishResponse>(
       `/api/applications/${appId}/publish`,
       {
@@ -42,14 +48,16 @@ export class ApplicationAPI extends TestAPI {
         headers: {
           [constants.Header.APP_ID]: appId,
         },
+        expectations,
       }
     )
   }
 
-  unpublish = async (appId: string): Promise<void> => {
-    await this._post(`/api/applications/${appId}/unpublish`, {
-      expectations: { status: 200 },
-    })
+  unpublish = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<void> => {
+    await this._post(`/api/applications/${appId}/unpublish`, { expectations })
   }
 
   sync = async (
@@ -144,13 +152,20 @@ export class ApplicationAPI extends TestAPI {
     })
   }
 
-  fetch = async ({ status }: { status?: AppStatus } = {}): Promise<App[]> => {
+  fetch = async (
+    { status }: { status?: AppStatus } = {},
+    expectations?: Expectations
+  ): Promise<App[]> => {
     return await this._get<App[]>("/api/applications", {
       query: { status },
+      expectations,
     })
   }
 
-  addSampleData = async (appId: string): Promise<void> => {
-    await this._post(`/api/applications/${appId}/sample`)
+  addSampleData = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<void> => {
+    await this._post(`/api/applications/${appId}/sample`, { expectations })
   }
 }

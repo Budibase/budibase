@@ -1,3 +1,10 @@
+<script context="module" lang="ts">
+  export const DropdownPosition = {
+    Relative: "top",
+    Absolute: "right",
+  }
+</script>
+
 <script lang="ts">
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
@@ -40,15 +47,27 @@
     indentMore,
     indentLess,
   } from "@codemirror/commands"
+  import { setDiagnostics } from "@codemirror/lint"
   import { Compartment, EditorState } from "@codemirror/state"
+  import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "@/stores/portal"
-  import type { EditorMode } from "@budibase/types"
+  import {
+    type EnrichedBinding,
+    FeatureFlag,
+    type EditorMode,
+  } from "@budibase/types"
+  import { tooltips } from "@codemirror/view"
+  import type { BindingCompletion, CodeValidator } from "@/types"
+  import { validateHbsTemplate } from "./validator/hbs"
+  import { validateJsTemplate } from "./validator/js"
+  import { featureFlag } from "@/helpers"
+  import AIGen from "./AIGen.svelte"
 
   export let label: string | undefined = undefined
-  // TODO: work out what best type fits this
-  export let completions: any[] = []
+  export let completions: BindingCompletion[] = []
+  export let validations: CodeValidator | null = null
   export let mode: EditorMode = EditorModes.Handlebars
   export let value: string | null = ""
   export let placeholder: string | null = null
@@ -57,19 +76,34 @@
   export let jsBindingWrapping = true
   export let readonly = false
   export let readonlyLineNumbers = false
+  export let dropdown = DropdownPosition.Relative
+  export let bindings: EnrichedBinding[] = []
 
   const dispatch = createEventDispatcher()
 
   let textarea: HTMLDivElement
   let editor: EditorView
+  let editorEle: HTMLDivElement
   let mounted = false
   let isEditorInitialised = false
   let queuedRefresh = false
+  let editorWidth: number | null = null
 
   // Theming!
   let currentTheme = $themeStore?.theme
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
+
+  const updateEditorWidth = () => {
+    if (editorEle) {
+      editorWidth = editorEle.offsetWidth
+    }
+  }
+
+  $: aiGenEnabled =
+    featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
+    mode.name === "javascript" &&
+    !readonly
 
   $: {
     if (autofocus && isEditorInitialised) {
@@ -112,7 +146,6 @@
       queuedRefresh = true
       return
     }
-
     if (
       editor &&
       value &&
@@ -247,7 +280,7 @@
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
   // TODO: work out type for base
-  const buildExtensions = (base: any[]) => {
+  const buildExtensions = (base: Extension[]) => {
     let complete = [...base]
 
     if (autocompleteEnabled) {
@@ -266,16 +299,15 @@
         EditorView.inputHandler.of((view, from, to, insert) => {
           if (jsBindingWrapping && insert === "$") {
             let { text } = view.state.doc.lineAt(from)
-
             const left = from ? text.substring(0, from) : ""
             const right = to ? text.substring(to) : ""
-            const wrap = !left.includes('$("') || !right.includes('")')
+            const wrap =
+              (!left.includes('$("') || !right.includes('")')) &&
+              !(left.includes("`") && right.includes("`"))
+            const anchor = from + (wrap ? 3 : 1)
             const tr = view.state.update(
               {
                 changes: [{ from, insert: wrap ? '$("")' : "$" }],
-                selection: {
-                  anchor: from + (wrap ? 3 : 1),
-                },
               },
               {
                 scrollIntoView: true,
@@ -283,6 +315,19 @@
               }
             )
             view.dispatch(tr)
+            // the selection needs to fired after the dispatch - this seems
+            // to fix an issue with the cursor not moving when the editor is
+            // first loaded, the first usage of the editor is not ready
+            // for the anchor to move as well as perform a change
+            setTimeout(() => {
+              view.dispatch(
+                view.state.update({
+                  selection: {
+                    anchor,
+                  },
+                })
+              )
+            }, 1)
             return true
           }
           return false
@@ -339,18 +384,70 @@
     return complete
   }
 
+  function validate(
+    value: string | null,
+    editor: EditorView | undefined,
+    mode: EditorMode,
+    validations: CodeValidator | null
+  ) {
+    if (!value || !validations || !editor) {
+      return
+    }
+
+    if (mode === EditorModes.Handlebars) {
+      const diagnostics = validateHbsTemplate(value, validations)
+      editor.dispatch(setDiagnostics(editor.state, diagnostics))
+    } else if (mode === EditorModes.JS) {
+      const diagnostics = validateJsTemplate(value, validations)
+      editor.dispatch(setDiagnostics(editor.state, diagnostics))
+    }
+  }
+
+  $: validate(value, editor, mode, validations)
+
   const initEditor = () => {
     const baseExtensions = buildBaseExtensions()
 
     editor = new EditorView({
-      doc: value?.toString(),
-      extensions: buildExtensions(baseExtensions),
+      doc: String(value),
+      extensions: buildExtensions([
+        ...baseExtensions,
+        dropdown == DropdownPosition.Absolute
+          ? tooltips({
+              position: "absolute",
+            })
+          : [],
+      ]),
       parent: textarea,
     })
   }
 
-  onMount(async () => {
+  // Handle AI generation code updates
+  const handleAICodeUpdate = (event: CustomEvent<{ code: string }>) => {
+    const { code } = event.detail
+    value = code
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: code },
+    })
+  }
+
+  onMount(() => {
     mounted = true
+    // Capture scrolling
+    editorEle.addEventListener("wheel", e => {
+      e.stopPropagation()
+    })
+
+    // Need to get the width of the drawer to pass to the prompt component
+    updateEditorWidth()
+    const resizeObserver = new ResizeObserver(() => {
+      updateEditorWidth()
+    })
+
+    resizeObserver.observe(editorEle)
+    return () => {
+      resizeObserver.disconnect()
+    }
   })
 
   onDestroy(() => {
@@ -366,15 +463,36 @@
   </div>
 {/if}
 
-<div class={`code-editor ${mode?.name || ""}`}>
+<div class={`code-editor ${mode?.name || ""}`} bind:this={editorEle}>
   <div tabindex="-1" bind:this={textarea} />
 </div>
+
+{#if aiGenEnabled}
+  <AIGen
+    {bindings}
+    {value}
+    parentWidth={editorWidth}
+    on:update={handleAICodeUpdate}
+    on:accept={() => {
+      dispatch("change", editor.state.doc.toString())
+      dispatch("blur", editor.state.doc.toString())
+    }}
+    on:reject={event => {
+      const { code } = event.detail
+      value = code || ""
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: code || "" },
+      })
+    }}
+  />
+{/if}
 
 <style>
   /* Editor */
   .code-editor {
     font-size: 12px;
     height: 100%;
+    cursor: text;
   }
   .code-editor :global(.cm-editor) {
     height: 100%;
@@ -534,12 +652,11 @@
 
   /* Live binding value / helper container */
   .code-editor :global(.cm-completionInfo) {
-    margin-left: var(--spacing-s);
+    margin: 0px var(--spacing-s);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-s);
     background-color: var(--spectrum-global-color-gray-50);
     padding: var(--spacing-m);
-    margin-top: -2px;
   }
 
   /* Wrapper around helpers */
@@ -564,6 +681,7 @@
     white-space: pre;
     text-overflow: ellipsis;
     overflow: hidden;
+    overflow-y: auto;
     max-height: 480px;
   }
   .code-editor :global(.binding__example.helper) {

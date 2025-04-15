@@ -250,6 +250,8 @@ describe("query utils", () => {
       expect(result).toEqual([
         "_id",
         "name",
+        "aux._id",
+        "auxTable._id",
         "aux.title",
         "auxTable.title",
         "aux.name",
@@ -284,7 +286,14 @@ describe("query utils", () => {
       const result = await config.doInContext(config.appId, () => {
         return getQueryableFields(table)
       })
-      expect(result).toEqual(["_id", "name", "aux.name", "auxTable.name"])
+      expect(result).toEqual([
+        "_id",
+        "name",
+        "aux._id",
+        "auxTable._id",
+        "aux.name",
+        "auxTable.name",
+      ])
     })
 
     it("excludes all relationship fields if hidden", async () => {
@@ -387,10 +396,14 @@ describe("query utils", () => {
             "_id",
             "name",
             // aux1 primitive props
+            "aux1._id",
+            "aux1Table._id",
             "aux1.name",
             "aux1Table.name",
 
             // aux2 primitive props
+            "aux2._id",
+            "aux2Table._id",
             "aux2.title",
             "aux2Table.title",
           ])
@@ -405,14 +418,18 @@ describe("query utils", () => {
             "name",
 
             // aux2_1 primitive props
+            "aux2_1._id",
+            "aux2Table._id",
             "aux2_1.title",
             "aux2Table.title",
 
             // aux2_2 primitive props
+            "aux2_2._id",
             "aux2_2.title",
-            "aux2Table.title",
 
             // table primitive props
+            "table._id",
+            "TestTable._id",
             "table.name",
             "TestTable.name",
           ])
@@ -427,14 +444,18 @@ describe("query utils", () => {
             "title",
 
             // aux1_1 primitive props
+            "aux1_1._id",
+            "aux1Table._id",
             "aux1_1.name",
             "aux1Table.name",
 
             // aux1_2 primitive props
+            "aux1_2._id",
             "aux1_2.name",
-            "aux1Table.name",
 
             // table primitive props
+            "table._id",
+            "TestTable._id",
             "table.name",
             "TestTable.name",
           ])
@@ -481,6 +502,8 @@ describe("query utils", () => {
             "name",
 
             // deep 1 aux primitive props
+            "aux._id",
+            "auxTable._id",
             "aux.title",
             "auxTable.title",
           ])
@@ -495,6 +518,8 @@ describe("query utils", () => {
             "title",
 
             // deep 1 dependency primitive props
+            "table._id",
+            "TestTable._id",
             "table.name",
             "TestTable.name",
           ])

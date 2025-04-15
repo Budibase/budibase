@@ -1,6 +1,6 @@
 <script>
   import { Layout } from "@budibase/bbui"
-  import { authStore, appStore, screenStore, componentStore } from "stores"
+  import { authStore, appStore, screenStore, componentStore } from "@/stores"
   import DevToolsStat from "./DevToolsStat.svelte"
 </script>
 

@@ -49,7 +49,11 @@
       data.append("file", fileList[i])
     }
     try {
-      return await API.uploadAttachment(formContext?.dataSource?.tableId, data)
+      let sourceId = formContext?.dataSource?.tableId
+      if (formContext?.dataSource?.type === "viewV2") {
+        sourceId = formContext.dataSource.id
+      }
+      return await API.uploadAttachment(sourceId, data)
     } catch (error) {
       return []
     }

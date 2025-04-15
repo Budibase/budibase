@@ -1,6 +1,6 @@
 <script>
-  import Block from "components/Block.svelte"
-  import BlockComponent from "components/BlockComponent.svelte"
+  import Block from "@/components/Block.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
 
   // Datasource

@@ -26,7 +26,9 @@
 
 <div class="info">
   <Icon name="InfoOutline" size="S" />
-  <Body size="S">These settings apply to all screens</Body>
+  <Body size="S">
+    These settings apply to all screens. PDFs are always light theme.
+  </Body>
 </div>
 <Layout noPadding gap="S">
   <Layout noPadding gap="XS">

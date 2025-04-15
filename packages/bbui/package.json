@@ -80,7 +80,7 @@
     "dayjs": "^1.10.8",
     "easymde": "^2.16.1",
     "svelte-dnd-action": "^0.9.8",
-    "svelte-portal": "^1.0.0"
+    "svelte-portal": "^2.2.1"
   },
   "resolutions": {
     "loader-utils": "1.4.1"

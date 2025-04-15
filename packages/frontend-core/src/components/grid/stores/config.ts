@@ -7,8 +7,12 @@ type ConfigStore = {
   [key in keyof BaseStoreProps]: Readable<BaseStoreProps[key]>
 }
 
+interface ConfigState extends BaseStoreProps {
+  canSelectRows: boolean
+}
+
 interface ConfigDerivedStore {
-  config: Readable<BaseStoreProps>
+  config: Readable<ConfigState>
 }
 
 export type Store = ConfigStore & ConfigDerivedStore
@@ -47,7 +51,7 @@ export const deriveStores = (context: StoreContext): ConfigDerivedStore => {
   const config = derived(
     [props, definition, hasNonAutoColumn],
     ([$props, $definition, $hasNonAutoColumn]) => {
-      let config = { ...$props }
+      let config: ConfigState = { ...$props, canSelectRows: false }
       const type = $props.datasource?.type
 
       // Disable some features if we're editing a view
@@ -77,6 +81,10 @@ export const deriveStores = (context: StoreContext): ConfigDerivedStore => {
         config.canSaveSchema = false
         config.canEditColumns = false
       }
+
+      // Determine if we can select rows. Always true in the meantime as you can
+      // use the selected rows binding regardless of readonly state.
+      config.canSelectRows = true
 
       return config
     }

@@ -4,9 +4,13 @@ import {
   App,
   AppFeatures,
   AppIcon,
+  AppScript,
   AutomationSettings,
   Plugin,
+  PWAManifest,
+  UpdateAppRequest,
 } from "@budibase/types"
+import { get } from "svelte/store"
 
 interface ClientFeatures {
   spectrumThemes: boolean
@@ -39,13 +43,15 @@ interface AppMetaState {
   appInstance: { _id: string } | null
   initialised: boolean
   hasAppPackage: boolean
-  usedPlugins: Plugin[] | null
+  usedPlugins: Plugin[]
   automations: AutomationSettings
   routes: { [key: string]: any }
   version?: string
   revertableVersion?: string
   upgradableVersion?: string
   icon?: AppIcon
+  pwa?: PWAManifest
+  scripts: AppScript[]
 }
 
 export const INITIAL_APP_META_STATE: AppMetaState = {
@@ -76,9 +82,20 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
   appInstance: null,
   initialised: false,
   hasAppPackage: false,
-  usedPlugins: null,
+  usedPlugins: [],
   automations: {},
   routes: {},
+  pwa: {
+    name: "",
+    short_name: "",
+    description: "",
+    icons: [],
+    background_color: "",
+    theme_color: "",
+    start_url: "",
+    screenshots: [],
+  },
+  scripts: [],
 }
 
 export class AppMetaStore extends BudiStore<AppMetaState> {
@@ -90,26 +107,18 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     this.store.set({ ...INITIAL_APP_META_STATE })
   }
 
-  syncAppPackage(pkg: {
-    application: App
-    clientLibPath: string
-    hasLock: boolean
-  }) {
-    const { application: app, clientLibPath, hasLock } = pkg
-
+  syncApp(app: App) {
     this.update(state => ({
       ...state,
       name: app.name,
       appId: app.appId,
       url: app.url || "",
-      hasLock,
-      clientLibPath,
       libraries: app.componentLibraries,
       version: app.version,
       appInstance: app.instance,
       revertableVersion: app.revertableVersion,
       upgradableVersion: app.upgradableVersion,
-      usedPlugins: app.usedPlugins || null,
+      usedPlugins: app.usedPlugins || [],
       icon: app.icon,
       features: {
         ...INITIAL_APP_META_STATE.features,
@@ -118,7 +127,23 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       initialised: true,
       automations: app.automations || {},
       hasAppPackage: true,
+      pwa: app.pwa,
+      scripts: app.scripts || [],
     }))
+  }
+
+  syncAppPackage(pkg: {
+    application: App
+    clientLibPath: string
+    hasLock: boolean
+  }) {
+    const { application, clientLibPath, hasLock } = pkg
+    this.update(state => ({
+      ...state,
+      hasLock,
+      clientLibPath,
+    }))
+    this.syncApp(application)
   }
 
   syncClientFeatures(features: Partial<ClientFeatures>) {
@@ -146,6 +171,11 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     }))
   }
 
+  async updateApp(updates: UpdateAppRequest) {
+    const app = await API.saveAppMetadata(get(this.store).appId, updates)
+    this.syncApp(app)
+  }
+
   // Returned from socket
   syncMetadata(metadata: { name: string; url: string; icon?: AppIcon }) {
     const { name, url, icon } = metadata
@@ -154,6 +184,17 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       name,
       url,
       icon,
+      pwa: {
+        ...state.pwa,
+        name: state.pwa?.name || "",
+        short_name: state.pwa?.short_name || "",
+        description: state.pwa?.description || "",
+        icons: state.pwa?.icons || [],
+        background_color: state.pwa?.background_color || "",
+        theme_color: state.pwa?.theme_color || "",
+        start_url: state.pwa?.start_url || "",
+        screenshots: state.pwa?.screenshots || [],
+      },
     }))
   }
 }

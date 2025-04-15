@@ -22,6 +22,7 @@ import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelt
 import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
+import TopLevelColumnEditor from "./controls/ColumnEditor/TopLevelColumnEditor.svelte"
 import GridColumnEditor from "./controls/GridColumnConfiguration/GridColumnConfiguration.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
@@ -31,9 +32,11 @@ import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
 import TableConditionEditor from "./controls/TableConditionEditor.svelte"
+import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
+  "text/multiline": MultilineDrawerBindableInput,
   plainText: Input,
   select: Select,
   radio: RadioGroup,
@@ -60,7 +63,10 @@ const componentMap = {
   stepConfiguration: FormStepConfiguration,
   formStepControls: FormStepControls,
   columns: ColumnEditor,
+  // "Basic" actually includes nested JSON and relationship fields
   "columns/basic": BasicColumnEditor,
+  // "Top level" is only the top level schema fields
+  "columns/toplevel": TopLevelColumnEditor,
   "columns/grid": GridColumnEditor,
   tableConditions: TableConditionEditor,
   "field/sortable": SortableFieldSelect,

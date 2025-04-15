@@ -143,13 +143,12 @@ export class FlagSet<T extends { [name: string]: boolean }> {
         const personProperties: Record<string, string> = { tenantId }
         const posthogFlags = await posthog.getAllFlags(userId, {
           personProperties,
+          onlyEvaluateLocally: true,
         })
 
         for (const [name, value] of Object.entries(posthogFlags)) {
           if (!this.isFlagName(name)) {
-            // We don't want an unexpected PostHog flag to break the app, so we
-            // just log it and continue.
-            console.warn(`Unexpected posthog flag "${name}": ${value}`)
+            // We don't want an unexpected PostHog flag to break the app
             continue
           }
 

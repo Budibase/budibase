@@ -1,5 +1,4 @@
-import BullQueue from "bull"
-import { createQueue, JobQueue } from "../../queue"
+import { BudibaseQueue, JobQueue } from "../../queue"
 import { Event, Identity } from "@budibase/types"
 
 export interface EventPayload {
@@ -9,10 +8,19 @@ export interface EventPayload {
   timestamp?: string | number
 }
 
-export let asyncEventQueue: BullQueue.Queue
+export let asyncEventQueue: BudibaseQueue<EventPayload>
 
 export function init() {
-  asyncEventQueue = createQueue<EventPayload>(JobQueue.SYSTEM_EVENT_QUEUE)
+  asyncEventQueue = new BudibaseQueue<EventPayload>(
+    JobQueue.SYSTEM_EVENT_QUEUE,
+    {
+      jobTags: (event: EventPayload) => {
+        return {
+          "event.name": event.event,
+        }
+      },
+    }
+  )
 }
 
 export async function shutdown() {

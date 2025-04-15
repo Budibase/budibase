@@ -9,13 +9,14 @@ import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 
 const descriptions = datasourceDescribe({
-  exclude: [DatabaseName.MONGODB, DatabaseName.SQS],
+  plus: true,
+  exclude: [DatabaseName.SQS],
 })
 
 if (descriptions.length) {
   describe.each(descriptions)(
     "queries ($dbName)",
-    ({ config, dsProvider, isOracle, isMSSQL, isPostgres }) => {
+    ({ config, dsProvider, isOracle, isMSSQL, isPostgres, isMySQL }) => {
       let rawDatasource: Datasource
       let datasource: Datasource
       let client: Knex
@@ -182,7 +183,7 @@ if (descriptions.length) {
               },
             })
 
-            await config.api.application.publish(config.getAppId())
+            await config.api.application.publish()
             const prodQuery = await config.api.query.getProd(query._id!)
 
             expect(prodQuery._id).toEqual(query._id)
@@ -216,6 +217,38 @@ if (descriptions.length) {
               expect(res).toBeDefined()
             })
         })
+
+        isMySQL &&
+          it("should handle ANSI_QUOTE=off MySQL queries with bindings", async () => {
+            const query = await createQuery({
+              fields: {
+                sql: client(tableName)
+                  .select("*")
+                  .where({
+                    name: client.raw("'{{ name }}'"),
+                  })
+                  .toString(),
+              },
+              parameters: [
+                {
+                  name: "name",
+                  default: "",
+                },
+              ],
+              queryVerb: "read",
+            })
+            const res = await config.api.query.execute(
+              query._id!,
+              {
+                parameters: { name: "one" },
+              },
+              {
+                status: 200,
+              }
+            )
+            expect(res.data.length).toEqual(1)
+            expect(res.data[0].name).toEqual("one")
+          })
       })
 
       describe("preview", () => {

@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { builderStore } from "stores"
+  import { builderStore } from "@/stores"
   import { createEventDispatcher } from "svelte"
 
   export let prop

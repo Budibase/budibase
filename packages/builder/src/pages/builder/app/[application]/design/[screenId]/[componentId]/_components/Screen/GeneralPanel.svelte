@@ -15,6 +15,8 @@
   import ButtonActionEditor from "@/components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "@/dataBinding"
   import BarButtonList from "@/components/design/settings/controls/BarButtonList.svelte"
+  import URLVariableTestInput from "@/components/design/settings/controls/URLVariableTestInput.svelte"
+  import { DrawerBindableInput } from "@/components/common/bindings"
 
   $: bindings = getBindableProperties($selectedScreen, null)
   $: screenSettings = getScreenSettings($selectedScreen)
@@ -22,7 +24,59 @@
   let errors = {}
 
   const getScreenSettings = screen => {
-    let settings = [
+    // Determine correct screen settings for the top level component
+    let screenComponentSettings = []
+    switch ($selectedScreen.props._component) {
+      case "@budibase/standard-components/pdf":
+        screenComponentSettings = [
+          {
+            key: "props.fileName",
+            label: "PDF title",
+            defaultValue: "Report",
+            control: DrawerBindableInput,
+          },
+          {
+            key: "props.buttonText",
+            label: "Button text",
+            defaultValue: "Download PDF",
+            control: DrawerBindableInput,
+          },
+        ]
+        break
+      default:
+        screenComponentSettings = [
+          {
+            key: "width",
+            label: "Width",
+            control: Select,
+            props: {
+              options: ["Extra small", "Small", "Medium", "Large", "Max"],
+              placeholder: "Default",
+              disabled: !!screen.layoutId,
+            },
+          },
+          {
+            key: "props.layout",
+            label: "Layout",
+            defaultValue: "flex",
+            control: BarButtonList,
+            props: {
+              options: [
+                {
+                  barIcon: "ModernGridView",
+                  value: "flex",
+                },
+                {
+                  barIcon: "ViewGrid",
+                  value: "grid",
+                },
+              ],
+            },
+          },
+        ]
+    }
+
+    return [
       {
         key: "routing.homeScreen",
         control: Checkbox,
@@ -65,37 +119,15 @@
         label: "On screen load",
         control: ButtonActionEditor,
       },
+      ...screenComponentSettings,
       {
-        key: "width",
-        label: "Width",
-        control: Select,
+        key: "urlTest",
+        control: URLVariableTestInput,
         props: {
-          options: ["Extra small", "Small", "Medium", "Large", "Max"],
-          placeholder: "Default",
-          disabled: !!screen.layoutId,
-        },
-      },
-      {
-        key: "props.layout",
-        label: "Layout",
-        defaultValue: "flex",
-        control: BarButtonList,
-        props: {
-          options: [
-            {
-              barIcon: "ModernGridView",
-              value: "flex",
-            },
-            {
-              barIcon: "ViewGrid",
-              value: "grid",
-            },
-          ],
+          baseRoute: screen.routing?.route,
         },
       },
     ]
-
-    return settings
   }
 
   const routeTaken = url => {

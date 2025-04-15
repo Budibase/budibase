@@ -40,26 +40,33 @@ function setupEnv(hosting, features = {}, flags = {}) {
 describe("AISettings", () => {
   let instance = null
 
+  const setupDOM = () => {
+    instance = render(AISettings, {})
+    const modalContainer = document.createElement("div")
+    modalContainer.classList.add("modal-container")
+    instance.baseElement.appendChild(modalContainer)
+  }
+
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
   it("that the AISettings is rendered", () => {
-    instance = render(AISettings, {})
+    setupDOM()
     expect(instance).toBeDefined()
   })
 
   describe("Licensing", () => {
     it("should show the premium label on self host for custom configs", async () => {
       setupEnv(Hosting.Self)
-      instance = render(AISettings, {})
+      setupDOM()
       const premiumTag = instance.queryByText("Premium")
       expect(premiumTag).toBeInTheDocument()
     })
 
     it("should show the enterprise label on cloud for custom configs", async () => {
       setupEnv(Hosting.Cloud)
-      instance = render(AISettings, {})
+      setupDOM()
       const enterpriseTag = instance.queryByText("Enterprise")
       expect(enterpriseTag).toBeInTheDocument()
     })
@@ -69,7 +76,7 @@ describe("AISettings", () => {
       let configModal
 
       setupEnv(Hosting.Cloud)
-      instance = render(AISettings)
+      setupDOM()
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).toBeInTheDocument()
       await fireEvent.click(addConfigurationButton)
@@ -86,7 +93,7 @@ describe("AISettings", () => {
         { customAIConfigsEnabled: true },
         { AI_CUSTOM_CONFIGS: true }
       )
-      instance = render(AISettings)
+      setupDOM()
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).toBeInTheDocument()
       await fireEvent.click(addConfigurationButton)
@@ -103,7 +110,7 @@ describe("AISettings", () => {
         { customAIConfigsEnabled: true },
         { AI_CUSTOM_CONFIGS: true }
       )
-      instance = render(AISettings)
+      setupDOM()
       addConfigurationButton = instance.queryByText("Add configuration")
       expect(addConfigurationButton).toBeInTheDocument()
       await fireEvent.click(addConfigurationButton)

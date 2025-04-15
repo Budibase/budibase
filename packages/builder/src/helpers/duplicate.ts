@@ -76,13 +76,15 @@ export const getSequentialName = <T extends any>(
   {
     getName,
     numberFirstItem,
+    separator = "",
   }: {
     getName?: (item: T) => string
     numberFirstItem?: boolean
+    separator?: string
   } = {}
 ) => {
   if (!prefix?.length) {
-    return null
+    return ""
   }
   const trimmedPrefix = prefix.trim()
   const firstName = numberFirstItem ? `${prefix}1` : trimmedPrefix
@@ -107,5 +109,5 @@ export const getSequentialName = <T extends any>(
       max = num
     }
   })
-  return max === 0 ? firstName : `${prefix}${max + 1}`
+  return max === 0 ? firstName : `${prefix}${separator}${max + 1}`
 }

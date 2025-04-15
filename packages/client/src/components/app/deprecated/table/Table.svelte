@@ -3,7 +3,7 @@
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
   import { canBeSortColumn } from "@budibase/frontend-core"
-  import Provider from "components/context/Provider.svelte"
+  import Provider from "@/components/context/Provider.svelte"
 
   export let dataProvider
   export let columns

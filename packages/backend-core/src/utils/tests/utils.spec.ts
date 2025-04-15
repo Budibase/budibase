@@ -67,6 +67,15 @@ describe("utils", () => {
       })
     })
 
+    it("gets appId from query params", async () => {
+      const ctx = structures.koa.newContext()
+      const expected = db.generateAppID()
+      ctx.query = { appId: expected }
+
+      const actual = await utils.getAppIdFromCtx(ctx)
+      expect(actual).toBe(expected)
+    })
+
     it("doesn't get appId from url when previewing", async () => {
       const ctx = structures.koa.newContext()
       const appId = db.generateAppID()

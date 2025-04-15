@@ -1,7 +1,8 @@
-import { FilterStepInputs, FilterStepOutputs } from "@budibase/types"
-import { automations } from "@budibase/shared-core"
-
-const FilterConditions = automations.steps.filter.FilterConditions
+import {
+  FilterCondition,
+  FilterStepInputs,
+  FilterStepOutputs,
+} from "@budibase/types"
 
 export async function run({
   inputs,
@@ -26,16 +27,16 @@ export async function run({
     let result = false
     if (typeof field !== "object" && typeof value !== "object") {
       switch (condition) {
-        case FilterConditions.EQUAL:
+        case FilterCondition.EQUAL:
           result = field === value
           break
-        case FilterConditions.NOT_EQUAL:
+        case FilterCondition.NOT_EQUAL:
           result = field !== value
           break
-        case FilterConditions.GREATER_THAN:
+        case FilterCondition.GREATER_THAN:
           result = field > value
           break
-        case FilterConditions.LESS_THAN:
+        case FilterCondition.LESS_THAN:
           result = field < value
           break
       }

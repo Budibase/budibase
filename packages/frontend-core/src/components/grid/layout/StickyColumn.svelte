@@ -169,7 +169,7 @@
     z-index: 1;
   }
   .header :global(.cell) {
-    background: var(--grid-background-alt);
+    background: var(--header-cell-background);
   }
   .header :global(.cell::before) {
     display: none;

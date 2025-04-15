@@ -2,7 +2,7 @@
   import Field from "./Field.svelte"
   import { CoreDropzone, ProgressCircle, Helpers } from "@budibase/bbui"
   import { getContext, onMount, onDestroy } from "svelte"
-  import { builderStore } from "stores/builder.js"
+  import { builderStore } from "@/stores/builder"
   import { processStringSync } from "@budibase/string-templates"
 
   export let datasourceId

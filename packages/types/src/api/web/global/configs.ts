@@ -45,9 +45,12 @@ interface ChecklistItem {
   label: string
   link: string
 }
+interface SmtpChecklistItem extends ChecklistItem {
+  fallback?: boolean
+}
 export interface ConfigChecklistResponse {
   apps: ChecklistItem
-  smtp: ChecklistItem
+  smtp: SmtpChecklistItem
   adminUser: ChecklistItem
   sso: ChecklistItem
   branding: SettingsBrandingConfig

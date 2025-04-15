@@ -1048,6 +1048,7 @@
   },
   "text": {
     "name": "Paragraph",
+    "deprecated": true,
     "description": "A component for displaying paragraph text.",
     "icon": "TextParagraph",
     "illegalChildren": ["section"],
@@ -1171,6 +1172,7 @@
   },
   "heading": {
     "name": "Headline",
+    "deprecated": true,
     "icon": "TextBold",
     "description": "A component for displaying heading text",
     "illegalChildren": ["section"],
@@ -1455,7 +1457,8 @@
         "type": "icon",
         "label": "Icon",
         "key": "icon",
-        "required": true
+        "required": true,
+        "defaultValue": "ri-star-fill"
       },
       {
         "type": "select",
@@ -3088,7 +3091,21 @@
       {
         "type": "tableConditions",
         "label": "Conditions",
-        "key": "conditions"
+        "key": "conditions",
+        "contextAccess": {
+          "global": true,
+          "self": false
+        }
+      },
+      {
+        "type": "text",
+        "label": "Format",
+        "key": "format",
+        "info": "Changing format will display values as text",
+        "contextAccess": {
+          "global": false,
+          "self": true
+        }
       }
     ]
   },
@@ -4476,6 +4493,12 @@
             "value": "environment"
           }
         ]
+      },
+      {
+        "type": "text",
+        "label": "Zoom level",
+        "key": "defaultZoom",
+        "defaultValue": "1"
       },
       {
         "type": "event",
@@ -7433,6 +7456,57 @@
       }
     ]
   },
+  "accordion": {
+    "name": "Accordion",
+    "friendlyName": "Accordion",
+    "description": "A collapsible Budibase container component",
+    "icon": "TreeExpandAll",
+    "hasChildren": true,
+    "illegalChildren": ["modal", "sidepanel"],
+    "showSettingsBar": true,
+    "new": true,
+    "size": {
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "placeholder": "Label",
+        "key": "label"
+      },
+      {
+        "type": "boolean",
+        "label": "Bold",
+        "key": "bold",
+        "showInBar": true,
+        "barIcon": "TagBold",
+        "barTitle": "Bold text",
+        "barSeparator": false
+      },
+      {
+        "type": "select",
+        "label": "Default State",
+        "key": "initialOpen",
+        "defaultValue": true,
+        "options": [
+          {
+            "label": "Open",
+            "value": true
+          },
+          {
+            "label": "Closed",
+            "value": false
+          }
+        ]
+      }
+    ]
+  },
   "rowexplorer": {
     "block": true,
     "name": "Row Explorer Block",
@@ -7561,6 +7635,18 @@
     "name": "Table",
     "icon": "Table",
     "styles": ["size"],
+    "cssVariables": [
+      {
+        "label": "Header color",
+        "variable": "--custom-header-cell-background",
+        "type": "color"
+      },
+      {
+        "label": "Stripe color",
+        "variable": "--custom-stripe-cell-background",
+        "type": "color"
+      }
+    ],
     "size": {
       "width": 600,
       "height": 400
@@ -7668,7 +7754,7 @@
       },
       {
         "type": "boolean",
-        "label": "High contrast",
+        "label": "Striped rows",
         "key": "stripeRows",
         "defaultValue": false
       },
@@ -7685,7 +7771,8 @@
           {
             "type": "columns/grid",
             "key": "columns",
-            "resetOn": "table"
+            "resetOn": "table",
+            "nested": true
           }
         ]
       },
@@ -7965,6 +8052,333 @@
           "label": "Value",
           "key": "value",
           "type": "string"
+        }
+      ]
+    }
+  },
+  "textv2": {
+    "name": "Text",
+    "description": "A component for displaying text",
+    "icon": "Text",
+    "size": {
+      "width": 400,
+      "height": 24
+    },
+    "settings": [
+      {
+        "type": "text/multiline",
+        "label": "Text (Markdown supported)",
+        "key": "text",
+        "wide": true
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "14px",
+        "showInBar": true,
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": "12px"
+          },
+          {
+            "label": "Medium",
+            "value": "14px"
+          },
+          {
+            "label": "Large",
+            "value": "18px"
+          },
+          {
+            "label": "Extra large",
+            "value": "24px"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true
+      }
+    ]
+  },
+  "pdf": {
+    "name": "PDF Generator",
+    "icon": "Document",
+    "hasChildren": true,
+    "showEmptyState": false,
+    "illegalChildren": ["sidepanel", "modal", "gridblock"],
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "start"
+    },
+    "size": {
+      "width": 800,
+      "height": 1200
+    },
+    "description": "A component to render PDFs from other Budibase components",
+    "settings": [
+      {
+        "type": "text",
+        "label": "PDF title",
+        "key": "fileName",
+        "defaultValue": "Report"
+      },
+      {
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Download PDF"
+      }
+    ]
+  },
+  "pdftable": {
+    "name": "PDF Table",
+    "icon": "Table",
+    "styles": ["size"],
+    "size": {
+      "width": 600,
+      "height": 304
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter",
+        "resetOn": "datasource",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "sortColumn",
+        "placeholder": "Default",
+        "resetOn": "datasource",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "sortOrder",
+        "resetOn": "datasource",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending",
+        "dependsOn": "sortColumn"
+      },
+      {
+        "type": "columns/toplevel",
+        "label": "Columns",
+        "key": "columns",
+        "resetOn": "datasource",
+        "placeholder": "First 3 columns"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 10
+      }
+    ]
+  },
+  "singlerowprovider": {
+    "name": "Single Row Provider",
+    "icon": "SQLQuery",
+    "hasChildren": true,
+    "actions": ["RefreshDatasource"],
+    "size": {
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "table",
+        "label": "Datasource",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Row ID",
+        "key": "rowId",
+        "required": true,
+        "resetOn": "datasource"
+      }
+    ],
+    "context": {
+      "type": "schema"
+    }
+  },
+  "ratingfield": {
+    "name": "Rating Field",
+    "icon": "Star",
+    "styles": ["size"],
+    "editable": true,
+    "new": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/number",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "number",
+        "label": "Number of stars",
+        "key": "numberOfStars",
+        "min": 1,
+        "max": 25,
+        "defaultValue": 5
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": ["XS", "S", "M", "L", "XL", "Custom"],
+        "defaultValue": "L"
+      },
+      {
+        "type": "number",
+        "label": "Custom size (px)",
+        "key": "customSize",
+        "min": 1,
+        "max": 72,
+        "defaultValue": 32,
+        "dependsOn": {
+          "setting": "size",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "select",
+        "label": "Icon type",
+        "key": "type",
+        "options": ["Star", "Heart"],
+        "defaultValue": "Star"
+      },
+      {
+        "type": "select",
+        "label": "Colour variant",
+        "key": "variant",
+        "options": ["Primary", "Secondary", "Mono", "Gold", "Red", "Custom"],
+        "defaultValue": "Primary"
+      },
+      {
+        "type": "color",
+        "label": "Custom colour",
+        "key": "colour",
+        "dependsOn": {
+          "setting": "variant",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "validation/number",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
         }
       ]
     }

@@ -43,10 +43,10 @@ const modal = async ({ tableOrView, permissions, screens }) => {
     .gridDesktopColSpan(7, 13)
     .gridDesktopRowSpan(1, 3)
 
-  const heading = new Component("@budibase/standard-components/heading")
+  const heading = new Component("@budibase/standard-components/textv2")
     .instanceName("Table heading")
     .customProps({
-      text: tableOrView.name,
+      text: `## ${tableOrView.name}`,
     })
     .gridDesktopColSpan(1, 7)
     .gridDesktopRowSpan(1, 3)

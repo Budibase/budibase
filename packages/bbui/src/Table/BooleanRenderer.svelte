@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/checkbox/dist/index-vars.css"
 
-  export let value
+  export let value: boolean
 </script>
 
 <label

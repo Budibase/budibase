@@ -108,7 +108,7 @@ You can install them following any of the steps described below:
   - Installation steps: https://asdf-vm.com/guide/getting-started.html
   - asdf plugin add nodejs
   - asdf plugin add python
-  - npm install -g yarn
+  - asdf plugin add yarn
 
 ### Using NVM and pyenv
 

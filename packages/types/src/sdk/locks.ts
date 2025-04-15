@@ -22,6 +22,7 @@ export enum LockName {
   QUOTA_USAGE_EVENT = "quota_usage_event",
   APP_MIGRATION = "app_migrations",
   PROCESS_USER_INVITE = "process_user_invite",
+  SQS_SYNC_DEFINITIONS = "sys_sync_definitions",
 }
 
 export type LockOptions = {

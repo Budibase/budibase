@@ -4,16 +4,17 @@ import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import {
-  User,
   SendEmailOpts,
   SMTPInnerConfig,
   EmailTemplatePurpose,
+  User,
 } from "@budibase/types"
-import { configs, cache, objectStore } from "@budibase/backend-core"
+import { configs, cache, objectStore, HTTPError } from "@budibase/backend-core"
 import ical from "ical-generator"
 import _ from "lodash"
 
-const nodemailer = require("nodemailer")
+import nodemailer from "nodemailer"
+import SMTPTransport from "nodemailer/lib/smtp-transport"
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
 const TYPE = TemplateType.EMAIL
@@ -26,7 +27,7 @@ const FULL_EMAIL_PURPOSES = [
 ]
 
 function createSMTPTransport(config?: SMTPInnerConfig) {
-  let options: any
+  let options: SMTPTransport.Options
   let secure = config?.secure
   // default it if not specified
   if (secure == null) {
@@ -59,22 +60,6 @@ function createSMTPTransport(config?: SMTPInnerConfig) {
   return nodemailer.createTransport(options)
 }
 
-async function getLinkCode(
-  purpose: EmailTemplatePurpose,
-  email: string,
-  user: User,
-  info: any = null
-) {
-  switch (purpose) {
-    case EmailTemplatePurpose.PASSWORD_RECOVERY:
-      return cache.passwordReset.createCode(user._id!, info)
-    case EmailTemplatePurpose.INVITATION:
-      return cache.invite.createCode(email, info)
-    default:
-      return null
-  }
-}
-
 /**
  * Builds an email using handlebars and the templates found in the system (default or otherwise).
  * @param purpose the purpose of the email being built, e.g. invitation, password reset.
@@ -87,8 +72,8 @@ async function getLinkCode(
 async function buildEmail(
   purpose: EmailTemplatePurpose,
   email: string,
-  context: any,
-  { user, contents }: any = {}
+  context: Record<string, any>,
+  { user, contents }: { user?: User; contents?: string } = {}
 ) {
   // this isn't a full email
   if (FULL_EMAIL_PURPOSES.indexOf(purpose) === -1) {
@@ -106,8 +91,8 @@ async function buildEmail(
     throw "Unable to build email, missing base components"
   }
 
-  let name = user ? user.name : undefined
-  if (user && !name && user.firstName) {
+  let name: string | undefined
+  if (user && user.firstName) {
     name = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName
   }
   context = {
@@ -158,10 +143,21 @@ export async function sendEmail(
   }
   const transport = createSMTPTransport(config)
   // if there is a link code needed this will retrieve it
-  const code = await getLinkCode(purpose, email, opts.user, opts?.info)
+  let code: string | null = null
+  switch (purpose) {
+    case EmailTemplatePurpose.PASSWORD_RECOVERY:
+      if (!opts.user || !opts.user._id) {
+        throw new HTTPError("User must be provided for password recovery.", 400)
+      }
+      code = await cache.passwordReset.createCode(opts.user._id, opts.info)
+      break
+    case EmailTemplatePurpose.INVITATION:
+      code = await cache.invite.createCode(email, opts.info)
+      break
+  }
   let context = await getSettingsTemplateContext(purpose, code)
 
-  let message: any = {
+  let message: Parameters<typeof transport.sendMail>[0] = {
     from: opts?.from || config?.from,
     html: await buildEmail(purpose, email, context, {
       user: opts?.user,

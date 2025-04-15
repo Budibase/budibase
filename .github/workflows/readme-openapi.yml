@@ -20,7 +20,7 @@ jobs:
       - run: yarn --frozen-lockfile
 
       - name: Install OpenAPI pkg
-        run: yarn global add openapi
+        run: yarn global add rdme@8.6.6
 
       - name: update specs
-        run: cd packages/server && yarn specs && openapi specs/openapi.yaml --key=${{ secrets.README_API_KEY }} --id=6728a74f5918b50036c61841
+        run: cd packages/server && yarn specs && rdme openapi specs/openapi.yaml --key=${{ secrets.README_API_KEY }} --id=67c16880add6da002352069a

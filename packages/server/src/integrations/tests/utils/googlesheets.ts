@@ -420,15 +420,16 @@ export class GoogleSheetsMock {
     }
 
     const newRows = body.values.map(v => this.valuesToRowData(v))
-    const toDelete =
-      params.insertDataOption === "INSERT_ROWS" ? newRows.length : 0
-    sheet.data[0].rowData.splice(endRowIndex + 1, toDelete, ...newRows)
-    sheet.data[0].rowMetadata.splice(endRowIndex + 1, toDelete, {
+    const newMetadata = newRows.map(() => ({
       hiddenByUser: false,
       hiddenByFilter: false,
       pixelSize: 100,
       developerMetadata: [],
-    })
+    }))
+    const toDelete =
+      params.insertDataOption === "INSERT_ROWS" ? newRows.length : 0
+    sheet.data[0].rowData.splice(endRowIndex + 1, toDelete, ...newRows)
+    sheet.data[0].rowMetadata.splice(endRowIndex + 1, toDelete, ...newMetadata)
 
     // It's important to give back a correct updated range because the API
     // library we use makes use of it to assign the correct row IDs to rows.
@@ -539,9 +540,28 @@ export class GoogleSheetsMock {
       throw new Error("Only row-based deletes are supported")
     }
 
-    this.iterateRange(range, cell => {
-      cell.userEnteredValue = this.createValue(null)
-    })
+    const sheet = this.getSheetById(range.sheetId)
+    if (!sheet) {
+      throw new Error(`Sheet ${range.sheetId} not found`)
+    }
+
+    if (range.startRowIndex === undefined || range.endRowIndex === undefined) {
+      throw new Error("Range must have start and end row indexes")
+    }
+
+    const totalRows = sheet.data[0].rowData.length
+    if (totalRows < range.endRowIndex) {
+      throw new Error(
+        `Cannot delete range ${JSON.stringify(range)} from sheet ${
+          sheet.properties.title
+        }. Only ${totalRows} rows exist.`
+      )
+    }
+
+    const rowsToDelete = range.endRowIndex - range.startRowIndex
+    sheet.data[0].rowData.splice(range.startRowIndex, rowsToDelete)
+    sheet.data[0].rowMetadata.splice(range.startRowIndex, rowsToDelete)
+    sheet.properties.gridProperties.rowCount -= rowsToDelete
   }
 
   private handleDeleteSheet(request: DeleteSheetRequest) {
@@ -609,7 +629,15 @@ export class GoogleSheetsMock {
       for (let col = startColumnIndex; col <= endColumnIndex; col++) {
         const cell = this.getCellNumericIndexes(sheetId, row, col)
         if (!cell) {
-          throw new Error("Cell not found")
+          const sheet = this.getSheetById(sheetId)
+          if (!sheet) {
+            throw new Error(`Sheet ${sheetId} not found`)
+          }
+          const sheetRows = sheet.data[0].rowData.length
+          const sheetCols = sheet.data[0].rowData[0].values.length
+          throw new Error(
+            `Failed to find cell at ${row}, ${col}. Range: ${valueRange.range}. Sheet dimensions: ${sheetRows}x${sheetCols}.`
+          )
         }
         const value =
           valueRange.values[row - startRowIndex][col - startColumnIndex]
@@ -638,7 +666,15 @@ export class GoogleSheetsMock {
       for (let col = startColumnIndex; col <= endColumnIndex; col++) {
         const cell = this.getCellNumericIndexes(sheetId, row, col)
         if (!cell) {
-          throw new Error("Cell not found")
+          const sheet = this.getSheetById(sheetId)
+          if (!sheet) {
+            throw new Error(`Sheet ${sheetId} not found`)
+          }
+          const sheetRows = sheet.data[0].rowData.length
+          const sheetCols = sheet.data[0].rowData[0].values.length
+          throw new Error(
+            `Failed to find cell at ${row}, ${col}. Range: ${valueRange.range}. Sheet dimensions: ${sheetRows}x${sheetCols}.`
+          )
         }
         values.push(this.cellValue(cell))
       }

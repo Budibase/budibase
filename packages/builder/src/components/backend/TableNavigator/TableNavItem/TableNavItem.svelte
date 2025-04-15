@@ -8,7 +8,7 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import { isActive } from "@roxi/routify"
   import EditModal from "./EditModal.svelte"
-  import DeleteConfirmationModal from "./DeleteConfirmationModal.svelte"
+  import DeleteConfirmationModal from "../../modals/DeleteDataConfirmationModal.svelte"
   import { Icon } from "@budibase/bbui"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
@@ -65,4 +65,4 @@
   {/if}
 </NavItem>
 <EditModal {table} bind:this={editModal} />
-<DeleteConfirmationModal {table} bind:this={deleteConfirmationModal} />
+<DeleteConfirmationModal source={table} bind:this={deleteConfirmationModal} />

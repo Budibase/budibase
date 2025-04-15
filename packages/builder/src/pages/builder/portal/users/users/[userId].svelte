@@ -98,7 +98,9 @@
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
-  $: availableApps = getAvailableApps($appsStore.apps, privileged, user?.roles)
+  $: availableApps = user
+    ? getApps(user, sdk.users.userAppAccessList(user, $groups || []))
+    : []
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
@@ -107,23 +109,19 @@
   $: globalRole = users.getUserRole(user)
   $: isTenantOwner = tenantOwner?.email && tenantOwner.email === user?.email
 
-  const getAvailableApps = (appList, privileged, roles) => {
-    let availableApps = appList.slice()
-    if (!privileged) {
-      availableApps = availableApps.filter(x => {
-        let roleKeys = Object.keys(roles || {})
-        return roleKeys.concat(user?.builder?.apps).find(y => {
-          return x.appId === appsStore.extractAppId(y)
-        })
-      })
-    }
+  const getApps = (user, appIds) => {
+    let availableApps = $appsStore.apps
+      .slice()
+      .filter(app =>
+        appIds.find(id => id === appsStore.getProdAppID(app.devId))
+      )
     return availableApps.map(app => {
       const prodAppId = appsStore.getProdAppID(app.devId)
       return {
         name: app.name,
         devId: app.devId,
         icon: app.icon,
-        role: getRole(prodAppId, roles),
+        role: getRole(prodAppId, user),
       }
     })
   }
@@ -136,7 +134,7 @@
     return groups.filter(group => group.name?.toLowerCase().includes(search))
   }
 
-  const getRole = (prodAppId, roles) => {
+  const getRole = (prodAppId, user) => {
     if (privileged) {
       return Constants.Roles.ADMIN
     }
@@ -145,7 +143,21 @@
       return Constants.Roles.CREATOR
     }
 
-    return roles[prodAppId]
+    if (user?.roles[prodAppId]) {
+      return user.roles[prodAppId]
+    }
+
+    // check if access via group for creator
+    const foundGroup = $groups?.find(
+      group => group.roles[prodAppId] || group.builder?.apps[prodAppId]
+    )
+    if (foundGroup.builder?.apps[prodAppId]) {
+      return Constants.Roles.CREATOR
+    }
+    // can't tell how groups will control role
+    if (foundGroup.roles[prodAppId]) {
+      return Constants.Roles.GROUP
+    }
   }
 
   const getNameLabel = user => {

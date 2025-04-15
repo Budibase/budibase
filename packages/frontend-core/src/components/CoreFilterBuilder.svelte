@@ -42,6 +42,7 @@
   export let panel
   export let toReadable
   export let toRuntime
+  export let evaluationContext = {}
 
   $: editableFilters = migrateFilters(filters)
   $: {
@@ -385,6 +386,7 @@
                         {panel}
                         {toReadable}
                         {toRuntime}
+                        {evaluationContext}
                         on:change={e => {
                           const updated = {
                             ...filter,
@@ -423,6 +425,7 @@
                       {panel}
                       {toReadable}
                       {toRuntime}
+                      {evaluationContext}
                       on:change={e => {
                         onFilterFieldUpdate(
                           { ...filter, ...e.detail },

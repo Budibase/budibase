@@ -16,7 +16,14 @@ import { auth, appsStore } from "@/stores/portal"
 import { screenStore } from "./screens"
 import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"
-import { Automation, Datasource, Role, Table, UIUser } from "@budibase/types"
+import {
+  Automation,
+  Datasource,
+  Role,
+  Table,
+  UIUser,
+  Screen,
+} from "@budibase/types"
 
 export const createBuilderWebsocket = (appId: string) => {
   const socket = createWebsocket("/socket/builder")

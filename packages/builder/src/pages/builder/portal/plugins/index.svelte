@@ -33,7 +33,6 @@
     },
     edit: {
       width: "auto",
-      borderLeft: true,
       displayName: "",
     },
   }

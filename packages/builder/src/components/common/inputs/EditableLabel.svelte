@@ -9,6 +9,8 @@
   export let type = "label"
   export let size = "M"
 
+  export const disableEditingState = () => setEditing(false)
+
   let editing = false
 
   function setEditing(state) {

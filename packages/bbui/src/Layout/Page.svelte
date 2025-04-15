@@ -1,13 +1,13 @@
-<script>
+<script lang="ts">
   import { setContext } from "svelte"
   import clickOutside from "../Actions/click_outside"
 
-  export let wide = false
-  export let narrow = false
-  export let narrower = false
-  export let noPadding = false
+  export let wide: boolean = false
+  export let narrow: boolean = false
+  export let narrower: boolean = false
+  export let noPadding: boolean = false
 
-  let sidePanelVisible = false
+  let sidePanelVisible: boolean = false
 
   setContext("side-panel", {
     open: () => (sidePanelVisible = true),
@@ -47,7 +47,7 @@
     overflow-x: hidden;
   }
   .main {
-    overflow-y: scroll;
+    overflow-y: auto;
   }
   .content {
     display: flex;

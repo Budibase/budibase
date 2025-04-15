@@ -7,42 +7,62 @@ import { marked } from "marked"
 import { join, dirname } from "path"
 
 const helpers = require("@budibase/handlebars-helpers")
-const doctrine = require("doctrine")
+import doctrine, { Annotation } from "doctrine"
 
-type HelperInfo = {
+type BudibaseAnnotation = Annotation & {
+  example?: string
   acceptsInline?: boolean
   acceptsBlock?: boolean
+}
+
+type Helper = {
+  args: string[]
   example?: string
   description: string
-  tags?: any[]
+  requiresBlock?: boolean
+}
+
+type Manifest = {
+  [category: string]: {
+    [helper: string]: Helper
+  }
 }
 
 const FILENAME = join(__dirname, "..", "src", "manifest.json")
-const outputJSON: any = {}
+const outputJSON: Manifest = {}
 const ADDED_HELPERS = {
   date: {
     date: {
-      args: ["datetime", "format"],
-      numArgs: 2,
+      args: ["[datetime]", "[format]", "[options]"],
       example: '{{date now "DD-MM-YYYY" "America/New_York" }} -> 21-01-2021',
       description:
         "Format a date using moment.js date formatting - the timezone is optional and uses the tz database.",
     },
     duration: {
       args: ["time", "durationType"],
-      numArgs: 2,
       example: '{{duration 8 "seconds"}} -> a few seconds',
+      description:
+        "Produce a humanized duration left/until given an amount of time and the type of time measurement.",
+    },
+    difference: {
+      args: ["from", "to", "[unitType=ms]"],
+      example:
+        '{{ difference "2025-09-30" "2025-06-17" "seconds" }} -> 9072000',
+      description:
+        "Gets the difference between two dates, in milliseconds. Pass a third parameter to adjust the unit measurement.",
+    },
+    durationFromNow: {
+      args: ["time"],
+      example: '{{durationFromNow "2021-09-30"}} -> 8 months',
       description:
         "Produce a humanized duration left/until given an amount of time and the type of time measurement.",
     },
   },
 }
 
-function fixSpecialCases(name: string, obj: any) {
-  const args = obj.args
+function fixSpecialCases(name: string, obj: Helper) {
   if (name === "ifNth") {
-    args[0] = "a"
-    args[1] = "b"
+    obj.args = ["a", "b", "options"]
   }
   if (name === "eachIndex") {
     obj.description = "Iterates the array, listing an item and the index of it."
@@ -66,10 +86,10 @@ function lookForward(lines: string[], funcLines: string[], idx: number) {
   return true
 }
 
-function getCommentInfo(file: string, func: string): HelperInfo {
+function getCommentInfo(file: string, func: string): BudibaseAnnotation {
   const lines = file.split("\n")
   const funcLines = func.split("\n")
-  let comment = null
+  let comment: string | null = null
   for (let idx = 0; idx < lines.length; ++idx) {
     // from here work back until we have the comment
     if (lookForward(lines, funcLines, idx)) {
@@ -91,15 +111,9 @@ function getCommentInfo(file: string, func: string): HelperInfo {
     }
   }
   if (comment == null) {
-    return { description: "" }
+    return { description: "", tags: [] }
   }
-  const docs: {
-    acceptsInline?: boolean
-    acceptsBlock?: boolean
-    example: string
-    description: string
-    tags: any[]
-  } = doctrine.parse(comment, { unwrap: true })
+  const docs: BudibaseAnnotation = doctrine.parse(comment, { unwrap: true })
   // some hacky fixes
   docs.description = docs.description.replace(/\n/g, " ")
   docs.description = docs.description.replace(/[ ]{2,}/g, " ")
@@ -135,7 +149,7 @@ function run() {
       )}/lib/${collection}.js`,
       "utf8"
     )
-    const collectionInfo: any = {}
+    const collectionInfo: { [name: string]: Helper } = {}
     // collect information about helper
     let hbsHelperInfo = helpers[collection]()
     for (let entry of Object.entries(hbsHelperInfo)) {
@@ -154,14 +168,10 @@ function run() {
       const jsDocInfo = getCommentInfo(collectionFile, fnc)
       let args = jsDocInfo.tags
         .filter(tag => tag.title === "param")
-        .map(
-          tag =>
-            tag.description &&
-            tag.description.replace(/`/g, "").split(" ")[0].trim()
-        )
+        .filter(tag => tag.description)
+        .map(tag => tag.description!.replace(/`/g, "").split(" ")[0].trim())
       collectionInfo[name] = fixSpecialCases(name, {
         args,
-        numArgs: args.length,
         example: jsDocInfo.example || undefined,
         description: jsDocInfo.description,
         requiresBlock: jsDocInfo.acceptsBlock && !jsDocInfo.acceptsInline,

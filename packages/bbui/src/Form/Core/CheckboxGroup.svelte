@@ -1,19 +1,24 @@
-<script>
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
+<script lang="ts" generics="O, V">
   import "@spectrum-css/fieldgroup/dist/index-vars.css"
   import "@spectrum-css/radio/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
 
-  export let direction = "vertical"
-  export let value = []
-  export let options = []
+  export let direction: "horizontal" | "vertical" = "vertical"
+  export let value: V[] = []
+  export let options: O[] = []
   export let disabled = false
   export let readonly = false
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
+  export let getOptionLabel = (option: O) => `${option}`
+  export let getOptionValue = (option: O) => option as unknown as V
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: V[] }>()
 
-  const onChange = optionValue => {
+  const onChange = (optionValue: V) => {
     if (!value.includes(optionValue)) {
       dispatch("change", [...value, optionValue])
     } else {

@@ -1,38 +1,52 @@
-import { API } from "api"
+import { API } from "@/api"
 import { writable } from "svelte/store"
+import {
+  AppSelfResponse,
+  ContextUserMetadata,
+  GetGlobalSelfResponse,
+} from "@budibase/types"
+
+type AuthState = ContextUserMetadata | GetGlobalSelfResponse | undefined
 
 const createAuthStore = () => {
-  const store = writable<{
-    csrfToken?: string
-  } | null>(null)
+  const store = writable<AuthState>()
+
+  const hasAppSelfUser = (
+    user: AppSelfResponse | null
+  ): user is ContextUserMetadata => {
+    return user != null && "_id" in user
+  }
 
   // Fetches the user object if someone is logged in and has reloaded the page
   const fetchUser = async () => {
-    let globalSelf = null
-    let appSelf = null
+    let globalSelf, appSelf
 
     // First try and get the global user, to see if we are logged in at all
     try {
       globalSelf = await API.fetchBuilderSelf()
     } catch (error) {
-      store.set(null)
+      store.set(undefined)
       return
     }
 
     // Then try and get the user for this app to provide via context
     try {
-      appSelf = await API.fetchSelf()
+      const res = await API.fetchSelf()
+      if (hasAppSelfUser(res)) {
+        appSelf = res
+      }
     } catch (error) {
       // Swallow
     }
 
     // Use the app self if present, otherwise fallback to the global self
-    store.set(appSelf || globalSelf || null)
+    store.set(appSelf || globalSelf)
   }
 
   const logOut = async () => {
     try {
       await API.logOut()
+      window.location.href = "/"
     } catch (error) {
       // Do nothing
     }

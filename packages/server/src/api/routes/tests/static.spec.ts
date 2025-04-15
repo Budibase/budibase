@@ -1,13 +1,3 @@
-// Directly mock the AWS SDK
-jest.mock("aws-sdk", () => ({
-  S3: jest.fn(() => ({
-    getSignedUrl: jest.fn(
-      (operation, params) => `http://example.com/${params.Bucket}/${params.Key}`
-    ),
-    upload: jest.fn(() => ({ Contents: {} })),
-  })),
-}))
-
 import { Datasource, SourceName } from "@budibase/types"
 import { setEnv } from "../../../environment"
 import { getRequest, getConfig, afterAll as _afterAll } from "./utilities"
@@ -77,7 +67,10 @@ describe("/static", () => {
             type: "datasource",
             name: "Test",
             source: SourceName.S3,
-            config: {},
+            config: {
+              accessKeyId: "bb",
+              secretAccessKey: "bb",
+            },
           },
         })
       })
@@ -91,7 +84,17 @@ describe("/static", () => {
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(200)
-        expect(res.body.signedUrl).toEqual("http://example.com/foo/bar")
+
+        expect(res.body.signedUrl).toStartWith(
+          "https://foo.s3.eu-west-1.amazonaws.com/bar?"
+        )
+        expect(res.body.signedUrl).toContain("X-Amz-Algorithm=AWS4-HMAC-SHA256")
+        expect(res.body.signedUrl).toContain("X-Amz-Credential=bb")
+        expect(res.body.signedUrl).toContain("X-Amz-Date=")
+        expect(res.body.signedUrl).toContain("X-Amz-Signature=")
+        expect(res.body.signedUrl).toContain("X-Amz-Expires=900")
+        expect(res.body.signedUrl).toContain("X-Amz-SignedHeaders=host")
+
         expect(res.body.publicUrl).toEqual(
           `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
         )

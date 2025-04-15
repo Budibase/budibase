@@ -6,6 +6,7 @@ import {
   Hosting,
 } from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
+import { UIField } from "@budibase/types"
 
 const { TypeIconMap } = Constants
 
@@ -27,7 +28,7 @@ export const AUTO_COLUMN_DISPLAY_NAMES: Record<
   UPDATED_AT: "Updated At",
 }
 
-export const FIELDS = {
+export const FIELDS: Record<string, UIField> = {
   STRING: {
     name: "Text",
     type: FieldType.STRING,
@@ -219,6 +220,7 @@ export const PrettyRelationshipDefinitions = {
 
 export const BUDIBASE_INTERNAL_DB_ID = INTERNAL_TABLE_SOURCE_ID
 export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"
 export const DB_TYPE_INTERNAL = "internal"
 export const DB_TYPE_EXTERNAL = "external"

@@ -16,6 +16,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "@/dataBinding"
+  import { builderStore } from "@/stores/builder"
 
   export let componentInstance
   export let componentDefinition
@@ -31,6 +32,8 @@
   )
 
   $: icon = componentDefinition?.icon
+
+  $: highlighted = $builderStore.highlightedSetting?.key === "_styles"
 
   const openDrawer = () => {
     tempValue = runtimeToReadableBinding(
@@ -55,7 +58,7 @@
   name={`Custom CSS${componentInstance?._styles?.custom ? " *" : ""}`}
   collapsible={false}
 >
-  <div>
+  <div class:highlighted>
     <ActionButton on:click={openDrawer}>Edit custom CSS</ActionButton>
   </div>
 </DetailSummary>
@@ -96,5 +99,13 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
+  }
+
+  .highlighted {
+    background: var(--spectrum-global-color-gray-300);
+    border-left: 4px solid var(--spectrum-semantic-informative-color-background);
+    transition: background 130ms ease-out, border-color 130ms ease-out;
+    margin: -4px calc(-1 * var(--spacing-xl));
+    padding: 4px var(--spacing-xl) 4px calc(var(--spacing-xl) - 4px);
   }
 </style>

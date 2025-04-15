@@ -14,14 +14,18 @@
   export let value = ""
   export let bindings = []
   export let title = "Bindings"
-  export let placeholder
-  export let label
+  export let placeholder = undefined
+  export let label = undefined
   export let disabled = false
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
-  export let type
-  export let schema
+  export let type = undefined
+  export let schema = undefined
+  export let showComponent = false
+
+  export let allowHBS = true
+  export let context = {}
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -147,7 +151,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="control" class:disabled>
-  {#if !isValid(value)}
+  {#if !isValid(value) && !showComponent}
     <Input
       {label}
       {disabled}
@@ -159,7 +163,7 @@
       {updateOnChange}
     />
     <div
-      class="icon"
+      class="icon close"
       on:click={() => {
         if (!isJS) {
           dispatch("change", "")
@@ -171,7 +175,7 @@
   {:else}
     <slot />
   {/if}
-  {#if !disabled && type !== "formula" && !disabled && !attachmentTypes.includes(type)}
+  {#if !disabled && type !== "formula" && !attachmentTypes.includes(type)}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {
@@ -187,7 +191,6 @@
   on:drawerShow
   bind:this={bindingDrawer}
   title={title ?? placeholder ?? "Bindings"}
-  forceModal={true}
 >
   <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
   <svelte:component
@@ -197,7 +200,9 @@
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}
+    {allowHBS}
     {allowHelpers}
+    {context}
   />
 </Drawer>
 
@@ -214,20 +219,24 @@
     border-bottom-right-radius: 0px !important;
   }
 
-  .text-area-slot-icon {
-    border-bottom: 1px solid var(--spectrum-alias-border-color);
-    border-bottom-right-radius: 0px !important;
-    top: 1px !important;
+  .icon.close {
+    right: 1px !important;
+    border-right: none;
+    border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
   }
+
+  .text-area-slot-icon,
   .json-slot-icon {
+    right: 1px !important;
     border-bottom: 1px solid var(--spectrum-alias-border-color);
+    border-top-right-radius: 4px !important;
     border-bottom-right-radius: 0px !important;
-    top: 1px !important;
-    right: 0px !important;
+    border-bottom-left-radius: 4px !important;
+    top: 1px;
   }
 
   .icon {
-    right: 1px;
     bottom: 1px;
     position: absolute;
     justify-content: center;
@@ -236,8 +245,6 @@
     flex-direction: row;
     box-sizing: border-box;
     border-left: 1px solid var(--spectrum-alias-border-color);
-    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
-    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
     width: 31px;
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);

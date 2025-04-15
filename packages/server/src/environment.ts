@@ -29,6 +29,7 @@ const DEFAULTS = {
   PLUGINS_DIR: "/plugins",
   FORKED_PROCESS_NAME: "main",
   JS_RUNNER_MEMORY_LIMIT: 64,
+  USE_LOCAL_COMPONENT_LIBS: coreEnv.isDev() || coreEnv.isTest(),
 }
 
 const QUERY_THREAD_TIMEOUT =
@@ -113,6 +114,8 @@ const environment = {
     DEFAULTS.JS_RUNNER_MEMORY_LIMIT,
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
   DISABLE_USER_SYNC: process.env.DISABLE_USER_SYNC,
+  USE_LOCAL_COMPONENT_LIBS:
+    process.env.USE_LOCAL_COMPONENT_LIBS || DEFAULTS.USE_LOCAL_COMPONENT_LIBS,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

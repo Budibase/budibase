@@ -1,9 +1,9 @@
 <script>
   import { getContext } from "svelte"
-  import Block from "components/Block.svelte"
-  import BlockComponent from "components/BlockComponent.svelte"
+  import Block from "@/components/Block.svelte"
+  import BlockComponent from "@/components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { enrichSearchColumns, enrichFilter } from "utils/blocks"
+  import { enrichSearchColumns, enrichFilter } from "@/utils/blocks"
   import { get } from "svelte/store"
 
   export let title
@@ -125,9 +125,9 @@
           order={0}
         >
           <BlockComponent
-            type="heading"
+            type="textv2"
             props={{
-              text: title,
+              text: title ? `## ${title}` : "",
             }}
             order={0}
           />

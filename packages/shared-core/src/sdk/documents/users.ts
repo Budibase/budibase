@@ -4,6 +4,7 @@ import {
   SEPARATOR,
   User,
   InternalTable,
+  UserGroup,
 } from "@budibase/types"
 import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
@@ -67,7 +68,7 @@ export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
   return _.flow(
     _.get("roles"),
     _.values,
-    _.find(x => ["CREATOR", "ADMIN"].includes(x)),
+    _.find(x => ["CREATOR"].includes(x)),
     x => !!x
   )(user)
 }
@@ -128,4 +129,31 @@ export function containsUserID(value: string | undefined): boolean {
     return false
   }
   return value.includes(`${DocumentType.USER}${SEPARATOR}`)
+}
+
+export function getUserGroups(user: User, groups?: UserGroup[]) {
+  return (
+    groups?.filter(group => group.users?.find(u => u._id === user._id)) || []
+  )
+}
+
+export function getUserAppGroups(
+  appId: string,
+  user: User,
+  groups?: UserGroup[]
+) {
+  const prodAppId = getProdAppID(appId)
+  const userGroups = getUserGroups(user, groups)
+  return userGroups.filter(group =>
+    Object.keys(group.roles || {}).find(app => app === prodAppId)
+  )
+}
+
+export function userAppAccessList(user: User, groups?: UserGroup[]) {
+  const userGroups = getUserGroups(user, groups)
+  const userGroupApps = userGroups.flatMap(userGroup =>
+    Object.keys(userGroup.roles || {})
+  )
+  const fullList = [...Object.keys(user.roles), ...userGroupApps]
+  return [...new Set(fullList)]
 }

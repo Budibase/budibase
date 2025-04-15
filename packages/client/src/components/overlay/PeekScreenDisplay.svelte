@@ -5,7 +5,7 @@
     notificationStore,
     routeStore,
     stateStore,
-  } from "stores"
+  } from "@/stores"
   import { Modal, ModalContent, ActionButton } from "@budibase/bbui"
   import { onDestroy } from "svelte"
 

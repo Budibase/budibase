@@ -19,7 +19,7 @@
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
   $: highlightedLogs = expressionLogs.map(l => ({
-    log: highlight(l.log.join(", ")),
+    log: l.log.map(part => highlight(part)).join(", "),
     line: l.line,
     type: l.type,
   }))
@@ -95,7 +95,9 @@
     {#if empty}
       Your expression will be evaluated here
     {:else if error}
-      {formatError(expressionError)}
+      <div class="error-msg">
+        {formatError(expressionError)}
+      </div>
     {:else}
       <div class="output-lines">
         {#each highlightedLogs as logLine}
@@ -118,13 +120,17 @@
               <span>{@html logLine.log}</span>
             </div>
             {#if logLine.line}
-              <span style="color: var(--blue)">:{logLine.line}</span>
+              <span style="color: var(--blue); overflow-wrap: normal;"
+                >:{logLine.line}</span
+              >
             {/if}
           </div>
         {/each}
         <div class="line">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-          {@html highlightedResult}
+          <div>
+            <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+            {@html highlightedResult}
+          </div>
         </div>
       </div>
     {/if}
@@ -169,29 +175,33 @@
   .header.error::before {
     background: var(--error-bg);
   }
+  .error-msg {
+    padding-top: var(--spacing-m);
+  }
   .body {
     flex: 1 1 auto;
-    padding: var(--spacing-m) var(--spacing-l);
     font-family: var(--font-mono);
+    margin: 0 var(--spacing-m);
     font-size: 12px;
     overflow-y: auto;
     overflow-x: hidden;
-    white-space: pre-line;
-    word-wrap: break-word;
+    word-wrap: anywhere;
     height: 0;
   }
   .output-lines {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
   }
   .line {
-    border-bottom: var(--border-light);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: end;
-    padding: var(--spacing-s);
+    padding: var(--spacing-m) 0;
+    word-wrap: anywhere;
+  }
+  .line:not(:first-of-type) {
+    border-top: var(--border-light);
   }
   .icon-log {
     display: flex;

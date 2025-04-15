@@ -1,19 +1,21 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
-  import { GridDragModes } from "utils/grid"
+  import { GridDragMode } from "@/utils/grid"
 
-  export let top
-  export let left
-  export let width
-  export let height
-  export let text
-  export let icon
-  export let color
-  export let zIndex
-  export let componentId
+  export let top: number
+  export let left: number
+  export let width: number
+  export let height: number
+  export let text: string | undefined
+  export let icon: string | undefined
+  export let color: string
+  export let zIndex: number
+  export let componentId: string
   export let line = false
   export let alignRight = false
   export let showResizeAnchors = false
+  export let background: string | undefined
+  export let animate = false
 
   const AnchorSides = [
     "right",
@@ -33,10 +35,12 @@
   class="indicator"
   class:flipped
   class:line
-  style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
+  style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex}; --bg: {background ||
+    'none'};"
   class:withText={!!text}
   class:vCompact={height < 40}
   class:hCompact={width < 40}
+  class:animate
 >
   {#if text || icon}
     <div
@@ -46,7 +50,7 @@
       class:right={alignRight}
       draggable="true"
       data-indicator="true"
-      data-drag-mode={GridDragModes.Move}
+      data-drag-mode={GridDragMode.Move}
       data-id={componentId}
     >
       {#if icon}
@@ -65,7 +69,7 @@
         class="anchor {side}"
         draggable="true"
         data-indicator="true"
-        data-drag-mode={GridDragModes.Resize}
+        data-drag-mode={GridDragMode.Resize}
         data-side={side}
         data-id={componentId}
       >
@@ -84,6 +88,7 @@
     border: 2px solid var(--color);
     pointer-events: none;
     border-radius: 4px;
+    background: var(--bg);
   }
   .indicator.withText {
     border-top-left-radius: 0;
@@ -93,6 +98,9 @@
   }
   .indicator.line {
     border-radius: 4px !important;
+  }
+  .indicator.animate {
+    transition: all 130ms ease-out;
   }
 
   /* Label styles */

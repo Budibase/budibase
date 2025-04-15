@@ -1,20 +1,29 @@
-<script>
-  import { ActionButton, List, ListItem, Button } from "@budibase/bbui"
-  import DetailPopover from "@/components/common/DetailPopover.svelte"
-  import { screenStore, appStore } from "@/stores/builder"
+<script lang="ts">
+  import { Button } from "@budibase/bbui"
+  import ScreensPopover from "@/components/common/ScreensPopover.svelte"
+  import { screenStore } from "@/stores/builder"
   import { getContext, createEventDispatcher } from "svelte"
-
-  const { datasource } = getContext("grid")
+  import type { Screen, ScreenUsage } from "@budibase/types"
   const dispatch = createEventDispatcher()
 
-  let popover
+  const { datasource }: { datasource: any } = getContext("grid")
+
+  let popover: any
 
   $: ds = $datasource
   $: resourceId = ds?.type === "table" ? ds.tableId : ds?.id
   $: connectedScreens = findConnectedScreens($screenStore.screens, resourceId)
-  $: screenCount = connectedScreens.length
+  $: screenUsage = connectedScreens.map(
+    (screen: Screen): ScreenUsage => ({
+      url: screen.routing?.route,
+      _id: screen._id!,
+    })
+  )
 
-  const findConnectedScreens = (screens, resourceId) => {
+  const findConnectedScreens = (
+    screens: Screen[],
+    resourceId: string
+  ): Screen[] => {
     return screens.filter(screen => {
       return JSON.stringify(screen).includes(`"${resourceId}"`)
     })
@@ -26,34 +35,16 @@
   }
 </script>
 
-<DetailPopover title="Screens" bind:this={popover}>
-  <svelte:fragment slot="anchor" let:open>
-    <ActionButton
-      icon="WebPage"
-      selected={open || screenCount}
-      quiet
-      accentColor="#364800"
-    >
-      Screens{screenCount ? `: ${screenCount}` : ""}
-    </ActionButton>
-  </svelte:fragment>
-  {#if !connectedScreens.length}
-    There aren't any screens connected to this data.
-  {:else}
-    The following screens are connected to this data.
-    <List>
-      {#each connectedScreens as screen}
-        <ListItem
-          title={screen.routing.route}
-          url={`/builder/app/${$appStore.appId}/design/${screen._id}`}
-          showArrow
-        />
-      {/each}
-    </List>
-  {/if}
-  <div>
+<ScreensPopover
+  bind:this={popover}
+  screens={screenUsage}
+  icon="WebPage"
+  accentColor="#364800"
+  showCount
+>
+  <svelte:fragment slot="footer">
     <Button secondary icon="WebPage" on:click={generateScreen}>
       Generate app screen
     </Button>
-  </div>
-</DetailPopover>
+  </svelte:fragment>
+</ScreensPopover>

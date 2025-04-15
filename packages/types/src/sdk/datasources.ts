@@ -157,7 +157,7 @@ export interface Integration {
   friendlyName: string
   type?: string
   iconUrl?: string
-  datasource: DatasourceConfig
+  datasource?: DatasourceConfig
   query: {
     [key: string]: QueryDefinition
   }

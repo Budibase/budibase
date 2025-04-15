@@ -26,7 +26,7 @@ import {
   getJsHelperList,
 } from "@budibase/string-templates"
 import { TableNames } from "./constants"
-import { JSONUtils, Constants } from "@budibase/frontend-core"
+import { JSONUtils, Constants, SchemaUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "@/components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
@@ -37,7 +37,7 @@ const { ContextScopes } = Constants
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
-const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
+const CAPTURE_VAR_INSIDE_JS = /\$\((["'`])([^"'`]+)\1\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
 const UpdateReferenceAction = {
@@ -373,6 +373,18 @@ const getContextBindings = (asset, componentId) => {
     .flat()
 }
 
+export const makeReadableKeyPropSafe = key => {
+  if (!key.includes(" ")) {
+    return key
+  }
+
+  if (new RegExp(/^\[(.+)\]$/).test(key.test)) {
+    return key
+  }
+
+  return `[${key}]`
+}
+
 /**
  * Generates a set of bindings for a given component context
  */
@@ -457,11 +469,11 @@ const generateComponentContextBindings = (asset, componentContext) => {
       const runtimeBinding = `${safeComponentId}.${safeKey}`
 
       // Optionally use a prefix with readable bindings
-      let readableBinding = component._instanceName
+      let readableBinding = makeReadableKeyPropSafe(component._instanceName)
       if (readablePrefix) {
         readableBinding += `.${readablePrefix}`
       }
-      readableBinding += `.${fieldSchema.name || key}`
+      readableBinding += `.${makeReadableKeyPropSafe(fieldSchema.name || key)}`
 
       // Determine which category this binding belongs in
       const bindingCategory = getComponentBindingCategory(
@@ -473,7 +485,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
       bindings.push({
         type: "context",
         runtimeBinding,
-        readableBinding: `${readableBinding}`,
+        readableBinding,
         // Field schema and provider are required to construct relationship
         // datasource options, based on bindable properties
         fieldSchema,
@@ -1014,25 +1026,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // Check for any JSON fields so we can add any top level properties
     if (schema) {
-      let jsonAdditions = {}
-      Object.keys(schema).forEach(fieldKey => {
-        const fieldSchema = schema[fieldKey]
-        if (fieldSchema?.type === "json") {
-          const jsonSchema = JSONUtils.convertJSONSchemaToTableSchema(
-            fieldSchema,
-            {
-              squashObjects: true,
-            }
-          )
-          Object.keys(jsonSchema).forEach(jsonKey => {
-            jsonAdditions[`${fieldKey}.${jsonKey}`] = {
-              type: jsonSchema[jsonKey].type,
-              nestedJSON: true,
-            }
-          })
-        }
-      })
-      schema = { ...schema, ...jsonAdditions }
+      schema = SchemaUtils.addNestedJSONSchemaFields(schema)
     }
 
     // Determine if we should add ID and rev to the schema
@@ -1159,10 +1153,17 @@ export const buildFormSchema = (component, asset) => {
  * Returns an array of the keys of any state variables which are set anywhere
  * in the app.
  */
-export const getAllStateVariables = () => {
-  // Find all button action settings in all components
+export const getAllStateVariables = screen => {
+  let assets = []
+  if (screen) {
+    // only include state variables from a specific screen
+    assets.push(screen)
+  } else {
+    // otherwise include state variables from all screens
+    assets = getAllAssets()
+  }
   let eventSettings = []
-  getAllAssets().forEach(asset => {
+  assets.forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = componentStore.getComponentSettings(component._component)
       const nestedTypes = [
@@ -1214,11 +1215,17 @@ export const getAllStateVariables = () => {
   })
 
   // Add on load settings from screens
-  get(screenStore).screens.forEach(screen => {
+  if (screen) {
     if (screen.onLoad) {
       eventSettings.push(screen.onLoad)
     }
-  })
+  } else {
+    get(screenStore).screens.forEach(screen => {
+      if (screen.onLoad) {
+        eventSettings.push(screen.onLoad)
+      }
+    })
+  }
 
   // Extract all state keys from any "update state" actions in each setting
   let bindingSet = new Set()
@@ -1341,13 +1348,14 @@ const bindingReplacement = (
   }
   // work from longest to shortest
   const convertFromProps = bindableProperties
+    // TODO check whitespaces
     .map(el => el[convertFrom])
     .sort((a, b) => {
       return b.length - a.length
     })
   const boundValues = textWithBindings.match(regex) || []
   let result = textWithBindings
-  for (let boundValue of boundValues) {
+  for (const boundValue of boundValues) {
     let newBoundValue = boundValue
     // we use a search string, where any time we replace something we blank it out
     // in the search, working from longest to shortest so always use best match first

@@ -1,14 +1,19 @@
-export interface BindingCompletion {
-  section: {
-    name: string
-  }
-  label: string
-}
-
 export interface EnrichedBinding {
+  value: string
+  valueHTML: string
   runtimeBinding: string
   readableBinding: string
   type?: null | string
+  icon?: string
+  category: string
+  display?: { name: string; type: string }
+  fieldSchema?: {
+    name: string
+    tableId: string
+    type: string
+    subtype?: string
+    prefixKeys?: string
+  }
 }
 
 export enum BindingMode {
@@ -24,3 +29,18 @@ export type InsertAtPositionFn = (_: {
   value: string
   cursor?: { anchor: number }
 }) => void
+
+export interface UIBinding {
+  tableId?: string
+  fieldSchema?: {
+    name: string
+    tableId: string
+    type: string
+    subtype?: string
+    prefixKeys?: string
+  }
+  component?: string
+  providerId: string
+  readableBinding?: string
+  runtimeBinding?: string
+}

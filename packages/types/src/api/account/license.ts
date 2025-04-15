@@ -6,6 +6,7 @@ export interface GetLicenseRequest {
   // All fields should be optional to cater for
   // historical versions of budibase
   quotaUsage?: QuotaUsage
+  tenantId?: string
   install: {
     id: string
     tenantId: string
@@ -20,7 +21,8 @@ export interface QuotaTriggeredRequest {
 }
 
 export interface LicenseActivateRequest {
-  installVersion?: string
+  installVersion: string
+  installId: string
 }
 
 export interface UpdateLicenseRequest {

@@ -1,4 +1,4 @@
-import { API } from "api"
+import { API } from "@/api"
 import { writable, get } from "svelte/store"
 import { appStore } from "./app"
 

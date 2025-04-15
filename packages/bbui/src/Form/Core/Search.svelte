@@ -1,19 +1,19 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/search/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
 
-  export let value = null
-  export let placeholder = null
+  export let value: any = null
+  export let placeholder: string | undefined = undefined
   export let disabled = false
   export let id = null
   export let updateOnChange = true
   export let quiet = false
-  export let inputRef
+  export let inputRef: HTMLElement | undefined = undefined
 
   const dispatch = createEventDispatcher()
   let focus = false
 
-  const updateValue = value => {
+  const updateValue = (value: any) => {
     dispatch("change", value)
   }
 
@@ -21,19 +21,19 @@
     focus = true
   }
 
-  const onBlur = event => {
+  const onBlur = (event: any) => {
     focus = false
     updateValue(event.target.value)
   }
 
-  const onInput = event => {
+  const onInput = (event: any) => {
     if (!updateOnChange) {
       return
     }
     updateValue(event.target.value)
   }
 
-  const updateValueOnEnter = event => {
+  const updateValueOnEnter = (event: any) => {
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }

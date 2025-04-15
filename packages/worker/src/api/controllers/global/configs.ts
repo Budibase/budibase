@@ -1,6 +1,6 @@
 import * as email from "../../../utilities/email"
 import env from "../../../environment"
-import { googleCallbackUrl, oidcCallbackUrl } from "./auth"
+import * as auth from "./auth"
 import {
   cache,
   configs,
@@ -322,27 +322,27 @@ export async function save(
   }
 }
 
-function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
+async function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
   if (!oidcLogos) {
     return
   }
-  oidcLogos.config = Object.keys(oidcLogos.config || {}).reduce(
-    (acc: any, key: string) => {
-      if (!key.endsWith("Etag")) {
-        const etag = oidcLogos.config[`${key}Etag`]
-        const objectStoreUrl = objectStore.getGlobalFileUrl(
-          oidcLogos.type,
-          key,
-          etag
-        )
-        acc[key] = objectStoreUrl
-      } else {
-        acc[key] = oidcLogos.config[key]
-      }
-      return acc
-    },
-    {}
-  )
+  const newConfig: Record<string, string> = {}
+  const keys = Object.keys(oidcLogos.config || {})
+
+  for (const key of keys) {
+    if (!key.endsWith("Etag")) {
+      const etag = oidcLogos.config[`${key}Etag`]
+      const objectStoreUrl = await objectStore.getGlobalFileUrl(
+        oidcLogos.type,
+        key,
+        etag
+      )
+      newConfig[key] = objectStoreUrl
+    } else {
+      newConfig[key] = oidcLogos.config[key]
+    }
+  }
+  oidcLogos.config = newConfig
 }
 
 export async function find(ctx: UserCtx<void, FindConfigResponse>) {
@@ -370,7 +370,7 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
 
 async function handleConfigType(type: ConfigType, config: Config) {
   if (type === ConfigType.OIDC_LOGOS) {
-    enrichOIDCLogos(config)
+    await enrichOIDCLogos(config)
   } else if (type === ConfigType.AI) {
     await handleAIConfig(config)
   }
@@ -396,7 +396,7 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
     const oidcCustomLogos = await configs.getOIDCLogosDoc()
 
     if (oidcCustomLogos) {
-      enrichOIDCLogos(oidcCustomLogos)
+      await enrichOIDCLogos(oidcCustomLogos)
     }
 
     if (!oidcConfig) {
@@ -420,45 +420,73 @@ export async function publicSettings(
 ) {
   try {
     // settings
-    const configDoc = await configs.getSettingsConfigDoc()
+    const [configDoc, googleConfig] = await Promise.all([
+      configs.getSettingsConfigDoc(),
+      configs.getGoogleConfig(),
+    ])
     const config = configDoc.config
 
-    const branding = await pro.branding.getBrandingConfig(config)
+    const brandingPromise = pro.branding.getBrandingConfig(config)
 
-    // enrich the logo url - empty url means deleted
-    if (config.logoUrl && config.logoUrl !== "") {
-      config.logoUrl = objectStore.getGlobalFileUrl(
-        "settings",
-        "logoUrl",
-        config.logoUrlEtag
-      )
+    const getLogoUrl = () => {
+      // enrich the logo url - empty url means deleted
+      if (config.logoUrl && config.logoUrl !== "") {
+        return objectStore.getGlobalFileUrl(
+          "settings",
+          "logoUrl",
+          config.logoUrlEtag
+        )
+      }
     }
+
+    // google
+    const googleDatasourcePromise = configs.getGoogleDatasourceConfig()
+    const preActivated = googleConfig && googleConfig.activated == null
+    const google = preActivated || !!googleConfig?.activated
+    const googleCallbackUrlPromise = auth.googleCallbackUrl(googleConfig)
+
+    // oidc
+    const oidcConfigPromise = configs.getOIDCConfig()
+    const oidcCallbackUrlPromise = auth.oidcCallbackUrl()
+
+    // sso enforced
+    const isSSOEnforcedPromise = pro.features.isSSOEnforced({ config })
+
+    // performance all async work at same time, there is no need for all of these
+    // operations to occur in sync, slowing the endpoint down significantly
+    const [
+      branding,
+      googleDatasource,
+      googleCallbackUrl,
+      oidcConfig,
+      oidcCallbackUrl,
+      isSSOEnforced,
+      logoUrl,
+    ] = await Promise.all([
+      brandingPromise,
+      googleDatasourcePromise,
+      googleCallbackUrlPromise,
+      oidcConfigPromise,
+      oidcCallbackUrlPromise,
+      isSSOEnforcedPromise,
+      getLogoUrl(),
+    ])
 
     // enrich the favicon url - empty url means deleted
     const faviconUrl =
       branding.faviconUrl && branding.faviconUrl !== ""
-        ? objectStore.getGlobalFileUrl(
+        ? await objectStore.getGlobalFileUrl(
             "settings",
             "faviconUrl",
             branding.faviconUrlEtag
           )
         : undefined
 
-    // google
-    const googleConfig = await configs.getGoogleConfig()
-    const googleDatasourceConfigured =
-      !!(await configs.getGoogleDatasourceConfig())
-    const preActivated = googleConfig && googleConfig.activated == null
-    const google = preActivated || !!googleConfig?.activated
-    const _googleCallbackUrl = await googleCallbackUrl(googleConfig)
-
-    // oidc
-    const oidcConfig = await configs.getOIDCConfig()
     const oidc = oidcConfig?.activated || false
-    const _oidcCallbackUrl = await oidcCallbackUrl()
-
-    // sso enforced
-    const isSSOEnforced = await pro.features.isSSOEnforced({ config })
+    const googleDatasourceConfigured = !!googleDatasource
+    if (logoUrl) {
+      config.logoUrl = logoUrl
+    }
 
     ctx.body = {
       type: ConfigType.SETTINGS,
@@ -472,8 +500,8 @@ export async function publicSettings(
         googleDatasourceConfigured,
         oidc,
         isSSOEnforced,
-        oidcCallbackUrl: _oidcCallbackUrl,
-        googleCallbackUrl: _googleCallbackUrl,
+        oidcCallbackUrl,
+        googleCallbackUrl,
       },
     }
   } catch (err: any) {
@@ -522,7 +550,7 @@ export async function upload(ctx: UserCtx<void, UploadConfigFileResponse>) {
 
   ctx.body = {
     message: "File has been uploaded and url stored to config.",
-    url: objectStore.getGlobalFileUrl(type, name, etag),
+    url: await objectStore.getGlobalFileUrl(type, name, etag),
   }
 }
 
@@ -586,6 +614,7 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
             checked: !!smtpConfig,
             label: "Set up email",
             link: "/builder/portal/settings/email",
+            fallback: smtpConfig?.fallback || false,
           },
           adminUser: {
             checked: userExists,

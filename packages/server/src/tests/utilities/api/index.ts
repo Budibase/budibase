@@ -17,45 +17,68 @@ import { RowActionAPI } from "./rowAction"
 import { AutomationAPI } from "./automation"
 import { PluginAPI } from "./plugin"
 import { WebhookAPI } from "./webhook"
+import { EnvironmentAPI } from "./environment"
+import { UserPublicAPI } from "./public/user"
+import { MiscAPI } from "./misc"
+import { OAuth2API } from "./oauth2"
+import { AssetsAPI } from "./assets"
+import { AIAPI } from "./ai"
 
 export default class API {
-  table: TableAPI
-  legacyView: LegacyViewAPI
-  viewV2: ViewV2API
-  row: RowAPI
-  permission: PermissionAPI
-  datasource: DatasourceAPI
-  screen: ScreenAPI
+  ai: AIAPI
   application: ApplicationAPI
-  backup: BackupAPI
   attachment: AttachmentAPI
-  user: UserAPI
+  automation: AutomationAPI
+  backup: BackupAPI
+  datasource: DatasourceAPI
+  environment: EnvironmentAPI
+  legacyView: LegacyViewAPI
+  misc: MiscAPI
+  oauth2: OAuth2API
+  permission: PermissionAPI
+  plugin: PluginAPI
   query: QueryAPI
   roles: RoleAPI
-  templates: TemplateAPI
+  row: RowAPI
   rowAction: RowActionAPI
-  automation: AutomationAPI
-  plugin: PluginAPI
+  screen: ScreenAPI
+  table: TableAPI
+  templates: TemplateAPI
+  user: UserAPI
+  viewV2: ViewV2API
   webhook: WebhookAPI
+  assets: AssetsAPI
+
+  public: {
+    user: UserPublicAPI
+  }
 
   constructor(config: TestConfiguration) {
-    this.table = new TableAPI(config)
-    this.legacyView = new LegacyViewAPI(config)
-    this.viewV2 = new ViewV2API(config)
-    this.row = new RowAPI(config)
-    this.permission = new PermissionAPI(config)
-    this.datasource = new DatasourceAPI(config)
-    this.screen = new ScreenAPI(config)
+    this.ai = new AIAPI(config)
     this.application = new ApplicationAPI(config)
-    this.backup = new BackupAPI(config)
     this.attachment = new AttachmentAPI(config)
-    this.user = new UserAPI(config)
+    this.automation = new AutomationAPI(config)
+    this.backup = new BackupAPI(config)
+    this.datasource = new DatasourceAPI(config)
+    this.environment = new EnvironmentAPI(config)
+    this.legacyView = new LegacyViewAPI(config)
+    this.misc = new MiscAPI(config)
+    this.oauth2 = new OAuth2API(config)
+    this.permission = new PermissionAPI(config)
+    this.plugin = new PluginAPI(config)
     this.query = new QueryAPI(config)
     this.roles = new RoleAPI(config)
-    this.templates = new TemplateAPI(config)
+    this.row = new RowAPI(config)
     this.rowAction = new RowActionAPI(config)
-    this.automation = new AutomationAPI(config)
-    this.plugin = new PluginAPI(config)
+    this.screen = new ScreenAPI(config)
+    this.table = new TableAPI(config)
+    this.templates = new TemplateAPI(config)
+    this.user = new UserAPI(config)
+    this.viewV2 = new ViewV2API(config)
     this.webhook = new WebhookAPI(config)
+    this.assets = new AssetsAPI(config)
+    this.public = {
+      user: new UserPublicAPI(config),
+    }
   }
 }

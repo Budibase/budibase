@@ -2,11 +2,12 @@
   import { admin, auth } from "@/stores/portal"
   import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import ProfileModal from "@/components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "@/components/settings/ChangePasswordModal.svelte"
+  import ProfileModal from "@budibase/frontend-core/src/components/ProfileModal.svelte"
+  import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
   import ThemeModal from "@/components/settings/ThemeModal.svelte"
   import APIKeyModal from "@/components/settings/APIKeyModal.svelte"
   import { UserAvatar } from "@budibase/frontend-core"
+  import { API } from "@/api"
 
   let themeModal
   let profileModal
@@ -26,8 +27,8 @@
 
 <ActionMenu align="right">
   <div slot="control" class="user-dropdown">
-    <UserAvatar user={$auth.user} showTooltip={false} />
-    <Icon size="XL" name="ChevronDown" />
+    <UserAvatar size="M" user={$auth.user} showTooltip={false} />
+    <Icon size="L" name="ChevronDown" />
   </div>
   <MenuItem icon="UserEdit" on:click={() => profileModal.show()}>
     My profile
@@ -60,10 +61,14 @@
   <ThemeModal />
 </Modal>
 <Modal bind:this={profileModal}>
-  <ProfileModal />
+  <ProfileModal {API} user={$auth.user} on:save={() => auth.getSelf()} />
 </Modal>
 <Modal bind:this={updatePasswordModal}>
-  <ChangePasswordModal />
+  <ChangePasswordModal
+    {API}
+    passwordMinLength={$admin.passwordMinLength}
+    on:save={() => auth.getSelf()}
+  />
 </Modal>
 <Modal bind:this={apiKeyModal}>
   <APIKeyModal />
@@ -75,7 +80,8 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
+    transition: filter 130ms ease-out;
   }
   .user-dropdown:hover {
     cursor: pointer;

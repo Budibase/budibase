@@ -1,4 +1,9 @@
-<script>
+<script lang="ts" context="module">
+  type O = any
+  type V = any
+</script>
+
+<script lang="ts">
   import "@spectrum-css/picker/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
@@ -11,43 +16,55 @@
   import Tags from "../../Tags/Tags.svelte"
   import Tag from "../../Tags/Tag.svelte"
   import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
+  import { PopoverAlignment } from "../../constants"
 
-  export let id = null
-  export let disabled = false
-  export let fieldText = ""
-  export let fieldIcon = ""
-  export let fieldColour = ""
-  export let isPlaceholder = false
-  export let placeholderOption = null
-  export let options = []
-  export let isOptionSelected = () => false
-  export let isOptionEnabled = () => true
-  export let onSelectOption = () => {}
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
-  export let getOptionIcon = () => null
+  export let id: string | undefined = undefined
+  export let disabled: boolean = false
+  export let fieldText: string = ""
+  export let fieldIcon: string = ""
+  export let fieldColour: string = ""
+  export let isPlaceholder: boolean = false
+  export let placeholderOption: string | undefined | boolean = undefined
+  export let options: O[] = []
+  export let isOptionSelected = (option: O) => option as unknown as boolean
+  export let isOptionEnabled = (option: O, _index?: number) =>
+    option as unknown as boolean
+  export let onSelectOption: (_value: V) => void = () => {}
+  export let getOptionLabel = (option: O, _index?: number) => `${option}`
+  export let getOptionValue = (option: O, _index?: number) =>
+    option as unknown as V
+  export let getOptionIcon = (option: O, _index?: number) =>
+    option?.icon ?? undefined
+  export let getOptionColour = (option: O, _index?: number) =>
+    option?.colour ?? undefined
+  export let getOptionSubtitle = (option: O, _index?: number) =>
+    option?.subtitle ?? undefined
   export let useOptionIconImage = false
-  export let getOptionColour = () => null
-  export let getOptionSubtitle = () => null
-  export let open = false
-  export let readonly = false
-  export let quiet = false
-  export let autoWidth = false
-  export let autocomplete = false
-  export let sort = false
-  export let searchTerm = null
-  export let customPopoverHeight
-  export let align = "left"
-  export let footer = null
-  export let customAnchor = null
-  export let loading
-  export let onOptionMouseenter = () => {}
-  export let onOptionMouseleave = () => {}
+  export let open: boolean = false
+  export let readonly: boolean = false
+  export let quiet: boolean = false
+  export let autoWidth: boolean | undefined = false
+  export let autocomplete: boolean = false
+  export let sort: boolean = false
+  export let searchTerm: string | null = null
+  export let customPopoverHeight: string | undefined = undefined
+  export let align: PopoverAlignment | undefined = PopoverAlignment.Left
+  export let footer: string | undefined = undefined
+  export let customAnchor: HTMLElement | undefined = undefined
+  export let loading: boolean = false
+  export let onOptionMouseenter: (
+    _e: MouseEvent,
+    _option: any
+  ) => void = () => {}
+  export let onOptionMouseleave: (
+    _e: MouseEvent,
+    _option: any
+  ) => void = () => {}
 
   const dispatch = createEventDispatcher()
 
-  let button
-  let component
+  let button: any
+  let component: any
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -56,7 +73,7 @@
     getOptionLabel
   )
 
-  const onClick = e => {
+  const onClick = (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     dispatch("click")
@@ -67,7 +84,11 @@
     open = !open
   }
 
-  const getSortedOptions = (options, getLabel, sort) => {
+  const getSortedOptions = (
+    options: any[],
+    getLabel: (_option: any) => string,
+    sort: boolean
+  ) => {
     if (!options?.length || !Array.isArray(options)) {
       return []
     }
@@ -81,17 +102,21 @@
     })
   }
 
-  const getFilteredOptions = (options, term, getLabel) => {
+  const getFilteredOptions = (
+    options: any[],
+    term: string | null,
+    getLabel: (_option: any) => string
+  ) => {
     if (autocomplete && term) {
       const lowerCaseTerm = term.toLowerCase()
-      return options.filter(option => {
+      return options.filter((option: any) => {
         return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
       })
     }
     return options
   }
 
-  const onScroll = e => {
+  const onScroll = (e: any) => {
     const scrollPxThreshold = 100
     const scrollPositionFromBottom =
       e.target.scrollHeight - e.target.clientHeight - e.target.scrollTop
@@ -151,18 +176,20 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <Popover
   anchor={customAnchor ? customAnchor : button}
-  align={align || "left"}
+  align={align || PopoverAlignment.Left}
   {open}
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
-  maxWidth={autoWidth ? 400 : null}
+  maxWidth={autoWidth ? 400 : undefined}
   customHeight={customPopoverHeight}
   maxHeight={360}
 >
   <div
     class="popover-content"
     class:auto-width={autoWidth}
-    use:clickOutside={() => (open = false)}
+    use:clickOutside={() => {
+      open = false
+    }}
   >
     {#if autocomplete}
       <Search

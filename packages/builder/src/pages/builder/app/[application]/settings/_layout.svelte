@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import { Content, SideNav, SideNavItem } from "@/components/portal/page"
   import { Page, Layout, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import { isOnlyUser, appStore } from "@/stores/builder"
 
-  let deleteModal
+  let deleteModal: DeleteModal
 </script>
 
 <!-- routify:options index=4 -->
@@ -30,6 +30,11 @@
             active={$isActive("./embed")}
           />
           <SideNavItem
+            text="Progressive Web App"
+            url={$url("./pwa")}
+            active={$isActive("./pwa")}
+          />
+          <SideNavItem
             text="Export/Import"
             url={$url("./exportImport")}
             active={$isActive("./exportImport")}
@@ -44,11 +49,21 @@
             url={$url("./version")}
             active={$isActive("./version")}
           />
+          <SideNavItem
+            text="OAuth2"
+            url={$url("./oauth2")}
+            active={$isActive("./oauth2")}
+          />
+          <SideNavItem
+            text="App scripts"
+            url={$url("./scripts")}
+            active={$isActive("./scripts")}
+          />
           <div class="delete-action">
             <AbsTooltip
               position={TooltipPosition.Bottom}
               text={$isOnlyUser
-                ? null
+                ? undefined
                 : "Unavailable - another user is editing this app"}
             >
               <SideNavItem

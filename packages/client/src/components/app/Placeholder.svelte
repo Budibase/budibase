@@ -5,7 +5,7 @@
   const component = getContext("component")
   const block = getContext("block")
 
-  export let text
+  export let text = undefined
 </script>
 
 {#if $builderStore.inBuilder}

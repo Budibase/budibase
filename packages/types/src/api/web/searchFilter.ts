@@ -38,11 +38,19 @@ export type SearchFilter = {
 // involved. We convert this to a SearchFilters before use with the search SDK.
 export type LegacyFilter = AllOr | OnEmptyFilter | SearchFilter
 
+// A search filter group should either contain groups or filters, but not both
 export type SearchFilterGroup = {
   logicalOperator?: UILogicalOperator
-  groups?: SearchFilterGroup[]
-  filters?: LegacyFilter[]
-}
+} & (
+  | {
+      groups?: (SearchFilterGroup | UISearchFilter)[]
+      filters?: never
+    }
+  | {
+      filters?: LegacyFilter[]
+      groups?: never
+    }
+)
 
 // As of v3, this is the format that the frontend always sends when search
 // filters are involved. We convert this to SearchFilters before use with the

@@ -1,15 +1,15 @@
 <script>
   import { Layout } from "@budibase/bbui"
   import Bulgaria from "../../assets/bulgaria.png"
-  import Covanta from "../../assets/covanta.png"
+  import Reworld from "../../assets/reworld.png"
   import Schnellecke from "../../assets/schnellecke.png"
 
   const testimonials = [
     {
-      text: "Budibase was the only solution that checked all the boxes for Covanta. Covanta expects to realize $3.2MM in savings due to the elimination of redundant data entry.",
+      text: "Budibase was the only solution that checked all the boxes for Reworld. Reworld expects to realize $3.2MM in savings due to the elimination of redundant data entry.",
       name: "Charles Link",
       role: "Senior Director, Data and Analytics",
-      image: Covanta,
+      image: Reworld,
       imageSize: 105,
     },
     {

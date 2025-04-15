@@ -5,14 +5,12 @@
     })
   </script>
   <head>
+    <script nonce="{{ nonce }}">
+      window["##BUDIBASE_APP_ID##"] = "{{appId}}"
+      window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
+    </script>
     {{{head}}}
     <style>{{{css}}}</style>
   </head>
-
-  <script nonce="{{ nonce }}">
-    window["##BUDIBASE_APP_ID##"] = "{{appId}}"
-    window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
-  </script>
-
   {{{body}}}
 </html>

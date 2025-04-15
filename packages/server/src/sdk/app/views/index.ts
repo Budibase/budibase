@@ -4,6 +4,7 @@ import {
   canGroupBy,
   FieldType,
   isNumeric,
+  isNumericStaticFormula,
   PermissionLevel,
   RelationSchemaField,
   RenameColumn,
@@ -79,6 +80,14 @@ export async function getTable(view: string | ViewV2): Promise<Table> {
 
 export function isView(view: any): view is ViewV2 {
   return view.id && docIds.isViewId(view.id) && view.version === 2
+}
+
+export function isInternal(viewId: string) {
+  if (!docIds.isViewId(viewId)) {
+    return false
+  }
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+  return !isExternalTableID(tableId)
 }
 
 function guardDuplicateCalculationFields(view: Omit<ViewV2, "id" | "version">) {
@@ -168,7 +177,11 @@ async function guardCalculationViewSchema(
     }
 
     const isCount = schema.calculationType === CalculationType.COUNT
-    if (!isCount && !isNumeric(targetSchema.type)) {
+    if (
+      !isCount &&
+      !isNumeric(targetSchema.type) &&
+      !isNumericStaticFormula(targetSchema)
+    ) {
       throw new HTTPError(
         `Calculation field "${name}" references field "${schema.field}" which is not a numeric field`,
         400

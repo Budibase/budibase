@@ -27,7 +27,9 @@ const table = {
 const baseColumnDef = {
   type: {
     type: "string",
-    enum: Object.values(FieldType),
+    enum: Object.values(FieldType).filter(
+      type => ![FieldType.LINK, FieldType.FORMULA].includes(type)
+    ),
     description:
       "Defines the type of the column, most explain themselves, a link column is a relationship.",
   },
@@ -38,11 +40,29 @@ const baseColumnDef = {
     properties: {
       type: {
         type: "string",
-        enum: ["string", "number", "object", "boolean"],
       },
       presence: {
-        type: "boolean",
-        description: "Defines whether the column is required or not.",
+        oneOf: [
+          {
+            type: "boolean",
+            description: "Defines whether the column is required or not.",
+          },
+          {
+            type: "object",
+            description: "Defines whether the column is required or not.",
+            properties: {
+              allowEmpty: {
+                type: "boolean",
+                description:
+                  "Defines whether the value is allowed to be empty or not.",
+              },
+            },
+          },
+        ],
+      },
+      inclusion: {
+        type: "array",
+        description: "Defines the valid values for this column.",
       },
     },
   },
@@ -53,6 +73,10 @@ const baseColumnDef = {
   autocolumn: {
     type: "boolean",
     description: "Defines whether the column is automatically generated.",
+  },
+  width: {
+    type: "number",
+    description: "Defines the width of the column in the data UI.",
   },
 }
 

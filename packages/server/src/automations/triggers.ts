@@ -1,7 +1,7 @@
 import emitter from "../events/index"
 import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
-import { definitions } from "./triggerInfo"
+import { automations } from "@budibase/shared-core"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
@@ -22,17 +22,40 @@ import {
   UserBindings,
   AutomationResults,
   DidNotTriggerResponse,
+  Table,
+  AutomationTriggerStepId,
+  AutomationTriggerInputs,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters, sdk } from "@budibase/shared-core"
 
-export const TRIGGER_DEFINITIONS = definitions
+export const TRIGGER_DEFINITIONS = automations.triggers.definitions
 const JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: true,
 }
 import * as automationUtils from "../automations/automationUtils"
 import { doesTableExist } from "../sdk/app/tables/getters"
+
+type RowTriggerStepId =
+  | AutomationTriggerStepId.ROW_ACTION
+  | AutomationTriggerStepId.ROW_DELETED
+  | AutomationTriggerStepId.ROW_SAVED
+  | AutomationTriggerStepId.ROW_UPDATED
+
+type RowTriggerInputs = Extract<
+  AutomationTriggerInputs<RowTriggerStepId>,
+  { tableId: string }
+>
+
+type RowFilterStepId =
+  | AutomationTriggerStepId.ROW_SAVED
+  | AutomationTriggerStepId.ROW_UPDATED
+
+type RowFilterInputs = Extract<
+  AutomationTriggerInputs<RowFilterStepId>,
+  { filters?: SearchFilters }
+>
 
 async function getAllAutomations() {
   const db = context.getAppDB()
@@ -63,11 +86,14 @@ async function queueRelevantRowAutomations(
     // make sure it is the correct table ID as well
     automations = automations.filter(automation => {
       const trigger = automation.definition.trigger
+
+      const triggerInputs = trigger?.inputs as RowTriggerInputs
+
       return (
         trigger &&
         trigger.event === eventType &&
         !automation.disabled &&
-        trigger?.inputs?.tableId === event.row.tableId
+        triggerInputs?.tableId === event.row.tableId
       )
     })
 
@@ -154,6 +180,7 @@ interface AutomationTriggerParams {
   timeout?: number
   appId?: string
   user?: UserBindings
+  table?: Table
 }
 
 export async function externalTrigger(
@@ -181,12 +208,15 @@ export async function externalTrigger(
   ) {
     // values are likely to be submitted as strings, so we shall convert to correct type
     const coercedFields: any = {}
-    const fields = automation.definition.trigger.inputs.fields
-    for (let key of Object.keys(fields || {})) {
+    const triggerInputs = automation.definition.trigger.inputs
+    const fields =
+      triggerInputs && "fields" in triggerInputs ? triggerInputs.fields : {}
+    for (const key of Object.keys(fields || {})) {
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields
   }
+
   // row actions and webhooks flatten the fields down
   else if (
     sdk.automations.isRowAction(automation) ||
@@ -198,6 +228,7 @@ export async function externalTrigger(
       fields: {},
     }
   }
+
   const data: AutomationData = { automation, event: params }
 
   const shouldTrigger = await checkTriggerFilters(automation, {
@@ -265,16 +296,17 @@ async function checkTriggerFilters(
   event: { row: Row; oldRow: Row }
 ): Promise<boolean> {
   const trigger = automation.definition.trigger
-  const filters = trigger?.inputs?.filters
-  const tableId = trigger?.inputs?.tableId
+  const triggerInputs = trigger.inputs as RowFilterInputs
+  const filters = triggerInputs?.filters
+  const tableId = triggerInputs?.tableId
 
   if (!filters) {
     return true
   }
 
   if (
-    trigger.stepId === definitions.ROW_UPDATED.stepId ||
-    trigger.stepId === definitions.ROW_SAVED.stepId
+    trigger.stepId === automations.triggers.definitions.ROW_UPDATED.stepId ||
+    trigger.stepId === automations.triggers.definitions.ROW_SAVED.stepId
   ) {
     const newRow = await automationUtils.cleanUpRow(tableId, event.row)
     return rowPassesFilters(newRow, filters)

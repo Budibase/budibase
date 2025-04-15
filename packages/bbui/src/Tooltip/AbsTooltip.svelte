@@ -1,38 +1,24 @@
-<script context="module">
-  export const TooltipPosition = {
-    Top: "top",
-    Right: "right",
-    Bottom: "bottom",
-    Left: "left",
-  }
-  export const TooltipType = {
-    Default: "default",
-    Info: "info",
-    Positive: "positive",
-    Negative: "negative",
-  }
-</script>
-
-<script>
+<script lang="ts">
   import Portal from "svelte-portal"
   import { fade } from "svelte/transition"
   import "@spectrum-css/tooltip/dist/index-vars.css"
   import { onDestroy } from "svelte"
+  import { TooltipPosition, TooltipType } from "../constants"
 
-  export let position = TooltipPosition.Top
-  export let type = TooltipType.Default
-  export let text = ""
-  export let fixed = false
-  export let color = ""
-  export let noWrap = false
+  export let position: TooltipPosition = TooltipPosition.Top
+  export let type: TooltipType = TooltipType.Default
+  export let text: string = ""
+  export let fixed: boolean = false
+  export let color: string | undefined = undefined
+  export let noWrap: boolean = false
 
-  let wrapper
+  let wrapper: HTMLElement | undefined
   let hovered = false
-  let left
-  let top
+  let left: number | undefined
+  let top: number | undefined
   let visible = false
-  let timeout
-  let interval
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  let interval: ReturnType<typeof setInterval> | undefined
 
   $: {
     if (hovered || fixed) {
@@ -49,8 +35,8 @@
   const updateTooltipPosition = () => {
     const node = wrapper?.children?.[0]
     if (!node) {
-      left = null
-      top = null
+      left = undefined
+      top = undefined
       return
     }
     const bounds = node.getBoundingClientRect()

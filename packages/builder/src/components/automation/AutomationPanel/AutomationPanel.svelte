@@ -32,7 +32,6 @@
     })
 
   $: groupedAutomations = groupAutomations(filteredAutomations)
-
   $: showNoResults = searchString && !filteredAutomations.length
 
   const groupAutomations = automations => {
@@ -41,7 +40,6 @@
     for (let auto of automations) {
       let category = null
       let dataTrigger = false
-
       // Group by datasource if possible
       if (dsTriggers.includes(auto.definition?.trigger?.stepId)) {
         if (auto.definition.trigger.inputs?.tableId) {
@@ -97,7 +95,10 @@
           {triggerGroup?.name}
         </div>
         {#each triggerGroup.entries as automation}
-          <AutomationNavItem {automation} icon={triggerGroup.icon} />
+          <AutomationNavItem
+            {automation}
+            icon={automation?.definition?.trigger?.icon}
+          />
         {/each}
       </div>
     {/each}

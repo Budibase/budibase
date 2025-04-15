@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/divider/dist/index-vars.css"
 
-  export let size = "M"
+  export let size: "S" | "M" | "L" = "M"
 
   export let vertical = false
   export let noMargin = false

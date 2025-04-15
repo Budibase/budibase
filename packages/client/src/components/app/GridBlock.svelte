@@ -3,8 +3,9 @@
   // because it functions similarly to one
   import { getContext, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
-  import { featuresStore } from "stores"
+  import { featuresStore } from "@/stores"
   import { Grid } from "@budibase/frontend-core"
+  import { processStringSync } from "@budibase/string-templates"
 
   // table is actually any datasource, but called table for legacy compatibility
   export let table
@@ -42,11 +43,12 @@
   let gridContext
   let minHeight = 0
 
+  $: id = $component.id
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
   $: parsedColumns = getParsedColumns(columns)
-  $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
+  $: schemaOverrides = getSchemaOverrides(parsedColumns, $context)
   $: selectedRows = deriveSelectedRows(gridContext)
   $: styles = patchStyles($component.styles, minHeight)
   $: data = { selectedRows: $selectedRows }
@@ -65,7 +67,6 @@
     const clean = gridContext?.rows.actions.cleanRow || (x => x)
     const cleaned = rows.map(clean)
     const goldenRow = generateGoldenSample(cleaned)
-    const id = get(component).id
     return {
       // Not sure what this one is for...
       [id]: goldenRow,
@@ -96,20 +97,44 @@
     }))
   }
 
-  const getSchemaOverrides = columns => {
+  const getSchemaOverrides = (columns, context) => {
     let overrides = {}
     columns.forEach((column, idx) => {
       overrides[column.field] = {
         displayName: column.label,
         order: idx,
-        conditions: column.conditions,
         visible: !!column.active,
+        conditions: enrichConditions(column.conditions, context),
+        format: createFormatter(column),
+
+        // Small hack to ensure we react to all changes, as our
+        // memoization cannot compare differences in functions
+        rand: column.conditions?.length ? Math.random() : null,
       }
       if (column.width) {
         overrides[column.field].width = column.width
       }
     })
     return overrides
+  }
+
+  const enrichConditions = (conditions, context) => {
+    return conditions?.map(condition => {
+      return {
+        ...condition,
+        referenceValue: processStringSync(
+          condition.referenceValue || "",
+          context
+        ),
+      }
+    })
+  }
+
+  const createFormatter = column => {
+    if (typeof column.format !== "string" || !column.format.trim().length) {
+      return null
+    }
+    return row => processStringSync(column.format, { [id]: row })
   }
 
   const enrichButtons = buttons => {

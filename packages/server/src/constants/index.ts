@@ -130,11 +130,6 @@ export enum InvalidColumns {
   TABLE_ID = "tableId",
 }
 
-export enum AutomationErrors {
-  INCORRECT_TYPE = "INCORRECT_TYPE",
-  FAILURE_CONDITION = "FAILURE_CONDITION_MET",
-}
-
 // pass through the list from the auth/core lib
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5

@@ -1,8 +1,6 @@
 <script>
-  import { get } from "svelte/store"
   import { isEqual } from "lodash"
-  import { integrationForDatasource } from "@/stores/selectors"
-  import { integrations, datasources } from "@/stores/builder"
+  import { integrations } from "@/stores/builder"
   import { notifications, Button } from "@budibase/bbui"
 
   export let datasource
@@ -12,11 +10,7 @@
 
   const save = async () => {
     try {
-      const integration = integrationForDatasource(
-        get(integrations),
-        updatedDatasource
-      )
-      await datasources.save({ datasource: updatedDatasource, integration })
+      await integrations.saveDatasource(updatedDatasource)
       notifications.success(
         `Datasource ${updatedDatasource.name} updated successfully`
       )

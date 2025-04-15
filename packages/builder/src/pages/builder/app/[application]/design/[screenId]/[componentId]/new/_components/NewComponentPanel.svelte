@@ -13,6 +13,16 @@
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
 
+  // Smallest possible 1x1 transparent GIF
+  const ghost = new Image(1, 1)
+  ghost.src =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+
+  // Aliases for other strings to match to when searching
+  const aliases = {
+    text: ["headline", "paragraph"],
+  }
+
   let searchString
   let searchRef
   let selectedIndex
@@ -48,7 +58,7 @@
     // Get initial set of allowed components
     let allowedComponents = []
     const definition = componentStore.getDefinition(component?._component)
-    if (definition.legalDirectChildren?.length) {
+    if (definition?.legalDirectChildren?.length) {
       allowedComponents = definition.legalDirectChildren.map(x => {
         return `@budibase/standard-components/${x}`
       })
@@ -57,7 +67,7 @@
     }
 
     // Build up list of illegal children from ancestors
-    let illegalChildren = definition.illegalChildren || []
+    let illegalChildren = definition?.illegalChildren || []
     path.forEach(ancestor => {
       // Sidepanels and modals can be nested anywhere in the component tree, but really they are always rendered at the top level.
       // Because of this, it doesn't make sense to carry over any parent illegal children to them, so the array is reset here.
@@ -134,20 +144,16 @@
       }
     })
 
-    // Swap blocks and plugins
-    let tmp = enrichedStructure[1]
-    enrichedStructure[1] = enrichedStructure[0]
-    enrichedStructure[0] = tmp
-
     return enrichedStructure
   }
 
   const filterStructure = (structure, allowedComponents, search) => {
-    selectedIndex = search ? 0 : null
-    componentList = []
     if (!structure?.length) {
       return []
     }
+    search = search?.toLowerCase()
+    selectedIndex = search ? 0 : null
+    componentList = []
 
     // Return only items which match the search string
     let filteredStructure = []
@@ -156,8 +162,12 @@
         const name = child.name.toLowerCase()
 
         // Check if the component matches the search string
-        if (search && !name.includes(search.toLowerCase())) {
-          return false
+        if (search) {
+          const nameMatch = name.includes(search)
+          const aliasMatch = (aliases[name] || []).some(x => x.includes(search))
+          if (!nameMatch && !aliasMatch) {
+            return false
+          }
         }
 
         // Check if the component is allowed as a child
@@ -217,7 +227,8 @@
     }
   })
 
-  const onDragStart = component => {
+  const onDragStart = (e, component) => {
+    e.dataTransfer.setDragImage(ghost, 0, 0)
     previewStore.startDrag(component)
   }
 
@@ -250,16 +261,20 @@
             {#each category.children as component}
               <div
                 draggable="true"
-                on:dragstart={() => onDragStart(component.component)}
+                on:dragstart={e => onDragStart(e, component.component)}
                 on:dragend={onDragEnd}
                 class="component"
                 class:selected={selectedIndex === orderMap[component.component]}
                 on:click={() => addComponent(component.component)}
-                on:mouseover={() => (selectedIndex = null)}
-                on:focus
+                on:mouseenter={() => (selectedIndex = null)}
               >
                 <Icon name={component.icon} />
-                <Body size="XS">{component.name}</Body>
+                <div class="component-name">
+                  <Body size="XS">{component.name}</Body>
+                  {#if component.new}
+                    <div class="new">NEW</div>
+                  {/if}
+                </div>
               </div>
             {/each}
           </Layout>
@@ -308,7 +323,22 @@
   }
   .component:hover {
     background: var(--spectrum-global-color-gray-300);
-    cursor: pointer;
+  }
+  .component-name {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 4px;
+  }
+  .new {
+    font-size: 8px;
+    color: white;
+    background: var(--bb-indigo);
+    border-radius: 2px;
+    padding: 1px 3px;
+    font-weight: bold;
+    margin-left: auto;
+    flex-shrink: 0;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;

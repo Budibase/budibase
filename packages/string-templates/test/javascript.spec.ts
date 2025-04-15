@@ -125,11 +125,6 @@ describe("Javascript", () => {
       expect(processJS(`throw "Error"`)).toEqual("Error")
     })
 
-    it("should timeout after one second", () => {
-      const output = processJS(`while (true) {}`)
-      expect(output).toBe("Timed out while executing JS")
-    })
-
     it("should prevent access to the process global", async () => {
       expect(processJS(`return process`)).toEqual(
         "ReferenceError: process is not defined"

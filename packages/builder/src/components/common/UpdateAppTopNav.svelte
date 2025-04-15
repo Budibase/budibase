@@ -25,7 +25,7 @@
 </div>
 
 <Popover
-  customZindex={998}
+  customZIndex={998}
   bind:this={formPopover}
   align="center"
   anchor={formPopoverAnchor}

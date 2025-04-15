@@ -14,15 +14,17 @@
   {
     "name": "Layout",
     "icon": "ClassicGridView",
-    "children": ["container", "sidepanel", "modal"]
+    "children": ["container", "sidepanel", "modal", "accordion"]
   },
   {
     "name": "Data",
     "icon": "Data",
     "children": [
+      "singlerowprovider",
       "dataprovider",
       "repeater",
       "gridblock",
+      "pdftable",
       "spreadsheet",
       "dynamicfilter",
       "daterangepicker"
@@ -32,8 +34,7 @@
     "name": "Basic",
     "icon": "TextParagraph",
     "children": [
-      "heading",
-      "text",
+      "textv2",
       "button",
       "buttongroup",
       "tag",
@@ -73,7 +74,8 @@
       "codescanner",
       "signaturesinglefield",
       "bbreferencesinglefield",
-      "bbreferencefield"
+      "bbreferencefield",
+      "ratingfield"
     ]
   },
   {

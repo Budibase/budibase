@@ -61,6 +61,7 @@
           anchor={primaryDisplayColumnAnchor}
           item={columns.primary}
           on:change={e => columns.update(e.detail)}
+          {bindings}
         />
       </div>
     </div>

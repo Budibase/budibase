@@ -3,6 +3,7 @@ import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
 import qs from "querystring"
 import { DEFAULT_TENANT_ID, getTenantId } from "../../context"
+import { PWAManifestImage } from "@budibase/types"
 
 export function clientLibraryPath(appId: string) {
   return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
@@ -13,7 +14,7 @@ export function clientLibraryPath(appId: string) {
  * due to issues with the domain we were unable to continue doing this - keeping
  * incase we are able to switch back to CDN path again in future.
  */
-export function clientLibraryCDNUrl(appId: string, version: string) {
+export async function clientLibraryCDNUrl(appId: string, version: string) {
   let file = clientLibraryPath(appId)
   if (env.CLOUDFRONT_CDN) {
     // append app version to bust the cache
@@ -24,7 +25,7 @@ export function clientLibraryCDNUrl(appId: string, version: string) {
     // file is public
     return cloudfront.getUrl(file)
   } else {
-    return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
+    return await objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
   }
 }
 
@@ -44,10 +45,33 @@ export function clientLibraryUrl(appId: string, version: string) {
   return `/api/assets/client?${qs.encode(qsParams)}`
 }
 
-export function getAppFileUrl(s3Key: string) {
+export async function getAppFileUrl(s3Key: string) {
   if (env.CLOUDFRONT_CDN) {
     return cloudfront.getPresignedUrl(s3Key)
   } else {
-    return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, s3Key)
+    return await objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, s3Key)
+  }
+}
+
+export async function enrichPWAImages(
+  images: PWAManifestImage[]
+): Promise<PWAManifestImage[]> {
+  if (images.length === 0) {
+    return []
+  }
+
+  try {
+    return await Promise.all(
+      images.map(async image => {
+        return {
+          ...image,
+          src: await getAppFileUrl(image.src),
+          type: image.type || "image/png",
+        }
+      })
+    )
+  } catch (error) {
+    console.error("Error enriching PWA images:", error)
+    return images
   }
 }

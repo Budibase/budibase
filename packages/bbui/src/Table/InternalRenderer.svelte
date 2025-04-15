@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import Icon from "../Icon/Icon.svelte"
   import { copyToClipboard } from "../helpers"
   import { notifications } from "../Stores/notifications"
 
-  export let value
+  export let value: string
 
-  const onClick = async e => {
+  const onClick = async (e: MouseEvent): Promise<void> => {
     e.stopPropagation()
     try {
       await copyToClipboard(value)

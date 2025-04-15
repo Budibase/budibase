@@ -23,6 +23,7 @@
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
   import QueryViewerSavePromptModal from "./QueryViewerSavePromptModal.svelte"
   import { Utils } from "@budibase/frontend-core"
+  import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
 
   export let query
   let queryHash
@@ -170,6 +171,7 @@
         </Body>
       </div>
       <div class="controls">
+        <ConnectedQueryScreens sourceId={query._id} />
         <Button disabled={loading} on:click={runQuery} overBackground>
           <Icon size="S" name="Play" />
           Run query</Button
@@ -384,6 +386,8 @@
   }
 
   .controls {
+    display: flex;
+    align-items: center;
     flex-shrink: 0;
   }
 

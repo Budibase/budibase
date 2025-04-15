@@ -1,34 +1,30 @@
-import { getScreenParams, generateScreenID, DocumentType } from "../../db/utils"
+import { DocumentType, generateScreenID } from "../../db/utils"
 import {
-  events,
   context,
-  tenancy,
   db as dbCore,
+  events,
   roles,
+  tenancy,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
 import {
-  Plugin,
-  ScreenProps,
-  Screen,
-  UserCtx,
+  DeleteScreenResponse,
   FetchScreenResponse,
+  Plugin,
   SaveScreenRequest,
   SaveScreenResponse,
-  DeleteScreenResponse,
+  Screen,
+  ScreenProps,
+  ScreenUsage,
+  UsageInScreensResponse,
+  UserCtx,
 } from "@budibase/types"
 import { builderSocket } from "../../websockets"
+import sdk from "../../sdk"
+import { sdk as sharedSdk } from "@budibase/shared-core"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
-  const db = context.getAppDB()
-
-  const screens = (
-    await db.allDocs(
-      getScreenParams(null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map((el: any) => el.doc)
+  const screens = await sdk.screens.fetch()
 
   const roleId = ctx.user?.role?._id as string
   if (!roleId) {
@@ -139,4 +135,24 @@ function findPlugins(component: ScreenProps, foundPlugins: string[]) {
     return
   }
   component._children.forEach(child => findPlugins(child, foundPlugins))
+}
+
+export async function usage(ctx: UserCtx<void, UsageInScreensResponse>) {
+  const sourceId = ctx.params.sourceId
+  const sourceType = sdk.common.getSourceType(sourceId)
+  const allScreens = await sdk.screens.fetch()
+  const response: ScreenUsage[] = []
+  for (let screen of allScreens) {
+    const found = sharedSdk.screens.findInSettings(screen, sourceId)
+    if (found.length !== 0) {
+      response.push({
+        url: screen.routing.route,
+        _id: screen._id!,
+      })
+    }
+  }
+  ctx.body = {
+    sourceType,
+    screens: response,
+  }
 }

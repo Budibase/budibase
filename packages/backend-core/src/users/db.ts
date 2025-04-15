@@ -26,8 +26,9 @@ import {
 import {
   getAccountHolderFromUsers,
   isAdmin,
-  isCreator,
+  creatorsInList,
   validateUniqueUser,
+  isCreatorAsync,
 } from "./utils"
 import {
   getFirstPlatformUser,
@@ -260,11 +261,25 @@ export class UserDB {
       }
     }
 
-    const change = dbUser ? 0 : 1 // no change if there is existing user
-    const creatorsChange =
-      (await isCreator(dbUser)) !== (await isCreator(user)) ? 1 : 0
+    let change = 1
+    let creatorsChange = 0
+    if (opts.isAccountHolder || dbUser) {
+      change = 0
+      creatorsChange = 1
+    }
+
+    if (dbUser) {
+      const [isDbUserCreator, isUserCreator] = await creatorsInList([
+        dbUser,
+        user,
+      ])
+      creatorsChange = isDbUserCreator !== isUserCreator ? 1 : 0
+    }
+
     return UserDB.quotas.addUsers(change, creatorsChange, async () => {
-      await validateUniqueUser(email, tenantId)
+      if (!opts.isAccountHolder) {
+        await validateUniqueUser(email, tenantId)
+      }
 
       let builtUser = await UserDB.buildUser(user, opts, tenantId, dbUser)
       // don't allow a user to update its own roles/perms
@@ -351,7 +366,7 @@ export class UserDB {
       }
       newUser.userGroups = groups || []
       newUsers.push(newUser)
-      if (await isCreator(newUser)) {
+      if (await isCreatorAsync(newUser)) {
         newCreators.push(newUser)
       }
     }
@@ -451,10 +466,8 @@ export class UserDB {
     }))
     const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
 
-    const creatorsEval = await Promise.all(usersToDelete.map(isCreator))
-    const creatorsToDeleteCount = creatorsEval.filter(
-      creator => !!creator
-    ).length
+    const creatorsEval = await creatorsInList(usersToDelete)
+    const creatorsToDeleteCount = creatorsEval.filter(creator => creator).length
 
     const ssoUsersToDelete: AnyDocument[] = []
     for (let user of usersToDelete) {
@@ -531,7 +544,7 @@ export class UserDB {
 
     await db.remove(userId, dbUser._rev!)
 
-    const creatorsToDelete = (await isCreator(dbUser)) ? 1 : 0
+    const creatorsToDelete = (await isCreatorAsync(dbUser)) ? 1 : 0
     await UserDB.quotas.removeUsers(1, creatorsToDelete)
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)
@@ -569,6 +582,7 @@ export class UserDB {
       hashPassword: opts?.hashPassword,
       requirePassword: opts?.requirePassword,
       skipPasswordValidation: opts?.skipPasswordValidation,
+      isAccountHolder: true,
     })
   }
 

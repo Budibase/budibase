@@ -88,6 +88,16 @@ export default async function setup() {
           content: `
           [log]
           level = warn
+
+          [httpd]
+          socket_options = [{nodelay, true}]
+
+          [couchdb]
+          single_node = true
+
+          [cluster]
+          n = 1
+          q = 1
         `,
           target: "/opt/couchdb/etc/local.d/test-couchdb.ini",
         },
