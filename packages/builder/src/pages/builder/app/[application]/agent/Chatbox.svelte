@@ -1,11 +1,13 @@
 <script lang="ts">
   import { MarkdownViewer } from "@budibase/bbui"
+  import BBAI from "@/components/common/Icons/BBAI.svelte"
 
   export let messages: {
     message: string
     system?: boolean
     isError?: boolean
   }[] = []
+  export let loading: boolean = false
 </script>
 
 <div class="chatbox">
@@ -18,6 +20,11 @@
       <MarkdownViewer value={message.message} />
     </div>
   {/each}
+  {#if loading}
+    <div class="message system">
+      <BBAI size="48px" animate />
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -28,7 +35,7 @@
     width: 800px;
     margin: 0 auto;
     flex: 1 1 auto;
-    padding-bottom: 24px;
+    padding: 48px 0 24px 0;
   }
 
   .message {
