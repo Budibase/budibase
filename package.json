@@ -120,7 +120,8 @@
     "@azure/identity": "4.2.1",
     "kind-of": "6.0.3",
     "**/nan": "2.22.0",
-    "globals": "15.13.0"
+    "globals": "15.13.0",
+    "esm": "npm:esm-wallaby@3.2.32"
   },
   "engines": {
     "node": ">=22.0.0 <23.0.0"

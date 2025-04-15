@@ -11407,10 +11407,10 @@ eslint@^8.56.0:
     strip-ansi "^6.0.1"
     text-table "^0.2.0"
 
-esm@^3.2.25:
-  version "3.2.25"
-  resolved "https://registry.yarnpkg.com/esm/-/esm-3.2.25.tgz#342c18c29d56157688ba5ce31f8431fbb795cc10"
-  integrity sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==
+esm@^3.2.25, "esm@npm:esm-wallaby@3.2.32":
+  version "3.2.32"
+  resolved "https://registry.yarnpkg.com/esm-wallaby/-/esm-wallaby-3.2.32.tgz#0cacc428e788938173260e4a91c75add42e106df"
+  integrity sha512-/E27KRXrtsHoHg2YOoTVrTsRz15puU1M/ul1qPK129gwbRLmHulLSSfGCRAdu4WSzjaHcImnUyBTX3KCPmlfhw==
 
 espree@^10.0.1, espree@^10.3.0:
   version "10.3.0"
