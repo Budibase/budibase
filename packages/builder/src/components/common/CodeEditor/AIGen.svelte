@@ -24,7 +24,7 @@
     accept: void
     reject: { code: string | null }
   }>()
-
+  $: console.log($auth.user?.llm)
   let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
   let promptLoading = false
@@ -34,13 +34,13 @@
   let containerWidth = "auto"
   let promptText = ""
   let animateBorder = false
-  let aiEnabled = false
   let creditsExceeded = false // TODO: Make this computed when quota is implemented
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
+  $: aiEnabled = !!$auth?.user?.llm
 
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
@@ -144,6 +144,8 @@
         src={BBAI}
         alt="AI"
         class="ai-icon"
+        class:disabled={expanded &&
+          (suggestedCode !== null || !aiEnabled || creditsExceeded)}
         on:click={e => {
           e.stopPropagation()
           toggleExpand()
@@ -378,6 +380,7 @@
     gap: var(--spacing-s);
     z-index: 4;
     flex-shrink: 0;
+    margin-right: var(--spacing-s);
   }
 
   .button-content-wrapper {
@@ -395,5 +398,10 @@
   .prompt-input[readonly] {
     color: var(--spectrum-global-color-gray-500);
     cursor: not-allowed;
+  }
+
+  .ai-icon.disabled {
+    filter: grayscale(1) brightness(1.5);
+    opacity: 0.5;
   }
 </style>
