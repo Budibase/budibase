@@ -42,8 +42,11 @@
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
-  $: aiEnabled = !!$auth?.user?.llm
+  $: aiEnabled = false
   $: expanded = expandedOnly ? true : expanded
+  $: if (expandedOnly) {
+    containerWidth = calculateExpandedWidth()
+  }
 
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
@@ -90,14 +93,17 @@
     animateBorder = false
   }
 
+  function calculateExpandedWidth() {
+    return parentWidth
+      ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
+      : "300px"
+  }
+
   function toggleExpand() {
     if (!expanded) {
       expanded = true
       animateBorder = true
-      // Calculate width based on size of parent
-      containerWidth = parentWidth
-        ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
-        : "300px"
+      containerWidth = calculateExpandedWidth()
       setTimeout(() => {
         promptInput?.focus()
       }, 250)
