@@ -22,20 +22,27 @@
   let previousContents: string | null = null
   let expanded = false
   let containerWidth = "auto"
-  let containerHeight = "40px"
+  let containerHeight = "44px"
   let promptText = ""
   let animateBorder = false
-
   function adjustContainerHeight() {
     if (promptInput && buttonElement) {
+      if (!promptText.trim()) {
+        promptInput.style.height = "24px"
+        containerHeight = "44px"
+        return
+      }
+
       promptInput.style.height = "0px"
       const newHeight = Math.min(promptInput.scrollHeight, 100)
       promptInput.style.height = `${newHeight}px`
-      containerHeight = `${Math.max(40, newHeight + 20)}px`
+      containerHeight = `${Math.max(44, newHeight + 18)}px`
+    } else if (!promptInput) {
+      containerHeight = "44px"
     }
   }
 
-  $: if (promptInput && promptText) adjustContainerHeight()
+  $: if (promptInput) adjustContainerHeight()
 
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
@@ -76,7 +83,7 @@
   function resetExpand() {
     expanded = false
     containerWidth = "auto"
-    containerHeight = "40px"
+    containerHeight = "44px"
     promptText = ""
     suggestedCode = null
     previousContents = null
@@ -91,7 +98,7 @@
       containerWidth = parentWidth
         ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
         : "300px"
-      containerHeight = "40px"
+      containerHeight = "44px"
       setTimeout(() => {
         promptInput?.focus()
       }, 250)
@@ -190,7 +197,7 @@
 <style>
   .ai-gen-container {
     --container-width: auto;
-    --container-height: 40px;
+    --container-height: 44px;
     position: absolute;
     right: 10px;
     bottom: 10px;
@@ -229,7 +236,7 @@
     background: linear-gradient(
       125deg,
       transparent -10%,
-      #6e56ff 5%,
+      #6e56ff 2%,
       #9f8fff 15%,
       #9f8fff 25%,
       transparent 35%,
@@ -332,7 +339,9 @@
     min-width: 0;
     resize: none;
     overflow: hidden;
-    line-height: 1.2;
+    line-height: 1.3;
+    padding: 6px 0 0 0;
+    height: 24px;
     min-height: 10px !important;
   }
 
