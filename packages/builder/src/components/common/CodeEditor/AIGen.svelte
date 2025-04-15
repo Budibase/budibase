@@ -6,7 +6,11 @@
     Button,
     Modal,
     ModalContent,
+    Body,
+    Link,
   } from "@budibase/bbui"
+  import { auth, admin } from "@/stores/portal"
+
   import { createEventDispatcher } from "svelte"
   import { API } from "@/api"
   import type { EnrichedBinding } from "@budibase/types"
@@ -30,12 +34,13 @@
   let containerWidth = "auto"
   let promptText = ""
   let animateBorder = false
-  let aiEnabled = true
-  let hasAICredits = true
-  let showSwitchOnAIModal = false
-  let showAddCreditsModal = false
-  let switchOnAIModal: Modal | null = null
-  let addCreditsModal: Modal | null = null
+  let aiEnabled = false
+  let creditsExceeded = false // TODO: Make this computed when quota is implemented
+  let switchOnAIModal: Modal
+  let addCreditsModal: Modal
+
+  $: accountPortalAccess = $auth?.user?.accountPortalAccess
+  $: accountPortal = $admin.accountPortalUrl
 
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
@@ -86,7 +91,7 @@
     if (!expanded) {
       expanded = true
       animateBorder = true
-      // Calculate width based on size of CodeEditor parent
+      // Calculate width based on size of parent
       containerWidth = parentWidth
         ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
         : "300px"
@@ -114,6 +119,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="ai-gen-container" style="--container-width: {containerWidth}">
   {#if suggestedCode !== null}
     <div class="floating-actions">
@@ -137,7 +144,10 @@
         src={BBAI}
         alt="AI"
         class="ai-icon"
-        class:disabled={(!aiEnabled || !hasAICredits) && expanded}
+        on:click={e => {
+          e.stopPropagation()
+          toggleExpand()
+        }}
       />
       {#if expanded}
         <input
@@ -147,7 +157,7 @@
           class="prompt-input"
           placeholder="Generate Javascript..."
           on:keydown={handleKeyPress}
-          disabled={suggestedCode !== null || !aiEnabled || !hasAICredits}
+          disabled={suggestedCode !== null || !aiEnabled || creditsExceeded}
           readonly={suggestedCode !== null}
         />
       {:else}
@@ -159,29 +169,40 @@
     {#if expanded}
       <div class="action-buttons">
         {#if !aiEnabled}
-          <Button cta size="S" on:click={() => switchOnAIModal?.show()}>
+          <Button cta size="S" on:click={() => switchOnAIModal.show()}>
             Switch on AI
           </Button>
           <Modal bind:this={switchOnAIModal}>
-            <ModalContent
-              title="Switch on AI"
-              confirmText="Enable"
-              onConfirm={() => (showSwitchOnAIModal = false)}
-            >
-              Enable AI features for your workspace.
+            <ModalContent title="Switch on AI" showConfirmButton={false}>
+              <div class="enable-ai">
+                <p>To enable BB AI:</p>
+                <ul>
+                  <li>
+                    Add your Budibase license key:
+                    <Link href={accountPortal}>Budibase account portal</Link>
+                  </li>
+                  <li>
+                    Go to the portal settings page, click AI and switch on BB AI
+                  </li>
+                </ul>
+              </div>
             </ModalContent>
           </Modal>
-        {:else if !hasAICredits}
-          <Button cta size="S" on:click={() => addCreditsModal?.show()}>
+        {:else if creditsExceeded}
+          <Button cta size="S" on:click={() => addCreditsModal.show()}>
             Add AI credits
           </Button>
           <Modal bind:this={addCreditsModal}>
-            <ModalContent
-              title="Add AI credits"
-              confirmText="Add credits"
-              onConfirm={() => (showAddCreditsModal = false)}
-            >
-              Purchase more AI credits to continue using AI features.
+            <ModalContent title="Add AI credits" showConfirmButton={false}>
+              <Body size="S">
+                {#if accountPortalAccess}
+                  <Link href={"https://budibase.com/contact/"}
+                    >Contact sales</Link
+                  > to unlock additional BB AI credits
+                {:else}
+                  Contact your account holder to unlock additional BB AI credits
+                {/if}
+              </Body>
             </ModalContent>
           </Modal>
         {:else}
@@ -196,16 +217,6 @@
             on:click={() => generateJs(promptText)}
           />
         {/if}
-        <Icon
-          hoverable
-          size="S"
-          name="Close"
-          hoverColor="#6E56FF"
-          on:click={e => {
-            e.stopPropagation()
-            if (!suggestedCode && !promptLoading) toggleExpand()
-          }}
-        />
       </div>
     {/if}
   </button>
@@ -334,6 +345,7 @@
     height: 18px;
     margin-right: 8px;
     flex-shrink: 0;
+    cursor: pointer;
   }
 
   .ai-gen-text {
@@ -382,12 +394,6 @@
   .prompt-input:disabled,
   .prompt-input[readonly] {
     color: var(--spectrum-global-color-gray-500);
-    cursor: not-allowed;
-  }
-
-  .ai-icon.disabled {
-    filter: grayscale(1) brightness(1.5);
-    opacity: 0.5;
     cursor: not-allowed;
   }
 </style>
