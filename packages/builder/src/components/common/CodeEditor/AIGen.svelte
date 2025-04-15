@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { ActionButton, Icon, notifications } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Icon,
+    notifications,
+    Button,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { API } from "@/api"
   import type { EnrichedBinding } from "@budibase/types"
@@ -23,6 +30,12 @@
   let containerWidth = "auto"
   let promptText = ""
   let animateBorder = false
+  let aiEnabled = true
+  let hasAICredits = true
+  let showSwitchOnAIModal = false
+  let showAddCreditsModal = false
+  let switchOnAIModal: Modal | null = null
+  let addCreditsModal: Modal | null = null
 
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
@@ -112,7 +125,6 @@
       </ActionButton>
     </div>
   {/if}
-
   <button
     bind:this={buttonElement}
     class="spectrum-ActionButton fade"
@@ -121,7 +133,12 @@
     on:click={!expanded ? toggleExpand : undefined}
   >
     <div class="button-content-wrapper">
-      <img src={BBAI} alt="AI" class="ai-icon" />
+      <img
+        src={BBAI}
+        alt="AI"
+        class="ai-icon"
+        class:disabled={(!aiEnabled || !hasAICredits) && expanded}
+      />
       {#if expanded}
         <input
           type="text"
@@ -130,7 +147,7 @@
           class="prompt-input"
           placeholder="Generate Javascript..."
           on:keydown={handleKeyPress}
-          disabled={suggestedCode !== null}
+          disabled={suggestedCode !== null || !aiEnabled || !hasAICredits}
           readonly={suggestedCode !== null}
         />
       {:else}
@@ -139,19 +156,46 @@
         </span>
       {/if}
     </div>
-
     {#if expanded}
       <div class="action-buttons">
-        <Icon
-          color={promptLoading
-            ? "#6E56FF"
-            : "var(--spectrum-global-color-gray-600)"}
-          size="S"
-          hoverable
-          hoverColor="#6E56FF"
-          name={promptLoading ? "StopCircle" : "PlayCircle"}
-          on:click={() => generateJs(promptText)}
-        />
+        {#if !aiEnabled}
+          <Button cta size="S" on:click={() => switchOnAIModal?.show()}>
+            Switch on AI
+          </Button>
+          <Modal bind:this={switchOnAIModal}>
+            <ModalContent
+              title="Switch on AI"
+              confirmText="Enable"
+              onConfirm={() => (showSwitchOnAIModal = false)}
+            >
+              Enable AI features for your workspace.
+            </ModalContent>
+          </Modal>
+        {:else if !hasAICredits}
+          <Button cta size="S" on:click={() => addCreditsModal?.show()}>
+            Add AI credits
+          </Button>
+          <Modal bind:this={addCreditsModal}>
+            <ModalContent
+              title="Add AI credits"
+              confirmText="Add credits"
+              onConfirm={() => (showAddCreditsModal = false)}
+            >
+              Purchase more AI credits to continue using AI features.
+            </ModalContent>
+          </Modal>
+        {:else}
+          <Icon
+            color={promptLoading
+              ? "#6E56FF"
+              : "var(--spectrum-global-color-gray-600)"}
+            size="S"
+            hoverable
+            hoverColor="#6E56FF"
+            name={promptLoading ? "StopCircle" : "PlayCircle"}
+            on:click={() => generateJs(promptText)}
+          />
+        {/if}
         <Icon
           hoverable
           size="S"
@@ -333,5 +377,17 @@
     flex-grow: 1;
     min-width: 0;
     margin-right: var(--spacing-s);
+  }
+
+  .prompt-input:disabled,
+  .prompt-input[readonly] {
+    color: var(--spectrum-global-color-gray-500);
+    cursor: not-allowed;
+  }
+
+  .ai-icon.disabled {
+    filter: grayscale(1) brightness(1.5);
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>
