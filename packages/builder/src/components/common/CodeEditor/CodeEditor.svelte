@@ -469,6 +469,7 @@
 
 {#if aiGenEnabled}
   <AIGen
+    expandedOnly={true}
     {bindings}
     {value}
     parentWidth={editorWidth}
