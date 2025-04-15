@@ -14,28 +14,15 @@
     reject: { code: string | null }
   }>()
 
-  let buttonContainer: HTMLElement
-  let promptInput: HTMLTextAreaElement
+  let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
   let promptLoading = false
   let suggestedCode: string | null = null
   let previousContents: string | null = null
   let expanded = false
   let containerWidth = "auto"
-  let containerHeight = "40px"
   let promptText = ""
   let animateBorder = false
-
-  function adjustContainerHeight() {
-    if (promptInput && buttonElement) {
-      promptInput.style.height = "0px"
-      const newHeight = Math.min(promptInput.scrollHeight, 100)
-      promptInput.style.height = `${newHeight}px`
-      containerHeight = `${Math.max(40, newHeight + 20)}px`
-    }
-  }
-
-  $: if (promptInput && promptText) adjustContainerHeight()
 
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
@@ -76,7 +63,6 @@
   function resetExpand() {
     expanded = false
     containerWidth = "auto"
-    containerHeight = "40px"
     promptText = ""
     suggestedCode = null
     previousContents = null
@@ -91,7 +77,6 @@
       containerWidth = parentWidth
         ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
         : "300px"
-      containerHeight = "40px"
       setTimeout(() => {
         promptInput?.focus()
       }, 250)
@@ -116,11 +101,7 @@
   }
 </script>
 
-<div
-  class="ai-gen-container"
-  style="--container-width: {containerWidth}; --container-height: {containerHeight}"
-  bind:this={buttonContainer}
->
+<div class="ai-gen-container" style="--container-width: {containerWidth}">
   {#if suggestedCode !== null}
     <div class="floating-actions">
       <ActionButton size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
@@ -142,16 +123,15 @@
     <div class="button-content-wrapper">
       <img src={BBAI} alt="AI" class="ai-icon" />
       {#if expanded}
-        <textarea
+        <input
+          type="text"
           bind:this={promptInput}
           bind:value={promptText}
           class="prompt-input"
           placeholder="Generate Javascript..."
           on:keydown={handleKeyPress}
-          on:input={adjustContainerHeight}
           disabled={suggestedCode !== null}
           readonly={suggestedCode !== null}
-          rows="1"
         />
       {:else}
         <span class="spectrum-ActionButton-label ai-gen-text">
@@ -189,13 +169,12 @@
 
 <style>
   .ai-gen-container {
+    height: 40px;
     --container-width: auto;
-    --container-height: 40px;
     position: absolute;
     right: 10px;
     bottom: 10px;
     width: var(--container-width);
-    height: var(--container-height);
     display: flex;
     overflow: visible;
   }
@@ -229,7 +208,7 @@
     background: linear-gradient(
       125deg,
       transparent -10%,
-      #6e56ff 5%,
+      #6e56ff 2%,
       #9f8fff 15%,
       #9f8fff 25%,
       transparent 35%,
@@ -326,18 +305,16 @@
     border: none;
     background: transparent;
     outline: none;
-    font-size: var(--font-size-s);
     font-family: var(--font-sans);
     color: var(--spectrum-alias-text-color);
     min-width: 0;
     resize: none;
     overflow: hidden;
-    line-height: 1.2;
-    min-height: 10px !important;
   }
 
   .prompt-input::placeholder {
     color: var(--spectrum-global-color-gray-600);
+    font-family: var(--font-sans);
   }
 
   .action-buttons {
