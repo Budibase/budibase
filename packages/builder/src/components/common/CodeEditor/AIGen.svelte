@@ -37,10 +37,12 @@
   let creditsExceeded = false // TODO: Make this computed when quota is implemented
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
+  export let expandedOnly: boolean = false
 
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
   $: aiEnabled = !!$auth?.user?.llm
+  $: expanded = expandedOnly ? true : expanded
 
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
@@ -146,10 +148,12 @@
         class="ai-icon"
         class:disabled={expanded &&
           (suggestedCode !== null || !aiEnabled || creditsExceeded)}
-        on:click={e => {
-          e.stopPropagation()
-          toggleExpand()
-        }}
+        on:click={!expandedOnly
+          ? e => {
+              e.stopPropagation()
+              toggleExpand()
+            }
+          : undefined}
       />
       {#if expanded}
         <input
@@ -347,7 +351,7 @@
     height: 18px;
     margin-right: 8px;
     flex-shrink: 0;
-    cursor: pointer;
+    cursor: var(--ai-icon-cursor, pointer);
   }
 
   .ai-gen-text {
@@ -403,5 +407,9 @@
   .ai-icon.disabled {
     filter: grayscale(1) brightness(1.5);
     opacity: 0.5;
+  }
+
+  :global(.ai-gen-container[expandedonly]) .ai-icon {
+    cursor: default;
   }
 </style>
