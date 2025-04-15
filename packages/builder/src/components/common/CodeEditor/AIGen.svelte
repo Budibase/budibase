@@ -424,8 +424,4 @@
     filter: grayscale(1) brightness(1.5);
     opacity: 0.5;
   }
-
-  :global(.ai-gen-container[expandedonly]) .ai-icon {
-    cursor: default;
-  }
 </style>
