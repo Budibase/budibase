@@ -1,34 +1,20 @@
 <script lang="ts">
   import { API } from "@/api"
+  import AiInput from "@/components/common/ai/AIInput.svelte"
   import { featureFlag } from "@/helpers"
-  import { ActionButton, Input } from "@budibase/bbui"
+  import { ActionButton } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
-
-  let prompt: string
 
   $: isEnabled = featureFlag.isEnabled(FeatureFlag.AI_TABLE_GENERATION)
 
   async function submitPrompt(message: string) {
     await API.generateTables(message)
   }
-
-  async function onInputKeydown(e: KeyboardEvent) {
-    if (e.repeat || e.key !== "Enter") {
-      return
-    }
-
-    await submitPrompt(prompt)
-  }
 </script>
 
 <div class="ai-generation">
   <div class="ai-generation-prompt">
-    <Input
-      bind:value={prompt}
-      placeholder="Generate data using AI..."
-      on:keydown={onInputKeydown}
-      disabled={!isEnabled}
-    />
+    <AiInput placeholder="Generate data using AI..." onSubmit={submitPrompt} />
   </div>
   <div class="ai-generation-examples">
     {#if isEnabled}
