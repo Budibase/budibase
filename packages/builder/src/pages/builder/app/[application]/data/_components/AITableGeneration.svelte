@@ -1,11 +1,10 @@
 <script lang="ts">
   import { API } from "@/api"
   import AiInput from "@/components/common/ai/AIInput.svelte"
-  import { featureFlag } from "@/helpers"
+  import { auth, licensing } from "@/stores/portal"
   import { ActionButton } from "@budibase/bbui"
-  import { FeatureFlag } from "@budibase/types"
 
-  $: isEnabled = featureFlag.isEnabled(FeatureFlag.AI_TABLE_GENERATION)
+  $: isEnabled = $auth?.user?.llm && !$licensing.aiCreditsExceeded
 
   async function submitPrompt(message: string) {
     await API.generateTables(message)
