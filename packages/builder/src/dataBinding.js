@@ -1327,7 +1327,7 @@ const excludeExtensions = (string, binding) => {
   // Regex to find prefixed bindings (e.g. exclude foox for foo)
   const regex2 = new RegExp(`[a-zA-Z0-9-_]*${binding}[a-zA-Z0-9-_]+`, "g")
   const matches = [...string.matchAll(regex1), ...string.matchAll(regex2)]
-  for (let match of matches) {
+  for (const match of matches) {
     string = string.replace(match[0], new Array(match[0].length + 1).join("*"))
   }
   return string
