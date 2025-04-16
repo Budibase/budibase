@@ -707,6 +707,13 @@
   }
 
   .code-editor.ai-generated :global(.cm-content) {
+    background: transparent !important;
+  }
+
+  .code-editor.ai-generated :global(.cm-line) {
     background: #765ffe1a !important;
+    display: inline-block;
+    min-width: fit-content;
+    padding-right: 2px !important;
   }
 </style>
