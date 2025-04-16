@@ -14,7 +14,11 @@
 
 <div class="ai-generation">
   <div class="ai-generation-prompt">
-    <AiInput placeholder="Generate data using AI..." onSubmit={submitPrompt} />
+    <AiInput
+      placeholder="Generate data using AI..."
+      onSubmit={submitPrompt}
+      expandedOnly
+    />
   </div>
   <div class="ai-generation-examples">
     {#if isEnabled}

@@ -33,7 +33,6 @@
   let expanded = false
   let containerWidth = "auto"
   let promptText = ""
-  let animateBorder = false
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
@@ -50,6 +49,7 @@
 
   $: creditsExceeded = $licensing.aiCreditsExceeded
   $: disabled = suggestedCode !== null || !aiEnabled || creditsExceeded
+  $: animateBorder = !disabled && expanded
 
   $: if (
     expandedOnly ||
