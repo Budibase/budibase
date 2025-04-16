@@ -12,7 +12,7 @@ import {
   ProviderConfig,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { quotas } from "@budibase/pro"
@@ -285,7 +285,8 @@ describe("BudibaseAI", () => {
       envCleanup()
     })
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      await config.newTenant()
       nock.cleanAll()
       const license: License = {
         plan: {
@@ -365,6 +366,44 @@ describe("BudibaseAI", () => {
           status: 403,
         }
       )
+    })
+
+    it("handles text format", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = generator.word()
+      mockChatGPTResponse(gptResponse, { format: "text" })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: "text",
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+
+    it("handles json format", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = JSON.stringify({
+        [generator.word()]: generator.word(),
+      })
+      mockChatGPTResponse(gptResponse, { format: "json" })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: "json",
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
   })
 })
