@@ -40,12 +40,14 @@
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
+  const thresholdExpansionWidth = 350
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
   $: aiEnabled = $auth?.user?.llm
 
   $: expanded =
-    expandedOnly || (parentWidth !== null && parentWidth > 450)
+    expandedOnly ||
+    (parentWidth !== null && parentWidth > thresholdExpansionWidth)
       ? true
       : expanded
 
@@ -54,7 +56,7 @@
 
   $: if (
     expandedOnly ||
-    (expanded && parentWidth !== null && parentWidth > 350)
+    (expanded && parentWidth !== null && parentWidth > thresholdExpansionWidth)
   ) {
     containerWidth = calculateExpandedWidth()
   } else if (!expanded) {
