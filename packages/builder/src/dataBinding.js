@@ -1317,6 +1317,22 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
   return !invalids.find(invalid => noSpaces?.includes(invalid))
 }
 
+// If converting readable to runtime we need to ensure we don't replace words
+// which are substrings of other words - e.g. a binding of `a` would turn
+// `hah` into `h[a]h` which is obviously wrong. To avoid this we can remove all
+// expanded versions of the binding to be replaced.
+const excludeExtensions = (string, binding) => {
+  // Regex to find prefixed bindings (e.g. exclude xfoo for foo)
+  const regex1 = new RegExp(`[a-zA-Z0-9-_]+${binding}[a-zA-Z0-9-_]*`, "g")
+  // Regex to find prefixed bindings (e.g. exclude foox for foo)
+  const regex2 = new RegExp(`[a-zA-Z0-9-_]*${binding}[a-zA-Z0-9-_]+`, "g")
+  const matches = [...string.matchAll(regex1), ...string.matchAll(regex2)]
+  for (const match of matches) {
+    string = string.replace(match[0], new Array(match[0].length + 1).join("*"))
+  }
+  return string
+}
+
 /**
  * Utility function which replaces a string between given indices.
  */
@@ -1361,6 +1377,10 @@ const bindingReplacement = (
     // in the search, working from longest to shortest so always use best match first
     let searchString = newBoundValue
     for (let from of convertFromProps) {
+      // Blank out all extensions of this string to avoid partial matches
+      if (convertTo === "runtimeBinding") {
+        searchString = excludeExtensions(searchString, from)
+      }
       const binding = bindableProperties.find(el => el[convertFrom] === from)
       if (
         isJS ||

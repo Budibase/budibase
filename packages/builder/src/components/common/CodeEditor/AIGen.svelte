@@ -1,5 +1,16 @@
 <script lang="ts">
-  import { ActionButton, Icon, notifications } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Icon,
+    notifications,
+    Button,
+    Modal,
+    ModalContent,
+    Body,
+    Link,
+  } from "@budibase/bbui"
+  import { auth, admin, licensing } from "@/stores/portal"
+
   import { createEventDispatcher } from "svelte"
   import { API } from "@/api"
   import type { EnrichedBinding } from "@budibase/types"
@@ -8,6 +19,8 @@
 
   export let bindings: EnrichedBinding[] = []
   export let value: string | null = ""
+  export let expandedOnly: boolean = false
+
   export let parentWidth: number | null = null
   export const dispatch = createEventDispatcher<{
     update: { code: string }
@@ -15,28 +28,40 @@
     reject: { code: string | null }
   }>()
 
-  let buttonContainer: HTMLElement
-  let promptInput: HTMLTextAreaElement
+  let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
   let promptLoading = false
   let suggestedCode: string | null = null
   let previousContents: string | null = null
   let expanded = false
   let containerWidth = "auto"
-  let containerHeight = "40px"
   let promptText = ""
   let animateBorder = false
+  let switchOnAIModal: Modal
+  let addCreditsModal: Modal
 
-  function adjustContainerHeight() {
-    if (promptInput && buttonElement) {
-      promptInput.style.height = "0px"
-      const newHeight = Math.min(promptInput.scrollHeight, 100)
-      promptInput.style.height = `${newHeight}px`
-      containerHeight = `${Math.max(40, newHeight + 20)}px`
-    }
+  const thresholdExpansionWidth = 350
+  $: accountPortalAccess = $auth?.user?.accountPortalAccess
+  $: accountPortal = $admin.accountPortalUrl
+  $: aiEnabled = $auth?.user?.llm
+
+  $: expanded =
+    expandedOnly ||
+    (parentWidth !== null && parentWidth > thresholdExpansionWidth)
+      ? true
+      : expanded
+
+  $: creditsExceeded = $licensing.aiCreditsExceeded
+  $: disabled = suggestedCode !== null || !aiEnabled || creditsExceeded
+
+  $: if (
+    expandedOnly ||
+    (expanded && parentWidth !== null && parentWidth > thresholdExpansionWidth)
+  ) {
+    containerWidth = calculateExpandedWidth()
+  } else if (!expanded) {
+    containerWidth = "auto"
   }
-
-  $: if (promptInput && promptText) adjustContainerHeight()
 
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
@@ -85,22 +110,23 @@
   function resetExpand() {
     expanded = false
     containerWidth = "auto"
-    containerHeight = "40px"
     promptText = ""
     suggestedCode = null
     previousContents = null
     animateBorder = false
   }
 
+  function calculateExpandedWidth() {
+    return parentWidth
+      ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
+      : "300px"
+  }
+
   function toggleExpand() {
     if (!expanded) {
       expanded = true
       animateBorder = true
-      // Calculate width based on size of CodeEditor parent
-      containerWidth = parentWidth
-        ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
-        : "300px"
-      containerHeight = "40px"
+      containerWidth = calculateExpandedWidth()
       setTimeout(() => {
         promptInput?.focus()
       }, 250)
@@ -125,11 +151,9 @@
   }
 </script>
 
-<div
-  class="ai-gen-container"
-  style="--container-width: {containerWidth}; --container-height: {containerHeight}"
-  bind:this={buttonContainer}
->
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="ai-gen-container" style="--container-width: {containerWidth}">
   {#if suggestedCode !== null}
     <div class="floating-actions">
       <ActionButton size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
@@ -140,7 +164,6 @@
       </ActionButton>
     </div>
   {/if}
-
   <button
     bind:this={buttonElement}
     class="spectrum-ActionButton fade"
@@ -149,18 +172,28 @@
     on:click={!expanded ? toggleExpand : undefined}
   >
     <div class="button-content-wrapper">
-      <img src={BBAI} alt="AI" class="ai-icon" />
+      <img
+        src={BBAI}
+        alt="AI"
+        class="ai-icon"
+        class:disabled={expanded && disabled}
+        on:click={!expandedOnly
+          ? e => {
+              e.stopPropagation()
+              toggleExpand()
+            }
+          : undefined}
+      />
       {#if expanded}
-        <textarea
+        <input
+          type="text"
           bind:this={promptInput}
           bind:value={promptText}
           class="prompt-input"
           placeholder="Generate Javascript..."
           on:keydown={handleKeyPress}
-          on:input={adjustContainerHeight}
-          disabled={suggestedCode !== null}
+          {disabled}
           readonly={suggestedCode !== null}
-          rows="1"
         />
       {:else}
         <span class="spectrum-ActionButton-label ai-gen-text">
@@ -168,29 +201,57 @@
         </span>
       {/if}
     </div>
-
     {#if expanded}
       <div class="action-buttons">
-        <Icon
-          color={promptLoading
-            ? "#6E56FF"
-            : "var(--spectrum-global-color-gray-600)"}
-          size="S"
-          hoverable
-          hoverColor="#6E56FF"
-          name={promptLoading ? "StopCircle" : "PlayCircle"}
-          on:click={() => generateJs(promptText)}
-        />
-        <Icon
-          hoverable
-          size="S"
-          name="Close"
-          hoverColor="#6E56FF"
-          on:click={e => {
-            e.stopPropagation()
-            if (!suggestedCode && !promptLoading) toggleExpand()
-          }}
-        />
+        {#if !aiEnabled}
+          <Button cta size="S" on:click={() => switchOnAIModal.show()}>
+            Switch on AI
+          </Button>
+          <Modal bind:this={switchOnAIModal}>
+            <ModalContent title="Switch on AI" showConfirmButton={false}>
+              <div class="enable-ai">
+                <p>To enable BB AI:</p>
+                <ul>
+                  <li>
+                    Add your Budibase license key:
+                    <Link href={accountPortal}>Budibase account portal</Link>
+                  </li>
+                  <li>
+                    Go to the portal settings page, click AI and switch on BB AI
+                  </li>
+                </ul>
+              </div>
+            </ModalContent>
+          </Modal>
+        {:else if creditsExceeded}
+          <Button cta size="S" on:click={() => addCreditsModal.show()}>
+            Add AI credits
+          </Button>
+          <Modal bind:this={addCreditsModal}>
+            <ModalContent title="Add AI credits" showConfirmButton={false}>
+              <Body size="S">
+                {#if accountPortalAccess}
+                  <Link href={"https://budibase.com/contact/"}
+                    >Contact sales</Link
+                  > to unlock additional BB AI credits
+                {:else}
+                  Contact your account holder to unlock additional BB AI credits
+                {/if}
+              </Body>
+            </ModalContent>
+          </Modal>
+        {:else}
+          <Icon
+            color={promptLoading
+              ? "#6E56FF"
+              : "var(--spectrum-global-color-gray-600)"}
+            size="S"
+            hoverable
+            hoverColor="#6E56FF"
+            name={promptLoading ? "StopCircle" : "PlayCircle"}
+            on:click={() => generateJs(promptText)}
+          />
+        {/if}
       </div>
     {/if}
   </button>
@@ -198,13 +259,12 @@
 
 <style>
   .ai-gen-container {
+    height: 40px;
     --container-width: auto;
-    --container-height: 40px;
     position: absolute;
     right: 10px;
     bottom: 10px;
     width: var(--container-width);
-    height: var(--container-height);
     display: flex;
     overflow: visible;
   }
@@ -238,7 +298,7 @@
     background: linear-gradient(
       125deg,
       transparent -10%,
-      #6e56ff 5%,
+      #6e56ff 2%,
       #9f8fff 15%,
       #9f8fff 25%,
       transparent 35%,
@@ -320,6 +380,7 @@
     height: 18px;
     margin-right: 8px;
     flex-shrink: 0;
+    cursor: var(--ai-icon-cursor, pointer);
   }
 
   .ai-gen-text {
@@ -335,18 +396,16 @@
     border: none;
     background: transparent;
     outline: none;
-    font-size: var(--font-size-s);
     font-family: var(--font-sans);
     color: var(--spectrum-alias-text-color);
     min-width: 0;
     resize: none;
     overflow: hidden;
-    line-height: 1.2;
-    min-height: 10px !important;
   }
 
   .prompt-input::placeholder {
     color: var(--spectrum-global-color-gray-600);
+    font-family: var(--font-sans);
   }
 
   .action-buttons {
@@ -354,6 +413,7 @@
     gap: var(--spacing-s);
     z-index: 4;
     flex-shrink: 0;
+    margin-right: var(--spacing-s);
   }
 
   .button-content-wrapper {
@@ -365,5 +425,16 @@
     flex-grow: 1;
     min-width: 0;
     margin-right: var(--spacing-s);
+  }
+
+  .prompt-input:disabled,
+  .prompt-input[readonly] {
+    color: var(--spectrum-global-color-gray-500);
+    cursor: not-allowed;
+  }
+
+  .ai-icon.disabled {
+    filter: grayscale(1) brightness(1.5);
+    opacity: 0.5;
   }
 </style>
