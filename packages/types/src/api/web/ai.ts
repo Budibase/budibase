@@ -5,8 +5,11 @@ export interface Message {
   content: string
 }
 
+export type ResponseFormat = "text" | "json"
+
 export interface ChatCompletionRequest {
   messages: Message[]
+  format?: ResponseFormat
 }
 
 export interface ChatCompletionResponse {
