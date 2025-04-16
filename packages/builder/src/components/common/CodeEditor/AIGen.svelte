@@ -63,6 +63,10 @@
     containerWidth = "auto"
   }
 
+  $: initiallyExpanded =
+    expandedOnly ||
+    (parentWidth !== null && parentWidth > thresholdExpansionWidth)
+
   async function generateJs(prompt: string) {
     if (!prompt.trim()) return
 
@@ -169,6 +173,7 @@
     class="spectrum-ActionButton fade"
     class:expanded
     class:animate-border={animateBorder}
+    class:static-border={initiallyExpanded && !animateBorder}
     on:click={!expanded ? toggleExpand : undefined}
   >
     <div class="button-content-wrapper">
@@ -292,18 +297,17 @@
     position: absolute;
     top: -1px;
     left: -1px;
-    width: calc(100% + 2px);
+    width: 50%;
     height: calc(100% + 2px);
     border-radius: inherit;
     background: linear-gradient(
-      125deg,
-      transparent -10%,
-      #6e56ff 2%,
-      #9f8fff 15%,
-      #9f8fff 25%,
-      transparent 35%,
-      transparent 110%
+      to right,
+      #6e56ff,
+      #9f8fff 40%,
+      transparent 100%
     );
+    background-size: 200% 100%;
+    background-position: 100% 0;
     pointer-events: none;
     z-index: 0;
   }
@@ -313,16 +317,18 @@
   }
 
   .animate-border::before {
-    animation: border-fade-in 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    animation: border-expand 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
     animation-fill-mode: forwards;
   }
 
-  @keyframes border-fade-in {
-    from {
-      opacity: 0;
+  @keyframes border-expand {
+    0% {
+      transform: scaleX(0);
+      transform-origin: left;
     }
-    to {
-      opacity: 1;
+    100% {
+      transform: scaleX(1);
+      transform-origin: left;
     }
   }
 
@@ -378,9 +384,9 @@
   .ai-icon {
     width: 18px;
     height: 18px;
-    margin-right: 8px;
-    flex-shrink: 0;
-    cursor: var(--ai-icon-cursor, pointer);
+    margin-right: var(--spacing-s);
+    cursor: pointer;
+    margin-left: var(--spacing-xs);
   }
 
   .ai-gen-text {
@@ -436,5 +442,11 @@
   .ai-icon.disabled {
     filter: grayscale(1) brightness(1.5);
     opacity: 0.5;
+  }
+
+  .spectrum-ActionButton.static-border::before {
+    content: "";
+    transform: scaleX(1);
+    transform-origin: left;
   }
 </style>
