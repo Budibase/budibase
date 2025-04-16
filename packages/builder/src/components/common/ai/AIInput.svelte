@@ -155,22 +155,16 @@
             }
           : undefined}
       />
-      {#if expanded}
-        <input
-          type="text"
-          bind:this={promptInput}
-          bind:value={promptText}
-          class="prompt-input"
-          {placeholder}
-          on:keydown={handleKeyPress}
-          {disabled}
-          readonly={suggestedCode !== null}
-        />
-      {:else}
-        <span class="spectrum-ActionButton-label ai-gen-text">
-          {placeholder}
-        </span>
-      {/if}
+      <input
+        type="text"
+        bind:this={promptInput}
+        bind:value={promptText}
+        class="prompt-input"
+        {placeholder}
+        on:keydown={handleKeyPress}
+        {disabled}
+        readonly={suggestedCode !== null}
+      />
     </div>
     {#if expanded}
       <div class="action-buttons">
@@ -347,15 +341,8 @@
     cursor: var(--ai-icon-cursor, pointer);
   }
 
-  .ai-gen-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: opacity 0.2s ease-out;
-    margin-right: var(--spacing-xs);
-  }
-
   .prompt-input {
+    font-size: 14px;
     flex: 1;
     border: none;
     background: transparent;
