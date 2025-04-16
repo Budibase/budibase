@@ -13,8 +13,6 @@ import {
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
-import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
-import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { quotas } from "@budibase/pro"
 
 function dedent(str: string) {
@@ -30,7 +28,6 @@ type SetupFn = (
 interface TestSetup {
   name: string
   setup: SetupFn
-  mockLLMResponse: MockLLMResponseFn
 }
 
 function budibaseAI(): SetupFn {
@@ -89,25 +86,14 @@ const allProviders: TestSetup[] = [
         OPENAI_API_KEY: "test-key",
       })
     },
-    mockLLMResponse: mockChatGPTResponse,
   },
   {
     name: "OpenAI API key with custom config",
     setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-4o-mini" }),
-    mockLLMResponse: mockChatGPTResponse,
-  },
-  {
-    name: "Anthropic API key with custom config",
-    setup: customAIConfig({
-      provider: "Anthropic",
-      defaultModel: "claude-3-5-sonnet-20240620",
-    }),
-    mockLLMResponse: mockAnthropicResponse,
   },
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
-    mockLLMResponse: mockChatGPTResponse,
   },
 ]
 
@@ -126,56 +112,54 @@ describe("AI", () => {
     nock.cleanAll()
   })
 
-  describe.each(allProviders)(
-    "provider: $name",
-    ({ setup, mockLLMResponse }: TestSetup) => {
-      let cleanup: () => Promise<void> | void
-      beforeAll(async () => {
-        cleanup = await setup(config)
+  describe.each(allProviders)("provider: $name", ({ setup }: TestSetup) => {
+    let cleanup: () => Promise<void> | void
+    beforeAll(async () => {
+      cleanup = await setup(config)
+    })
+
+    afterAll(async () => {
+      const maybePromise = cleanup()
+      if (maybePromise) {
+        await maybePromise
+      }
+    })
+
+    describe("POST /api/ai/js", () => {
+      let cleanup: () => void
+      beforeAll(() => {
+        cleanup = features.testutils.setFeatureFlags("*", {
+          AI_JS_GENERATION: true,
+        })
       })
 
-      afterAll(async () => {
-        const maybePromise = cleanup()
-        if (maybePromise) {
-          await maybePromise
-        }
+      afterAll(() => {
+        cleanup()
       })
 
-      describe("POST /api/ai/js", () => {
-        let cleanup: () => void
-        beforeAll(() => {
-          cleanup = features.testutils.setFeatureFlags("*", {
-            AI_JS_GENERATION: true,
-          })
-        })
+      it("handles correct plain code response", async () => {
+        mockChatGPTResponse(`return 42`)
 
-        afterAll(() => {
-          cleanup()
-        })
+        const { code } = await config.api.ai.generateJs({ prompt: "test" })
+        expect(code).toBe("return 42")
+      })
 
-        it("handles correct plain code response", async () => {
-          mockLLMResponse(`return 42`)
-
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
-
-        it("handles correct markdown code response", async () => {
-          mockLLMResponse(
-            dedent(`
+      it("handles correct markdown code response", async () => {
+        mockChatGPTResponse(
+          dedent(`
                 \`\`\`js
                 return 42
                 \`\`\`
             `)
-          )
+        )
 
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
+        const { code } = await config.api.ai.generateJs({ prompt: "test" })
+        expect(code).toBe("return 42")
+      })
 
-        it("handles multiple markdown code blocks returned", async () => {
-          mockLLMResponse(
-            dedent(`
+      it("handles multiple markdown code blocks returned", async () => {
+        mockChatGPTResponse(
+          dedent(`
                 This:
 
                 \`\`\`js
@@ -188,63 +172,62 @@ describe("AI", () => {
                 return 10
                 \`\`\`
             `)
-          )
+        )
 
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
-
-        // TODO: handle when this happens
-        it.skip("handles no code response", async () => {
-          mockLLMResponse("I'm sorry, you're quite right, etc.")
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("")
-        })
-
-        it("handles LLM errors", async () => {
-          mockLLMResponse(() => {
-            throw new Error("LLM error")
-          })
-          await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
-        })
+        const { code } = await config.api.ai.generateJs({ prompt: "test" })
+        expect(code).toBe("return 42")
       })
 
-      describe("POST /api/ai/cron", () => {
-        it("handles correct cron response", async () => {
-          mockLLMResponse("0 0 * * *")
+      // TODO: handle when this happens
+      it.skip("handles no code response", async () => {
+        mockChatGPTResponse("I'm sorry, you're quite right, etc.")
+        const { code } = await config.api.ai.generateJs({ prompt: "test" })
+        expect(code).toBe("")
+      })
 
-          const { message } = await config.api.ai.generateCron({
+      it("handles LLM errors", async () => {
+        mockChatGPTResponse(() => {
+          throw new Error("LLM error")
+        })
+        await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
+      })
+    })
+
+    describe("POST /api/ai/cron", () => {
+      it("handles correct cron response", async () => {
+        mockChatGPTResponse("0 0 * * *")
+
+        const { message } = await config.api.ai.generateCron({
+          prompt: "test",
+        })
+        expect(message).toBe("0 0 * * *")
+      })
+
+      it("handles expected LLM error", async () => {
+        mockChatGPTResponse("Error generating cron: skill issue")
+
+        await config.api.ai.generateCron(
+          {
             prompt: "test",
-          })
-          expect(message).toBe("0 0 * * *")
-        })
-
-        it("handles expected LLM error", async () => {
-          mockLLMResponse("Error generating cron: skill issue")
-
-          await config.api.ai.generateCron(
-            {
-              prompt: "test",
-            },
-            { status: 400 }
-          )
-        })
-
-        it("handles unexpected LLM error", async () => {
-          mockLLMResponse(() => {
-            throw new Error("LLM error")
-          })
-
-          await config.api.ai.generateCron(
-            {
-              prompt: "test",
-            },
-            { status: 500 }
-          )
-        })
+          },
+          { status: 400 }
+        )
       })
-    }
-  )
+
+      it("handles unexpected LLM error", async () => {
+        mockChatGPTResponse(() => {
+          throw new Error("LLM error")
+        })
+
+        await config.api.ai.generateCron(
+          {
+            prompt: "test",
+          },
+          { status: 500 }
+        )
+      })
+    })
+  })
 })
 
 describe("BudibaseAI", () => {

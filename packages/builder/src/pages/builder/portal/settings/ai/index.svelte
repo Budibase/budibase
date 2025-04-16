@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte"
   import {
     Button,
@@ -16,22 +16,23 @@
   import { API } from "@/api"
   import AIConfigModal from "./ConfigModal.svelte"
   import AIConfigTile from "./AIConfigTile.svelte"
+  import {
+    type AIConfig,
+    ConfigType,
+    type ProviderConfig,
+  } from "@budibase/types"
 
-  const ConfigTypes = {
-    AI: "ai",
-  }
-
-  let modal
-  let fullAIConfig
-  let editingAIConfig = {}
-  let editingUuid
+  let modal: Modal
+  let fullAIConfig: AIConfig
+  let editingAIConfig: ProviderConfig | undefined
+  let editingUuid: string | undefined
 
   $: isCloud = $admin.cloud
   $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
 
   async function fetchAIConfig() {
     try {
-      fullAIConfig = await API.getConfig(ConfigTypes.AI)
+      fullAIConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
     } catch (error) {
       notifications.error("Error fetching AI config")
     }
@@ -42,9 +43,9 @@
     const id = editingUuid || Helpers.uuid()
 
     // Creating first custom AI Config
-    if (!fullAIConfig) {
+    if (!fullAIConfig && editingAIConfig) {
       fullAIConfig = {
-        type: ConfigTypes.AI,
+        type: ConfigType.AI,
         config: {
           [id]: editingAIConfig,
         },
@@ -54,7 +55,7 @@
       delete fullAIConfig.config.budibase_ai
 
       // unset the default value from other configs if default is set
-      if (editingAIConfig.isDefault) {
+      if (editingAIConfig?.isDefault) {
         for (let key in fullAIConfig.config) {
           if (key !== id) {
             fullAIConfig.config[key].isDefault = false
@@ -62,8 +63,10 @@
         }
       }
       // Add new or update existing custom AI Config
-      fullAIConfig.config[id] = editingAIConfig
-      fullAIConfig.type = ConfigTypes.AI
+      if (editingAIConfig) {
+        fullAIConfig.config[id] = editingAIConfig
+      }
+      fullAIConfig.type = ConfigType.AI
     }
 
     try {
@@ -72,7 +75,7 @@
     } catch (error) {
       notifications.error(
         `Failed to save AI Configuration, reason: ${
-          error?.message || "Unknown"
+          error instanceof Error ? error.message : "Unknown"
         }`
       )
     } finally {
@@ -80,7 +83,7 @@
     }
   }
 
-  async function deleteConfig(key) {
+  async function deleteConfig(key: string) {
     // We don't store the default BB AI config in the DB
     delete fullAIConfig.config.budibase_ai
     // Delete the configuration
@@ -91,14 +94,16 @@
       notifications.success(`Deleted config`)
     } catch (error) {
       notifications.error(
-        `Failed to delete config, reason: ${error?.message || "Unknown"}`
+        `Failed to delete config, reason: ${
+          error instanceof Error ? error.message : "Unknown"
+        }`
       )
     } finally {
       await fetchAIConfig()
     }
   }
 
-  function editConfig(uuid) {
+  function editConfig(uuid: string) {
     editingUuid = uuid
     editingAIConfig = fullAIConfig?.config[editingUuid]
     modal.show()
@@ -136,7 +141,10 @@
         </Tags>
       {/if}
     </div>
-    <Body>Configure your AI settings within this section:</Body>
+    <Body
+      >Connect an LLM to enable AI features. You can only enable one LLM at a
+      time.</Body
+    >
   </Layout>
   <Divider />
   <div style={`opacity: ${customAIConfigsEnabled ? 1 : 0.5}`}>
