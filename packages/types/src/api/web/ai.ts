@@ -5,7 +5,9 @@ export interface Message {
   content: string
 }
 
-export type ResponseFormat = "text" | "json"
+export enum StructuredOutput {}
+
+export type ResponseFormat = "text" | "json" | StructuredOutput
 
 export interface ChatCompletionRequest {
   messages: Message[]
