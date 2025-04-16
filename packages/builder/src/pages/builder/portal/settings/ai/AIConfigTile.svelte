@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { Body, Label, Icon } from "@budibase/bbui"
+  import { Body, Label, Icon, ActionButton } from "@budibase/bbui"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import OpenAILogo from "./logos/OpenAI.svelte"
   import AnthropicLogo from "./logos/Anthropic.svelte"
   import TogetherAILogo from "./logos/TogetherAI.svelte"
   import AzureOpenAILogo from "./logos/AzureOpenAI.svelte"
+  import BudibaseAILogo from "./logos/BBAI.svelte"
   import { Providers } from "./constants"
   import type { ProviderConfig } from "@budibase/types"
   const logos = {
-    ["Budibase AI"]: BudibaseLogo,
+    ["Budibase AI"]: BudibaseAILogo,
     [Providers.OpenAI.name]: OpenAILogo,
     [Providers.Anthropic.name]: AnthropicLogo,
     [Providers.TogetherAI.name]: TogetherAILogo,
@@ -25,41 +26,32 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click class:disabled class="option">
-  <div class="icon">
-    <svelte:component
-      this={logos[config.name || config.provider]}
-      height="18"
-      width="18"
-    />
-  </div>
-  <div class="header">
-    <Body>{config.provider}</Body>
-    <Label>{config.name}</Label>
-  </div>
-  <div class="controls">
-    {#if config.name !== "Budibase AI"}
-      <Icon
-        on:click={editHandler}
-        color="var(--grey-6)"
-        size="S"
-        hoverable
-        name="Edit"
+  <div class="details">
+    <div class="icon">
+      <svelte:component
+        this={logos[config.name || config.provider]}
+        height="18"
+        width="18"
       />
-      <Icon
-        on:click={deleteHandler}
-        color="var(--grey-6)"
-        size="S"
-        hoverable
-        name="Delete"
-      />
-    {/if}
+    </div>
+    <div class="header">
+      <Body>{config.name}</Body>
+    </div>
+    <div class="controls">
+      {#if config.active}
+        <div class="tag active">Enabled</div>
+      {:else}
+        <div class="tag disabled">Disabled</div>
+      {/if}
+    </div>
+  </div>
+  <div>
     {#if config.active}
-      <div class="tag active">Activated</div>
-    {:else if !config.active}
-      <div class="tag disabled">Disabled</div>
-    {/if}
-    {#if config.isDefault}
-      <div class="tag default">Default</div>
+      <ActionButton>Disable</ActionButton>
+    {:else if config.provider === "BudibaseAI"}
+      <ActionButton>Enable</ActionButton>
+    {:else}
+      <ActionButton>Set up</ActionButton>
     {/if}
   </div>
 </div>
@@ -71,10 +63,16 @@
     padding: 16px;
     border-radius: 4px;
     cursor: pointer;
-    display: grid;
-    grid-template-columns: 6% 1fr auto;
-    grid-gap: 20px;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .option :global(label) {
@@ -90,7 +88,7 @@
   }
 
   .icon {
-    background-color: white;
+    background-color: var(--grey-2);
     height: 38px;
     width: 38px;
     display: flex;
@@ -103,16 +101,7 @@
     pointer-events: none;
   }
 
-  .controls {
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: 10px;
-    align-items: center;
-  }
-
   .tag {
-    display: flex;
-    color: #ffffff;
     padding: 4px 8px;
     justify-content: center;
     align-items: center;
@@ -121,15 +110,11 @@
     border-radius: 5px;
   }
 
-  .default {
-    background: var(--grey-6);
-  }
-
   .active {
     background: var(--spectrum-global-color-green-600);
   }
 
   .disabled {
-    background: var(--spectrum-global-color-red-600);
+    background: var(--grey-3);
   }
 </style>

@@ -12,7 +12,9 @@
     Tags,
     Tag,
   } from "@budibase/bbui"
-  import { admin, licensing } from "@/stores/portal"
+  import BBAI from "assets/bb-ai.svg"
+
+  import { admin, licensing, auth } from "@/stores/portal"
   import { API } from "@/api"
   import AIConfigModal from "./ConfigModal.svelte"
   import AIConfigTile from "./AIConfigTile.svelte"
@@ -20,6 +22,7 @@
     type AIConfig,
     ConfigType,
     type ProviderConfig,
+    type AIProvider,
   } from "@budibase/types"
 
   let modal: Modal
@@ -29,6 +32,10 @@
 
   $: isCloud = $admin.cloud
   $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
+  $: defaultConfig = Object.values(fullAIConfig?.config || {}).find(
+    config => config.isDefault === true
+  )
+  $: aiEnabled = $auth?.user?.llm
 
   async function fetchAIConfig() {
     try {
@@ -127,6 +134,7 @@
     bind:config={editingAIConfig}
   />
 </Modal>
+
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <div class="header">
@@ -147,51 +155,138 @@
     >
   </Layout>
   <Divider />
-  <div style={`opacity: ${customAIConfigsEnabled ? 1 : 0.5}`}>
-    <Layout noPadding>
-      <div class="config-heading">
-        <Heading size="S">AI Configurations</Heading>
-        <Button
-          size="S"
-          cta={customAIConfigsEnabled}
-          secondary={!customAIConfigsEnabled}
-          on:click={customAIConfigsEnabled ? newConfig : null}
-        >
-          Add configuration
-        </Button>
+
+  {#if !aiEnabled}
+    <div class="banner">
+      <div class="banner-content">
+        <div class="banner-icon">
+          <img src={BBAI} alt="BB AI" width="24" height="24" />
+        </div>
+        <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
       </div>
-      <Body size="S"
-        >Use the following interface to select your preferred AI configuration.</Body
-      >
-      {#if customAIConfigsEnabled}
-        <Body size="S">Select your AI Model:</Body>
+      <Button secondary cta size="S">Enable BB AI</Button>
+    </div>
+  {/if}
+
+  <div class="section">
+    <div class="section-title">Enabled</div>
+    <div class="ai-list">
+      {#if defaultConfig}
+        <AIConfigTile config={defaultConfig} />
+      {:else}
+        <div class="no-enabled">No LLMs are enabled</div>
       {/if}
-      {#if fullAIConfig?.config}
-        {#each Object.keys(fullAIConfig.config) as key}
-          <AIConfigTile
-            config={fullAIConfig.config[key]}
-            editHandler={customAIConfigsEnabled ? () => editConfig(key) : null}
-            deleteHandler={customAIConfigsEnabled
-              ? () => deleteConfig(key)
-              : null}
-          />
-        {/each}
-      {/if}
-    </Layout>
+    </div>
+    <div style="margin-top: 12px;">Disabled</div>
+    <div class="ai-list">
+      <AIConfigTile
+        config={{
+          name: "Azure OpenAI",
+          provider: "AzureOpenAI",
+          isDefault: false,
+          active: false,
+        }}
+      />
+      <AIConfigTile
+        config={{
+          name: "OpenAI",
+          provider: "OpenAI",
+          isDefault: false,
+          active: false,
+        }}
+      />
+    </div>
   </div>
 </Layout>
 
 <style>
-  .config-heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: -18px;
-  }
-
   .header {
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  .banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2e3851;
+    border-radius: 8px;
+    padding: var(--spacing-s);
+  }
+
+  .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .ai-list {
+    margin-top: var(--spacing-l);
+    margin-bottom: var(--spacing-l);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .no-enabled {
+    padding: 16px;
+    background-color: var(--background);
+    border: 1px solid var(--grey-4);
+    border-radius: 4px;
+  }
+
+  .section-title {
+    margin-bottom: 12px;
+  }
+
+  .ai-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background-color: var(--background);
+    border: 1px solid var(--grey-4);
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+
+  .ai-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 4px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .bb-logo {
+    background-color: var(--spectrum-global-color-purple-100);
+  }
+
+  .ai-info {
+    flex-grow: 1;
+    margin-left: 12px;
+  }
+
+  .openai-logo {
+    width: 24px;
+    height: 24px;
+    color: #000000;
+  }
+
+  .azure-logo {
+    width: 24px;
+    height: 24px;
   }
 </style>
