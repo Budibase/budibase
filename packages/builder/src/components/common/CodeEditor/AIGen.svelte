@@ -43,11 +43,22 @@
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
   $: aiEnabled = $auth?.user?.llm
-  $: expanded = expandedOnly ? true : expanded
+
+  $: expanded =
+    expandedOnly || (parentWidth !== null && parentWidth > 450)
+      ? true
+      : expanded
+
   $: creditsExceeded = $licensing.aiCreditsExceeded
   $: disabled = suggestedCode !== null || !aiEnabled || creditsExceeded
-  $: if (expandedOnly) {
+
+  $: if (
+    expandedOnly ||
+    (expanded && parentWidth !== null && parentWidth > 350)
+  ) {
     containerWidth = calculateExpandedWidth()
+  } else if (!expanded) {
+    containerWidth = "auto"
   }
 
   async function generateJs(prompt: string) {
