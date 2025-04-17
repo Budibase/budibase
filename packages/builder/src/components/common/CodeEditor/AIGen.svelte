@@ -71,7 +71,7 @@
       prompt: promptText,
     })
     dispatch("accept")
-    resetExpand()
+    reset()
   }
 
   function rejectSuggestion() {
@@ -80,15 +80,12 @@
       prompt: promptText,
     })
     dispatch("reject", { code: previousContents })
-    resetExpand()
+    reset()
   }
 
-  function resetExpand() {
-    expanded = false
-    containerWidth = "auto"
+  function reset() {
     suggestedCode = null
     previousContents = null
-    // animateBorder = false
   }
 
   function calculateExpandedWidth() {
@@ -96,34 +93,6 @@
       ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
       : "300px"
   }
-
-  // function toggleExpand() {
-  //   if (!expanded) {
-  //     expanded = true
-  //     animateBorder = true
-  //     containerWidth = calculateExpandedWidth()
-  //     setTimeout(() => {
-  //       promptInput?.focus()
-  //     }, 250)
-  //   } else {
-  //     resetExpand()
-  //   }
-  // }
-
-  // function handleKeyPress(event: KeyboardEvent) {
-  //   if (event.key === "Enter" && !event.shiftKey) {
-  //     event.preventDefault()
-  //     generateJs(promptText)
-  //   } else if (event.key === "Escape") {
-  //     if (!suggestedCode) resetExpand()
-  //     else {
-  //       expanded = false
-  //       containerWidth = "auto"
-  //     }
-  //   } else {
-  //     event.stopPropagation()
-  //   }
-  // }
 </script>
 
 <div class="ai-gen-container" style="--container-width: {containerWidth}">
@@ -141,6 +110,7 @@
   <AiInput
     placeholder="Generate with AI"
     onSubmit={generateJs}
+    bind:expanded
     on:collapse={rejectSuggestion}
     readonly={!!suggestedCode}
   />

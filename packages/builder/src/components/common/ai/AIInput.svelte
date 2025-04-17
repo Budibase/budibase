@@ -8,12 +8,9 @@
   export let onSubmit: (_prompt: string) => Promise<void>
   export let placeholder: string = ""
   export let expanded: boolean = false
-  export let expandedOnly: boolean = false
   export let readonly: boolean = false
 
   const dispatch = createEventDispatcher()
-
-  let parentWidth: number | null = null
 
   let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
@@ -22,16 +19,9 @@
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
-  const thresholdExpansionWidth = 350
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
   $: aiEnabled = $auth?.user?.llm
-
-  $: expanded =
-    expandedOnly ||
-    (parentWidth !== null && parentWidth > thresholdExpansionWidth)
-      ? true
-      : expanded
 
   $: creditsExceeded = $licensing.aiCreditsExceeded
   $: disabled = !aiEnabled || creditsExceeded || readonly
@@ -39,9 +29,6 @@
 
   function collapse() {
     dispatch("collapse")
-    if (expandedOnly) {
-      return
-    }
     expanded = false
     promptText = ""
     animateBorder = false
