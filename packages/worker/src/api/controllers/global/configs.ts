@@ -231,17 +231,34 @@ export async function processAIConfig(
     }
   }
 
-  let numDefaults = 0
+  let numBudibaseAI = 0
   for (const config of Object.values(newConfig)) {
-    if (config.isDefault) {
-      numDefaults++
+    if (config.isBudibaseAI) {
+      numBudibaseAI++
+      if (numBudibaseAI > 1) {
+        throw new BadRequestError("Only one Budibase AI provider is allowed")
+      }
     }
-  }
 
-  if (numDefaults !== 1) {
-    throw new BadRequestError(
-      "Exactly one AI provider must be set as the default provider"
-    )
+    if (config.provider === "BudibaseAI") {
+      config.isBudibaseAI = true
+      config.name = "Budibase AI"
+
+      if (env.SELF_HOSTED) {
+        const licenseKey = await pro.licensing.keys.getLicenseKey()
+        if (!licenseKey) {
+          throw new BadRequestError(
+            "Budibase AI is only available self-hosted with a valid license key"
+          )
+        }
+        config.apiKey = licenseKey
+      } else {
+        config.provider = "OpenAI"
+        // This will get set later, don't want to save it to the DB because we
+        // may want to change it in future.
+        config.apiKey = undefined
+      }
+    }
   }
 }
 
