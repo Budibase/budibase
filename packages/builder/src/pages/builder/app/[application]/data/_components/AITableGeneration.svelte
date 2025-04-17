@@ -50,7 +50,12 @@
   .ai-generation-examples {
     display: grid;
     gap: 10px;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  @media (min-width: 833px) {
+    .ai-generation-examples {
+      grid-auto-flow: column;
+    }
   }
   .ai-generation :global(.spectrum-Textfield-input),
   .ai-generation :global(.spectrum-ActionButton) {
