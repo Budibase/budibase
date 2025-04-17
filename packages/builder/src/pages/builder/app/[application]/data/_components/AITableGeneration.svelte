@@ -5,7 +5,6 @@
   import { ActionButton, notifications } from "@budibase/bbui"
 
   let promptText = ""
-  let aiInput: AiInput
 
   $: isEnabled = $auth?.user?.llm && !$licensing.aiCreditsExceeded
 
@@ -18,7 +17,6 @@
 <div class="ai-generation">
   <div class="ai-generation-prompt">
     <AiInput
-      bind:this={aiInput}
       bind:value={promptText}
       placeholder="Generate data using AI..."
       onSubmit={submitPrompt}
@@ -28,11 +26,8 @@
   <div class="ai-generation-examples">
     {#if isEnabled}
       {#each ["Create a table called tickets with title, description, status fields", "Create a table called students with name and address fields"] as prompt}
-        <ActionButton
-          on:click={async () => {
-            promptText = prompt
-            await aiInput.submit()
-          }}>{prompt}</ActionButton
+        <ActionButton on:click={() => (promptText = prompt)}
+          >{prompt}</ActionButton
         >
       {/each}
     {/if}
