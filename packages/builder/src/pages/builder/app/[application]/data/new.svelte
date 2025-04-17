@@ -18,11 +18,9 @@
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
   import { featureFlag } from "@/helpers"
   import { FeatureFlag } from "@budibase/types"
-  import AiTableCreationModal from "./_components/AITableCreationModal.svelte"
 
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
-  let aiTablesModal: AiTableCreationModal
 
   let sampleDataLoading = false
   let externalDatasourceLoading = false
@@ -54,8 +52,6 @@
   bind:loading={externalDatasourceLoading}
   bind:this={externalDatasourceModal}
 />
-
-<AiTableCreationModal bind:this={aiTablesModal} />
 
 <CreationPage
   showClose={hasData($datasources, $tables)}
@@ -98,14 +94,6 @@
       {disabled}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
-    </DatasourceOption>
-    <DatasourceOption
-      on:click={() => aiTablesModal.show()}
-      title="Generate it using AI"
-      description="Non-relational"
-      {disabled}
-    >
-      <Icon name="MagicWand" size="M" />
     </DatasourceOption>
   </div>
 
