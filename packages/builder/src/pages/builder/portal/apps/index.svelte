@@ -5,6 +5,7 @@
     Button,
     Select,
     Modal,
+    ModalContent,
     Page,
     notifications,
     Notification,
@@ -26,15 +27,18 @@
     licensing,
     enrichedApps,
     sortBy,
+    templates,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
+  import TemplatesModal from "@/components/start/TemplatesModal.svelte"
 
   let template
   let creationModal
   let appLimitModal
   let accountLockedModal
+  let templatesModal
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
@@ -157,6 +161,12 @@
     }
   }
 
+  const handleTemplateSelect = selectedTemplate => {
+    template = selectedTemplate
+    templatesModal.hide()
+    autoCreateApp()
+  }
+
   onMount(async () => {
     try {
       // If the portal is loaded from an external URL with a template param
@@ -168,6 +178,7 @@
       if (usersLimitLockAction) {
         usersLimitLockAction()
       }
+      await templates.load()
     } catch (error) {
       notifications.error("Error getting init info")
     }
@@ -228,8 +239,7 @@
                   <Button
                     size="M"
                     secondary
-                    on:click={usersLimitLockAction ||
-                      $goto("/builder/portal/apps/templates")}
+                    on:click={usersLimitLockAction || templatesModal.show}
                   >
                     View templates
                   </Button>
@@ -304,6 +314,10 @@
   on:hide={stopAppCreation}
 >
   <CreateAppModal {template} />
+</Modal>
+
+<Modal bind:this={templatesModal}>
+  <TemplatesModal onSelectTemplate={handleTemplateSelect} />
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />
