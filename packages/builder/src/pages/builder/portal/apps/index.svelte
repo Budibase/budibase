@@ -91,8 +91,6 @@
   const initiateAppCreation = async () => {
     if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
-    } else if ($appsStore.apps?.length) {
-      $goto("/builder/portal/apps/create")
     } else {
       template = null
       creationModal.show()
@@ -224,20 +222,20 @@
               >
                 Create new app
               </Button>
-              {#if $appsStore.apps?.length > 0 && !$admin.offlineMode}
+
+              {#if $appsStore.apps?.length > 0}
+                {#if !$admin.offlineMode}
+                  <Button
+                    size="M"
+                    secondary
+                    on:click={usersLimitLockAction ||
+                      $goto("/builder/portal/apps/templates")}
+                  >
+                    View templates
+                  </Button>
+                {/if}
                 <Button
                   size="M"
-                  secondary
-                  on:click={usersLimitLockAction ||
-                    $goto("/builder/portal/apps/templates")}
-                >
-                  View templates
-                </Button>
-              {/if}
-              {#if !$appsStore.apps?.length}
-                <Button
-                  size="L"
-                  quiet
                   secondary
                   on:click={usersLimitLockAction || initiateAppImport}
                 >
