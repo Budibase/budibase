@@ -10,7 +10,6 @@ import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
 import { cloneDeep, merge } from "lodash/fp"
 import sdk from "../../../sdk"
-import * as pro from "@budibase/pro"
 
 function mergeRows(row1: Row, row2: Row) {
   const merged = merge(row1, row2)
@@ -156,14 +155,9 @@ export async function finaliseRow(
     contextRows: [enrichedRow],
   })
 
-  const aiEnabled =
-    (await pro.features.isBudibaseAIEnabled()) ||
-    (await pro.features.isAICustomConfigsEnabled())
-  if (aiEnabled) {
-    row = await processAIColumns(table, row, {
-      contextRows: [enrichedRow],
-    })
-  }
+  row = await processAIColumns(table, row, {
+    contextRows: [enrichedRow],
+  })
 
   await db.put(row)
   const retrieved = await db.tryGet<Row>(row._id)
