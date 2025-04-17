@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { zodResponseFormat } from "openai/helpers/zod"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
@@ -11,11 +12,10 @@ import {
   PlanModel,
   PlanType,
   ProviderConfig,
-  StructuredOutput,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import { ai, quotas } from "@budibase/pro"
+import { quotas } from "@budibase/pro"
 import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 
@@ -414,11 +414,12 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.guid()
-      const structuredOutput = generator.word() as unknown as StructuredOutput
-      ai.structuredOutputs[structuredOutput] = {
-        key: generator.word(),
-        validator: z.object({ name: z.string() }),
-      }
+      const structuredOutput = zodResponseFormat(
+        z.object({
+          [generator.word()]: z.string(),
+        }),
+        "key"
+      )
       mockChatGPTResponse(gptResponse, { format: structuredOutput })
       const { message } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
