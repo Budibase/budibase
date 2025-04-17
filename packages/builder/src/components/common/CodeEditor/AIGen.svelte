@@ -12,7 +12,7 @@
   export let expandedOnly: boolean = false
 
   export let parentWidth: number | null = null
-  export const dispatch = createEventDispatcher<{
+  const dispatch = createEventDispatcher<{
     update: { code: string }
     accept: void
     reject: { code: string | null }
