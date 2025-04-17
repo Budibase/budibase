@@ -2,6 +2,8 @@ import { StaticDatabases } from "../constants"
 import { getPlatformDB } from "./platformDb"
 import { LockName, LockOptions, LockType, Tenants } from "@budibase/types"
 import * as locks from "../redis/redlockImpl"
+import { doInTenant } from "../context"
+import { getSettingsConfigDoc } from "../configs"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 
@@ -98,4 +100,14 @@ export async function removeTenant(tenantId: string) {
     console.error(`Error removing tenant ${tenantId} from info db`, err)
     throw err
   }
+}
+
+export async function getTenantCreatedAt(tenantId: string) {
+  return await doInTenant(tenantId, async () => {
+    const settings = await getSettingsConfigDoc()
+    if (settings.createdAt === undefined) {
+      return undefined
+    }
+    return new Date(settings.createdAt)
+  })
 }
