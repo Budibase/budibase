@@ -225,7 +225,7 @@ export async function processAIConfig(
   existingConfig: AIInnerConfig
 ) {
   // ensure that the redacted API keys are not overwritten in the DB
-  for (const key in existingConfig.config) {
+  for (const key in existingConfig) {
     if (newConfig[key]?.apiKey === PASSWORD_REPLACEMENT) {
       newConfig[key].apiKey = existingConfig[key].apiKey
     }
@@ -233,30 +233,16 @@ export async function processAIConfig(
 
   let numBudibaseAI = 0
   for (const config of Object.values(newConfig)) {
-    if (config.isBudibaseAI) {
+    if (config.provider === "BudibaseAI") {
       numBudibaseAI++
       if (numBudibaseAI > 1) {
         throw new BadRequestError("Only one Budibase AI provider is allowed")
       }
-    }
-
-    if (config.provider === "BudibaseAI") {
-      config.isBudibaseAI = true
-      config.name = "Budibase AI"
-
-      if (env.SELF_HOSTED) {
-        const licenseKey = await pro.licensing.keys.getLicenseKey()
-        if (!licenseKey) {
-          throw new BadRequestError(
-            "Budibase AI is only available self-hosted with a valid license key"
-          )
-        }
-        config.apiKey = licenseKey
-      } else {
-        config.provider = "OpenAI"
-        // This will get set later, don't want to save it to the DB because we
-        // may want to change it in future.
-        config.apiKey = undefined
+    } else {
+      if (!config.apiKey) {
+        throw new BadRequestError(
+          `API key is required for provider ${config.provider}`
+        )
       }
     }
   }
