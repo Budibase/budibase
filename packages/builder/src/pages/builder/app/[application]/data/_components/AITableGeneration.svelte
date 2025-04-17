@@ -2,7 +2,7 @@
   import { API } from "@/api"
   import AiInput from "@/components/common/ai/AIInput.svelte"
   import { auth, licensing } from "@/stores/portal"
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, notifications } from "@budibase/bbui"
 
   let promptText = ""
   let aiInput: AiInput
@@ -11,6 +11,7 @@
 
   async function submitPrompt(message: string) {
     await API.generateTables(message)
+    notifications.success("Tables created successfully!")
   }
 </script>
 
