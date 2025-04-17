@@ -1,4 +1,4 @@
-import { verifyAIConfig } from "../configs"
+import { processAIConfig } from "../configs"
 import { TestConfiguration, structures } from "../../../../tests"
 import { AIInnerConfig } from "@budibase/types"
 
@@ -45,7 +45,7 @@ describe("Global configs controller", () => {
       },
     }
 
-    await verifyAIConfig(newConfig, data)
+    await processAIConfig(newConfig, data.config)
     // should be unchanged
     expect(newConfig.ai.apiKey).toEqual("myapikey")
   })
