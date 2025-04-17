@@ -94,8 +94,7 @@ export type AIColumnSchema =
 
 export interface LLMConfigOptions {
   model: string
-  apiKey: string
-  measureUsage: boolean
+  apiKey?: string
 }
 
 export interface LLMProviderConfig extends LLMConfigOptions {

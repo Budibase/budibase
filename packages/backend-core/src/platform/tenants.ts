@@ -2,6 +2,8 @@ import { StaticDatabases } from "../constants"
 import { getPlatformDB } from "./platformDb"
 import { LockName, LockOptions, LockType, Tenants } from "@budibase/types"
 import * as locks from "../redis/redlockImpl"
+import { doInTenant, isSelfHostUsingCloud } from "../context"
+import { getSettingsConfigDoc } from "../configs"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 
@@ -98,4 +100,20 @@ export async function removeTenant(tenantId: string) {
     console.error(`Error removing tenant ${tenantId} from info db`, err)
     throw err
   }
+}
+
+export async function getTenantCreatedAt(tenantId: string) {
+  if (isSelfHostUsingCloud()) {
+    // we have no way of knowing when self-host tenants were created, so we
+    // can't return a createdAt date
+    return undefined
+  }
+
+  return await doInTenant(tenantId, async () => {
+    const settings = await getSettingsConfigDoc()
+    if (settings.createdAt === undefined) {
+      return undefined
+    }
+    return new Date(settings.createdAt)
+  })
 }
