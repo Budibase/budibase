@@ -12,6 +12,11 @@
     await API.generateTables(message)
     notifications.success("Tables created successfully!")
   }
+
+  const examplePrompts = [
+    "Create me a table for managing IT tickets",
+    "Create a table called students with name and address fields",
+  ]
 </script>
 
 <div class="ai-generation">
@@ -25,7 +30,7 @@
   </div>
   <div class="ai-generation-examples">
     {#if isEnabled}
-      {#each ["Create a table called tickets with title, description, status fields", "Create a table called students with name and address fields"] as prompt}
+      {#each examplePrompts as prompt}
         <ActionButton on:click={() => (promptText = prompt)}
           >{prompt}</ActionButton
         >
