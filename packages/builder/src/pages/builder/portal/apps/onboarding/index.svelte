@@ -56,7 +56,7 @@
   <SplitPage>
     <NamePanel bind:name bind:url disabled={loading} onNext={handleCreateApp} />
     <div slot="right">
-      <ExampleApp {name} />
+      <ExampleApp />
     </div>
   </SplitPage>
 </div>
