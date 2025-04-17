@@ -141,8 +141,7 @@
   <AiInput
     placeholder="Generate with AI"
     onSubmit={generateJs}
-    collapseOnEscKey={!suggestedCode}
-    on:escKey={rejectSuggestion}
+    on:collapse={rejectSuggestion}
     readonly={!!suggestedCode}
   />
 </div>

@@ -7,8 +7,8 @@
 
   export let onSubmit: (_prompt: string) => Promise<void>
   export let placeholder: string = ""
+  export let expanded: boolean = false
   export let expandedOnly: boolean = false
-  export let collapseOnEscKey: boolean = true
   export let readonly: boolean = false
 
   const dispatch = createEventDispatcher()
@@ -18,7 +18,6 @@
   let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
   let promptLoading = false
-  let expanded = false
   let promptText = ""
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
@@ -38,7 +37,11 @@
   $: disabled = !aiEnabled || creditsExceeded || readonly
   $: animateBorder = !disabled && expanded
 
-  function resetExpand() {
+  function collapse() {
+    dispatch("collapse")
+    if (expandedOnly) {
+      return
+    }
     expanded = false
     promptText = ""
     animateBorder = false
@@ -52,7 +55,7 @@
         promptInput?.focus()
       }, 250)
     } else {
-      resetExpand()
+      collapse()
     }
   }
 
@@ -61,10 +64,7 @@
       event.preventDefault()
       onPromptSubmit()
     } else if (event.key === "Escape") {
-      dispatch("escKey")
-      if (collapseOnEscKey) {
-        expanded = false
-      }
+      collapse()
     } else {
       event.stopPropagation()
     }
@@ -99,12 +99,10 @@
         alt="AI"
         class="ai-icon"
         class:disabled={expanded && disabled}
-        on:click={!expandedOnly
-          ? e => {
-              e.stopPropagation()
-              toggleExpand()
-            }
-          : undefined}
+        on:click={e => {
+          e.stopPropagation()
+          toggleExpand()
+        }}
       />
       {#if expanded}
         <input
