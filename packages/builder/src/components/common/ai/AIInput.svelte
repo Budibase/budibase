@@ -9,6 +9,7 @@
   export let placeholder: string = ""
   export let expandedOnly: boolean = false
   export let collapseOnEscKey: boolean = true
+  export let readonly: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -34,7 +35,7 @@
       : expanded
 
   $: creditsExceeded = $licensing.aiCreditsExceeded
-  $: disabled = !aiEnabled || creditsExceeded
+  $: disabled = !aiEnabled || creditsExceeded || readonly
   $: animateBorder = !disabled && expanded
 
   function resetExpand() {
@@ -70,6 +71,9 @@
   }
 
   async function onPromptSubmit() {
+    if (readonly) {
+      return
+    }
     promptLoading = true
     try {
       await onSubmit(promptText)
@@ -163,7 +167,7 @@
               ? "#6E56FF"
               : "var(--spectrum-global-color-gray-600)"}
             size="S"
-            hoverable
+            hoverable={!readonly}
             hoverColor="#6E56FF"
             name={promptLoading ? "StopCircle" : "PlayCircle"}
             on:click={onPromptSubmit}

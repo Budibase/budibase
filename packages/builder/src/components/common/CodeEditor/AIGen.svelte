@@ -143,6 +143,7 @@
     onSubmit={generateJs}
     collapseOnEscKey={!suggestedCode}
     on:escKey={rejectSuggestion}
+    readonly={!!suggestedCode}
   />
 </div>
 
