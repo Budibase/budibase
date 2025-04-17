@@ -105,6 +105,7 @@
     bind:expanded
     on:collapse={rejectSuggestion}
     readonly={!!suggestedCode}
+    {expandedOnly}
   />
 </div>
 

@@ -8,14 +8,18 @@
   export let onSubmit: (_prompt: string) => Promise<void>
   export let placeholder: string = ""
   export let expanded: boolean = false
+  export let expandedOnly: boolean = false
   export let readonly: boolean = false
+  export let value: string = ""
+  export const submit = onPromptSubmit
+
+  $: expanded = expandedOnly || expanded
 
   const dispatch = createEventDispatcher()
 
   let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
   let promptLoading = false
-  let promptText = ""
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
@@ -24,13 +28,13 @@
   $: aiEnabled = $auth?.user?.llm
 
   $: creditsExceeded = $licensing.aiCreditsExceeded
-  $: disabled = !aiEnabled || creditsExceeded || readonly
+  $: disabled = !aiEnabled || creditsExceeded || readonly || promptLoading
   $: animateBorder = !disabled && expanded
 
   function collapse() {
     dispatch("collapse")
-    expanded = false
-    promptText = ""
+    expanded = expandedOnly
+    value = ""
     animateBorder = false
   }
 
@@ -63,7 +67,7 @@
     }
     promptLoading = true
     try {
-      await onSubmit(promptText)
+      await onSubmit(value)
     } finally {
       promptLoading = false
     }
@@ -95,7 +99,7 @@
       <input
         type="text"
         bind:this={promptInput}
-        bind:value={promptText}
+        bind:value
         class="prompt-input"
         {placeholder}
         on:keydown={handleKeyPress}
