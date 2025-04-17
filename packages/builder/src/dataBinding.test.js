@@ -79,6 +79,20 @@ describe("Builder dataBinding", () => {
         runtimeBinding: "[location]",
         type: "context",
       },
+      {
+        category: "Bindings",
+        icon: "Brackets",
+        readableBinding: "foo.[bar]",
+        runtimeBinding: "[foo].[qwe]",
+        type: "context",
+      },
+      {
+        category: "Bindings",
+        icon: "Brackets",
+        readableBinding: "foo.baz",
+        runtimeBinding: "[foo].[baz]",
+        type: "context",
+      },
     ]
     it("should convert a readable binding to a runtime one", () => {
       const textWithBindings = `Hello {{ Current User.firstName }}! The count is {{ Binding.count }}.`
@@ -101,6 +115,16 @@ describe("Builder dataBinding", () => {
       ).toEqual(
         `location {{ _location Zlocation [location] locationZ _location_ }}`
       )
+    })
+    it("should handle special characters in the readable binding", () => {
+      const textWithBindings = `{{ foo.baz }}`
+      expect(
+        readableToRuntimeBinding(
+          bindableProperties,
+          textWithBindings,
+          "runtimeBinding"
+        )
+      ).toEqual(`{{ [foo].[baz] }}`)
     })
   })
 
