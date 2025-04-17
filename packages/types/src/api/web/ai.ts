@@ -5,7 +5,11 @@ export interface Message {
   content: string
 }
 
-export enum StructuredOutput {}
+export enum StructuredOutput {
+  TableGeneration,
+  GenerateAIColumns,
+  GenerateData,
+}
 
 export type ResponseFormat = "text" | "json" | StructuredOutput
 
