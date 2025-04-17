@@ -8,13 +8,11 @@
   export let onSubmit: (_prompt: string) => Promise<void>
   export let placeholder: string = ""
   export let expandedOnly: boolean = false
+  export let collapseOnEscKey: boolean = true
 
-  export let parentWidth: number | null = null
-  export const dispatch = createEventDispatcher<{
-    update: { code: string }
-    accept: void
-    reject: { code: string | null }
-  }>()
+  const dispatch = createEventDispatcher()
+
+  let parentWidth: number | null = null
 
   let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
@@ -60,11 +58,23 @@
   function handleKeyPress(event: KeyboardEvent) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
-      onSubmit(promptText)
+      onPromptSubmit()
     } else if (event.key === "Escape") {
-      expanded = false
+      dispatch("escKey")
+      if (collapseOnEscKey) {
+        expanded = false
+      }
     } else {
       event.stopPropagation()
+    }
+  }
+
+  async function onPromptSubmit() {
+    promptLoading = true
+    try {
+      await onSubmit(promptText)
+    } finally {
+      promptLoading = false
     }
   }
 </script>
@@ -156,7 +166,7 @@
             hoverable
             hoverColor="#6E56FF"
             name={promptLoading ? "StopCircle" : "PlayCircle"}
-            on:click={() => onSubmit(promptText)}
+            on:click={onPromptSubmit}
           />
         {/if}
       </div>
