@@ -21,7 +21,6 @@
   let suggestedCode: string | null = null
   let previousContents: string | null = null
   let expanded = false
-  let containerWidth = "auto"
   let promptText = ""
 
   const thresholdExpansionWidth = 350
@@ -32,14 +31,7 @@
       ? true
       : expanded
 
-  $: if (
-    expandedOnly ||
-    (expanded && parentWidth !== null && parentWidth > thresholdExpansionWidth)
-  ) {
-    containerWidth = calculateExpandedWidth()
-  } else if (!expanded) {
-    containerWidth = "auto"
-  }
+  $: containerWidth = expanded ? calculateExpandedWidth() : "auto"
 
   async function generateJs(prompt: string) {
     promptText = ""
