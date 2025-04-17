@@ -100,6 +100,7 @@
     },
     limit,
     primaryDisplay: ($fetch.definition as any)?.primaryDisplay,
+    loaded: $fetch.loaded,
   }
 
   const createFetch = (datasource: ProviderDatasource) => {

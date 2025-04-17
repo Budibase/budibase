@@ -1,4 +1,4 @@
-const modernize = columns => {
+export const modernize = columns => {
   if (!columns) {
     return []
   }
@@ -14,9 +14,9 @@ const modernize = columns => {
   return columns
 }
 
-const removeInvalidAddMissing = (
+export const removeInvalidAddMissing = (
   columns = [],
-  defaultColumns,
+  defaultColumns = [],
   primaryDisplayColumnName
 ) => {
   const defaultColumnNames = defaultColumns.map(column => column.field)
@@ -47,7 +47,7 @@ const removeInvalidAddMissing = (
   return combinedColumns
 }
 
-const getDefault = (schema = {}) => {
+export const getDefault = (schema = {}) => {
   const defaultValues = Object.values(schema)
     .filter(column => !column.nestedJSON)
     .map(column => ({
@@ -93,7 +93,7 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
   })
 }
 
-const getColumns = ({
+export const getColumns = ({
   columns,
   schema,
   primaryDisplayColumnName,
@@ -132,5 +132,3 @@ const getColumns = ({
     },
   }
 }
-
-export default getColumns

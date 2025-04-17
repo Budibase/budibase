@@ -1424,7 +1424,7 @@ const bindingReplacement = (
  * Extracts a component ID from a handlebars expression setting of
  * {{ literal [componentId] }}
  */
-const extractLiteralHandlebarsID = value => {
+export const extractLiteralHandlebarsID = value => {
   if (!value || typeof value !== "string") {
     return null
   }

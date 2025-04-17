@@ -11,7 +11,7 @@
   export let listTypeProps = {}
   export let listItemKey
   export let draggable = true
-  export let focus
+  export let focus = undefined
 
   let zoneType = generate()
 

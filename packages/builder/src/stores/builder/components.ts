@@ -65,7 +65,6 @@ export const INITIAL_COMPONENTS_STATE: ComponentState = {
 export class ComponentStore extends BudiStore<ComponentState> {
   constructor() {
     super(INITIAL_COMPONENTS_STATE)
-
     this.reset = this.reset.bind(this)
     this.refreshDefinitions = this.refreshDefinitions.bind(this)
     this.getDefinition = this.getDefinition.bind(this)
@@ -213,8 +212,10 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     const def = this.getDefinition(enrichedComponent?._component)
-    const filterableTypes = def?.settings?.filter(setting =>
-      setting?.type?.startsWith("filter")
+    const filterableTypes = def?.settings?.filter(
+      setting =>
+        setting?.type?.startsWith("filter") &&
+        setting?.type !== "filterConfiguration"
     )
     for (let setting of filterableTypes || []) {
       const isLegacy = Array.isArray(enrichedComponent[setting.key])

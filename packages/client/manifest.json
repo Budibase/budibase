@@ -5526,6 +5526,58 @@
       }
     ]
   },
+
+  "filter": {
+    "name": "Filter",
+    "icon": "Filter",
+    "size": {
+      "width": 100,
+      "height": 35
+    },
+    "settings": [
+      {
+        "type": "dataSource/embedded",
+        "label": "Target component",
+        "required": true,
+        "key": "targetComponent",
+        "wide": true
+      },
+      {
+        "label": "",
+        "type": "filterConfiguration",
+        "key": "filterConfig",
+        "nested": true,
+        "dependsOn": "targetComponent",
+        "resetOn": "targetComponent"
+      },
+      {
+        "type": "boolean",
+        "label": "Persist filter values when a user returns to the screen",
+        "key": "persistFilters",
+        "wide": true,
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Add a 'Clear filters' button so that user can clear multiple filters at once",
+        "key": "showClear",
+        "defaultValue": false,
+        "wide": true
+      }
+    ]
+  },
+  "filterconfig": {
+    "name": "",
+    "icon": "",
+    "editable": true,
+    "settings": [
+      {
+        "type": "plainText",
+        "label": "Label",
+        "key": "label"
+      }
+    ]
+  },
   "dynamicfilter": {
     "name": "Dynamic Filter",
     "icon": "Filter",
@@ -7670,7 +7722,8 @@
           "setting": "table.type",
           "value": "custom",
           "invert": true
-        }
+        },
+        "resetOn": "table"
       },
       {
         "type": "field/sortable",
@@ -7820,9 +7873,20 @@
             "type": "array"
           }
         ]
+      },
+      {
+        "type": "static",
+        "scope": "local",
+        "values": [
+          {
+            "label": "Datasources",
+            "key": "datasources",
+            "type": "array"
+          }
+        ]
       }
     ],
-    "actions": ["RefreshDatasource"]
+    "actions": ["RefreshDatasource", "AddDataProviderQueryExtension"]
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",

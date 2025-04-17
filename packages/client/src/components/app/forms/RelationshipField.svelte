@@ -14,13 +14,15 @@
     type LegacyFilter,
     type SearchFilterGroup,
     type UISearchFilter,
+    type RelationshipFieldMetadata,
+    type Row,
   } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
-  import type { RelationshipFieldMetadata, Row } from "@budibase/types"
   import type { FieldApi, FieldState, FieldValidation } from "@/types"
   import { utils } from "@budibase/shared-core"
+  import { createEventDispatcher } from "svelte"
 
   export let field: string | undefined = undefined
   export let label: string | undefined = undefined
@@ -30,7 +32,7 @@
   export let validation: FieldValidation | undefined = undefined
   export let autocomplete: boolean = true
   export let defaultValue: ValueType | undefined = undefined
-  export let onChange: (_props: { value: ValueType }) => void
+  export let onChange: (_props: { value: ValueType; label?: string }) => void
   export let filter: UISearchFilter | LegacyFilter[] | undefined = undefined
   export let datasourceType: "table" | "user" = "table"
   export let primaryDisplay: string | undefined = undefined
@@ -41,7 +43,13 @@
     | FieldType.BB_REFERENCE
     | FieldType.BB_REFERENCE_SINGLE = FieldType.LINK
 
+  export let multi: boolean | undefined = undefined
+  export let tableId: string | undefined = undefined
+  export let defaultRows: Row[] | undefined = []
+
   const { API } = getContext("sdk")
+
+  const dispatch = createEventDispatcher()
 
   // Field state
   let fieldState: FieldState<string | string[]> | undefined
@@ -59,11 +67,11 @@
 
   // Reset the available options when our base filter changes
   $: filter, (optionsMap = {})
-
   // Determine if we can select multiple rows or not
   $: multiselect =
-    [FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
-    fieldSchema?.relationshipType !== "one-to-many"
+    multi ??
+    ([FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
+      fieldSchema?.relationshipType !== "one-to-many")
 
   // Get the proper string representation of the value
   $: realValue = fieldState?.value as ValueType
@@ -71,7 +79,7 @@
   $: selectedIDs = getSelectedIDs(selectedValue)
 
   // If writable, we use a fetch to load options
-  $: linkedTableId = fieldSchema?.tableId
+  $: linkedTableId = tableId ?? fieldSchema?.tableId
   $: writable = !disabled && !readonly
   $: migratedFilter = migrateFilter(filter)
   $: fetch = createFetch(
@@ -87,7 +95,13 @@
 
   // Build our options map
   $: rows = $fetch?.rows || []
-  $: processOptions(realValue, rows, primaryDisplayField)
+  $: rows && dispatch("rows", rows)
+
+  $: processOptions(
+    realValue,
+    [...rows, ...(defaultRows || [])],
+    primaryDisplayField
+  )
 
   // If we ever have a value selected for which we don't have an option, we must
   // fetch those rows to ensure we can render them as options

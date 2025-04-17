@@ -44,6 +44,7 @@ const createComponentStore = () => {
         selectedComponentPath: selectedPath?.map(component => component._id),
         mountedComponentCount: Object.keys($store.mountedComponents).length,
         screenslotInstance: $store.mountedComponents[ScreenslotID],
+        mounted: $store.mountedComponents,
       }
     }
   )
