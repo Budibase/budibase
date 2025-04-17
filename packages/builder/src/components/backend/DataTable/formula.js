@@ -1,4 +1,4 @@
-import { FieldType } from "@budibase/types"
+import { FieldType, FormulaType } from "@budibase/types"
 import { FIELDS } from "@/constants/backend"
 import { tables } from "@/stores/builder"
 import { get as svelteGet } from "svelte/store"
@@ -8,7 +8,6 @@ import { makeReadableKeyPropSafe } from "@/dataBinding"
 const MAX_DEPTH = 1
 
 const TYPES_TO_SKIP = [
-  FieldType.FORMULA,
   FieldType.AI,
   FieldType.LONGFORM,
   FieldType.SIGNATURE_SINGLE,
@@ -16,6 +15,18 @@ const TYPES_TO_SKIP = [
   //https://github.com/Budibase/budibase/issues/3030
   FieldType.INTERNAL,
 ]
+
+const shouldSkipFieldSchema = fieldSchema => {
+  // Skip some types always
+  if (TYPES_TO_SKIP.includes(fieldSchema.type)) {
+    return true
+  }
+  // Skip dynamic formula fields
+  return (
+    fieldSchema.type === FieldType.FORMULA &&
+    fieldSchema.formulaType === FormulaType.DYNAMIC
+  )
+}
 
 export function getBindings({
   table,
@@ -32,7 +43,7 @@ export function getBindings({
     // skip relationships after a certain depth and types which
     // can't bind to
     if (
-      TYPES_TO_SKIP.includes(schema.type) ||
+      shouldSkipFieldSchema(schema) ||
       (isRelationship && depth >= MAX_DEPTH)
     ) {
       continue

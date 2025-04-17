@@ -1,5 +1,7 @@
 import nock from "nock"
 import { MockLLMResponseFn, MockLLMResponseOpts } from "."
+import _ from "lodash"
+import { ai } from "@budibase/pro"
 
 let chatID = 1
 const SPACE_REGEX = /\s+/g
@@ -48,8 +50,15 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
   opts?: MockLLMResponseOpts
 ) => {
+  let body: any = undefined
+
+  if (opts?.format) {
+    body = _.matches({
+      response_format: ai.openai.parseResponseFormat(opts.format),
+    })
+  }
   return nock(opts?.host || "https://api.openai.com")
-    .post("/v1/chat/completions")
+    .post("/v1/chat/completions", body)
     .reply((uri: string, body: nock.Body) => {
       const req = body as ChatCompletionRequest
       const messages = req.messages

@@ -40,14 +40,27 @@
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
+  const thresholdExpansionWidth = 350
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
   $: aiEnabled = $auth?.user?.llm
-  $: expanded = expandedOnly ? true : expanded
+
+  $: expanded =
+    expandedOnly ||
+    (parentWidth !== null && parentWidth > thresholdExpansionWidth)
+      ? true
+      : expanded
+
   $: creditsExceeded = $licensing.aiCreditsExceeded
   $: disabled = suggestedCode !== null || !aiEnabled || creditsExceeded
-  $: if (expandedOnly) {
+
+  $: if (
+    expandedOnly ||
+    (expanded && parentWidth !== null && parentWidth > thresholdExpansionWidth)
+  ) {
     containerWidth = calculateExpandedWidth()
+  } else if (!expanded) {
+    containerWidth = "auto"
   }
 
   async function generateJs(prompt: string) {
