@@ -72,102 +72,96 @@
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="ai-gen-container">
-  <button
-    bind:this={buttonElement}
-    class="spectrum-ActionButton fade"
-    class:expanded
-    class:animate-border={animateBorder}
-    on:click={!expanded ? toggleExpand : undefined}
-  >
-    <div class="button-content-wrapper">
-      <img
-        src={BBAI}
-        alt="AI"
-        class="ai-icon"
-        class:disabled={expanded && disabled}
-        on:click={e => {
-          e.stopPropagation()
-          toggleExpand()
-        }}
+
+<button
+  bind:this={buttonElement}
+  class="spectrum-ActionButton fade"
+  class:expanded
+  class:animate-border={animateBorder}
+  on:click={!expanded ? toggleExpand : undefined}
+>
+  <div class="button-content-wrapper">
+    <img
+      src={BBAI}
+      alt="AI"
+      class="ai-icon"
+      class:disabled={expanded && disabled}
+      on:click={e => {
+        e.stopPropagation()
+        toggleExpand()
+      }}
+    />
+    {#if expanded}
+      <input
+        type="text"
+        bind:this={promptInput}
+        bind:value={promptText}
+        class="prompt-input"
+        {placeholder}
+        on:keydown={handleKeyPress}
+        {disabled}
       />
-      {#if expanded}
-        <input
-          type="text"
-          bind:this={promptInput}
-          bind:value={promptText}
-          class="prompt-input"
-          {placeholder}
-          on:keydown={handleKeyPress}
-          {disabled}
-        />
+    {:else}
+      <span class="spectrum-ActionButton-label ai-gen-text">
+        {placeholder}
+      </span>
+    {/if}
+  </div>
+  {#if expanded}
+    <div class="action-buttons">
+      {#if !aiEnabled}
+        <Button cta size="S" on:click={() => switchOnAIModal.show()}>
+          Switch on AI
+        </Button>
+        <Modal bind:this={switchOnAIModal}>
+          <ModalContent title="Switch on AI" showConfirmButton={false}>
+            <div class="enable-ai">
+              <p>To enable BB AI:</p>
+              <ul>
+                <li>
+                  Add your Budibase license key:
+                  <Link href={accountPortal}>Budibase account portal</Link>
+                </li>
+                <li>
+                  Go to the portal settings page, click AI and switch on BB AI
+                </li>
+              </ul>
+            </div>
+          </ModalContent>
+        </Modal>
+      {:else if creditsExceeded}
+        <Button cta size="S" on:click={() => addCreditsModal.show()}>
+          Add AI credits
+        </Button>
+        <Modal bind:this={addCreditsModal}>
+          <ModalContent title="Add AI credits" showConfirmButton={false}>
+            <Body size="S">
+              {#if accountPortalAccess}
+                <Link href={"https://budibase.com/contact/"}>Contact sales</Link
+                > to unlock additional BB AI credits
+              {:else}
+                Contact your account holder to unlock additional BB AI credits
+              {/if}
+            </Body>
+          </ModalContent>
+        </Modal>
       {:else}
-        <span class="spectrum-ActionButton-label ai-gen-text">
-          {placeholder}
-        </span>
+        <Icon
+          color={promptLoading
+            ? "#6E56FF"
+            : "var(--spectrum-global-color-gray-600)"}
+          size="S"
+          hoverable={!readonly}
+          hoverColor="#6E56FF"
+          name={promptLoading ? "StopCircle" : "PlayCircle"}
+          on:click={onPromptSubmit}
+        />
       {/if}
     </div>
-    {#if expanded}
-      <div class="action-buttons">
-        {#if !aiEnabled}
-          <Button cta size="S" on:click={() => switchOnAIModal.show()}>
-            Switch on AI
-          </Button>
-          <Modal bind:this={switchOnAIModal}>
-            <ModalContent title="Switch on AI" showConfirmButton={false}>
-              <div class="enable-ai">
-                <p>To enable BB AI:</p>
-                <ul>
-                  <li>
-                    Add your Budibase license key:
-                    <Link href={accountPortal}>Budibase account portal</Link>
-                  </li>
-                  <li>
-                    Go to the portal settings page, click AI and switch on BB AI
-                  </li>
-                </ul>
-              </div>
-            </ModalContent>
-          </Modal>
-        {:else if creditsExceeded}
-          <Button cta size="S" on:click={() => addCreditsModal.show()}>
-            Add AI credits
-          </Button>
-          <Modal bind:this={addCreditsModal}>
-            <ModalContent title="Add AI credits" showConfirmButton={false}>
-              <Body size="S">
-                {#if accountPortalAccess}
-                  <Link href={"https://budibase.com/contact/"}
-                    >Contact sales</Link
-                  > to unlock additional BB AI credits
-                {:else}
-                  Contact your account holder to unlock additional BB AI credits
-                {/if}
-              </Body>
-            </ModalContent>
-          </Modal>
-        {:else}
-          <Icon
-            color={promptLoading
-              ? "#6E56FF"
-              : "var(--spectrum-global-color-gray-600)"}
-            size="S"
-            hoverable={!readonly}
-            hoverColor="#6E56FF"
-            name={promptLoading ? "StopCircle" : "PlayCircle"}
-            on:click={onPromptSubmit}
-          />
-        {/if}
-      </div>
-    {/if}
-  </button>
-</div>
+  {/if}
+</button>
 
 <style>
-  .ai-gen-container {
-    height: 40px;
-  }
-
   .spectrum-ActionButton {
     --offset: 1px;
     position: relative;
@@ -180,7 +174,7 @@
     border-radius: 30px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
-    height: 100%;
+    height: 40px;
     overflow: hidden;
     cursor: pointer;
     background-color: var(--spectrum-global-color-gray-75);
