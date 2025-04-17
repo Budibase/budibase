@@ -1,5 +1,5 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
-import getColumns from "./getColumns"
+import { getColumns } from "./getColumns"
 
 describe("getColumns", () => {
   beforeEach(ctx => {

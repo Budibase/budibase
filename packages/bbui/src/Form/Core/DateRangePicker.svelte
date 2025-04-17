@@ -1,24 +1,78 @@
-<script>
+<script lang="ts">
+  import dayjs, { Dayjs } from "dayjs"
+  import { memo } from "@budibase/frontend-core"
+  import { createEventDispatcher } from "svelte"
   import CoreDatePicker from "./DatePicker/DatePicker.svelte"
   import Icon from "../../Icon/Icon.svelte"
+  import { parseDate } from "../../helpers"
 
-  let fromDate
-  let toDate
+  export let enableTime: boolean | undefined = false
+  export let timeOnly: boolean | undefined = false
+  export let ignoreTimezones: boolean | undefined = false
+  export let value: string[] | undefined = []
+
+  const dispatch = createEventDispatcher()
+  const valueStore = memo(value)
+
+  let fromDate: Dayjs | null
+  let toDate: Dayjs | null
+
+  $: valueStore.set(value || [])
+  $: parseValue($valueStore)
+
+  $: parsedFrom = fromDate ? parseDate(fromDate, { enableTime }) : undefined
+  $: parsedTo = toDate ? parseDate(toDate, { enableTime }) : undefined
+
+  const parseValue = (value: string[]) => {
+    if (!Array.isArray(value) || !value[0] || !value[1]) {
+      fromDate = null
+      toDate = null
+    } else {
+      fromDate = dayjs(value[0])
+      toDate = dayjs(value[1])
+    }
+  }
+
+  const onChangeFrom = (utc: string) => {
+    fromDate = utc ? dayjs(utc).startOf("day") : null
+    if (fromDate && (!toDate || fromDate.isAfter(toDate))) {
+      toDate = !enableTime ? fromDate.endOf("day") : fromDate
+    } else if (!fromDate) {
+      toDate = null
+    }
+
+    dispatch("change", [fromDate, toDate])
+  }
+
+  // Pass the raw date not the event
+  const onChangeTo = (utc: string) => {
+    toDate = utc ? dayjs(utc).endOf("day") : null
+    if (toDate && (!fromDate || toDate.isBefore(fromDate))) {
+      fromDate = !enableTime ? toDate.startOf("day") : toDate
+    } else if (!toDate) {
+      fromDate = null
+    }
+    dispatch("change", [fromDate, toDate])
+  }
 </script>
 
 <div class="date-range">
   <CoreDatePicker
-    value={fromDate}
-    on:change={e => (fromDate = e.detail)}
-    enableTime={false}
+    value={parsedFrom}
+    on:change={e => onChangeFrom(e.detail)}
+    {enableTime}
+    {timeOnly}
+    {ignoreTimezones}
   />
   <div class="arrow">
     <Icon name="ChevronRight" />
   </div>
   <CoreDatePicker
-    value={toDate}
-    on:change={e => (toDate = e.detail)}
-    enableTime={false}
+    value={parsedTo}
+    on:change={e => onChangeTo(e.detail)}
+    {enableTime}
+    {timeOnly}
+    {ignoreTimezones}
   />
 </div>
 
