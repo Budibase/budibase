@@ -1,18 +1,9 @@
 <script lang="ts">
-  import {
-    ActionButton,
-    Icon,
-    Button,
-    Modal,
-    ModalContent,
-    Body,
-    Link,
-  } from "@budibase/bbui"
+  import { Icon, Button, Modal, ModalContent, Body, Link } from "@budibase/bbui"
   import { auth, admin, licensing } from "@/stores/portal"
 
   import { createEventDispatcher } from "svelte"
   import BBAI from "assets/bb-ai.svg"
-  import analytics, { Events } from "@/analytics"
 
   export let onSubmit: (_prompt: string) => Promise<void>
   export let placeholder: string = ""
@@ -28,10 +19,7 @@
   let promptInput: HTMLInputElement
   let buttonElement: HTMLButtonElement
   let promptLoading = false
-  let suggestedCode: string | null = null
-  let previousContents: string | null = null
   let expanded = false
-  let containerWidth = "auto"
   let promptText = ""
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
@@ -48,56 +36,19 @@
       : expanded
 
   $: creditsExceeded = $licensing.aiCreditsExceeded
-  $: disabled = suggestedCode !== null || !aiEnabled || creditsExceeded
+  $: disabled = !aiEnabled || creditsExceeded
   $: animateBorder = !disabled && expanded
-
-  $: if (
-    expandedOnly ||
-    (expanded && parentWidth !== null && parentWidth > thresholdExpansionWidth)
-  ) {
-    containerWidth = calculateExpandedWidth()
-  } else if (!expanded) {
-    containerWidth = "auto"
-  }
-
-  function acceptSuggestion() {
-    analytics.captureEvent(Events.AI_JS_ACCEPTED, {
-      code: suggestedCode,
-      prompt: promptText,
-    })
-    dispatch("accept")
-    resetExpand()
-  }
-
-  function rejectSuggestion() {
-    analytics.captureEvent(Events.AI_JS_REJECTED, {
-      code: suggestedCode,
-      prompt: promptText,
-    })
-    dispatch("reject", { code: previousContents })
-    resetExpand()
-  }
 
   function resetExpand() {
     expanded = false
-    containerWidth = "auto"
     promptText = ""
-    suggestedCode = null
-    previousContents = null
     animateBorder = false
-  }
-
-  function calculateExpandedWidth() {
-    return parentWidth
-      ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
-      : "300px"
   }
 
   function toggleExpand() {
     if (!expanded) {
       expanded = true
       animateBorder = true
-      containerWidth = calculateExpandedWidth()
       setTimeout(() => {
         promptInput?.focus()
       }, 250)
@@ -111,11 +62,7 @@
       event.preventDefault()
       onSubmit(promptText)
     } else if (event.key === "Escape") {
-      if (!suggestedCode) resetExpand()
-      else {
-        expanded = false
-        containerWidth = "auto"
-      }
+      expanded = false
     } else {
       event.stopPropagation()
     }
@@ -124,17 +71,7 @@
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="ai-gen-container" style="--container-width: {containerWidth}">
-  {#if suggestedCode !== null}
-    <div class="floating-actions">
-      <ActionButton size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
-        Accept
-      </ActionButton>
-      <ActionButton size="S" icon="Delete" on:click={rejectSuggestion}>
-        Reject
-      </ActionButton>
-    </div>
-  {/if}
+<div class="ai-gen-container">
   <button
     bind:this={buttonElement}
     class="spectrum-ActionButton fade"
@@ -163,7 +100,6 @@
         {placeholder}
         on:keydown={handleKeyPress}
         {disabled}
-        readonly={suggestedCode !== null}
       />
     </div>
     {#if expanded}
@@ -296,16 +232,6 @@
     border-radius: inherit;
   }
 
-  .floating-actions {
-    position: absolute;
-    display: flex;
-    gap: var(--spacing-s);
-    bottom: calc(100% + 5px);
-    left: 5px;
-    z-index: 2;
-    animation: fade-in 0.2s ease-out forwards;
-  }
-
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -378,8 +304,7 @@
     margin-right: var(--spacing-s);
   }
 
-  .prompt-input:disabled,
-  .prompt-input[readonly] {
+  .prompt-input:disabled {
     color: var(--spectrum-global-color-gray-500);
     cursor: not-allowed;
   }
