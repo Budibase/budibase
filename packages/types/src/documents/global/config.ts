@@ -111,7 +111,13 @@ export interface SCIMInnerConfig {
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
-export type AIProvider = "OpenAI" | "AzureOpenAI" | "BudibaseAI"
+export type AIProvider =
+  | "OpenAI"
+  | "Anthropic"
+  | "AzureOpenAI"
+  | "TogetherAI"
+  | "Custom"
+  | "BudibaseAI"
 
 export interface ProviderConfig {
   provider: AIProvider
