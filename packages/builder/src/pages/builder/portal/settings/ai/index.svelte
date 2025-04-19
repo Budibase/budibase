@@ -5,7 +5,6 @@
     Layout,
     Heading,
     Body,
-    Helpers,
     Divider,
     notifications,
     Modal,
@@ -14,145 +13,191 @@
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
 
-  import { admin, licensing, auth } from "@/stores/portal"
+  import { auth, admin, licensing } from "@/stores/portal"
   import { API } from "@/api"
-  import AIConfigModal from "./ConfigModal.svelte"
   import AIConfigTile from "./AIConfigTile.svelte"
+  import ConfigModal from "./ConfigModal.svelte"
+  import PortalModal from "./PortalModal.svelte"
   import {
-    type AIConfig,
-    ConfigType,
-    type ProviderConfig,
     type AIProvider,
+    ConfigType,
+    type AIConfig,
+    type ProviderConfig,
   } from "@budibase/types"
+  import { ConfigMap, Providers } from "./constants"
 
-  let modal: Modal
-  let fullAIConfig: AIConfig
-  let editingAIConfig: ProviderConfig | undefined
-  let editingUuid: string | undefined
+  // Supported provider keys
+  const BUDIBASE_AI_KEY = "budibase_ai"
+  const OPENAI_KEY = "OpenAI"
+  const AZURE_OPENAI_KEY = "AzureOpenAI"
+
+  let aiConfig: AIConfig
+
+  let configModal: any
+  let portalModal: any
+  let activeKey: string | undefined
+  let modalKey: string
+  let modalConfig: ProviderConfig
+  onMount(async () => {
+    aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+  })
+
+  $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
 
   $: isCloud = $admin.cloud
-  $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
-  $: defaultConfig = Object.values(fullAIConfig?.config || {}).find(
-    config => config.isDefault === true
-  )
-  $: aiEnabled = $auth?.user?.llm
+  $: aiEnabled = !!activeKey
+  $: activeKey =
+    uiConfigs && $auth?.user?.llm
+      ? uiConfigs.find(({ cfg }) => cfg.provider === $auth?.user?.llm?.provider)
+          ?.key
+      : undefined
+  $: uiConfigs = aiConfig?.config
+    ? [BUDIBASE_AI_KEY, OPENAI_KEY, AZURE_OPENAI_KEY].map(key => ({
+        key,
+        cfg: aiConfig.config[key] ?? getDefaultConfig(key),
+      }))
+    : []
+
+  function handleEnable(key: string) {
+    modalKey = key
+    if (key === BUDIBASE_AI_KEY && !isCloud) {
+      portalModal.show()
+    } else {
+      // Prefill modal state for config editing/enabling
+      const entry = uiConfigs.find(p => p.key === key)
+      modalConfig = { ...entry?.cfg } as ProviderConfig
+      configModal.show()
+    }
+  }
 
   async function fetchAIConfig() {
     try {
-      fullAIConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
     } catch (error) {
       notifications.error("Error fetching AI config")
     }
   }
 
+  /** Save or enable the AI provider configuration */
   async function saveConfig() {
-    // Use existing key or generate new one
-    const id = editingUuid || Helpers.uuid()
-
-    // Creating first custom AI Config
-    if (!fullAIConfig && editingAIConfig) {
-      fullAIConfig = {
-        type: ConfigType.AI,
-        config: {
-          [id]: editingAIConfig,
+    const { _id, _rev } = aiConfig
+    const existing = aiConfig.config[modalKey] || {}
+    const updatedConfig: ProviderConfig = {
+      ...existing,
+      ...modalConfig,
+      active: true,
+      isDefault: true,
+    }
+    const payload = {
+      _id,
+      _rev,
+      type: ConfigType.AI,
+      config: {
+        [modalKey]: updatedConfig,
+      },
+    }
+    try {
+      await API.saveConfig(payload)
+      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      notifications.success(`AI provider ${updatedConfig.name} enabled`)
+    } catch (err: any) {
+      notifications.error(
+        err.message || "Failed to save AI provider configuration"
+      )
+    }
+    configModal.hide()
+  }
+  function cancelConfig() {
+    configModal.hide()
+  }
+  async function disableConfig(key?: string) {
+    if (key !== undefined) {
+      modalKey = key
+    }
+    const { _id, _rev } = aiConfig
+    const existing = aiConfig.config[modalKey] || {}
+    // Preserve existing settings but disable the provider
+    const payload = {
+      _id,
+      _rev,
+      type: ConfigType.AI,
+      config: {
+        [modalKey]: {
+          ...existing,
+          active: false,
+          isDefault: false,
         },
-      }
-    } else {
-      // We don't store the default BB AI config in the DB
-      delete fullAIConfig.config.budibase_ai
-
-      // unset the default value from other configs if default is set
-      if (editingAIConfig?.isDefault) {
-        for (let key in fullAIConfig.config) {
-          if (key !== id) {
-            fullAIConfig.config[key].isDefault = false
-          }
-        }
-      }
-      // Add new or update existing custom AI Config
-      if (editingAIConfig) {
-        fullAIConfig.config[id] = editingAIConfig
-      }
-      fullAIConfig.type = ConfigType.AI
+      },
     }
-
     try {
-      await API.saveConfig(fullAIConfig)
-      notifications.success(`Successfully saved and activated AI Configuration`)
-    } catch (error) {
-      notifications.error(
-        `Failed to save AI Configuration, reason: ${
-          error instanceof Error ? error.message : "Unknown"
-        }`
-      )
-    } finally {
-      await fetchAIConfig()
+      await API.saveConfig(payload)
+      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      notifications.success(`AI provider ${existing.name} disabled`)
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to disable AI provider")
+    }
+    configModal.hide()
+  }
+
+  function getDefaultConfig(key: string): ProviderConfig {
+    if (key === BUDIBASE_AI_KEY) {
+      return {
+        provider: isCloud ? "OpenAI" : "BudibaseAI",
+        name: "Budibase AI",
+        active: false,
+        isDefault: false,
+        apiKey: "",
+        baseUrl: "",
+        defaultModel: "",
+      }
+    }
+    if (key === OPENAI_KEY) {
+      return {
+        provider: "OpenAI",
+        name: ConfigMap.OpenAI.name,
+        active: false,
+        isDefault: false,
+        apiKey: "",
+        baseUrl: ConfigMap.OpenAI.baseUrl,
+        defaultModel: "",
+      }
+    }
+    return {
+      provider: "AzureOpenAI",
+      name: ConfigMap.AzureOpenAI.name,
+      active: false,
+      isDefault: false,
+      apiKey: "",
+      baseUrl: ConfigMap.AzureOpenAI.baseUrl,
+      defaultModel: "",
     }
   }
 
-  async function deleteConfig(key: string) {
-    // We don't store the default BB AI config in the DB
-    delete fullAIConfig.config.budibase_ai
-    // Delete the configuration
-    delete fullAIConfig.config[key]
-
-    try {
-      await API.saveConfig(fullAIConfig)
-      notifications.success(`Deleted config`)
-    } catch (error) {
-      notifications.error(
-        `Failed to delete config, reason: ${
-          error instanceof Error ? error.message : "Unknown"
-        }`
-      )
-    } finally {
-      await fetchAIConfig()
-    }
-  }
-
-  function editConfig(uuid: string) {
-    editingUuid = uuid
-    editingAIConfig = fullAIConfig?.config[editingUuid]
-    modal.show()
-  }
-
-  function newConfig() {
-    editingUuid = undefined
-    editingAIConfig = undefined
-    modal.show()
-  }
-
-  onMount(() => {
-    fetchAIConfig()
+  onMount(async () => {
+    await fetchAIConfig()
   })
 </script>
-
-<Modal bind:this={modal}>
-  <AIConfigModal
-    saveHandler={saveConfig}
-    deleteHandler={deleteConfig}
-    bind:config={editingAIConfig}
-  />
-</Modal>
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <div class="header">
       <Heading size="M">AI</Heading>
-      {#if !isCloud && !customAIConfigsEnabled}
-        <Tags>
-          <Tag icon="LockClosed">Premium</Tag>
-        </Tags>
-      {:else if isCloud && !customAIConfigsEnabled}
-        <Tags>
-          <Tag icon="LockClosed">Enterprise</Tag>
-        </Tags>
-      {/if}
+      <Tags>
+        {#if !isCloud && !customAIConfigsEnabled}
+          <Tags>
+            <Tag icon="LockClosed">Premium</Tag>
+          </Tags>
+        {:else if isCloud && !customAIConfigsEnabled}
+          <Tags>
+            <Tag icon="LockClosed">Enterprise</Tag>
+          </Tags>
+        {/if}
+      </Tags>
     </div>
-    <Body
-      >Connect an LLM to enable AI features. You can only enable one LLM at a
-      time.</Body
-    >
+    <Body>
+      Connect an LLM to enable AI features. You can only enable one LLM at a
+      time.
+    </Body>
   </Layout>
   <Divider />
 
@@ -164,40 +209,67 @@
         </div>
         <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
       </div>
-      <Button secondary cta size="S">Enable BB AI</Button>
+      <Button
+        secondary
+        cta
+        size="S"
+        on:click={() => handleEnable(BUDIBASE_AI_KEY)}
+      >
+        Enable BB AI
+      </Button>
     </div>
   {/if}
 
-  <div class="section">
-    <div class="section-title">Enabled</div>
-    <div class="ai-list">
-      {#if defaultConfig}
-        <AIConfigTile config={defaultConfig} />
-      {:else}
-        <div class="no-enabled">No LLMs are enabled</div>
-      {/if}
+  {#if aiConfig}
+    <div class="section">
+      <div class="section-title">Enabled</div>
+      <div class="ai-list">
+        {#if activeKey}
+          {#each uiConfigs.filter(item => item.key === activeKey) as { key, cfg }}
+            <AIConfigTile
+              config={cfg}
+              activeOverride={key === activeKey}
+              editHandler={() => handleEnable(key)}
+              disableHandler={() => disableConfig(key)}
+            />
+          {/each}
+        {:else}
+          <div class="no-enabled">No LLMs are enabled</div>
+        {/if}
+      </div>
+      <div style="margin-top: 12px;">Disabled</div>
+      <div class="ai-list">
+        {#each uiConfigs.filter(item => item.key !== activeKey) as { key, cfg }}
+          <AIConfigTile
+            config={cfg}
+            activeOverride={key === activeKey}
+            editHandler={() => handleEnable(key)}
+            disableHandler={() => disableConfig(key)}
+          />
+        {/each}
+      </div>
     </div>
-    <div style="margin-top: 12px;">Disabled</div>
-    <div class="ai-list">
-      <AIConfigTile
-        config={{
-          name: "Azure OpenAI",
-          provider: "AzureOpenAI",
-          isDefault: false,
-          active: false,
-        }}
-      />
-      <AIConfigTile
-        config={{
-          name: "OpenAI",
-          provider: "OpenAI",
-          isDefault: false,
-          active: false,
-        }}
-      />
-    </div>
-  </div>
+  {/if}
 </Layout>
+
+<!-- Modals for Budibase AI portal and provider configuration -->
+<Modal bind:this={portalModal}>
+  <PortalModal
+    url={$admin.accountPortalUrl}
+    confirmHandler={() => {
+      window.open($admin.accountPortalUrl, "_blank")
+      portalModal.hide()
+    }}
+    cancelHandler={() => portalModal.hide()}
+  />
+</Modal>
+<Modal bind:this={configModal}>
+  <ConfigModal
+    config={modalConfig}
+    saveHandler={saveConfig}
+    deleteHandler={cancelConfig}
+  />
+</Modal>
 
 <style>
   .header {
@@ -247,46 +319,5 @@
 
   .section-title {
     margin-bottom: 12px;
-  }
-
-  .ai-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px;
-    background-color: var(--background);
-    border: 1px solid var(--grey-4);
-    border-radius: 4px;
-    margin-bottom: 8px;
-  }
-
-  .ai-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: white;
-    border-radius: 4px;
-    width: 38px;
-    height: 38px;
-  }
-
-  .bb-logo {
-    background-color: var(--spectrum-global-color-purple-100);
-  }
-
-  .ai-info {
-    flex-grow: 1;
-    margin-left: 12px;
-  }
-
-  .openai-logo {
-    width: 24px;
-    height: 24px;
-    color: #000000;
-  }
-
-  .azure-logo {
-    width: 24px;
-    height: 24px;
   }
 </style>

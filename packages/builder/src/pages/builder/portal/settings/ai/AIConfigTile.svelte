@@ -11,21 +11,21 @@
   const logos = {
     ["Budibase AI"]: BudibaseAILogo,
     [Providers.OpenAI.name]: OpenAILogo,
-    [Providers.Anthropic.name]: AnthropicLogo,
-    [Providers.TogetherAI.name]: TogetherAILogo,
     [Providers.AzureOpenAI.name]: AzureOpenAILogo,
+    // legacy/custom providers
+    ["Anthropic"]: AnthropicLogo,
+    ["TogetherAI"]: TogetherAILogo,
   }
-
   export let config: ProviderConfig
-  export let disabled: boolean | null = null
-
   export let editHandler: (() => void) | null
-  export let deleteHandler: (() => void) | null
+  /** Invoke to disable this provider (for Budibase AI) */
+  export let disableHandler: (() => void) | null
+  /** Override for active state display */
+  export let activeOverride: boolean | undefined
+  $: console.log(config)
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<div on:click class:disabled class="option">
+<div class="option">
   <div class="details">
     <div class="icon">
       <svelte:component
@@ -38,7 +38,7 @@
       <Body>{config.name}</Body>
     </div>
     <div class="controls">
-      {#if config.active}
+      {#if activeOverride ?? config.active}
         <div class="tag active">Enabled</div>
       {:else}
         <div class="tag disabled">Disabled</div>
@@ -46,12 +46,20 @@
     </div>
   </div>
   <div>
-    {#if config.active}
-      <ActionButton>Disable</ActionButton>
-    {:else if config.provider === "BudibaseAI"}
-      <ActionButton>Enable</ActionButton>
+    {#if config.isBudibaseAI}
+      {#if config.active}
+        <ActionButton on:click={() => disableHandler && disableHandler()}>
+          Disable
+        </ActionButton>
+      {:else}
+        <ActionButton on:click={() => editHandler && editHandler()}>
+          Enable
+        </ActionButton>
+      {/if}
     {:else}
-      <ActionButton>Set up</ActionButton>
+      <ActionButton on:click={() => editHandler && editHandler()}>
+        Edit
+      </ActionButton>
     {/if}
   </div>
 </div>
