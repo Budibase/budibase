@@ -15957,6 +15957,11 @@ map-obj@^4.0.0:
   resolved "https://registry.yarnpkg.com/map-obj/-/map-obj-4.3.0.tgz#9304f906e93faae70880da102a9f1df0ea8bb05a"
   integrity sha512-hdN1wVrZbb29eBGiGjJbeP8JbKjq1urkHJ/LIP/NY48MZ1QVXUsQBV1G1zvYFHn1XE06cwjBsOI2K3Ulnj1YXQ==
 
+marked@^15.0.8:
+  version "15.0.8"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-15.0.8.tgz#39873a3fdf91a520111e48aeb2ef3746d58d7166"
+  integrity sha512-rli4l2LyZqpQuRve5C0rkn6pj3hT8EWPC+zkAxFTAJLxRbENfTAhEQq9itrmf1Y81QtAX5D/MYlGlIomNgj9lA==
+
 marked@^4.0.10, marked@^4.1.0:
   version "4.2.12"
   resolved "https://registry.yarnpkg.com/marked/-/marked-4.2.12.tgz#d69a64e21d71b06250da995dcd065c11083bebb5"
