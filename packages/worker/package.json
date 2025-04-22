@@ -50,7 +50,7 @@
     "bcrypt": "5.1.0",
     "bcryptjs": "2.4.3",
     "bull": "4.10.1",
-    "dd-trace": "5.43.0",
+    "dd-trace": "5.47.0",
     "dotenv": "8.6.0",
     "email-validator": "^2.0.4",
     "global-agent": "3.0.0",

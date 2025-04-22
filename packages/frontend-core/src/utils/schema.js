@@ -12,7 +12,7 @@ export const getColumnIcon = column => {
     return "Calculator"
   }
   if (column.schema.autocolumn) {
-    return "MagicWand"
+    return "Shapes"
   }
   if (helpers.schema.isDeprecatedSingleUserColumn(column.schema)) {
     return "User"
