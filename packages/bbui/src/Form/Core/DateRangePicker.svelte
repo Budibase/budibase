@@ -1,10 +1,10 @@
 <script lang="ts">
   import dayjs, { type Dayjs } from "dayjs"
-  import { memo } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
   import CoreDatePicker from "./DatePicker/DatePicker.svelte"
   import Icon from "../../Icon/Icon.svelte"
   import { parseDate } from "../../helpers"
+  import { writable } from "svelte/store"
 
   export let enableTime: boolean | undefined = false
   export let timeOnly: boolean | undefined = false
@@ -12,7 +12,7 @@
   export let value: string[] | undefined = []
 
   const dispatch = createEventDispatcher()
-  const valueStore = memo(value)
+  const valueStore = writable<string[]>()
 
   let fromDate: Dayjs | null
   let toDate: Dayjs | null

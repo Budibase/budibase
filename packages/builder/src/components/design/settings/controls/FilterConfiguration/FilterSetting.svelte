@@ -49,23 +49,6 @@
     return columnSettings
   }
 
-  /*
-    Filter Config
-      _id: UI transient
-      active : true - UI
-      
-      columnType : "string" - UI/schema
-      field : "Email" - UI/schema
-      
-      label : "Emailx"
-
-    Component
-      _component : "@budibase/standard-components/filterconfig" - static
-      _instanceName : "Email" - schema
-      _rootId : "c96e29aef0b2c4da98d9c815f2989f777" - derived
-      _styles : {normal: {…}, hover: {…}, active: {…}}
-  */
-
   const itemToComponent = item => {
     return componentStore.createInstance(
       "@budibase/standard-components/filterconfig",

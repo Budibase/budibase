@@ -268,7 +268,6 @@
             value={parseDateRange(editableFilter.value)}
             on:change={e => {
               const [from, to] = e.detail
-              // check both - hard coded for testing
               const parsedFrom = Helpers.stringifyDate(from, {
                 enableTime,
                 timeOnly,
@@ -286,8 +285,6 @@
                 ...editableFilter,
                 value: { low: parsedFrom, high: parsedTo },
               })
-
-              // editableFilter = { ...(sanitized ?? editableFilter) }
             }}
           />
         {:else if editableFilter.type === FieldType.DATETIME}
