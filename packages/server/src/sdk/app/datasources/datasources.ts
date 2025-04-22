@@ -11,6 +11,7 @@ import {
   Row,
   RestConfig,
   SourceName,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
@@ -51,7 +52,7 @@ export async function fetch(opts?: {
   )
 
   const internal = internalTables.rows.reduce((acc: any, row: Row) => {
-    const sourceId = row.doc.sourceId || "bb_internal"
+    const sourceId = row.doc.sourceId || INTERNAL_TABLE_SOURCE_ID
     acc[sourceId] = acc[sourceId] || []
     acc[sourceId].push(row.doc)
     return acc

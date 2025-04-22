@@ -1,37 +1,25 @@
 import {
-  DocumentType,
   FieldType,
   GenerateTablesResponse,
-  SourceName,
+  INTERNAL_TABLE_SOURCE_ID,
   TableSchema,
   TableSourceType,
 } from "@budibase/types"
 import sdk from "../../.."
-import { context, utils } from "@budibase/backend-core"
 
 export async function generateTables(
   tables: { name: string; primaryDisplay: string; schema: TableSchema }[]
 ) {
-  const count = (await sdk.datasources.fetch()).length
-  const { id: dsId } = await context.getAppDB().put({
-    _id: `${DocumentType.DATASOURCE}_bb_internal_${utils.newid()}`,
-    name: `Test ${count}`,
-    type: "budibase",
-
-    source: SourceName.BUDIBASE,
-    config: {},
-  })
-
   const createdTables: GenerateTablesResponse["createdTables"] = []
   const tableIds: Record<string, string> = {}
 
   for (const table of tables) {
     const createdTable = await sdk.tables.create({
       ...table,
-      sourceId: dsId,
       schema: {},
       primaryDisplay: undefined,
       sourceType: TableSourceType.INTERNAL,
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       type: "table",
     })
 
