@@ -1,4 +1,3 @@
-import { IAccountDetail } from "@budibase/backend-core/src/accounts"
 import { generator, quotas, uuid } from "."
 import { generateGlobalUserID } from "../../../../src/docIds"
 import {
@@ -7,6 +6,7 @@ import {
   AccountSSOProviderType,
   AuthType,
   CloudAccount,
+  IAccountDetail,
   Hosting,
   SSOAccount,
 } from "@budibase/types"

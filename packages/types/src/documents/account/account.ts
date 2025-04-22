@@ -67,6 +67,29 @@ export interface CloudAccount extends Account {
   budibaseUserId: string
 }
 
+export interface ITenantDetail {
+  id: string
+  name: string
+  hosting: Hosting
+  installation?: {
+    id: string
+    version: string
+  }
+  license?: {
+    key: string
+    session?: string
+  }
+}
+export interface IAccountDetail {
+  id: string
+  email: string
+  name: string
+  displayName: string
+  customerId: string | null
+  createdAt: Date
+  tenants: ITenantDetail[]
+}
+
 export const isCloudAccount = (account: Account): account is CloudAccount =>
   account.hosting === Hosting.CLOUD
 

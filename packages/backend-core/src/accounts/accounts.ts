@@ -1,7 +1,11 @@
 import API from "./api"
 import env from "../environment"
 import { Header } from "../constants"
-import { CloudAccount, HealthStatusResponse, Hosting } from "@budibase/types"
+import {
+  CloudAccount,
+  HealthStatusResponse,
+  IAccountDetail,
+} from "@budibase/types"
 
 const api = new API(env.ACCOUNT_PORTAL_URL)
 
@@ -12,29 +16,6 @@ const api = new API(env.ACCOUNT_PORTAL_URL)
  * handled by the caller.
  */
 const EXIT_EARLY = env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL
-
-export interface ITenantDetail {
-  id: string
-  name: string
-  hosting: Hosting
-  installation?: {
-    id: string
-    version: string
-  }
-  license?: {
-    key: string
-    session?: string
-  }
-}
-export interface IAccountDetail {
-  id: string
-  email: string
-  name: string
-  displayName: string
-  customerId: string | null
-  createdAt: Date
-  tenants: ITenantDetail[]
-}
 
 export const getAccount = async (
   email: string
