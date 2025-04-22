@@ -1,4 +1,4 @@
-import { FieldType, Table } from "@budibase/types"
+import { FieldSchema, FieldType, Table } from "@budibase/types"
 import sdk from "../../.."
 import { uploadFile, uploadUrl } from "../../../../utilities"
 
@@ -27,36 +27,14 @@ export async function generateRows(
     )
 
     for (const entry of data[tableName]) {
-      const attachmentData: Record<string, any> = {}
-      for (const column of attachmentColumns) {
-        attachmentData[column.name] = []
-        if (!Array.isArray(entry[column.name])) {
-          entry[column.name] = [entry[column.name]]
-        }
-        for (const attachmentValue of entry[column.name]) {
-          let attachment
-          if (typeof attachmentValue === "object") {
-            attachment = await uploadFile(attachmentValue)
-          } else {
-            attachment = await uploadUrl(attachmentValue)
-          }
-          if (attachment) {
-            attachmentData[column.name].push(attachment)
-          }
-        }
+      await processAttachments(entry, attachmentColumns)
 
-        if (column.type === FieldType.ATTACHMENT_SINGLE) {
-          attachmentData[column.name] = attachmentData[column.name][0]
-        }
-      }
-
-      const tableId = tables[tableName]._id!
+      const tableId = table._id!
       const createdRow = await sdk.rows.save(
         tableId,
         {
           ...entry,
           ...linksOverride,
-          ...attachmentData,
           _id: undefined,
         },
         userId
@@ -111,5 +89,29 @@ export async function generateRows(
       },
       userId
     )
+  }
+}
+async function processAttachments(
+  entry: Record<string, any>,
+  attachmentColumns: FieldSchema[]
+) {
+  function processAttachment(value: any) {
+    if (typeof value === "object") {
+      return uploadFile(value)
+    }
+
+    return uploadUrl(value)
+  }
+
+  for (const column of attachmentColumns) {
+    if (!Array.isArray(entry[column.name])) {
+      entry[column.name] = await processAttachment(entry[column.name])
+    } else {
+      entry[column.name] = await Promise.all(
+        entry[column.name].map((attachment: any) =>
+          processAttachment(attachment)
+        )
+      )
+    }
   }
 }
