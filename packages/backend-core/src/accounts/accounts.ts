@@ -13,7 +13,7 @@ const api = new API(env.ACCOUNT_PORTAL_URL)
  */
 const EXIT_EARLY = env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL
 
-interface ITenantDetail {
+export interface ITenantDetail {
   id: string
   name: string
   hosting: Hosting
@@ -26,7 +26,7 @@ interface ITenantDetail {
     session?: string
   }
 }
-interface IAccountDetail {
+export interface IAccountDetail {
   id: string
   email: string
   name: string

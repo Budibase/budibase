@@ -1,3 +1,4 @@
+import { IAccountDetail } from "@budibase/backend-core/src/accounts"
 import { generator, quotas, uuid } from "."
 import { generateGlobalUserID } from "../../../../src/docIds"
 import {
@@ -40,6 +41,19 @@ export const cloudAccount = (): CloudAccount => {
     ...account(),
     hosting: Hosting.CLOUD,
     budibaseUserId: generateGlobalUserID(),
+  }
+}
+
+export const accountDetail = (): IAccountDetail => {
+  const account = cloudAccount()
+  return {
+    id: account.accountId,
+    email: account.email,
+    name: account.accountName,
+    displayName: account.name!,
+    customerId: null,
+    createdAt: new Date(account.createdAt),
+    tenants: [],
   }
 }
 
