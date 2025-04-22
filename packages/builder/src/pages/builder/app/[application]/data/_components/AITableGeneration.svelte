@@ -14,7 +14,6 @@
     try {
       const { createdTables } = await API.generateTables({
         prompt: message,
-        addData: true,
       })
 
       const [tableToRedirect] = createdTables.sort((a, b) =>
