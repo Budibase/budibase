@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
@@ -10,12 +11,13 @@ import {
   PlanModel,
   PlanType,
   ProviderConfig,
+  StructuredOutput,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { ai, quotas } from "@budibase/pro"
 import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
-import { quotas } from "@budibase/pro"
 
 function dedent(str: string) {
   return str
@@ -285,7 +287,8 @@ describe("BudibaseAI", () => {
       envCleanup()
     })
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      await config.newTenant()
       nock.cleanAll()
       const license: License = {
         plan: {
@@ -365,6 +368,67 @@ describe("BudibaseAI", () => {
           status: 403,
         }
       )
+    })
+
+    it("handles text format", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = generator.word()
+      mockChatGPTResponse(gptResponse, { format: "text" })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: "text",
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+
+    it("handles json format", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = JSON.stringify({
+        [generator.word()]: generator.word(),
+      })
+      mockChatGPTResponse(gptResponse, { format: "json" })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: "json",
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+
+    it("handles structured outputs", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = generator.guid()
+      const structuredOutput = generator.word() as unknown as StructuredOutput
+      ai.structuredOutputs[structuredOutput] = {
+        key: generator.word(),
+        validator: z.object({ name: z.string() }),
+      }
+      mockChatGPTResponse(gptResponse, { format: structuredOutput })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: structuredOutput,
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
   })
 })
