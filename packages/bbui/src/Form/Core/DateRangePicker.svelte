@@ -1,5 +1,5 @@
 <script lang="ts">
-  import dayjs, { Dayjs } from "dayjs"
+  import dayjs, { type Dayjs } from "dayjs"
   import { memo } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
   import CoreDatePicker from "./DatePicker/DatePicker.svelte"

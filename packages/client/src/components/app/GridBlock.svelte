@@ -3,7 +3,7 @@
   // because it functions similarly to one
   import { getContext, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
-  import { featuresStore, componentStore } from "@/stores"
+  import { featuresStore } from "@/stores"
   import { Grid } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
   import { UILogicalOperator, EmptyFilterOption } from "@budibase/types"
@@ -86,7 +86,6 @@
   /**
    *
    * @param componentId Originating Component id
-   * @param datasourceId Underlying datasource id
    * @param extension Filter extension
    */
   const addFilterExtension = (componentId, extension) => {
@@ -99,10 +98,9 @@
   /**
    *
    * @param componentId Originating Component id
-   * @param datasourceId Underlying datasource id
    * @param extension Filter extension
    */
-  const removeFilterExtension = (componentId, datasourceId) => {
+  const removeFilterExtension = componentId => {
     if (!componentId) {
       return
     }
@@ -123,7 +121,7 @@
     }
 
     // Process and aggregate all filters.
-    let groups = Object.entries(extensions).map(([key, entry]) => {
+    let groups = Object.entries(extensions).map(([_, entry]) => {
       // Assuming there should only ever be 1
       return entry
     })

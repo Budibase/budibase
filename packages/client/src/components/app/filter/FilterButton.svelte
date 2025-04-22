@@ -221,13 +221,6 @@
     border: 1px dashed var(--spectrum-global-color-gray-200);
   }
 
-  /* .spectrum-Button-label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 200px;
-  } */
-
   .spectrum-Button-label.truncate {
     white-space: nowrap;
     overflow: hidden;

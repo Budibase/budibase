@@ -6,7 +6,7 @@
     extractLiteralHandlebarsID,
     getDatasourceForProvider,
   } from "@/dataBinding"
-  import { selectedScreen, datasources, tables } from "@/stores/builder"
+  import { selectedScreen } from "@/stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FilterSetting from "./FilterSetting.svelte"
@@ -72,6 +72,8 @@
       FieldType.ATTACHMENT_SINGLE,
       FieldType.ATTACHMENTS,
       FieldType.AI,
+      FieldType.LINK,
+      FieldType.SIGNATURE_SINGLE,
     ]
 
     const filteredSchema = Object.entries(schema || {}).filter(

@@ -3,7 +3,6 @@
   import {
     type FilterConfig,
     type FieldSchema,
-    type Row,
     type SearchFilter,
     type SearchFilterGroup,
     type TableSchema,
@@ -61,16 +60,9 @@
   let filters: Record<string, SearchFilter> = {}
 
   let schema: TableSchema | null
-  let schemaLoaded = false
 
   // Target component being filtered
   let dataComponent: Component | null = null
-
-  // componentId > componentInstance
-  let mountedInstances: Record<string, any> | undefined
-
-  // Used in dev app to make the init more reactive
-  $: mountedInstances = $componentStore?.mounted || {}
 
   // Update the memo when the filters are updated
   $: memoFilters.set(filters)
@@ -136,7 +128,6 @@
       dataComponent = null
       filters = {}
       schema = null
-      schemaLoaded = false
     }
   }
 
@@ -256,10 +247,8 @@
         }
       )
       schema = Object.fromEntries(filteredSchema)
-      schemaLoaded = true
     } else {
       schema = null
-      schemaLoaded = false
     }
   }
 

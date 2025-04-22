@@ -27,7 +27,6 @@
   } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
   import BbReferenceField from "../forms/BBReferenceField.svelte"
-  import RelationshipField from "../forms/RelationshipField.svelte"
   import { type Writable } from "svelte/store"
   import { getContext } from "svelte"
   import { isArrayOperator } from "@/utils/filtering"
@@ -63,8 +62,6 @@
   $: editableFilter = getDefaultFilter(filter, schema, config)
   $: fieldSchema = config ? schema?.[config?.field] : undefined
   $: options = getOptions(fieldSchema)
-  $: fieldTableId =
-    fieldSchema?.type === FieldType.LINK ? fieldSchema?.tableId : undefined
 
   $: if (fieldSchema?.type === FieldType.DATETIME) {
     enableTime = !fieldSchema?.dateOnly

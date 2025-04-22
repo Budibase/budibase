@@ -2,11 +2,7 @@
   import { Select } from "@budibase/bbui"
   import { componentStore, selectedScreen } from "@/stores/builder"
 
-  import {
-    findAllComponents,
-    findComponent,
-    getComponentContexts,
-  } from "@/helpers/components"
+  import { findAllComponents, getComponentContexts } from "@/helpers/components"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { createEventDispatcher } from "svelte"
   import { extractLiteralHandlebarsID } from "@/dataBinding"
@@ -18,17 +14,12 @@
 
   let providersComps: Component[]
   let providers: { label: string; value: string; subtitle: string }[]
-  let targetComponent: Component | null
 
   // Load the component for processing
   $: targetId = extractLiteralHandlebarsID(value)
 
   // Refresh datasources if the target is altered
-  $: {
-    targetComponent =
-      $selectedScreen && targetId
-        ? findComponent($selectedScreen?.props, targetId)
-        : null
+  $: if (targetId) {
     providersComps = loadProviderComponents()
     providers = buildProviders()
   }
