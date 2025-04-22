@@ -37,7 +37,6 @@ export interface GenerateCronResponse {
 
 export interface GenerateTablesRequest {
   prompt: string
-  addData: boolean
 }
 
 export interface GenerateTablesResponse {
