@@ -627,7 +627,60 @@ describe("BudibaseAI", () => {
       nock("https://photourl.com").get("/any.png").reply(200).persist()
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
-        Tickets: [],
+        Tickets: [
+          {
+            Title: "System slow performance",
+            Description:
+              "User reports significant slowdowns when using multiple applications simultaneously on their PC.",
+            Priority: "Medium",
+            Status: "Closed",
+            "Created Date": "2025-04-17",
+            Attachment: {
+              name: "performance_logs.txt",
+              extension: ".txt",
+              content: "performance logs",
+            },
+          },
+          {
+            Title: "Email delivery failure",
+            Description:
+              "Emails sent to external clients are bouncing back. Bounce back message: '550: Recipient address rejected'.",
+            Priority: "Medium",
+            Status: "In Progress",
+            "Created Date": "2025-04-19",
+            Attachment: {
+              name: "email_bounce_back.txt",
+              extension: ".txt",
+              content: "Email delivery failure",
+            },
+          },
+          {
+            Title: "Software installation request",
+            Description:
+              "Request to install Adobe Photoshop on user’s workstation for design work.",
+            Priority: "Low",
+            Status: "In Progress",
+            "Created Date": "2025-04-18",
+            Attachment: {
+              name: "software_request_form.pdf",
+              extension: ".pdf",
+              content: "Software installation request",
+            },
+          },
+          {
+            Title: "Unable to connect to VPN",
+            Description:
+              "User is experiencing issues when trying to connect to the VPN. Error message: 'VPN connection failed due to incorrect credentials'.",
+            Priority: "High",
+            Status: "Open",
+            "Created Date": "2025-04-20",
+            Attachment: {
+              name: "vpn_error_screenshot.pdf",
+              extension: ".pdf",
+              content: "vpn error",
+            },
+          },
+        ],
         "Employees 2": [
           {
             "First Name": "Joshua",
@@ -646,7 +699,6 @@ describe("BudibaseAI", () => {
                 content: "any content",
               },
             ],
-            "Role Category": "Staff",
           },
           {
             "First Name": "Emily",
@@ -670,7 +722,6 @@ describe("BudibaseAI", () => {
                 content: "any content",
               },
             ],
-            "Role Category": "Staff",
           },
           {
             "First Name": "James",
@@ -689,7 +740,6 @@ describe("BudibaseAI", () => {
                 content: "any content",
               },
             ],
-            "Role Category": "Staff",
           },
           {
             "First Name": "Jessica",
@@ -708,7 +758,6 @@ describe("BudibaseAI", () => {
                 content: "any content",
               },
             ],
-            "Role Category": "Staff",
           },
           {
             "First Name": "Ashley",
@@ -727,7 +776,6 @@ describe("BudibaseAI", () => {
                 content: "any content",
               },
             ],
-            "Role Category": "Staff",
           },
         ],
       }
@@ -868,6 +916,12 @@ describe("BudibaseAI", () => {
           },
         }),
       ])
+
+      const tickets = await config.api.row.fetch(createdTables[0].id)
+      expect(tickets).toHaveLength(4)
+
+      const employees = await config.api.row.fetch(createdTables[1].id)
+      expect(employees).toHaveLength(5)
     })
   })
 })
