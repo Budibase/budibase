@@ -14,6 +14,16 @@ export async function generateTables(
   const createdTables: GenerateTablesResponse["createdTables"] = []
   const tableIds: Record<string, string> = {}
 
+  for (const table of tables) {
+    for (const linkField of Object.values(table.schema).filter(
+      f => f.type === FieldType.LINK
+    )) {
+      if (!tables.find(t => t.name === linkField.tableId)) {
+        throw `Table ${linkField.tableId} not found in the json response.`
+      }
+    }
+  }
+
   const existingTableNames = (await sdk.tables.getAllInternalTables()).map(
     t => t.name
   )
@@ -39,11 +49,7 @@ export async function generateTables(
   for (const table of tables) {
     for (const field of Object.values(table.schema)) {
       if (field.type === FieldType.LINK) {
-        const linkedTable = createdTables.find(t => t.name === field.tableId)
-        if (!linkedTable) {
-          throw `Table ${field.tableId} not found in the json response.`
-        }
-        field.tableId = linkedTable.id
+        field.tableId = tableIds[field.tableId]
       } else if (field.type === FieldType.FORMULA) {
         field.formula = `{{ js "${btoa(field.formula)}" }}`
       }
