@@ -740,6 +740,134 @@ describe("BudibaseAI", () => {
         { id: expect.stringMatching(/ta_\w+/), name: "Tickets" },
         { id: expect.stringMatching(/ta_\w+/), name: "Employees" },
       ])
+
+      const tables = [
+        await config.api.table.get(createdTables[0].id),
+        await config.api.table.get(createdTables[1].id),
+      ]
+      expect(tables).toEqual([
+        expect.objectContaining({
+          name: "Tickets",
+          schema: {
+            Title: {
+              name: "Title",
+              type: "string",
+              constraints: {
+                presence: true,
+              },
+            },
+            Description: {
+              name: "Description",
+              type: "longform",
+              constraints: {
+                presence: true,
+              },
+            },
+            Priority: {
+              name: "Priority",
+              type: "options",
+              constraints: {
+                inclusion: ["Low", "Medium", "High"],
+                presence: true,
+              },
+            },
+            Status: {
+              name: "Status",
+              type: "options",
+              constraints: {
+                inclusion: ["Open", "In Progress", "Closed"],
+                presence: true,
+              },
+            },
+            Assignee: {
+              name: "Assignee",
+              type: "link",
+              tableId: createdTables[1].id,
+              fieldName: "AssignedTickets",
+              relationshipType: "one-to-many",
+            },
+            "Created Date": {
+              name: "Created Date",
+              type: "datetime",
+              ignoreTimezones: false,
+              dateOnly: true,
+            },
+            "Resolution Time (Days)": {
+              name: "Resolution Time (Days)",
+              type: "formula",
+              formula:
+                '{{ js "cmV0dXJuIChuZXcgRGF0ZSgpIC0gbmV3IERhdGUoJCgiQ3JlYXRlZCBEYXRlIikpKSAvICgxMDAwICogNjAgKiA2MCAqIDI0KTs=" }}',
+              responseType: "number",
+            },
+            Attachment: {
+              name: "Attachment",
+              type: "attachment_single",
+            },
+            "Ticket Summary": {
+              name: "Ticket Summary",
+              type: "ai",
+              operation: "SUMMARISE_TEXT",
+              columns: ["Title", "Description"],
+            },
+            "Translated Description": {
+              name: "Translated Description",
+              type: "ai",
+              operation: "TRANSLATE",
+              column: "Description",
+              language: "es",
+            },
+          },
+        }),
+        expect.objectContaining({
+          name: "Employees 2",
+          schema: {
+            "First Name": {
+              constraints: {
+                presence: true,
+              },
+              name: "First Name",
+              type: "string",
+            },
+            "Last Name": {
+              constraints: {
+                presence: true,
+              },
+              name: "Last Name",
+              type: "string",
+            },
+            Photo: {
+              name: "Photo",
+              subtype: "image",
+              type: "attachment_single",
+            },
+            Position: {
+              constraints: {
+                presence: true,
+              },
+              name: "Position",
+              type: "string",
+            },
+            AssignedTickets: {
+              fieldName: "Assignee",
+              name: "AssignedTickets",
+              relationshipType: "many-to-one",
+              tableId: createdTables[0].id,
+              type: "link",
+            },
+            Documents: {
+              name: "Documents",
+              type: "attachment",
+            },
+            "Role Category": {
+              categories: "Manager,Staff,Intern,Contractor",
+              columns: ["Position"],
+              name: "Role Category",
+              operation: "CATEGORISE_TEXT",
+              type: "ai",
+            },
+          },
+        }),
+      ])
     })
   })
 })
