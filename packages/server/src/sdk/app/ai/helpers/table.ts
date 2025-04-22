@@ -6,6 +6,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import sdk from "../../.."
+import { helpers } from "@budibase/shared-core"
 
 export async function generateTables(
   tables: { name: string; primaryDisplay: string; schema: TableSchema }[]
@@ -13,9 +14,17 @@ export async function generateTables(
   const createdTables: GenerateTablesResponse["createdTables"] = []
   const tableIds: Record<string, string> = {}
 
+  const existingTableNames = (await sdk.tables.getAllInternalTables()).map(
+    t => t.name
+  )
+
   for (const table of tables) {
+    const name = helpers.getSequentialName(existingTableNames, table.name, {
+      separator: " ",
+    })
     const createdTable = await sdk.tables.create({
       ...table,
+      name,
       schema: {},
       primaryDisplay: undefined,
       sourceType: TableSourceType.INTERNAL,
@@ -23,7 +32,7 @@ export async function generateTables(
       type: "table",
     })
 
-    createdTables.push({ id: createdTable._id!, name: createdTable.name })
+    createdTables.push({ id: createdTable._id!, name: table.name })
     tableIds[table.name] = createdTable._id!
   }
 
