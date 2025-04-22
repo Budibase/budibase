@@ -8,7 +8,6 @@ import {
   AIInnerConfig,
   AIOperationEnum,
   AttachmentSubType,
-  AutoFieldSubType,
   ConfigType,
   Feature,
   FieldType,
@@ -439,16 +438,8 @@ describe("BudibaseAI", () => {
   })
 
   describe("POST /api/ai/tables", () => {
-    let licenseKey = "test-key"
-    let internalApiKey = "api-key"
-
-    let envCleanup: () => void
     let featureCleanup: () => void
     beforeAll(() => {
-      envCleanup = setEnv({
-        SELF_HOSTED: false,
-        INTERNAL_API_KEY: internalApiKey,
-      })
       featureCleanup = features.testutils.setFeatureFlags("*", {
         AI_TABLE_GENERATION: true,
       })
@@ -456,26 +447,40 @@ describe("BudibaseAI", () => {
 
     afterAll(() => {
       featureCleanup()
-      envCleanup()
     })
 
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      const license: License = {
-        plan: {
-          type: PlanType.FREE,
-          model: PlanModel.PER_USER,
-          usesInvoicing: false,
-        },
-        features: [Feature.BUDIBASE_AI],
-        quotas: {} as any,
-        tenantId: config.tenantId,
-      }
-      nock(env.ACCOUNT_PORTAL_URL)
-        .get(`/api/license/${licenseKey}`)
-        .reply(200, license)
     })
+
+    const mockAIGenerationStructure = (
+      generationStructure: ai.GenerationStructure
+    ) =>
+      mockChatGPTResponse(JSON.stringify(generationStructure), {
+        format: zodResponseFormat(ai.generationStructure, "key"),
+      })
+
+    const mockAIColumnGeneration = (
+      generationStructure: ai.GenerationStructure,
+      aiColumnGeneration: ai.AIColumnSchemas
+    ) =>
+      mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
+        format: zodResponseFormat(
+          ai.aiColumnSchemas(generationStructure),
+          "key"
+        ),
+      })
+
+    const mockDataGeneration = (
+      dataGeneration: Record<string, Record<string, any>[]>
+    ) =>
+      mockChatGPTResponse(JSON.stringify(dataGeneration), {
+        format: zodResponseFormat(ai.tableDataStructuredOutput([]), "key"),
+      })
+
+    const mockProcessAIColumn = (response: string) =>
+      mockChatGPTResponse(response)
 
     it("handles correct chat response", async () => {
       const prompt = "Create me a table for managing IT tickets"
@@ -589,9 +594,7 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: zodResponseFormat(ai.generationStructure, "key"),
-      })
+      mockAIGenerationStructure(generationStructure)
 
       const aiColumnGeneration: ai.AIColumnSchemas = {
         Tickets: [
@@ -619,14 +622,9 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: zodResponseFormat(
-          ai.aiColumnSchemas(generationStructure),
-          "key"
-        ),
-      })
+      mockAIColumnGeneration(generationStructure, aiColumnGeneration)
 
-      nock("http://photourl.com").get("/any").reply(200)
+      nock("https://photourl.com").get("/any.png").reply(200).persist()
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Tickets: [],
@@ -635,7 +633,7 @@ describe("BudibaseAI", () => {
             "First Name": "Joshua",
             "Last Name": "Lee",
             Position: "Application Developer",
-            Photo: "http://photourl.com/any",
+            Photo: "https://photourl.com/any.png",
             Documents: [
               {
                 name: "development_guidelines.pdf",
@@ -654,7 +652,7 @@ describe("BudibaseAI", () => {
             "First Name": "Emily",
             "Last Name": "Davis",
             Position: "Software Deployment Technician",
-            Photo: "http://photourl.com/any",
+            Photo: "https://photourl.com/any.png",
             Documents: [
               {
                 name: "software_license_list.txt",
@@ -678,7 +676,7 @@ describe("BudibaseAI", () => {
             "First Name": "James",
             "Last Name": "Smith",
             Position: "IT Support Specialist",
-            Photo: "http://photourl.com/any",
+            Photo: "https://photourl.com/any.png",
             Documents: [
               {
                 name: "certificates.pdf",
@@ -697,7 +695,7 @@ describe("BudibaseAI", () => {
             "First Name": "Jessica",
             "Last Name": "Taylor",
             Position: "Cybersecurity Analyst",
-            Photo: "http://photourl.com/any",
+            Photo: "https://photourl.com/any.png",
             Documents: [
               {
                 name: "security_audit_report.pdf",
@@ -716,7 +714,7 @@ describe("BudibaseAI", () => {
             "First Name": "Ashley",
             "Last Name": "Harris",
             Position: "Database Administrator",
-            Photo: "http://photourl.com/any",
+            Photo: "https://photourl.com/any.png",
             Documents: [
               {
                 name: "database_backup.txt",
@@ -733,11 +731,9 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: zodResponseFormat(ai.tableDataStructuredOutput([]), "key"),
-      })
+      mockDataGeneration(dataGeneration)
 
-      mockChatGPTResponse("Mock LLM Response")
+      mockProcessAIColumn("Mock LLM Response")
 
       const { createdTables } = await config.api.ai.generateTables({ prompt })
       expect(createdTables).toEqual([
