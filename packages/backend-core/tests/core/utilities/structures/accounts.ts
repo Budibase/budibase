@@ -6,7 +6,7 @@ import {
   AccountSSOProviderType,
   AuthType,
   CloudAccount,
-  IAccountDetail,
+  AccountDetail,
   Hosting,
   SSOAccount,
 } from "@budibase/types"
@@ -44,7 +44,7 @@ export const cloudAccount = (): CloudAccount => {
   }
 }
 
-export const accountDetail = (): IAccountDetail => {
+export const accountDetail = (): AccountDetail => {
   const account = cloudAccount()
   return {
     id: account.accountId,

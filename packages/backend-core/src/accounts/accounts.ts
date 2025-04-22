@@ -4,7 +4,7 @@ import { Header } from "../constants"
 import {
   CloudAccount,
   HealthStatusResponse,
-  IAccountDetail,
+  AccountDetail,
 } from "@budibase/types"
 
 const api = new API(env.ACCOUNT_PORTAL_URL)
@@ -19,7 +19,7 @@ const EXIT_EARLY = env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL
 
 export const getAccount = async (
   email: string
-): Promise<IAccountDetail | undefined> => {
+): Promise<AccountDetail | undefined> => {
   if (EXIT_EARLY) {
     return
   }
@@ -33,7 +33,7 @@ export const getAccount = async (
     throw new Error(`Error getting account by email ${email}`)
   }
 
-  const json: IAccountDetail[] = await response.json()
+  const json: AccountDetail[] = await response.json()
   return json[0]
 }
 
