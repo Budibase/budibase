@@ -83,6 +83,7 @@ describe("docWritethrough", () => {
           _rev: expect.stringMatching(/2-.+/),
           createdAt: new Date(initialTime).toISOString(),
           updatedAt: new Date(initialTime).toISOString(),
+          createdVersion: "0.0.0",
         })
       })
     })

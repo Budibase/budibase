@@ -58,6 +58,7 @@ describe("UserDB", () => {
             status: UserStatus.ACTIVE,
             createdAt: Date.now(),
             updatedAt: new Date().toISOString(),
+            createdVersion: "0.0.0",
           })
         })
       })

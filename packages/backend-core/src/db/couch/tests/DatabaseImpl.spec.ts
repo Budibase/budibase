@@ -3,6 +3,7 @@ import tk from "timekeeper"
 import { DatabaseImpl } from ".."
 
 import { generator, structures } from "../../../../tests"
+import environment from "../../../environment"
 
 const initialTime = new Date()
 tk.freeze(initialTime)
@@ -12,10 +13,11 @@ describe("DatabaseImpl", () => {
 
   beforeEach(() => {
     tk.freeze(initialTime)
+    environment._set("VERSION", "1.3.5")
   })
 
   describe("put", () => {
-    it("persists createdAt and updatedAt fields", async () => {
+    it("persists createdAt, updatedAt and createdVersion fields", async () => {
       const id = generator.guid()
       await db.put({ _id: id })
 
@@ -24,6 +26,7 @@ describe("DatabaseImpl", () => {
         _rev: expect.any(String),
         createdAt: initialTime.toISOString(),
         updatedAt: initialTime.toISOString(),
+        createdVersion: "1.3.5",
       })
     })
 
@@ -33,6 +36,7 @@ describe("DatabaseImpl", () => {
       await db.put({ _id: id })
       tk.travel(100)
 
+      environment._set("VERSION", "1.3.6")
       await db.put({ ...(await db.get(id)), newValue: 123 })
 
       expect(await db.get(id)).toEqual({
@@ -41,6 +45,7 @@ describe("DatabaseImpl", () => {
         newValue: 123,
         createdAt: initialTime.toISOString(),
         updatedAt: new Date().toISOString(),
+        createdVersion: "1.3.5",
       })
     })
   })
