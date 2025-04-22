@@ -81,6 +81,7 @@ export interface Document {
   _rev?: string
   createdAt?: string | number
   updatedAt?: string
+  creationVersion?: string
 }
 
 export interface AnyDocument extends Document {
