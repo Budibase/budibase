@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
@@ -10,10 +11,13 @@ import {
   PlanModel,
   PlanType,
   ProviderConfig,
+  StructuredOutput,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
-import { mocks } from "@budibase/backend-core/tests"
-import { quotas } from "@budibase/pro"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { ai, quotas } from "@budibase/pro"
+import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
+import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 
 function dedent(str: string) {
   return str
@@ -28,6 +32,7 @@ type SetupFn = (
 interface TestSetup {
   name: string
   setup: SetupFn
+  mockLLMResponse: MockLLMResponseFn
 }
 
 function budibaseAI(): SetupFn {
@@ -86,14 +91,25 @@ const allProviders: TestSetup[] = [
         OPENAI_API_KEY: "test-key",
       })
     },
+    mockLLMResponse: mockChatGPTResponse,
   },
   {
     name: "OpenAI API key with custom config",
     setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-4o-mini" }),
+    mockLLMResponse: mockChatGPTResponse,
+  },
+  {
+    name: "Anthropic API key with custom config",
+    setup: customAIConfig({
+      provider: "Anthropic",
+      defaultModel: "claude-3-5-sonnet-20240620",
+    }),
+    mockLLMResponse: mockAnthropicResponse,
   },
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
+    mockLLMResponse: mockChatGPTResponse,
   },
 ]
 
@@ -112,54 +128,56 @@ describe("AI", () => {
     nock.cleanAll()
   })
 
-  describe.each(allProviders)("provider: $name", ({ setup }: TestSetup) => {
-    let cleanup: () => Promise<void> | void
-    beforeAll(async () => {
-      cleanup = await setup(config)
-    })
+  describe.each(allProviders)(
+    "provider: $name",
+    ({ setup, mockLLMResponse }: TestSetup) => {
+      let cleanup: () => Promise<void> | void
+      beforeAll(async () => {
+        cleanup = await setup(config)
+      })
 
-    afterAll(async () => {
-      const maybePromise = cleanup()
-      if (maybePromise) {
-        await maybePromise
-      }
-    })
+      afterAll(async () => {
+        const maybePromise = cleanup()
+        if (maybePromise) {
+          await maybePromise
+        }
+      })
 
-    describe("POST /api/ai/js", () => {
-      let cleanup: () => void
-      beforeAll(() => {
-        cleanup = features.testutils.setFeatureFlags("*", {
-          AI_JS_GENERATION: true,
+      describe("POST /api/ai/js", () => {
+        let cleanup: () => void
+        beforeAll(() => {
+          cleanup = features.testutils.setFeatureFlags("*", {
+            AI_JS_GENERATION: true,
+          })
         })
-      })
 
-      afterAll(() => {
-        cleanup()
-      })
+        afterAll(() => {
+          cleanup()
+        })
 
-      it("handles correct plain code response", async () => {
-        mockChatGPTResponse(`return 42`)
+        it("handles correct plain code response", async () => {
+          mockLLMResponse(`return 42`)
 
-        const { code } = await config.api.ai.generateJs({ prompt: "test" })
-        expect(code).toBe("return 42")
-      })
+          const { code } = await config.api.ai.generateJs({ prompt: "test" })
+          expect(code).toBe("return 42")
+        })
 
-      it("handles correct markdown code response", async () => {
-        mockChatGPTResponse(
-          dedent(`
+        it("handles correct markdown code response", async () => {
+          mockLLMResponse(
+            dedent(`
                 \`\`\`js
                 return 42
                 \`\`\`
             `)
-        )
+          )
 
-        const { code } = await config.api.ai.generateJs({ prompt: "test" })
-        expect(code).toBe("return 42")
-      })
+          const { code } = await config.api.ai.generateJs({ prompt: "test" })
+          expect(code).toBe("return 42")
+        })
 
-      it("handles multiple markdown code blocks returned", async () => {
-        mockChatGPTResponse(
-          dedent(`
+        it("handles multiple markdown code blocks returned", async () => {
+          mockLLMResponse(
+            dedent(`
                 This:
 
                 \`\`\`js
@@ -172,62 +190,63 @@ describe("AI", () => {
                 return 10
                 \`\`\`
             `)
-        )
+          )
 
-        const { code } = await config.api.ai.generateJs({ prompt: "test" })
-        expect(code).toBe("return 42")
-      })
-
-      // TODO: handle when this happens
-      it.skip("handles no code response", async () => {
-        mockChatGPTResponse("I'm sorry, you're quite right, etc.")
-        const { code } = await config.api.ai.generateJs({ prompt: "test" })
-        expect(code).toBe("")
-      })
-
-      it("handles LLM errors", async () => {
-        mockChatGPTResponse(() => {
-          throw new Error("LLM error")
+          const { code } = await config.api.ai.generateJs({ prompt: "test" })
+          expect(code).toBe("return 42")
         })
-        await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
-      })
-    })
 
-    describe("POST /api/ai/cron", () => {
-      it("handles correct cron response", async () => {
-        mockChatGPTResponse("0 0 * * *")
-
-        const { message } = await config.api.ai.generateCron({
-          prompt: "test",
+        // TODO: handle when this happens
+        it.skip("handles no code response", async () => {
+          mockLLMResponse("I'm sorry, you're quite right, etc.")
+          const { code } = await config.api.ai.generateJs({ prompt: "test" })
+          expect(code).toBe("")
         })
-        expect(message).toBe("0 0 * * *")
+
+        it("handles LLM errors", async () => {
+          mockLLMResponse(() => {
+            throw new Error("LLM error")
+          })
+          await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
+        })
       })
 
-      it("handles expected LLM error", async () => {
-        mockChatGPTResponse("Error generating cron: skill issue")
+      describe("POST /api/ai/cron", () => {
+        it("handles correct cron response", async () => {
+          mockLLMResponse("0 0 * * *")
 
-        await config.api.ai.generateCron(
-          {
+          const { message } = await config.api.ai.generateCron({
             prompt: "test",
-          },
-          { status: 400 }
-        )
-      })
-
-      it("handles unexpected LLM error", async () => {
-        mockChatGPTResponse(() => {
-          throw new Error("LLM error")
+          })
+          expect(message).toBe("0 0 * * *")
         })
 
-        await config.api.ai.generateCron(
-          {
-            prompt: "test",
-          },
-          { status: 500 }
-        )
+        it("handles expected LLM error", async () => {
+          mockLLMResponse("Error generating cron: skill issue")
+
+          await config.api.ai.generateCron(
+            {
+              prompt: "test",
+            },
+            { status: 400 }
+          )
+        })
+
+        it("handles unexpected LLM error", async () => {
+          mockLLMResponse(() => {
+            throw new Error("LLM error")
+          })
+
+          await config.api.ai.generateCron(
+            {
+              prompt: "test",
+            },
+            { status: 500 }
+          )
+        })
       })
-    })
-  })
+    }
+  )
 })
 
 describe("BudibaseAI", () => {
@@ -268,7 +287,8 @@ describe("BudibaseAI", () => {
       envCleanup()
     })
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      await config.newTenant()
       nock.cleanAll()
       const license: License = {
         plan: {
@@ -348,6 +368,67 @@ describe("BudibaseAI", () => {
           status: 403,
         }
       )
+    })
+
+    it("handles text format", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = generator.word()
+      mockChatGPTResponse(gptResponse, { format: "text" })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: "text",
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+
+    it("handles json format", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = JSON.stringify({
+        [generator.word()]: generator.word(),
+      })
+      mockChatGPTResponse(gptResponse, { format: "json" })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: "json",
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+
+    it("handles structured outputs", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = generator.guid()
+      const structuredOutput = generator.word() as unknown as StructuredOutput
+      ai.structuredOutputs[structuredOutput] = {
+        key: generator.word(),
+        validator: z.object({ name: z.string() }),
+      }
+      mockChatGPTResponse(gptResponse, { format: structuredOutput })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: structuredOutput,
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
   })
 })
