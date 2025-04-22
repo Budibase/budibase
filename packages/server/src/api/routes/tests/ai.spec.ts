@@ -6,16 +6,21 @@ import nock from "nock"
 import { configs, env, features, setEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
+  AIOperationEnum,
+  AttachmentSubType,
+  AutoFieldSubType,
   ConfigType,
   Feature,
+  FieldType,
   License,
   PlanModel,
   PlanType,
   ProviderConfig,
+  RelationshipType,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import { quotas } from "@budibase/pro"
+import { quotas, ai } from "@budibase/pro"
 import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 
@@ -430,6 +435,315 @@ describe("BudibaseAI", () => {
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+  })
+
+  describe("POST /api/ai/tables", () => {
+    let licenseKey = "test-key"
+    let internalApiKey = "api-key"
+
+    let envCleanup: () => void
+    let featureCleanup: () => void
+    beforeAll(() => {
+      envCleanup = setEnv({
+        SELF_HOSTED: false,
+        INTERNAL_API_KEY: internalApiKey,
+      })
+      featureCleanup = features.testutils.setFeatureFlags("*", {
+        AI_TABLE_GENERATION: true,
+      })
+    })
+
+    afterAll(() => {
+      featureCleanup()
+      envCleanup()
+    })
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+      const license: License = {
+        plan: {
+          type: PlanType.FREE,
+          model: PlanModel.PER_USER,
+          usesInvoicing: false,
+        },
+        features: [Feature.BUDIBASE_AI],
+        quotas: {} as any,
+        tenantId: config.tenantId,
+      }
+      nock(env.ACCOUNT_PORTAL_URL)
+        .get(`/api/license/${licenseKey}`)
+        .reply(200, license)
+    })
+
+    it("handles correct chat response", async () => {
+      const prompt = "Create me a table for managing IT tickets"
+      const generationStructure: ai.GenerationStructure = {
+        tables: [
+          {
+            name: "Tickets",
+            primaryDisplay: "Title",
+            schema: [
+              {
+                name: "Title",
+                type: FieldType.STRING,
+                constraints: {
+                  presence: true,
+                },
+              },
+              {
+                name: "Description",
+                type: FieldType.LONGFORM,
+                constraints: {
+                  presence: true,
+                },
+              },
+              {
+                name: "Priority",
+                type: FieldType.OPTIONS,
+                constraints: {
+                  inclusion: ["Low", "Medium", "High"],
+                  presence: true,
+                },
+              },
+              {
+                name: "Status",
+                type: FieldType.OPTIONS,
+                constraints: {
+                  inclusion: ["Open", "In Progress", "Closed"],
+                  presence: true,
+                },
+              },
+              {
+                name: "Assignee",
+                type: FieldType.LINK,
+                tableId: "Employees",
+                relationshipType: RelationshipType.MANY_TO_ONE,
+                reverseFieldName: "AssignedTickets",
+                relationshipId: "TicketUser",
+              },
+              {
+                name: "Created Date",
+                type: FieldType.DATETIME,
+                ignoreTimezones: false,
+                dateOnly: true,
+              },
+              {
+                name: "Resolution Time (Days)",
+                type: FieldType.FORMULA,
+                formula:
+                  'return (new Date() - new Date($("Created Date"))) / (1000 * 60 * 60 * 24);',
+                responseType: FieldType.NUMBER,
+              },
+              {
+                name: "Attachment",
+                type: FieldType.ATTACHMENT_SINGLE,
+              },
+            ],
+          },
+          {
+            name: "Employees",
+            primaryDisplay: "First Name",
+            schema: [
+              {
+                name: "First Name",
+                type: FieldType.STRING,
+                constraints: {
+                  presence: true,
+                },
+              },
+              {
+                name: "Last Name",
+                type: FieldType.STRING,
+                constraints: {
+                  presence: true,
+                },
+              },
+              {
+                name: "Position",
+                type: FieldType.STRING,
+                constraints: {
+                  presence: true,
+                },
+              },
+              {
+                name: "Photo",
+                type: FieldType.ATTACHMENT_SINGLE,
+                subtype: AttachmentSubType.IMAGE,
+              },
+              {
+                name: "Documents",
+                type: FieldType.ATTACHMENTS,
+              },
+
+              {
+                name: "AssignedTickets",
+                type: FieldType.LINK,
+                tableId: "Tickets",
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                reverseFieldName: "Assignee",
+                relationshipId: "TicketUser",
+              },
+            ],
+          },
+        ],
+      }
+      mockChatGPTResponse(JSON.stringify(generationStructure), {
+        format: zodResponseFormat(ai.generationStructure, "key"),
+      })
+
+      const aiColumnGeneration: ai.AIColumnSchemas = {
+        Tickets: [
+          {
+            name: "Ticket Summary",
+            type: FieldType.AI,
+            operation: AIOperationEnum.SUMMARISE_TEXT,
+            columns: ["Title", "Description"],
+          },
+          {
+            name: "Translated Description",
+            type: FieldType.AI,
+            operation: AIOperationEnum.TRANSLATE,
+            column: "Description",
+            language: "es",
+          },
+        ],
+        Employees: [
+          {
+            name: "Role Category",
+            type: FieldType.AI,
+            operation: AIOperationEnum.CATEGORISE_TEXT,
+            columns: ["Position"],
+            categories: "Manager,Staff,Intern,Contractor",
+          },
+        ],
+      }
+      mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
+        format: zodResponseFormat(
+          ai.aiColumnSchemas(generationStructure),
+          "key"
+        ),
+      })
+
+      nock("http://photourl.com").get("/any").reply(200)
+
+      const dataGeneration: Record<string, Record<string, any>[]> = {
+        Tickets: [],
+        "Employees 2": [
+          {
+            "First Name": "Joshua",
+            "Last Name": "Lee",
+            Position: "Application Developer",
+            Photo: "http://photourl.com/any",
+            Documents: [
+              {
+                name: "development_guidelines.pdf",
+                extension: ".pdf",
+                content: "any content",
+              },
+              {
+                name: "project_documents.txt",
+                extension: ".txt",
+                content: "any content",
+              },
+            ],
+            "Role Category": "Staff",
+          },
+          {
+            "First Name": "Emily",
+            "Last Name": "Davis",
+            Position: "Software Deployment Technician",
+            Photo: "http://photourl.com/any",
+            Documents: [
+              {
+                name: "software_license_list.txt",
+                extension: ".txt",
+                content: "any content",
+              },
+              {
+                name: "deployment_guide.pdf",
+                extension: ".pdf",
+                content: "any content",
+              },
+              {
+                name: "installation_logs.txt",
+                extension: ".txt",
+                content: "any content",
+              },
+            ],
+            "Role Category": "Staff",
+          },
+          {
+            "First Name": "James",
+            "Last Name": "Smith",
+            Position: "IT Support Specialist",
+            Photo: "http://photourl.com/any",
+            Documents: [
+              {
+                name: "certificates.pdf",
+                extension: ".pdf",
+                content: "any content",
+              },
+              {
+                name: "employment_contract.pdf",
+                extension: ".pdf",
+                content: "any content",
+              },
+            ],
+            "Role Category": "Staff",
+          },
+          {
+            "First Name": "Jessica",
+            "Last Name": "Taylor",
+            Position: "Cybersecurity Analyst",
+            Photo: "http://photourl.com/any",
+            Documents: [
+              {
+                name: "security_audit_report.pdf",
+                extension: ".pdf",
+                content: "any content",
+              },
+              {
+                name: "incident_response_plan.pdf",
+                extension: ".pdf",
+                content: "any content",
+              },
+            ],
+            "Role Category": "Staff",
+          },
+          {
+            "First Name": "Ashley",
+            "Last Name": "Harris",
+            Position: "Database Administrator",
+            Photo: "http://photourl.com/any",
+            Documents: [
+              {
+                name: "database_backup.txt",
+                extension: ".txt",
+                content: "any content",
+              },
+              {
+                name: "permission_settings.pdf",
+                extension: ".pdf",
+                content: "any content",
+              },
+            ],
+            "Role Category": "Staff",
+          },
+        ],
+      }
+      mockChatGPTResponse(JSON.stringify(dataGeneration), {
+        format: zodResponseFormat(ai.tableDataStructuredOutput([]), "key"),
+      })
+
+      mockChatGPTResponse("Mock LLM Response")
+
+      const { createdTables } = await config.api.ai.generateTables({ prompt })
+      expect(createdTables).toEqual([
+        { id: expect.stringMatching(/ta_\w+/), name: "Tickets" },
+        { id: expect.stringMatching(/ta_\w+/), name: "Employees" },
+      ])
     })
   })
 })
