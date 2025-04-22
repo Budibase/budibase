@@ -18,7 +18,7 @@ async function populateFromDB(userId: string, tenantId: string) {
   const user = await db.get<UserMetadata>(userId)
   user.budibaseAccess = true
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-    const account = await accounts.getAccount(user.email)
+    const account = await accounts.getAccountByTenantId(tenantId)
     if (account) {
       user.account = account
       user.accountPortalAccess = true
@@ -42,7 +42,8 @@ async function populateUsersFromDB(
     users.map(async (user: any) => {
       user.budibaseAccess = true
       if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-        const account = await accounts.getAccount(user.email)
+        user.te
+        const account = await accounts.getAccountByTenantId(user.tenantId)
         if (account) {
           user.account = account
           user.accountPortalAccess = true
