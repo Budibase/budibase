@@ -4,7 +4,7 @@
   import { templates } from "@/stores/portal"
   import type { TemplateMetadata } from "@budibase/types"
 
-  export let onSelectTemplate: (template: TemplateMetadata) => void
+  export let onSelectTemplate: (_template: TemplateMetadata) => void
 
   let newTemplates: TemplateMetadata[] = []
   $: {

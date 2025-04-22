@@ -5,7 +5,6 @@
     Button,
     Select,
     Modal,
-    ModalContent,
     Page,
     notifications,
     Notification,
