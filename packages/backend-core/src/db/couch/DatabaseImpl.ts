@@ -26,6 +26,7 @@ import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
 import { sqlLog } from "../../sql/utils"
+import environment from "../../environment"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -321,6 +322,9 @@ export class DatabaseImpl implements Database {
     return this.performCallWithDBCreation(async db => {
       if (!document.createdAt) {
         document.createdAt = new Date().toISOString()
+      }
+      if (!document.creationVersion) {
+        document.creationVersion = environment.VERSION
       }
       document.updatedAt = new Date().toISOString()
       if (opts?.force && document._id) {
