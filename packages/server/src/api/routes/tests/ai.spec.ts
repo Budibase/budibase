@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
@@ -5,13 +6,16 @@ import { configs, env, features, setEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   ConfigType,
+  Feature,
   License,
   PlanModel,
   PlanType,
   ProviderConfig,
+  StructuredOutput,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { ai, quotas } from "@budibase/pro"
 import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 
@@ -263,10 +267,16 @@ describe("BudibaseAI", () => {
   })
 
   describe("POST /api/ai/chat", () => {
+    let licenseKey = "test-key"
+    let internalApiKey = "api-key"
+
     let envCleanup: () => void
     let featureCleanup: () => void
     beforeAll(() => {
-      envCleanup = setEnv({ SELF_HOSTED: false })
+      envCleanup = setEnv({
+        SELF_HOSTED: false,
+        INTERNAL_API_KEY: internalApiKey,
+      })
       featureCleanup = features.testutils.setFeatureFlags("*", {
         AI_JS_GENERATION: true,
       })
@@ -277,7 +287,8 @@ describe("BudibaseAI", () => {
       envCleanup()
     })
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      await config.newTenant()
       nock.cleanAll()
       const license: License = {
         plan: {
@@ -285,20 +296,38 @@ describe("BudibaseAI", () => {
           model: PlanModel.PER_USER,
           usesInvoicing: false,
         },
-        features: [],
+        features: [Feature.BUDIBASE_AI],
         quotas: {} as any,
         tenantId: config.tenantId,
       }
-      nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(200, license)
+      nock(env.ACCOUNT_PORTAL_URL)
+        .get(`/api/license/${licenseKey}`)
+        .reply(200, license)
     })
 
+    async function getQuotaUsage() {
+      return await context.doInSelfHostTenantUsingCloud(
+        config.getTenantId(),
+        async () => {
+          return await quotas.getQuotaUsage()
+        }
+      )
+    }
+
     it("handles correct chat response", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
       mockChatGPTResponse("Hi there!")
       const { message } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
-        licenseKey: "test-key",
+        licenseKey: licenseKey,
       })
       expect(message).toBe("Hi there!")
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
 
     it("handles chat response error", async () => {
@@ -316,7 +345,7 @@ describe("BudibaseAI", () => {
 
     it("handles no license", async () => {
       nock.cleanAll()
-      nock(env.ACCOUNT_PORTAL_URL).get("/api/license").reply(404)
+      nock(env.ACCOUNT_PORTAL_URL).get(`/api/license/${licenseKey}`).reply(404)
       await config.api.ai.chat(
         {
           messages: [{ role: "user", content: "Hello!" }],
@@ -339,6 +368,67 @@ describe("BudibaseAI", () => {
           status: 403,
         }
       )
+    })
+
+    it("handles text format", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = generator.word()
+      mockChatGPTResponse(gptResponse, { format: "text" })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: "text",
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+
+    it("handles json format", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = JSON.stringify({
+        [generator.word()]: generator.word(),
+      })
+      mockChatGPTResponse(gptResponse, { format: "json" })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: "json",
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
+    })
+
+    it("handles structured outputs", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      const gptResponse = generator.guid()
+      const structuredOutput = generator.word() as unknown as StructuredOutput
+      ai.structuredOutputs[structuredOutput] = {
+        key: generator.word(),
+        validator: z.object({ name: z.string() }),
+      }
+      mockChatGPTResponse(gptResponse, { format: structuredOutput })
+      const { message } = await config.api.ai.chat({
+        messages: [{ role: "user", content: "Hello!" }],
+        format: structuredOutput,
+        licenseKey: licenseKey,
+      })
+      expect(message).toBe(gptResponse)
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
   })
 })

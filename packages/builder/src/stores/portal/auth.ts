@@ -48,7 +48,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
       analytics
         .activate()
         .then(() => {
-          analytics.identify(user._id)
+          analytics.identify(user._id!)
         })
         .catch(() => {
           // This request may fail due to browser extensions blocking requests

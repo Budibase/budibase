@@ -12,6 +12,7 @@
   export let bindings = []
   export let context = {}
   export let height = 180
+  export let dropdown
 
   const dispatch = createEventDispatcher()
 </script>
@@ -32,6 +33,7 @@
       value = e.detail
       dispatch("change", value)
     }}
+    showComponent
   >
     <div class="code-editor-wrapper">
       <CodeEditorField
@@ -39,6 +41,7 @@
         {bindings}
         {context}
         {height}
+        {dropdown}
         allowHBS={false}
         allowJS
         placeholder={"Add bindings by typing $"}

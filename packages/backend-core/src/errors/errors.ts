@@ -53,6 +53,22 @@ export class HTTPError extends BudibaseError {
     super(message, code)
     this.status = httpStatus
   }
+
+  static async fromResponse(resp: Response) {
+    const body = await resp.text()
+    let message = body
+    let httpStatus = resp.status
+    let code = ErrorCode.HTTP
+    try {
+      const error = JSON.parse(body)
+      message = error.message
+      httpStatus = error.status
+      code = error.error?.code
+    } catch (e) {
+      // ignore
+    }
+    return new HTTPError(message, httpStatus, code)
+  }
 }
 
 export class NotFoundError extends HTTPError {

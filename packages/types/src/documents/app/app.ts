@@ -29,6 +29,7 @@ export interface App extends Document {
   snippets?: Snippet[]
   creationVersion?: string
   updatedBy?: string
+  pwa?: PWAManifest
   scripts?: AppScript[]
 }
 
@@ -84,9 +85,30 @@ export interface AutomationSettings {
   chainAutomations?: boolean
 }
 
+export interface PWAManifest {
+  name: string
+  short_name: string
+  description: string
+  icons: PWAManifestImage[]
+  screenshots: PWAManifestImage[]
+  background_color: string
+  theme_color: string
+  display?: string
+  start_url: string
+}
+
+export interface PWAManifestImage {
+  src: string
+  sizes: string
+  type: string
+  form_factor?: "wide" | "narrow" | undefined
+  label?: string
+}
+
 export interface AppScript {
   id: string
   name: string
   location: "Head" | "Body"
   html?: string
+  cspWhitelist?: string
 }

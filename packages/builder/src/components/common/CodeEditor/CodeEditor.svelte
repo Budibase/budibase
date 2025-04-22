@@ -6,13 +6,7 @@
 </script>
 
 <script lang="ts">
-  import {
-    Button,
-    Label,
-    notifications,
-    Popover,
-    TextArea,
-  } from "@budibase/bbui"
+  import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
@@ -69,8 +63,7 @@
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
   import { featureFlag } from "@/helpers"
-  import { API } from "@/api"
-  import Spinner from "../Spinner.svelte"
+  import AIGen from "./AIGen.svelte"
 
   export let label: string | undefined = undefined
   export let completions: BindingCompletion[] = []
@@ -94,15 +87,19 @@
   let mounted = false
   let isEditorInitialised = false
   let queuedRefresh = false
+  let editorWidth: number | null = null
 
   // Theming!
   let currentTheme = $themeStore?.theme
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
 
-  let popoverAnchor: HTMLElement
-  let popover: Popover
-  let promptInput: TextArea
+  const updateEditorWidth = () => {
+    if (editorEle) {
+      editorWidth = editorEle.offsetWidth
+    }
+  }
+
   $: aiGenEnabled =
     featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
     mode.name === "javascript" &&
@@ -159,68 +156,6 @@
       })
       queuedRefresh = false
     }
-  }
-
-  $: promptLoading = false
-  let popoverWidth = 300
-  let suggestedCode: string | null = null
-  let previousContents: string | null = null
-  const generateJs = async (prompt: string) => {
-    previousContents = editor.state.doc.toString()
-    promptLoading = true
-    popoverWidth = 30
-    let code = ""
-    try {
-      const resp = await API.generateJs({ prompt, bindings })
-      code = resp.code
-
-      if (code === "") {
-        throw new Error(
-          "we didn't understand your prompt, please phrase your request in another way"
-        )
-      }
-    } catch (e) {
-      console.error(e)
-      if (e instanceof Error) {
-        notifications.error(`Unable to generate code: ${e.message}`)
-      } else {
-        notifications.error("Unable to generate code, please try again later.")
-      }
-      code = previousContents
-      promptLoading = false
-      resetPopover()
-      return
-    }
-    value = code
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: code },
-    })
-    suggestedCode = code
-    popoverWidth = 100
-    promptLoading = false
-  }
-
-  const acceptSuggestion = () => {
-    suggestedCode = null
-    previousContents = null
-    resetPopover()
-    dispatch("change", editor.state.doc.toString())
-    dispatch("blur", editor.state.doc.toString())
-  }
-
-  const rejectSuggestion = () => {
-    suggestedCode = null
-    value = previousContents || ""
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: value },
-    })
-    previousContents = null
-    resetPopover()
-  }
-
-  const resetPopover = () => {
-    popover.hide()
-    popoverWidth = 300
   }
 
   // Export a function to expose caret position
@@ -487,12 +422,31 @@
     })
   }
 
-  onMount(async () => {
+  // Handle AI generation code updates
+  const handleAICodeUpdate = (event: CustomEvent<{ code: string }>) => {
+    const { code } = event.detail
+    value = code
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: code },
+    })
+  }
+
+  onMount(() => {
     mounted = true
     // Capture scrolling
     editorEle.addEventListener("wheel", e => {
       e.stopPropagation()
     })
+
+    // Need to get the width of the drawer to pass to the prompt component
+    updateEditorWidth()
+    const resizeObserver = new ResizeObserver(() => {
+      updateEditorWidth()
+    })
+    resizeObserver.observe(editorEle)
+    return () => {
+      resizeObserver.disconnect()
+    }
   })
 
   onDestroy(() => {
@@ -513,52 +467,23 @@
 </div>
 
 {#if aiGenEnabled}
-  <button
-    bind:this={popoverAnchor}
-    class="ai-gen"
-    on:click={() => {
-      popover.show()
-      setTimeout(() => {
-        promptInput.focus()
-      }, 100)
+  <AIGen
+    {bindings}
+    {value}
+    parentWidth={editorWidth}
+    on:update={handleAICodeUpdate}
+    on:accept={() => {
+      dispatch("change", editor.state.doc.toString())
+      dispatch("blur", editor.state.doc.toString())
     }}
-  >
-    Generate with AI ✨
-  </button>
-
-  <Popover
-    bind:this={popover}
-    minWidth={popoverWidth}
-    anchor={popoverAnchor}
-    on:close={() => {
-      if (suggestedCode) {
-        acceptSuggestion()
-      }
+    on:reject={event => {
+      const { code } = event.detail
+      value = code || ""
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: code || "" },
+      })
     }}
-    align="left-outside"
-  >
-    {#if promptLoading}
-      <div class="prompt-spinner">
-        <Spinner size="20" color="white" />
-      </div>
-    {:else if suggestedCode !== null}
-      <Button on:click={acceptSuggestion}>Accept</Button>
-      <Button on:click={rejectSuggestion}>Reject</Button>
-    {:else}
-      <TextArea
-        bind:this={promptInput}
-        placeholder="Type your prompt then press enter..."
-        on:keypress={event => {
-          if (event.getModifierState("Shift")) {
-            return
-          }
-          if (event.key === "Enter") {
-            generateJs(promptInput.contents())
-          }
-        }}
-      />
-    {/if}
-  </Popover>
+  />
 {/if}
 
 <style>
@@ -765,35 +690,5 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
-  }
-  .ai-gen {
-    right: 1px;
-    bottom: 1px;
-    position: absolute;
-    justify-content: center;
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    box-sizing: border-box;
-    padding: var(--spacing-s);
-    border-left: 1px solid var(--spectrum-alias-border-color);
-    border-top: 1px solid var(--spectrum-alias-border-color);
-    border-top-left-radius: var(--spectrum-alias-border-radius-regular);
-    color: var(--spectrum-global-color-blue-700);
-    background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color
-        var(--spectrum-global-animation-duration-100, 130ms),
-      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
-      border-color var(--spectrum-global-animation-duration-100, 130ms);
-    height: calc(var(--spectrum-alias-item-height-m) - 2px);
-  }
-  .ai-gen:hover {
-    cursor: pointer;
-    color: var(--spectrum-alias-text-color-hover);
-    background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-alias-border-color-hover);
-  }
-  .prompt-spinner {
-    padding: var(--spacing-m);
   }
 </style>
