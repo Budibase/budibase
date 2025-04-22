@@ -109,27 +109,16 @@
   }
 
   const extendFilter = (initialFilter, extensions) => {
-    if (!extensions || !Object.keys(extensions).length) {
+    if (!Object.keys(extensions || {}).length) {
       return initialFilter
     }
-
-    // Base filter
-    let extended = {
-      groups: initialFilter ? [initialFilter] : [],
+    return {
+      groups: (initialFilter ? [initialFilter] : []).concat(
+        Object.values(extensions)
+      ),
       logicalOperator: UILogicalOperator.ALL,
       onEmptyFilter: EmptyFilterOption.RETURN_NONE,
     }
-
-    // Process and aggregate all filters.
-    let groups = Object.entries(extensions).map(([_, entry]) => {
-      // Assuming there should only ever be 1
-      return entry
-    })
-
-    // Combine all groups into the base
-    extended.groups = [...extended.groups, ...groups]
-
-    return extended
   }
 
   // Provide additional data context for live binding eval

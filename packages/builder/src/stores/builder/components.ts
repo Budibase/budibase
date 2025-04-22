@@ -212,10 +212,8 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
 
     const def = this.getDefinition(enrichedComponent?._component)
-    const filterableTypes = def?.settings?.filter(
-      setting =>
-        setting?.type?.startsWith("filter") &&
-        setting?.type !== "filterConfiguration"
+    const filterableTypes = def?.settings?.filter(setting =>
+      ["filter", "filter/relationship"].includes(setting?.type)
     )
     for (let setting of filterableTypes || []) {
       const isLegacy = Array.isArray(enrichedComponent[setting.key])

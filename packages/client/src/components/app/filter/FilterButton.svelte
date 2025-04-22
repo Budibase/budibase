@@ -229,7 +229,7 @@
   }
 
   .spectrum-Button-label .display {
-    color: rgba(179, 222, 254, 1);
+    color: var(--spectrum-global-color-blue-600);
   }
 
   .spectrum-Button--secondary.new-styles {

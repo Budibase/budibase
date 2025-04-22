@@ -34,7 +34,7 @@ import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
 import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
-import EmbeddedDatasourceSelect from "./controls/EmbeddedDatasourceSelect.svelte"
+import FilterableSelect from "./controls/FilterableSelect.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -44,7 +44,7 @@ const componentMap = {
   radio: RadioGroup,
   dataSource: DataSourceSelect,
   "dataSource/s3": S3DataSourceSelect,
-  "dataSource/embedded": EmbeddedDatasourceSelect,
+  "dataSource/filterable": FilterableSelect,
   dataProvider: DataProviderSelect,
   boolean: Checkbox,
   number: Stepper,
