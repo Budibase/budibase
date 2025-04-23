@@ -49,35 +49,14 @@
     : () => updateHandler(config)}
   disabled={!(validation && edited)}
   size="M"
-  title="Custom AI Configuration"
+  title={`Set up ${config.name}`}
 >
   <div class="form-row">
-    <Label size="M">Provider</Label>
-    <Select
-      bind:value={config.provider}
-      options={Object.keys(Providers)}
-      on:change={e => {
-        prefillConfig(e)
-        edited = true
-      }}
-    />
-  </div>
-  <div class="form-row">
-    <Label size="M">Name</Label>
+    <Label size="M">API Key</Label>
     <Input
-      error={config.name === "Budibase AI" ? "Cannot use this name" : undefined}
-      placeholder={"Enter a name"}
-      bind:value={config.name}
+      type="password"
+      bind:value={config.apiKey}
       on:input={() => (edited = true)}
-    />
-  </div>
-  <div class="form-row">
-    <Label size="M">Default Model</Label>
-    <Select
-      placeholder={config.provider ? "Choose an option" : "Select a provider"}
-      bind:value={config.defaultModel}
-      options={Models}
-      on:change={() => (edited = true)}
     />
   </div>
   <div class="form-row">
@@ -89,12 +68,14 @@
       on:input={() => (edited = true)}
     />
   </div>
+
   <div class="form-row">
-    <Label size="M">API Key</Label>
-    <Input
-      type="password"
-      bind:value={config.apiKey}
-      on:input={() => (edited = true)}
+    <Label size="M">Default Model</Label>
+    <Select
+      placeholder={config.provider ? "Choose an option" : "Select a provider"}
+      bind:value={config.defaultModel}
+      options={Models}
+      on:change={() => (edited = true)}
     />
   </div>
 </ModalContent>

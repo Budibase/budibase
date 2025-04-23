@@ -38,10 +38,6 @@
     const loadedConfig = aiConfig?.config[key] || {}
     let baseConfig = { ...details.defaultConfig }
 
-    if (key === BBAI_KEY) {
-      baseConfig.active = $licensing.budibaseAIEnabled
-    }
-
     return {
       ...baseConfig,
       ...loadedConfig,
@@ -167,6 +163,7 @@
       notifications.error("Error fetching AI settings")
     }
   })
+  $: console.log(enabled)
 </script>
 
 <Layout noPadding>
@@ -188,7 +185,7 @@
   </Layout>
   <Divider />
 
-  {#if !enabled.length && activeKey === BBAI_KEY}
+  {#if !enabled.length}
     <div class="banner">
       <div class="banner-content">
         <div class="banner-icon">
@@ -196,7 +193,7 @@
         </div>
         <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
       </div>
-      <Button secondary cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
+      <Button quiet cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
         Enable BB AI
       </Button>
     </div>

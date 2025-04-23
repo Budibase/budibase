@@ -50,7 +50,7 @@
     {:else}
       <!-- OpenAI or AzureOpenAI -->
       <ActionButton on:click={() => editHandler && editHandler()}>
-        {#if config}Edit{:else}Set up{/if}
+        {#if config.apiKey}Edit{:else}Set up{/if}
       </ActionButton>
     {/if}
   </div>
