@@ -529,8 +529,8 @@ export class UserDB {
 
     if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
       // root account holder can't be deleted from inside budibase
-      const tenantId = dbUser.tenantId
-      const account = await accountSdk.getAccountByTenantId(tenantId)
+      const email = dbUser.email
+      const account = await accountSdk.getAccount(email)
       if (account) {
         if (dbUser.userId === getIdentity()!._id) {
           throw new HTTPError('Please visit "Account" to delete this user', 400)
