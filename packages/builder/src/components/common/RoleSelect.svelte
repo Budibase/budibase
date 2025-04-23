@@ -30,6 +30,7 @@
     Constants.PlanType.PREMIUM,
     Constants.PlanType.ENTERPRISE,
     Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
+    Constants.PlanType.ENTERPRISE_BASIC,
   ].includes(subType)
 
   $: enrichLabel = label => (labelPrefix ? `${labelPrefix} ${label}` : label)
