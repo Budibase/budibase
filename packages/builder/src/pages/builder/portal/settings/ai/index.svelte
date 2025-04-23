@@ -13,25 +13,27 @@
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
 
-  import { auth, admin, licensing } from "@/stores/portal"
+  import { admin, licensing } from "@/stores/portal"
   import { API } from "@/api"
   import AIConfigTile from "./AIConfigTile.svelte"
   import ConfigModal from "./ConfigModal.svelte"
   import PortalModal from "./PortalModal.svelte"
   import {
+    type AIProvider,
     ConfigType,
     type AIConfig,
     type ProviderConfig,
+    type AIProviderPartial,
   } from "@budibase/types"
   import { ProviderDetails, BBAI_KEY, OPENAI_KEY, AZURE_KEY } from "./constants"
 
   let aiConfig: AIConfig
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
-  let modalKey: string
+  let modalKey: AIProviderPartial
   let modalConfig: ProviderConfig
 
-  function getProviderConfig(key: string): ProviderConfig {
+  function getProviderConfig(key: AIProviderPartial): ProviderConfig {
     const details = ProviderDetails[key]
     const loadedConfig = aiConfig?.config[key] || {}
     let baseConfig = { ...details.defaultConfig }
@@ -43,17 +45,17 @@
     return {
       ...baseConfig,
       ...loadedConfig,
-      provider: details.provider,
+      provider: details.provider as AIProvider,
       name: details.name,
       active: loadedConfig.active ?? baseConfig.active ?? false,
       isDefault: loadedConfig.isDefault ?? baseConfig.isDefault ?? false,
-    } as ProviderConfig
+    }
   }
 
-  $: providerKeys = [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
+  let providerKeys: AIProviderPartial[] = [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
 
   $: providers = aiConfig
-    ? providerKeys.map(key => ({
+    ? providerKeys.map((key: AIProviderPartial) => ({
         key,
         cfg: getProviderConfig(key),
       }))
@@ -64,7 +66,7 @@
   $: disabled = providers.filter(p => p.key !== activeKey)
 
   async function updateProviderConfig(
-    key: string,
+    key: AIProviderPartial,
     enable: boolean,
     configData: Partial<ProviderConfig> | null = null
   ) {
@@ -74,15 +76,12 @@
 
     if (enable) {
       if (key === BBAI_KEY) {
-        // BB AI enable doesn't use configData, uses defaults + active state
         updated = {
           ...details.defaultConfig,
           ...existing,
-          provider: details.provider,
-          name: details.name,
           active: true,
           isDefault: true,
-        } as ProviderConfig
+        }
       } else {
         updated = {
           ...details.defaultConfig,
@@ -90,7 +89,7 @@
           ...configData,
           active: true,
           isDefault: true,
-        } as ProviderConfig
+        }
       }
     } else {
       updated = {
@@ -98,12 +97,24 @@
         ...existing,
         active: false,
         isDefault: false,
-      } as ProviderConfig
+      }
     }
 
     const payload = {
       type: ConfigType.AI,
       config: { ...aiConfig.config, [key]: updated },
+    }
+
+    if (enable) {
+      Object.keys(payload.config).forEach(providerKey => {
+        if (providerKey !== key) {
+          payload.config[providerKey] = {
+            ...payload.config[providerKey],
+            active: false,
+            isDefault: false,
+          }
+        }
+      })
     }
 
     try {
@@ -116,7 +127,7 @@
     configModal?.hide()
   }
 
-  function handleEnable(key: string) {
+  function handleEnable(key: AIProviderPartial) {
     modalKey = key
     if (
       key === BBAI_KEY &&
@@ -137,7 +148,7 @@
     configModal.show()
   }
 
-  function handleDisable(key: string) {
+  function handleDisable(key: AIProviderPartial) {
     if (
       key === BBAI_KEY &&
       !$admin.cloud &&
@@ -177,7 +188,7 @@
   </Layout>
   <Divider />
 
-  {#if !enabled.length && providerKeys.includes(BBAI_KEY)}
+  {#if !enabled.length && activeKey === BBAI_KEY}
     <div class="banner">
       <div class="banner-content">
         <div class="banner-icon">

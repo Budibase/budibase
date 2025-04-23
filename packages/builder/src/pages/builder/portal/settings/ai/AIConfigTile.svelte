@@ -6,7 +6,7 @@
   import type { ProviderConfig } from "@budibase/types"
   import { Providers } from "./constants"
 
-  const logos = {
+  const logos: Record<string, any> = {
     [Providers.BudibaseAI]: BudibaseAILogo,
     [Providers.OpenAI]: OpenAILogo,
     [Providers.AzureOpenAI]: AzureOpenAILogo,
@@ -15,16 +15,15 @@
   export let config: ProviderConfig
   export let editHandler: (() => void) | null
   export let disableHandler: (() => void) | null
+
+  let selectedLogo: any =
+    logos[Providers[config.provider as keyof typeof Providers]]
 </script>
 
 <div class="option">
   <div class="details">
     <div class="icon">
-      <svelte:component
-        this={logos[config.provider || config.name]}
-        height="26"
-        width="26"
-      />
+      <svelte:component this={selectedLogo} height="26" width="26" />
     </div>
     <div class="header">
       <Body size="S" weight={"600"}>{config.name}</Body>
@@ -51,7 +50,7 @@
     {:else}
       <!-- OpenAI or AzureOpenAI -->
       <ActionButton on:click={() => editHandler && editHandler()}>
-        {#if config.active}Edit{:else}Set up{/if}
+        {#if config}Edit{:else}Set up{/if}
       </ActionButton>
     {/if}
   </div>

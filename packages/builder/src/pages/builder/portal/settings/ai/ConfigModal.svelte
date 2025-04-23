@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ModalContent, Label, Input, Select } from "@budibase/bbui"
-  import { ConfigMap, Providers } from "./constants"
+  import { ConfigMap, Providers, Models } from "./constants"
   import type { ProviderConfig } from "@budibase/types"
 
   export let config: ProviderConfig
@@ -12,7 +12,6 @@
   let edited: boolean = false
 
   $: isEnabled = config.active && config.isDefault
-  $: modelOptions = config.provider ? Providers[config.provider].models : []
 
   $: {
     const { provider, defaultModel, name, apiKey } = config
@@ -77,7 +76,7 @@
     <Select
       placeholder={config.provider ? "Choose an option" : "Select a provider"}
       bind:value={config.defaultModel}
-      options={modelOptions}
+      options={Models}
       on:change={() => (edited = true)}
     />
   </div>
