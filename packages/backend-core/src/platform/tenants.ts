@@ -101,19 +101,3 @@ export async function removeTenant(tenantId: string) {
     throw err
   }
 }
-
-export async function getTenantCreatedAt(tenantId: string) {
-  if (isSelfHostUsingCloud()) {
-    // we have no way of knowing when self-host tenants were created, so we
-    // can't return a createdAt date
-    return undefined
-  }
-
-  return await doInTenant(tenantId, async () => {
-    const settings = await getSettingsConfigDoc()
-    if (settings.createdAt === undefined) {
-      return undefined
-    }
-    return new Date(settings.createdAt)
-  })
-}

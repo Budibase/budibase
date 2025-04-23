@@ -5,10 +5,6 @@ import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
 import { quotas } from "@budibase/pro"
-import tk from "timekeeper"
-
-// Freezing to a time when Budibase AI was enabled by default.
-tk.freeze(new Date("2023-10-01T00:00:00Z"))
 
 describe("test the openai action", () => {
   const config = new TestConfiguration()
