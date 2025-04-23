@@ -8,14 +8,13 @@
   export let enableHandler: (_config: ProviderConfig) => void
   export let disableHandler: (_config: ProviderConfig) => void
 
-  let validation: boolean
-  let edited: boolean = false
+  let complete: boolean
 
   $: isEnabled = config.active && config.isDefault
 
   $: {
     const { provider, defaultModel, name, apiKey } = config
-    validation = Boolean(provider && name && defaultModel && apiKey)
+    complete = Boolean(provider && name && defaultModel && apiKey)
   }
   $: canEditBaseUrl =
     config.provider &&
@@ -31,17 +30,13 @@
   onCancel={isEnabled
     ? () => disableHandler(config)
     : () => updateHandler(config)}
-  disabled={!(validation && edited)}
+  disabled={!complete}
   size="M"
   title={`Set up ${config.name}`}
 >
   <div class="form-row">
     <Label size="M">API Key</Label>
-    <Input
-      type="password"
-      bind:value={config.apiKey}
-      on:input={() => (edited = true)}
-    />
+    <Input type="password" bind:value={config.apiKey} />
   </div>
   <div class="form-row">
     <Label size="M">Base URL</Label>
@@ -49,7 +44,6 @@
       disabled={!canEditBaseUrl}
       placeholder={"https://budibase.ai"}
       bind:value={config.baseUrl}
-      on:input={() => (edited = true)}
     />
   </div>
 
@@ -59,7 +53,6 @@
       placeholder={config.provider ? "Choose an option" : "Select a provider"}
       bind:value={config.defaultModel}
       options={Models}
-      on:change={() => (edited = true)}
     />
   </div>
 </ModalContent>

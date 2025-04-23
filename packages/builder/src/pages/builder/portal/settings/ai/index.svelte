@@ -91,14 +91,21 @@
       updated = {
         ...details.defaultConfig,
         ...existing,
+        ...configData,
         active: false,
         isDefault: false,
       }
     }
 
+    // handle the old budibase_ai key
+    const baseConfig = { ...aiConfig.config }
+    if (baseConfig["budibase_ai"]) {
+      delete baseConfig["budibase_ai"]
+    }
+
     const payload = {
       type: ConfigType.AI,
-      config: { ...aiConfig.config, [key]: updated },
+      config: { ...baseConfig, [key]: updated },
     }
     if (enable) {
       Object.keys(payload.config).forEach(providerKey => {
@@ -231,7 +238,7 @@
   <ConfigModal
     config={modalConfig}
     updateHandler={updatedConfig =>
-      updateProviderConfig(modalKey, true, updatedConfig)}
+      updateProviderConfig(modalKey, false, updatedConfig)}
     enableHandler={updatedConfig =>
       updateProviderConfig(modalKey, true, updatedConfig)}
     disableHandler={() => updateProviderConfig(modalKey, false)}

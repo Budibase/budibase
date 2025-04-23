@@ -1,9 +1,9 @@
-export const BBAI_KEY = "budibase_ai"
+export const BBAI_KEY = "BudibaseAI"
 export const OPENAI_KEY = "OpenAI"
 export const AZURE_KEY = "AzureOpenAI"
 
 export const Providers = {
-  BudibaseAI: "budibase_ai",
+  BudibaseAI: "BudibaseAI",
   OpenAI: "OpenAI",
   AzureOpenAI: "AzureOpenAI",
 }
