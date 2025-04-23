@@ -67,7 +67,8 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BROWSER: "off"
-    command: server /data --console-address ":9001"
+      MINIO_CONSOLE_PORT: 9001
+    command: server /data
     healthcheck:
       test: "timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"
       interval: 30s
