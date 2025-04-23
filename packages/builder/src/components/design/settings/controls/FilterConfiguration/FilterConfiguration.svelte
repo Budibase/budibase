@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { enrichSchemaWithRelColumns } from "@budibase/frontend-core"
+  import { enrichSchemaWithRelColumns, search } from "@budibase/frontend-core"
   import { Toggle } from "@budibase/bbui"
   import {
     getSchemaForDatasource,
@@ -17,9 +17,12 @@
     type Component,
     type FilterConfig,
     type Screen,
+    type TableSchema,
+    type Table,
   } from "@budibase/types"
   import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { findComponent } from "@/helpers/components"
+  import { tables } from "@/stores/builder"
 
   export let value
   export let componentInstance
@@ -37,6 +40,28 @@
       : null
 
   $: contextDS = getDatasourceForProvider($selectedScreen, targetComponent)
+
+  $: schema = $selectedScreen
+    ? getSchema($selectedScreen, contextDS)
+    : undefined
+
+  $: searchable = getSearchableFields(schema, $tables.list)
+
+  $: defaultValues = searchable
+    .filter((column: UIFieldSchema) => !column.nestedJSON)
+    .map(
+      (column: UIFieldSchema): FilterConfig => ({
+        field: column.name,
+        active: !!value == false ? false : !!column.visible,
+        columnType: column.type,
+      })
+    )
+
+  $: parsedColumns = schema
+    ? removeInvalidAddMissing(value || [], [...defaultValues]).map(column => ({
+        ...column,
+      }))
+    : []
 
   const itemUpdate = (e: CustomEvent) => {
     // The item is a component instance. '_instanceName' === 'field'
@@ -56,6 +81,15 @@
     dispatch("change", list)
   }
 
+  const getSearchableFields = (
+    schema: TableSchema | undefined,
+    tableList: Table[]
+  ) => {
+    return search.getFields(tableList, Object.values(schema || {}), {
+      allowLinks: true,
+    })
+  }
+
   const getSchema = (screen: Screen, datasource: any) => {
     const schema = getSchemaForDatasource(screen, datasource, null)
       .schema as Record<string, UIFieldSchema>
@@ -72,7 +106,6 @@
       FieldType.ATTACHMENT_SINGLE,
       FieldType.ATTACHMENTS,
       FieldType.AI,
-      FieldType.LINK,
       FieldType.SIGNATURE_SINGLE,
     ]
 
@@ -85,29 +118,8 @@
     const result = enrichSchemaWithRelColumns(
       Object.fromEntries(filteredSchema)
     )
-
     return result
   }
-
-  $: schema = $selectedScreen
-    ? getSchema($selectedScreen, contextDS)
-    : undefined
-
-  $: defaultValues = Object.values(schema || {})
-    .filter(column => !column.nestedJSON)
-    .map(
-      (column): FilterConfig => ({
-        field: column.name,
-        active: !!value == false ? false : !!column.visible,
-        columnType: column.type,
-      })
-    )
-
-  $: parsedColumns = schema
-    ? removeInvalidAddMissing(value || [], defaultValues).map(column => ({
-        ...column,
-      }))
-    : []
 </script>
 
 <div class="filter-configuration">
