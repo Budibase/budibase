@@ -10,11 +10,6 @@
   $: {
     const templateList = $templates as TemplateMetadata[]
     newTemplates = templateList?.filter(template => template.new) || []
-
-    // for dev only, remove when templates manifest updated in s3
-    if (newTemplates.length === 0) {
-      newTemplates = templateList?.slice(0, 3) || []
-    }
   }
 </script>
 
