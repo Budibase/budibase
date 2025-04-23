@@ -6980,6 +6980,7 @@
     ]
   },
   "markdownviewer": {
+    "deprecated": true,
     "name": "Markdown Viewer",
     "icon": "Preview",
     "styles": ["size"],
@@ -8057,6 +8058,7 @@
     }
   },
   "textv2": {
+    "new": true,
     "name": "Text",
     "description": "A component for displaying text",
     "icon": "Text",
