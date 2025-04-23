@@ -22,6 +22,7 @@
     data.append("name", name.trim())
     data.append("url", url.trim())
     data.append("useTemplate", false)
+    data.append("isOnboarding", "true")
 
     const createdApp = await API.createApp(data)
 

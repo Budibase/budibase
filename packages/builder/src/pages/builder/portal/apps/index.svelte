@@ -121,6 +121,7 @@
       data.append("name", appName)
       data.append("useTemplate", true)
       data.append("templateKey", template.key)
+      data.append("isOnboarding", "false")
 
       // Create App
       const createdApp = await API.createApp(data)
