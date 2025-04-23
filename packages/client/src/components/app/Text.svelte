@@ -72,4 +72,9 @@
   div :global(h6) {
     font-weight: 600;
   }
+
+  /* Slightly shrink h1 so that it fits into 2 grid rows by default */
+  div :global(h1) {
+    font-size: 1.8em;
+  }
 </style>
