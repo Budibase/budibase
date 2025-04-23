@@ -1,11 +1,7 @@
 import API from "./api"
 import env from "../environment"
 import { Header } from "../constants"
-import {
-  CloudAccount,
-  HealthStatusResponse,
-  AccountDetail,
-} from "@budibase/types"
+import { CloudAccount, HealthStatusResponse } from "@budibase/types"
 
 const api = new API(env.ACCOUNT_PORTAL_URL)
 
@@ -19,11 +15,15 @@ const EXIT_EARLY = env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL
 
 export const getAccount = async (
   email: string
-): Promise<AccountDetail | undefined> => {
+): Promise<CloudAccount | undefined> => {
   if (EXIT_EARLY) {
     return
   }
-  const response = await api.get(`/api/v2/admin/account?email=${email}`, {
+  const payload = {
+    email,
+  }
+  const response = await api.post(`/api/accounts/search`, {
+    body: payload,
     headers: {
       [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
     },
@@ -33,7 +33,7 @@ export const getAccount = async (
     throw new Error(`Error getting account by email ${email}`)
   }
 
-  const json: AccountDetail[] = await response.json()
+  const json: CloudAccount[] = await response.json()
   return json[0]
 }
 
