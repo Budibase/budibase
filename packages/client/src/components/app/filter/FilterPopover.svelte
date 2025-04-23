@@ -94,7 +94,7 @@
     if (
       isOperatorArray &&
       typeof filter.value === "string" &&
-      filter.type !== FieldType.STRING
+      ![FieldType.STRING, FieldType.NUMBER].includes(filter.type!)
     ) {
       clone.value = [filter.value]
     } else if (isOperatorArray && !filter?.value?.length) {
