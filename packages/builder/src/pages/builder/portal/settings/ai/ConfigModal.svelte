@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ModalContent, Label, Input, Select } from "@budibase/bbui"
-  import { ConfigMap, Providers, Models } from "./constants"
+  import { ConfigMap, Models } from "./constants"
   import type { ProviderConfig } from "@budibase/types"
 
   export let config: ProviderConfig
@@ -20,22 +20,6 @@
   $: canEditBaseUrl =
     config.provider &&
     ConfigMap[config.provider as keyof typeof ConfigMap].baseUrl === ""
-
-  function prefillConfig(evt: CustomEvent) {
-    const provider = evt.detail
-    // grab the preset config from the constants for that provider and fill it in
-    if (ConfigMap[provider as keyof typeof ConfigMap]) {
-      config = {
-        ...config,
-        ...ConfigMap[provider as keyof typeof ConfigMap],
-        provider,
-      }
-      edited = true
-    } else {
-      config.provider = provider
-      edited = true
-    }
-  }
 </script>
 
 <ModalContent
