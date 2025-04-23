@@ -74,7 +74,7 @@ export async function validateUniqueUser(email: string, tenantId: string) {
   // check root account users in account portal
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accountSdk.getAccount(email)
-    if (account && account.verified && account.tenantId !== tenantId) {
+    if (account) {
       throw new EmailUnavailableError(email)
     }
   }
