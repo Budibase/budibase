@@ -8,8 +8,6 @@
     Divider,
     notifications,
     Modal,
-    Tags,
-    Tag,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
 
@@ -69,7 +67,7 @@
     const details = ProviderDetails[key]
     const existing = aiConfig.config[key] || {}
     let updated: ProviderConfig
-    console.log("test")
+
     if (enable) {
       if (key === BBAI_KEY) {
         updated = {
@@ -102,7 +100,6 @@
       type: ConfigType.AI,
       config: { ...aiConfig.config, [key]: updated },
     }
-    console.log("payload", payload)
     if (enable) {
       Object.keys(payload.config).forEach(providerKey => {
         if (providerKey !== key) {
@@ -171,13 +168,6 @@
   <Layout gap="XS" noPadding>
     <div class="header">
       <Heading size="M">AI</Heading>
-      <Tags>
-        {#if !$admin.cloud && !$licensing.customAIConfigsEnabled}
-          <Tag icon="LockClosed">Premium</Tag>
-        {:else if $admin.cloud && !$licensing.customAIConfigsEnabled}
-          <Tag icon="LockClosed">Enterprise</Tag>
-        {/if}
-      </Tags>
     </div>
     <Body>
       Connect an LLM to enable AI features. You can only enable one LLM at a
