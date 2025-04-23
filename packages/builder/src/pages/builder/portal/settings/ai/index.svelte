@@ -69,12 +69,14 @@
     const details = ProviderDetails[key]
     const existing = aiConfig.config[key] || {}
     let updated: ProviderConfig
-
+    console.log("test")
     if (enable) {
       if (key === BBAI_KEY) {
         updated = {
           ...details.defaultConfig,
           ...existing,
+          provider: details.provider as AIProvider,
+          name: details.name,
           active: true,
           isDefault: true,
         }
@@ -100,7 +102,7 @@
       type: ConfigType.AI,
       config: { ...aiConfig.config, [key]: updated },
     }
-
+    console.log("payload", payload)
     if (enable) {
       Object.keys(payload.config).forEach(providerKey => {
         if (providerKey !== key) {
@@ -163,7 +165,6 @@
       notifications.error("Error fetching AI settings")
     }
   })
-  $: console.log(enabled)
 </script>
 
 <Layout noPadding>
@@ -193,7 +194,7 @@
         </div>
         <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
       </div>
-      <Button quiet cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
+      <Button primary cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
         Enable BB AI
       </Button>
     </div>
@@ -243,7 +244,7 @@
       updateProviderConfig(modalKey, true, updatedConfig)}
     enableHandler={updatedConfig =>
       updateProviderConfig(modalKey, true, updatedConfig)}
-    disableHandler={() => configModal.hide()}
+    disableHandler={() => updateProviderConfig(modalKey, false)}
   />
 </Modal>
 
