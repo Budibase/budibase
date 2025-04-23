@@ -27,8 +27,6 @@
     sortedScreens,
     appPublished,
   } from "@/stores/builder"
-  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
-  import { TOUR_STEP_KEYS } from "@/components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
 
   export let application
