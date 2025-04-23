@@ -284,7 +284,7 @@ describe("/api/global/users", () => {
 
     it("should not be able to create user with the same email as an account", async () => {
       const user = structures.users.user()
-      const account = structures.accounts.accountDetail()
+      const account = structures.accounts.cloudAccount()
       accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
 
       const response = await config.api.users.saveUser(user, 400)
@@ -743,9 +743,7 @@ describe("/api/global/users", () => {
     it("should not be able to destroy account owner", async () => {
       const user = await config.createUser()
       const account = structures.accounts.cloudAccount()
-      accounts.getAccountByTenantId.mockReturnValueOnce(
-        Promise.resolve(account)
-      )
+      accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
 
       const response = await config.api.users.deleteUser(user._id!, 400)
 
@@ -756,9 +754,7 @@ describe("/api/global/users", () => {
       const user = await config.user!
       const account = structures.accounts.cloudAccount()
       account.email = user.email
-      accounts.getAccountByTenantId.mockReturnValueOnce(
-        Promise.resolve(account)
-      )
+      accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
 
       const response = await config.api.users.deleteUser(user._id!, 400)
 

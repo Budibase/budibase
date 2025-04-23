@@ -648,7 +648,7 @@ describe("scim", () => {
           budibaseUserId: user.id,
           email: user.emails![0].value,
         }
-        mocks.accounts.getAccountByTenantId.mockResolvedValue(account)
+        mocks.accounts.getAccount.mockResolvedValue(account)
 
         await deleteScimUser(user.id, {
           expect: {
