@@ -26,7 +26,7 @@
   const RemoveID = "remove"
   const subType = $licensing.license.plan.type ?? null
 
-  $: isPremiumPlan = [
+  $: isPremiumOrAbove = [
     Constants.PlanType.PREMIUM,
     Constants.PlanType.ENTERPRISE,
     Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
@@ -78,11 +78,11 @@
     }))
 
     // Add creator if required
-    if (allowCreator || isPremiumPlan) {
+    if (allowCreator || isPremiumOrAbove) {
       options.unshift({
         _id: Constants.Roles.CREATOR,
         name: "Can edit",
-        tag: isPremiumPlan ? null : capitalise(Constants.PlanType.PREMIUM),
+        tag: isPremiumOrAbove ? null : capitalise(Constants.PlanType.PREMIUM),
       })
     }
 
@@ -143,7 +143,7 @@
     getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return isPremiumPlan
+        return isPremiumOrAbove
       }
       return true
     }}
@@ -166,7 +166,7 @@
     getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return isPremiumPlan
+        return isPremiumOrAbove
       }
       return option.enabled !== false
     }}
