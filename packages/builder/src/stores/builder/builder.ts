@@ -3,7 +3,6 @@ import { createBuilderWebsocket } from "./websocket.js"
 import { Socket } from "socket.io-client"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import { BudiStore } from "../BudiStore.js"
-import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
 import { App } from "@budibase/types"
 
 interface BuilderState {
@@ -14,7 +13,6 @@ interface BuilderState {
   } | null
   propertyFocus: string | null
   builderSidePanel: boolean
-  onboarding: boolean
   tourNodes: Record<string, HTMLElement> | null
   tourKey: string | null
   tourStepKey: string | null
@@ -27,7 +25,6 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
   highlightedSetting: null,
   propertyFocus: null,
   builderSidePanel: false,
-  onboarding: false,
   tourNodes: null,
   tourKey: null,
   tourStepKey: null,
@@ -51,7 +48,6 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.selectResource = this.selectResource.bind(this)
     this.registerTourNode = this.registerTourNode.bind(this)
     this.destroyTourNode = this.destroyTourNode.bind(this)
-    this.startBuilderOnboarding = this.startBuilderOnboarding.bind(this)
   }
 
   init(app: App) {
@@ -142,21 +138,6 @@ export class BuilderStore extends BudiStore<BuilderState> {
         tourNodes: nodes,
       }))
     }
-  }
-
-  startBuilderOnboarding() {
-    this.update(state => ({
-      ...state,
-      onboarding: true,
-      tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
-    }))
-  }
-
-  endBuilderOnboarding() {
-    this.update(state => ({
-      ...state,
-      onboarding: false,
-    }))
   }
 
   setTour(tourKey?: string | null) {
