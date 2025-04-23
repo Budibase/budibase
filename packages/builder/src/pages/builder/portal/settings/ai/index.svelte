@@ -19,162 +19,142 @@
   import ConfigModal from "./ConfigModal.svelte"
   import PortalModal from "./PortalModal.svelte"
   import {
-    type AIProvider,
     ConfigType,
     type AIConfig,
     type ProviderConfig,
   } from "@budibase/types"
-  import { ConfigMap, Providers } from "./constants"
-
-  // Supported provider keys
-  const BUDIBASE_AI_KEY = "budibase_ai"
-  const OPENAI_KEY = "OpenAI"
-  const AZURE_OPENAI_KEY = "AzureOpenAI"
+  import { ProviderDetails, BBAI_KEY, OPENAI_KEY, AZURE_KEY } from "./constants"
 
   let aiConfig: AIConfig
-
-  let configModal: any
-  let portalModal: any
-  let activeKey: string | undefined
+  let configModal: { show: () => void; hide: () => void }
+  let portalModal: { show: () => void; hide: () => void }
   let modalKey: string
   let modalConfig: ProviderConfig
-  onMount(async () => {
-    aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-  })
 
-  $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
+  function getProviderConfig(key: string): ProviderConfig {
+    const details = ProviderDetails[key]
+    const loadedConfig = aiConfig?.config[key] || {}
+    let baseConfig = { ...details.defaultConfig }
 
-  $: isCloud = $admin.cloud
-  $: aiEnabled = !!activeKey
-  $: activeKey =
-    uiConfigs && $auth?.user?.llm
-      ? uiConfigs.find(({ cfg }) => cfg.provider === $auth?.user?.llm?.provider)
-          ?.key
-      : undefined
-  $: uiConfigs = aiConfig?.config
-    ? [BUDIBASE_AI_KEY, OPENAI_KEY, AZURE_OPENAI_KEY].map(key => ({
+    if (key === BBAI_KEY) {
+      baseConfig.active = $licensing.budibaseAIEnabled
+    }
+
+    return {
+      ...baseConfig,
+      ...loadedConfig,
+      provider: details.provider,
+      name: details.name,
+      active: loadedConfig.active ?? baseConfig.active ?? false,
+      isDefault: loadedConfig.isDefault ?? baseConfig.isDefault ?? false,
+    } as ProviderConfig
+  }
+
+  $: providerKeys = [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
+
+  $: providers = aiConfig
+    ? providerKeys.map(key => ({
         key,
-        cfg: aiConfig.config[key] ?? getDefaultConfig(key),
+        cfg: getProviderConfig(key),
       }))
     : []
 
+  $: activeKey = providers.find(p => p.cfg.active)?.key
+  $: enabled = providers.filter(p => p.key === activeKey)
+  $: disabled = providers.filter(p => p.key !== activeKey)
+
+  async function updateProviderConfig(
+    key: string,
+    enable: boolean,
+    configData: Partial<ProviderConfig> | null = null
+  ) {
+    const details = ProviderDetails[key]
+    const existing = aiConfig.config[key] || {}
+    let updated: ProviderConfig
+
+    if (enable) {
+      if (key === BBAI_KEY) {
+        // BB AI enable doesn't use configData, uses defaults + active state
+        updated = {
+          ...details.defaultConfig,
+          ...existing,
+          provider: details.provider,
+          name: details.name,
+          active: true,
+          isDefault: true,
+        } as ProviderConfig
+      } else {
+        updated = {
+          ...details.defaultConfig,
+          ...existing,
+          ...configData,
+          active: true,
+          isDefault: true,
+        } as ProviderConfig
+      }
+    } else {
+      updated = {
+        ...details.defaultConfig,
+        ...existing,
+        active: false,
+        isDefault: false,
+      } as ProviderConfig
+    }
+
+    const payload = {
+      type: ConfigType.AI,
+      config: { ...aiConfig.config, [key]: updated },
+    }
+
+    try {
+      await API.saveConfig(payload)
+      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      notifications.success(`AI provider updated`)
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to update AI provider")
+    }
+    configModal?.hide()
+  }
+
   function handleEnable(key: string) {
     modalKey = key
-    if (key === BUDIBASE_AI_KEY && !isCloud) {
+    if (
+      key === BBAI_KEY &&
+      !$admin.cloud &&
+      !$licensing.customAIConfigsEnabled
+    ) {
       portalModal.show()
-    } else {
-      // Prefill modal state for config editing/enabling
-      const entry = uiConfigs.find(p => p.key === key)
-      modalConfig = { ...entry?.cfg } as ProviderConfig
-      configModal.show()
+      return
     }
+
+    if (key === BBAI_KEY) {
+      updateProviderConfig(key, true)
+      return
+    }
+
+    const currentCfg = getProviderConfig(key)
+    modalConfig = { ...currentCfg }
+    configModal.show()
   }
 
-  async function fetchAIConfig() {
-    try {
-      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-    } catch (error) {
-      notifications.error("Error fetching AI config")
+  function handleDisable(key: string) {
+    if (
+      key === BBAI_KEY &&
+      !$admin.cloud &&
+      !$licensing.customAIConfigsEnabled
+    ) {
+      portalModal.show()
+      return
     }
-  }
-
-  /** Save or enable the AI provider configuration */
-  async function saveConfig() {
-    const { _id, _rev } = aiConfig
-    const existing = aiConfig.config[modalKey] || {}
-    const updatedConfig: ProviderConfig = {
-      ...existing,
-      ...modalConfig,
-      active: true,
-      isDefault: true,
-    }
-    const payload = {
-      _id,
-      _rev,
-      type: ConfigType.AI,
-      config: {
-        [modalKey]: updatedConfig,
-      },
-    }
-    try {
-      await API.saveConfig(payload)
-      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-      notifications.success(`AI provider ${updatedConfig.name} enabled`)
-    } catch (err: any) {
-      notifications.error(
-        err.message || "Failed to save AI provider configuration"
-      )
-    }
-    configModal.hide()
-  }
-  function cancelConfig() {
-    configModal.hide()
-  }
-  async function disableConfig(key?: string) {
-    if (key !== undefined) {
-      modalKey = key
-    }
-    const { _id, _rev } = aiConfig
-    const existing = aiConfig.config[modalKey] || {}
-    // Preserve existing settings but disable the provider
-    const payload = {
-      _id,
-      _rev,
-      type: ConfigType.AI,
-      config: {
-        [modalKey]: {
-          ...existing,
-          active: false,
-          isDefault: false,
-        },
-      },
-    }
-    try {
-      await API.saveConfig(payload)
-      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-      notifications.success(`AI provider ${existing.name} disabled`)
-    } catch (err: any) {
-      notifications.error(err.message || "Failed to disable AI provider")
-    }
-    configModal.hide()
-  }
-
-  function getDefaultConfig(key: string): ProviderConfig {
-    if (key === BUDIBASE_AI_KEY) {
-      return {
-        provider: isCloud ? "OpenAI" : "BudibaseAI",
-        name: "Budibase AI",
-        active: false,
-        isDefault: false,
-        apiKey: "",
-        baseUrl: "",
-        defaultModel: "",
-      }
-    }
-    if (key === OPENAI_KEY) {
-      return {
-        provider: "OpenAI",
-        name: ConfigMap.OpenAI.name,
-        active: false,
-        isDefault: false,
-        apiKey: "",
-        baseUrl: ConfigMap.OpenAI.baseUrl,
-        defaultModel: "",
-      }
-    }
-    return {
-      provider: "AzureOpenAI",
-      name: ConfigMap.AzureOpenAI.name,
-      active: false,
-      isDefault: false,
-      apiKey: "",
-      baseUrl: ConfigMap.AzureOpenAI.baseUrl,
-      defaultModel: "",
-    }
+    updateProviderConfig(key, false)
   }
 
   onMount(async () => {
-    await fetchAIConfig()
+    try {
+      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+    } catch {
+      notifications.error("Error fetching AI settings")
+    }
   })
 </script>
 
@@ -183,14 +163,10 @@
     <div class="header">
       <Heading size="M">AI</Heading>
       <Tags>
-        {#if !isCloud && !customAIConfigsEnabled}
-          <Tags>
-            <Tag icon="LockClosed">Premium</Tag>
-          </Tags>
-        {:else if isCloud && !customAIConfigsEnabled}
-          <Tags>
-            <Tag icon="LockClosed">Enterprise</Tag>
-          </Tags>
+        {#if !$admin.cloud && !$licensing.customAIConfigsEnabled}
+          <Tag icon="LockClosed">Premium</Tag>
+        {:else if $admin.cloud && !$licensing.customAIConfigsEnabled}
+          <Tag icon="LockClosed">Enterprise</Tag>
         {/if}
       </Tags>
     </div>
@@ -201,7 +177,7 @@
   </Layout>
   <Divider />
 
-  {#if !aiEnabled}
+  {#if !enabled.length && providerKeys.includes(BBAI_KEY)}
     <div class="banner">
       <div class="banner-content">
         <div class="banner-icon">
@@ -209,53 +185,42 @@
         </div>
         <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
       </div>
-      <Button
-        secondary
-        cta
-        size="S"
-        on:click={() => handleEnable(BUDIBASE_AI_KEY)}
-      >
+      <Button secondary cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
         Enable BB AI
       </Button>
     </div>
   {/if}
 
-  {#if aiConfig}
-    <div class="section">
-      <div class="section-title">Enabled</div>
-      <div class="ai-list">
-        {#if activeKey}
-          {#each uiConfigs.filter(item => item.key === activeKey) as { key, cfg }}
-            <AIConfigTile
-              config={cfg}
-              activeOverride={key === activeKey}
-              editHandler={() => handleEnable(key)}
-              disableHandler={() => disableConfig(key)}
-            />
-          {/each}
-        {:else}
-          <div class="no-enabled">No LLMs are enabled</div>
-        {/if}
+  <div class="section">
+    <div class="section-title">Enabled</div>
+    {#if enabled.length}
+      {#each enabled as { key, cfg } (key)}
+        <AIConfigTile
+          config={cfg}
+          editHandler={() => handleEnable(key)}
+          disableHandler={() => handleDisable(key)}
+        />
+      {/each}
+    {:else}
+      <div class="no-enabled">
+        <Body size="S">No LLMs are enabled</Body>
       </div>
-      <div style="margin-top: 12px;">Disabled</div>
-      <div class="ai-list">
-        {#each uiConfigs.filter(item => item.key !== activeKey) as { key, cfg }}
-          <AIConfigTile
-            config={cfg}
-            activeOverride={key === activeKey}
-            editHandler={() => handleEnable(key)}
-            disableHandler={() => disableConfig(key)}
-          />
-        {/each}
-      </div>
+    {/if}
+    <div class="section-title disabled-title">Disabled</div>
+    <div class="ai-list">
+      {#each disabled as { key, cfg } (key)}
+        <AIConfigTile
+          config={cfg}
+          editHandler={() => handleEnable(key)}
+          disableHandler={() => handleDisable(key)}
+        />
+      {/each}
     </div>
-  {/if}
+  </div>
 </Layout>
 
-<!-- Modals for Budibase AI portal and provider configuration -->
 <Modal bind:this={portalModal}>
   <PortalModal
-    url={$admin.accountPortalUrl}
     confirmHandler={() => {
       window.open($admin.accountPortalUrl, "_blank")
       portalModal.hide()
@@ -266,8 +231,11 @@
 <Modal bind:this={configModal}>
   <ConfigModal
     config={modalConfig}
-    saveHandler={saveConfig}
-    deleteHandler={cancelConfig}
+    updateHandler={updatedConfig =>
+      updateProviderConfig(modalKey, true, updatedConfig)}
+    enableHandler={updatedConfig =>
+      updateProviderConfig(modalKey, true, updatedConfig)}
+    disableHandler={() => configModal.hide()}
   />
 </Modal>
 
@@ -283,7 +251,7 @@
     justify-content: space-between;
     align-items: center;
     background-color: #2e3851;
-    border-radius: 8px;
+    border-radius: var(--border-radius-m);
     padding: var(--spacing-s);
   }
 
@@ -297,7 +265,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: var(--border-radius-s);
     width: 32px;
     height: 32px;
   }
@@ -312,12 +280,16 @@
 
   .no-enabled {
     padding: 16px;
-    background-color: var(--background);
+    background-color: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--grey-4);
-    border-radius: 4px;
+    border-radius: var(--border-radius-s);
   }
 
   .section-title {
-    margin-bottom: 12px;
+    margin-bottom: var(--spacing-m);
+  }
+
+  .disabled-title {
+    margin-top: var(--spacing-xl);
   }
 </style>

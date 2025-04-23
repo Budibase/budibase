@@ -1,27 +1,21 @@
 <script lang="ts">
-  import { ModalContent, Body } from "@budibase/bbui"
-  /**
-   * URL to the account portal where Budibase AI can be enabled.
-   */
-  export let url: string
-  /**
-   * Handler for the confirm action (Go to Portal).
-   */
+  import { ModalContent, Body, Link } from "@budibase/bbui"
+  import { admin } from "@/stores/portal"
+
   export let confirmHandler: () => void
-  /**
-   * Handler for the cancel action.
-   */
   export let cancelHandler: () => void
 </script>
 
 <ModalContent
-  title="Enable Budibase AI"
+  title="Setup BB AI"
   confirmText="Go to Portal"
   cancelText="Cancel"
   onConfirm={confirmHandler}
   onCancel={cancelHandler}
 >
+  <Body>To setup BB AI you must add a Budibase license key.</Body>
   <Body>
-    To enable Budibase AI, please visit your account portal.
+    To get your license key, account admins must sign up to the
+    <Link href={$admin.accountPortalUrl}>Budibase Account Portal</Link>
   </Body>
 </ModalContent>
