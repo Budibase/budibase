@@ -134,7 +134,6 @@
     opacity: 0.16;
     background: var(--spectrum-global-color-blue-400);
     z-index: 2;
-    pointer-events: none;
   }
 
   /* Cell border for cells with labels */
@@ -161,6 +160,7 @@
   }
   .cell:not(.focused) {
     user-select: none;
+    -webkit-user-select: none;
   }
   .cell:hover {
     cursor: default;

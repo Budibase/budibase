@@ -60,6 +60,7 @@
     align-items: stretch;
     flex: 1 1 auto;
     z-index: 1;
+    position: relative;
   }
 
   .panel-title-content {
