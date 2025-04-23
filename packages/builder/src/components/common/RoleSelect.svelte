@@ -124,14 +124,6 @@
       dispatch("change", e.detail)
     }
   }
-
-  function isEnterprisePlan(subType) {
-    return (
-      subType === Constants.PlanType.ENTERPRISE ||
-      subType === Constants.PlanType.ENTERPRISE_BASIC ||
-      subType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
-    )
-  }
 </script>
 
 {#if fancySelect}
