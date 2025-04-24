@@ -1,4 +1,3 @@
-import { expect, describe, it } from "vitest"
 import { duplicateName, getSequentialName } from "../duplicate"
 
 describe("duplicate", () => {

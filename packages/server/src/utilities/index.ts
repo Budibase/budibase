@@ -1,3 +1,4 @@
+export * from "./fileUtils"
 import env from "../environment"
 import { context } from "@budibase/backend-core"
 import { generateMetadataID } from "../db/utils"
