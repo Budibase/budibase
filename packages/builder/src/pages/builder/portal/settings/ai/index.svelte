@@ -8,10 +8,12 @@
     Divider,
     notifications,
     Modal,
+    Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-
   import { admin, licensing } from "@/stores/portal"
+  import { BudiStore, PersistenceType } from "@/stores/BudiStore"
+
   import { API } from "@/api"
   import AIConfigTile from "./AIConfigTile.svelte"
   import ConfigModal from "./ConfigModal.svelte"
@@ -25,11 +27,34 @@
   } from "@budibase/types"
   import { ProviderDetails, BBAI_KEY, OPENAI_KEY, AZURE_KEY } from "./constants"
 
+  const bannerKey = `bb-ai-configuration-banner`
+  const bannerStore = new BudiStore<boolean>(false, {
+    persistence: {
+      type: PersistenceType.LOCAL,
+      key: bannerKey,
+    },
+  })
+
+  $: console.log("bannerStore", $bannerStore)
   let aiConfig: AIConfig
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
   let modalKey: AIProviderPartial
   let modalConfig: ProviderConfig
+  let providerKeys: AIProviderPartial[]
+
+  $: isCloud = $admin.cloud
+  $: providerKeys = isCloud ? [BBAI_KEY] : [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
+  $: providers = aiConfig
+    ? providerKeys.map((key: AIProviderPartial) => ({
+        key,
+        cfg: getProviderConfig(key),
+      }))
+    : []
+
+  $: activeKey = providers.find(p => p.cfg.active)?.key
+  $: enabled = !isCloud ? providers.filter(p => p.key === activeKey) : providers
+  $: disabled = !isCloud ? providers.filter(p => p.key !== activeKey) : []
 
   function getProviderConfig(key: AIProviderPartial): ProviderConfig {
     const details = ProviderDetails[key]
@@ -45,19 +70,6 @@
       isDefault: loadedConfig.isDefault ?? baseConfig.isDefault ?? false,
     }
   }
-
-  let providerKeys: AIProviderPartial[] = [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
-
-  $: providers = aiConfig
-    ? providerKeys.map((key: AIProviderPartial) => ({
-        key,
-        cfg: getProviderConfig(key),
-      }))
-    : []
-
-  $: activeKey = providers.find(p => p.cfg.active)?.key
-  $: enabled = providers.filter(p => p.key === activeKey)
-  $: disabled = providers.filter(p => p.key !== activeKey)
 
   async function updateProviderConfig(
     key: AIProviderPartial,
@@ -162,6 +174,10 @@
     updateProviderConfig(key, false)
   }
 
+  function setBannerLocalStorageKey() {
+    localStorage.setItem(bannerKey, "true")
+  }
+
   onMount(async () => {
     try {
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
@@ -183,7 +199,7 @@
   </Layout>
   <Divider />
 
-  {#if !enabled.length}
+  {#if !enabled.length && !$bannerStore}
     <div class="banner">
       <div class="banner-content">
         <div class="banner-icon">
@@ -191,9 +207,19 @@
         </div>
         <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
       </div>
-      <Button primary cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
-        Enable BB AI
-      </Button>
+      <div class="banner-buttons">
+        <Button primary cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
+          Enable BB AI
+        </Button>
+        <Icon
+          hoverable
+          name="Close"
+          on:click={() => {
+            setBannerLocalStorageKey()
+            bannerStore.set(true)
+          }}
+        />
+      </div>
     </div>
   {/if}
 
@@ -212,16 +238,18 @@
         <Body size="S">No LLMs are enabled</Body>
       </div>
     {/if}
-    <div class="section-title disabled-title">Disabled</div>
-    <div class="ai-list">
-      {#each disabled as { key, cfg } (key)}
-        <AIConfigTile
-          config={cfg}
-          editHandler={() => handleEnable(key)}
-          disableHandler={() => handleDisable(key)}
-        />
-      {/each}
-    </div>
+    {#if !isCloud}
+      <div class="section-title disabled-title">Disabled</div>
+      <div class="ai-list">
+        {#each disabled as { key, cfg } (key)}
+          <AIConfigTile
+            config={cfg}
+            editHandler={() => handleEnable(key)}
+            disableHandler={() => handleDisable(key)}
+          />
+        {/each}
+      </div>
+    {/if}
   </div>
 </Layout>
 
@@ -274,6 +302,12 @@
     border-radius: var(--border-radius-s);
     width: 32px;
     height: 32px;
+  }
+
+  .banner-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 
   .ai-list {
