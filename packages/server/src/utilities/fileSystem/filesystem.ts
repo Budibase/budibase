@@ -8,6 +8,7 @@ import { v4 as uuid } from "uuid"
 
 export const TOP_LEVEL_PATH =
   env.TOP_LEVEL_PATH || resolve(join(__dirname, "..", "..", ".."))
+export const DEV_ASSET_PATH = join(TOP_LEVEL_PATH, "packages", "server")
 
 /**
  * Upon first startup of instance there may not be everything we need in tmp directory, set it up.

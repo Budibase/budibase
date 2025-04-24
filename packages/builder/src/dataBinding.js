@@ -26,7 +26,7 @@ import {
   getJsHelperList,
 } from "@budibase/string-templates"
 import { TableNames } from "./constants"
-import { JSONUtils, Constants } from "@budibase/frontend-core"
+import { JSONUtils, Constants, SchemaUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "@/components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
@@ -1026,25 +1026,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // Check for any JSON fields so we can add any top level properties
     if (schema) {
-      let jsonAdditions = {}
-      Object.keys(schema).forEach(fieldKey => {
-        const fieldSchema = schema[fieldKey]
-        if (fieldSchema?.type === "json") {
-          const jsonSchema = JSONUtils.convertJSONSchemaToTableSchema(
-            fieldSchema,
-            {
-              squashObjects: true,
-            }
-          )
-          Object.keys(jsonSchema).forEach(jsonKey => {
-            jsonAdditions[`${fieldKey}.${jsonKey}`] = {
-              type: jsonSchema[jsonKey].type,
-              nestedJSON: true,
-            }
-          })
-        }
-      })
-      schema = { ...schema, ...jsonAdditions }
+      schema = SchemaUtils.addNestedJSONSchemaFields(schema)
     }
 
     // Determine if we should add ID and rev to the schema
@@ -1335,6 +1317,25 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
   return !invalids.find(invalid => noSpaces?.includes(invalid))
 }
 
+// If converting readable to runtime we need to ensure we don't replace words
+// which are substrings of other words - e.g. a binding of `a` would turn
+// `hah` into `h[a]h` which is obviously wrong. To avoid this we can remove all
+// expanded versions of the binding to be replaced.
+const excludeReadableExtensions = (string, binding) => {
+  // Escape any special chars in the binding so we can treat it as a literal
+  // string match in the regexes below
+  const escaped = binding.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  // Regex to find prefixed bindings (e.g. exclude xfoo for foo)
+  const regex1 = new RegExp(`[a-zA-Z0-9-_]+${escaped}[a-zA-Z0-9-_]*`, "g")
+  // Regex to find prefixed bindings (e.g. exclude foox for foo)
+  const regex2 = new RegExp(`[a-zA-Z0-9-_]*${escaped}[a-zA-Z0-9-_]+`, "g")
+  const matches = [...string.matchAll(regex1), ...string.matchAll(regex2)]
+  for (const match of matches) {
+    string = string.replace(match[0], new Array(match[0].length + 1).join("*"))
+  }
+  return string
+}
+
 /**
  * Utility function which replaces a string between given indices.
  */
@@ -1379,6 +1380,11 @@ const bindingReplacement = (
     // in the search, working from longest to shortest so always use best match first
     let searchString = newBoundValue
     for (let from of convertFromProps) {
+      // If converting readable > runtime, blank out all extensions of this
+      // string to avoid partial matches
+      if (convertTo === "runtimeBinding") {
+        searchString = excludeReadableExtensions(searchString, from)
+      }
       const binding = bindableProperties.find(el => el[convertFrom] === from)
       if (
         isJS ||

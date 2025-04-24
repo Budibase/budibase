@@ -3,18 +3,19 @@
   import { TooltipPosition, TooltipType } from "../constants"
 
   export let name: string = "Add"
-  export let size: "XS" | "S" | "M" | "L" | "XL" = "M"
+  export let size: "XS" | "S" | "M" | "L" | "XL" | "Custom" = "M"
   export let hidden: boolean = false
   export let hoverable: boolean = false
   export let disabled: boolean = false
   export let color: string | undefined = undefined
   export let hoverColor: string | undefined = undefined
   export let tooltip: string | undefined = undefined
-  export let tooltipPosition = TooltipPosition.Bottom
+  export let tooltipPosition: TooltipPosition = TooltipPosition.Bottom
   export let tooltipType = TooltipType.Default
   export let tooltipColor: string | undefined = undefined
   export let tooltipWrap: boolean = true
   export let newStyles: boolean = false
+  export let customSize: number | undefined = undefined
 </script>
 
 <AbsTooltip
@@ -37,11 +38,13 @@
       focusable="false"
       aria-hidden={hidden}
       aria-label={name}
-      style={`${color ? `color: ${color};` : ""} ${
+      style={`${color ? `color: ${color};` : ""} 
+      ${
         hoverColor
           ? `--hover-color: ${hoverColor}`
           : "--hover-color: var(--spectrum-alias-icon-color-selected-hover)"
-      }`}
+      }; 
+      ${customSize ? `width: ${customSize}px; height: ${customSize}px;` : ""}`}
     >
       <use
         style="pointer-events: none;"

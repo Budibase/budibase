@@ -122,7 +122,6 @@
     await tick()
     try {
       await automationStore.actions.test($selectedAutomation.data, testData)
-      $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error(error)
     }

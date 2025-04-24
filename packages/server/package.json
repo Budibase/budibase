@@ -49,6 +49,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.3",
     "@apidevtools/swagger-parser": "10.0.3",
     "@aws-sdk/client-dynamodb": "3.709.0",
     "@aws-sdk/client-s3": "3.709.0",
@@ -85,8 +86,9 @@
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
     "dayjs": "^1.10.8",
-    "dd-trace": "5.26.0",
+    "dd-trace": "5.47.0",
     "dotenv": "8.2.0",
+    "extract-zip": "^2.0.1",
     "form-data": "4.0.0",
     "global-agent": "3.0.0",
     "google-auth-library": "^8.0.1",
@@ -181,6 +183,9 @@
     "update-dotenv": "1.1.1",
     "yargs": "^13.2.4",
     "zod": "^3.23.8"
+  },
+  "resolutions": {
+    "@budibase/pro": "npm:@budibase/pro@latest"
   },
   "nx": {
     "targets": {

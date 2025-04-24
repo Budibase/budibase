@@ -129,6 +129,29 @@ export default class BaseCache {
     }
   }
 
+  async withCacheWithDynamicTTL<T>(
+    key: string,
+    fetchFn: () => Promise<{ value: T; ttl: number | null }>,
+    opts = { useTenancy: true }
+  ): Promise<T> {
+    const cachedValue = await this.get(key, opts)
+    if (cachedValue) {
+      return cachedValue
+    }
+
+    try {
+      const fetchedResponse = await fetchFn()
+      const { value, ttl } = fetchedResponse
+      await this.store(key, value, ttl, {
+        useTenancy: opts.useTenancy,
+      })
+      return value
+    } catch (err) {
+      console.error("Error fetching before cache - ", err)
+      throw err
+    }
+  }
+
   async bustCache(key: string) {
     const client = await this.getClient()
     try {

@@ -7,7 +7,7 @@
     Modal,
     notifications,
   } from "@budibase/bbui"
-  import type { OAuth2Config } from "@budibase/types"
+  import type { OAuth2Config } from "@/types"
   import OAuth2ConfigModalContent from "./OAuth2ConfigModalContent.svelte"
   import { confirm } from "@/helpers"
 
@@ -26,7 +26,7 @@
       warning: true,
       onConfirm: async () => {
         try {
-          await oauth2.delete(row.id)
+          await oauth2.delete(row._id, row._rev)
           notifications.success(`Config '${row.name}' deleted successfully`)
         } catch (e: any) {
           let message = "Error deleting config"

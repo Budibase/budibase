@@ -21,6 +21,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
 import fs from "fs"
+import fsp from "fs/promises"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 import {
@@ -32,6 +33,7 @@ import {
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
+  PWAManifest,
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
@@ -45,6 +47,9 @@ import {
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
+import path from "path"
+import extract from "extract-zip"
+import { tmpdir } from "os"
 
 export const toggleBetaUiFeature = async function (
   ctx: Ctx<void, ToggleBetaFeatureResponse>
@@ -74,11 +79,6 @@ export const toggleBetaUiFeature = async function (
   ctx.body = {
     message: `${ctx.params.feature} enabled`,
   }
-}
-
-export const serveBuilder = async function (ctx: Ctx<void, void>) {
-  const builderPath = join(TOP_LEVEL_PATH, "builder")
-  await send(ctx, ctx.file, { root: builderPath })
 }
 
 export const uploadFile = async function (
@@ -138,6 +138,83 @@ export const uploadFile = async function (
   )
 }
 
+export async function processPWAZip(ctx: UserCtx) {
+  const file = ctx.request.files?.file
+  if (!file || Array.isArray(file)) {
+    ctx.throw(400, "No file or multiple files provided")
+  }
+
+  if (!file.path || !file.name?.toLowerCase().endsWith(".zip")) {
+    ctx.throw(400, "Invalid file - must be a zip file")
+  }
+
+  const tempDir = join(tmpdir(), `pwa-${Date.now()}`)
+  try {
+    await fsp.mkdir(tempDir, { recursive: true })
+
+    await extract(file.path, { dir: tempDir })
+    const iconsJsonPath = join(tempDir, "icons.json")
+
+    if (!fs.existsSync(iconsJsonPath)) {
+      ctx.throw(400, "Invalid zip structure - missing icons.json")
+    }
+
+    let iconsData
+    try {
+      const iconsContent = await fsp.readFile(iconsJsonPath, "utf-8")
+      iconsData = JSON.parse(iconsContent)
+    } catch (error) {
+      ctx.throw(400, "Invalid icons.json file - could not parse JSON")
+    }
+
+    if (!iconsData.icons || !Array.isArray(iconsData.icons)) {
+      ctx.throw(400, "Invalid icons.json file - missing icons array")
+    }
+
+    const icons = []
+    const baseDir = path.dirname(iconsJsonPath)
+    const appId = context.getProdAppId()
+
+    for (const icon of iconsData.icons) {
+      if (!icon.src || !icon.sizes || !fs.existsSync(join(baseDir, icon.src))) {
+        continue
+      }
+
+      const extension = path.extname(icon.src) || ".png"
+      const key = `${appId}/pwa/${uuid.v4()}${extension}`
+      const mimeType =
+        icon.type || (extension === ".png" ? "image/png" : "image/jpeg")
+
+      try {
+        const result = await objectStore.upload({
+          bucket: ObjectStoreBuckets.APPS,
+          filename: key,
+          path: join(baseDir, icon.src),
+          type: mimeType,
+        })
+
+        if (result.Key) {
+          icons.push({
+            src: result.Key,
+            sizes: icon.sizes,
+            type: mimeType,
+          })
+        }
+      } catch (uploadError) {
+        throw new Error(`Failed to upload icon ${icon.src}: ${uploadError}`)
+      }
+    }
+
+    if (icons.length === 0) {
+      ctx.throw(400, "No valid icons found in the zip file")
+    }
+
+    ctx.body = { icons }
+  } catch (error: any) {
+    ctx.throw(500, `Error processing zip: ${error.message}`)
+  }
+}
+
 const requiresMigration = async (ctx: Ctx) => {
   const appId = context.getAppId()
   if (!appId) {
@@ -152,6 +229,21 @@ const requiresMigration = async (ctx: Ctx) => {
   const latestMigrationApplied = await getAppMigrationVersion(appId)
 
   return latestMigrationApplied !== latestMigration
+}
+
+const getAppScriptHTML = (
+  app: App,
+  location: "Head" | "Body",
+  nonce: string
+) => {
+  if (!app.scripts?.length) {
+    return ""
+  }
+  return app.scripts
+    .filter(script => script.location === location && script.html?.length)
+    .map(script => script.html)
+    .join("\n")
+    .replaceAll("<script", `<script nonce="${nonce}"`)
 }
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
@@ -189,7 +281,12 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const sideNav = appInfo.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo?.theme)
+    const themeVariables = getThemeVariables(appInfo?.theme || {})
+    const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
+    const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
+    const addAppScripts =
+      ctx?.user?.license?.features?.includes(Feature.CUSTOM_APP_SCRIPTS) ||
+      false
 
     if (!env.isJest()) {
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
@@ -199,7 +296,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
-      const props: BudibaseAppProps = {
+      const nonce = ctx.state.nonce || ""
+      let props: BudibaseAppProps = {
         title: branding?.platformTitle || `${appInfo.name}`,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
@@ -218,13 +316,56 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         appMigrating: needMigrations,
-        nonce: ctx.state.nonce,
+        nonce,
+      }
+
+      // Add custom app scripts if enabled
+      if (addAppScripts) {
+        props.headAppScripts = getAppScriptHTML(appInfo, "Head", nonce)
+        props.bodyAppScripts = getAppScriptHTML(appInfo, "Body", nonce)
       }
 
       const { head, html, css } = AppComponent.render({ props })
       const appHbs = loadHandlebarsFile(appHbsPath)
+
+      let extraHead = ""
+      const pwaEnabled = await pro.features.isPWAEnabled()
+      if (hasPWA && pwaEnabled) {
+        extraHead = `<link rel="manifest" href="${manifestUrl}">`
+        extraHead += `<meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content=${
+          appInfo.pwa.theme_color
+        }>
+        <meta name="apple-mobile-web-app-title" content="${
+          appInfo.pwa.short_name || appInfo.name
+        }">`
+
+        if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
+          try {
+            // Enrich all icons
+            const enrichedIcons = await objectStore.enrichPWAImages(
+              appInfo.pwa.icons
+            )
+
+            let appleTouchIcon = enrichedIcons.find(
+              icon => icon.sizes === "180x180"
+            )
+
+            if (!appleTouchIcon && enrichedIcons.length > 0) {
+              appleTouchIcon = enrichedIcons[0]
+            }
+
+            if (appleTouchIcon) {
+              extraHead += `<link rel="apple-touch-icon" sizes="${appleTouchIcon.sizes}" href="${appleTouchIcon.src}">`
+            }
+          } catch (error) {
+            throw new Error("Error enriching PWA icons: " + error)
+          }
+        }
+      }
+
       ctx.body = await processString(appHbs, {
-        head,
+        head: `${head}${extraHead}`,
         body: html,
         css: `:root{${themeVariables}} ${css.code}`,
         appId,
@@ -273,10 +414,22 @@ export const serveBuilderPreview = async function (
     const templateLoc = join(__dirname, "templates")
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
-    ctx.body = await processString(previewHbs, {
+    const nonce = ctx.state.nonce || ""
+    const addAppScripts =
+      ctx?.user?.license?.features?.includes(Feature.CUSTOM_APP_SCRIPTS) ||
+      false
+    let props: any = {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
-      nonce: ctx.state.nonce,
-    })
+      nonce,
+    }
+
+    // Add custom app scripts if enabled
+    if (addAppScripts) {
+      props.headAppScripts = getAppScriptHTML(appInfo, "Head", nonce)
+      props.bodyAppScripts = getAppScriptHTML(appInfo, "Body", nonce)
+    }
+
+    ctx.body = await processString(previewHbs, props)
   } else {
     // just return the app info for jest to assert on
     ctx.body = { ...appInfo, builderPreview: true }
@@ -312,6 +465,16 @@ export const serveClientLibrary = async function (
       root: !fs.existsSync(rootPath) ? tsPath : rootPath,
     })
   }
+}
+
+export const serveServiceWorker = async function (ctx: Ctx) {
+  const serviceWorkerContent = `
+    self.addEventListener('install', () => {
+    self.skipWaiting();
+  });`
+
+  ctx.set("Content-Type", "application/javascript")
+  ctx.body = serviceWorkerContent
 }
 
 export const getSignedUploadURL = async function (
@@ -364,4 +527,71 @@ export const getSignedUploadURL = async function (
   }
 
   ctx.body = { signedUrl, publicUrl }
+}
+
+export async function servePwaManifest(ctx: UserCtx<void, any>) {
+  const appId = context.getAppId()
+  if (!appId) {
+    ctx.throw(404)
+  }
+
+  try {
+    const db = context.getAppDB({ skip_setup: true })
+    const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+
+    if (!appInfo.pwa) {
+      ctx.throw(404)
+    }
+
+    const manifest: PWAManifest = {
+      name: appInfo.pwa.name || appInfo.name,
+      short_name: appInfo.pwa.short_name || appInfo.name,
+      description: appInfo.pwa.description || "",
+      start_url: `/app${appInfo.url}`,
+      display: appInfo.pwa.display || "standalone",
+      background_color: appInfo.pwa.background_color || "#FFFFFF",
+      theme_color: appInfo.pwa.theme_color || "#FFFFFF",
+      icons: [],
+      screenshots: [],
+    }
+
+    if (appInfo.pwa.icons && appInfo.pwa.icons.length > 0) {
+      try {
+        manifest.icons = await objectStore.enrichPWAImages(appInfo.pwa.icons)
+
+        const desktopScreenshot = manifest.icons.find(
+          icon => icon.sizes === "1240x600" || icon.sizes === "2480x1200"
+        )
+        if (desktopScreenshot) {
+          manifest.screenshots.push({
+            src: desktopScreenshot.src,
+            sizes: desktopScreenshot.sizes,
+            type: "image/png",
+            form_factor: "wide",
+            label: "Desktop view",
+          })
+        }
+
+        const mobileScreenshot = manifest.icons.find(
+          icon => icon.sizes === "620x620" || icon.sizes === "1024x1024"
+        )
+        if (mobileScreenshot) {
+          manifest.screenshots.push({
+            src: mobileScreenshot.src,
+            sizes: mobileScreenshot.sizes,
+            type: "image/png",
+            label: "Mobile view",
+          })
+        }
+      } catch (error) {
+        throw new Error("Error processing manifest icons: " + error)
+      }
+    }
+
+    ctx.set("Content-Type", "application/json")
+    ctx.body = manifest
+  } catch (error) {
+    ctx.status = 500
+    ctx.body = { message: "Error generating manifest" }
+  }
 }

@@ -1,14 +1,15 @@
 import {
-  UpsertOAuth2ConfigRequest,
-  UpsertOAuth2ConfigResponse,
   Ctx,
   FetchOAuth2ConfigsResponse,
   OAuth2Config,
-  RequiredKeys,
   OAuth2ConfigResponse,
   PASSWORD_REPLACEMENT,
   ValidateConfigResponse,
   ValidateConfigRequest,
+  InsertOAuth2ConfigRequest,
+  InsertOAuth2ConfigResponse,
+  UpdateOAuth2ConfigRequest,
+  UpdateOAuth2ConfigResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -16,34 +17,45 @@ function toFetchOAuth2ConfigsResponse(
   config: OAuth2Config
 ): OAuth2ConfigResponse {
   return {
-    id: config.id,
+    _id: config._id!,
+    _rev: config._rev!,
     name: config.name,
     url: config.url,
     clientId: config.clientId,
     clientSecret: PASSWORD_REPLACEMENT,
     method: config.method,
+    grantType: config.grantType,
   }
 }
 
 export async function fetch(ctx: Ctx<void, FetchOAuth2ConfigsResponse>) {
   const configs = await sdk.oauth2.fetch()
 
+  const timestamps = await sdk.oauth2.getLastUsages(configs.map(c => c._id))
+
   const response: FetchOAuth2ConfigsResponse = {
-    configs: (configs || []).map(toFetchOAuth2ConfigsResponse),
+    configs: (configs || []).map(c => ({
+      ...toFetchOAuth2ConfigsResponse(c),
+      lastUsage: timestamps[c._id]
+        ? new Date(timestamps[c._id]).toISOString()
+        : undefined,
+    })),
   }
+
   ctx.body = response
 }
 
 export async function create(
-  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
+  ctx: Ctx<InsertOAuth2ConfigRequest, InsertOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
-  const newConfig: RequiredKeys<Omit<OAuth2Config, "id">> = {
+  const newConfig = {
     name: body.name,
     url: body.url,
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   const config = await sdk.oauth2.create(newConfig)
@@ -54,16 +66,23 @@ export async function create(
 }
 
 export async function edit(
-  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
+  ctx: Ctx<UpdateOAuth2ConfigRequest, UpdateOAuth2ConfigResponse>
 ) {
   const { body } = ctx.request
-  const toUpdate: RequiredKeys<OAuth2Config> = {
-    id: ctx.params.id,
+
+  if (ctx.params.id !== body._id) {
+    ctx.throw("Path and body ids do not match", 400)
+  }
+
+  const toUpdate = {
+    _id: body._id,
+    _rev: body._rev,
     name: body.name,
     url: body.url,
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
   const config = await sdk.oauth2.update(toUpdate)
@@ -72,12 +91,10 @@ export async function edit(
   }
 }
 
-export async function remove(
-  ctx: Ctx<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>
-) {
-  const configToRemove = ctx.params.id
+export async function remove(ctx: Ctx<void, void>) {
+  const { id, rev } = ctx.params
 
-  await sdk.oauth2.remove(configToRemove)
+  await sdk.oauth2.remove(id, rev)
   ctx.status = 204
 }
 
@@ -90,12 +107,13 @@ export async function validate(
     clientId: body.clientId,
     clientSecret: body.clientSecret,
     method: body.method,
+    grantType: body.grantType,
   }
 
-  if (config.clientSecret === PASSWORD_REPLACEMENT && body.id) {
-    const existingConfig = await sdk.oauth2.get(body.id)
+  if (config.clientSecret === PASSWORD_REPLACEMENT && body._id) {
+    const existingConfig = await sdk.oauth2.get(body._id)
     if (!existingConfig) {
-      ctx.throw(`OAuth2 config with id '${body.id}' not found.`, 404)
+      ctx.throw(`OAuth2 config with id '${body._id}' not found.`, 404)
     }
 
     config.clientSecret = existingConfig.clientSecret

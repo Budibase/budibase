@@ -1,7 +1,11 @@
 import { API } from "@/api"
 import { BudiStore } from "@/stores/BudiStore"
-import { OAuth2Config, UpsertOAuth2Config } from "@/types"
-import { ValidateConfigRequest } from "@budibase/types"
+import { OAuth2Config } from "@/types"
+import {
+  InsertOAuth2ConfigRequest,
+  UpdateOAuth2ConfigRequest,
+  ValidateConfigRequest,
+} from "@budibase/types"
 
 interface OAuth2StoreState {
   configs: OAuth2Config[]
@@ -27,12 +31,15 @@ export class OAuth2Store extends BudiStore<OAuth2StoreState> {
       this.store.update(store => ({
         ...store,
         configs: configs.map(c => ({
-          id: c.id,
+          _id: c._id,
+          _rev: c._rev,
           name: c.name,
           url: c.url,
           clientId: c.clientId,
           clientSecret: c.clientSecret,
           method: c.method,
+          grantType: c.grantType,
+          lastUsage: c.lastUsage,
         })),
         loading: false,
       }))
@@ -45,18 +52,18 @@ export class OAuth2Store extends BudiStore<OAuth2StoreState> {
     }
   }
 
-  async create(config: UpsertOAuth2Config) {
+  async create(config: InsertOAuth2ConfigRequest) {
     await API.oauth2.create(config)
     await this.fetch()
   }
 
-  async edit(id: string, config: UpsertOAuth2Config) {
-    await API.oauth2.update(id, config)
+  async edit(config: UpdateOAuth2ConfigRequest) {
+    await API.oauth2.update(config)
     await this.fetch()
   }
 
-  async delete(id: string) {
-    await API.oauth2.delete(id)
+  async delete(id: string, rev: string) {
+    await API.oauth2.delete(id, rev)
     await this.fetch()
   }
 

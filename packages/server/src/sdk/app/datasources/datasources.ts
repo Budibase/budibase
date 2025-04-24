@@ -11,6 +11,7 @@ import {
   Row,
   RestConfig,
   SourceName,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
@@ -51,7 +52,7 @@ export async function fetch(opts?: {
   )
 
   const internal = internalTables.rows.reduce((acc: any, row: Row) => {
-    const sourceId = row.doc.sourceId || "bb_internal"
+    const sourceId = row.doc.sourceId || INTERNAL_TABLE_SOURCE_ID
     acc[sourceId] = acc[sourceId] || []
     acc[sourceId].push(row.doc)
     return acc
@@ -296,6 +297,9 @@ export async function save(
   datasource: Datasource,
   opts?: { fetchSchema?: boolean; tablesFilter?: string[] }
 ): Promise<{ datasource: Datasource; errors: Record<string, string> }> {
+  // getIntegration throws an error if the integration is not found
+  await getIntegration(datasource.source)
+
   const db = context.getAppDB()
   const plus = datasource.plus
 
@@ -328,14 +332,6 @@ export async function save(
   )
   await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
-
-  // Drain connection pools when configuration is changed
-  if (datasource.source) {
-    const source = await getIntegration(datasource.source)
-    if (source && source.pool) {
-      await source.pool.end()
-    }
-  }
 
   return { datasource, errors }
 }

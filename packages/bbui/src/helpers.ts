@@ -211,9 +211,12 @@ const localeDateFormat = new Intl.DateTimeFormat()
 
 // Formats a dayjs date according to schema flags
 export const getDateDisplayValue = (
-  value: dayjs.Dayjs | null,
+  value: dayjs.Dayjs | string | null,
   { enableTime = true, timeOnly = false } = {}
 ): string => {
+  if (typeof value === "string") {
+    value = dayjs(value)
+  }
   if (!value?.isValid()) {
     return ""
   }
@@ -234,4 +237,22 @@ export const hexToRGBA = (color: string, opacity: number): string => {
   const g = parseInt(color.substring(2, 4), 16)
   const b = parseInt(color.substring(4, 6), 16)
   return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
+export function rgbToHex(rgbStr: string | undefined): string {
+  if (rgbStr?.startsWith("#")) return rgbStr
+
+  const rgbMatch = rgbStr?.match(
+    /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/
+  )
+  if (!rgbMatch) return rgbStr || "#FFFFFF"
+
+  const r = parseInt(rgbMatch[1])
+  const g = parseInt(rgbMatch[2])
+  const b = parseInt(rgbMatch[3])
+
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b)
+    .toString(16)
+    .slice(1)
+    .toUpperCase()}`
 }

@@ -11,8 +11,7 @@
   import { goto } from "@roxi/routify"
   import { appStore, oauth2 } from "@/stores/builder"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
-  import { featureFlag } from "@/helpers"
-  import { FeatureFlag, RestAuthType } from "@budibase/types"
+  import { RestAuthType } from "@budibase/types"
   import { onMount } from "svelte"
 
   type Config = { label: string; value: string }
@@ -29,7 +28,7 @@
     ...authConfigs,
     ...$oauth2.configs.map(c => ({
       label: c.name,
-      value: c.id,
+      value: c._id,
     })),
   ]
   $: authConfig = allConfigs.find(c => c.value === authConfigId)
@@ -57,15 +56,13 @@
 
   $: title = !authConfig ? "Authentication" : `Auth: ${authConfig.label}`
 
-  $: oauth2Enabled = featureFlag.isEnabled(FeatureFlag.OAUTH2_CONFIG)
-
   onMount(() => {
     oauth2.fetch()
   })
 </script>
 
 <DetailPopover bind:this={popover} {title} align={PopoverAlignment.Right}>
-  <div slot="anchor">
+  <div slot="anchor" class:display-new={!authConfig}>
     <ActionButton icon="LockClosed" quiet selected>
       {#if !authConfig}
         Authentication
@@ -96,24 +93,23 @@
     >
   </div>
 
-  {#if oauth2Enabled}
-    <Divider />
+  <Divider />
 
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      OAuth 2.0 (Token-Based Authentication)
-    </Body>
+  <Body size="S" color="var(--spectrum-global-color-gray-700)">
+    OAuth 2.0 (Token-Based Authentication)
+  </Body>
 
-    {#if $oauth2.configs.length}
-      <List>
-        {#each $oauth2.configs as config}
-          <ListItem
-            title={config.name}
-            on:click={() => selectConfiguration(config.id, RestAuthType.OAUTH2)}
-            selected={config.id === authConfigId}
-          />
-        {/each}
-      </List>
-    {/if}
+  {#if $oauth2.configs.length}
+    <List>
+      {#each $oauth2.configs as config}
+        <ListItem
+          title={config.name}
+          on:click={() => selectConfiguration(config._id, RestAuthType.OAUTH2)}
+          selected={config._id === authConfigId}
+        />
+      {/each}
+    </List>
+
     <div>
       <Button secondary icon="Add" on:click={addOAuth2Configuration}
         >Add OAuth2</Button
@@ -121,3 +117,16 @@
     </div>
   {/if}
 </DetailPopover>
+
+<style>
+  .display-new :global(.spectrum-ActionButton)::before {
+    content: "NEW";
+    font-size: 10px;
+    background: var(--bb-indigo);
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin-right: var(--spacing-s);
+    color: white;
+    font-weight: bold;
+  }
+</style>

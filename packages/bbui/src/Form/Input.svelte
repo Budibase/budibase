@@ -14,7 +14,7 @@
   export let updateOnChange = true
   export let quiet = false
   export let autofocus: boolean | undefined = undefined
-  export let autocomplete: boolean | undefined = undefined
+  export let autocomplete: boolean | string | undefined = undefined
   export let helpText: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
@@ -41,5 +41,8 @@
     on:blur
     on:focus
     on:keyup
-  />
+    on:keydown
+  >
+    <slot />
+  </TextField>
 </Field>

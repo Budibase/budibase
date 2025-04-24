@@ -1,23 +1,23 @@
 import {
   FetchOAuth2ConfigsResponse,
-  OAuth2ConfigResponse,
-  UpsertOAuth2ConfigRequest,
-  UpsertOAuth2ConfigResponse,
+  InsertOAuth2ConfigRequest,
+  InsertOAuth2ConfigResponse,
+  UpdateOAuth2ConfigRequest,
+  UpdateOAuth2ConfigResponse,
   ValidateConfigRequest,
   ValidateConfigResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface OAuth2Endpoints {
-  fetch: () => Promise<OAuth2ConfigResponse[]>
+  fetch: () => Promise<FetchOAuth2ConfigsResponse["configs"]>
   create: (
-    config: UpsertOAuth2ConfigRequest
-  ) => Promise<UpsertOAuth2ConfigResponse>
+    config: InsertOAuth2ConfigRequest
+  ) => Promise<InsertOAuth2ConfigResponse>
   update: (
-    id: string,
-    config: UpsertOAuth2ConfigRequest
-  ) => Promise<UpsertOAuth2ConfigResponse>
-  delete: (id: string) => Promise<void>
+    config: UpdateOAuth2ConfigRequest
+  ) => Promise<UpdateOAuth2ConfigResponse>
+  delete: (id: string, rev: string) => Promise<void>
   validate: (config: ValidateConfigRequest) => Promise<ValidateConfigResponse>
 }
 
@@ -38,8 +38,8 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
    */
   create: async config => {
     return await API.post<
-      UpsertOAuth2ConfigRequest,
-      UpsertOAuth2ConfigResponse
+      InsertOAuth2ConfigRequest,
+      InsertOAuth2ConfigResponse
     >({
       url: `/api/oauth2`,
       body: {
@@ -51,10 +51,10 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
   /**
    * Updates an existing OAuth2 configuration.
    */
-  update: async (id, config) => {
-    return await API.put<UpsertOAuth2ConfigRequest, UpsertOAuth2ConfigResponse>(
+  update: async config => {
+    return await API.put<UpdateOAuth2ConfigRequest, UpdateOAuth2ConfigResponse>(
       {
-        url: `/api/oauth2/${id}`,
+        url: `/api/oauth2/${config._id}`,
         body: {
           ...config,
         },
@@ -65,10 +65,11 @@ export const buildOAuth2Endpoints = (API: BaseAPIClient): OAuth2Endpoints => ({
   /**
    * Deletes an OAuth2 configuration by its id.
    * @param id the ID of the OAuth2 config
+   * @param rev the rev of the OAuth2 config
    */
-  delete: async id => {
+  delete: async (id, rev) => {
     return await API.delete<void, void>({
-      url: `/api/oauth2/${id}`,
+      url: `/api/oauth2/${id}/${rev}`,
     })
   },
   validate: async function (

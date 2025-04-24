@@ -20,6 +20,7 @@
   import { API } from "@/api"
   import { onMount } from "svelte"
   import { sdk } from "@budibase/shared-core"
+  import { getFormattedPlanName } from "@/helpers/planTitle"
 
   $: license = $auth.user.license
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
@@ -70,7 +71,11 @@
       notifications.success("Successfully activated")
     } catch (e) {
       console.error(e)
-      notifications.error("Error activating license key")
+      if (e?.status === 409) {
+        notifications.error(e.message)
+      } else {
+        notifications.error("Error activating license key")
+      }
     }
   }
 
@@ -260,7 +265,11 @@
     <Layout gap="XS" noPadding>
       <Heading size="XS">Plan</Heading>
       <Layout noPadding gap="S">
-        <Body size="S">You are currently on the {license.plan.type} plan</Body>
+        <Body size="S"
+          >You are currently on the <b
+            >{getFormattedPlanName(license.plan.type)}</b
+          ></Body
+        >
         <div>
           <Body size="S"
             >If you purchase or update your plan on the account</Body

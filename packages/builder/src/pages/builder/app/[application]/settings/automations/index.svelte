@@ -147,6 +147,13 @@
     await automationStore.actions.fetch()
     const params = new URLSearchParams(window.location.search)
     const shouldOpen = params.get("open") === ERROR
+    const defaultAutoId = params.get("automationId")
+    const defaultAuto = $automationStore.automations.find(
+      auto => auto._id === defaultAutoId || undefined
+    )
+
+    automationId = defaultAuto?._id || undefined
+
     if (shouldOpen) {
       status = ERROR
     }
@@ -170,7 +177,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading>Automations</Heading>
-    <Body size="S">See your automation history and edit advanced settings</Body>
+    <Body>See your automation history and edit advanced settings</Body>
   </Layout>
   <Divider />
 
@@ -251,7 +258,6 @@
         data={runHistory}
         {customRenderers}
         placeholderText="No history found"
-        border={false}
       />
       <div class="pagination">
         <Pagination

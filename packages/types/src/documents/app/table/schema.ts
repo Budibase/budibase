@@ -2,6 +2,7 @@
 // column size, position and whether it can be viewed
 import { FieldType, FormulaResponseType } from "../row"
 import {
+  AttachmentSubType,
   AutoFieldSubType,
   AutoReason,
   BBReferenceFieldSubType,
@@ -142,8 +143,15 @@ export interface BBReferenceSingleFieldMetadata
   default?: string
 }
 
-export interface AttachmentFieldMetadata extends BaseFieldSchema {
+export interface AttachmentFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.ATTACHMENTS
+  subtype?: AttachmentSubType
+}
+export interface SingleAttachmentFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.ATTACHMENT_SINGLE
+  subtype?: AttachmentSubType
 }
 
 export interface FieldConstraints {
@@ -207,6 +215,8 @@ export interface BaseFieldSchema extends UIFieldMetadata {
   autocolumn?: boolean
   autoReason?: AutoReason.FOREIGN_KEY
   subtype?: never
+  // added when enriching nested JSON fields into schema
+  nestedJSON?: boolean
 }
 
 interface OtherFieldMetadata extends BaseFieldSchema {
@@ -244,6 +254,7 @@ export type FieldSchema =
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
   | AttachmentFieldMetadata
+  | SingleAttachmentFieldMetadata
   | BBReferenceSingleFieldMetadata
   | ArrayFieldMetadata
   | OptionsFieldMetadata

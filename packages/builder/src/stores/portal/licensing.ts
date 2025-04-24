@@ -31,11 +31,16 @@ interface LicensingState {
   groupsEnabled: boolean
   backupsEnabled: boolean
   brandingEnabled: boolean
+  pwaEnabled: boolean
   scimEnabled: boolean
   environmentVariablesEnabled: boolean
   budibaseAIEnabled: boolean
   customAIConfigsEnabled: boolean
   auditLogsEnabled: boolean
+  customAppScriptsEnabled: boolean
+  syncAutomationsEnabled: boolean
+  triggerAutomationRunEnabled: boolean
+  pdfEnabled: boolean
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
   // derived quota metrics for percentages used
@@ -51,7 +56,9 @@ interface LicensingState {
   // user limits
   userCount?: number
   userLimit?: number
+  aiCreditsLimit?: number
   userLimitReached: boolean
+  aiCreditsExceeded: boolean
   errUserLimit: boolean
 }
 
@@ -70,11 +77,16 @@ class LicensingStore extends BudiStore<LicensingState> {
       groupsEnabled: false,
       backupsEnabled: false,
       brandingEnabled: false,
+      pwaEnabled: false,
       scimEnabled: false,
       environmentVariablesEnabled: false,
       budibaseAIEnabled: false,
       customAIConfigsEnabled: false,
       auditLogsEnabled: false,
+      customAppScriptsEnabled: false,
+      syncAutomationsEnabled: false,
+      triggerAutomationRunEnabled: false,
+      pdfEnabled: false,
       // the currently used quotas from the db
       quotaUsage: undefined,
       // derived quota metrics for percentages used
@@ -92,6 +104,8 @@ class LicensingStore extends BudiStore<LicensingState> {
       userLimit: undefined,
       userLimitReached: false,
       errUserLimit: false,
+      // AI Limits
+      aiCreditsExceeded: false,
     })
   }
 
@@ -107,6 +121,16 @@ class LicensingStore extends BudiStore<LicensingState> {
       return false
     }
     return userCount > userLimit
+  }
+
+  aiCreditsExceeded(
+    aiCredits: number,
+    aiCreditsLimit = get(this.store).aiCreditsLimit
+  ) {
+    if (aiCreditsLimit === UNLIMITED || aiCreditsLimit === undefined) {
+      return false
+    }
+    return aiCredits > aiCreditsLimit
   }
 
   async isCloud() {
@@ -164,6 +188,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     )
     const enforceableSSO = features.includes(Constants.Features.ENFORCEABLE_SSO)
     const brandingEnabled = features.includes(Constants.Features.BRANDING)
+    const pwaEnabled = features.includes(Constants.Features.PWA)
     const auditLogsEnabled = features.includes(Constants.Features.AUDIT_LOGS)
     const syncAutomationsEnabled = features.includes(
       Constants.Features.SYNC_AUTOMATIONS
@@ -178,6 +203,10 @@ class LicensingStore extends BudiStore<LicensingState> {
     const customAIConfigsEnabled = features.includes(
       Constants.Features.AI_CUSTOM_CONFIGS
     )
+    const customAppScriptsEnabled = features.includes(
+      Constants.Features.CUSTOM_APP_SCRIPTS
+    )
+    const pdfEnabled = features.includes(Constants.Features.PDF)
     this.update(state => {
       return {
         ...state,
@@ -189,6 +218,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         groupsEnabled,
         backupsEnabled,
         brandingEnabled,
+        pwaEnabled,
         budibaseAIEnabled,
         customAIConfigsEnabled,
         scimEnabled,
@@ -198,6 +228,8 @@ class LicensingStore extends BudiStore<LicensingState> {
         syncAutomationsEnabled,
         triggerAutomationRunEnabled,
         perAppBuildersEnabled,
+        customAppScriptsEnabled,
+        pdfEnabled,
       }
     })
   }
@@ -273,9 +305,15 @@ class LicensingStore extends BudiStore<LicensingState> {
 
     const userQuota = license.quotas.usage.static.users
     const userLimit = userQuota.value
+    const aiCreditsQuota = license.quotas.usage.monthly.budibaseAICredits
+    const aiCreditsLimit = aiCreditsQuota.value
     const userCount = usage.usageQuota.users
     const userLimitReached = this.usersLimitReached(userCount, userLimit)
     const userLimitExceeded = this.usersLimitExceeded(userCount, userLimit)
+    const aiCreditsExceeded = this.aiCreditsExceeded(
+      usage.monthly.current.budibaseAICredits,
+      aiCreditsLimit
+    )
     const isCloudAccount = await this.isCloud()
     const errUserLimit =
       isCloudAccount &&
@@ -297,6 +335,8 @@ class LicensingStore extends BudiStore<LicensingState> {
         userLimit,
         userLimitReached,
         errUserLimit,
+        aiCreditsLimit,
+        aiCreditsExceeded,
       }
     })
   }

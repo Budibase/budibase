@@ -46,7 +46,7 @@ import { withEnv } from "../../../environment"
 import { JsTimeoutError } from "@budibase/string-templates"
 import { isDate } from "../../../utilities"
 import nock from "nock"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/openai"
+import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -2196,6 +2196,13 @@ if (descriptions.length) {
       })
 
       describe("attachments and signatures", () => {
+        function generateAttachment(value: string) {
+          return {
+            key: `${config.getAppId()}/attachments/${value}`,
+          }
+        }
+        const newCsv = () => `${uuid.v4()}.csv`
+
         const coreAttachmentEnrichment = async (
           schema: TableSchema,
           field: string,
@@ -2206,18 +2213,13 @@ if (descriptions.length) {
               schema,
             })
           )
-          const attachmentToStoreKey = (attachmentId: string) => {
-            return {
-              key: `${config.getAppId()}/attachments/${attachmentId}`,
-            }
-          }
           const draftRow = {
             name: "test",
             description: "test",
             [field]:
               typeof attachmentCfg === "string"
-                ? attachmentToStoreKey(attachmentCfg)
-                : attachmentCfg.map(attachmentToStoreKey),
+                ? generateAttachment(attachmentCfg)
+                : attachmentCfg.map(generateAttachment),
             tableId: testTable._id,
           }
           const row = await config.api.row.save(testTable._id!, draftRow)
@@ -2238,6 +2240,7 @@ if (descriptions.length) {
               }
             })
           })
+          return { row, table: testTable }
         }
 
         it("should allow enriching single attachment rows", async () => {
@@ -2250,8 +2253,46 @@ if (descriptions.length) {
               },
             },
             "attachment",
-            `${uuid.v4()}.csv`
+            newCsv()
           )
+        })
+
+        it("should allow updating single attachment row", async () => {
+          const { row, table } = await coreAttachmentEnrichment(
+            {
+              attachment: {
+                type: FieldType.ATTACHMENT_SINGLE,
+                name: "attachment",
+                constraints: { presence: false },
+              },
+            },
+            "attachment",
+            newCsv()
+          )
+
+          const newAttachment = generateAttachment(newCsv())
+          row["attachment"] = newAttachment
+          const updated = await config.api.row.save(table._id!, row)
+          expect(updated.attachment.key).toBe(newAttachment.key)
+        })
+
+        it("should allow updating signature row", async () => {
+          const { table, row } = await coreAttachmentEnrichment(
+            {
+              signature: {
+                type: FieldType.SIGNATURE_SINGLE,
+                name: "signature",
+                constraints: { presence: false },
+              },
+            },
+            "signature",
+            `${uuid.v4()}.png`
+          )
+
+          const newSignature = generateAttachment(`${uuid.v4()}.png`)
+          row["signature"] = newSignature
+          const updated = await config.api.row.save(table._id!, row)
+          expect(updated.signature.key).toBe(newSignature.key)
         })
 
         it("should allow enriching attachment list rows", async () => {
@@ -2264,7 +2305,7 @@ if (descriptions.length) {
               },
             },
             "attachments",
-            [`${uuid.v4()}.csv`]
+            [newCsv()]
           )
         })
 
