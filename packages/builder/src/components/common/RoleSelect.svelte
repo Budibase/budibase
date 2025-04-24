@@ -28,6 +28,7 @@
 
   $: isPremiumOrAbove = [
     Constants.PlanType.PREMIUM,
+    Constants.PlanType.PREMIUM_PLUS,
     Constants.PlanType.ENTERPRISE,
     Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
     Constants.PlanType.ENTERPRISE_BASIC,
