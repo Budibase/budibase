@@ -25,7 +25,6 @@
   import { onMount, onDestroy } from "svelte"
   import VerificationPromptBanner from "@/components/common/VerificationPromptBanner.svelte"
   import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
-  import TourPopover from "@/components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import { UserAvatars } from "@budibase/frontend-core"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
@@ -101,8 +100,6 @@
     setTimeout(reset, 10)
   })
 </script>
-
-<TourPopover />
 
 {#if $builderStore.builderSidePanel}
   <BuilderSidePanel />

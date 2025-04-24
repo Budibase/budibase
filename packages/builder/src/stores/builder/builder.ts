@@ -46,8 +46,6 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.showBuilderSidePanel = this.showBuilderSidePanel.bind(this)
     this.setPreviousTopNavPath = this.setPreviousTopNavPath.bind(this)
     this.selectResource = this.selectResource.bind(this)
-    this.registerTourNode = this.registerTourNode.bind(this)
-    this.destroyTourNode = this.destroyTourNode.bind(this)
   }
 
   init(app: App) {
@@ -113,40 +111,6 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.websocket?.emit(BuilderSocketEvent.SelectResource, {
       resourceId: id,
     })
-  }
-
-  registerTourNode(tourStepKey: string, node: HTMLElement) {
-    this.update(state => {
-      const update = {
-        ...state,
-        tourNodes: {
-          ...state.tourNodes,
-          [tourStepKey]: node,
-        },
-      }
-      return update
-    })
-  }
-
-  destroyTourNode(tourStepKey: string) {
-    const store = get(this.store)
-    if (store.tourNodes?.[tourStepKey]) {
-      const nodes = { ...store.tourNodes }
-      delete nodes[tourStepKey]
-      this.update(state => ({
-        ...state,
-        tourNodes: nodes,
-      }))
-    }
-  }
-
-  setTour(tourKey?: string | null) {
-    this.update(state => ({
-      ...state,
-      tourStepKey: null,
-      tourNodes: null,
-      tourKey: tourKey || null,
-    }))
   }
 }
 
