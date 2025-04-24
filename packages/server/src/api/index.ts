@@ -31,7 +31,7 @@ router.get("/health", async ctx => {
 })
 router.get("/version", ctx => (ctx.body = envCore.VERSION))
 
-router.use(middleware.errorHandling)
+router.use(middleware.errorHandling).use(middleware.featureFlagCookie)
 
 // only add the routes if they are enabled
 if (apiEnabled()) {
@@ -71,7 +71,6 @@ if (apiEnabled()) {
     )
     .use(pro.licensing())
     .use(currentApp)
-    .use(middleware.featureFlagCookie)
 
   // Add CSP as soon as possible - depends on licensing and currentApp
   if (!coreEnv.DISABLE_CONTENT_SECURITY_POLICY) {

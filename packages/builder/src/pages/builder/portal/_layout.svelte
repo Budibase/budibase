@@ -1,6 +1,6 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
-  import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
+  import { Icon, notifications, Tabs, Tab, Modal } from "@budibase/bbui"
   import {
     organisation,
     auth,
@@ -8,6 +8,7 @@
     appsStore,
     licensing,
     admin,
+    featureFlags,
   } from "@/stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
@@ -19,10 +20,12 @@
   import { sdk } from "@budibase/shared-core"
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { Constants } from "@budibase/frontend-core"
+  import DebugUI from "@/components/debug/DebugUI.svelte"
 
   let loaded = false
   let mobileMenuVisible = false
   let activeTab = "Apps"
+  let debugModal
 
   $: $url(), updateActiveTab($menu)
   $: isOnboarding =
@@ -93,8 +96,17 @@
         <div class="desktop">
           <UpgradeButton />
         </div>
-        <div class="dropdown">
-          <UserDropdown />
+        <div class="right">
+          <div class="dropdown">
+            <UserDropdown />
+          </div>
+          {#if $featureFlags.DEBUG_UI}
+            <Icon
+              hoverable
+              name="Settings"
+              on:click={() => debugModal.show()}
+            />
+          {/if}
         </div>
       </div>
       <div class="main">
@@ -104,6 +116,10 @@
     </div>
   {/if}
 {/if}
+
+<Modal bind:this={debugModal}>
+  <DebugUI />
+</Modal>
 
 <style>
   .container {
@@ -155,6 +171,13 @@
   }
   .desktop {
     display: contents;
+  }
+  .right {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 
   @media (max-width: 640px) {

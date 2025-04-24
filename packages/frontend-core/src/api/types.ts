@@ -10,6 +10,7 @@ import { ConfigEndpoints } from "./configs"
 import { DatasourceEndpoints } from "./datasources"
 import { EnvironmentVariableEndpoints } from "./environmentVariables"
 import { EventEndpoints } from "./events"
+import { FeatureFlagEndpoints } from "./features"
 import { FlagEndpoints } from "./flags"
 import { GroupEndpoints } from "./groups"
 import { LayoutEndpoints } from "./layouts"
@@ -133,6 +134,7 @@ export type APIClient = BaseAPIClient &
   TableEndpoints &
   TemplateEndpoints &
   UserEndpoints &
+  FeatureFlagEndpoints &
   ViewEndpoints & {
     rowActions: RowActionEndpoints
     viewV2: ViewV2Endpoints

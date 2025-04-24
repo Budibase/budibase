@@ -464,11 +464,11 @@ export function getFeatureFlagOverrides(): Record<string, boolean> {
   return getCurrentContext()?.featureFlagOverrides || {}
 }
 
-export function doInFeatureFlagOverrideContext<T>(
+export async function doInFeatureFlagOverrideContext<T>(
   value: Record<string, boolean>,
   callback: () => Promise<T>
 ) {
-  return newContext({ featureFlagOverrides: value }, callback)
+  return await newContext({ featureFlagOverrides: value }, callback)
 }
 
 export function getTableForView(viewId: string): Table | undefined {

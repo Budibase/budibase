@@ -1,7 +1,0 @@
-import { UserCtx, OverrideFeatureFlagRequest } from "@budibase/types"
-import { Cookie, utils } from "@budibase/backend-core"
-
-export async function override(ctx: UserCtx<OverrideFeatureFlagRequest, void>) {
-  const { flags = {} } = ctx.request.body
-  utils.setCookie(ctx, flags, Cookie.FeatureFlags)
-}
