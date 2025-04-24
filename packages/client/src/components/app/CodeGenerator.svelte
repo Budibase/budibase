@@ -1,17 +1,17 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
   import { onMount, afterUpdate } from "svelte"
   import JsBarcode from "jsbarcode"
   import { createQrSvgString, createQrSvgDataUrl } from "@svelte-put/qr"
   import "@spectrum-css/vars/dist/spectrum-global.css"
-  export let value
-  export let codeType
-  export let showValue
-  export let showLogo
-  export let customLogo
-  export let size
-  export let primColor
-  export let invertColors
+  export let value: string
+  export let codeType: "QR Code" | "Barcode"
+  export let showValue: boolean
+  export let showLogo: boolean
+  export let customLogo: string
+  export let size: number
+  export let primColor: string
+  export let invertColors: boolean
   const { styleable } = getContext("sdk")
   const component = getContext("component")
   const generateBarcode = () => {
