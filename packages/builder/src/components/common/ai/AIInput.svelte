@@ -265,6 +265,7 @@
   .ai-icon {
     width: 18px;
     height: 18px;
+    margin-left: 4px;
     margin-right: 8px;
     flex-shrink: 0;
     cursor: var(--ai-icon-cursor, pointer);
