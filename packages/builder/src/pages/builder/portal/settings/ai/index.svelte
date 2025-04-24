@@ -35,7 +35,6 @@
     },
   })
 
-  $: console.log("bannerStore", $bannerStore)
   let aiConfig: AIConfig
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
