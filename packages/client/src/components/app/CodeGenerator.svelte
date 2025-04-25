@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { onMount, afterUpdate } from "svelte"
   import JsBarcode from "jsbarcode"
-  import { createQrSvgString, createQrSvgDataUrl } from "@svelte-put/qr"
+  import { createQrSvgString } from "@svelte-put/qr"
   import "@spectrum-css/vars/dist/spectrum-global.css"
 
   export let value: string
