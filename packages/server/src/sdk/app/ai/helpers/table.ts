@@ -41,6 +41,7 @@ export async function generateTables(
         sourceType: TableSourceType.INTERNAL,
         sourceId: INTERNAL_TABLE_SOURCE_ID,
         type: "table",
+        aiGenerated: true,
       })
 
       createdTables.push({ id: createdTable._id!, name: table.name })
@@ -59,13 +60,18 @@ export async function generateTables(
 
     for (const table of tables) {
       const storedTable = await sdk.tables.getTable(tableIds[table.name])
+      const schema = {
+        ...storedTable.schema,
+        ...table.schema,
+      }
+
+      for (const field of Object.keys(schema)) {
+        schema[field].aiGenerated = true
+      }
 
       await sdk.tables.update({
         ...storedTable,
-        schema: {
-          ...storedTable.schema,
-          ...table.schema,
-        },
+        schema,
         primaryDisplay: table.primaryDisplay,
       })
     }
