@@ -134,12 +134,12 @@
   }
   #custom-logo {
     /* border: 1px solid lime; */
-    object-fit: contain;
+    /* object-fit: contain; */
   }
   #barcode-img {
     /* border: 3px solid goldenrod; */
-    object-fit: contain;
-    max-width: 75%;
+    /* object-fit: contain; */
+    /* max-width: 75%; */
     /* height: 100%; */
   }
   #barcode-value {

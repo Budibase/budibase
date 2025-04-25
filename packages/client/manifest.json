@@ -4652,28 +4652,6 @@
               "value": "QR Code",
               "invert": false
             }
-          },
-          {
-            "type": "boolean",
-            "key": "invertColors",
-            "label": "Invert Colors",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "codeType",
-              "value": "Barcode",
-              "invert": false
-            }
-          },
-          {
-            "type": "boolean",
-            "key": "vertical",
-            "label": "Display Vertically",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "codeType",
-              "value": "Barcode",
-              "invert": false
-            }
           }
         ]
       }
