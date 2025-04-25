@@ -217,6 +217,7 @@ export interface BaseFieldSchema extends UIFieldMetadata {
   subtype?: never
   // added when enriching nested JSON fields into schema
   nestedJSON?: boolean
+  aiGenerated?: boolean
 }
 
 interface OtherFieldMetadata extends BaseFieldSchema {
