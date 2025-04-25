@@ -19,7 +19,7 @@
 
   const generateBarcode = () => {
     let barcodeSize = size / 100
-    if (!!value) {
+    if (value) {
       JsBarcode("#barcode-img", value, {
         displayValue: false, // Hide the library's built in value, optionally display it later
         width: barcodeSize,
@@ -27,14 +27,37 @@
       })
     }
   }
+
+  let qrContainer: HTMLElement
+
+  const generateQr = () => {
+    if (qrContainer && codeType === "QR Code" && value) {
+      const svg = createQrSvgString({
+        data: value,
+        logo: showLogo ? customLogo : "",
+        moduleFill: primColor,
+        anchorOuterFill: primColor,
+        anchorInnerFill: primColor,
+        width: size,
+        height: size,
+      })
+      qrContainer.innerHTML = svg
+    }
+  }
+
   onMount(() => {
     if (codeType === "Barcode") {
       generateBarcode()
+    } else {
+      generateQr()
     }
   })
+
   afterUpdate(() => {
     if (codeType === "Barcode") {
       generateBarcode()
+    } else {
+      generateQr()
     }
   })
 </script>
@@ -47,15 +70,7 @@
   {#if value}
     {#if codeType === "QR Code"}
       <div class="qr-container">
-        {@html createQrSvgString({
-          data: value,
-          logo: showLogo ? customLogo : "",
-          moduleFill: primColor,
-          anchorOuterFill: primColor,
-          anchorInnerFill: primColor,
-          width: size,
-          height: size,
-        })}
+        <div bind:this={qrContainer} />
         <div class="qr-value" style="color: {primColor}; max-width: {size}px;">
           {showValue ? value : ""}
         </div>
