@@ -112,7 +112,6 @@
     align-items: center;
   }
   #barcode-container {
-    /* border: 1px solid red; */
     max-width: 100%;
     display: flex;
     flex-direction: column;
@@ -123,26 +122,10 @@
     background-color: white;
   }
   #logo-and-barcode {
-    /* border: 10px solid blue; */
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    /* width: 100%;
-    height: 100%; */
     overflow: hidden;
-  }
-  #custom-logo {
-    /* border: 1px solid lime; */
-    /* object-fit: contain; */
-  }
-  #barcode-img {
-    /* border: 3px solid goldenrod; */
-    /* object-fit: contain; */
-    /* max-width: 75%; */
-    /* height: 100%; */
-  }
-  #barcode-value {
-    /* border: 1px solid fuchsia; */
   }
 </style>
