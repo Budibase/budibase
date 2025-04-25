@@ -12,7 +12,6 @@
   export let customLogo: string
   export let size: number
   export let primColor: string
-  export let invertColors: boolean
   export let vertical: boolean
 
   const { styleable } = getContext("sdk")
@@ -25,8 +24,6 @@
         displayValue: false, // Hide the library's built in value, optionally display it later
         width: barcodeSize,
         height: size,
-        lineColor: invertColors ? "white" : "black",
-        background: invertColors ? "black" : "white",
       })
     }
   }
@@ -64,10 +61,7 @@
         </div>
       </div>
     {:else}
-      <div
-        id="barcode-container"
-        style="background-color: {invertColors ? 'black' : 'white'}"
-      >
+      <div id="barcode-container">
         <div id="logo-and-barcode" style="height: {size}px, width: 100%">
           {#if showLogo && customLogo}
             <img
@@ -86,11 +80,7 @@
         </div>
         {#if showValue}
           <div id="barcode-value">
-            <p
-              style="background-color: {invertColors
-                ? 'white'
-                : 'black'}; color: {invertColors ? 'black' : 'white'}"
-            />
+            <p />
             {value}
           </div>
         {/if}
@@ -130,6 +120,7 @@
     align-items: center;
     overflow: hidden;
     padding: 12px;
+    background-color: white;
   }
   #logo-and-barcode {
     /* border: 10px solid blue; */
@@ -137,8 +128,8 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
+    /* width: 100%;
+    height: 100%; */
     overflow: hidden;
   }
   #custom-logo {
@@ -149,7 +140,7 @@
     /* border: 3px solid goldenrod; */
     object-fit: contain;
     max-width: 75%;
-    height: 100%;
+    /* height: 100%; */
   }
   #barcode-value {
     /* border: 1px solid fuchsia; */
