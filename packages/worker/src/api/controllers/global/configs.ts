@@ -9,6 +9,7 @@ import {
   events,
   objectStore,
   tenancy,
+  BadRequestError,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
@@ -219,14 +220,30 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 }
 
-export async function verifyAIConfig(
-  configToSave: AIInnerConfig,
-  existingConfig: AIConfig
+export async function processAIConfig(
+  newConfig: AIInnerConfig,
+  existingConfig: AIInnerConfig
 ) {
   // ensure that the redacted API keys are not overwritten in the DB
-  for (const uuid in existingConfig.config) {
-    if (configToSave[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
-      configToSave[uuid].apiKey = existingConfig.config[uuid].apiKey
+  for (const key in existingConfig) {
+    if (newConfig[key]?.apiKey === PASSWORD_REPLACEMENT) {
+      newConfig[key].apiKey = existingConfig[key].apiKey
+    }
+  }
+
+  let numBudibaseAI = 0
+  for (const config of Object.values(newConfig)) {
+    if (config.provider === "BudibaseAI") {
+      numBudibaseAI++
+      if (numBudibaseAI > 1) {
+        throw new BadRequestError("Only one Budibase AI provider is allowed")
+      }
+    } else {
+      if (!config.apiKey) {
+        throw new BadRequestError(
+          `API key is required for provider ${config.provider}`
+        )
+      }
     }
   }
 }
@@ -246,7 +263,6 @@ export async function save(
   }
 
   try {
-    // verify the configuration
     switch (type) {
       case ConfigType.SMTP:
         await email.verifyConfig(config)
@@ -262,7 +278,7 @@ export async function save(
         break
       case ConfigType.AI:
         if (existingConfig) {
-          await verifyAIConfig(config, existingConfig)
+          await processAIConfig(config, existingConfig.config)
         }
         break
     }
