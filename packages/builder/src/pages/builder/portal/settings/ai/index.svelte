@@ -5,193 +5,330 @@
     Layout,
     Heading,
     Body,
-    Helpers,
     Divider,
     notifications,
     Modal,
-    Tags,
-    Tag,
+    Icon,
   } from "@budibase/bbui"
+  import BBAI from "assets/bb-ai.svg"
   import { admin, licensing } from "@/stores/portal"
-  import { API } from "@/api"
-  import AIConfigModal from "./ConfigModal.svelte"
-  import AIConfigTile from "./AIConfigTile.svelte"
-  import {
-    type AIConfig,
-    ConfigType,
-    type ProviderConfig,
-  } from "@budibase/types"
+  import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
-  let modal: Modal
-  let fullAIConfig: AIConfig
-  let editingAIConfig: ProviderConfig | undefined
-  let editingUuid: string | undefined
+  import { API } from "@/api"
+  import AIConfigTile from "./AIConfigTile.svelte"
+  import ConfigModal from "./ConfigModal.svelte"
+  import PortalModal from "./PortalModal.svelte"
+  import {
+    type AIProvider,
+    ConfigType,
+    type AIConfig,
+    type ProviderConfig,
+    type AIProviderPartial,
+  } from "@budibase/types"
+  import { ProviderDetails, BBAI_KEY, OPENAI_KEY, AZURE_KEY } from "./constants"
+
+  const bannerKey = `bb-ai-configuration-banner`
+  const bannerStore = new BudiStore<boolean>(false, {
+    persistence: {
+      type: PersistenceType.LOCAL,
+      key: bannerKey,
+    },
+  })
+
+  let aiConfig: AIConfig
+  let configModal: { show: () => void; hide: () => void }
+  let portalModal: { show: () => void; hide: () => void }
+  let modalKey: AIProviderPartial
+  let modalConfig: ProviderConfig
+  let providerKeys: AIProviderPartial[]
 
   $: isCloud = $admin.cloud
-  $: customAIConfigsEnabled = $licensing.customAIConfigsEnabled
+  $: providerKeys = isCloud ? [BBAI_KEY] : [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
+  $: providers = aiConfig
+    ? providerKeys.map((key: AIProviderPartial) => ({
+        key,
+        cfg: getProviderConfig(key),
+      }))
+    : []
 
-  async function fetchAIConfig() {
-    try {
-      fullAIConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
-    } catch (error) {
-      notifications.error("Error fetching AI config")
+  $: activeKey = providers.find(p => p.cfg.active)?.key
+  $: enabled = !isCloud ? providers.filter(p => p.key === activeKey) : providers
+  $: disabled = !isCloud ? providers.filter(p => p.key !== activeKey) : []
+
+  function getProviderConfig(key: AIProviderPartial): ProviderConfig {
+    const details = ProviderDetails[key]
+    const loadedConfig = aiConfig?.config[key] || {}
+    let baseConfig = { ...details.defaultConfig }
+
+    return {
+      ...baseConfig,
+      ...loadedConfig,
+      provider: details.provider as AIProvider,
+      name: details.name,
+      active: loadedConfig.active ?? baseConfig.active ?? false,
+      isDefault: loadedConfig.isDefault ?? baseConfig.isDefault ?? false,
     }
   }
 
-  async function saveConfig() {
-    // Use existing key or generate new one
-    const id = editingUuid || Helpers.uuid()
+  async function updateProviderConfig(
+    key: AIProviderPartial,
+    enable: boolean,
+    configData: Partial<ProviderConfig> | null = null
+  ) {
+    const details = ProviderDetails[key]
+    const existing = aiConfig.config[key] || {}
+    let updated: ProviderConfig
 
-    // Creating first custom AI Config
-    if (!fullAIConfig && editingAIConfig) {
-      fullAIConfig = {
-        type: ConfigType.AI,
-        config: {
-          [id]: editingAIConfig,
-        },
-      }
-    } else {
-      // We don't store the default BB AI config in the DB
-      delete fullAIConfig.config.budibase_ai
-
-      // unset the default value from other configs if default is set
-      if (editingAIConfig?.isDefault) {
-        for (let key in fullAIConfig.config) {
-          if (key !== id) {
-            fullAIConfig.config[key].isDefault = false
-          }
+    if (enable) {
+      if (key === BBAI_KEY) {
+        updated = {
+          ...details.defaultConfig,
+          ...existing,
+          provider: details.provider as AIProvider,
+          name: details.name,
+          active: true,
+          isDefault: true,
+        }
+      } else {
+        updated = {
+          ...details.defaultConfig,
+          ...existing,
+          ...configData,
+          active: true,
+          isDefault: true,
         }
       }
-      // Add new or update existing custom AI Config
-      if (editingAIConfig) {
-        fullAIConfig.config[id] = editingAIConfig
+    } else {
+      updated = {
+        ...details.defaultConfig,
+        ...existing,
+        ...configData,
+        active: false,
+        isDefault: false,
       }
-      fullAIConfig.type = ConfigType.AI
+    }
+
+    // handle the old budibase_ai key
+    const baseConfig = { ...aiConfig.config }
+    if (baseConfig["budibase_ai"]) {
+      delete baseConfig["budibase_ai"]
+    }
+
+    const payload = {
+      type: ConfigType.AI,
+      config: { ...baseConfig, [key]: updated },
+    }
+    if (enable) {
+      Object.keys(payload.config).forEach(providerKey => {
+        if (providerKey !== key) {
+          payload.config[providerKey] = {
+            ...payload.config[providerKey],
+            active: false,
+            isDefault: false,
+          }
+        }
+      })
     }
 
     try {
-      await API.saveConfig(fullAIConfig)
-      notifications.success(`Successfully saved and activated AI Configuration`)
-    } catch (error) {
-      notifications.error(
-        `Failed to save AI Configuration, reason: ${
-          error instanceof Error ? error.message : "Unknown"
-        }`
-      )
-    } finally {
-      await fetchAIConfig()
+      await API.saveConfig(payload)
+      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      notifications.success(`AI provider updated`)
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to update AI provider")
     }
+    configModal?.hide()
   }
 
-  async function deleteConfig(key: string) {
-    // We don't store the default BB AI config in the DB
-    delete fullAIConfig.config.budibase_ai
-    // Delete the configuration
-    delete fullAIConfig.config[key]
+  function handleEnable(key: AIProviderPartial) {
+    modalKey = key
+    if (
+      key === BBAI_KEY &&
+      !$admin.cloud &&
+      !$licensing.customAIConfigsEnabled
+    ) {
+      portalModal.show()
+      return
+    }
 
+    if (key === BBAI_KEY) {
+      updateProviderConfig(key, true)
+      return
+    }
+
+    const currentCfg = getProviderConfig(key)
+    modalConfig = { ...currentCfg }
+    configModal.show()
+  }
+
+  function handleDisable(key: AIProviderPartial) {
+    if (
+      key === BBAI_KEY &&
+      !$admin.cloud &&
+      !$licensing.customAIConfigsEnabled
+    ) {
+      portalModal.show()
+      return
+    }
+    updateProviderConfig(key, false)
+  }
+
+  function setBannerLocalStorageKey() {
+    localStorage.setItem(bannerKey, "true")
+  }
+
+  onMount(async () => {
     try {
-      await API.saveConfig(fullAIConfig)
-      notifications.success(`Deleted config`)
-    } catch (error) {
-      notifications.error(
-        `Failed to delete config, reason: ${
-          error instanceof Error ? error.message : "Unknown"
-        }`
-      )
-    } finally {
-      await fetchAIConfig()
+      aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+    } catch {
+      notifications.error("Error fetching AI settings")
     }
-  }
-
-  function editConfig(uuid: string) {
-    editingUuid = uuid
-    editingAIConfig = fullAIConfig?.config[editingUuid]
-    modal.show()
-  }
-
-  function newConfig() {
-    editingUuid = undefined
-    editingAIConfig = undefined
-    modal.show()
-  }
-
-  onMount(() => {
-    fetchAIConfig()
   })
 </script>
 
-<Modal bind:this={modal}>
-  <AIConfigModal
-    saveHandler={saveConfig}
-    deleteHandler={deleteConfig}
-    bind:config={editingAIConfig}
-  />
-</Modal>
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <div class="header">
       <Heading size="M">AI</Heading>
-      {#if !isCloud && !customAIConfigsEnabled}
-        <Tags>
-          <Tag icon="LockClosed">Premium</Tag>
-        </Tags>
-      {:else if isCloud && !customAIConfigsEnabled}
-        <Tags>
-          <Tag icon="LockClosed">Enterprise</Tag>
-        </Tags>
-      {/if}
     </div>
-    <Body
-      >Connect an LLM to enable AI features. You can only enable one LLM at a
-      time.</Body
-    >
+    <Body>
+      Connect an LLM to enable AI features. You can only enable one LLM at a
+      time.
+    </Body>
   </Layout>
   <Divider />
-  <div style={`opacity: ${customAIConfigsEnabled ? 1 : 0.5}`}>
-    <Layout noPadding>
-      <div class="config-heading">
-        <Heading size="S">AI Configurations</Heading>
-        <Button
-          size="S"
-          cta={customAIConfigsEnabled}
-          secondary={!customAIConfigsEnabled}
-          on:click={customAIConfigsEnabled ? newConfig : null}
-        >
-          Add configuration
-        </Button>
+
+  {#if !enabled.length && !$bannerStore}
+    <div class="banner">
+      <div class="banner-content">
+        <div class="banner-icon">
+          <img src={BBAI} alt="BB AI" width="24" height="24" />
+        </div>
+        <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
       </div>
-      <Body size="S"
-        >Use the following interface to select your preferred AI configuration.</Body
-      >
-      {#if customAIConfigsEnabled}
-        <Body size="S">Select your AI Model:</Body>
-      {/if}
-      {#if fullAIConfig?.config}
-        {#each Object.keys(fullAIConfig.config) as key}
+      <div class="banner-buttons">
+        <Button primary cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
+          Enable BB AI
+        </Button>
+        <Icon
+          hoverable
+          name="Close"
+          on:click={() => {
+            setBannerLocalStorageKey()
+            bannerStore.set(true)
+          }}
+        />
+      </div>
+    </div>
+  {/if}
+
+  <div class="section">
+    <div class="section-title">Enabled</div>
+    {#if enabled.length}
+      {#each enabled as { key, cfg } (key)}
+        <AIConfigTile
+          config={cfg}
+          editHandler={() => handleEnable(key)}
+          disableHandler={() => handleDisable(key)}
+        />
+      {/each}
+    {:else}
+      <div class="no-enabled">
+        <Body size="S">No LLMs are enabled</Body>
+      </div>
+    {/if}
+    {#if !isCloud}
+      <div class="section-title disabled-title">Disabled</div>
+      <div class="ai-list">
+        {#each disabled as { key, cfg } (key)}
           <AIConfigTile
-            config={fullAIConfig.config[key]}
-            editHandler={customAIConfigsEnabled ? () => editConfig(key) : null}
-            deleteHandler={customAIConfigsEnabled
-              ? () => deleteConfig(key)
-              : null}
+            config={cfg}
+            editHandler={() => handleEnable(key)}
+            disableHandler={() => handleDisable(key)}
           />
         {/each}
-      {/if}
-    </Layout>
+      </div>
+    {/if}
   </div>
 </Layout>
 
-<style>
-  .config-heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: -18px;
-  }
+<Modal bind:this={portalModal}>
+  <PortalModal
+    confirmHandler={() => {
+      window.open($admin.accountPortalUrl, "_blank")
+      portalModal.hide()
+    }}
+    cancelHandler={() => portalModal.hide()}
+  />
+</Modal>
+<Modal bind:this={configModal}>
+  <ConfigModal
+    config={modalConfig}
+    updateHandler={updatedConfig =>
+      updateProviderConfig(modalKey, false, updatedConfig)}
+    enableHandler={updatedConfig =>
+      updateProviderConfig(modalKey, true, updatedConfig)}
+    disableHandler={() => updateProviderConfig(modalKey, false)}
+  />
+</Modal>
 
+<style>
   .header {
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  .banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2e3851;
+    border-radius: var(--border-radius-m);
+    padding: var(--spacing-s);
+  }
+
+  .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-s);
+    width: 32px;
+    height: 32px;
+  }
+
+  .banner-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .ai-list {
+    margin-top: var(--spacing-l);
+    margin-bottom: var(--spacing-l);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .no-enabled {
+    padding: 16px;
+    background-color: var(--spectrum-global-color-gray-75);
+    border: 1px solid var(--grey-4);
+    border-radius: var(--border-radius-s);
+  }
+
+  .section-title {
+    margin-bottom: var(--spacing-m);
+  }
+
+  .disabled-title {
+    margin-top: var(--spacing-xl);
   }
 </style>
