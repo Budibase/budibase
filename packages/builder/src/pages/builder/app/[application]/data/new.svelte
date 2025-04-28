@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { API } from "@/api"
   import {
     tables,
@@ -19,8 +19,8 @@
   import { featureFlag } from "@/helpers"
   import { FeatureFlag } from "@budibase/types"
 
-  let internalTableModal
-  let externalDatasourceModal
+  let internalTableModal: CreateInternalTableModal
+  let externalDatasourceModal: CreateExternalDatasourceModal
 
   let sampleDataLoading = false
   let externalDatasourceLoading = false
@@ -72,7 +72,7 @@
       </div>
     {/if}
     <DatasourceOption
-      on:click={internalTableModal.show}
+      on:click={() => internalTableModal.show()}
       title="Create new table"
       description="Non-relational"
       {disabled}

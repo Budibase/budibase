@@ -31,6 +31,8 @@
   $: disabled = !aiEnabled || creditsExceeded || readonly || promptLoading
   $: animateBorder = !disabled && expanded
 
+  $: canSubmit = !readonly && !!value
+
   function collapse() {
     dispatch("collapse")
     expanded = expandedOnly
@@ -62,7 +64,7 @@
   }
 
   async function onPromptSubmit() {
-    if (readonly) {
+    if (!canSubmit) {
       return
     }
     promptLoading = true
@@ -155,6 +157,7 @@
             ? "#6E56FF"
             : "var(--spectrum-global-color-gray-600)"}
           size="S"
+          disabled={!canSubmit}
           hoverable={!readonly}
           hoverColor="#6E56FF"
           name={promptLoading ? "StopCircle" : "PlayCircle"}
@@ -265,6 +268,7 @@
   .ai-icon {
     width: 18px;
     height: 18px;
+    margin-left: 4px;
     margin-right: 8px;
     flex-shrink: 0;
     cursor: var(--ai-icon-cursor, pointer);
