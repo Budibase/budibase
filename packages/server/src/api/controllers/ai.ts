@@ -16,8 +16,11 @@ export async function generateTables(
     getTablesDelegate: sdk.tables.getTables,
     generateDataDelegate: sdk.ai.helpers.generateRows,
   })
-  tableGenerator.withData(ctx.user._id || "")
-  const createdTables = await tableGenerator.generate(prompt)
+
+  const createdTables = await tableGenerator.generate(
+    prompt,
+    ctx.user._id || ""
+  )
 
   ctx.body = {
     createdTables,
