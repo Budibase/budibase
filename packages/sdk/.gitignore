@@ -2,3 +2,4 @@ sdk
 docs
 node_modules
 dist
+src/generated
