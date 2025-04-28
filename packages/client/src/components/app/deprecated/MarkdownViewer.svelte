@@ -1,7 +1,7 @@
 <script>
   import { MarkdownViewer } from "@budibase/bbui"
   import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
+  import Placeholder from "../Placeholder.svelte"
 
   export let value
 
