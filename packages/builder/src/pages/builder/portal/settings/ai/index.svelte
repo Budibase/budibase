@@ -55,18 +55,25 @@
   $: enabled = !isCloud ? providers.filter(p => p.key === activeKey) : providers
   $: disabled = !isCloud ? providers.filter(p => p.key !== activeKey) : []
 
+  function getConfigForProvider(key: AIProviderPartial) {
+    for (const config of Object.values(aiConfig.config)) {
+      if (config.provider === key) {
+        return config
+      }
+    }
+    return undefined
+  }
+
   function getProviderConfig(key: AIProviderPartial): ProviderConfig {
     const details = ProviderDetails[key]
-    const loadedConfig = aiConfig?.config[key] || {}
-    let baseConfig = { ...details.defaultConfig }
+    const config = getConfigForProvider(key) || { ...details.defaultConfig }
 
     return {
-      ...baseConfig,
-      ...loadedConfig,
+      ...config,
       provider: details.provider as AIProvider,
       name: details.name,
-      active: loadedConfig.active ?? baseConfig.active ?? false,
-      isDefault: loadedConfig.isDefault ?? baseConfig.isDefault ?? false,
+      active: config.active ?? false,
+      isDefault: config.isDefault ?? false,
     }
   }
 
@@ -108,12 +115,7 @@
       }
     }
 
-    // handle the old budibase_ai key
     const baseConfig = { ...aiConfig.config }
-    if (baseConfig["budibase_ai"]) {
-      delete baseConfig["budibase_ai"]
-    }
-
     const payload = {
       type: ConfigType.AI,
       config: { ...baseConfig, [key]: updated },
