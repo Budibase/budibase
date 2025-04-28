@@ -32,14 +32,12 @@ import {
   OIDCConfigs,
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
-  QuotaUsageType,
   SaveConfigRequest,
   SaveConfigResponse,
   SettingsBrandingConfig,
   SettingsInnerConfig,
   SSOConfig,
   SSOConfigType,
-  StaticQuotaName,
   UploadConfigFileResponse,
   UserCtx,
 } from "@budibase/types"
@@ -53,7 +51,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPCreated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigCreated)
-      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
@@ -92,12 +89,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPUpdated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigUpdated)
-      if (
-        Object.keys(existing.config).length > Object.keys(config.config).length
-      ) {
-        fns.push(() => pro.quotas.removeCustomAIConfig())
-      }
-      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
       if (!existing.config.activated && config.config.activated) {
@@ -576,13 +567,6 @@ export async function destroy(ctx: UserCtx<void, DeleteConfigResponse>) {
   try {
     await db.remove(id, rev)
     await cache.destroy(cache.CacheKey.CHECKLIST)
-    if (id === configs.generateConfigID(ConfigType.AI)) {
-      await pro.quotas.set(
-        StaticQuotaName.AI_CUSTOM_CONFIGS,
-        QuotaUsageType.STATIC,
-        0
-      )
-    }
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
     ctx.throw(err.status, err)
