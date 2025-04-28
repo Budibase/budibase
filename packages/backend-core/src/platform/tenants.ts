@@ -2,8 +2,6 @@ import { StaticDatabases } from "../constants"
 import { getPlatformDB } from "./platformDb"
 import { LockName, LockOptions, LockType, Tenants } from "@budibase/types"
 import * as locks from "../redis/redlockImpl"
-import { doInTenant, isSelfHostUsingCloud } from "../context"
-import { getSettingsConfigDoc } from "../configs"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 
