@@ -27,6 +27,14 @@ describe("Global configs controller", () => {
         name: "Test",
         provider: "OpenAI",
       },
+      budibase_ai: {
+        active: true,
+        defaultModel: "gpt-4o-mini",
+        isBudibaseAI: true,
+        isDefault: true,
+        name: "Budibase AI",
+        provider: "OpenAI",
+      },
     })
   })
 
