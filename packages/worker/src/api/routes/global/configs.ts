@@ -68,16 +68,16 @@ function scimValidation() {
 function aiValidation() {
   // prettier-ignore
   return Joi.object().pattern(
-     Joi.string(),
-     Joi.object({
-       provider: Joi.string().required(),
-       isDefault: Joi.boolean().required(),
-       name: Joi.string().required(),
-       active: Joi.boolean().required(),
-       baseUrl: Joi.string().optional().allow("", null),
-       apiKey: Joi.string().required(),
-       defaultModel: Joi.string().optional(),
-     }).required()
+    Joi.string(),
+    Joi.object({
+      provider: Joi.string().required(),
+      isDefault: Joi.boolean().required(),
+      name: Joi.string().required(),
+      active: Joi.boolean().required(),
+      baseUrl: Joi.string().optional().allow("", null),
+      apiKey: Joi.string().optional(),
+      defaultModel: Joi.string().optional(),
+    }).required()
   )
 }
 

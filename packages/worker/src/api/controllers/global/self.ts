@@ -120,7 +120,6 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
     ? {
         provider: llmConfig.provider,
         model: llmConfig.model,
-        measureUsage: llmConfig.measureUsage,
       }
     : undefined
 

@@ -234,6 +234,9 @@
     border-bottom: var(--border-light);
     z-index: 2;
   }
+  .top-nav > * {
+    height: 100%;
+  }
 
   .topcenternav {
     display: flex;
@@ -255,6 +258,7 @@
     position: relative;
     margin-bottom: -2px;
     overflow: hidden;
+    height: calc(100% + 2px);
   }
 
   .topleftnav :global(.spectrum-Tabs-itemLabel) {

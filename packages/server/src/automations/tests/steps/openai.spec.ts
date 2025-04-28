@@ -4,7 +4,6 @@ import { Model, MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
 import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
-import { mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
 
 describe("test the openai action", () => {
@@ -98,16 +97,13 @@ describe("test the openai action", () => {
   })
 
   it("should ensure that the pro AI module is called when the budibase AI features are enabled", async () => {
-    mocks.licenses.useBudibaseAI()
-    mocks.licenses.useAICustomConfigs()
-
     mockChatGPTResponse("This is a test")
 
     // We expect a non-0 AI usage here because it goes through the @budibase/pro
     // path, because we've enabled Budibase AI. The exact value depends on a
     // calculation we use to approximate cost. This uses Budibase's OpenAI API
     // key, so we charge users for it.
-    const result = await withEnv({ SELF_HOSTED: false }, () =>
+    const result = await withEnv({ SELF_HOSTED: false }, async () =>
       expectAIUsage(14, () =>
         createAutomationBuilder(config)
           .onAppAction()

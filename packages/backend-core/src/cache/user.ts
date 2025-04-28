@@ -6,7 +6,7 @@ import env from "../environment"
 import * as accounts from "../accounts"
 import { UserDB } from "../users"
 import { sdk } from "@budibase/shared-core"
-import { CloudAccount, User, UserMetadata } from "@budibase/types"
+import { User, UserMetadata } from "@budibase/types"
 
 const EXPIRY_SECONDS = 3600
 
@@ -18,7 +18,7 @@ async function populateFromDB(userId: string, tenantId: string) {
   const user = await db.get<UserMetadata>(userId)
   user.budibaseAccess = true
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-    const account = await accounts.getAccountByTenantId(tenantId)
+    const account = await accounts.getAccount(user.email)
     if (account) {
       user.account = account
       user.accountPortalAccess = true
@@ -39,10 +39,10 @@ async function populateUsersFromDB(
   const users = getUsersResponse.filter(x => x)
 
   await Promise.all(
-    users.map(async (user: User & { account?: CloudAccount }) => {
+    users.map(async (user: any) => {
       user.budibaseAccess = true
       if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-        const account = await accounts.getAccountByTenantId(user.tenantId)
+        const account = await accounts.getAccount(user.email)
         if (account) {
           user.account = account
           user.accountPortalAccess = true
