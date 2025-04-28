@@ -13,7 +13,6 @@ export async function generateTables(
 
   const tableGenerator = await ai.TableGeneration.init({
     generateTablesDelegate: sdk.ai.helpers.generateTables,
-    getTablesDelegate: sdk.tables.getTables,
     generateDataDelegate: sdk.ai.helpers.generateRows,
   })
 

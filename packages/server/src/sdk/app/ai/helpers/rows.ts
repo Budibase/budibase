@@ -1,11 +1,11 @@
-import { FieldSchema, FieldType, Table } from "@budibase/types"
+import { FieldSchema, FieldType, TableSchema } from "@budibase/types"
 import sdk from "../../.."
 import { uploadFile, uploadUrl } from "../../../../utilities"
 
 export async function generateRows(
   data: Record<string, Record<string, any>[]>,
   userId: string,
-  tables: Record<string, Table>
+  tables: Record<string, { _id: string; schema: TableSchema }>
 ) {
   const createdData: Record<string, Record<string, string>> = {}
   const toUpdateLinks: {
