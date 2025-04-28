@@ -20,12 +20,17 @@
     tables,
     views,
   } from "@/stores/builder"
-  import { themeStore } from "@/stores/portal"
+  import { themeStore, featureFlags } from "@/stores/portal"
   import { getContext } from "svelte"
   import { ThemeOptions } from "@budibase/shared-core"
+  import { FeatureFlag } from "@budibase/types"
 
   const modalContext = getContext(Context.Modal)
-  const commands = [
+
+  let search
+  let selected = null
+
+  $: commands = [
     {
       type: "Access",
       name: "Invite users and manage app access",
@@ -151,17 +156,30 @@
           return state
         }),
     })),
+    ...featureFlagCommands($featureFlags),
   ]
-
-  let search
-  let selected = null
-
   $: enrichedCommands = commands.map(cmd => ({
     ...cmd,
-    searchValue: `${cmd.type} ${cmd.name}`.toLowerCase(),
+    searchValue: `${cmd.type} ${cmd.name}`.toLowerCase().replace(/_/g, " "),
   }))
   $: results = filterResults(enrichedCommands, search)
   $: categories = groupResults(results)
+
+  const featureFlagCommands = flags => {
+    if (!flags.DEBUG_UI) {
+      return []
+    }
+    return Object.entries(flags)
+      .filter(([flag]) => flag !== FeatureFlag.DEBUG_UI)
+      .map(([flag, value]) => ({
+        type: "Feature Flag",
+        name: `${value ? "Disable" : "Enable"} ${flag}`,
+        icon: "Flag",
+        action: () => {
+          featureFlags.setFlag(flag, !value)
+        },
+      }))
+  }
 
   const filterResults = (commands, search) => {
     if (!search) {
@@ -169,7 +187,7 @@
       return commands
     }
     selected = 0
-    search = search.toLowerCase()
+    search = search.toLowerCase().replace(/_/g, " ")
     return commands
       .filter(cmd => cmd.searchValue.includes(search))
       .map((cmd, idx) => ({
