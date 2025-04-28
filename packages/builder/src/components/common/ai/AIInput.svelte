@@ -170,14 +170,12 @@
 
 <style>
   .spectrum-ActionButton {
-    --offset: 1px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
     padding: var(--spacing-s);
-    border: 1px solid var(--spectrum-alias-border-color);
     border-radius: 30px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
@@ -185,58 +183,55 @@
     overflow: hidden;
     cursor: pointer;
     background-color: var(--spectrum-global-color-gray-75);
+    border: none;
   }
 
   .spectrum-ActionButton::before {
     content: "";
     position: absolute;
-    top: -1px;
-    left: -1px;
-    width: 50%;
-    height: calc(100% + 2px);
-    border-radius: inherit;
+    inset: 0;
+    border-radius: 30px;
+    padding: 1px;
+    background: var(--spectrum-alias-border-color);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .animate-border::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 30px;
+    padding: 1px;
     background: linear-gradient(
       to right,
-      #6e56ff,
-      #9f8fff 40%,
-      transparent 100%
+      #6e56ff 15%,
+      #9f8fff 50%,
+      transparent 65%
     );
-    background-size: 200% 100%;
-    background-position: 100% 0;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
     pointer-events: none;
-    z-index: 0;
+    animation: border-flow 1s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
   }
 
-  .spectrum-ActionButton:not(.animate-border)::before {
-    content: none;
-  }
-
-  .animate-border::before {
-    animation: border-expand 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-    animation-fill-mode: forwards;
-  }
-
-  @keyframes border-expand {
+  @keyframes border-flow {
     0% {
-      transform: scaleX(0);
-      transform-origin: left;
+      clip-path: inset(0 100% 0 0);
     }
     100% {
-      transform: scaleX(1);
-      transform-origin: left;
+      clip-path: inset(0 20% 0 0);
     }
   }
 
-  .spectrum-ActionButton::after {
-    content: "";
-    background: inherit;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    inset: var(--offset);
-    height: calc(100% - 2 * var(--offset));
-    width: calc(100% - 2 * var(--offset));
-    border-radius: inherit;
+  .spectrum-ActionButton:not(.animate-border)::after {
+    content: none;
   }
 
   @keyframes fade-in {
@@ -273,6 +268,8 @@
     margin-right: var(--spacing-s);
     flex-shrink: 0;
     cursor: var(--ai-icon-cursor, pointer);
+    position: relative;
+    z-index: 2;
   }
 
   .ai-gen-text {
@@ -281,6 +278,8 @@
     text-overflow: ellipsis;
     transition: opacity 0.2s ease-out;
     margin-right: var(--spacing-xs);
+    position: relative;
+    z-index: 2;
   }
 
   .prompt-input {
@@ -294,6 +293,8 @@
     min-width: 0;
     resize: none;
     overflow: hidden;
+    position: relative;
+    z-index: 2;
   }
 
   .prompt-input::placeholder {
@@ -304,14 +305,15 @@
   .action-buttons {
     display: flex;
     gap: var(--spacing-s);
-    z-index: 4;
+    z-index: 5;
     flex-shrink: 0;
     margin-right: var(--spacing-s);
+    position: relative;
   }
 
   .button-content-wrapper {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: flex;
     align-items: center;
     overflow: hidden;
