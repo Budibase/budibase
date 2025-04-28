@@ -17,16 +17,9 @@ import { bindings } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
 import { componentStore } from "./components"
 import { getSettingsDefinition } from "@budibase/frontend-core"
+import { utils } from "@budibase/shared-core"
 
-function reduceBy<TItem extends {}, TKey extends keyof TItem>(
-  key: TKey,
-  list: TItem[]
-): Record<string, TItem> {
-  return list.reduce<Record<string, TItem>>((result, item) => {
-    result[item[key] as string] = item
-    return result
-  }, {})
-}
+const reduceBy = utils.toMap
 
 const friendlyNameByType: Partial<Record<UIDatasourceType, string>> = {
   viewV2: "view",
