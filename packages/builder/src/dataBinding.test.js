@@ -72,6 +72,27 @@ describe("Builder dataBinding", () => {
         runtimeBinding: "count",
         type: "context",
       },
+      {
+        category: "Bindings",
+        icon: "Brackets",
+        readableBinding: "location",
+        runtimeBinding: "[location]",
+        type: "context",
+      },
+      {
+        category: "Bindings",
+        icon: "Brackets",
+        readableBinding: "foo.[bar]",
+        runtimeBinding: "[foo].[qwe]",
+        type: "context",
+      },
+      {
+        category: "Bindings",
+        icon: "Brackets",
+        readableBinding: "foo.baz",
+        runtimeBinding: "[foo].[baz]",
+        type: "context",
+      },
     ]
     it("should convert a readable binding to a runtime one", () => {
       const textWithBindings = `Hello {{ Current User.firstName }}! The count is {{ Binding.count }}.`
@@ -82,6 +103,28 @@ describe("Builder dataBinding", () => {
           "runtimeBinding"
         )
       ).toEqual(`Hello {{ [user].[firstName] }}! The count is {{ count }}.`)
+    })
+    it("should not convert a partial match", () => {
+      const textWithBindings = `location {{ _location Zlocation location locationZ _location_ }}`
+      expect(
+        readableToRuntimeBinding(
+          bindableProperties,
+          textWithBindings,
+          "runtimeBinding"
+        )
+      ).toEqual(
+        `location {{ _location Zlocation [location] locationZ _location_ }}`
+      )
+    })
+    it("should handle special characters in the readable binding", () => {
+      const textWithBindings = `{{ foo.baz }}`
+      expect(
+        readableToRuntimeBinding(
+          bindableProperties,
+          textWithBindings,
+          "runtimeBinding"
+        )
+      ).toEqual(`{{ [foo].[baz] }}`)
     })
   })
 
