@@ -443,7 +443,6 @@
     const resizeObserver = new ResizeObserver(() => {
       updateEditorWidth()
     })
-
     resizeObserver.observe(editorEle)
     return () => {
       resizeObserver.disconnect()

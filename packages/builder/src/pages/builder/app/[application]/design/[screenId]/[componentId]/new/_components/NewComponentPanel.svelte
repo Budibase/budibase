@@ -20,7 +20,7 @@
 
   // Aliases for other strings to match to when searching
   const aliases = {
-    text: ["headline", "paragraph"],
+    text: ["headline", "heading", "title", "paragraph", "markdown"],
   }
 
   let searchString

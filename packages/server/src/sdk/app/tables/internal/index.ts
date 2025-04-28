@@ -144,7 +144,7 @@ export async function save(
   }
 
   // update linked rows
-  const linkResp: any = await updateLinks({
+  const linkResp = await updateLinks({
     eventType: oldTable ? EventType.TABLE_UPDATED : EventType.TABLE_SAVE,
     table: table,
     oldTable: oldTable,

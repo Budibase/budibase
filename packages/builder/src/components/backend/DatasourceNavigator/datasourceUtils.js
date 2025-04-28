@@ -1,4 +1,5 @@
 import { TableNames } from "@/constants"
+import { INTERNAL_TABLE_SOURCE_ID } from "@budibase/types"
 
 const showDatasourceOpen = ({
   selected,
@@ -41,7 +42,7 @@ const containsActiveEntity = (
   // Check for hardcoded datasource edge cases
   if (
     isActive("./datasource/bb_internal") &&
-    datasource._id === "bb_internal"
+    datasource._id === INTERNAL_TABLE_SOURCE_ID
   ) {
     return true
   }

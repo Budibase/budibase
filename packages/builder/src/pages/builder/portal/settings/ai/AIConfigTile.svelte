@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Body, Label, Icon } from "@budibase/bbui"
   import BudibaseLogo from "./logos/Budibase.svelte"
   import OpenAILogo from "./logos/OpenAI.svelte"
@@ -6,7 +6,7 @@
   import TogetherAILogo from "./logos/TogetherAI.svelte"
   import AzureOpenAILogo from "./logos/AzureOpenAI.svelte"
   import { Providers } from "./constants"
-
+  import type { ProviderConfig } from "@budibase/types"
   const logos = {
     ["Budibase AI"]: BudibaseLogo,
     [Providers.OpenAI.name]: OpenAILogo,
@@ -15,11 +15,11 @@
     [Providers.AzureOpenAI.name]: AzureOpenAILogo,
   }
 
-  export let config
-  export let disabled
+  export let config: ProviderConfig
+  export let disabled: boolean | null = null
 
-  export let editHandler
-  export let deleteHandler
+  export let editHandler: (() => void) | null
+  export let deleteHandler: (() => void) | null
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
