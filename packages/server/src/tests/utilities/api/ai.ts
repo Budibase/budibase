@@ -5,6 +5,8 @@ import {
   GenerateCronResponse,
   GenerateJsRequest,
   GenerateJsResponse,
+  GenerateTablesRequest,
+  GenerateTablesResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 import { constants } from "@budibase/backend-core"
@@ -39,6 +41,18 @@ export class AIAPI extends TestAPI {
       headers[constants.Header.LICENSE_KEY] = req.licenseKey
     }
     return await this._post<ChatCompletionResponse>(`/api/ai/chat`, {
+      body: req,
+      headers,
+      expectations,
+    })
+  }
+
+  generateTables = async (
+    req: GenerateTablesRequest,
+    expectations?: Expectations
+  ): Promise<GenerateTablesResponse> => {
+    const headers: Record<string, string> = {}
+    return await this._post<GenerateTablesResponse>(`/api/ai/tables`, {
       body: req,
       headers,
       expectations,

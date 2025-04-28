@@ -26,6 +26,7 @@ export interface Table extends Document {
   indexes?: { [key: string]: any }
   created?: boolean
   rowHeight?: number
+  aiGenerated?: boolean
 }
 
 export interface TableRequest extends Table {
