@@ -11,7 +11,7 @@
     Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-  import { admin, licensing } from "@/stores/portal"
+  import { admin } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
   import { API } from "@/api"
@@ -161,7 +161,7 @@
   }
 
   function handleDisable(key: AIProviderPartial) {
-    if (key === BBAI_KEY && !$admin.cloud) {
+    if (key === BBAI_KEY && !$admin.cloud && !hasLicenseKey) {
       portalModal.show()
       return
     }
