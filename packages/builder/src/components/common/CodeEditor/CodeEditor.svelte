@@ -701,7 +701,6 @@
     white-space: nowrap !important;
   }
 
-  /* Add styling for AI-generated content */
   .code-editor.ai-generated :global(.cm-editor) {
     background: var(--spectrum-global-color-blue-50) !important;
   }
