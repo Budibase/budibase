@@ -20,7 +20,7 @@
 
   let suggestedCode: string | null = null
   let previousContents: string | null = null
-  let expanded = false // TODO(samwho): set this back to false
+  let expanded = false
   let promptText = ""
 
   const thresholdExpansionWidth = 350
@@ -38,22 +38,15 @@
     previousContents = value
     promptText = prompt
     try {
-      await new Promise<void>((resolve, reject) =>
-        setTimeout(() => {
-          suggestedCode = prompt
-          dispatch("update", { code: prompt })
-          resolve()
-        }, 1000)
-      )
-      // const resp = await API.generateJs({ prompt, bindings })
-      // const code = resp.code
-      // if (code === "") {
-      //   throw new Error(
-      //     "We didn't understand your prompt. This can happen if the prompt isn't specific, or if it's a request for something other than code. Try expressing your request in a different way."
-      //   )
-      // }
-      // suggestedCode = code
-      // dispatch("update", { code })
+      const resp = await API.generateJs({ prompt, bindings })
+      const code = resp.code
+      if (code === "") {
+        throw new Error(
+          "We didn't understand your prompt. This can happen if the prompt isn't specific, or if it's a request for something other than code. Try expressing your request in a different way."
+        )
+      }
+      suggestedCode = code
+      dispatch("update", { code })
     } catch (e) {
       console.error(e)
       if (!(e instanceof Error)) {
