@@ -9,7 +9,6 @@
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
-
   import {
     autocompletion,
     closeBrackets,
@@ -52,17 +51,12 @@
   import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
-  import { themeStore } from "@/stores/portal"
-  import {
-    type EnrichedBinding,
-    FeatureFlag,
-    type EditorMode,
-  } from "@budibase/types"
+  import { featureFlags, themeStore } from "@/stores/portal"
+  import { type EnrichedBinding, type EditorMode } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
   import type { BindingCompletion, CodeValidator } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
-  import { featureFlag } from "@/helpers"
   import AIGen from "./AIGen.svelte"
 
   export let label: string | undefined = undefined
@@ -102,9 +96,7 @@
   }
 
   $: aiGenEnabled =
-    featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
-    mode.name === "javascript" &&
-    !readonly
+    $featureFlags.AI_JS_GENERATION && mode.name === "javascript" && !readonly
 
   $: {
     if (autofocus && isEditorInitialised) {
