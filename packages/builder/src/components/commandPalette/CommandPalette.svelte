@@ -376,6 +376,7 @@
                 <Icon size="M" name={command.icon} />
                 <strong>{command.type}:&nbsp;</strong>
                 <div class="name">
+                  <!--eslint-disable-next-line svelte/no-at-html-tags-->
                   {@html command.name}
                 </div>
               </div>
