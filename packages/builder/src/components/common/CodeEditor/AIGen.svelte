@@ -87,6 +87,8 @@
   function reset() {
     suggestedCode = null
     previousContents = null
+    promptText = ""
+    expanded = false
   }
 
   function calculateExpandedWidth() {
@@ -112,7 +114,6 @@
     placeholder="Generate with AI"
     onSubmit={generateJs}
     bind:expanded
-    on:collapse={rejectSuggestion}
     readonly={!!suggestedCode}
     {expandedOnly}
   />
@@ -130,21 +131,11 @@
     overflow: visible;
   }
 
-  @keyframes border-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
   .floating-actions {
     position: absolute;
     display: flex;
     gap: var(--spacing-s);
     bottom: calc(100% + 5px);
-    left: 5px;
     z-index: 2;
     animation: fade-in 0.2s ease-out forwards;
   }
