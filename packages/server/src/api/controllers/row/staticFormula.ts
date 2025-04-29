@@ -82,6 +82,7 @@ export async function updateRelatedFormula(
             relatedRows[tableId].map(related =>
               finaliseRow(relatedTable, related, {
                 updateFormula: false,
+                updateAIColumns: false,
               })
             )
           )
@@ -137,10 +138,10 @@ export async function updateAllFormulasInTable(table: Table) {
 export async function finaliseRow(
   source: Table | ViewV2,
   row: Row,
-  opts?: { updateFormula: boolean }
+  opts?: { updateFormula: boolean; updateAIColumns: boolean }
 ) {
   const db = context.getAppDB()
-  const { updateFormula = true } = opts || {}
+  const { updateFormula = true, updateAIColumns = true } = opts || {}
   const table = sdk.views.isView(source)
     ? await sdk.views.getTable(source.id)
     : source
@@ -159,7 +160,7 @@ export async function finaliseRow(
   const aiEnabled =
     (await pro.features.isBudibaseAIEnabled()) ||
     (await pro.features.isAICustomConfigsEnabled())
-  if (aiEnabled) {
+  if (aiEnabled && updateAIColumns) {
     row = await processAIColumns(table, row, {
       contextRows: [enrichedRow],
     })

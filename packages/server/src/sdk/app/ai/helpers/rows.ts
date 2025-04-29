@@ -13,83 +13,89 @@ export async function generateRows(
     rowId: string
     data: Record<string, { rowId: string[]; tableId: string }>
   }[] = []
-  for (const tableName of Object.keys(data)) {
-    const table = tables[tableName]
-    const linksOverride: Record<string, null> = {}
-    for (const field of Object.values(table.schema).filter(
-      f => f.type === FieldType.LINK
-    )) {
-      linksOverride[field.name] = null
-    }
 
-    const attachmentColumns = Object.values(table.schema).filter(f =>
-      [FieldType.ATTACHMENTS, FieldType.ATTACHMENT_SINGLE].includes(f.type)
-    )
+  await Promise.all(
+    Object.keys(data).map(async tableName => {
+      const table = tables[tableName]
+      const linksOverride: Record<string, null> = {}
+      for (const field of Object.values(table.schema).filter(
+        f => f.type === FieldType.LINK
+      )) {
+        linksOverride[field.name] = null
+      }
 
-    for (const entry of data[tableName]) {
-      await processAttachments(entry, attachmentColumns)
-
-      const tableId = table._id!
-      const createdRow = await sdk.rows.save(
-        tableId,
-        {
-          ...entry,
-          ...linksOverride,
-          _id: undefined,
-        },
-        userId
+      const attachmentColumns = Object.values(table.schema).filter(f =>
+        [FieldType.ATTACHMENTS, FieldType.ATTACHMENT_SINGLE].includes(f.type)
       )
 
-      createdData[tableId] ??= {}
-      createdData[tableId][entry._id] = createdRow.row._id!
+      for (const entry of data[tableName]) {
+        await processAttachments(entry, attachmentColumns)
 
-      const overridenLinks = Object.keys(linksOverride).reduce<
-        Record<string, { rowId: string[]; tableId: string }>
-      >((acc, l) => {
-        if (entry[l]) {
-          acc[l] = {
-            tableId: (table.schema[l] as any).tableId,
-            rowId: entry[l],
+        const tableId = table._id!
+        const createdRow = await sdk.rows.save(
+          tableId,
+          {
+            ...entry,
+            ...linksOverride,
+            _id: undefined,
+          },
+          userId
+        )
+
+        createdData[tableId] ??= {}
+        createdData[tableId][entry._id] = createdRow.row._id!
+
+        const overridenLinks = Object.keys(linksOverride).reduce<
+          Record<string, { rowId: string[]; tableId: string }>
+        >((acc, l) => {
+          if (entry[l]) {
+            acc[l] = {
+              tableId: (table.schema[l] as any).tableId,
+              rowId: entry[l],
+            }
           }
+          return acc
+        }, {})
+
+        if (Object.keys(overridenLinks).length) {
+          toUpdateLinks.push({
+            tableId: createdRow.table._id!,
+            rowId: createdRow.row._id!,
+            data: overridenLinks,
+          })
         }
-        return acc
-      }, {})
-
-      if (Object.keys(overridenLinks).length) {
-        toUpdateLinks.push({
-          tableId: createdRow.table._id!,
-          rowId: createdRow.row._id!,
-          data: overridenLinks,
-        })
       }
-    }
-  }
+    })
+  )
 
-  for (const data of toUpdateLinks) {
-    const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
+  await Promise.all(
+    toUpdateLinks.map(async data => {
+      const persistedRow = await sdk.rows.find(data.tableId, data.rowId)
 
-    const updatedLinks = Object.keys(data.data).reduce<Record<string, any>>(
-      (acc, d) => {
-        acc[d] = [
-          ...(persistedRow[d] || []),
-          ...data.data[d].rowId.map(
-            rid => createdData[data.data[d].tableId][rid]
-          ),
-        ]
-        return acc
-      },
-      {}
-    )
+      const updatedLinks = Object.keys(data.data).reduce<Record<string, any>>(
+        (acc, d) => {
+          acc[d] = [
+            ...(persistedRow[d] || []),
+            ...data.data[d].rowId.map(
+              rid => createdData[data.data[d].tableId][rid]
+            ),
+          ]
+          return acc
+        },
+        {}
+      )
 
-    await sdk.rows.save(
-      data.tableId,
-      {
-        ...persistedRow,
-        ...updatedLinks,
-      },
-      userId
-    )
-  }
+      await sdk.rows.save(
+        data.tableId,
+        {
+          ...persistedRow,
+          ...updatedLinks,
+        },
+        userId,
+        { updateAIColumns: false }
+      )
+    })
+  )
 }
 async function processAttachments(
   entry: Record<string, any>,

@@ -15,7 +15,8 @@ import { helpers } from "@budibase/shared-core"
 export async function save(
   tableOrViewId: string,
   inputs: Row,
-  userId: string | undefined
+  userId: string | undefined,
+  opts?: { updateAIColumns: boolean }
 ) {
   const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
   inputs.tableId = tableId
@@ -57,7 +58,10 @@ export async function save(
     table,
   })) as Row
 
-  return finaliseRow(source, row, { updateFormula: true })
+  return finaliseRow(source, row, {
+    updateFormula: true,
+    updateAIColumns: opts?.updateAIColumns || true,
+  })
 }
 
 export async function find(sourceId: string, rowId: string): Promise<Row> {
