@@ -93,10 +93,8 @@
         <div class="desktop">
           <UpgradeButton />
         </div>
-        <div class="right">
-          <div class="dropdown">
-            <UserDropdown />
-          </div>
+        <div class="dropdown">
+          <UserDropdown />
         </div>
       </div>
       <div class="main">
@@ -157,13 +155,6 @@
   }
   .desktop {
     display: contents;
-  }
-  .right {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: var(--spacing-m);
   }
 
   @media (max-width: 640px) {
