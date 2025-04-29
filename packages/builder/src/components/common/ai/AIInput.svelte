@@ -28,7 +28,7 @@
   $: aiEnabled = $auth?.user?.llm
 
   $: creditsExceeded = $licensing.aiCreditsExceeded
-  $: disabled = !aiEnabled || creditsExceeded || readonly || promptLoading
+  $: disabled = !aiEnabled || creditsExceeded || readonly
   $: animateBorder = !disabled && expanded
 
   $: canSubmit = !readonly && !!value
@@ -106,7 +106,7 @@
         class="prompt-input"
         {placeholder}
         on:keydown={handleKeyPress}
-        {disabled}
+        disabled={disabled || promptLoading}
       />
     {:else}
       <span class="spectrum-ActionButton-label ai-gen-text">
@@ -331,7 +331,7 @@
   }
 
   .ai-icon.loading {
-    animation: spin 1s cubic-bezier(0.075, 0.82, 0.165, 1) infinite;
+    animation: spin 1s ease-in-out infinite;
   }
 
   @keyframes spin {
@@ -339,7 +339,7 @@
       transform: rotate(0deg);
     }
     to {
-      transform: rotate(90deg);
+      transform: rotate(360deg);
     }
   }
 </style>
