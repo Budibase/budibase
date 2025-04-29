@@ -3,7 +3,7 @@
 
   import { createEventDispatcher } from "svelte"
   import { API } from "@/api"
-  import type { EnrichedBinding } from "@budibase/types"
+  import { ErrorCode, type EnrichedBinding } from "@budibase/types"
   import analytics, { Events } from "@/analytics"
   import AiInput from "../ai/AIInput.svelte"
 
@@ -43,17 +43,26 @@
       const resp = await API.generateJs({ prompt, bindings })
       const code = resp.code
       if (code === "") {
-        throw new Error("We didn't understand your prompt. Please rephrase it.")
+        throw new Error(
+          "We didn't understand your prompt. This can happen if the prompt isn't specific, or if it's a request for something other than code. Try expressing your request in a different way."
+        )
       }
       suggestedCode = code
       dispatch("update", { code })
     } catch (e) {
       console.error(e)
-      notifications.error(
-        e instanceof Error
-          ? `Unable to generate code: ${e.message}`
-          : "Unable to generate code. Please try again later."
-      )
+      if (!(e instanceof Error)) {
+        notifications.error("Unable to generate code. Please try again later.")
+        return
+      }
+
+      if ("code" in e && e.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
+        notifications.error(
+          "Monthly usage limit reached. We're exploring options to expand this soon. Questions? Contact support@budibase.com"
+        )
+      } else {
+        notifications.error(`Unable to generate code: ${e.message}`)
+      }
     }
   }
 
@@ -78,6 +87,8 @@
   function reset() {
     suggestedCode = null
     previousContents = null
+    promptText = ""
+    expanded = false
   }
 
   function calculateExpandedWidth() {
@@ -103,7 +114,6 @@
     placeholder="Generate with AI"
     onSubmit={generateJs}
     bind:expanded
-    on:collapse={rejectSuggestion}
     readonly={!!suggestedCode}
     {expandedOnly}
   />
@@ -121,21 +131,11 @@
     overflow: visible;
   }
 
-  @keyframes border-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
   .floating-actions {
     position: absolute;
     display: flex;
     gap: var(--spacing-s);
     bottom: calc(100% + 5px);
-    left: 5px;
     z-index: 2;
     animation: fade-in 0.2s ease-out forwards;
   }
