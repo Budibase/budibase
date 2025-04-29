@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionButton, notifications } from "@budibase/bbui"
+  import { Button, notifications } from "@budibase/bbui"
 
   import { createEventDispatcher } from "svelte"
   import { API } from "@/api"
@@ -20,7 +20,7 @@
 
   let suggestedCode: string | null = null
   let previousContents: string | null = null
-  let expanded = false
+  let expanded = false // TODO(samwho): set this back to false
   let promptText = ""
 
   const thresholdExpansionWidth = 350
@@ -31,8 +31,6 @@
       ? true
       : expanded
 
-  $: containerWidth = expanded ? calculateExpandedWidth() : "auto"
-
   async function generateJs(prompt: string) {
     promptText = ""
     if (!prompt.trim()) return
@@ -40,15 +38,22 @@
     previousContents = value
     promptText = prompt
     try {
-      const resp = await API.generateJs({ prompt, bindings })
-      const code = resp.code
-      if (code === "") {
-        throw new Error(
-          "We didn't understand your prompt. This can happen if the prompt isn't specific, or if it's a request for something other than code. Try expressing your request in a different way."
-        )
-      }
-      suggestedCode = code
-      dispatch("update", { code })
+      await new Promise<void>((resolve, reject) =>
+        setTimeout(() => {
+          suggestedCode = prompt
+          dispatch("update", { code: prompt })
+          resolve()
+        }, 1000)
+      )
+      // const resp = await API.generateJs({ prompt, bindings })
+      // const code = resp.code
+      // if (code === "") {
+      //   throw new Error(
+      //     "We didn't understand your prompt. This can happen if the prompt isn't specific, or if it's a request for something other than code. Try expressing your request in a different way."
+      //   )
+      // }
+      // suggestedCode = code
+      // dispatch("update", { code })
     } catch (e) {
       console.error(e)
       if (!(e instanceof Error)) {
@@ -90,23 +95,17 @@
     promptText = ""
     expanded = false
   }
-
-  function calculateExpandedWidth() {
-    return parentWidth
-      ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
-      : "300px"
-  }
 </script>
 
-<div class="ai-gen-container" style="--container-width: {containerWidth}">
+<div class="ai-gen-container" class:expanded>
   {#if suggestedCode !== null}
     <div class="floating-actions">
-      <ActionButton size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
+      <Button cta size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
         Accept
-      </ActionButton>
-      <ActionButton size="S" icon="Delete" on:click={rejectSuggestion}>
-        Reject
-      </ActionButton>
+      </Button>
+      <Button primary size="S" icon="Delete" on:click={rejectSuggestion}
+        >Reject</Button
+      >
     </div>
   {/if}
 
@@ -122,22 +121,27 @@
 <style>
   .ai-gen-container {
     height: 40px;
-    --container-width: auto;
     position: absolute;
-    right: 10px;
-    bottom: 10px;
-    width: var(--container-width);
+    bottom: var(--spacing-s);
+    right: var(--spacing-s);
     display: flex;
     overflow: visible;
+    transition: width 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    width: 22ch;
+  }
+
+  .ai-gen-container.expanded {
+    width: calc(100% - var(--spacing-s) * 2);
   }
 
   .floating-actions {
     position: absolute;
     display: flex;
     gap: var(--spacing-s);
-    bottom: calc(100% + 5px);
+    bottom: calc(100% + var(--spacing-s));
     z-index: 2;
     animation: fade-in 0.2s ease-out forwards;
+    width: 100%;
   }
 
   @keyframes fade-in {
