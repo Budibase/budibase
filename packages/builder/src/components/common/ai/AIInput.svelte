@@ -91,6 +91,7 @@
       src={BBAI}
       alt="AI"
       class="ai-icon"
+      class:loading={promptLoading}
       class:disabled={expanded && disabled}
       on:click={e => {
         e.stopPropagation()
@@ -327,5 +328,18 @@
   .ai-icon.disabled {
     filter: grayscale(1) brightness(1.5);
     opacity: 0.5;
+  }
+
+  .ai-icon.loading {
+    animation: spin 1s cubic-bezier(0.075, 0.82, 0.165, 1) infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(90deg);
+    }
   }
 </style>
