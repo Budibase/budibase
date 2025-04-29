@@ -174,3 +174,13 @@ export function processSearchFilters(
     ],
   }
 }
+
+export function toMap<TKey extends keyof TItem, TItem extends {}>(
+  key: TKey,
+  list: TItem[]
+): Record<string, TItem> {
+  return list.reduce<Record<string, TItem>>((result, item) => {
+    result[item[key] as string] = item
+    return result
+  }, {})
+}
