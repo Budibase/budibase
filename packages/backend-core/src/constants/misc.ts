@@ -9,6 +9,7 @@ export enum Cookie {
   ACCOUNT_RETURN_URL = "budibase:account:returnurl",
   DatasourceAuth = "budibase:datasourceauth",
   OIDC_CONFIG = "budibase:oidc:config",
+  FeatureFlags = "budibase:featureflags",
 }
 
 export { Header } from "@budibase/shared-core"
