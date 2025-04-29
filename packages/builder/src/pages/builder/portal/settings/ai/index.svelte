@@ -145,11 +145,7 @@
 
   function handleEnable(key: AIProviderPartial) {
     modalKey = key
-    if (
-      key === BBAI_KEY &&
-      !$admin.cloud &&
-      !$licensing.customAIConfigsEnabled
-    ) {
+    if (key === BBAI_KEY && !$admin.cloud && !hasLicenseKey) {
       portalModal.show()
       return
     }
@@ -165,7 +161,7 @@
   }
 
   function handleDisable(key: AIProviderPartial) {
-    if (key === BBAI_KEY && !$admin.cloud && !hasLicenseKey) {
+    if (key === BBAI_KEY && !$admin.cloud) {
       portalModal.show()
       return
     }
