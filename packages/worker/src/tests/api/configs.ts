@@ -1,3 +1,8 @@
+import {
+  AIConfig,
+  SaveConfigRequest,
+  SaveConfigResponse,
+} from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class ConfigAPI extends TestAPI {
@@ -17,21 +22,44 @@ export class ConfigAPI extends TestAPI {
       .expect("Content-Type", /json/)
   }
 
-  getAIConfig = () => {
-    return this.request
+  getAIConfig = async () => {
+    const resp = await this.request
       .get(`/api/global/configs/ai`)
       .set(this.config.defaultHeaders())
       .expect(200)
       .expect("Content-Type", /json/)
+    return resp.body as AIConfig
   }
 
-  saveConfig = (data: any) => {
-    return this.request
+  saveConfig = async (
+    data: SaveConfigRequest,
+    expectations?: { status?: number; body?: Record<string, string | RegExp> }
+  ) => {
+    const { status = 200, body } = expectations || {}
+
+    const resp = await this.request
       .post(`/api/global/configs`)
       .send(data)
       .set(this.config.defaultHeaders())
-      .expect(200)
       .expect("Content-Type", /json/)
+
+    if (resp.status !== status) {
+      throw new Error(
+        `Expected status ${status}, got ${resp.status}: ${resp.text}`
+      )
+    }
+
+    if (body) {
+      for (const [key, value] of Object.entries(body)) {
+        if (typeof value === "string") {
+          expect(resp.body[key]).toEqual(value)
+        } else if (value instanceof RegExp) {
+          expect(resp.body[key]).toMatch(value)
+        }
+      }
+    }
+
+    return resp.body as SaveConfigResponse
   }
 
   OIDCCallback = (configId: string, preAuthRes: any) => {
