@@ -14,21 +14,23 @@ export async function generateRows(
     data: Record<string, { rowId: string[]; tableId: string }>
   }[] = []
 
-  await Promise.all(
-    Object.keys(data).map(async tableName => {
-      const table = tables[tableName]
-      const linksOverride: Record<string, null> = {}
-      for (const field of Object.values(table.schema).filter(
-        f => f.type === FieldType.LINK
-      )) {
-        linksOverride[field.name] = null
-      }
+  const rowPromises = []
 
-      const attachmentColumns = Object.values(table.schema).filter(f =>
-        [FieldType.ATTACHMENTS, FieldType.ATTACHMENT_SINGLE].includes(f.type)
-      )
+  for (const tableName of Object.keys(data)) {
+    const table = tables[tableName]
+    const linksOverride: Record<string, null> = {}
+    for (const field of Object.values(table.schema).filter(
+      f => f.type === FieldType.LINK
+    )) {
+      linksOverride[field.name] = null
+    }
 
-      for (const entry of data[tableName]) {
+    const attachmentColumns = Object.values(table.schema).filter(f =>
+      [FieldType.ATTACHMENTS, FieldType.ATTACHMENT_SINGLE].includes(f.type)
+    )
+
+    rowPromises.push(
+      ...data[tableName].map(async entry => {
         await processAttachments(entry, attachmentColumns)
 
         const tableId = table._id!
@@ -64,9 +66,11 @@ export async function generateRows(
             data: overridenLinks,
           })
         }
-      }
-    })
-  )
+      })
+    )
+  }
+
+  await Promise.all(rowPromises)
 
   await Promise.all(
     toUpdateLinks.map(async data => {
