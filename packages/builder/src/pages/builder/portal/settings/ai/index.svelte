@@ -41,6 +41,7 @@
   let modalKey: AIProviderPartial
   let modalConfig: ProviderConfig
   let providerKeys: AIProviderPartial[]
+  let hasLicenseKey: string | undefined
 
   $: isCloud = $admin.cloud
   $: providerKeys = isCloud ? [BBAI_KEY] : [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
@@ -164,11 +165,7 @@
   }
 
   function handleDisable(key: AIProviderPartial) {
-    if (
-      key === BBAI_KEY &&
-      !$admin.cloud &&
-      !$licensing.customAIConfigsEnabled
-    ) {
+    if (key === BBAI_KEY && !$admin.cloud && !hasLicenseKey) {
       portalModal.show()
       return
     }
@@ -182,6 +179,8 @@
   onMount(async () => {
     try {
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      const licenseKeyResponse = await API.getLicenseKey()
+      hasLicenseKey = licenseKeyResponse?.licenseKey
     } catch {
       notifications.error("Error fetching AI settings")
     }
