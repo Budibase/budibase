@@ -175,6 +175,21 @@ export class FlagSet<T extends { [name: string]: boolean }> {
         }
       }
 
+      const overrides = context.getFeatureFlagOverrides()
+      for (const [key, value] of Object.entries(overrides)) {
+        if (!this.isFlagName(key)) {
+          continue
+        }
+
+        if (typeof value !== "boolean") {
+          continue
+        }
+
+        // @ts-expect-error - TS does not like you writing into a generic type.
+        flagValues[key] = value
+        tags[`flags.${key}.source`] = "override"
+      }
+
       context.setFeatureFlags(this.setId, flagValues)
       for (const [key, value] of Object.entries(flagValues)) {
         tags[`flags.${key}.value`] = value
