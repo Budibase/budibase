@@ -14,7 +14,6 @@
   export const submit = onPromptSubmit
 
   $: expanded = expandedOnly || expanded
-
   const dispatch = createEventDispatcher()
 
   let promptInput: HTMLInputElement
@@ -157,7 +156,7 @@
             ? "#6E56FF"
             : "var(--spectrum-global-color-gray-600)"}
           size="S"
-          disabled={!canSubmit}
+          disabled={!canSubmit || promptLoading}
           hoverable={!readonly}
           hoverColor="#6E56FF"
           name={promptLoading ? "StopCircle" : "PlayCircle"}
@@ -208,46 +207,42 @@
     border-radius: 30px;
     padding: 1px;
     background: linear-gradient(
-      to right,
-      #6e56ff 5%,
-      #9f8fff 20%,
-      transparent 35%
+      125deg,
+      transparent -10%,
+      #6e56ff 2%,
+      #9f8fff 15%,
+      #9f8fff 25%,
+      transparent 35%,
+      transparent 110%
     );
     -webkit-mask: linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     pointer-events: none;
-    animation: border-flow 1s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
+    animation: border-flow 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
   }
 
   @keyframes border-flow {
     0% {
-      /* Top: 10%, Bottom: ~7.5% */
       clip-path: polygon(0% 0%, 10% 0%, 8% 100%, 0% 100%);
     }
     30% {
-      /* Top: 35%, Bottom: ~26% */
       clip-path: polygon(0% 0%, 35% 0%, 26% 100%, 0% 100%);
     }
     50% {
-      /* Top: 55%, Bottom: ~41% */
       clip-path: polygon(0% 0%, 55% 0%, 41% 100%, 0% 100%);
     }
     70% {
-      /* Top: 70%, Bottom: ~53% */
       clip-path: polygon(0% 0%, 70% 0%, 53% 100%, 0% 100%);
     }
     85% {
-      /* Top: 80%, Bottom: 60% */
       clip-path: polygon(0% 0%, 80% 0%, 60% 100%, 0% 100%);
     }
     95% {
-      /* Top: 86%, Bottom: ~65% */
       clip-path: polygon(0% 0%, 86% 0%, 65% 100%, 0% 100%);
     }
     100% {
-      /* Top: 90%, Bottom: ~68% */
       clip-path: polygon(0% 0%, 90% 0%, 68% 100%, 0% 100%);
     }
   }

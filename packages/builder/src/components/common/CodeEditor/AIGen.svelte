@@ -33,10 +33,6 @@
 
   $: containerWidth = expanded ? calculateExpandedWidth() : "auto"
 
-  $: initiallyExpanded =
-    expandedOnly ||
-    (parentWidth !== null && parentWidth > thresholdExpansionWidth)
-
   async function generateJs(prompt: string) {
     promptText = ""
     if (!prompt.trim()) return
@@ -82,6 +78,8 @@
   function reset() {
     suggestedCode = null
     previousContents = null
+    promptText = ""
+    expanded = false
   }
 
   function calculateExpandedWidth() {
@@ -107,7 +105,6 @@
     placeholder="Generate with AI"
     onSubmit={generateJs}
     bind:expanded
-    on:collapse={rejectSuggestion}
     readonly={!!suggestedCode}
     {expandedOnly}
   />
