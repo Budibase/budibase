@@ -16,6 +16,7 @@ import {
   DeleteInviteUsersRequest,
   DeleteInviteUsersResponse,
   DeleteUserResponse,
+  ErrorCode,
   FetchUsersResponse,
   FindUserResponse,
   GetUserInvitesResponse,
@@ -42,7 +43,6 @@ import {
 import {
   users,
   cache,
-  ErrorCode,
   events,
   platform,
   tenancy,
