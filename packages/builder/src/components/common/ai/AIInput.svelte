@@ -153,7 +153,7 @@
         </Modal>
       {:else}
         <Icon
-          color={promptLoading
+          color={promptInput
             ? "#6E56FF"
             : "var(--spectrum-global-color-gray-600)"}
           size="S"
