@@ -82,6 +82,7 @@
   let isEditorInitialised = false
   let queuedRefresh = false
   let editorWidth: number | null = null
+  let isAIGeneratedContent = false
 
   // Theming!
   let currentTheme = $themeStore?.theme
@@ -421,6 +422,7 @@
     editor.dispatch({
       changes: { from: 0, to: editor.state.doc.length, insert: code },
     })
+    isAIGeneratedContent = true
   }
 
   onMount(() => {
@@ -454,7 +456,12 @@
   </div>
 {/if}
 
-<div class={`code-editor ${mode?.name || ""}`} bind:this={editorEle}>
+<div
+  class={`code-editor ${mode?.name || ""} ${
+    isAIGeneratedContent ? "ai-generated" : ""
+  }`}
+  bind:this={editorEle}
+>
   <div tabindex="-1" bind:this={textarea} />
 </div>
 
@@ -467,6 +474,7 @@
     on:accept={() => {
       dispatch("change", editor.state.doc.toString())
       dispatch("blur", editor.state.doc.toString())
+      isAIGeneratedContent = false
     }}
     on:reject={event => {
       const { code } = event.detail
@@ -474,6 +482,7 @@
       editor.dispatch({
         changes: { from: 0, to: editor.state.doc.length, insert: code || "" },
       })
+      isAIGeneratedContent = false
     }}
   />
 {/if}
@@ -682,5 +691,20 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+
+  .code-editor.ai-generated :global(.cm-editor) {
+    background: var(--spectrum-global-color-blue-50) !important;
+  }
+
+  .code-editor.ai-generated :global(.cm-content) {
+    background: transparent !important;
+  }
+
+  .code-editor.ai-generated :global(.cm-line) {
+    background: #765ffe1a !important;
+    display: inline-block;
+    min-width: fit-content;
+    padding-right: 2px !important;
   }
 </style>
