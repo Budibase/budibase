@@ -200,9 +200,6 @@ class LicensingStore extends BudiStore<LicensingState> {
       Constants.Features.APP_BUILDERS
     )
     const budibaseAIEnabled = features.includes(Constants.Features.BUDIBASE_AI)
-    const customAIConfigsEnabled = features.includes(
-      Constants.Features.AI_CUSTOM_CONFIGS
-    )
     const customAppScriptsEnabled = features.includes(
       Constants.Features.CUSTOM_APP_SCRIPTS
     )
@@ -220,7 +217,6 @@ class LicensingStore extends BudiStore<LicensingState> {
         brandingEnabled,
         pwaEnabled,
         budibaseAIEnabled,
-        customAIConfigsEnabled,
         scimEnabled,
         environmentVariablesEnabled,
         auditLogsEnabled,
