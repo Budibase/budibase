@@ -119,6 +119,8 @@ export type AIProvider =
   | "Custom"
   | "BudibaseAI"
 
+export type AIProviderPartial = "BudibaseAI" | "OpenAI" | "AzureOpenAI"
+
 export interface ProviderConfig {
   provider: AIProvider
   isDefault: boolean
