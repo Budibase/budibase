@@ -28,7 +28,7 @@
   $: aiEnabled = $auth?.user?.llm
 
   $: creditsExceeded = $licensing.aiCreditsExceeded
-  $: disabled = !aiEnabled || creditsExceeded || readonly || promptLoading
+  $: disabled = !aiEnabled || creditsExceeded || readonly
   $: animateBorder = !disabled && expanded
 
   $: canSubmit = !readonly && !!value
@@ -91,6 +91,7 @@
       src={BBAI}
       alt="AI"
       class="ai-icon"
+      class:loading={promptLoading}
       class:disabled={expanded && disabled}
       on:click={e => {
         e.stopPropagation()
@@ -105,7 +106,7 @@
         class="prompt-input"
         {placeholder}
         on:keydown={handleKeyPress}
-        {disabled}
+        disabled={disabled || promptLoading}
       />
     {:else}
       <span class="spectrum-ActionButton-label ai-gen-text">
@@ -327,5 +328,18 @@
   .ai-icon.disabled {
     filter: grayscale(1) brightness(1.5);
     opacity: 0.5;
+  }
+
+  .ai-icon.loading {
+    animation: spin 1s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>
