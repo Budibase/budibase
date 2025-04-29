@@ -16,11 +16,12 @@ import env from "../environment"
 import {
   Ctx,
   EndpointMatcher,
+  ErrorCode,
   LoginMethod,
   SessionCookie,
   User,
 } from "@budibase/types"
-import { ErrorCode, InvalidAPIKeyError } from "../errors"
+import { InvalidAPIKeyError } from "../errors"
 import tracer from "dd-trace"
 import type { Middleware, Next } from "koa"
 
