@@ -91,6 +91,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
   const result = await finaliseRow(source, row, {
     updateFormula: true,
+    updateAIColumns: true,
   })
 
   return { ...result, oldRow }
