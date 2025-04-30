@@ -5,7 +5,7 @@ interface Position {
   y: number
 }
 
- interface MenuItem {
+interface MenuItem {
   icon?: string
   name: string
   keyBind: string | null
