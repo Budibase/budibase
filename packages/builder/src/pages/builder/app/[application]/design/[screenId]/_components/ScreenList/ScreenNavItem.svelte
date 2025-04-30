@@ -15,7 +15,6 @@
   import { capitalise } from "@/helpers"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import type { Screen } from "@budibase/types"
-  import type { MenuItem } from "@/stores/builder/contextMenu"
 
   export let screen
 
@@ -71,7 +70,7 @@
     e.preventDefault()
     e.stopPropagation()
 
-    const items: MenuItem[] = [
+    const items = [
       {
         icon: "ShowOneLayer",
         name: "Paste inside",
