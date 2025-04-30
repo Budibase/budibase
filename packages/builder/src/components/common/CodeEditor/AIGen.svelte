@@ -22,6 +22,7 @@
   let previousContents: string | null = null
   let expanded = false
   let promptText = ""
+  let inputValue = ""
 
   const thresholdExpansionWidth = 350
 
@@ -89,6 +90,7 @@
     previousContents = null
     promptText = ""
     expanded = false
+    inputValue = ""
   }
 
   function calculateExpandedWidth() {
@@ -114,6 +116,7 @@
     placeholder="Generate with AI"
     onSubmit={generateJs}
     bind:expanded
+    bind:value={inputValue}
     readonly={!!suggestedCode}
     {expandedOnly}
   />
