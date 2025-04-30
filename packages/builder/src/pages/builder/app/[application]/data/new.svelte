@@ -16,8 +16,7 @@
   import CreationPage from "@/components/common/CreationPage.svelte"
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
-  import { featureFlag } from "@/helpers"
-  import { FeatureFlag } from "@budibase/types"
+  import { featureFlags } from "@/stores/portal"
 
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
@@ -26,10 +25,7 @@
   let externalDatasourceLoading = false
 
   $: disabled = sampleDataLoading || externalDatasourceLoading
-
-  $: aiTableGenerationEnabled = featureFlag.isEnabled(
-    FeatureFlag.AI_TABLE_GENERATION
-  )
+  $: aiTableGenerationEnabled = $featureFlags.AI_TABLE_GENERATION
 
   const createSampleData = async () => {
     sampleDataLoading = true

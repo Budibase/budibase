@@ -460,6 +460,17 @@ export function setFeatureFlags(key: string, value: Record<string, boolean>) {
   context.featureFlagCache[key] = value
 }
 
+export function getFeatureFlagOverrides(): Record<string, boolean> {
+  return getCurrentContext()?.featureFlagOverrides || {}
+}
+
+export async function doInFeatureFlagOverrideContext<T>(
+  value: Record<string, boolean>,
+  callback: () => Promise<T>
+) {
+  return await newContext({ featureFlagOverrides: value }, callback)
+}
+
 export function getTableForView(viewId: string): Table | undefined {
   const context = getCurrentContext()
   if (!context) {
