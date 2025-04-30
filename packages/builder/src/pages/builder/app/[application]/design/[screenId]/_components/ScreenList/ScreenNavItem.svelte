@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Modal, Helpers, notifications, Icon } from "@budibase/bbui"
   import {
     navigationStore,
@@ -14,13 +14,15 @@
   import { makeComponentUnique } from "@/helpers/components"
   import { capitalise } from "@/helpers"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import type { Screen } from "@budibase/types"
+  import type { MenuItem } from "@/stores/builder/contextMenu"
 
   export let screen
 
-  let confirmDeleteDialog
-  let screenDetailsModal
+  let confirmDeleteDialog: ConfirmDialog
+  let screenDetailsModal: Modal
 
-  const createDuplicateScreen = async ({ route }) => {
+  const createDuplicateScreen = async ({ route }: { route: string }) => {
     // Create a dupe and ensure it is unique
     let duplicateScreen = Helpers.cloneDeep(screen)
     delete duplicateScreen._id
@@ -57,7 +59,7 @@
 
   $: noPaste = !$componentStore.componentToPaste
 
-  const pasteComponent = mode => {
+  const pasteComponent = (mode: "inside") => {
     try {
       componentStore.paste(screen.props, mode, screen)
     } catch (error) {
@@ -65,11 +67,11 @@
     }
   }
 
-  const openContextMenu = (e, screen) => {
+  const openContextMenu = (e: MouseEvent, screen: Screen) => {
     e.preventDefault()
     e.stopPropagation()
 
-    const items = [
+    const items: MenuItem[] = [
       {
         icon: "ShowOneLayer",
         name: "Paste inside",
@@ -96,7 +98,7 @@
       },
     ]
 
-    contextMenuStore.open(screen._id, items, { x: e.clientX, y: e.clientY })
+    contextMenuStore.open(screen._id!, items, { x: e.clientX, y: e.clientY })
   }
 </script>
 

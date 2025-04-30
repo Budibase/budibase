@@ -5,10 +5,13 @@ interface Position {
   y: number
 }
 
-interface MenuItem {
-  label: string
+export interface MenuItem {
   icon?: string
-  action: () => void
+  name: string
+  keyBind: string | null
+  visible: boolean
+  disabled: boolean
+  callback: () => void
 }
 
 interface ContextMenuState {

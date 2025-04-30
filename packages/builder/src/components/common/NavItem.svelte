@@ -5,7 +5,7 @@
   import type { UIUser } from "@budibase/types"
 
   export let icon: string | null
-  export let iconTooltip: string
+  export let iconTooltip: string = ""
   export let withArrow: boolean = false
   export let withActions: boolean = true
   export let showActions: boolean = false
@@ -15,12 +15,12 @@
   export let selected: boolean = false
   export let opened: boolean = false
   export let draggable: boolean = false
-  export let iconText: string
-  export let iconColor: string
+  export let iconText: string = ""
+  export let iconColor: string = ""
   export let scrollable: boolean = false
   export let highlighted: boolean = false
   export let rightAlignIcon: boolean = false
-  export let id: string
+  export let id: string = ""
   export let showTooltip: boolean = false
   export let selectedBy: UIUser[] | null = null
   export let compact: boolean = false
