@@ -415,7 +415,6 @@
     })
   }
 
-  // Handle AI generation code updates
   const handleAICodeUpdate = (event: CustomEvent<{ code: string }>) => {
     const { code } = event.detail
     value = code
@@ -423,6 +422,7 @@
       changes: { from: 0, to: editor.state.doc.length, insert: code },
     })
     isAIGeneratedContent = true
+    dispatch("change", code)
   }
 
   onMount(() => {
@@ -483,6 +483,7 @@
         changes: { from: 0, to: editor.state.doc.length, insert: code || "" },
       })
       isAIGeneratedContent = false
+      dispatch("change", code || "")
     }}
   />
 {/if}
