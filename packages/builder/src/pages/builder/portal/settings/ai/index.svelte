@@ -11,7 +11,8 @@
     Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-  import { admin, licensing } from "@/stores/portal"
+  import { admin } from "@/stores/portal"
+  import { auth } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
   import { API } from "@/api"
@@ -41,6 +42,7 @@
   let modalKey: AIProviderPartial
   let modalConfig: ProviderConfig
   let providerKeys: AIProviderPartial[]
+  let hasLicenseKey: string | undefined
 
   $: isCloud = $admin.cloud
   $: providerKeys = isCloud ? [BBAI_KEY] : [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
@@ -55,18 +57,25 @@
   $: enabled = !isCloud ? providers.filter(p => p.key === activeKey) : providers
   $: disabled = !isCloud ? providers.filter(p => p.key !== activeKey) : []
 
+  function getConfigForProvider(key: AIProviderPartial) {
+    for (const config of Object.values(aiConfig.config)) {
+      if (config.provider === key) {
+        return config
+      }
+    }
+    return undefined
+  }
+
   function getProviderConfig(key: AIProviderPartial): ProviderConfig {
     const details = ProviderDetails[key]
-    const loadedConfig = aiConfig?.config[key] || {}
-    let baseConfig = { ...details.defaultConfig }
+    const config = getConfigForProvider(key) || { ...details.defaultConfig }
 
     return {
-      ...baseConfig,
-      ...loadedConfig,
+      ...config,
       provider: details.provider as AIProvider,
       name: details.name,
-      active: loadedConfig.active ?? baseConfig.active ?? false,
-      isDefault: loadedConfig.isDefault ?? baseConfig.isDefault ?? false,
+      active: config.active ?? false,
+      isDefault: config.isDefault ?? false,
     }
   }
 
@@ -108,12 +117,7 @@
       }
     }
 
-    // handle the old budibase_ai key
     const baseConfig = { ...aiConfig.config }
-    if (baseConfig["budibase_ai"]) {
-      delete baseConfig["budibase_ai"]
-    }
-
     const payload = {
       type: ConfigType.AI,
       config: { ...baseConfig, [key]: updated },
@@ -133,6 +137,7 @@
     try {
       await API.saveConfig(payload)
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      await auth.getSelf()
       notifications.success(`AI provider updated`)
     } catch (err: any) {
       notifications.error(err.message || "Failed to update AI provider")
@@ -142,11 +147,7 @@
 
   function handleEnable(key: AIProviderPartial) {
     modalKey = key
-    if (
-      key === BBAI_KEY &&
-      !$admin.cloud &&
-      !$licensing.customAIConfigsEnabled
-    ) {
+    if (key === BBAI_KEY && !$admin.cloud && !hasLicenseKey) {
       portalModal.show()
       return
     }
@@ -162,11 +163,7 @@
   }
 
   function handleDisable(key: AIProviderPartial) {
-    if (
-      key === BBAI_KEY &&
-      !$admin.cloud &&
-      !$licensing.customAIConfigsEnabled
-    ) {
+    if (key === BBAI_KEY && !$admin.cloud && !hasLicenseKey) {
       portalModal.show()
       return
     }
@@ -180,6 +177,8 @@
   onMount(async () => {
     try {
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      const licenseKeyResponse = await API.getLicenseKey()
+      hasLicenseKey = licenseKeyResponse?.licenseKey
     } catch {
       notifications.error("Error fetching AI settings")
     }

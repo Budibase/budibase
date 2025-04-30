@@ -470,7 +470,9 @@ describe("BudibaseAI", () => {
     ) =>
       mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
         format: zodResponseFormat(
-          ai.aiColumnSchemas(generationStructure),
+          ai.aiColumnSchemas(
+            ai.aiTableResponseToTableSchema(generationStructure)
+          ),
           "key"
         ),
       })
@@ -684,7 +686,7 @@ describe("BudibaseAI", () => {
             },
           },
         ],
-        "Employees 2": [
+        Employees: [
           {
             "First Name": "Joshua",
             "Last Name": "Lee",
