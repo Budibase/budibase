@@ -7,22 +7,24 @@
 </script>
 
 <ModalContent
-  title="Setup BB AI"
+  title="Set up Budibase AI"
   confirmText="Account portal"
   cancelText="Cancel"
   onConfirm={confirmHandler}
   onCancel={cancelHandler}
 >
-  <div>To setup BB AI you must add a Budibase license key.</div>
+  <div>To set up Budibase AI you need a Budibase license key.</div>
 
-  <div class="link-container">
-    To get your license key, account admins must sign up to the
+  <div>
+    To get your license key, an account admin must sign up to Budibase using the
     <Link href={$admin.accountPortalUrl}>Budibase Account Portal</Link>
   </div>
-</ModalContent>
 
-<style>
-  .link-container {
-    margin-top: calc(var(--spacing-xl) * -1);
-  }
-</style>
+  <div>
+    Either use an existing self-host workspace, or create a new one. Once you
+    have signed up, you will be able to link your license key to this self-host
+    installation by going to "Account" at the top of this page, and then
+    "Upgrade" tab. Paste your license key in there, return to this page, and try
+    again.
+  </div>
+</ModalContent>

@@ -48,19 +48,17 @@
       }
       suggestedCode = code
       dispatch("update", { code })
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      if (!(e instanceof Error)) {
-        notifications.error("Unable to generate code. Please try again later.")
-        return
-      }
 
       if ("code" in e && e.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
         notifications.error(
           "Monthly usage limit reached. We're exploring options to expand this soon. Questions? Contact support@budibase.com"
         )
-      } else {
+      } else if ("message" in e) {
         notifications.error(`Unable to generate code: ${e.message}`)
+      } else {
+        notifications.error(`Unable to generate code.`)
       }
     }
   }
