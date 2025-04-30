@@ -160,7 +160,7 @@
           disabled={!canSubmit || promptLoading}
           hoverable={!readonly}
           hoverColor="#6E56FF"
-          name={promptLoading ? "StopCircle" : "PlayCircle"}
+          name={"PlayCircle"}
           on:click={onPromptSubmit}
         />
       {/if}
@@ -295,7 +295,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     transition: opacity 0.2s ease-out;
-    margin-right: var(--spacing-xs);
+    margin: auto;
     position: relative;
     z-index: 2;
   }

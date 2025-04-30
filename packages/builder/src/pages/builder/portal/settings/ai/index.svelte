@@ -12,6 +12,7 @@
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
   import { admin } from "@/stores/portal"
+  import { auth } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
   import { API } from "@/api"
@@ -136,6 +137,7 @@
     try {
       await API.saveConfig(payload)
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
+      await auth.getSelf()
       notifications.success(`AI provider updated`)
     } catch (err: any) {
       notifications.error(err.message || "Failed to update AI provider")
