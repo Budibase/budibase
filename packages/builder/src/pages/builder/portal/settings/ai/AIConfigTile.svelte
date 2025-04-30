@@ -3,27 +3,24 @@
   import OpenAILogo from "./logos/OpenAI.svelte"
   import AzureOpenAILogo from "./logos/AzureOpenAI.svelte"
   import BudibaseAILogo from "./logos/BBAI.svelte"
-  import type { ProviderConfig } from "@budibase/types"
-  import { Providers } from "./constants"
+  import type { AIProvider, ProviderConfig } from "@budibase/types"
+  import { type ComponentType } from "svelte"
 
-  const logos: Record<string, any> = {
-    [Providers.BudibaseAI]: BudibaseAILogo,
-    [Providers.OpenAI]: OpenAILogo,
-    [Providers.AzureOpenAI]: AzureOpenAILogo,
+  const logos: Partial<Record<AIProvider, ComponentType>> = {
+    BudibaseAI: BudibaseAILogo,
+    OpenAI: OpenAILogo,
+    AzureOpenAI: AzureOpenAILogo,
   }
 
   export let config: ProviderConfig
   export let editHandler: (() => void) | null
   export let disableHandler: (() => void) | null
-
-  let selectedLogo: any =
-    logos[Providers[config.provider as keyof typeof Providers]]
 </script>
 
 <div class="option">
   <div class="details">
     <div class="icon">
-      <svelte:component this={selectedLogo} height="26" width="26" />
+      <svelte:component this={logos[config.provider]} height="26" width="26" />
     </div>
     <div class="header">
       <Body size="S" weight={"600"}>{config.name}</Body>

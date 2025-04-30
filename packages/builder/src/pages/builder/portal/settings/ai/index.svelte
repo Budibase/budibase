@@ -24,9 +24,8 @@
     ConfigType,
     type AIConfig,
     type ProviderConfig,
-    type AIProviderPartial,
   } from "@budibase/types"
-  import { ProviderDetails, BBAI_KEY, OPENAI_KEY, AZURE_KEY } from "./constants"
+  import { ProviderDetails } from "./constants"
 
   const bannerKey = `bb-ai-configuration-banner`
   const bannerStore = new BudiStore<boolean>(false, {
@@ -39,135 +38,110 @@
   let aiConfig: AIConfig
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
-  let modalKey: AIProviderPartial
+  let modalProvider: AIProvider
   let modalConfig: ProviderConfig
-  let providerKeys: AIProviderPartial[]
+  let providerNames: AIProvider[]
   let hasLicenseKey: string | undefined
 
   $: isCloud = $admin.cloud
-  $: providerKeys = isCloud ? [BBAI_KEY] : [BBAI_KEY, OPENAI_KEY, AZURE_KEY]
+  $: providerNames = isCloud
+    ? ["BudibaseAI"]
+    : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
   $: providers = aiConfig
-    ? providerKeys.map((key: AIProviderPartial) => ({
-        key,
-        cfg: getProviderConfig(key),
+    ? providerNames.map((provider: AIProvider) => ({
+        provider,
+        config: getProviderConfig(provider).config,
       }))
     : []
 
-  $: activeKey = providers.find(p => p.cfg.active)?.key
-  $: enabled = !isCloud ? providers.filter(p => p.key === activeKey) : providers
-  $: disabled = !isCloud ? providers.filter(p => p.key !== activeKey) : []
+  $: activeProvider = providers.find(p => p.config.active)?.provider
+  $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
 
-  function getConfigForProvider(key: AIProviderPartial) {
-    for (const config of Object.values(aiConfig.config)) {
-      if (config.provider === key) {
-        return config
+  function getExistingProviderConfig(provider: AIProvider) {
+    for (const [key, config] of Object.entries(aiConfig.config)) {
+      if (config.provider === provider) {
+        return { key, config }
       }
     }
-    return undefined
+    return { key: undefined, config: undefined }
   }
 
-  function getProviderConfig(key: AIProviderPartial): ProviderConfig {
-    const details = ProviderDetails[key]
-    const config = getConfigForProvider(key) || { ...details.defaultConfig }
-
-    return {
-      ...config,
-      provider: details.provider as AIProvider,
-      name: details.name,
-      active: config.active ?? false,
-      isDefault: config.isDefault ?? false,
+  function getProviderConfig(provider: AIProvider) {
+    const { key, config } = getExistingProviderConfig(provider)
+    if (config) {
+      return { key, config }
     }
+
+    const details = ProviderDetails[provider] // Update to use the provider parameter
+    if (!details) {
+      throw new Error(`Provider ${key} not found`)
+    }
+    return { key: provider, config: details.defaultConfig }
   }
 
-  async function updateProviderConfig(
-    key: AIProviderPartial,
-    enable: boolean,
-    configData: Partial<ProviderConfig> | null = null
-  ) {
-    const details = ProviderDetails[key]
-    const existing = aiConfig.config[key] || {}
-    let updated: ProviderConfig
-
-    if (enable) {
-      if (key === BBAI_KEY) {
-        updated = {
-          ...details.defaultConfig,
-          ...existing,
-          provider: details.provider as AIProvider,
-          name: details.name,
-          active: true,
-          isDefault: true,
-        }
-      } else {
-        updated = {
-          ...details.defaultConfig,
-          ...existing,
-          ...configData,
-          active: true,
-          isDefault: true,
-        }
-      }
-    } else {
-      updated = {
-        ...details.defaultConfig,
-        ...existing,
-        ...configData,
-        active: false,
-        isDefault: false,
-      }
-    }
-
-    const baseConfig = { ...aiConfig.config }
-    const payload = {
-      type: ConfigType.AI,
-      config: { ...baseConfig, [key]: updated },
-    }
-    if (enable) {
-      Object.keys(payload.config).forEach(providerKey => {
-        if (providerKey !== key) {
-          payload.config[providerKey] = {
-            ...payload.config[providerKey],
-            active: false,
-            isDefault: false,
-          }
-        }
-      })
-    }
-
+  async function saveConfig(config: AIConfig) {
     try {
-      await API.saveConfig(payload)
+      await API.saveConfig(config)
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
       await auth.getSelf()
       notifications.success(`AI provider updated`)
     } catch (err: any) {
       notifications.error(err.message || "Failed to update AI provider")
     }
+  }
+
+  async function enableProvider(
+    provider: AIProvider,
+    updates?: Partial<Omit<ProviderConfig, "active" | "isDefault">>
+  ) {
+    // Ensure that only one provider is active at a time.
+    for (const config of Object.values(aiConfig.config)) {
+      config.active = false
+      config.isDefault = false
+    }
+
+    const { key, config } = getProviderConfig(provider)
+    aiConfig.config[key] = {
+      ...config,
+      ...updates,
+      active: true,
+      isDefault: true,
+    }
+
+    await saveConfig(aiConfig)
     configModal?.hide()
   }
 
-  function handleEnable(key: AIProviderPartial) {
-    modalKey = key
-    if (key === BBAI_KEY && !$admin.cloud && !hasLicenseKey) {
-      portalModal.show()
-      return
-    }
-
-    if (key === BBAI_KEY) {
-      updateProviderConfig(key, true)
-      return
-    }
-
-    const currentCfg = getProviderConfig(key)
-    modalConfig = { ...currentCfg }
-    configModal.show()
+  async function disableProvider(provider: AIProvider) {
+    const { key, config } = getProviderConfig(provider)
+    aiConfig.config[key] = { ...config, active: false, isDefault: false }
+    await saveConfig(aiConfig)
   }
 
-  function handleDisable(key: AIProviderPartial) {
-    if (key === BBAI_KEY && !$admin.cloud && !hasLicenseKey) {
+  async function updateProvider(
+    provider: AIProvider,
+    updates: Partial<Omit<ProviderConfig, "active" | "isDefault">>
+  ) {
+    const { key, config } = getProviderConfig(provider)
+    aiConfig.config[key] = { ...config, ...updates }
+    await saveConfig(aiConfig)
+  }
+
+  async function handleEnable(provider: AIProvider) {
+    modalProvider = provider
+    if (provider === "BudibaseAI" && !isCloud && !hasLicenseKey) {
       portalModal.show()
       return
     }
-    updateProviderConfig(key, false)
+
+    if (provider === "BudibaseAI") {
+      await enableProvider(provider)
+      return
+    }
+
+    const { config } = getProviderConfig(provider)
+    modalConfig = config
+    configModal.show()
   }
 
   function setBannerLocalStorageKey() {
@@ -197,7 +171,7 @@
   </Layout>
   <Divider />
 
-  {#if !enabled.length && !$bannerStore}
+  {#if !activeProvider && !$bannerStore}
     <div class="banner">
       <div class="banner-content">
         <div class="banner-icon">
@@ -206,7 +180,12 @@
         <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
       </div>
       <div class="banner-buttons">
-        <Button primary cta size="S" on:click={() => handleEnable(BBAI_KEY)}>
+        <Button
+          primary
+          cta
+          size="S"
+          on:click={() => handleEnable("BudibaseAI")}
+        >
           Enable BB AI
         </Button>
         <Icon
@@ -223,14 +202,12 @@
 
   <div class="section">
     <div class="section-title">Enabled</div>
-    {#if enabled.length}
-      {#each enabled as { key, cfg } (key)}
-        <AIConfigTile
-          config={cfg}
-          editHandler={() => handleEnable(key)}
-          disableHandler={() => handleDisable(key)}
-        />
-      {/each}
+    {#if activeProvider}
+      <AIConfigTile
+        config={getProviderConfig(activeProvider).config}
+        editHandler={() => handleEnable(activeProvider)}
+        disableHandler={() => disableProvider(activeProvider)}
+      />
     {:else}
       <div class="no-enabled">
         <Body size="S">No LLMs are enabled</Body>
@@ -239,11 +216,11 @@
     {#if !isCloud}
       <div class="section-title disabled-title">Disabled</div>
       <div class="ai-list">
-        {#each disabled as { key, cfg } (key)}
+        {#each disabledProviders as { provider, config } (provider)}
           <AIConfigTile
-            config={cfg}
-            editHandler={() => handleEnable(key)}
-            disableHandler={() => handleDisable(key)}
+            {config}
+            editHandler={() => handleEnable(provider)}
+            disableHandler={() => disableProvider(provider)}
           />
         {/each}
       </div>
@@ -264,10 +241,10 @@
   <ConfigModal
     config={modalConfig}
     updateHandler={updatedConfig =>
-      updateProviderConfig(modalKey, false, updatedConfig)}
+      updateProvider(modalProvider, updatedConfig)}
     enableHandler={updatedConfig =>
-      updateProviderConfig(modalKey, true, updatedConfig)}
-    disableHandler={() => updateProviderConfig(modalKey, false)}
+      enableProvider(modalProvider, updatedConfig)}
+    disableHandler={() => disableProvider(modalProvider)}
   />
 </Modal>
 

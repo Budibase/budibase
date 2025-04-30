@@ -1,12 +1,4 @@
-export const BBAI_KEY = "BudibaseAI"
-export const OPENAI_KEY = "OpenAI"
-export const AZURE_KEY = "AzureOpenAI"
-
-export const Providers = {
-  BudibaseAI: "BudibaseAI",
-  OpenAI: "OpenAI",
-  AzureOpenAI: "AzureOpenAI",
-}
+import { AIProvider, ProviderConfig } from "@budibase/types"
 
 export const Models = [
   { label: "GPT 4o Mini", value: "gpt-4o-mini" },
@@ -16,53 +8,39 @@ export const Models = [
   { label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
 ]
 
-export const ProviderDetails = {
-  [BBAI_KEY]: {
-    provider: "BudibaseAI",
-    name: "BB AI",
+interface AIProviderDetails {
+  defaultConfig: ProviderConfig
+  models: { label: string; value: string }[]
+}
+
+export const ProviderDetails: Partial<Record<AIProvider, AIProviderDetails>> = {
+  BudibaseAI: {
     defaultConfig: {
+      name: "Budibase AI",
+      provider: "BudibaseAI",
       active: false,
       isDefault: false,
     },
     models: [],
   },
-  [OPENAI_KEY]: {
-    provider: "OpenAI",
-    name: "OpenAI",
-    baseUrl: "https://api.openai.com",
+  OpenAI: {
     defaultConfig: {
+      name: "OpenAI",
+      provider: "OpenAI",
       active: false,
       isDefault: false,
-      apiKey: "",
       baseUrl: "https://api.openai.com",
-      defaultModel: "",
     },
-    models: [
-      { label: "GPT 4o Mini", value: "gpt-4o-mini" },
-      { label: "GPT 4o", value: "gpt-4o" },
-      { label: "GPT 4 Turbo", value: "gpt-4-turbo" },
-      { label: "GPT 4", value: "gpt-4" },
-      { label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
-    ],
+    models: Models,
   },
-  [AZURE_KEY]: {
-    provider: "AzureOpenAI",
-    name: "Azure OpenAI",
-    baseUrl: "",
+  AzureOpenAI: {
     defaultConfig: {
+      name: "Azure OpenAI",
+      provider: "AzureOpenAI",
       active: false,
       isDefault: false,
-      apiKey: "",
-      baseUrl: "",
-      defaultModel: "",
     },
-    models: [
-      { label: "GPT 4o Mini", value: "gpt-4o-mini" },
-      { label: "GPT 4o", value: "gpt-4o" },
-      { label: "GPT 4 Turbo", value: "gpt-4-turbo" },
-      { label: "GPT 4", value: "gpt-4" },
-      { label: "GPT 3.5 Turbo", value: "gpt-3.5-turbo" },
-    ],
+    models: Models,
   },
 }
 
