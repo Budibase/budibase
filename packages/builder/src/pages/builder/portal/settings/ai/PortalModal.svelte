@@ -23,7 +23,7 @@
   <div>
     Either use an existing self-host workspace, or create a new one. Once you
     have signed up, you will be able to link your license key to this self-host
-    installation by doing to "Account" at the top of this page, and then
+    installation by going to "Account" at the top of this page, and then
     "Upgrade" tab. Paste your license key in there, return to this page, and try
     again.
   </div>
