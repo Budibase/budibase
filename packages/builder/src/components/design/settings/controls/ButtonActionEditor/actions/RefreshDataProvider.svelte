@@ -11,7 +11,10 @@
     $componentStore.selectedComponentId,
     "RefreshDatasource",
     { includeSelf: nested }
-  )
+  ).concat({
+    readableBinding: "All data providers",
+    runtimeBinding: "all",
+  })
 </script>
 
 <div class="root">
