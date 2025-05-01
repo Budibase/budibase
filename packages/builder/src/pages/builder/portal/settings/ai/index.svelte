@@ -43,7 +43,7 @@
   let providerNames: AIProvider[]
   let hasLicenseKey: string | undefined
 
-  $: isCloud = $admin.cloud
+  $: isCloud = true // $admin.cloud
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
@@ -213,16 +213,18 @@
         <Body size="S">No LLMs are enabled</Body>
       </div>
     {/if}
-    <div class="section-title disabled-title">Disabled</div>
-    <div class="ai-list">
-      {#each disabledProviders as { provider, config } (provider)}
-        <AIConfigTile
-          {config}
-          editHandler={() => handleEnable(provider)}
-          disableHandler={() => disableProvider(provider)}
-        />
-      {/each}
-    </div>
+    {#if disabledProviders.length > 0}
+      <div class="section-title disabled-title">Disabled</div>
+      <div class="ai-list">
+        {#each disabledProviders as { provider, config } (provider)}
+          <AIConfigTile
+            {config}
+            editHandler={() => handleEnable(provider)}
+            disableHandler={() => disableProvider(provider)}
+          />
+        {/each}
+      </div>
+    {/if}
   </div>
 </Layout>
 
