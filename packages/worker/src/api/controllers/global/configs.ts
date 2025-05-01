@@ -361,7 +361,7 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
     if (scopedConfig) {
       await handleConfigType(type, scopedConfig)
     } else if (type === ConfigType.AI) {
-      scopedConfig = { config: {} } as AIConfig
+      scopedConfig = { type: ConfigType.AI, config: {} }
       await handleAIConfig(scopedConfig)
     } else {
       // If no config found and not AI type, just return an empty body
