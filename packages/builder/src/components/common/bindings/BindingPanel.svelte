@@ -372,6 +372,7 @@
             <CodeEditor
               value={jsValue ? decodeJSBinding(jsValue) : ""}
               on:change={onChangeJSValue}
+              on:ai_suggestion={() => (sidePanel = "Evaluation")}
               {completions}
               {bindings}
               {validations}
