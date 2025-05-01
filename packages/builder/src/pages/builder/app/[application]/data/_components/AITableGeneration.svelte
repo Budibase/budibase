@@ -75,7 +75,7 @@
   }
   .ai-generation :global(.spectrum-Textfield-input),
   .ai-generation :global(.spectrum-ActionButton) {
-    background: #1d1d1d;
+    background: var(--spectrum-global-color-gray-75);
     border-radius: 20px;
   }
 </style>
