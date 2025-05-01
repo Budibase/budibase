@@ -213,18 +213,16 @@
         <Body size="S">No LLMs are enabled</Body>
       </div>
     {/if}
-    {#if !isCloud}
-      <div class="section-title disabled-title">Disabled</div>
-      <div class="ai-list">
-        {#each disabledProviders as { provider, config } (provider)}
-          <AIConfigTile
-            {config}
-            editHandler={() => handleEnable(provider)}
-            disableHandler={() => disableProvider(provider)}
-          />
-        {/each}
-      </div>
-    {/if}
+    <div class="section-title disabled-title">Disabled</div>
+    <div class="ai-list">
+      {#each disabledProviders as { provider, config } (provider)}
+        <AIConfigTile
+          {config}
+          editHandler={() => handleEnable(provider)}
+          disableHandler={() => disableProvider(provider)}
+        />
+      {/each}
+    </div>
   </div>
 </Layout>
 
