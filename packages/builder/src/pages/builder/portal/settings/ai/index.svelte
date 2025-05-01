@@ -43,7 +43,7 @@
   let providerNames: AIProvider[]
   let hasLicenseKey: string | undefined
 
-  $: isCloud = true // $admin.cloud
+  $: isCloud = $admin.cloud
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
