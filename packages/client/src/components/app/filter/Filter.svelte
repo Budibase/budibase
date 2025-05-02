@@ -21,7 +21,6 @@
   import Container from "../container/Container.svelte"
   import { getAction } from "@/utils/getAction"
   import { ActionTypes } from "@/constants"
-  import { fetchDatasourceSchema } from "@/utils/schema"
   import { QueryUtils, fetchData, memo } from "@budibase/frontend-core"
   import FilterButton from "./FilterButton.svelte"
   import { onDestroy } from "svelte"
@@ -36,7 +35,8 @@
 
   const memoFilters = memo({} as Record<string, SearchFilter>)
   const component = getContext("component")
-  const { API } = getContext("sdk")
+  const { API, fetchDatasourceSchema, getRelationshipSchemaAdditions } =
+    getContext("sdk")
 
   const rowCache = writable({})
   setContext("rows", rowCache)
@@ -236,17 +236,29 @@
 
   async function fetchSchema(datasource: any) {
     if (datasource) {
-      const fetchedSchema = await fetchDatasourceSchema(datasource, {
-        enrichRelationships: true,
-        formSchema: false,
-      })
+      const fetchedSchema: TableSchema | null = await fetchDatasourceSchema(
+        datasource,
+        {
+          enrichRelationships: true,
+          formSchema: false,
+        }
+      )
 
-      const filteredSchema = Object.entries(fetchedSchema || {}).filter(
+      const filteredSchemaEntries = Object.entries(fetchedSchema || {}).filter(
         ([_, field]: [string, FieldSchema]) => {
           return !excludedTypes.includes(field.type)
         }
       )
-      schema = Object.fromEntries(filteredSchema)
+
+      const filteredSchema = Object.fromEntries(filteredSchemaEntries)
+
+      // Necessary to ensure that link fields possess all config required
+      // to render their respective UX
+      const enrichedSchema = await getRelationshipSchemaAdditions(
+        filteredSchema as Record<string, any>
+      )
+
+      schema = { ...filteredSchema, ...enrichedSchema }
     } else {
       schema = null
     }

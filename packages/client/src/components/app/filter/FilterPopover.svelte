@@ -30,6 +30,10 @@
   import { type Writable } from "svelte/store"
   import { getContext } from "svelte"
   import { isArrayOperator } from "@/utils/filtering"
+  import dayjs from "dayjs"
+  import utc from "dayjs/plugin/utc"
+
+  dayjs.extend(utc)
 
   export const show = () => popover?.show()
   export const hide = () => popover?.hide()
@@ -268,22 +272,29 @@
             value={parseDateRange(editableFilter.value)}
             on:change={e => {
               const [from, to] = e.detail
-              const parsedFrom = Helpers.stringifyDate(from, {
-                enableTime,
-                timeOnly,
-                ignoreTimezones,
-              })
+              const parsedFrom = enableTime
+                ? from.utc().format()
+                : Helpers.stringifyDate(from, {
+                    enableTime,
+                    timeOnly,
+                    ignoreTimezones,
+                  })
 
-              const parsedTo = Helpers.stringifyDate(to, {
-                enableTime,
-                timeOnly,
-                ignoreTimezones,
-              })
+              const parsedTo = enableTime
+                ? to.utc().format()
+                : Helpers.stringifyDate(to, {
+                    enableTime,
+                    timeOnly,
+                    ignoreTimezones,
+                  })
 
               if (!editableFilter) return
               editableFilter = sanitizeOperator({
                 ...editableFilter,
-                value: { low: parsedFrom, high: parsedTo },
+                value: {
+                  low: parsedFrom,
+                  high: parsedTo,
+                },
               })
             }}
           />

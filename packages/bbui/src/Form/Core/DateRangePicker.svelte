@@ -34,7 +34,12 @@
   }
 
   const onChangeFrom = (utc: string) => {
-    fromDate = utc ? dayjs(utc).startOf("day") : null
+    // Preserve the time if its editable
+    const fromDate = utc
+      ? enableTime
+        ? dayjs(utc)
+        : dayjs(utc).startOf("day")
+      : null
     if (fromDate && (!toDate || fromDate.isAfter(toDate))) {
       toDate = !enableTime ? fromDate.endOf("day") : fromDate
     } else if (!fromDate) {
@@ -44,9 +49,13 @@
     dispatch("change", [fromDate, toDate])
   }
 
-  // Pass the raw date not the event
   const onChangeTo = (utc: string) => {
-    toDate = utc ? dayjs(utc).endOf("day") : null
+    // Preserve the time if its editable
+    const toDate = utc
+      ? enableTime
+        ? dayjs(utc)
+        : dayjs(utc).startOf("day")
+      : null
     if (toDate && (!fromDate || toDate.isBefore(fromDate))) {
       fromDate = !enableTime ? toDate.startOf("day") : toDate
     } else if (!toDate) {

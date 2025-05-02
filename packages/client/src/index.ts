@@ -96,6 +96,7 @@ export interface SDK {
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
   fetchDatasourceDefinition: (datasource: DataFetchDatasource) => Promise<Table>
+  getRelationshipSchemaAdditions: (schema: Record<string, any>) => Promise<any>
   enrichButtonActions: any
   generateGoldenSample: any
   createContextStore: any

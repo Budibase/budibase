@@ -85,7 +85,11 @@
     schema: TableSchema | undefined,
     tableList: Table[]
   ) => {
-    return search.getFields(tableList, Object.values(schema || {}), {
+    // Omit calculated fields
+    const filtered = Object.values(schema || {}).filter(
+      field => !("calculationType" in field)
+    )
+    return search.getFields(tableList, filtered, {
       allowLinks: true,
     })
   }

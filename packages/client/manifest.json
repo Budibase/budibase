@@ -5578,6 +5578,7 @@
     ]
   },
   "dynamicfilter": {
+    "deprecated": true,
     "name": "Dynamic Filter",
     "icon": "Filter",
     "size": {
