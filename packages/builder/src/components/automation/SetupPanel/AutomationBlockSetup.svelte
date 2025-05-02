@@ -681,7 +681,6 @@
         } else {
           selectedRow = newTestData.row
         }
-        console.log({ automation, newTestData })
         const updatedAuto = automationStore.addTestDataToAutomation(
           automation,
           newTestData

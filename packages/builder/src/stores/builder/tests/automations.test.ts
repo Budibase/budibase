@@ -1,5 +1,5 @@
 import { it, expect, describe, beforeEach, vi, TestContext } from "vitest"
-import { cloneDeep, difference } from "lodash/fp"
+import { cloneDeep } from "lodash/fp"
 import { get, writable } from "svelte/store"
 import { API } from "@/api"
 import { appStore } from "@/stores/builder"
@@ -185,7 +185,6 @@ const dispenseBlock = (
 describe("Automation store", () => {
   beforeEach<CustomContext>(async ctx => {
     const automationStore = new AutomationStore()
-    console.log()
     ctx.bb = {
       get store() {
         return get(automationStore)
@@ -842,7 +841,7 @@ describe("Automation store", () => {
 
     const rowActionDeleteSpy = vi
       .spyOn(API.rowActions, "delete")
-      .mockImplementation((tableId, rowId): Promise<void> => {
+      .mockImplementation((): Promise<void> => {
         return Promise.resolve()
       })
 

@@ -21,7 +21,7 @@ export function apiDefinitions(): GetAutomationStepDefinitionsResponse {
 
 export function baseAutomation(
   triggerDef: keyof typeof AutomationTriggerStepId = AutomationTriggerStepId.APP,
-  appId: string = "testApp"
+  appId = "testApp"
 ): Automation {
   return {
     _id: Helpers.uuid(),
