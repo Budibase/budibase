@@ -17,14 +17,14 @@
     if (!automation?.definition?.trigger?.inputs.schemaUrl) {
       // save the automation initially
       try {
-        await automationStore.actions.save(automation)
+        await automationStore.save(automation)
       } catch (error) {
         notifications.error("Error saving automation")
       }
     }
     interval = setInterval(async () => {
       try {
-        await automationStore.actions.fetch()
+        await automationStore.fetch()
         const outputs =
           automation?.definition?.trigger.schema.outputs?.properties
         // always one prop for the "body"

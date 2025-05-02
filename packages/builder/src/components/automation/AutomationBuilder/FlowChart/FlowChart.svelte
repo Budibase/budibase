@@ -66,7 +66,7 @@
 
   const deleteAutomation = async () => {
     try {
-      await automationStore.actions.delete(automation)
+      await automationStore.delete(automation)
     } catch (error) {
       notifications.error("Error deleting automation")
     }
@@ -74,9 +74,9 @@
 
   onMount(async () => {
     try {
-      await automationStore.actions.initAppSelf()
+      await automationStore.initAppSelf()
       await environment.loadVariables()
-      const response = await automationStore.actions.getLogs({
+      const response = await automationStore.getLogs({
         automationId: automation._id,
         status: "error",
       })
@@ -134,7 +134,7 @@
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Paused" : "Activated"}
-          on:change={automationStore.actions.toggleDisabled(
+          on:change={automationStore.toggleDisabled(
             automation._id,
             automation.disabled
           )}

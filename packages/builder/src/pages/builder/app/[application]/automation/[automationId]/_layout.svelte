@@ -7,7 +7,7 @@
       m => m._id === $params.automation
     )
     if (automation) {
-      automationStore.actions.select(automation)
+      automationStore.select(automation)
     }
   }
 </script>

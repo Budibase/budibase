@@ -21,7 +21,7 @@
 
   async function deleteAutomation() {
     try {
-      await automationStore.actions.delete(automation)
+      await automationStore.delete(automation)
       notifications.success("Automation deleted successfully")
     } catch (error) {
       console.error(error)
@@ -31,7 +31,7 @@
 
   async function duplicateAutomation() {
     try {
-      await automationStore.actions.duplicate(automation)
+      await automationStore.duplicate(automation)
       notifications.success("Automation has been duplicated successfully")
     } catch (error) {
       notifications.error("Error duplicating automation")
@@ -46,10 +46,7 @@
       visible: true,
       disabled: !automation.definition.trigger,
       callback: () => {
-        automationStore.actions.toggleDisabled(
-          automation._id,
-          automation.disabled
-        )
+        automationStore.toggleDisabled(automation._id, automation.disabled)
       },
     }
     const del = {
@@ -115,7 +112,7 @@
   text={automation.name}
   selected={automation._id === $selectedAutomation?.data?._id}
   hovering={automation._id === $contextMenuStore.id}
-  on:click={() => automationStore.actions.select(automation._id)}
+  on:click={() => automationStore.select(automation._id)}
   selectedBy={$userSelectedResourceMap[automation._id]}
   disabled={automation.disabled}
 >

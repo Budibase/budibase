@@ -40,7 +40,7 @@
   $: selectedNodeId = $automationStore.selectedNodeId
   $: blockRefs = $selectedAutomation.blockRefs
   $: blockRef = selectedNodeId ? blockRefs[selectedNodeId] : undefined
-  $: block = automationStore.actions.getBlockByRef($memoAutomation, blockRef)
+  $: block = automationStore.getBlockByRef($memoAutomation, blockRef)
 
   $: memoBlock.set(block)
 
@@ -52,14 +52,13 @@
 
   $: isAppAction = block?.stepId === AutomationTriggerStepId.APP
   $: isAppAction && fetchPermissions($memoAutomation?._id)
-  $: isAppAction &&
-    automationStore.actions.setPermissions(role, $memoAutomation)
+  $: isAppAction && automationStore.setPermissions(role, $memoAutomation)
 
   const fetchPermissions = async (automationId?: string) => {
     if (!automationId) {
       return
     }
-    role = await automationStore.actions.getPermissions(automationId)
+    role = await automationStore.getPermissions(automationId)
   }
 
   const loadPathSteps = (
@@ -67,7 +66,7 @@
     automation: Automation | undefined
   ) => {
     return blockRef && automation
-      ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
+      ? automationStore.getPathSteps(blockRef.pathTo, automation)
       : []
   }
 </script>
@@ -83,7 +82,7 @@
       block={$memoBlock}
       on:update={e => {
         if ($memoBlock && !isTrigger($memoBlock)) {
-          automationStore.actions.updateBlockTitle($memoBlock, e.detail)
+          automationStore.updateBlockTitle($memoBlock, e.detail)
         }
       }}
     />
@@ -91,7 +90,7 @@
       name="Close"
       hoverable
       on:click={() => {
-        automationStore.actions.selectNode()
+        automationStore.selectNode()
       }}
     />
   </div>
@@ -104,9 +103,9 @@
           icon="RotateCW"
           on:click={async () => {
             if (loopBlock) {
-              await automationStore.actions.removeLooping(blockRef)
+              await automationStore.removeLooping(blockRef)
             } else {
-              await automationStore.actions.addLooping(blockRef)
+              await automationStore.addLooping(blockRef)
             }
           }}
         >
@@ -121,7 +120,7 @@
           if (!blockRef) {
             return
           }
-          await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
+          await automationStore.deleteAutomationBlock(blockRef.pathTo)
         }}
       >
         Delete

@@ -3,6 +3,7 @@ import {
   createLocalStorageStore,
   createSessionStorageStore,
 } from "@budibase/frontend-core"
+import { Helpers } from "@budibase/bbui"
 
 export enum PersistenceType {
   NONE = "none",
@@ -25,19 +26,24 @@ export class BudiStore<T> {
   set: Writable<T>["set"]
 
   constructor(init: T, opts?: BudiStoreOpts) {
+    // Must be cloned to avoid mutation of initial state
+    const cloneInit = Helpers.cloneDeep(init)
     if (opts?.persistence) {
       switch (opts.persistence.type) {
         case PersistenceType.LOCAL:
-          this.store = createLocalStorageStore(opts.persistence.key, init)
+          this.store = createLocalStorageStore(opts.persistence.key, cloneInit)
           break
         case PersistenceType.SESSION:
-          this.store = createSessionStorageStore(opts.persistence.key, init)
+          this.store = createSessionStorageStore(
+            opts.persistence.key,
+            cloneInit
+          )
           break
         default:
-          this.store = writable<T>(init)
+          this.store = writable<T>(cloneInit)
       }
     } else {
-      this.store = writable<T>(init)
+      this.store = writable<T>(cloneInit)
     }
 
     this.subscribe = this.store.subscribe
@@ -67,7 +73,9 @@ export class DerivedBudiStore<T, DerivedT> {
     makeDerivedStore: (store: Writable<T>) => Readable<DerivedT>,
     opts?: BudiStoreOpts
   ) {
-    this.store = new BudiStore(init, opts)
+    // Must be cloned to avoid mutation of initial state
+    const cloneInit = Helpers.cloneDeep(init)
+    this.store = new BudiStore(cloneInit, opts)
     this.derivedStore = makeDerivedStore(this.store)
     this.subscribe = this.derivedStore.subscribe
     this.update = this.store.update

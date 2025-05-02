@@ -23,7 +23,7 @@
     validate: id => $automationStore.automations.some(x => x._id === id),
     fallbackUrl: "./index",
     store: automationStore,
-    update: automationStore.actions.select,
+    update: automationStore.select,
     routify,
   })
 

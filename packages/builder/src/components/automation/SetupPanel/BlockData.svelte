@@ -73,17 +73,14 @@
   $: loopRef = blockRef?.looped
     ? $selectedAutomation.blockRefs[blockRef.looped]
     : undefined
-  $: loopBlock = automationStore.actions.getBlockByRef(automation, loopRef)
+  $: loopBlock = automationStore.getBlockByRef(automation, loopRef)
 
   $: if ($automationStore.selectedNodeId) {
     dataMode = $automationStore.selectedNodeMode || DataMode.INPUT
   }
 
   $: testResults = $automationStore.testResults as TestAutomationResponse
-  $: blockResults = automationStore.actions.processBlockResults(
-    testResults,
-    block
-  )
+  $: blockResults = automationStore.processBlockResults(testResults, block)
   $: processTestIssues(testResults, block)
 
   /**
@@ -197,10 +194,7 @@
 
     let clonetext = cloneDeep(context)
 
-    const pathSteps = automationStore.actions.getPathSteps(
-      blockRef.pathTo,
-      automation
-    )
+    const pathSteps = automationStore.getPathSteps(blockRef.pathTo, automation)
 
     const defs = $automationStore.blockDefinitions
     const stepNames = automation.definition.stepNames

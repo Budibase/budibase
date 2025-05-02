@@ -72,7 +72,7 @@
           if (branchSteps.length) {
             confirmDeleteModal.show()
           } else {
-            await automationStore.actions.deleteBranch(
+            await automationStore.deleteBranch(
               branchBlockRef.pathTo,
               $selectedAutomation.data
             )
@@ -86,7 +86,7 @@
         visible: true,
         disabled: branchIdx == 0,
         callback: async () => {
-          automationStore.actions.branchLeft(
+          automationStore.branchLeft(
             branchBlockRef.pathTo,
             $selectedAutomation.data,
             step
@@ -100,7 +100,7 @@
         visible: true,
         disabled: isLast,
         callback: async () => {
-          automationStore.actions.branchRight(
+          automationStore.branchRight(
             branchBlockRef.pathTo,
             $selectedAutomation.data,
             step
@@ -125,7 +125,7 @@
     title={"Are you sure you want to delete?"}
     confirmText="Delete"
     onConfirm={async () => {
-      await automationStore.actions.deleteBranch(
+      await automationStore.deleteBranch(
         branchBlockRef.pathTo,
         $selectedAutomation.data
       )
@@ -198,12 +198,12 @@
             )
             branchUpdate.name = e.detail
 
-            const updatedAuto = automationStore.actions.updateStep(
+            const updatedAuto = automationStore.updateStep(
               pathTo,
               $selectedAutomation.data,
               stepUpdate
             )
-            await automationStore.actions.save(updatedAuto)
+            await automationStore.save(updatedAuto)
           }}
         />
         <div class="actions">

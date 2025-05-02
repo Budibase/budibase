@@ -72,7 +72,7 @@
 
   onMount(async () => {
     try {
-      await automationStore.actions.fetch()
+      await automationStore.fetch()
     } catch (error) {
       notifications.error("Error getting automations list")
     }

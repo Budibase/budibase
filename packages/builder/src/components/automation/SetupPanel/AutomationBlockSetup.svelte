@@ -536,13 +536,10 @@
             searchableSchema: true,
           }).schema
 
-          updatedAutomation = await automationStore.actions.processBlockInputs(
-            block,
-            {
-              schema: reqSchema,
-              ...update,
-            }
-          )
+          updatedAutomation = await automationStore.processBlockInputs(block, {
+            schema: reqSchema,
+            ...update,
+          })
 
           // Reset testData when tableId changes
           updatedAutomation = {
@@ -557,13 +554,13 @@
           }
         } else {
           // For filters update, just process block inputs without resetting testData
-          updatedAutomation = await automationStore.actions.processBlockInputs(
+          updatedAutomation = await automationStore.processBlockInputs(
             block,
             update
           )
         }
 
-        await automationStore.actions.save(updatedAutomation)
+        await automationStore.save(updatedAutomation)
 
         return
       } catch (e) {
@@ -584,11 +581,13 @@
   const onAppTriggerUpdate = async update => {
     try {
       // Parse the block inputs as usual
-      const updatedAutomation =
-        await automationStore.actions.processBlockInputs(block, {
+      const updatedAutomation = await automationStore.processBlockInputs(
+        block,
+        {
           schema: {},
           ...update,
-        })
+        }
+      )
 
       if (!updatedAutomation) {
         return
@@ -605,7 +604,7 @@
       }
 
       // Save the entire automation and reset the testData
-      await automationStore.actions.save({
+      await automationStore.save({
         ...updatedAutomation,
         testData: {
           fields: updatedFields,
@@ -682,17 +681,19 @@
         } else {
           selectedRow = newTestData.row
         }
-
-        const updatedAuto =
-          automationStore.actions.addTestDataToAutomation(newTestData)
+        console.log({ automation, newTestData })
+        const updatedAuto = automationStore.addTestDataToAutomation(
+          automation,
+          newTestData
+        )
 
         // Ensure the test request has the latest info.
         dispatch("update", updatedAuto)
 
-        await automationStore.actions.save(updatedAuto)
+        await automationStore.save(updatedAuto)
       } else {
         const data = { schema, ...request }
-        await automationStore.actions.updateBlockInputs(block, data)
+        await automationStore.updateBlockInputs(block, data)
       }
     } catch (error) {
       console.error("Error saving automation", error)

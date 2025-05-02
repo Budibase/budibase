@@ -95,7 +95,7 @@ export const reset = () => {
 
 const refreshBuilderData = async () => {
   await Promise.all([
-    automationStore.actions.fetch(),
+    automationStore.fetch(),
     datasources.init(),
     integrations.init(),
     queries.init(),

@@ -46,7 +46,7 @@
       const terminatingStep = filteredResults.at(-1)
       const terminatingBlockRef = automationBlockRefs[terminatingStep.id]
       if (terminatingBlockRef) {
-        const pathSteps = automationStore.actions.getPathSteps(
+        const pathSteps = automationStore.getPathSteps(
           terminatingBlockRef.pathTo,
           automation
         )

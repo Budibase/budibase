@@ -30,10 +30,7 @@
   $: isTriggerBlock = block ? isTrigger(block) : false
 
   $: testResults = $automationStore.testResults as TestAutomationResponse
-  $: blockResult = automationStore.actions.processBlockResults(
-    testResults,
-    block
-  )
+  $: blockResult = automationStore.processBlockResults(testResults, block)
   $: flowStatus = getFlowStatus(blockResult)
 
   const getFlowStatus = (
@@ -111,7 +108,7 @@
             if (branch || !block) {
               return
             }
-            await automationStore.actions.selectNode(
+            automationStore.selectNode(
               block?.id,
               flowStatus.type == FlowStatusType.SUCCESS
                 ? DataMode.OUTPUT

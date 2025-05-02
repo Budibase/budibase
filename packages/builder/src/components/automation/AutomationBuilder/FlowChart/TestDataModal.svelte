@@ -112,16 +112,18 @@
       }
     }
 
-    const updatedAuto =
-      automationStore.actions.addTestDataToAutomation(jsonUpdate)
-    await automationStore.actions.save(updatedAuto)
+    const updatedAuto = automationStore.addTestDataToAutomation(
+      $selectedAutomation.data,
+      jsonUpdate
+    )
+    await automationStore.save(updatedAuto)
   }
 
   const testAutomation = async () => {
     // Ensure testData reactiveness is processed
     await tick()
     try {
-      await automationStore.actions.test($selectedAutomation.data, testData)
+      await automationStore.test($selectedAutomation.data, testData)
     } catch (error) {
       notifications.error(error)
     }
@@ -162,6 +164,7 @@
         isTestModal
         {testData}
         block={trigger}
+        automation={$selectedAutomation.data}
         on:update={e => {
           const { testData: updatedTestData } = e.detail
           testData = parseTestData(updatedTestData)

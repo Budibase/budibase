@@ -191,7 +191,7 @@
         on:dismiss={async () => {
           const automationId = Object.keys(automationErrors[appId] || {})[0]
           if (automationId) {
-            await automationStore.actions.clearLogErrors({
+            await automationStore.clearLogErrors({
               appId,
               automationId,
             })
