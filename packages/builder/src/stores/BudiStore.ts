@@ -3,7 +3,7 @@ import {
   createLocalStorageStore,
   createSessionStorageStore,
 } from "@budibase/frontend-core"
-import { Helpers } from "@budibase/bbui"
+import { cloneDeep } from "lodash/fp"
 
 export enum PersistenceType {
   NONE = "none",
@@ -27,7 +27,7 @@ export class BudiStore<T> {
 
   constructor(init: T, opts?: BudiStoreOpts) {
     // Must be cloned to avoid mutation of initial state
-    const cloneInit = Helpers.cloneDeep(init)
+    const cloneInit = cloneDeep(init)
     if (opts?.persistence) {
       switch (opts.persistence.type) {
         case PersistenceType.LOCAL:
@@ -74,7 +74,7 @@ export class DerivedBudiStore<T, DerivedT> {
     opts?: BudiStoreOpts
   ) {
     // Must be cloned to avoid mutation of initial state
-    const cloneInit = Helpers.cloneDeep(init)
+    const cloneInit = cloneDeep(init)
     this.store = new BudiStore(cloneInit, opts)
     this.derivedStore = makeDerivedStore(this.store)
     this.subscribe = this.derivedStore.subscribe
