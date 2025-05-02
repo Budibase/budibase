@@ -960,8 +960,8 @@ if (descriptions.length) {
         it("fetches all rows for given tableId", async () => {
           const table = await config.api.table.save(defaultTable())
           const rows = await Promise.all([
-            config.api.row.save(table._id!, {}),
-            config.api.row.save(table._id!, {}),
+            config.api.row.save(table._id!, { name: "foo" }),
+            config.api.row.save(table._id!, { name: "bar" }),
           ])
 
           const res = await config.api.row.fetch(table._id!)
@@ -1614,8 +1614,8 @@ if (descriptions.length) {
         })
 
         it("should be able to delete a bulk set of rows", async () => {
-          const row1 = await config.api.row.save(table._id!, {})
-          const row2 = await config.api.row.save(table._id!, {})
+          const row1 = await config.api.row.save(table._id!, { name: "foo" })
+          const row2 = await config.api.row.save(table._id!, { name: "bar" })
 
           await expectRowUsage(isInternal ? -2 : 0, async () => {
             const res = await config.api.row.bulkDelete(table._id!, {
@@ -1629,9 +1629,9 @@ if (descriptions.length) {
 
         it("should be able to delete a variety of row set types", async () => {
           const [row1, row2, row3] = await Promise.all([
-            config.api.row.save(table._id!, {}),
-            config.api.row.save(table._id!, {}),
-            config.api.row.save(table._id!, {}),
+            config.api.row.save(table._id!, { name: "foo" }),
+            config.api.row.save(table._id!, { name: "bar" }),
+            config.api.row.save(table._id!, { name: "baz" }),
           ])
 
           await expectRowUsage(isInternal ? -3 : 0, async () => {
@@ -1645,7 +1645,7 @@ if (descriptions.length) {
         })
 
         it("should accept a valid row object and delete the row", async () => {
-          const row1 = await config.api.row.save(table._id!, {})
+          const row1 = await config.api.row.save(table._id!, { name: "foo" })
 
           await expectRowUsage(isInternal ? -1 : 0, async () => {
             const res = await config.api.row.delete(
@@ -2396,7 +2396,9 @@ if (descriptions.length) {
           })
 
         it("should allow exporting without filtering", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
           const res = await config.api.row.exportRows(table._id!)
           const results = JSON.parse(res)
           expect(results.length).toEqual(1)
@@ -2406,7 +2408,9 @@ if (descriptions.length) {
         })
 
         it("should allow exporting only certain columns", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
           const res = await config.api.row.exportRows(table._id!, {
             rows: [existing._id!],
             columns: ["_id"],
@@ -2421,7 +2425,9 @@ if (descriptions.length) {
         })
 
         it("should handle single quotes in row filtering", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
           const res = await config.api.row.exportRows(table._id!, {
             rows: [`['${existing._id!}']`],
           })
@@ -2432,7 +2438,9 @@ if (descriptions.length) {
         })
 
         it("should return an error if no table is found", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
           await config.api.row.exportRows(
             "1234567",
             { rows: [existing._id!] },
