@@ -2380,7 +2380,9 @@ if (descriptions.length) {
 
         !isInternal &&
           it("should allow exporting all columns", async () => {
-            const existing = await config.api.row.save(table._id!, {})
+            const existing = await config.api.row.save(table._id!, {
+              name: "foo",
+            })
             const res = await config.api.row.exportRows(table._id!, {
               rows: [existing._id!],
             })
