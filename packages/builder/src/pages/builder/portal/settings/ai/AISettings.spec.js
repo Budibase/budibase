@@ -56,66 +56,18 @@ describe("AISettings", () => {
     expect(instance).toBeDefined()
   })
 
-  describe("Licensing", () => {
-    it("should show the premium label on self host for custom configs", async () => {
-      setupEnv(Hosting.Self)
-      setupDOM()
-      const premiumTag = instance.queryByText("Premium")
-      expect(premiumTag).toBeInTheDocument()
-    })
-
-    it("should show the enterprise label on cloud for custom configs", async () => {
-      setupEnv(Hosting.Cloud)
-      setupDOM()
-      const enterpriseTag = instance.queryByText("Enterprise")
-      expect(enterpriseTag).toBeInTheDocument()
-    })
-
-    it("the add configuration button should not do anything the user doesn't have the correct license on cloud", async () => {
-      let addConfigurationButton
+  describe("DOM Render tests", () => {
+    it("the enable bb ai button should not do anything if the user doesn't have the correct license on self host", async () => {
+      let addAiButton
       let configModal
 
-      setupEnv(Hosting.Cloud)
+      setupEnv(Hosting.Self, { customAIConfigsEnabled: false })
       setupDOM()
-      addConfigurationButton = instance.queryByText("Add configuration")
-      expect(addConfigurationButton).toBeInTheDocument()
-      await fireEvent.click(addConfigurationButton)
+      addAiButton = instance.queryByText("Enable BB AI")
+      expect(addAiButton).toBeInTheDocument()
+      await fireEvent.click(addAiButton)
       configModal = instance.queryByText("Custom AI Configuration")
       expect(configModal).not.toBeInTheDocument()
-    })
-
-    it("the add configuration button should open the config modal if the user has the correct license on cloud", async () => {
-      let addConfigurationButton
-      let configModal
-
-      setupEnv(
-        Hosting.Cloud,
-        { customAIConfigsEnabled: true },
-        { AI_CUSTOM_CONFIGS: true }
-      )
-      setupDOM()
-      addConfigurationButton = instance.queryByText("Add configuration")
-      expect(addConfigurationButton).toBeInTheDocument()
-      await fireEvent.click(addConfigurationButton)
-      configModal = instance.queryByText("Custom AI Configuration")
-      expect(configModal).toBeInTheDocument()
-    })
-
-    it("the add configuration button should open the config modal if the user has the correct license on self host", async () => {
-      let addConfigurationButton
-      let configModal
-
-      setupEnv(
-        Hosting.Self,
-        { customAIConfigsEnabled: true },
-        { AI_CUSTOM_CONFIGS: true }
-      )
-      setupDOM()
-      addConfigurationButton = instance.queryByText("Add configuration")
-      expect(addConfigurationButton).toBeInTheDocument()
-      await fireEvent.click(addConfigurationButton)
-      configModal = instance.queryByText("Custom AI Configuration")
-      expect(configModal).toBeInTheDocument()
     })
   })
 })

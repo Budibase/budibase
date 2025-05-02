@@ -9,6 +9,7 @@ import {
   events,
   objectStore,
   tenancy,
+  BadRequestError,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
@@ -31,14 +32,12 @@ import {
   OIDCConfigs,
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
-  QuotaUsageType,
   SaveConfigRequest,
   SaveConfigResponse,
   SettingsBrandingConfig,
   SettingsInnerConfig,
   SSOConfig,
   SSOConfigType,
-  StaticQuotaName,
   UploadConfigFileResponse,
   UserCtx,
 } from "@budibase/types"
@@ -52,7 +51,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPCreated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigCreated)
-      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
@@ -91,12 +89,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
       fns.push(events.email.SMTPUpdated)
     } else if (isAIConfig(config)) {
       fns.push(() => events.ai.AIConfigUpdated)
-      if (
-        Object.keys(existing.config).length > Object.keys(config.config).length
-      ) {
-        fns.push(() => pro.quotas.removeCustomAIConfig())
-      }
-      fns.push(() => pro.quotas.addCustomAIConfig())
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
       if (!existing.config.activated && config.config.activated) {
@@ -219,14 +211,30 @@ async function verifyOIDCConfig(config: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 }
 
-export async function verifyAIConfig(
-  configToSave: AIInnerConfig,
-  existingConfig: AIConfig
+export async function processAIConfig(
+  newConfig: AIInnerConfig,
+  existingConfig: AIInnerConfig
 ) {
   // ensure that the redacted API keys are not overwritten in the DB
-  for (const uuid in existingConfig.config) {
-    if (configToSave[uuid]?.apiKey === PASSWORD_REPLACEMENT) {
-      configToSave[uuid].apiKey = existingConfig.config[uuid].apiKey
+  for (const key in existingConfig) {
+    if (newConfig[key]?.apiKey === PASSWORD_REPLACEMENT) {
+      newConfig[key].apiKey = existingConfig[key].apiKey
+    }
+  }
+
+  let numBudibaseAI = 0
+  for (const config of Object.values(newConfig)) {
+    if (config.provider === "BudibaseAI") {
+      numBudibaseAI++
+      if (numBudibaseAI > 1) {
+        throw new BadRequestError("Only one Budibase AI provider is allowed")
+      }
+    } else {
+      if (!config.apiKey) {
+        throw new BadRequestError(
+          `API key is required for provider ${config.provider}`
+        )
+      }
     }
   }
 }
@@ -246,7 +254,6 @@ export async function save(
   }
 
   try {
-    // verify the configuration
     switch (type) {
       case ConfigType.SMTP:
         await email.verifyConfig(config)
@@ -262,7 +269,7 @@ export async function save(
         break
       case ConfigType.AI:
         if (existingConfig) {
-          await verifyAIConfig(config, existingConfig)
+          await processAIConfig(config, existingConfig.config)
         }
         break
     }
@@ -354,7 +361,7 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
     if (scopedConfig) {
       await handleConfigType(type, scopedConfig)
     } else if (type === ConfigType.AI) {
-      scopedConfig = { config: {} } as AIConfig
+      scopedConfig = { type: ConfigType.AI, config: {} }
       await handleAIConfig(scopedConfig)
     } else {
       // If no config found and not AI type, just return an empty body
@@ -560,13 +567,6 @@ export async function destroy(ctx: UserCtx<void, DeleteConfigResponse>) {
   try {
     await db.remove(id, rev)
     await cache.destroy(cache.CacheKey.CHECKLIST)
-    if (id === configs.generateConfigID(ConfigType.AI)) {
-      await pro.quotas.set(
-        StaticQuotaName.AI_CUSTOM_CONFIGS,
-        QuotaUsageType.STATIC,
-        0
-      )
-    }
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
     ctx.throw(err.status, err)

@@ -1,16 +1,32 @@
 <script lang="ts">
   import { API } from "@/api"
   import AiInput from "@/components/common/ai/AIInput.svelte"
+  import { datasources, tables } from "@/stores/builder"
   import { auth, licensing } from "@/stores/portal"
   import { ActionButton, notifications } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
 
   let promptText = ""
 
   $: isEnabled = $auth?.user?.llm && !$licensing.aiCreditsExceeded
 
   async function submitPrompt(message: string) {
-    await API.generateTables(message)
-    notifications.success("Tables created successfully!")
+    try {
+      const { createdTables } = await API.generateTables({
+        prompt: message,
+      })
+
+      const [tableToRedirect] = createdTables.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
+
+      notifications.success(`Tables created successfully.`)
+      await datasources.fetch()
+      await tables.fetch()
+      $goto(`./table/${tableToRedirect.id}`)
+    } catch (e: any) {
+      notifications.error(e.message)
+    }
   }
 
   const examplePrompts = [
@@ -59,7 +75,7 @@
   }
   .ai-generation :global(.spectrum-Textfield-input),
   .ai-generation :global(.spectrum-ActionButton) {
-    background: #1d1d1d;
+    background: var(--spectrum-global-color-gray-75);
     border-radius: 20px;
   }
 </style>

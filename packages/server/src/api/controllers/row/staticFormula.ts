@@ -10,7 +10,6 @@ import * as linkRows from "../../../db/linkedRows"
 import isEqual from "lodash/isEqual"
 import { cloneDeep, merge } from "lodash/fp"
 import sdk from "../../../sdk"
-import * as pro from "@budibase/pro"
 
 function mergeRows(row1: Row, row2: Row) {
   const merged = merge(row1, row2)
@@ -82,6 +81,7 @@ export async function updateRelatedFormula(
             relatedRows[tableId].map(related =>
               finaliseRow(relatedTable, related, {
                 updateFormula: false,
+                updateAIColumns: false,
               })
             )
           )
@@ -137,10 +137,10 @@ export async function updateAllFormulasInTable(table: Table) {
 export async function finaliseRow(
   source: Table | ViewV2,
   row: Row,
-  opts?: { updateFormula: boolean }
+  opts?: { updateFormula: boolean; updateAIColumns: boolean }
 ) {
   const db = context.getAppDB()
-  const { updateFormula = true } = opts || {}
+  const { updateFormula = true, updateAIColumns = true } = opts || {}
   const table = sdk.views.isView(source)
     ? await sdk.views.getTable(source.id)
     : source
@@ -156,10 +156,7 @@ export async function finaliseRow(
     contextRows: [enrichedRow],
   })
 
-  const aiEnabled =
-    (await pro.features.isBudibaseAIEnabled()) ||
-    (await pro.features.isAICustomConfigsEnabled())
-  if (aiEnabled) {
+  if (updateAIColumns) {
     row = await processAIColumns(table, row, {
       contextRows: [enrichedRow],
     })

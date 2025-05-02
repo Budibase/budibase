@@ -122,7 +122,6 @@ export type AIProvider =
 export interface ProviderConfig {
   provider: AIProvider
   isDefault: boolean
-  isBudibaseAI?: boolean
   name: string
   active: boolean
   baseUrl?: string

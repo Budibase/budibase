@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { API } from "@/api"
   import {
     tables,
@@ -16,20 +16,16 @@
   import CreationPage from "@/components/common/CreationPage.svelte"
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
-  import { featureFlag } from "@/helpers"
-  import { FeatureFlag } from "@budibase/types"
+  import { featureFlags } from "@/stores/portal"
 
-  let internalTableModal
-  let externalDatasourceModal
+  let internalTableModal: CreateInternalTableModal
+  let externalDatasourceModal: CreateExternalDatasourceModal
 
   let sampleDataLoading = false
   let externalDatasourceLoading = false
 
   $: disabled = sampleDataLoading || externalDatasourceLoading
-
-  $: aiTableGenerationEnabled = featureFlag.isEnabled(
-    FeatureFlag.AI_TABLE_GENERATION
-  )
+  $: aiTableGenerationEnabled = $featureFlags.AI_TABLE_GENERATION
 
   const createSampleData = async () => {
     sampleDataLoading = true
@@ -72,7 +68,7 @@
       </div>
     {/if}
     <DatasourceOption
-      on:click={internalTableModal.show}
+      on:click={() => internalTableModal.show()}
       title="Create new table"
       description="Non-relational"
       {disabled}

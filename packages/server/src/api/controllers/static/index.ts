@@ -281,7 +281,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const sideNav = appInfo.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo?.theme || {})
+    const themeVariables = getThemeVariables(appInfo?.theme)
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
     const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
     const addAppScripts =
@@ -376,30 +376,14 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       // just return the app info for jest to assert on
       ctx.body = appInfo
     }
-  } catch (error) {
-    if (!env.isJest()) {
-      const props: BudibaseAppProps = {
-        usedPlugins: [],
-        title: branding?.metaTitle || "",
-        metaTitle: branding?.metaTitle || "",
-        metaImage:
-          branding?.metaImageUrl ||
-          "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
-        metaDescription: branding?.metaDescription || "",
-        favicon:
-          branding.faviconUrl !== ""
-            ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
-            : "",
-      }
-      const { head, html, css } = AppComponent.render({ props })
-
-      const appHbs = loadHandlebarsFile(appHbsPath)
-      ctx.body = await processString(appHbs, {
-        head,
-        body: html,
-        style: css.code,
-      })
+  } catch (error: any) {
+    let msg = "An unknown error occurred"
+    if (typeof error === "string") {
+      msg = error
+    } else if (error?.message) {
+      msg = error.message
     }
+    ctx.throw(500, msg)
   }
 }
 

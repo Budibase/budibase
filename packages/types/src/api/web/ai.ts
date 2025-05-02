@@ -1,3 +1,4 @@
+import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 
 export interface Message {
@@ -5,9 +6,7 @@ export interface Message {
   content: string
 }
 
-export enum StructuredOutput {}
-
-export type ResponseFormat = "text" | "json" | StructuredOutput
+export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
 
 export interface ChatCompletionRequest {
   messages: Message[]
@@ -34,4 +33,12 @@ export interface GenerateCronRequest {
 
 export interface GenerateCronResponse {
   message?: string
+}
+
+export interface GenerateTablesRequest {
+  prompt: string
+}
+
+export interface GenerateTablesResponse {
+  createdTables: { id: string; name: string }[]
 }
