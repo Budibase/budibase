@@ -22,6 +22,7 @@
   let previousContents: string | null = null
   let expanded = false
   let promptText = ""
+  let inputValue = ""
 
   const thresholdExpansionWidth = 350
 
@@ -47,19 +48,17 @@
       }
       suggestedCode = code
       dispatch("update", { code })
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      if (!(e instanceof Error)) {
-        notifications.error("Unable to generate code. Please try again later.")
-        return
-      }
 
       if ("code" in e && e.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
         notifications.error(
           "Monthly usage limit reached. We're exploring options to expand this soon. Questions? Contact support@budibase.com"
         )
-      } else {
+      } else if ("message" in e) {
         notifications.error(`Unable to generate code: ${e.message}`)
+      } else {
+        notifications.error(`Unable to generate code.`)
       }
     }
   }
@@ -87,6 +86,7 @@
     previousContents = null
     promptText = ""
     expanded = false
+    inputValue = ""
   }
 </script>
 
@@ -106,6 +106,7 @@
     placeholder="Generate with AI"
     onSubmit={generateJs}
     bind:expanded
+    bind:value={inputValue}
     readonly={!!suggestedCode}
     {expandedOnly}
   />
