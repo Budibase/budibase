@@ -918,7 +918,9 @@ if (descriptions.length) {
 
       describe("get", () => {
         it("reads an existing row successfully", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           const res = await config.api.row.get(table._id!, existing._id!)
 
@@ -930,7 +932,7 @@ if (descriptions.length) {
 
         it("returns 404 when row does not exist", async () => {
           const table = await config.api.table.save(defaultTable())
-          await config.api.row.save(table._id!, {})
+          await config.api.row.save(table._id!, { name: "foo" })
           await config.api.row.get(table._id!, "1234567", {
             status: 404,
           })
@@ -975,7 +977,9 @@ if (descriptions.length) {
 
       describe("update", () => {
         it("updates an existing row successfully", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(0, async () => {
             const res = await config.api.row.save(table._id!, {
@@ -1166,7 +1170,9 @@ if (descriptions.length) {
         })
 
         it("should update only the fields that are supplied", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(0, async () => {
             const row = await config.api.row.patch(table._id!, {
@@ -1183,6 +1189,22 @@ if (descriptions.length) {
 
             expect(savedRow.description).toEqual(existing.description)
             expect(savedRow.name).toEqual("Updated Name")
+          })
+        })
+
+        it("should not require the primary display", async () => {
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+            description: "bar",
+          })
+          await expectRowUsage(0, async () => {
+            const row = await config.api.row.patch(table._id!, {
+              _id: existing._id!,
+              _rev: existing._rev!,
+              tableId: table._id!,
+              description: "baz",
+            })
+            expect(row.description).toEqual("baz")
           })
         })
 
@@ -1213,7 +1235,9 @@ if (descriptions.length) {
         })
 
         it("should throw an error when given improper types", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(0, async () => {
             await config.api.row.patch(
@@ -1289,6 +1313,7 @@ if (descriptions.length) {
             description: "test",
           })
           const { _id } = await config.api.row.save(table._id!, {
+            name: "test",
             relationship: [{ _id: row._id }, { _id: row2._id }],
           })
           const relatedRow = await config.api.row.get(table._id!, _id!, {
@@ -1440,7 +1465,9 @@ if (descriptions.length) {
         })
 
         it("should be able to delete a row", async () => {
-          const createdRow = await config.api.row.save(table._id!, {})
+          const createdRow = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(isInternal ? -1 : 0, async () => {
             const res = await config.api.row.bulkDelete(table._id!, {
@@ -1451,7 +1478,9 @@ if (descriptions.length) {
         })
 
         it("should be able to delete a row with ID only", async () => {
-          const createdRow = await config.api.row.save(table._id!, {})
+          const createdRow = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(isInternal ? -1 : 0, async () => {
             const res = await config.api.row.bulkDelete(table._id!, {
@@ -1463,8 +1492,12 @@ if (descriptions.length) {
         })
 
         it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
-          const createdRow = await config.api.row.save(table._id!, {})
-          const createdRow2 = await config.api.row.save(table._id!, {})
+          const createdRow = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
+          const createdRow2 = await config.api.row.save(table._id!, {
+            name: "bar",
+          })
 
           const res = await config.api.row.bulkDelete(table._id!, {
             rows: [createdRow, createdRow2, { _id: "9999999" }],
