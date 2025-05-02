@@ -455,15 +455,11 @@ export class AutomationStore extends BudiStore<AutomationState> {
     const pathEnd = pathTo.at(-1) || {}
     const { stepIdx, branchIdx } = pathEnd
 
-    if (stepIdx == undefined) {
-      throw new Error("Step index is required. Invalid request")
-    }
-
     // Load core automation steps by default
     let steps: AutomationStep[] = newAutomation.definition.steps
 
     // Load the stepIdx with trigger offset by default
-    let actionIdx = stepIdx > 0 ? stepIdx - 1 : 0
+    let actionIdx = stepIdx != undefined && stepIdx > 0 ? stepIdx - 1 : 0
 
     // The target step to be deleted
     if (branchIdx !== undefined) {
@@ -473,7 +469,7 @@ export class AutomationStore extends BudiStore<AutomationState> {
       }
       const branchId = branchStep?.inputs.branches?.[branchIdx].id
       steps = branchStep?.inputs?.children?.[branchId] || []
-      actionIdx = stepIdx
+      actionIdx = stepIdx === undefined ? 0 : stepIdx
     }
 
     return { ...action(steps, actionIdx), newAutomation }
