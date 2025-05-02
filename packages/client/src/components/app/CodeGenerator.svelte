@@ -3,26 +3,25 @@
   import { onMount, afterUpdate } from "svelte"
   import JsBarcode from "jsbarcode"
   import { createQrSvgString } from "@svelte-put/qr"
-  import "@spectrum-css/vars/dist/spectrum-global.css"
 
   export let value: string
   export let codeType: "QR Code" | "Barcode"
   export let showValue: boolean
   export let showLogo: boolean
-  export let customLogo: string
+  export let customLogo: string | undefined
   export let size: number
   export let primColor: string
-  export let vertical: boolean
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
 
-  const generateBarcode = () => {
-    let barcodeSize = size / 100
-    if (value) {
-      JsBarcode("#barcode-img", value, {
+  let barcodeElement: SVGSVGElement
+
+  function generateBarcode() {
+    if (barcodeElement && value) {
+      JsBarcode(barcodeElement, value, {
         displayValue: false, // Hide the library's built in value, optionally display it later
-        width: barcodeSize,
+        width: size / 100,
         height: size,
       })
     }
@@ -47,23 +46,27 @@
 
   onMount(() => {
     if (codeType === "Barcode") {
+      console.log("On mount, Barcode")
       generateBarcode()
     } else {
+      console.log("On mount, QR code")
       generateQr()
     }
   })
 
   afterUpdate(() => {
     if (codeType === "Barcode") {
+      console.log("After update, Barcode")
       generateBarcode()
     } else {
+      console.log("After update, QR code")
       generateQr()
     }
   })
 </script>
 
 <div
-  class="overall {vertical ? 'vertical' : ''}"
+  class="overall"
   use:styleable={$component.styles}
   styles="border: 3px solid red; width: 100px; height: 200px;"
 >
@@ -76,27 +79,23 @@
         </div>
       </div>
     {:else}
-      <div id="barcode-container">
-        <div id="logo-and-barcode" style="height: {size}px, width: 100%">
+      <div class="barcode-container">
+        <div class="logo-and-barcode" style="height: {size}px, width: 100%">
           {#if showLogo && customLogo}
             <img
-              id="custom-logo"
+              class="custom-logo"
               src={customLogo}
               alt="logo"
-              class="custom-logo"
               style="height: {size}px"
             />
           {/if}
-          <img
-            id="barcode-img"
-            alt="barcode {value ? value : ''}"
-            class="barcode-img"
-          />
+          {#if value}
+            <svg class="barcode" bind:this={barcodeElement} height={size} />
+          {/if}
         </div>
         {#if showValue}
-          <div id="barcode-value">
-            <p />
-            {value}
+          <div class="barcode-value">
+            <p>{value}</p>
           </div>
         {/if}
       </div>
@@ -126,7 +125,7 @@
     flex-direction: column;
     align-items: center;
   }
-  #barcode-container {
+  .barcode-container {
     max-width: 100%;
     display: flex;
     flex-direction: column;
@@ -136,11 +135,20 @@
     padding: 12px;
     background-color: white;
   }
-  #logo-and-barcode {
+  .logo-and-barcode {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+  }
+
+  .logo-and-barcode img {
+    margin-left: 10px;
+  }
+
+  .barcode-value p {
+    margin: 0;
+    color: black;
   }
 </style>
