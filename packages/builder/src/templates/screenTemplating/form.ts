@@ -5,7 +5,12 @@ import { componentStore } from "@/stores/builder"
 import { Helpers } from "@budibase/bbui"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
 
-export const getTypeSpecificRoute = (tableOrView, type) => {
+type FormType = "create" | "update" | "view"
+
+export const getTypeSpecificRoute = (
+  tableOrView: { name: string },
+  type: FormType
+) => {
   if (type === "create") {
     return `/${tableOrView.name}/new`
   } else if (type === "update") {
@@ -15,7 +20,10 @@ export const getTypeSpecificRoute = (tableOrView, type) => {
   }
 }
 
-const getRole = (permissions, type) => {
+const getRole = (
+  permissions: { read: string; write: string },
+  type: FormType
+) => {
   if (type === "view") {
     return permissions.read
   }
@@ -23,7 +31,7 @@ const getRole = (permissions, type) => {
   return permissions.write
 }
 
-const getActionType = type => {
+const getActionType = (type: FormType) => {
   if (type === "create") {
     return "Create"
   }
@@ -35,7 +43,7 @@ const getActionType = type => {
   }
 }
 
-const getTitle = type => {
+const getTitle = (type: FormType) => {
   if (type === "create") {
     return "Create row"
   } else if (type === "update") {
