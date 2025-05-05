@@ -239,6 +239,7 @@ jobs:
       - name: Test server
         env:
           DATASOURCE: ${{ matrix.datasource }}
+          # DEBUG: testcontainers*
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
             AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)

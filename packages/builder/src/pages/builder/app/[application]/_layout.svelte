@@ -14,7 +14,6 @@
     Tabs,
     Tab,
     Heading,
-    Modal,
     notifications,
     TooltipPosition,
   } from "@budibase/bbui"
@@ -23,8 +22,6 @@
   import { isActive, url, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "@/helpers"
   import { onMount, onDestroy } from "svelte"
-  import VerificationPromptBanner from "@/components/common/VerificationPromptBanner.svelte"
-  import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
   import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "@/components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
@@ -38,7 +35,6 @@
 
   let promise = getPackage()
   let hasSynced = false
-  let commandPaletteModal
   let loaded = false
 
   $: loaded && initTour()
@@ -77,14 +73,6 @@
       )
     }
     $goto($builderStore.previousTopNavPath[path] || path)
-  }
-
-  // Event handler for the command palette
-  const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      commandPaletteModal.toggle()
-    }
   }
 
   const initTour = async () => {
@@ -126,7 +114,6 @@
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
-  <VerificationPromptBanner />
   <div class="top-nav">
     {#if $appStore.initialised}
       <div class="topleftnav">
@@ -183,11 +170,6 @@
 {#if $previewStore.showPreview}
   <PreviewOverlay />
 {/if}
-
-<svelte:window on:keydown={handleKeyDown} />
-<Modal bind:this={commandPaletteModal} zIndex={999999}>
-  <CommandPalette />
-</Modal>
 
 <EnterpriseBasicTrialModal />
 

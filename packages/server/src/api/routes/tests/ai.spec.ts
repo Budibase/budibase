@@ -18,7 +18,7 @@ import {
   RelationshipType,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
-import { generator, mocks } from "@budibase/backend-core/tests"
+import { generator } from "@budibase/backend-core/tests"
 import { quotas, ai } from "@budibase/pro"
 import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
@@ -40,22 +40,27 @@ interface TestSetup {
 }
 
 function budibaseAI(): SetupFn {
-  return async () => {
-    const cleanup = setEnv({
-      OPENAI_API_KEY: "test-key",
+  return async (config: TestConfiguration) => {
+    await config.doInTenant(async () => {
+      await configs.save({
+        type: ConfigType.AI,
+        config: {
+          budibaseAI: {
+            provider: "BudibaseAI",
+            name: "Budibase AI",
+            active: true,
+            isDefault: true,
+          },
+        },
+      })
     })
-    mocks.licenses.useBudibaseAI()
-    return async () => {
-      mocks.licenses.useCloudFree()
-      cleanup()
-    }
+
+    return setEnv({ OPENAI_API_KEY: "test-key", SELF_HOSTED: false })
   }
 }
 
 function customAIConfig(providerConfig: Partial<ProviderConfig>): SetupFn {
   return async (config: TestConfiguration) => {
-    mocks.licenses.useAICustomConfigs()
-
     const innerConfig: AIInnerConfig = {
       myaiconfig: {
         provider: "OpenAI",
@@ -77,8 +82,6 @@ function customAIConfig(providerConfig: Partial<ProviderConfig>): SetupFn {
     )
 
     return async () => {
-      mocks.licenses.useCloudFree()
-
       await config.doInTenant(async () => {
         const db = context.getGlobalDB()
         await db.remove(id, rev)
@@ -467,7 +470,9 @@ describe("BudibaseAI", () => {
     ) =>
       mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
         format: zodResponseFormat(
-          ai.aiColumnSchemas(generationStructure),
+          ai.aiColumnSchemas(
+            ai.aiTableResponseToTableSchema(generationStructure)
+          ),
           "key"
         ),
       })
@@ -681,7 +686,7 @@ describe("BudibaseAI", () => {
             },
           },
         ],
-        "Employees 2": [
+        Employees: [
           {
             "First Name": "Joshua",
             "Last Name": "Lee",

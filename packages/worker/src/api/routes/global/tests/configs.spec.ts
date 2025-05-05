@@ -28,10 +28,7 @@ describe("configs", () => {
       _rev,
     }
     const res = await config.api.configs.saveConfig(data)
-    return {
-      ...data,
-      ...res.body,
-    }
+    return { ...data, ...res }
   }
 
   const saveSettingsConfig = async (

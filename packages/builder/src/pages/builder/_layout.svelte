@@ -6,8 +6,11 @@
   import { API } from "@/api"
   import Branding from "./Branding.svelte"
   import ContextMenu from "@/components/ContextMenu.svelte"
+  import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
+  import { Modal } from "@budibase/bbui"
 
   let loaded = false
+  let commandPaletteModal
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -157,11 +160,24 @@
       }
     }
   }
+
+  // Event handler for the command palette
+  const handleKeyDown = e => {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      commandPaletteModal.toggle()
+    }
+  }
 </script>
 
 <!--Portal branding overrides -->
 <Branding />
 <ContextMenu />
+
+<svelte:window on:keydown={handleKeyDown} />
+<Modal bind:this={commandPaletteModal} zIndex={999999}>
+  <CommandPalette />
+</Modal>
 
 {#if loaded}
   <slot />

@@ -14,7 +14,6 @@
   export const submit = onPromptSubmit
 
   $: expanded = expandedOnly || expanded
-
   const dispatch = createEventDispatcher()
 
   let promptInput: HTMLInputElement
@@ -28,7 +27,7 @@
   $: aiEnabled = $auth?.user?.llm
 
   $: creditsExceeded = $licensing.aiCreditsExceeded
-  $: disabled = !aiEnabled || creditsExceeded || readonly || promptLoading
+  $: disabled = !aiEnabled || creditsExceeded || readonly
   $: animateBorder = !disabled && expanded
 
   $: canSubmit = !readonly && !!value
@@ -91,6 +90,7 @@
       src={BBAI}
       alt="AI"
       class="ai-icon"
+      class:loading={promptLoading}
       class:disabled={expanded && disabled}
       on:click={e => {
         e.stopPropagation()
@@ -105,7 +105,7 @@
         class="prompt-input"
         {placeholder}
         on:keydown={handleKeyPress}
-        {disabled}
+        disabled={disabled || promptLoading}
       />
     {:else}
       <span class="spectrum-ActionButton-label ai-gen-text">
@@ -153,14 +153,14 @@
         </Modal>
       {:else}
         <Icon
-          color={promptLoading
+          color={promptInput
             ? "#6E56FF"
             : "var(--spectrum-global-color-gray-600)"}
           size="S"
-          disabled={!canSubmit}
+          disabled={!canSubmit || promptLoading}
           hoverable={!readonly}
           hoverColor="#6E56FF"
-          name={promptLoading ? "StopCircle" : "PlayCircle"}
+          name={"PlayCircle"}
           on:click={onPromptSubmit}
         />
       {/if}
@@ -170,14 +170,12 @@
 
 <style>
   .spectrum-ActionButton {
-    --offset: 1px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
     padding: var(--spacing-s);
-    border: 1px solid var(--spectrum-alias-border-color);
     border-radius: 30px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
@@ -185,16 +183,30 @@
     overflow: hidden;
     cursor: pointer;
     background-color: var(--spectrum-global-color-gray-75);
+    border: none;
   }
 
   .spectrum-ActionButton::before {
     content: "";
     position: absolute;
-    top: -1px;
-    left: -1px;
-    width: calc(100% + 2px);
-    height: calc(100% + 2px);
-    border-radius: inherit;
+    inset: 0;
+    border-radius: 30px;
+    padding: 1px;
+    background: var(--spectrum-alias-border-color);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .animate-border::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 30px;
+    padding: 1px;
     background: linear-gradient(
       125deg,
       transparent -10%,
@@ -204,38 +216,40 @@
       transparent 35%,
       transparent 110%
     );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
     pointer-events: none;
-    z-index: 0;
+    animation: border-flow 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
   }
 
-  .spectrum-ActionButton:not(.animate-border)::before {
+  @keyframes border-flow {
+    0% {
+      clip-path: polygon(0% 0%, 10% 0%, 8% 100%, 0% 100%);
+    }
+    30% {
+      clip-path: polygon(0% 0%, 35% 0%, 26% 100%, 0% 100%);
+    }
+    50% {
+      clip-path: polygon(0% 0%, 55% 0%, 41% 100%, 0% 100%);
+    }
+    70% {
+      clip-path: polygon(0% 0%, 70% 0%, 53% 100%, 0% 100%);
+    }
+    85% {
+      clip-path: polygon(0% 0%, 80% 0%, 60% 100%, 0% 100%);
+    }
+    95% {
+      clip-path: polygon(0% 0%, 86% 0%, 65% 100%, 0% 100%);
+    }
+    100% {
+      clip-path: polygon(0% 0%, 90% 0%, 68% 100%, 0% 100%);
+    }
+  }
+
+  .spectrum-ActionButton:not(.animate-border)::after {
     content: none;
-  }
-
-  .animate-border::before {
-    animation: border-fade-in 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-    animation-fill-mode: forwards;
-  }
-
-  @keyframes border-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .spectrum-ActionButton::after {
-    content: "";
-    background: inherit;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    inset: var(--offset);
-    height: calc(100% - 2 * var(--offset));
-    width: calc(100% - 2 * var(--offset));
-    border-radius: inherit;
   }
 
   @keyframes fade-in {
@@ -268,10 +282,12 @@
   .ai-icon {
     width: 18px;
     height: 18px;
-    margin-left: 4px;
-    margin-right: 8px;
+    margin-left: var(--spacing-xs);
+    margin-right: var(--spacing-s);
     flex-shrink: 0;
     cursor: var(--ai-icon-cursor, pointer);
+    position: relative;
+    z-index: 2;
   }
 
   .ai-gen-text {
@@ -279,11 +295,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     transition: opacity 0.2s ease-out;
-    margin-right: var(--spacing-xs);
+    margin: auto;
+    position: relative;
+    z-index: 2;
   }
 
   .prompt-input {
-    font-size: 14px;
+    font-size: inherit;
     flex: 1;
     border: none;
     background: transparent;
@@ -293,6 +311,8 @@
     min-width: 0;
     resize: none;
     overflow: hidden;
+    position: relative;
+    z-index: 2;
   }
 
   .prompt-input::placeholder {
@@ -303,14 +323,15 @@
   .action-buttons {
     display: flex;
     gap: var(--spacing-s);
-    z-index: 4;
+    z-index: 5;
     flex-shrink: 0;
     margin-right: var(--spacing-s);
+    position: relative;
   }
 
   .button-content-wrapper {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: flex;
     align-items: center;
     overflow: hidden;
@@ -327,5 +348,18 @@
   .ai-icon.disabled {
     filter: grayscale(1) brightness(1.5);
     opacity: 0.5;
+  }
+
+  .ai-icon.loading {
+    animation: spin 1s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>
