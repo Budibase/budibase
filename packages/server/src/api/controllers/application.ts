@@ -304,7 +304,7 @@ async function ensureProjectApp(app: App, screens: Screen[]) {
     }))
   )
 
-  return getScreens()
+  return sdk.screens.fetch()
 }
 
 async function extractScreensByProjectApp(

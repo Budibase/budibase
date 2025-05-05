@@ -1,8 +1,10 @@
-import { getScreenParams } from "../../../db/utils"
 import { context } from "@budibase/backend-core"
-import { Screen } from "@budibase/types"
+import { Database, Screen } from "@budibase/types"
+import { getScreenParams } from "../../../db/utils"
 
-export async function fetch(db = context.getAppDB()): Promise<Screen[]> {
+export async function fetch(
+  db: Database = context.getAppDB()
+): Promise<Screen[]> {
   return (
     await db.allDocs<Screen>(
       getScreenParams(null, {
