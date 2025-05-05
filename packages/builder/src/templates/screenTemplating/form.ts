@@ -1,7 +1,7 @@
 import { componentStore } from "@/stores/builder"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
 import { Helpers } from "@budibase/bbui"
-import { Screen as ScreenDoc } from "@budibase/types"
+import { Screen as ScreenDoc, UIPermissions } from "@budibase/types"
 import { Component } from "../Component"
 import getValidRoute from "./getValidRoute"
 import { Screen } from "./Screen"
@@ -24,10 +24,7 @@ export const getTypeSpecificRoute = (
   }
 }
 
-const getRole = (
-  permissions: { read: string; write: string },
-  type: FormType
-) => {
+const getRole = (permissions: UIPermissions, type: FormType) => {
   if (type === "view") {
     return permissions.read
   }

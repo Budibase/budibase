@@ -1,10 +1,20 @@
-import { Screen } from "../Screen"
-import { Component } from "../../Component"
 import { capitalise } from "@/helpers"
-import getValidRoute from "../getValidRoute"
+import { SourceOption } from "@/pages/builder/app/[application]/design/_components/NewScreen/utils"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
+import { Screen as ScreenDoc, UIPermissions } from "@budibase/types"
+import { Component } from "../../Component"
+import getValidRoute from "../getValidRoute"
+import { Screen } from "../Screen"
 
-const inline = async ({ tableOrView, permissions, screens }) => {
+const inline = async ({
+  tableOrView,
+  permissions,
+  screens,
+}: {
+  tableOrView: SourceOption
+  permissions: UIPermissions
+  screens: ScreenDoc[]
+}) => {
   const heading = new Component("@budibase/standard-components/textv2")
     .instanceName("Table heading")
     .customProps({

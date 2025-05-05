@@ -3,7 +3,7 @@ import { cloneDeep } from "lodash/fp"
 
 export class BaseStructure<T extends Document> {
   private _isScreen: boolean
-  private _children: Component[]
+  private _children: (Component | BaseStructure<any>)[]
   _json: T
 
   constructor(isScreen: boolean, initialDoc: T) {
@@ -12,7 +12,7 @@ export class BaseStructure<T extends Document> {
     this._json = initialDoc
   }
 
-  addChild(child: Component) {
+  addChild(child: Component | BaseStructure<any>) {
     this._children.push(child)
     return this
   }
