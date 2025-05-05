@@ -76,6 +76,7 @@ import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
+import { groupBy } from "lodash/fp"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -248,6 +249,8 @@ export async function fetchAppPackage(
   let screens = await sdk.screens.fetch()
   const license = await licensing.cache.getCachedLicense()
 
+  screens = await ensureProjectApp(application, screens)
+
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
     application.usedPlugins
@@ -267,6 +270,8 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
+  const projectApps = await extractScreensByProjectApp(screens)
+
   const clientLibPath = objectStore.clientLibraryUrl(
     ctx.params.appId,
     application.version
@@ -275,11 +280,51 @@ export async function fetchAppPackage(
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
-    screens,
+    projectApps,
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
   }
+}
+
+async function ensureProjectApp(app: App, screens: Screen[]) {
+  if (screens.every(s => s.projectAppId)) {
+    return screens
+  }
+
+  const createdProjectApp = await sdk.projectApps.create({
+    name: app.name,
+  })
+
+  const db = context.getAppDB()
+  db.bulkDocs(
+    screens.map<Screen>(s => ({
+      ...s,
+      projectAppId: createdProjectApp._id,
+    }))
+  )
+
+  return getScreens()
+}
+
+async function extractScreensByProjectApp(
+  screens: Screen[]
+): Promise<FetchAppPackageResponse["projectApps"]> {
+  const result: FetchAppPackageResponse["projectApps"] = []
+
+  const projectApps = await sdk.projectApps.fetch()
+
+  const screensByProjectApp = groupBy(s => s.projectAppId, screens)
+  for (const projectAppId of Object.keys(screensByProjectApp)) {
+    const projectApp = projectApps.find(p => p._id === projectAppId)
+
+    result.push({
+      ...projectApp!,
+      screens: screensByProjectApp[projectAppId],
+    })
+  }
+
+  return result
 }
 
 async function performAppCreate(
