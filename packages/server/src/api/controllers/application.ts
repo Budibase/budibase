@@ -249,8 +249,6 @@ export async function fetchAppPackage(
   let screens = await sdk.screens.fetch()
   const license = await licensing.cache.getCachedLicense()
 
-  screens = await ensureProjectApp(application, screens)
-
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
     application.usedPlugins
@@ -285,26 +283,6 @@ export async function fetchAppPackage(
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
   }
-}
-
-async function ensureProjectApp(app: App, screens: Screen[]) {
-  if (screens.every(s => s.projectAppId)) {
-    return screens
-  }
-
-  const createdProjectApp = await sdk.projectApps.create({
-    name: app.name,
-  })
-
-  const db = context.getAppDB()
-  db.bulkDocs(
-    screens.map<Screen>(s => ({
-      ...s,
-      projectAppId: createdProjectApp._id,
-    }))
-  )
-
-  return sdk.screens.fetch()
 }
 
 async function extractScreensByProjectApp(
