@@ -1,9 +1,9 @@
-import { Document } from "@budibase/types"
+import { Document, Component } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 
 export class BaseStructure<T extends Document> {
   private _isScreen: boolean
-  private _children: BaseStructure<any>[]
+  private _children: Component[]
   _json: T
 
   constructor(isScreen: boolean, initialDoc: T) {
@@ -12,7 +12,7 @@ export class BaseStructure<T extends Document> {
     this._json = initialDoc
   }
 
-  addChild(child: BaseStructure<any>) {
+  addChild(child: Component) {
     this._children.push(child)
     return this
   }

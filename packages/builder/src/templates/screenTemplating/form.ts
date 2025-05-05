@@ -1,9 +1,11 @@
-import { Screen } from "./Screen"
+import { componentStore } from "@/stores/builder"
+import { getRowActionButtonTemplates } from "@/templates/rowActions"
+import { Helpers } from "@budibase/bbui"
+import { Screen as ScreenDoc } from "@budibase/types"
 import { Component } from "../Component"
 import getValidRoute from "./getValidRoute"
-import { componentStore } from "@/stores/builder"
-import { Helpers } from "@budibase/bbui"
-import { getRowActionButtonTemplates } from "@/templates/rowActions"
+import { Screen } from "./Screen"
+import { utils } from "@budibase/shared-core"
 
 type FormType = "create" | "update" | "view"
 
@@ -17,6 +19,8 @@ export const getTypeSpecificRoute = (
     return `/${tableOrView.name}/edit/:id`
   } else if (type === "view") {
     return `/${tableOrView.name}/view/:id`
+  } else {
+    throw utils.unreachable(type)
   }
 }
 
@@ -52,7 +56,17 @@ const getTitle = (type: FormType) => {
   return "Row details"
 }
 
-const form = async ({ tableOrView, type, permissions, screens }) => {
+const form = async ({
+  tableOrView,
+  type,
+  permissions,
+  screens,
+}: {
+  tableOrView: any
+  type: any
+  permissions: any
+  screens: ScreenDoc[]
+}) => {
   const id = Helpers.uuid()
   const typeSpecificRoute = getTypeSpecificRoute(tableOrView, type)
   const role = getRole(permissions, type)
