@@ -6,7 +6,7 @@ import {
 } from "@budibase/types"
 
 export const datasourceSelect = {
-  table: (table: Table, datasources: Datasource[]) => {
+  table: (table: Table, datasources: Omit<Datasource, "entities">[]) => {
     const sourceId = table.sourceId || (table as any).datasourceId
     const datasource = datasources.find(ds => ds._id === sourceId)
     return {
@@ -47,7 +47,7 @@ export const tableSelect = {
 }
 
 export const sortAndFormat = {
-  tables: (tables: Table[], datasources: Datasource[]) => {
+  tables: (tables: Table[], datasources: Omit<Datasource, "entities">[]) => {
     return tables
       .map(table => {
         const formatted = datasourceSelect.table(table, datasources)
