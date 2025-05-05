@@ -1,6 +1,7 @@
 import * as format from "@/helpers/data/format"
+import { Datasource, Table, ViewV2 } from "@budibase/types"
 
-export const makeViewOption = view => ({
+export const makeViewOption = (view: ViewV2) => ({
   icon: "Remove",
   name: view.name,
   id: view.id,
@@ -8,7 +9,7 @@ export const makeViewOption = view => ({
   datasourceSelectFormat: format.datasourceSelect.viewV2(view),
 })
 
-export const makeTableOption = (table, datasources) => ({
+export const makeTableOption = (table: Table, datasources: Datasource[]) => ({
   icon: "Table",
   name: table.name,
   id: table._id,
