@@ -1,60 +1,6 @@
-import { roles } from "@budibase/backend-core"
-import { BASE_LAYOUT_PROP_IDS } from "./layouts"
 import { Screen, Table, Query, ViewV2, Component } from "@budibase/types"
 
 export const SAMPLE_DATA_SCREEN_NAME = "sample-data-inventory-screen"
-
-export function createHomeScreen(
-  config: {
-    roleId: string
-    route: string
-  } = {
-    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-    route: "/",
-  }
-): Screen {
-  return {
-    layoutId: BASE_LAYOUT_PROP_IDS.PRIVATE,
-    props: {
-      _id: "d834fea2-1b3e-4320-ab34-f9009f5ecc59",
-      _component: "@budibase/standard-components/container",
-      _styles: {
-        normal: {},
-        hover: {},
-        active: {},
-        selected: {},
-      },
-      _transition: "fade",
-      _children: [
-        {
-          _id: "ef60083f-4a02-4df3-80f3-a0d3d16847e7",
-          _component: "@budibase/standard-components/heading",
-          _styles: {
-            hover: {},
-            active: {},
-            selected: {},
-          },
-          text: "Welcome to your Budibase App 👋",
-          size: "M",
-          align: "left",
-          _instanceName: "Heading",
-          _children: [],
-        },
-      ],
-      _instanceName: "Home",
-      direction: "column",
-      hAlign: "stretch",
-      vAlign: "top",
-      size: "grow",
-      gap: "M",
-    },
-    routing: {
-      route: config.route,
-      roleId: config.roleId,
-    },
-    name: "home-screen",
-  }
-}
 
 function heading(text: string): Component {
   return {
