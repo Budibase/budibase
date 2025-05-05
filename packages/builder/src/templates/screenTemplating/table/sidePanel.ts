@@ -1,13 +1,23 @@
-import { Screen } from "../Screen"
-import { Component } from "../../Component"
-import { generate } from "shortid"
-import { makePropSafe as safe } from "@budibase/string-templates"
-import { Utils } from "@budibase/frontend-core"
 import { capitalise } from "@/helpers"
-import getValidRoute from "../getValidRoute"
+import { SourceOption } from "@/pages/builder/app/[application]/design/_components/NewScreen/utils"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
+import { Utils } from "@budibase/frontend-core"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import { Screen as ScreenDoc, UIPermissions } from "@budibase/types"
+import { generate } from "shortid"
+import { Component } from "../../Component"
+import getValidRoute from "../getValidRoute"
+import { Screen } from "../Screen"
 
-const sidePanel = async ({ tableOrView, permissions, screens }) => {
+const sidePanel = async ({
+  tableOrView,
+  permissions,
+  screens,
+}: {
+  tableOrView: SourceOption
+  permissions: UIPermissions
+  screens: ScreenDoc[]
+}) => {
   /*
     Create Row
    */
@@ -89,7 +99,7 @@ const sidePanel = async ({ tableOrView, permissions, screens }) => {
   })
 
   // Generate button config including row actions
-  let buttons = Utils.buildFormBlockButtonConfig({
+  const formButtons = Utils.buildFormBlockButtonConfig({
     _id: editFormBlock._json._id,
     showDeleteButton: true,
     showSaveButton: true,
@@ -101,7 +111,7 @@ const sidePanel = async ({ tableOrView, permissions, screens }) => {
   const rowActionButtons = await getRowActionButtonTemplates({
     instance: editFormBlock.json(),
   })
-  buttons = [...(buttons || []), ...rowActionButtons]
+  const buttons = [...(formButtons || []), ...rowActionButtons]
   editFormBlock = editFormBlock.customProps({
     buttons,
     buttonsCollapsed: buttons.length > 5,
