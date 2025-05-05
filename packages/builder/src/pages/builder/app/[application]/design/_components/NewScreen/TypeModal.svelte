@@ -13,18 +13,22 @@
 
   export let title: string
   export let types: SelectableType[]
-  export let onConfirm: (_selectedType: string | null) => Promise<void>
+  export let onConfirm: (_selectedType: string) => Promise<void>
   export let onCancel: () => void
   export let showCancelButton: boolean = true
 
   let selectedType: string | null = null
+
+  function confirm() {
+    onConfirm(selectedType!)
+  }
 </script>
 
 <ModalContent
   {title}
   confirmText="Done"
   cancelText="Back"
-  onConfirm={() => onConfirm(selectedType)}
+  onConfirm={confirm}
   {onCancel}
   disabled={!selectedType}
   size="L"
