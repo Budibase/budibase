@@ -4,8 +4,8 @@ import {
   getDatasourceParams,
   getTableParams,
   getAutomationParams,
-  getScreenParams,
 } from "../../../db/utils"
+import sdk from "../.."
 
 async function runInContext(appId: string, cb: any, db?: Database) {
   if (db) {
@@ -45,9 +45,9 @@ export async function calculateAutomationCount(appId: string, db?: Database) {
 export async function calculateScreenCount(appId: string, db?: Database) {
   return runInContext(
     appId,
-    async (db: Database) => {
-      const screenList = await db.allDocs(getScreenParams())
-      return screenList.rows.length
+    async () => {
+      const screenList = await sdk.screens.fetch(db)
+      return screenList.length
     },
     db
   )

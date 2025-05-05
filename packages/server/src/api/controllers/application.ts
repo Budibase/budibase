@@ -18,7 +18,6 @@ import {
   generateDevAppID,
   generateScreenID,
   getLayoutParams,
-  getScreenParams,
 } from "../../db/utils"
 import {
   cache,
@@ -85,17 +84,6 @@ async function getLayouts() {
   return (
     await db.allDocs<Layout>(
       getLayoutParams(null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(row => row.doc!)
-}
-
-async function getScreens() {
-  const db = context.getAppDB()
-  return (
-    await db.allDocs<Screen>(
-      getScreenParams(null, {
         include_docs: true,
       })
     )
@@ -242,7 +230,7 @@ export async function fetchAppDefinition(
   const userRoleId = getUserRoleId(ctx)
   const accessController = new roles.AccessController()
   const screens = await accessController.checkScreensAccess(
-    await getScreens(),
+    await sdk.screens.fetch(),
     userRoleId
   )
   ctx.body = {
@@ -258,7 +246,7 @@ export async function fetchAppPackage(
   const appId = context.getAppId()
   const application = await sdk.applications.metadata.get()
   const layouts = await getLayouts()
-  let screens = await getScreens()
+  let screens = await sdk.screens.fetch()
   const license = await licensing.cache.getCachedLicense()
 
   screens = await ensureProjectApp(application, screens)
@@ -316,7 +304,7 @@ async function ensureProjectApp(app: App, screens: Screen[]) {
     }))
   )
 
-  return getScreens()
+  return sdk.screens.fetch()
 }
 
 async function extractScreensByProjectApp(
@@ -960,7 +948,7 @@ async function migrateAppNavigation() {
   const db = context.getAppDB()
   const existing = await sdk.applications.metadata.get()
   const layouts: Layout[] = await getLayouts()
-  const screens: Screen[] = await getScreens()
+  const screens: Screen[] = await sdk.screens.fetch()
 
   // Migrate all screens, removing custom layouts
   for (let screen of screens) {
