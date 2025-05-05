@@ -4,7 +4,7 @@ import { Datasource, Table, ViewV2 } from "@budibase/types"
 export type SourceOption = TableOption | ViewOption
 
 type TableOption = ReturnType<typeof makeTableOption>
-type ViewOption = ReturnType<typeof makeTableOption>
+type ViewOption = ReturnType<typeof makeViewOption>
 
 export const makeViewOption = (view: ViewV2) => ({
   icon: "Remove",
