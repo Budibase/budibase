@@ -46,7 +46,7 @@ export {
   createTableScreen,
   createQueryScreen,
   createViewScreen,
-} from "../../constants/screens"
+} from "./structures/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -587,7 +587,7 @@ function createHomeScreen(
       roleId: config.roleId,
     },
     name: "home-screen",
-    projectAppId: "appId",
+    projectAppId: "projectAppId",
   }
 }
 
