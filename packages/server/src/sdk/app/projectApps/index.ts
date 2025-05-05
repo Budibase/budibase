@@ -39,3 +39,18 @@ export async function create(
     ...projectApp,
   }
 }
+
+export async function update(
+  projectApp: Omit<ProjectApp, "createdAt" | "updatedAt">
+) {
+  const db = context.getAppDB()
+
+  await guardName(projectApp.name, projectApp._id)
+
+  const response = await db.put(projectApp)
+  return {
+    _id: response.id!,
+    _rev: response.rev!,
+    ...projectApp,
+  }
+}
