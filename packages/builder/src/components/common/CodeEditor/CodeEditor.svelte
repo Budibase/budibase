@@ -423,6 +423,7 @@
     })
     isAIGeneratedContent = true
     dispatch("change", code)
+    dispatch("ai_suggestion")
   }
 
   onMount(() => {
