@@ -2,6 +2,8 @@ import {
   Datasource,
   Table,
   UIInternalDatasource,
+  UITableResource,
+  UIViewResource,
   ViewV2,
 } from "@budibase/types"
 
@@ -31,13 +33,13 @@ export const datasourceSelect = {
 }
 
 export const tableSelect = {
-  table: (table: Table) => ({
+  table: (table: Table): UITableResource => ({
     type: "table",
     label: table.name,
-    tableId: table._id,
-    resourceId: table._id,
+    tableId: table._id!,
+    resourceId: table._id!,
   }),
-  viewV2: (view: ViewV2) => ({
+  viewV2: (view: ViewV2): UIViewResource => ({
     type: "viewV2",
     id: view.id,
     label: view.name,
