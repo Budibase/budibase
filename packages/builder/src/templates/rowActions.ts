@@ -3,11 +3,16 @@ import { getDatasourceForProvider } from "@/dataBinding"
 import { rowActions, selectedScreen, componentStore } from "@/stores/builder"
 import { Helpers } from "@budibase/bbui"
 import { findComponent } from "@/helpers/components"
+import { Component, Screen } from "@budibase/types"
 
 export const getRowActionButtonTemplates = async ({
   screen,
   component,
   instance,
+}: {
+  instance: Component | null
+  screen?: Screen
+  component?: { _rootId: string }
 }) => {
   // Find root component instance if not specified
   if (!instance) {
@@ -47,7 +52,7 @@ export const getRowActionButtonTemplates = async ({
   const enabledActions = get(rowActions)[resourceId] || []
 
   // Generate the row ID binding depending on the component
-  let rowIdBinding
+  let rowIdBinding: string
   if (isGridBlock) {
     rowIdBinding = `{{ [${instance._id}].[_id] }}`
   } else if (isFormBlock) {
@@ -68,7 +73,19 @@ export const getRowActionButtonTemplates = async ({
     )
 
     // Row action button action
-    const onClick = [
+    const onClick: {
+      parameters:
+        | {
+            rowActionId: string
+            resourceId: string
+            rowId: string
+          }
+        | {
+            componentId: string
+          }
+      "##eventHandlerType": string
+      id: string
+    }[] = [
       {
         parameters: {
           rowActionId: action.id,
