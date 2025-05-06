@@ -22,7 +22,6 @@
   import { isActive, url, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "@/helpers"
   import { onMount, onDestroy } from "svelte"
-  import VerificationPromptBanner from "@/components/common/VerificationPromptBanner.svelte"
   import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "@/components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
@@ -115,7 +114,6 @@
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
-  <VerificationPromptBanner />
   <div class="top-nav">
     {#if $appStore.initialised}
       <div class="topleftnav">
