@@ -22,6 +22,7 @@
     environmentStore,
     sidePanelStore,
     modalStore,
+    dataSourceStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
@@ -47,11 +48,18 @@
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
   import EmbedProvider from "./context/EmbedProvider.svelte"
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
+  import { ActionTypes } from "@/constants"
 
   // Provide contexts
+  const context = createContextStore()
   setContext("sdk", SDK)
   setContext("component", writable({ id: null, ancestors: [] }))
-  setContext("context", createContextStore())
+  setContext("context", context)
+
+  // Seed context with an action to refresh all datasources
+  context.actions.provideAction("all", ActionTypes.RefreshDatasource, () => {
+    dataSourceStore.actions.refreshAll()
+  })
 
   let dataLoaded = false
   let permissionError = false
