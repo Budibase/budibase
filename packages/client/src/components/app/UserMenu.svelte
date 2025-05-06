@@ -42,13 +42,15 @@
   const goToPortal = () => {
     window.location.href = isBuilder ? "/builder/portal/apps" : "/builder/apps"
   }
+
+  $: user = $authStore as User
 </script>
 
 {#if $authStore}
   <ActionMenu align={compact ? "right" : "left"}>
     <svelte:fragment slot="control">
       <div class="container">
-        <UserAvatar user={$authStore} size="M" showTooltip={false} />
+        <UserAvatar {user} size="M" showTooltip={false} />
         {#if !compact}
           <div class="text">
             <div class="name">
