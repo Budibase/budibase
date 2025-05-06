@@ -64,14 +64,14 @@
         agentsStore.clearCurrentHistoryId()
         $goto("./agents")
       }}
-      selected={!$params.appId && !openedApp && !$agentsStore.currentHistoryId && onAgents}
+      selected={!$params.appId &&
+        !openedApp &&
+        !$agentsStore.currentHistoryId &&
+        onAgents}
     />
     {#each $agentsStore.history as history}
       {@const selected = $agentsStore.currentHistoryId === history._id}
-        <span
-          class="side-bar-app-entry"
-          class:actionsOpen={selected}
-        >
+      <span class="side-bar-app-entry" class:actionsOpen={selected}>
         <NavItem
           icon="Branch1"
           text={history.title}
@@ -81,7 +81,7 @@
             agentsStore.setCurrentHistoryId(history._id)
             $goto("./agents")
           }}
-          selected={selected}
+          {selected}
         />
       </span>
     {/each}
