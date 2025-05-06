@@ -92,6 +92,7 @@
       class="ai-icon"
       class:loading={promptLoading}
       class:disabled={expanded && disabled}
+      class:no-toggle={expandedOnly}
       on:click={e => {
         if (!expandedOnly) {
           e.stopPropagation()
@@ -290,6 +291,10 @@
     cursor: var(--ai-icon-cursor, pointer);
     position: relative;
     z-index: 2;
+  }
+
+  .ai-icon.no-toggle {
+    cursor: default;
   }
 
   .ai-gen-text {
