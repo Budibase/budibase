@@ -13,6 +13,7 @@ import {
   UnsavedUser,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import { notifications } from "@budibase/bbui"
 
 interface UserInfo {
   email: string
@@ -43,6 +44,7 @@ class UserStore extends BudiStore<UserState> {
     try {
       return await API.getUser(userId)
     } catch (err) {
+      notifications.error("Error fetching user")
       return null
     }
   }

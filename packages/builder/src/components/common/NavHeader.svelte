@@ -1,15 +1,15 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte"
   import { Icon, Body } from "@budibase/bbui"
   import { keyUtils } from "@/helpers/keyUtils"
 
-  export let title
-  export let placeholder
-  export let value
-  export let onAdd
-  export let search
+  export let title: string
+  export let placeholder: string
+  export let value: string
+  export let onAdd: () => void
+  export let search: boolean
 
-  let searchInput
+  let searchInput: HTMLInputElement
 
   const openSearch = async () => {
     search = true
@@ -22,7 +22,7 @@
     value = ""
   }
 
-  const onKeyDown = e => {
+  const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       closeSearch()
     }
