@@ -2,12 +2,13 @@ import { Screen } from "@budibase/types"
 
 export const SAMPLE_DATA_SCREEN_NAME = "sample-data-inventory-screen"
 
-export function createSampleDataTableScreen(): Screen {
+export function createSampleDataTableScreen(projectAppId: string): Screen {
   return {
     showNavigation: true,
     width: "Large",
     routing: { route: "/inventory", roleId: "BASIC", homeScreen: false },
     name: SAMPLE_DATA_SCREEN_NAME,
+    projectAppId,
     props: {
       _id: "c38f2b9f250fb4c33965ce47e12c02a80",
       _component: "@budibase/standard-components/container",
