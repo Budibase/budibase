@@ -1,13 +1,13 @@
 import { EMPTY_LAYOUT } from "../../constants/layouts"
-import { generateLayoutID, getScreenParams } from "../../db/utils"
+import { generateLayoutID } from "../../db/utils"
 import { events, context } from "@budibase/backend-core"
 import {
   DeleteLayoutResponse,
-  Layout,
   SaveLayoutRequest,
   SaveLayoutResponse,
   UserCtx,
 } from "@budibase/types"
+import sdk from "../../sdk"
 
 export async function save(
   ctx: UserCtx<SaveLayoutRequest, SaveLayoutResponse>
@@ -36,13 +36,9 @@ export async function destroy(ctx: UserCtx<void, DeleteLayoutResponse>) {
   const layoutId = ctx.params.layoutId,
     layoutRev = ctx.params.layoutRev
 
-  const layoutsUsedByScreens = (
-    await db.allDocs<Layout>(
-      getScreenParams(null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(element => element.doc!.layoutId)
+  const layoutsUsedByScreens = (await sdk.screens.fetch()).map(
+    element => element.layoutId
+  )
   if (layoutsUsedByScreens.includes(layoutId)) {
     ctx.throw(400, "Cannot delete a layout that's being used by a screen")
   }
