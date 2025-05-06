@@ -22,6 +22,7 @@ import {
   screenComponentErrors,
   screenComponentErrorList,
 } from "./screenComponent"
+import { selectedProjectAppId } from "./projectApps"
 
 // Backend
 import { tables } from "./tables"
@@ -81,6 +82,7 @@ export {
   screenComponentErrors,
   screenComponentErrorList,
   oauth2,
+  selectedProjectAppId,
 }
 
 export const reset = () => {

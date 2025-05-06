@@ -12,6 +12,7 @@
     builderStore,
     datasources,
     appStore,
+    selectedProjectAppId,
   } from "@/stores/builder"
   import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
@@ -41,6 +42,8 @@
   let hasPreselectedDatasource = false
 
   $: screens = $screenStore.screens
+
+  $: projectAppId = $selectedProjectAppId
 
   export const show = (
     newMode: string,
@@ -122,8 +125,8 @@
   const createBasicScreen = async ({ route }: { route: string }) => {
     const screenTemplates =
       mode === AutoScreenTypes.BLANK
-        ? screenTemplating.blank({ route, screens })
-        : screenTemplating.pdf({ route, screens })
+        ? screenTemplating.blank({ route, screens, projectAppId })
+        : screenTemplating.pdf({ route, screens, projectAppId })
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
@@ -154,6 +157,7 @@
             tableOrView,
             type,
             permissions: permissions[tableOrView.id],
+            projectAppId,
           })
         )
       )

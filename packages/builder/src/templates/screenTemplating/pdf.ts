@@ -4,10 +4,21 @@ import getValidRoute from "./getValidRoute"
 import { Roles } from "@/constants/backend"
 import { Screen } from "@budibase/types"
 
-const pdf = ({ route, screens }: { route: string; screens: Screen[] }) => {
+const pdf = ({
+  route,
+  screens,
+  projectAppId,
+}: {
+  route: string
+  screens: Screen[]
+  projectAppId: string
+}) => {
   const validRoute = getValidRoute(screens, route, Roles.BASIC)
 
-  const template = new PDFScreen().role(Roles.BASIC).route(validRoute).json()
+  const template = new PDFScreen(projectAppId)
+    .role(Roles.BASIC)
+    .route(validRoute)
+    .json()
 
   return [
     {
