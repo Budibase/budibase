@@ -76,7 +76,6 @@ import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
-import { groupBy } from "lodash/fp"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -267,13 +266,14 @@ export async function fetchAppPackage(
   }
 
   // Only filter screens if the user is not a builder
-  if (!users.isBuilder(ctx.user, appId)) {
+  const isBuilder = users.isBuilder(ctx.user, appId)
+  if (isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  const projectApps = await extractScreensByProjectApp(screens)
+  const projectApps = await extractScreensByProjectApp(screens, isBuilder)
 
   const clientLibPath = objectStore.clientLibraryUrl(
     ctx.params.appId,
@@ -291,20 +291,23 @@ export async function fetchAppPackage(
 }
 
 async function extractScreensByProjectApp(
-  screens: Screen[]
+  screens: Screen[],
+  keepEmptyProjects: boolean
 ): Promise<FetchAppPackageResponse["projectApps"]> {
   const result: FetchAppPackageResponse["projectApps"] = []
 
   const projectApps = await sdk.projectApps.fetch()
 
-  const screensByProjectApp = groupBy(s => s.projectAppId, screens)
-  for (const projectAppId of Object.keys(screensByProjectApp)) {
-    const projectApp = projectApps.find(p => p._id === projectAppId)
-
-    result.push({
-      ...projectApp!,
-      screens: screensByProjectApp[projectAppId],
-    })
+  for (const projectApp of projectApps) {
+    const projectAppScreens = screens.filter(
+      s => s.projectAppId === projectApp._id
+    )
+    if (projectAppScreens.length || keepEmptyProjects) {
+      result.push({
+        ...projectApp!,
+        screens: projectAppScreens,
+      })
+    }
   }
 
   return result

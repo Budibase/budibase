@@ -22,7 +22,7 @@ import {
   screenComponentErrors,
   screenComponentErrorList,
 } from "./screenComponent"
-import { selectedProjectAppId } from "./projectApps"
+import { projectAppStore, selectedProjectAppId } from "./projectApps"
 
 // Backend
 import { tables } from "./tables"
@@ -126,6 +126,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
+  projectAppStore.syncAppProjectApps(pkg)
   resetBuilderHistory()
   await refreshBuilderData()
 }
