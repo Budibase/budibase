@@ -1,8 +1,17 @@
+import { JSONSchema4 } from "json-schema"
 import { EnrichedBinding } from "../../ui"
 
 export interface Message {
   role: "system" | "user"
   content: string
+}
+
+export interface Tool {
+  name: string
+  description?: string
+  parameters?: JSONSchema4
+  // strictly follow JSON schema specified in parameters
+  strict?: boolean
 }
 
 export interface ChatCompletionRequest {
