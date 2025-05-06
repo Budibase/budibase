@@ -121,10 +121,16 @@ export async function processAIColumns<T extends Row | Row[]>(
   inputRows: T,
   { contextRows }: FormulaOpts
 ): Promise<T> {
+  const aiColumns = Object.values(table.schema).filter(isAIColumn)
+  if (!aiColumns.length) {
+    return inputRows
+  }
+
   return tracer.trace("processAIColumns", {}, async span => {
     const numRows = Array.isArray(inputRows) ? inputRows.length : 1
     span?.addTags({ table_id: table._id, numRows })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
+
     const llm = await ai.getLLM()
     if (rows && llm) {
       // Ensure we have snippet context
