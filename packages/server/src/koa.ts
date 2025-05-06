@@ -7,8 +7,8 @@ import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
 import { events, logging, middleware, timers } from "@budibase/backend-core"
-import destroyable from "server-destroy"
 import { userAgent } from "koa-useragent"
+import gracefulShutdown from "http-graceful-shutdown"
 
 export default function createKoaApp() {
   const app = new Koa()
@@ -40,55 +40,47 @@ export default function createKoaApp() {
   app.use(userAgent)
 
   const server = http.createServer(app.callback())
-  destroyable(server)
 
-  let shuttingDown = false,
-    errCode = 0
+  let shuttingDown = false
 
-  server.on("close", async () => {
-    // already in process
-    if (shuttingDown) {
-      return
-    }
+  const shutdown = async () => {
+    if (shuttingDown) return
     shuttingDown = true
-    console.log("Server Closed")
+    console.log(`Server shutting down gracefully...`)
+
     timers.cleanup()
     await automations.shutdown()
     await redis.shutdown()
     events.shutdown()
     await Thread.shutdown()
     api.shutdown()
-    if (!env.isTest()) {
-      process.exit(errCode)
-    }
-  })
-
-  const listener = server.listen(env.PORT || 0)
-
-  const shutdown = () => {
-    server.close()
-    // @ts-ignore
-    server.destroy()
   }
+
+  gracefulShutdown(server, {
+    signals: "SIGINT SIGTERM",
+    timeout: 30000, // in ms
+    onShutdown: shutdown,
+    finally: () => {
+      console.log("Server shutdown complete")
+    },
+  })
 
   process.on("uncaughtException", err => {
     // @ts-ignore
     // don't worry about this error, comes from zlib isn't important
-    if (err && err["code"] === "ERR_INVALID_CHAR") {
-      return
-    }
-    errCode = -1
+    if (err?.["code"] === "ERR_INVALID_CHAR") return
     logging.logAlert("Uncaught exception.", err)
     shutdown()
+    process.exit(1)
   })
 
-  process.on("SIGTERM", () => {
+  process.on("unhandledRejection", reason => {
+    logging.logAlert("Unhandled Promise Rejection", reason as Error)
     shutdown()
+    process.exit(1)
   })
 
-  process.on("SIGINT", () => {
-    shutdown()
-  })
+  const listener = server.listen(env.PORT || 0)
 
   return { app, server: listener }
 }

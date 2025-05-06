@@ -26,12 +26,12 @@ db.init()
 import koaBody from "koa-body"
 import http from "http"
 import api from "./api"
+import gracefulShutdown from "http-graceful-shutdown"
 
 const koaSession = require("koa-session")
 
 import { userAgent } from "koa-useragent"
 
-import destroyable from "server-destroy"
 import { initPro } from "./initPro"
 import { handleScimBody } from "./middleware/handleScimBody"
 
@@ -86,29 +86,40 @@ app.use(auth.passport.session())
 app.use(api.routes())
 
 const server = http.createServer(app.callback())
-destroyable(server)
 
-let shuttingDown = false,
-  errCode = 0
-server.on("close", async () => {
-  if (shuttingDown) {
-    return
-  }
+let shuttingDown = false
+
+const shutdown = async () => {
+  if (shuttingDown) return
   shuttingDown = true
-  console.log("Server Closed")
+  console.log(`Worker service shutting down gracefully...`)
+
   timers.cleanup()
   events.shutdown()
   await redis.clients.shutdown()
   await queue.shutdown()
-  if (!env.isTest()) {
-    process.exit(errCode)
-  }
+}
+
+gracefulShutdown(server, {
+  signals: "SIGINT SIGTERM",
+  timeout: 30000,
+  onShutdown: shutdown,
+  finally: () => {
+    console.log("Worker service shutdown complete")
+  },
 })
 
-const shutdown = () => {
-  server.close()
-  server.destroy()
-}
+process.on("uncaughtException", err => {
+  logging.logAlert("Uncaught exception.", err)
+  shutdown()
+  process.exit(1)
+})
+
+process.on("unhandledRejection", reason => {
+  logging.logAlert("Unhandled Promise Rejection", reason as Error)
+  shutdown()
+  process.exit(1)
+})
 
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   let startupLog = `Worker running on ${JSON.stringify(server.address())}`
@@ -124,18 +135,4 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   await events.processors.init(proSdk.auditLogs.write)
-})
-
-process.on("uncaughtException", err => {
-  errCode = -1
-  logging.logAlert("Uncaught exception.", err)
-  shutdown()
-})
-
-process.on("SIGTERM", () => {
-  shutdown()
-})
-
-process.on("SIGINT", () => {
-  shutdown()
 })
