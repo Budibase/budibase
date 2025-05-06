@@ -8,7 +8,7 @@
     userStore,
     deploymentStore,
   } from "@/stores/builder"
-  import { auth, appsStore } from "@/stores/portal"
+  import { auth, appsStore, featureFlags } from "@/stores/portal"
   import {
     Icon,
     Tabs,
@@ -122,17 +122,21 @@
         </a>
         <Tabs {selected} size="M">
           {#each $layout.children as { path, title }}
-            <TourWrap stepKeys={[`builder-${title}-section`]}>
-              <Tab
-                link
-                href={$url(path)}
-                quiet
-                selected={$isActive(path)}
-                on:click={() => topItemNavigate(path)}
-                title={capitalise(title)}
-                id={`builder-${title}-tab`}
-              />
-            </TourWrap>
+            {#if title === "agent" && !$featureFlags.AI_AGENTS}
+              <!-- skip -->
+            {:else}
+              <TourWrap stepKeys={[`builder-${title}-section`]}>
+                <Tab
+                  link
+                  href={$url(path)}
+                  quiet
+                  selected={$isActive(path)}
+                  on:click={() => topItemNavigate(path)}
+                  title={capitalise(title)}
+                  id={`builder-${title}-tab`}
+                />
+              </TourWrap>
+            {/if}
           {/each}
         </Tabs>
       </div>
