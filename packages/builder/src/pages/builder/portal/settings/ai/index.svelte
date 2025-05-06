@@ -35,7 +35,6 @@
     },
   })
 
-  let mounted = false
   let aiConfig: AIConfig
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
@@ -154,14 +153,13 @@
       aiConfig = (await API.getConfig(ConfigType.AI)) as AIConfig
       const licenseKeyResponse = await API.getLicenseKey()
       hasLicenseKey = licenseKeyResponse?.licenseKey
-      mounted = true
     } catch {
       notifications.error("Error fetching AI settings")
     }
   })
 </script>
 
-{#if mounted}
+{#if aiConfig}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <div class="header">

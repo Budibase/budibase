@@ -85,6 +85,7 @@ describe("AISettings", () => {
     })
 
     it("should display the 'Enable BB AI' button", async () => {
+      API.getConfig.mockResolvedValueOnce({ config: {} })
       setupDOM()
       await waitFor(() => {
         const enableButton = instance.getByText("Enable BB AI")
