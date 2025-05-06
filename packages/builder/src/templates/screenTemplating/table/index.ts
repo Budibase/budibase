@@ -5,8 +5,6 @@ import modal from "./modal"
 import newScreen from "./newScreen"
 import sidePanel from "./sidePanel"
 
-type NewScreenType = "inline" | "modal" | "sidePanel" | "newScreen"
-
 const createScreen = async ({
   tableOrView,
   type,
@@ -14,7 +12,7 @@ const createScreen = async ({
   screens,
 }: {
   tableOrView: SourceOption
-  type: NewScreenType
+  type: string
   permissions: UIPermissions
   screens: Screen[]
 }) => {
