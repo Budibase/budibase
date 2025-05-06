@@ -45,7 +45,7 @@ export async function calculateAutomationCount(appId: string, db?: Database) {
 export async function calculateScreenCount(appId: string, db?: Database) {
   return runInContext(
     appId,
-    async () => {
+    async (db: Database) => {
       const screenList = await sdk.screens.fetch(db)
       return screenList.length
     },
