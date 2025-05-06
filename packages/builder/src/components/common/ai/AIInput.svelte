@@ -13,7 +13,6 @@
   export let value: string = ""
   export const submit = onPromptSubmit
 
-  $: expanded = expandedOnly || expanded
   const dispatch = createEventDispatcher()
 
   let promptInput: HTMLInputElement
@@ -22,6 +21,7 @@
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
+  $: expanded = expandedOnly || expanded
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
   $: aiEnabled = $auth?.user?.llm
@@ -93,8 +93,10 @@
       class:loading={promptLoading}
       class:disabled={expanded && disabled}
       on:click={e => {
-        e.stopPropagation()
-        toggleExpand()
+        if (!expandedOnly) {
+          e.stopPropagation()
+          toggleExpand()
+        }
       }}
     />
     {#if expanded}

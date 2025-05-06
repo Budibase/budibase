@@ -26,11 +26,10 @@
 
   const thresholdExpansionWidth = 350
 
-  $: expanded =
+  $: isExpandedOnly =
     expandedOnly ||
     (parentWidth !== null && parentWidth > thresholdExpansionWidth)
-      ? true
-      : expanded
+  $: expanded = isExpandedOnly || expanded
 
   async function generateJs(prompt: string) {
     promptText = ""
@@ -108,7 +107,7 @@
     bind:expanded
     bind:value={inputValue}
     readonly={!!suggestedCode}
-    {expandedOnly}
+    expandedOnly={isExpandedOnly}
   />
 </div>
 
