@@ -138,8 +138,9 @@
           screenTemplating.table({
             screens,
             tableOrView,
-            type,
+            type: type as any,
             permissions: permissions[tableOrView.id],
+            projectAppId,
           })
         )
       )
