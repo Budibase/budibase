@@ -10,6 +10,7 @@ import {
   SourceName,
   VirtualDocumentType,
   LinkDocument,
+  AIFieldMetadata,
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
@@ -336,6 +337,10 @@ export function isRelationshipColumn(
   column: FieldSchema
 ): column is RelationshipFieldMetadata {
   return column.type === FieldType.LINK
+}
+
+export function isAIColumn(column: FieldSchema): column is AIFieldMetadata {
+  return column.type === FieldType.AI
 }
 
 /**
