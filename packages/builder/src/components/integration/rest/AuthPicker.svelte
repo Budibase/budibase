@@ -109,13 +109,12 @@
         />
       {/each}
     </List>
-
-    <div>
-      <Button secondary icon="Add" on:click={addOAuth2Configuration}
-        >Add OAuth2</Button
-      >
-    </div>
   {/if}
+  <div>
+    <Button secondary icon="Add" on:click={addOAuth2Configuration}
+      >Add OAuth2</Button
+    >
+  </div>
 </DetailPopover>
 
 <style>
