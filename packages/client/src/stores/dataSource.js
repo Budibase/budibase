@@ -115,9 +115,18 @@ export const createDataSourceStore = () => {
     })
   }
 
+  const refreshAll = () => {
+    get(store).forEach(instance => instance.refresh())
+  }
+
   return {
     subscribe: store.subscribe,
-    actions: { registerDataSource, unregisterInstance, invalidateDataSource },
+    actions: {
+      registerDataSource,
+      unregisterInstance,
+      invalidateDataSource,
+      refreshAll,
+    },
   }
 }
 

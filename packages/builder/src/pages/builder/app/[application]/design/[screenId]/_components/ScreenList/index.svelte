@@ -1,16 +1,17 @@
-<script>
+<script lang="ts">
   import { Layout } from "@budibase/bbui"
   import { sortedScreens } from "@/stores/builder"
   import ScreenNavItem from "./ScreenNavItem.svelte"
   import { goto } from "@roxi/routify"
   import { getVerticalResizeActions } from "@/components/common/resizable"
   import NavHeader from "@/components/common/NavHeader.svelte"
+  import type { Screen } from "@budibase/types"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
   let searching = false
   let searchValue = ""
-  let screensContainer
+  let screensContainer: HTMLDivElement
   let scrolling = false
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
@@ -25,13 +26,13 @@
     }
   }
 
-  const getFilteredScreens = (screens, searchValue) => {
+  const getFilteredScreens = (screens: Screen[], searchValue: string) => {
     return screens.filter(screen => {
       return !searchValue || screen.routing.route.includes(searchValue)
     })
   }
 
-  const handleScroll = e => {
+  const handleScroll = (e: any) => {
     scrolling = e.target.scrollTop !== 0
   }
 </script>
@@ -62,7 +63,6 @@
 
   <div
     role="separator"
-    disabled={searching}
     class="divider"
     class:disabled={searching}
     use:resizableHandle

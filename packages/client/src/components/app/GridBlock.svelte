@@ -6,6 +6,7 @@
   import { featuresStore } from "@/stores"
   import { Grid } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
+  import { UILogicalOperator, EmptyFilterOption } from "@budibase/types"
 
   // table is actually any datasource, but called table for legacy compatibility
   export let table
@@ -43,6 +44,8 @@
   let gridContext
   let minHeight = 0
 
+  let filterExtensions = {}
+
   $: id = $component.id
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
@@ -51,14 +54,72 @@
   $: schemaOverrides = getSchemaOverrides(parsedColumns, $context)
   $: selectedRows = deriveSelectedRows(gridContext)
   $: styles = patchStyles($component.styles, minHeight)
-  $: data = { selectedRows: $selectedRows }
+  $: rowMap = gridContext?.rowLookupMap
+
+  $: data = {
+    selectedRows: $selectedRows,
+    embeddedData: {
+      dataSource: table,
+      componentId: $component.id,
+      loaded: !!$rowMap,
+    },
+  }
+
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
       callback: () => gridContext?.rows.actions.refreshData(),
       metadata: { dataSource: table },
     },
+    {
+      type: ActionTypes.AddDataProviderFilterExtension,
+      callback: addFilterExtension,
+    },
+    {
+      type: ActionTypes.RemoveDataProviderFilterExtension,
+      callback: removeFilterExtension,
+    },
   ]
+
+  $: extendedFilter = extendFilter(initialFilter, filterExtensions)
+
+  /**
+   *
+   * @param componentId Originating Component id
+   * @param extension Filter extension
+   */
+  const addFilterExtension = (componentId, extension) => {
+    if (!componentId || !extension) {
+      return
+    }
+    filterExtensions = { ...filterExtensions, [componentId]: extension }
+  }
+
+  /**
+   *
+   * @param componentId Originating Component id
+   * @param extension Filter extension
+   */
+  const removeFilterExtension = componentId => {
+    if (!componentId) {
+      return
+    }
+    const { [componentId]: removed, ...rest } = filterExtensions
+    filterExtensions = { ...rest }
+  }
+
+  const extendFilter = (initialFilter, extensions) => {
+    if (!Object.keys(extensions || {}).length) {
+      return initialFilter
+    }
+    return {
+      groups: (initialFilter ? [initialFilter] : []).concat(
+        Object.values(extensions)
+      ),
+      logicalOperator: UILogicalOperator.ALL,
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+    }
+  }
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -197,7 +258,7 @@
     {stripeRows}
     {quiet}
     {darkMode}
-    {initialFilter}
+    initialFilter={extendedFilter}
     {initialSortColumn}
     {initialSortOrder}
     {fixedRowHeight}

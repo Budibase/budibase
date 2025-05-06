@@ -1,10 +1,12 @@
 <script lang="ts">
   import { sdk } from "@budibase/shared-core"
-  import { FieldType } from "@budibase/types"
+  import { FieldType, type Row } from "@budibase/types"
   import RelationshipField from "./RelationshipField.svelte"
 
   export let defaultValue: string
   export let type = FieldType.BB_REFERENCE
+  export let multi: boolean | undefined = undefined
+  export let defaultRows: Row[] | undefined = []
 
   function updateUserIDs(value: string | string[]) {
     if (Array.isArray(value)) {
@@ -33,4 +35,7 @@
   datasourceType={"user"}
   primaryDisplay={"email"}
   defaultValue={updatedDefaultValue}
+  {defaultRows}
+  {multi}
+  on:rows
 />
