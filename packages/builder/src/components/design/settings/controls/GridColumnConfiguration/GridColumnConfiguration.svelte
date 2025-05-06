@@ -9,7 +9,7 @@
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
-  import getColumns from "./getColumns.js"
+  import { getColumns } from "./getColumns.js"
   import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let value

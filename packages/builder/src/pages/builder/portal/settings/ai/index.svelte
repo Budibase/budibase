@@ -159,74 +159,76 @@
   })
 </script>
 
-<Layout noPadding>
-  <Layout gap="XS" noPadding>
-    <div class="header">
-      <Heading size="M">AI</Heading>
-    </div>
-    <Body>
-      Connect an LLM to enable AI features. You can only enable one LLM at a
-      time.
-    </Body>
-  </Layout>
-  <Divider />
+{#if aiConfig}
+  <Layout noPadding>
+    <Layout gap="XS" noPadding>
+      <div class="header">
+        <Heading size="M">AI</Heading>
+      </div>
+      <Body>
+        Connect an LLM to enable AI features. You can only enable one LLM at a
+        time.
+      </Body>
+    </Layout>
+    <Divider />
 
-  {#if !activeProvider && !$bannerStore}
-    <div class="banner">
-      <div class="banner-content">
-        <div class="banner-icon">
-          <img src={BBAI} alt="BB AI" width="24" height="24" />
+    {#if !activeProvider && !$bannerStore}
+      <div class="banner">
+        <div class="banner-content">
+          <div class="banner-icon">
+            <img src={BBAI} alt="BB AI" width="24" height="24" />
+          </div>
+          <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
         </div>
-        <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
-      </div>
-      <div class="banner-buttons">
-        <Button
-          primary
-          cta
-          size="S"
-          on:click={() => handleEnable("BudibaseAI")}
-        >
-          Enable BB AI
-        </Button>
-        <Icon
-          hoverable
-          name="Close"
-          on:click={() => {
-            setBannerLocalStorageKey()
-            bannerStore.set(true)
-          }}
-        />
-      </div>
-    </div>
-  {/if}
-
-  <div class="section">
-    <div class="section-title">Enabled</div>
-    {#if activeProvider}
-      <AIConfigTile
-        config={getProviderConfig(activeProvider).config}
-        editHandler={() => handleEnable(activeProvider)}
-        disableHandler={() => disableProvider(activeProvider)}
-      />
-    {:else}
-      <div class="no-enabled">
-        <Body size="S">No LLMs are enabled</Body>
-      </div>
-    {/if}
-    {#if disabledProviders.length > 0}
-      <div class="section-title disabled-title">Disabled</div>
-      <div class="ai-list">
-        {#each disabledProviders as { provider, config } (provider)}
-          <AIConfigTile
-            {config}
-            editHandler={() => handleEnable(provider)}
-            disableHandler={() => disableProvider(provider)}
+        <div class="banner-buttons">
+          <Button
+            primary
+            cta
+            size="S"
+            on:click={() => handleEnable("BudibaseAI")}
+          >
+            Enable BB AI
+          </Button>
+          <Icon
+            hoverable
+            name="Close"
+            on:click={() => {
+              setBannerLocalStorageKey()
+              bannerStore.set(true)
+            }}
           />
-        {/each}
+        </div>
       </div>
     {/if}
-  </div>
-</Layout>
+
+    <div class="section">
+      <div class="section-title">Enabled</div>
+      {#if activeProvider}
+        <AIConfigTile
+          config={getProviderConfig(activeProvider).config}
+          editHandler={() => handleEnable(activeProvider)}
+          disableHandler={() => disableProvider(activeProvider)}
+        />
+      {:else}
+        <div class="no-enabled">
+          <Body size="S">No LLMs are enabled</Body>
+        </div>
+      {/if}
+      {#if disabledProviders.length > 0}
+        <div class="section-title disabled-title">Disabled</div>
+        <div class="ai-list">
+          {#each disabledProviders as { provider, config } (provider)}
+            <AIConfigTile
+              {config}
+              editHandler={() => handleEnable(provider)}
+              disableHandler={() => disableProvider(provider)}
+            />
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </Layout>
+{/if}
 
 <Modal bind:this={portalModal}>
   <PortalModal
