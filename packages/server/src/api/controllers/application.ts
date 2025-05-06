@@ -182,7 +182,12 @@ async function addSampleDataDocs() {
 
 async function addSampleDataScreen() {
   const db = context.getAppDB()
-  let screen = createSampleDataTableScreen()
+
+  const projectApp = await sdk.projectApps.create({
+    name: "TODO",
+  })
+
+  let screen = createSampleDataTableScreen(projectApp._id)
   screen._id = generateScreenID()
   await db.put(screen)
 }
