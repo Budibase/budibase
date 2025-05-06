@@ -1,9 +1,23 @@
+import { SourceOption } from "@/pages/builder/app/[application]/design/_components/NewScreen/utils"
+import { Screen, UIPermissions } from "@budibase/types"
 import inline from "./inline"
 import modal from "./modal"
-import sidePanel from "./sidePanel"
 import newScreen from "./newScreen"
+import sidePanel from "./sidePanel"
 
-const createScreen = async ({ tableOrView, type, permissions, screens }) => {
+type NewScreenType = "inline" | "modal" | "sidePanel" | "newScreen"
+
+const createScreen = async ({
+  tableOrView,
+  type,
+  permissions,
+  screens,
+}: {
+  tableOrView: SourceOption
+  type: NewScreenType
+  permissions: UIPermissions
+  screens: Screen[]
+}) => {
   if (type === "inline") {
     return await inline({ tableOrView, permissions, screens })
   }
