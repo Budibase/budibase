@@ -35,9 +35,10 @@ function pickApi(tableOrViewId: string) {
 export async function save(
   sourceId: string,
   row: Row,
-  userId: string | undefined
+  userId: string | undefined,
+  opts?: { updateAIColumns: boolean }
 ) {
-  return pickApi(sourceId).save(sourceId, row, userId)
+  return pickApi(sourceId).save(sourceId, row, userId, opts)
 }
 
 export async function find(sourceId: string, rowId: string) {

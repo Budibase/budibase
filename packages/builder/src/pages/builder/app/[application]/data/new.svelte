@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { API } from "@/api"
   import {
     tables,
@@ -15,14 +15,17 @@
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import CreationPage from "@/components/common/CreationPage.svelte"
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
+  import AiTableGeneration from "./_components/AITableGeneration.svelte"
+  import { featureFlags } from "@/stores/portal"
 
-  let internalTableModal
-  let externalDatasourceModal
+  let internalTableModal: CreateInternalTableModal
+  let externalDatasourceModal: CreateExternalDatasourceModal
 
   let sampleDataLoading = false
   let externalDatasourceLoading = false
 
   $: disabled = sampleDataLoading || externalDatasourceLoading
+  $: aiTableGenerationEnabled = $featureFlags.AI_TABLE_GENERATION
 
   const createSampleData = async () => {
     sampleDataLoading = true
@@ -58,9 +61,14 @@
     </AbsTooltip>
   </div>
 
-  <div class="options">
+  <div class="options bb-options">
+    {#if aiTableGenerationEnabled}
+      <div class="ai-generation">
+        <AiTableGeneration />
+      </div>
+    {/if}
     <DatasourceOption
-      on:click={internalTableModal.show}
+      on:click={() => internalTableModal.show()}
       title="Create new table"
       description="Non-relational"
       {disabled}
@@ -111,7 +119,7 @@
     display: flex;
     align-items: center;
     margin-top: 12px;
-    margin-bottom: 36px;
+    margin-bottom: 24px;
     gap: 8px;
   }
   .subHeading :global(p) {
@@ -126,5 +134,11 @@
     justify-content: center;
     margin-bottom: 48px;
     max-width: 1050px;
+  }
+  .bb-options {
+    max-width: calc(3 * 235px + 2 * 24px); /* 3 columns + 2 gaps */
+  }
+  .options .ai-generation {
+    grid-column: 1 / -1;
   }
 </style>

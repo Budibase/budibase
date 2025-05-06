@@ -20,7 +20,7 @@
 
   // Aliases for other strings to match to when searching
   const aliases = {
-    text: ["headline", "paragraph"],
+    text: ["headline", "heading", "title", "paragraph", "markdown"],
   }
 
   let searchString
@@ -269,7 +269,12 @@
                 on:mouseenter={() => (selectedIndex = null)}
               >
                 <Icon name={component.icon} />
-                <Body size="XS">{component.name}</Body>
+                <div class="component-name">
+                  <Body size="XS">{component.name}</Body>
+                  {#if component.new}
+                    <div class="new">NEW</div>
+                  {/if}
+                </div>
               </div>
             {/each}
           </Layout>
@@ -318,6 +323,22 @@
   }
   .component:hover {
     background: var(--spectrum-global-color-gray-300);
+  }
+  .component-name {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 4px;
+  }
+  .new {
+    font-size: 8px;
+    color: white;
+    background: var(--bb-indigo);
+    border-radius: 2px;
+    padding: 1px 3px;
+    font-weight: bold;
+    margin-left: auto;
+    flex-shrink: 0;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;

@@ -10,7 +10,14 @@ import {
   StaticDatabases,
   DEFAULT_TENANT_ID,
 } from "../constants"
-import { Database, IdentityContext, Snippet, App, Table } from "@budibase/types"
+import {
+  Database,
+  IdentityContext,
+  Snippet,
+  App,
+  Table,
+  License,
+} from "@budibase/types"
 import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
@@ -169,6 +176,18 @@ export async function doInSelfHostTenantUsingCloud<T>(
 ): Promise<T> {
   const updates = { tenantId, isSelfHostUsingCloud: true }
   return newContext(updates, task)
+}
+
+export async function doInLicenseContext<T>(
+  license: License,
+  task: () => T
+): Promise<T> {
+  return newContext({ license }, task)
+}
+
+export function getLicense(): License | undefined {
+  const context = Context.get()
+  return context?.license
 }
 
 export function isSelfHostUsingCloud() {
@@ -439,6 +458,17 @@ export function setFeatureFlags(key: string, value: Record<string, boolean>) {
   }
   context.featureFlagCache ??= {}
   context.featureFlagCache[key] = value
+}
+
+export function getFeatureFlagOverrides(): Record<string, boolean> {
+  return getCurrentContext()?.featureFlagOverrides || {}
+}
+
+export async function doInFeatureFlagOverrideContext<T>(
+  value: Record<string, boolean>,
+  callback: () => Promise<T>
+) {
+  return await newContext({ featureFlagOverrides: value }, callback)
 }
 
 export function getTableForView(viewId: string): Table | undefined {

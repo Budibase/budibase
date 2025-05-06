@@ -26,6 +26,14 @@
   const RemoveID = "remove"
   const subType = $licensing.license.plan.type ?? null
 
+  $: isPremiumOrAbove = [
+    Constants.PlanType.PREMIUM,
+    Constants.PlanType.PREMIUM_PLUS,
+    Constants.PlanType.ENTERPRISE,
+    Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
+    Constants.PlanType.ENTERPRISE_BASIC,
+  ].includes(subType)
+
   $: enrichLabel = label => (labelPrefix ? `${labelPrefix} ${label}` : label)
   $: options = getOptions(
     $roles,
@@ -71,13 +79,11 @@
     }))
 
     // Add creator if required
-    if (allowCreator || isEnterprisePlan(subType)) {
+    if (allowCreator || isPremiumOrAbove) {
       options.unshift({
         _id: Constants.Roles.CREATOR,
         name: "Can edit",
-        tag: isEnterprisePlan(subType)
-          ? null
-          : capitalise(Constants.PlanType.ENTERPRISE),
+        tag: isPremiumOrAbove ? null : capitalise(Constants.PlanType.PREMIUM),
       })
     }
 
@@ -120,14 +126,6 @@
       dispatch("change", e.detail)
     }
   }
-
-  function isEnterprisePlan(subType) {
-    return (
-      subType === Constants.PlanType.ENTERPRISE ||
-      subType === Constants.PlanType.ENTERPRISE_BASIC ||
-      subType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
-    )
-  }
 </script>
 
 {#if fancySelect}
@@ -146,7 +144,7 @@
     getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return isEnterprisePlan(subType)
+        return isPremiumOrAbove
       }
       return true
     }}
@@ -169,7 +167,7 @@
     getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return isEnterprisePlan(subType)
+        return isPremiumOrAbove
       }
       return option.enabled !== false
     }}
