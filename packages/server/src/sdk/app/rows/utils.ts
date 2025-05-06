@@ -206,8 +206,14 @@ export async function validate({
   ]
   for (let fieldName of Object.keys(table.schema)) {
     const column = table.schema[fieldName]
-    const constraints = cloneDeep(column.constraints)
     const type = column.type
+    let constraints = cloneDeep(column.constraints)
+
+    // Ensure display column is required
+    if (table.primaryDisplay === fieldName) {
+      constraints = { ...constraints, presence: true }
+    }
+
     // foreign keys are likely to be enriched
     if (isForeignKey(fieldName, table)) {
       continue
