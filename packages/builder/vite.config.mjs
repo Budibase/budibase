@@ -17,7 +17,7 @@ const copyFonts = dest =>
   viteStaticCopy({
     targets: [
       {
-        src: "../../node_modules/@fontsource/source-sans-pro",
+        src: "./assets/source-sans-3",
         dest,
       },
       {
