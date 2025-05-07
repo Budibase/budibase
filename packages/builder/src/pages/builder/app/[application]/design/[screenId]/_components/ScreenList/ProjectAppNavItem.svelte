@@ -1,12 +1,13 @@
 <script lang="ts">
   import { Icon, notifications } from "@budibase/bbui"
   import NavItem from "@/components/common/NavItem.svelte"
-  import type { ProjectApp } from "@budibase/types"
+  import type { UIProjectApp } from "@budibase/types"
   import { contextMenuStore, projectAppStore } from "@/stores/builder"
   import { confirm } from "@/helpers"
   import { createEventDispatcher } from "svelte"
+  import ScreenNavItem from "./ScreenNavItem.svelte"
 
-  export let projectApp: ProjectApp
+  export let projectApp: UIProjectApp
 
   const dispatch = createEventDispatcher<{ edit: void }>()
 
@@ -73,3 +74,8 @@
     <Icon name={projectApp.icon} size="S" color={projectApp.iconColor} />
   </div>
 </NavItem>
+
+<!-- <Divider vertical /> -->
+{#each projectApp.screens as screen (screen._id)}
+  <ScreenNavItem {screen} />
+{/each}
