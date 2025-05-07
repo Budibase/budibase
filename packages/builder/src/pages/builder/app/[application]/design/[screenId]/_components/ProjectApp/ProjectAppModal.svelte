@@ -1,6 +1,7 @@
 <script lang="ts">
+  import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { projectAppStore } from "@/stores/builder"
-  import { Input, keepOpen, ModalContent } from "@budibase/bbui"
+  import { Input, keepOpen, Label, ModalContent } from "@budibase/bbui"
   import type { ProjectApp } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
@@ -69,5 +70,13 @@
     bind:value={data.urlPrefix}
     error={errors.urlPrefix}
   />
-  <Input label="Icon" bind:value={data.icon} error={errors.icon} />
+
+  <Label size="L">Icon</Label>
+  <EditableIcon
+    name={data.icon}
+    app={null}
+    autoSave={false}
+    disabled={false}
+    color={null}
+  />
 </ModalContent>
