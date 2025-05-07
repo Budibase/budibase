@@ -78,15 +78,17 @@
       prompt: promptText,
     })
     dispatch("reject", { code: previousContents })
-    reset()
+    reset(false)
   }
 
-  function reset() {
+  function reset(clearPrompt: boolean = true) {
+    if (clearPrompt) {
+      promptText = ""
+      inputValue = ""
+    }
     suggestedCode = null
     previousContents = null
-    promptText = ""
     expanded = false
-    inputValue = ""
   }
 </script>
 
