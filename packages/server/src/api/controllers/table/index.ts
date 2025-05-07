@@ -91,7 +91,7 @@ async function guardTable(table: Table, isCreate: boolean) {
 
 // covers both internal and external
 export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
-  const internal = await sdk.tables.getAllInternalTables()
+  const internal = sdk.tables.getAllInternalTables()
 
   const datasources = await sdk.datasources.getExternalDatasources()
 
