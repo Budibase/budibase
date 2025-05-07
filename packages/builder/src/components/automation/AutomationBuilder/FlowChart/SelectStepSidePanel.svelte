@@ -16,6 +16,8 @@
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import type { AutomationStepDefinition } from "@budibase/types"
   import { onMount } from "svelte"
+  import { fly } from "svelte/transition"
+
   export let block
   export let onClose = () => {}
 
@@ -216,9 +218,9 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="container">
+<div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
   <Panel
-    title="Add the next step to your automation"
+    title="Automation Step"
     showCloseButton
     onClickCloseButton={onClose}
     customWidth={400}
@@ -237,7 +239,7 @@
         {#if i > 0}
           <div class="section-divider" />
         {/if}
-        <Detail size="M" weight={700}>{category.name}</Detail>
+        <Detail size="M" weight={600}>{category.name}</Detail>
         <div class="item-list">
           {#each category.items as [idx, action]}
             {@const isDisabled =
@@ -314,26 +316,29 @@
 
 <style>
   .container {
+    position: fixed;
+    right: 0;
+    z-index: 1;
+    height: calc(100% - 60px);
     display: flex;
-    background: var(--background);
-    box-shadow: var(--shadow-l);
-    overflow: hidden;
+    flex-direction: row;
+    align-items: stretch;
   }
+
   .step-panel-content {
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: 24px 15px 0px 15px;
+    padding: 10px 15px 10px 15px;
     display: flex;
     flex-direction: column;
     gap: 0;
   }
   .search-container {
-    margin-top: calc(-1 * var(--spacing-m));
-    margin-bottom: var(--spacing-s);
+    margin-bottom: var(--spacing-xl);
   }
   .section-header,
   .step-panel-content :global(.spectrum-Detail) {
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--spacing-s);
     color: var(--spectrum-global-color-gray-700) !important;
   }
   .section-divider {
@@ -353,7 +358,7 @@
     padding: 0 12px;
     margin-bottom: 0px;
     transition: box-shadow 0.2s, background 0.2s;
-    border: 1px solid var(--spectrum-alias-border-color);
+    border: 0.5px solid var(--spectrum-alias-border-color);
     background: var(--spectrum-alias-background-color-secondary);
     display: flex;
     align-items: center;
