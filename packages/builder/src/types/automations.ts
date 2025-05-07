@@ -129,7 +129,7 @@ export interface AutomationState {
   appSelf?: AppSelfResponse
   selectedNodeId?: string
   selectedNodeMode?: DataMode
-  actionPanelBlock?: AutomationStep
+  actionPanelBlock?: BlockRef
 }
 
 export interface DerivedAutomationState extends AutomationState {

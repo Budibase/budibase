@@ -86,7 +86,6 @@ const initialAutomationState: AutomationState = {
     ACTION: {},
   },
   selectedAutomationId: null,
-  actionPanelBlock: null,
 }
 
 const getFinalDefinitions = (
@@ -2014,13 +2013,13 @@ const automationActions = (store: AutomationStore) => ({
     store.update(state => ({
       ...state,
       actionPanelBlock: block,
-      selectedNodeId: null,
+      selectedNodeId: undefined,
     }))
   },
   closeActionPanel: () => {
     store.update(state => ({
       ...state,
-      actionPanelBlock: null,
+      actionPanelBlock: undefined,
     }))
   },
 })
