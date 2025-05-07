@@ -1,18 +1,19 @@
-<script>
+<script lang="ts">
+  import { appsStore } from "@/stores/portal"
   import {
-    ModalContent,
-    Icon,
     ColorPicker,
+    Icon,
     Label,
+    ModalContent,
     notifications,
   } from "@budibase/bbui"
-  import { appsStore } from "@/stores/portal"
+  import type { App } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
 
-  export let app
-  export let name
-  export let color
-  export let autoSave = false
+  export let app: App
+  export let name: string
+  export let color: string
+  export let autoSave: boolean = false
 
   const dispatch = createEventDispatcher()
 
