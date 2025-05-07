@@ -1,19 +1,9 @@
 <script lang="ts">
-  import { appsStore } from "@/stores/portal"
-  import {
-    ColorPicker,
-    Icon,
-    Label,
-    ModalContent,
-    notifications,
-  } from "@budibase/bbui"
-  import type { App } from "@budibase/types"
+  import { ColorPicker, Icon, Label, ModalContent } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
-  export let app: App
   export let name: string
   export let color: string
-  export let autoSave: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -45,17 +35,8 @@
   ]
 
   const save = async () => {
-    if (!autoSave) {
-      dispatch("change", { color, name })
-      return
-    }
-    try {
-      await appsStore.save(app.instance._id, {
-        icon: { name, color },
-      })
-    } catch (error) {
-      notifications.error("Error updating app")
-    }
+    dispatch("change", { color, name })
+    return
   }
 </script>
 

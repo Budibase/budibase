@@ -1,13 +1,10 @@
 <script lang="ts">
-  import { Icon, Modal } from "@budibase/bbui"
   import ChooseIconModal from "@/components/start/ChooseIconModal.svelte"
-  import type { App } from "@budibase/types"
+  import { Icon, Modal } from "@budibase/bbui"
 
   export let name: string
   export let size: "M" = "M"
-  export let app: App
   export let color: string
-  export let autoSave: boolean = false
   export let disabled: boolean = false
 
   let modal: Modal
@@ -29,7 +26,7 @@
 </div>
 
 <Modal bind:this={modal}>
-  <ChooseIconModal {name} {color} {app} {autoSave} on:change />
+  <ChooseIconModal {name} {color} on:change />
 </Modal>
 
 <style>
