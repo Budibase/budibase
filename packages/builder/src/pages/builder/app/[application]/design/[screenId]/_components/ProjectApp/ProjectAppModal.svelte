@@ -12,7 +12,13 @@
 
   $: isNew = !projectApp
 
-  $: data = (projectApp as Partial<ProjectApp>) ?? {}
+  let data: ProjectApp
+  $: data = projectApp ?? {
+    name: "",
+    urlPrefix: "",
+    icon: "",
+    iconColor: "",
+  }
 
   $: title = isNew ? "Create new app" : "Edit app"
 
@@ -33,6 +39,7 @@
       ),
       urlPrefix: requiredString("Url prefix is required."),
       icon: z.string(),
+      iconColor: z.string(),
     }) satisfies ZodType<ProjectApp>
 
     const validationResult = validator.safeParse(projectApp)
@@ -72,11 +79,5 @@
   />
 
   <Label size="L">Icon</Label>
-  <EditableIcon
-    name={data.icon}
-    app={null}
-    autoSave={false}
-    disabled={false}
-    color={null}
-  />
+  <EditableIcon bind:name={data.icon} bind:color={data.iconColor} />
 </ModalContent>

@@ -15,6 +15,6 @@
 >
   <Icon on:click={() => {}} size="S" hoverable name="MoreSmallList" />
   <div slot="icon">
-    <Icon name={projectApp.icon} size="S" />
+    <Icon name={projectApp.icon} size="S" color={projectApp.iconColor} />
   </div>
 </NavItem>
