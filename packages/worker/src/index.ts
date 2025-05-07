@@ -87,13 +87,8 @@ app.use(api.routes())
 
 const server = http.createServer(app.callback())
 
-let shuttingDown = false
-
 const shutdown = async () => {
-  if (shuttingDown) return
-  shuttingDown = true
-  console.log(`Worker service shutting down gracefully...`)
-
+  console.log("Worker service shutting down gracefully...")
   timers.cleanup()
   events.shutdown()
   await redis.clients.shutdown()
@@ -106,19 +101,26 @@ gracefulShutdown(server, {
   onShutdown: shutdown,
   finally: () => {
     console.log("Worker service shutdown complete")
+    if (!env.isTest) {
+      process.exit(0)
+    }
   },
 })
 
-process.on("uncaughtException", err => {
+process.on("uncaughtException", async err => {
   logging.logAlert("Uncaught exception.", err)
-  shutdown()
-  process.exit(1)
+  await shutdown()
+  if (!env.isTest) {
+    process.exit(1)
+  }
 })
 
-process.on("unhandledRejection", reason => {
+process.on("unhandledRejection", async reason => {
   logging.logAlert("Unhandled Promise Rejection", reason as Error)
-  shutdown()
-  process.exit(1)
+  await shutdown()
+  if (!env.isTest) {
+    process.exit(1)
+  }
 })
 
 export default server.listen(parseInt(env.PORT || "4002"), async () => {

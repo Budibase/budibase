@@ -41,13 +41,8 @@ export default function createKoaApp() {
 
   const server = http.createServer(app.callback())
 
-  let shuttingDown = false
-
   const shutdown = async () => {
-    if (shuttingDown) return
-    shuttingDown = true
-    console.log(`Server shutting down gracefully...`)
-
+    console.log("Server shutting down gracefully...")
     timers.cleanup()
     await automations.shutdown()
     await redis.shutdown()
@@ -62,22 +57,31 @@ export default function createKoaApp() {
     onShutdown: shutdown,
     finally: () => {
       console.log("Server shutdown complete")
+      if (!env.isTest) {
+        process.exit(0)
+      }
     },
   })
 
-  process.on("uncaughtException", err => {
+  process.on("uncaughtException", async err => {
     // @ts-ignore
     // don't worry about this error, comes from zlib isn't important
-    if (err?.["code"] === "ERR_INVALID_CHAR") return
-    logging.logAlert("Uncaught exception.", err)
-    shutdown()
-    process.exit(1)
+    if (err?.["code"] === "ERR_INVALID_CHAR") {
+      logging.logAlert("Uncaught exception.", err)
+      return
+    }
+    await shutdown()
+    if (!env.isTest) {
+      process.exit(1)
+    }
   })
 
-  process.on("unhandledRejection", reason => {
+  process.on("unhandledRejection", async reason => {
     logging.logAlert("Unhandled Promise Rejection", reason as Error)
-    shutdown()
-    process.exit(1)
+    await shutdown()
+    if (!env.isTest) {
+      process.exit(1)
+    }
   })
 
   const listener = server.listen(env.PORT || 0)
