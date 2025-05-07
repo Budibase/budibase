@@ -4,7 +4,7 @@
   import { UserAvatars } from "@budibase/frontend-core"
   import type { UIUser } from "@budibase/types"
 
-  export let icon: string | null
+  export let icon: string | null = null
   export let iconTooltip: string = ""
   export let withArrow: boolean = false
   export let withActions: boolean = true

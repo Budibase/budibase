@@ -6,6 +6,8 @@
   import { getVerticalResizeActions } from "@/components/common/resizable"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import type { Screen } from "@budibase/types"
+  import { projectAppStore } from "@/stores/builder/projectApps"
+  import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -19,6 +21,8 @@
   const handleOpenSearch = async () => {
     screensContainer.scroll({ top: 0, behavior: "smooth" })
   }
+
+  $: projectApps = $projectAppStore.projectApps
 
   $: {
     if (searching) {
@@ -48,6 +52,9 @@
     />
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
+    {#each projectApps as projectApp}
+      <ProjectAppNavItem {projectApp} />
+    {/each}
     {#if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <ScreenNavItem {screen} />
