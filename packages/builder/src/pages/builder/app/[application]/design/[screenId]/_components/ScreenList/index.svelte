@@ -103,8 +103,7 @@
           on:edit={() => onEditProjectApp(projectApp)}
         />
       {/each}
-    {/if}
-    {#if filteredScreens?.length}
+    {:else if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <ScreenNavItem {screen} />
       {/each}

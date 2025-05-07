@@ -1,8 +1,12 @@
 import { BudiStore } from "@/stores/BudiStore"
-import { FetchAppPackageResponse, ProjectApp, Screen } from "@budibase/types"
+import {
+  FetchAppPackageResponse,
+  ProjectApp,
+  UIProjectApp,
+} from "@budibase/types"
 
 interface ProjectAppStoreState {
-  projectApps: (ProjectApp & { screens: Screen[] })[]
+  projectApps: UIProjectApp[]
   loading: boolean
 }
 
@@ -32,7 +36,7 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
 
   async add(projectApp: ProjectApp) {
     this.store.update(state => {
-      state.projectApps.push(projectApp)
+      state.projectApps.push({ ...projectApp, screens: [] })
       return state
     })
   }
@@ -42,7 +46,10 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
       const index = state.projectApps.findIndex(
         app => app._id === projectApp._id
       )
-      state.projectApps[index] = projectApp
+      state.projectApps[index] = {
+        ...projectApp,
+        screens: state.projectApps[index].screens,
+      }
       return state
     })
   }
