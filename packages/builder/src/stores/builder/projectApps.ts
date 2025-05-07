@@ -1,14 +1,21 @@
 import { BudiStore } from "@/stores/BudiStore"
-import { ProjectApp } from "@budibase/types"
+import { FetchAppPackageResponse, ProjectApp, Screen } from "@budibase/types"
 
 interface ProjectAppStoreState {
-  projectApps: ProjectApp[]
+  projectApps: (ProjectApp & { screens: Screen[] })[]
   loading: boolean
 }
 
 export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
   constructor() {
     super({
+      projectApps: [],
+      loading: true,
+    })
+  }
+
+  syncFromAppPackage(pkg: FetchAppPackageResponse) {
+    this.set({
       projectApps: [
         {
           _id: "default",
@@ -16,6 +23,7 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
           name: "Default",
           icon: "Add",
           iconColor: "",
+          screens: pkg.screens,
         },
       ],
       loading: false,
