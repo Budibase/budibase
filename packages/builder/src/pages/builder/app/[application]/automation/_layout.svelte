@@ -70,12 +70,10 @@
   {/if}
 
   {#if $automationStore.actionPanelBlock}
-    <div class="action-sidepanel-overlay">
-      <SelectStepSidePanel
-        block={$automationStore.actionPanelBlock}
-        onClose={() => automationStore.actions.closeActionPanel()}
-      />
-    </div>
+    <SelectStepSidePanel
+      block={$automationStore.actionPanelBlock}
+      onClose={() => automationStore.actions.closeActionPanel()}
+    />
   {/if}
 
   <Modal bind:this={modal}>
@@ -128,20 +126,7 @@
     background-color: var(--background);
     overflow: auto;
     grid-column: 3;
-    width: 360px;
-    max-width: 360px;
-  }
-
-  .action-sidepanel-overlay {
-    border-left: var(--border-light);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    background-color: var(--background);
-    overflow: auto;
-    grid-column: 3;
-    width: 360px;
-    max-width: 360px;
+    width: 400px;
+    max-width: 400px;
   }
 </style>

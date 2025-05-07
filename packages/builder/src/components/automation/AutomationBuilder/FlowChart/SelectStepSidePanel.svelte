@@ -1,14 +1,26 @@
 <script lang="ts">
-  import { Detail, Body, Icon, notifications, Tags, Tag } from "@budibase/bbui"
+  import {
+    Detail,
+    Body,
+    Icon,
+    notifications,
+    Tags,
+    Tag,
+    Search,
+  } from "@budibase/bbui"
+  import Panel from "@/components/design/Panel.svelte"
   import { AutomationActionStepId, BlockDefinitionTypes } from "@budibase/types"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { admin, licensing } from "@/stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import type { AutomationStepDefinition } from "@budibase/types"
-
+  import { onMount } from "svelte"
   export let block
   export let onClose = () => {}
+
+  let searchString: string = ""
+  let searchRef: HTMLInputElement | undefined = undefined
 
   let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   let triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
@@ -152,6 +164,20 @@
     },
   ]
 
+  // Filtered categories based on search
+  $: filteredCategories = categories
+    .map(category => ({
+      ...category,
+      items: category.items.filter(([_, action]) => {
+        const term = searchString.trim().toLowerCase()
+        if (!term) return true
+        const name = action.name?.toLowerCase() || ""
+        const stepTitle = action.stepTitle?.toLowerCase() || ""
+        return name.includes(term) || stepTitle.includes(term)
+      }),
+    }))
+    .filter(category => category.items.length > 0)
+
   const selectAction = async (action: AutomationStepDefinition) => {
     selectedAction = action.name
 
@@ -182,143 +208,139 @@
   const getExternalAction = (stepId: string) => {
     return externalActions[stepId as keyof typeof externalActions]
   }
+
+  onMount(() => {
+    searchRef?.focus()
+  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="action-panel-root">
-  <div class="action-panel-header">
-    <Body size="L" weight="700">Add automation step</Body>
-    <Icon name="Close" size="L" hoverable on:click={onClose} />
-  </div>
-  <div class="action-panel-content">
-    {#each categories as category, i}
-      {#if i > 0}
-        <div class="section-divider" />
-      {/if}
-      <div class="section-header">
-        <Detail size="L" weight={700}>{category.name}</Detail>
+<div class="container">
+  <Panel
+    title="Add component"
+    showCloseButton
+    onClickCloseButton={onClose}
+    wide
+    borderLeft
+  >
+    <div class="step-panel-content">
+      <div class="search-container">
+        <Search
+          placeholder="Search"
+          value={searchString || null}
+          on:change={e => (searchString = e.detail)}
+          bind:inputRef={searchRef}
+        />
       </div>
-      <div class="item-list">
-        {#each category.items as [idx, action]}
-          {@const isDisabled =
-            checkDisabled(idx) && checkDisabled(idx).disabled}
-          <div
-            class="item"
-            class:disabled={isDisabled}
-            class:selected={selectedAction === action.name}
-            on:click={isDisabled ? null : () => selectAction(action)}
-          >
-            <div class="item-body">
-              {#if !action.internal && getExternalAction(action.stepId)?.icon}
-                <img
-                  width={24}
-                  height={24}
-                  src={getExternalAction(action.stepId)?.icon}
-                  alt={getExternalAction(action.stepId)?.name}
-                  class="external-icon"
-                />
-              {:else}
-                <div class="item-icon">
+      {#each filteredCategories as category, i}
+        {#if i > 0}
+          <div class="section-divider" />
+        {/if}
+        <Detail size="M" weight={700}>{category.name}</Detail>
+        <div class="item-list">
+          {#each category.items as [idx, action]}
+            {@const isDisabled =
+              checkDisabled(idx) && checkDisabled(idx).disabled}
+            <div
+              class="item"
+              class:disabled={isDisabled}
+              class:selected={selectedAction === action.name}
+              on:click={isDisabled ? null : () => selectAction(action)}
+            >
+              <div class="item-body">
+                {#if !action.internal && getExternalAction(action.stepId)?.icon}
+                  <img
+                    width={24}
+                    height={24}
+                    src={getExternalAction(action.stepId)?.icon}
+                    alt={getExternalAction(action.stepId)?.name}
+                    class="external-icon"
+                  />
+                {:else}
                   <Icon name={action.icon} size="L" />
-                </div>
-              {/if}
-              <div class="item-label">
-                <Body size="M" weight="500">
+                {/if}
+                <Body size="S" weight="400">
                   {action.internal === false
                     ? action.stepTitle ||
                       idx.charAt(0).toUpperCase() + idx.slice(1)
                     : action.name}
                 </Body>
-              </div>
-              {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
-                <div class="tag-color">
+                {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
+                  <div class="tag-color">
+                    <Tags>
+                      <Tag icon="LockClosed">Premium</Tag>
+                    </Tags>
+                  </div>
+                {:else if isDisabled}
+                  <Icon name="Help" tooltip={checkDisabled(idx).message} />
+                {:else if action.new}
                   <Tags>
-                    <Tag icon="LockClosed">Premium</Tag>
+                    <Tag emphasized>New</Tag>
                   </Tags>
-                </div>
-              {:else if isDisabled}
-                <Icon name="Help" tooltip={checkDisabled(idx).message} />
-              {:else if action.new}
-                <Tags>
-                  <Tag emphasized>New</Tag>
-                </Tags>
-              {/if}
-            </div>
-          </div>
-        {/each}
-      </div>
-    {/each}
-
-    {#if Object.keys(plugins).length}
-      <div class="section-divider" />
-      <div class="section-header">
-        <Detail size="L" weight={700}>Plugins</Detail>
-      </div>
-      <div class="item-list">
-        {#each Object.entries(plugins) as [_, action]}
-          <div
-            class="item"
-            class:selected={selectedAction === action.name}
-            on:click={() => selectAction(action)}
-          >
-            <div class="item-body">
-              <div class="item-icon"><Icon name={action.icon} size="L" /></div>
-              <div class="item-label">
-                <Body size="M" weight="500">{action.name}</Body>
+                {/if}
               </div>
             </div>
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
+          {/each}
+        </div>
+      {/each}
+      {#if Object.keys(plugins).length}
+        <div class="section-divider" />
+        <div class="section-header">
+          <Detail size="M" weight={700}>Plugins</Detail>
+        </div>
+        <div class="item-list">
+          {#each Object.entries(plugins) as [_, action]}
+            <div
+              class="item"
+              class:selected={selectedAction === action.name}
+              on:click={() => selectAction(action)}
+            >
+              <div class="item-body">
+                <div class="item-icon">
+                  <Icon name={action.icon} size="L" />
+                </div>
+                <div class="item-label">
+                  <Body size="M" weight="400">{action.name}</Body>
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </Panel>
 </div>
 
 <style>
-  .action-panel-root {
+  .container {
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
     background: var(--background);
     box-shadow: var(--shadow-l);
-    min-width: 360px;
-    max-width: 360px;
     overflow: hidden;
   }
-  .action-panel-header {
-    position: sticky;
-    top: 0;
-    background: var(--background);
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0px 28px 0px 28px;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    flex: 0 0 53px;
-  }
-  .action-panel-content {
+  .step-panel-content {
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: 10px 28px 28px 28px;
+    padding: 24px 20px;
     display: flex;
     flex-direction: column;
     gap: 0;
   }
-  .section-header {
+  .search-container {
+    margin-top: calc(-1 * var(--spacing-m));
+    margin-bottom: var(--spacing-s);
+  }
+  .section-header,
+  .step-panel-content :global(.spectrum-Detail) {
     margin-bottom: var(--spacing-xs);
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--spectrum-global-color-gray-700);
-    text-transform: uppercase;
+    color: var(--spectrum-global-color-gray-700) !important;
   }
   .section-divider {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
     height: 1px;
     background: var(--spectrum-global-color-gray-200);
-    margin: 10px 0 10px 0;
+    margin: 18px 0 10px 0;
     width: 100%;
   }
   .item-list {
@@ -328,14 +350,15 @@
   }
   .item {
     border-radius: 8px;
-    padding: 0px 18px;
+    padding: 0 12px;
     margin-bottom: 0px;
     transition: box-shadow 0.2s, background 0.2s;
-    border: 1.5px solid var(--spectrum-alias-border-color);
+    border: 1px solid var(--spectrum-alias-border-color);
     background: var(--spectrum-alias-background-color-secondary);
     display: flex;
     align-items: center;
-    min-height: 48px;
+    min-height: 40px;
+    height: 40px;
     box-sizing: border-box;
   }
   .item:not(.disabled):hover,
@@ -351,12 +374,12 @@
   .item-body {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-s);
     width: 100%;
+    cursor: pointer;
   }
   .item-icon,
   .external-icon {
-    margin-right: 12px;
     font-size: 24px;
     width: 24px;
     height: 24px;
@@ -366,11 +389,12 @@
   }
   .item-label {
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 400;
     flex: 1 1 auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--spectrum-global-color-gray-900) !important;
   }
   .tag-color :global(.spectrum-Tags-item) {
     background: var(--spectrum-global-color-gray-200);
