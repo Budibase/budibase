@@ -9,6 +9,8 @@
   import { projectAppStore } from "@/stores/builder/projectApps"
   import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
 
+  $: projectAppsEnabled = true
+
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
   let searching = false
@@ -39,6 +41,11 @@
   const handleScroll = (e: any) => {
     scrolling = e.target.scrollTop !== 0
   }
+  const onAdd = () => {
+    if (!projectAppsEnabled) {
+      return $goto("../new")
+    }
+  }
 </script>
 
 <div class="screens" class:searching use:resizable>
@@ -48,13 +55,15 @@
       placeholder="Search for screens"
       bind:value={searchValue}
       bind:search={searching}
-      onAdd={() => $goto("../new")}
+      {onAdd}
     />
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
-    {#each projectApps as projectApp}
-      <ProjectAppNavItem {projectApp} />
-    {/each}
+    {#if projectAppsEnabled}
+      {#each projectApps as projectApp}
+        <ProjectAppNavItem {projectApp} />
+      {/each}
+    {/if}
     {#if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <ScreenNavItem {screen} />
