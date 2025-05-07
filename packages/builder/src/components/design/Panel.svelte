@@ -18,9 +18,15 @@
   export let closeButtonIcon: string | undefined = "Close"
   export let noHeaderBorder: boolean | undefined = false
   export let titleCSS: boolean | undefined = true
+  export let customWidth: number | undefined = undefined
 
   $: customHeaderContent = $$slots["panel-header-content"]
   $: customTitleContent = $$slots["panel-title-content"]
+
+  $: panelStyle =
+    customWidth && !isNaN(customWidth)
+      ? `min-width: ${customWidth}px; width: ${customWidth}px; flex: 0 0 ${customWidth}px;`
+      : undefined
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -31,6 +37,7 @@
   class:extraWide
   class:borderLeft
   class:borderRight
+  style={panelStyle}
 >
   <div
     class="header"

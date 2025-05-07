@@ -69,7 +69,7 @@
     </div>
   {/if}
 
-  {#if $automationStore.actionPanelBlock}
+  {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
     <SelectStepSidePanel
       block={$automationStore.actionPanelBlock}
       onClose={() => automationStore.actions.closeActionPanel()}

@@ -218,17 +218,17 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="container">
   <Panel
-    title="Add component"
+    title="Add the next step to your automation"
     showCloseButton
     onClickCloseButton={onClose}
-    wide
+    customWidth={400}
     borderLeft
   >
     <div class="step-panel-content">
       <div class="search-container">
         <Search
           placeholder="Search"
-          value={searchString || null}
+          value={searchString}
           on:change={e => (searchString = e.detail)}
           bind:inputRef={searchRef}
         />
@@ -322,7 +322,7 @@
   .step-panel-content {
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: 24px 20px;
+    padding: 24px 15px 0px 15px;
     display: flex;
     flex-direction: column;
     gap: 0;
