@@ -6,9 +6,12 @@ interface Position {
 }
 
 interface MenuItem {
-  label: string
   icon?: string
-  action: () => void
+  name: string
+  keyBind: string | null
+  visible: boolean
+  disabled: boolean
+  callback: () => void
 }
 
 interface ContextMenuState {

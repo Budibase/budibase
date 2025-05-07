@@ -6,6 +6,8 @@ export const ActionTypes = {
   RefreshDatasource: "RefreshDatasource",
   AddDataProviderQueryExtension: "AddDataProviderQueryExtension",
   RemoveDataProviderQueryExtension: "RemoveDataProviderQueryExtension",
+  AddDataProviderFilterExtension: "AddDataProviderFilterExtension",
+  RemoveDataProviderFilterExtension: "RemoveDataProviderFilterExtension",
   SetDataProviderSorting: "SetDataProviderSorting",
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
