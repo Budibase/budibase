@@ -72,7 +72,7 @@
 
     const boundingBox = (e.currentTarget as HTMLElement).getBoundingClientRect()
 
-    contextMenuStore.open("fwerf", items, {
+    contextMenuStore.open("newProject", items, {
       x: boundingBox.x,
       y: boundingBox.y + boundingBox.height,
     })

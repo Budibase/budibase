@@ -15,6 +15,7 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
           urlPrefix: "/",
           name: "Default",
           icon: "Add",
+          iconColor: "",
         },
       ],
       loading: false,
@@ -24,6 +25,13 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
   async add(projectApp: ProjectApp) {
     this.store.update(state => {
       state.projectApps.push(projectApp)
+      return state
+    })
+  }
+
+  async delete(_id: string | undefined, _rev: string | undefined) {
+    this.store.update(state => {
+      state.projectApps = state.projectApps.filter(app => app._id !== _id)
       return state
     })
   }
