@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Layout } from "@budibase/bbui"
+  import { Layout, Modal } from "@budibase/bbui"
   import { contextMenuStore, sortedScreens } from "@/stores/builder"
   import ScreenNavItem from "./ScreenNavItem.svelte"
   import { goto } from "@roxi/routify"
@@ -8,6 +8,7 @@
   import type { Screen } from "@budibase/types"
   import { projectAppStore } from "@/stores/builder/projectApps"
   import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
+  import ProjectAppModal from "../ProjectApp/ProjectAppModal.svelte"
 
   $: projectAppsEnabled = true
 
@@ -17,6 +18,8 @@
   let searchValue = ""
   let screensContainer: HTMLDivElement
   let scrolling = false
+
+  let projectAppModal: Modal
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
@@ -61,7 +64,9 @@
         keyBind: null,
         visible: true,
         disabled: false,
-        callback: () => {},
+        callback: () => {
+          projectAppModal.show()
+        },
       },
     ]
 
@@ -110,6 +115,10 @@
     use:resizableHandle
   />
 </div>
+
+<Modal bind:this={projectAppModal}>
+  <ProjectAppModal />
+</Modal>
 
 <style>
   .screens {

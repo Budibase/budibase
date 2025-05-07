@@ -12,11 +12,19 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
       projectApps: [
         {
           _id: "default",
+          urlPrefix: "/",
           name: "Default",
           icon: "Add",
         },
       ],
       loading: false,
+    })
+  }
+
+  async add(projectApp: ProjectApp) {
+    this.store.update(state => {
+      state.projectApps.push(projectApp)
+      return state
     })
   }
 }
