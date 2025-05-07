@@ -1,15 +1,13 @@
-<script>
-  import { Icon, Modal } from "@budibase/bbui"
+<script lang="ts">
   import ChooseIconModal from "@/components/start/ChooseIconModal.svelte"
+  import { Icon, Modal } from "@budibase/bbui"
 
-  export let name
-  export let size = "M"
-  export let app
-  export let color
-  export let autoSave = false
-  export let disabled = false
+  export let name: string
+  export let size: "M" = "M"
+  export let color: string
+  export let disabled: boolean = false
 
-  let modal
+  let modal: Modal
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -28,7 +26,7 @@
 </div>
 
 <Modal bind:this={modal}>
-  <ChooseIconModal {name} {color} {app} {autoSave} on:change />
+  <ChooseIconModal {name} {color} on:change />
 </Modal>
 
 <style>
