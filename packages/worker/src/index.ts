@@ -99,11 +99,9 @@ gracefulShutdown(server, {
   signals: "SIGINT SIGTERM",
   timeout: 30000,
   onShutdown: shutdown,
+  forceExit: !env.isTest,
   finally: () => {
     console.log("Worker service shutdown complete")
-    if (!env.isTest) {
-      process.exit(0)
-    }
   },
 })
 

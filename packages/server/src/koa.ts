@@ -55,11 +55,9 @@ export default function createKoaApp() {
     signals: "SIGINT SIGTERM",
     timeout: 30000, // in ms
     onShutdown: shutdown,
+    forceExit: !env.isTest,
     finally: () => {
       console.log("Server shutdown complete")
-      if (!env.isTest) {
-        process.exit(0)
-      }
     },
   })
 
