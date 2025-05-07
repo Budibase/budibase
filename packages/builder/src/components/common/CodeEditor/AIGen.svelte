@@ -10,8 +10,8 @@
   export let bindings: EnrichedBinding[] = []
   export let value: string | null = ""
   export let expandedOnly: boolean = false
-
   export let parentWidth: number | null = null
+
   const dispatch = createEventDispatcher<{
     update: { code: string }
     accept: void
@@ -26,11 +26,11 @@
 
   const thresholdExpansionWidth = 350
 
-  $: expanded =
+  $: shouldAlwaysBeExpanded =
     expandedOnly ||
     (parentWidth !== null && parentWidth > thresholdExpansionWidth)
-      ? true
-      : expanded
+
+  $: expanded = shouldAlwaysBeExpanded || expanded
 
   async function generateJs(prompt: string) {
     promptText = ""
@@ -78,15 +78,17 @@
       prompt: promptText,
     })
     dispatch("reject", { code: previousContents })
-    reset()
+    reset(false)
   }
 
-  function reset() {
+  function reset(clearPrompt: boolean = true) {
+    if (clearPrompt) {
+      promptText = ""
+      inputValue = ""
+    }
     suggestedCode = null
     previousContents = null
-    promptText = ""
     expanded = false
-    inputValue = ""
   }
 </script>
 
@@ -108,7 +110,7 @@
     bind:expanded
     bind:value={inputValue}
     readonly={!!suggestedCode}
-    {expandedOnly}
+    expandedOnly={shouldAlwaysBeExpanded}
   />
 </div>
 
