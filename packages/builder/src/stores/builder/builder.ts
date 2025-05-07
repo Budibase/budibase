@@ -13,9 +13,6 @@ interface BuilderState {
   } | null
   propertyFocus: string | null
   builderSidePanel: boolean
-  tourNodes: Record<string, HTMLElement> | null
-  tourKey: string | null
-  tourStepKey: string | null
   hoveredComponentId: string | null
   websocket?: Socket
 }
@@ -25,9 +22,6 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
   highlightedSetting: null,
   propertyFocus: null,
   builderSidePanel: false,
-  tourNodes: null,
-  tourKey: null,
-  tourStepKey: null,
   hoveredComponentId: null,
 }
 
