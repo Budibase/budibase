@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Layout } from "@budibase/bbui"
-  import { sortedScreens } from "@/stores/builder"
+  import { contextMenuStore, sortedScreens } from "@/stores/builder"
   import ScreenNavItem from "./ScreenNavItem.svelte"
   import { goto } from "@roxi/routify"
   import { getVerticalResizeActions } from "@/components/common/resizable"
@@ -41,10 +41,36 @@
   const handleScroll = (e: any) => {
     scrolling = e.target.scrollTop !== 0
   }
-  const onAdd = () => {
+
+  const onAdd = (e: Event) => {
     if (!projectAppsEnabled) {
       return $goto("../new")
     }
+
+    const items = [
+      {
+        icon: "Add",
+        name: "Add screen",
+        keyBind: null,
+        visible: true,
+        callback: () => $goto("../new"),
+      },
+      {
+        icon: "Add",
+        name: "Add project",
+        keyBind: null,
+        visible: true,
+        disabled: false,
+        callback: () => {},
+      },
+    ]
+
+    const boundingBox = (e.currentTarget as HTMLElement).getBoundingClientRect()
+
+    contextMenuStore.open("fwerf", items, {
+      x: boundingBox.x,
+      y: boundingBox.y + boundingBox.height,
+    })
   }
 </script>
 
