@@ -1,13 +1,5 @@
 <script lang="ts">
-  import {
-    Layout,
-    Detail,
-    Body,
-    Icon,
-    notifications,
-    Tags,
-    Tag,
-  } from "@budibase/bbui"
+  import { Detail, Body, Icon, notifications, Tags, Tag } from "@budibase/bbui"
   import { AutomationActionStepId, BlockDefinitionTypes } from "@budibase/types"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import { admin, licensing } from "@/stores/portal"
@@ -86,7 +78,6 @@
     }
   }
 
-  // Get all action definitions
   const allActions: Record<string, AutomationStepDefinition> = {}
   actions.forEach(([k, v]) => {
     if (!v.deprecated) {
@@ -105,7 +96,6 @@
     {}
   )
 
-  // Categories based on requirements
   const categories = [
     {
       name: "Records",
@@ -198,82 +188,89 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="action-panel-root">
   <div class="action-panel-header">
-    <span class="action-panel-title">Add automation step</span>
-    <Icon name="Close" hoverable on:click={onClose} />
+    <Body size="L" weight="700">Add automation step</Body>
+    <Icon name="Close" size="L" hoverable on:click={onClose} />
   </div>
   <div class="action-panel-content">
-    {#each categories as category}
-      {#if category.items.length > 0}
-        <Layout noPadding gap="XS">
-          <Detail weight={200} size="L">{category.name}</Detail>
-          <div class="item-list">
-            {#each category.items as [idx, action]}
-              {@const isDisabled =
-                checkDisabled(idx) && checkDisabled(idx).disabled}
-              <div
-                class="item"
-                class:disabled={isDisabled}
-                class:selected={selectedAction === action.name}
-                on:click={isDisabled ? null : () => selectAction(action)}
-              >
-                <div class="item-body">
-                  {#if !action.internal && getExternalAction(action.stepId)?.icon}
-                    <img
-                      width={20}
-                      height={20}
-                      src={getExternalAction(action.stepId)?.icon}
-                      alt={getExternalAction(action.stepId)?.name}
-                    />
-                  {:else}
-                    <Icon name={action.icon} />
-                  {/if}
-                  {#if action.internal === false}
-                    <Body size="M">
-                      {action.stepTitle ||
-                        idx.charAt(0).toUpperCase() + idx.slice(1)}
-                    </Body>
-                  {:else}
-                    <Body size="M">{action.name}</Body>
-                  {/if}
-                  {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
-                    <div class="tag-color">
-                      <Tags>
-                        <Tag icon="LockClosed">Premium</Tag>
-                      </Tags>
-                    </div>
-                  {:else if isDisabled}
-                    <Icon name="Help" tooltip={checkDisabled(idx).message} />
-                  {:else if action.new}
-                    <Tags>
-                      <Tag emphasized>New</Tag>
-                    </Tags>
-                  {/if}
-                </div>
-              </div>
-            {/each}
-          </div>
-        </Layout>
+    {#each categories as category, i}
+      {#if i > 0}
+        <div class="section-divider" />
       {/if}
+      <div class="section-header">
+        <Detail size="L" weight={700}>{category.name}</Detail>
+      </div>
+      <div class="item-list">
+        {#each category.items as [idx, action]}
+          {@const isDisabled =
+            checkDisabled(idx) && checkDisabled(idx).disabled}
+          <div
+            class="item"
+            class:disabled={isDisabled}
+            class:selected={selectedAction === action.name}
+            on:click={isDisabled ? null : () => selectAction(action)}
+          >
+            <div class="item-body">
+              {#if !action.internal && getExternalAction(action.stepId)?.icon}
+                <img
+                  width={24}
+                  height={24}
+                  src={getExternalAction(action.stepId)?.icon}
+                  alt={getExternalAction(action.stepId)?.name}
+                  class="external-icon"
+                />
+              {:else}
+                <div class="item-icon">
+                  <Icon name={action.icon} size="L" />
+                </div>
+              {/if}
+              <div class="item-label">
+                <Body size="M" weight="500">
+                  {action.internal === false
+                    ? action.stepTitle ||
+                      idx.charAt(0).toUpperCase() + idx.slice(1)
+                    : action.name}
+                </Body>
+              </div>
+              {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
+                <div class="tag-color">
+                  <Tags>
+                    <Tag icon="LockClosed">Premium</Tag>
+                  </Tags>
+                </div>
+              {:else if isDisabled}
+                <Icon name="Help" tooltip={checkDisabled(idx).message} />
+              {:else if action.new}
+                <Tags>
+                  <Tag emphasized>New</Tag>
+                </Tags>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
     {/each}
 
     {#if Object.keys(plugins).length}
-      <Layout noPadding gap="XS">
-        <Detail size="S">Plugins</Detail>
-        <div class="item-list">
-          {#each Object.entries(plugins) as [_, action]}
-            <div
-              class="item"
-              class:selected={selectedAction === action.name}
-              on:click={() => selectAction(action)}
-            >
-              <div class="item-body">
-                <Icon name={action.icon} />
-                <Body size="XS">{action.name}</Body>
+      <div class="section-divider" />
+      <div class="section-header">
+        <Detail size="L" weight={700}>Plugins</Detail>
+      </div>
+      <div class="item-list">
+        {#each Object.entries(plugins) as [_, action]}
+          <div
+            class="item"
+            class:selected={selectedAction === action.name}
+            on:click={() => selectAction(action)}
+          >
+            <div class="item-body">
+              <div class="item-icon"><Icon name={action.icon} size="L" /></div>
+              <div class="item-label">
+                <Body size="M" weight="500">{action.name}</Body>
               </div>
             </div>
-          {/each}
-        </div>
-      </Layout>
+          </div>
+        {/each}
+      </div>
     {/if}
   </div>
 </div>
@@ -291,60 +288,89 @@
     overflow: hidden;
   }
   .action-panel-header {
+    position: sticky;
+    top: 0;
+    background: var(--background);
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-l);
-    border-bottom: var(--border-light);
-    flex: 0 0 48px;
-  }
-  .action-panel-title {
-    font-size: 1.1rem;
-    font-weight: 600;
+    padding: 0px 28px 0px 28px;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    flex: 0 0 53px;
   }
   .action-panel-content {
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: var(--spacing-l);
+    padding: 10px 28px 28px 28px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: 0;
   }
-  .item-body {
-    display: flex;
-    margin-left: var(--spacing-m);
-    gap: var(--spacing-m);
-    align-items: center;
+  .section-header {
+    margin-bottom: var(--spacing-xs);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--spectrum-global-color-gray-700);
+    text-transform: uppercase;
+  }
+  .section-divider {
+    height: 1px;
+    background: var(--spectrum-global-color-gray-200);
+    margin: 10px 0 10px 0;
+    width: 100%;
   }
   .item-list {
-    display: grid;
-    grid-gap: var(--spectrum-alias-grid-baseline);
-  }
-  .item :global(.spectrum-Tags-itemLabel) {
-    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
   .item {
-    cursor: pointer;
-    grid-gap: var(--spectrum-alias-grid-margin-xsmall);
-    background: var(--spectrum-alias-background-color-secondary);
-    transition: 0.3s all;
-    border: solid var(--spectrum-alias-border-color);
     border-radius: 8px;
-    box-sizing: border-box;
-    border-width: 2px;
-    height: var(--spectrum-alias-item-height-l);
+    padding: 0px 18px;
+    margin-bottom: 0px;
+    transition: box-shadow 0.2s, background 0.2s;
+    border: 1.5px solid var(--spectrum-alias-border-color);
+    background: var(--spectrum-alias-background-color-secondary);
     display: flex;
+    align-items: center;
+    min-height: 48px;
+    box-sizing: border-box;
   }
   .item:not(.disabled):hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
-  .disabled {
-    background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-500);
+  .item.disabled {
+    opacity: 0.5;
+    filter: grayscale(0.5);
+    cursor: not-allowed;
   }
-  .disabled :global(.spectrum-Body) {
-    color: var(--spectrum-global-color-gray-600);
+  .item-body {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    width: 100%;
+  }
+  .item-icon,
+  .external-icon {
+    margin-right: 12px;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .item-label {
+    font-size: 15px;
+    font-weight: 500;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .tag-color :global(.spectrum-Tags-item) {
     background: var(--spectrum-global-color-gray-200);

@@ -12,7 +12,7 @@
     selectedAutomation,
   } from "@/stores/builder"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
-  import ActionSidePanel from "@/components/automation/AutomationBuilder/FlowChart/ActionSidePanel.svelte"
+  import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -71,7 +71,7 @@
 
   {#if $automationStore.actionPanelBlock}
     <div class="action-sidepanel-overlay">
-      <ActionSidePanel
+      <SelectStepSidePanel
         block={$automationStore.actionPanelBlock}
         onClose={() => automationStore.actions.closeActionPanel()}
       />
