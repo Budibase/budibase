@@ -21,9 +21,6 @@ export interface AgentEndpoints {
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
-  /**
-   * Generates a cron expression from a prompt
-   */
   agentChat: async (messages, appIds) => {
     const body: ChatAgentRequest = {
       messages,
