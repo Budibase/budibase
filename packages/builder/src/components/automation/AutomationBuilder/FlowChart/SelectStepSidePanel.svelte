@@ -365,6 +365,7 @@
     min-height: 40px;
     height: 40px;
     box-sizing: border-box;
+    cursor: pointer;
   }
   .item:not(.disabled):hover,
   .selected {
@@ -381,7 +382,6 @@
     align-items: center;
     gap: var(--spacing-s);
     width: 100%;
-    cursor: pointer;
   }
   .item-icon,
   .external-icon {
