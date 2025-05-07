@@ -5,7 +5,7 @@
   import { goto } from "@roxi/routify"
   import { getVerticalResizeActions } from "@/components/common/resizable"
   import NavHeader from "@/components/common/NavHeader.svelte"
-  import type { Screen } from "@budibase/types"
+  import type { ProjectApp, Screen } from "@budibase/types"
   import { projectAppStore } from "@/stores/builder/projectApps"
   import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
   import ProjectAppModal from "../ProjectApp/ProjectAppModal.svelte"
@@ -20,6 +20,7 @@
   let scrolling = false
 
   let projectAppModal: Modal
+  let editingProjectApp: ProjectApp | undefined
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
@@ -77,6 +78,11 @@
       y: boundingBox.y + boundingBox.height,
     })
   }
+
+  function onEditProjectApp(projectApp: ProjectApp) {
+    editingProjectApp = projectApp
+    projectAppModal.show()
+  }
 </script>
 
 <div class="screens" class:searching use:resizable>
@@ -92,7 +98,10 @@
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
     {#if projectAppsEnabled}
       {#each projectApps as projectApp}
-        <ProjectAppNavItem {projectApp} />
+        <ProjectAppNavItem
+          {projectApp}
+          on:edit={() => onEditProjectApp(projectApp)}
+        />
       {/each}
     {/if}
     {#if filteredScreens?.length}
@@ -116,8 +125,11 @@
   />
 </div>
 
-<Modal bind:this={projectAppModal}>
-  <ProjectAppModal />
+<Modal
+  bind:this={projectAppModal}
+  on:cancel={() => (editingProjectApp = undefined)}
+>
+  <ProjectAppModal projectApp={editingProjectApp} />
 </Modal>
 
 <style>

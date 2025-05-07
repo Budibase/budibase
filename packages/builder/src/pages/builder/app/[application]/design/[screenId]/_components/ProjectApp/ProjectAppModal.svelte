@@ -66,7 +66,11 @@
 
     const { data: projectAppData } = validationResult
 
-    await projectAppStore.add(projectAppData)
+    if (isNew) {
+      await projectAppStore.add(projectAppData)
+    } else {
+      await projectAppStore.edit(projectAppData)
+    }
   }
 </script>
 

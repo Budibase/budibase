@@ -29,6 +29,16 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
     })
   }
 
+  async edit(projectApp: ProjectApp) {
+    this.store.update(state => {
+      const index = state.projectApps.findIndex(
+        app => app._id === projectApp._id
+      )
+      state.projectApps[index] = projectApp
+      return state
+    })
+  }
+
   async delete(_id: string | undefined, _rev: string | undefined) {
     this.store.update(state => {
       state.projectApps = state.projectApps.filter(app => app._id !== _id)

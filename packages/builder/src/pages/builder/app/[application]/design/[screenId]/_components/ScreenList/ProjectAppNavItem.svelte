@@ -4,8 +4,11 @@
   import type { ProjectApp } from "@budibase/types"
   import { contextMenuStore, projectAppStore } from "@/stores/builder"
   import { confirm } from "@/helpers"
+  import { createEventDispatcher } from "svelte"
 
   export let projectApp: ProjectApp
+
+  const dispatch = createEventDispatcher<{ edit: void }>()
 
   async function onDelete() {
     await confirm({
@@ -35,7 +38,9 @@
         name: "Edit",
         keyBind: null,
         visible: true,
-        callback: () => {},
+        callback: () => {
+          dispatch("edit")
+        },
       },
       {
         icon: "Delete",
