@@ -76,10 +76,6 @@ export const handleSaveEvents = async (
       await events.user.permissionAdminRemoved(user)
     }
 
-    if (isOnboardingComplete(user, existingUser)) {
-      await events.user.onboardingComplete(user)
-    }
-
     if (
       !existingUser.forceResetPassword &&
       user.forceResetPassword &&
@@ -120,10 +116,6 @@ const isAddingAdmin = (user: any, existingUser: any) => {
 
 const isRemovingAdmin = (user: any, existingUser: any) => {
   return isRemovingPermission(user, existingUser, hasAdminPermissions)
-}
-
-const isOnboardingComplete = (user: any, existingUser: any) => {
-  return !existingUser?.onboardedAt && typeof user.onboardedAt === "string"
 }
 
 /**
