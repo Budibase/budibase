@@ -14,14 +14,10 @@ import {
   Integration,
   UIIntegration,
   SourceName,
+  UIInternalDatasource,
 } from "@budibase/types"
 import { TableNames } from "@/constants"
 import { DerivedBudiStore } from "@/stores/BudiStore"
-
-// when building the internal DS - seems to represent it slightly differently to the backend typing of a DS
-interface InternalDatasource extends Omit<Datasource, "entities"> {
-  entities: Table[]
-}
 
 class TableImportError extends Error {
   errors: Record<string, string>
@@ -41,19 +37,14 @@ class TableImportError extends Error {
   }
 }
 
-// when building the internal DS - seems to represent it slightly differently to the backend typing of a DS
-interface InternalDatasource extends Omit<Datasource, "entities"> {
-  entities: Table[]
-}
-
 interface BuilderDatasourceStore {
   rawList: Datasource[]
   selectedDatasourceId: null | string
 }
 
 interface DerivedDatasourceStore extends BuilderDatasourceStore {
-  list: (Datasource | InternalDatasource)[]
-  selected?: Datasource | InternalDatasource
+  list: (Datasource | UIInternalDatasource)[]
+  selected?: Datasource | UIInternalDatasource
   hasDefaultData: boolean
   hasData: boolean
 }
@@ -68,7 +59,7 @@ export class DatasourceStore extends DerivedBudiStore<
         // Set the internal datasource entities from the table list, which we're
         // able to keep updated unlike the egress generated definition of the
         // internal datasource
-        let internalDS: Datasource | InternalDatasource | undefined =
+        let internalDS: Datasource | UIInternalDatasource | undefined =
           $store.rawList?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
         let otherDS = $store.rawList?.filter(
           ds => ds._id !== BUDIBASE_INTERNAL_DB_ID
@@ -88,7 +79,7 @@ export class DatasourceStore extends DerivedBudiStore<
 
         // Build up enriched DS list
         // Only add the internal DS if we have at least one non-users table
-        let list: (InternalDatasource | Datasource)[] = []
+        let list: (UIInternalDatasource | Datasource)[] = []
         if (internalDS?.entities?.length) {
           list.push(internalDS)
         }

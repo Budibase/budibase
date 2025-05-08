@@ -1,19 +1,19 @@
-<script>
+<script lang="ts">
   import { Tooltip, StatusLight } from "@budibase/bbui"
   import { roles } from "@/stores/builder"
   import { Roles } from "@/constants/backend"
 
-  export let roleId
+  export let roleId: string
 
   let showTooltip = false
 
   $: role = $roles.find(role => role._id === roleId)
   $: color =
-    role?.uiMetadata.color || "var(--spectrum-global-color-static-magenta-400)"
+    role?.uiMetadata?.color || "var(--spectrum-global-color-static-magenta-400)"
   $: tooltip =
     roleId === Roles.PUBLIC
       ? "Open to the public"
-      : `Requires ${role?.uiMetadata.displayName || "Unknown role"} access`
+      : `Requires ${role?.uiMetadata?.displayName || "Unknown role"} access`
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

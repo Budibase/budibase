@@ -6,6 +6,7 @@
   import StatePanel from "./StatePanel.svelte"
   import BindingsPanel from "./BindingsPanel.svelte"
   import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
+  import NewPill from "@/components/common/NewPill.svelte"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
 
@@ -31,7 +32,7 @@
           <div class="tab-label">
             {tab}
             {#if tab !== Tabs.Components}
-              <div class="new">NEW</div>
+              <NewPill />
             {/if}
           </div>
         </ActionButton>
@@ -87,14 +88,6 @@
     display: flex;
     align-items: center;
     gap: 4px;
-  }
-  .new {
-    font-size: 8px;
-    background: var(--bb-indigo);
-    border-radius: 2px;
-    padding: 1px 3px;
-    color: white;
-    font-weight: bold;
   }
 
   .divider {
