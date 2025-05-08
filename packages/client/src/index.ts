@@ -86,6 +86,7 @@ declare global {
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
     svelte_internal: typeof internal
+    INIT_TIME: number
   }
 }
 

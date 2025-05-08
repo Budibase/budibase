@@ -1,7 +1,15 @@
 import { API } from "@/api"
 import { get, writable, derived } from "svelte/store"
 
-const initialState = {
+interface AppStoreState {
+  appId: string | null
+  isDevApp: boolean
+  clientLoadTime: number | null
+  embedded: boolean
+  inIframe: boolean
+}
+
+const initialState: AppStoreState = {
   appId: null,
   isDevApp: false,
   clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
@@ -37,7 +45,7 @@ const createAppStore = () => {
   }
 
   // Sets the initial app ID
-  const setAppId = id => {
+  const setAppId = (id: string) => {
     store.update(state => {
       if (state) {
         state.appId = id
@@ -48,7 +56,7 @@ const createAppStore = () => {
     })
   }
 
-  const setAppEmbedded = embeddded => {
+  const setAppEmbedded = (embeddded: boolean) => {
     store.update(state => {
       if (state) {
         state.embedded = embeddded
