@@ -47,23 +47,13 @@ const createAppStore = () => {
   // Sets the initial app ID
   const setAppId = (id: string) => {
     store.update(state => {
-      if (state) {
-        state.appId = id
-      } else {
-        state = { appId: id }
-      }
-      return state
+      return { ...state, appId: id }
     })
   }
 
-  const setAppEmbedded = (embeddded: boolean) => {
+  const setAppEmbedded = (embedded: boolean) => {
     store.update(state => {
-      if (state) {
-        state.embedded = embeddded
-      } else {
-        state = { embeddded }
-      }
-      return state
+      return { ...state, embedded }
     })
   }
 
