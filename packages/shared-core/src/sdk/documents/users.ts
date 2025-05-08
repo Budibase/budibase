@@ -154,6 +154,6 @@ export function userAppAccessList(user: User, groups?: UserGroup[]) {
   const userGroupApps = userGroups.flatMap(userGroup =>
     Object.keys(userGroup.roles || {})
   )
-  const fullList = [...Object.keys(user.roles), ...userGroupApps]
+  const fullList = [...Object.keys(user?.roles || {}), ...userGroupApps]
   return [...new Set(fullList)]
 }

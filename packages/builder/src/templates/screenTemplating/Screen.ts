@@ -1,11 +1,10 @@
 import { BaseStructure } from "../BaseStructure"
 import { Helpers } from "@budibase/bbui"
-import { ScreenVariant } from "@budibase/types"
+import { ScreenVariant, Screen as ScreenDoc } from "@budibase/types"
 
-export class Screen extends BaseStructure {
+export class Screen extends BaseStructure<ScreenDoc> {
   constructor() {
-    super(true)
-    this._json = {
+    super(true, {
       showNavigation: true,
       width: "Large",
       props: {
@@ -32,50 +31,50 @@ export class Screen extends BaseStructure {
         homeScreen: false,
       },
       name: "screen-id",
-    }
+    })
   }
 
-  role(role) {
+  role(role: string) {
     this._json.routing.roleId = role
     return this
   }
 
-  normalStyle(styling) {
+  normalStyle(styling: any) {
     this._json.props._styles.normal = styling
     return this
   }
 
-  component(name) {
+  component(name: string) {
     this._json.props._component = name
     return this
   }
 
-  table(tableName) {
+  table(tableName: string) {
     this._json.props.table = tableName
     return this
   }
 
-  route(route) {
+  route(route: string) {
     this._json.routing.route = route
     return this
   }
 
-  name(name) {
+  name(name: string) {
     this._json.name = name
     return this
   }
 
-  autoTableId(autoTableId) {
-    this._json.autoTableId = autoTableId
+  autoTableId(autoTableId: string) {
+    ;(this._json as any).autoTableId = autoTableId
     return this
   }
 
-  instanceName(name) {
+  instanceName(name: string) {
     this._json.props._instanceName = name
     return this
   }
 
-  customProps(props) {
+  customProps(props: Record<string, string>) {
     for (let key of Object.keys(props)) {
       this._json.props[key] = props[key]
     }

@@ -12,6 +12,7 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
+  import NewPill from "@/components/common/NewPill.svelte"
 
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
@@ -272,7 +273,7 @@
                 <div class="component-name">
                   <Body size="XS">{component.name}</Body>
                   {#if component.new}
-                    <div class="new">NEW</div>
+                    <NewPill />
                   {/if}
                 </div>
               </div>
@@ -329,16 +330,6 @@
     flex: 1;
     align-items: center;
     gap: 4px;
-  }
-  .new {
-    font-size: 8px;
-    color: white;
-    background: var(--bb-indigo);
-    border-radius: 2px;
-    padding: 1px 3px;
-    font-weight: bold;
-    margin-left: auto;
-    flex-shrink: 0;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;
