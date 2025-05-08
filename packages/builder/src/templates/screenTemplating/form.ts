@@ -1,21 +1,30 @@
-import { Screen } from "./Screen"
+import { componentStore } from "@/stores/builder"
+import { getRowActionButtonTemplates } from "@/templates/rowActions"
+import { Helpers } from "@budibase/bbui"
+import { Screen as ScreenDoc, UIPermissions } from "@budibase/types"
 import { Component } from "../Component"
 import getValidRoute from "./getValidRoute"
-import { componentStore } from "@/stores/builder"
-import { Helpers } from "@budibase/bbui"
-import { getRowActionButtonTemplates } from "@/templates/rowActions"
+import { Screen } from "./Screen"
+import { utils } from "@budibase/shared-core"
 
-export const getTypeSpecificRoute = (tableOrView, type) => {
+type FormType = "create" | "update" | "view"
+
+export const getTypeSpecificRoute = (
+  tableOrView: { name: string },
+  type: FormType
+) => {
   if (type === "create") {
     return `/${tableOrView.name}/new`
   } else if (type === "update") {
     return `/${tableOrView.name}/edit/:id`
   } else if (type === "view") {
     return `/${tableOrView.name}/view/:id`
+  } else {
+    throw utils.unreachable(type)
   }
 }
 
-const getRole = (permissions, type) => {
+const getRole = (permissions: UIPermissions, type: FormType) => {
   if (type === "view") {
     return permissions.read
   }
@@ -23,7 +32,7 @@ const getRole = (permissions, type) => {
   return permissions.write
 }
 
-const getActionType = type => {
+const getActionType = (type: FormType) => {
   if (type === "create") {
     return "Create"
   }
@@ -35,7 +44,7 @@ const getActionType = type => {
   }
 }
 
-const getTitle = type => {
+const getTitle = (type: FormType) => {
   if (type === "create") {
     return "Create row"
   } else if (type === "update") {
@@ -44,7 +53,17 @@ const getTitle = type => {
   return "Row details"
 }
 
-const form = async ({ tableOrView, type, permissions, screens }) => {
+const form = async ({
+  tableOrView,
+  type,
+  permissions,
+  screens,
+}: {
+  tableOrView: any
+  type: any
+  permissions: any
+  screens: ScreenDoc[]
+}) => {
   const id = Helpers.uuid()
   const typeSpecificRoute = getTypeSpecificRoute(tableOrView, type)
   const role = getRole(permissions, type)
