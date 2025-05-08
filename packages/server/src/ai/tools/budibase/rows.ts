@@ -12,7 +12,7 @@ export default [
     handler: async ({ tableId }) => {
       const rows = await sdk.rows.fetch(tableId)
       const formatted = JSON.stringify(rows, null, 2)
-      return `Here are the rows table ${tableId}:\n\n${formatted}`
+      return `Here are the rows for table ${tableId}:\n\n${formatted}`
     },
   }),
 ]
