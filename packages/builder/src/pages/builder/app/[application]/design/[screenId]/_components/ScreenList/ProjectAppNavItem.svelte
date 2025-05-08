@@ -65,10 +65,10 @@
 
 <NavItem
   on:contextmenu={openContextMenu}
-  scrollable
   indentLevel={0}
   text={projectApp.name}
   showTooltip
+  nonSelectable
 >
   <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
   <div slot="icon">
