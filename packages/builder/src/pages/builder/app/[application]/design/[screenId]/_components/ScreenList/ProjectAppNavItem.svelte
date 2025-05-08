@@ -33,6 +33,9 @@
   }
 
   const openContextMenu = (e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
     const items = [
       {
         icon: "Edit",
@@ -61,9 +64,7 @@
 </script>
 
 <NavItem
-  on:contextmenu={() => {
-    /* TODO */
-  }}
+  on:contextmenu={openContextMenu}
   scrollable
   indentLevel={0}
   text={projectApp.name}
