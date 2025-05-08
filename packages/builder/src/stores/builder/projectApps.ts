@@ -1,42 +1,59 @@
-import { BudiStore } from "@/stores/BudiStore"
-import {
-  FetchAppPackageResponse,
-  ProjectApp,
-  UIProjectApp,
-} from "@budibase/types"
+import { DerivedBudiStore } from "@/stores/BudiStore"
+import { ProjectApp, UIProjectApp } from "@budibase/types"
+import { derived, Readable } from "svelte/store"
+import { screenStore } from "./screens"
 
 interface ProjectAppStoreState {
-  projectApps: UIProjectApp[]
+  projectApps: ProjectApp[]
   loading: boolean
 }
 
-export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
-  constructor() {
-    super({
-      projectApps: [],
-      loading: true,
-    })
-  }
+interface DerivedProjectAppStoreState {
+  projectApps: UIProjectApp[]
+}
 
-  syncFromAppPackage(pkg: FetchAppPackageResponse) {
-    this.set({
-      projectApps: [
-        {
-          _id: "default",
-          urlPrefix: "/",
-          name: "Default",
-          icon: "Monitoring",
-          iconColor: "",
-          screens: pkg.screens,
-        },
-      ],
-      loading: false,
-    })
+const DEFAULT_PROJECT_APP_ID = "default"
+
+export class ProjectAppStore extends DerivedBudiStore<
+  ProjectAppStoreState,
+  DerivedProjectAppStoreState
+> {
+  constructor() {
+    const makeDerivedStore = (store: Readable<ProjectAppStoreState>) => {
+      return derived([store, screenStore], ([$store, $screenStore]) => {
+        const projectApps = $store.projectApps.map<UIProjectApp>(projectApp => {
+          return {
+            ...projectApp,
+            screens: $screenStore.screens.filter(
+              s => (s.projectAppId || DEFAULT_PROJECT_APP_ID) === projectApp._id
+            ),
+          }
+        })
+
+        return { projectApps }
+      })
+    }
+
+    super(
+      {
+        projectApps: [
+          {
+            _id: DEFAULT_PROJECT_APP_ID,
+            urlPrefix: "/",
+            name: "Default",
+            icon: "Monitoring",
+            iconColor: "",
+          },
+        ],
+        loading: true,
+      },
+      makeDerivedStore
+    )
   }
 
   async add(projectApp: ProjectApp) {
     this.store.update(state => {
-      state.projectApps.push({ ...projectApp, screens: [] })
+      state.projectApps.push({ ...projectApp })
       return state
     })
   }
@@ -52,7 +69,6 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
 
       state.projectApps[index] = {
         ...projectApp,
-        screens: state.projectApps[index].screens,
       }
       return state
     })

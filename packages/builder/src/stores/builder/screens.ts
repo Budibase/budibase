@@ -25,7 +25,7 @@ import {
 } from "@budibase/types"
 
 interface ScreenState {
-  screens: Screen[]
+  screens: (Screen & { projectAppId?: string })[]
   selectedScreenId?: string
 }
 
