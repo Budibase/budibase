@@ -55,20 +55,10 @@ export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
 export interface ChatCompletionRequest {
   messages: Message[]
   format?: ResponseFormat
-}
-
-export interface ChatCompletionResponse {
-  message: string
-  tokensUsed: number
-}
-
-export interface ChatFullCompletionRequest {
-  messages: Message[]
-  format?: ResponseFormat
   useTools?: boolean
 }
 
-export interface ChatFullCompletionResponse {
+export interface ChatCompletionResponse {
   messages: Message[]
   tokensUsed: number
 }

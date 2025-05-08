@@ -1,8 +1,6 @@
 import {
   ChatCompletionRequest,
   ChatCompletionResponse,
-  ChatFullCompletionRequest,
-  ChatFullCompletionResponse,
   Ctx,
   FeatureFlag,
 } from "@budibase/types"
@@ -20,19 +18,6 @@ export async function chatCompletion(
     ctx.throw(500, "AI generation is disabled")
   }
 
-  if (env.SELF_HOSTED) {
-    ctx.throw(500, "Budibase AI endpoints are not available in self-host")
-  }
-
-  const llm = await ai.getLLMOrThrow()
-  const prompt = ai.Prompt.fromRequest(ctx.request.body)
-  const { message, tokensUsed } = await llm.prompt(prompt)
-  ctx.body = { message, tokensUsed }
-}
-
-export async function chatCompletionFull(
-  ctx: Ctx<ChatFullCompletionRequest, ChatFullCompletionResponse>
-) {
   if (env.SELF_HOSTED) {
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }

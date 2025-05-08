@@ -327,11 +327,20 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       mockChatGPTResponse("Hi there!")
-      const { message } = await config.api.ai.chat({
+      const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         licenseKey: licenseKey,
       })
-      expect(message).toBe("Hi there!")
+      expect(messages).toEqual([
+        {
+          role: "user",
+          content: "Hello!",
+        },
+        {
+          role: "assistant",
+          content: "Hi there!",
+        },
+      ])
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
@@ -384,12 +393,21 @@ describe("BudibaseAI", () => {
 
       const gptResponse = generator.word()
       mockChatGPTResponse(gptResponse, { format: "text" })
-      const { message } = await config.api.ai.chat({
+      const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "text",
         licenseKey: licenseKey,
       })
-      expect(message).toBe(gptResponse)
+      expect(messages).toEqual([
+        {
+          role: "user",
+          content: "Hello!",
+        },
+        {
+          role: "assistant",
+          content: gptResponse,
+        },
+      ])
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
@@ -404,12 +422,21 @@ describe("BudibaseAI", () => {
         [generator.word()]: generator.word(),
       })
       mockChatGPTResponse(gptResponse, { format: "json" })
-      const { message } = await config.api.ai.chat({
+      const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "json",
         licenseKey: licenseKey,
       })
-      expect(message).toBe(gptResponse)
+      expect(messages).toEqual([
+        {
+          role: "user",
+          content: "Hello!",
+        },
+        {
+          role: "assistant",
+          content: gptResponse,
+        },
+      ])
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
@@ -428,75 +455,19 @@ describe("BudibaseAI", () => {
         "key"
       )
       mockChatGPTResponse(gptResponse, { format: structuredOutput })
-      const { message } = await config.api.ai.chat({
+      const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: structuredOutput,
         licenseKey: licenseKey,
       })
-      expect(message).toBe(gptResponse)
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
-    })
-  })
-
-  describe("POST /api/ai/chatfull", () => {
-    let licenseKey = "test-key"
-    let internalApiKey = "api-key"
-
-    let envCleanup: () => void
-    let featureCleanup: () => void
-    beforeAll(() => {
-      envCleanup = setEnv({
-        SELF_HOSTED: false,
-        INTERNAL_API_KEY: internalApiKey,
-      })
-      featureCleanup = features.testutils.setFeatureFlags("*", {
-        AI_JS_GENERATION: true,
-      })
-    })
-
-    afterAll(() => {
-      featureCleanup()
-      envCleanup()
-    })
-
-    beforeEach(async () => {
-      await config.newTenant()
-      nock.cleanAll()
-      const license: License = {
-        plan: {
-          type: PlanType.FREE,
-          model: PlanModel.PER_USER,
-          usesInvoicing: false,
-        },
-        features: [Feature.BUDIBASE_AI],
-        quotas: {} as any,
-        tenantId: config.tenantId,
-      }
-      nock(env.ACCOUNT_PORTAL_URL)
-        .get(`/api/license/${licenseKey}`)
-        .reply(200, license)
-    })
-
-    it("handles correct chat response", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
-
-      mockChatGPTResponse("Hi there!")
-      const { messages } = await config.api.ai.chatFull({
-        messages: [{ role: "user", content: "Hello!" }],
-        licenseKey: licenseKey,
-      })
-      expect(messages).toStrictEqual([
+      expect(messages).toEqual([
         {
           role: "user",
           content: "Hello!",
         },
         {
           role: "assistant",
-          content: "Hi there!",
+          content: gptResponse,
         },
       ])
 
