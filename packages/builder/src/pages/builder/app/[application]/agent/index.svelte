@@ -1,21 +1,18 @@
 <script lang="ts">
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, notifications } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
-  import type { AgentMessage, AgentHistory } from "@budibase/types"
+  import type { AgentChat } from "@budibase/types"
   import { API } from "@/api"
-  import { appStore } from "@/stores/builder/app"
   import { onDestroy, onMount } from "svelte"
 
   let inputValue = ""
-  let history: AgentHistory
+  let chat: AgentChat
   let loading: boolean = false
   let wrapper: HTMLDivElement
   let observer: MutationObserver
-  let messages: AgentMessage[] = []
 
-  $: appContext = [$appStore.appId]
-  $: messages.length, scroll()
+  $: chat.messages.length, scroll()
 
   async function handleKeyDown(event: any) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -25,46 +22,23 @@
   }
 
   async function prompt() {
-    messages.push({
-      message: inputValue,
-      system: false,
-    })
+    if (!chat) {
+      chat = { title: "", messages: [] }
+    }
+    chat.messages.push({ role: "user", content: inputValue })
     inputValue = ""
-    messages = messages
     loading = true
     try {
-      const res = await API.agentChat(
-        messages.map(m => ({ message: m.message, system: m.system })),
-        appContext
-      )
-      messages.push({
-        message: res.response,
-        system: true,
-      })
+      chat = await API.agentChat(chat)
     } catch (err: any) {
-      messages.push({
-        message: err.message,
-        system: true,
-        isError: true,
-      })
+      console.error(err)
+      notifications.error(err.message)
     }
-
     loading = false
-    messages = messages
-    history = await agentsStore.saveHistory({
-      ...history,
-      messages,
-      appIds: appContext,
-    })
   }
 
   const reset = async () => {
-    messages = []
-    history = await agentsStore.saveHistory({
-      ...history,
-      messages: [],
-      appIds: appContext,
-    })
+    chat = { title: "", messages: [] }
   }
 
   onMount(async () => {
@@ -72,10 +46,7 @@
     await agentsStore.init()
 
     // Init history for this app
-    history = $agentsStore.history.find(
-      history => history.appIds?.[0] === $appStore.appId
-    ) as AgentHistory
-    messages = history?.messages || []
+    chat = { title: "", messages: [] }
 
     // Ensure we always autoscroll to reveal new messages
     observer = new MutationObserver(() => {
@@ -94,7 +65,7 @@
 </script>
 
 <div class="page" bind:this={wrapper}>
-  <Chatbox bind:messages {loading} />
+  <Chatbox bind:chat {loading} />
   <div class="controls">
     <ActionButton quiet on:click={reset}>Reset history</ActionButton>
   </div>

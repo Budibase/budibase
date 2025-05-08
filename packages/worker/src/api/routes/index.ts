@@ -7,7 +7,6 @@ import emailRoutes from "./global/email"
 import authRoutes from "./global/auth"
 import roleRoutes from "./global/roles"
 import eventRoutes from "./global/events"
-import agentRoutes from "./global/agents"
 import environmentRoutes from "./system/environment"
 import tenantsRoutes from "./system/tenants"
 import statusRoutes from "./system/status"
@@ -32,7 +31,6 @@ export const routes: Router[] = [
   statusRoutes,
   selfRoutes,
   licenseRoutes,
-  agentRoutes,
   pro.groups,
   pro.auditLogs,
   accountRoutes,

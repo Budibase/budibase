@@ -1,18 +1,52 @@
-import { JSONSchema4 } from "json-schema"
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
+import { z } from "zod"
 
-export interface Message {
-  role: "system" | "user"
+export interface SystemMessage {
+  role: "system"
   content: string
 }
 
-export interface Tool {
+export interface UserMessage {
+  role: "user"
+  content: string
+}
+
+export interface AssistantMessage {
+  role: "assistant"
+  content: string
+}
+
+export interface ToolMessage {
+  role: "tool"
+  tool_call_id: string
+  content: string
+}
+
+export type Message =
+  | SystemMessage
+  | UserMessage
+  | AssistantMessage
+  | ToolMessage
+
+export type Tool<T extends z.ZodType = z.ZodType> = Required<ToolArgs<T>>
+
+export interface ToolArgs<T extends z.ZodType> {
   name: string
-  description?: string
-  parameters?: JSONSchema4
-  // strictly follow JSON schema specified in parameters
+  description: string
+  parameters?: T
+  handler: (args: z.infer<T>) => Promise<string>
   strict?: boolean
+}
+
+export function newTool<T extends z.ZodType>(tool: ToolArgs<T>): Tool<T> {
+  return {
+    strict: tool.strict ?? true,
+    parameters: tool.parameters ?? (z.object({}) as unknown as T),
+    description: tool.description,
+    handler: tool.handler,
+    name: tool.name,
+  }
 }
 
 export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
@@ -24,6 +58,17 @@ export interface ChatCompletionRequest {
 
 export interface ChatCompletionResponse {
   message?: string
+  tokensUsed?: number
+}
+
+export interface ChatFullCompletionRequest {
+  messages: Message[]
+  format?: ResponseFormat
+  useTools?: boolean
+}
+
+export interface ChatFullCompletionResponse {
+  messages: Message[]
   tokensUsed?: number
 }
 

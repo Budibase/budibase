@@ -1,53 +1,36 @@
 import {
+  AgentChat,
   ChatAgentRequest,
   ChatAgentResponse,
-  SaveAgentHistoryRequest,
-  SaveAgentHistoryResponse,
   FetchAgentHistoryResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
-  agentChat: (
-    messages: { message: string; system?: boolean }[],
-    appIds: string[]
-  ) => Promise<ChatAgentResponse>
+  agentChat: (chat: AgentChat) => Promise<ChatAgentResponse>
 
-  saveHistory: (
-    history: SaveAgentHistoryRequest
-  ) => Promise<SaveAgentHistoryResponse>
-  removeHistory: (historyId: string) => Promise<void>
-  fetchHistory: () => Promise<FetchAgentHistoryResponse>
+  removeChat: (historyId: string) => Promise<void>
+  fetchChats: () => Promise<FetchAgentHistoryResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
-  agentChat: async (messages, appIds) => {
-    const body: ChatAgentRequest = {
-      messages,
-      appIds,
-    }
+  agentChat: async chat => {
+    const body: ChatAgentRequest = chat
     return await API.post({
-      url: "/api/global/agent/chat",
+      url: "/api/agent/chat",
       body,
     })
   },
 
-  saveHistory: async (history: SaveAgentHistoryRequest) => {
-    return await API.post({
-      url: "/api/global/agent/history",
-      body: history,
-    })
-  },
-
-  removeHistory: async (historyId: string) => {
+  removeChat: async (historyId: string) => {
     return await API.delete({
-      url: `/api/global/agent/history/${historyId}`,
+      url: `/api/agent/history/${historyId}`,
     })
   },
 
-  fetchHistory: async () => {
+  fetchChats: async () => {
     return await API.get({
-      url: "/api/global/agent/history",
+      url: "/api/agent/history",
     })
   },
 })

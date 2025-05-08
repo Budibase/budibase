@@ -1,13 +1,6 @@
-import { Document } from "../../"
+import { Document, Message } from "../../"
 
-export interface AgentMessage {
-  message: string
-  system?: boolean
-  isError?: boolean
-}
-
-export interface AgentHistory extends Document {
+export interface AgentChat extends Document {
   title: string
-  messages: AgentMessage[]
-  appIds: string[]
+  messages: Message[]
 }

@@ -61,24 +61,24 @@
       on:click={() => {
         openedApp = undefined
         onAgents = true
-        agentsStore.clearCurrentHistoryId()
+        agentsStore.clearCurrentChatId()
         $goto("./agents")
       }}
       selected={!$params.appId &&
         !openedApp &&
-        !$agentsStore.currentHistoryId &&
+        !$agentsStore.currentChatId &&
         onAgents}
     />
-    {#each $agentsStore.history as history}
-      {@const selected = $agentsStore.currentHistoryId === history._id}
+    {#each $agentsStore.chats as chat}
+      {@const selected = $agentsStore.currentChatId === chat._id}
       <span class="side-bar-app-entry" class:actionsOpen={selected}>
         <NavItem
           icon="Branch1"
-          text={history.title}
+          text={chat.title}
           on:click={() => {
             onAgents = true
             openedApp = undefined
-            agentsStore.setCurrentHistoryId(history._id)
+            agentsStore.setCurrentChatId(chat._id)
             $goto("./agents")
           }}
           {selected}

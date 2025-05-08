@@ -42,7 +42,7 @@ export enum DocumentType {
   ROW_ACTIONS = "ra",
   OAUTH2_CONFIG = "oauth2",
   OAUTH2_CONFIG_LOG = "oauth2log",
-  AGENT_HISTORY = "agenthistory",
+  AGENT_CHAT = "agentchat",
 }
 
 // Because DocumentTypes can overlap, we need to make sure that we search

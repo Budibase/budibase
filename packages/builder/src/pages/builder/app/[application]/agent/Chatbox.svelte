@@ -1,24 +1,19 @@
 <script lang="ts">
   import { MarkdownViewer } from "@budibase/bbui"
   import BBAI from "@/components/common/Icons/BBAI.svelte"
+  import { type AgentChat } from "@budibase/types"
 
-  export let messages: {
-    message: string
-    system?: boolean
-    isError?: boolean
-  }[] = []
+  export let chat: AgentChat
   export let loading: boolean = false
 </script>
 
 <div class="chatbox">
-  {#each messages as message}
-    <div
-      class="message"
-      class:system={message.system}
-      class:error={message.isError}
-    >
-      <MarkdownViewer value={message.message} />
-    </div>
+  {#each chat.messages as message}
+    {#if message.role === "user" || message.role === "system"}
+      <div class="message" class:system={message.role === "system"}>
+        <MarkdownViewer value={message.content} />
+      </div>
+    {/if}
   {/each}
   {#if loading}
     <div class="message system">
@@ -53,10 +48,5 @@
     align-self: flex-start;
     background: none;
     padding-left: 0;
-  }
-
-  .message.error {
-    background-color: rgba(255, 99, 71, 0.85) !important;
-    padding-left: 20px;
   }
 </style>
