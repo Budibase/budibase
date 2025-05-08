@@ -43,7 +43,7 @@
         name: "Add screen",
         keyBind: null,
         visible: true,
-        callback: () => $goto("../new"),
+        callback: () => $goto("../new?projectAppId=" + projectApp._id),
       },
       {
         icon: "Edit",

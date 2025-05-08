@@ -2,6 +2,7 @@ import { DerivedBudiStore } from "@/stores/BudiStore"
 import { ProjectApp, UIProjectApp } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
+import { Helpers } from "@budibase/bbui"
 
 interface ProjectAppStoreState {
   projectApps: ProjectApp[]
@@ -53,7 +54,7 @@ export class ProjectAppStore extends DerivedBudiStore<
 
   async add(projectApp: ProjectApp) {
     this.store.update(state => {
-      state.projectApps.push({ ...projectApp })
+      state.projectApps.push({ ...projectApp, _id: Helpers.uuid() })
       return state
     })
   }

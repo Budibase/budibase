@@ -22,10 +22,11 @@ import {
   SaveScreenResponse,
   Screen,
   ScreenVariant,
+  WithRequired,
 } from "@budibase/types"
 
 interface ScreenState {
-  screens: (Screen & { projectAppId?: string })[]
+  screens: Screen[]
   selectedScreenId?: string
 }
 
@@ -37,7 +38,7 @@ export const initialScreenState: ScreenState = {
 export class ScreenStore extends BudiStore<ScreenState> {
   history: HistoryStore<Screen>
   delete: (screens: Screen) => Promise<void>
-  save: (screen: Screen) => Promise<Screen>
+  save: (screen: WithRequired<Screen, "projectAppId">) => Promise<Screen>
 
   constructor() {
     super(initialScreenState)
@@ -229,7 +230,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Save screen
     const creatingNewScreen = screen._id === undefined
-    const savedScreen = await API.saveScreen(screen)
+    const savedScreen = await API.saveScreen({
+      ...screen,
+      projectAppId: undefined, // TODO: remove then implemented in the backend
+    })
 
     // Update state
     this.update(state => {
@@ -238,7 +242,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
       if (idx !== -1) {
         state.screens.splice(idx, 1, savedScreen)
       } else {
-        state.screens.push(savedScreen)
+        state.screens.push({
+          ...savedScreen,
+          projectAppId: screen.projectAppId, // TODO: remove then implemented in the backend
+        })
       }
 
       // Select the new screen if creating a new one
@@ -306,7 +313,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
       if (result === false) {
         return
       }
-      return this.save(clone)
+      return this.save({
+        ...clone,
+        projectAppId: screen.projectAppId || "default",
+      })
     }
   )
 
