@@ -58,8 +58,8 @@ export interface ChatCompletionRequest {
 }
 
 export interface ChatCompletionResponse {
-  message?: string
-  tokensUsed?: number
+  message: string
+  tokensUsed: number
 }
 
 export interface ChatFullCompletionRequest {
@@ -70,7 +70,7 @@ export interface ChatFullCompletionRequest {
 
 export interface ChatFullCompletionResponse {
   messages: Message[]
-  tokensUsed?: number
+  tokensUsed: number
 }
 
 export interface GenerateJsRequest {

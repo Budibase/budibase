@@ -1,6 +1,8 @@
 import {
   ChatCompletionRequest,
   ChatCompletionResponse,
+  ChatFullCompletionRequest,
+  ChatFullCompletionResponse,
   GenerateCronRequest,
   GenerateCronResponse,
   GenerateJsRequest,
@@ -41,6 +43,21 @@ export class AIAPI extends TestAPI {
       headers[constants.Header.LICENSE_KEY] = req.licenseKey
     }
     return await this._post<ChatCompletionResponse>(`/api/ai/chat`, {
+      body: req,
+      headers,
+      expectations,
+    })
+  }
+
+  chatFull = async (
+    req: ChatFullCompletionRequest & { licenseKey: string },
+    expectations?: Expectations
+  ): Promise<ChatFullCompletionResponse> => {
+    const headers: Record<string, string> = {}
+    if (req.licenseKey) {
+      headers[constants.Header.LICENSE_KEY] = req.licenseKey
+    }
+    return await this._post<ChatFullCompletionResponse>(`/api/ai/chatfull`, {
       body: req,
       headers,
       expectations,
