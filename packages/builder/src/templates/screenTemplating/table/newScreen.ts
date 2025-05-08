@@ -5,6 +5,8 @@ import { makePropSafe as safe } from "@budibase/string-templates"
 import getValidRoute from "../getValidRoute"
 import { Helpers } from "@budibase/bbui"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
+import { SourceOption } from "@/pages/builder/app/[application]/design/_components/NewScreen/utils"
+import { UIPermissions, Screen as ScreenDoc } from "@budibase/types"
 
 const getTableScreenTemplate = ({
   route,
@@ -13,6 +15,13 @@ const getTableScreenTemplate = ({
   tableOrView,
   permissions,
   gridLayout,
+}: {
+  route: string
+  updateScreenRoute: string
+  createScreenRoute: string
+  tableOrView: SourceOption
+  permissions: UIPermissions
+  gridLayout: boolean
 }) => {
   const buttonGroup = new Component("@budibase/standard-components/buttongroup")
   const createButton = new Component("@budibase/standard-components/button")
@@ -98,6 +107,11 @@ const getUpdateScreenTemplate = async ({
   tableScreenRoute,
   tableOrView,
   permissions,
+}: {
+  route: string
+  tableScreenRoute: string
+  tableOrView: SourceOption
+  permissions: UIPermissions
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
@@ -172,11 +186,11 @@ const getUpdateScreenTemplate = async ({
     })
 
   // Generate button config including row actions
-  let buttons = [saveButton.json(), deleteButton.json()]
+  let baseButtons = [saveButton.json(), deleteButton.json()]
   const rowActionButtons = await getRowActionButtonTemplates({
     instance: updateFormBlock.json(),
   })
-  buttons = [...(buttons || []), ...rowActionButtons]
+  const buttons = [...(baseButtons || []), ...rowActionButtons]
   updateFormBlock = updateFormBlock.customProps({
     buttons,
     buttonsCollapsed: buttons.length > 5,
@@ -201,6 +215,11 @@ const getCreateScreenTemplate = ({
   tableScreenRoute,
   tableOrView,
   permissions,
+}: {
+  route: string
+  tableScreenRoute: string
+  tableOrView: SourceOption
+  permissions: UIPermissions
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
@@ -262,7 +281,15 @@ const getCreateScreenTemplate = ({
   }
 }
 
-const newScreen = async ({ tableOrView, permissions, screens }) => {
+const newScreen = async ({
+  tableOrView,
+  permissions,
+  screens,
+}: {
+  tableOrView: SourceOption
+  permissions: UIPermissions
+  screens: ScreenDoc[]
+}) => {
   const tableScreenRoute = getValidRoute(
     screens,
     tableOrView.name,
@@ -295,7 +322,6 @@ const newScreen = async ({ tableOrView, permissions, screens }) => {
     tableScreenRoute,
     tableOrView,
     permissions,
-    gridLayout: false,
   })
 
   const createScreenTemplate = getCreateScreenTemplate({
@@ -303,7 +329,6 @@ const newScreen = async ({ tableOrView, permissions, screens }) => {
     tableScreenRoute,
     tableOrView,
     permissions,
-    gridLayout: false,
   })
 
   return [tableScreenTemplate, updateScreenTemplate, createScreenTemplate]
