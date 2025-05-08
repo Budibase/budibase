@@ -273,6 +273,15 @@ describe("BudibaseAI", () => {
     config.end()
   })
 
+  async function getQuotaUsage() {
+    return await context.doInSelfHostTenantUsingCloud(
+      config.getTenantId(),
+      async () => {
+        return await quotas.getQuotaUsage()
+      }
+    )
+  }
+
   describe("POST /api/ai/chat", () => {
     let licenseKey = "test-key"
     let internalApiKey = "api-key"
@@ -311,15 +320,6 @@ describe("BudibaseAI", () => {
         .get(`/api/license/${licenseKey}`)
         .reply(200, license)
     })
-
-    async function getQuotaUsage() {
-      return await context.doInSelfHostTenantUsingCloud(
-        config.getTenantId(),
-        async () => {
-          return await quotas.getQuotaUsage()
-        }
-      )
-    }
 
     it("handles correct chat response", async () => {
       let usage = await getQuotaUsage()

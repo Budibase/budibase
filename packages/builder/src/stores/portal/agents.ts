@@ -29,7 +29,7 @@ export class AgentsStore extends BudiStore<AgentStore> {
       state.chats = chats
       return state
     })
-    return history
+    return chats
   }
 
   async removeChat(chatId: string) {
