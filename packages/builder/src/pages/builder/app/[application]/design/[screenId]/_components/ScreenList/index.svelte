@@ -126,7 +126,7 @@
 <ProjectAppModal
   bind:this={projectAppModal}
   projectApp={selectedProjectApp}
-  on:cancel={() => (selectedProjectApp = undefined)}
+  on:hide={() => (selectedProjectApp = undefined)}
 />
 
 <style>

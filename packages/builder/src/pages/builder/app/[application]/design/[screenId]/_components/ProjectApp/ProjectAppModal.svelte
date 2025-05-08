@@ -94,7 +94,7 @@
   }
 </script>
 
-<Modal bind:this={modal} on:show={onShow}>
+<Modal bind:this={modal} on:show={onShow} on:hide>
   <ModalContent {title} {onConfirm}>
     <Input
       label="App Name"
