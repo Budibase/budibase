@@ -30,7 +30,7 @@ export const createDataSourceStore = () => {
 
     // Extract the dataSource ID (not the query ID) for queries
     else if (dataSource.type === "query") {
-      dataSourceId = dataSource.dataSourceId
+      dataSourceId = dataSource.datasourceId
     }
 
     // Store configs for each relevant dataSource ID
