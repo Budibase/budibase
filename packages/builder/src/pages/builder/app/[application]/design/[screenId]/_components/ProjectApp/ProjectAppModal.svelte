@@ -60,7 +60,7 @@
       _rev: projectApp?._rev,
       name: projectApp?.name ?? "",
       urlPrefix: projectApp?.urlPrefix ?? "",
-      icon: projectApp?.icon ?? "",
+      icon: projectApp?.icon ?? "Monitoring",
       iconColor: projectApp?.iconColor ?? "",
     }
   }
