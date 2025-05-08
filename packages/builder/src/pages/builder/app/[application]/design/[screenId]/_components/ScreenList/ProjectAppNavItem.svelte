@@ -75,7 +75,25 @@
   </div>
 </NavItem>
 
-<!-- <Divider vertical /> -->
-{#each projectApp.screens as screen (screen._id)}
-  <ScreenNavItem {screen} />
-{/each}
+<div class="screens">
+  {#each projectApp.screens as screen (screen._id)}
+    <div class="screen">
+      <ScreenNavItem {screen} />
+    </div>
+  {/each}
+</div>
+
+<style>
+  .screens {
+    border-left: 2px solid var(--spectrum-global-color-gray-200);
+    padding-right: 12px;
+    margin-left: 20px;
+  }
+  .screens .screen {
+    margin-left: 8px;
+  }
+
+  .screens :global(.nav-item) {
+    border-radius: 4px;
+  }
+</style>
