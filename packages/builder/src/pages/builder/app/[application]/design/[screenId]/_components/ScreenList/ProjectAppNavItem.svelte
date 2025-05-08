@@ -6,6 +6,7 @@
   import { confirm } from "@/helpers"
   import { createEventDispatcher } from "svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
+  import { goto } from "@roxi/routify"
 
   export let projectApp: UIProjectApp
 
@@ -38,6 +39,13 @@
 
     const items = [
       {
+        icon: "Add",
+        name: "Add screen",
+        keyBind: null,
+        visible: true,
+        callback: () => $goto("../new"),
+      },
+      {
         icon: "Edit",
         name: "Edit",
         keyBind: null,
@@ -51,7 +59,6 @@
         name: "Delete",
         keyBind: null,
         visible: true,
-        disabled: false,
         callback: onDelete,
       },
     ]
