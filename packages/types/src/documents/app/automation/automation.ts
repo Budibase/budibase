@@ -15,6 +15,7 @@ export enum AutomationIOType {
   JSON = "json",
   DATE = "date",
   ATTACHMENT = "attachment",
+  LONGFORM = "longform",
 }
 
 export enum AutomationCustomIOType {
