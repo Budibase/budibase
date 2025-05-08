@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from "svelte"
-  import { onMount, afterUpdate } from "svelte"
+  import { onMount } from "svelte"
   import JsBarcode from "jsbarcode"
   import { createQrSvgString } from "@svelte-put/qr"
 
