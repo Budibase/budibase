@@ -1,6 +1,15 @@
+import {
+  Datasource,
+  Table,
+  UIInternalDatasource,
+  UITableResource,
+  UIViewResource,
+  ViewV2,
+} from "@budibase/types"
+
 export const datasourceSelect = {
-  table: (table, datasources) => {
-    const sourceId = table.sourceId || table.datasourceId
+  table: (table: Table, datasources: Omit<Datasource, "entities">[]) => {
+    const sourceId = table.sourceId || (table as any).datasourceId
     const datasource = datasources.find(ds => ds._id === sourceId)
     return {
       label: table.name,
@@ -9,9 +18,9 @@ export const datasourceSelect = {
       datasourceName: datasource?.name,
     }
   },
-  viewV2: (view, datasources) => {
+  viewV2: (view: ViewV2, datasources: UIInternalDatasource[] = []) => {
     const datasource = datasources
-      ?.filter(f => f.entities)
+      ?.filter(d => d.entities)
       .flatMap(d => d.entities)
       .find(ds => ds._id === view.tableId)
     return {
@@ -24,13 +33,13 @@ export const datasourceSelect = {
 }
 
 export const tableSelect = {
-  table: table => ({
+  table: (table: Table): UITableResource => ({
     type: "table",
     label: table.name,
-    tableId: table._id,
-    resourceId: table._id,
+    tableId: table._id!,
+    resourceId: table._id!,
   }),
-  viewV2: view => ({
+  viewV2: (view: ViewV2): UIViewResource => ({
     type: "viewV2",
     id: view.id,
     label: view.name,
@@ -40,7 +49,7 @@ export const tableSelect = {
 }
 
 export const sortAndFormat = {
-  tables: (tables, datasources) => {
+  tables: (tables: Table[], datasources: Omit<Datasource, "entities">[]) => {
     return tables
       .map(table => {
         const formatted = datasourceSelect.table(table, datasources)
@@ -61,7 +70,7 @@ export const sortAndFormat = {
         return a.label.localeCompare(b.label)
       })
   },
-  viewsV2: (views, datasources) => {
+  viewsV2: (views: ViewV2[], datasources: UIInternalDatasource[]) => {
     return views.map(view => {
       const formatted = datasourceSelect.viewV2(view, datasources)
       return {

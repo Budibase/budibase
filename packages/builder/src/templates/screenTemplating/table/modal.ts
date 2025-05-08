@@ -1,19 +1,31 @@
-import { Screen } from "../Screen"
-import { Component } from "../../Component"
-import { generate } from "shortid"
-import { makePropSafe as safe } from "@budibase/string-templates"
-import { Utils } from "@budibase/frontend-core"
 import { capitalise } from "@/helpers"
-import getValidRoute from "../getValidRoute"
+import { SourceOption } from "@/pages/builder/app/[application]/design/_components/NewScreen/utils"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
+import { Utils } from "@budibase/frontend-core"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import { Screen as ScreenDoc, UIPermissions } from "@budibase/types"
+import { generate } from "shortid"
+import { Component } from "../../Component"
+import getValidRoute from "../getValidRoute"
+import { Screen } from "../Screen"
 
-const sidePanel = async ({ tableOrView, permissions, screens }) => {
+const modal = async ({
+  tableOrView,
+  permissions,
+  screens,
+}: {
+  tableOrView: SourceOption
+  permissions: UIPermissions
+  screens: ScreenDoc[]
+}) => {
   /*
     Create Row
    */
-  const createRowSidePanel = new Component(
-    "@budibase/standard-components/sidepanel"
-  ).instanceName("New row side panel")
+  const createRowModal = new Component("@budibase/standard-components/modal")
+    .instanceName("New row modal")
+    .customProps({
+      size: "large",
+    })
 
   const buttonGroup = new Component("@budibase/standard-components/buttongroup")
   const createButton = new Component("@budibase/standard-components/button")
@@ -22,9 +34,9 @@ const sidePanel = async ({ tableOrView, permissions, screens }) => {
     onClick: [
       {
         id: 0,
-        "##eventHandlerType": "Open Side Panel",
+        "##eventHandlerType": "Open Modal",
         parameters: {
-          id: createRowSidePanel._json._id,
+          id: createRowModal._json._id,
         },
       },
     ],
@@ -68,28 +80,31 @@ const sidePanel = async ({ tableOrView, permissions, screens }) => {
     }),
   })
 
-  createRowSidePanel.addChild(createFormBlock)
+  createRowModal.addChild(createFormBlock)
 
   /*
     Edit Row
    */
   const stateKey = `ID_${generate()}`
-  const detailsSidePanel = new Component(
-    "@budibase/standard-components/sidepanel"
-  ).instanceName("Edit row side panel")
+  const detailsModal = new Component("@budibase/standard-components/modal")
+    .instanceName("Edit row modal")
+    .customProps({
+      size: "large",
+    })
 
   let editFormBlock = new Component("@budibase/standard-components/formblock")
-  editFormBlock.instanceName("Edit row form block").customProps({
-    dataSource: tableOrView.tableSelectFormat,
-    labelPosition: "left",
-    buttonPosition: "bottom",
-    actionType: "Update",
-    title: "Edit",
-    rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
-  })
+    .instanceName("Edit row form block")
+    .customProps({
+      dataSource: tableOrView.tableSelectFormat,
+      labelPosition: "left",
+      buttonPosition: "bottom",
+      actionType: "Update",
+      title: "Edit",
+      rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
+    })
 
   // Generate button config including row actions
-  let buttons = Utils.buildFormBlockButtonConfig({
+  const formButtons = Utils.buildFormBlockButtonConfig({
     _id: editFormBlock._json._id,
     showDeleteButton: true,
     showSaveButton: true,
@@ -101,13 +116,13 @@ const sidePanel = async ({ tableOrView, permissions, screens }) => {
   const rowActionButtons = await getRowActionButtonTemplates({
     instance: editFormBlock.json(),
   })
-  buttons = [...(buttons || []), ...rowActionButtons]
+  const buttons = [...(formButtons || []), ...rowActionButtons]
   editFormBlock = editFormBlock.customProps({
     buttons,
     buttonsCollapsed: buttons.length > 5,
   })
 
-  detailsSidePanel.addChild(editFormBlock)
+  detailsModal.addChild(editFormBlock)
 
   const tableBlock = new Component("@budibase/standard-components/gridblock")
   tableBlock
@@ -129,9 +144,9 @@ const sidePanel = async ({ tableOrView, permissions, screens }) => {
         },
         {
           id: 1,
-          "##eventHandlerType": "Open Side Panel",
+          "##eventHandlerType": "Open Modal",
           parameters: {
-            id: detailsSidePanel._json._id,
+            id: detailsModal._json._id,
           },
         },
       ],
@@ -149,8 +164,8 @@ const sidePanel = async ({ tableOrView, permissions, screens }) => {
     .addChild(heading)
     .addChild(buttonGroup)
     .addChild(tableBlock)
-    .addChild(createRowSidePanel)
-    .addChild(detailsSidePanel)
+    .addChild(createRowModal)
+    .addChild(detailsModal)
     .json()
 
   return [
@@ -161,4 +176,4 @@ const sidePanel = async ({ tableOrView, permissions, screens }) => {
   ]
 }
 
-export default sidePanel
+export default modal

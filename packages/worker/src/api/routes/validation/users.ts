@@ -25,10 +25,8 @@ export const buildSelfSaveValidation = () => {
     forceResetPassword: Joi.boolean().optional(),
     firstName: OPTIONAL_STRING,
     lastName: OPTIONAL_STRING,
-    onboardedAt: Joi.string().optional(),
     freeTrialConfirmedAt: Joi.string().optional(),
     appFavourites: Joi.array().optional(),
-    tours: Joi.object().optional(),
     appSort: Joi.string().optional(),
   }
   return auth.joiValidator.body(Joi.object(schema).required().unknown(false))
