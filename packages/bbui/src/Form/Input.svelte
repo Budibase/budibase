@@ -17,10 +17,22 @@
   export let autocomplete: boolean | string | undefined = undefined
   export let helpText: string | undefined = undefined
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{
+    change: any
+    enterkey: KeyboardEvent
+  }>()
   const onChange = (e: any) => {
     value = e.detail
     dispatch("change", e.detail)
+  }
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (readonly || disabled) {
+      return
+    }
+    if (e.key === "Enter") {
+      dispatch("enterkey", e)
+    }
   }
 </script>
 
@@ -42,6 +54,7 @@
     on:focus
     on:keyup
     on:keydown
+    on:keydown={onKeyDown}
   >
     <slot />
   </TextField>

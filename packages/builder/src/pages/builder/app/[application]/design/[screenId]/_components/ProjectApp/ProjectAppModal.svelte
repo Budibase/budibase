@@ -75,9 +75,15 @@
 </script>
 
 <ModalContent {title} {onConfirm}>
-  <Input label="App Name" bind:value={data.name} error={errors.name} />
+  <Input
+    label="App Name"
+    on:enterkey={onConfirm}
+    bind:value={data.name}
+    error={errors.name}
+  />
   <Input
     label="Project url"
+    on:enterkey={onConfirm}
     bind:value={data.urlPrefix}
     error={errors.urlPrefix}
   />
