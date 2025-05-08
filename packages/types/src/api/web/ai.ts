@@ -14,7 +14,8 @@ export interface UserMessage {
 
 export interface AssistantMessage {
   role: "assistant"
-  content: string
+  content: string | null
+  tool_calls?: openai.ChatCompletionMessageToolCall[]
 }
 
 export interface ToolMessage {

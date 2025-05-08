@@ -9,8 +9,12 @@
 
 <div class="chatbox">
   {#each chat.messages as message}
-    {#if message.role === "user" || message.role === "system"}
-      <div class="message" class:system={message.role === "system"}>
+    {#if message.role === "user"}
+      <div class="message">
+        <MarkdownViewer value={message.content} />
+      </div>
+    {:else if message.role === "assistant" && message.content}
+      <div class="message system">
         <MarkdownViewer value={message.content} />
       </div>
     {/if}

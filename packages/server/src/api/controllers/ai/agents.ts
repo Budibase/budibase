@@ -41,7 +41,8 @@ export async function agentChat(
   }
 
   const db = context.getGlobalDB()
-  await db.put(newChat)
+  const { rev } = await db.put(newChat)
+  newChat._rev = rev
   ctx.body = newChat
 }
 

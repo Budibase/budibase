@@ -7,7 +7,7 @@
   import { onDestroy, onMount } from "svelte"
 
   let inputValue = ""
-  let chat: AgentChat
+  let chat: AgentChat = { title: "", messages: [] }
   let loading: boolean = false
   let wrapper: HTMLDivElement
   let observer: MutationObserver
