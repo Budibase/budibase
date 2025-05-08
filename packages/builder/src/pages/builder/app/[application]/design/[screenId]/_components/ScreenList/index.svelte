@@ -53,21 +53,20 @@
 
     const items = [
       {
-        icon: "Add",
-        name: "Add screen",
-        keyBind: null,
-        visible: true,
-        callback: () => $goto("../new"),
-      },
-      {
-        icon: "Add",
-        name: "Add project",
+        name: "Add app",
         keyBind: null,
         visible: true,
         disabled: false,
         callback: () => {
           projectAppModal.show()
         },
+        isNew: true,
+      },
+      {
+        name: "Add screen",
+        keyBind: null,
+        visible: true,
+        callback: () => $goto("../new"),
       },
     ]
 

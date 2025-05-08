@@ -12,6 +12,7 @@ interface MenuItem {
   visible: boolean
   disabled?: boolean
   callback: () => void
+  isNew?: boolean
 }
 
 interface ContextMenuState {
