@@ -27,6 +27,7 @@
       "pdftable",
       "spreadsheet",
       "dynamicfilter",
+      "filter",
       "daterangepicker"
     ]
   },

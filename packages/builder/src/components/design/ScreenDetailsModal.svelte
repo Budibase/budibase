@@ -1,25 +1,25 @@
-<script>
+<script lang="ts">
   import { ModalContent, Input } from "@budibase/bbui"
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import { get } from "svelte/store"
   import { screenStore } from "@/stores/builder"
 
-  export let onConfirm
-  export let onCancel
-  export let route
-  export let role
+  export let onConfirm: (_data: { route: string }) => Promise<void>
+  export let onCancel: (() => Promise<void>) | undefined = undefined
+  export let route: string = ""
+  export let role: string | undefined = undefined
   export let confirmText = "Continue"
 
   const appPrefix = "/app"
   let touched = false
-  let error
-  let modal
+  let error: string | undefined
+  let modal: ModalContent
 
   $: appUrl = route
     ? `${window.location.origin}${appPrefix}${route}`
     : `${window.location.origin}${appPrefix}`
 
-  const routeChanged = event => {
+  const routeChanged = (event: { detail: string }) => {
     if (!event.detail.startsWith("/")) {
       route = "/" + event.detail
     }
@@ -28,11 +28,11 @@
     if (routeExists(route)) {
       error = "This URL is already taken for this access role"
     } else {
-      error = null
+      error = undefined
     }
   }
 
-  const routeExists = url => {
+  const routeExists = (url: string) => {
     if (!role) {
       return false
     }
@@ -58,7 +58,7 @@
   onConfirm={confirmScreenDetails}
   {onCancel}
   cancelText={"Back"}
-  disabled={!route || error || !touched}
+  disabled={!route || !!error || !touched}
 >
   <form on:submit|preventDefault={() => modal.confirm()}>
     <Input

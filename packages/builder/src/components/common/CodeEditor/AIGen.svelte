@@ -1,17 +1,17 @@
 <script lang="ts">
-  import { ActionButton, notifications } from "@budibase/bbui"
+  import { Button, notifications } from "@budibase/bbui"
 
   import { createEventDispatcher } from "svelte"
   import { API } from "@/api"
-  import type { EnrichedBinding } from "@budibase/types"
+  import { ErrorCode, type EnrichedBinding } from "@budibase/types"
   import analytics, { Events } from "@/analytics"
   import AiInput from "../ai/AIInput.svelte"
 
   export let bindings: EnrichedBinding[] = []
   export let value: string | null = ""
   export let expandedOnly: boolean = false
-
   export let parentWidth: number | null = null
+
   const dispatch = createEventDispatcher<{
     update: { code: string }
     accept: void
@@ -22,16 +22,15 @@
   let previousContents: string | null = null
   let expanded = false
   let promptText = ""
+  let inputValue = ""
 
   const thresholdExpansionWidth = 350
 
-  $: expanded =
+  $: shouldAlwaysBeExpanded =
     expandedOnly ||
     (parentWidth !== null && parentWidth > thresholdExpansionWidth)
-      ? true
-      : expanded
 
-  $: containerWidth = expanded ? calculateExpandedWidth() : "auto"
+  $: expanded = shouldAlwaysBeExpanded || expanded
 
   async function generateJs(prompt: string) {
     promptText = ""
@@ -43,17 +42,24 @@
       const resp = await API.generateJs({ prompt, bindings })
       const code = resp.code
       if (code === "") {
-        throw new Error("We didn't understand your prompt. Please rephrase it.")
+        throw new Error(
+          "We didn't understand your prompt. This can happen if the prompt isn't specific, or if it's a request for something other than code. Try expressing your request in a different way."
+        )
       }
       suggestedCode = code
       dispatch("update", { code })
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      notifications.error(
-        e instanceof Error
-          ? `Unable to generate code: ${e.message}`
-          : "Unable to generate code. Please try again later."
-      )
+
+      if ("code" in e && e.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
+        notifications.error(
+          "Monthly usage limit reached. We're exploring options to expand this soon. Questions? Contact support@budibase.com"
+        )
+      } else if ("message" in e) {
+        notifications.error(`Unable to generate code: ${e.message}`)
+      } else {
+        notifications.error(`Unable to generate code.`)
+      }
     }
   }
 
@@ -72,30 +78,29 @@
       prompt: promptText,
     })
     dispatch("reject", { code: previousContents })
-    reset()
+    reset(false)
   }
 
-  function reset() {
+  function reset(clearPrompt: boolean = true) {
+    if (clearPrompt) {
+      promptText = ""
+      inputValue = ""
+    }
     suggestedCode = null
     previousContents = null
-  }
-
-  function calculateExpandedWidth() {
-    return parentWidth
-      ? `${Math.min(Math.max(parentWidth * 0.8, 300), 600)}px`
-      : "300px"
+    expanded = false
   }
 </script>
 
-<div class="ai-gen-container" style="--container-width: {containerWidth}">
+<div class="ai-gen-container" class:expanded>
   {#if suggestedCode !== null}
     <div class="floating-actions">
-      <ActionButton size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
+      <Button cta size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
         Accept
-      </ActionButton>
-      <ActionButton size="S" icon="Delete" on:click={rejectSuggestion}>
-        Reject
-      </ActionButton>
+      </Button>
+      <Button primary size="S" icon="Delete" on:click={rejectSuggestion}
+        >Reject</Button
+      >
     </div>
   {/if}
 
@@ -103,41 +108,36 @@
     placeholder="Generate with AI"
     onSubmit={generateJs}
     bind:expanded
-    on:collapse={rejectSuggestion}
+    bind:value={inputValue}
     readonly={!!suggestedCode}
-    {expandedOnly}
+    expandedOnly={shouldAlwaysBeExpanded}
   />
 </div>
 
 <style>
   .ai-gen-container {
     height: 40px;
-    --container-width: auto;
     position: absolute;
-    right: 10px;
-    bottom: 10px;
-    width: var(--container-width);
+    bottom: var(--spacing-s);
+    right: var(--spacing-s);
     display: flex;
     overflow: visible;
+    transition: width 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    width: 22ch;
   }
 
-  @keyframes border-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+  .ai-gen-container.expanded {
+    width: calc(100% - var(--spacing-s) * 2);
   }
 
   .floating-actions {
     position: absolute;
     display: flex;
     gap: var(--spacing-s);
-    bottom: calc(100% + 5px);
-    left: 5px;
+    bottom: calc(100% + var(--spacing-s));
     z-index: 2;
     animation: fade-in 0.2s ease-out forwards;
+    width: 100%;
   }
 
   @keyframes fade-in {

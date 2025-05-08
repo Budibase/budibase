@@ -9,7 +9,6 @@
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher, onDestroy } from "svelte"
   import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
-
   import {
     autocompletion,
     closeBrackets,
@@ -52,17 +51,12 @@
   import type { Extension } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
-  import { themeStore } from "@/stores/portal"
-  import {
-    type EnrichedBinding,
-    FeatureFlag,
-    type EditorMode,
-  } from "@budibase/types"
+  import { featureFlags, themeStore } from "@/stores/portal"
+  import { type EnrichedBinding, type EditorMode } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
   import type { BindingCompletion, CodeValidator } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
-  import { featureFlag } from "@/helpers"
   import AIGen from "./AIGen.svelte"
 
   export let label: string | undefined = undefined
@@ -88,6 +82,7 @@
   let isEditorInitialised = false
   let queuedRefresh = false
   let editorWidth: number | null = null
+  let isAIGeneratedContent = false
 
   // Theming!
   let currentTheme = $themeStore?.theme
@@ -101,9 +96,7 @@
   }
 
   $: aiGenEnabled =
-    featureFlag.isEnabled(FeatureFlag.AI_JS_GENERATION) &&
-    mode.name === "javascript" &&
-    !readonly
+    $featureFlags.AI_JS_GENERATION && mode.name === "javascript" && !readonly
 
   $: {
     if (autofocus && isEditorInitialised) {
@@ -422,13 +415,15 @@
     })
   }
 
-  // Handle AI generation code updates
   const handleAICodeUpdate = (event: CustomEvent<{ code: string }>) => {
     const { code } = event.detail
     value = code
     editor.dispatch({
       changes: { from: 0, to: editor.state.doc.length, insert: code },
     })
+    isAIGeneratedContent = true
+    dispatch("change", code)
+    dispatch("ai_suggestion")
   }
 
   onMount(() => {
@@ -462,7 +457,12 @@
   </div>
 {/if}
 
-<div class={`code-editor ${mode?.name || ""}`} bind:this={editorEle}>
+<div
+  class={`code-editor ${mode?.name || ""} ${
+    isAIGeneratedContent ? "ai-generated" : ""
+  }`}
+  bind:this={editorEle}
+>
   <div tabindex="-1" bind:this={textarea} />
 </div>
 
@@ -475,6 +475,7 @@
     on:accept={() => {
       dispatch("change", editor.state.doc.toString())
       dispatch("blur", editor.state.doc.toString())
+      isAIGeneratedContent = false
     }}
     on:reject={event => {
       const { code } = event.detail
@@ -482,6 +483,8 @@
       editor.dispatch({
         changes: { from: 0, to: editor.state.doc.length, insert: code || "" },
       })
+      isAIGeneratedContent = false
+      dispatch("change", code || "")
     }}
   />
 {/if}
@@ -690,5 +693,20 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+
+  .code-editor.ai-generated :global(.cm-editor) {
+    background: var(--spectrum-global-color-blue-50) !important;
+  }
+
+  .code-editor.ai-generated :global(.cm-content) {
+    background: transparent !important;
+  }
+
+  .code-editor.ai-generated :global(.cm-line) {
+    background: #765ffe1a !important;
+    display: inline-block;
+    min-width: fit-content;
+    padding-right: 2px !important;
   }
 </style>

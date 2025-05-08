@@ -8,13 +8,12 @@
     userStore,
     deploymentStore,
   } from "@/stores/builder"
-  import { auth, appsStore } from "@/stores/portal"
+  import { appsStore } from "@/stores/portal"
   import {
     Icon,
     Tabs,
     Tab,
     Heading,
-    Modal,
     notifications,
     TooltipPosition,
   } from "@budibase/bbui"
@@ -23,13 +22,8 @@
   import { isActive, url, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "@/helpers"
   import { onMount, onDestroy } from "svelte"
-  import VerificationPromptBanner from "@/components/common/VerificationPromptBanner.svelte"
-  import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
-  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
-  import TourPopover from "@/components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import { UserAvatars } from "@budibase/frontend-core"
-  import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import UpdateAppTopNav from "@/components/common/UpdateAppTopNav.svelte"
@@ -38,10 +32,8 @@
 
   let promise = getPackage()
   let hasSynced = false
-  let commandPaletteModal
   let loaded = false
 
-  $: loaded && initTour()
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
@@ -79,28 +71,6 @@
     $goto($builderStore.previousTopNavPath[path] || path)
   }
 
-  // Event handler for the command palette
-  const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      commandPaletteModal.toggle()
-    }
-  }
-
-  const initTour = async () => {
-    // Check if onboarding is enabled.
-    if (!$auth.user?.onboardedAt) {
-      builderStore.startBuilderOnboarding()
-    } else {
-      // Feature tour date
-      const release_date = new Date("2023-03-01T00:00:00.000Z")
-      const onboarded = new Date($auth.user?.onboardedAt)
-      if (onboarded < release_date) {
-        builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
-      }
-    }
-  }
-
   onMount(async () => {
     if (!hasSynced && application) {
       try {
@@ -119,14 +89,11 @@
   })
 </script>
 
-<TourPopover />
-
 {#if $builderStore.builderSidePanel}
   <BuilderSidePanel />
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
-  <VerificationPromptBanner />
   <div class="top-nav">
     {#if $appStore.initialised}
       <div class="topleftnav">
@@ -135,17 +102,15 @@
         </a>
         <Tabs {selected} size="M">
           {#each $layout.children as { path, title }}
-            <TourWrap stepKeys={[`builder-${title}-section`]}>
-              <Tab
-                link
-                href={$url(path)}
-                quiet
-                selected={$isActive(path)}
-                on:click={() => topItemNavigate(path)}
-                title={capitalise(title)}
-                id={`builder-${title}-tab`}
-              />
-            </TourWrap>
+            <Tab
+              link
+              href={$url(path)}
+              quiet
+              selected={$isActive(path)}
+              on:click={() => topItemNavigate(path)}
+              title={capitalise(title)}
+              id={`builder-${title}-tab`}
+            />
           {/each}
         </Tabs>
       </div>
@@ -183,11 +148,6 @@
 {#if $previewStore.showPreview}
   <PreviewOverlay />
 {/if}
-
-<svelte:window on:keydown={handleKeyDown} />
-<Modal bind:this={commandPaletteModal} zIndex={999999}>
-  <CommandPalette />
-</Modal>
 
 <EnterpriseBasicTrialModal />
 

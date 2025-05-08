@@ -28,7 +28,6 @@
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { datasources, tables } from "@/stores/builder"
-  import { licensing } from "@/stores/portal"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "@/constants"
   import {
     DB_TYPE_EXTERNAL,
@@ -137,8 +136,6 @@
   ]
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
-  $: aiEnabled =
-    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
   $: if (hasPrimaryDisplay && editableColumn.constraints) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
@@ -559,10 +556,8 @@
         FIELDS.SIGNATURE_SINGLE,
         FIELDS.JSON,
         FIELDS.AUTO,
+        FIELDS.AI,
       ]
-      if (aiEnabled) {
-        fields.push(FIELDS.AI)
-      }
       return fields
     }
     if (isExternalTable && isSqlTable) {

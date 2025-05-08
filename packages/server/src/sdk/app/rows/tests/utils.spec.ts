@@ -375,4 +375,31 @@ describe("validate", () => {
       })
     })
   })
+
+  describe("primary display", () => {
+    const getTable = (): Table => ({
+      type: "table",
+      _id: generateTableID(),
+      name: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
+      primaryDisplay: "foo",
+      schema: {
+        foo: {
+          name: "foo",
+          type: FieldType.STRING,
+        },
+      },
+    })
+
+    it("should always require primary display column", async () => {
+      const row = {}
+      const table = getTable()
+      const output = await validate({ source: table, row })
+      expect(output.valid).toBe(false)
+      expect(output.errors).toStrictEqual({
+        foo: ["can't be blank"],
+      })
+    })
+  })
 })

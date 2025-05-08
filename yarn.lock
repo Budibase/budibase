@@ -13168,6 +13168,13 @@ http-errors@~1.6.2:
     setprototypeof "1.1.0"
     statuses ">= 1.4.0 < 2"
 
+http-graceful-shutdown@^3.1.12:
+  version "3.1.14"
+  resolved "https://registry.yarnpkg.com/http-graceful-shutdown/-/http-graceful-shutdown-3.1.14.tgz#a4d48ac5d985da18b4d35c050acd3ef10f02113d"
+  integrity sha512-aTbGAZDUtRt7gRmU+li7rt5WbJeemULZHLNrycJ1dRBU80Giut6NvzG8h5u1TW1zGHXkPGpEtoEKhPKogIRKdA==
+  dependencies:
+    debug "^4.3.4"
+
 http-proxy-agent@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/http-proxy-agent/-/http-proxy-agent-4.0.1.tgz#8a8c8ef7f5932ccf953c296ca8291b95aa74aa3a"

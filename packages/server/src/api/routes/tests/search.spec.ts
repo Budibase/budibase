@@ -1897,7 +1897,7 @@ if (descriptions.length) {
                   tableOrViewId = await createTableOrView({
                     product: { name: "product", type: FieldType.STRING },
                     ai: {
-                      name: "AI",
+                      name: "ai",
                       type: FieldType.AI,
                       operation: AIOperationEnum.PROMPT,
                       prompt: "Translate '{{ product }}' into German",
