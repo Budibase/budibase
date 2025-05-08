@@ -1,26 +1,30 @@
-<script>
+<script lang="ts">
   import { Body, ModalContent, Layout } from "@budibase/bbui"
   import { datasources as datasourcesStore } from "@/stores/builder"
   import ICONS from "@/components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "@/constants"
   import { createEventDispatcher } from "svelte"
   import TableOrViewOption from "./TableOrViewOption.svelte"
+  import type { SourceOption } from "./utils"
   import { makeTableOption, makeViewOption } from "./utils"
+  import type { Datasource, Table, UIInternalDatasource } from "@budibase/types"
+  import { helpers } from "@budibase/shared-core"
 
-  export let onConfirm
-  export let selectedTablesAndViews
+  export let onConfirm: () => Promise<void>
+  export let selectedTablesAndViews: SourceOption[]
 
   const dispatch = createEventDispatcher()
 
-  const getViews = table => {
-    const views = Object.values(table.views || {}).filter(
-      view => view.version === 2
-    )
+  const getViews = (table: Table) => {
+    const views = Object.values(table.views || {}).filter(helpers.views.isV2)
     return views.map(makeViewOption)
   }
 
-  const getTablesAndViews = (datasource, datasources) => {
-    let tablesAndViews = []
+  const getTablesAndViews = (
+    datasource: Datasource | UIInternalDatasource,
+    datasources: (Datasource | UIInternalDatasource)[]
+  ) => {
+    let tablesAndViews: SourceOption[] = []
     const tables = Array.isArray(datasource.entities)
       ? datasource.entities
       : Object.values(datasource.entities ?? {})
@@ -41,7 +45,9 @@
     return tablesAndViews
   }
 
-  const getDatasources = rawDatasources => {
+  const getDatasources = (
+    rawDatasources: (Datasource | UIInternalDatasource)[]
+  ) => {
     const datasources = []
 
     for (const rawDatasource of rawDatasources) {
@@ -66,7 +72,7 @@
 
   $: datasources = getDatasources($datasourcesStore.list)
 
-  const toggleSelection = tableOrView => {
+  const toggleSelection = (tableOrView: SourceOption) => {
     dispatch("toggle", tableOrView)
   }
 </script>

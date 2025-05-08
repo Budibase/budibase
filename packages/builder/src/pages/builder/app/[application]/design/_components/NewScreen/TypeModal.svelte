@@ -1,20 +1,34 @@
-<script>
+<script lang="ts">
   import { ModalContent, Layout, Body } from "@budibase/bbui"
 
-  let selectedType = null
+  type SelectableType = {
+    id: string
+    title: string
+    description: string
+    img: {
+      src: string
+      alt: string
+    }
+  }
 
-  export let title
-  export let types
-  export let onCancel = () => {}
-  export let onConfirm = () => {}
-  export let showCancelButton = true
+  export let title: string
+  export let types: SelectableType[]
+  export let onConfirm: (_selectedType: string) => Promise<void>
+  export let onCancel: () => void
+  export let showCancelButton: boolean = true
+
+  let selectedType: string | null = null
+
+  function confirm() {
+    onConfirm(selectedType!)
+  }
 </script>
 
 <ModalContent
   {title}
   confirmText="Done"
   cancelText="Back"
-  onConfirm={() => onConfirm(selectedType)}
+  onConfirm={confirm}
   {onCancel}
   disabled={!selectedType}
   size="L"
@@ -33,7 +47,7 @@
           <img alt={type.img.alt} src={type.img.src} />
         </div>
         <div class="typeContent">
-          <Body noPadding>{type.title}</Body>
+          <Body>{type.title}</Body>
           <Body size="S">{type.description}</Body>
         </div>
       </div>
