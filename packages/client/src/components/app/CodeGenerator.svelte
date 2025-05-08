@@ -46,20 +46,16 @@
 
   onMount(() => {
     if (codeType === "Barcode") {
-      console.log("On mount, Barcode")
       generateBarcode()
     } else {
-      console.log("On mount, QR code")
       generateQr()
     }
   })
 
   afterUpdate(() => {
     if (codeType === "Barcode") {
-      console.log("After update, Barcode")
       generateBarcode()
     } else {
-      console.log("After update, QR code")
       generateQr()
     }
   })
