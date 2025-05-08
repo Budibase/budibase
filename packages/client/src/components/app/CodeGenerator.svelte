@@ -52,13 +52,18 @@
     }
   })
 
-  afterUpdate(() => {
-    if (codeType === "Barcode") {
-      generateBarcode()
-    } else {
-      generateQr()
-    }
-  })
+  $: if (codeType === "Barcode" && value && barcodeElement && size) {
+    generateBarcode()
+  }
+
+  $: if (
+    codeType === "QR Code" &&
+    value &&
+    qrContainer &&
+    (showLogo !== undefined || customLogo !== undefined || size || primColor)
+  ) {
+    generateQr()
+  }
 </script>
 
 <div
