@@ -4573,6 +4573,7 @@
         "label": "Size",
         "key": "size",
         "defaultValue": 200,
+        "required": true,
         "options": [
           {
             "label": "X Small",
