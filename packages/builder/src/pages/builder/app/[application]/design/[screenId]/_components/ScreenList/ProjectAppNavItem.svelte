@@ -71,7 +71,7 @@
 >
   <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
   <div slot="icon">
-    <Icon name={projectApp.icon} size="S" color={projectApp.iconColor} />
+    <Icon name={projectApp.icon} size="XS" color={projectApp.iconColor} />
   </div>
 </NavItem>
 

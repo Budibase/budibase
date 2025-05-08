@@ -25,7 +25,7 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
           _id: "default",
           urlPrefix: "/",
           name: "Default",
-          icon: "Add",
+          icon: "Monitoring",
           iconColor: "",
           screens: pkg.screens,
         },

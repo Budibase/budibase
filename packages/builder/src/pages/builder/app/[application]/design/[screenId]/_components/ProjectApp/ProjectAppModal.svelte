@@ -76,7 +76,11 @@
     if (isNew) {
       await projectAppStore.add(projectAppData)
     } else {
-      await projectAppStore.edit(projectAppData)
+      await projectAppStore.edit({
+        ...projectAppData,
+        _id: projectApp!._id,
+        _rev: projectApp!._rev,
+      })
     }
   }
 

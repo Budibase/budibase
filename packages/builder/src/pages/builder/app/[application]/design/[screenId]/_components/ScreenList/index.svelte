@@ -130,12 +130,6 @@
   on:cancel={() => (selectedProjectApp = undefined)}
 />
 
-<!-- <Modal
-  bind:this={projectAppModal}
-  on:cancel={() => (editingProjectApp = undefined)}
->
-  <ProjectAppModal projectApp={editingProjectApp} />
-</Modal> -->
 <style>
   .screens {
     display: flex;
