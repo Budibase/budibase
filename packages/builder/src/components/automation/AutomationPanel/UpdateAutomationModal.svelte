@@ -29,7 +29,7 @@
         ...automation,
         name,
       }
-      await automationStore.actions.save(updatedAutomation)
+      await automationStore.save(updatedAutomation)
       notifications.success(`Automation ${name} updated successfully`)
       hide()
     } catch (error) {

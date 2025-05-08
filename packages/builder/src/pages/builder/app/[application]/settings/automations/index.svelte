@@ -89,7 +89,7 @@
       const [length, units] = timeRange.split("-")
       startDate = dayjs().subtract(length, units)
     }
-    const response = await automationStore.actions.getLogs({
+    const response = await automationStore.getLogs({
       automationId,
       status,
       page,
@@ -144,7 +144,7 @@
   }
 
   onMount(async () => {
-    await automationStore.actions.fetch()
+    await automationStore.fetch()
     const params = new URLSearchParams(window.location.search)
     const shouldOpen = params.get("open") === ERROR
     const defaultAutoId = params.get("automationId")

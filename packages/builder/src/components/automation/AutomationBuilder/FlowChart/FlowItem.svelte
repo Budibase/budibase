@@ -1,6 +1,6 @@
 <script>
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, notifications } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { ActionStepID } from "@/constants/backend/automations"
@@ -79,7 +79,7 @@
 
   const loadSteps = blockRef => {
     return blockRef
-      ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
+      ? automationStore.getPathSteps(blockRef.pathTo, automation)
       : []
   }
 
@@ -167,8 +167,8 @@
         {/if}
         <div
           class="block-core"
-          on:click={async () => {
-            await automationStore.actions.selectNode(block.id)
+          on:click={() => {
+            automationStore.selectNode(block.id)
           }}
         >
           <div class="blockSection block-info">
@@ -176,8 +176,7 @@
               disabled
               {automation}
               {block}
-              on:update={e =>
-                automationStore.actions.updateBlockTitle(block, e.detail)}
+              on:update={e => automationStore.updateBlockTitle(block, e.detail)}
             />
           </div>
 
@@ -201,11 +200,17 @@
     {:else}
       <FlowItemActions
         {block}
-        on:branch={() => {
-          automationStore.actions.branchAutomation(
+        on:branch={async () => {
+          const updated = automationStore.branchAutomation(
             $selectedAutomation.blockRefs[block.id].pathTo,
             automation
           )
+          try {
+            await automationStore.save(updated)
+          } catch (e) {
+            notifications.error("Error adding branch to automation")
+            console.error("Error adding automation branch", e)
+          }
         }}
       />
     {/if}

@@ -23,17 +23,14 @@
   let environmentBindings: any[]
 
   // All bindings available to this point
-  $: availableBindings = automationStore.actions.getPathBindings(
-    block?.id,
-    automation
-  )
+  $: availableBindings = automationStore.getPathBindings(block?.id, automation)
 
   // Fetch the env bindings
   $: if ($memoEnvVariables) {
-    environmentBindings = automationStore.actions.buildEnvironmentBindings()
+    environmentBindings = automationStore.buildEnvironmentBindings()
   }
-  $: userBindings = automationStore.actions.buildUserBindings()
-  $: settingBindings = automationStore.actions.buildSettingBindings()
+  $: userBindings = automationStore.buildUserBindings()
+  $: settingBindings = automationStore.buildSettingBindings()
 
   // Combine all bindings for the step
   $: bindings = [

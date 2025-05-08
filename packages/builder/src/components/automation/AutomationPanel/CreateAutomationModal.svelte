@@ -28,12 +28,12 @@
 
   async function createAutomation() {
     try {
-      const trigger = automationStore.actions.constructBlock(
+      const trigger = automationStore.constructBlock(
         "TRIGGER",
         triggerVal.stepId,
         triggerVal
       )
-      const automation = await automationStore.actions.create(name, trigger)
+      const automation = await automationStore.create(name, trigger)
       if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
         webhookModal.show()
       }

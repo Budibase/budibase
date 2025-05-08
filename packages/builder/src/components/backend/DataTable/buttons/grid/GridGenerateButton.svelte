@@ -52,7 +52,7 @@
         getName: x => x.name,
       }
     )
-    const triggerBlock = automationStore.actions.constructBlock(
+    const triggerBlock = automationStore.constructBlock(
       "TRIGGER",
       triggerType.stepId,
       triggerType
@@ -61,7 +61,7 @@
     triggerBlock.inputs = { tableId: $datasource.tableId }
 
     try {
-      const response = await automationStore.actions.create(
+      const response = await automationStore.create(
         automationName,
         triggerBlock
       )

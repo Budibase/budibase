@@ -44,7 +44,7 @@
 
   $: isTrigger = block?.type === AutomationStepType.TRIGGER
   $: allSteps = automation?.definition.steps || []
-  $: blockDefinition = automationStore.actions.getBlockDefinition(block)
+  $: blockDefinition = automationStore.getBlockDefinition(block)
 
   // Put the type in the header if they change the name
   // Otherwise the info is obscured

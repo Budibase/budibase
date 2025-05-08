@@ -123,7 +123,7 @@ export const createBuilderWebsocket = (appId: string) => {
   socket.onOther(
     BuilderSocketEvent.AutomationChange,
     ({ id, automation }: { id: string; automation: Automation }) => {
-      automationStore.actions.replace(id, automation)
+      automationStore.replace(id, automation)
     }
   )
 

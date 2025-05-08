@@ -37,10 +37,7 @@
   $: lastStep = blockRef?.terminating
   $: pathSteps =
     block.id && $selectedAutomation?.data
-      ? automationStore.actions.getPathSteps(
-          blockRef.pathTo,
-          $selectedAutomation.data
-        )
+      ? automationStore.getPathSteps(blockRef.pathTo, $selectedAutomation.data)
       : []
 
   $: collectBlockExists = pathSteps?.some(
@@ -123,20 +120,29 @@
     selectedAction = action.name
 
     try {
-      const newBlock = automationStore.actions.constructBlock(
+      const newBlock = automationStore.constructBlock(
         BlockDefinitionTypes.ACTION,
         action.stepId,
         action
       )
-      await automationStore.actions.addBlockToAutomation(
+      const updated = automationStore.addBlockToAutomation(
+        $selectedAutomation.data!,
         newBlock,
         blockRef ? blockRef.pathTo : block.pathTo
       )
 
-      // Determine presence of the block before focusing
-      const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
-      const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
-      await automationStore.actions.selectNode(createdBlockLoc?.id)
+      if (updated) {
+        try {
+          await automationStore.save(updated)
+          // Determine presence of the block before focusing
+          const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
+          const createdBlockLoc = (createdBlock?.pathTo || []).at(-1)
+          automationStore.selectNode(createdBlockLoc?.id)
+        } catch (e) {
+          notifications.error("Error adding automation block")
+          console.error("Automation adding block ", e)
+        }
+      }
 
       modal.hide()
     } catch (error) {
