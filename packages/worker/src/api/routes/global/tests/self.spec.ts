@@ -47,13 +47,12 @@ describe("/api/global/self", () => {
     })
   })
 
-  it("should update onboarding", async () => {
+  it("should update free trial confirmation date", async () => {
     const user = await config.createUser()
     await config.createSession(user)
 
     const res = await config.api.self
       .updateSelf(user, {
-        onboardedAt: "2023-03-07T14:10:54.869Z",
         freeTrialConfirmedAt: "2024-03-17T14:10:54.869Z",
       })
       .expect(200)
@@ -61,7 +60,6 @@ describe("/api/global/self", () => {
     const dbUser = (await config.getUser(user.email))!
 
     user._rev = dbUser._rev
-    expect(dbUser.onboardedAt).toBe("2023-03-07T14:10:54.869Z")
     expect(dbUser.freeTrialConfirmedAt).toBe("2024-03-17T14:10:54.869Z")
     expect(res.body._id).toBe(user._id)
   })

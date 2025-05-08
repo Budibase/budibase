@@ -64,15 +64,15 @@ export interface User extends Document {
   status?: UserStatus
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
   userGroups?: string[]
-  onboardedAt?: string
   freeTrialConfirmedAt?: string
-  tours?: Record<string, Date>
   scimInfo?: { isSync: true } & Record<string, any>
   appFavourites?: string[]
   ssoId?: string
   appSort?: string
   budibaseAccess?: boolean
   accountPortalAccess?: boolean
+  onboardedAt?: string // deprecated and no longer saved
+  tours?: Record<string, Date> // deprecated and no longer saved
 }
 
 export interface UserBindings extends Document {
