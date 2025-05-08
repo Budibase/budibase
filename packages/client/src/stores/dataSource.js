@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { API } from "@/api"
-import { FieldTypes } from "../constants"
+import { FieldTypes, PeekMessages } from "@/constants"
 import { routeStore } from "./routes"
 
 export const createDataSourceStore = () => {
@@ -72,7 +72,7 @@ export const createDataSourceStore = () => {
     const inModal = get(routeStore).queryParams?.peek
     if (inModal) {
       window.parent.postMessage({
-        type: "invalidate-datasource",
+        type: PeekMessages.INVALIDATE_DATASOURCE,
         detail: { dataSourceId, options },
       })
     }
@@ -117,6 +117,15 @@ export const createDataSourceStore = () => {
 
   const refreshAll = () => {
     get(store).forEach(instance => instance.refresh())
+
+    // Emit this as a window event, so parent screens which are iframing us in
+    // can also refresh all datasources
+    const inModal = get(routeStore).queryParams?.peek
+    if (inModal) {
+      window.parent.postMessage({
+        type: PeekMessages.REFRESH_ALL_DATASOURCES,
+      })
+    }
   }
 
   return {
