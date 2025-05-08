@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Layout, Modal } from "@budibase/bbui"
+  import { Layout } from "@budibase/bbui"
   import { contextMenuStore, sortedScreens } from "@/stores/builder"
   import ScreenNavItem from "./ScreenNavItem.svelte"
   import { goto } from "@roxi/routify"
@@ -19,8 +19,8 @@
   let screensContainer: HTMLDivElement
   let scrolling = false
 
-  let projectAppModal: Modal
-  let editingProjectApp: ProjectApp | undefined
+  let projectAppModal: ProjectAppModal
+  let selectedProjectApp: ProjectApp | undefined
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
@@ -80,7 +80,7 @@
   }
 
   function onEditProjectApp(projectApp: ProjectApp) {
-    editingProjectApp = projectApp
+    selectedProjectApp = projectApp
     projectAppModal.show()
   }
 </script>
@@ -124,13 +124,18 @@
   />
 </div>
 
-<Modal
+<ProjectAppModal
+  bind:this={projectAppModal}
+  projectApp={selectedProjectApp}
+  on:cancel={() => (selectedProjectApp = undefined)}
+/>
+
+<!-- <Modal
   bind:this={projectAppModal}
   on:cancel={() => (editingProjectApp = undefined)}
 >
   <ProjectAppModal projectApp={editingProjectApp} />
-</Modal>
-
+</Modal> -->
 <style>
   .screens {
     display: flex;

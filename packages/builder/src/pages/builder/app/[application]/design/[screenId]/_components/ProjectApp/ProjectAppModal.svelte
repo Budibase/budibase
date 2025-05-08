@@ -1,24 +1,20 @@
 <script lang="ts">
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { projectAppStore } from "@/stores/builder"
-  import { Input, keepOpen, Label, ModalContent } from "@budibase/bbui"
+  import { Input, keepOpen, Label, Modal, ModalContent } from "@budibase/bbui"
   import type { ProjectApp } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
 
   export let projectApp: ProjectApp | null = null
 
+  let modal: Modal
+  export const show = () => modal.show()
+
   let errors: Partial<Record<keyof ProjectApp, string>> = {}
+  let data: ProjectApp
 
   $: isNew = !projectApp
-
-  let data: ProjectApp
-  $: data = projectApp ?? {
-    name: "",
-    urlPrefix: "",
-    icon: "",
-    iconColor: "",
-  }
 
   $: title = isNew ? "Create new app" : "Edit app"
 
@@ -58,6 +54,17 @@
     return validationResult
   }
 
+  function onShow() {
+    data = {
+      _id: projectApp?._id,
+      _rev: projectApp?._rev,
+      name: projectApp?.name ?? "",
+      urlPrefix: projectApp?.urlPrefix ?? "",
+      icon: projectApp?.icon ?? "",
+      iconColor: projectApp?.iconColor ?? "",
+    }
+  }
+
   async function onConfirm() {
     const validationResult = validateProjectApp(data)
     if (validationResult.error) {
@@ -72,22 +79,29 @@
       await projectAppStore.edit(projectAppData)
     }
   }
+
+  async function onEnterKey() {
+    await onConfirm()
+    modal.hide()
+  }
 </script>
 
-<ModalContent {title} {onConfirm}>
-  <Input
-    label="App Name"
-    on:enterkey={onConfirm}
-    bind:value={data.name}
-    error={errors.name}
-  />
-  <Input
-    label="Project url"
-    on:enterkey={onConfirm}
-    bind:value={data.urlPrefix}
-    error={errors.urlPrefix}
-  />
+<Modal bind:this={modal} on:show={onShow}>
+  <ModalContent {title} {onConfirm}>
+    <Input
+      label="App Name"
+      on:enterkey={onEnterKey}
+      bind:value={data.name}
+      error={errors.name}
+    />
+    <Input
+      label="Project url"
+      on:enterkey={onEnterKey}
+      bind:value={data.urlPrefix}
+      error={errors.urlPrefix}
+    />
 
-  <Label size="L">Icon</Label>
-  <EditableIcon bind:name={data.icon} bind:color={data.iconColor} />
-</ModalContent>
+    <Label size="L">Icon</Label>
+    <EditableIcon bind:name={data.icon} bind:color={data.iconColor} />
+  </ModalContent>
+</Modal>

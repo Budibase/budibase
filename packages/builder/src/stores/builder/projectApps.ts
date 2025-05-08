@@ -46,6 +46,10 @@ export class ProjectAppStore extends BudiStore<ProjectAppStoreState> {
       const index = state.projectApps.findIndex(
         app => app._id === projectApp._id
       )
+      if (index === -1) {
+        throw new Error(`App not found with id "${projectApp._id}"`)
+      }
+
       state.projectApps[index] = {
         ...projectApp,
         screens: state.projectApps[index].screens,
