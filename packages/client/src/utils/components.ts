@@ -1,7 +1,12 @@
+import { Component } from "@budibase/types"
+
 /**
  * Finds a component instance by ID
  */
-export const findComponentById = (component, componentId) => {
+export const findComponentById = (
+  component: Component | undefined,
+  componentId: string | undefined
+): Component | null => {
   if (!component || !componentId) {
     return null
   }
@@ -23,7 +28,11 @@ export const findComponentById = (component, componentId) => {
 /**
  * Finds the component path to a component
  */
-export const findComponentPathById = (component, componentId, path = []) => {
+export const findComponentPathById = (
+  component: Component | undefined,
+  componentId: string | undefined,
+  path: Component[] = []
+): Component[] | null => {
   if (!component || !componentId) {
     return null
   }
@@ -46,7 +55,11 @@ export const findComponentPathById = (component, componentId, path = []) => {
 /**
  * Finds all children instances of a certain component type of a given component
  */
-export const findChildrenByType = (component, type, children = []) => {
+export const findChildrenByType = (
+  component: Component | undefined,
+  type: string,
+  children: Component[] = []
+): Component[] | undefined => {
   if (!component) {
     return
   }
@@ -64,7 +77,11 @@ export const findChildrenByType = (component, type, children = []) => {
 /**
  * Recursively searches for the parent component of a specific component ID
  */
-export const findComponentParent = (rootComponent, id, parentComponent) => {
+export const findComponentParent = (
+  rootComponent: Component | undefined,
+  id: string,
+  parentComponent: Component
+): Component | null => {
   if (!rootComponent || !id) {
     return null
   }
