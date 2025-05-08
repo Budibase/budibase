@@ -75,7 +75,8 @@
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
     "server-destroy": "1.0.1",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "http-graceful-shutdown": "^3.1.12"
   },
   "devDependencies": {
     "@jest/types": "^29.6.3",
