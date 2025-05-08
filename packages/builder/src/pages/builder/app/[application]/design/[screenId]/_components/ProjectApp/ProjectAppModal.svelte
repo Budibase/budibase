@@ -81,7 +81,11 @@
   }
 
   async function onEnterKey() {
-    await onConfirm()
+    const result = await onConfirm()
+    if (result === keepOpen) {
+      return result
+    }
+
     modal.hide()
   }
 </script>
