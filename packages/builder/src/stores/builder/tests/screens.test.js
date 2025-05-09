@@ -247,7 +247,6 @@ describe("Screens store", () => {
 
     expect(bb.store.screens[0]).toStrictEqual({
       ...newDoc,
-      projectAppId: undefined,
     })
 
     expect(bb.store.selectedScreenId).toBe(newDocId)
