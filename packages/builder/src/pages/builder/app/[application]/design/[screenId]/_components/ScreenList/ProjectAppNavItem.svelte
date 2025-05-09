@@ -70,18 +70,20 @@
   }
 </script>
 
-<NavItem
-  on:contextmenu={openContextMenu}
-  indentLevel={0}
-  text={projectApp.name}
-  showTooltip
-  nonSelectable
->
-  <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
-  <div slot="icon">
-    <Icon name={projectApp.icon} size="XS" color={projectApp.iconColor} />
-  </div>
-</NavItem>
+<div class="project-app-nav-item">
+  <NavItem
+    on:contextmenu={openContextMenu}
+    indentLevel={0}
+    text={projectApp.name}
+    showTooltip
+    nonSelectable
+  >
+    <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
+    <div slot="icon">
+      <Icon name={projectApp.icon} size="XS" color={projectApp.iconColor} />
+    </div>
+  </NavItem>
+</div>
 
 <div class="screens">
   {#each projectApp.screens as screen (screen._id)}
@@ -109,7 +111,15 @@
     border-radius: 4px;
   }
 
+  .screens :global(.nav-item-content) {
+    padding-left: 8px;
+  }
+
   .no-results {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .project-app-nav-item :global(.nav-item-content .icon) {
+    margin-right: 4px;
   }
 </style>
