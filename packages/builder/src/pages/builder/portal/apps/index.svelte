@@ -26,15 +26,18 @@
     licensing,
     enrichedApps,
     sortBy,
+    templates,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
+  import TemplatesModal from "@/components/start/TemplatesModal.svelte"
 
   let template
   let creationModal
   let appLimitModal
   let accountLockedModal
+  let templatesModal
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
@@ -91,8 +94,6 @@
   const initiateAppCreation = async () => {
     if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
-    } else if ($appsStore.apps?.length) {
-      $goto("/builder/portal/apps/create")
     } else {
       template = null
       creationModal.show()
@@ -120,6 +121,7 @@
       data.append("name", appName)
       data.append("useTemplate", true)
       data.append("templateKey", template.key)
+      data.append("isOnboarding", "false")
 
       // Create App
       const createdApp = await API.createApp(data)
@@ -159,6 +161,12 @@
     }
   }
 
+  const handleTemplateSelect = selectedTemplate => {
+    template = selectedTemplate
+    templatesModal.hide()
+    autoCreateApp()
+  }
+
   onMount(async () => {
     try {
       // If the portal is loaded from an external URL with a template param
@@ -170,6 +178,7 @@
       if (usersLimitLockAction) {
         usersLimitLockAction()
       }
+      await templates.load()
     } catch (error) {
       notifications.error("Error getting init info")
     }
@@ -224,20 +233,19 @@
               >
                 Create new app
               </Button>
-              {#if $appsStore.apps?.length > 0 && !$admin.offlineMode}
+
+              {#if $appsStore.apps?.length > 0}
+                {#if !$admin.offlineMode}
+                  <Button
+                    size="M"
+                    secondary
+                    on:click={usersLimitLockAction || templatesModal.show}
+                  >
+                    View templates
+                  </Button>
+                {/if}
                 <Button
                   size="M"
-                  secondary
-                  on:click={usersLimitLockAction ||
-                    $goto("/builder/portal/apps/templates")}
-                >
-                  View templates
-                </Button>
-              {/if}
-              {#if !$appsStore.apps?.length}
-                <Button
-                  size="L"
-                  quiet
                   secondary
                   on:click={usersLimitLockAction || initiateAppImport}
                 >
@@ -306,6 +314,10 @@
   on:hide={stopAppCreation}
 >
   <CreateAppModal {template} />
+</Modal>
+
+<Modal bind:this={templatesModal}>
+  <TemplatesModal onSelectTemplate={handleTemplateSelect} />
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />

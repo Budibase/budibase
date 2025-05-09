@@ -12,6 +12,7 @@ export interface TemplateMetadata {
   type: TemplateType
   key: string
   image: string
+  new: boolean
 }
 
 export type FetchTemplateResponse = TemplateMetadata[]
