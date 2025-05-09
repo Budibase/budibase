@@ -2008,6 +2008,20 @@ const automationActions = (store: AutomationStore) => ({
       }
     })
   },
+
+  openActionPanel: (block: BlockRef) => {
+    store.update(state => ({
+      ...state,
+      actionPanelBlock: block,
+      selectedNodeId: undefined,
+    }))
+  },
+  closeActionPanel: () => {
+    store.update(state => ({
+      ...state,
+      actionPanelBlock: undefined,
+    }))
+  },
 })
 
 export interface AutomationContext {

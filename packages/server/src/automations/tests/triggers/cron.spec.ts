@@ -51,7 +51,7 @@ describe("cron trigger", () => {
   })
 
   it("should fail if the cron expression is invalid", async () => {
-    await createAutomationBuilder(config)
+    const { automation } = await createAutomationBuilder(config)
       .onCron({ cron: "* * * * * *" })
       .serverLog({
         text: "Hello, world!",
@@ -61,8 +61,7 @@ describe("cron trigger", () => {
     await config.api.application.publish(config.getAppId(), {
       status: 500,
       body: {
-        message:
-          'Deployment Failed: Invalid automation CRON "* * * * * *" - Expected 5 values, but got 6.',
+        message: `Deployment Failed: Failed to enable CRON trigger for automation "${automation.name}": Invalid automation CRON "* * * * * *" - Expected 5 values, but got 6.`,
       },
     })
   })

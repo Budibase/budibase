@@ -12,6 +12,7 @@
     selectedAutomation,
   } from "@/stores/builder"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
+  import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -68,6 +69,13 @@
     </div>
   {/if}
 
+  {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
+    <SelectStepSidePanel
+      block={$automationStore.actionPanelBlock}
+      onClose={() => automationStore.actions.closeActionPanel()}
+    />
+  {/if}
+
   <Modal bind:this={modal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -118,7 +126,7 @@
     background-color: var(--background);
     overflow: auto;
     grid-column: 3;
-    width: 360px;
-    max-width: 360px;
+    width: 400px;
+    max-width: 400px;
   }
 </style>
