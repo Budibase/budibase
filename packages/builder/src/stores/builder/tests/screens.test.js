@@ -245,7 +245,10 @@ describe("Screens store", () => {
 
     expect(bb.store.screens.length).toBe(1)
 
-    expect(bb.store.screens[0]).toStrictEqual(newDoc)
+    expect(bb.store.screens[0]).toStrictEqual({
+      ...newDoc,
+      projectAppId: undefined,
+    })
 
     expect(bb.store.selectedScreenId).toBe(newDocId)
 
@@ -808,6 +811,10 @@ describe("Screens store", () => {
       screen.name = "updated"
     }, existingDocId)
 
-    expect(saveSpy).toBeCalledWith({ ...original, name: "updated" })
+    expect(saveSpy).toBeCalledWith({
+      ...original,
+      projectAppId: "default",
+      name: "updated",
+    })
   })
 })
