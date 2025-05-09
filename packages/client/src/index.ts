@@ -58,7 +58,7 @@ loadSpectrumIcons()
 declare global {
   interface Window {
     // Data from builder
-    "##BUDIBASE_APP_ID##"?: string
+    "##BUDIBASE_APP_ID##": string
     "##BUDIBASE_IN_BUILDER##"?: true
     "##BUDIBASE_PREVIEW_SCREEN##"?: Screen
     "##BUDIBASE_SELECTED_COMPONENT_ID##"?: string
