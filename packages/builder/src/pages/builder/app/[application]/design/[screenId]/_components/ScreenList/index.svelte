@@ -5,7 +5,7 @@
   import { projectAppStore } from "@/stores/builder/projectApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
-  import type { ProjectApp, Screen } from "@budibase/types"
+  import type { ProjectApp, Screen, UIProjectApp } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import ProjectAppModal from "../ProjectApp/ProjectAppModal.svelte"
   import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
@@ -24,12 +24,14 @@
   let selectedProjectApp: ProjectApp | undefined
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
+  $: filteredProjectApps = getFilteredProjectApps(
+    $projectAppStore.projectApps,
+    searchValue
+  )
 
   const handleOpenSearch = async () => {
     screensContainer.scroll({ top: 0, behavior: "smooth" })
   }
-
-  $: projectApps = $projectAppStore.projectApps
 
   $: {
     if (searching) {
@@ -41,6 +43,24 @@
     return screens.filter(screen => {
       return !searchValue || screen.routing.route.includes(searchValue)
     })
+  }
+
+  const getFilteredProjectApps = (
+    projectApps: UIProjectApp[],
+    searchValue: string
+  ) => {
+    if (!searchValue) {
+      return projectApps
+    }
+
+    const filteredProjects: UIProjectApp[] = []
+    for (const projectApp of projectApps) {
+      filteredProjects.push({
+        ...projectApp,
+        screens: getFilteredScreens(projectApp.screens, searchValue),
+      })
+    }
+    return filteredProjects
   }
 
   const handleScroll = (e: any) => {
@@ -97,7 +117,7 @@
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
     {#if projectAppsEnabled}
-      {#each projectApps as projectApp}
+      {#each filteredProjectApps as projectApp}
         <ProjectAppNavItem
           {projectApp}
           on:edit={() => onEditProjectApp(projectApp)}
