@@ -6,6 +6,7 @@
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
   import { Divider } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
+  import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
 </script>
@@ -21,6 +22,7 @@
         {#if $appStore.clientFeatures.devicePreview}
           <DevicePreviewSelect />
         {/if}
+        <ThemeSettings />
         <Divider vertical />
       {/if}
       <ScreenErrorsButton />
