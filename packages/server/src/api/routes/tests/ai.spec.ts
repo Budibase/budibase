@@ -273,6 +273,15 @@ describe("BudibaseAI", () => {
     config.end()
   })
 
+  async function getQuotaUsage() {
+    return await context.doInSelfHostTenantUsingCloud(
+      config.getTenantId(),
+      async () => {
+        return await quotas.getQuotaUsage()
+      }
+    )
+  }
+
   describe("POST /api/ai/chat", () => {
     let licenseKey = "test-key"
     let internalApiKey = "api-key"
@@ -312,26 +321,26 @@ describe("BudibaseAI", () => {
         .reply(200, license)
     })
 
-    async function getQuotaUsage() {
-      return await context.doInSelfHostTenantUsingCloud(
-        config.getTenantId(),
-        async () => {
-          return await quotas.getQuotaUsage()
-        }
-      )
-    }
-
     it("handles correct chat response", async () => {
       let usage = await getQuotaUsage()
       expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       mockChatGPTResponse("Hi there!")
-      const { message } = await config.api.ai.chat({
+      const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         licenseKey: licenseKey,
       })
-      expect(message).toBe("Hi there!")
+      expect(messages).toEqual([
+        {
+          role: "user",
+          content: "Hello!",
+        },
+        {
+          role: "assistant",
+          content: "Hi there!",
+        },
+      ])
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
@@ -384,12 +393,21 @@ describe("BudibaseAI", () => {
 
       const gptResponse = generator.word()
       mockChatGPTResponse(gptResponse, { format: "text" })
-      const { message } = await config.api.ai.chat({
+      const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "text",
         licenseKey: licenseKey,
       })
-      expect(message).toBe(gptResponse)
+      expect(messages).toEqual([
+        {
+          role: "user",
+          content: "Hello!",
+        },
+        {
+          role: "assistant",
+          content: gptResponse,
+        },
+      ])
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
@@ -404,12 +422,21 @@ describe("BudibaseAI", () => {
         [generator.word()]: generator.word(),
       })
       mockChatGPTResponse(gptResponse, { format: "json" })
-      const { message } = await config.api.ai.chat({
+      const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "json",
         licenseKey: licenseKey,
       })
-      expect(message).toBe(gptResponse)
+      expect(messages).toEqual([
+        {
+          role: "user",
+          content: "Hello!",
+        },
+        {
+          role: "assistant",
+          content: gptResponse,
+        },
+      ])
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
@@ -428,12 +455,21 @@ describe("BudibaseAI", () => {
         "key"
       )
       mockChatGPTResponse(gptResponse, { format: structuredOutput })
-      const { message } = await config.api.ai.chat({
+      const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: structuredOutput,
         licenseKey: licenseKey,
       })
-      expect(message).toBe(gptResponse)
+      expect(messages).toEqual([
+        {
+          role: "user",
+          content: "Hello!",
+        },
+        {
+          role: "assistant",
+          content: gptResponse,
+        },
+      ])
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)

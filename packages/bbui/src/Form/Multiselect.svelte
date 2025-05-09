@@ -11,8 +11,12 @@
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
   export let options: Option[] = []
-  export let getOptionLabel = (option: Option) => option
-  export let getOptionValue = (option: Option) => option
+  export let getOptionLabel: (_: Option) => Option | string = (
+    option: Option
+  ) => option
+  export let getOptionValue: (_: Option) => Option | string = (
+    option: Option
+  ) => option
   export let sort = false
   export let autoWidth = false
   export let autocomplete = false
