@@ -100,6 +100,20 @@
       comp: ExecuteScriptV2,
       fullWidth: true,
     },
+    [SchemaFieldTypes.LONGFORM]: {
+      comp: DrawerBindableInput,
+      props: (opts: FieldProps = {} as FieldProps) => {
+        const { key, field } = opts
+        return {
+          title: field.title ?? getFieldLabel(key, field),
+          panel: AutomationBindingPanel,
+          type: field.customType,
+          updateOnChange: false,
+          multiline: true,
+          placeholder: field?.description,
+        }
+      },
+    },
     [SchemaFieldTypes.BOOL]: {
       comp: Checkbox,
     },
@@ -309,7 +323,7 @@
    */
   const getFieldType = (
     field: BaseIOStructure,
-    block?: AutomationStep | AutomationTrigger
+    block: AutomationStep | AutomationTrigger
   ) => {
     // Direct customType map
     const customType = field.customType && customTypeToSchema[field.customType]

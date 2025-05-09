@@ -57,7 +57,7 @@
 </script>
 
 {#if customLayout}
-  <!-- Render custom layout 1 or more components in a custom layout -->
+  <!-- Render 1 or more components in a custom layout -->
   <AutomationCustomLayout {context} {bindings} {block} layout={customLayout} />
 {:else}
   <!-- Render Automation Step Schema > [string, BaseIOStructure][] -->
