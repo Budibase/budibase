@@ -1,14 +1,23 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { screenStore, appStore, selectedScreen } from "@/stores/builder"
+  import {
+    screenStore,
+    appStore,
+    selectedScreen,
+    previewStore,
+  } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { Divider } from "@budibase/bbui"
+  import { ActionButton, Divider } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
+
+  const previewApp = () => {
+    previewStore.showPreview(true)
+  }
 </script>
 
 <div class="app-panel">
@@ -27,6 +36,10 @@
         <Divider vertical />
       {/if}
       <ScreenErrorsButton />
+      <Divider vertical />
+      <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+        Preview
+      </ActionButton>
     </div>
   </div>
   <div class="content">
@@ -59,7 +72,7 @@
   }
   .header {
     display: flex;
-    margin-bottom: 9px;
+    margin: 0 6px 4px 0;
   }
 
   .header-left {

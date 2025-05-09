@@ -19,7 +19,6 @@
   import { API } from "@/api"
   import { appsStore } from "@/stores/portal"
   import {
-    previewStore,
     builderStore,
     isOnlyUser,
     appStore,
@@ -58,10 +57,6 @@
             new Date().getTime() - new Date(deployments[0].updatedAt).getTime(),
         })
       : ""
-  }
-
-  const previewApp = () => {
-    previewStore.showPreview(true)
   }
 
   const viewApp = () => {
@@ -161,19 +156,6 @@
           }}
         >
           Users
-        </ActionButton>
-      </div>
-    </div>
-
-    <div class="app-action-button preview">
-      <div class="app-action">
-        <ActionButton
-          disabled={$sortedScreens.length === 0}
-          quiet
-          icon="PlayCircle"
-          on:click={previewApp}
-        >
-          Preview
         </ActionButton>
       </div>
     </div>
