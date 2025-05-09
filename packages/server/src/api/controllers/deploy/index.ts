@@ -207,10 +207,8 @@ export const publishApp = async function (
   } catch (err: any) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
     await storeDeploymentHistory(deployment)
-    throw {
-      ...err,
-      message: `Deployment Failed: ${err.message}`,
-    }
+
+    throw new Error(`Deployment Failed: ${err.message}`, { cause: err })
   } finally {
     if (replication) {
       await replication.close()
