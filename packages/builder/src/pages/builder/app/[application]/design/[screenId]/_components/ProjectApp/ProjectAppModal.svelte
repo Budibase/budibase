@@ -33,7 +33,16 @@
           message: "This name is already taken.",
         }
       ),
-      urlPrefix: requiredString("Url prefix is required."),
+      urlPrefix: requiredString("Url prefix is required.").refine(
+        val =>
+          !$projectAppStore.projectApps
+            .filter(a => a._id !== projectApp._id)
+            .map(a => a.urlPrefix.toLowerCase())
+            .includes(val.toLowerCase()),
+        {
+          message: "This url is already taken.",
+        }
+      ),
       icon: z.string(),
       iconColor: z.string(),
     }) satisfies ZodType<ProjectApp>
