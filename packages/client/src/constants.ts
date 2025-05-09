@@ -15,6 +15,14 @@ export const ActionTypes = {
   ClearRowSelection: "ClearRowSelection",
 }
 
+export const PeekMessages = {
+  NOTIFICATION: "notification",
+  CLOSE_SCREEN_MODAL: "close-screen-modal",
+  INVALIDATE_DATASOURCE: "invalidate-datasource",
+  UPDATE_STATE: "update-state",
+  REFRESH_ALL_DATASOURCES: "refresh-all-datasources",
+}
+
 export const DNDPlaceholderID = "dnd-placeholder"
 export const ScreenslotType = "screenslot"
 export const ScreenslotID = "screenslot"

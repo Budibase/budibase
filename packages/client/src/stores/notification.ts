@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store"
 import { routeStore } from "./routes"
+import { PeekMessages } from "@/constants"
 
 const DEFAULT_NOTIFICATION_TIMEOUT = 3000
 
@@ -27,7 +28,7 @@ const createNotificationStore = () => {
 
     if (get(routeStore).queryParams?.peek) {
       window.parent.postMessage({
-        type: "notification",
+        type: PeekMessages.NOTIFICATION,
         detail: {
           message,
           type,

@@ -8,13 +8,7 @@
   } from "@/stores"
   import { Modal, ModalContent, ActionButton } from "@budibase/bbui"
   import { onDestroy } from "svelte"
-
-  const MessageTypes = {
-    NOTIFICATION: "notification",
-    CLOSE_SCREEN_MODAL: "close-screen-modal",
-    INVALIDATE_DATASOURCE: "invalidate-datasource",
-    UPDATE_STATE: "update-state",
-  }
+  import { PeekMessages } from "@/constants"
 
   let iframe
   let listenersAttached = false
@@ -38,22 +32,29 @@
     }
   }
 
+  const proxyRefreshAllDatasources = () => {
+    dataSourceStore.actions.refreshAll()
+  }
+
   function receiveMessage(message) {
     const handlers = {
-      [MessageTypes.NOTIFICATION]: () => {
+      [PeekMessages.NOTIFICATION]: () => {
         proxyNotification(message.data)
       },
-      [MessageTypes.CLOSE_SCREEN_MODAL]: () => {
+      [PeekMessages.CLOSE_SCREEN_MODAL]: () => {
         peekStore.actions.hidePeek()
         if (message.data?.url) {
           routeStore.actions.navigate(message.data.url)
         }
       },
-      [MessageTypes.INVALIDATE_DATASOURCE]: () => {
+      [PeekMessages.INVALIDATE_DATASOURCE]: () => {
         proxyInvalidation(message.data)
       },
-      [MessageTypes.UPDATE_STATE]: () => {
+      [PeekMessages.UPDATE_STATE]: () => {
         proxyStateUpdate(message.data)
+      },
+      [PeekMessages.REFRESH_ALL_DATASOURCES]: () => {
+        proxyRefreshAllDatasources()
       },
     }
 
