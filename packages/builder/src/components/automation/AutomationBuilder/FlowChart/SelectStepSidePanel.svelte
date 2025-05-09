@@ -48,8 +48,6 @@
 
   $: blockRef = $selectedAutomation.blockRefs?.[block.id]
   $: lastStep = blockRef?.terminating
-  $: console.log(lastStep)
-
   $: pathSteps =
     block.id && $selectedAutomation?.data
       ? automationStore.actions.getPathSteps(
