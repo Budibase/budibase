@@ -8,7 +8,7 @@
     FieldType,
     RangeOperator,
   } from "@budibase/types"
-  import { type PopoverAPI, Helpers } from "@budibase/bbui"
+  import { type PopoverAPI, Helpers, Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { type Writable } from "svelte/store"
   import { isArrayOperator } from "@/utils/filtering"
@@ -170,7 +170,7 @@
           }}
         >
           <svg
-            class="spectrum-Icon spectrum-Icon--sizeS"
+            class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
             focusable="false"
             aria-hidden="true"
             aria-label={icon}
@@ -200,7 +200,7 @@
     z-index: 1;
   }
   .toggle-wrap svg {
-    width: 12px;
+    scale: 90%;
     pointer-events: none;
   }
   .filter-button-wrap.inactive .spectrum-Button .spectrum-Icon {
@@ -212,6 +212,17 @@
     display: flex;
     gap: var(--spacing-xs);
   }
+
+  .spectrum-Button--sizeM,
+  .spectrum-Button--sizeL {
+    gap: var(--spacing-s);
+  }
+
+  .spectrum-Button--sizeL {
+    padding-left: calc(1em * 0.9);
+    padding-right: calc(1em * 0.9);
+  }
+
   .spectrum-Button.is-disabled {
     cursor: default;
   }

@@ -5544,12 +5544,26 @@
         "wide": true
       },
       {
-        "label": "",
-        "type": "filterConfiguration",
-        "key": "filterConfig",
-        "nested": true,
-        "dependsOn": "targetComponent",
-        "resetOn": "targetComponent"
+        "type": "select",
+        "label": "Size",
+        "showInBar": true,
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M",
+        "wide": true
       },
       {
         "type": "boolean",
@@ -5562,6 +5576,14 @@
         "label": "Clear filters",
         "key": "showClear",
         "defaultValue": false
+      },
+      {
+        "label": "",
+        "type": "filterConfiguration",
+        "key": "filterConfig",
+        "nested": true,
+        "dependsOn": "targetComponent",
+        "resetOn": "targetComponent"
       }
     ]
   },
