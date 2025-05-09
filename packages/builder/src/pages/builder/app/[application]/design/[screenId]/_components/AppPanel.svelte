@@ -22,6 +22,7 @@
         {#if $appStore.clientFeatures.devicePreview}
           <DevicePreviewSelect />
         {/if}
+        <Divider vertical />
         <ThemeSettings />
         <Divider vertical />
       {/if}
