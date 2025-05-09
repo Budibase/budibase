@@ -24,8 +24,8 @@
   let searchString: string = ""
   let searchRef: HTMLInputElement | undefined = undefined
 
-  let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
-  let triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
+  $: syncAutomationsEnabled = $licensing.syncAutomationsEnabled
+  $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction: string | undefined
   let actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
@@ -48,6 +48,8 @@
 
   $: blockRef = $selectedAutomation.blockRefs?.[block.id]
   $: lastStep = blockRef?.terminating
+  $: console.log(lastStep)
+
   $: pathSteps =
     block.id && $selectedAutomation?.data
       ? automationStore.actions.getPathSteps(
@@ -60,27 +62,24 @@
     step => step.stepId === ActionStepID.COLLECT
   )
 
-  const disabled = () => {
-    return {
-      SEND_EMAIL_SMTP: {
-        disabled:
-          !$admin.checklist?.smtp?.checked || $admin.checklist?.smtp.fallback,
-        message: "Please configure SMTP",
-      },
-      COLLECT: {
-        disabled: !lastStep || !syncAutomationsEnabled || collectBlockExists,
-        message: collectDisabledMessage(),
-      },
-      TRIGGER_AUTOMATION_RUN: {
-        disabled: !triggerAutomationRunEnabled,
-        message: "Please upgrade to a paid plan",
-      },
-    }
+  $: disabledStates = {
+    SEND_EMAIL_SMTP: {
+      disabled:
+        !$admin.checklist?.smtp?.checked || $admin.checklist?.smtp.fallback,
+      message: "Please configure SMTP",
+    },
+    COLLECT: {
+      disabled: !lastStep || !syncAutomationsEnabled || collectBlockExists,
+      message: collectDisabledMessage(),
+    },
+    TRIGGER_AUTOMATION_RUN: {
+      disabled: !triggerAutomationRunEnabled,
+      message: "Please upgrade to a paid plan",
+    },
   }
 
-  const checkDisabled = (idx: string) => {
-    const disabledActions = disabled()
-    return disabledActions[idx as keyof typeof disabledActions]
+  $: checkDisabled = (idx: string) => {
+    return disabledStates[idx as keyof typeof disabledStates]
   }
 
   const collectDisabledMessage = () => {

@@ -2010,6 +2010,7 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   openActionPanel: (block: BlockRef) => {
+    console.log(block)
     store.update(state => ({
       ...state,
       actionPanelBlock: block,
