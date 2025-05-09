@@ -1,7 +1,20 @@
 import { API } from "@/api"
-import { get, writable, derived } from "svelte/store"
+import { App, Layout, Screen } from "@budibase/types"
+import { derived, get, writable } from "svelte/store"
 
-const initialState = {
+interface AppStoreState {
+  appId: string | null
+  isDevApp: boolean
+  clientLoadTime: number | null
+  embedded: boolean
+  inIframe: boolean
+  screens?: Screen[]
+  layouts?: Layout[]
+  application?: App
+  pageWidth?: string
+}
+
+const initialState: AppStoreState = {
   appId: null,
   isDevApp: false,
   clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
@@ -37,25 +50,15 @@ const createAppStore = () => {
   }
 
   // Sets the initial app ID
-  const setAppId = id => {
+  const setAppId = (id: string) => {
     store.update(state => {
-      if (state) {
-        state.appId = id
-      } else {
-        state = { appId: id }
-      }
-      return state
+      return { ...state, appId: id }
     })
   }
 
-  const setAppEmbedded = embeddded => {
+  const setAppEmbedded = (embedded: boolean) => {
     store.update(state => {
-      if (state) {
-        state.embedded = embeddded
-      } else {
-        state = { embeddded }
-      }
-      return state
+      return { ...state, embedded }
     })
   }
 
