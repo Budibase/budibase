@@ -1,16 +1,17 @@
 <script lang="ts">
-  import { Layout } from "@budibase/bbui"
-  import { contextMenuStore, sortedScreens } from "@/stores/builder"
-  import ScreenNavItem from "./ScreenNavItem.svelte"
-  import { goto } from "@roxi/routify"
-  import { getVerticalResizeActions } from "@/components/common/resizable"
   import NavHeader from "@/components/common/NavHeader.svelte"
-  import type { ProjectApp, Screen } from "@budibase/types"
+  import { getVerticalResizeActions } from "@/components/common/resizable"
+  import { contextMenuStore, sortedScreens } from "@/stores/builder"
   import { projectAppStore } from "@/stores/builder/projectApps"
-  import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
+  import { featureFlags } from "@/stores/portal"
+  import { Layout } from "@budibase/bbui"
+  import type { ProjectApp, Screen } from "@budibase/types"
+  import { goto } from "@roxi/routify"
   import ProjectAppModal from "../ProjectApp/ProjectAppModal.svelte"
+  import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
+  import ScreenNavItem from "./ScreenNavItem.svelte"
 
-  $: projectAppsEnabled = true
+  $: projectAppsEnabled = $featureFlags.APPS_IN_APPS
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
