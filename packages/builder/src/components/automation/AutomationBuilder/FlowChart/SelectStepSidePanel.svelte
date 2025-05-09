@@ -163,7 +163,6 @@
     },
   ]
 
-  // Filtered categories based on search
   $: filteredCategories = categories
     .map(category => ({
       ...category,
@@ -176,6 +175,14 @@
       }),
     }))
     .filter(category => category.items.length > 0)
+
+  $: filteredPlugins = Object.entries(plugins).filter(([_, action]) => {
+    const term = searchString.trim().toLowerCase()
+    if (!term) return true
+    const name = action.name?.toLowerCase() || ""
+    const stepTitle = action.stepTitle?.toLowerCase() || ""
+    return name.includes(term) || stepTitle.includes(term)
+  })
 
   const selectAction = async (action: AutomationStepDefinition) => {
     selectedAction = action.name
@@ -283,13 +290,13 @@
           {/each}
         </div>
       {/each}
-      {#if Object.keys(plugins).length}
+      {#if filteredPlugins.length}
         <div class="section-divider" />
         <div class="section-header">
           <Detail size="M" weight={700}>Plugins</Detail>
         </div>
         <div class="item-list">
-          {#each Object.entries(plugins) as [_, action]}
+          {#each filteredPlugins as [_, action]}
             <div
               class="item"
               class:selected={selectedAction === action.name}
