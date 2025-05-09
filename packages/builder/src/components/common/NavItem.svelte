@@ -4,7 +4,7 @@
   import { UserAvatars } from "@budibase/frontend-core"
   import type { UIUser } from "@budibase/types"
 
-  export let icon: string | null
+  export let icon: string | null = null
   export let iconTooltip: string = ""
   export let withArrow: boolean = false
   export let withActions: boolean = true
@@ -26,6 +26,7 @@
   export let compact: boolean = false
   export let hovering: boolean = false
   export let disabled: boolean = false
+  export let nonSelectable: boolean = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -73,6 +74,7 @@
   class:highlighted
   class:selectedBy
   class:disabled
+  class:nonSelectable
   on:dragend
   on:dragstart
   on:dragover
@@ -156,6 +158,9 @@
     justify-content: flex-start;
     align-items: stretch;
   }
+  .nav-item.nonSelectable {
+    cursor: inherit;
+  }
   .nav-item.scrollable {
     flex-direction: column;
     justify-content: center;
@@ -173,7 +178,7 @@
   .nav-item.disabled span {
     color: var(--spectrum-global-color-gray-700);
   }
-  .nav-item:hover,
+  .nav-item:not(.nonSelectable):hover,
   .hovering {
     background-color: var(--spectrum-global-color-gray-200);
     --avatars-background: var(--spectrum-global-color-gray-300);

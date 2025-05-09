@@ -120,7 +120,7 @@
     hoverable
     name="MoreSmallList"
   />
-  <div slot="icon" class="icon">
+  <div slot="right" class="icon">
     <RoleIndicator roleId={screen.routing.roleId} />
   </div>
 </NavItem>

@@ -20,6 +20,8 @@
   import { makeTableOption, makeViewOption } from "./utils"
   import type { Screen, Table, ViewV2 } from "@budibase/types"
 
+  export let projectAppId: string
+
   let mode: string
 
   let screenDetailsModal: Modal
@@ -71,7 +73,7 @@
 
   const createScreen = async (screenTemplate: Screen): Promise<Screen> => {
     try {
-      return await screenStore.save(screenTemplate)
+      return await screenStore.save({ ...screenTemplate, projectAppId })
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
