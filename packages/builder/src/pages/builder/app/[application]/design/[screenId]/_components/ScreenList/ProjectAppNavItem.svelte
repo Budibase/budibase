@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { Icon, notifications } from "@budibase/bbui"
   import NavItem from "@/components/common/NavItem.svelte"
-  import type { UIProjectApp } from "@budibase/types"
-  import { contextMenuStore, projectAppStore } from "@/stores/builder"
   import { confirm } from "@/helpers"
+  import { contextMenuStore, projectAppStore } from "@/stores/builder"
+  import { Icon, Layout, notifications } from "@budibase/bbui"
+  import type { UIProjectApp } from "@budibase/types"
+  import { goto } from "@roxi/routify"
   import { createEventDispatcher } from "svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
-  import { goto } from "@roxi/routify"
 
   export let projectApp: UIProjectApp
 
@@ -88,6 +88,10 @@
     <div class="screen">
       <ScreenNavItem {screen} />
     </div>
+  {:else}
+    <Layout paddingY="none" paddingX="L">
+      <div class="no-results">There aren't screens matching that route</div>
+    </Layout>
   {/each}
 </div>
 
@@ -103,5 +107,9 @@
 
   .screens :global(.nav-item) {
     border-radius: 4px;
+  }
+
+  .no-results {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
