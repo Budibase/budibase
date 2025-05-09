@@ -8,7 +8,7 @@
     FieldType,
     RangeOperator,
   } from "@budibase/types"
-  import { type PopoverAPI, Helpers, Icon } from "@budibase/bbui"
+  import { type PopoverAPI, Helpers } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { type Writable } from "svelte/store"
   import { isArrayOperator } from "@/utils/filtering"
