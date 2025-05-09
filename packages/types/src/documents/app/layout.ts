@@ -8,4 +8,9 @@ export interface Layout extends Document {
   props: any
   layoutId?: string
   name?: string
+  navigation?: string
+  pageWidth: string
+  embedded: boolean
+  logoUrl: string
+  hideTitle: boolean
 }

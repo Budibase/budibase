@@ -79,14 +79,14 @@ export const findChildrenByType = (
  */
 export const findComponentParent = (
   rootComponent: Component | undefined,
-  id: string,
-  parentComponent: Component
+  id: string | undefined,
+  parentComponent?: Component
 ): Component | null => {
   if (!rootComponent || !id) {
     return null
   }
   if (rootComponent._id === id) {
-    return parentComponent
+    return parentComponent || null
   }
   if (!rootComponent._children) {
     return null

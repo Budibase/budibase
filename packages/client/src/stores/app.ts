@@ -1,5 +1,6 @@
 import { API } from "@/api"
-import { get, writable, derived } from "svelte/store"
+import { App, Layout, Screen } from "@budibase/types"
+import { derived, get, writable } from "svelte/store"
 
 interface AppStoreState {
   appId: string | null
@@ -7,6 +8,10 @@ interface AppStoreState {
   clientLoadTime: number | null
   embedded: boolean
   inIframe: boolean
+  screens?: Screen[]
+  layouts?: Layout[]
+  application?: App
+  pageWidth?: string
 }
 
 const initialState: AppStoreState = {

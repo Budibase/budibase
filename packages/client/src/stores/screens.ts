@@ -8,7 +8,7 @@ import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
 import { DNDPlaceholderID, ScreenslotID, ScreenslotType } from "@/constants"
-import { ScreenVariant } from "@budibase/types"
+import { Screen, ScreenProps, ScreenVariant, Layout } from "@budibase/types"
 
 const createScreenStore = () => {
   const store = derived(
@@ -30,35 +30,34 @@ const createScreenStore = () => {
       $dndIndex,
       $dndSource,
     ]) => {
-      let activeLayout, activeScreen
-      let screens
+      let activeLayout: Layout, activeScreen: Screen | undefined
+      let screens: Screen[]
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
-        activeScreen = Helpers.cloneDeep($builderStore.screen)
+        activeScreen = Helpers.cloneDeep($builderStore.screen!)
         screens = [activeScreen]
 
         // Attach meta
         const errors = $builderStore.componentErrors || {}
-        const attachComponentMeta = component => {
-          component._meta = { errors: errors[component._id] || [] }
+        const attachComponentMeta = (component: ScreenProps) => {
+          component._meta = { errors: errors[component._id!] || [] }
           component._children?.forEach(attachComponentMeta)
         }
         attachComponentMeta(activeScreen.props)
       } else {
         // Find the correct screen by matching the current route
         screens = $appStore.screens || []
-        if ($routeStore.activeRoute) {
+        const { activeRoute } = $routeStore
+        if (activeRoute) {
           activeScreen = Helpers.cloneDeep(
-            screens.find(
-              screen => screen._id === $routeStore.activeRoute.screenId
-            )
+            screens.find(screen => screen._id === activeRoute.screenId)
           )
         }
 
         // Legacy - find the custom layout for the selected screen
         if (activeScreen) {
           const screenLayout = $appStore.layouts?.find(
-            layout => layout._id === activeScreen.layoutId
+            layout => layout._id === activeScreen!.layoutId
           )
           if (screenLayout) {
             activeLayout = screenLayout
@@ -79,7 +78,7 @@ const createScreenStore = () => {
 
         // Remove selected component from tree if we are moving an existing
         // component
-        if (!$dndSource.isNew && selectedParent) {
+        if (!$dndSource!.isNew && selectedParent) {
           selectedParent._children = selectedParent._children?.filter(
             x => x._id !== selectedComponentId
           )
