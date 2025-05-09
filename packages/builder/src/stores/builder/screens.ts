@@ -230,10 +230,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Save screen
     const creatingNewScreen = screen._id === undefined
-    const savedScreen = await API.saveScreen({
-      ...screen,
-      projectAppId: undefined, // TODO: remove then implemented in the backend
-    })
+    const savedScreen = await API.saveScreen(screen)
 
     // Update state
     this.update(state => {
@@ -242,10 +239,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       if (idx !== -1) {
         state.screens.splice(idx, 1, savedScreen)
       } else {
-        state.screens.push({
-          ...savedScreen,
-          projectAppId: screen.projectAppId, // TODO: remove then implemented in the backend
-        })
+        state.screens.push(savedScreen)
       }
 
       // Select the new screen if creating a new one
