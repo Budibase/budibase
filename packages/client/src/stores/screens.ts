@@ -8,7 +8,13 @@ import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
 import { DNDPlaceholderID, ScreenslotID, ScreenslotType } from "@/constants"
-import { Screen, ScreenProps, ScreenVariant, Layout } from "@budibase/types"
+import {
+  Screen,
+  ScreenProps,
+  ScreenVariant,
+  Layout,
+  Component,
+} from "@budibase/types"
 
 const createScreenStore = () => {
   const store = derived(
@@ -30,7 +36,7 @@ const createScreenStore = () => {
       $dndIndex,
       $dndSource,
     ]) => {
-      let activeLayout: Layout, activeScreen: Screen | undefined
+      let activeLayout: Layout | undefined, activeScreen: Screen | undefined
       let screens: Screen[]
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
@@ -85,7 +91,8 @@ const createScreenStore = () => {
         }
 
         // Insert placeholder component
-        const componentToInsert = {
+        const componentToInsert: Component = {
+          _instanceName: "",
           _component: "@budibase/standard-components/container",
           _id: DNDPlaceholderID,
           _styles: {
@@ -109,6 +116,10 @@ const createScreenStore = () => {
         }
       }
 
+      type ScreenWithRank = Screen & {
+        rank: number
+      }
+
       // Assign ranks to screens, preferring higher roles and home screens
       screens.forEach(screen => {
         const roleId = screen.routing.roleId
@@ -116,11 +127,11 @@ const createScreenStore = () => {
         if (screen.routing.homeScreen) {
           rank += 100
         }
-        screen.rank = rank
+        ;(screen as ScreenWithRank).rank = rank
       })
 
       // Sort screens so the best route is first
-      screens = screens.sort((a, b) => {
+      screens = screens.sort((a: any, b: any) => {
         // First sort by rank
         if (a.rank !== b.rank) {
           return a.rank > b.rank ? -1 : 1
@@ -132,7 +143,7 @@ const createScreenStore = () => {
       // If we don't have a legacy custom layout, build a layout structure
       // from the screen navigation settings
       if (!activeLayout) {
-        let layoutSettings = {
+        let layoutSettings: Partial<Layout> = {
           navigation: "None",
           pageWidth: activeScreen?.width || "Large",
           embedded: $appStore.embedded,
