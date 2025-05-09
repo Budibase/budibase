@@ -64,9 +64,9 @@
   --rounded-medium: 8px;
   --rounded-large: 16px;
 
-  --font-sans: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI,
+  --font-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI,
     "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --font-accent: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI,
+  --font-accent: "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI,
     "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-serif: "Georgia", Cambria, Times New Roman, Times, serif;
   --font-mono: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",

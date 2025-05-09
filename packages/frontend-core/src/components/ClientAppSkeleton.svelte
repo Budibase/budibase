@@ -100,7 +100,7 @@
     mix-blend-mode: multiply;
     background: rgb(0 0 0);
     font-size: 30px;
-    font-family: Source Sans Pro;
+    font-family: Source Sans 3;
     -webkit-font-smoothing: antialiased;
   }
 
