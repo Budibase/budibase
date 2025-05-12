@@ -4,7 +4,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import sdk from "../../sdk"
+import sdk from "../../../sdk"
 
 export async function generateTables(
   ctx: UserCtx<GenerateTablesRequest, GenerateTablesResponse>

@@ -3,6 +3,7 @@ export enum FeatureFlag {
   USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
   AI_JS_GENERATION = "AI_JS_GENERATION",
   AI_TABLE_GENERATION = "AI_TABLE_GENERATION",
+  AI_AGENTS = "AI_AGENTS",
   APPS_IN_APPS = "APPS_IN_APPS",
 
   // Account-portal
@@ -13,6 +14,7 @@ export const FeatureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_JS_GENERATION]: false,
   [FeatureFlag.AI_TABLE_GENERATION]: false,
+  [FeatureFlag.AI_AGENTS]: false,
   [FeatureFlag.APPS_IN_APPS]: true, // TODO: change to false
 
   // Account-portal
