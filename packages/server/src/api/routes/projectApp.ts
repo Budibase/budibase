@@ -1,0 +1,56 @@
+import Router from "@koa/router"
+import {
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+  PermissionType,
+} from "@budibase/types"
+import { middleware } from "@budibase/backend-core"
+import authorized from "../../middleware/authorized"
+
+import * as controller from "../controllers/projectApp"
+import Joi from "joi"
+
+const baseSchema = {
+  name: Joi.string().required(),
+  urlPrefix: Joi.string().required(),
+  icon: Joi.string().required(),
+  iconColor: Joi.string().required(),
+}
+
+const insertSchema = Joi.object({
+  ...baseSchema,
+})
+
+const updateSchema = Joi.object({
+  _id: Joi.string().required(),
+  _rev: Joi.string().required(),
+  ...baseSchema,
+})
+
+function projectAppValidator(
+  schema: typeof insertSchema | typeof updateSchema
+) {
+  return middleware.joiValidator.body(schema, { allowUnknown: false })
+}
+
+const router: Router = new Router()
+
+router.post(
+  "/api/projectApp",
+  authorized(PermissionType.BUILDER),
+  projectAppValidator(insertSchema),
+  controller.create
+)
+router.put(
+  "/api/projectApp/:id",
+  authorized(PermissionType.BUILDER),
+  projectAppValidator(updateSchema),
+  controller.edit
+)
+router.delete(
+  "/api/projectApp/:id/:rev",
+  authorized(PermissionType.BUILDER),
+  controller.remove
+)
+
+export default router
