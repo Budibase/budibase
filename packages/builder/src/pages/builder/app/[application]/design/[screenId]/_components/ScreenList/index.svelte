@@ -121,6 +121,7 @@
         <ProjectAppNavItem
           {projectApp}
           on:edit={() => onEditProjectApp(projectApp)}
+          {searchValue}
         />
       {/each}
     {:else if filteredScreens?.length}

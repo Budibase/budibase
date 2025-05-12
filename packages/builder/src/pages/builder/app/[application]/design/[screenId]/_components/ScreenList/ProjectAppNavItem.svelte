@@ -9,6 +9,7 @@
   import ScreenNavItem from "./ScreenNavItem.svelte"
 
   export let projectApp: UIProjectApp
+  export let searchValue: string
 
   const dispatch = createEventDispatcher<{ edit: void }>()
 
@@ -68,6 +69,10 @@
       y: e.clientY,
     })
   }
+
+  $: noResultsMessage = searchValue
+    ? "There aren't screens matching that route"
+    : ""
 </script>
 
 <div class="project-app-nav-item">
@@ -92,7 +97,7 @@
     </div>
   {:else}
     <Layout paddingY="none" paddingX="L">
-      <div class="no-results">There aren't screens matching that route</div>
+      <div class="no-results">{noResultsMessage}</div>
     </Layout>
   {/each}
 </div>
