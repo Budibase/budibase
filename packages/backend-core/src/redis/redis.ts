@@ -21,7 +21,7 @@ import {
   getRedisClusterOptions,
 } from "./utils"
 import { Span, tracer } from "dd-trace"
-import { remove, zip } from "lodash"
+import { zip } from "lodash"
 
 async function init(db = SelectableDatabase.DEFAULT): Promise<Redis | Cluster> {
   return await tracer.trace("Redis.init", async span => {
