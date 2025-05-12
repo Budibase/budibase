@@ -86,27 +86,25 @@ export function getRedisConnectionDetails() {
   }
 }
 
-export function getRedisOptions() {
+export function getRedisClusterOptions(): Redis.ClusterOptions {
+  return {
+    slotsRefreshTimeout: SLOT_REFRESH_MS,
+    dnsLookup: (address: string, callback: any) => callback(null, address),
+    redisOptions: {
+      ...getRedisOptions(),
+      tls: {},
+    },
+  }
+}
+
+export function getRedisOptions(): Redis.RedisOptions {
   const { host, password, port } = getRedisConnectionDetails()
-  let redisOpts: Redis.RedisOptions = {
+  return {
     connectTimeout: CONNECT_TIMEOUT_MS,
     port: port,
     host,
     password,
   }
-  let opts: Redis.ClusterOptions | Redis.RedisOptions = redisOpts
-  if (env.REDIS_CLUSTERED) {
-    opts = {
-      connectTimeout: CONNECT_TIMEOUT_MS,
-      redisOptions: {
-        ...redisOpts,
-        tls: {},
-      },
-      slotsRefreshTimeout: SLOT_REFRESH_MS,
-      dnsLookup: (address: string, callback: any) => callback(null, address),
-    } as Redis.ClusterOptions
-  }
-  return opts
 }
 
 export function addDbPrefix(db: string, key: string) {
