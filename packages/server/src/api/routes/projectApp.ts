@@ -1,9 +1,5 @@
 import Router from "@koa/router"
-import {
-  OAuth2CredentialsMethod,
-  OAuth2GrantType,
-  PermissionType,
-} from "@budibase/types"
+import { PermissionType } from "@budibase/types"
 import { middleware } from "@budibase/backend-core"
 import authorized from "../../middleware/authorized"
 
