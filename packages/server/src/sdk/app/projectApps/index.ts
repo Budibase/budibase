@@ -60,3 +60,21 @@ export async function update(
     ...projectApp,
   }
 }
+
+export async function remove(
+  projectAppId: string,
+  _rev: string
+): Promise<void> {
+  const db = context.getAppDB()
+  try {
+    await db.remove(projectAppId, _rev)
+  } catch (e: any) {
+    if (e.status === 404) {
+      throw new HTTPError(
+        `Project app with id '${projectAppId}' not found.`,
+        404
+      )
+    }
+    throw e
+  }
+}
