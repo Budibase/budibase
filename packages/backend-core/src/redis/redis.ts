@@ -60,7 +60,7 @@ async function init(db = SelectableDatabase.DEFAULT): Promise<Redis | Cluster> {
   })
 }
 
-interface Entry {
+export interface Entry {
   key: string
   value: any
 }
