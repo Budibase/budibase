@@ -91,10 +91,10 @@
     // Update state
     const id = component.dataset.id!
     const parentId = component.dataset.parent!
-    const parent: Component = findComponentById(
+    const parent = findComponentById(
       get(screenStore).activeScreen?.props,
       parentId
-    )
+    )!
     const index = parent._children!.findIndex(child => child._id === id)
     dndStore.actions.startDraggingExistingComponent({
       id,
