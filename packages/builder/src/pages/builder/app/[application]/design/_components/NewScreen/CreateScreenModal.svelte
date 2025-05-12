@@ -9,14 +9,11 @@
     screenStore,
     navigationStore,
     permissions as permissionsStore,
-    builderStore,
     datasources,
     appStore,
     selectedProjectAppId,
   } from "@/stores/builder"
-  import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
   import * as screenTemplating from "@/templates/screenTemplating"
   import { Roles } from "@/constants/backend"
   import { AutoScreenTypes } from "@/constants"
@@ -164,19 +161,6 @@
       )
     ).flat()
     const newScreens = await createScreens(screenTemplates)
-
-    if (type === "update" || type === "create") {
-      const associatedTour =
-        type === "update"
-          ? TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE
-          : TOUR_KEYS.BUILDER_FORM_CREATE
-
-      const tourRequired = !$auth?.user?.tours?.[associatedTour]
-      if (tourRequired) {
-        builderStore.setTour(associatedTour)
-      }
-    }
-
     loadNewScreen(newScreens[0])
   }
 
