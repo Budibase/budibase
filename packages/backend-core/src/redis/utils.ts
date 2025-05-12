@@ -107,13 +107,6 @@ export function getRedisOptions(): Redis.RedisOptions {
   }
 }
 
-export function addDbPrefix(db: string, key: string) {
-  if (key.includes(db)) {
-    return key
-  }
-  return `${db}${SEPARATOR}${key}`
-}
-
 export function removeDbPrefix(key: string) {
   let parts = key.split(SEPARATOR)
   if (parts.length >= 2) {
