@@ -80,6 +80,7 @@
         automationId: automation._id,
         status: "error",
       })
+      console.log(response)
       prodErrors = response?.data?.length || 0
     } catch (error) {
       console.error(error)
@@ -241,7 +242,7 @@
     align-items: center;
     width: 100%;
     background: var(--background);
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-s) 0;
+    padding: var(--spacing-m) var(--spacing-l) var(--spacing-s);
     box-sizing: border-box;
     justify-content: space-between;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
