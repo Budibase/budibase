@@ -22,6 +22,12 @@ export async function fetch(): Promise<ProjectApp[]> {
   return result
 }
 
+export async function get(id: string): Promise<ProjectApp | undefined> {
+  const db = context.getAppDB()
+  const projectApp = await db.tryGet<ProjectApp>(id)
+  return projectApp
+}
+
 export async function create(
   projectApp: Omit<ProjectApp, "_id" | "_rev" | "createdAt" | "updatedAt">
 ) {
