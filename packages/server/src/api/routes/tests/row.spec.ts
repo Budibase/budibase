@@ -82,7 +82,7 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "/rows ($dbName)",
-    ({ config, dsProvider, isInternal, isMSSQL, isOracle }) => {
+    ({ config, dsProvider, isInternal, isMSSQL, isOracle, isSql }) => {
       let table: Table
       let datasource: Datasource | undefined
       let client: Knex | undefined
@@ -1147,6 +1147,40 @@ if (descriptions.length) {
             expect(row.related2).toBeUndefined()
           })
         })
+
+        isSql &&
+          describe("date", () => {
+            it("should be able to write back a date fetched directly from the DB", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    date: {
+                      name: "date",
+                      type: FieldType.DATETIME,
+                      dateOnly: true,
+                    },
+                  },
+                })
+              )
+
+              const row = await config.api.row.save(table._id!, {
+                date: "2023-01-26",
+              })
+
+              const rawRows = await client!(table.name)
+                .select("*")
+                .where({ id: row.id })
+
+              await config.api.row.save(table._id!, {
+                ...row,
+                date: rawRows[0].date,
+              })
+
+              const fetchedRow = await config.api.row.get(table._id!, row._id!)
+
+              expect(fetchedRow.date).toEqual("2023-01-26")
+            })
+          })
       })
 
       describe("patch", () => {
