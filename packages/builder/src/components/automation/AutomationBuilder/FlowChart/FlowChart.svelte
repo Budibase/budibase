@@ -80,7 +80,6 @@
         automationId: automation._id,
         status: "error",
       })
-      console.log(response)
       prodErrors = response?.data?.length || 0
     } catch (error) {
       console.error(error)
