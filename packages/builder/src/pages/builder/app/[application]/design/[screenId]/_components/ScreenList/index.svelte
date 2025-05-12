@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { Layout } from "@budibase/bbui"
-  import { sortedScreens } from "@/stores/builder"
-  import ScreenNavItem from "./ScreenNavItem.svelte"
-  import { goto } from "@roxi/routify"
-  import { getVerticalResizeActions } from "@/components/common/resizable"
   import NavHeader from "@/components/common/NavHeader.svelte"
-  import type { Screen } from "@budibase/types"
+  import { getVerticalResizeActions } from "@/components/common/resizable"
+  import { contextMenuStore, sortedScreens } from "@/stores/builder"
+  import { projectAppStore } from "@/stores/builder/projectApps"
+  import { featureFlags } from "@/stores/portal"
+  import { Layout } from "@budibase/bbui"
+  import type { ProjectApp, Screen, UIProjectApp } from "@budibase/types"
+  import { goto } from "@roxi/routify"
+  import ProjectAppModal from "../ProjectApp/ProjectAppModal.svelte"
+  import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
+  import ScreenNavItem from "./ScreenNavItem.svelte"
+
+  $: projectAppsEnabled = $featureFlags.APPS_IN_APPS
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -14,7 +20,14 @@
   let screensContainer: HTMLDivElement
   let scrolling = false
 
+  let projectAppModal: ProjectAppModal
+  let selectedProjectApp: ProjectApp | undefined
+
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
+  $: filteredProjectApps = getFilteredProjectApps(
+    $projectAppStore.projectApps,
+    searchValue
+  )
 
   const handleOpenSearch = async () => {
     screensContainer.scroll({ top: 0, behavior: "smooth" })
@@ -32,8 +45,63 @@
     })
   }
 
+  const getFilteredProjectApps = (
+    projectApps: UIProjectApp[],
+    searchValue: string
+  ) => {
+    if (!searchValue) {
+      return projectApps
+    }
+
+    const filteredProjects: UIProjectApp[] = []
+    for (const projectApp of projectApps) {
+      filteredProjects.push({
+        ...projectApp,
+        screens: getFilteredScreens(projectApp.screens, searchValue),
+      })
+    }
+    return filteredProjects
+  }
+
   const handleScroll = (e: any) => {
     scrolling = e.target.scrollTop !== 0
+  }
+
+  const onAdd = (e: Event) => {
+    if (!projectAppsEnabled) {
+      return $goto("../new")
+    }
+
+    const items = [
+      {
+        name: "Add app",
+        keyBind: null,
+        visible: true,
+        disabled: false,
+        callback: () => {
+          projectAppModal.show()
+        },
+        isNew: true,
+      },
+      {
+        name: "Add screen",
+        keyBind: null,
+        visible: true,
+        callback: () => $goto("../new"),
+      },
+    ]
+
+    const boundingBox = (e.currentTarget as HTMLElement).getBoundingClientRect()
+
+    contextMenuStore.open("newProject", items, {
+      x: boundingBox.x,
+      y: boundingBox.y + boundingBox.height,
+    })
+  }
+
+  function onEditProjectApp(projectApp: ProjectApp) {
+    selectedProjectApp = projectApp
+    projectAppModal.show()
   }
 </script>
 
@@ -44,11 +112,19 @@
       placeholder="Search for screens"
       bind:value={searchValue}
       bind:search={searching}
-      onAdd={() => $goto("../new")}
+      {onAdd}
     />
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
-    {#if filteredScreens?.length}
+    {#if projectAppsEnabled}
+      {#each filteredProjectApps as projectApp}
+        <ProjectAppNavItem
+          {projectApp}
+          on:edit={() => onEditProjectApp(projectApp)}
+          {searchValue}
+        />
+      {/each}
+    {:else if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <ScreenNavItem {screen} />
       {/each}
@@ -68,6 +144,12 @@
     use:resizableHandle
   />
 </div>
+
+<ProjectAppModal
+  bind:this={projectAppModal}
+  projectApp={selectedProjectApp}
+  on:hide={() => (selectedProjectApp = undefined)}
+/>
 
 <style>
   .screens {

@@ -1,5 +1,5 @@
-import { derived } from "svelte/store"
 import { FetchAppPackageResponse, ProjectApp } from "@budibase/types"
+import { derived } from "svelte/store"
 import { BudiStore } from "../BudiStore"
 
 interface ProjectAppStoreState {
