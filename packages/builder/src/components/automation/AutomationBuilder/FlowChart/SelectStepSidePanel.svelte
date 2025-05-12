@@ -116,6 +116,7 @@
           AutomationActionStepId.UPDATE_ROW,
           AutomationActionStepId.DELETE_ROW,
           AutomationActionStepId.QUERY_ROWS,
+          AutomationActionStepId.EXECUTE_QUERY,
         ].includes(k as AutomationActionStepId)
       ),
     },
@@ -153,6 +154,7 @@
       name: "Apps",
       items: actions.filter(([k]) =>
         [
+          AutomationActionStepId.OPENAI,
           AutomationActionStepId.zapier,
           AutomationActionStepId.n8n,
           AutomationActionStepId.integromat,
@@ -322,7 +324,7 @@
   .container {
     position: fixed;
     right: 0;
-    z-index: 1;
+    z-index: 99;
     height: calc(100% - 60px);
     display: flex;
     flex-direction: row;
