@@ -1,7 +1,7 @@
-import { get } from "svelte/store"
+import { derived, get, Readable } from "svelte/store"
 import { API } from "@/api"
-import { appStore } from "@/stores/builder"
-import { BudiStore } from "../BudiStore"
+import { appStore, screenStore, selectedScreen } from "@/stores/builder"
+import { DerivedBudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
 
 interface NavigationStoreState {
@@ -16,12 +16,34 @@ export const INITIAL_NAVIGATION_STATE: NavigationStoreState = {
   textAlign: "Left",
 }
 
-export class NavigationStore extends BudiStore<NavigationStoreState> {
+interface DerivedNavigationStoreState extends NavigationStoreState {}
+
+export class NavigationStore extends DerivedBudiStore<
+  NavigationStoreState,
+  DerivedNavigationStoreState
+> {
   constructor() {
-    super(INITIAL_NAVIGATION_STATE)
+    const makeDerivedStore = (store: Readable<NavigationStoreState>) => {
+      return derived(
+        [store, selectedScreen, screenStore],
+        ([$store, $selectedScreen, $screenStore]) => {
+          const currentScreenLinks = $screenStore.screens
+            .filter(s => s.projectAppId === $selectedScreen?.projectAppId)
+            .map(s => s.routing.route)
+
+          const links = $store.links.filter(l =>
+            currentScreenLinks.includes(l.url)
+          )
+
+          return { ...$store, links }
+        }
+      )
+    }
+
+    super(INITIAL_NAVIGATION_STATE, makeDerivedStore)
   }
 
-  syncAppNavigation(nav?: NavigationStoreState) {
+  syncAppNavigation(nav?: AppNavigation) {
     this.update(state => ({
       ...state,
       ...nav,
