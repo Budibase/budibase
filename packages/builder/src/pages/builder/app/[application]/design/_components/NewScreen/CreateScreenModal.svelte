@@ -11,7 +11,6 @@
     permissions as permissionsStore,
     datasources,
     appStore,
-    selectedProjectAppId,
   } from "@/stores/builder"
   import { goto } from "@roxi/routify"
   import * as screenTemplating from "@/templates/screenTemplating"
@@ -41,8 +40,6 @@
   let hasPreselectedDatasource = false
 
   $: screens = $screenStore.screens
-
-  $: projectAppId = $selectedProjectAppId
 
   export const show = (
     newMode: string,
