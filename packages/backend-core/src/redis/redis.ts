@@ -21,7 +21,7 @@ import {
   getRedisClusterOptions,
 } from "./utils"
 import { Span, tracer } from "dd-trace"
-import { zip } from "lodash"
+import { remove, zip } from "lodash"
 
 async function init(db = SelectableDatabase.DEFAULT): Promise<Redis | Cluster> {
   return await tracer.trace("Redis.init", async span => {
@@ -66,32 +66,22 @@ interface Entry {
 }
 function promisifyStream(
   stream: ScanStream,
-  client: RedisWrapper
+  client: Redis | Cluster
 ): Promise<Entry[]> {
   return new Promise<Entry[]>((resolve, reject) => {
-    const outputKeys = new Set()
-    stream.on("data", (keys: string[]) => {
-      keys.forEach(key => {
-        outputKeys.add(key)
-      })
-    })
-    stream.on("error", (err: Error) => {
-      reject(err)
-    })
+    const keys = new Set<string>()
+    stream.on("data", (data: string[]) => data.forEach(k => keys.add(k)))
+    stream.on("error", (err: Error) => reject(err))
     stream.on("end", async () => {
-      const keysArray: string[] = Array.from(outputKeys) as string[]
       try {
-        let getPromises = []
-        for (let key of keysArray) {
-          getPromises.push(client.get(key))
-        }
-        const jsonArray = await Promise.all(getPromises)
-        resolve(
-          keysArray.map(key => ({
-            key: removeDbPrefix(key),
-            value: JSON.parse(jsonArray.shift()),
-          }))
-        )
+        const promises = Array.from(keys).map(async key => {
+          let value = await client.get(key)
+          if (value) {
+            value = JSON.parse(value)
+          }
+          return { key: removeDbPrefix(key), value }
+        })
+        resolve(await Promise.all(promises))
       } catch (err) {
         reject(err)
       }
@@ -159,7 +149,7 @@ class RedisWrapper {
         })
       }
 
-      const entries = await promisifyStream(stream, this)
+      const entries = await promisifyStream(stream, this.client)
       span.addTags({ numKeysFound: entries.length })
       return entries
     })
@@ -198,7 +188,7 @@ class RedisWrapper {
     })
   }
 
-  async bulkGet<T>(keys: string[]) {
+  async bulkGet<T>(keys: string[]): Promise<Record<string, T | null>> {
     return await this.trace("RedisWrapper.bulkGet", async span => {
       span.addTags({ numKeys: keys.length })
 
