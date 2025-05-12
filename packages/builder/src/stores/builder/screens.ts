@@ -90,7 +90,12 @@ export class ScreenStore extends BudiStore<ScreenState> {
   syncAppScreens(pkg: FetchAppPackageResponse) {
     this.update(state => ({
       ...state,
-      screens: [...pkg.screens],
+      screens: [
+        ...pkg.screens.map(s => ({
+          ...s,
+          projectAppId: "default", // TODO: remove on server
+        })),
+      ],
     }))
   }
 
