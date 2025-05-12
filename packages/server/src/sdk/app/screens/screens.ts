@@ -32,6 +32,7 @@ async function migrateToProjectApp(screens: Screen[]) {
   const createdProjectApp = await sdk.projectApps.update({
     _id: `${DocumentType.PROJECT_APP}${SEPARATOR}default`,
     name: application.name,
+    urlPrefix: "/",
   })
 
   const db = context.getAppDB()
