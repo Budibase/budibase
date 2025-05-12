@@ -128,3 +128,7 @@ export const generatePluginID = (name: string) => {
 export const generateOAuth2LogID = (id: string) => {
   return `${DocumentType.OAUTH2_CONFIG_LOG}${SEPARATOR}${id}`
 }
+
+export const generateAgentChatID = () => {
+  return `${DocumentType.AGENT_CHAT}${SEPARATOR}${newid()}`
+}
