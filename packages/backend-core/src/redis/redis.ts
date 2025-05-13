@@ -44,6 +44,7 @@ async function init(db = SelectableDatabase.DEFAULT): Promise<Redis | Cluster> {
       client.on("error", (err: Error | string) => {
         span.addTags({ error: true })
         console.error(`failed to connect to redis (db: ${db})`, err)
+        client.disconnect()
         reject(err)
       })
 

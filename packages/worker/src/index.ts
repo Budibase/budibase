@@ -54,7 +54,7 @@ app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
 const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
-  const redisClient = await redis.Client.init(redis.utils.Databases.SESSIONS)
+  const redisClient = redis.clients.getSessionClient()
   return koaSession(
     {
       // @ts-ignore

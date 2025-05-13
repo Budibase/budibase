@@ -1,8 +1,6 @@
 import env from "../environment"
 import * as Redis from "ioredis"
 
-const SLOT_REFRESH_MS = 2000
-const CONNECT_TIMEOUT_MS = 10000
 export const SEPARATOR = "-"
 
 /**
@@ -88,7 +86,7 @@ export function getRedisConnectionDetails() {
 
 export function getRedisClusterOptions(): Redis.ClusterOptions {
   return {
-    slotsRefreshTimeout: SLOT_REFRESH_MS,
+    slotsRefreshTimeout: 2000,
     dnsLookup: (address: string, callback: any) => callback(null, address),
     redisOptions: {
       ...getRedisOptions(),
@@ -100,7 +98,7 @@ export function getRedisClusterOptions(): Redis.ClusterOptions {
 export function getRedisOptions(): Redis.RedisOptions {
   const { host, password, port } = getRedisConnectionDetails()
   return {
-    connectTimeout: CONNECT_TIMEOUT_MS,
+    connectTimeout: 30000,
     port: port,
     host,
     password,
