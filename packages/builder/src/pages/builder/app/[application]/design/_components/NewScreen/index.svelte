@@ -6,29 +6,18 @@
   import form from "./images/formUpdate.svg"
   import pdf from "./images/pdf.svg"
   import CreateScreenModal from "./CreateScreenModal.svelte"
-  import { screenStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import { AutoScreenTypes } from "@/constants"
 
   export let onClose: (() => void) | null = null
 
   let createScreenModal: CreateScreenModal
-
-  $: hasScreens = $screenStore.screens?.length
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="page">
-  <CreationPage
-    showClose={!!onClose}
-    {onClose}
-    heading={hasScreens ? "Create new screen" : "Create your first screen"}
-  >
-    <div class="subHeading">
-      <Body>Start from scratch or create screens from your data</Body>
-    </div>
-
+  <CreationPage showClose={!!onClose} {onClose}>
     <div class="cards">
       <div
         class="card"
@@ -100,13 +89,6 @@
 <style>
   .page {
     padding: 28px 40px 40px 40px;
-  }
-
-  .subHeading :global(p) {
-    text-align: center;
-    margin-top: 12px;
-    margin-bottom: 36px;
-    color: var(--spectrum-global-color-gray-600);
   }
 
   .cards {
