@@ -320,7 +320,6 @@ export function screenValidator() {
       })
         .required()
         .unknown(true),
-      projectAppId: Joi.string().required(),
     }).unknown(true)
   )
 }

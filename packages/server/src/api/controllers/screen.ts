@@ -48,10 +48,6 @@ export async function save(
     eventFn = events.screen.created
   }
 
-  if (!(await sdk.projectApps.get(screen.projectAppId))) {
-    ctx.throw("Project app is not valid")
-  }
-
   const response = await db.put(screen)
 
   // Find any custom components being used
