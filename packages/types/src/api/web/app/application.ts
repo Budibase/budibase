@@ -1,5 +1,5 @@
 import type { PlanType } from "../../../sdk"
-import type { Layout, App, Screen } from "../../../documents"
+import type { Layout, App, Screen, ProjectApp } from "../../../documents"
 import { ReadStream } from "fs"
 
 export interface SyncAppResponse {
@@ -38,7 +38,7 @@ export interface FetchAppDefinitionResponse {
 export interface FetchAppPackageResponse {
   application: App
   licenseType: PlanType
-  screens: Screen[]
+  projectApps: (ProjectApp & { screens: Screen[] })[]
   layouts: Layout[]
   clientLibPath: string
   hasLock: boolean

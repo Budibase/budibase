@@ -18,15 +18,11 @@ export const buildScreenEndpoints = (API: BaseAPIClient): ScreenEndpoints => ({
    * @param screen the screen to save
    */
   saveScreen: async screen => {
-    const { projectAppId, ...screenData } = screen // TODO: remove then implemented in the backend
     const result = await API.post<SaveScreenRequest, SaveScreenResponse>({
       url: "/api/screens",
-      body: screenData,
+      body: screen,
     })
-    return {
-      ...result,
-      projectAppId, // TODO: remove then implemented in the backend
-    }
+    return result
   },
 
   /**

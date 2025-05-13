@@ -1,8 +1,14 @@
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { ProjectApp, UIProjectApp } from "@budibase/types"
+import { notifications } from "@budibase/bbui"
+import {
+  FetchAppPackageResponse,
+  ProjectApp,
+  UIProjectApp,
+  WithRequired,
+} from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
-import { Helpers } from "@budibase/bbui"
+import { API } from "@/api"
 
 interface ProjectAppStoreState {
   projectApps: ProjectApp[]
@@ -52,27 +58,47 @@ export class ProjectAppStore extends DerivedBudiStore<
     )
   }
 
-  async add(projectApp: ProjectApp) {
-    this.store.update(state => {
-      state.projectApps.push({ ...projectApp, _id: Helpers.uuid() })
-      return state
-    })
+  syncAppProjectApps(pkg: FetchAppPackageResponse) {
+    this.update(state => ({
+      ...state,
+      loading: false,
+      projectApps: [...pkg.projectApps],
+    }))
   }
 
-  async edit(projectApp: ProjectApp) {
-    this.store.update(state => {
-      const index = state.projectApps.findIndex(
-        app => app._id === projectApp._id
-      )
-      if (index === -1) {
-        throw new Error(`App not found with id "${projectApp._id}"`)
-      }
+  async add(projectApp: ProjectApp) {
+    try {
+      const createdProjectApp = await API.projectApp.create(projectApp)
+      this.store.update(state => {
+        state.projectApps.push(createdProjectApp.projectApp)
+        return state
+      })
+    } catch (e: any) {
+      console.error("Error saving app", e)
+      notifications.error(`Error saving app: ${e.message}`)
+    }
+  }
 
-      state.projectApps[index] = {
-        ...projectApp,
-      }
-      return state
-    })
+  async edit(projectApp: WithRequired<ProjectApp, "_id" | "_rev">) {
+    try {
+      const updatedProjectApp = await API.projectApp.update(projectApp)
+      this.store.update(state => {
+        const index = state.projectApps.findIndex(
+          app => app._id === projectApp._id
+        )
+        if (index === -1) {
+          throw new Error(`App not found with id "${projectApp._id}"`)
+        }
+
+        state.projectApps[index] = {
+          ...updatedProjectApp.projectApp,
+        }
+        return state
+      })
+    } catch (e: any) {
+      console.error("Error saving app", e)
+      notifications.error(`Error saving app: ${e.message}`)
+    }
   }
 
   async delete(_id: string | undefined, _rev: string | undefined) {
@@ -84,3 +110,10 @@ export class ProjectAppStore extends DerivedBudiStore<
 }
 
 export const projectAppStore = new ProjectAppStore()
+
+export const selectedProjectAppId = derived(
+  projectAppStore,
+  $projectAppStore => {
+    return $projectAppStore.projectApps[0]._id!
+  }
+)

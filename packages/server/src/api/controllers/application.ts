@@ -181,7 +181,14 @@ async function addSampleDataDocs() {
 
 async function addSampleDataScreen() {
   const db = context.getAppDB()
-  let screen = createSampleDataTableScreen()
+  const appMetadata = await sdk.applications.metadata.get()
+
+  const projectApp = await sdk.projectApps.create({
+    name: appMetadata.name,
+    urlPrefix: "/",
+  })
+
+  let screen = createSampleDataTableScreen(projectApp._id)
   screen._id = generateScreenID()
   await db.put(screen)
 }
@@ -261,11 +268,14 @@ export async function fetchAppPackage(
   }
 
   // Only filter screens if the user is not a builder
-  if (!users.isBuilder(ctx.user, appId)) {
+  const isBuilder = users.isBuilder(ctx.user, appId)
+  if (isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
+
+  const projectApps = await extractScreensByProjectApp(screens, isBuilder)
 
   const clientLibPath = objectStore.clientLibraryUrl(
     ctx.params.appId,
@@ -275,11 +285,34 @@ export async function fetchAppPackage(
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
-    screens,
+    projectApps,
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
   }
+}
+
+async function extractScreensByProjectApp(
+  screens: Screen[],
+  keepEmptyProjects: boolean
+): Promise<FetchAppPackageResponse["projectApps"]> {
+  const result: FetchAppPackageResponse["projectApps"] = []
+
+  const projectApps = await sdk.projectApps.fetch()
+
+  for (const projectApp of projectApps) {
+    const projectAppScreens = screens.filter(
+      s => s.projectAppId === projectApp._id
+    )
+    if (projectAppScreens.length || keepEmptyProjects) {
+      result.push({
+        ...projectApp!,
+        screens: projectAppScreens,
+      })
+    }
+  }
+
+  return result
 }
 
 async function performAppCreate(

@@ -30,7 +30,7 @@ import { flags } from "./flags"
 import { integrations } from "./integrations"
 import { oauth2 } from "./oauth2"
 import { permissions } from "./permissions"
-import { projectAppStore } from "./projectApps"
+import { projectAppStore, selectedProjectAppId } from "./projectApps"
 import { appPublished } from "./published"
 import { queries } from "./queries"
 import { roles } from "./roles"
@@ -73,6 +73,7 @@ export {
   screenStore,
   selectedAutomation,
   selectedComponent,
+  selectedProjectAppId,
   selectedScreen,
   snippets,
   sortedIntegrations,
@@ -126,6 +127,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
+  projectAppStore.syncAppProjectApps(pkg)
   resetBuilderHistory()
   await refreshBuilderData()
 }

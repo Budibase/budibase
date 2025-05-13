@@ -92,8 +92,8 @@
     } else {
       await projectAppStore.edit({
         ...projectAppData,
-        _id: projectApp!._id,
-        _rev: projectApp!._rev,
+        _id: projectApp!._id!,
+        _rev: projectApp!._rev!,
       })
     }
   }
