@@ -1,9 +1,10 @@
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { Helpers, notifications } from "@budibase/bbui"
+import { notifications } from "@budibase/bbui"
 import {
   FetchAppPackageResponse,
   ProjectApp,
   UIProjectApp,
+  WithRequired,
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
@@ -73,25 +74,31 @@ export class ProjectAppStore extends DerivedBudiStore<
         return state
       })
     } catch (e: any) {
-      console.error("Error saving project app", e)
-      notifications.error(`Error saving automation: ${e.message}`)
+      console.error("Error saving app", e)
+      notifications.error(`Error saving app: ${e.message}`)
     }
   }
 
-  async edit(projectApp: ProjectApp) {
-    this.store.update(state => {
-      const index = state.projectApps.findIndex(
-        app => app._id === projectApp._id
-      )
-      if (index === -1) {
-        throw new Error(`App not found with id "${projectApp._id}"`)
-      }
+  async edit(projectApp: WithRequired<ProjectApp, "_id" | "_rev">) {
+    try {
+      const updatedProjectApp = await API.projectApp.update(projectApp)
+      this.store.update(state => {
+        const index = state.projectApps.findIndex(
+          app => app._id === projectApp._id
+        )
+        if (index === -1) {
+          throw new Error(`App not found with id "${projectApp._id}"`)
+        }
 
-      state.projectApps[index] = {
-        ...projectApp,
-      }
-      return state
-    })
+        state.projectApps[index] = {
+          ...updatedProjectApp.projectApp,
+        }
+        return state
+      })
+    } catch (e: any) {
+      console.error("Error saving app", e)
+      notifications.error(`Error saving app: ${e.message}`)
+    }
   }
 
   async delete(_id: string | undefined, _rev: string | undefined) {

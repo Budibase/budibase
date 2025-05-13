@@ -40,9 +40,9 @@ export async function create(
     ...projectApp,
   })
   return {
+    ...projectApp,
     _id: response.id!,
     _rev: response.rev!,
-    ...projectApp,
   }
 }
 
@@ -55,9 +55,8 @@ export async function update(
 
   const response = await db.put(projectApp)
   return {
-    _id: response.id!,
-    _rev: response.rev!,
     ...projectApp,
+    _rev: response.rev!,
   }
 }
 

@@ -30,7 +30,7 @@ export const buildProjectAppEndpoints = (
     return result
   },
   update: async projectApp => {
-    const result = await API.post<
+    const result = await API.put<
       UpdateProjectAppRequest,
       UpdateProjectAppResponse
     >({
