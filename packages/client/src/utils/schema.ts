@@ -121,6 +121,7 @@ export const getRelationshipSchemaAdditions = async (
         relationshipAdditions[`${fieldKey}.${linkKey}`] = {
           type: linkSchema[linkKey].type,
           externalType: linkSchema[linkKey].externalType,
+          constraints: linkSchema[linkKey].constraints,
         }
       })
     }

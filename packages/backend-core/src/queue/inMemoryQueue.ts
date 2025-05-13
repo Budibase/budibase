@@ -96,12 +96,17 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
 
       let resp = func(message)
 
-      async function retryFunc(fnc: any) {
+      async function retryFunc(fnc: any, attempt = 0) {
         try {
           await fnc
         } catch (e: any) {
-          await helpers.wait(50)
-          await retryFunc(func(message))
+          attempt++
+          if (attempt < 3) {
+            await helpers.wait(100 * attempt)
+            await retryFunc(func(message), attempt)
+          } else {
+            throw e
+          }
         }
       }
 

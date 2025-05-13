@@ -145,7 +145,7 @@
         <div class="column">
           <div class="wide">
             <Body size="S">
-              By default, all columns will automatically be shown.
+              The default column configuration will automatically be shown.
               <br />
               You can manually control which columns are included by adding them
               below.

@@ -117,11 +117,11 @@ export type AIProvider =
   | "AzureOpenAI"
   | "TogetherAI"
   | "Custom"
+  | "BudibaseAI"
 
 export interface ProviderConfig {
   provider: AIProvider
   isDefault: boolean
-  isBudibaseAI?: boolean
   name: string
   active: boolean
   baseUrl?: string

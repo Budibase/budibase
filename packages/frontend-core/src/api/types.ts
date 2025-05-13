@@ -10,6 +10,7 @@ import { ConfigEndpoints } from "./configs"
 import { DatasourceEndpoints } from "./datasources"
 import { EnvironmentVariableEndpoints } from "./environmentVariables"
 import { EventEndpoints } from "./events"
+import { FeatureFlagEndpoints } from "./features"
 import { FlagEndpoints } from "./flags"
 import { GroupEndpoints } from "./groups"
 import { LayoutEndpoints } from "./layouts"
@@ -33,6 +34,7 @@ import { TemplateEndpoints } from "./templates"
 import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
+import { AgentEndpoints } from "./agents"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -103,6 +105,7 @@ export type APIError = {
 
 export type APIClient = BaseAPIClient &
   AIEndpoints &
+  AgentEndpoints &
   AnalyticsEndpoints &
   AppEndpoints &
   AttachmentEndpoints &
@@ -133,6 +136,7 @@ export type APIClient = BaseAPIClient &
   TableEndpoints &
   TemplateEndpoints &
   UserEndpoints &
+  FeatureFlagEndpoints &
   ViewEndpoints & {
     rowActions: RowActionEndpoints
     viewV2: ViewV2Endpoints

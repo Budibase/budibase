@@ -60,6 +60,11 @@ export const StaticDatabases = {
   SCIM_LOGS: {
     name: "scim-logs",
   },
+  // Used by self-host users making use of Budicloud resources. Introduced when
+  // we started letting self-host users use Budibase AI in the cloud.
+  SELF_HOST_CLOUD: {
+    name: "self-host-cloud",
+  },
 }
 
 export const APP_PREFIX = prefixed(DocumentType.APP)

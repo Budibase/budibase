@@ -5204,7 +5204,7 @@
     "icon": "Data",
     "illegalChildren": ["section"],
     "hasChildren": true,
-    "actions": ["RefreshDatasource"],
+    "actions": ["RefreshDatasource", "AddDataProviderQueryExtension"],
     "size": {
       "width": 500,
       "height": 200
@@ -5526,7 +5526,59 @@
       }
     ]
   },
+
+  "filter": {
+    "name": "Filter",
+    "icon": "Filter",
+    "size": {
+      "width": 100,
+      "height": 35
+    },
+    "new": true,
+    "settings": [
+      {
+        "type": "dataSource/filterable",
+        "label": "Target component",
+        "required": true,
+        "key": "targetComponent",
+        "wide": true
+      },
+      {
+        "label": "",
+        "type": "filterConfiguration",
+        "key": "filterConfig",
+        "nested": true,
+        "dependsOn": "targetComponent",
+        "resetOn": "targetComponent"
+      },
+      {
+        "type": "boolean",
+        "label": "Persist filters",
+        "key": "persistFilters",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Clear filters",
+        "key": "showClear",
+        "defaultValue": false
+      }
+    ]
+  },
+  "filterconfig": {
+    "name": "",
+    "icon": "",
+    "editable": true,
+    "settings": [
+      {
+        "type": "plainText",
+        "label": "Label",
+        "key": "label"
+      }
+    ]
+  },
   "dynamicfilter": {
+    "deprecated": true,
     "name": "Dynamic Filter",
     "icon": "Filter",
     "size": {
@@ -6980,6 +7032,7 @@
     ]
   },
   "markdownviewer": {
+    "deprecated": true,
     "name": "Markdown Viewer",
     "icon": "Preview",
     "styles": ["size"],
@@ -7456,6 +7509,57 @@
       }
     ]
   },
+  "accordion": {
+    "name": "Accordion",
+    "friendlyName": "Accordion",
+    "description": "A collapsible Budibase container component",
+    "icon": "TreeExpandAll",
+    "hasChildren": true,
+    "illegalChildren": ["modal", "sidepanel"],
+    "showSettingsBar": true,
+    "new": true,
+    "size": {
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "placeholder": "Label",
+        "key": "label"
+      },
+      {
+        "type": "boolean",
+        "label": "Bold",
+        "key": "bold",
+        "showInBar": true,
+        "barIcon": "TagBold",
+        "barTitle": "Bold text",
+        "barSeparator": false
+      },
+      {
+        "type": "select",
+        "label": "Default State",
+        "key": "initialOpen",
+        "defaultValue": true,
+        "options": [
+          {
+            "label": "Open",
+            "value": true
+          },
+          {
+            "label": "Closed",
+            "value": false
+          }
+        ]
+      }
+    ]
+  },
   "rowexplorer": {
     "block": true,
     "name": "Row Explorer Block",
@@ -7584,15 +7688,18 @@
     "name": "Table",
     "icon": "Table",
     "styles": ["size"],
-    "cssVariables": [{
-      "label": "Header color",
-      "variable": "--custom-header-cell-background",
-      "type": "color"
-    }, {
-      "label": "Stripe color",
-      "variable": "--custom-stripe-cell-background",
-      "type": "color"
-    }],
+    "cssVariables": [
+      {
+        "label": "Header color",
+        "variable": "--custom-header-cell-background",
+        "type": "color"
+      },
+      {
+        "label": "Stripe color",
+        "variable": "--custom-stripe-cell-background",
+        "type": "color"
+      }
+    ],
     "size": {
       "width": 600,
       "height": 400
@@ -7616,7 +7723,8 @@
           "setting": "table.type",
           "value": "custom",
           "invert": true
-        }
+        },
+        "resetOn": "table"
       },
       {
         "type": "field/sortable",
@@ -7768,7 +7876,7 @@
         ]
       }
     ],
-    "actions": ["RefreshDatasource"]
+    "actions": ["RefreshDatasource", "AddDataProviderFilterExtension"]
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
@@ -8003,6 +8111,7 @@
     }
   },
   "textv2": {
+    "new": true,
     "name": "Text",
     "description": "A component for displaying text",
     "icon": "Text",
@@ -8016,6 +8125,32 @@
         "label": "Text (Markdown supported)",
         "key": "text",
         "wide": true
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "14px",
+        "showInBar": true,
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": "12px"
+          },
+          {
+            "label": "Medium",
+            "value": "14px"
+          },
+          {
+            "label": "Large",
+            "value": "18px"
+          },
+          {
+            "label": "Extra large",
+            "value": "24px"
+          }
+        ]
       },
       {
         "type": "select",
@@ -8058,5 +8193,249 @@
         "showInBar": true
       }
     ]
+  },
+  "pdf": {
+    "name": "PDF Generator",
+    "icon": "Document",
+    "hasChildren": true,
+    "showEmptyState": false,
+    "illegalChildren": ["sidepanel", "modal", "gridblock"],
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "start"
+    },
+    "size": {
+      "width": 800,
+      "height": 1200
+    },
+    "description": "A component to render PDFs from other Budibase components",
+    "settings": [
+      {
+        "type": "text",
+        "label": "PDF title",
+        "key": "fileName",
+        "defaultValue": "Report"
+      },
+      {
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Download PDF"
+      }
+    ]
+  },
+  "pdftable": {
+    "name": "PDF Table",
+    "icon": "Table",
+    "styles": ["size"],
+    "size": {
+      "width": 600,
+      "height": 304
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter",
+        "resetOn": "datasource",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "sortColumn",
+        "placeholder": "Default",
+        "resetOn": "datasource",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "sortOrder",
+        "resetOn": "datasource",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending",
+        "dependsOn": "sortColumn"
+      },
+      {
+        "type": "columns/toplevel",
+        "label": "Columns",
+        "key": "columns",
+        "resetOn": "datasource",
+        "placeholder": "First 3 columns"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 10
+      }
+    ]
+  },
+  "singlerowprovider": {
+    "name": "Single Row Provider",
+    "icon": "SQLQuery",
+    "hasChildren": true,
+    "actions": ["RefreshDatasource"],
+    "size": {
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
+    "settings": [
+      {
+        "type": "table",
+        "label": "Datasource",
+        "key": "datasource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Row ID",
+        "key": "rowId",
+        "required": true,
+        "resetOn": "datasource"
+      }
+    ],
+    "context": {
+      "type": "schema"
+    }
+  },
+  "ratingfield": {
+    "name": "Rating Field",
+    "icon": "Star",
+    "styles": ["size"],
+    "editable": true,
+    "new": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/number",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "number",
+        "label": "Number of stars",
+        "key": "numberOfStars",
+        "min": 1,
+        "max": 25,
+        "defaultValue": 5
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": ["XS", "S", "M", "L", "XL", "Custom"],
+        "defaultValue": "L"
+      },
+      {
+        "type": "number",
+        "label": "Custom size (px)",
+        "key": "customSize",
+        "min": 1,
+        "max": 72,
+        "defaultValue": 32,
+        "dependsOn": {
+          "setting": "size",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "select",
+        "label": "Icon type",
+        "key": "type",
+        "options": ["Star", "Heart"],
+        "defaultValue": "Star"
+      },
+      {
+        "type": "select",
+        "label": "Colour variant",
+        "key": "variant",
+        "options": ["Primary", "Secondary", "Mono", "Gold", "Red", "Custom"],
+        "defaultValue": "Primary"
+      },
+      {
+        "type": "color",
+        "label": "Custom colour",
+        "key": "colour",
+        "dependsOn": {
+          "setting": "variant",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "validation/number",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
+        }
+      ]
+    }
   }
 }

@@ -1,5 +1,7 @@
 // BASE
 
+import { ErrorCode } from "@budibase/types"
+
 export abstract class BudibaseError extends Error {
   code: string
 
@@ -12,13 +14,6 @@ export abstract class BudibaseError extends Error {
 }
 
 // ERROR HANDLING
-
-export enum ErrorCode {
-  USAGE_LIMIT_EXCEEDED = "usage_limit_exceeded",
-  FEATURE_DISABLED = "feature_disabled",
-  INVALID_API_KEY = "invalid_api_key",
-  HTTP = "http",
-}
 
 /**
  * For the given error, build the public representation that is safe
@@ -52,6 +47,22 @@ export class HTTPError extends BudibaseError {
   constructor(message: string, httpStatus: number, code = ErrorCode.HTTP) {
     super(message, code)
     this.status = httpStatus
+  }
+
+  static async fromResponse(resp: Response) {
+    const body = await resp.text()
+    let message = body
+    let httpStatus = resp.status
+    let code = ErrorCode.HTTP
+    try {
+      const error = JSON.parse(body)
+      message = error.message
+      httpStatus = error.status
+      code = error.error?.code
+    } catch (e) {
+      // ignore
+    }
+    return new HTTPError(message, httpStatus, code)
   }
 }
 

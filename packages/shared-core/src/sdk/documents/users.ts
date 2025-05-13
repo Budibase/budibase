@@ -68,7 +68,7 @@ export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
   return _.flow(
     _.get("roles"),
     _.values,
-    _.find(x => ["CREATOR", "ADMIN"].includes(x)),
+    _.find(x => ["CREATOR"].includes(x)),
     x => !!x
   )(user)
 }
@@ -154,6 +154,6 @@ export function userAppAccessList(user: User, groups?: UserGroup[]) {
   const userGroupApps = userGroups.flatMap(userGroup =>
     Object.keys(userGroup.roles || {})
   )
-  const fullList = [...Object.keys(user.roles), ...userGroupApps]
+  const fullList = [...Object.keys(user?.roles || {}), ...userGroupApps]
   return [...new Set(fullList)]
 }

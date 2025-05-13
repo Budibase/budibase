@@ -1,12 +1,18 @@
 <script>
   import { themeStore } from "@/stores"
   import { setContext } from "svelte"
-  import { Context } from "@budibase/bbui"
+  import { Context, Helpers } from "@budibase/bbui"
 
-  setContext(Context.PopoverRoot, "#theme-root")
+  export let popoverRoot = true
+
+  const id = Helpers.uuid()
+
+  if (popoverRoot) {
+    setContext(Context.PopoverRoot, `#${id}`)
+  }
 </script>
 
-<div style={$themeStore.customThemeCss} id="theme-root">
+<div style={$themeStore.customThemeCss} {id}>
   <slot />
 </div>
 

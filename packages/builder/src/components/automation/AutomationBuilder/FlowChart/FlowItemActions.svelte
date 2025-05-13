@@ -1,17 +1,12 @@
 <script>
-  import { Icon, TooltipPosition, TooltipType, Modal } from "@budibase/bbui"
+  import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import ActionModal from "./ActionModal.svelte"
+  import { automationStore } from "@/stores/builder"
 
   export let block
 
   const dispatch = createEventDispatcher()
-  let actionModal
 </script>
-
-<Modal bind:this={actionModal} width="30%">
-  <ActionModal modal={actionModal} {block} />
-</Modal>
 
 <div class="action-bar">
   {#if !block.branchNode}
@@ -31,7 +26,7 @@
     hoverable
     name="AddCircle"
     on:click={() => {
-      actionModal.show()
+      automationStore.actions.openActionPanel(block)
     }}
     tooltipType={TooltipType.Info}
     tooltipPosition={TooltipPosition.Right}

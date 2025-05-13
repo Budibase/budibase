@@ -1,71 +1,76 @@
 <script lang="ts">
-  import SpectrumMDE from "./SpectrumMDE.svelte"
+  import { marked } from "marked"
 
   export let value: string | undefined = undefined
   export let height: string | undefined = undefined
 
-  let mde: any
+  let ref: HTMLDivElement | undefined
 
-  // Keep the value up to date
-  $: mde && mde.value(value || "")
-  $: {
-    if (mde && !mde.isPreviewActive()) {
-      mde.togglePreview()
+  $: updateValue(ref, value)
+
+  const updateValue = (
+    ref: HTMLDivElement | undefined,
+    markdown: string | undefined
+  ) => {
+    if (!ref) {
+      return
     }
+    if (!markdown) {
+      ref.innerHTML = ""
+      return
+    }
+    ref.innerHTML = marked.parse(markdown)
   }
 </script>
 
-<div class="markdown-viewer" style="height:{height};">
-  <SpectrumMDE
-    bind:mde
-    scroll={false}
-    easyMDEOptions={{
-      initialValue: value,
-      toolbar: false,
-    }}
-  />
-</div>
+<div class="markdown-viewer" style="height:{height};" bind:this={ref} />
 
 <style>
   .markdown-viewer {
     overflow: auto;
   }
-  /* Remove padding, borders and background colors */
-  .markdown-viewer :global(.editor-preview) {
-    padding: 0;
-    border: none;
-    background: transparent;
-  }
-  .markdown-viewer :global(.CodeMirror) {
-    border: none;
-    background: transparent;
-    padding: 0;
-    color: inherit;
-  }
-  .markdown-viewer :global(.EasyMDEContainer) {
-    background: transparent;
-  }
-  /* Hide the actual code editor */
-  .markdown-viewer :global(.CodeMirror-scroll) {
-    display: none;
-  }
-  /*Hide the scrollbar*/
-  .markdown-viewer :global(.CodeMirror-vscrollbar) {
-    display: none !important;
-  }
-  /*Position relatively so we only consume whatever space we need */
-  .markdown-viewer :global(.editor-preview-full) {
-    position: relative;
-  }
   /* Remove margin on the first and last components to fully trim the preview */
-  .markdown-viewer :global(.editor-preview-full > :first-child) {
+  .markdown-viewer :global(:first-child) {
     margin-top: 0;
   }
-  .markdown-viewer :global(.editor-preview-full > :last-child) {
+  .markdown-viewer :global(:last-child) {
     margin-bottom: 0;
   }
-  /* Code blocks in preview */
-  .markdown-viewer :global(.editor-preview-full pre) {
+  /* Code blocks */
+  .markdown-viewer :global(pre) {
     background: var(--spectrum-global-color-gray-200);
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .markdown-viewer :global(code) {
+    color: #e83e8c;
+  }
+  .markdown-viewer :global(pre code) {
+    color: var(--spectrum-alias-text-color);
+  }
+  /* Block quotes */
+  .markdown-viewer :global(blockquote) {
+    border-left: 4px solid var(--spectrum-global-color-gray-400);
+    color: var(--spectrum-global-color-gray-700);
+    margin-left: 0;
+    padding-left: 20px;
+  }
+  /* HRs */
+  .markdown-viewer :global(hr) {
+    background-color: var(--spectrum-global-color-gray-300);
+    border: none;
+    height: 2px;
+  }
+  /* Tables */
+  .markdown-viewer :global(td),
+  .markdown-viewer :global(th) {
+    border-color: var(--spectrum-alias-border-color) !important;
+  }
+  /* Links */
+  .markdown-viewer :global(a) {
+    color: var(--primaryColor);
+  }
+  .markdown-viewer :global(a:hover) {
+    color: var(--primaryColorHover);
   }
 </style>

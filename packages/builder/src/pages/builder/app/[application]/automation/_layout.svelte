@@ -3,8 +3,7 @@
   import AutomationPanel from "@/components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import TestPanel from "@/components/automation/AutomationBuilder/TestPanel.svelte"
-  import { onDestroy, onMount } from "svelte"
+  import { onDestroy } from "svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import {
@@ -12,8 +11,11 @@
     automationStore,
     selectedAutomation,
   } from "@/stores/builder"
+  import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
+  import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
 
   $: automationId = $selectedAutomation?.data?._id
+  $: blockRefs = $selectedAutomation.blockRefs
   $: builderStore.selectResource(automationId)
 
   const stopSyncing = syncURLToState({
@@ -28,15 +30,6 @@
 
   let modal
   let webhookModal
-
-  onMount(async () => {
-    await automationStore.actions.initAppSelf()
-
-    // Init the binding evaluation context
-    automationStore.actions.initContext()
-
-    $automationStore.showTestPanel = false
-  })
 
   onDestroy(stopSyncing)
 </script>
@@ -70,15 +63,23 @@
     {/if}
   </div>
 
-  {#if $automationStore.showTestPanel}
-    <div class="setup">
-      <TestPanel automation={$selectedAutomation.data} />
+  {#if blockRefs[$automationStore.selectedNodeId] && $automationStore.selectedNodeId}
+    <div class="step-panel">
+      <StepPanel />
     </div>
   {/if}
+
+  {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
+    <SelectStepSidePanel
+      block={$automationStore.actionPanelBlock}
+      onClose={() => automationStore.actions.closeActionPanel()}
+    />
+  {/if}
+
   <Modal bind:this={modal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
-  <Modal bind:this={webhookModal} width="30%">
+  <Modal bind:this={webhookModal}>
     <CreateWebhookModal />
   </Modal>
 </div>
@@ -115,16 +116,17 @@
   .main {
     width: 300px;
   }
-  .setup {
-    padding-top: 9px;
+
+  .step-panel {
     border-left: var(--border-light);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-l);
     background-color: var(--background);
-    grid-column: 3;
     overflow: auto;
+    grid-column: 3;
+    width: 400px;
+    max-width: 400px;
   }
 </style>

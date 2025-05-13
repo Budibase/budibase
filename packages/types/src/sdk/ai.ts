@@ -1,3 +1,5 @@
+import { AIProvider } from "../documents"
+
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",
   CLEAN_DATA = "CLEAN_DATA",
@@ -89,3 +91,12 @@ export type AIColumnSchema =
   | SentimentAnalysisSchema
   | PromptSchema
   | SearchWebSchema
+
+export interface LLMConfigOptions {
+  model: string
+  apiKey?: string
+}
+
+export interface LLMProviderConfig extends LLMConfigOptions {
+  provider: AIProvider
+}

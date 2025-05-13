@@ -1,7 +1,12 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
 import { cloneDeep } from "lodash"
-import { SearchFilterGroup, UISearchFilter } from "@budibase/types"
+import {
+  SearchFilterGroup,
+  UISearchFilter,
+  UITableResource,
+  UIViewResource,
+} from "@budibase/types"
 
 export const sleep = (ms: number) =>
   new Promise(resolve => setTimeout(resolve, ms))
@@ -131,7 +136,7 @@ export const domDebounce = (callback: Function) => {
 export const buildFormBlockButtonConfig = (props?: {
   _id?: string
   actionType?: string
-  dataSource?: { resourceId: string }
+  dataSource?: UITableResource | UIViewResource
   notificationOverride?: boolean
   actionUrl?: string
   showDeleteButton?: boolean

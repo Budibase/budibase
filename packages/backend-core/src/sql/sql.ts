@@ -1,11 +1,13 @@
 import { Knex, knex } from "knex"
 import * as dbCore from "../db"
 import {
+  extractDate,
   getNativeSql,
   isExternalTable,
   isInvalidISODateString,
   isValidFilter,
   isValidISODateString,
+  isValidTime,
   sqlLog,
   validateManyToMany,
 } from "./utils"
@@ -417,11 +419,23 @@ class InternalBuilder {
     }
 
     if (typeof input === "string" && schema.type === FieldType.DATETIME) {
-      if (isInvalidISODateString(input)) {
-        return null
-      }
-      if (isValidISODateString(input)) {
-        return new Date(input.trim())
+      if (schema.timeOnly) {
+        if (!isValidTime(input)) {
+          return null
+        }
+      } else if (schema.dateOnly) {
+        const date = extractDate(input)
+        if (!date) {
+          return null
+        }
+        return new Date(date)
+      } else {
+        if (isInvalidISODateString(input)) {
+          return null
+        }
+        if (isValidISODateString(input)) {
+          return new Date(input.trim())
+        }
       }
     }
     return input

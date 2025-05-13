@@ -18,7 +18,6 @@ import {
   generateDevAppID,
   generateScreenID,
   getLayoutParams,
-  getScreenParams,
 } from "../../db/utils"
 import {
   cache,
@@ -26,7 +25,6 @@ import {
   db as dbCore,
   docIds,
   env as envCore,
-  ErrorCode,
   events,
   objectStore,
   roles,
@@ -70,6 +68,7 @@ import {
   AddAppSampleDataResponse,
   UnpublishAppResponse,
   SetRevertableAppVersionResponse,
+  ErrorCode,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -84,17 +83,6 @@ async function getLayouts() {
   return (
     await db.allDocs<Layout>(
       getLayoutParams(null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(row => row.doc!)
-}
-
-async function getScreens() {
-  const db = context.getAppDB()
-  return (
-    await db.allDocs<Screen>(
-      getScreenParams(null, {
         include_docs: true,
       })
     )
@@ -241,7 +229,7 @@ export async function fetchAppDefinition(
   const userRoleId = getUserRoleId(ctx)
   const accessController = new roles.AccessController()
   const screens = await accessController.checkScreensAccess(
-    await getScreens(),
+    await sdk.screens.fetch(),
     userRoleId
   )
   ctx.body = {
@@ -257,13 +245,20 @@ export async function fetchAppPackage(
   const appId = context.getAppId()
   const application = await sdk.applications.metadata.get()
   const layouts = await getLayouts()
-  let screens = await getScreens()
+  let screens = await sdk.screens.fetch()
   const license = await licensing.cache.getCachedLicense()
 
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
     application.usedPlugins
   )
+
+  // Enrich PWA icon URLs if they exist
+  if (application.pwa?.icons && application.pwa.icons.length > 0) {
+    application.pwa.icons = await objectStore.enrichPWAImages(
+      application.pwa.icons
+    )
+  }
 
   // Only filter screens if the user is not a builder
   if (!users.isBuilder(ctx.user, appId)) {
@@ -867,6 +862,18 @@ export async function updateAppPackage(
       newAppPackage._rev = application._rev
     }
 
+    // Make sure that when saving down pwa settings, we don't override the keys with the enriched url
+    if (appPackage.pwa && application.pwa) {
+      if (appPackage.pwa.icons) {
+        appPackage.pwa.icons = appPackage.pwa.icons.map((icon, i) =>
+          icon.src.startsWith(objectStore.SIGNED_FILE_PREFIX) &&
+          application?.pwa?.icons?.[i]
+            ? { ...icon, src: application?.pwa?.icons?.[i].src }
+            : icon
+        )
+      }
+    }
+
     // the locked by property is attached by server but generated from
     // Redis, shouldn't ever store it
     delete newAppPackage.lockedBy
@@ -896,7 +903,7 @@ async function migrateAppNavigation() {
   const db = context.getAppDB()
   const existing = await sdk.applications.metadata.get()
   const layouts: Layout[] = await getLayouts()
-  const screens: Screen[] = await getScreens()
+  const screens: Screen[] = await sdk.screens.fetch()
 
   // Migrate all screens, removing custom layouts
   for (let screen of screens) {

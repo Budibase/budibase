@@ -11,8 +11,10 @@
   import { FieldType } from "@budibase/types"
 
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
-  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import {
+    DrawerBindableSlot,
+    ServerBindingPanel as AutomationBindingPanel,
+  } from "@/components/common/bindings"
   import { FIELDS } from "@/constants/backend"
   import { capitalise } from "@/helpers"
   import { memo } from "@budibase/frontend-core"
@@ -26,6 +28,8 @@
   export let bindings
   export let isTestModal
   export let context = {}
+  export let componentWidth
+  export let fullWidth = false
 
   const typeToField = Object.values(FIELDS).reduce((acc, field) => {
     acc[field.type] = field
@@ -242,13 +246,20 @@
   const drawerValue = fieldValue => {
     return Array.isArray(fieldValue) ? fieldValue.join(",") : fieldValue
   }
+
+  // The element controls their own binding drawer
+  const customDrawer = ["string", "number", "barcodeqr", "bigint"]
 </script>
 
 {#each schemaFields || [] as [field, schema]}
   {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
-    <PropField label={field} fullWidth={isFullWidth(schema.type)}>
-      <div class="prop-control-wrap">
-        {#if isTestModal}
+    <PropField
+      label={field}
+      fullWidth={fullWidth || isFullWidth(schema.type)}
+      {componentWidth}
+    >
+      {#if customDrawer.includes(schema.type) || isTestModal}
+        <div class="prop-control-wrap">
           <RowSelectorTypes
             {isTestModal}
             {field}
@@ -261,25 +272,26 @@
             {onChange}
             {context}
           />
-        {:else}
-          <DrawerBindableSlot
-            title={$memoStore?.row?.title || field}
-            panel={AutomationBindingPanel}
-            type={schema.type}
-            {schema}
-            value={drawerValue(editableRow[field])}
-            on:change={e =>
-              onChange({
-                row: {
-                  [field]: e.detail,
-                },
-              })}
-            {bindings}
-            allowJS={true}
-            updateOnChange={false}
-            drawerLeft="260px"
-            {context}
-          >
+        </div>
+      {:else}
+        <DrawerBindableSlot
+          title={$memoStore?.row?.title || field}
+          panel={AutomationBindingPanel}
+          type={schema.type}
+          {schema}
+          value={drawerValue(editableRow[field])}
+          on:change={e =>
+            onChange({
+              row: {
+                [field]: e.detail,
+              },
+            })}
+          {bindings}
+          allowJS={true}
+          updateOnChange={false}
+          {context}
+        >
+          <div class="prop-control-wrap">
             <RowSelectorTypes
               {isTestModal}
               {field}
@@ -289,12 +301,12 @@
               meta={{
                 fields: editableFields,
               }}
+              {onChange}
               {context}
-              onChange={change => onChange(change)}
             />
-          </DrawerBindableSlot>
-        {/if}
-      </div>
+          </div>
+        </DrawerBindableSlot>
+      {/if}
     </PropField>
   {/if}
 {/each}
@@ -305,24 +317,30 @@
     class:empty={Object.is(editableFields, {})}
     bind:this={popoverAnchor}
   >
-    <ActionButton
-      icon="Add"
-      on:click={() => {
-        customPopover.show()
-      }}
-      disabled={!schemaFields}
-      >Add fields
-    </ActionButton>
-    <ActionButton
-      icon="Remove"
-      on:click={() => {
-        dispatch("change", {
-          meta: { fields: {} },
-          row: {},
-        })
-      }}
-      >Clear
-    </ActionButton>
+    <PropField {componentWidth} {fullWidth}>
+      <div class="prop-control-wrap">
+        <ActionButton
+          on:click={() => {
+            customPopover.show()
+          }}
+          disabled={!schemaFields}
+        >
+          Edit fields
+        </ActionButton>
+        {#if schemaFields.length}
+          <ActionButton
+            on:click={() => {
+              dispatch("change", {
+                meta: { fields: {} },
+                row: {},
+              })
+            }}
+          >
+            Clear
+          </ActionButton>
+        {/if}
+      </div>
+    </PropField>
   </div>
 {/if}
 
@@ -387,12 +405,5 @@
   /* Override for general json field override */
   .prop-control-wrap :global(.icon.json-slot-icon) {
     right: 1px !important;
-  }
-
-  .add-fields-btn {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: var(--spacing-s);
   }
 </style>

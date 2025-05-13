@@ -12,6 +12,7 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
+  import NewPill from "@/components/common/NewPill.svelte"
 
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
@@ -20,7 +21,7 @@
 
   // Aliases for other strings to match to when searching
   const aliases = {
-    text: ["headline", "paragraph"],
+    text: ["headline", "heading", "title", "paragraph", "markdown"],
   }
 
   let searchString
@@ -58,7 +59,7 @@
     // Get initial set of allowed components
     let allowedComponents = []
     const definition = componentStore.getDefinition(component?._component)
-    if (definition.legalDirectChildren?.length) {
+    if (definition?.legalDirectChildren?.length) {
       allowedComponents = definition.legalDirectChildren.map(x => {
         return `@budibase/standard-components/${x}`
       })
@@ -67,7 +68,7 @@
     }
 
     // Build up list of illegal children from ancestors
-    let illegalChildren = definition.illegalChildren || []
+    let illegalChildren = definition?.illegalChildren || []
     path.forEach(ancestor => {
       // Sidepanels and modals can be nested anywhere in the component tree, but really they are always rendered at the top level.
       // Because of this, it doesn't make sense to carry over any parent illegal children to them, so the array is reset here.
@@ -143,11 +144,6 @@
         })
       }
     })
-
-    // Swap blocks and plugins
-    let tmp = enrichedStructure[1]
-    enrichedStructure[1] = enrichedStructure[0]
-    enrichedStructure[0] = tmp
 
     return enrichedStructure
   }
@@ -274,7 +270,12 @@
                 on:mouseenter={() => (selectedIndex = null)}
               >
                 <Icon name={component.icon} />
-                <Body size="XS">{component.name}</Body>
+                <div class="component-name">
+                  <Body size="XS">{component.name}</Body>
+                  {#if component.new}
+                    <NewPill />
+                  {/if}
+                </div>
               </div>
             {/each}
           </Layout>
@@ -323,6 +324,12 @@
   }
   .component:hover {
     background: var(--spectrum-global-color-gray-300);
+  }
+  .component-name {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 4px;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;

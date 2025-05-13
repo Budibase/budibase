@@ -155,13 +155,19 @@ export async function importToRows(
           schema.type === FieldType.ARRAY) &&
         row[fieldName]
       ) {
-        const rowVal = Array.isArray(row[fieldName])
-          ? row[fieldName]
-          : [row[fieldName]]
+        const isArray = Array.isArray(row[fieldName])
+
+        // Add option to inclusion constraints
+        const rowVal = isArray ? row[fieldName] : [row[fieldName]]
         let merged = [...schema.constraints!.inclusion!, ...rowVal]
         let superSet = new Set(merged)
         schema.constraints!.inclusion = Array.from(superSet)
         schema.constraints!.inclusion.sort()
+
+        // If array type, ensure we import the value as an array
+        if (!isArray && schema.type === FieldType.ARRAY) {
+          row[fieldName] = rowVal
+        }
       }
     }
 

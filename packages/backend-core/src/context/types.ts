@@ -1,10 +1,12 @@
-import { IdentityContext, Snippet, Table, VM } from "@budibase/types"
+import { IdentityContext, License, Snippet, Table, VM } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 
 // keep this out of Budibase types, don't want to expose context info
 export type ContextMap = {
   tenantId?: string
+  isSelfHostUsingCloud?: boolean
+  license?: License
   appId?: string
   identity?: IdentityContext
   environmentVariables?: Record<string, string>
@@ -22,5 +24,6 @@ export type ContextMap = {
   featureFlagCache?: {
     [key: string]: Record<string, boolean>
   }
+  featureFlagOverrides?: Record<string, boolean>
   viewToTableCache?: Record<string, Table>
 }

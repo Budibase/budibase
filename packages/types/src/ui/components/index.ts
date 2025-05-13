@@ -1,3 +1,5 @@
+import { FieldType } from "@budibase/types"
+
 export * from "./codeEditor"
 export * from "./errors"
 
@@ -23,6 +25,7 @@ export interface ComponentDefinition {
   requiredAncestors?: string[]
   illegalChildren: string[]
   icon?: string
+  new?: boolean
   size?: {
     width: number
     height: number
@@ -81,4 +84,12 @@ export type ComponentContextType = "action" | "static" | "schema" | "form"
 export const enum ComponentContextScopes {
   Local = "local",
   Global = "global",
+}
+
+export type FilterConfig = {
+  active: boolean
+  field: string
+  label?: string
+  _id?: string
+  columnType?: FieldType
 }

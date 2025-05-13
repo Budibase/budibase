@@ -52,9 +52,9 @@ export const BudibaseRoleOptionsOld = [
 ]
 export const BudibaseRoleOptions = [
   {
-    label: "Account admin",
+    label: "Workspace admin",
     value: BudibaseRoles.Admin,
-    subtitle: "Has full access to all apps and settings in your account",
+    subtitle: "Has full access to all apps and settings in your workspace",
     sortOrder: 1,
   },
   {
@@ -86,6 +86,7 @@ export const PlanType = {
   PRO: "pro",
   BUSINESS: "business",
   PREMIUM: "premium",
+  PREMIUM_PLUS: "premium_plus",
   ENTERPRISE: "enterprise",
   ENTERPRISE_BASIC_TRIAL: "enterprise_basic_trial",
 }

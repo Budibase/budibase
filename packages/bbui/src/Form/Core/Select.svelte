@@ -35,7 +35,7 @@
   export let footer: string | undefined = undefined
   export let open: boolean = false
   export let searchTerm: string | undefined = undefined
-  export let loading: boolean | undefined = undefined
+  export let loading: boolean | undefined = false
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
   export let customPopoverHeight: string | undefined = undefined

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts" generics="O">
   import {
     Icon,
     ActionButton,
@@ -15,31 +15,30 @@
 
   const dispatch = createEventDispatcher()
 
-  export let defaults
-  export let object = defaults || {}
-  export let activity = {}
-  export let readOnly
-  export let noAddButton
-  export let name
-  export let headings = false
-  export let options
-  export let toggle
-  export let keyPlaceholder = "Key"
-  export let valuePlaceholder = "Value"
-  export let valueHeading
-  export let keyHeading
-  export let tooltip
-  export let menuItems
-  export let showMenu = false
-  export let bindings = []
-  export let bindingDrawerLeft
-  export let allowHelpers = true
+  export let defaults: Record<string, string> | undefined = undefined
+  export let object: Record<string, string> = defaults || {}
+  export let activity: Record<string, boolean> = {}
+  export let readOnly: boolean = false
+  export let noAddButton: boolean = false
+  export let name: string = ""
+  export let headings: boolean = false
+  export let options: O[] | undefined = undefined
+  export let toggle: boolean = false
+  export let keyPlaceholder: string = "Key"
+  export let valuePlaceholder: string = "Value"
+  export let valueHeading: string = ""
+  export let keyHeading: string = ""
+  export let tooltip: string = ""
+  export let menuItems: any[] = []
+  export let showMenu: boolean = false
+  export let bindings: any[] = []
+  export let allowHelpers: boolean = true
   export let customButtonText = null
-  export let keyBindings = false
-  export let allowJS = false
-  export let actionButtonDisabled = false
-  export let compare = (option, value) => option === value
-  export let context = null
+  export let keyBindings: boolean = false
+  export let allowJS: boolean = false
+  export let actionButtonDisabled: boolean = false
+  export let compare = (option: O, value: O) => option === value
+  export let context: any = null
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -47,27 +46,32 @@
   }))
   let fieldActivity = buildFieldActivity(activity)
 
-  $: fullObject = fields.reduce((acc, next) => {
+  $: fullObject = fields.reduce<Record<string, string>>((acc, next) => {
     acc[next.name] = next.value
     return acc
   }, {})
 
-  $: object = Object.entries(fullObject).reduce((acc, [key, next]) => {
-    if (key) {
-      acc[key] = next
-    }
-    return acc
-  }, {})
+  $: object = Object.entries(fullObject).reduce<Record<string, string>>(
+    (acc, [key, next]) => {
+      if (key) {
+        acc[key] = next
+      }
+      return acc
+    },
+    {}
+  )
 
-  function buildFieldActivity(obj) {
+  function buildFieldActivity(obj: Record<string, boolean>) {
     if (!obj || typeof obj !== "object") {
       return []
     }
-    const array = Array(fields.length)
+    const array: boolean[] = Array(fields.length)
     for (let [key, value] of Object.entries(obj)) {
       const field = fields.find(el => el.name === key)
-      const idx = fields.indexOf(field)
-      array[idx] = idx !== -1 ? value : true
+      if (field) {
+        const idx = fields.indexOf(field)
+        array[idx] = idx !== -1 ? value : true
+      }
     }
     return array
   }
@@ -78,7 +82,7 @@
     changed()
   }
 
-  function deleteEntry(idx) {
+  function deleteEntry(idx: number) {
     fields.splice(idx, 1)
     fieldActivity.splice(idx, 1)
     changed()
@@ -87,7 +91,7 @@
   function changed() {
     // Required for reactivity
     fields = fields
-    const newActivity = {}
+    const newActivity: Record<string, boolean> = {}
     for (let idx = 0; idx < fields.length; idx++) {
       const fieldName = fields[idx].name
       if (fieldName) {
@@ -98,7 +102,7 @@
     dispatch("change", fields)
   }
 
-  function isJsonArray(value) {
+  function isJsonArray(value: any) {
     if (!value || typeof value === "string") {
       return false
     }
@@ -140,7 +144,6 @@
           value={field.name}
           {allowJS}
           {allowHelpers}
-          drawerLeft={bindingDrawerLeft}
           {context}
         />
       {:else}
@@ -167,7 +170,6 @@
           value={field.value}
           {allowJS}
           {allowHelpers}
-          drawerLeft={bindingDrawerLeft}
           {context}
         />
       {:else}
@@ -184,7 +186,7 @@
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
       {/if}
-      {#if menuItems?.length > 0 && showMenu}
+      {#if menuItems?.length && showMenu}
         <ActionMenu>
           <div slot="control" class="control icon">
             <Icon size="S" hoverable name="MoreSmallList" />
@@ -204,9 +206,6 @@
     <ActionButton
       disabled={actionButtonDisabled}
       icon="Add"
-      secondary
-      thin
-      outline
       on:click={addEntry}
     >
       {#if customButtonText}

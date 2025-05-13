@@ -45,7 +45,7 @@
     },
     {
       label: "Multi-select",
-      value: FieldType.ARRAY.type,
+      value: FieldType.ARRAY,
     },
     {
       label: "Barcode/QR",

@@ -49,6 +49,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.3",
     "@apidevtools/swagger-parser": "10.0.3",
     "@aws-sdk/client-dynamodb": "3.709.0",
     "@aws-sdk/client-s3": "3.709.0",
@@ -85,8 +86,9 @@
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
     "dayjs": "^1.10.8",
-    "dd-trace": "5.43.0",
+    "dd-trace": "5.47.0",
     "dotenv": "8.2.0",
+    "extract-zip": "^2.0.1",
     "form-data": "4.0.0",
     "global-agent": "3.0.0",
     "google-auth-library": "^8.0.1",
@@ -133,7 +135,8 @@
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xml2js": "0.6.2",
-    "zod-validation-error": "^3.4.0"
+    "zod-validation-error": "^3.4.0",
+    "http-graceful-shutdown": "^3.1.12"
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
@@ -144,6 +147,7 @@
     "@types/archiver": "6.0.2",
     "@types/global-agent": "2.1.1",
     "@types/jest": "29.5.5",
+    "@types/json-schema": "^7.0.15",
     "@types/koa": "2.13.4",
     "@types/koa-send": "^4.1.6",
     "@types/koa__cors": "5.0.0",

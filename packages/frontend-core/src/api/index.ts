@@ -46,6 +46,8 @@ import { buildLogsEndpoints } from "./logs"
 import { buildMigrationEndpoints } from "./migrations"
 import { buildRowActionEndpoints } from "./rowActions"
 import { buildOAuth2Endpoints } from "./oauth2"
+import { buildAgentEndpoints } from "./agents"
+import { buildFeatureFlagEndpoints } from "./features"
 
 export type { APIClient } from "./types"
 
@@ -289,6 +291,8 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildAuditLogEndpoints(API),
     ...buildLogsEndpoints(API),
     ...buildMigrationEndpoints(API),
+    ...buildAgentEndpoints(API),
+    ...buildFeatureFlagEndpoints(API),
     viewV2: buildViewV2Endpoints(API),
     rowActions: buildRowActionEndpoints(API),
     oauth2: buildOAuth2Endpoints(API),

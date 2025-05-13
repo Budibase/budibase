@@ -31,6 +31,16 @@ import {
 } from "@budibase/types"
 import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
+import BlockComponent from "./components/BlockComponent.svelte"
+import Block from "./components/Block.svelte"
+
+// Set up global PWA install prompt handler
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault()
+    window.deferredPwaPrompt = e
+  })
+}
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
@@ -48,7 +58,7 @@ loadSpectrumIcons()
 declare global {
   interface Window {
     // Data from builder
-    "##BUDIBASE_APP_ID##"?: string
+    "##BUDIBASE_APP_ID##": string
     "##BUDIBASE_IN_BUILDER##"?: true
     "##BUDIBASE_PREVIEW_SCREEN##"?: Screen
     "##BUDIBASE_SELECTED_COMPONENT_ID##"?: string
@@ -67,12 +77,16 @@ declare global {
     // Other flags
     MIGRATING_APP: boolean
 
+    // PWA install prompt
+    deferredPwaPrompt: any
+
     // Client additions
     handleBuilderRuntimeEvent: (type: string, data: any) => void
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
     svelte_internal: typeof internal
+    INIT_TIME: number
   }
 }
 
@@ -83,12 +97,17 @@ export interface SDK {
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
   fetchDatasourceDefinition: (datasource: DataFetchDatasource) => Promise<Table>
+  getRelationshipSchemaAdditions: (schema: Record<string, any>) => Promise<any>
+  enrichButtonActions: any
   generateGoldenSample: any
+  createContextStore: any
   builderStore: typeof builderStore
   authStore: typeof authStore
   notificationStore: typeof notificationStore
   environmentStore: typeof environmentStore
   appStore: typeof appStore
+  Block: typeof Block
+  BlockComponent: typeof BlockComponent
 }
 
 let app: ClientApp

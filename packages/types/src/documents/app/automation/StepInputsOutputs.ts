@@ -320,6 +320,7 @@ export type WebhookTriggerOutputs = Record<string, any> & {
 
 export type RowActionTriggerInputs = {
   tableId: string
+  rowActionId: string
 }
 
 export type RowActionTriggerOutputs = {
