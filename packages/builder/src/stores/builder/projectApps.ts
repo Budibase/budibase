@@ -7,6 +7,7 @@ import {
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
+import { API } from "@/api"
 
 interface ProjectAppStoreState {
   projectApps: ProjectApp[]
@@ -65,8 +66,10 @@ export class ProjectAppStore extends DerivedBudiStore<
   }
 
   async add(projectApp: ProjectApp) {
+    const createdProjectApp = await API.projectApp.create(projectApp)
+
     this.store.update(state => {
-      state.projectApps.push({ ...projectApp, _id: Helpers.uuid() })
+      state.projectApps.push(createdProjectApp.projectApp)
       return state
     })
   }
