@@ -4,7 +4,7 @@ export interface ProjectAppResponse {
   name: string
   urlPrefix: string
   icon: string
-  iconColor: string
+  iconColor?: string
 }
 
 export interface InsertProjectAppRequest {

@@ -187,6 +187,7 @@ async function addSampleDataScreen() {
   const projectApp = await sdk.projectApps.create({
     name: appMetadata.name,
     urlPrefix: "/",
+    icon: "Monitoring",
   })
 
   let screen = createSampleDataTableScreen(projectApp._id)

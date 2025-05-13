@@ -89,7 +89,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
   syncAppScreens(pkg: FetchAppPackageResponse) {
     this.update(state => ({
       ...state,
-      screens: [...pkg.screens],
+      screens: [...pkg.projectApps.flatMap(p => p.screens)],
     }))
   }
 

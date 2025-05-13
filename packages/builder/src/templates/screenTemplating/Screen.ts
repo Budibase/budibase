@@ -31,6 +31,7 @@ export class Screen extends BaseStructure<ScreenDoc> {
         homeScreen: false,
       },
       name: "screen-id",
+      projectAppId: "TODO",
     })
   }
 

@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, utils } from "@budibase/backend-core"
 import { Database, DocumentType, Screen, SEPARATOR } from "@budibase/types"
 import { getScreenParams } from "../../../db/utils"
 import sdk from "../.."
@@ -30,9 +30,10 @@ async function migrateToProjectApp(screens: Screen[]) {
 
   // Forcing the _id to avoid concurrency issues
   const createdProjectApp = await sdk.projectApps.update({
-    _id: `${DocumentType.PROJECT_APP}${SEPARATOR}default`,
+    _id: `${DocumentType.PROJECT_APP}${SEPARATOR}${utils.newid()}`,
     name: application.name,
     urlPrefix: "/",
+    icon: "Monitoring",
   })
 
   const db = context.getAppDB()
