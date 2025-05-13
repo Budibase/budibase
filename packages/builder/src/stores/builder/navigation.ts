@@ -1,18 +1,46 @@
-import { get } from "svelte/store"
+import { derived, get, Readable } from "svelte/store"
 import { API } from "@/api"
-import { appStore } from "@/stores/builder"
-import { BudiStore } from "../BudiStore"
+import { appStore, screenStore, selectedScreen } from "@/stores/builder"
+import { DerivedBudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
 
-export const INITIAL_NAVIGATION_STATE = {
+interface NavigationStoreState {
+  navigation: AppNavigation["navigation"]
+  links: AppNavigationLink[]
+  textAlign: AppNavigation["textAlign"]
+}
+
+export const INITIAL_NAVIGATION_STATE: NavigationStoreState = {
   navigation: "Top",
   links: [],
   textAlign: "Left",
 }
 
-export class NavigationStore extends BudiStore<AppNavigation> {
+interface DerivedNavigationStoreState extends NavigationStoreState {}
+
+export class NavigationStore extends DerivedBudiStore<
+  NavigationStoreState,
+  DerivedNavigationStoreState
+> {
   constructor() {
-    super(INITIAL_NAVIGATION_STATE)
+    const makeDerivedStore = (store: Readable<NavigationStoreState>) => {
+      return derived(
+        [store, selectedScreen, screenStore],
+        ([$store, $selectedScreen, $screenStore]) => {
+          const currentScreenLinks = $screenStore.screens
+            .filter(s => s.projectAppId === $selectedScreen?.projectAppId)
+            .map(s => s.routing.route)
+
+          const links = $store.links.filter(l =>
+            currentScreenLinks.includes(l.url)
+          )
+
+          return { ...$store, links }
+        }
+      )
+    }
+
+    super(INITIAL_NAVIGATION_STATE, makeDerivedStore)
   }
 
   syncAppNavigation(nav?: AppNavigation) {
@@ -26,17 +54,25 @@ export class NavigationStore extends BudiStore<AppNavigation> {
     this.store.set({ ...INITIAL_NAVIGATION_STATE })
   }
 
-  async save(navigation: AppNavigation) {
+  async save(navigation: NavigationStoreState) {
     const appId = get(appStore).appId
     const app = await API.saveAppMetadata(appId, { navigation })
     if (app.navigation) {
-      this.syncAppNavigation(app.navigation)
+      this.syncAppNavigation({
+        navigation:
+          app.navigation?.navigation ?? INITIAL_NAVIGATION_STATE.navigation,
+        links: app.navigation.links ?? INITIAL_NAVIGATION_STATE.links,
+        textAlign:
+          app.navigation.textAlign ?? INITIAL_NAVIGATION_STATE.textAlign,
+      })
     }
   }
 
   async saveLink(url: string, title: string, roleId: string) {
     const navigation = get(this.store)
-    let links: AppNavigationLink[] = [...(navigation?.links ?? [])]
+    const links = [...(navigation.links ?? [])]
+
+    navigation.links
 
     // Skip if we have an identical link
     if (links.find(link => link.url === url && link.text === title)) {
