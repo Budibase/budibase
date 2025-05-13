@@ -34,7 +34,7 @@
         }
       ),
       urlPrefix: requiredString("Url prefix is required.")
-        .regex(/^\/\w+$/, {
+        .regex(/^\/\w*$/, {
           message:
             "Url must start with / and contain only alphanumeric characters.",
         })
@@ -105,6 +105,12 @@
     }
 
     modal.hide()
+  }
+
+  $: {
+    if (data && !data.urlPrefix.startsWith("/")) {
+      data.urlPrefix = `/${data.urlPrefix}`
+    }
   }
 </script>
 
