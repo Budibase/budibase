@@ -41,7 +41,7 @@
 
   export const show = (
     newMode: string,
-    preselectedDatasource: Table | ViewV2 | null
+    preselectedDatasource: Table | ViewV2 | null = null
   ) => {
     mode = newMode
     selectedTablesAndViews = []

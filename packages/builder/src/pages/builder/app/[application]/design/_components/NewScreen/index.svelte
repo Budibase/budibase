@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Body, Tag, Tags } from "@budibase/bbui"
   import CreationPage from "@/components/common/CreationPage.svelte"
   import blank from "./images/blank.svg"
@@ -10,9 +10,9 @@
   import { licensing } from "@/stores/portal"
   import { AutoScreenTypes } from "@/constants"
 
-  export let onClose = null
+  export let onClose: (() => void) | null = null
 
-  let createScreenModal
+  let createScreenModal: CreateScreenModal
 
   $: hasScreens = $screenStore.screens?.length
 </script>

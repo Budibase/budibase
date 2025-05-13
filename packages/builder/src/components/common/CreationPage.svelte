@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
   import { Icon, Heading } from "@budibase/bbui"
 
-  export let showClose = false
-  export let onClose = () => {}
-  export let heading = ""
+  export let showClose: boolean = false
+  export let onClose: (() => void) | null = () => {}
+  export let heading: string = ""
 </script>
 
 <section class="page">
