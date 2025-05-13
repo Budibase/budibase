@@ -20,14 +20,15 @@ async function start() {
   const koa = createKoaApp()
   app = koa.app
   server = koa.server
-  // startup includes automation runner - if enabled
-  await startup({ app, server })
+  try {
+    await startup({ app, server })
+  } catch (err: any) {
+    console.error(`Failed server startup - ${err.message}`)
+    process.exit(1)
+  }
 }
 
-start().catch(err => {
-  console.error(`Failed server startup - ${err.message}`)
-  throw err
-})
+start()
 
 export function getServer(): Server {
   return server

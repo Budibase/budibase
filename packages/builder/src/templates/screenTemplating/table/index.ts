@@ -10,25 +10,27 @@ const createScreen = async ({
   type,
   permissions,
   screens,
+  projectAppId,
 }: {
   tableOrView: SourceOption
   type: string
   permissions: UIPermissions
   screens: Screen[]
+  projectAppId: string
 }) => {
   if (type === "inline") {
-    return await inline({ tableOrView, permissions, screens })
+    return await inline({ tableOrView, permissions, screens, projectAppId })
   }
   if (type === "modal") {
-    return await modal({ tableOrView, permissions, screens })
+    return await modal({ tableOrView, permissions, screens, projectAppId })
   }
 
   if (type === "sidePanel") {
-    return await sidePanel({ tableOrView, permissions, screens })
+    return await sidePanel({ tableOrView, permissions, screens, projectAppId })
   }
 
   if (type === "newScreen") {
-    return await newScreen({ tableOrView, permissions, screens })
+    return await newScreen({ tableOrView, permissions, screens, projectAppId })
   }
 
   throw new Error(`Unrecognized table type ${type}`)

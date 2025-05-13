@@ -4,10 +4,18 @@ import getValidRoute from "./getValidRoute"
 import { Roles } from "@/constants/backend"
 import { Screen as ScreenDoc } from "@budibase/types"
 
-const blank = ({ route, screens }: { route: string; screens: ScreenDoc[] }) => {
+const blank = ({
+  route,
+  screens,
+  projectAppId,
+}: {
+  route: string
+  screens: ScreenDoc[]
+  projectAppId: string
+}) => {
   const validRoute = getValidRoute(screens, route, Roles.BASIC)
 
-  const template = new Screen()
+  const template = new Screen(projectAppId)
     .instanceName("Blank screen")
     .customProps({ layout: "grid" })
     .role(Roles.BASIC)

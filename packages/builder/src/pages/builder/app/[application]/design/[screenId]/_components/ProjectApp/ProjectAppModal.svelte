@@ -33,16 +33,21 @@
           message: "This name is already taken.",
         }
       ),
-      urlPrefix: requiredString("Url prefix is required.").refine(
-        val =>
-          !$projectAppStore.projectApps
-            .filter(a => a._id !== projectApp._id)
-            .map(a => a.urlPrefix.toLowerCase())
-            .includes(val.toLowerCase()),
-        {
-          message: "This url is already taken.",
-        }
-      ),
+      urlPrefix: requiredString("Url prefix is required.")
+        .regex(/^\/\w*$/, {
+          message:
+            "Url must start with / and contain only alphanumeric characters.",
+        })
+        .refine(
+          val =>
+            !$projectAppStore.projectApps
+              .filter(a => a._id !== projectApp._id)
+              .map(a => a.urlPrefix.toLowerCase())
+              .includes(val.toLowerCase()),
+          {
+            message: "This url is already taken.",
+          }
+        ),
       icon: z.string(),
       iconColor: z.string(),
     }) satisfies ZodType<ProjectApp>
@@ -87,8 +92,8 @@
     } else {
       await projectAppStore.edit({
         ...projectAppData,
-        _id: projectApp!._id,
-        _rev: projectApp!._rev,
+        _id: projectApp!._id!,
+        _rev: projectApp!._rev!,
       })
     }
   }
@@ -100,6 +105,12 @@
     }
 
     modal.hide()
+  }
+
+  $: {
+    if (data && !data.urlPrefix.startsWith("/")) {
+      data.urlPrefix = `/${data.urlPrefix}`
+    }
   }
 </script>
 

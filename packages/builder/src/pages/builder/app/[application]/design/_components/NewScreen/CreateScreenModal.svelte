@@ -121,8 +121,8 @@
   const createBasicScreen = async ({ route }: { route: string }) => {
     const screenTemplates =
       mode === AutoScreenTypes.BLANK
-        ? screenTemplating.blank({ route, screens })
-        : screenTemplating.pdf({ route, screens })
+        ? screenTemplating.blank({ route, screens, projectAppId })
+        : screenTemplating.pdf({ route, screens, projectAppId })
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
@@ -134,8 +134,9 @@
           screenTemplating.table({
             screens,
             tableOrView,
-            type,
+            type: type as any,
             permissions: permissions[tableOrView.id],
+            projectAppId,
           })
         )
       )
@@ -153,6 +154,7 @@
             tableOrView,
             type,
             permissions: permissions[tableOrView.id],
+            projectAppId,
           })
         )
       )

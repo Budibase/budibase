@@ -23,9 +23,9 @@ export async function chatCompletion(
   }
 
   const llm = await ai.getLLMOrThrow()
-  const prompt = ai.Prompt.fromRequest(ctx.request.body)
+  const prompt = ai.LLMRequest.fromRequest(ctx.request.body)
   if (ctx.request.body.useTools) {
     prompt.tools.push(...tools.budibase)
   }
-  ctx.body = await llm.chat(ai.Prompt.fromRequest(ctx.request.body))
+  ctx.body = await llm.chat(ai.LLMRequest.fromRequest(ctx.request.body))
 }
