@@ -1,6 +1,7 @@
 import { Knex, knex } from "knex"
 import * as dbCore from "../db"
 import {
+  extractDate,
   getNativeSql,
   isExternalTable,
   isInvalidISODateString,
@@ -422,6 +423,12 @@ class InternalBuilder {
         if (!isValidTime(input)) {
           return null
         }
+      } else if (schema.dateOnly) {
+        const date = extractDate(input)
+        if (!date) {
+          return null
+        }
+        return new Date(date)
       } else {
         if (isInvalidISODateString(input)) {
           return null

@@ -16,8 +16,10 @@ export async function agentChat(
   const model = await ai.getLLMOrThrow()
   const chat = ctx.request.body
 
-  const prompt = ai.Prompt.system(ai.agentSystemPrompt(ctx.user), chat.messages)
-  prompt.tools.push(...tools.budibase)
+  const prompt = new ai.LLMRequest()
+    .addSystemMessage(ai.agentSystemPrompt(ctx.user))
+    .addMessages(chat.messages)
+    .addTools(tools.budibase)
   const response = await model.chat(prompt)
 
   if (!chat._id) {
@@ -25,10 +27,9 @@ export async function agentChat(
   }
 
   if (!chat.title || chat.title === "") {
-    const titlePrompt = ai.Prompt.system(
-      ai.agentHistoryTitleSystemPrompt(),
-      response.messages
-    )
+    const titlePrompt = new ai.LLMRequest()
+      .addSystemMessage(ai.agentHistoryTitleSystemPrompt())
+      .addMessages(response.messages)
     const { message } = await model.prompt(titlePrompt)
     chat.title = message
   }

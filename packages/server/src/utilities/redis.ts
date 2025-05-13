@@ -16,17 +16,18 @@ let socketSubClient: any
 // We init this as we want to keep the connection open all the time
 // reduces the performance hit
 export async function init() {
-  devAppClient = new redis.Client(redis.utils.Databases.DEV_LOCKS)
-  debounceClient = new redis.Client(redis.utils.Databases.DEBOUNCE)
-  flagClient = new redis.Client(redis.utils.Databases.FLAGS)
-  await devAppClient.init()
-  await debounceClient.init()
-  await flagClient.init()
+  ;[devAppClient, debounceClient, flagClient, socketClient] = await Promise.all(
+    [
+      redis.Client.init(redis.utils.Databases.DEV_LOCKS),
+      redis.Client.init(redis.utils.Databases.DEBOUNCE),
+      redis.Client.init(redis.utils.Databases.FLAGS),
+      redis.clients.getSocketClient(),
+    ]
+  )
 
   // Duplicate the socket client for pub/sub
-  socketClient = await redis.clients.getSocketClient()
   if (!env.isTest()) {
-    socketSubClient = socketClient.getClient().duplicate()
+    socketSubClient = socketClient.client.duplicate()
   }
 }
 
@@ -109,7 +110,7 @@ export async function withTestFlag<R>(id: string, fn: () => Promise<R>) {
 
 export function getSocketPubSubClients() {
   return {
-    pub: socketClient.getClient(),
+    pub: socketClient.client,
     sub: socketSubClient,
   }
 }
