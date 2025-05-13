@@ -1,5 +1,5 @@
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { Helpers } from "@budibase/bbui"
+import { Helpers, notifications } from "@budibase/bbui"
 import {
   FetchAppPackageResponse,
   ProjectApp,
@@ -66,12 +66,16 @@ export class ProjectAppStore extends DerivedBudiStore<
   }
 
   async add(projectApp: ProjectApp) {
-    const createdProjectApp = await API.projectApp.create(projectApp)
-
-    this.store.update(state => {
-      state.projectApps.push(createdProjectApp.projectApp)
-      return state
-    })
+    try {
+      const createdProjectApp = await API.projectApp.create(projectApp)
+      this.store.update(state => {
+        state.projectApps.push(createdProjectApp.projectApp)
+        return state
+      })
+    } catch (e: any) {
+      console.error("Error saving project app", e)
+      notifications.error(`Error saving automation: ${e.message}`)
+    }
   }
 
   async edit(projectApp: ProjectApp) {
