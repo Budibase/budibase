@@ -1,5 +1,10 @@
 <script>
-  import { sideBarCollapsed, enrichedApps, agentsStore } from "@/stores/portal"
+  import {
+    sideBarCollapsed,
+    enrichedApps,
+    agentsStore,
+    featureFlags,
+  } from "@/stores/portal"
   import { params, goto, page } from "@roxi/routify"
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
@@ -46,46 +51,48 @@
       </span>
     {/each}
   </div>
-  <div class="side-bar-controls">
-    <NavHeader
-      title="Chats"
-      placeholder="Search for agent chats"
-      bind:value={searchString}
-      onAdd={() => $goto("./create")}
-    />
-  </div>
-  <div class="side-bar-nav">
-    <NavItem
-      icon="Algorithm"
-      text="All chats"
-      on:click={() => {
-        openedApp = undefined
-        onAgents = true
-        agentsStore.clearCurrentChatId()
-        $goto("./agents")
-      }}
-      selected={!$params.appId &&
-        !openedApp &&
-        !$agentsStore.currentChatId &&
-        onAgents}
-    />
-    {#each $agentsStore.chats as chat}
-      {@const selected = $agentsStore.currentChatId === chat._id}
-      <span class="side-bar-app-entry" class:actionsOpen={selected}>
-        <NavItem
-          icon="Branch1"
-          text={chat.title}
-          on:click={() => {
-            onAgents = true
-            openedApp = undefined
-            agentsStore.setCurrentChatId(chat._id)
-            $goto("./agents")
-          }}
-          {selected}
-        />
-      </span>
-    {/each}
-  </div>
+  {#if $featureFlags.AI_AGENTS}
+    <div class="side-bar-controls">
+      <NavHeader
+        title="Chats"
+        placeholder="Search for agent chats"
+        bind:value={searchString}
+        onAdd={() => $goto("./create")}
+      />
+    </div>
+    <div class="side-bar-nav">
+      <NavItem
+        icon="Algorithm"
+        text="All chats"
+        on:click={() => {
+          openedApp = undefined
+          onAgents = true
+          agentsStore.clearCurrentChatId()
+          $goto("./agents")
+        }}
+        selected={!$params.appId &&
+          !openedApp &&
+          !$agentsStore.currentChatId &&
+          onAgents}
+      />
+      {#each $agentsStore.chats as chat}
+        {@const selected = $agentsStore.currentChatId === chat._id}
+        <span class="side-bar-app-entry" class:actionsOpen={selected}>
+          <NavItem
+            icon="Branch1"
+            text={chat.title}
+            on:click={() => {
+              onAgents = true
+              openedApp = undefined
+              agentsStore.setCurrentChatId(chat._id)
+              $goto("./agents")
+            }}
+            {selected}
+          />
+        </span>
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
