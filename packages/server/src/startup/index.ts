@@ -62,9 +62,11 @@ async function initPro() {
   })
 }
 
-export async function startup(opts: { app?: Koa; server?: Server } = {}) {
+export async function startup(
+  opts: { app?: Koa; server?: Server; force?: boolean } = {}
+) {
   const { app, server } = opts
-  if (STATE !== "uninitialised") {
+  if (STATE !== "uninitialised" && !opts.force) {
     console.log("Budibase already started")
     return
   }
