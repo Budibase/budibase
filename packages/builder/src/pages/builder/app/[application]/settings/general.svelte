@@ -138,6 +138,42 @@
   <Heading size="S">App info</Heading>
   <UpdateAppForm />
   <Divider />
+  <Heading size="S">Deployment</Heading>
+  {#if $appPublished}
+    <div class="row top">
+      <Icon
+        name="CheckmarkCircle"
+        color="var(--spectrum-global-color-green-400)"
+        size="XL"
+      />
+      <Body>
+        {lastDeployed}
+        <br />
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="link" on:click={viewApp}>View app</div>
+      </Body>
+    </div>
+    <div class="row">
+      <Button warning on:click={unpublishModal?.show}>Unpublish</Button>
+      <Button secondary on:click={revertModal?.show}>Revert changes</Button>
+    </div>
+  {:else}
+    <div class="row">
+      <Icon
+        name="Alert"
+        color="var(--spectrum-global-color-yellow-400)"
+        size="L"
+      />
+      <Body>
+        Your app hasn't been published yet and isn't available to users
+      </Body>
+    </div>
+    <div class="row">
+      <Button cta disabled={publishing} on:click={publishApp}>Publish</Button>
+    </div>
+  {/if}
+  <Divider />
   <Layout gap="XS" noPadding>
     <Heading size="S">App version</Heading>
     {#if updateAvailable}
@@ -179,42 +215,6 @@
     {/if}
   </Layout>
   <Divider />
-  <Heading size="S">Deployment</Heading>
-  {#if $appPublished}
-    <div class="row top">
-      <Icon
-        name="CheckmarkCircle"
-        color="var(--spectrum-global-color-green-400)"
-        size="XL"
-      />
-      <Body>
-        {lastDeployed}
-        <br />
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="link" on:click={viewApp}>View app</div>
-      </Body>
-    </div>
-    <div class="row">
-      <Button warning on:click={unpublishModal?.show}>Unpublish</Button>
-      <Button secondary on:click={revertModal?.show}>Revert changes</Button>
-    </div>
-  {:else}
-    <div class="row">
-      <Icon
-        name="Alert"
-        color="var(--spectrum-global-color-yellow-400)"
-        size="L"
-      />
-      <Body>
-        Your app hasn't been published yet and isn't available to users
-      </Body>
-    </div>
-    <div class="row">
-      <Button cta disabled={publishing} on:click={publishApp}>Publish</Button>
-    </div>
-  {/if}
-  <Divider />
   <Layout noPadding gap="XS">
     <Heading size="S">Export</Heading>
     <Body>Export your app for backup or to share it with someone else</Body>
@@ -242,20 +242,18 @@
   <Divider />
   <Heading size="S">Danger zone</Heading>
   <div class="row">
-    <AbsTooltip
-      position={TooltipPosition.Bottom}
-      text={$isOnlyUser
+    <Button
+      warning
+      disabled={!$isOnlyUser}
+      on:click={() => {
+        deleteModal.show()
+      }}
+      tooltip={$isOnlyUser
         ? undefined
         : "Unavailable - another user is editing this app"}
     >
-      <Button
-        warning
-        disabled={!$isOnlyUser}
-        on:click={() => {
-          deleteModal.show()
-        }}>Delete app</Button
-      >
-    </AbsTooltip>
+      Delete app
+    </Button>
   </div>
 </Layout>
 
