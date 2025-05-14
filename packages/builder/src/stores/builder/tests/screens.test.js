@@ -92,9 +92,7 @@ describe("Screens store", () => {
       .fill()
       .map(() => getScreenFixture().json())
 
-    bb.screenStore.syncAppScreens({
-      projectApps: [{ screens }],
-    })
+    bb.screenStore.syncAppScreens({ screens })
 
     expect(bb.store.screens).toStrictEqual(screens)
   })
@@ -106,9 +104,7 @@ describe("Screens store", () => {
       .fill()
       .map(() => getScreenFixture().json())
 
-    bb.screenStore.syncAppScreens({
-      projectApps: [{ screens }],
-    })
+    bb.screenStore.syncAppScreens({ screens })
     expect(bb.store.screens).toStrictEqual(screens)
 
     bb.screenStore.update(state => ({
@@ -126,9 +122,7 @@ describe("Screens store", () => {
       .fill()
       .map(() => getScreenFixture().json())
 
-    bb.screenStore.syncAppScreens({
-      projectApps: [{ screens }],
-    })
+    bb.screenStore.syncAppScreens({ screens })
     expect(bb.store.screens.length).toBe(2)
 
     bb.screenStore.select(screens[0]._id)
@@ -141,9 +135,7 @@ describe("Screens store", () => {
       .fill()
       .map(() => getScreenFixture().json())
 
-    bb.screenStore.syncAppScreens({
-      projectApps: [{ screens }],
-    })
+    bb.screenStore.syncAppScreens({ screens })
     expect(bb.store.screens.length).toBe(2)
 
     bb.screenStore.select("screen_abc")
@@ -418,9 +410,7 @@ describe("Screens store", () => {
         screenDoc._json._id = existingDocId
         return screenDoc.json()
       })
-    bb.screenStore.syncAppScreens({
-      projectApps: [{ screens: existingScreens }],
-    })
+    bb.screenStore.syncAppScreens({ screens: existingScreens })
 
     bb.screenStore.replace()
 
@@ -438,9 +428,7 @@ describe("Screens store", () => {
         screenDoc._json._id = existingDocId
         return screenDoc.json()
       })
-    bb.screenStore.syncAppScreens({
-      projectApps: [{ screens: existingScreens }],
-    })
+    bb.screenStore.syncAppScreens({ screens: existingScreens })
 
     bb.screenStore.replace(existingScreens[1]._id)
 
