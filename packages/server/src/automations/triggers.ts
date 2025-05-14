@@ -176,7 +176,7 @@ export function isAutomationResults(
 }
 
 interface AutomationTriggerParams {
-  fields: Record<string, any>
+  fields?: Record<string, any>
   timeout?: number
   appId?: string
   user?: UserBindings
@@ -206,11 +206,14 @@ export async function externalTrigger(
     sdk.automations.isAppAction(automation) &&
     !(await checkTestFlag(automation._id!))
   ) {
+    if (params.fields == null) {
+      params.fields = {}
+    }
+
     // values are likely to be submitted as strings, so we shall convert to correct type
     const coercedFields: any = {}
-    const triggerInputs = automation.definition.trigger.inputs
-    const fields =
-      triggerInputs && "fields" in triggerInputs ? triggerInputs.fields : {}
+    const triggerInputs = automation.definition.trigger.inputs || {}
+    const fields = "fields" in triggerInputs ? triggerInputs.fields : {}
     for (const key of Object.keys(fields || {})) {
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }

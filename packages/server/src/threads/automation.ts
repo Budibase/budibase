@@ -246,6 +246,7 @@ class Orchestrator {
         success: false,
         status: AutomationStatus.STOPPED_ERROR,
       })
+      result.status = AutomationStatus.STOPPED_ERROR
       await this.logResult(result)
     }
   }
@@ -313,7 +314,11 @@ class Orchestrator {
         inputs: null,
         outputs: data.event,
       }
-      const result: AutomationResults = { trigger, steps: [trigger] }
+      const result: AutomationResults = {
+        trigger,
+        steps: [trigger],
+        status: AutomationStatus.SUCCESS,
+      }
 
       const ctx: AutomationContext = {
         trigger: trigger.outputs,
@@ -337,6 +342,12 @@ class Orchestrator {
 
           result.steps.push(...stepOutputs)
 
+          if (this.stopped) {
+            result.status = AutomationStatus.STOPPED
+          } else if (this.hasErrored(ctx)) {
+            result.status = AutomationStatus.ERROR
+          }
+
           console.info(
             `Automation ID: ${
               this.automation._id
@@ -351,6 +362,7 @@ class Orchestrator {
         if (e.errno === "ETIME") {
           span?.addTags({ timedOut: true })
           console.warn(`Automation execution timed out after ${timeout}ms`)
+          result.status = AutomationStatus.TIMED_OUT
         } else {
           throw e
         }
@@ -490,9 +502,15 @@ class Orchestrator {
         }
 
         ctx.loop = { currentItem }
-        const result = await this.executeStep(ctx, stepToLoop)
-        items.push(result.outputs)
-        ctx.loop = undefined
+        try {
+          const result = await this.executeStep(ctx, stepToLoop)
+          items.push(result.outputs)
+          if (result.outputs.success === false) {
+            return stepFailure(stepToLoop, { iterations, items })
+          }
+        } finally {
+          ctx.loop = undefined
+        }
       }
 
       const status =
@@ -568,12 +586,22 @@ class Orchestrator {
         step.schema.inputs.properties
       )
 
-      const outputs = await fn({
-        inputs,
-        appId: this.appId,
-        emitter: this.emitter,
-        context: ctx,
-      })
+      let outputs
+      try {
+        outputs = await tracer.trace("fn", () =>
+          fn({
+            inputs,
+            appId: this.appId,
+            emitter: this.emitter,
+            context: ctx,
+          })
+        )
+      } catch (err: any) {
+        return stepFailure(step, {
+          status: AutomationStatus.ERROR,
+          error: automationUtils.getError(err),
+        })
+      }
 
       if (
         step.stepId === AutomationActionStepId.FILTER &&

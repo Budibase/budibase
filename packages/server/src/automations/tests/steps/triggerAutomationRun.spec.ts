@@ -1,7 +1,7 @@
 import * as automation from "../../index"
-import env from "../../../environment"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { AutomationStatus } from "@budibase/types"
 
 describe("Test triggering an automation from another automation", () => {
   const config = new TestConfiguration()
@@ -29,7 +29,6 @@ describe("Test triggering an automation from another automation", () => {
         automation: {
           automationId: automation._id!,
         },
-        timeout: env.getDefaults().AUTOMATION_THREAD_TIMEOUT,
       })
       .test({ fields: {} })
 
@@ -44,10 +43,30 @@ describe("Test triggering an automation from another automation", () => {
           // @ts-expect-error - incorrect on purpose
           automationId: null,
         },
-        timeout: env.getDefaults().AUTOMATION_THREAD_TIMEOUT,
       })
       .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(false)
+  })
+
+  it("should fail if the child automation times out", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
+      .delay({ time: 1000 })
+      .save()
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .triggerAutomationRun({
+        automation: {
+          automationId: automation._id!,
+        },
+        timeout: 0.1,
+      })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toBe(false)
+    expect(result.steps[0].outputs.status).toBe(AutomationStatus.TIMED_OUT)
+    expect(result.status).toBe(AutomationStatus.ERROR)
   })
 })
