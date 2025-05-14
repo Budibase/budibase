@@ -232,11 +232,14 @@ export async function shutdown() {
   if (cleanupInterval) {
     timers.clear(cleanupInterval)
   }
-  if (QUEUES.length) {
-    for (let queue of QUEUES) {
-      await queue.close()
-    }
-    QUEUES = []
+  console.log("Closing queue Redis connections...")
+  for (const queue of QUEUES) {
+    await queue.close()
   }
+  console.log("Waiting for current queue jobs to finish...")
+  for (const queue of QUEUES) {
+    await queue.whenCurrentJobsFinished()
+  }
+  QUEUES = []
   console.log("Queues shutdown")
 }
