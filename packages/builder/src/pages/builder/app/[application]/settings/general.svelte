@@ -14,7 +14,6 @@
   import { appsStore } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
-  import analytics, { Events, EventSource } from "@/analytics"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import RevertModal from "@/components/deploy/RevertModal.svelte"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
@@ -34,18 +33,6 @@
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
     exportModal.show()
-  }
-
-  const viewApp = () => {
-    analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
-      appId: selectedApp.appId,
-      eventSource: EventSource.PORTAL,
-    })
-    if (selectedApp.url) {
-      window.open(`/app${selectedApp.url}`)
-    } else {
-      window.open(`/${selectedApp.prodId}`)
-    }
   }
 </script>
 
@@ -71,7 +58,9 @@
         <br />
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="link" on:click={viewApp}>View app</div>
+        <div class="link" on:click={deploymentStore.viewPublishedApp}>
+          View app
+        </div>
       </Body>
     </div>
     <div class="row">

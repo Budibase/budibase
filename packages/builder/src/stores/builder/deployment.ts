@@ -2,7 +2,7 @@ import { type Writable, get, type Readable, derived } from "svelte/store"
 import { API } from "@/api"
 import { notifications } from "@budibase/bbui"
 import { DeploymentProgressResponse, DeploymentStatus } from "@budibase/types"
-import analytics from "@/analytics"
+import analytics, { Events, EventSource } from "@/analytics"
 import { appsStore } from "@/stores/portal"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import { appStore } from "./app"
@@ -111,7 +111,6 @@ class DeploymentStore extends DerivedBudiStore<
   }
 
   async unpublishApp() {
-    // Ensure app is published
     if (!get(this.derivedStore).isPublished) {
       return
     }
@@ -124,6 +123,19 @@ class DeploymentStore extends DerivedBudiStore<
       })
     } catch (err) {
       notifications.error("Error unpublishing app")
+    }
+  }
+
+  viewPublishedApp() {
+    const app = get(appStore)
+    analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
+      appId: app.appId,
+      eventSource: EventSource.PORTAL,
+    })
+    if (get(appStore).url) {
+      window.open(`/app${app.url}`)
+    } else {
+      window.open(`/${app.appId}`)
     }
   }
 }
