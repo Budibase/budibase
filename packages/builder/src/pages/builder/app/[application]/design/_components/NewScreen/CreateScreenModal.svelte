@@ -230,7 +230,7 @@
   }
 </script>
 
-<Modal bind:this={datasourceModal} autoFocus={false}>
+<Modal bind:this={datasourceModal} autoFocus={false} on:cancel>
   <DatasourceModal
     {selectedTablesAndViews}
     onConfirm={onSelectDatasources}
