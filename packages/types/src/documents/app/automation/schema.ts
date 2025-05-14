@@ -65,6 +65,8 @@ import {
   PromptLLMStepInputs,
   TranslateStepOutputs,
   TranslateStepInputs,
+  SummariseStepInputs,
+  SummariseStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -159,6 +161,10 @@ export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.TRANSLATE]: ActionImplementation<
     TranslateStepInputs,
     TranslateStepOutputs
+  >
+  [AutomationActionStepId.SUMMARISE]: ActionImplementation<
+    SummariseStepInputs,
+    SummariseStepOutputs
   >
 } & (T extends "self"
   ? {
@@ -356,6 +362,9 @@ export type PromptLLMStep =
 export type TranslateStep =
   AutomationStepSchema<AutomationActionStepId.TRANSLATE>
 
+export type SummariseStep =
+  AutomationStepSchema<AutomationActionStepId.SUMMARISE>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
   | CollectStep
@@ -384,6 +393,7 @@ export type AutomationStep =
   | ClassifyContentStep
   | PromptLLMStep
   | TranslateStep
+  | SummariseStep
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
 ): step is BranchStep {

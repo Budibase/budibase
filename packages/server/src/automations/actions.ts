@@ -23,6 +23,7 @@ import * as bash from "./steps/bash"
 import * as classifyText from "./steps/ai/classify"
 import * as promptLLM from "./steps/ai/promptLLM"
 import * as translate from "./steps/ai/translate"
+import * as summarise from "./steps/ai/summarise"
 import env from "../environment"
 import {
   PluginType,
@@ -60,6 +61,7 @@ const ACTION_IMPLS: ActionImplType = {
   CLASSIFY_CONTENT: classifyText.run,
   PROMPT_LLM: promptLLM.run,
   TRANSLATE: translate.run,
+  SUMMARISE: summarise.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -91,6 +93,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   CLASSIFY_CONTENT: automations.steps.classifyText.definition,
   PROMPT_LLM: automations.steps.promptLLM.definition,
   TRANSLATE: automations.steps.translate.definition,
+  SUMMARISE: automations.steps.summarise.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: automations.steps.discord.definition,
   slack: automations.steps.slack.definition,

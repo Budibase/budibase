@@ -5,15 +5,21 @@ import {
   AutomationIOType,
 } from "@budibase/types"
 
+enum SummariseLength {
+  SHORT = "Short",
+  MEDIUM = "Medium",
+  LONG = "Long",
+}
+
 export const definition: AutomationStepDefinition = {
-  name: "Translate",
-  tagline: "Translate text to a different language",
+  name: "Summarise",
+  tagline: "Summarise text",
   icon: "Algorithm",
-  description: "Translate text to a different language.",
+  description: "Summarise text.",
   type: AutomationStepType.ACTION,
   internal: true,
   features: {},
-  stepId: AutomationActionStepId.TRANSLATE,
+  stepId: AutomationActionStepId.SUMMARISE,
   inputs: {
     prompt: "",
   },
@@ -24,12 +30,13 @@ export const definition: AutomationStepDefinition = {
           type: AutomationIOType.STRING,
           title: "Text",
         },
-        language: {
+        length: {
           type: AutomationIOType.STRING,
-          title: "Language",
+          title: "Length",
+          enum: Object.values(SummariseLength),
         },
       },
-      required: ["text", "language"],
+      required: ["text", "length"],
     },
     outputs: {
       properties: {
@@ -39,7 +46,7 @@ export const definition: AutomationStepDefinition = {
         },
         response: {
           type: AutomationIOType.STRING,
-          description: "What was the translated text",
+          description: "What was the summarised text",
         },
       },
       required: ["success", "response"],

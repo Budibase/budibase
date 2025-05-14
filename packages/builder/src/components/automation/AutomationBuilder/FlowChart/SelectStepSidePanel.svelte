@@ -157,6 +157,7 @@
           AutomationActionStepId.PROMPT_LLM,
           AutomationActionStepId.CLASSIFY_CONTENT,
           AutomationActionStepId.TRANSLATE,
+          AutomationActionStepId.SUMMARISE,
         ].includes(k as AutomationActionStepId)
       ),
     },

@@ -78,6 +78,7 @@ export enum AutomationActionStepId {
   CLASSIFY_CONTENT = "CLASSIFY_CONTENT",
   PROMPT_LLM = "PROMPT_LLM",
   TRANSLATE = "TRANSLATE",
+  SUMMARISE = "SUMMARISE",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
