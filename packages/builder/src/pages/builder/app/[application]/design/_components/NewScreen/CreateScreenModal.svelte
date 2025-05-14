@@ -251,7 +251,7 @@
   />
 </Modal>
 
-<Modal bind:this={screenDetailsModal}>
+<Modal bind:this={screenDetailsModal} on:cancel>
   <ScreenDetailsModal onConfirm={createBasicScreen} />
 </Modal>
 

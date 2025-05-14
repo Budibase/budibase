@@ -43,6 +43,12 @@
     }
     rootModal.hide()
     createScreenModal.show(selectedType)
+
+    const selectedTypeSnapshot = selectedType
+    createScreenModal.$on("cancel", () => {
+      selectedType = selectedTypeSnapshot
+      rootModal.show()
+    })
   }
 </script>
 
