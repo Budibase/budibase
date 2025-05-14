@@ -13,13 +13,11 @@
 <Modal bind:this={modal}>
   <ModalContent
     {title}
-    size="XL"
+    size="L"
     showConfirmButton={false}
     showCancelButton={false}
   >
-    <div class="subHeading">
-      Start from scratch or create screens from your data
-    </div>
+    Start from scratch or create screens from your data
     <NewScreen />
   </ModalContent>
 </Modal>

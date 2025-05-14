@@ -16,81 +16,75 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="page">
-  <CreationPage showClose={!!onClose} {onClose}>
-    <div class="cards">
-      <div
-        class="card"
-        on:click={() => createScreenModal.show(AutoScreenTypes.BLANK)}
-      >
-        <div class="image">
-          <img alt="A blank screen" src={blank} />
-        </div>
-        <div class="text">
-          <Body size="M">Blank</Body>
-          <Body size="XS">Add an empty blank screen</Body>
-        </div>
+<CreationPage showClose={!!onClose} {onClose}>
+  <div class="cards">
+    <div
+      class="card"
+      on:click={() => createScreenModal.show(AutoScreenTypes.BLANK)}
+    >
+      <div class="image">
+        <img alt="A blank screen" src={blank} />
       </div>
-
-      <div
-        class="card"
-        on:click={() => createScreenModal.show(AutoScreenTypes.TABLE)}
-      >
-        <div class="image">
-          <img alt="A table of data" src={table} />
-        </div>
-        <div class="text">
-          <Body size="M">Table</Body>
-          <Body size="XS">List rows in a table</Body>
-        </div>
-      </div>
-
-      <div
-        class="card"
-        on:click={() => createScreenModal.show(AutoScreenTypes.FORM)}
-      >
-        <div class="image">
-          <img alt="A form containing data" src={form} />
-        </div>
-        <div class="text">
-          <Body size="M">Form</Body>
-          <Body size="XS">Capture data from your users</Body>
-        </div>
-      </div>
-
-      <div
-        class="card"
-        class:disabled={!$licensing.pdfEnabled}
-        on:click={$licensing.pdfEnabled
-          ? () => createScreenModal.show(AutoScreenTypes.PDF)
-          : null}
-      >
-        <div class="image">
-          <img alt="A PDF document" src={pdf} width="185" />
-        </div>
-        <div class="text">
-          <Body size="M">
-            PDF
-            {#if !$licensing.pdfEnabled}
-              <Tags>
-                <Tag icon="LockClosed">Premium</Tag>
-              </Tags>
-            {/if}
-          </Body>
-          <Body size="XS">Create, edit and export your PDF</Body>
-        </div>
+      <div class="text">
+        <Body size="M">Blank</Body>
+        <Body size="XS">Add an empty blank screen</Body>
       </div>
     </div>
-  </CreationPage>
-</div>
+
+    <div
+      class="card"
+      on:click={() => createScreenModal.show(AutoScreenTypes.TABLE)}
+    >
+      <div class="image">
+        <img alt="A table of data" src={table} />
+      </div>
+      <div class="text">
+        <Body size="M">Table</Body>
+        <Body size="XS">List rows in a table</Body>
+      </div>
+    </div>
+
+    <div
+      class="card"
+      on:click={() => createScreenModal.show(AutoScreenTypes.FORM)}
+    >
+      <div class="image">
+        <img alt="A form containing data" src={form} />
+      </div>
+      <div class="text">
+        <Body size="M">Form</Body>
+        <Body size="XS">Capture data from your users</Body>
+      </div>
+    </div>
+
+    <div
+      class="card"
+      class:disabled={!$licensing.pdfEnabled}
+      on:click={$licensing.pdfEnabled
+        ? () => createScreenModal.show(AutoScreenTypes.PDF)
+        : null}
+    >
+      <div class="image">
+        <img alt="A PDF document" src={pdf} width="185" />
+      </div>
+      <div class="text">
+        <Body size="M">
+          PDF
+          {#if !$licensing.pdfEnabled}
+            <Tags>
+              <Tag icon="LockClosed">Premium</Tag>
+            </Tags>
+          {/if}
+        </Body>
+        <Body size="XS">Create, edit and export your PDF</Body>
+      </div>
+    </div>
+  </div>
+</CreationPage>
 
 <CreateScreenModal bind:this={createScreenModal} />
 
 <style>
-  .page {
-    padding: 28px 40px 40px 40px;
-  }
-
   .cards {
     display: flex;
     flex-wrap: wrap;
