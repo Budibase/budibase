@@ -6,7 +6,6 @@ import { findAllMatchingComponents } from "@/helpers/components"
 import {
   appStore,
   componentStore,
-  flags,
   layoutStore,
   navigationStore,
   previewStore,
