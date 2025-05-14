@@ -46,8 +46,14 @@
   }
 </script>
 
-<Modal bind:this={rootModal}>
-  <ModalContent {title} size="L" {onConfirm} disabled={!selectedType}>
+<Modal bind:this={rootModal} on:hide={() => (selectedType = undefined)}>
+  <ModalContent
+    {title}
+    size="L"
+    {onConfirm}
+    disabled={!selectedType}
+    confirmText="Next"
+  >
     <div class="subHeading">
       Start from scratch or create screens from your data
     </div>
