@@ -16,6 +16,10 @@ export const MIGRATIONS: AppMigration[] = [
   {
     id: "20250514133719_project_apps",
     func: m20250514133719_project_apps,
-    disabled: !features.flags.isEnabled(FeatureFlag.PROJECT_APPS),
+    // Disabling it, enabling it via env variables to enable development.
+    // Using the existing flag system would require async checks and we could run to race conditions, so this keeps is simple
+    disabled: !features
+      .getEnvFlags()
+      .some(f => f.key === FeatureFlag.PROJECT_APPS && f.value === true),
   },
 ]
