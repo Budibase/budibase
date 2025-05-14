@@ -6,6 +6,7 @@
   import {
     Body,
     Modal,
+    ModalCancelFrom,
     ModalContent,
     notifications,
     Tag,
@@ -45,9 +46,11 @@
     createScreenModal.show(selectedType)
 
     const selectedTypeSnapshot = selectedType
-    createScreenModal.$on("cancel", () => {
-      selectedType = selectedTypeSnapshot
-      rootModal.show()
+    createScreenModal.$on("cancel", e => {
+      if (e.detail !== ModalCancelFrom.OUTSIDE_CLICK) {
+        selectedType = selectedTypeSnapshot
+        rootModal.show()
+      }
     })
   }
 </script>
