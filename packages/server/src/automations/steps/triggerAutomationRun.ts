@@ -27,7 +27,7 @@ export async function run({
       let automation = await db.get<Automation>(inputs.automation.automationId)
 
       let timeout = env.AUTOMATION_THREAD_TIMEOUT
-      if (inputs.timeout) {
+      if (inputs.timeout !== undefined) {
         timeout = inputs.timeout * 1000
       }
 
