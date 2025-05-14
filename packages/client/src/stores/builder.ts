@@ -19,7 +19,7 @@ import {
 interface BuilderStore {
   inBuilder: boolean
   screen?: Screen | null
-  selectedComponentId?: string | null
+  selectedComponentId?: string
   editMode: boolean
   previewId?: number | null
   theme?: Theme | null
@@ -37,7 +37,7 @@ const createBuilderStore = () => {
   const initialState: BuilderStore = {
     inBuilder: false,
     screen: null,
-    selectedComponentId: null,
+    selectedComponentId: undefined,
     editMode: false,
     previewId: null,
     theme: null,

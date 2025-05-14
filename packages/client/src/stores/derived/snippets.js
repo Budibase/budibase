@@ -1,4 +1,4 @@
-import { appStore } from "../app.js"
+import { appStore } from "../app"
 import { builderStore } from "../builder"
 import { derivedMemo } from "@budibase/frontend-core"
 

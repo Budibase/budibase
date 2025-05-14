@@ -87,6 +87,7 @@ export default defineConfig(({ mode }) => {
       exclude: ["@roxi/routify", "fsevents"],
     },
     resolve: {
+      conditions: mode === "test" ? ["browser"] : [],
       dedupe: ["@roxi/routify"],
       alias: {
         "@budibase/types": path.resolve(__dirname, "../types/src"),

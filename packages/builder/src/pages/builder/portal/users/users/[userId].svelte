@@ -143,7 +143,7 @@
       return Constants.Roles.CREATOR
     }
 
-    if (user?.roles[prodAppId]) {
+    if (user?.roles?.[prodAppId]) {
       return user.roles[prodAppId]
     }
 
