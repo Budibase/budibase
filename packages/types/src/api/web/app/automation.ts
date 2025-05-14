@@ -75,6 +75,7 @@ export type TriggerAutomationResponse = Record<string, any> | undefined
 export interface TestAutomationRequest {
   id?: string
   revision?: string
+  timeout?: number
   fields: Record<string, any>
   row?: Row
   oldRow?: Row
