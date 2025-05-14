@@ -1,90 +1,112 @@
 <script lang="ts">
-  import { Body, Tag, Tags } from "@budibase/bbui"
   import CreationPage from "@/components/common/CreationPage.svelte"
+  import { AutoScreenTypes } from "@/constants"
+  import { screenStore } from "@/stores/builder"
+  import { licensing } from "@/stores/portal"
+  import { Body, Modal, ModalContent, Tag, Tags } from "@budibase/bbui"
+  import CreateScreenModal from "./CreateScreenModal.svelte"
   import blank from "./images/blank.svg"
-  import table from "./images/tableInline.svg"
   import form from "./images/formUpdate.svg"
   import pdf from "./images/pdf.svg"
-  import CreateScreenModal from "./CreateScreenModal.svelte"
-  import { licensing } from "@/stores/portal"
-  import { AutoScreenTypes } from "@/constants"
+  import table from "./images/tableInline.svg"
 
   export let onClose: (() => void) | null = null
+
+  $: hasScreens = $screenStore.screens?.length
+  $: title = hasScreens ? "Create new screen" : "Create your first screen"
+
+  let rootModal: Modal
+  export const show = () => rootModal.show()
 
   let createScreenModal: CreateScreenModal
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<CreationPage showClose={!!onClose} {onClose}>
-  <div class="cards">
-    <div
-      class="card"
-      on:click={() => createScreenModal.show(AutoScreenTypes.BLANK)}
-    >
-      <div class="image">
-        <img alt="A blank screen" src={blank} />
-      </div>
-      <div class="text">
-        <Body size="M">Blank</Body>
-        <Body size="XS">Add an empty blank screen</Body>
-      </div>
+<Modal bind:this={rootModal}>
+  <ModalContent
+    {title}
+    size="L"
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <div class="subHeading">
+      Start from scratch or create screens from your data
     </div>
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <CreationPage showClose={!!onClose} {onClose}>
+      <div class="cards">
+        <div
+          class="card"
+          on:click={() => createScreenModal.show(AutoScreenTypes.BLANK)}
+        >
+          <div class="image">
+            <img alt="A blank screen" src={blank} />
+          </div>
+          <div class="text">
+            <Body size="M">Blank</Body>
+            <Body size="XS">Add an empty blank screen</Body>
+          </div>
+        </div>
 
-    <div
-      class="card"
-      on:click={() => createScreenModal.show(AutoScreenTypes.TABLE)}
-    >
-      <div class="image">
-        <img alt="A table of data" src={table} />
-      </div>
-      <div class="text">
-        <Body size="M">Table</Body>
-        <Body size="XS">List rows in a table</Body>
-      </div>
-    </div>
+        <div
+          class="card"
+          on:click={() => createScreenModal.show(AutoScreenTypes.TABLE)}
+        >
+          <div class="image">
+            <img alt="A table of data" src={table} />
+          </div>
+          <div class="text">
+            <Body size="M">Table</Body>
+            <Body size="XS">List rows in a table</Body>
+          </div>
+        </div>
 
-    <div
-      class="card"
-      on:click={() => createScreenModal.show(AutoScreenTypes.FORM)}
-    >
-      <div class="image">
-        <img alt="A form containing data" src={form} />
-      </div>
-      <div class="text">
-        <Body size="M">Form</Body>
-        <Body size="XS">Capture data from your users</Body>
-      </div>
-    </div>
+        <div
+          class="card"
+          on:click={() => createScreenModal.show(AutoScreenTypes.FORM)}
+        >
+          <div class="image">
+            <img alt="A form containing data" src={form} />
+          </div>
+          <div class="text">
+            <Body size="M">Form</Body>
+            <Body size="XS">Capture data from your users</Body>
+          </div>
+        </div>
 
-    <div
-      class="card"
-      class:disabled={!$licensing.pdfEnabled}
-      on:click={$licensing.pdfEnabled
-        ? () => createScreenModal.show(AutoScreenTypes.PDF)
-        : null}
-    >
-      <div class="image">
-        <img alt="A PDF document" src={pdf} width="185" />
+        <div
+          class="card"
+          class:disabled={!$licensing.pdfEnabled}
+          on:click={$licensing.pdfEnabled
+            ? () => createScreenModal.show(AutoScreenTypes.PDF)
+            : null}
+        >
+          <div class="image">
+            <img alt="A PDF document" src={pdf} width="185" />
+          </div>
+          <div class="text">
+            <Body size="M">
+              PDF
+              {#if !$licensing.pdfEnabled}
+                <Tags>
+                  <Tag icon="LockClosed">Premium</Tag>
+                </Tags>
+              {/if}
+            </Body>
+            <Body size="XS">Create, edit and export your PDF</Body>
+          </div>
+        </div>
       </div>
-      <div class="text">
-        <Body size="M">
-          PDF
-          {#if !$licensing.pdfEnabled}
-            <Tags>
-              <Tag icon="LockClosed">Premium</Tag>
-            </Tags>
-          {/if}
-        </Body>
-        <Body size="XS">Create, edit and export your PDF</Body>
-      </div>
-    </div>
-  </div>
-</CreationPage>
+    </CreationPage>
+  </ModalContent></Modal
+>
 
 <CreateScreenModal bind:this={createScreenModal} />
 
 <style>
+  .subHeading {
+    padding-bottom: var(--spacing-l);
+  }
   .cards {
     display: flex;
     flex-wrap: wrap;

@@ -4,7 +4,7 @@
   import { sortedScreens } from "@/stores/builder"
   import { Layout } from "@budibase/bbui"
   import type { Screen } from "@budibase/types"
-  import NewScreenModal from "../../../_components/NewScreenModal.svelte"
+  import NewScreenModal from "../../../_components/NewScreen/index.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
