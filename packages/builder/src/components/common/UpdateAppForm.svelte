@@ -187,7 +187,7 @@
       {:else}
         <div class="edit-info">
           <Icon size="M" name="InfoOutline" />
-          <Body>Unpublish your app to edit name and URL</Body>
+          <Body size="S">Unpublish your app to edit name and URL</Body>
         </div>
       {/if}
     </div>
@@ -213,6 +213,6 @@
   }
   .edit-info {
     display: flex;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
   }
 </style>

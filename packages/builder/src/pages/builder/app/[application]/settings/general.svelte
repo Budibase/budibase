@@ -144,9 +144,9 @@
       <Icon
         name="CheckmarkCircle"
         color="var(--spectrum-global-color-green-400)"
-        size="XL"
+        size="L"
       />
-      <Body>
+      <Body size="S">
         {lastDeployed}
         <br />
         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -163,9 +163,9 @@
       <Icon
         name="Alert"
         color="var(--spectrum-global-color-yellow-400)"
-        size="L"
+        size="M"
       />
-      <Body>
+      <Body size="S">
         Your app hasn't been published yet and isn't available to users
       </Body>
     </div>
@@ -177,7 +177,7 @@
   <Layout gap="XS" noPadding>
     <Heading size="S">App version</Heading>
     {#if updateAvailable}
-      <Body>
+      <Body size="S">
         The app is currently using version <strong>{$appStore.version}</strong>
         but version <strong>{$appStore.upgradableVersion}</strong> is available.
         <br />
@@ -196,7 +196,7 @@
         </Button>
       </div>
     {:else}
-      <Body>
+      <Body size="S">
         The app is currently using version <strong>{$appStore.version}</strong>.
         <br />
         You're running the latest!
@@ -217,7 +217,9 @@
   <Divider />
   <Layout noPadding gap="XS">
     <Heading size="S">Export</Heading>
-    <Body>Export your app for backup or to share it with someone else</Body>
+    <Body size="S">
+      Export your app for backup or to share it with someone else
+    </Body>
   </Layout>
   <div class="row">
     <Button secondary on:click={() => exportApp({ published: false })}>
@@ -234,7 +236,7 @@
   <Divider />
   <Layout noPadding gap="XS">
     <Heading size="S">Import</Heading>
-    <Body>Import an app export bundle to update this app</Body>
+    <Body size="S">Import an app export bundle to update this app</Body>
   </Layout>
   <div class="row">
     <Button secondary on:click={() => importApp()}>Import app</Button>
@@ -296,9 +298,6 @@
   .row {
     display: flex;
     gap: var(--spacing-m);
-  }
-  .row.top {
-    align-items: flex-start;
   }
   .buttons {
     margin-top: var(--spacing-xl);
