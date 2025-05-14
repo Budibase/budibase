@@ -95,6 +95,16 @@ export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
   info?: any
 }
 
+export type APIRequestStepInputs = {
+  query: {
+    queryId: string
+  }
+}
+
+export type APIRequestStepOutputs = BaseAutomationOutputs & {
+  info?: any
+}
+
 export type ExecuteScriptStepInputs = {
   code: string
 }
