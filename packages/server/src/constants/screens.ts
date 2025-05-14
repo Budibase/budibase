@@ -2,7 +2,9 @@ import { Screen } from "@budibase/types"
 
 export const SAMPLE_DATA_SCREEN_NAME = "sample-data-inventory-screen"
 
-export function createSampleDataTableScreen(projectAppId: string): Screen {
+export function createSampleDataTableScreen(
+  projectAppId: string | undefined
+): Screen {
   return {
     showNavigation: true,
     width: "Large",

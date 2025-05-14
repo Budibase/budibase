@@ -71,7 +71,6 @@ import {
   SetRevertableAppVersionResponse,
   ErrorCode,
   FeatureFlag,
-  ProjectAppResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -185,15 +184,19 @@ async function addSampleDataDocs() {
 
 async function addSampleDataScreen() {
   const db = context.getAppDB()
-  const appMetadata = await sdk.applications.metadata.get()
+  let projectAppId: string | undefined
+  if (await features.isEnabled(FeatureFlag.PROJECT_APPS)) {
+    const appMetadata = await sdk.applications.metadata.get()
 
-  const projectApp = await sdk.projectApps.create({
-    name: appMetadata.name,
-    urlPrefix: "/",
-    icon: "Monitoring",
-  })
+    const projectApp = await sdk.projectApps.create({
+      name: appMetadata.name,
+      urlPrefix: "/",
+      icon: "Monitoring",
+    })
+    projectAppId = projectApp._id!
+  }
 
-  let screen = createSampleDataTableScreen(projectApp._id)
+  let screen = await createSampleDataTableScreen(projectAppId)
   screen._id = generateScreenID()
   await db.put(screen)
 }
