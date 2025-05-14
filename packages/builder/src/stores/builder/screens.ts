@@ -22,6 +22,7 @@ import {
   SaveScreenResponse,
   Screen,
   ScreenVariant,
+  WithRequired,
 } from "@budibase/types"
 
 interface ScreenState {
@@ -37,7 +38,7 @@ export const initialScreenState: ScreenState = {
 export class ScreenStore extends BudiStore<ScreenState> {
   history: HistoryStore<Screen>
   delete: (screens: Screen) => Promise<void>
-  save: (screen: Screen) => Promise<Screen>
+  save: (screen: WithRequired<Screen, "projectAppId">) => Promise<Screen>
 
   constructor() {
     super(initialScreenState)
@@ -306,7 +307,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
       if (result === false) {
         return
       }
-      return this.save(clone)
+      return this.save({
+        ...clone,
+        projectAppId: screen.projectAppId || "default",
+      })
     }
   )
 

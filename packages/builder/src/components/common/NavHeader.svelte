@@ -6,7 +6,7 @@
   export let title: string
   export let placeholder: string
   export let value: string
-  export let onAdd: () => void
+  export let onAdd: (_e: Event) => void
   export let search: boolean
 
   let searchInput: HTMLInputElement
@@ -28,11 +28,11 @@
     }
   }
 
-  const handleAddButton = () => {
+  const handleAddButton = (e: Event) => {
     if (search) {
       closeSearch()
     } else {
-      onAdd()
+      onAdd(e)
     }
   }
 </script>
@@ -64,7 +64,7 @@
 
   <div
     on:click={handleAddButton}
-    on:keydown={keyUtils.handleEnter(handleAddButton)}
+    on:keydown={e => keyUtils.handleEnter(() => handleAddButton(e))}
     class="addButton"
     class:rotate={search}
   >

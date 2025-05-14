@@ -1,6 +1,7 @@
 <script>
   import { contextMenuStore } from "@/stores/builder"
-  import { Popover, Menu, MenuItem } from "@budibase/bbui"
+  import { Menu, MenuItem, Popover } from "@budibase/bbui"
+  import NewPill from "./common/NewPill.svelte"
 
   let dropdown
   let anchor
@@ -46,6 +47,11 @@
           disabled={item.disabled}
         >
           {item.name}
+          <div slot="right">
+            {#if item.isNew}
+              <NewPill />
+            {/if}
+          </div>
         </MenuItem>
       {/if}
     {/each}
