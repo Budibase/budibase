@@ -1,5 +1,10 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
-import { DocumentType, ProjectApp, SEPARATOR } from "@budibase/types"
+import {
+  DocumentType,
+  ProjectApp,
+  SEPARATOR,
+  WithoutDocMetadata,
+} from "@budibase/types"
 
 async function guardName(name: string, id?: string) {
   const existingProjectApps = await fetch()
@@ -28,9 +33,7 @@ export async function get(id: string): Promise<ProjectApp | undefined> {
   return projectApp
 }
 
-export async function create(
-  projectApp: Omit<ProjectApp, "_id" | "_rev" | "createdAt" | "updatedAt">
-) {
+export async function create(projectApp: WithoutDocMetadata<ProjectApp>) {
   const db = context.getAppDB()
 
   await guardName(projectApp.name)
