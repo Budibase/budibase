@@ -1,5 +1,4 @@
 import * as automation from "../../index"
-import env from "../../../environment"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { AutomationStatus } from "@budibase/types"
