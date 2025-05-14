@@ -19,15 +19,20 @@
   export const show = () => rootModal.show()
 
   let createScreenModal: CreateScreenModal
+  let selectedType: AutoScreenTypes
+
+  function onSelect(screenType: AutoScreenTypes) {
+    selectedType = screenType
+  }
+
+  function onConfirm() {
+    rootModal.hide()
+    createScreenModal.show(selectedType)
+  }
 </script>
 
 <Modal bind:this={rootModal}>
-  <ModalContent
-    {title}
-    size="L"
-    showConfirmButton={false}
-    showCancelButton={false}
-  >
+  <ModalContent {title} size="L" {onConfirm} disabled={!selectedType}>
     <div class="subHeading">
       Start from scratch or create screens from your data
     </div>
@@ -35,10 +40,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <CreationPage showClose={!!onClose} {onClose}>
       <div class="cards">
-        <div
-          class="card"
-          on:click={() => createScreenModal.show(AutoScreenTypes.BLANK)}
-        >
+        <div class="card" on:click={() => onSelect(AutoScreenTypes.BLANK)}>
           <div class="image">
             <img alt="A blank screen" src={blank} />
           </div>
@@ -48,10 +50,7 @@
           </div>
         </div>
 
-        <div
-          class="card"
-          on:click={() => createScreenModal.show(AutoScreenTypes.TABLE)}
-        >
+        <div class="card" on:click={() => onSelect(AutoScreenTypes.TABLE)}>
           <div class="image">
             <img alt="A table of data" src={table} />
           </div>
@@ -61,10 +60,7 @@
           </div>
         </div>
 
-        <div
-          class="card"
-          on:click={() => createScreenModal.show(AutoScreenTypes.FORM)}
-        >
+        <div class="card" on:click={() => onSelect(AutoScreenTypes.FORM)}>
           <div class="image">
             <img alt="A form containing data" src={form} />
           </div>
@@ -78,7 +74,7 @@
           class="card"
           class:disabled={!$licensing.pdfEnabled}
           on:click={$licensing.pdfEnabled
-            ? () => createScreenModal.show(AutoScreenTypes.PDF)
+            ? () => onSelect(AutoScreenTypes.PDF)
             : null}
         >
           <div class="image">
