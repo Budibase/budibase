@@ -26,6 +26,7 @@ import {
   docIds,
   env as envCore,
   events,
+  features,
   objectStore,
   roles,
   tenancy,
@@ -69,6 +70,8 @@ import {
   UnpublishAppResponse,
   SetRevertableAppVersionResponse,
   ErrorCode,
+  FeatureFlag,
+  ProjectAppResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -276,7 +279,12 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  const projectApps = await extractScreensByProjectApp(screens)
+  let projectApps: FetchAppPackageResponse["projectApps"] = []
+
+  if (await features.flags.isEnabled(FeatureFlag.PROJECT_APPS)) {
+    projectApps = await extractScreensByProjectApp(screens)
+    screens = []
+  }
 
   const clientLibPath = objectStore.clientLibraryUrl(
     ctx.params.appId,
@@ -287,6 +295,7 @@ export async function fetchAppPackage(
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
     projectApps,
+    screens,
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),

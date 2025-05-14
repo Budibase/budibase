@@ -42,6 +42,7 @@ interface ProjectAppResponse extends ProjectApp {
 export interface FetchAppPackageResponse {
   application: App
   licenseType: PlanType
+  screens: Screen[]
   projectApps: ProjectAppResponse[]
   layouts: Layout[]
   clientLibPath: string
