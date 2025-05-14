@@ -4,7 +4,7 @@
   import TypeModal from "./TypeModal.svelte"
   import tableTypes from "./tableTypes"
   import formTypes from "./formTypes"
-  import { Modal, notifications } from "@budibase/bbui"
+  import { Modal, ModalCancelFrom, notifications } from "@budibase/bbui"
   import {
     screenStore,
     navigationStore,
@@ -238,15 +238,23 @@
   />
 </Modal>
 
-<Modal bind:this={tableTypeModal}>
+<Modal
+  bind:this={tableTypeModal}
+  on:cancel={e => {
+    if (
+      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
+        e.detail
+      )
+    ) {
+      tableTypeModal.hide()
+      datasourceModal.show()
+    }
+  }}
+>
   <TypeModal
     title="Choose how you want to manage rows"
     types={tableTypes}
     onConfirm={createTableScreen}
-    onCancel={() => {
-      tableTypeModal.hide()
-      datasourceModal.show()
-    }}
     showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>
@@ -255,15 +263,23 @@
   <ScreenDetailsModal onConfirm={createBasicScreen} />
 </Modal>
 
-<Modal bind:this={formTypeModal}>
+<Modal
+  bind:this={formTypeModal}
+  on:cancel={e => {
+    if (
+      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
+        e.detail
+      )
+    ) {
+      formTypeModal.hide()
+      datasourceModal.show()
+    }
+  }}
+>
   <TypeModal
     title="Select form type"
     types={formTypes}
     onConfirm={createFormScreen}
-    onCancel={() => {
-      formTypeModal.hide()
-      datasourceModal.show()
-    }}
     showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>

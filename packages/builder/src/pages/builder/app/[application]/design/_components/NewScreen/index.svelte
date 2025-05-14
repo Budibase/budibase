@@ -47,7 +47,11 @@
 
     const selectedTypeSnapshot = selectedType
     createScreenModal.$on("cancel", e => {
-      if (e.detail !== ModalCancelFrom.OUTSIDE_CLICK) {
+      if (
+        [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
+          e.detail
+        )
+      ) {
         selectedType = selectedTypeSnapshot
         rootModal.show()
       }
