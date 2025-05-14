@@ -54,7 +54,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
 
   if (opts?.format) {
     body = _.matches({
-      response_format: ai.openai.parseResponseFormat(opts.format),
+      response_format: ai.parseResponseFormat(opts.format),
     })
   }
   return nock(opts?.host || "https://api.openai.com")
