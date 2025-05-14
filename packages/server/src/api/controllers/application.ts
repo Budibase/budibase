@@ -457,7 +457,7 @@ async function performAppCreate(
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
-    if (latestMigrationId) {
+    if (latestMigrationId && !isImport) {
       // Initialise the app migration version as the latest one
       await appMigrations.updateAppMigrationMetadata({
         appId,
