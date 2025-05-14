@@ -38,10 +38,10 @@ jobs:
           submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: yarn
       - run: yarn --frozen-lockfile
       - run: yarn lint
@@ -56,10 +56,10 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: yarn
       - run: yarn --frozen-lockfile
 
@@ -83,7 +83,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: azure/setup-helm@v3
       - run: cd charts/budibase && helm lint .
 
@@ -97,10 +97,10 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: yarn
       - name: Pull testcontainers images
         run: |
@@ -131,10 +131,10 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test worker
@@ -176,10 +176,10 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: yarn
 
       - name: Load dotenv
@@ -326,10 +326,10 @@ jobs:
           submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: yarn
       - run: yarn install
       - name: Check for yarn.lock changes
