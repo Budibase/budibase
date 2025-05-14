@@ -17,7 +17,15 @@
     showConfirmButton={false}
     showCancelButton={false}
   >
-    Start from scratch or create screens from your data
+    <div class="subHeading">
+      Start from scratch or create screens from your data
+    </div>
     <NewScreen />
   </ModalContent>
 </Modal>
+
+<style>
+  .subHeading {
+    padding-bottom: var(--spacing-l);
+  }
+</style>

@@ -7,11 +7,11 @@
 </script>
 
 <section class="page">
-  <div class="closeButton">
-    {#if showClose}
+  {#if showClose}
+    <div class="closeButton">
       <Icon hoverable name="Close" on:click={onClose} />
-    {/if}
-  </div>
+    </div>
+  {/if}
   <div class="heading">
     <Heading weight="light">{heading}</Heading>
   </div>
