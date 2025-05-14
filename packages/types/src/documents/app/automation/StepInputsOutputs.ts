@@ -210,6 +210,17 @@ export type SummariseStepOutputs = {
   success: boolean
 }
 
+export type GenerateTextStepInputs = {
+  contentType: string
+  instructions: string
+}
+
+export type GenerateTextStepOutputs = {
+  generatedText?: string
+  success: boolean
+  response?: string
+}
+
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API

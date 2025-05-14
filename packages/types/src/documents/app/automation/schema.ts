@@ -67,6 +67,8 @@ import {
   TranslateStepInputs,
   SummariseStepInputs,
   SummariseStepOutputs,
+  GenerateTextStepInputs,
+  GenerateTextStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -166,6 +168,10 @@ export type ActionImplementations<T extends Hosting> = {
     SummariseStepInputs,
     SummariseStepOutputs
   >
+  [AutomationActionStepId.GENERATE_TEXT]: ActionImplementation<
+    GenerateTextStepInputs,
+    GenerateTextStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -250,6 +256,8 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
     ? TranslateStepInputs
     : T extends AutomationActionStepId.SUMMARISE
     ? SummariseStepInputs
+    : T extends AutomationActionStepId.GENERATE_TEXT
+    ? GenerateTextStepInputs
     : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
@@ -303,6 +311,8 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
     ? TranslateStepOutputs
     : T extends AutomationActionStepId.SUMMARISE
     ? SummariseStepOutputs
+    : T extends AutomationActionStepId.GENERATE_TEXT
+    ? GenerateTextStepOutputs
     : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
@@ -381,6 +391,9 @@ export type TranslateStep =
 export type SummariseStep =
   AutomationStepSchema<AutomationActionStepId.SUMMARISE>
 
+export type GenerateTextStep =
+  AutomationStepSchema<AutomationActionStepId.GENERATE_TEXT>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
   | CollectStep
@@ -410,6 +423,8 @@ export type AutomationStep =
   | PromptLLMStep
   | TranslateStep
   | SummariseStep
+  | GenerateTextStep
+
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
 ): step is BranchStep {

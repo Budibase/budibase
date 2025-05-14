@@ -158,6 +158,7 @@
           AutomationActionStepId.CLASSIFY_CONTENT,
           AutomationActionStepId.TRANSLATE,
           AutomationActionStepId.SUMMARISE,
+          AutomationActionStepId.GENERATE_TEXT,
         ].includes(k as AutomationActionStepId)
       ),
     },

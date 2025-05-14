@@ -1,5 +1,5 @@
 <script>
-  import { ActionButton, Input, Body, Icon } from "@budibase/bbui"
+  import { ActionButton, Input, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { generate } from "shortid"
   import { slide } from "svelte/transition"

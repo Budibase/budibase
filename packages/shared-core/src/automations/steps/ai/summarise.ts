@@ -14,7 +14,7 @@ enum SummariseLength {
 export const definition: AutomationStepDefinition = {
   name: "Summarise",
   tagline: "Summarise text",
-  icon: "Algorithm",
+  icon: "Summarize",
   description: "Summarise text.",
   type: AutomationStepType.ACTION,
   internal: true,
