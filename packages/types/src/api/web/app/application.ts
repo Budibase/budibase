@@ -35,10 +35,14 @@ export interface FetchAppDefinitionResponse {
   libraries: string[]
 }
 
+interface ProjectAppResponse extends ProjectApp {
+  screens: Screen[]
+}
+
 export interface FetchAppPackageResponse {
   application: App
   licenseType: PlanType
-  projectApps: (ProjectApp & { screens: Screen[] })[]
+  projectApps: ProjectAppResponse[]
   layouts: Layout[]
   clientLibPath: string
   hasLock: boolean
