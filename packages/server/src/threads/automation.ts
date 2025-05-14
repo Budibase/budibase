@@ -28,7 +28,6 @@ import {
   AutomationStepResult,
   isLogicalFilter,
   Branch,
-  TimedOutResponse,
 } from "@budibase/types"
 import { AutomationContext } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -649,7 +648,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
 
 export async function executeInThread(
   job: Job<AutomationData>
-): Promise<AutomationResults | TimedOutResponse> {
+): Promise<AutomationResults> {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")

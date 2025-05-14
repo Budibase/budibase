@@ -65,7 +65,7 @@ export interface ClearAutomationLogResponse {
 }
 
 export interface TriggerAutomationRequest {
-  fields: Record<string, any>
+  fields?: Record<string, any>
   timestamp?: number
   // time in seconds
   timeout: number
@@ -76,7 +76,7 @@ export interface TestAutomationRequest {
   id?: string
   revision?: string
   timeout?: number
-  fields: Record<string, any>
+  fields?: Record<string, any>
   row?: Row
   oldRow?: Row
 }
