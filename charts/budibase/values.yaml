@@ -243,6 +243,10 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- The amount of time to wait between requesting a shutdown and killing the
+    # container. This is used to give the apps service time to finish processing
+    # any requests before shutting down. You shouldn't need to change this.
+    terminationGracePeriodSeconds: 60
     # -- Extra environment variables to set for apps pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -333,6 +337,11 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- The amount of time to wait between requesting a shutdown and killing
+    # the container. This is used to give the automation worker service time to
+    # finish processing any requests before shutting down. You shouldn't need to
+    # change this.
+    terminationGracePeriodSeconds: 60
     # -- Extra environment variables to set for automation worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -425,6 +434,11 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- The amount of time to wait between requesting a shutdown and killing
+    # the container. This is used to give the worker service time to finish
+    # processing any requests before shutting down. You shouldn't need to change
+    # this.
+    terminationGracePeriodSeconds: 60
     # -- Extra environment variables to set for worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
