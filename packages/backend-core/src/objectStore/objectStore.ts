@@ -408,7 +408,7 @@ export async function retrieveDirectory(bucketName: string, path: string) {
     objects.map(obj => getReadStream(bucketName, obj.Key!))
   )
   let count = 0
-  const writePromises: Promise<Error>[] = []
+  const writePromises: Promise<void>[] = []
   for (let obj of objects) {
     const filename = obj.Key!
     const stream = streams[count++]
@@ -423,8 +423,8 @@ export async function retrieveDirectory(bucketName: string, path: string) {
     })
     stream.pipe(writeStream)
     writePromises.push(
-      new Promise((resolve, reject) => {
-        writeStream.on("finish", resolve)
+      new Promise<void>((resolve, reject) => {
+        writeStream.on("finish", () => resolve())
         stream.on("error", reject)
         writeStream.on("error", reject)
       })
