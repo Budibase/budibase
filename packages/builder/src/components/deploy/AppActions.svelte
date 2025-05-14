@@ -1,13 +1,5 @@
 <script>
-  import {
-    notifications,
-    Button,
-    ActionButton,
-    StatusLight,
-  } from "@budibase/bbui"
-  import analytics from "@/analytics"
-  import { API } from "@/api"
-  import { appsStore } from "@/stores/portal"
+  import { Button, ActionButton, StatusLight } from "@budibase/bbui"
   import {
     builderStore,
     isOnlyUser,
@@ -17,46 +9,12 @@
   import VersionModal from "@/components/deploy/VersionModal.svelte"
 
   let versionModal
-  let publishing = false
   let showNpsSurvey = false
 
   $: updateAvailable =
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-
-  async function publishApp() {
-    try {
-      publishing = true
-      await API.publishAppChanges($appStore.appId)
-      notifications.send("App published successfully", {
-        type: "success",
-        icon: "GlobeCheck",
-      })
-      showNpsSurvey = true
-      await completePublish()
-    } catch (error) {
-      console.error(error)
-      analytics.captureException(error)
-      const baseMsg = "Error publishing app"
-      const message = error.message
-      if (message) {
-        notifications.error(`${baseMsg} - ${message}`)
-      } else {
-        notifications.error(baseMsg)
-      }
-    }
-    publishing = false
-  }
-
-  const completePublish = async () => {
-    try {
-      await appsStore.load()
-      await deploymentStore.load()
-    } catch (err) {
-      notifications.error("Error refreshing app")
-    }
-  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -88,7 +46,11 @@
     </div>
     <div class="app-action-button publish">
       <div class="app-action" id="builder-app-users-button">
-        <Button cta on:click={publishApp} disabled={publishing}>Publish</Button>
+        <Button
+          cta
+          on:click={deploymentStore.publishApp}
+          disabled={$deploymentStore.isPublishing}>Publish</Button
+        >
       </div>
     </div>
   </div>

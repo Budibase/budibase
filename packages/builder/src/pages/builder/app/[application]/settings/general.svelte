@@ -6,27 +6,15 @@
     Body,
     Button,
     Modal,
-    ActionButton,
     Icon,
-    notifications,
-    TooltipPosition,
-    AbsTooltip,
-    Link,
   } from "@budibase/bbui"
   import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
-  import {
-    isOnlyUser,
-    appStore,
-    appPublished,
-    deploymentStore,
-  } from "@/stores/builder"
+  import { isOnlyUser, appStore, deploymentStore } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
   import { appsStore } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
-  import { processStringSync } from "@budibase/string-templates"
   import analytics, { Events, EventSource } from "@/analytics"
-  import { API } from "@/api"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import RevertModal from "@/components/deploy/RevertModal.svelte"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
@@ -38,33 +26,14 @@
   let unpublishModal
   let revertModal
   let deleteModal
-  let publishing = false
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
   $: selectedApp = filteredApps.length ? filteredApps[0] : {}
-  $: lastDeployed = getLastDeployedString($deploymentStore)
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
     exportModal.show()
-  }
-
-  const importApp = () => {
-    importModal.show()
-  }
-
-  const getLastDeployedString = deployments => {
-    return deployments?.length
-      ? processStringSync(
-          "Your app was last published {{ duration time 'millisecond' }} ago",
-          {
-            time:
-              new Date().getTime() -
-              new Date(deployments[0].updatedAt).getTime(),
-          }
-        )
-      : ""
   }
 
   const viewApp = () => {
@@ -76,55 +45,6 @@
       window.open(`/app${selectedApp.url}`)
     } else {
       window.open(`/${selectedApp.prodId}`)
-    }
-  }
-
-  const confirmUnpublishApp = async () => {
-    if (!selectedApp || !$appPublished) {
-      //confirm the app has loaded.
-      return
-    }
-    try {
-      await API.unpublishApp(selectedApp.prodId)
-      await appsStore.load()
-      notifications.send("App unpublished", {
-        type: "success",
-        icon: "GlobeStrike",
-      })
-    } catch (err) {
-      notifications.error("Error unpublishing app")
-    }
-  }
-
-  async function publishApp() {
-    try {
-      publishing = true
-      await API.publishAppChanges($appStore.appId)
-      notifications.send("App published successfully", {
-        type: "success",
-        icon: "GlobeCheck",
-      })
-      await completePublish()
-    } catch (error) {
-      console.error(error)
-      analytics.captureException(error)
-      const baseMsg = "Error publishing app"
-      const message = error.message
-      if (message) {
-        notifications.error(`${baseMsg} - ${message}`)
-      } else {
-        notifications.error(baseMsg)
-      }
-    }
-    publishing = false
-  }
-
-  const completePublish = async () => {
-    try {
-      await appsStore.load()
-      await deploymentStore.load()
-    } catch (err) {
-      notifications.error("Error refreshing app")
     }
   }
 </script>
@@ -139,7 +59,7 @@
   <UpdateAppForm />
   <Divider />
   <Heading size="S">Deployment</Heading>
-  {#if $appPublished}
+  {#if $deploymentStore.isPublished}
     <div class="row top">
       <Icon
         name="CheckmarkCircle"
@@ -147,7 +67,7 @@
         size="L"
       />
       <Body size="S">
-        {lastDeployed}
+        {$deploymentStore.lastPublished}
         <br />
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -170,7 +90,13 @@
       </Body>
     </div>
     <div class="row">
-      <Button cta disabled={publishing} on:click={publishApp}>Publish</Button>
+      <Button
+        cta
+        disabled={$deploymentStore.isPublishing}
+        on:click={deploymentStore.publishApp}
+      >
+        Publish
+      </Button>
     </div>
   {/if}
   <Divider />
@@ -227,7 +153,7 @@
     </Button>
     <Button
       secondary
-      disabled={!$appPublished}
+      disabled={!$deploymentStore.isPublished}
       on:click={() => exportApp({ published: true })}
     >
       Export latest published app
@@ -239,7 +165,7 @@
     <Body size="S">Import an app export bundle to update this app</Body>
   </Layout>
   <div class="row">
-    <Button secondary on:click={() => importApp()}>Import app</Button>
+    <Button secondary on:click={importModal?.show}>Import app</Button>
   </div>
   <Divider />
   <Heading size="S">Danger zone</Heading>
@@ -273,7 +199,7 @@
   bind:this={unpublishModal}
   title="Confirm unpublish"
   okText="Unpublish app"
-  onOk={confirmUnpublishApp}
+  onOk={deploymentStore.unpublishApp}
 >
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
