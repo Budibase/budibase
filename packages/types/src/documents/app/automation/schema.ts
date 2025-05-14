@@ -59,6 +59,12 @@ import {
   RowUpdatedTriggerOutputs,
   WebhookTriggerOutputs,
   RowActionTriggerInputs,
+  ClassifyContentStepOutputs,
+  ClassifyContentStepInputs,
+  PromptLLMStepOutputs,
+  PromptLLMStepInputs,
+  TranslateStepOutputs,
+  TranslateStepInputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -141,6 +147,18 @@ export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.OPENAI]: ActionImplementation<
     OpenAIStepInputs,
     OpenAIStepOutputs
+  >
+  [AutomationActionStepId.CLASSIFY_CONTENT]: ActionImplementation<
+    ClassifyContentStepInputs,
+    ClassifyContentStepOutputs
+  >
+  [AutomationActionStepId.PROMPT_LLM]: ActionImplementation<
+    PromptLLMStepInputs,
+    PromptLLMStepOutputs
+  >
+  [AutomationActionStepId.TRANSLATE]: ActionImplementation<
+    TranslateStepInputs,
+    TranslateStepOutputs
   >
 } & (T extends "self"
   ? {
@@ -329,6 +347,15 @@ export type OpenAIStep = AutomationStepSchema<AutomationActionStepId.OPENAI>
 
 export type LoopStep = AutomationStepSchema<AutomationActionStepId.LOOP>
 
+export type ClassifyContentStep =
+  AutomationStepSchema<AutomationActionStepId.CLASSIFY_CONTENT>
+
+export type PromptLLMStep =
+  AutomationStepSchema<AutomationActionStepId.PROMPT_LLM>
+
+export type TranslateStep =
+  AutomationStepSchema<AutomationActionStepId.TRANSLATE>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
   | CollectStep
@@ -354,7 +381,9 @@ export type AutomationStep =
   | ExecuteBashStep
   | OpenAIStep
   | BranchStep
-
+  | ClassifyContentStep
+  | PromptLLMStep
+  | TranslateStep
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
 ): step is BranchStep {

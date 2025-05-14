@@ -20,6 +20,9 @@ import * as collect from "./steps/collect"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import * as openai from "./steps/openai"
 import * as bash from "./steps/bash"
+import * as classifyText from "./steps/ai/classify"
+import * as promptLLM from "./steps/ai/promptLLM"
+import * as translate from "./steps/ai/translate"
 import env from "../environment"
 import {
   PluginType,
@@ -54,6 +57,9 @@ const ACTION_IMPLS: ActionImplType = {
   COLLECT: collect.run,
   TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
   OPENAI: openai.run,
+  CLASSIFY_CONTENT: classifyText.run,
+  PROMPT_LLM: promptLLM.run,
+  TRANSLATE: translate.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -82,6 +88,9 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   COLLECT: automations.steps.collect.definition,
   TRIGGER_AUTOMATION_RUN: automations.steps.triggerAutomationRun.definition,
   BRANCH: automations.steps.branch.definition,
+  CLASSIFY_CONTENT: automations.steps.classifyText.definition,
+  PROMPT_LLM: automations.steps.promptLLM.definition,
+  TRANSLATE: automations.steps.translate.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: automations.steps.discord.definition,
   slack: automations.steps.slack.definition,

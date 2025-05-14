@@ -151,6 +151,16 @@
       ),
     },
     {
+      name: "AI",
+      items: actions.filter(([k]) =>
+        [
+          AutomationActionStepId.PROMPT_LLM,
+          AutomationActionStepId.CLASSIFY_CONTENT,
+          AutomationActionStepId.TRANSLATE,
+        ].includes(k as AutomationActionStepId)
+      ),
+    },
+    {
       name: "Apps",
       items: actions.filter(([k]) =>
         [
