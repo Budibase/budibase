@@ -242,6 +242,14 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
     ? LoopStepInputs
     : T extends AutomationActionStepId.BRANCH
     ? BranchStepInputs
+    : T extends AutomationActionStepId.CLASSIFY_CONTENT
+    ? ClassifyContentStepInputs
+    : T extends AutomationActionStepId.PROMPT_LLM
+    ? PromptLLMStepInputs
+    : T extends AutomationActionStepId.TRANSLATE
+    ? TranslateStepInputs
+    : T extends AutomationActionStepId.SUMMARISE
+    ? SummariseStepInputs
     : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
@@ -287,6 +295,14 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
     ? OpenAIStepOutputs
     : T extends AutomationActionStepId.LOOP
     ? BaseAutomationOutputs
+    : T extends AutomationActionStepId.CLASSIFY_CONTENT
+    ? ClassifyContentStepOutputs
+    : T extends AutomationActionStepId.PROMPT_LLM
+    ? PromptLLMStepOutputs
+    : T extends AutomationActionStepId.TRANSLATE
+    ? TranslateStepOutputs
+    : T extends AutomationActionStepId.SUMMARISE
+    ? SummariseStepOutputs
     : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>

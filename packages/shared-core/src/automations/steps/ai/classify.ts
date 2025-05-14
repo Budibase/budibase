@@ -3,6 +3,7 @@ import {
   AutomationIOType,
   AutomationStepDefinition,
   AutomationStepType,
+  AutomationCustomIOType,
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
@@ -22,14 +23,15 @@ export const definition: AutomationStepDefinition = {
           title: "Text to Classify",
           description: "The text content you want the AI to classify.",
         },
-        categories: {
-          type: AutomationIOType.STRING,
+        categoryItems: {
+          type: AutomationIOType.ARRAY,
+          customType: AutomationCustomIOType.CATEGORIES,
           title: "Categories",
           description:
-            "A list of categories to classify the text against (e.g., Positive, Negative).",
+            "Add categories with descriptions for the AI to use when classifying text.",
         },
       },
-      required: ["textInput", "categories"],
+      required: ["textInput", "categoryItems"],
     },
     outputs: {
       properties: {

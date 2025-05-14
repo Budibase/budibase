@@ -167,7 +167,10 @@ export type OpenAIStepInputs = {
 export type ClassifyContentStepInputs = {
   inputType: string
   textInput: string
-  categories: string
+  categoryItems: Array<{
+    category: string
+    description: string
+  }>
 }
 
 export type ClassifyContentStepOutputs = {

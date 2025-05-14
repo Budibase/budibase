@@ -12,8 +12,8 @@ export async function run({
 }): Promise<ClassifyContentStepOutputs> {
   if (
     !inputs.textInput ||
-    !inputs.categories ||
-    inputs.categories.length === 0
+    !inputs.categoryItems ||
+    inputs.categoryItems.length === 0
   ) {
     return {
       success: false,
@@ -24,15 +24,30 @@ export async function run({
 
   try {
     const llm = await ai.getLLMOrThrow()
-    const request = ai.classifyText(
-      inputs.textInput,
-      inputs.categories.split(",")
+
+    const categories = inputs.categoryItems!.map(item => item.category)
+    const categoryDescriptionMap: Record<string, string> = {}
+
+    inputs.categoryItems!.forEach(item => {
+      categoryDescriptionMap[item.category] = item.description
+    })
+
+    const categoriesWithDescriptions = categories
+      .map(cat => `${cat}: ${categoryDescriptionMap[cat] || ""}`)
+      .join("\n")
+
+    const request = new ai.LLMRequest().addUserMessage(
+      `Return the category of this text: "${inputs.textInput}". 
+Based on these categories and their descriptions:
+${categoriesWithDescriptions}
+
+Only return the exact category name with no additional text.`
     )
 
     const llmResponse = await llm.prompt(request)
     const determinedCategory = llmResponse?.message?.trim()
 
-    if (determinedCategory && inputs.categories.includes(determinedCategory)) {
+    if (determinedCategory && categories.includes(determinedCategory)) {
       return {
         category: determinedCategory,
         success: true,
@@ -40,7 +55,9 @@ export async function run({
     } else if (determinedCategory) {
       return {
         success: false,
-        response: `Classify Text AI Step Failed: AI returned category '${determinedCategory}', which is not in the provided list: [${inputs.categories}]. Ensure the AI is constrained to the list or check AI response variability.`,
+        response: `Classify Text AI Step Failed: AI returned category '${determinedCategory}', which is not in the provided list: [${categories.join(
+          ", "
+        )}].`,
       }
     } else {
       return {
