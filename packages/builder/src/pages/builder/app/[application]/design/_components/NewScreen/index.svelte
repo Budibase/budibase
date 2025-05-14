@@ -3,7 +3,14 @@
   import { AutoScreenTypes } from "@/constants"
   import { screenStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
-  import { Body, Modal, ModalContent, Tag, Tags } from "@budibase/bbui"
+  import {
+    Body,
+    Modal,
+    ModalContent,
+    notifications,
+    Tag,
+    Tags,
+  } from "@budibase/bbui"
   import CreateScreenModal from "./CreateScreenModal.svelte"
   import blank from "./images/blank.svg"
   import form from "./images/formUpdate.svg"
@@ -19,13 +26,21 @@
   export const show = () => rootModal.show()
 
   let createScreenModal: CreateScreenModal
-  let selectedType: AutoScreenTypes
+  let selectedType: AutoScreenTypes | undefined
 
   function onSelect(screenType: AutoScreenTypes) {
-    selectedType = screenType
+    if (selectedType === screenType) {
+      selectedType = undefined
+    } else {
+      selectedType = screenType
+    }
   }
 
   function onConfirm() {
+    if (!selectedType) {
+      notifications.error("Select screen type")
+      return
+    }
     rootModal.hide()
     createScreenModal.show(selectedType)
   }
@@ -40,7 +55,11 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <CreationPage showClose={!!onClose} {onClose}>
       <div class="cards">
-        <div class="card" on:click={() => onSelect(AutoScreenTypes.BLANK)}>
+        <div
+          class="card"
+          on:click={() => onSelect(AutoScreenTypes.BLANK)}
+          class:selected={selectedType === AutoScreenTypes.BLANK}
+        >
           <div class="image">
             <img alt="A blank screen" src={blank} />
           </div>
@@ -50,7 +69,11 @@
           </div>
         </div>
 
-        <div class="card" on:click={() => onSelect(AutoScreenTypes.TABLE)}>
+        <div
+          class="card"
+          on:click={() => onSelect(AutoScreenTypes.TABLE)}
+          class:selected={selectedType === AutoScreenTypes.TABLE}
+        >
           <div class="image">
             <img alt="A table of data" src={table} />
           </div>
@@ -60,7 +83,11 @@
           </div>
         </div>
 
-        <div class="card" on:click={() => onSelect(AutoScreenTypes.FORM)}>
+        <div
+          class="card"
+          on:click={() => onSelect(AutoScreenTypes.FORM)}
+          class:selected={selectedType === AutoScreenTypes.FORM}
+        >
           <div class="image">
             <img alt="A form containing data" src={form} />
           </div>
@@ -76,6 +103,7 @@
           on:click={$licensing.pdfEnabled
             ? () => onSelect(AutoScreenTypes.PDF)
             : null}
+          class:selected={selectedType === AutoScreenTypes.PDF}
         >
           <div class="image">
             <img alt="A PDF document" src={pdf} width="185" />
@@ -158,5 +186,11 @@
   }
   .text :global(p:nth-child(2)) {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .selected {
+    border-radius: 4px;
+    border: 1px solid var(--blue);
+    margin: -1px;
   }
 </style>
