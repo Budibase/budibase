@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Generate Text",
   icon: "Edit",
-  tagline: "Generate {{inputs.contentType}} using AI",
+  tagline: "Generate contentusing AI",
   description:
     "Uses AI to generate text content based on your instructions and chosen format",
   stepId: AutomationActionStepId.GENERATE_TEXT,
