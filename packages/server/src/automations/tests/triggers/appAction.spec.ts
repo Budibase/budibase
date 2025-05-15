@@ -1,7 +1,7 @@
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { captureAutomationResults } from "../utilities"
-import { Automation, AutomationIOType } from "@budibase/types"
+import { Automation, AutomationIOType, AutomationStatus } from "@budibase/types"
 
 describe("app action trigger", () => {
   const config = new TestConfiguration()
@@ -76,5 +76,16 @@ describe("app action trigger", () => {
       number: 2,
       boolean: true,
     })
+  })
+
+  it("should report that it has timed out if the timeout is reached", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .delay({
+        time: 1000,
+      })
+      .test({ fields: {}, timeout: 10 })
+
+    expect(result.status).toEqual(AutomationStatus.TIMED_OUT)
   })
 })

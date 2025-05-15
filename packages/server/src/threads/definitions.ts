@@ -16,7 +16,7 @@ export interface QueryEvent
   ctx?: any
 }
 
-export type QueryEventParameters = Record<string, string | null>
+export type QueryEventParameters = Record<string, string | number | null>
 
 export interface QueryResponse {
   rows: Row[]
