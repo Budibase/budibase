@@ -28,7 +28,7 @@ export const definition: AutomationStepDefinition = {
           customType: AutomationCustomIOType.CATEGORIES,
           title: "Categories",
           description:
-            "Add categories with descriptions for the AI to use when classifying text.",
+            "Add categories for the AI to use when classifying text.",
         },
       },
       required: ["textInput", "categoryItems"],

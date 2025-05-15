@@ -169,7 +169,6 @@ export type ClassifyContentStepInputs = {
   textInput: string
   categoryItems: Array<{
     category: string
-    description: string
   }>
 }
 

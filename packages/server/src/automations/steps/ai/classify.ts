@@ -25,24 +25,10 @@ export async function run({
   try {
     const llm = await ai.getLLMOrThrow()
 
+    // Extract categories
     const categories = inputs.categoryItems!.map(item => item.category)
-    const categoryDescriptionMap: Record<string, string> = {}
 
-    inputs.categoryItems!.forEach(item => {
-      categoryDescriptionMap[item.category] = item.description
-    })
-
-    const categoriesWithDescriptions = categories
-      .map(cat => `${cat}: ${categoryDescriptionMap[cat] || ""}`)
-      .join("\n")
-
-    const request = new ai.LLMRequest().addUserMessage(
-      `Return the category of this text: "${inputs.textInput}". 
-Based on these categories and their descriptions:
-${categoriesWithDescriptions}
-
-Only return the exact category name with no additional text.`
-    )
+    const request = ai.classifyText(inputs.textInput, categories)
 
     const llmResponse = await llm.prompt(request)
     const determinedCategory = llmResponse?.message?.trim()
@@ -57,7 +43,7 @@ Only return the exact category name with no additional text.`
         success: false,
         response: `Classify Text AI Step Failed: AI returned category '${determinedCategory}', which is not in the provided list: [${categories.join(
           ", "
-        )}].`,
+        )}]. Ensure the AI is constrained to the list or check AI response variability.`,
       }
     } else {
       return {

@@ -25,7 +25,6 @@
     const newCategory = {
       id: generate(),
       category: "",
-      description: "",
     }
     categories = [...categories, newCategory]
     updateValue()
@@ -37,9 +36,9 @@
     updateValue()
   }
 
-  function updateCategory(index, field, newValue) {
+  function updateCategory(index, newValue) {
     if (categories[index]) {
-      categories[index][field] = newValue
+      categories[index].category = newValue
       categories = [...categories]
       updateValue()
     }
@@ -59,15 +58,8 @@
           <div class="input-group">
             <Input
               value={cat.category}
-              on:blur={e => updateCategory(index, "category", e.detail)}
+              on:blur={e => updateCategory(index, e.detail)}
               placeholder="Category name"
-            />
-          </div>
-          <div class="input-group">
-            <Input
-              value={cat.description}
-              on:blur={e => updateCategory(index, "description", e.detail)}
-              placeholder="What defines this category?"
             />
           </div>
           <div class="remove-button">
@@ -83,13 +75,7 @@
     {/each}
   </div>
 
-  <ActionButton
-    on:click={addCategory}
-    icon="Add"
-    text="Add Category"
-    secondary
-    quiet={false}
-  >
+  <ActionButton on:click={addCategory} icon="Add" secondary quiet={false}>
     Add Category
   </ActionButton>
 </div>
@@ -122,9 +108,6 @@
   }
 
   .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
     flex: 1;
   }
 
