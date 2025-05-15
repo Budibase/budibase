@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import NewScreen from "./_components/NewScreen/index.svelte"
   import { screenStore } from "@/stores/builder"
   import { goto } from "@roxi/routify"
 
   $: onClose = getOnClose($screenStore)
 
-  const getOnClose = ({ screens, selectedScreenId }) => {
+  const getOnClose = ({ screens, selectedScreenId }: typeof $screenStore) => {
     if (!screens?.length) {
       return null
     }
