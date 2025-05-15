@@ -5,26 +5,28 @@
     runtimeToReadableBinding,
   } from "@/dataBinding"
   import { builderStore } from "@/stores/builder"
+  import { createEventDispatcher } from "svelte"
 
   export let label = ""
   export let labelHidden = false
   export let componentInstance = {}
-  export let control = null
+  export let control = undefined
   export let key = ""
   export let type = ""
-  export let value = null
-  export let defaultValue = null
+  export let value = undefined
+  export let defaultValue = undefined
   export let props = {}
-  export let onChange = () => {}
+  export let onChange = undefined
   export let bindings = []
   export let componentBindings = []
   export let nested = false
   export let propertyFocus = false
-  export let info = null
+  export let info = undefined
   export let disableBindings = false
   export let wide = false
-  export let contextAccess = null
+  export let contextAccess = undefined
 
+  const dispatch = createEventDispatcher()
   let highlightType
   let domElement
 
@@ -93,10 +95,11 @@
       innerVal = parseInt(innerVal)
     }
 
-    if (typeof innerVal === "string") {
-      onChange(replaceBindings(innerVal))
-    } else {
-      onChange(innerVal)
+    const dispatchVal =
+      typeof innerVal === "string" ? replaceBindings(innerVal) : innerVal
+    dispatch("change", dispatchVal)
+    if (onChange) {
+      onChange(dispatchVal)
     }
   }
 

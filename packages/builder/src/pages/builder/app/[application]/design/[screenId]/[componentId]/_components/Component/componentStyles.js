@@ -191,6 +191,17 @@ export const size = {
   ],
 }
 
+export const font = {
+  label: "Font",
+  settings: [
+    {
+      label: "Color",
+      key: "color",
+      control: ColorPicker,
+    },
+  ],
+}
+
 export const background = {
   label: "Background",
   settings: [
