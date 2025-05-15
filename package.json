@@ -121,6 +121,7 @@
     "kind-of": "6.0.3",
     "**/nan": "2.22.0",
     "globals": "15.13.0",
+    "node-gyp": "11.2.0",
     "esm": "npm:esm-wallaby@3.2.32"
   },
   "engines": {
