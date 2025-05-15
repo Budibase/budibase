@@ -361,14 +361,13 @@ export class ExternalRequest<T extends Operation> {
         }
         // many to many
         else if (isManyToMany(field)) {
-          // we're not inserting a doc, will be a bunch of update calls
           const otherKey: string = field.throughFrom || linkTablePrimary
           const thisKey: string = field.throughTo || tablePrimary
           for (const relationship of row[key]) {
             manyRelationships.push({
               tableId: field.through || field.tableId,
               isUpdate: false,
-              key: otherKey,
+              key: field.fieldName,
               [otherKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [thisKey]: `{{ literal ${tablePrimary} }}`,
@@ -378,17 +377,13 @@ export class ExternalRequest<T extends Operation> {
         }
         // many to one
         else {
-          const thisKey = "id"
-          // @ts-ignore
-          const otherKey: string = field.fieldName
           for (const relationship of row[key]) {
             manyRelationships.push({
+              id: breakRowIdField(relationship)[0],
               tableId: field.tableId,
               isUpdate: true,
-              key: otherKey,
-              [thisKey]: breakRowIdField(relationship)[0],
-              // leave the ID for enrichment later
-              [otherKey]: `{{ literal ${tablePrimary} }}`,
+              key: field.fieldName,
+              [field.fieldName]: `{{ literal ${tablePrimary} }}`,
               relationshipType: RelationshipType.MANY_TO_ONE,
             })
           }
@@ -488,7 +483,8 @@ export class ExternalRequest<T extends Operation> {
           ? []
           : response
 
-      related[this.getLookupRelationsKey(field)] = {
+      const relatedKey = this.getLookupRelationsKey(field)
+      related[relatedKey] = {
         rows,
         isMany: isManyToMany(field),
         tableId: relatedTableId,
@@ -533,14 +529,12 @@ export class ExternalRequest<T extends Operation> {
 
       const linkSecondary = relationshipPrimary[1]
 
-      const rows =
-        related[
-          this.getLookupRelationsKey({
-            relationshipType,
-            fieldName: key,
-            through: relationship.tableId,
-          })
-        ]?.rows || []
+      const relatedKey = this.getLookupRelationsKey({
+        relationshipType,
+        fieldName: key,
+        through: relationship.tableId,
+      })
+      const rows = related[relatedKey]?.rows || []
 
       const relationshipMatchPredicate = ({
         row,
@@ -612,7 +606,8 @@ export class ExternalRequest<T extends Operation> {
         continue
       }
 
-      const relatedByTable = related[this.getLookupRelationsKey(column)]
+      const relatedKey = this.getLookupRelationsKey(column)
+      const relatedByTable = related[relatedKey]
       if (!relatedByTable) {
         continue
       }
