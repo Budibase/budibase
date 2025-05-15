@@ -223,11 +223,12 @@ export type TriggerAutomationStepInputs = {
   automation: {
     automationId: string
   }
-  timeout: number
+  timeout?: number
 }
 
 export type TriggerAutomationStepOutputs = BaseAutomationOutputs & {
   value?: AutomationResults["steps"]
+  status: AutomationResults["status"]
 }
 
 export type UpdateRowStepInputs = {

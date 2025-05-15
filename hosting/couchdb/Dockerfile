@@ -4,7 +4,7 @@
 # Dockerfile. Only modifications related to upgrading from Debian bullseye to
 # bookworm have been included. The `runner` image contains Budibase's
 # customisations to the image, e.g. adding Clouseau.
-FROM node:20-slim AS base
+FROM node:22-slim AS base
 
 # Add CouchDB user account to make sure the IDs are assigned consistently
 RUN groupadd -g 5984 -r couchdb && useradd -u 5984 -d /opt/couchdb -g couchdb couchdb

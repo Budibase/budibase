@@ -15,7 +15,7 @@ import {
   modalStore,
 } from "@/stores"
 import { API } from "@/api"
-import { ActionTypes } from "@/constants"
+import { ActionTypes, PeekMessages } from "@/constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
 
@@ -305,7 +305,7 @@ const closeScreenModalHandler = action => {
   }
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
-  window.parent.postMessage({ type: "close-screen-modal", url })
+  window.parent.postMessage({ type: PeekMessages.CLOSE_SCREEN_MODAL, url })
 }
 
 const updateStateHandler = action => {
@@ -320,7 +320,7 @@ const updateStateHandler = action => {
   // can also update their state
   if (get(routeStore).queryParams?.peek) {
     window.parent.postMessage({
-      type: "update-state",
+      type: PeekMessages.UPDATE_STATE,
       detail: { type, key, value, persist },
     })
   }

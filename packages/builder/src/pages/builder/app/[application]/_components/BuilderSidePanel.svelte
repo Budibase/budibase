@@ -14,7 +14,12 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
+  import {
+    builderStore,
+    appStore,
+    roles,
+    deploymentStore,
+  } from "@/stores/builder"
   import {
     groups,
     licensing,
@@ -620,7 +625,7 @@
     </div>
 
     <div class="body">
-      {#if !$appPublished}
+      {#if !$deploymentStore.isPublished}
         <div class="alert">
           <InfoDisplay
             icon="AlertCircleFilled"
