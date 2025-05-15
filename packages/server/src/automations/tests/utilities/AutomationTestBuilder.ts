@@ -84,7 +84,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
         id,
         stepId,
         name: opts?.stepName || schema.name,
-      })
+      } as AutomationStep)
       if (opts?.stepName) {
         this.stepNames[id] = opts.stepName
       }
