@@ -664,7 +664,7 @@ if (descriptions.length) {
               parameters: { number: 0 },
             })
 
-            const rows = await client(tableName).select("*")
+            const rows = await client(tableName).select("*").orderBy("id")
             expect(rows).toHaveLength(6)
             expect(rows[5].number).toEqual(0)
 
