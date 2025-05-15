@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Cleanup
+# Cleanup previous generated files
 if [[ -f "openapi.yaml" ]]; then
     rm openapi.yaml
 fi
 if [[ -d "generated" ]]; then
     rm -r generated
 fi
-if [[ -d "../sdk" ]]; then
-    rm -r ../sdk
+if [[ -d "../src/generated" ]]; then
+    rm -r ../src/generated
 fi
 
 # Generate new SDK
@@ -25,8 +25,9 @@ docker run --rm \
   -o /generated \
   -c /config.json
 
-# Use a subset of the generated files
-mv generated/src ../sdk
+# Move generated files to the correct location
+mkdir -p ../src/generated
+mv generated/src/* ../src/generated/
 
 # Cleanup
 if [[ -f "openapi.yaml" ]]; then

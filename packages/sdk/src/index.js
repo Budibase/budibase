@@ -1,4 +1,4 @@
-import * as BudibaseApi from "../sdk"
+import * as BudibaseApi from "./generated"
 
 export default class SDK {
   applications = new BudibaseApi.ApplicationsApi()
