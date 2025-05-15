@@ -18,11 +18,13 @@ import {
   Component,
   ComponentDefinition,
   DeleteScreenResponse,
+  FeatureFlag,
   FetchAppPackageResponse,
   SaveScreenResponse,
   Screen,
   ScreenVariant,
 } from "@budibase/types"
+import { featureFlag } from "@/helpers"
 
 interface ScreenState {
   screens: Screen[]
@@ -87,9 +89,13 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {FetchAppPackageResponse} pkg
    */
   syncAppScreens(pkg: FetchAppPackageResponse) {
+    let screens = [...pkg.screens]
+    if (featureFlag.isEnabled(FeatureFlag.PROJECT_APPS)) {
+      screens = [...pkg.projectApps.flatMap(p => p.screens)]
+    }
     this.update(state => ({
       ...state,
-      screens: [...pkg.projectApps.flatMap(p => p.screens)],
+      screens,
     }))
   }
 

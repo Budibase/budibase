@@ -26,6 +26,7 @@ import {
   docIds,
   env as envCore,
   events,
+  features,
   objectStore,
   roles,
   tenancy,
@@ -69,6 +70,7 @@ import {
   UnpublishAppResponse,
   SetRevertableAppVersionResponse,
   ErrorCode,
+  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -182,15 +184,19 @@ async function addSampleDataDocs() {
 
 async function addSampleDataScreen() {
   const db = context.getAppDB()
-  const appMetadata = await sdk.applications.metadata.get()
+  let projectAppId: string | undefined
+  if (await features.isEnabled(FeatureFlag.PROJECT_APPS)) {
+    const appMetadata = await sdk.applications.metadata.get()
 
-  const projectApp = await sdk.projectApps.create({
-    name: appMetadata.name,
-    urlPrefix: "/",
-    icon: "Monitoring",
-  })
+    const projectApp = await sdk.projectApps.create({
+      name: appMetadata.name,
+      urlPrefix: "/",
+      icon: "Monitoring",
+    })
+    projectAppId = projectApp._id!
+  }
 
-  let screen = createSampleDataTableScreen(projectApp._id)
+  let screen = await createSampleDataTableScreen(projectAppId)
   screen._id = generateScreenID()
   await db.put(screen)
 }
@@ -276,7 +282,12 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  const projectApps = await extractScreensByProjectApp(screens)
+  let projectApps: FetchAppPackageResponse["projectApps"] = []
+
+  if (await features.flags.isEnabled(FeatureFlag.PROJECT_APPS)) {
+    projectApps = await extractScreensByProjectApp(screens)
+    screens = []
+  }
 
   const clientLibPath = objectStore.clientLibraryUrl(
     ctx.params.appId,
@@ -287,6 +298,7 @@ export async function fetchAppPackage(
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
     projectApps,
+    screens,
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
