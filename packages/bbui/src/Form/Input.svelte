@@ -22,6 +22,10 @@
     value = e.detail
     dispatch("change", e.detail)
   }
+
+  const onBlur = () => {
+    dispatch("blur", value)
+  }
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>
@@ -38,7 +42,7 @@
     on:change={onChange}
     on:click
     on:input
-    on:blur
+    on:blur={onBlur}
     on:focus
     on:keyup
     on:keydown

@@ -164,6 +164,62 @@ export type OpenAIStepInputs = {
   model: Model
 }
 
+export type ClassifyContentStepInputs = {
+  inputType: string
+  textInput: string
+  categoryItems: Array<{
+    category: string
+  }>
+}
+
+export type ClassifyContentStepOutputs = {
+  category?: string
+  confidence?: number
+  success: boolean
+  response?: string
+}
+
+export type PromptLLMStepInputs = {
+  prompt: string
+  model: Model
+}
+
+export type PromptLLMStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type TranslateStepInputs = {
+  text: string
+  language: string
+}
+
+export type TranslateStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type SummariseStepInputs = {
+  text: string
+  length?: string
+}
+
+export type SummariseStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type GenerateTextStepInputs = {
+  contentType: string
+  instructions: string
+}
+
+export type GenerateTextStepOutputs = {
+  generatedText?: string
+  success: boolean
+  response?: string
+}
+
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
