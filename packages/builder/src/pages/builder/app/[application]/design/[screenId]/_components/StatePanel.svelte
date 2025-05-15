@@ -56,7 +56,13 @@
   ) => {
     if (screen && key) {
       searchComponents(screen, key)
-      editorValue = $previewStore.selectedComponentContext?.state?.[key] ?? ""
+      const stateValue = $previewStore.selectedComponentContext?.state?.[key]
+
+      if (typeof stateValue === "object") {
+        editorValue = JSON.stringify(stateValue)
+      } else {
+        editorValue = stateValue ?? ""
+      }
     } else {
       editorValue = ""
       componentsUsingState = []
