@@ -1,57 +1,24 @@
 <script>
-  import { Popover, Layout, Icon } from "@budibase/bbui"
-  import UpdateAppForm from "./UpdateAppForm.svelte"
-
-  let formPopover
-  let formPopoverAnchor
-  let formPopoverOpen = false
+  import { Icon } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
+  import { appStore } from "@/stores/builder"
 </script>
 
-<div bind:this={formPopoverAnchor}>
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div
-    class="app-heading"
-    class:editing={formPopoverOpen}
-    on:click={() => {
-      formPopover.show()
-    }}
-  >
-    <slot />
-    <span class="edit-icon">
-      <Icon size="S" name="Edit" color={"var(--grey-7)"} />
-    </span>
-  </div>
-</div>
-
-<Popover
-  customZIndex={998}
-  bind:this={formPopover}
-  align="center"
-  anchor={formPopoverAnchor}
-  offset={20}
-  on:close={() => {
-    formPopoverOpen = false
-  }}
-  on:open={() => {
-    formPopoverOpen = true
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div
+  class="app-heading"
+  on:click={() => {
+    $goto(`/builder/app/${$appStore.appId}/settings/general`)
   }}
 >
-  <Layout noPadding gap="M">
-    <div class="popover-content">
-      <UpdateAppForm
-        on:updated={() => {
-          formPopover.hide()
-        }}
-      />
-    </div>
-  </Layout>
-</Popover>
+  <slot />
+  <span class="edit-icon">
+    <Icon size="S" name="Edit" color={"var(--grey-7)"} />
+  </span>
+</div>
 
 <style>
-  .popover-content {
-    padding: var(--spacing-xl);
-  }
   .app-heading {
     display: flex;
     cursor: pointer;
@@ -61,8 +28,7 @@
   .edit-icon {
     display: none;
   }
-  .app-heading:hover .edit-icon,
-  .app-heading.editing .edit-icon {
+  .app-heading:hover .edit-icon {
     display: inline;
   }
 </style>

@@ -1,6 +1,6 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
-import { auth } from "@/stores/portal"
+import { auth } from "./auth"
 import { banner } from "@budibase/bbui"
 import {
   ConfigChecklistResponse,
