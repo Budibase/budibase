@@ -23,6 +23,9 @@
 
   $: $component.editing && node?.focus()
   $: componentText = getComponentText(text, $builderStore, $component)
+  $: customBg =
+    $component.styles?.normal?.background ||
+    $component.styles?.normal?.["background-image"]
 
   const getComponentText = (text, builderState, componentState) => {
     if (componentState.editing) {
@@ -49,16 +52,17 @@
 
 {#key $component.editing}
   <button
+    use:styleable={$component.styles}
     class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type} gap-${gap}`}
     class:spectrum-Button--quiet={quiet}
-    disabled={disabled || handlingOnClick}
-    use:styleable={$component.styles}
-    on:click={handleOnClick}
-    contenteditable={$component.editing && !icon}
-    on:blur={$component.editing ? updateText : null}
-    bind:this={node}
+    class:custom={customBg}
     class:active
+    bind:this={node}
+    on:click={handleOnClick}
+    on:blur={$component.editing ? updateText : null}
     on:input={() => (touched = true)}
+    disabled={disabled || handlingOnClick}
+    contenteditable={$component.editing && !icon}
   >
     {#if icon}
       <i class="{icon} {size}" />
@@ -74,6 +78,13 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  button.custom {
+    transition: filter 130ms ease-out;
+    border-width: 0;
+  }
+  button.custom:hover {
+    filter: brightness(1.1);
   }
   .spectrum-Button--overBackground:hover {
     color: #555;

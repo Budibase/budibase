@@ -1,13 +1,27 @@
 <script>
-  import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { screenStore, appStore, selectedScreen } from "@/stores/builder"
+  import {
+    screenStore,
+    appStore,
+    selectedScreen,
+    previewStore,
+  } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { Divider } from "@budibase/bbui"
+  import { ActionButton, Divider } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
+  import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
+  $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
+
+  const previewApp = () => {
+    previewStore.showPreview(true)
+  }
+
+  const togglePreviewDevice = () => {
+    previewStore.setDevice(mobile ? "desktop" : "mobile")
+  }
 </script>
 
 <div class="app-panel">
@@ -17,13 +31,24 @@
       <UndoRedoControl store={screenStore.history} />
     </div>
     <div class="header-right">
-      {#if !isPDF}
-        {#if $appStore.clientFeatures.devicePreview}
-          <DevicePreviewSelect />
+      <div class="actions">
+        {#if !isPDF}
+          {#if $appStore.clientFeatures.devicePreview}
+            <ActionButton
+              quiet
+              icon={mobile ? "DevicePhone" : "DeviceDesktop"}
+              selected
+              on:click={togglePreviewDevice}
+            />
+          {/if}
+          <ThemeSettings />
         {/if}
-        <Divider vertical />
-      {/if}
-      <ScreenErrorsButton />
+        <ScreenErrorsButton />
+      </div>
+      <Divider vertical />
+      <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+        Preview
+      </ActionButton>
     </div>
   </div>
   <div class="content">
@@ -56,7 +81,7 @@
   }
   .header {
     display: flex;
-    margin-bottom: 9px;
+    margin: 0 6px 4px 0;
   }
 
   .header-left {
@@ -75,5 +100,11 @@
   }
   .content {
     flex: 1 1 auto;
+  }
+  .actions {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
   }
 </style>
