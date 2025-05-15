@@ -107,7 +107,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <div class="title-section">
-      <Heading>Progressive Web App</Heading>
+      <Heading>Progressive web app</Heading>
       {#if !pwaEnabled}
         <Tags>
           <Tag icon="LockClosed">Enterprise</Tag>

@@ -1,5 +1,6 @@
 import env from "../environment"
-import Redis, { Cluster } from "ioredis"
+import Redis, { Cluster, ScanStream } from "ioredis"
+
 // mock-redis doesn't have any typing
 let MockRedis: any | undefined
 if (env.MOCK_REDIS) {
@@ -10,161 +11,77 @@ if (env.MOCK_REDIS) {
     console.log("Mock redis unavailable")
   }
 }
+
 import {
-  addDbPrefix,
   removeDbPrefix,
   getRedisOptions,
   SEPARATOR,
   SelectableDatabase,
   getRedisConnectionDetails,
+  getRedisClusterOptions,
 } from "./utils"
-import { logAlert } from "../logging"
-import * as timers from "../timers"
+import { Span, tracer } from "dd-trace"
+import { zip } from "lodash"
 
-const RETRY_PERIOD_MS = 2000
-const STARTUP_TIMEOUT_MS = 5000
-const CLUSTERED = env.REDIS_CLUSTERED
-const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
-
-// for testing just generate the client once
-let CLOSED = false
-const CLIENTS: Record<number, Redis> = {}
-let CONNECTED = false
-
-// mock redis always connected
-if (env.MOCK_REDIS) {
-  CONNECTED = true
-}
-
-function pickClient(selectDb: number) {
-  return CLIENTS[selectDb]
-}
-
-function connectionError(timeout: NodeJS.Timeout, err: Error | string) {
-  // manually shut down, ignore errors
-  if (CLOSED) {
-    return
-  }
-  CLOSED = true
-  // always clear this on error
-  clearTimeout(timeout)
-  CONNECTED = false
-  logAlert("Redis connection failed", err)
-  setTimeout(() => {
-    init()
-  }, RETRY_PERIOD_MS)
-}
-
-/**
- * Inits the system, will error if unable to connect to redis cluster (may take up to 10 seconds) otherwise
- * will return the ioredis client which will be ready to use.
- */
-function init(selectDb = DEFAULT_SELECT_DB) {
-  const RedisCore = env.MOCK_REDIS && MockRedis ? MockRedis : Redis
-  let timeout: NodeJS.Timeout
-  CLOSED = false
-  let client = pickClient(selectDb)
-  // already connected, ignore
-  if (client && CONNECTED) {
-    return
-  }
-  // testing uses a single in memory client
-  if (env.MOCK_REDIS) {
-    CLIENTS[selectDb] = new RedisCore(getRedisOptions())
-  }
-  // start the timer - only allowed 5 seconds to connect
-  timeout = setTimeout(() => {
-    if (!CONNECTED) {
-      connectionError(timeout, "Did not successfully connect in timeout")
+async function init(db = SelectableDatabase.DEFAULT): Promise<Redis | Cluster> {
+  return await tracer.trace("Redis.init", async span => {
+    // testing uses a single in memory client
+    if (env.MOCK_REDIS) {
+      span.addTags({ mock: true })
+      return new MockRedis(getRedisOptions())
     }
-  }, STARTUP_TIMEOUT_MS)
 
-  // disconnect any lingering client
-  if (client) {
-    client.disconnect()
-  }
-  const { host, port } = getRedisConnectionDetails()
-  const opts = getRedisOptions()
-
-  if (CLUSTERED) {
-    client = new RedisCore.Cluster([{ host, port }], opts)
-  } else {
-    client = new RedisCore(opts)
-  }
-  // attach handlers
-  client.on("end", (err: Error) => {
-    if (env.isTest()) {
-      // don't try to re-connect in test env
-      // allow the process to exit
-      return
+    let client: Redis | Cluster
+    if (env.REDIS_CLUSTERED) {
+      span.addTags({ clustered: true })
+      const { host, port } = getRedisConnectionDetails()
+      client = new Cluster([{ host, port }], getRedisClusterOptions())
+    } else {
+      client = new Redis(getRedisOptions())
     }
-    connectionError(timeout, err)
-  })
-  client.on("error", (err: Error) => {
-    connectionError(timeout, err)
-  })
-  client.on("connect", () => {
-    console.log(`Connected to Redis DB: ${selectDb}`)
-    clearTimeout(timeout)
-    CONNECTED = true
-  })
-  CLIENTS[selectDb] = client
-}
 
-export function closeAll() {
-  Object.values(CLIENTS).forEach(client => client.disconnect())
-}
+    return new Promise<Redis | Cluster>((resolve, reject) => {
+      client.on("error", (err: Error | string) => {
+        span.addTags({ error: true })
+        console.error(`failed to connect to redis (db: ${db})`, err)
+        reject(err)
+      })
 
-function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
-  return new Promise(resolve => {
-    if (pickClient(selectDb) == null) {
-      init()
-    } else if (CONNECTED) {
-      resolve("")
-      return
-    }
-    // check if the connection is ready
-    const interval = timers.set(() => {
-      if (CONNECTED) {
-        timers.clear(interval)
-        resolve("")
-      }
-    }, 500)
-  })
-}
+      client.on("reconnecting", () => {
+        console.log(`Redis reconnecting... (db: ${db})`)
+      })
 
-/**
- * Utility function, takes a redis stream and converts it to a promisified response -
- * this can only be done with redis streams because they will have an end.
- * @param stream A redis stream, specifically as this type of stream will have an end.
- * @param client The client to use for further lookups.
- * @return The final output of the stream
- */
-function promisifyStream(stream: any, client: RedisWrapper) {
-  return new Promise((resolve, reject) => {
-    const outputKeys = new Set()
-    stream.on("data", (keys: string[]) => {
-      keys.forEach(key => {
-        outputKeys.add(key)
+      client.on("ready", () => {
+        span.addTags({ connected: true })
+        console.log(`Redis ready to receive commands (db: ${db})`)
+        resolve(client)
       })
     })
-    stream.on("error", (err: Error) => {
-      reject(err)
-    })
+  })
+}
+
+export interface Entry {
+  key: string
+  value: any
+}
+function promisifyStream(
+  stream: ScanStream,
+  client: Redis | Cluster
+): Promise<Entry[]> {
+  return new Promise<Entry[]>((resolve, reject) => {
+    const keys = new Set<string>()
+    stream.on("data", (data: string[]) => data.forEach(k => keys.add(k)))
+    stream.on("error", (err: Error) => reject(err))
     stream.on("end", async () => {
-      const keysArray: string[] = Array.from(outputKeys) as string[]
       try {
-        let getPromises = []
-        for (let key of keysArray) {
-          getPromises.push(client.get(key))
-        }
-        const jsonArray = await Promise.all(getPromises)
-        resolve(
-          keysArray.map(key => ({
-            key: removeDbPrefix(key),
-            value: JSON.parse(jsonArray.shift()),
-          }))
-        )
+        const promises = Array.from(keys).map(async key => {
+          let value = await client.get(key)
+          if (value) {
+            value = JSON.parse(value)
+          }
+          return { key: removeDbPrefix(key), value }
+        })
+        resolve(await Promise.all(promises))
       } catch (err) {
         reject(err)
       }
@@ -172,186 +89,235 @@ function promisifyStream(stream: any, client: RedisWrapper) {
   })
 }
 
+function isCluster(client: Redis | Cluster): client is Cluster {
+  return client.isCluster
+}
+
 class RedisWrapper {
-  _db: string
-  _select: number
+  db: string
+  client: Redis | Cluster
 
-  constructor(db: string, selectDb: number | null = null) {
-    this._db = db
-    this._select = selectDb || DEFAULT_SELECT_DB
+  private constructor(client: Redis | Cluster, db: string) {
+    this.client = client
+    this.db = db
   }
 
-  getClient() {
-    return pickClient(this._select)
+  static async init(db: string, selectDb: number = SelectableDatabase.DEFAULT) {
+    return await tracer.trace("RedisWrapper.init", async span => {
+      const client = await init(selectDb)
+      if (selectDb && !env.isTest()) {
+        span.addTags({ db })
+        client.select(selectDb)
+      }
+      return new RedisWrapper(client, db)
+    })
   }
 
-  async init() {
-    CLOSED = false
-    init(this._select)
-    await waitForConnection(this._select)
-    if (this._select && !env.isTest()) {
-      this.getClient().select(this._select)
+  private trace(name: string, fn: (span: Span) => Promise<any>) {
+    return tracer.trace(name, async span => {
+      span.addTags({ db: this.db })
+      return await fn(span)
+    })
+  }
+
+  private prefixed(key: string) {
+    if (key.includes(this.db)) {
+      return key
     }
-    return this
+    return `${this.db}${SEPARATOR}${key}`
   }
 
   async finish() {
-    CLOSED = true
-    this.getClient().disconnect()
+    return await this.trace("RedisWrapper.finish", async () => {
+      await this.client.quit()
+    })
   }
 
-  async scan(key = ""): Promise<any> {
-    const db = this._db
-    key = `${db}${SEPARATOR}${key}`
-    let stream
-    if (CLUSTERED) {
-      let node = (this.getClient() as never as Cluster).nodes("master")
-      stream = node[0].scanStream({ match: key + "*", count: 100 })
-    } else {
-      stream = (this.getClient() as Redis).scanStream({
-        match: key + "*",
-        count: 100,
-      })
-    }
-    return promisifyStream(stream, this.getClient() as any)
+  async scan(key = ""): Promise<Entry[]> {
+    return await this.trace("RedisWrapper.scan", async span => {
+      span.addTags({ key })
+
+      key = `${this.db}${SEPARATOR}${key}`
+      let stream: ScanStream
+      if (isCluster(this.client)) {
+        let node = this.client.nodes("master")
+        stream = node[0].scanStream({ match: key + "*", count: 100 })
+      } else {
+        stream = (this.client as Redis).scanStream({
+          match: key + "*",
+          count: 100,
+        })
+      }
+
+      const entries = await promisifyStream(stream, this.client)
+      span.addTags({ numKeysFound: entries.length })
+      return entries
+    })
   }
 
   async keys(pattern: string) {
-    const db = this._db
-    return this.getClient().keys(addDbPrefix(db, pattern))
+    return await this.trace("RedisWrapper.keys", async span => {
+      span.addTags({ pattern })
+      return this.client.keys(this.prefixed(pattern))
+    })
   }
 
   async exists(key: string) {
-    const db = this._db
-    return await this.getClient().exists(addDbPrefix(db, key))
+    return await this.trace("RedisWrapper.exists", async span => {
+      span.addTags({ key })
+      return await this.client.exists(this.prefixed(key))
+    })
   }
 
   async get(key: string) {
-    const db = this._db
-    const response = await this.getClient().get(addDbPrefix(db, key))
-    // overwrite the prefixed key
-    // @ts-ignore
-    if (response != null && response.key) {
+    return await this.trace("RedisWrapper.get", async span => {
+      span.addTags({ key })
+      const response = await this.client.get(this.prefixed(key))
+      // overwrite the prefixed key
       // @ts-ignore
-      response.key = key
-    }
-    // if its not an object just return the response
-    try {
-      return JSON.parse(response!)
-    } catch (err) {
-      return response
-    }
+      if (response != null && response.key) {
+        // @ts-ignore
+        response.key = key
+      }
+      // if its not an object just return the response
+      try {
+        return JSON.parse(response!)
+      } catch (err) {
+        return response
+      }
+    })
   }
 
-  async bulkGet<T>(keys: string[]) {
-    const db = this._db
-    if (keys.length === 0) {
-      return {}
-    }
-    const prefixedKeys = keys.map(key => addDbPrefix(db, key))
-    let response = await this.getClient().mget(prefixedKeys)
-    if (Array.isArray(response)) {
-      let final: Record<string, T> = {}
-      let count = 0
-      for (let result of response) {
-        if (result) {
-          let parsed
-          try {
-            parsed = JSON.parse(result)
-          } catch (err) {
-            parsed = result
-          }
-          final[keys[count]] = parsed
-        }
-        count++
+  async bulkGet<T>(keys: string[]): Promise<Record<string, T | null>> {
+    return await this.trace("RedisWrapper.bulkGet", async span => {
+      span.addTags({ numKeys: keys.length })
+
+      if (keys.length === 0) {
+        return {}
       }
-      return final
-    } else {
-      throw new Error(`Invalid response: ${response}`)
-    }
+
+      const response = await this.client.mget(
+        keys.map(key => this.prefixed(key))
+      )
+
+      span.addTags({ numKeysFound: response.length })
+
+      return zip(keys, response).reduce((acc, [key, result]) => {
+        if (key === undefined || result === undefined) {
+          throw new Error(
+            `Keys and response length mismatch: ${keys.length} vs ${response.length}`
+          )
+        }
+
+        try {
+          acc[key] = result ? (JSON.parse(result) as T) : null
+        } catch (err) {
+          // TODO: this is a filthy lie but downstream code expects this, I have
+          // no idea how it actually works if if this branch is ever hit in
+          // practice.
+          acc[key] = result as T
+        }
+        return acc
+      }, {} as Record<string, T | null>)
+    })
   }
 
   async store(key: string, value: any, expirySeconds: number | null = null) {
-    const db = this._db
-    if (typeof value === "object") {
-      value = JSON.stringify(value)
-    }
-    const prefixedKey = addDbPrefix(db, key)
-    await this.getClient().set(prefixedKey, value)
-    if (expirySeconds) {
-      await this.getClient().expire(prefixedKey, expirySeconds)
-    }
+    return await this.trace("RedisWrapper.store", async span => {
+      span.addTags({ key, expirySeconds })
+      if (typeof value === "object") {
+        value = JSON.stringify(value)
+      }
+      await this.client.set(this.prefixed(key), value)
+      if (expirySeconds) {
+        await this.client.expire(this.prefixed(key), expirySeconds)
+      }
+    })
   }
 
   async bulkStore(
     data: Record<string, any>,
     expirySeconds: number | null = null
   ) {
-    const client = this.getClient()
+    return await this.trace("RedisWrapper.bulkStore", async span => {
+      span.addTags({ numKeys: Object.keys(data).length, expirySeconds })
 
-    const dataToStore = Object.entries(data).reduce((acc, [key, value]) => {
-      acc[addDbPrefix(this._db, key)] =
-        typeof value === "object" ? JSON.stringify(value) : value
-      return acc
-    }, {} as Record<string, any>)
+      const dataToStore = Object.entries(data).reduce((acc, [key, value]) => {
+        acc[this.prefixed(key)] =
+          typeof value === "object" ? JSON.stringify(value) : value
+        return acc
+      }, {} as Record<string, any>)
 
-    const pipeline = client.pipeline()
-    pipeline.mset(dataToStore)
+      const pipeline = this.client.pipeline()
+      pipeline.mset(dataToStore)
 
-    if (expirySeconds !== null) {
-      for (const key of Object.keys(dataToStore)) {
-        pipeline.expire(key, expirySeconds)
+      if (expirySeconds !== null) {
+        for (const key of Object.keys(dataToStore)) {
+          pipeline.expire(key, expirySeconds)
+        }
       }
-    }
 
-    await pipeline.exec()
+      await pipeline.exec()
+    })
   }
 
   async getTTL(key: string) {
-    const db = this._db
-    const prefixedKey = addDbPrefix(db, key)
-    return this.getClient().ttl(prefixedKey)
+    return await this.trace("RedisWrapper.getTTL", async span => {
+      span.addTags({ key })
+      return await this.client.ttl(this.prefixed(key))
+    })
   }
 
   async setExpiry(key: string, expirySeconds: number) {
-    const db = this._db
-    const prefixedKey = addDbPrefix(db, key)
-    await this.getClient().expire(prefixedKey, expirySeconds)
+    return await this.trace("RedisWrapper.setExpiry", async span => {
+      span.addTags({ key, expirySeconds })
+      return await this.client.expire(this.prefixed(key), expirySeconds)
+    })
   }
 
   async delete(key: string) {
-    const db = this._db
-    await this.getClient().del(addDbPrefix(db, key))
+    return await this.trace("RedisWrapper.delete", async span => {
+      span.addTags({ key })
+      await this.client.del(this.prefixed(key))
+    })
   }
 
   async bulkDelete(keys: string[]) {
-    const db = this._db
-    await this.getClient().del(keys.map(key => addDbPrefix(db, key)))
+    return await this.trace("RedisWrapper.bulkDelete", async span => {
+      span.addTags({ numKeys: keys.length })
+      await this.client.del(keys.map(key => this.prefixed(key)))
+    })
   }
 
   async clear() {
-    let items = await this.scan()
-    await Promise.all(items.map((obj: any) => this.delete(obj.key)))
+    return await this.trace("RedisWrapper.clear", async span => {
+      let items = await this.scan()
+      span.addTags({ numKeys: items.length })
+      await Promise.all(items.map(obj => this.delete(obj.key)))
+    })
   }
 
-  async increment(key: string) {
-    const result = await this.getClient().incr(addDbPrefix(this._db, key))
-    if (isNaN(result)) {
-      throw new Error(`Redis ${key} does not contain a number`)
-    }
-    return result
+  async increment(key: string): Promise<number> {
+    return await this.trace("RedisWrapper.increment", async span => {
+      span.addTags({ key })
+      const result = await this.client.incr(this.prefixed(key))
+      if (isNaN(result)) {
+        throw new Error(`Redis ${key} does not contain a number`)
+      }
+      return result
+    })
   }
 
   async deleteIfValue(key: string, value: any) {
-    const client = this.getClient()
-
-    const luaScript = `
+    return await this.trace("RedisWrapper.deleteIfValue", async span => {
+      span.addTags({ key })
+      const luaScript = `
       if redis.call('GET', KEYS[1]) == ARGV[1] then
         redis.call('DEL', KEYS[1])
       end
       `
-
-    await client.eval(luaScript, 1, addDbPrefix(this._db, key), value)
+      await this.client.eval(luaScript, 1, this.prefixed(key), value)
+    })
   }
 }
 
