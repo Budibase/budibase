@@ -1,5 +1,5 @@
 ARG BASEIMG=budibase/couchdb:v3.3.3-sqs-v2.1.1
-FROM node:20-slim AS build
+FROM node:22-slim AS build
 
 # install node-gyp dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
