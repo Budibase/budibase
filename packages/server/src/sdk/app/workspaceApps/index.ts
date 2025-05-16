@@ -39,7 +39,7 @@ export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
   await guardName(workspaceApp.name)
 
   const response = await db.put({
-    _id: `${DocumentType.PROJECT_APP}${SEPARATOR}${utils.newid()}`,
+    _id: `${DocumentType.WORKSPACE_APP}${SEPARATOR}${utils.newid()}`,
     ...workspaceApp,
   })
   return {

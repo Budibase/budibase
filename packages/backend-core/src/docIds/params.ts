@@ -218,5 +218,5 @@ export const getProjectAppParams = (
   projectAppId?: string | null,
   otherProps: Partial<DatabaseQueryOpts> = {}
 ) => {
-  return getDocParams(DocumentType.PROJECT_APP, projectAppId, otherProps)
+  return getDocParams(DocumentType.WORKSPACE_APP, projectAppId, otherProps)
 }
