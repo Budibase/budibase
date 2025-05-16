@@ -225,7 +225,6 @@
 
   .selected {
     border-radius: 4px;
-    border: 1px solid var(--blue);
-    margin: -1px;
+    outline: 1px solid var(--blue);
   }
 </style>
