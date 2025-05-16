@@ -35,7 +35,7 @@
 
 <Modal bind:this={revertModal}>
   <ModalContent
-    title="Revert Changes"
+    title="Revert changes"
     confirmText="Revert"
     onConfirm={revert}
     disabled={appName !== $appStore.name}

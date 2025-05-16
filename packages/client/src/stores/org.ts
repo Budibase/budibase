@@ -2,8 +2,12 @@ import { API } from "@/api"
 import { writable, get } from "svelte/store"
 import { appStore } from "./app"
 
+interface OrgStore {
+  logoUrl?: string
+}
+
 const createOrgStore = () => {
-  const store = writable(null)
+  const store = writable<OrgStore | null>(null)
 
   const { subscribe, set } = store
 

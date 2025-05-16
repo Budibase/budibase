@@ -16,6 +16,7 @@ import {
   UserCtx,
   DeploymentStatus,
   DeploymentProgressResponse,
+  Automation,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -76,17 +77,24 @@ async function initDeployedApp(prodAppId: any) {
   const db = context.getProdAppDB()
   console.log("Reading automation docs")
   const automations = (
-    await db.allDocs(
+    await db.allDocs<Automation>(
       getAutomationParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc!)
   await clearMetadata()
   const { count } = await disableAllCrons(prodAppId)
   const promises = []
   for (let automation of automations) {
-    promises.push(enableCronTrigger(prodAppId, automation))
+    promises.push(
+      enableCronTrigger(prodAppId, automation).catch(err => {
+        throw new Error(
+          `Failed to enable CRON trigger for automation "${automation.name}": ${err.message}`,
+          { cause: err }
+        )
+      })
+    )
   }
   const results = await Promise.all(promises)
   const enabledCount = results
@@ -207,10 +215,8 @@ export const publishApp = async function (
   } catch (err: any) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
     await storeDeploymentHistory(deployment)
-    throw {
-      ...err,
-      message: `Deployment Failed: ${err.message}`,
-    }
+
+    throw new Error(`Deployment Failed: ${err.message}`, { cause: err })
   } finally {
     if (replication) {
       await replication.close()
