@@ -188,7 +188,7 @@ async function addSampleDataScreen() {
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const appMetadata = await sdk.applications.metadata.get()
 
-    const projectApp = await sdk.projectApps.create({
+    const projectApp = await sdk.workspaceApps.create({
       name: appMetadata.name,
       urlPrefix: "/",
       icon: "Monitoring",
@@ -310,7 +310,7 @@ async function extractScreensByProjectApp(
 ): Promise<FetchAppPackageResponse["projectApps"]> {
   const result: FetchAppPackageResponse["projectApps"] = []
 
-  const projectApps = await sdk.projectApps.fetch()
+  const projectApps = await sdk.workspaceApps.fetch()
 
   const screensByProjectApp = groupBy(s => s.projectAppId, screens)
   for (const projectAppId of Object.keys(screensByProjectApp)) {

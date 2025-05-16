@@ -6,10 +6,10 @@ const migration = async () => {
   const screens = await sdk.screens.fetch()
 
   const application = await sdk.applications.metadata.get()
-  const allProjectApps = await sdk.projectApps.fetch()
+  const allProjectApps = await sdk.workspaceApps.fetch()
   let projectAppId = allProjectApps.find(p => p.name === application.name)?._id
   if (!projectAppId) {
-    const projectApp = await sdk.projectApps.create({
+    const projectApp = await sdk.workspaceApps.create({
       name: application.name,
       urlPrefix: "/",
       icon: "Monitoring",

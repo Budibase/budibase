@@ -31,7 +31,7 @@ export async function create(
     iconColor: body.iconColor,
   }
 
-  const projectApp = await sdk.projectApps.create(newProjectApp)
+  const projectApp = await sdk.workspaceApps.create(newProjectApp)
   ctx.status = 201
   ctx.body = {
     projectApp: toProjectAppResponse(projectApp),
@@ -56,7 +56,7 @@ export async function edit(
     iconColor: body.iconColor,
   }
 
-  const projectApp = await sdk.projectApps.update(toUpdate)
+  const projectApp = await sdk.workspaceApps.update(toUpdate)
   ctx.body = {
     projectApp: toProjectAppResponse(projectApp),
   }
@@ -65,6 +65,6 @@ export async function edit(
 export async function remove(ctx: Ctx<void, void>) {
   const { id, rev } = ctx.params
 
-  await sdk.projectApps.remove(id, rev)
+  await sdk.workspaceApps.remove(id, rev)
   ctx.status = 204
 }
