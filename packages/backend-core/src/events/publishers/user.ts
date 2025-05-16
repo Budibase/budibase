@@ -14,7 +14,6 @@ import {
   UserPermissionAssignedEvent,
   UserPermissionRemovedEvent,
   UserUpdatedEvent,
-  UserOnboardingEvent,
 } from "@budibase/types"
 import { isScim } from "../../context"
 
@@ -49,16 +48,6 @@ async function deleted(user: User) {
     },
   }
   await publishEvent(Event.USER_DELETED, properties)
-}
-
-export async function onboardingComplete(user: User) {
-  const properties: UserOnboardingEvent = {
-    userId: user._id as string,
-    audited: {
-      email: user.email,
-    },
-  }
-  await publishEvent(Event.USER_ONBOARDING_COMPLETE, properties)
 }
 
 // PERMISSIONS
@@ -191,7 +180,6 @@ export default {
   permissionAdminRemoved,
   permissionBuilderAssigned,
   permissionBuilderRemoved,
-  onboardingComplete,
   invited,
   inviteAccepted,
   passwordForceReset,

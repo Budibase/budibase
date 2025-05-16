@@ -14,6 +14,7 @@ import { apiEnabled, automationsEnabled } from "../features"
 import migrations from "../middleware/appMigrations"
 import { automationQueue } from "../automations"
 import assetRouter from "./routes/assets"
+import { getState } from "../startup"
 
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
@@ -26,6 +27,10 @@ router.get("/health", async ctx => {
       ctx.status = 503
       return
     }
+  }
+  if (getState() !== "ready") {
+    ctx.status = 503
+    return
   }
   ctx.status = 200
 })

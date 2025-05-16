@@ -24,6 +24,7 @@ export enum DataMode {
 }
 
 export enum SchemaFieldTypes {
+  LONGFORM = "longform",
   JSON = "json",
   ENUM = "enum",
   BOOL = "boolean",
@@ -129,6 +130,7 @@ export interface AutomationState {
   appSelf?: AppSelfResponse
   selectedNodeId?: string
   selectedNodeMode?: DataMode
+  actionPanelBlock?: BlockRef
 }
 
 export interface DerivedAutomationState extends AutomationState {
@@ -159,6 +161,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
 export const typeToSchema: Partial<Record<AutomationIOType, SchemaFieldTypes>> =
   {
     [AutomationIOType.BOOLEAN]: SchemaFieldTypes.BOOL,
+    [AutomationIOType.LONGFORM]: SchemaFieldTypes.LONGFORM,
     [AutomationIOType.DATE]: SchemaFieldTypes.DATE,
     [AutomationIOType.JSON]: SchemaFieldTypes.JSON,
     [AutomationIOType.ATTACHMENT]: SchemaFieldTypes.FILE,

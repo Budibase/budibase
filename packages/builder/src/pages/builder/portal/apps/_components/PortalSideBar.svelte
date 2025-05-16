@@ -1,12 +1,18 @@
 <script>
-  import { sideBarCollapsed, enrichedApps } from "@/stores/portal"
-  import { params, goto } from "@roxi/routify"
+  import {
+    sideBarCollapsed,
+    enrichedApps,
+    agentsStore,
+    featureFlags,
+  } from "@/stores/portal"
+  import { params, goto, page } from "@roxi/routify"
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
 
   let searchString
-  let opened
+  let onAgents = $page.path.endsWith("/agents")
+  let openedApp
 
   $: filteredApps = $enrichedApps.filter(app => {
     return (
@@ -29,19 +35,64 @@
     <NavItem
       icon="WebPages"
       text="All apps"
-      on:click={() => $goto("./")}
-      selected={!$params.appId}
+      on:click={() => {
+        onAgents = false
+        $goto("./")
+      }}
+      selected={!$params.appId && !onAgents}
     />
     {#each filteredApps as app}
       <span
         class="side-bar-app-entry"
         class:favourite={app.favourite}
-        class:actionsOpen={opened == app.appId}
+        class:actionsOpen={openedApp == app.appId}
       >
         <AppNavItem {app} />
       </span>
     {/each}
   </div>
+  {#if $featureFlags.AI_AGENTS}
+    <div class="side-bar-controls">
+      <NavHeader
+        title="Chats"
+        placeholder="Search for agent chats"
+        bind:value={searchString}
+        onAdd={() => $goto("./create")}
+      />
+    </div>
+    <div class="side-bar-nav">
+      <NavItem
+        icon="Algorithm"
+        text="All chats"
+        on:click={() => {
+          openedApp = undefined
+          onAgents = true
+          agentsStore.clearCurrentChatId()
+          $goto("./agents")
+        }}
+        selected={!$params.appId &&
+          !openedApp &&
+          !$agentsStore.currentChatId &&
+          onAgents}
+      />
+      {#each $agentsStore.chats as chat}
+        {@const selected = $agentsStore.currentChatId === chat._id}
+        <span class="side-bar-app-entry" class:actionsOpen={selected}>
+          <NavItem
+            icon="Branch1"
+            text={chat.title}
+            on:click={() => {
+              onAgents = true
+              openedApp = undefined
+              agentsStore.setCurrentChatId(chat._id)
+              $goto("./agents")
+            }}
+            {selected}
+          />
+        </span>
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -78,7 +129,7 @@
   }
 
   .side-bar-nav {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     overflow: auto;
     overflow-x: hidden;
   }

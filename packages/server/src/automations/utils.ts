@@ -182,7 +182,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     !automation.disabled
   ) {
     const inputs = trigger.inputs as CronTriggerInputs
-    const cronExp = inputs.cron
+    const cronExp = inputs.cron || ""
     const validation = helpers.cron.validate(cronExp)
     if (!validation.valid) {
       throw new Error(

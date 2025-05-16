@@ -30,6 +30,7 @@ spec:
 {{- toYaml .Values.services.worker.templateLabels | indent 8 -}}
 {{ end }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.services.worker.terminationGracePeriodSeconds }}
       containers:
       - env:
         - name: BUDIBASE_ENVIRONMENT

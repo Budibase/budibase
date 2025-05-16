@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import ScreenDetailsModal from "@/components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import TypeModal from "./TypeModal.svelte"
@@ -9,31 +9,40 @@
     screenStore,
     navigationStore,
     permissions as permissionsStore,
-    builderStore,
     datasources,
     appStore,
   } from "@/stores/builder"
-  import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
   import * as screenTemplating from "@/templates/screenTemplating"
   import { Roles } from "@/constants/backend"
   import { AutoScreenTypes } from "@/constants"
+  import type { SourceOption } from "./utils"
   import { makeTableOption, makeViewOption } from "./utils"
+  import type { Screen, Table, ViewV2 } from "@budibase/types"
 
-  let mode
+  let mode: string
 
-  let screenDetailsModal
-  let datasourceModal
-  let formTypeModal
-  let tableTypeModal
-  let selectedTablesAndViews = []
-  let permissions = {}
+  let screenDetailsModal: Modal
+  let datasourceModal: Modal
+  let formTypeModal: Modal
+  let tableTypeModal: Modal
+  let selectedTablesAndViews: SourceOption[] = []
+  let permissions: Record<
+    string,
+    {
+      loading: boolean
+      read: string
+      write: string
+    }
+  > = {}
   let hasPreselectedDatasource = false
 
   $: screens = $screenStore.screens
 
-  export const show = (newMode, preselectedDatasource) => {
+  export const show = (
+    newMode: string,
+    preselectedDatasource: Table | ViewV2 | null
+  ) => {
     mode = newMode
     selectedTablesAndViews = []
     permissions = {}
@@ -60,17 +69,20 @@
     }
   }
 
-  const createScreen = async screenTemplate => {
+  const createScreen = async (screenTemplate: Screen): Promise<Screen> => {
     try {
       return await screenStore.save(screenTemplate)
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
+      throw error
     }
   }
 
-  const createScreens = async screenTemplates => {
-    const newScreens = []
+  const createScreens = async (
+    screenTemplates: { data: Screen; navigationLinkLabel: string | null }[]
+  ) => {
+    const newScreens: Screen[] = []
 
     for (let screenTemplate of screenTemplates) {
       await addNavigationLink(
@@ -83,7 +95,10 @@
     return newScreens
   }
 
-  const addNavigationLink = async (screen, linkLabel) => {
+  const addNavigationLink = async (
+    screen: Screen,
+    linkLabel: string | null
+  ) => {
     if (linkLabel == null) return
 
     await navigationStore.saveLink(
@@ -101,7 +116,7 @@
     }
   }
 
-  const createBasicScreen = async ({ route }) => {
+  const createBasicScreen = async ({ route }: { route: string }) => {
     const screenTemplates =
       mode === AutoScreenTypes.BLANK
         ? screenTemplating.blank({ route, screens })
@@ -110,7 +125,7 @@
     loadNewScreen(newScreens[0])
   }
 
-  const createTableScreen = async type => {
+  const createTableScreen = async (type: string) => {
     const screenTemplates = (
       await Promise.all(
         selectedTablesAndViews.map(tableOrView =>
@@ -127,7 +142,7 @@
     loadNewScreen(newScreens[0])
   }
 
-  const createFormScreen = async type => {
+  const createFormScreen = async (type: string | null) => {
     const screenTemplates = (
       await Promise.all(
         selectedTablesAndViews.map(tableOrView =>
@@ -141,26 +156,13 @@
       )
     ).flat()
     const newScreens = await createScreens(screenTemplates)
-
-    if (type === "update" || type === "create") {
-      const associatedTour =
-        type === "update"
-          ? TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE
-          : TOUR_KEYS.BUILDER_FORM_CREATE
-
-      const tourRequired = !$auth?.user?.tours?.[associatedTour]
-      if (tourRequired) {
-        builderStore.setTour(associatedTour)
-      }
-    }
-
     loadNewScreen(newScreens[0])
   }
 
-  const loadNewScreen = screen => {
-    if (screen?.props?._children.length) {
+  const loadNewScreen = (screen: Screen) => {
+    if (screen.props?._children?.length) {
       // Focus on the main component for the screen type
-      const mainComponent = screen?.props?._children?.[0]._id
+      const mainComponent = screen.props?._children?.[0]._id
       $goto(
         `/builder/app/${$appStore.appId}/design/${screen._id}/${mainComponent}`
       )
@@ -168,10 +170,10 @@
       $goto(`/builder/app/${$appStore.appId}/design/${screen._id}`)
     }
 
-    screenStore.select(screen._id)
+    screenStore.select(screen._id!)
   }
 
-  const fetchPermission = resourceId => {
+  const fetchPermission = (resourceId: string) => {
     permissions[resourceId] = {
       loading: true,
       read: Roles.BASIC,
@@ -202,12 +204,16 @@
       })
   }
 
-  const deletePermission = resourceId => {
+  const deletePermission = (resourceId: string) => {
     delete permissions[resourceId]
     permissions = permissions
   }
 
-  const handleTableOrViewToggle = ({ detail: tableOrView }) => {
+  const handleTableOrViewToggle = ({
+    detail: tableOrView,
+  }: {
+    detail: SourceOption
+  }) => {
     const alreadySelected = selectedTablesAndViews.some(
       selected => selected.id === tableOrView.id
     )

@@ -7,8 +7,8 @@ import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
 import { events, logging, middleware, timers } from "@budibase/backend-core"
-import destroyable from "server-destroy"
 import { userAgent } from "koa-useragent"
+import gracefulShutdown from "http-graceful-shutdown"
 
 export default function createKoaApp() {
   const app = new Koa()
@@ -40,55 +40,49 @@ export default function createKoaApp() {
   app.use(userAgent)
 
   const server = http.createServer(app.callback())
-  destroyable(server)
 
-  let shuttingDown = false,
-    errCode = 0
-
-  server.on("close", async () => {
-    // already in process
-    if (shuttingDown) {
-      return
-    }
-    shuttingDown = true
-    console.log("Server Closed")
+  const shutdown = async () => {
+    console.log("Server shutting down gracefully...")
     timers.cleanup()
     await automations.shutdown()
     await redis.shutdown()
     events.shutdown()
     await Thread.shutdown()
     api.shutdown()
-    if (!env.isTest()) {
-      process.exit(errCode)
+  }
+
+  gracefulShutdown(server, {
+    signals: "SIGINT SIGTERM",
+    timeout: 30000, // in ms
+    onShutdown: shutdown,
+    forceExit: !env.isTest,
+    finally: () => {
+      console.log("Server shutdown complete")
+    },
+  })
+
+  process.on("uncaughtException", async err => {
+    // @ts-ignore
+    // don't worry about this error, comes from zlib isn't important
+    if (err?.["code"] === "ERR_INVALID_CHAR") {
+      logging.logAlert("Uncaught exception.", err)
+      return
+    }
+    await shutdown()
+    if (!env.isTest) {
+      process.exit(1)
+    }
+  })
+
+  process.on("unhandledRejection", async reason => {
+    logging.logAlert("Unhandled Promise Rejection", reason as Error)
+    await shutdown()
+    if (!env.isTest) {
+      process.exit(1)
     }
   })
 
   const listener = server.listen(env.PORT || 0)
-
-  const shutdown = () => {
-    server.close()
-    // @ts-ignore
-    server.destroy()
-  }
-
-  process.on("uncaughtException", err => {
-    // @ts-ignore
-    // don't worry about this error, comes from zlib isn't important
-    if (err && err["code"] === "ERR_INVALID_CHAR") {
-      return
-    }
-    errCode = -1
-    logging.logAlert("Uncaught exception.", err)
-    shutdown()
-  })
-
-  process.on("SIGTERM", () => {
-    shutdown()
-  })
-
-  process.on("SIGINT", () => {
-    shutdown()
-  })
 
   return { app, server: listener }
 }

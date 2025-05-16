@@ -1,6 +1,6 @@
 import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { generator, structures } from "../../../tests"
-import RedisWrapper, { closeAll } from "../redis"
+import RedisWrapper from "../redis"
 import env from "../../environment"
 import { randomUUID } from "crypto"
 
@@ -23,14 +23,18 @@ describe("redis", () => {
     env._set("REDIS_PASSWORD", 0)
   })
 
-  afterAll(() => {
-    container?.stop()
-    closeAll()
+  afterAll(async () => {
+    if (container) {
+      await container.stop()
+    }
   })
 
   beforeEach(async () => {
-    redis = new RedisWrapper(structures.db.id())
-    await redis.init()
+    redis = await RedisWrapper.init(structures.db.id())
+  })
+
+  afterEach(async () => {
+    await redis.finish()
   })
 
   describe("store", () => {
