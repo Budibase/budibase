@@ -213,6 +213,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-height: 46px;
   }
   .text :global(p:first-child) {
     display: flex;
