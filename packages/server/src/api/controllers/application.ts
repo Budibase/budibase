@@ -188,12 +188,12 @@ async function addSampleDataScreen() {
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const appMetadata = await sdk.applications.metadata.get()
 
-    const projectApp = await sdk.workspaceApps.create({
+    const workspaceApp = await sdk.workspaceApps.create({
       name: appMetadata.name,
       urlPrefix: "/",
       icon: "Monitoring",
     })
-    projectAppId = projectApp._id!
+    projectAppId = workspaceApp._id!
   }
 
   let screen = await createSampleDataTableScreen(projectAppId)
@@ -282,10 +282,10 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  let projectApps: FetchAppPackageResponse["projectApps"] = []
+  let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    projectApps = await extractScreensByProjectApp(screens)
+    workspaceApps = await extractScreensByProjectApp(screens)
     screens = []
   }
 
@@ -297,7 +297,7 @@ export async function fetchAppPackage(
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
-    projectApps,
+    workspaceApps,
     screens,
     layouts,
     clientLibPath,
@@ -307,17 +307,17 @@ export async function fetchAppPackage(
 
 async function extractScreensByProjectApp(
   screens: Screen[]
-): Promise<FetchAppPackageResponse["projectApps"]> {
-  const result: FetchAppPackageResponse["projectApps"] = []
+): Promise<FetchAppPackageResponse["workspaceApps"]> {
+  const result: FetchAppPackageResponse["workspaceApps"] = []
 
-  const projectApps = await sdk.workspaceApps.fetch()
+  const workspaceApps = await sdk.workspaceApps.fetch()
 
   const screensByProjectApp = groupBy(s => s.projectAppId, screens)
   for (const projectAppId of Object.keys(screensByProjectApp)) {
-    const projectApp = projectApps.find(p => p._id === projectAppId)
+    const workspaceApp = workspaceApps.find(p => p._id === projectAppId)
 
     result.push({
-      ...projectApp!,
+      ...workspaceApp!,
       screens: screensByProjectApp[projectAppId],
     })
   }

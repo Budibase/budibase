@@ -9,12 +9,12 @@ const migration = async () => {
   const allProjectApps = await sdk.workspaceApps.fetch()
   let projectAppId = allProjectApps.find(p => p.name === application.name)?._id
   if (!projectAppId) {
-    const projectApp = await sdk.workspaceApps.create({
+    const workspaceApp = await sdk.workspaceApps.create({
       name: application.name,
       urlPrefix: "/",
       icon: "Monitoring",
     })
-    projectAppId = projectApp._id
+    projectAppId = workspaceApp._id
   }
 
   const db = context.getAppDB()

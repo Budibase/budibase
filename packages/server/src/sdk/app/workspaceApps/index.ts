@@ -1,7 +1,7 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
   DocumentType,
-  ProjectApp,
+  WorkspaceApp,
   SEPARATOR,
   WithoutDocMetadata,
 } from "@budibase/types"
@@ -14,9 +14,9 @@ async function guardName(name: string, id?: string) {
   }
 }
 
-export async function fetch(): Promise<ProjectApp[]> {
+export async function fetch(): Promise<WorkspaceApp[]> {
   const db = context.getAppDB()
-  const docs = await db.allDocs<ProjectApp>(
+  const docs = await db.allDocs<WorkspaceApp>(
     docIds.getProjectAppParams(null, { include_docs: true })
   )
   const result = docs.rows.map(r => ({
@@ -27,40 +27,40 @@ export async function fetch(): Promise<ProjectApp[]> {
   return result
 }
 
-export async function get(id: string): Promise<ProjectApp | undefined> {
+export async function get(id: string): Promise<WorkspaceApp | undefined> {
   const db = context.getAppDB()
-  const projectApp = await db.tryGet<ProjectApp>(id)
-  return projectApp
+  const workspaceApp = await db.tryGet<WorkspaceApp>(id)
+  return workspaceApp
 }
 
-export async function create(projectApp: WithoutDocMetadata<ProjectApp>) {
+export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
   const db = context.getAppDB()
 
-  await guardName(projectApp.name)
+  await guardName(workspaceApp.name)
 
   const response = await db.put({
     _id: `${DocumentType.PROJECT_APP}${SEPARATOR}${utils.newid()}`,
-    ...projectApp,
+    ...workspaceApp,
   })
   return {
     _id: response.id!,
     _rev: response.rev!,
-    ...projectApp,
+    ...workspaceApp,
   }
 }
 
 export async function update(
-  projectApp: Omit<ProjectApp, "createdAt" | "updatedAt">
+  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt">
 ) {
   const db = context.getAppDB()
 
-  await guardName(projectApp.name, projectApp._id)
+  await guardName(workspaceApp.name, workspaceApp._id)
 
-  const response = await db.put(projectApp)
+  const response = await db.put(workspaceApp)
   return {
     _id: response.id!,
     _rev: response.rev!,
-    ...projectApp,
+    ...workspaceApp,
   }
 }
 

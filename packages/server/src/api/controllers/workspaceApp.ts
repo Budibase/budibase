@@ -2,21 +2,21 @@ import {
   Ctx,
   InsertProjectAppRequest,
   InsertProjectAppResponse,
-  ProjectApp,
+  WorkspaceApp,
   ProjectAppResponse,
   UpdateProjectAppRequest,
   UpdateProjectAppResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
-function toProjectAppResponse(projectApp: ProjectApp): ProjectAppResponse {
+function toProjectAppResponse(workspaceApp: WorkspaceApp): ProjectAppResponse {
   return {
-    _id: projectApp._id!,
-    _rev: projectApp._rev!,
-    name: projectApp.name,
-    urlPrefix: projectApp.urlPrefix,
-    icon: projectApp.icon,
-    iconColor: projectApp.iconColor,
+    _id: workspaceApp._id!,
+    _rev: workspaceApp._rev!,
+    name: workspaceApp.name,
+    urlPrefix: workspaceApp.urlPrefix,
+    icon: workspaceApp.icon,
+    iconColor: workspaceApp.iconColor,
   }
 }
 
@@ -31,10 +31,10 @@ export async function create(
     iconColor: body.iconColor,
   }
 
-  const projectApp = await sdk.workspaceApps.create(newProjectApp)
+  const workspaceApp = await sdk.workspaceApps.create(newProjectApp)
   ctx.status = 201
   ctx.body = {
-    projectApp: toProjectAppResponse(projectApp),
+    workspaceApp: toProjectAppResponse(workspaceApp),
   }
 }
 
@@ -56,9 +56,9 @@ export async function edit(
     iconColor: body.iconColor,
   }
 
-  const projectApp = await sdk.workspaceApps.update(toUpdate)
+  const workspaceApp = await sdk.workspaceApps.update(toUpdate)
   ctx.body = {
-    projectApp: toProjectAppResponse(projectApp),
+    workspaceApp: toProjectAppResponse(workspaceApp),
   }
 }
 

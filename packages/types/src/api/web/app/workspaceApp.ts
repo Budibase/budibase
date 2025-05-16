@@ -15,7 +15,7 @@ export interface InsertProjectAppRequest {
 }
 
 export interface InsertProjectAppResponse {
-  projectApp: ProjectAppResponse
+  workspaceApp: ProjectAppResponse
 }
 
 export interface UpdateProjectAppRequest {
@@ -28,5 +28,5 @@ export interface UpdateProjectAppRequest {
 }
 
 export interface UpdateProjectAppResponse {
-  projectApp: ProjectAppResponse
+  workspaceApp: ProjectAppResponse
 }

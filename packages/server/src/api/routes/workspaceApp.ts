@@ -32,19 +32,19 @@ function projectAppValidator(
 const router: Router = new Router()
 
 router.post(
-  "/api/projectApp",
+  "/api/workspaceApp",
   authorized(PermissionType.BUILDER),
   projectAppValidator(insertSchema),
   controller.create
 )
 router.put(
-  "/api/projectApp/:id",
+  "/api/workspaceApp/:id",
   authorized(PermissionType.BUILDER),
   projectAppValidator(updateSchema),
   controller.edit
 )
 router.delete(
-  "/api/projectApp/:id/:rev",
+  "/api/workspaceApp/:id/:rev",
   authorized(PermissionType.BUILDER),
   controller.remove
 )
