@@ -10,6 +10,7 @@
   import Icon from "../Icon/Icon.svelte"
   import Context from "../context"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
+  import { ModalCancelFrom } from "../constants"
 
   export let title: string | undefined = undefined
   export let size: "S" | "M" | "L" | "XL" = "S"
@@ -30,10 +31,7 @@
   export let secondaryButtonWarning: boolean = false
   export let custom: boolean = false
 
-  const { hide, cancel } = getContext(Context.Modal) as {
-    hide: () => void
-    cancel: () => void
-  }
+  const { hide, cancel } = getContext(Context.Modal)
 
   let loading: boolean = false
 
@@ -59,7 +57,7 @@
   async function close(): Promise<void> {
     loading = true
     if (!onCancel || (await onCancel()) !== keepOpen) {
-      cancel()
+      cancel(ModalCancelFrom.CANCEL_BUTTON)
     }
     loading = false
   }
@@ -139,7 +137,11 @@
     {/if}
     {#if showCloseIcon}
       <div class="close-icon">
-        <Icon hoverable name="Close" on:click={cancel} />
+        <Icon
+          hoverable
+          name="Close"
+          on:click={() => cancel(ModalCancelFrom.CLOSE_BUTTON)}
+        />
       </div>
     {/if}
   </div>

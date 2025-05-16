@@ -1,17 +1,17 @@
-<script>
+<script lang="ts">
   import { Icon, Heading } from "@budibase/bbui"
 
-  export let showClose = false
-  export let onClose = () => {}
-  export let heading = ""
+  export let showClose: boolean = false
+  export let onClose: (() => void) | null = () => {}
+  export let heading: string = ""
 </script>
 
 <section class="page">
-  <div class="closeButton">
-    {#if showClose}
+  {#if showClose}
+    <div class="closeButton">
       <Icon hoverable name="Close" on:click={onClose} />
-    {/if}
-  </div>
+    </div>
+  {/if}
   <div class="heading">
     <Heading weight="light">{heading}</Heading>
   </div>
