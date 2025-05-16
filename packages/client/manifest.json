@@ -4561,6 +4561,7 @@
   "codegenerator": {
     "name": "Barcode/QR Generator",
     "icon": "Vignette",
+    "new": true,
     "settings": [
       {
         "type": "radio",
