@@ -49,7 +49,7 @@
     rootModal.hide()
     createScreenModal.show(type)
 
-    const selectedTypeSnapshot = type
+    const selectedTypeSnapshot = selectedType
     createScreenModal.$on("cancel", e => {
       if (
         [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
