@@ -20,6 +20,6 @@ export const MIGRATIONS: AppMigration[] = [
     // Using the existing flag system would require async checks and we could run to race conditions, so this keeps is simple
     disabled: !features
       .getEnvFlags()
-      .some(f => f.key === FeatureFlag.PROJECT_APPS && f.value === true),
+      .some(f => f.key === FeatureFlag.WORKSPACE_APPS && f.value === true),
   },
 ]

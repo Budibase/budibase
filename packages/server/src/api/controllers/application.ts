@@ -185,7 +185,7 @@ async function addSampleDataDocs() {
 async function addSampleDataScreen() {
   const db = context.getAppDB()
   let projectAppId: string | undefined
-  if (await features.isEnabled(FeatureFlag.PROJECT_APPS)) {
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const appMetadata = await sdk.applications.metadata.get()
 
     const projectApp = await sdk.projectApps.create({
@@ -284,7 +284,7 @@ export async function fetchAppPackage(
 
   let projectApps: FetchAppPackageResponse["projectApps"] = []
 
-  if (await features.flags.isEnabled(FeatureFlag.PROJECT_APPS)) {
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     projectApps = await extractScreensByProjectApp(screens)
     screens = []
   }
