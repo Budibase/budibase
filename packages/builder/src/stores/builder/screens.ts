@@ -90,8 +90,8 @@ export class ScreenStore extends BudiStore<ScreenState> {
    */
   syncAppScreens(pkg: FetchAppPackageResponse) {
     let screens = [...pkg.screens]
-    if (featureFlag.isEnabled(FeatureFlag.PROJECT_APPS)) {
-      screens = [...pkg.projectApps.flatMap(p => p.screens)]
+    if (featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+      screens = [...pkg.workspaceApps.flatMap(p => p.screens)]
     }
     this.update(state => ({
       ...state,
