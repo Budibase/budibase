@@ -22,6 +22,7 @@
     data.append("name", name.trim())
     data.append("url", url.trim())
     data.append("useTemplate", false)
+    data.append("isOnboarding", "true")
 
     const createdApp = await API.createApp(data)
 
@@ -56,7 +57,7 @@
   <SplitPage>
     <NamePanel bind:name bind:url disabled={loading} onNext={handleCreateApp} />
     <div slot="right">
-      <ExampleApp {name} />
+      <ExampleApp />
     </div>
   </SplitPage>
 </div>
