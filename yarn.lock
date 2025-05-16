@@ -3279,11 +3279,6 @@
   resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-2.1.1.tgz#b9da6a878a371829a0502c9b6c1c143ef6663f4d"
   integrity sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==
 
-"@fontsource/source-sans-pro@^5.0.3":
-  version "5.0.3"
-  resolved "https://registry.yarnpkg.com/@fontsource/source-sans-pro/-/source-sans-pro-5.0.3.tgz#7d6e84a8169ba12fa5e6ce70757aa2ca7e74d855"
-  integrity sha512-mQnjuif/37VxwRloHZ+wQdoozd2VPWutbFSt1AuSkk7nFXIBQxHJLw80rgCF/osL0t7N/3Gx1V7UJuOX2zxzhQ==
-
 "@fortawesome/fontawesome-common-types@6.4.2":
   version "6.4.2"
   resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-6.4.2.tgz#1766039cad33f8ad87f9467b98e0d18fbc8f01c5"
