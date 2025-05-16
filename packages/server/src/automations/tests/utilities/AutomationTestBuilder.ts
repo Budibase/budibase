@@ -181,7 +181,9 @@ class StepBuilder<
     return new AutomationRunner<TStep>(this.config, automation)
   }
 
-  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
+  async test(
+    triggerOutput: AutomationTriggerOutputs<TStep> & TestAutomationRequest
+  ) {
     const runner = await this.save()
     return await runner.test(triggerOutput)
   }
@@ -203,11 +205,12 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
     this.automation = automation
   }
 
-  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
+  async test(
+    triggerOutput: AutomationTriggerOutputs<TStep> & TestAutomationRequest
+  ) {
     const response = await this.config.api.automation.test(
       this.automation._id!,
-      // TODO: figure out why this cast is needed.
-      triggerOutput as TestAutomationRequest
+      triggerOutput
     )
 
     if (isDidNotTriggerResponse(response)) {

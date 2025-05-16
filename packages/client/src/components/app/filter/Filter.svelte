@@ -117,7 +117,7 @@
   // If the filters are updated, notify the target of the change
   $: hydrated && dataComponent && loaded && fire(filterExtension)
 
-  const initTarget = (target: Component) => {
+  const initTarget = (target: Component | null) => {
     if (!dataComponent && target) {
       dataComponent = target
       // In the event the underlying component is remounted and requires hydration

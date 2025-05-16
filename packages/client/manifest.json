@@ -639,6 +639,7 @@
       "hAlign": "center",
       "vAlign": "center"
     },
+    "styles": ["margin", "background", "font"],
     "settings": [
       {
         "type": "text",

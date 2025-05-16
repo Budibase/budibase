@@ -14,6 +14,7 @@ export enum AutomationIOType {
   ARRAY = "array",
   JSON = "json",
   DATE = "date",
+  DATETIME = "datetime",
   ATTACHMENT = "attachment",
 }
 
@@ -179,10 +180,12 @@ export enum AutomationStatus {
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
   NO_CONDITION_MET = "No branch condition met",
+  TIMED_OUT = "timed_out",
 }
 
 export enum AutomationStoppedReason {
   TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
+  TIMED_OUT = "Automation timed out.",
 }
 
 export interface AutomationStepResultOutputs {
@@ -213,7 +216,7 @@ export interface AutomationTriggerResult {
 
 export interface AutomationResults {
   automationId?: string
-  status?: AutomationStatus
+  status: AutomationStatus
   trigger: AutomationTriggerResult
   steps: [AutomationTriggerResult, ...AutomationStepResult[]]
 }
