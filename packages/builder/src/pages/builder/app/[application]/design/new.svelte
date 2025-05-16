@@ -10,7 +10,7 @@
 </script>
 
 <div class="new-screen-picker">
-  <NewScreen bind:this={newScreenModal} inline />
+  <NewScreen bind:this={newScreenModal} inline submitOnClick />
 </div>
 
 <style>

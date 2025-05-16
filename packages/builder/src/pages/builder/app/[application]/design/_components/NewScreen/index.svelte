@@ -20,6 +20,7 @@
 
   export let onClose: (() => void) | null = null
   export let inline: boolean = false
+  export let submitOnClick: boolean = false
 
   $: hasScreens = $screenStore.screens?.length
   $: title = hasScreens ? "Create new screen" : "Create your first screen"
@@ -31,22 +32,24 @@
   let selectedType: AutoScreenTypes | undefined
 
   function onSelect(screenType: AutoScreenTypes) {
-    if (selectedType === screenType) {
+    if (submitOnClick) {
+      onConfirm(screenType)
+    } else if (selectedType === screenType) {
       selectedType = undefined
     } else {
       selectedType = screenType
     }
   }
 
-  function onConfirm() {
-    if (!selectedType) {
+  function onConfirm(type = selectedType) {
+    if (!type) {
       notifications.error("Select screen type")
       return
     }
     rootModal.hide()
-    createScreenModal.show(selectedType)
+    createScreenModal.show(type)
 
-    const selectedTypeSnapshot = selectedType
+    const selectedTypeSnapshot = type
     createScreenModal.$on("cancel", e => {
       if (
         [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
@@ -74,6 +77,7 @@
     showDivider={!inline}
     showCloseIcon={!inline}
     showCancelButton={!inline}
+    showConfirmButton={!submitOnClick}
   >
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
