@@ -4,6 +4,7 @@ import {
   OAuth2Config,
   PASSWORD_REPLACEMENT,
   SEPARATOR,
+  WithoutDocMetadata,
   WithRequired,
 } from "@budibase/types"
 
@@ -34,7 +35,7 @@ export async function fetch(): Promise<CreatedOAuthConfig[]> {
 }
 
 export async function create(
-  config: Omit<OAuth2Config, "_id" | "_rev" | "createdAt" | "updatedAt">
+  config: WithoutDocMetadata<OAuth2Config>
 ): Promise<CreatedOAuthConfig> {
   const db = context.getAppDB()
 

@@ -26,6 +26,7 @@ import {
   docIds,
   env as envCore,
   events,
+  features,
   objectStore,
   roles,
   tenancy,
@@ -69,6 +70,7 @@ import {
   UnpublishAppResponse,
   SetRevertableAppVersionResponse,
   ErrorCode,
+  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -76,6 +78,7 @@ import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
+import { groupBy } from "lodash/fp"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -181,7 +184,19 @@ async function addSampleDataDocs() {
 
 async function addSampleDataScreen() {
   const db = context.getAppDB()
-  let screen = createSampleDataTableScreen()
+  let projectAppId: string | undefined
+  if (await features.isEnabled(FeatureFlag.PROJECT_APPS)) {
+    const appMetadata = await sdk.applications.metadata.get()
+
+    const projectApp = await sdk.projectApps.create({
+      name: appMetadata.name,
+      urlPrefix: "/",
+      icon: "Monitoring",
+    })
+    projectAppId = projectApp._id!
+  }
+
+  let screen = await createSampleDataTableScreen(projectAppId)
   screen._id = generateScreenID()
   await db.put(screen)
 }
@@ -267,6 +282,13 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
+  let projectApps: FetchAppPackageResponse["projectApps"] = []
+
+  if (await features.flags.isEnabled(FeatureFlag.PROJECT_APPS)) {
+    projectApps = await extractScreensByProjectApp(screens)
+    screens = []
+  }
+
   const clientLibPath = objectStore.clientLibraryUrl(
     ctx.params.appId,
     application.version
@@ -275,11 +297,32 @@ export async function fetchAppPackage(
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
+    projectApps,
     screens,
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
   }
+}
+
+async function extractScreensByProjectApp(
+  screens: Screen[]
+): Promise<FetchAppPackageResponse["projectApps"]> {
+  const result: FetchAppPackageResponse["projectApps"] = []
+
+  const projectApps = await sdk.projectApps.fetch()
+
+  const screensByProjectApp = groupBy(s => s.projectAppId, screens)
+  for (const projectAppId of Object.keys(screensByProjectApp)) {
+    const projectApp = projectApps.find(p => p._id === projectAppId)
+
+    result.push({
+      ...projectApp!,
+      screens: screensByProjectApp[projectAppId],
+    })
+  }
+
+  return result
 }
 
 async function performAppCreate(
@@ -426,7 +469,7 @@ async function performAppCreate(
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
-    if (latestMigrationId) {
+    if (latestMigrationId && !isImport) {
       // Initialise the app migration version as the latest one
       await appMigrations.updateAppMigrationMetadata({
         appId,

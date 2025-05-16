@@ -1,4 +1,4 @@
-import { Row, Table } from "@budibase/types"
+import { Row, Table, WithoutDocMetadata } from "@budibase/types"
 
 import * as external from "./external"
 import * as internal from "./internal"
@@ -7,7 +7,7 @@ import { setPermissions } from "../permissions"
 import { roles } from "@budibase/backend-core"
 
 export async function create(
-  table: Omit<Table, "_id" | "_rev">,
+  table: WithoutDocMetadata<Table>,
   rows?: Row[],
   userId?: string
 ): Promise<Table> {

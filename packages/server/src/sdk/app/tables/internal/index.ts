@@ -6,6 +6,7 @@ import {
   ViewV2,
   Row,
   TableSourceType,
+  WithoutDocMetadata,
 } from "@budibase/types"
 import {
   hasTypeChanged,
@@ -25,7 +26,7 @@ import { generateTableID, getRowParams } from "../../../../db/utils"
 import { quotas } from "@budibase/pro"
 
 export async function create(
-  table: Omit<Table, "_id" | "_rev">,
+  table: WithoutDocMetadata<Table>,
   rows?: Row[],
   userId?: string
 ) {
