@@ -7,9 +7,9 @@ import {
 } from "@budibase/types"
 
 async function guardName(name: string, id?: string) {
-  const existingProjectApps = await fetch()
+  const existingWorkspaceApps = await fetch()
 
-  if (existingProjectApps.find(p => p.name === name && p._id !== id)) {
+  if (existingWorkspaceApps.find(p => p.name === name && p._id !== id)) {
     throw new HTTPError(`App with name '${name}' is already taken.`, 400)
   }
 }
@@ -17,7 +17,7 @@ async function guardName(name: string, id?: string) {
 export async function fetch(): Promise<WorkspaceApp[]> {
   const db = context.getAppDB()
   const docs = await db.allDocs<WorkspaceApp>(
-    docIds.getProjectAppParams(null, { include_docs: true })
+    docIds.getWorkspaceAppParams(null, { include_docs: true })
   )
   const result = docs.rows.map(r => ({
     ...r.doc!,
@@ -65,16 +65,16 @@ export async function update(
 }
 
 export async function remove(
-  projectAppId: string,
+  workspaceAppId: string,
   _rev: string
 ): Promise<void> {
   const db = context.getAppDB()
   try {
-    await db.remove(projectAppId, _rev)
+    await db.remove(workspaceAppId, _rev)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(
-        `Project app with id '${projectAppId}' not found.`,
+        `Project app with id '${workspaceAppId}' not found.`,
         404
       )
     }

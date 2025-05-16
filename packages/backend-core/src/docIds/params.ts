@@ -214,9 +214,9 @@ export const getOAuth2ConfigParams = (
 /**
  * Gets parameters for retrieving project apps, this is a utility function for the getDocParams function.
  */
-export const getProjectAppParams = (
-  projectAppId?: string | null,
+export const getWorkspaceAppParams = (
+  workspaceAppId?: string | null,
   otherProps: Partial<DatabaseQueryOpts> = {}
 ) => {
-  return getDocParams(DocumentType.WORKSPACE_APP, projectAppId, otherProps)
+  return getDocParams(DocumentType.WORKSPACE_APP, workspaceAppId, otherProps)
 }

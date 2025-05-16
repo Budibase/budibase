@@ -6,24 +6,26 @@ const migration = async () => {
   const screens = await sdk.screens.fetch()
 
   const application = await sdk.applications.metadata.get()
-  const allProjectApps = await sdk.workspaceApps.fetch()
-  let projectAppId = allProjectApps.find(p => p.name === application.name)?._id
-  if (!projectAppId) {
+  const allWorkspaceApps = await sdk.workspaceApps.fetch()
+  let workspaceAppId = allWorkspaceApps.find(
+    p => p.name === application.name
+  )?._id
+  if (!workspaceAppId) {
     const workspaceApp = await sdk.workspaceApps.create({
       name: application.name,
       urlPrefix: "/",
       icon: "Monitoring",
     })
-    projectAppId = workspaceApp._id
+    workspaceAppId = workspaceApp._id
   }
 
   const db = context.getAppDB()
   await db.bulkDocs(
     screens
-      .filter(s => !s.projectAppId)
+      .filter(s => !s.workspaceAppId)
       .map<Screen>(s => ({
         ...s,
-        projectAppId,
+        workspaceAppId,
       }))
   )
 }

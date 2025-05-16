@@ -1,4 +1,4 @@
-export interface ProjectAppResponse {
+export interface WorkspaceAppResponse {
   _id: string
   _rev: string
   name: string
@@ -7,18 +7,18 @@ export interface ProjectAppResponse {
   iconColor?: string
 }
 
-export interface InsertProjectAppRequest {
+export interface InsertWorkspaceAppRequest {
   name: string
   urlPrefix: string
   icon: string
   iconColor: string
 }
 
-export interface InsertProjectAppResponse {
-  workspaceApp: ProjectAppResponse
+export interface InsertWorkspaceAppResponse {
+  workspaceApp: WorkspaceAppResponse
 }
 
-export interface UpdateProjectAppRequest {
+export interface UpdateWorkspaceAppRequest {
   _id: string
   _rev: string
   name: string
@@ -27,6 +27,6 @@ export interface UpdateProjectAppRequest {
   iconColor: string
 }
 
-export interface UpdateProjectAppResponse {
-  workspaceApp: ProjectAppResponse
+export interface UpdateWorkspaceAppResponse {
+  workspaceApp: WorkspaceAppResponse
 }

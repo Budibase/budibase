@@ -23,7 +23,7 @@ const updateSchema = Joi.object({
   ...baseSchema,
 })
 
-function projectAppValidator(
+function workspaceAppValidator(
   schema: typeof insertSchema | typeof updateSchema
 ) {
   return middleware.joiValidator.body(schema, { allowUnknown: false })
@@ -34,13 +34,13 @@ const router: Router = new Router()
 router.post(
   "/api/workspaceApp",
   authorized(PermissionType.BUILDER),
-  projectAppValidator(insertSchema),
+  workspaceAppValidator(insertSchema),
   controller.create
 )
 router.put(
   "/api/workspaceApp/:id",
   authorized(PermissionType.BUILDER),
-  projectAppValidator(updateSchema),
+  workspaceAppValidator(updateSchema),
   controller.edit
 )
 router.delete(

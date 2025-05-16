@@ -184,7 +184,7 @@ async function addSampleDataDocs() {
 
 async function addSampleDataScreen() {
   const db = context.getAppDB()
-  let projectAppId: string | undefined
+  let workspaceAppId: string | undefined
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const appMetadata = await sdk.applications.metadata.get()
 
@@ -193,10 +193,10 @@ async function addSampleDataScreen() {
       urlPrefix: "/",
       icon: "Monitoring",
     })
-    projectAppId = workspaceApp._id!
+    workspaceAppId = workspaceApp._id!
   }
 
-  let screen = await createSampleDataTableScreen(projectAppId)
+  let screen = await createSampleDataTableScreen(workspaceAppId)
   screen._id = generateScreenID()
   await db.put(screen)
 }
@@ -285,7 +285,7 @@ export async function fetchAppPackage(
   let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    workspaceApps = await extractScreensByProjectApp(screens)
+    workspaceApps = await extractScreensByWorkspaceApp(screens)
     screens = []
   }
 
@@ -305,20 +305,20 @@ export async function fetchAppPackage(
   }
 }
 
-async function extractScreensByProjectApp(
+async function extractScreensByWorkspaceApp(
   screens: Screen[]
 ): Promise<FetchAppPackageResponse["workspaceApps"]> {
   const result: FetchAppPackageResponse["workspaceApps"] = []
 
   const workspaceApps = await sdk.workspaceApps.fetch()
 
-  const screensByProjectApp = groupBy(s => s.projectAppId, screens)
-  for (const projectAppId of Object.keys(screensByProjectApp)) {
-    const workspaceApp = workspaceApps.find(p => p._id === projectAppId)
+  const screensByWorkspaceApp = groupBy(s => s.workspaceAppId, screens)
+  for (const workspaceAppId of Object.keys(screensByWorkspaceApp)) {
+    const workspaceApp = workspaceApps.find(p => p._id === workspaceAppId)
 
     result.push({
       ...workspaceApp!,
-      screens: screensByProjectApp[projectAppId],
+      screens: screensByWorkspaceApp[workspaceAppId],
     })
   }
 

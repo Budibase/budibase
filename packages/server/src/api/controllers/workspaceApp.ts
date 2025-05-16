@@ -1,15 +1,17 @@
 import {
   Ctx,
-  InsertProjectAppRequest,
-  InsertProjectAppResponse,
+  InsertWorkspaceAppRequest,
+  InsertWorkspaceAppResponse,
   WorkspaceApp,
-  ProjectAppResponse,
-  UpdateProjectAppRequest,
-  UpdateProjectAppResponse,
+  WorkspaceAppResponse,
+  UpdateWorkspaceAppRequest,
+  UpdateWorkspaceAppResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
-function toProjectAppResponse(workspaceApp: WorkspaceApp): ProjectAppResponse {
+function toWorkspaceAppResponse(
+  workspaceApp: WorkspaceApp
+): WorkspaceAppResponse {
   return {
     _id: workspaceApp._id!,
     _rev: workspaceApp._rev!,
@@ -21,25 +23,25 @@ function toProjectAppResponse(workspaceApp: WorkspaceApp): ProjectAppResponse {
 }
 
 export async function create(
-  ctx: Ctx<InsertProjectAppRequest, InsertProjectAppResponse>
+  ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
-  const newProjectApp = {
+  const newWorkspaceApp = {
     name: body.name,
     urlPrefix: body.urlPrefix,
     icon: body.icon,
     iconColor: body.iconColor,
   }
 
-  const workspaceApp = await sdk.workspaceApps.create(newProjectApp)
+  const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)
   ctx.status = 201
   ctx.body = {
-    workspaceApp: toProjectAppResponse(workspaceApp),
+    workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
 }
 
 export async function edit(
-  ctx: Ctx<UpdateProjectAppRequest, UpdateProjectAppResponse>
+  ctx: Ctx<UpdateWorkspaceAppRequest, UpdateWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
 
@@ -58,7 +60,7 @@ export async function edit(
 
   const workspaceApp = await sdk.workspaceApps.update(toUpdate)
   ctx.body = {
-    workspaceApp: toProjectAppResponse(workspaceApp),
+    workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
 }
 

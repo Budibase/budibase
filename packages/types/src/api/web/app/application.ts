@@ -35,7 +35,7 @@ export interface FetchAppDefinitionResponse {
   libraries: string[]
 }
 
-interface ProjectAppResponse extends WorkspaceApp {
+interface WorkspaceAppResponse extends WorkspaceApp {
   screens: Screen[]
 }
 
@@ -43,7 +43,7 @@ export interface FetchAppPackageResponse {
   application: App
   licenseType: PlanType
   screens: Screen[]
-  workspaceApps: ProjectAppResponse[]
+  workspaceApps: WorkspaceAppResponse[]
   layouts: Layout[]
   clientLibPath: string
   hasLock: boolean
