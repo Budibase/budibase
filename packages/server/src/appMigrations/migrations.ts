@@ -4,7 +4,7 @@ import { features } from "@budibase/backend-core"
 import { AppMigration } from "."
 
 import m20240604153647_initial_sqs from "./migrations/20240604153647_initial_sqs"
-import m20250514133719_project_apps from "./migrations/20250514133719_project_apps"
+import m20250514133719_project_apps from "./migrations/20250514133719_workspace_apps"
 import { FeatureFlag } from "@budibase/types"
 
 export const MIGRATIONS: AppMigration[] = [

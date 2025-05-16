@@ -32,7 +32,7 @@ import rowActionRoutes from "./rowAction"
 import oauth2Routes from "./oauth2"
 import featuresRoutes from "./features"
 import aiRoutes from "./ai"
-import projectApps from "./projectApp"
+import projectApps from "./workspaceApp"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"

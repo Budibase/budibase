@@ -3,7 +3,7 @@ import { PermissionType } from "@budibase/types"
 import { middleware } from "@budibase/backend-core"
 import authorized from "../../middleware/authorized"
 
-import * as controller from "../controllers/projectApp"
+import * as controller from "../controllers/workspaceApp"
 import Joi from "joi"
 
 const baseSchema = {
