@@ -2,6 +2,9 @@
   import NewScreen from "./_components/NewScreen/index.svelte"
   import { screenStore } from "@/stores/builder"
   import { goto } from "@roxi/routify"
+  import { onMount } from "svelte"
+
+  let newScreenModal: NewScreen
 
   $: onClose = getOnClose($screenStore)
 
@@ -18,6 +21,10 @@
       $goto(`./${screens[0]._id}`)
     }
   }
+
+  onMount(() => {
+    newScreenModal.show()
+  })
 </script>
 
-<NewScreen {onClose} />
+<NewScreen {onClose} bind:this={newScreenModal} inline />

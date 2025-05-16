@@ -19,6 +19,7 @@
   import table from "./images/tableInline.svg"
 
   export let onClose: (() => void) | null = null
+  export let inline: boolean = false
 
   $: hasScreens = $screenStore.screens?.length
   $: title = hasScreens ? "Create new screen" : "Create your first screen"
@@ -59,20 +60,27 @@
   }
 </script>
 
-<Modal bind:this={rootModal} on:hide={() => (selectedType = undefined)}>
+<Modal
+  bind:this={rootModal}
+  on:hide={() => (selectedType = undefined)}
+  {inline}
+>
   <ModalContent
-    {title}
+    title={inline ? "" : title}
     size="L"
     {onConfirm}
     disabled={!selectedType}
     confirmText="Next"
+    showDivider={!inline}
+    showCloseIcon={!inline}
+    showCancelButton={!inline}
   >
-    <div class="subHeading">
-      Start from scratch or create screens from your data
-    </div>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <CreationPage showClose={!!onClose} {onClose}>
+    <CreationPage showClose={!!onClose} {onClose} heading={inline ? title : ""}>
+      <div class="subHeading" class:inline>
+        Start from scratch or create screens from your data
+      </div>
       <div class="cards">
         <div
           class="card"
@@ -150,6 +158,10 @@
   .subHeading {
     padding-bottom: var(--spacing-l);
   }
+  .subHeading:not(.inline) {
+    align-self: start;
+  }
+
   .cards {
     display: flex;
     flex-wrap: wrap;
