@@ -5,11 +5,11 @@
   import { workspaceAppStore } from "@/stores/builder/workspaceApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
-  import type { WorkspaceApp, Screen, UIWorkspaceApp } from "@budibase/types"
-  import { goto } from "@roxi/routify"
+  import type { Screen, UIWorkspaceApp, WorkspaceApp } from "@budibase/types"
+  import NewScreenModal from "../../../_components/NewScreen/index.svelte"
   import WorkspaceAppModal from "../WorkspaceApp/WorkspaceAppModal.svelte"
-  import WorkspaceAppNavItem from "./WorkspaceAppNavItem.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
+  import WorkspaceAppNavItem from "./WorkspaceAppNavItem.svelte"
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
@@ -19,6 +19,7 @@
   let searchValue = ""
   let screensContainer: HTMLDivElement
   let scrolling = false
+  let newScreenModal: NewScreenModal
 
   let workspaceAppModal: WorkspaceAppModal
   let selectedWorkspaceApp: WorkspaceApp | undefined
@@ -69,7 +70,8 @@
 
   const onAdd = (e: Event) => {
     if (!workspaceAppsEnabled) {
-      return $goto("../new")
+      newScreenModal.show()
+      return
     }
 
     const items = [
@@ -87,7 +89,7 @@
         name: "Add screen",
         keyBind: null,
         visible: true,
-        callback: () => $goto("../new"),
+        callback: () => newScreenModal.show(),
       },
     ]
 
@@ -149,6 +151,10 @@
   bind:this={workspaceAppModal}
   workspaceApp={selectedWorkspaceApp}
   on:hide={() => (selectedWorkspaceApp = undefined)}
+/>
+<NewScreenModal
+  bind:this={newScreenModal}
+  workspaceAppId={selectedWorkspaceApp?._id || ""}
 />
 
 <style>

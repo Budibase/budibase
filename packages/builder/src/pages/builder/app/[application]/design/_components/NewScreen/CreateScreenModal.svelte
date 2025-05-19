@@ -4,7 +4,7 @@
   import TypeModal from "./TypeModal.svelte"
   import tableTypes from "./tableTypes"
   import formTypes from "./formTypes"
-  import { Modal, notifications } from "@budibase/bbui"
+  import { Modal, ModalCancelFrom, notifications } from "@budibase/bbui"
   import {
     screenStore,
     navigationStore,
@@ -43,7 +43,7 @@
 
   export const show = (
     newMode: string,
-    preselectedDatasource: Table | ViewV2 | null
+    preselectedDatasource: Table | ViewV2 | null = null
   ) => {
     mode = newMode
     selectedTablesAndViews = []
@@ -235,7 +235,7 @@
   }
 </script>
 
-<Modal bind:this={datasourceModal} autoFocus={false}>
+<Modal bind:this={datasourceModal} autoFocus={false} on:cancel>
   <DatasourceModal
     {selectedTablesAndViews}
     onConfirm={onSelectDatasources}
@@ -243,32 +243,48 @@
   />
 </Modal>
 
-<Modal bind:this={tableTypeModal}>
+<Modal
+  bind:this={tableTypeModal}
+  on:cancel={e => {
+    if (
+      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
+        e.detail
+      )
+    ) {
+      tableTypeModal.hide()
+      datasourceModal.show()
+    }
+  }}
+>
   <TypeModal
     title="Choose how you want to manage rows"
     types={tableTypes}
     onConfirm={createTableScreen}
-    onCancel={() => {
-      tableTypeModal.hide()
-      datasourceModal.show()
-    }}
     showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>
 
-<Modal bind:this={screenDetailsModal}>
+<Modal bind:this={screenDetailsModal} on:cancel>
   <ScreenDetailsModal onConfirm={createBasicScreen} />
 </Modal>
 
-<Modal bind:this={formTypeModal}>
+<Modal
+  bind:this={formTypeModal}
+  on:cancel={e => {
+    if (
+      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
+        e.detail
+      )
+    ) {
+      formTypeModal.hide()
+      datasourceModal.show()
+    }
+  }}
+>
   <TypeModal
     title="Select form type"
     types={formTypes}
     onConfirm={createFormScreen}
-    onCancel={() => {
-      formTypeModal.hide()
-      datasourceModal.show()
-    }}
     showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>
