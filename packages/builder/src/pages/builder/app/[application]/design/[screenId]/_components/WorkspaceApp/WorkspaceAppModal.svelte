@@ -1,7 +1,14 @@
 <script lang="ts">
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { workspaceAppStore } from "@/stores/builder"
-  import { Input, keepOpen, Label, Modal, ModalContent } from "@budibase/bbui"
+  import {
+    Input,
+    keepOpen,
+    Label,
+    Modal,
+    ModalContent,
+    notifications,
+  } from "@budibase/bbui"
   import type { WorkspaceApp } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
@@ -87,14 +94,22 @@
 
     const { data: workspaceAppData } = validationResult
 
-    if (isNew) {
-      await workspaceAppStore.add(workspaceAppData)
-    } else {
-      await workspaceAppStore.edit({
-        ...workspaceAppData,
-        _id: workspaceApp!._id!,
-        _rev: workspaceApp!._rev!,
-      })
+    try {
+      if (isNew) {
+        await workspaceAppStore.add(workspaceAppData)
+
+        notifications.success("App created successfully")
+      } else {
+        await workspaceAppStore.edit({
+          ...workspaceAppData,
+          _id: workspaceApp!._id!,
+          _rev: workspaceApp!._rev!,
+        })
+        notifications.success("App updated successfully")
+      }
+    } catch (e: any) {
+      console.error("Error saving app", e)
+      notifications.error(`Error saving app: ${e.message}`)
     }
   }
 

@@ -8,7 +8,6 @@ import {
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
-import { notifications } from "@budibase/bbui"
 import { featureFlag } from "@/helpers"
 import { API } from "@/api"
 
@@ -64,38 +63,28 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   }
 
   async add(workspaceApp: WorkspaceApp) {
-    try {
-      const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
-      this.store.update(state => {
-        state.workspaceApps.push(createdWorkspaceApp.workspaceApp)
-        return state
-      })
-    } catch (e: any) {
-      console.error("Error saving app", e)
-      notifications.error(`Error saving app: ${e.message}`)
-    }
+    const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
+    this.store.update(state => {
+      state.workspaceApps.push(createdWorkspaceApp.workspaceApp)
+      return state
+    })
   }
 
   async edit(workspaceApp: UpdateWorkspaceAppRequest) {
-    try {
-      const updatedWorkspaceApp = await API.workspaceApp.update(workspaceApp)
-      this.store.update(state => {
-        const index = state.workspaceApps.findIndex(
-          app => app._id === workspaceApp._id
-        )
-        if (index === -1) {
-          throw new Error(`App not found with id "${workspaceApp._id}"`)
-        }
+    const updatedWorkspaceApp = await API.workspaceApp.update(workspaceApp)
+    this.store.update(state => {
+      const index = state.workspaceApps.findIndex(
+        app => app._id === workspaceApp._id
+      )
+      if (index === -1) {
+        throw new Error(`App not found with id "${workspaceApp._id}"`)
+      }
 
-        state.workspaceApps[index] = {
-          ...updatedWorkspaceApp.workspaceApp,
-        }
-        return state
-      })
-    } catch (e: any) {
-      console.error("Error saving app", e)
-      notifications.error(`Error saving app: ${e.message}`)
-    }
+      state.workspaceApps[index] = {
+        ...updatedWorkspaceApp.workspaceApp,
+      }
+      return state
+    })
   }
 
   async delete(_id: string | undefined, _rev: string | undefined) {
