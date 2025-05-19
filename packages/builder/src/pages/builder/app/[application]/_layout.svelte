@@ -27,6 +27,7 @@
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import UpdateAppTopNav from "@/components/common/UpdateAppTopNav.svelte"
+  import SideNav from "./_components/SideNav.svelte"
 
   export let application
 
@@ -94,49 +95,50 @@
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
-  <div class="top-nav">
-    {#if $appStore.initialised}
-      <div class="topleftnav">
-        <a href={$url("../../portal/apps")} class="linkWrapper back-to-apps">
-          <Icon size="S" hoverable name="BackAndroid" />
-        </a>
-        <Tabs {selected} size="M">
-          {#each $layout.children as { path, title }}
-            {#if title === "agent" && !$featureFlags.AI_AGENTS}
-              <!-- skip -->
-            {:else}
-              <Tab
-                link
-                href={$url(path)}
-                quiet
-                selected={$isActive(path)}
-                on:click={() => topItemNavigate(path)}
-                title={capitalise(title)}
-                id={`builder-${title}-tab`}
-              />
-            {/if}
-          {/each}
-        </Tabs>
-      </div>
-      <div class="topcenternav">
-        <div class="app-name">
-          <UpdateAppTopNav {application}>
-            <Heading noPadding size="XS">{$appStore.name}</Heading>
-          </UpdateAppTopNav>
-        </div>
-      </div>
-      <div class="toprightnav">
-        <span>
-          <UserAvatars
-            users={$userStore}
-            order="rtl"
-            tooltipPosition={TooltipPosition.Bottom}
-          />
-        </span>
-        <AppActions {application} {loaded} />
-      </div>
-    {/if}
-  </div>
+  <SideNav />
+<!--  <div class="top-nav">-->
+<!--    {#if $appStore.initialised}-->
+<!--      <div class="topleftnav">-->
+<!--        <a href={$url("../../portal/apps")} class="linkWrapper back-to-apps">-->
+<!--          <Icon size="S" hoverable name="BackAndroid" />-->
+<!--        </a>-->
+<!--        <Tabs {selected} size="M">-->
+<!--          {#each $layout.children as { path, title }}-->
+<!--            {#if title === "agent" && !$featureFlags.AI_AGENTS}-->
+<!--              &lt;!&ndash; skip &ndash;&gt;-->
+<!--            {:else}-->
+<!--              <Tab-->
+<!--                link-->
+<!--                href={$url(path)}-->
+<!--                quiet-->
+<!--                selected={$isActive(path)}-->
+<!--                on:click={() => topItemNavigate(path)}-->
+<!--                title={capitalise(title)}-->
+<!--                id={`builder-${title}-tab`}-->
+<!--              />-->
+<!--            {/if}-->
+<!--          {/each}-->
+<!--        </Tabs>-->
+<!--      </div>-->
+<!--      <div class="topcenternav">-->
+<!--        <div class="app-name">-->
+<!--          <UpdateAppTopNav {application}>-->
+<!--            <Heading noPadding size="XS">{$appStore.name}</Heading>-->
+<!--          </UpdateAppTopNav>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--      <div class="toprightnav">-->
+<!--        <span>-->
+<!--          <UserAvatars-->
+<!--            users={$userStore}-->
+<!--            order="rtl"-->
+<!--            tooltipPosition={TooltipPosition.Bottom}-->
+<!--          />-->
+<!--        </span>-->
+<!--        <AppActions {application} {loaded} />-->
+<!--      </div>-->
+<!--    {/if}-->
+<!--  </div>-->
   {#await promise}
     <!-- This should probably be some kind of loading state? -->
     <div class="loading" />
@@ -179,8 +181,9 @@
     height: 100%;
     width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     transition: filter 260ms ease-out;
+    align-items: stretch;
   }
   .root.blur {
     filter: blur(8px);
@@ -243,6 +246,7 @@
 
   .body {
     flex: 1 1 auto;
+    width: 0;
     z-index: 1;
     display: flex;
     flex-direction: column;
