@@ -235,9 +235,7 @@ describe("/screens", () => {
         viewV2.createRequest(table._id!),
         { status: 201 }
       )
-      const screen = await config.api.screen.save(
-        createViewScreen("BudibaseDB", view)
-      )
+      const screen = await config.api.screen.save(createViewScreen(view))
       const usage = await config.api.screen.usage(view.id)
       expect(usage.sourceType).toEqual(SourceType.VIEW)
       confirmScreen(usage, screen)
