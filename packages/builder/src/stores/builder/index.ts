@@ -37,7 +37,7 @@ import { flags } from "./flags"
 import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
-import { projectAppStore } from "./projectApps"
+import { projectAppStore } from "./workspaceApps"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 

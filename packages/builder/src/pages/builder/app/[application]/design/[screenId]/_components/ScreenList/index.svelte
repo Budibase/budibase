@@ -2,13 +2,13 @@
   import NavHeader from "@/components/common/NavHeader.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"
   import { contextMenuStore, sortedScreens } from "@/stores/builder"
-  import { projectAppStore } from "@/stores/builder/projectApps"
+  import { projectAppStore } from "@/stores/builder/workspaceApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
   import type { WorkspaceApp, Screen, UIWorkspaceApp } from "@budibase/types"
   import { goto } from "@roxi/routify"
-  import ProjectAppModal from "../ProjectApp/ProjectAppModal.svelte"
-  import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
+  import ProjectAppModal from "../WorkspaceApp/WorkspaceAppModal.svelte"
+  import ProjectAppNavItem from "./WorkspaceAppNavItem.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
 
   $: projectAppsEnabled = $featureFlags.WORKSPACE_APPS
