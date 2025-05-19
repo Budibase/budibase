@@ -73,7 +73,10 @@
 
   const createScreen = async (screenTemplate: Screen): Promise<Screen> => {
     try {
-      return await screenStore.save({ ...screenTemplate, projectAppId })
+      return await screenStore.save({
+        ...screenTemplate,
+        workspaceAppId: projectAppId,
+      })
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")

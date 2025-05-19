@@ -3,12 +3,12 @@
   import { confirm } from "@/helpers"
   import { contextMenuStore, projectAppStore } from "@/stores/builder"
   import { Icon, Layout, notifications } from "@budibase/bbui"
-  import type { UIProjectApp } from "@budibase/types"
+  import type { UIWorkspaceApp } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import { createEventDispatcher } from "svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
 
-  export let projectApp: UIProjectApp
+  export let projectApp: UIWorkspaceApp
   export let searchValue: string
 
   const dispatch = createEventDispatcher<{ edit: void }>()

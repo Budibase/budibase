@@ -2,17 +2,17 @@
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { projectAppStore } from "@/stores/builder"
   import { Input, keepOpen, Label, Modal, ModalContent } from "@budibase/bbui"
-  import type { ProjectApp } from "@budibase/types"
+  import type { WorkspaceApp } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
 
-  export let projectApp: ProjectApp | null = null
+  export let projectApp: WorkspaceApp | null = null
 
   let modal: Modal
   export const show = () => modal.show()
 
-  let errors: Partial<Record<keyof ProjectApp, string>> = {}
-  let data: ProjectApp
+  let errors: Partial<Record<keyof WorkspaceApp, string>> = {}
+  let data: WorkspaceApp
 
   $: isNew = !projectApp
 
@@ -21,7 +21,7 @@
   const requiredString = (errorMessage: string) =>
     z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
 
-  const validateProjectApp = (projectApp: Partial<ProjectApp>) => {
+  const validateProjectApp = (projectApp: Partial<WorkspaceApp>) => {
     const validator = z.object({
       name: requiredString("Name is required.").refine(
         val =>
@@ -50,7 +50,7 @@
         ),
       icon: z.string(),
       iconColor: z.string(),
-    }) satisfies ZodType<ProjectApp>
+    }) satisfies ZodType<WorkspaceApp>
 
     const validationResult = validator.safeParse(projectApp)
     errors = {}
@@ -130,6 +130,12 @@
     />
 
     <Label size="L">Icon</Label>
-    <EditableIcon bind:name={data.icon} bind:color={data.iconColor} />
+    <EditableIcon
+      bind:name={data.icon}
+      color={data.iconColor || ""}
+      on:change={e => {
+        data.iconColor = e.detail
+      }}
+    />
   </ModalContent>
 </Modal>

@@ -40,7 +40,7 @@ export const initialScreenState: ScreenState = {
 export class ScreenStore extends BudiStore<ScreenState> {
   history: HistoryStore<Screen>
   delete: (screens: Screen) => Promise<void>
-  save: (screen: WithRequired<Screen, "projectAppId">) => Promise<Screen>
+  save: (screen: WithRequired<Screen, "workspaceAppId">) => Promise<Screen>
 
   constructor() {
     super(initialScreenState)
@@ -315,7 +315,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       }
       return this.save({
         ...clone,
-        projectAppId: screen.projectAppId || "default",
+        workspaceAppId: screen.workspaceAppId || "default",
       })
     }
   )

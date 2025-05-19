@@ -1,16 +1,16 @@
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { ProjectApp, UIProjectApp } from "@budibase/types"
+import { WorkspaceApp, UIWorkspaceApp } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
 import { Helpers } from "@budibase/bbui"
 
 interface ProjectAppStoreState {
-  projectApps: ProjectApp[]
+  projectApps: WorkspaceApp[]
   loading: boolean
 }
 
 interface DerivedProjectAppStoreState {
-  projectApps: UIProjectApp[]
+  projectApps: UIWorkspaceApp[]
 }
 
 const DEFAULT_PROJECT_APP_ID = "default"
@@ -22,14 +22,18 @@ export class ProjectAppStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Readable<ProjectAppStoreState>) => {
       return derived([store, screenStore], ([$store, $screenStore]) => {
-        const projectApps = $store.projectApps.map<UIProjectApp>(projectApp => {
-          return {
-            ...projectApp,
-            screens: $screenStore.screens.filter(
-              s => (s.projectAppId || DEFAULT_PROJECT_APP_ID) === projectApp._id
-            ),
+        const projectApps = $store.projectApps.map<UIWorkspaceApp>(
+          projectApp => {
+            return {
+              ...projectApp,
+              screens: $screenStore.screens.filter(
+                s =>
+                  (s.workspaceAppId || DEFAULT_PROJECT_APP_ID) ===
+                  projectApp._id
+              ),
+            }
           }
-        })
+        )
 
         return { projectApps }
       })
@@ -52,14 +56,14 @@ export class ProjectAppStore extends DerivedBudiStore<
     )
   }
 
-  async add(projectApp: ProjectApp) {
+  async add(projectApp: WorkspaceApp) {
     this.store.update(state => {
       state.projectApps.push({ ...projectApp, _id: Helpers.uuid() })
       return state
     })
   }
 
-  async edit(projectApp: ProjectApp) {
+  async edit(projectApp: WorkspaceApp) {
     this.store.update(state => {
       const index = state.projectApps.findIndex(
         app => app._id === projectApp._id

@@ -5,13 +5,13 @@
   import { projectAppStore } from "@/stores/builder/projectApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
-  import type { ProjectApp, Screen, UIProjectApp } from "@budibase/types"
+  import type { WorkspaceApp, Screen, UIWorkspaceApp } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import ProjectAppModal from "../ProjectApp/ProjectAppModal.svelte"
   import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
 
-  $: projectAppsEnabled = $featureFlags.APPS_IN_APPS
+  $: projectAppsEnabled = $featureFlags.WORKSPACE_APPS
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -21,7 +21,7 @@
   let scrolling = false
 
   let projectAppModal: ProjectAppModal
-  let selectedProjectApp: ProjectApp | undefined
+  let selectedProjectApp: WorkspaceApp | undefined
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
   $: filteredProjectApps = getFilteredProjectApps(
@@ -46,14 +46,14 @@
   }
 
   const getFilteredProjectApps = (
-    projectApps: UIProjectApp[],
+    projectApps: UIWorkspaceApp[],
     searchValue: string
   ) => {
     if (!searchValue) {
       return projectApps
     }
 
-    const filteredProjects: UIProjectApp[] = []
+    const filteredProjects: UIWorkspaceApp[] = []
     for (const projectApp of projectApps) {
       filteredProjects.push({
         ...projectApp,
@@ -99,7 +99,7 @@
     })
   }
 
-  function onEditProjectApp(projectApp: ProjectApp) {
+  function onEditProjectApp(projectApp: WorkspaceApp) {
     selectedProjectApp = projectApp
     projectAppModal.show()
   }
