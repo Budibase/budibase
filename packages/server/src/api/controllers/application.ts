@@ -184,19 +184,19 @@ async function addSampleDataDocs() {
 
 async function addSampleDataScreen() {
   const db = context.getAppDB()
-  let projectAppId: string | undefined
-  if (await features.isEnabled(FeatureFlag.PROJECT_APPS)) {
+  let workspaceAppId: string | undefined
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const appMetadata = await sdk.applications.metadata.get()
 
-    const projectApp = await sdk.projectApps.create({
+    const workspaceApp = await sdk.workspaceApps.create({
       name: appMetadata.name,
       urlPrefix: "/",
       icon: "Monitoring",
     })
-    projectAppId = projectApp._id!
+    workspaceAppId = workspaceApp._id!
   }
 
-  let screen = await createSampleDataTableScreen(projectAppId)
+  let screen = await createSampleDataTableScreen(workspaceAppId)
   screen._id = generateScreenID()
   await db.put(screen)
 }
@@ -282,10 +282,10 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  let projectApps: FetchAppPackageResponse["projectApps"] = []
+  let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
-  if (await features.flags.isEnabled(FeatureFlag.PROJECT_APPS)) {
-    projectApps = await extractScreensByProjectApp(screens)
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    workspaceApps = await extractScreensByWorkspaceApp(screens)
     screens = []
   }
 
@@ -297,7 +297,7 @@ export async function fetchAppPackage(
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
-    projectApps,
+    workspaceApps,
     screens,
     layouts,
     clientLibPath,
@@ -305,20 +305,20 @@ export async function fetchAppPackage(
   }
 }
 
-async function extractScreensByProjectApp(
+async function extractScreensByWorkspaceApp(
   screens: Screen[]
-): Promise<FetchAppPackageResponse["projectApps"]> {
-  const result: FetchAppPackageResponse["projectApps"] = []
+): Promise<FetchAppPackageResponse["workspaceApps"]> {
+  const result: FetchAppPackageResponse["workspaceApps"] = []
 
-  const projectApps = await sdk.projectApps.fetch()
+  const workspaceApps = await sdk.workspaceApps.fetch()
 
-  const screensByProjectApp = groupBy(s => s.projectAppId, screens)
-  for (const projectAppId of Object.keys(screensByProjectApp)) {
-    const projectApp = projectApps.find(p => p._id === projectAppId)
+  const screensByWorkspaceApp = groupBy(s => s.workspaceAppId, screens)
+  for (const workspaceAppId of Object.keys(screensByWorkspaceApp)) {
+    const workspaceApp = workspaceApps.find(p => p._id === workspaceAppId)
 
     result.push({
-      ...projectApp!,
-      screens: screensByProjectApp[projectAppId],
+      ...workspaceApp!,
+      screens: screensByWorkspaceApp[workspaceAppId],
     })
   }
 
