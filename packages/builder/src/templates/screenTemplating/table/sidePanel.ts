@@ -18,7 +18,7 @@ const sidePanel = async ({
   tableOrView: SourceOption
   permissions: UIPermissions
   screens: ScreenDoc[]
-  workspaceAppId: string
+  workspaceAppId: string | undefined
 }) => {
   /*
     Create Row

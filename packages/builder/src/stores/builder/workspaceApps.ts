@@ -4,6 +4,7 @@ import {
   UIWorkspaceApp,
   FetchAppPackageResponse,
   FeatureFlag,
+  UpdateWorkspaceAppRequest,
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
@@ -75,7 +76,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     }
   }
 
-  async edit(workspaceApp: WorkspaceApp) {
+  async edit(workspaceApp: UpdateWorkspaceAppRequest) {
     try {
       const updatedWorkspaceApp = await API.workspaceApp.update(workspaceApp)
       this.store.update(state => {

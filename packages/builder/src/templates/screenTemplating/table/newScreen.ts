@@ -23,7 +23,7 @@ const getTableScreenTemplate = ({
   tableOrView: SourceOption
   permissions: UIPermissions
   gridLayout: boolean
-  workspaceAppId: string
+  workspaceAppId: string | undefined
 }) => {
   const buttonGroup = new Component("@budibase/standard-components/buttongroup")
   const createButton = new Component("@budibase/standard-components/button")
@@ -115,7 +115,7 @@ const getUpdateScreenTemplate = async ({
   tableScreenRoute: string
   tableOrView: SourceOption
   permissions: UIPermissions
-  workspaceAppId: string
+  workspaceAppId: string | undefined
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
@@ -225,7 +225,7 @@ const getCreateScreenTemplate = ({
   tableScreenRoute: string
   tableOrView: SourceOption
   permissions: UIPermissions
-  workspaceAppId: string
+  workspaceAppId: string | undefined
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
@@ -296,7 +296,7 @@ const newScreen = async ({
   tableOrView: SourceOption
   permissions: UIPermissions
   screens: ScreenDoc[]
-  workspaceAppId: string
+  workspaceAppId: string | undefined
 }) => {
   const tableScreenRoute = getValidRoute(
     screens,

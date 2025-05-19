@@ -92,8 +92,8 @@
     } else {
       await workspaceAppStore.edit({
         ...workspaceAppData,
-        _id: workspaceApp!._id,
-        _rev: workspaceApp!._rev,
+        _id: workspaceApp!._id!,
+        _rev: workspaceApp!._rev!,
       })
     }
   }
