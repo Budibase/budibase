@@ -812,7 +812,6 @@ describe("Screens store", () => {
 
     expect(saveSpy).toBeCalledWith({
       ...original,
-      workspaceAppId: "default",
       name: "updated",
     })
   })
