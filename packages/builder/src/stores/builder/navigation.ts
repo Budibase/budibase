@@ -28,7 +28,7 @@ export class NavigationStore extends DerivedBudiStore<
         [store, selectedScreen, screenStore],
         ([$store, $selectedScreen, $screenStore]) => {
           const currentScreenLinks = $screenStore.screens
-            .filter(s => s.projectAppId === $selectedScreen?.projectAppId)
+            .filter(s => s.workspaceAppId === $selectedScreen?.workspaceAppId)
             .map(s => s.routing.route)
 
           const links = $store.links.filter(l =>

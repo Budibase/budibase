@@ -3,7 +3,7 @@ import { PermissionType } from "@budibase/types"
 import { middleware } from "@budibase/backend-core"
 import authorized from "../../middleware/authorized"
 
-import * as controller from "../controllers/projectApp"
+import * as controller from "../controllers/workspaceApp"
 import Joi from "joi"
 
 const baseSchema = {
@@ -23,7 +23,7 @@ const updateSchema = Joi.object({
   ...baseSchema,
 })
 
-function projectAppValidator(
+function workspaceAppValidator(
   schema: typeof insertSchema | typeof updateSchema
 ) {
   return middleware.joiValidator.body(schema, { allowUnknown: false })
@@ -32,19 +32,19 @@ function projectAppValidator(
 const router: Router = new Router()
 
 router.post(
-  "/api/projectApp",
+  "/api/workspaceApp",
   authorized(PermissionType.BUILDER),
-  projectAppValidator(insertSchema),
+  workspaceAppValidator(insertSchema),
   controller.create
 )
 router.put(
-  "/api/projectApp/:id",
+  "/api/workspaceApp/:id",
   authorized(PermissionType.BUILDER),
-  projectAppValidator(updateSchema),
+  workspaceAppValidator(updateSchema),
   controller.edit
 )
 router.delete(
-  "/api/projectApp/:id/:rev",
+  "/api/workspaceApp/:id/:rev",
   authorized(PermissionType.BUILDER),
   controller.remove
 )

@@ -1,45 +1,47 @@
 import {
   Ctx,
-  InsertProjectAppRequest,
-  InsertProjectAppResponse,
-  ProjectApp,
-  ProjectAppResponse,
-  UpdateProjectAppRequest,
-  UpdateProjectAppResponse,
+  InsertWorkspaceAppRequest,
+  InsertWorkspaceAppResponse,
+  WorkspaceApp,
+  WorkspaceAppResponse,
+  UpdateWorkspaceAppRequest,
+  UpdateWorkspaceAppResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
-function toProjectAppResponse(projectApp: ProjectApp): ProjectAppResponse {
+function toWorkspaceAppResponse(
+  workspaceApp: WorkspaceApp
+): WorkspaceAppResponse {
   return {
-    _id: projectApp._id!,
-    _rev: projectApp._rev!,
-    name: projectApp.name,
-    urlPrefix: projectApp.urlPrefix,
-    icon: projectApp.icon,
-    iconColor: projectApp.iconColor,
+    _id: workspaceApp._id!,
+    _rev: workspaceApp._rev!,
+    name: workspaceApp.name,
+    urlPrefix: workspaceApp.urlPrefix,
+    icon: workspaceApp.icon,
+    iconColor: workspaceApp.iconColor,
   }
 }
 
 export async function create(
-  ctx: Ctx<InsertProjectAppRequest, InsertProjectAppResponse>
+  ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
-  const newProjectApp = {
+  const newWorkspaceApp = {
     name: body.name,
     urlPrefix: body.urlPrefix,
     icon: body.icon,
     iconColor: body.iconColor,
   }
 
-  const projectApp = await sdk.projectApps.create(newProjectApp)
+  const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)
   ctx.status = 201
   ctx.body = {
-    projectApp: toProjectAppResponse(projectApp),
+    workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
 }
 
 export async function edit(
-  ctx: Ctx<UpdateProjectAppRequest, UpdateProjectAppResponse>
+  ctx: Ctx<UpdateWorkspaceAppRequest, UpdateWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
 
@@ -56,15 +58,15 @@ export async function edit(
     iconColor: body.iconColor,
   }
 
-  const projectApp = await sdk.projectApps.update(toUpdate)
+  const workspaceApp = await sdk.workspaceApps.update(toUpdate)
   ctx.body = {
-    projectApp: toProjectAppResponse(projectApp),
+    workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
 }
 
 export async function remove(ctx: Ctx<void, void>) {
   const { id, rev } = ctx.params
 
-  await sdk.projectApps.remove(id, rev)
+  await sdk.workspaceApps.remove(id, rev)
   ctx.status = 204
 }

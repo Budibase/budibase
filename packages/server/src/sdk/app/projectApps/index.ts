@@ -1,18 +1,18 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
-import { DocumentType, ProjectApp, SEPARATOR } from "@budibase/types"
+import { DocumentType, WorkspaceApp, SEPARATOR } from "@budibase/types"
 
 async function guardName(name: string, id?: string) {
-  const existingProjectApps = await fetch()
+  const existingWorkspaceApps = await fetch()
 
-  if (existingProjectApps.find(p => p.name === name && p._id !== id)) {
+  if (existingWorkspaceApps.find(p => p.name === name && p._id !== id)) {
     throw new HTTPError(`App with name '${name}' is already taken.`, 400)
   }
 }
 
-export async function fetch(): Promise<ProjectApp[]> {
+export async function fetch(): Promise<WorkspaceApp[]> {
   const db = context.getAppDB()
-  const docs = await db.allDocs<ProjectApp>(
-    docIds.getProjectAppParams(null, { include_docs: true })
+  const docs = await db.allDocs<WorkspaceApp>(
+    docIds.getWorkspaceAppParams(null, { include_docs: true })
   )
   const result = docs.rows.map(r => ({
     ...r.doc!,
@@ -22,55 +22,55 @@ export async function fetch(): Promise<ProjectApp[]> {
   return result
 }
 
-export async function get(id: string): Promise<ProjectApp | undefined> {
+export async function get(id: string): Promise<WorkspaceApp | undefined> {
   const db = context.getAppDB()
-  const projectApp = await db.tryGet<ProjectApp>(id)
-  return projectApp
+  const workspaceApp = await db.tryGet<WorkspaceApp>(id)
+  return workspaceApp
 }
 
 export async function create(
-  projectApp: Omit<ProjectApp, "_id" | "_rev" | "createdAt" | "updatedAt">
+  workspaceApp: Omit<WorkspaceApp, "_id" | "_rev" | "createdAt" | "updatedAt">
 ) {
   const db = context.getAppDB()
 
-  await guardName(projectApp.name)
+  await guardName(workspaceApp.name)
 
   const response = await db.put({
     _id: `${DocumentType.PROJECT_APP}${SEPARATOR}${utils.newid()}`,
-    ...projectApp,
+    ...workspaceApp,
   })
   return {
-    ...projectApp,
+    ...workspaceApp,
     _id: response.id!,
     _rev: response.rev!,
   }
 }
 
 export async function update(
-  projectApp: Omit<ProjectApp, "createdAt" | "updatedAt">
+  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt">
 ) {
   const db = context.getAppDB()
 
-  await guardName(projectApp.name, projectApp._id)
+  await guardName(workspaceApp.name, workspaceApp._id)
 
-  const response = await db.put(projectApp)
+  const response = await db.put(workspaceApp)
   return {
-    ...projectApp,
+    ...workspaceApp,
     _rev: response.rev!,
   }
 }
 
 export async function remove(
-  projectAppId: string,
+  workspaceAppId: string,
   _rev: string
 ): Promise<void> {
   const db = context.getAppDB()
   try {
-    await db.remove(projectAppId, _rev)
+    await db.remove(workspaceAppId, _rev)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(
-        `Project app with id '${projectAppId}' not found.`,
+        `Project app with id '${workspaceAppId}' not found.`,
         404
       )
     }

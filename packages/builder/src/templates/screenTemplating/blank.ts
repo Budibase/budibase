@@ -7,15 +7,15 @@ import { Screen as ScreenDoc } from "@budibase/types"
 const blank = ({
   route,
   screens,
-  projectAppId,
+  workspaceAppId,
 }: {
   route: string
   screens: ScreenDoc[]
-  projectAppId: string
+  workspaceAppId: string
 }) => {
   const validRoute = getValidRoute(screens, route, Roles.BASIC)
 
-  const template = new Screen(projectAppId)
+  const template = new Screen(workspaceAppId)
     .instanceName("Blank screen")
     .customProps({ layout: "grid" })
     .role(Roles.BASIC)

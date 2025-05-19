@@ -64,9 +64,9 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
   async add(workspaceApp: WorkspaceApp) {
     try {
-      const createdProjectApp = await API.projectApp.create(workspaceApp)
+      const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
       this.store.update(state => {
-        state.workspaceApps.push(createdProjectApp.projectApp)
+        state.workspaceApps.push(createdWorkspaceApp.workspaceApp)
         return state
       })
     } catch (e: any) {
@@ -77,7 +77,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
   async edit(workspaceApp: WorkspaceApp) {
     try {
-      const updatedProjectApp = await API.projectApp.update(workspaceApp)
+      const updatedWorkspaceApp = await API.workspaceApp.update(workspaceApp)
       this.store.update(state => {
         const index = state.workspaceApps.findIndex(
           app => app._id === workspaceApp._id
@@ -87,7 +87,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
         }
 
         state.workspaceApps[index] = {
-          ...updatedProjectApp.projectApp,
+          ...updatedWorkspaceApp.workspaceApp,
         }
         return state
       })

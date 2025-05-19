@@ -15,7 +15,7 @@ const getTableScreenTemplate = ({
   tableOrView,
   permissions,
   gridLayout,
-  projectAppId,
+  workspaceAppId,
 }: {
   route: string
   updateScreenRoute: string
@@ -23,7 +23,7 @@ const getTableScreenTemplate = ({
   tableOrView: SourceOption
   permissions: UIPermissions
   gridLayout: boolean
-  projectAppId: string
+  workspaceAppId: string
 }) => {
   const buttonGroup = new Component("@budibase/standard-components/buttongroup")
   const createButton = new Component("@budibase/standard-components/button")
@@ -87,7 +87,7 @@ const getTableScreenTemplate = ({
     .gridDesktopColSpan(1, 13)
     .gridDesktopRowSpan(3, 21)
 
-  const template = new Screen(projectAppId)
+  const template = new Screen(workspaceAppId)
     .route(route)
     .instanceName(`${tableOrView.name} - List`)
     .customProps({ layout: gridLayout ? "grid" : "flex" })
@@ -109,13 +109,13 @@ const getUpdateScreenTemplate = async ({
   tableScreenRoute,
   tableOrView,
   permissions,
-  projectAppId,
+  workspaceAppId,
 }: {
   route: string
   tableScreenRoute: string
   tableOrView: SourceOption
   permissions: UIPermissions
-  projectAppId: string
+  workspaceAppId: string
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
@@ -200,7 +200,7 @@ const getUpdateScreenTemplate = async ({
     buttonsCollapsed: buttons.length > 5,
   })
 
-  const template = new Screen(projectAppId)
+  const template = new Screen(workspaceAppId)
     .route(route)
     .instanceName(`Update row`)
     .role(permissions.write)
@@ -219,13 +219,13 @@ const getCreateScreenTemplate = ({
   tableScreenRoute,
   tableOrView,
   permissions,
-  projectAppId,
+  workspaceAppId,
 }: {
   route: string
   tableScreenRoute: string
   tableOrView: SourceOption
   permissions: UIPermissions
-  projectAppId: string
+  workspaceAppId: string
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
@@ -273,7 +273,7 @@ const getCreateScreenTemplate = ({
       buttons: [saveButton.json()],
     })
 
-  const template = new Screen(projectAppId)
+  const template = new Screen(workspaceAppId)
     .route(route)
     .instanceName("Create row")
     .role(permissions.write)
@@ -291,12 +291,12 @@ const newScreen = async ({
   tableOrView,
   permissions,
   screens,
-  projectAppId,
+  workspaceAppId,
 }: {
   tableOrView: SourceOption
   permissions: UIPermissions
   screens: ScreenDoc[]
-  projectAppId: string
+  workspaceAppId: string
 }) => {
   const tableScreenRoute = getValidRoute(
     screens,
@@ -323,7 +323,7 @@ const newScreen = async ({
     permissions,
     tableOrView,
     gridLayout: true,
-    projectAppId,
+    workspaceAppId,
   })
 
   const updateScreenTemplate = await getUpdateScreenTemplate({
@@ -331,7 +331,7 @@ const newScreen = async ({
     tableScreenRoute,
     tableOrView,
     permissions,
-    projectAppId,
+    workspaceAppId,
   })
 
   const createScreenTemplate = getCreateScreenTemplate({
@@ -339,7 +339,7 @@ const newScreen = async ({
     tableScreenRoute,
     tableOrView,
     permissions,
-    projectAppId,
+    workspaceAppId,
   })
 
   return [tableScreenTemplate, updateScreenTemplate, createScreenTemplate]

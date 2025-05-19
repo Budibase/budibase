@@ -7,15 +7,15 @@ import { Screen } from "@budibase/types"
 const pdf = ({
   route,
   screens,
-  projectAppId,
+  workspaceAppId,
 }: {
   route: string
   screens: Screen[]
-  projectAppId: string
+  workspaceAppId: string
 }) => {
   const validRoute = getValidRoute(screens, route, Roles.BASIC)
 
-  const template = new PDFScreen(projectAppId)
+  const template = new PDFScreen(workspaceAppId)
     .role(Roles.BASIC)
     .route(validRoute)
     .json()

@@ -1,41 +1,41 @@
 import {
-  InsertProjectAppRequest,
-  InsertProjectAppResponse,
-  UpdateProjectAppRequest,
-  UpdateProjectAppResponse,
+  InsertWorkspaceAppRequest,
+  InsertWorkspaceAppResponse,
+  UpdateWorkspaceAppRequest,
+  UpdateWorkspaceAppResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
-export interface ProjectAppEndpoints {
+export interface WorkspaceAppEndpoints {
   create: (
-    projectApp: InsertProjectAppRequest
-  ) => Promise<InsertProjectAppResponse>
+    workspaceApp: InsertWorkspaceAppRequest
+  ) => Promise<InsertWorkspaceAppResponse>
   update: (
-    projectApp: UpdateProjectAppRequest
-  ) => Promise<UpdateProjectAppResponse>
+    workspaceApp: UpdateWorkspaceAppRequest
+  ) => Promise<UpdateWorkspaceAppResponse>
   delete: (id: string, rev: string) => Promise<void>
 }
 
-export const buildProjectAppEndpoints = (
+export const buildWorkspaceAppEndpoints = (
   API: BaseAPIClient
-): ProjectAppEndpoints => ({
-  create: async projectApp => {
+): WorkspaceAppEndpoints => ({
+  create: async workspaceApp => {
     const result = await API.post<
-      InsertProjectAppRequest,
-      InsertProjectAppResponse
+      InsertWorkspaceAppRequest,
+      InsertWorkspaceAppResponse
     >({
-      url: "/api/projectApp",
-      body: projectApp,
+      url: "/api/workspaceApp",
+      body: workspaceApp,
     })
     return result
   },
-  update: async projectApp => {
+  update: async workspaceApp => {
     const result = await API.put<
-      UpdateProjectAppRequest,
-      UpdateProjectAppResponse
+      UpdateWorkspaceAppRequest,
+      UpdateWorkspaceAppResponse
     >({
-      url: `/api/projectApp/${projectApp._id}`,
-      body: projectApp,
+      url: `/api/workspaceApp/${workspaceApp._id}`,
+      body: workspaceApp,
     })
     return result
   },

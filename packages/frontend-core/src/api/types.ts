@@ -35,7 +35,7 @@ import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
 import { AgentEndpoints } from "./agents"
-import { ProjectAppEndpoints } from "./projectName"
+import { WorkspaceAppEndpoints } from "./projectName"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -142,5 +142,5 @@ export type APIClient = BaseAPIClient &
     rowActions: RowActionEndpoints
     viewV2: ViewV2Endpoints
     oauth2: OAuth2Endpoints
-    projectApp: ProjectAppEndpoints
+    workspaceApp: WorkspaceAppEndpoints
   }

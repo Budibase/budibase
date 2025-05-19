@@ -48,7 +48,7 @@ export async function save(
     eventFn = events.screen.created
   }
 
-  if (!(await sdk.projectApps.get(screen.projectAppId))) {
+  if (!(await sdk.workspaceApps.get(screen.workspaceAppId))) {
     ctx.throw("Project app is not valid")
   }
 

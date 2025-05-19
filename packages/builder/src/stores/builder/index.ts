@@ -125,7 +125,6 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   screenStore.syncAppScreens(pkg)
   workspaceAppStore.syncWorkspaceApps(pkg)
   layoutStore.syncAppLayouts(pkg)
-  projectAppStore.syncAppProjectApps(pkg)
   resetBuilderHistory()
   await refreshBuilderData()
 }
