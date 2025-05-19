@@ -277,7 +277,7 @@ export async function fetchAppPackage(
 
   // Only filter screens if the user is not a builder
   const isBuilder = users.isBuilder(ctx.user, appId)
-  if (isBuilder) {
+  if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
@@ -286,7 +286,7 @@ export async function fetchAppPackage(
   let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    workspaceApps = await extractScreensByWorkspaceApp(screens)
+    workspaceApps = await extractScreensByWorkspaceApp(screens, isBuilder)
     screens = []
   }
 
@@ -307,20 +307,22 @@ export async function fetchAppPackage(
 }
 
 async function extractScreensByWorkspaceApp(
-  screens: Screen[]
+  screens: Screen[],
+  isBuilder: boolean
 ): Promise<FetchAppPackageResponse["workspaceApps"]> {
   const result: FetchAppPackageResponse["workspaceApps"] = []
 
   const workspaceApps = await sdk.workspaceApps.fetch()
 
   const screensByWorkspaceApp = groupBy(s => s.workspaceAppId, screens)
-  for (const workspaceAppId of Object.keys(screensByWorkspaceApp)) {
-    const workspaceApp = workspaceApps.find(p => p._id === workspaceAppId)
-
-    result.push({
-      ...workspaceApp!,
-      screens: screensByWorkspaceApp[workspaceAppId],
-    })
+  for (const workspaceApp of workspaceApps) {
+    const screens = screensByWorkspaceApp[workspaceApp._id!] ?? []
+    if (screens.length || isBuilder) {
+      result.push({
+        ...workspaceApp!,
+        screens,
+      })
+    }
   }
 
   return result
