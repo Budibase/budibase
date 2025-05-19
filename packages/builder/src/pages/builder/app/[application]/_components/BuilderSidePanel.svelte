@@ -529,7 +529,7 @@
       return `This user has been given ${role?.name} access from the ${user.group} group`
     }
     if (user.isAdminOrGlobalBuilder) {
-      return "Workspace admins can edit all apps"
+      return "Tenant admins can edit all workspaces"
     }
     return null
   }
