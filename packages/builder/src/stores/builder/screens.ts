@@ -315,7 +315,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       }
       return this.save({
         ...clone,
-        workspaceAppId: screen.workspaceAppId || "default",
+        workspaceAppId: clone.workspaceAppId!,
       })
     }
   )

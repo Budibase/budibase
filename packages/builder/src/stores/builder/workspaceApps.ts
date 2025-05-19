@@ -13,8 +13,6 @@ interface DerivedWorkspaceAppStoreState {
   workspaceApps: UIWorkspaceApp[]
 }
 
-const DEFAULT_PROJECT_APP_ID = "default"
-
 export class WorkspaceAppStore extends DerivedBudiStore<
   WorkspaceAppStoreState,
   DerivedWorkspaceAppStoreState
@@ -27,9 +25,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
             return {
               ...workspaceApp,
               screens: $screenStore.screens.filter(
-                s =>
-                  (s.workspaceAppId || DEFAULT_PROJECT_APP_ID) ===
-                  workspaceApp._id
+                s => s.workspaceAppId === workspaceApp._id
               ),
             }
           }
@@ -41,15 +37,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
     super(
       {
-        workspaceApps: [
-          {
-            _id: DEFAULT_PROJECT_APP_ID,
-            urlPrefix: "/",
-            name: "Default",
-            icon: "Monitoring",
-            iconColor: "",
-          },
-        ],
+        workspaceApps: [],
         loading: true,
       },
       makeDerivedStore
