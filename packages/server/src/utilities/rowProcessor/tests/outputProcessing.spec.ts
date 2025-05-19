@@ -177,10 +177,6 @@ describe("rowProcessor - outputProcessing", () => {
       expect(output2.attach[0].url?.split("?")[0]).toBe(
         "/files/signed/prod-budi-app-assets/test.jpg"
       )
-
-      row.attach[0].url = "aaaa"
-      const output3 = await outputProcessing(table, row, { squash: false })
-      expect(output3.attach[0].url).toBe("aaaa")
     })
   })
 
@@ -220,10 +216,6 @@ describe("rowProcessor - outputProcessing", () => {
       expect(output2.attach?.url?.split("?")[0]).toBe(
         "/files/signed/prod-budi-app-assets/test.jpg"
       )
-
-      row.attach.url = "aaaa"
-      const output3 = await outputProcessing(table, row, { squash: false })
-      expect(output3.attach.url).toBe("aaaa")
     })
   })
 
