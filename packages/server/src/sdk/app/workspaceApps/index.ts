@@ -5,6 +5,7 @@ import {
   SEPARATOR,
   WithoutDocMetadata,
 } from "@budibase/types"
+import sdk from "../.."
 
 async function guardName(name: string, id?: string) {
   const existingWorkspaceApps = await fetch()
@@ -80,4 +81,9 @@ export async function remove(
     }
     throw e
   }
+
+  const screensToDelete = (await sdk.screens.fetch()).filter(
+    s => s.workspaceAppId === workspaceAppId
+  )
+  await db.bulkRemove(screensToDelete)
 }
