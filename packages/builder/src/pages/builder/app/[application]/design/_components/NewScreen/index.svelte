@@ -18,7 +18,6 @@
   import pdf from "./images/pdf.svg"
   import table from "./images/tableInline.svg"
 
-  export let workspaceAppId: string
   export let onClose: (() => void) | null = null
   export let inline: boolean = false
   export let submitOnClick: boolean = false
@@ -26,8 +25,12 @@
   $: hasScreens = $screenStore.screens?.length
   $: title = hasScreens ? "Create new screen" : "Create your first screen"
 
+  let workspaceAppId: string | undefined = undefined
   let rootModal: Modal
-  export const show = () => rootModal.show()
+  export const open = (addToWorkspaceId?: string) => {
+    workspaceAppId = addToWorkspaceId
+    rootModal.show()
+  }
 
   let createScreenModal: CreateScreenModal
   let selectedType: AutoScreenTypes | undefined

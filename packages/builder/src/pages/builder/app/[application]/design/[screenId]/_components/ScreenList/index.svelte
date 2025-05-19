@@ -89,7 +89,7 @@
         name: "Add screen",
         keyBind: null,
         visible: true,
-        callback: () => newScreenModal.show(),
+        callback: () => newScreenModal.open(),
       },
     ]
 
@@ -152,10 +152,7 @@
   workspaceApp={selectedWorkspaceApp}
   on:hide={() => (selectedWorkspaceApp = undefined)}
 />
-<NewScreenModal
-  bind:this={newScreenModal}
-  workspaceAppId={selectedWorkspaceApp?._id || ""}
-/>
+<NewScreenModal bind:this={newScreenModal} />
 
 <style>
   .screens {

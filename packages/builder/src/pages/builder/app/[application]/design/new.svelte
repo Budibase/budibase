@@ -4,17 +4,13 @@
 
   let newScreenModal: NewScreen
 
-  $: workspaceAppId =
-    new URLSearchParams(window.location.search).get("workspaceAppId") ||
-    "default"
-
   onMount(() => {
-    newScreenModal.show()
+    newScreenModal.open()
   })
 </script>
 
 <div class="new-screen-picker">
-  <NewScreen bind:this={newScreenModal} inline submitOnClick {workspaceAppId} />
+  <NewScreen bind:this={newScreenModal} inline submitOnClick />
 </div>
 
 <style>

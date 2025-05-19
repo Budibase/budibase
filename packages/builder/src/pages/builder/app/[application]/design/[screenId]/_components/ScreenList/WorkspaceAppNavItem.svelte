@@ -4,14 +4,16 @@
   import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
   import { Icon, Layout, notifications } from "@budibase/bbui"
   import type { UIWorkspaceApp } from "@budibase/types"
-  import { goto } from "@roxi/routify"
   import { createEventDispatcher } from "svelte"
+  import NewScreenModal from "../../../_components/NewScreen/index.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
 
   export let workspaceApp: UIWorkspaceApp
   export let searchValue: string
 
   const dispatch = createEventDispatcher<{ edit: void }>()
+
+  let newScreenModal: NewScreenModal
 
   async function onDelete() {
     await confirm({
@@ -46,7 +48,7 @@
         name: "Add screen",
         keyBind: null,
         visible: true,
-        callback: () => $goto("../new?workspaceAppId=" + workspaceApp._id),
+        callback: () => newScreenModal.open(workspaceApp._id),
       },
       {
         icon: "Edit",
@@ -103,6 +105,8 @@
     </Layout>
   {/each}
 </div>
+
+<NewScreenModal bind:this={newScreenModal} />
 
 <style>
   .screens {
