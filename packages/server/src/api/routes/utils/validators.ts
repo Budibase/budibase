@@ -1,4 +1,4 @@
-import { auth, features, permissions } from "@budibase/backend-core"
+import { auth, permissions } from "@budibase/backend-core"
 import {
   AutomationActionStepId,
   AutomationStep,
@@ -15,7 +15,6 @@ import {
   BasicOperator,
   ArrayOperator,
   RangeOperator,
-  FeatureFlag,
 } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
@@ -298,43 +297,31 @@ export function permissionValidator() {
 }
 
 export function screenValidator() {
-  return async () => {
-    const workspaceAppsEnabled = await features.isEnabled(
-      FeatureFlag.WORKSPACE_APPS
-    )
-    const workspaceAppProps = workspaceAppsEnabled
-      ? {
-          workspaceAppId: Joi.string().required(),
-        }
-      : {}
-
-    return auth.joiValidator.body(
-      Joi.object({
-        name: Joi.string().required(),
-        showNavigation: OPTIONAL_BOOLEAN,
-        width: OPTIONAL_STRING,
-        routing: Joi.object({
-          route: Joi.string().required(),
-          roleId: Joi.string().required().allow(""),
-          homeScreen: OPTIONAL_BOOLEAN,
-        })
-          .required()
-          .unknown(true),
-        props: Joi.object({
-          _id: Joi.string().required(),
-          _component: Joi.string().required(),
-          _children: Joi.array().required(),
-          _styles: Joi.object().required(),
-          type: OPTIONAL_STRING,
-          table: OPTIONAL_STRING,
-          layoutId: OPTIONAL_STRING,
-        })
-          .required()
-          .unknown(true),
-        ...workspaceAppProps,
-      }).unknown(true)
-    )
-  }
+  return auth.joiValidator.body(
+    Joi.object({
+      name: Joi.string().required(),
+      showNavigation: OPTIONAL_BOOLEAN,
+      width: OPTIONAL_STRING,
+      routing: Joi.object({
+        route: Joi.string().required(),
+        roleId: Joi.string().required().allow(""),
+        homeScreen: OPTIONAL_BOOLEAN,
+      })
+        .required()
+        .unknown(true),
+      props: Joi.object({
+        _id: Joi.string().required(),
+        _component: Joi.string().required(),
+        _children: Joi.array().required(),
+        _styles: Joi.object().required(),
+        type: OPTIONAL_STRING,
+        table: OPTIONAL_STRING,
+        layoutId: OPTIONAL_STRING,
+      })
+        .required()
+        .unknown(true),
+    }).unknown(true)
+  )
 }
 
 function generateStepSchema(allowStepTypes: string[]) {
