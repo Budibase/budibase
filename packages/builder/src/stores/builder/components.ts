@@ -1085,6 +1085,40 @@ export class ComponentStore extends BudiStore<ComponentState> {
     await this.patch(this.updateComponentSetting(name, value))
   }
 
+  isDatasourceUpdated(
+    component: Component,
+    setting: ComponentSetting | undefined,
+    update: any
+  ) {
+    if (setting?.type !== "dataSource") {
+      return false
+    }
+
+    const identifierKey: Record<string, string> = {
+      provider: "providerId",
+      query: "_id",
+      table: "resourceId",
+      viewV2: "resourceId",
+      view: "tableId", // Legacy
+    }
+    const currentSetting = component[setting!.key]
+    const resourceId = identifierKey[update.type]
+
+    // Legacy support.
+    let viewNameChange = false
+    if (currentSetting?.type === "view" && update.type === "view") {
+      // Could have the same tableId but the view name is different
+      viewNameChange = currentSetting.name !== update.name
+    }
+
+    return (
+      !currentSetting ||
+      currentSetting.type !== update.type ||
+      currentSetting?.[resourceId] !== update[resourceId] ||
+      viewNameChange
+    )
+  }
+
   updateComponentSetting(name: string, value: any) {
     return (component: Component) => {
       if (!name || !component) {
@@ -1100,12 +1134,25 @@ export class ComponentStore extends BudiStore<ComponentState> {
         (setting: ComponentSetting) => setting.key === name
       )
 
+      // Datasource setting changes should only count if the source has been entirely replaced
+      const isDatasource = updatedSetting?.type === "dataSource"
+      const sourceModified = this.isDatasourceUpdated(
+        component,
+        updatedSetting,
+        value
+      )
+
       // Reset dependent fields
       settings.forEach((setting: ComponentSetting) => {
         const needsReset =
           name === setting.resetOn ||
           (Array.isArray(setting.resetOn) && setting.resetOn.includes(name))
+
         if (needsReset) {
+          // Ignore the reset if the updated datasource was not replaced
+          if (isDatasource && !sourceModified) {
+            return
+          }
           component[setting.key] = setting.defaultValue || null
         }
       })
