@@ -1,6 +1,5 @@
 import { roles, utils } from "@budibase/backend-core"
-import { createHomeScreen } from "../../constants/screens"
-import { EMPTY_LAYOUT } from "../../constants/layouts"
+import { BASE_LAYOUT_PROP_IDS, EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
 import {
   BUILTIN_ACTION_DEFINITIONS,
@@ -38,6 +37,7 @@ import {
   FilterCondition,
   AutomationTriggerResult,
   CreateEnvironmentVariableRequest,
+  Screen,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -46,7 +46,7 @@ export {
   createTableScreen,
   createQueryScreen,
   createViewScreen,
-} from "../../constants/screens"
+} from "./structures/screens"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -535,6 +535,59 @@ export function basicUser(role: string) {
     email: "bill@bill.com",
     password: "yeeooo",
     roleId: role,
+  }
+}
+
+function createHomeScreen(
+  config: {
+    roleId: string
+    route: string
+  } = {
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    route: "/",
+  }
+): Screen {
+  return {
+    layoutId: BASE_LAYOUT_PROP_IDS.PRIVATE,
+    props: {
+      _id: "d834fea2-1b3e-4320-ab34-f9009f5ecc59",
+      _component: "@budibase/standard-components/container",
+      _styles: {
+        normal: {},
+        hover: {},
+        active: {},
+        selected: {},
+      },
+      _transition: "fade",
+      _children: [
+        {
+          _id: "ef60083f-4a02-4df3-80f3-a0d3d16847e7",
+          _component: "@budibase/standard-components/heading",
+          _styles: {
+            hover: {},
+            active: {},
+            selected: {},
+          },
+          text: "Welcome to your Budibase App 👋",
+          size: "M",
+          align: "left",
+          _instanceName: "Heading",
+          _children: [],
+        },
+      ],
+      _instanceName: "Home",
+      direction: "column",
+      hAlign: "stretch",
+      vAlign: "top",
+      size: "grow",
+      gap: "M",
+    },
+    routing: {
+      route: config.route,
+      roleId: config.roleId,
+    },
+    name: "home-screen",
+    workspaceAppId: "workspaceAppId",
   }
 }
 
