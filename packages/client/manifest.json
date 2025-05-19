@@ -639,6 +639,7 @@
       "hAlign": "center",
       "vAlign": "center"
     },
+    "styles": ["margin", "background", "font"],
     "settings": [
       {
         "type": "text",
@@ -4557,6 +4558,108 @@
       ]
     }
   },
+  "codegenerator": {
+    "name": "Barcode/QR Generator",
+    "icon": "Vignette",
+    "new": true,
+    "settings": [
+      {
+        "type": "radio",
+        "label": "Barcode/QR",
+        "key": "codeType",
+        "options": ["QR Code", "Barcode"],
+        "defaultValue": "QR Code"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": 200,
+        "required": true,
+        "options": [
+          {
+            "label": "X Small",
+            "value": 75
+          },
+          {
+            "label": "Small",
+            "value": 150
+          },
+          {
+            "label": "Medium",
+            "value": 200
+          },
+          {
+            "label": "Large",
+            "value": 250
+          },
+          {
+            "label": "X Large",
+            "value": 300
+          },
+          {
+            "label": "XX Large",
+            "value": 350
+          },
+          {
+            "label": "XXX Large",
+            "value": 400
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "key": "value",
+        "label": "Value",
+        "defaultValue": "https://docs.budibase.com/"
+      },
+      {
+        "type": "boolean",
+        "key": "showValue",
+        "label": "Display value",
+        "defaultValue": true
+      },
+
+      {
+        "section": true,
+        "name": "Customisation",
+        "settings": [
+          {
+            "type": "boolean",
+            "key": "showLogo",
+            "label": "Show Logo",
+            "defaultValue": true
+          },
+          {
+            "type": "text",
+            "key": "customLogo",
+            "label": "Logo",
+            "dependsOn": {
+              "setting": "showLogo",
+              "value": true
+            }
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Appearance",
+        "settings": [
+          {
+            "type": "color",
+            "label": "Primary color",
+            "key": "primColor",
+            "defaultValue": "#000",
+            "dependsOn": {
+              "setting": "codeType",
+              "value": "QR Code",
+              "invert": false
+            }
+          }
+        ]
+      }
+    ]
+  },
   "signaturesinglefield": {
     "name": "Signature",
     "icon": "AnnotatePen",
@@ -5544,12 +5647,26 @@
         "wide": true
       },
       {
-        "label": "",
-        "type": "filterConfiguration",
-        "key": "filterConfig",
-        "nested": true,
-        "dependsOn": "targetComponent",
-        "resetOn": "targetComponent"
+        "type": "select",
+        "label": "Size",
+        "showInBar": true,
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M",
+        "wide": true
       },
       {
         "type": "boolean",
@@ -5562,6 +5679,14 @@
         "label": "Clear filters",
         "key": "showClear",
         "defaultValue": false
+      },
+      {
+        "label": "",
+        "type": "filterConfiguration",
+        "key": "filterConfig",
+        "nested": true,
+        "dependsOn": "targetComponent",
+        "resetOn": "targetComponent"
       }
     ]
   },
