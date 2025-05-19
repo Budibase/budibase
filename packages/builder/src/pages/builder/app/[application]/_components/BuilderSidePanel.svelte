@@ -14,7 +14,12 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
+  import {
+    builderStore,
+    appStore,
+    roles,
+    deploymentStore,
+  } from "@/stores/builder"
   import {
     groups,
     licensing,
@@ -524,7 +529,7 @@
       return `This user has been given ${role?.name} access from the ${user.group} group`
     }
     if (user.isAdminOrGlobalBuilder) {
-      return "Workspace admins can edit all apps"
+      return "Tenant admins can edit all workspaces"
     }
     return null
   }
@@ -620,7 +625,7 @@
     </div>
 
     <div class="body">
-      {#if !$appPublished}
+      {#if !$deploymentStore.isPublished}
         <div class="alert">
           <InfoDisplay
             icon="AlertCircleFilled"
