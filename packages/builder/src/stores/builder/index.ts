@@ -123,6 +123,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   themeStore.syncAppTheme(application)
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
+  workspaceAppStore.syncWorkspaceApps(pkg)
   layoutStore.syncAppLayouts(pkg)
   resetBuilderHistory()
   await refreshBuilderData()

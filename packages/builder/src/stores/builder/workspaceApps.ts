@@ -1,8 +1,14 @@
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { WorkspaceApp, UIWorkspaceApp } from "@budibase/types"
+import {
+  WorkspaceApp,
+  UIWorkspaceApp,
+  FetchAppPackageResponse,
+  FeatureFlag,
+} from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
 import { Helpers } from "@budibase/bbui"
+import { featureFlag } from "@/helpers"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
@@ -42,6 +48,17 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       },
       makeDerivedStore
     )
+  }
+
+  syncWorkspaceApps(pkg: FetchAppPackageResponse) {
+    let workspaceApps = featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)
+      ? pkg.workspaceApps
+      : []
+    this.update(state => ({
+      ...state,
+      workspaceApps,
+      loading: false,
+    }))
   }
 
   async add(workspaceApp: WorkspaceApp) {
