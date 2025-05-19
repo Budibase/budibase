@@ -1,14 +1,14 @@
 <script lang="ts">
   import NavItem from "@/components/common/NavItem.svelte"
   import { confirm } from "@/helpers"
-  import { contextMenuStore, projectAppStore } from "@/stores/builder"
+  import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
   import { Icon, Layout, notifications } from "@budibase/bbui"
   import type { UIWorkspaceApp } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import { createEventDispatcher } from "svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
 
-  export let projectApp: UIWorkspaceApp
+  export let workspaceApp: UIWorkspaceApp
   export let searchValue: string
 
   const dispatch = createEventDispatcher<{ edit: void }>()
@@ -16,13 +16,15 @@
   async function onDelete() {
     await confirm({
       title: "Confirm Deletion",
-      body: `Deleting "${projectApp.name}" cannot be undone. Are you sure?`,
+      body: `Deleting "${workspaceApp.name}" cannot be undone. Are you sure?`,
       okText: "Delete app",
       warning: true,
       onConfirm: async () => {
         try {
-          await projectAppStore.delete(projectApp._id, projectApp._rev)
-          notifications.success(`App '${projectApp.name}' deleted successfully`)
+          await workspaceAppStore.delete(workspaceApp._id, workspaceApp._rev)
+          notifications.success(
+            `App '${workspaceApp.name}' deleted successfully`
+          )
         } catch (e: any) {
           let message = "Error deleting app"
           if (e.message) {
@@ -44,7 +46,7 @@
         name: "Add screen",
         keyBind: null,
         visible: true,
-        callback: () => $goto("../new?projectAppId=" + projectApp._id),
+        callback: () => $goto("../new?workspaceAppId=" + workspaceApp._id),
       },
       {
         icon: "Edit",
@@ -79,19 +81,19 @@
   <NavItem
     on:contextmenu={openContextMenu}
     indentLevel={0}
-    text={projectApp.name}
+    text={workspaceApp.name}
     showTooltip
     nonSelectable
   >
     <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
     <div slot="icon">
-      <Icon name={projectApp.icon} size="XS" color={projectApp.iconColor} />
+      <Icon name={workspaceApp.icon} size="XS" color={workspaceApp.iconColor} />
     </div>
   </NavItem>
 </div>
 
 <div class="screens">
-  {#each projectApp.screens as screen (screen._id)}
+  {#each workspaceApp.screens as screen (screen._id)}
     <div class="screen">
       <ScreenNavItem {screen} />
     </div>

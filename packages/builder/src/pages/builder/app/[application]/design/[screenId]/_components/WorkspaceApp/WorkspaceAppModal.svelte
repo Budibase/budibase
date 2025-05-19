@@ -1,12 +1,12 @@
 <script lang="ts">
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { projectAppStore } from "@/stores/builder"
+  import { workspaceAppStore } from "@/stores/builder"
   import { Input, keepOpen, Label, Modal, ModalContent } from "@budibase/bbui"
   import type { WorkspaceApp } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
 
-  export let projectApp: WorkspaceApp | null = null
+  export let workspaceApp: WorkspaceApp | null = null
 
   let modal: Modal
   export const show = () => modal.show()
@@ -14,19 +14,19 @@
   let errors: Partial<Record<keyof WorkspaceApp, string>> = {}
   let data: WorkspaceApp
 
-  $: isNew = !projectApp
+  $: isNew = !workspaceApp
 
   $: title = isNew ? "Create new app" : "Edit app"
 
   const requiredString = (errorMessage: string) =>
     z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
 
-  const validateProjectApp = (projectApp: Partial<WorkspaceApp>) => {
+  const validateWorkspaceApp = (workspaceApp: Partial<WorkspaceApp>) => {
     const validator = z.object({
       name: requiredString("Name is required.").refine(
         val =>
-          !$projectAppStore.projectApps
-            .filter(a => a._id !== projectApp._id)
+          !$workspaceAppStore.workspaceApps
+            .filter(a => a._id !== workspaceApp._id)
             .map(a => a.name.toLowerCase())
             .includes(val.toLowerCase()),
         {
@@ -40,8 +40,8 @@
         })
         .refine(
           val =>
-            !$projectAppStore.projectApps
-              .filter(a => a._id !== projectApp._id)
+            !$workspaceAppStore.workspaceApps
+              .filter(a => a._id !== workspaceApp._id)
               .map(a => a.urlPrefix.toLowerCase())
               .includes(val.toLowerCase()),
           {
@@ -52,7 +52,7 @@
       iconColor: z.string(),
     }) satisfies ZodType<WorkspaceApp>
 
-    const validationResult = validator.safeParse(projectApp)
+    const validationResult = validator.safeParse(workspaceApp)
     errors = {}
     if (!validationResult.success) {
       errors = Object.entries(
@@ -70,30 +70,30 @@
 
   function onShow() {
     data = {
-      _id: projectApp?._id,
-      _rev: projectApp?._rev,
-      name: projectApp?.name ?? "",
-      urlPrefix: projectApp?.urlPrefix ?? "",
-      icon: projectApp?.icon ?? "Monitoring",
-      iconColor: projectApp?.iconColor ?? "",
+      _id: workspaceApp?._id,
+      _rev: workspaceApp?._rev,
+      name: workspaceApp?.name ?? "",
+      urlPrefix: workspaceApp?.urlPrefix ?? "",
+      icon: workspaceApp?.icon ?? "Monitoring",
+      iconColor: workspaceApp?.iconColor ?? "",
     }
   }
 
   async function onConfirm() {
-    const validationResult = validateProjectApp(data)
+    const validationResult = validateWorkspaceApp(data)
     if (validationResult.error) {
       return keepOpen
     }
 
-    const { data: projectAppData } = validationResult
+    const { data: workspaceAppData } = validationResult
 
     if (isNew) {
-      await projectAppStore.add(projectAppData)
+      await workspaceAppStore.add(workspaceAppData)
     } else {
-      await projectAppStore.edit({
-        ...projectAppData,
-        _id: projectApp!._id,
-        _rev: projectApp!._rev,
+      await workspaceAppStore.edit({
+        ...workspaceAppData,
+        _id: workspaceApp!._id,
+        _rev: workspaceApp!._rev,
       })
     }
   }

@@ -5,8 +5,9 @@
 
   $: onClose = getOnClose($screenStore)
 
-  $: projectAppId =
-    new URLSearchParams(window.location.search).get("projectAppId") || "default"
+  $: workspaceAppId =
+    new URLSearchParams(window.location.search).get("workspaceAppId") ||
+    "default"
 
   const getOnClose = ({ screens, selectedScreenId }) => {
     if (!screens?.length) {
@@ -23,4 +24,4 @@
   }
 </script>
 
-<NewScreen {projectAppId} {onClose} />
+<NewScreen {workspaceAppId} {onClose} />

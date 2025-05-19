@@ -4,44 +4,44 @@ import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
 import { Helpers } from "@budibase/bbui"
 
-interface ProjectAppStoreState {
-  projectApps: WorkspaceApp[]
+interface WorkspaceAppStoreState {
+  workspaceApps: WorkspaceApp[]
   loading: boolean
 }
 
-interface DerivedProjectAppStoreState {
-  projectApps: UIWorkspaceApp[]
+interface DerivedWorkspaceAppStoreState {
+  workspaceApps: UIWorkspaceApp[]
 }
 
 const DEFAULT_PROJECT_APP_ID = "default"
 
-export class ProjectAppStore extends DerivedBudiStore<
-  ProjectAppStoreState,
-  DerivedProjectAppStoreState
+export class WorkspaceAppStore extends DerivedBudiStore<
+  WorkspaceAppStoreState,
+  DerivedWorkspaceAppStoreState
 > {
   constructor() {
-    const makeDerivedStore = (store: Readable<ProjectAppStoreState>) => {
+    const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
       return derived([store, screenStore], ([$store, $screenStore]) => {
-        const projectApps = $store.projectApps.map<UIWorkspaceApp>(
-          projectApp => {
+        const workspaceApps = $store.workspaceApps.map<UIWorkspaceApp>(
+          workspaceApp => {
             return {
-              ...projectApp,
+              ...workspaceApp,
               screens: $screenStore.screens.filter(
                 s =>
                   (s.workspaceAppId || DEFAULT_PROJECT_APP_ID) ===
-                  projectApp._id
+                  workspaceApp._id
               ),
             }
           }
         )
 
-        return { projectApps }
+        return { workspaceApps }
       })
     }
 
     super(
       {
-        projectApps: [
+        workspaceApps: [
           {
             _id: DEFAULT_PROJECT_APP_ID,
             urlPrefix: "/",
@@ -56,24 +56,24 @@ export class ProjectAppStore extends DerivedBudiStore<
     )
   }
 
-  async add(projectApp: WorkspaceApp) {
+  async add(workspaceApp: WorkspaceApp) {
     this.store.update(state => {
-      state.projectApps.push({ ...projectApp, _id: Helpers.uuid() })
+      state.workspaceApps.push({ ...workspaceApp, _id: Helpers.uuid() })
       return state
     })
   }
 
-  async edit(projectApp: WorkspaceApp) {
+  async edit(workspaceApp: WorkspaceApp) {
     this.store.update(state => {
-      const index = state.projectApps.findIndex(
-        app => app._id === projectApp._id
+      const index = state.workspaceApps.findIndex(
+        app => app._id === workspaceApp._id
       )
       if (index === -1) {
-        throw new Error(`App not found with id "${projectApp._id}"`)
+        throw new Error(`App not found with id "${workspaceApp._id}"`)
       }
 
-      state.projectApps[index] = {
-        ...projectApp,
+      state.workspaceApps[index] = {
+        ...workspaceApp,
       }
       return state
     })
@@ -81,10 +81,10 @@ export class ProjectAppStore extends DerivedBudiStore<
 
   async delete(_id: string | undefined, _rev: string | undefined) {
     this.store.update(state => {
-      state.projectApps = state.projectApps.filter(app => app._id !== _id)
+      state.workspaceApps = state.workspaceApps.filter(app => app._id !== _id)
       return state
     })
   }
 }
 
-export const projectAppStore = new ProjectAppStore()
+export const workspaceAppStore = new WorkspaceAppStore()

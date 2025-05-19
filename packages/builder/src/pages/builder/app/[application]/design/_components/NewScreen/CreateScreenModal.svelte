@@ -20,7 +20,7 @@
   import { makeTableOption, makeViewOption } from "./utils"
   import type { Screen, Table, ViewV2 } from "@budibase/types"
 
-  export let projectAppId: string
+  export let workspaceAppId: string
 
   let mode: string
 
@@ -75,7 +75,7 @@
     try {
       return await screenStore.save({
         ...screenTemplate,
-        workspaceAppId: projectAppId,
+        workspaceAppId: workspaceAppId,
       })
     } catch (error) {
       console.error(error)

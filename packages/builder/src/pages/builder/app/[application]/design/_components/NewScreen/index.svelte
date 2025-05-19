@@ -10,7 +10,7 @@
   import { licensing } from "@/stores/portal"
   import { AutoScreenTypes } from "@/constants"
 
-  export let projectAppId
+  export let workspaceAppId
   export let onClose = null
 
   let createScreenModal
@@ -96,7 +96,7 @@
   </CreationPage>
 </div>
 
-<CreateScreenModal {projectAppId} bind:this={createScreenModal} />
+<CreateScreenModal {workspaceAppId} bind:this={createScreenModal} />
 
 <style>
   .page {
