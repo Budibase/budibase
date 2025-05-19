@@ -9,6 +9,7 @@ import {
   stopMailserver,
 } from "../../../../tests/mocks/email"
 import { objectStore } from "@budibase/backend-core"
+import * as cheerio from "cheerio"
 
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
@@ -265,5 +266,119 @@ describe("/api/global/email", () => {
     expect(email.alternatives[0].content).toContain(
       `DTEND:${formatDate(endTime)}`
     )
+  })
+
+  it("Should parse valid markdown content from automation steps into valid HTML.", async () => {
+    // Basic verification that the markdown is being processed.
+    const email = await captureEmail(mailserver, async () => {
+      const res = await config.api.emails.sendEmail({
+        email: "to@example.com",
+        subject: "Test",
+        userId: config.user!._id,
+        contents: `test@home.com [Call Me!](tel:1111111)`,
+        purpose: EmailTemplatePurpose.CUSTOM,
+      })
+      expect(res.message).toBeDefined()
+    })
+
+    const $ = cheerio.load(email.html)
+
+    // Verify the email body rendered
+    const emailBody = $("td.email-body").first()
+    expect(emailBody.length).toBe(1)
+
+    // Verify a valid link was generated and is queryable
+    const emailLink = $("a[href^='mailto:']").first()
+    expect(emailLink.length).toBe(1)
+    expect(emailLink.text()).toBe("test@home.com")
+
+    // Verify the markdown link has been built correctly
+    const phoneLink = $("a[href^='tel:']").first()
+    expect(phoneLink.length).toBe(1)
+    expect(phoneLink.text()).toBe("Call Me!")
+    expect(phoneLink.attr("href")).toBe("tel:1111111")
+  })
+
+  it("Should ignore invalid markdown content and return nothing", async () => {
+    // The only failure case for a parse with marked is 'undefined'
+    // It should be caught and resolve to nothing.
+    const email = await captureEmail(mailserver, async () => {
+      const res = await config.api.emails.sendEmail({
+        email: "to@example.com",
+        subject: "Test",
+        userId: config.user!._id,
+        contents: undefined,
+        purpose: EmailTemplatePurpose.CUSTOM,
+      })
+      expect(res.message).toBeDefined()
+    })
+
+    const $ = cheerio.load(email.html)
+    const emailBody = $("td.email-body").first()
+    expect(emailBody.length).toBe(1)
+
+    const bodyText = emailBody.text().trim()
+    expect(bodyText).toBe("")
+  })
+
+  it("Should render a mixture of content. Plain text, markdown and HTML", async () => {
+    // A more involved check to ensure all content types are still respected
+    const email = await captureEmail(mailserver, async () => {
+      const res = await config.api.emails.sendEmail({
+        email: "to@example.com",
+        subject: "Test",
+        userId: config.user!._id,
+        contents: `<div class="html-content"><strong>Some content</strong></div>
+
+# A heading
+ - This should be list entry 1
+ - This should be list entry 2
+
+Some plain text`,
+        purpose: EmailTemplatePurpose.CUSTOM,
+      })
+      expect(res.message).toBeDefined()
+    })
+
+    const $ = cheerio.load(email.html)
+    const emailBody = $("td.email-body").first()
+    expect(emailBody.length).toBe(1)
+
+    const divEle = emailBody.find("div.html-content").first()
+    expect(divEle.length).toBe(1)
+    expect(divEle.text()).toBe("Some content")
+
+    const heading = emailBody.find("h1").first()
+    expect(heading.length).toBe(1)
+    expect(heading.text()).toBe("A heading")
+
+    // Both list items rendered
+    const listEles = emailBody.find("ul li")
+    expect(listEles.length).toBe(2)
+
+    const plainText = emailBody.find("p")
+    expect(plainText.length).toBe(1)
+    expect(plainText.text()).toBe("Some plain text")
+  })
+
+  it("Should only parse markdown content for the CUSTOM email template used in automation steps", async () => {
+    const email = await captureEmail(mailserver, async () => {
+      const res = await config.api.emails.sendEmail({
+        email: "to@example.com",
+        subject: "Test",
+        userId: config.user!._id,
+        purpose: EmailTemplatePurpose.INVITATION,
+      })
+      expect(res.message).toBeDefined()
+    })
+
+    const $ = cheerio.load(email.html)
+    const emailBody = $("td.email-body").first()
+    expect(emailBody.length).toBe(1)
+
+    const heading = emailBody.find("h1").first()
+    expect(heading.length).toBe(1)
+    // The email should not be parsed as markdown.
+    expect(heading.text()).toBe("Hi, to@example.com!")
   })
 })
