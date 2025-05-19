@@ -49,7 +49,7 @@
           }
         ),
       icon: z.string(),
-      iconColor: z.string(),
+      iconColor: z.string().optional(),
     }) satisfies ZodType<WorkspaceApp>
 
     const validationResult = validator.safeParse(workspaceApp)
@@ -75,7 +75,7 @@
       name: workspaceApp?.name ?? "",
       urlPrefix: workspaceApp?.urlPrefix ?? "",
       icon: workspaceApp?.icon ?? "Monitoring",
-      iconColor: workspaceApp?.iconColor ?? "",
+      iconColor: workspaceApp?.iconColor,
     }
   }
 
