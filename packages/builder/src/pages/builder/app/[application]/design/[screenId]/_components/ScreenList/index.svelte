@@ -2,19 +2,16 @@
   import NavHeader from "@/components/common/NavHeader.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"
   import { contextMenuStore, sortedScreens } from "@/stores/builder"
-  import {
-    projectAppStore,
-    selectedProjectAppId,
-  } from "@/stores/builder/projectApps"
+  import { workspaceAppStore } from "@/stores/builder/workspaceApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
-  import type { ProjectApp, Screen, UIProjectApp } from "@budibase/types"
-  import { goto } from "@roxi/routify"
-  import ProjectAppModal from "../ProjectApp/ProjectAppModal.svelte"
-  import ProjectAppNavItem from "./ProjectAppNavItem.svelte"
+  import type { Screen, UIWorkspaceApp, WorkspaceApp } from "@budibase/types"
+  import NewScreenModal from "../../../_components/NewScreen/index.svelte"
+  import WorkspaceAppModal from "../WorkspaceApp/WorkspaceAppModal.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
+  import WorkspaceAppNavItem from "./WorkspaceAppNavItem.svelte"
 
-  $: projectAppsEnabled = $featureFlags.APPS_IN_APPS
+  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -22,13 +19,14 @@
   let searchValue = ""
   let screensContainer: HTMLDivElement
   let scrolling = false
+  let newScreenModal: NewScreenModal
 
-  let projectAppModal: ProjectAppModal
-  let selectedProjectApp: ProjectApp | undefined
+  let workspaceAppModal: WorkspaceAppModal
+  let selectedWorkspaceApp: WorkspaceApp | undefined
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
-  $: filteredProjectApps = getFilteredProjectApps(
-    $projectAppStore.projectApps,
+  $: filteredWorkspaceApps = getFilteredWorkspaceApps(
+    $workspaceAppStore.workspaceApps,
     searchValue
   )
 
@@ -48,19 +46,19 @@
     })
   }
 
-  const getFilteredProjectApps = (
-    projectApps: UIProjectApp[],
+  const getFilteredWorkspaceApps = (
+    workspaceApps: UIWorkspaceApp[],
     searchValue: string
   ) => {
     if (!searchValue) {
-      return projectApps
+      return workspaceApps
     }
 
-    const filteredProjects: UIProjectApp[] = []
-    for (const projectApp of projectApps) {
+    const filteredProjects: UIWorkspaceApp[] = []
+    for (const workspaceApp of workspaceApps) {
       filteredProjects.push({
-        ...projectApp,
-        screens: getFilteredScreens(projectApp.screens, searchValue),
+        ...workspaceApp,
+        screens: getFilteredScreens(workspaceApp.screens, searchValue),
       })
     }
     return filteredProjects
@@ -71,8 +69,9 @@
   }
 
   const onAdd = (e: Event) => {
-    if (!projectAppsEnabled) {
-      return $goto("../new")
+    if (!workspaceAppsEnabled) {
+      newScreenModal.show()
+      return
     }
 
     const items = [
@@ -82,7 +81,7 @@
         visible: true,
         disabled: false,
         callback: () => {
-          projectAppModal.show()
+          workspaceAppModal.show()
         },
         isNew: true,
       },
@@ -90,7 +89,7 @@
         name: "Add screen",
         keyBind: null,
         visible: true,
-        callback: () => $goto(`../new?projectAppId=${$selectedProjectAppId}`),
+        callback: () => newScreenModal.open(),
       },
     ]
 
@@ -102,9 +101,9 @@
     })
   }
 
-  function onEditProjectApp(projectApp: ProjectApp) {
-    selectedProjectApp = projectApp
-    projectAppModal.show()
+  function onEditWorkspaceApp(workspaceApp: WorkspaceApp) {
+    selectedWorkspaceApp = workspaceApp
+    workspaceAppModal.show()
   }
 </script>
 
@@ -119,11 +118,11 @@
     />
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
-    {#if projectAppsEnabled}
-      {#each filteredProjectApps as projectApp}
-        <ProjectAppNavItem
-          {projectApp}
-          on:edit={() => onEditProjectApp(projectApp)}
+    {#if workspaceAppsEnabled}
+      {#each filteredWorkspaceApps as workspaceApp}
+        <WorkspaceAppNavItem
+          {workspaceApp}
+          on:edit={() => onEditWorkspaceApp(workspaceApp)}
           {searchValue}
         />
       {/each}
@@ -148,11 +147,12 @@
   />
 </div>
 
-<ProjectAppModal
-  bind:this={projectAppModal}
-  projectApp={selectedProjectApp}
-  on:hide={() => (selectedProjectApp = undefined)}
+<WorkspaceAppModal
+  bind:this={workspaceAppModal}
+  workspaceApp={selectedWorkspaceApp}
+  on:hide={() => (selectedWorkspaceApp = undefined)}
 />
+<NewScreenModal bind:this={newScreenModal} />
 
 <style>
   .screens {

@@ -41,7 +41,7 @@ export async function run({
 
   try {
     let response
-    const llm = await ai.getLLM(inputs.model)
+    const llm = await ai.getLLM({ model: inputs.model })
     response = llm
       ? (await llm.prompt(inputs.prompt)).message
       : await legacyOpenAIPrompt(inputs)

@@ -1,89 +1,86 @@
-import { appStore } from "./app"
-import {
-  automationHistoryStore,
-  automationStore,
-  evaluationContext,
-  selectedAutomation,
-} from "./automations"
-import { builderStore } from "./builder"
-import { componentStore, selectedComponent } from "./components"
-import { contextMenuStore } from "./contextMenu"
-import { deploymentStore } from "./deployments"
-import { hoverStore } from "./hover"
 import { layoutStore } from "./layouts"
+import { appStore } from "./app"
+import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
+import { themeStore } from "./theme"
+import { screenStore, selectedScreen, sortedScreens } from "./screens"
+import { builderStore } from "./builder"
+import { hoverStore } from "./hover"
 import { previewStore } from "./preview"
 import {
-  screenComponentErrorList,
-  screenComponentErrors,
-  screenComponentsList,
-} from "./screenComponent"
-import { screenStore, selectedScreen, sortedScreens } from "./screens"
+  automationStore,
+  selectedAutomation,
+  automationHistoryStore,
+  evaluationContext,
+} from "./automations"
+import { userStore, userSelectedResourceMap, isOnlyUser } from "./users"
+import { deploymentStore } from "./deployment"
+import { contextMenuStore } from "./contextMenu"
 import { snippets } from "./snippets"
-import { themeStore } from "./theme"
-import { isOnlyUser, userSelectedResourceMap, userStore } from "./users"
+import {
+  screenComponentsList,
+  screenComponentErrors,
+  screenComponentErrorList,
+} from "./screenComponent"
 
 // Backend
-import componentTreeNodesStore from "./componentTreeNodes"
-import { datasources } from "./datasources"
-import { flags } from "./flags"
-import { integrations } from "./integrations"
-import { oauth2 } from "./oauth2"
-import { permissions } from "./permissions"
-import { projectAppStore, selectedProjectAppId } from "./projectApps"
-import { appPublished } from "./published"
-import { queries } from "./queries"
-import { roles } from "./roles"
-import { rowActions } from "./rowActions"
-import { sortedIntegrations } from "./sortedIntegrations"
 import { tables } from "./tables"
 import { views } from "./views"
 import { viewsV2 } from "./viewsV2"
+import { permissions } from "./permissions"
+import { roles } from "./roles"
+import { datasources } from "./datasources"
+import { integrations } from "./integrations"
+import { sortedIntegrations } from "./sortedIntegrations"
+import { queries } from "./queries"
+import { flags } from "./flags"
+import { rowActions } from "./rowActions"
+import componentTreeNodesStore from "./componentTreeNodes"
+import { oauth2 } from "./oauth2"
+import { workspaceAppStore } from "./workspaceApps"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 
 export {
-  appPublished,
-  appStore,
-  automationHistoryStore,
-  automationStore,
-  builderStore,
-  componentStore,
   componentTreeNodesStore,
-  contextMenuStore,
-  datasources,
-  deploymentStore,
-  evaluationContext,
-  flags,
-  hoverStore,
-  integrations,
-  isOnlyUser,
   layoutStore,
+  appStore,
+  componentStore,
   navigationStore,
-  oauth2,
-  permissions,
-  previewStore,
-  projectAppStore,
-  queries,
-  roles,
-  rowActions,
-  screenComponentErrorList,
-  screenComponentErrors,
-  screenComponentsList,
-  screenStore,
-  selectedAutomation,
-  selectedComponent,
-  selectedProjectAppId,
-  selectedScreen,
-  snippets,
-  sortedIntegrations,
-  sortedScreens,
-  tables,
   themeStore,
+  screenStore,
+  selectedScreen,
+  builderStore,
   userSelectedResourceMap,
+  previewStore,
+  automationStore,
+  selectedAutomation,
+  automationHistoryStore,
+  sortedScreens,
   userStore,
+  isOnlyUser,
+  deploymentStore,
+  contextMenuStore,
+  selectedComponent,
+  tables,
   views,
   viewsV2,
+  permissions,
+  roles,
+  datasources,
+  integrations,
+  sortedIntegrations,
+  queries,
+  flags,
+  hoverStore,
+  snippets,
+  rowActions,
+  evaluationContext,
+  screenComponentsList,
+  screenComponentErrors,
+  screenComponentErrorList,
+  oauth2,
+  workspaceAppStore,
 }
 
 export const reset = () => {
@@ -126,6 +123,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   themeStore.syncAppTheme(application)
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
+  workspaceAppStore.syncWorkspaceApps(pkg)
   layoutStore.syncAppLayouts(pkg)
   projectAppStore.syncAppProjectApps(pkg)
   resetBuilderHistory()

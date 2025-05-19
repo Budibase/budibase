@@ -1,5 +1,12 @@
 <script>
-  import { Button, Label, Icon, Input, notifications } from "@budibase/bbui"
+  import {
+    Button,
+    Label,
+    Icon,
+    Input,
+    notifications,
+    Body,
+  } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
   import { appStore, initialise } from "@/stores/builder"
   import { appsStore } from "@/stores/portal"
@@ -8,7 +15,6 @@
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
   import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { isEqual } from "lodash"
   import { createEventDispatcher } from "svelte"
 
   export let alignActions = "left"
@@ -18,10 +24,9 @@
   const dispatch = createEventDispatcher()
 
   let updating = false
-  let edited = false
   let initialised = false
 
-  $: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
+  $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
@@ -38,7 +43,6 @@
   }
 
   const initForm = appMeta => {
-    edited = false
     values.set({
       ...appMeta,
     })
@@ -49,18 +53,17 @@
     }
   }
 
-  const validate = (vals, appMeta) => {
+  const validate = vals => {
     const { url } = vals || {}
     validation.check({
       ...vals,
       url: url?.[0] === "/" ? url.substring(1, url.length) : url,
     })
-    edited = !isEqual(vals, appMeta)
   }
 
   // On app/apps update, reset the state.
   $: initForm(appMeta)
-  $: validate($values, appMeta)
+  $: validate($values)
 
   const resolveAppUrl = (template, name) => {
     let parsedName
@@ -177,13 +180,14 @@
             updating = false
             dispatch("updated")
           }}
-          disabled={appDeployed || updating || !edited || !$validation.valid}
+          disabled={appDeployed || updating || !$validation.valid}
         >
           Save
         </Button>
       {:else}
         <div class="edit-info">
-          <Icon size="S" name="Info" /> Unpublish your app to edit name and URL
+          <Icon size="M" name="InfoOutline" />
+          <Body size="S">Unpublish your app to edit name and URL</Body>
         </div>
       {/if}
     </div>
@@ -209,6 +213,6 @@
   }
   .edit-info {
     display: flex;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
   }
 </style>

@@ -149,7 +149,7 @@
 
     // check if access via group for creator
     const foundGroup = $groups?.find(
-      group => group.roles[prodAppId] || group.builder?.apps[prodAppId]
+      group => group.roles?.[prodAppId] || group.builder?.apps[prodAppId]
     )
     if (foundGroup.builder?.apps[prodAppId]) {
       return Constants.Roles.CREATOR

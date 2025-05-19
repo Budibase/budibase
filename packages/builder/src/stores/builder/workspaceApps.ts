@@ -1,0 +1,108 @@
+import { DerivedBudiStore } from "@/stores/BudiStore"
+import {
+  WorkspaceApp,
+  UIWorkspaceApp,
+  FetchAppPackageResponse,
+  FeatureFlag,
+} from "@budibase/types"
+import { derived, Readable } from "svelte/store"
+import { screenStore } from "./screens"
+import { notifications } from "@budibase/bbui"
+import { featureFlag } from "@/helpers"
+import { API } from "@/api"
+
+interface WorkspaceAppStoreState {
+  workspaceApps: WorkspaceApp[]
+  loading: boolean
+}
+
+interface DerivedWorkspaceAppStoreState {
+  workspaceApps: UIWorkspaceApp[]
+}
+
+export class WorkspaceAppStore extends DerivedBudiStore<
+  WorkspaceAppStoreState,
+  DerivedWorkspaceAppStoreState
+> {
+  constructor() {
+    const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
+      return derived([store, screenStore], ([$store, $screenStore]) => {
+        const workspaceApps = $store.workspaceApps.map<UIWorkspaceApp>(
+          workspaceApp => {
+            return {
+              ...workspaceApp,
+              screens: $screenStore.screens.filter(
+                s => s.workspaceAppId === workspaceApp._id
+              ),
+            }
+          }
+        )
+
+        return { workspaceApps }
+      })
+    }
+
+    super(
+      {
+        workspaceApps: [],
+        loading: true,
+      },
+      makeDerivedStore
+    )
+  }
+
+  syncWorkspaceApps(pkg: FetchAppPackageResponse) {
+    let workspaceApps = featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)
+      ? pkg.workspaceApps
+      : []
+    this.update(state => ({
+      ...state,
+      workspaceApps,
+      loading: false,
+    }))
+  }
+
+  async add(workspaceApp: WorkspaceApp) {
+    try {
+      const createdProjectApp = await API.projectApp.create(workspaceApp)
+      this.store.update(state => {
+        state.workspaceApps.push(createdProjectApp.projectApp)
+        return state
+      })
+    } catch (e: any) {
+      console.error("Error saving app", e)
+      notifications.error(`Error saving app: ${e.message}`)
+    }
+  }
+
+  async edit(workspaceApp: WorkspaceApp) {
+    try {
+      const updatedProjectApp = await API.projectApp.update(workspaceApp)
+      this.store.update(state => {
+        const index = state.workspaceApps.findIndex(
+          app => app._id === workspaceApp._id
+        )
+        if (index === -1) {
+          throw new Error(`App not found with id "${workspaceApp._id}"`)
+        }
+
+        state.workspaceApps[index] = {
+          ...updatedProjectApp.projectApp,
+        }
+        return state
+      })
+    } catch (e: any) {
+      console.error("Error saving app", e)
+      notifications.error(`Error saving app: ${e.message}`)
+    }
+  }
+
+  async delete(_id: string | undefined, _rev: string | undefined) {
+    this.store.update(state => {
+      state.workspaceApps = state.workspaceApps.filter(app => app._id !== _id)
+      return state
+    })
+  }
+}
+
+export const workspaceAppStore = new WorkspaceAppStore()

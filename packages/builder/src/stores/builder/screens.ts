@@ -18,12 +18,14 @@ import {
   Component,
   ComponentDefinition,
   DeleteScreenResponse,
+  FeatureFlag,
   FetchAppPackageResponse,
   SaveScreenResponse,
   Screen,
   ScreenVariant,
   WithRequired,
 } from "@budibase/types"
+import { featureFlag } from "@/helpers"
 
 interface ScreenState {
   screens: Screen[]
@@ -38,7 +40,7 @@ export const initialScreenState: ScreenState = {
 export class ScreenStore extends BudiStore<ScreenState> {
   history: HistoryStore<Screen>
   delete: (screens: Screen) => Promise<void>
-  save: (screen: WithRequired<Screen, "projectAppId">) => Promise<Screen>
+  save: (screen: WithRequired<Screen, "workspaceAppId">) => Promise<Screen>
 
   constructor() {
     super(initialScreenState)
@@ -88,9 +90,13 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {FetchAppPackageResponse} pkg
    */
   syncAppScreens(pkg: FetchAppPackageResponse) {
+    let screens = [...pkg.screens]
+    if (featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+      screens = [...pkg.workspaceApps.flatMap(p => p.screens)]
+    }
     this.update(state => ({
       ...state,
-      screens: [...pkg.projectApps.flatMap(pa => pa.screens)],
+      screens,
     }))
   }
 
@@ -309,7 +315,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       }
       return this.save({
         ...clone,
-        projectAppId: screen.projectAppId || "default",
+        workspaceAppId: clone.workspaceAppId!,
       })
     }
   )

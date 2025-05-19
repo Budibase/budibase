@@ -587,7 +587,7 @@ function createHomeScreen(
       roleId: config.roleId,
     },
     name: "home-screen",
-    projectAppId: "projectAppId",
+    workspaceAppId: "workspaceAppId",
   }
 }
 

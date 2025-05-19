@@ -65,7 +65,7 @@ export function createTableScreen(
       homeScreen: false,
     },
     name: "screen-id",
-    projectAppId: "projectAppId",
+    workspaceAppId: "workspaceAppId",
   }
 }
 
@@ -117,7 +117,7 @@ export function createViewScreen(view: ViewV2): Screen {
       homeScreen: false,
     },
     name: "view-id",
-    projectAppId: "projectAppId",
+    workspaceAppId: "workspaceAppId",
   }
 }
 
@@ -173,6 +173,6 @@ export function createQueryScreen(datasourceId: string, query: Query): Screen {
       homeScreen: false,
     },
     name: "screen-id",
-    projectAppId: "projectAppId",
+    workspaceAppId: "workspaceAppId",
   }
 }

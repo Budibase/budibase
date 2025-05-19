@@ -1,8 +1,8 @@
 import { Document } from "../document"
 
-export interface ProjectApp extends Document {
+export interface WorkspaceApp extends Document {
   name: string
   urlPrefix: string
   icon: string
-  iconColor: string
+  iconColor?: string
 }
