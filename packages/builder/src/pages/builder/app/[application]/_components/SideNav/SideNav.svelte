@@ -1,36 +1,48 @@
 <script lang="ts">
-  import { ActionButton, Context, Icon } from "@budibase/bbui"
+  import { Context, Icon } from "@budibase/bbui"
   import { createLocalStorageStore } from "@budibase/frontend-core"
   import { url } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
   import { appStore, builderStore } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
-  import SideNavUserSetings from "./SideNavUserSetings.svelte"
-  import { setContext } from "svelte"
+  import SideNavUserSettings from "./SideNavUserSettings.svelte"
+  import { onDestroy, setContext } from "svelte"
 
   setContext(Context.PopoverRoot, ".nav > .popover-container")
 
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
 
+  let ignoreFocus = false
   let focused = false
+  let timeout: ReturnType<typeof setTimeout> | undefined
+
   $: collapsed = !focused && !$pinned
 
-  // let hidden = false
-  // let hiddenTimeout
-  //
-  // $: updateTimeout($collapsed)
-  //
-  // const updateTimeout = collapsed => {
-  //   hidden = false
-  //   f (collapsed) {
-  //     setTimeout(() => {
-  //       hidden = true
-  //     }, 130)
-  //   } else {
-  //     clearTimeout(hiddenTimeout)
-  //   }
-  // }
+  // When unpinning, we need to temporarily ignore pointer events, as otherwise
+  // we would keep the menu open due to immediately triggering a mouseenter
+  $: updateTimeout($pinned)
+
+  const updateTimeout = (pinned: boolean) => {
+    if (!pinned) {
+      ignoreFocus = true
+      focused = false
+      timeout = setTimeout(() => {
+        ignoreFocus = false
+      }, 130)
+    }
+  }
+
+  const setFocused = (nextFocused: boolean) => {
+    if (ignoreFocus) {
+      return
+    }
+    focused = nextFocused
+  }
+
+  onDestroy(() => {
+    clearTimeout(timeout)
+  })
 </script>
 
 <div class="nav_wrapper">
@@ -40,8 +52,8 @@
     class:pinned={$pinned}
     class:focused
     role="tooltip"
-    on:mouseenter={() => (focused = true)}
-    on:mouseleave={() => (focused = false)}
+    on:mouseenter={() => setFocused(true)}
+    on:mouseleave={() => setFocused(false)}
   >
     <div class="nav_header">
       <img src={BBLogo} alt="Budibase logo" />
@@ -51,8 +63,8 @@
       </div>
       <Icon
         name="MarginLeft"
+        newStyles
         hoverable
-        hoverColor="var(--spectrum-global-color-gray-900)"
         on:click={() => pinned.set(!$pinned)}
       />
     </div>
@@ -98,7 +110,7 @@
         url={$url("./settings")}
         {collapsed}
       />
-      <SideNavUserSetings {collapsed} />
+      <SideNavUserSettings {collapsed} />
     </div>
 
     <div class="popover-container"></div>
@@ -152,7 +164,7 @@
   }
 
   /* Header */
-  .nav .nav_header {
+  .nav_header {
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -160,6 +172,7 @@
     padding: 0 var(--nav-padding);
     gap: var(--spacing-m);
     border-bottom: var(--nav-border);
+    color: var(--spectrum-global-color-gray-800);
   }
   .nav_header img {
     width: var(--nav-logo-width);
