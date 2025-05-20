@@ -110,7 +110,7 @@ export class NavigationStore extends DerivedBudiStore<
 
     const navigation = get(this.store)
     const links = workspaceAppsEnabled
-      ? [...(navigation.linksPerApp[workspaceAppId] || {})]
+      ? [...(navigation.linksPerApp[workspaceAppId] || [])]
       : [...(navigation.links ?? [])]
 
     // Skip if we have an identical link
