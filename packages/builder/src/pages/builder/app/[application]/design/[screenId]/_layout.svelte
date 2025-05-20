@@ -42,7 +42,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    height: 0;
   }
   .content {
     display: flex;
@@ -50,5 +49,6 @@
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
+    height: 0;
   }
 </style>
