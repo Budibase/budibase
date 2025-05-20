@@ -47,10 +47,7 @@
 
 {#if $selectedScreen}
   <div class="design">
-    <TopBar
-      breadcrumbs={[{ text: "Apps" }, { text: $appStore.name }]}
-      icon="RailLeft"
-    >
+    <TopBar breadcrumbs={[{ text: "Design" }]} icon="RailLeft">
       <Button
         cta
         on:click={publish}

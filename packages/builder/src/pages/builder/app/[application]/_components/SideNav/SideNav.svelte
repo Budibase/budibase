@@ -81,7 +81,7 @@
         {/if}
         <SideNavLink
           icon="RailLeft"
-          text="Apps"
+          text="Design"
           url={$url("./design")}
           {collapsed}
         />
