@@ -287,6 +287,19 @@ export async function fetchAppPackage(
   let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const fromHashUrl = ctx.params.hashUrl as string
+    if (fromHashUrl) {
+      const allWorkspaceApps = await sdk.workspaceApps.fetch()
+
+      const matchedWorkspaceApp = allWorkspaceApps.find(a =>
+        fromHashUrl.startsWith(a.urlPrefix)
+      )
+      if (matchedWorkspaceApp) {
+        screens = screens.filter(
+          s => s.workspaceAppId === matchedWorkspaceApp._id
+        )
+      }
+    }
     workspaceApps = await extractScreensByWorkspaceApp(screens, isBuilder)
   }
 
