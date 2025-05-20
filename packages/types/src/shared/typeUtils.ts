@@ -39,3 +39,5 @@ export type WithoutDocMetadata<T extends Document> = Omit<
   T,
   "_id" | "_rev" | "createdAt" | "updatedAt"
 >
+
+export type WithDocIds<T extends Document> = WithRequired<T, "_id" | "_rev">
