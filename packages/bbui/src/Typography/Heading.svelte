@@ -6,7 +6,6 @@
   export let textAlign: string | undefined = undefined
   export let noPadding: boolean = false
   export let weight: "light" | "heavy" | "default" = "default"
-  export let id: string | undefined = undefined
 </script>
 
 <h1
@@ -14,7 +13,6 @@
   style={textAlign ? `text-align:${textAlign}` : ``}
   class:noPadding
   class="spectrum-Heading spectrum-Heading--size{size} spectrum-Heading--{weight}"
-  {id}
 >
   <slot />
 </h1>

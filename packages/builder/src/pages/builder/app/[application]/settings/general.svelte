@@ -88,7 +88,7 @@
       </Button>
     </div>
   {/if}
-  <Divider />
+  <Divider id="version" />
   <Layout gap="XS" noPadding>
     <Heading size="S" id="version">App version</Heading>
     {#if updateAvailable}
