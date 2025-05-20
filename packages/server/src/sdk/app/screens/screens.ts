@@ -19,5 +19,20 @@ export async function fetch(
 export async function create(screen: WithoutDocMetadata<Screen>) {
   const db = context.getAppDB()
 
-  await db.put({ ...screen, _id: generateScreenID() })
+  const response = await db.put({ ...screen, _id: generateScreenID() })
+  return {
+    ...screen,
+    _id: response.id,
+    _rev: response.rev,
+  }
+}
+
+export async function update(screen: Screen) {
+  const db = context.getAppDB()
+
+  const response = await db.put(screen)
+  return {
+    ...screen,
+    _rev: response.rev,
+  }
 }
