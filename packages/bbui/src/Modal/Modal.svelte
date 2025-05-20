@@ -12,6 +12,9 @@
   export let autoFocus: boolean = true
   export let zIndex: number = 1001
 
+  // Ensure any popovers inside this modal are rendered inside this modal
+  setContext(Context.PopoverRoot, ".spectrum-Modal")
+
   const dispatch = createEventDispatcher<{
     show: void
     hide: void
@@ -78,7 +81,12 @@
     hide,
     toggle,
     cancel,
-  } as { show: () => void; hide: () => void; toggle: () => void; cancel: () => void })
+  } as {
+    show: () => void
+    hide: () => void
+    toggle: () => void
+    cancel: () => void
+  })
 
   onMount(() => {
     document.addEventListener("keydown", handleKey)

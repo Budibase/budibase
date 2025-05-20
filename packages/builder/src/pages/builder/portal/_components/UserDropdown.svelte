@@ -26,10 +26,17 @@
 </script>
 
 <ActionMenu align="right">
-  <div slot="control" class="user-dropdown">
-    <UserAvatar size="M" user={$auth.user} showTooltip={false} />
-    <Icon size="L" name="ChevronDown" />
-  </div>
+  <svelte:fragment slot="control">
+    {#if $$slots.default}
+      <slot />
+    {:else}
+      <div class="user-dropdown">
+        <UserAvatar size="M" user={$auth.user} showTooltip={false} />
+        <Icon size="L" name="ChevronDown" />
+      </div>
+    {/if}
+  </svelte:fragment>
+
   <MenuItem icon="UserEdit" on:click={() => profileModal.show()}>
     My profile
   </MenuItem>

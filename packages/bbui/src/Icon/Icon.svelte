@@ -64,7 +64,7 @@
     color: var(--spectrum-global-color-gray-700);
   }
   svg {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    transition: color 130ms ease-out;
   }
   svg.hoverable {
     pointer-events: all;
