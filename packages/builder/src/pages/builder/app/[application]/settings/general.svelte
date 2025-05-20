@@ -90,7 +90,7 @@
   {/if}
   <Divider />
   <Layout gap="XS" noPadding>
-    <Heading size="S">App version</Heading>
+    <Heading size="S" id="version">App version</Heading>
     {#if updateAvailable}
       <Body size="S">
         The app is currently using version <strong>{$appStore.version}</strong>

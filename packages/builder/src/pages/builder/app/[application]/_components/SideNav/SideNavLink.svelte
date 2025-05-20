@@ -8,7 +8,8 @@
   export let collapsed = false
   export let forceActive = false
 
-  $: active = forceActive || (url ? $isActive(url) : false)
+  $: active =
+    forceActive || (forceActive !== false && url ? $isActive(url) : false)
 </script>
 
 <a class="link" class:active href={url} on:click class:collapsed tabindex="0">

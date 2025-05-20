@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Context, Icon } from "@budibase/bbui"
+  import { ActionButton, Context, Icon, StatusLight } from "@budibase/bbui"
   import { createLocalStorageStore } from "@budibase/frontend-core"
   import { url } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
-  import { appStore, builderStore } from "@/stores/builder"
+  import { appStore, builderStore, isOnlyUser } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
@@ -18,12 +18,15 @@
   let timeout: ReturnType<typeof setTimeout> | undefined
 
   $: collapsed = !focused && !$pinned
-
-  // When unpinning, we need to temporarily ignore pointer events, as otherwise
-  // we would keep the menu open due to immediately triggering a mouseenter
   $: !$pinned && unPin()
+  $: updateAvailable =
+    $appStore.upgradableVersion &&
+    $appStore.version &&
+    $appStore.upgradableVersion !== $appStore.version
 
   const unPin = () => {
+    // We need to ignore pointer events for a while since otherwise we would
+    // instantly trigger a mouseenter and show it again
     ignoreFocus = true
     focused = false
     timeout = setTimeout(() => {
@@ -109,6 +112,16 @@
     </div>
 
     <div class="links">
+      {#if updateAvailable && $isOnlyUser}
+        <SideNavLink
+          icon="Circle"
+          url={$url("./settings/general#version")}
+          text="Update available"
+          forceActive={false}
+        >
+          <StatusLight notice slot="icon" size="L" />
+        </SideNavLink>
+      {/if}
       <SideNavLink
         icon="User"
         text="Users"
