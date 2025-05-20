@@ -180,7 +180,7 @@
   }
 
   thead th {
-    font-family: "Source Sans Pro";
+    font-family: "Source Sans 3";
     color: var(--lightText);
     white-space: nowrap;
     padding: 12px;

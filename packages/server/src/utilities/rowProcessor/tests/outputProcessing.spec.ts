@@ -178,6 +178,7 @@ describe("rowProcessor - outputProcessing", () => {
         "/files/signed/prod-budi-app-assets/test.jpg"
       )
 
+      delete row.attach[0].key
       row.attach[0].url = "aaaa"
       const output3 = await outputProcessing(table, row, { squash: false })
       expect(output3.attach[0].url).toBe("aaaa")
@@ -221,9 +222,10 @@ describe("rowProcessor - outputProcessing", () => {
         "/files/signed/prod-budi-app-assets/test.jpg"
       )
 
+      delete row.attach.key
       row.attach.url = "aaaa"
       const output3 = await outputProcessing(table, row, { squash: false })
-      expect(output3.attach.url).toBe("aaaa")
+      expect(output3.attach?.url).toBe("aaaa")
     })
   })
 

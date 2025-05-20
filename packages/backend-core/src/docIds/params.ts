@@ -210,3 +210,13 @@ export const getOAuth2ConfigParams = (
 ) => {
   return getDocParams(DocumentType.OAUTH2_CONFIG, configId, otherProps)
 }
+
+/**
+ * Gets parameters for retrieving project apps, this is a utility function for the getDocParams function.
+ */
+export const getWorkspaceAppParams = (
+  workspaceAppId?: string | null,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) => {
+  return getDocParams(DocumentType.WORKSPACE_APP, workspaceAppId, otherProps)
+}
