@@ -47,7 +47,7 @@
   }
   .breadcrumbs h1 {
     font-size: 18px;
-    font-weight: 510;
+    font-weight: 500;
     color: var(--spectrum-global-color-gray-700);
   }
   .breadcrumbs h1:last-child {
