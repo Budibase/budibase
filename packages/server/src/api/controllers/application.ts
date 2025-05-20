@@ -31,6 +31,7 @@ import {
   roles,
   tenancy,
   users,
+  utils,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -275,8 +276,8 @@ export async function fetchAppPackage(
     )
   }
 
-  // Only filter screens if the user is not a builder
-  const isBuilder = users.isBuilder(ctx.user, appId)
+  // Only filter screens if the user is not a builder call
+  const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
@@ -287,7 +288,6 @@ export async function fetchAppPackage(
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     workspaceApps = await extractScreensByWorkspaceApp(screens, isBuilder)
-    screens = []
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(
