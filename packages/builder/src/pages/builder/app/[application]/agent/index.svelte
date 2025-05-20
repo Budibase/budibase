@@ -1,18 +1,26 @@
 <script lang="ts">
-  import { ActionButton, notifications } from "@budibase/bbui"
+  import { ActionButton, notifications, Button, Tooltip } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
   import type { AgentChat } from "@budibase/types"
   import { API } from "@/api"
   import { onDestroy, onMount } from "svelte"
+  import Panel from "@/components/design/Panel.svelte"
 
   let inputValue = ""
   let chat: AgentChat = { title: "", messages: [] }
   let loading: boolean = false
   let wrapper: HTMLDivElement
   let observer: MutationObserver
+  let textareaElement: HTMLTextAreaElement
 
   $: chat.messages.length, scroll()
+
+  function scroll() {
+    if (wrapper) {
+      wrapper.scrollTop = wrapper.scrollHeight
+    }
+  }
 
   async function handleKeyDown(event: any) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -25,16 +33,39 @@
     if (!chat) {
       chat = { title: "", messages: [] }
     }
-    chat.messages.push({ role: "user", content: inputValue })
+    
+    const userMessage = { role: "user", content: inputValue }
+    
+    const updatedChat = {
+      ...chat,
+      messages: [...chat.messages, userMessage] 
+    }
+    
+    // Update local display immediately with user message
+    chat = updatedChat
+    
     inputValue = ""
     loading = true
+
     try {
-      chat = await API.agentChat(chat)
+      // Send copy with new message to API
+      const response = await API.agentChat(updatedChat)
+      
+      // Update chat with response from API
+      chat = response
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
     }
+
     loading = false
+
+    // Ensure focus returns to textarea after response
+    setTimeout(() => {
+      if (textareaElement) {
+        textareaElement.focus()
+      }
+    }, 0)
   }
 
   const reset = async () => {
@@ -57,6 +88,11 @@
       subtree: true,
       attributes: true,
     })
+    
+    // Set initial focus on the textarea
+    if (textareaElement) {
+      textareaElement.focus()
+    }
   })
 
   onDestroy(() => {
@@ -65,17 +101,33 @@
 </script>
 
 <div class="page" bind:this={wrapper}>
-  <Chatbox bind:chat {loading} />
-  <div class="controls">
-    <ActionButton quiet on:click={reset}>Reset history</ActionButton>
-  </div>
-  <div class="input-wrapper">
-    <textarea
-      bind:value={inputValue}
-      class="input spectrum-Textfield-input"
-      on:keydown={handleKeyDown}
-      placeholder="Ask anything"
-    />
+  <div class="layout">
+    <div class="chat-area">
+      <Chatbox bind:chat {loading} />
+      <div class="controls">
+        <ActionButton quiet on:click={reset}>Reset history</ActionButton>
+      </div>
+      <div class="input-wrapper">
+      <textarea
+        bind:value={inputValue}
+        bind:this={textareaElement}
+        class="input spectrum-Textfield-input"
+        on:keydown={handleKeyDown}
+        placeholder="Ask anything"
+        disabled={loading}
+      />
+      </div>
+    </div>
+    <div class="panel-container">
+      <Panel
+        customWidth={400}
+      >
+        <div class="debug-panel">
+          <h3>Train</h3>
+          <p>fooooo</p>
+        </div>
+      </Panel>
+    </div>
   </div>
 </div>
 
@@ -90,14 +142,43 @@
     overflow-y: scroll;
     overflow-x: hidden;
   }
+  
+  .layout {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+  }
+  
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-width: calc(100% - 400px);
+  }
+  
+  .panel-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 400px;
+  }
+  
+  .debug-panel {
+    padding: var(--spacing-l);
+  }
 
   .input-wrapper {
     position: sticky;
     bottom: 0;
-    width: 801px;
+    width: 600px;
     margin: 0 auto;
     background: var(--background-alt);
     padding-bottom: 48px;
+    display: flex;
+    flex-direction: column;
   }
 
   textarea {
@@ -113,7 +194,9 @@
     border: none;
     outline: none;
     min-height: 100px;
+    margin-bottom: 8px;
   }
+
   textarea::placeholder {
     color: var(--spectrum-global-color-gray-600);
   }
@@ -121,7 +204,7 @@
   .controls {
     position: fixed;
     bottom: 8px;
-    right: calc(50% - 400px);
+    right: calc(50% - 300px);
     z-index: 1;
   }
 </style>

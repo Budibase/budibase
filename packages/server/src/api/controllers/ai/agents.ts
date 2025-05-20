@@ -22,6 +22,37 @@ export async function agentChat(
     .addTools(tools.budibase)
   const response = await model.chat(prompt)
 
+  // Process tool calls to add debug information to messages instead of using separate tool messages
+  const processedMessages = [...response.messages]
+  for (let i = 0; i < processedMessages.length; i++) {
+    const message = processedMessages[i]
+    if (message.role === 'assistant' && message.tool_calls?.length) {
+      // For each tool call, add debug information to the assistant message content
+      let toolDebugInfo = "\n\n**Tool Calls:**\n"
+      
+      for (const toolCall of message.tool_calls) {
+        let toolParams = '{}'
+        try {
+          // Try to parse and prettify the JSON arguments
+          toolParams = JSON.stringify(JSON.parse(toolCall.function.arguments), null, 2)
+        } catch (e) {
+          // If not valid JSON, use as is
+          toolParams = toolCall.function.arguments
+        }
+
+        toolDebugInfo += `\n**Tool:** ${toolCall.function.name}\n**Parameters:**\n\`\`\`json\n${toolParams}\n\`\`\`\n`
+      }
+      
+      // Append tool debug info to the message content
+      if (message.content) {
+        message.content += toolDebugInfo
+      } else {
+        message.content = toolDebugInfo
+      }
+    }
+  }
+  response.messages = processedMessages
+
   if (!chat._id) {
     chat._id = docIds.generateAgentChatID()
   }
