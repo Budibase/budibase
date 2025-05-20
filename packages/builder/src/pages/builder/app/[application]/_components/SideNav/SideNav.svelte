@@ -21,16 +21,14 @@
 
   // When unpinning, we need to temporarily ignore pointer events, as otherwise
   // we would keep the menu open due to immediately triggering a mouseenter
-  $: updateTimeout($pinned)
+  $: !$pinned && unPin()
 
-  const updateTimeout = (pinned: boolean) => {
-    if (!pinned) {
-      ignoreFocus = true
-      focused = false
-      timeout = setTimeout(() => {
-        ignoreFocus = false
-      }, 130)
-    }
+  const unPin = () => {
+    ignoreFocus = true
+    focused = false
+    timeout = setTimeout(() => {
+      ignoreFocus = false
+    }, 130)
   }
 
   const setFocused = (nextFocused: boolean) => {
@@ -38,6 +36,12 @@
       return
     }
     focused = nextFocused
+  }
+
+  const keepCollapsed = () => {
+    if (!$pinned) {
+      unPin()
+    }
   }
 
   onDestroy(() => {
@@ -77,6 +81,7 @@
             text="Agent"
             url={$url("./agent")}
             {collapsed}
+            on:click={keepCollapsed}
           />
         {/if}
         <SideNavLink
@@ -84,14 +89,22 @@
           text="Design"
           url={$url("./design")}
           {collapsed}
+          on:click={keepCollapsed}
         />
         <SideNavLink
           icon="Workflow"
           text="Automations"
           url={$url("./automation")}
           {collapsed}
+          on:click={keepCollapsed}
         />
-        <SideNavLink icon="Data" text="Data" url={$url("./data")} {collapsed} />
+        <SideNavLink
+          icon="Data"
+          text="Data"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
       </div>
     </div>
 
@@ -101,6 +114,7 @@
         text="Users"
         on:click={() => {
           builderStore.showBuilderSidePanel()
+          keepCollapsed()
         }}
         {collapsed}
       />
@@ -109,6 +123,7 @@
         text="Settings"
         url={$url("./settings")}
         {collapsed}
+        on:click={keepCollapsed}
       />
       <SideNavUserSettings {collapsed} />
     </div>
