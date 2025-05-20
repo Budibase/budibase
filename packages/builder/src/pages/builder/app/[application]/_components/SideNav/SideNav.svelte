@@ -63,7 +63,9 @@
     on:mouseleave={() => setFocused(false)}
   >
     <div class="nav_header">
-      <img src={BBLogo} alt="Budibase logo" />
+      <a href={$url("/builder/portal/apps")}>
+        <img src={BBLogo} alt="Budibase logo" />
+      </a>
       <div class="nav_title">
         <h1>{$appStore.name}</h1>
         <Icon name="ChevronDown" size="XS" />
@@ -201,6 +203,15 @@
     gap: var(--spacing-m);
     border-bottom: var(--nav-border);
     color: var(--spectrum-global-color-gray-800);
+  }
+  .nav_header a {
+    display: grid;
+    place-items: center;
+    transition: filter 130ms ease-out;
+  }
+  .nav_header a:hover {
+    cursor: pointer;
+    filter: brightness(1.2);
   }
   .nav_header img {
     width: var(--nav-logo-width);
