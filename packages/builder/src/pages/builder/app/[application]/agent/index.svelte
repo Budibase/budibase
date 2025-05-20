@@ -14,9 +14,15 @@
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
 
-  $: chat.messages.length, scroll()
+  // Use Svelte's tick function to wait for DOM updates
+  import { tick } from "svelte"
+  
+  $: if (chat.messages.length) {
+    scrollToBottom()
+  }
 
-  function scroll() {
+  async function scrollToBottom() {
+    await tick()
     if (wrapper) {
       wrapper.scrollTop = wrapper.scrollHeight
     }
@@ -44,6 +50,9 @@
     // Update local display immediately with user message
     chat = updatedChat
     
+    // Ensure we scroll to the new message
+    await scrollToBottom()
+    
     inputValue = ""
     loading = true
 
@@ -53,6 +62,9 @@
       
       // Update chat with response from API
       chat = response
+      
+      // Scroll to the response
+      await scrollToBottom()
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
@@ -60,12 +72,11 @@
 
     loading = false
 
-    // Ensure focus returns to textarea after response
-    setTimeout(() => {
-      if (textareaElement) {
-        textareaElement.focus()
-      }
-    }, 0)
+    // Return focus to textarea after the response
+    await tick()
+    if (textareaElement) {
+      textareaElement.focus()
+    }
   }
 
   const reset = async () => {
@@ -80,7 +91,9 @@
     chat = { title: "", messages: [] }
 
     // Ensure we always autoscroll to reveal new messages
-    observer = new MutationObserver(() => {
+    observer = new MutationObserver(async () => {
+      // Use this approach as a backup to catch any DOM changes
+      await tick()
       wrapper.scrollTop = wrapper.scrollHeight
     })
     observer.observe(wrapper, {
@@ -90,6 +103,7 @@
     })
     
     // Set initial focus on the textarea
+    await tick()
     if (textareaElement) {
       textareaElement.focus()
     }

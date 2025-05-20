@@ -35,7 +35,7 @@ export type Tool<T extends z.ZodType = z.ZodType> = Required<ToolArgs<T>>
 export interface ToolArgs<T extends z.ZodType> {
   name: string
   description: string
-  parameters?: T
+  parameters?: T | any
   handler: (args: z.infer<T>) => Promise<string>
   strict?: boolean
 }

@@ -9,6 +9,7 @@ import {
   FetchAgentHistoryResponse,
   AgentChat,
 } from "@budibase/types"
+import { AtlassianClient } from "../../../ai/tools/mcp/atlassian"
 
 export async function agentChat(
   ctx: UserCtx<ChatAgentRequest, ChatAgentResponse>
@@ -16,10 +17,15 @@ export async function agentChat(
   const model = await ai.getLLMOrThrow()
   const chat = ctx.request.body
 
+  // Initialize Atlassian client to fetch MCP tools dynamically
+  const atlassianClient = new AtlassianClient()
+  const mcpTools = await atlassianClient.fetchTools()
+
   const prompt = new ai.LLMRequest()
     .addSystemMessage(ai.agentSystemPrompt(ctx.user))
     .addMessages(chat.messages)
     .addTools(tools.budibase)
+    .addTools(mcpTools)
   const response = await model.chat(prompt)
 
   // Process tool calls to add debug information to messages instead of using separate tool messages
