@@ -78,6 +78,7 @@
     gap: 10px;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
     padding: 0 10px 0 20px;
+    background: var(--background);
   }
   .breadcrumbs {
     flex: 1 1 auto;
