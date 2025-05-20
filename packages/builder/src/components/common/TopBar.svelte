@@ -6,10 +6,20 @@
 </script>
 
 <script lang="ts">
-  import { Icon } from "@budibase/bbui"
+  import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
+  import { deploymentStore } from "@/stores/builder"
+  import type { PopoverAPI } from "@budibase/bbui"
 
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
+
+  let publishButton: HTMLElement | undefined
+  let publishSuccessPopover: PopoverAPI | undefined
+
+  const publish = async () => {
+    await deploymentStore.publishApp(false)
+    publishSuccessPopover?.show()
+  }
 </script>
 
 <div class="top-bar">
@@ -24,8 +34,39 @@
       {/if}
     {/each}
   </div>
-  <slot name="right"></slot>
+  <Button
+    cta
+    on:click={publish}
+    disabled={$deploymentStore.isPublishing}
+    bind:ref={publishButton}
+  >
+    Publish
+  </Button>
 </div>
+
+<Popover
+  anchor={publishButton}
+  bind:this={publishSuccessPopover}
+  align={PopoverAlignment.Right}
+  offset={6}
+>
+  <div class="popover-content">
+    <Icon
+      name="CheckmarkCircle"
+      color="var(--spectrum-global-color-green-400)"
+      size="L"
+    />
+    <Body size="S">
+      App published successfully
+      <br />
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div class="link" on:click={deploymentStore.viewPublishedApp}>
+        View app
+      </div>
+    </Body>
+  </div>
+</Popover>
 
 <style>
   .top-bar {
@@ -55,5 +96,18 @@
   }
   .breadcrumbs h1.divider {
     color: var(--spectrum-global-color-gray-400);
+  }
+  .popover-content {
+    display: flex;
+    gap: var(--spacing-m);
+    padding: var(--spacing-xl);
+  }
+  .link {
+    text-decoration: underline;
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .link:hover {
+    cursor: pointer;
+    filter: brightness(110%);
   }
 </style>
