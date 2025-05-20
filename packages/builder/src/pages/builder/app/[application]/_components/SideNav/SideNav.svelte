@@ -121,7 +121,7 @@
   .nav_wrapper {
     display: contents;
     --nav-logo-width: 20px;
-    --nav-padding: var(--spacing-m);
+    --nav-padding: 12px;
     --nav-collapsed-width: calc(var(--nav-logo-width) + var(--nav-padding) * 2);
     --nav-width: 240px;
     --nav-border: 1px solid var(--spectrum-global-color-gray-200);
@@ -150,8 +150,8 @@
     border-right: var(--nav-border);
     transition: width 130ms ease-out;
     overflow: hidden;
-    gap: 12px;
-    padding-bottom: 12px;
+    gap: var(--nav-padding);
+    padding-bottom: var(--nav-padding);
     box-sizing: border-box;
   }
   .nav:not(.pinned).focused {
@@ -185,6 +185,12 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    gap: 4px;
+    transition: color 130ms ease-out;
+  }
+  .nav_title:hover {
+    cursor: pointer;
+    color: var(--spectrum-global-color-gray-900);
   }
   .nav_title h1 {
     font-size: 18px;
@@ -216,7 +222,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding: 0 4px;
+    padding: 0 calc(var(--nav-padding) / 2);
     gap: 2px;
   }
 </style>

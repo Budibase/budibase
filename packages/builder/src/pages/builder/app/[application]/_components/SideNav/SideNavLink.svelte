@@ -29,7 +29,7 @@
     align-items: center;
     height: 30px;
     gap: 7px;
-    padding: 0 6px;
+    padding: 0 calc(var(--nav-padding) / 2);
     color: var(--spectrum-global-color-gray-800);
     border-radius: 8px;
     border: 1px solid transparent;
