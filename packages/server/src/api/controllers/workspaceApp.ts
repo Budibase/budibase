@@ -20,6 +20,7 @@ function toWorkspaceAppResponse(
     urlPrefix: workspaceApp.urlPrefix,
     icon: workspaceApp.icon,
     iconColor: workspaceApp.iconColor,
+    navigation: workspaceApp.navigation,
   }
 }
 
@@ -34,6 +35,11 @@ export async function create(
     iconColor: body.iconColor,
     navigation: {
       navigation: "Top",
+      title: body.name,
+      navWidth: "Large",
+      navBackground: "var(--spectrum-global-color-static-blue-1200)",
+      navTextColor: "var(--spectrum-global-color-static-white)",
+      links: [],
     },
   }
 

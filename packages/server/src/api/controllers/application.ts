@@ -191,6 +191,14 @@ async function addSampleDataScreen() {
       name: appMetadata.name,
       urlPrefix: "/",
       icon: "Monitoring",
+      navigation: {
+        navigation: "Top",
+        title: appMetadata.name,
+        navWidth: "Large",
+        navBackground: "var(--spectrum-global-color-static-blue-1200)",
+        navTextColor: "var(--spectrum-global-color-static-white)",
+        links: [],
+      },
     })
     workspaceAppId = workspaceApp._id!
   }

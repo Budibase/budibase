@@ -4,28 +4,24 @@ import { appStore, screenStore, selectedScreen } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
 import {
   AppNavigation,
-  AppNavigationLink,
   FeatureFlag,
   UIObject,
   UIWorkspaceApp,
 } from "@budibase/types"
 import { featureFlag } from "@/helpers"
 
-interface NavigationStoreState {
-  navigation: AppNavigation["navigation"]
-  links: AppNavigationLink[]
-  linksPerApp: Record<string, AppNavigationLink[]>
-  textAlign: AppNavigation["textAlign"]
+interface NavigationStoreState extends AppNavigation {
+  navigationPerWorkspaceApp: Record<string, AppNavigation>
 }
 
 export const INITIAL_NAVIGATION_STATE: NavigationStoreState = {
   navigation: "Top",
   links: [],
-  linksPerApp: {},
+  navigationPerWorkspaceApp: {},
   textAlign: "Left",
 }
 
-interface DerivedNavigationStoreState extends NavigationStoreState {}
+interface DerivedNavigationStoreState extends AppNavigation {}
 
 export class NavigationStore extends DerivedBudiStore<
   NavigationStoreState,
@@ -40,7 +36,7 @@ export class NavigationStore extends DerivedBudiStore<
             .filter(s => s.workspaceAppId === $selectedScreen?.workspaceAppId)
             .map(s => s.routing.route)
 
-          let links = $store.links.filter(l =>
+          let links = $store.links?.filter(l =>
             currentScreenLinks.includes(l.url)
           )
 
@@ -49,7 +45,9 @@ export class NavigationStore extends DerivedBudiStore<
           )
 
           if (workspaceAppsEnabled && $selectedScreen) {
-            links = $store.linksPerApp[$selectedScreen.workspaceAppId!]
+            return $store.navigationPerWorkspaceApp[
+              $selectedScreen.workspaceAppId!
+            ]
           }
 
           return { ...$store, links }
@@ -70,13 +68,12 @@ export class NavigationStore extends DerivedBudiStore<
   syncWorkspaceAppsNavigation(workspaceApps: UIWorkspaceApp[]) {
     this.update(state => ({
       ...state,
-      linksPerApp: workspaceApps.reduce<Record<string, AppNavigationLink[]>>(
-        (acc, a) => {
-          acc[a._id!] = a.navigation?.links || []
-          return acc
-        },
-        {}
-      ),
+      navigationPerWorkspaceApp: workspaceApps.reduce<
+        Record<string, AppNavigation>
+      >((acc, a) => {
+        acc[a._id!] = a.navigation
+        return acc
+      }, {}),
     }))
   }
 
@@ -110,7 +107,7 @@ export class NavigationStore extends DerivedBudiStore<
 
     const navigation = get(this.store)
     const links = workspaceAppsEnabled
-      ? [...(navigation.linksPerApp[workspaceAppId] || [])]
+      ? [...(navigation.navigationPerWorkspaceApp[workspaceAppId]?.links || [])]
       : [...(navigation.links ?? [])]
 
     // Skip if we have an identical link
@@ -129,6 +126,11 @@ export class NavigationStore extends DerivedBudiStore<
       await this.save({
         ...navigation,
         links: [...links],
+      })
+    } else {
+      this.update(state => {
+        state.navigationPerWorkspaceApp[workspaceAppId].links = links
+        return { ...state }
       })
     }
   }
