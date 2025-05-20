@@ -9,6 +9,9 @@
   import { UserAvatar } from "@budibase/frontend-core"
   import { API } from "@/api"
 
+  export let offset = 4
+  export let useAnchorWidth = false
+
   let themeModal
   let profileModal
   let updatePasswordModal
@@ -25,7 +28,7 @@
   }
 </script>
 
-<ActionMenu align="right">
+<ActionMenu align="right" {offset} {useAnchorWidth}>
   <svelte:fragment slot="control">
     {#if $$slots.default}
       <slot />

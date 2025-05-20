@@ -10,6 +10,7 @@
   export let openOnHover: boolean = false
   export let animate: boolean | undefined = true
   export let offset: number | undefined = undefined
+  export let useAnchorWidth = false
 
   const actionMenuContext = getContext("actionMenu")
 
@@ -73,6 +74,7 @@
   {portalTarget}
   {animate}
   {offset}
+  {useAnchorWidth}
   resizable={false}
   on:open
   on:close

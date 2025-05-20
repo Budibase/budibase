@@ -7,7 +7,7 @@
   export let collapsed = false
 </script>
 
-<UserDropdown>
+<UserDropdown useAnchorWidth offset={2}>
   <SideNavLink text="Andrew Kingston" {collapsed}>
     <UserAvatar slot="icon" size="XS" user={$auth.user} showTooltip={false} />
   </SideNavLink>
