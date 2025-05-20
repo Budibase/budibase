@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
-import { Database, Screen } from "@budibase/types"
-import { getScreenParams } from "../../../db/utils"
+import { Database, Screen, WithoutDocMetadata } from "@budibase/types"
+import { generateScreenID, getScreenParams } from "../../../db/utils"
 
 export async function fetch(
   db: Database = context.getAppDB()
@@ -14,4 +14,10 @@ export async function fetch(
   ).rows.map(el => el.doc!)
 
   return screens
+}
+
+export async function create(screen: WithoutDocMetadata<Screen>) {
+  const db = context.getAppDB()
+
+  await db.put({ ...screen, _id: generateScreenID() })
 }
