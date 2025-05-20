@@ -19,6 +19,7 @@ export interface App extends Document {
   revertableVersion?: string
   lockedBy?: User
   sessions?: SocketSession[]
+  // @deprecated  use workspace app navigation instead
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
   icon?: AppIcon
