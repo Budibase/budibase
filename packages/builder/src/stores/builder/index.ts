@@ -39,7 +39,8 @@ import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
 import { workspaceAppStore } from "./workspaceApps"
 
-import { FetchAppPackageResponse } from "@budibase/types"
+import { FeatureFlag, FetchAppPackageResponse } from "@budibase/types"
+import { featureFlag } from "@/helpers"
 
 export {
   componentTreeNodesStore,
@@ -119,7 +120,11 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
     componentStore.refreshDefinitions(application?.appId),
   ])
   builderStore.init(application)
-  navigationStore.syncAppNavigation(application?.navigation)
+  if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    navigationStore.syncAppNavigation(application?.navigation)
+  } else {
+    navigationStore.syncWorkspaceAppsNavigation(pkg.workspaceApps)
+  }
   themeStore.syncAppTheme(application)
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)

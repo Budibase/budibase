@@ -109,7 +109,8 @@
     await navigationStore.saveLink(
       screen.routing.route,
       linkLabel,
-      screen.routing.roleId
+      screen.routing.roleId,
+      workspaceAppId!
     )
   }
 

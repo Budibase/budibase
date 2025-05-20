@@ -2,17 +2,26 @@ import { derived, get, Readable } from "svelte/store"
 import { API } from "@/api"
 import { appStore, screenStore, selectedScreen } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
-import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
+import {
+  AppNavigation,
+  AppNavigationLink,
+  FeatureFlag,
+  UIObject,
+  UIWorkspaceApp,
+} from "@budibase/types"
+import { featureFlag } from "@/helpers"
 
 interface NavigationStoreState {
   navigation: AppNavigation["navigation"]
   links: AppNavigationLink[]
+  linksPerApp: Record<string, AppNavigationLink[]>
   textAlign: AppNavigation["textAlign"]
 }
 
 export const INITIAL_NAVIGATION_STATE: NavigationStoreState = {
   navigation: "Top",
   links: [],
+  linksPerApp: {},
   textAlign: "Left",
 }
 
@@ -31,9 +40,17 @@ export class NavigationStore extends DerivedBudiStore<
             .filter(s => s.workspaceAppId === $selectedScreen?.workspaceAppId)
             .map(s => s.routing.route)
 
-          const links = $store.links.filter(l =>
+          let links = $store.links.filter(l =>
             currentScreenLinks.includes(l.url)
           )
+
+          const workspaceAppsEnabled = featureFlag.isEnabled(
+            FeatureFlag.WORKSPACE_APPS
+          )
+
+          if (workspaceAppsEnabled && $selectedScreen) {
+            links = $store.linksPerApp[$selectedScreen.workspaceAppId!]
+          }
 
           return { ...$store, links }
         }
@@ -47,6 +64,19 @@ export class NavigationStore extends DerivedBudiStore<
     this.update(state => ({
       ...state,
       ...nav,
+    }))
+  }
+
+  syncWorkspaceAppsNavigation(workspaceApps: UIWorkspaceApp[]) {
+    this.update(state => ({
+      ...state,
+      linksPerApp: workspaceApps.reduce<Record<string, AppNavigationLink[]>>(
+        (acc, a) => {
+          acc[a._id!] = a.navigation?.links || []
+          return acc
+        },
+        {}
+      ),
     }))
   }
 
@@ -68,11 +98,20 @@ export class NavigationStore extends DerivedBudiStore<
     }
   }
 
-  async saveLink(url: string, title: string, roleId: string) {
-    const navigation = get(this.store)
-    const links = [...(navigation.links ?? [])]
+  async saveLink(
+    url: string,
+    title: string,
+    roleId: string,
+    workspaceAppId: string
+  ) {
+    const workspaceAppsEnabled = featureFlag.isEnabled(
+      FeatureFlag.WORKSPACE_APPS
+    )
 
-    navigation.links
+    const navigation = get(this.store)
+    const links = workspaceAppsEnabled
+      ? [...(navigation.linksPerApp[workspaceAppId] || {})]
+      : [...(navigation.links ?? [])]
 
     // Skip if we have an identical link
     if (links.find(link => link.url === url && link.text === title)) {
@@ -85,10 +124,13 @@ export class NavigationStore extends DerivedBudiStore<
       type: "link",
       roleId,
     })
-    await this.save({
-      ...navigation,
-      links: [...links],
-    })
+
+    if (!workspaceAppsEnabled) {
+      await this.save({
+        ...navigation,
+        links: [...links],
+      })
+    }
   }
 
   async deleteLink(urls: string[] | string) {
