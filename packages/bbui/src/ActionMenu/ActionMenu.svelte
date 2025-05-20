@@ -17,6 +17,7 @@
   let anchor: HTMLElement | undefined
   let dropdown: Popover
   let timeout: ReturnType<typeof setTimeout>
+  let open = false
 
   // This is needed because display: contents is considered "invisible".
   // It should only ever be an action button, so should be fine.
@@ -65,7 +66,7 @@
   on:mouseenter={openOnHover ? show : null}
   on:mouseleave={openOnHover ? queueHide : null}
 >
-  <slot name="control" />
+  <slot name="control" {open} />
 </div>
 <Popover
   bind:this={dropdown}
@@ -80,6 +81,7 @@
   on:close
   on:mouseenter={openOnHover ? cancelHide : null}
   on:mouseleave={openOnHover ? queueHide : null}
+  bind:open
 >
   <Menu>
     <slot />

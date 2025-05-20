@@ -9,8 +9,7 @@
   import { UserAvatar } from "@budibase/frontend-core"
   import { API } from "@/api"
 
-  export let offset = 4
-  export let useAnchorWidth = false
+  export let align = "right"
 
   let themeModal
   let profileModal
@@ -28,10 +27,10 @@
   }
 </script>
 
-<ActionMenu align="right" {offset} {useAnchorWidth}>
-  <svelte:fragment slot="control">
+<ActionMenu {align}>
+  <svelte:fragment slot="control" let:open>
     {#if $$slots.default}
-      <slot />
+      <slot {open} />
     {:else}
       <div class="user-dropdown">
         <UserAvatar size="M" user={$auth.user} showTooltip={false} />

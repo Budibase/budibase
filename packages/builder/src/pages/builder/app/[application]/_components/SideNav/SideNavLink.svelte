@@ -2,12 +2,13 @@
   import { Icon } from "@budibase/bbui"
   import { isActive } from "@roxi/routify"
 
-  export let icon: string
   export let text: string
+  export let icon: string | undefined = undefined
   export let url: string | undefined = undefined
   export let collapsed = false
+  export let forceActive = false
 
-  $: active = url ? $isActive(url) : false
+  $: active = forceActive || (url ? $isActive(url) : false)
 </script>
 
 <a class="link" class:active href={url} on:click class:collapsed tabindex="0">
