@@ -340,6 +340,9 @@ describe("/applications", () => {
           await config.api.workspaceApp.create(
             structures.workspaceApps.workspaceApp()
           )
+          await config.api.screen.save(
+            customScreen({ roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, route: "/" })
+          )
 
           await config.publish()
           const res = await config.api.application.getAppPackage(app.appId, {
@@ -356,6 +359,7 @@ describe("/applications", () => {
           const res = await config.api.application.getAppPackage(app.appId)
 
           expect(res.workspaceApps).toHaveLength(0)
+          expect(res.screens).toHaveLength(1)
         })
       })
     })
