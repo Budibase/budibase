@@ -5,6 +5,7 @@
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
+  import { ModalCancelFrom } from "../constants"
 
   export let fixed: boolean = false
   export let inline: boolean = false
@@ -18,7 +19,7 @@
   const dispatch = createEventDispatcher<{
     show: void
     hide: void
-    cancel: void
+    cancel: ModalCancelFrom
   }>()
   let visible: boolean = fixed || inline
   let modal: HTMLElement | undefined
@@ -47,17 +48,17 @@
     }
   }
 
-  export function cancel(): void {
+  export function cancel(from: ModalCancelFrom): void {
     if (!visible || disableCancel) {
       return
     }
-    dispatch("cancel")
+    dispatch("cancel", from)
     hide()
   }
 
   function handleKey(e: KeyboardEvent): void {
     if (visible && e.key === "Escape") {
-      cancel()
+      cancel(ModalCancelFrom.ESCAPE_KEY)
     }
   }
 
@@ -115,7 +116,7 @@
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div
         class="spectrum-Underlay is-open"
-        on:mousedown|self={cancel}
+        on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
         style="z-index:{zIndex || 999}"
       >
         <div
@@ -123,8 +124,14 @@
           in:fade={{ duration: 200 }}
           out:fade|local={{ duration: 200 }}
         />
-        <div class="modal-wrapper" on:mousedown|self={cancel}>
-          <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
+        <div
+          class="modal-wrapper"
+          on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
+        >
+          <div
+            class="modal-inner-wrapper"
+            on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
+          >
             <slot name="outside" />
             <div
               use:focusModal
