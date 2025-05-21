@@ -44,7 +44,6 @@
       }
     }}
   >
-    sdfdsf
     {#if $$slots && reverse}
       <span class="spectrum-Button-label"><slot /></span>
     {/if}
