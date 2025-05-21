@@ -286,12 +286,9 @@ export async function fetchAppPackage(
 
   let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
-  if (
-    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
-    isBuilder
-  ) {
-    const fromHashUrl = ctx.params.hashUrl as string
-    if (fromHashUrl) {
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const fromHashUrl = ctx.request.query.hashUrl
+    if (typeof fromHashUrl === "string") {
       const allWorkspaceApps = await sdk.workspaceApps.fetch()
 
       const matchedWorkspaceApp = allWorkspaceApps.find(a =>
@@ -302,8 +299,9 @@ export async function fetchAppPackage(
           s => s.workspaceAppId === matchedWorkspaceApp._id
         )
       }
+    } else if (isBuilder) {
+      workspaceApps = await extractScreensByWorkspaceApp(screens, isBuilder)
     }
-    workspaceApps = await extractScreensByWorkspaceApp(screens, isBuilder)
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(

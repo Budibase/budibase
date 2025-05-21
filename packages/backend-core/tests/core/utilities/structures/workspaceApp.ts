@@ -4,7 +4,7 @@ import { generator } from "./generator"
 export function workspaceApp(): WorkspaceApp {
   const result: RequiredKeys<WorkspaceApp> = {
     name: generator.word(),
-    urlPrefix: `/${generator.word}`,
+    urlPrefix: `/${generator.word()}`,
     icon: "Monitoring",
     iconColor: undefined,
 

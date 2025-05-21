@@ -13,7 +13,12 @@ import {
   Header,
 } from "@budibase/backend-core"
 import env from "../../../environment"
-import { type App, BuiltinPermissionID } from "@budibase/types"
+import {
+  type App,
+  BuiltinPermissionID,
+  Screen,
+  WorkspaceApp,
+} from "@budibase/types"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
@@ -262,7 +267,9 @@ describe("/applications", () => {
     })
 
     it("should be able to fetch the app package", async () => {
-      const res = await config.api.application.getAppPackage(app.appId)
+      const res = await config.api.application.getAppPackage({
+        appId: app.appId,
+      })
       expect(res.application).toBeDefined()
       expect(res.application.appId).toEqual(config.getAppId())
     })
@@ -272,7 +279,9 @@ describe("/applications", () => {
       await config.api.screen.save(basicScreen())
       await config.api.screen.save(basicScreen())
 
-      const res = await config.api.application.getAppPackage(app.appId)
+      const res = await config.api.application.getAppPackage({
+        appId: app.appId,
+      })
 
       expect(res.screens).toHaveLength(4) // Default one + 3 created
     })
@@ -287,9 +296,12 @@ describe("/applications", () => {
       ])
 
       await config.publish()
-      const res = await config.api.application.getAppPackage(app.appId, {
-        publicUser: true,
-      })
+      const res = await config.api.application.getAppPackage(
+        { appId: app.appId },
+        {
+          publicUser: true,
+        }
+      )
 
       expect(res.screens).toHaveLength(1)
       expect(res.screens).toContainEqual(
@@ -315,7 +327,9 @@ describe("/applications", () => {
             structures.workspaceApps.workspaceApp()
           )
 
-          const res = await config.api.application.getAppPackage(app.appId)
+          const res = await config.api.application.getAppPackage({
+            appId: app.appId,
+          })
 
           expect(res.workspaceApps).toHaveLength(2)
           expect(res.screens).toHaveLength(1)
@@ -326,11 +340,14 @@ describe("/applications", () => {
             structures.workspaceApps.workspaceApp()
           )
 
-          const res = await config.api.application.getAppPackage(app.appId, {
-            headers: {
-              [Header.TYPE]: "client",
-            },
-          })
+          const res = await config.api.application.getAppPackage(
+            { appId: app.appId },
+            {
+              headers: {
+                [Header.TYPE]: "client",
+              },
+            }
+          )
 
           expect(res.workspaceApps).toHaveLength(0)
           expect(res.screens).toHaveLength(1)
@@ -345,18 +362,133 @@ describe("/applications", () => {
           )
 
           await config.publish()
-          const res = await config.api.application.getAppPackage(app.appId, {
-            publicUser: true,
-          })
+          const res = await config.api.application.getAppPackage(
+            { appId: app.appId },
+            {
+              publicUser: true,
+            }
+          )
 
           expect(res.workspaceApps).toHaveLength(0)
           expect(res.screens).toHaveLength(1)
+        })
+
+        describe("should retrieve only the screens for a given workspace app", () => {
+          let workspaceAppInfo: {
+            workspaceApp: WorkspaceApp
+            screens: Screen[]
+          }[] = []
+
+          beforeEach(async () => {
+            const { workspaceApp: workspaceApp1 } =
+              await config.api.workspaceApp.create(
+                structures.workspaceApps.workspaceApp()
+              )
+            const { workspaceApp: workspaceApp2 } =
+              await config.api.workspaceApp.create(
+                structures.workspaceApps.workspaceApp()
+              )
+
+            async function createScreens(
+              workspaceApp: WorkspaceApp,
+              routes: string[]
+            ) {
+              const screens = []
+
+              for (const route of routes) {
+                const screen = await config.api.screen.save({
+                  ...basicScreen(route),
+                  workspaceAppId: workspaceApp._id,
+                })
+                screens.push(screen)
+              }
+
+              workspaceAppInfo.push({
+                workspaceApp,
+                screens,
+              })
+            }
+
+            const appPackage = await config.api.application.getAppPackage({
+              appId: config.appId!,
+            })
+            const defaultWorkspaceApp = appPackage.workspaceApps[0]!
+            await createScreens(defaultWorkspaceApp, ["/page-1"])
+            await createScreens(workspaceApp1, ["/", "/page-1", "/page-2"])
+            await createScreens(workspaceApp2, ["/", "/page-1"])
+
+            workspaceAppInfo[0].screens.unshift(...appPackage.screens)
+          })
+
+          it("should retrieve only the screens for a the workspace all with empty prefix", async () => {
+            const res = await config.api.application.getAppPackage(
+              { appId: app.appId, hashUrl: "/" },
+              {
+                headers: {
+                  [Header.TYPE]: "client",
+                },
+              }
+            )
+
+            expect(res.screens).toHaveLength(2)
+            expect(res.screens).toEqual(
+              expect.arrayContaining(
+                workspaceAppInfo[0].screens.map(s =>
+                  expect.objectContaining({ _id: s._id })
+                )
+              )
+            )
+          })
+
+          it("should retrieve only the screens for a the workspace from the base url of it", async () => {
+            const fromUrl = workspaceAppInfo[1].workspaceApp.urlPrefix
+            const res = await config.api.application.getAppPackage(
+              { appId: app.appId, hashUrl: fromUrl },
+              {
+                headers: {
+                  [Header.TYPE]: "client",
+                },
+              }
+            )
+
+            expect(res.screens).toHaveLength(3)
+            expect(res.screens).toEqual(
+              expect.arrayContaining(
+                workspaceAppInfo[1].screens.map(s =>
+                  expect.objectContaining({ _id: s._id })
+                )
+              )
+            )
+          })
+
+          it("should retrieve only the screens for a the workspace from a page url", async () => {
+            const fromUrl = `${workspaceAppInfo[1].workspaceApp.urlPrefix}/page-1}`
+            const res = await config.api.application.getAppPackage(
+              { appId: app.appId, hashUrl: fromUrl },
+              {
+                headers: {
+                  [Header.TYPE]: "client",
+                },
+              }
+            )
+
+            expect(res.screens).toHaveLength(3)
+            expect(res.screens).toEqual(
+              expect.arrayContaining(
+                workspaceAppInfo[1].screens.map(s =>
+                  expect.objectContaining({ _id: s._id })
+                )
+              )
+            )
+          })
         })
       })
 
       describe("off", () => {
         it("should not retrieve workspaceApps", async () => {
-          const res = await config.api.application.getAppPackage(app.appId)
+          const res = await config.api.application.getAppPackage({
+            appId: app.appId,
+          })
 
           expect(res.workspaceApps).toHaveLength(0)
           expect(res.screens).toHaveLength(1)
