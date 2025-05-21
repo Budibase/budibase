@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { ActionButton, Input, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { generate } from "shortid"
@@ -6,9 +6,9 @@
 
   const dispatch = createEventDispatcher()
 
-  export let value = []
+  export let value: { category: string; id?: string }[] = []
 
-  let categories = []
+  let categories: { category: string; id: string }[] = []
 
   $: {
     if (Array.isArray(value)) {
@@ -30,13 +30,13 @@
     updateValue()
   }
 
-  function removeCategory(index) {
+  function removeCategory(index: number) {
     categories.splice(index, 1)
     categories = [...categories]
     updateValue()
   }
 
-  function updateCategory(index, newValue) {
+  function updateCategory(index: number, newValue: string) {
     if (categories[index]) {
       categories[index].category = newValue
       categories = [...categories]
@@ -75,7 +75,7 @@
     {/each}
   </div>
 
-  <ActionButton on:click={addCategory} icon="Add" secondary quiet={false}>
+  <ActionButton on:click={addCategory} icon="Add" quiet={false}>
     Add Category
   </ActionButton>
 </div>

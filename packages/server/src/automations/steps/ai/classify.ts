@@ -38,18 +38,20 @@ export async function run({
         category: determinedCategory,
         success: true,
       }
-    } else if (determinedCategory) {
+    }
+
+    if (determinedCategory) {
       return {
         success: false,
         response: `Classify Text AI Step Failed: AI returned category '${determinedCategory}', which is not in the provided list: [${categories.join(
           ", "
         )}]. Ensure the AI is constrained to the list or check AI response variability.`,
       }
-    } else {
-      return {
-        success: false,
-        response: "Classify Text AI Step Failed: AI did not return a category.",
-      }
+    }
+
+    return {
+      success: false,
+      response: "Classify Text AI Step Failed: AI did not return a category.",
     }
   } catch (err: any) {
     return {

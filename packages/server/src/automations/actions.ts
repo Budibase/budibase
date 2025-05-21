@@ -35,9 +35,11 @@ import {
   AutomationStepDefinition,
   AutomationStepInputs,
   AutomationStepOutputs,
+  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
+import { features } from "@budibase/backend-core"
 
 type ActionImplType = ActionImplementations<
   typeof env.SELF_HOSTED extends "true" ? Hosting.SELF : Hosting.CLOUD
@@ -123,6 +125,10 @@ export async function getActionDefinitions(): Promise<
 > {
   if (env.SELF_HOSTED) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
+
+    if (await features.isEnabled(FeatureFlag.AI_AUTOMATION_STEPS)) {
+      BUILTIN_ACTION_DEFINITIONS["OPENAI"].deprecated = true
+    }
   }
 
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS

@@ -5,6 +5,7 @@ import {
   GenerateTextStepOutputs,
   ContentType,
 } from "@budibase/types"
+import { utils } from "@budibase/shared-core"
 
 export async function run({
   inputs,
@@ -23,7 +24,9 @@ export async function run({
   try {
     const llm = await ai.getLLMOrThrow()
 
-    const contentTypePrompt = getContentTypePrompt(inputs.contentType)
+    const contentTypePrompt = getContentTypePrompt(
+      inputs.contentType as ContentType
+    )
 
     const request = new ai.LLMRequest().addUserMessage(
       `${contentTypePrompt}
@@ -41,13 +44,12 @@ Generate the content based on these instructions. Format appropriately for a ${i
         generatedText,
         success: true,
       }
-    } else {
-      return {
-        success: false,
-        generatedText: "",
-        response:
-          "Generate Text AI Step Failed: AI did not return any content.",
-      }
+    }
+
+    return {
+      success: false,
+      generatedText: "",
+      response: "Generate Text AI Step Failed: AI did not return any content.",
     }
   } catch (err: any) {
     return {
@@ -58,7 +60,7 @@ Generate the content based on these instructions. Format appropriately for a ${i
   }
 }
 
-function getContentTypePrompt(contentType: string): string {
+function getContentTypePrompt(contentType: ContentType): string | void {
   switch (contentType) {
     case ContentType.EMAIL:
       return "You are writing an email. Include an appropriate subject line, greeting, body, and signature."
@@ -73,7 +75,8 @@ function getContentTypePrompt(contentType: string): string {
     case ContentType.PROPOSAL:
       return "You are writing a proposal. Include an executive summary, problem statement, proposed solution, benefits, and conclusion."
     case ContentType.OTHER:
-    default:
       return "You are generating text content."
+    default:
+      return utils.unreachable(contentType as never)
   }
 }

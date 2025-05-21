@@ -20,7 +20,7 @@ export const definition: AutomationStepDefinition = {
   type: AutomationStepType.ACTION,
   internal: true,
   features: {},
-  deprecated: true,
+  deprecated: false,
   stepId: AutomationActionStepId.OPENAI,
   inputs: {
     prompt: "",
