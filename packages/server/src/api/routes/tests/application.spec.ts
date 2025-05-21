@@ -4,7 +4,7 @@ import { setEnv } from "../../../environment"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events, utils, context } from "@budibase/backend-core"
+import { events, utils, context, roles } from "@budibase/backend-core"
 import env from "../../../environment"
 import { type App, BuiltinPermissionID } from "@budibase/types"
 import tk from "timekeeper"
@@ -12,7 +12,7 @@ import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
 import nock from "nock"
 import path from "path"
-import { basicScreen } from "../../../tests/utilities/structures"
+import { basicScreen, customScreen } from "../../../tests/utilities/structures"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -250,6 +250,10 @@ describe("/applications", () => {
   })
 
   describe("fetchAppPackage", () => {
+    beforeEach(async () => {
+      await config.newTenant()
+    })
+
     it("should be able to fetch the app package", async () => {
       const res = await config.api.application.getAppPackage(app.appId)
       expect(res.application).toBeDefined()
@@ -265,6 +269,27 @@ describe("/applications", () => {
 
       expect(res.application).toBeDefined()
       expect(res.screens).toHaveLength(4) // Default one + 3 created
+    })
+
+    it("should retrieve all the screens for public calls", async () => {
+      const [_screen1, screen2, _screen3] = await Promise.all([
+        config.api.screen.save(basicScreen()),
+        config.api.screen.save(
+          customScreen({ roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, route: "/" })
+        ),
+        config.api.screen.save(basicScreen()),
+      ])
+
+      await config.publish()
+      const res = await config.api.application.getAppPackage(app.appId, {
+        publicUser: true,
+      })
+
+      expect(res.application).toBeDefined()
+      expect(res.screens).toHaveLength(1)
+      expect(res.screens).toContainEqual(
+        expect.objectContaining({ _id: screen2._id })
+      )
     })
   })
 
