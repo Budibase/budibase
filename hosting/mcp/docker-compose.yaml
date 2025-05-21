@@ -1,16 +1,5 @@
 version: '3.8'
 services:
-  mcp-github-sse:
-    image: supercorp/supergateway:latest
-    command: >
-      --stdio npx -y @modelcontextprotocol/github
-      --port 8090
-    environment:
-      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN}
-    ports:
-      - "8090:8090"
-    restart: unless-stopped
-
   mcp-atlassian:
     image: ghcr.io/sooperset/mcp-atlassian:latest
     command: --transport sse --port 8080 -vv

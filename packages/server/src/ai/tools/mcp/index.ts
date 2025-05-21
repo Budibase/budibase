@@ -1,9 +1,7 @@
-import { Tool } from "@budibase/types"
 import { AtlassianClient } from "./atlassian"
-// import { GitHubClient } from "./github"
+import { GitHubClient } from "./github"
 
-// Create client instances
 const atlassianClient = new AtlassianClient()
+const githubClient = new GitHubClient()
 
-// Export the client for direct access
-export { atlassianClient }
+export { githubClient, atlassianClient }
