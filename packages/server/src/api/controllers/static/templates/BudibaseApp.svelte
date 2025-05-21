@@ -39,6 +39,9 @@
     <link rel="icon" type="image/png" href="/builder/bblogo.png" />
   {/if}
 
+  <link href="/builder/fonts/source-sans-pro/400.css" rel="stylesheet" />
+  <link href="/builder/fonts/source-sans-pro/600.css" rel="stylesheet" />
+  <link href="/builder/fonts/source-sans-pro/700.css" rel="stylesheet" />
   <link
     href="/builder/fonts/source-sans-3/source-sans-3.css"
     rel="stylesheet"
@@ -87,6 +90,15 @@
     #error h2 {
       color: #888;
       font-weight: 400;
+    }
+
+    .spectrum {
+      --font-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI,
+        "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+      --font-accent: "Source Sans 3", -apple-system, BlinkMacSystemFont,
+        Segoe UI, "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+      --spectrum-alias-body-text-font-family: var(--font-sans) !important;
+      --spectrum-global-font-family-base: var(--font-sans) !important;
     }
   </style>
 
