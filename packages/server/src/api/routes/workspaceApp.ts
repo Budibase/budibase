@@ -10,7 +10,7 @@ const baseSchema = {
   name: Joi.string().required(),
   urlPrefix: Joi.string().required(),
   icon: Joi.string().required(),
-  iconColor: Joi.string().required(),
+  iconColor: Joi.string().optional(),
 }
 
 const insertSchema = Joi.object({

@@ -306,10 +306,14 @@ describe("/applications", () => {
         })
 
         it("should retrieve all the workspace packages for builder calls", async () => {
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.workspaceApp()
+          )
+
           const res = await config.api.application.getAppPackage(app.appId)
 
           expect(res.application).toBeDefined()
-          expect(res.workspaceApps).toHaveLength(1)
+          expect(res.workspaceApps).toHaveLength(2)
         })
       })
 
