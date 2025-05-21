@@ -377,7 +377,7 @@ describe("/applications", () => {
           let workspaceAppInfo: {
             workspaceApp: WorkspaceApp
             screens: Screen[]
-          }[] = []
+          }[]
 
           beforeEach(async () => {
             const { workspaceApp: workspaceApp1 } =
@@ -388,6 +388,8 @@ describe("/applications", () => {
               await config.api.workspaceApp.create(
                 structures.workspaceApps.workspaceApp()
               )
+
+            workspaceAppInfo = []
 
             async function createScreens(
               workspaceApp: WorkspaceApp,
