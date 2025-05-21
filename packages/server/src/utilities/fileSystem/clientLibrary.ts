@@ -140,30 +140,17 @@ export async function updateClientLibrary(appId: string) {
 export async function revertClientLibrary(appId: string) {
   let manifestPath, clientPath
 
-  if (env.isDev()) {
-    const db = context.getAppDB()
-    const app = await db.get<App>(DocumentType.APP_METADATA)
-    clientPath = join(
-      __dirname,
-      `/oldClientVersions/${app.revertableVersion}/app.js`
-    )
-    manifestPath = join(
-      __dirname,
-      `/oldClientVersions/${app.revertableVersion}/manifest.json`
-    )
-  } else {
-    // Copy backups manifest to tmp directory
-    manifestPath = await objectStore.retrieveToTmp(
-      ObjectStoreBuckets.APPS,
-      join(appId, "manifest.json.bak")
-    )
+  // Copy backups manifest to tmp directory
+  manifestPath = await objectStore.retrieveToTmp(
+    ObjectStoreBuckets.APPS,
+    join(appId, "manifest.json.bak")
+  )
 
-    // Copy backup client lib to tmp
-    clientPath = await objectStore.retrieveToTmp(
-      ObjectStoreBuckets.APPS,
-      join(appId, "budibase-client.js.bak")
-    )
-  }
+  // Copy backup client lib to tmp
+  clientPath = await objectStore.retrieveToTmp(
+    ObjectStoreBuckets.APPS,
+    join(appId, "budibase-client.js.bak")
+  )
 
   const manifestSrc = fs.promises.readFile(manifestPath, "utf8")
 

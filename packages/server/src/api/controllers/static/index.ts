@@ -436,6 +436,7 @@ export const serveClientLibrary = async function (
   }
 
   const serveLocally = shouldServeLocally(version || "")
+  console.log(version + ": " + serveLocally)
   if (!serveLocally) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
