@@ -89,6 +89,7 @@
       font-weight: 400;
     }
 
+    /* Inject latest font CSS from bbui.css, as the real file is versioned with the client lib */
     .spectrum {
       --font-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI,
         "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
