@@ -1,4 +1,4 @@
-import { newTool, Tool } from "@budibase/types"
+import { Tool } from "@budibase/types"
 import { MCPBaseClient } from "./mcpBase"
 import { z } from "zod"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
@@ -81,32 +81,30 @@ export class AtlassianClient extends MCPBaseClient {
       const client = await this.getMCPClient()
       const toolsResponse = await client.listTools()
 
-      const mcpTools = toolsResponse.tools
-      console.log("MCP Tools:", JSON.stringify(mcpTools, null, 2))
-
-      const budibaseTools = mcpTools.map(tool => {
-        return newTool({
+      const tools = toolsResponse.tools.map(tool => {
+        return {
           name: `atlassian_${tool.name}`,
           description: tool.description || "No description provided",
-          // TODO: Map to zod
-          parameters: tool.inputSchema,
+          schema: tool.inputSchema || { type: "object", properties: {} },
           handler: async (params: any) => {
             try {
+              console.log(`Calling tool ${tool.name} with params:`, params);
               const result = await client.callTool({
                 name: tool.name,
                 arguments: params
               })
-              return JSON.stringify(result)
+              return typeof result === "string" ? result : JSON.stringify(result)
             } catch (error) {
               console.error(`Error calling tool ${tool.name}:`, error)
               return `Error: Failed to execute Atlassian tool ${tool.name}`
             }
           }
-        })
+        }
       })
 
-      console.log(`Generated ${budibaseTools.length} Budibase tools from Atlassian MCP`)
-      return budibaseTools
+
+      console.log(`Generated ${tools.length} Budibase tools from Atlassian MCP`)
+      return tools
     } catch (error) {
       console.error("Error fetching Atlassian MCP tools:", error)
       return []

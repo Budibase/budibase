@@ -101,3 +101,12 @@ export interface LLMConfigOptions {
 export interface LLMProviderConfig extends LLMConfigOptions {
   provider: AIProvider
 }
+
+export interface Tool {
+  name: string
+  description: string
+  // Support either Zod schema or direct JSON Schema
+  parameters?: any // Zod schema
+  schema?: any // Direct JSON Schema for tools that already have it
+  handler: (params: any) => Promise<string> | string
+}
