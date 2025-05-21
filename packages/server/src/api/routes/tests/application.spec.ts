@@ -4,7 +4,7 @@ import { setEnv } from "../../../environment"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events, utils, context, roles } from "@budibase/backend-core"
+import { events, utils, context, roles, features } from "@budibase/backend-core"
 import env from "../../../environment"
 import { type App, BuiltinPermissionID } from "@budibase/types"
 import tk from "timekeeper"
@@ -290,6 +290,37 @@ describe("/applications", () => {
       expect(res.screens).toContainEqual(
         expect.objectContaining({ _id: screen2._id })
       )
+    })
+
+    describe("workspace apps", () => {
+      describe("on", () => {
+        let featureCleanup: () => void
+        beforeAll(() => {
+          featureCleanup = features.testutils.setFeatureFlags("*", {
+            WORKSPACE_APPS: true,
+          })
+        })
+
+        afterAll(() => {
+          featureCleanup()
+        })
+
+        it("should retrieve all the workspace packages for builder calls", async () => {
+          const res = await config.api.application.getAppPackage(app.appId)
+
+          expect(res.application).toBeDefined()
+          expect(res.workspaceApps).toHaveLength(1)
+        })
+      })
+
+      describe("off", () => {
+        it("should not retrieve workspaceApps", async () => {
+          const res = await config.api.application.getAppPackage(app.appId)
+
+          expect(res.application).toBeDefined()
+          expect(res.workspaceApps).toHaveLength(0)
+        })
+      })
     })
   })
 
