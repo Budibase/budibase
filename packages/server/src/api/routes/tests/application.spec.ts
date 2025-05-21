@@ -4,7 +4,14 @@ import { setEnv } from "../../../environment"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events, utils, context, roles, features } from "@budibase/backend-core"
+import {
+  events,
+  utils,
+  context,
+  roles,
+  features,
+  Header,
+} from "@budibase/backend-core"
 import env from "../../../environment"
 import { type App, BuiltinPermissionID } from "@budibase/types"
 import tk from "timekeeper"
@@ -267,7 +274,6 @@ describe("/applications", () => {
 
       const res = await config.api.application.getAppPackage(app.appId)
 
-      expect(res.application).toBeDefined()
       expect(res.screens).toHaveLength(4) // Default one + 3 created
     })
 
@@ -285,7 +291,6 @@ describe("/applications", () => {
         publicUser: true,
       })
 
-      expect(res.application).toBeDefined()
       expect(res.screens).toHaveLength(1)
       expect(res.screens).toContainEqual(
         expect.objectContaining({ _id: screen2._id })
@@ -312,8 +317,37 @@ describe("/applications", () => {
 
           const res = await config.api.application.getAppPackage(app.appId)
 
-          expect(res.application).toBeDefined()
           expect(res.workspaceApps).toHaveLength(2)
+          expect(res.screens).toHaveLength(1)
+        })
+
+        it("should not retrieve all the workspace packages for client calls", async () => {
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.workspaceApp()
+          )
+
+          const res = await config.api.application.getAppPackage(app.appId, {
+            headers: {
+              [Header.TYPE]: "client",
+            },
+          })
+
+          expect(res.workspaceApps).toHaveLength(0)
+          expect(res.screens).toHaveLength(1)
+        })
+
+        it("should not retrieve all the workspace packages for public calls", async () => {
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.workspaceApp()
+          )
+
+          await config.publish()
+          const res = await config.api.application.getAppPackage(app.appId, {
+            publicUser: true,
+          })
+
+          expect(res.workspaceApps).toHaveLength(0)
+          expect(res.screens).toHaveLength(1)
         })
       })
 
@@ -321,7 +355,6 @@ describe("/applications", () => {
         it("should not retrieve workspaceApps", async () => {
           const res = await config.api.application.getAppPackage(app.appId)
 
-          expect(res.application).toBeDefined()
           expect(res.workspaceApps).toHaveLength(0)
         })
       })

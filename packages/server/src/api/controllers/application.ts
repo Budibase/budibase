@@ -286,7 +286,10 @@ export async function fetchAppPackage(
 
   let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
-  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+  if (
+    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    isBuilder
+  ) {
     const fromHashUrl = ctx.params.hashUrl as string
     if (fromHashUrl) {
       const allWorkspaceApps = await sdk.workspaceApps.fetch()
