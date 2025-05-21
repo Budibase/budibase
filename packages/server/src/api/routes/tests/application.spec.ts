@@ -12,6 +12,7 @@ import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
 import nock from "nock"
 import path from "path"
+import { basicScreen } from "../../../tests/utilities/structures"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -253,6 +254,17 @@ describe("/applications", () => {
       const res = await config.api.application.getAppPackage(app.appId)
       expect(res.application).toBeDefined()
       expect(res.application.appId).toEqual(config.getAppId())
+    })
+
+    it("should retrieve all the screens for builder calls", async () => {
+      await config.api.screen.save(basicScreen())
+      await config.api.screen.save(basicScreen())
+      await config.api.screen.save(basicScreen())
+
+      const res = await config.api.application.getAppPackage(app.appId)
+
+      expect(res.application).toBeDefined()
+      expect(res.screens).toHaveLength(4) // Default one + 3 created
     })
   })
 
