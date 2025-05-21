@@ -422,7 +422,7 @@ describe("/applications", () => {
 
           it("should retrieve only the screens for a the workspace all with empty prefix", async () => {
             const res = await config.api.application.getAppPackage(
-              { appId: app.appId, hashUrl: "/" },
+              { appId: app.appId, fromRoute: "/" },
               {
                 headers: {
                   [Header.TYPE]: "client",
@@ -441,9 +441,9 @@ describe("/applications", () => {
           })
 
           it("should retrieve only the screens for a the workspace from the base url of it", async () => {
-            const fromUrl = workspaceAppInfo[1].workspaceApp.urlPrefix
+            const fromRoute = workspaceAppInfo[1].workspaceApp.urlPrefix
             const res = await config.api.application.getAppPackage(
-              { appId: app.appId, hashUrl: fromUrl },
+              { appId: app.appId, fromRoute },
               {
                 headers: {
                   [Header.TYPE]: "client",
@@ -464,7 +464,7 @@ describe("/applications", () => {
           it("should retrieve only the screens for a the workspace from a page url", async () => {
             const fromUrl = `${workspaceAppInfo[1].workspaceApp.urlPrefix}/page-1}`
             const res = await config.api.application.getAppPackage(
-              { appId: app.appId, hashUrl: fromUrl },
+              { appId: app.appId, fromRoute: fromUrl },
               {
                 headers: {
                   [Header.TYPE]: "client",

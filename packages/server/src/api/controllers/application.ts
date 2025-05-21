@@ -287,12 +287,16 @@ export async function fetchAppPackage(
   let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const fromHashUrl = ctx.request.query.hashUrl
-    if (typeof fromHashUrl === "string") {
-      const allWorkspaceApps = await sdk.workspaceApps.fetch()
+    const fromRoute = ctx.request.query.fromRoute
+    if (typeof fromRoute === "string") {
+      let allWorkspaceApps = await sdk.workspaceApps.fetch()
+      // Sort decending to ensure we match the most strict, removing match conflicts
+      allWorkspaceApps = allWorkspaceApps.sort((a, b) =>
+        b.urlPrefix.localeCompare(a.urlPrefix)
+      )
 
       const matchedWorkspaceApp = allWorkspaceApps.find(a =>
-        fromHashUrl.startsWith(a.urlPrefix)
+        fromRoute.startsWith(a.urlPrefix)
       )
       if (matchedWorkspaceApp) {
         screens = screens.filter(

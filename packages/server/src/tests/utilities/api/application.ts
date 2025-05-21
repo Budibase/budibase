@@ -108,12 +108,12 @@ export class ApplicationAPI extends TestAPI {
   }
 
   getAppPackage = async (
-    { appId, hashUrl }: { appId: string; hashUrl?: string },
+    { appId, fromRoute }: { appId: string; fromRoute?: string },
     opts?: RequestOpts
   ): Promise<FetchAppPackageResponse> => {
     let url = `/api/applications/${appId}/appPackage`
-    if (hashUrl) {
-      url += `?hashUrl=${encodeURIComponent(hashUrl)}`
+    if (fromRoute) {
+      url += `?fromRoute=${encodeURIComponent(fromRoute)}`
     }
     return await this._get<FetchAppPackageResponse>(url, opts)
   }
