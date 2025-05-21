@@ -201,7 +201,7 @@ export type TranslateStepOutputs = {
 
 export type SummariseStepInputs = {
   text: string
-  length?: string
+  length?: SummariseLength
 }
 
 export type SummariseStepOutputs = {
@@ -226,6 +226,12 @@ export enum Model {
   GPT_4 = "gpt-4",
   GPT_4O = "gpt-4o",
   GPT_4O_MINI = "gpt-4o-mini",
+}
+
+export enum SummariseLength {
+  SHORT = "short",
+  MEDIUM = "medium",
+  LONG = "long",
 }
 
 export type OpenAIStepOutputs = Omit<BaseAutomationOutputs, "response"> & {
