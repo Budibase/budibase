@@ -197,7 +197,7 @@ async function addSampleDataScreen() {
     workspaceAppId = workspaceApp._id!
   }
 
-  let screen = await createSampleDataTableScreen(workspaceAppId)
+  let screen = createSampleDataTableScreen(workspaceAppId)
   screen._id = generateScreenID()
   await db.put(screen)
 }

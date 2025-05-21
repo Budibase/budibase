@@ -39,12 +39,13 @@ describe("/applications", () => {
     await config.init()
   })
 
+  async function createNewApp() {
+    app = await config.newTenant()
+    await config.publish()
+  }
+
   beforeEach(async () => {
-    app = await config.api.application.create({ name: utils.newid() })
-    const deployment = await config.api.application.publish(app.appId)
-    if (deployment.status !== "SUCCESS") {
-      throw new Error("Failed to publish app")
-    }
+    await createNewApp()
     jest.clearAllMocks()
     nock.cleanAll()
   })
@@ -262,10 +263,6 @@ describe("/applications", () => {
   })
 
   describe("fetchAppPackage", () => {
-    beforeEach(async () => {
-      await config.newTenant()
-    })
-
     it("should be able to fetch the app package", async () => {
       const res = await config.api.application.getAppPackage({
         appId: app.appId,
@@ -380,13 +377,18 @@ describe("/applications", () => {
           }[]
 
           beforeEach(async () => {
+            const appPackage = await config.api.application.getAppPackage({
+              appId: app.appId,
+            })
+            const defaultWorkspaceApp = appPackage.workspaceApps[0]!
+
             const { workspaceApp: workspaceApp1 } =
               await config.api.workspaceApp.create(
-                structures.workspaceApps.workspaceApp()
+                structures.workspaceApps.workspaceApp({ urlPrefix: "/app1" })
               )
             const { workspaceApp: workspaceApp2 } =
               await config.api.workspaceApp.create(
-                structures.workspaceApps.workspaceApp()
+                structures.workspaceApps.workspaceApp({ urlPrefix: "/app2" })
               )
 
             workspaceAppInfo = []
@@ -411,10 +413,6 @@ describe("/applications", () => {
               })
             }
 
-            const appPackage = await config.api.application.getAppPackage({
-              appId: config.appId!,
-            })
-            const defaultWorkspaceApp = appPackage.workspaceApps[0]!
             await createScreens(defaultWorkspaceApp, ["/page-1"])
             await createScreens(workspaceApp1, ["/", "/page-1", "/page-2"])
             await createScreens(workspaceApp2, ["/", "/page-1"])

@@ -1,7 +1,7 @@
 import { RequiredKeys, WorkspaceApp } from "@budibase/types"
 import { generator } from "./generator"
 
-export function workspaceApp(): WorkspaceApp {
+export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   const result: RequiredKeys<WorkspaceApp> = {
     name: generator.word(),
     urlPrefix: `/${generator.word()}`,
@@ -12,6 +12,8 @@ export function workspaceApp(): WorkspaceApp {
     _rev: undefined,
     createdAt: undefined,
     updatedAt: undefined,
+
+    ...props,
   }
   return result
 }
