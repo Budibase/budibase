@@ -38,7 +38,11 @@
   let rootModal: Modal
 
   export const open = (addToWorkspaceId?: string) => {
-    if ($featureFlags.WORKSPACE_APPS && !addToWorkspaceId) {
+    if (
+      $featureFlags.WORKSPACE_APPS &&
+      !addToWorkspaceId &&
+      $workspaceAppStore.workspaceApps.length > 1
+    ) {
       modalSteps = [CreationStep.APP_PICKER, CreationStep.SCREEN_TYPE_PICKER]
     } else {
       modalSteps = [CreationStep.SCREEN_TYPE_PICKER]
