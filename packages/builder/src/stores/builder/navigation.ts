@@ -94,6 +94,13 @@ export class NavigationStore extends BudiStore<AppNavigation> {
     const { navigation } = metadata
     this.syncAppNavigation(navigation)
   }
+
+  async refresh() {
+    const appId = get(appStore).appId
+    const appPackage = await API.fetchAppPackage(appId)
+
+    this.syncAppNavigation(appPackage.application.navigation)
+  }
 }
 
 export const navigationStore = new NavigationStore()

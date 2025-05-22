@@ -412,7 +412,8 @@ export class ScreenStore extends BudiStore<ScreenState> {
         deleteUrls.push(screen.routing.route)
       })
     await Promise.all(promises)
-    await navigationStore.deleteLink(deleteUrls)
+
+    navigationStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()
     this.update(state => {

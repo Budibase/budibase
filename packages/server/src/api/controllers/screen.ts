@@ -124,6 +124,8 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
 
   await db.remove(id, ctx.params.screenRev)
 
+  await sdk.navigation.deleteLink(screen.routing.route)
+
   await events.screen.deleted(screen)
   ctx.body = {
     message: "Screen deleted successfully",
