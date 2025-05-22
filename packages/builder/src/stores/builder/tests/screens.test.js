@@ -36,6 +36,7 @@ vi.mock("@/stores/builder", async () => {
 
   const navigationStore = {
     deleteLink: vi.fn(),
+    refresh: vi.fn(),
   }
 
   return {
