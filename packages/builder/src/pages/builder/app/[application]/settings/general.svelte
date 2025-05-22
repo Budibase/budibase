@@ -93,8 +93,8 @@
     <Heading size="S">App version</Heading>
     {#if $admin.isDev}
       <Body size="S">
-        You're running the latest client version from your filesystem, as you're
-        in developer mode.
+        You're running the latest client version from your file system, as
+        you're in developer mode.
       </Body>
     {:else if updateAvailable}
       <Body size="S">
