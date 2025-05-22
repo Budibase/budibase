@@ -360,7 +360,7 @@ export async function coreOutputProcessing(
           continue
         }
         const process = async (attachment: RowAttachment) => {
-          if (!attachment.url && attachment.key) {
+          if (attachment.key) {
             attachment.url = await objectStore.getAppFileUrl(attachment.key)
           }
           return attachment

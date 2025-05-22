@@ -15,6 +15,7 @@ import * as screens from "./app/screens"
 import * as common from "./app/common"
 import * as oauth2 from "./app/oauth2"
 import * as ai from "./app/ai"
+import * as workspaceApps from "./app/workspaceApps"
 
 const sdk = {
   backups,
@@ -34,6 +35,7 @@ const sdk = {
   common,
   oauth2,
   ai,
+  workspaceApps,
 }
 
 // default export for TS
