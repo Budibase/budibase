@@ -132,6 +132,9 @@
       {bindings}
       iconTooltip="Navigation item"
       componentTitle={navItem.text}
+      onSave={async value => {
+        update("_styles")({ custom: value })
+      }}
     />
   </div>
 </Popover>

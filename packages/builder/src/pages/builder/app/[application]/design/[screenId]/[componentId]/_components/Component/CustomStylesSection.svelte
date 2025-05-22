@@ -22,6 +22,7 @@
   export let componentDefinition
   export let iconTooltip
   export let componentTitle
+  export let onSave = null
 
   let tempValue
   let drawer
@@ -46,7 +47,11 @@
   const save = async () => {
     try {
       const value = readableToRuntimeBinding(bindings, tempValue)
-      await componentStore.updateCustomStyle(value)
+      if (onSave) {
+        await onSave(value)
+      } else {
+        await componentStore.updateCustomStyle(value)
+      }
     } catch (error) {
       notifications.error("Error updating custom style")
     }
