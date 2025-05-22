@@ -40,7 +40,7 @@ export async function save(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
   const db = context.getAppDB()
-  let screen = ctx.request.body
+  let { navigationLinkLabel, ...screen } = ctx.request.body
 
   let eventFn
   if (!screen._id) {
@@ -100,6 +100,15 @@ export async function save(
     _id: response.id,
     _rev: response.rev,
   }
+
+  if (navigationLinkLabel) {
+    await sdk.navigation.addLink({
+      label: navigationLinkLabel,
+      url: screen.routing.route,
+      roleId: screen.routing.roleId,
+    })
+  }
+
   ctx.message = `Screen ${screen.name} saved.`
   ctx.body = {
     ...savedScreen,
