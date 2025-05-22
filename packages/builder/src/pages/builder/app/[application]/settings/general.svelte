@@ -29,6 +29,7 @@
   $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
   $: selectedApp = filteredApps.length ? filteredApps[0] : {}
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
+  $: revertAvailable = $appStore.revertableVersion != null
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
@@ -121,17 +122,20 @@
         <br />
         You're running the latest!
       </Body>
-      <div class="buttons">
-        <Button
-          secondary
-          on:click={versionModal.show}
-          tooltip={$isOnlyUser
-            ? null
-            : "Unavailable - another user is editing this app"}
-        >
-          Revert version
-        </Button>
-      </div>
+      {#if revertAvailable}
+        <div class="buttons">
+          <Button
+            secondary
+            on:click={versionModal.show}
+            disabled={!$isOnlyUser}
+            tooltip={$isOnlyUser
+              ? null
+              : "Unavailable - another user is editing this app"}
+          >
+            Revert version
+          </Button>
+        </div>
+      {/if}
     {/if}
   </Layout>
   <Divider />

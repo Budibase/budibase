@@ -52,7 +52,7 @@
       )
       onComplete()
     } catch (err) {
-      notifications.error(`Error updating app: ${err}`)
+      notifications.error(err?.message || err || "Error updating app")
     }
     updateModal.hide()
   }
@@ -67,7 +67,7 @@
         `App reverted successfully to version ${$appStore.revertableVersion}`
       )
     } catch (err) {
-      notifications.error(`Error reverting app: ${err}`)
+      notifications.error(err?.message || err || "Error reverting app")
     }
     updateModal.hide()
   }
