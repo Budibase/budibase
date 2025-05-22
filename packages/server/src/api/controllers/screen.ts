@@ -42,10 +42,10 @@ export async function save(
   const db = context.getAppDB()
   let { navigationLinkLabel, ...screen } = ctx.request.body
 
-  let eventFn
+  const isCreation = !screen._id
+
   if (!screen._id) {
     screen._id = generateScreenID()
-    eventFn = events.screen.created
   }
 
   const response = await db.put(screen)
@@ -92,8 +92,8 @@ export async function save(
     }
   }
 
-  if (eventFn) {
-    await eventFn(screen)
+  if (isCreation) {
+    await events.screen.created(screen)
   }
   const savedScreen = {
     ...screen,
@@ -101,7 +101,7 @@ export async function save(
     _rev: response.rev,
   }
 
-  if (navigationLinkLabel) {
+  if (navigationLinkLabel && isCreation) {
     await sdk.navigation.addLink({
       label: navigationLinkLabel,
       url: screen.routing.route,
