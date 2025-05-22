@@ -38,7 +38,10 @@ const createAppStore = () => {
       throw "Cannot fetch app definition without app ID set"
     }
     try {
-      const appDefinition = await API.fetchAppPackage(appId)
+      const appDefinition = await API.fetchAppPackage(
+        appId,
+        new URL(window.location.href).hash
+      )
       store.set({
         ...initialState,
         ...appDefinition,

@@ -16,7 +16,6 @@ import {
   DocumentType,
   generateAppID,
   generateDevAppID,
-  generateScreenID,
   getLayoutParams,
 } from "../../db/utils"
 import {
@@ -31,6 +30,7 @@ import {
   roles,
   tenancy,
   users,
+  utils,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -183,7 +183,6 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  const db = context.getAppDB()
   let workspaceAppId: string | undefined
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const appMetadata = await sdk.applications.metadata.get()
@@ -192,13 +191,20 @@ async function addSampleDataScreen() {
       name: appMetadata.name,
       urlPrefix: "/",
       icon: "Monitoring",
+      navigation: {
+        navigation: "Top",
+        title: appMetadata.name,
+        navWidth: "Large",
+        navBackground: "var(--spectrum-global-color-static-blue-1200)",
+        navTextColor: "var(--spectrum-global-color-static-white)",
+        links: [],
+      },
     })
     workspaceAppId = workspaceApp._id!
   }
 
-  let screen = await createSampleDataTableScreen(workspaceAppId)
-  screen._id = generateScreenID()
-  await db.put(screen)
+  const screen = createSampleDataTableScreen(workspaceAppId)
+  await sdk.screens.create(screen)
 }
 
 async function addSampleDataNavLinks() {
@@ -275,8 +281,8 @@ export async function fetchAppPackage(
     )
   }
 
-  // Only filter screens if the user is not a builder
-  const isBuilder = users.isBuilder(ctx.user, appId)
+  // Only filter screens if the user is not a builder call
+  const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
@@ -286,8 +292,20 @@ export async function fetchAppPackage(
   let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const fromHashUrl = ctx.params.hashUrl as string
+    if (fromHashUrl) {
+      const allWorkspaceApps = await sdk.workspaceApps.fetch()
+
+      const matchedWorkspaceApp = allWorkspaceApps.find(a =>
+        fromHashUrl.startsWith(a.urlPrefix)
+      )
+      if (matchedWorkspaceApp) {
+        screens = screens.filter(
+          s => s.workspaceAppId === matchedWorkspaceApp._id
+        )
+      }
+    }
     workspaceApps = await extractScreensByWorkspaceApp(screens, isBuilder)
-    screens = []
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(

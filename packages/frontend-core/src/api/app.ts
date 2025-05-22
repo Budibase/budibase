@@ -28,7 +28,10 @@ import {
 } from "@budibase/types"
 
 export interface AppEndpoints {
-  fetchAppPackage: (appId: string) => Promise<FetchAppPackageResponse>
+  fetchAppPackage: (
+    appId: string,
+    hashUrl?: string
+  ) => Promise<FetchAppPackageResponse>
   saveAppMetadata: (
     appId: string,
     metadata: UpdateAppRequest
@@ -71,9 +74,13 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * Fetches screen definition for an app.
    * @param appId the ID of the app to fetch from
    */
-  fetchAppPackage: async appId => {
+  fetchAppPackage: async (appId, hashUrl) => {
+    let url = `/api/applications/${appId}/appPackage`
+    if (hashUrl) {
+      url += `?hashUrl=${encodeURIComponent(hashUrl)}`
+    }
     return await API.get({
-      url: `/api/applications/${appId}/appPackage`,
+      url,
     })
   },
 
