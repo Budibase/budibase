@@ -5,11 +5,11 @@
   import { workspaceAppStore } from "@/stores/builder/workspaceApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
-  import type { Screen, UIWorkspaceApp, WorkspaceApp } from "@budibase/types"
+  import type { Screen, UIWorkspaceApp } from "@budibase/types"
   import NewScreenModal from "../../../_components/NewScreen/index.svelte"
   import WorkspaceAppModal from "../WorkspaceApp/WorkspaceAppModal.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
-  import WorkspaceAppNavItem from "./WorkspaceAppNavItem.svelte"
+  import WorkspaceAppList from "./WorkspaceAppList.svelte"
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
@@ -22,7 +22,6 @@
   let newScreenModal: NewScreenModal
 
   let workspaceAppModal: WorkspaceAppModal
-  let selectedWorkspaceApp: WorkspaceApp | undefined
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
   $: filteredWorkspaceApps = getFilteredWorkspaceApps(
@@ -100,11 +99,6 @@
       y: boundingBox.y + boundingBox.height,
     })
   }
-
-  function onEditWorkspaceApp(workspaceApp: WorkspaceApp) {
-    selectedWorkspaceApp = workspaceApp
-    workspaceAppModal.show()
-  }
 </script>
 
 <div class="screens" class:searching use:resizable>
@@ -119,13 +113,7 @@
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
     {#if workspaceAppsEnabled}
-      {#each filteredWorkspaceApps as workspaceApp}
-        <WorkspaceAppNavItem
-          {workspaceApp}
-          on:edit={() => onEditWorkspaceApp(workspaceApp)}
-          {searchValue}
-        />
-      {/each}
+      <WorkspaceAppList workspaceApps={filteredWorkspaceApps} {searchValue} />
     {:else if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <ScreenNavItem {screen} />
@@ -147,11 +135,7 @@
   />
 </div>
 
-<WorkspaceAppModal
-  bind:this={workspaceAppModal}
-  workspaceApp={selectedWorkspaceApp}
-  on:hide={() => (selectedWorkspaceApp = undefined)}
-/>
+<WorkspaceAppModal bind:this={workspaceAppModal} />
 <NewScreenModal bind:this={newScreenModal} />
 
 <style>
