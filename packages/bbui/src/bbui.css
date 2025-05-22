@@ -122,6 +122,7 @@
 .spectrum {
   --spectrum-alias-body-text-font-family: var(--font-sans) !important;
   --spectrum-global-font-family-base: var(--font-sans) !important;
+  --spectrum-global-font-line-height-small: 1.4 !important;
   --spectrum-alias-text-color-disabled: var(--spectrum-global-color-gray-600) !important;
 }
 
