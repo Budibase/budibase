@@ -290,6 +290,7 @@
                     url={navItem.url}
                     subLinks={navItem.subLinks}
                     internalLink={navItem.internalLink}
+                    customStyles={navItem._styles.custom}
                     on:clickLink={handleClickLink}
                     leftNav={navigation === "Left"}
                     {mobile}
