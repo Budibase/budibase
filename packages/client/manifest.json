@@ -2388,6 +2388,18 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click segment",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked segment",
+            "key": "segment",
+            "type": "schema"
+          }
+        ]
+      },
+      {
         "type": "text",
         "label": "Width",
         "key": "width"

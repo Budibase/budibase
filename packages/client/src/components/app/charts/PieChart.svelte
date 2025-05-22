@@ -1,6 +1,7 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
   import { formatters, parsePalette } from "./utils"
+  import { writable, get } from "svelte/store"
 
   export let title
   export let dataProvider
@@ -13,6 +14,8 @@
   export let legend
   export let palette
   export let c1, c2, c3, c4, c5
+
+  const selectedSegment = writable(null)
 
   $: labelType =
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
@@ -54,6 +57,16 @@
       },
       zoom: {
         enabled: false,
+      },
+      events: {
+        // Clicking on a slice of the pie
+        dataPointSelection: function (event, chartContext, opts) {
+          const segmentIndex = opts.dataPointIndex
+          const row = dataProvider.rows[segmentIndex]
+
+          selectedSegment.set({ ...row, index: segmentIndex })
+          console.log(get(selectedSegment))
+        },
       },
     },
   }
