@@ -2,12 +2,10 @@ import semver from "semver"
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import fs from "fs"
-import { context, objectStore } from "@budibase/backend-core"
+import { objectStore } from "@budibase/backend-core"
 import { resolve } from "../centralPath"
 import env from "../../environment"
 import { TOP_LEVEL_PATH } from "./filesystem"
-import { DocumentType } from "../../db/utils"
-import { App } from "@budibase/types"
 
 export function devClientLibPath() {
   return require.resolve("@budibase/client")
