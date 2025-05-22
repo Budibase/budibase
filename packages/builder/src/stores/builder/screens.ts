@@ -264,6 +264,14 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     await this.syncScreenData(savedScreen)
 
+    if (navigationLinkLabel) {
+      await navigationStore.addLink({
+        url: screen.routing.route,
+        title: navigationLinkLabel,
+        roleId: screen.routing.roleId,
+      })
+    }
+
     return savedScreen
   }
 
