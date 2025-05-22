@@ -4,6 +4,7 @@
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
+  import CustomStylesSection from "../Component/CustomStylesSection.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import SubLinksDrawer from "./SubLinksDrawer.svelte"
   import { screenStore } from "@/stores/builder"
@@ -125,6 +126,13 @@
       value={navItem.roleId}
       onChange={update("roleId")}
     />
+    <CustomStylesSection
+      componentInstance={navItem}
+      componentDefinition={null}
+      {bindings}
+      iconTooltip="Navigation item"
+      componentTitle={navItem.text}
+    />
   </div>
 </Popover>
 
@@ -137,5 +145,11 @@
     align-items: stretch;
     gap: 8px;
     padding: var(--spacing-xl);
+    max-height: 200px;
+    overflow: scroll;
+  }
+  .settings :global(.property-group-name),
+  .settings :global(.property-panel) {
+    padding: 5px 0;
   }
 </style>
