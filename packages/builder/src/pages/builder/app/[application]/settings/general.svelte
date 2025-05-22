@@ -11,7 +11,7 @@
   import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
   import { isOnlyUser, appStore, deploymentStore } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import { appsStore } from "@/stores/portal"
+  import { appsStore, admin } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -91,7 +91,12 @@
   <Divider />
   <Layout gap="XS" noPadding>
     <Heading size="S">App version</Heading>
-    {#if updateAvailable}
+    {#if $admin.isDev}
+      <Body size="S">
+        You're running the latest client version from your filesystem, as you're
+        in developer mode.
+      </Body>
+    {:else if updateAvailable}
       <Body size="S">
         The app is currently using version <strong>{$appStore.version}</strong>
         but version <strong>{$appStore.upgradableVersion}</strong> is available.
