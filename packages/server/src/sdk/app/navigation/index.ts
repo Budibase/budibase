@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
 import sdk from "../.."
-import { App } from "@budibase/types"
+import { App, AppNavigation } from "@budibase/types"
 
 export async function addLink({
   label,
@@ -53,4 +53,12 @@ export async function deleteLink(route: string) {
     },
   }
   await db.put(updatedMetadata)
+}
+
+export async function update(navigation: AppNavigation) {
+  const appMetadata = await sdk.applications.metadata.get()
+  appMetadata.navigation = navigation
+
+  const db = context.getAppDB()
+  await db.put(appMetadata)
 }
