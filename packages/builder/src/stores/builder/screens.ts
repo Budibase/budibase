@@ -20,6 +20,7 @@ import {
   DeleteScreenResponse,
   FeatureFlag,
   FetchAppPackageResponse,
+  SaveScreenRequest,
   SaveScreenResponse,
   Screen,
   ScreenVariant,
@@ -39,7 +40,7 @@ export const initialScreenState: ScreenState = {
 export class ScreenStore extends BudiStore<ScreenState> {
   history: HistoryStore<Screen>
   delete: (screens: Screen) => Promise<void>
-  save: (screen: Screen) => Promise<Screen>
+  save: (screen: SaveScreenRequest) => Promise<Screen>
 
   constructor() {
     super(initialScreenState)
@@ -220,9 +221,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * Core save method. If creating a new screen, the store will sync the target
    * screen id to ensure that it is selected in the builder
    *
-   * @param {Screen} screen The screen being modified/created
+   * @param {Screen} screenRequest The screen being modified/created
    */
-  async saveScreen(screen: Screen) {
+  async saveScreen(screenRequest: SaveScreenRequest) {
+    const { navigationLinkLabel, ...screen } = screenRequest
     const appState = get(appStore)
 
     // Validate screen structure if the app supports it
@@ -235,7 +237,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Save screen
     const creatingNewScreen = screen._id === undefined
-    const savedScreen = await API.saveScreen(screen)
+    const savedScreen = await API.saveScreen({ ...screen, navigationLinkLabel })
 
     // Update state
     this.update(state => {

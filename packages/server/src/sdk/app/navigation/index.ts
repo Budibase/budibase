@@ -19,6 +19,7 @@ export async function addLink({
     text: label,
     url,
     roleId,
+    type: "link",
   })
 
   const db = context.getAppDB()

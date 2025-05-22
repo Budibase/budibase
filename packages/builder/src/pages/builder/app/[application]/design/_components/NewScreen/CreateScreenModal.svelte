@@ -18,7 +18,12 @@
   import { AutoScreenTypes } from "@/constants"
   import type { SourceOption } from "./utils"
   import { makeTableOption, makeViewOption } from "./utils"
-  import type { Screen, Table, ViewV2 } from "@budibase/types"
+  import type {
+    SaveScreenRequest,
+    Screen,
+    Table,
+    ViewV2,
+  } from "@budibase/types"
 
   let mode: string
 
@@ -69,7 +74,9 @@
     }
   }
 
-  const createScreen = async (screenTemplate: Screen): Promise<Screen> => {
+  const createScreen = async (
+    screenTemplate: SaveScreenRequest
+  ): Promise<Screen> => {
     try {
       return await screenStore.save(screenTemplate)
     } catch (error) {
@@ -89,7 +96,12 @@
         screenTemplate.data,
         screenTemplate.navigationLinkLabel
       )
-      newScreens.push(await createScreen(screenTemplate.data))
+      newScreens.push(
+        await createScreen({
+          ...screenTemplate.data,
+          navigationLinkLabel: screenTemplate.navigationLinkLabel ?? undefined,
+        })
+      )
     }
 
     return newScreens
