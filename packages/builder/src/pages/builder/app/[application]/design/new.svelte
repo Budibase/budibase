@@ -15,7 +15,10 @@
 
 <style>
   .new-screen-picker {
-    justify-items: center;
+    display: flex;
+    justify-content: center;
+    flex: 1 1 auto;
+    padding-top: 40px;
   }
 
   .new-screen-picker :global(.spectrum-Modal) {
