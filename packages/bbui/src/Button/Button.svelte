@@ -70,6 +70,9 @@
   button.is-disabled {
     cursor: default;
   }
+  .spectrum-Button {
+    padding-bottom: calc(var(--spectrum-button-padding-y) - 1px);
+  }
   .spectrum-Button-label {
     white-space: nowrap;
     overflow: hidden;
