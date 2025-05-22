@@ -226,6 +226,7 @@
     align-items: center;
     gap: 4px;
     transition: color 130ms ease-out;
+    color: var(--spectrum-global-color-gray-800);
   }
   .nav_title:hover {
     cursor: pointer;
@@ -239,6 +240,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
+    color: var(--spectrum-global-color-gray-900);
   }
 
   /* Body */

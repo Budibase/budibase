@@ -6,10 +6,9 @@
   export let icon: string | undefined = undefined
   export let url: string | undefined = undefined
   export let collapsed = false
-  export let forceActive = false
+  export let forceActive: boolean | undefined = undefined
 
-  $: active =
-    forceActive || (forceActive !== false && url ? $isActive(url) : false)
+  $: active = forceActive ?? (url ? $isActive(url) : false)
 </script>
 
 <a class="link" class:active href={url} on:click class:collapsed tabindex="0">
