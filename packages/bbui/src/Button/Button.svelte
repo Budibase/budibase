@@ -100,8 +100,11 @@
   .spectrum-Button .spectrum-Button-label + .spectrum-Icon {
     margin-left: var(--spectrum-button-primary-icon-gap);
     margin-right: calc(
-      -1 * (var(--spectrum-button-primary-textonly-padding-left-adjusted) -
-            var(--spectrum-button-primary-padding-left-adjusted))
+      -1 *
+        (
+          var(--spectrum-button-primary-textonly-padding-left-adjusted) -
+            var(--spectrum-button-primary-padding-left-adjusted)
+        )
     );
   }
 </style>

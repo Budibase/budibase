@@ -148,7 +148,9 @@
     display: flex;
     padding: 12px;
     align-items: center;
-    transition: filter 0.5s, background 0.13s ease-out;
+    transition:
+      filter 0.5s,
+      background 0.13s ease-out;
   }
 
   a:hover {

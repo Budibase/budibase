@@ -69,7 +69,9 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     box-sizing: border-box;
-    transition: border-color 130ms ease-out, background 130ms ease-out,
+    transition:
+      border-color 130ms ease-out,
+      background 130ms ease-out,
       background 130ms ease-out;
     color: var(--spectrum-global-color-gray-800);
     --padding: 16px;

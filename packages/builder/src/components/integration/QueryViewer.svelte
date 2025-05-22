@@ -353,7 +353,9 @@
     padding: 8px 10px 8px 16px;
     display: flex;
     border-bottom: 2px solid transparent;
-    transition: border-bottom 130ms ease-out, background 130ms ease-out;
+    transition:
+      border-bottom 130ms ease-out,
+      background 130ms ease-out;
   }
 
   .header.scrolling {

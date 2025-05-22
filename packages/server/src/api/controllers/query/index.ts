@@ -392,9 +392,8 @@ async function execute(
       schema: query.schema,
     }
 
-    const { rows, pagination, extra, info } = await Runner.run<QueryResponse>(
-      inputs
-    )
+    const { rows, pagination, extra, info } =
+      await Runner.run<QueryResponse>(inputs)
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw

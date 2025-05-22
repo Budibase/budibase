@@ -160,7 +160,10 @@
     right: 6px;
     border: 1px solid transparent;
     border-radius: 3px;
-    transition: 150ms background-color, 150ms border-color, 150ms color;
+    transition:
+      150ms background-color,
+      150ms border-color,
+      150ms color;
   }
 
   .input:hover,

@@ -839,9 +839,8 @@ describe("scim", () => {
 
       it("creating an external group that conflicts an internal one syncs the existing group", async () => {
         const groupToSave = structures.userGroups.userGroup()
-        const { body: internalGroup } = await config.api.groups.saveGroup(
-          groupToSave
-        )
+        const { body: internalGroup } =
+          await config.api.groups.saveGroup(groupToSave)
 
         const scimGroupData = {
           externalId: structures.uuid(),
