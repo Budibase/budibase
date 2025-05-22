@@ -7,7 +7,6 @@
   import { Modal, ModalCancelFrom, notifications } from "@budibase/bbui"
   import {
     screenStore,
-    navigationStore,
     permissions as permissionsStore,
     datasources,
     appStore,
@@ -92,10 +91,6 @@
     const newScreens: Screen[] = []
 
     for (let screenTemplate of screenTemplates) {
-      await addNavigationLink(
-        screenTemplate.data,
-        screenTemplate.navigationLinkLabel
-      )
       newScreens.push(
         await createScreen({
           ...screenTemplate.data,
@@ -105,19 +100,6 @@
     }
 
     return newScreens
-  }
-
-  const addNavigationLink = async (
-    screen: Screen,
-    linkLabel: string | null
-  ) => {
-    if (linkLabel == null) return
-
-    await navigationStore.saveLink(
-      screen.routing.route,
-      linkLabel,
-      screen.routing.roleId
-    )
   }
 
   const onSelectDatasources = async () => {
