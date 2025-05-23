@@ -5,6 +5,7 @@
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
   import CustomStylesSection from "../Component/CustomStylesSection.svelte"
+  import ConditionalUISection from "../Component/ConditionalUISection.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import SubLinksDrawer from "./SubLinksDrawer.svelte"
   import { screenStore } from "@/stores/builder"
@@ -136,6 +137,15 @@
         update("_styles")({ custom: value })
       }}
     />
+    <ConditionalUISection
+      componentInstance={navItem}
+      componentDefinition={null}
+      {bindings}
+      componentBindings={[]}
+      onSave={async value => {
+        update("_conditions")(value)
+      }}
+    />
   </div>
 </Popover>
 
@@ -150,6 +160,9 @@
     padding: var(--spacing-xl);
     max-height: 200px;
     overflow: scroll;
+  }
+  .settings :global(.property-group-container) {
+    border: none;
   }
   .settings :global(.property-group-name),
   .settings :global(.property-panel) {
