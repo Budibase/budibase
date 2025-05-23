@@ -319,7 +319,7 @@ describe("/applications", () => {
           featureCleanup()
         })
 
-        it("should retrieve all the workspace packages for builder calls", async () => {
+        it("should retrieve all the screens for builder calls", async () => {
           await config.api.workspaceApp.create(
             structures.workspaceApps.workspaceApp()
           )
@@ -328,45 +328,6 @@ describe("/applications", () => {
             appId: app.appId,
           })
 
-          expect(res.workspaceApps).toHaveLength(2)
-          expect(res.screens).toHaveLength(1)
-        })
-
-        it("should not retrieve all the workspace packages for client calls", async () => {
-          await config.api.workspaceApp.create(
-            structures.workspaceApps.workspaceApp()
-          )
-
-          const res = await config.api.application.getAppPackage(
-            { appId: app.appId },
-            {
-              headers: {
-                [Header.TYPE]: "client",
-              },
-            }
-          )
-
-          expect(res.workspaceApps).toHaveLength(0)
-          expect(res.screens).toHaveLength(1)
-        })
-
-        it("should not retrieve all the workspace packages for public calls", async () => {
-          await config.api.workspaceApp.create(
-            structures.workspaceApps.workspaceApp()
-          )
-          await config.api.screen.save(
-            customScreen({ roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, route: "/" })
-          )
-
-          await config.publish()
-          const res = await config.api.application.getAppPackage(
-            { appId: app.appId },
-            {
-              publicUser: true,
-            }
-          )
-
-          expect(res.workspaceApps).toHaveLength(0)
           expect(res.screens).toHaveLength(1)
         })
 
@@ -380,7 +341,9 @@ describe("/applications", () => {
             const appPackage = await config.api.application.getAppPackage({
               appId: app.appId,
             })
-            const defaultWorkspaceApp = appPackage.workspaceApps[0]!
+            const [defaultWorkspaceApp] = (
+              await config.api.workspaceApp.fetch()
+            ).workspaceApps
 
             const { workspaceApp: workspaceApp1 } =
               await config.api.workspaceApp.create(
@@ -485,12 +448,11 @@ describe("/applications", () => {
       })
 
       describe("off", () => {
-        it("should not retrieve workspaceApps", async () => {
+        it("should retrieve all the screens", async () => {
           const res = await config.api.application.getAppPackage({
             appId: app.appId,
           })
 
-          expect(res.workspaceApps).toHaveLength(0)
           expect(res.screens).toHaveLength(1)
         })
       })
