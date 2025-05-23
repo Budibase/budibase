@@ -121,8 +121,9 @@
 
 <style>
   .screens {
-    border-left: 2px solid var(--spectrum-global-color-gray-200);
+    border-left: 2px solid var(--spectrum-global-color-gray-300);
     padding-right: 12px;
+    padding-left: 8px;
     margin-left: 20px;
   }
 
