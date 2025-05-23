@@ -2051,6 +2051,17 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click marker",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked marker",
+            "key": "marker"
+          }
+        ]
+      },
+      {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
