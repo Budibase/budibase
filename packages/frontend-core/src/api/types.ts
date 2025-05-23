@@ -35,7 +35,7 @@ import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
 import { AgentEndpoints } from "./agents"
-import { WorkspaceAppEndpoints } from "./projectName"
+import { WorkspaceAppEndpoints } from "./workspaceApps"
 
 export enum HTTPMethod {
   POST = "POST",

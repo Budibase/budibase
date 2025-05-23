@@ -2,7 +2,7 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import { confirm } from "@/helpers"
   import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
-  import { Icon, Layout, notifications } from "@budibase/bbui"
+  import { Icon, notifications } from "@budibase/bbui"
   import type { UIWorkspaceApp, WorkspaceApp } from "@budibase/types"
   import NewScreenModal from "../../../_components/NewScreen/index.svelte"
 

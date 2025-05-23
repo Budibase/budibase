@@ -2,7 +2,6 @@ import { DerivedBudiStore } from "@/stores/BudiStore"
 import {
   WorkspaceApp,
   UIWorkspaceApp,
-  FetchAppPackageResponse,
   FeatureFlag,
   UpdateWorkspaceAppRequest,
 } from "@budibase/types"
@@ -51,10 +50,11 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     )
   }
 
-  syncWorkspaceApps(pkg: FetchAppPackageResponse) {
-    let workspaceApps = featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)
-      ? pkg.workspaceApps
-      : []
+  async fetch() {
+    if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+      return
+    }
+    const { workspaceApps } = await API.workspaceApp.fetch()
     this.update(state => ({
       ...state,
       workspaceApps,

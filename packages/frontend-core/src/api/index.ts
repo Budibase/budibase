@@ -48,7 +48,7 @@ import { buildRowActionEndpoints } from "./rowActions"
 import { buildOAuth2Endpoints } from "./oauth2"
 import { buildAgentEndpoints } from "./agents"
 import { buildFeatureFlagEndpoints } from "./features"
-import { buildWorkspaceAppEndpoints } from "./projectName"
+import { buildWorkspaceAppEndpoints } from "./workspaceApps"
 
 export type { APIClient } from "./types"
 

@@ -1,4 +1,5 @@
 import {
+  FetchWorkspaceAppResponse,
   InsertWorkspaceAppRequest,
   InsertWorkspaceAppResponse,
   UpdateWorkspaceAppRequest,
@@ -7,6 +8,7 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface WorkspaceAppEndpoints {
+  fetch: () => Promise<FetchWorkspaceAppResponse>
   create: (
     workspaceApp: InsertWorkspaceAppRequest
   ) => Promise<InsertWorkspaceAppResponse>
@@ -19,6 +21,12 @@ export interface WorkspaceAppEndpoints {
 export const buildWorkspaceAppEndpoints = (
   API: BaseAPIClient
 ): WorkspaceAppEndpoints => ({
+  fetch: async () => {
+    const result = await API.get<FetchWorkspaceAppResponse>({
+      url: "/api/workspaceApp",
+    })
+    return result
+  },
   create: async workspaceApp => {
     const result = await API.post<
       InsertWorkspaceAppRequest,
