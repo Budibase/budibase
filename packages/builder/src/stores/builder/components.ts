@@ -1089,34 +1089,26 @@ export class ComponentStore extends BudiStore<ComponentState> {
     component: Component,
     setting: ComponentSetting | undefined,
     update: any
-  ) {
+  ): boolean {
     if (setting?.type !== "dataSource") {
       return false
     }
 
-    const identifierKey: Record<string, string> = {
-      provider: "providerId",
-      query: "_id",
-      table: "resourceId",
-      viewV2: "resourceId",
-      view: "tableId", // Legacy
+    const current = component[setting.key]
+
+    if (!current || current.type !== update?.type) {
+      return true
     }
-    const currentSetting = component[setting!.key]
-    const resourceId = identifierKey[update.type]
 
     // Legacy support.
-    let viewNameChange = false
-    if (currentSetting?.type === "view" && update.type === "view") {
+    if (current?.type === "view" && update.type === "view") {
       // Could have the same tableId but the view name is different
-      viewNameChange = currentSetting.name !== update.name
+      return current.name !== update.name || current.tableId !== update.tableId
     }
 
-    return (
-      !currentSetting ||
-      currentSetting.type !== update.type ||
-      currentSetting?.[resourceId] !== update[resourceId] ||
-      viewNameChange
-    )
+    // In the case of a query, we need to check if _id actually changed
+    // as we currently allow query param updates.
+    return update.type === "query" && current._id !== update?._id
   }
 
   updateComponentSetting(name: string, value: any) {
