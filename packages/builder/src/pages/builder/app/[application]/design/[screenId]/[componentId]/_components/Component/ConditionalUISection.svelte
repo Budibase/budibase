@@ -15,6 +15,7 @@
   export let componentDefinition
   export let componentBindings
   export let bindings
+  export let onSave = null
 
   let tempValue
   let drawer
@@ -28,7 +29,11 @@
 
   const save = async () => {
     try {
-      await componentStore.updateConditions(tempValue)
+      if (onSave) {
+        await onSave(tempValue)
+      } else {
+        await componentStore.updateConditions(tempValue)
+      }
     } catch (error) {
       notifications.error("Error updating conditions")
     }
