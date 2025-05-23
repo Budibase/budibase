@@ -2869,6 +2869,25 @@
         "min": 2
       },
       {
+        "type": "event",
+        "label": "On click bucket",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked bucket rows",
+            "key": "rowsInBucket"
+          },
+          {
+            "label": "Lower limit",
+            "key": "lowerLimit"
+          },
+          {
+            "label": "Upper limit",
+            "key": "upperLimit"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Data labels",
         "key": "dataLabels",
