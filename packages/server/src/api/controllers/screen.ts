@@ -40,7 +40,7 @@ export async function save(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
   const db = context.getAppDB()
-  let { navigationLinkLabel, ...screen } = ctx.request.body
+  const { navigationLinkLabel, ...screen } = ctx.request.body
 
   const isCreation = !screen._id
 
