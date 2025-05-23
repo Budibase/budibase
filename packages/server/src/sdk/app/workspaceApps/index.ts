@@ -44,9 +44,9 @@ export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
     ...workspaceApp,
   })
   return {
+    ...workspaceApp,
     _id: response.id!,
     _rev: response.rev!,
-    ...workspaceApp,
   }
 }
 
@@ -59,9 +59,9 @@ export async function update(
 
   const response = await db.put(workspaceApp)
   return {
+    ...workspaceApp,
     _id: response.id!,
     _rev: response.rev!,
-    ...workspaceApp,
   }
 }
 
