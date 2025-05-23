@@ -5,6 +5,10 @@
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
+  import {
+    getActiveConditions,
+    reduceConditionActions,
+  } from "@/utils/conditions"
 
   const sdk = getContext("sdk")
   const {
@@ -147,6 +151,21 @@
       })
   }
 
+  function evaluateNavItemConditions(conditions = []) {
+    if (!conditions?.length) return true
+
+    // Get only the active (matching) conditions
+    const activeConditions = getActiveConditions(conditions)
+    const { visible } = reduceConditionActions(activeConditions)
+
+    if (visible == null) {
+      // If any show condition exists, default to hidden unless one matches
+      const hasShow = conditions.some(cond => cond.action === "show")
+      return hasShow ? false : true
+    }
+    return visible
+  }
+
   const isInternal = url => {
     return url?.startsWith("/")
   }
@@ -284,18 +303,20 @@
             {#if enrichedNavItems.length}
               <div class="links" class:visible={mobileOpen}>
                 {#each enrichedNavItems as navItem}
-                  <NavItem
-                    type={navItem.type}
-                    text={navItem.text}
-                    url={navItem.url}
-                    subLinks={navItem.subLinks}
-                    internalLink={navItem.internalLink}
-                    customStyles={navItem._styles?.custom}
-                    on:clickLink={handleClickLink}
-                    leftNav={navigation === "Left"}
-                    {mobile}
-                    {navStateStore}
-                  />
+                  {#if evaluateNavItemConditions(navItem._conditions)}
+                    <NavItem
+                      type={navItem.type}
+                      text={navItem.text}
+                      url={navItem.url}
+                      subLinks={navItem.subLinks}
+                      internalLink={navItem.internalLink}
+                      customStyles={navItem._styles?.custom}
+                      on:clickLink={handleClickLink}
+                      leftNav={navigation === "Left"}
+                      {mobile}
+                      {navStateStore}
+                    />
+                  {/if}
                 {/each}
               </div>
             {/if}
