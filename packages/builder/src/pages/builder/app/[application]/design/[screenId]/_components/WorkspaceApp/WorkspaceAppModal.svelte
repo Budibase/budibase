@@ -149,7 +149,7 @@
       bind:name={data.icon}
       color={data.iconColor || ""}
       on:change={e => {
-        data.iconColor = e.detail
+        data.iconColor = e.detail.color || undefined
       }}
     />
   </ModalContent>
