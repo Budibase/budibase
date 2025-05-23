@@ -20,6 +20,7 @@
 
   let errors: Partial<Record<keyof WorkspaceApp, string>> = {}
   let data: WorkspaceApp
+  let iconColor: string
 
   $: isNew = !workspaceApp
 
@@ -84,10 +85,11 @@
       icon: workspaceApp?.icon ?? "Monitoring",
       iconColor: workspaceApp?.iconColor,
     }
+    iconColor = workspaceApp?.iconColor ?? ""
   }
 
   async function onConfirm() {
-    const validationResult = validateWorkspaceApp(data)
+    const validationResult = validateWorkspaceApp({ ...data, iconColor })
     if (validationResult.error) {
       return keepOpen
     }
@@ -145,12 +147,6 @@
     />
 
     <Label size="L">Icon</Label>
-    <EditableIcon
-      bind:name={data.icon}
-      color={data.iconColor || ""}
-      on:change={e => {
-        data.iconColor = e.detail.color || undefined
-      }}
-    />
+    <EditableIcon bind:name={data.icon} bind:color={iconColor} />
   </ModalContent>
 </Modal>
