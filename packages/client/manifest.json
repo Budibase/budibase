@@ -1867,6 +1867,17 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click bar",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked bar",
+            "key": "bar"
+          }
+        ]
+      },
+      {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
