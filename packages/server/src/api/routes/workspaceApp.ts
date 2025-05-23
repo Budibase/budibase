@@ -31,6 +31,11 @@ function workspaceAppValidator(
 
 const router: Router = new Router()
 
+router.get(
+  "/api/workspaceApp",
+  authorized(PermissionType.BUILDER),
+  controller.fetch
+)
 router.post(
   "/api/workspaceApp",
   authorized(PermissionType.BUILDER),

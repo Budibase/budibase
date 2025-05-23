@@ -30,3 +30,7 @@ export interface UpdateWorkspaceAppRequest {
 export interface UpdateWorkspaceAppResponse {
   workspaceApp: WorkspaceAppResponse
 }
+
+export interface FetchWorkspaceAppResponse {
+  workspaceApps: WorkspaceAppResponse[]
+}
