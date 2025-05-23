@@ -13,6 +13,16 @@
   export let anchor
   export let navItem
   export let bindings
+  let actionOptions = [
+    {
+      label: "Hide component",
+      value: "hide",
+    },
+    {
+      label: "Show component",
+      value: "show",
+    },
+  ]
 
   const draggable = getContext("draggable")
   const dispatch = createEventDispatcher()
@@ -142,6 +152,7 @@
       componentDefinition={null}
       {bindings}
       componentBindings={[]}
+      {actionOptions}
       onSave={async value => {
         update("_conditions")(value)
       }}

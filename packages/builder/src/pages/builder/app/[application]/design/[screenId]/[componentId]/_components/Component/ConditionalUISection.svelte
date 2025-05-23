@@ -16,6 +16,7 @@
   export let componentBindings
   export let bindings
   export let onSave = null
+  export let actionOptions
 
   let tempValue
   let drawer
@@ -74,6 +75,7 @@
     bind:conditions={tempValue}
     {bindings}
     {componentBindings}
+    {actionOptions}
   />
 </Drawer>
 
