@@ -2394,8 +2394,7 @@
         "context": [
           {
             "label": "Clicked segment",
-            "key": "segment",
-            "type": "schema"
+            "key": "segment"
           }
         ]
       },

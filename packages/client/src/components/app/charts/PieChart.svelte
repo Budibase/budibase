@@ -14,8 +14,7 @@
   export let legend
   export let palette
   export let c1, c2, c3, c4, c5
-
-  const selectedSegment = writable(null)
+  export let onClick
 
   $: labelType =
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
@@ -64,11 +63,14 @@
           const segmentIndex = opts.dataPointIndex
           const row = dataProvider.rows[segmentIndex]
 
-          selectedSegment.set({ ...row, index: segmentIndex })
-          console.log(get(selectedSegment))
+          handleSegmentClick(row)
         },
       },
     },
+  }
+
+  function handleSegmentClick(segment) {
+    onClick?.({ segment })
   }
 
   const getSeries = (dataProvider, valueColumn) => {
@@ -109,4 +111,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} on:click={handleSegmentClick} />
