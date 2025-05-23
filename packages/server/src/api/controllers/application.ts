@@ -16,7 +16,6 @@ import {
   DocumentType,
   generateAppID,
   generateDevAppID,
-  generateScreenID,
   getLayoutParams,
 } from "../../db/utils"
 import {
@@ -78,7 +77,6 @@ import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
-import { groupBy } from "lodash/fp"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -183,7 +181,6 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  const db = context.getAppDB()
   let workspaceAppId: string | undefined
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const appMetadata = await sdk.applications.metadata.get()
@@ -196,9 +193,8 @@ async function addSampleDataScreen() {
     workspaceAppId = workspaceApp._id!
   }
 
-  let screen = await createSampleDataTableScreen(workspaceAppId)
-  screen._id = generateScreenID()
-  await db.put(screen)
+  const screen = createSampleDataTableScreen(workspaceAppId)
+  await sdk.screens.create(screen)
 }
 
 async function addSampleDataNavLinks() {
@@ -282,13 +278,6 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  let workspaceApps: FetchAppPackageResponse["workspaceApps"] = []
-
-  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    workspaceApps = await extractScreensByWorkspaceApp(screens)
-    screens = []
-  }
-
   const clientLibPath = objectStore.clientLibraryUrl(
     ctx.params.appId,
     application.version
@@ -297,32 +286,11 @@ export async function fetchAppPackage(
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
-    workspaceApps,
     screens,
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
   }
-}
-
-async function extractScreensByWorkspaceApp(
-  screens: Screen[]
-): Promise<FetchAppPackageResponse["workspaceApps"]> {
-  const result: FetchAppPackageResponse["workspaceApps"] = []
-
-  const workspaceApps = await sdk.workspaceApps.fetch()
-
-  const screensByWorkspaceApp = groupBy(s => s.workspaceAppId, screens)
-  for (const workspaceAppId of Object.keys(screensByWorkspaceApp)) {
-    const workspaceApp = workspaceApps.find(p => p._id === workspaceAppId)
-
-    result.push({
-      ...workspaceApp!,
-      screens: screensByWorkspaceApp[workspaceAppId],
-    })
-  }
-
-  return result
 }
 
 async function performAppCreate(
