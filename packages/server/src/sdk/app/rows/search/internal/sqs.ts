@@ -335,10 +335,13 @@ export async function search(
   }
 
   const allTables = await sdk.tables.getAllInternalTables()
-  const allTablesMap = allTables.reduce((acc, table) => {
-    acc[table._id!] = table
-    return acc
-  }, {} as Record<string, Table>)
+  const allTablesMap = allTables.reduce(
+    (acc, table) => {
+      acc[table._id!] = table
+      return acc
+    },
+    {} as Record<string, Table>
+  )
 
   // make sure we have the mapped/latest table
   if (table._id) {

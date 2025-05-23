@@ -68,8 +68,11 @@
 
 <style>
   button {
-    transition: filter 130ms ease-out, background 130ms ease-out,
-      border 130ms ease-out, color 130ms ease-out;
+    transition:
+      filter 130ms ease-out,
+      background 130ms ease-out,
+      border 130ms ease-out,
+      color 130ms ease-out;
   }
   .fullWidth {
     width: 100%;

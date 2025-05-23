@@ -64,10 +64,13 @@ describe("redis", () => {
     ) {
       return generator
         .unique(() => randomUUID(), keyLength)
-        .reduce((acc, key) => {
-          acc[key] = valueGenerator()
-          return acc
-        }, {} as Record<string, string>)
+        .reduce(
+          (acc, key) => {
+            acc[key] = valueGenerator()
+            return acc
+          },
+          {} as Record<string, string>
+        )
     }
 
     it("a basic object can be persisted", async () => {

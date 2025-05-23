@@ -78,7 +78,7 @@ export type DataFetchDefinition =
 // Constructs a new fetch model for a certain datasource
 export const fetchData = <
   T extends DataFetchDatasource,
-  Type extends T["type"] = T["type"]
+  Type extends T["type"] = T["type"],
 >({
   API,
   datasource,

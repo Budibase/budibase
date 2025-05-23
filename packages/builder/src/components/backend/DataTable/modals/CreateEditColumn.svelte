@@ -821,8 +821,9 @@
         <div class="input-length">
           <Input
             type="number"
-            bind:value={editableColumn.constraints.numericality
-              .greaterThanOrEqualTo}
+            bind:value={
+              editableColumn.constraints.numericality.greaterThanOrEqualTo
+            }
           />
         </div>
       {/if}
@@ -836,8 +837,9 @@
         <div class="input-length">
           <Input
             type="number"
-            bind:value={editableColumn.constraints.numericality
-              .lessThanOrEqualTo}
+            bind:value={
+              editableColumn.constraints.numericality.lessThanOrEqualTo
+            }
           />
         </div>
       {/if}

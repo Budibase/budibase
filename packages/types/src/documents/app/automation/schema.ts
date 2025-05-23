@@ -175,95 +175,95 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
     ? CollectStepInputs
     : T extends AutomationActionStepId.CREATE_ROW
-    ? CreateRowStepInputs
-    : T extends AutomationActionStepId.DELAY
-    ? DelayStepInputs
-    : T extends AutomationActionStepId.DELETE_ROW
-    ? DeleteRowStepInputs
-    : T extends AutomationActionStepId.EXECUTE_QUERY
-    ? ExecuteQueryStepInputs
-    : T extends AutomationActionStepId.EXECUTE_SCRIPT
-    ? ExecuteScriptStepInputs
-    : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
-    ? ExecuteScriptStepInputs
-    : T extends AutomationActionStepId.FILTER
-    ? FilterStepInputs
-    : T extends AutomationActionStepId.QUERY_ROWS
-    ? QueryRowsStepInputs
-    : T extends AutomationActionStepId.SEND_EMAIL_SMTP
-    ? SmtpEmailStepInputs
-    : T extends AutomationActionStepId.SERVER_LOG
-    ? ServerLogStepInputs
-    : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
-    ? TriggerAutomationStepInputs
-    : T extends AutomationActionStepId.UPDATE_ROW
-    ? UpdateRowStepInputs
-    : T extends AutomationActionStepId.OUTGOING_WEBHOOK
-    ? OutgoingWebhookStepInputs
-    : T extends AutomationActionStepId.discord
-    ? DiscordStepInputs
-    : T extends AutomationActionStepId.slack
-    ? SlackStepInputs
-    : T extends AutomationActionStepId.zapier
-    ? ZapierStepInputs
-    : T extends AutomationActionStepId.integromat
-    ? MakeIntegrationInputs
-    : T extends AutomationActionStepId.n8n
-    ? n8nStepInputs
-    : T extends AutomationActionStepId.EXECUTE_BASH
-    ? BashStepInputs
-    : T extends AutomationActionStepId.OPENAI
-    ? OpenAIStepInputs
-    : T extends AutomationActionStepId.LOOP
-    ? LoopStepInputs
-    : T extends AutomationActionStepId.BRANCH
-    ? BranchStepInputs
-    : never
+      ? CreateRowStepInputs
+      : T extends AutomationActionStepId.DELAY
+        ? DelayStepInputs
+        : T extends AutomationActionStepId.DELETE_ROW
+          ? DeleteRowStepInputs
+          : T extends AutomationActionStepId.EXECUTE_QUERY
+            ? ExecuteQueryStepInputs
+            : T extends AutomationActionStepId.EXECUTE_SCRIPT
+              ? ExecuteScriptStepInputs
+              : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
+                ? ExecuteScriptStepInputs
+                : T extends AutomationActionStepId.FILTER
+                  ? FilterStepInputs
+                  : T extends AutomationActionStepId.QUERY_ROWS
+                    ? QueryRowsStepInputs
+                    : T extends AutomationActionStepId.SEND_EMAIL_SMTP
+                      ? SmtpEmailStepInputs
+                      : T extends AutomationActionStepId.SERVER_LOG
+                        ? ServerLogStepInputs
+                        : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
+                          ? TriggerAutomationStepInputs
+                          : T extends AutomationActionStepId.UPDATE_ROW
+                            ? UpdateRowStepInputs
+                            : T extends AutomationActionStepId.OUTGOING_WEBHOOK
+                              ? OutgoingWebhookStepInputs
+                              : T extends AutomationActionStepId.discord
+                                ? DiscordStepInputs
+                                : T extends AutomationActionStepId.slack
+                                  ? SlackStepInputs
+                                  : T extends AutomationActionStepId.zapier
+                                    ? ZapierStepInputs
+                                    : T extends AutomationActionStepId.integromat
+                                      ? MakeIntegrationInputs
+                                      : T extends AutomationActionStepId.n8n
+                                        ? n8nStepInputs
+                                        : T extends AutomationActionStepId.EXECUTE_BASH
+                                          ? BashStepInputs
+                                          : T extends AutomationActionStepId.OPENAI
+                                            ? OpenAIStepInputs
+                                            : T extends AutomationActionStepId.LOOP
+                                              ? LoopStepInputs
+                                              : T extends AutomationActionStepId.BRANCH
+                                                ? BranchStepInputs
+                                                : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
     ? CollectStepOutputs
     : T extends AutomationActionStepId.CREATE_ROW
-    ? CreateRowStepOutputs
-    : T extends AutomationActionStepId.DELAY
-    ? DelayStepOutputs
-    : T extends AutomationActionStepId.DELETE_ROW
-    ? DeleteRowStepOutputs
-    : T extends AutomationActionStepId.EXECUTE_QUERY
-    ? ExecuteQueryStepOutputs
-    : T extends AutomationActionStepId.EXECUTE_SCRIPT
-    ? ExecuteScriptStepOutputs
-    : T extends AutomationActionStepId.FILTER
-    ? FilterStepOutputs
-    : T extends AutomationActionStepId.QUERY_ROWS
-    ? QueryRowsStepOutputs
-    : T extends AutomationActionStepId.SEND_EMAIL_SMTP
-    ? BaseAutomationOutputs
-    : T extends AutomationActionStepId.SERVER_LOG
-    ? ServerLogStepOutputs
-    : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
-    ? TriggerAutomationStepOutputs
-    : T extends AutomationActionStepId.UPDATE_ROW
-    ? UpdateRowStepOutputs
-    : T extends AutomationActionStepId.OUTGOING_WEBHOOK
-    ? ExternalAppStepOutputs
-    : T extends AutomationActionStepId.discord
-    ? ExternalAppStepOutputs
-    : T extends AutomationActionStepId.slack
-    ? ExternalAppStepOutputs
-    : T extends AutomationActionStepId.zapier
-    ? ZapierStepOutputs
-    : T extends AutomationActionStepId.integromat
-    ? ExternalAppStepOutputs
-    : T extends AutomationActionStepId.n8n
-    ? ExternalAppStepOutputs
-    : T extends AutomationActionStepId.EXECUTE_BASH
-    ? BashStepOutputs
-    : T extends AutomationActionStepId.OPENAI
-    ? OpenAIStepOutputs
-    : T extends AutomationActionStepId.LOOP
-    ? BaseAutomationOutputs
-    : never
+      ? CreateRowStepOutputs
+      : T extends AutomationActionStepId.DELAY
+        ? DelayStepOutputs
+        : T extends AutomationActionStepId.DELETE_ROW
+          ? DeleteRowStepOutputs
+          : T extends AutomationActionStepId.EXECUTE_QUERY
+            ? ExecuteQueryStepOutputs
+            : T extends AutomationActionStepId.EXECUTE_SCRIPT
+              ? ExecuteScriptStepOutputs
+              : T extends AutomationActionStepId.FILTER
+                ? FilterStepOutputs
+                : T extends AutomationActionStepId.QUERY_ROWS
+                  ? QueryRowsStepOutputs
+                  : T extends AutomationActionStepId.SEND_EMAIL_SMTP
+                    ? BaseAutomationOutputs
+                    : T extends AutomationActionStepId.SERVER_LOG
+                      ? ServerLogStepOutputs
+                      : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
+                        ? TriggerAutomationStepOutputs
+                        : T extends AutomationActionStepId.UPDATE_ROW
+                          ? UpdateRowStepOutputs
+                          : T extends AutomationActionStepId.OUTGOING_WEBHOOK
+                            ? ExternalAppStepOutputs
+                            : T extends AutomationActionStepId.discord
+                              ? ExternalAppStepOutputs
+                              : T extends AutomationActionStepId.slack
+                                ? ExternalAppStepOutputs
+                                : T extends AutomationActionStepId.zapier
+                                  ? ZapierStepOutputs
+                                  : T extends AutomationActionStepId.integromat
+                                    ? ExternalAppStepOutputs
+                                    : T extends AutomationActionStepId.n8n
+                                      ? ExternalAppStepOutputs
+                                      : T extends AutomationActionStepId.EXECUTE_BASH
+                                        ? BashStepOutputs
+                                        : T extends AutomationActionStepId.OPENAI
+                                          ? OpenAIStepOutputs
+                                          : T extends AutomationActionStepId.LOOP
+                                            ? BaseAutomationOutputs
+                                            : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -429,38 +429,38 @@ export type AutomationTriggerInputs<T extends AutomationTriggerStepId> =
         | void
         | (Record<string, any> & { fields?: Record<string, AutomationIOType> })
     : T extends AutomationTriggerStepId.CRON
-    ? CronTriggerInputs
-    : T extends AutomationTriggerStepId.ROW_ACTION
-    ? RowActionTriggerInputs
-    : T extends AutomationTriggerStepId.ROW_DELETED
-    ? RowDeletedTriggerInputs
-    : T extends AutomationTriggerStepId.ROW_SAVED
-    ? RowCreatedTriggerInputs
-    : T extends AutomationTriggerStepId.ROW_UPDATED
-    ? RowUpdatedTriggerInputs
-    : T extends AutomationTriggerStepId.WEBHOOK
-    ? Record<string, any>
-    : never
+      ? CronTriggerInputs
+      : T extends AutomationTriggerStepId.ROW_ACTION
+        ? RowActionTriggerInputs
+        : T extends AutomationTriggerStepId.ROW_DELETED
+          ? RowDeletedTriggerInputs
+          : T extends AutomationTriggerStepId.ROW_SAVED
+            ? RowCreatedTriggerInputs
+            : T extends AutomationTriggerStepId.ROW_UPDATED
+              ? RowUpdatedTriggerInputs
+              : T extends AutomationTriggerStepId.WEBHOOK
+                ? Record<string, any>
+                : never
 
 export type AutomationTriggerOutputs<T extends AutomationTriggerStepId> =
   T extends AutomationTriggerStepId.APP
     ? AppActionTriggerOutputs
     : T extends AutomationTriggerStepId.CRON
-    ? CronTriggerOutputs
-    : T extends AutomationTriggerStepId.ROW_ACTION
-    ? Record<string, any>
-    : T extends AutomationTriggerStepId.ROW_DELETED
-    ? RowDeletedTriggerOutputs
-    : T extends AutomationTriggerStepId.ROW_SAVED
-    ? RowCreatedTriggerOutputs
-    : T extends AutomationTriggerStepId.ROW_UPDATED
-    ? RowUpdatedTriggerOutputs
-    : T extends AutomationTriggerStepId.WEBHOOK
-    ? WebhookTriggerOutputs
-    : never
+      ? CronTriggerOutputs
+      : T extends AutomationTriggerStepId.ROW_ACTION
+        ? Record<string, any>
+        : T extends AutomationTriggerStepId.ROW_DELETED
+          ? RowDeletedTriggerOutputs
+          : T extends AutomationTriggerStepId.ROW_SAVED
+            ? RowCreatedTriggerOutputs
+            : T extends AutomationTriggerStepId.ROW_UPDATED
+              ? RowUpdatedTriggerOutputs
+              : T extends AutomationTriggerStepId.WEBHOOK
+                ? WebhookTriggerOutputs
+                : never
 
 export interface AutomationTriggerSchema<
-  TTrigger extends AutomationTriggerStepId
+  TTrigger extends AutomationTriggerStepId,
 > extends AutomationStepSchemaBase {
   id: string
   type: AutomationStepType.TRIGGER
