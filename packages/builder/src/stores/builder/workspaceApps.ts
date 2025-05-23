@@ -26,16 +26,16 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
       return derived([store, screenStore], ([$store, $screenStore]) => {
-        const workspaceApps = $store.workspaceApps.map<UIWorkspaceApp>(
-          workspaceApp => {
+        const workspaceApps = $store.workspaceApps
+          .map<UIWorkspaceApp>(workspaceApp => {
             return {
               ...workspaceApp,
               screens: $screenStore.screens.filter(
                 s => s.workspaceAppId === workspaceApp._id
               ),
             }
-          }
-        )
+          })
+          .sort((a, b) => a.name.localeCompare(b.name))
 
         return { workspaceApps }
       })
