@@ -16,7 +16,6 @@ import {
   DocumentType,
   generateAppID,
   generateDevAppID,
-  generateScreenID,
   getLayoutParams,
 } from "../../db/utils"
 import {
@@ -182,7 +181,6 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  const db = context.getAppDB()
   let workspaceAppId: string | undefined
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const appMetadata = await sdk.applications.metadata.get()
@@ -195,9 +193,8 @@ async function addSampleDataScreen() {
     workspaceAppId = workspaceApp._id!
   }
 
-  let screen = await createSampleDataTableScreen(workspaceAppId)
-  screen._id = generateScreenID()
-  await db.put(screen)
+  const screen = createSampleDataTableScreen(workspaceAppId)
+  await sdk.screens.create(screen)
 }
 
 async function addSampleDataNavLinks() {
