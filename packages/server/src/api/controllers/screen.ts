@@ -1,4 +1,4 @@
-import { DocumentType, generateScreenID } from "../../db/utils"
+import { DocumentType } from "../../db/utils"
 import {
   context,
   db as dbCore,
@@ -40,22 +40,20 @@ export async function save(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
   const db = context.getAppDB()
-  let screen = ctx.request.body
+  const screen = ctx.request.body
 
-  let eventFn
-  if (!screen._id) {
-    screen._id = generateScreenID()
-    eventFn = events.screen.created
-  }
+  const isCreation = !screen._id
 
   if (
     screen.workspaceAppId &&
     !(await sdk.workspaceApps.get(screen.workspaceAppId))
   ) {
-    ctx.throw("Project app is not valid")
+    ctx.throw("workspaceAppId is not valid")
   }
 
-  const response = await db.put(screen)
+  const savedScreen = isCreation
+    ? await sdk.screens.create(screen)
+    : await sdk.screens.update(screen)
 
   // Find any custom components being used
   let pluginNames: string[] = []
@@ -99,13 +97,8 @@ export async function save(
     }
   }
 
-  if (eventFn) {
-    await eventFn(screen)
-  }
-  const savedScreen = {
-    ...screen,
-    _id: response.id,
-    _rev: response.rev,
+  if (isCreation) {
+    await events.screen.created(screen)
   }
   ctx.message = `Screen ${screen.name} saved.`
   ctx.body = {

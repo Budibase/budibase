@@ -6,6 +6,7 @@ import {
   WorkspaceAppResponse,
   UpdateWorkspaceAppRequest,
   UpdateWorkspaceAppResponse,
+  FetchWorkspaceAppResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -19,6 +20,13 @@ function toWorkspaceAppResponse(
     urlPrefix: workspaceApp.urlPrefix,
     icon: workspaceApp.icon,
     iconColor: workspaceApp.iconColor,
+  }
+}
+
+export async function fetch(ctx: Ctx<void, FetchWorkspaceAppResponse>) {
+  const workspaceApps = await sdk.workspaceApps.fetch()
+  ctx.body = {
+    workspaceApps: workspaceApps.map(toWorkspaceAppResponse),
   }
 }
 
