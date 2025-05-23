@@ -89,7 +89,10 @@
   }
 
   async function onConfirm() {
-    const validationResult = validateWorkspaceApp({ ...data, iconColor })
+    const validationResult = validateWorkspaceApp({
+      ...data,
+      iconColor: iconColor || undefined,
+    })
     if (validationResult.error) {
       return keepOpen
     }
