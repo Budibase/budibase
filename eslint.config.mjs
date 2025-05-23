@@ -25,7 +25,6 @@ export default [
       "packages/builder/.routify",
       "packages/sdk/sdk",
       "**/*.ivm.bundle.js",
-      "packages/server/build/oldClientVersions/**/**/*",
     ],
   },
   {

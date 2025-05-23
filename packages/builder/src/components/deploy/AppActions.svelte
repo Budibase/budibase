@@ -14,6 +14,7 @@
     appStore,
     deploymentStore,
   } from "@/stores/builder"
+  import { admin } from "@/stores/portal"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
 
   let versionModal
@@ -36,7 +37,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="action-top-nav">
   <div class="action-buttons">
-    {#if updateAvailable && $isOnlyUser}
+    {#if updateAvailable && $isOnlyUser && !$admin.isDev}
       <div class="app-action-button version" on:click={versionModal.show}>
         <div class="app-action">
           <ActionButton quiet>

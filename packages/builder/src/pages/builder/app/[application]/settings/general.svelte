@@ -11,7 +11,7 @@
   import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
   import { isOnlyUser, appStore, deploymentStore } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import { appsStore } from "@/stores/portal"
+  import { appsStore, admin } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -29,6 +29,7 @@
   $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
   $: selectedApp = filteredApps.length ? filteredApps[0] : {}
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
+  $: revertAvailable = $appStore.revertableVersion != null
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
@@ -91,7 +92,12 @@
   <Divider />
   <Layout gap="XS" noPadding>
     <Heading size="S">App version</Heading>
-    {#if updateAvailable}
+    {#if $admin.isDev}
+      <Body size="S">
+        You're running the latest client version from your file system, as
+        you're in developer mode.
+      </Body>
+    {:else if updateAvailable}
       <Body size="S">
         The app is currently using version <strong>{$appStore.version}</strong>
         but version <strong>{$appStore.upgradableVersion}</strong> is available.
@@ -116,17 +122,20 @@
         <br />
         You're running the latest!
       </Body>
-      <div class="buttons">
-        <Button
-          secondary
-          on:click={versionModal.show}
-          tooltip={$isOnlyUser
-            ? null
-            : "Unavailable - another user is editing this app"}
-        >
-          Revert version
-        </Button>
-      </div>
+      {#if revertAvailable}
+        <div class="buttons">
+          <Button
+            secondary
+            on:click={versionModal.show}
+            disabled={!$isOnlyUser}
+            tooltip={$isOnlyUser
+              ? null
+              : "Unavailable - another user is editing this app"}
+          >
+            Revert version
+          </Button>
+        </div>
+      {/if}
     {/if}
   </Layout>
   <Divider />

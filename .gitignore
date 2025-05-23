@@ -4,8 +4,6 @@ packages/server/runtime_apps/
 .idea/
 bb-airgapped.tar.gz
 *.iml
-packages/server/build/oldClientVersions/**/*
-packages/builder/src/components/deploy/clientVersions.json
 packages/server/src/integrations/tests/utils/*.lock
 packages/builder/vite.config.mjs.timestamp*
 packages/account-portal
