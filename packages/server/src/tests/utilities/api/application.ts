@@ -8,7 +8,7 @@ import {
   UpdateAppRequest,
   UpdateAppResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import { Expectations, RequestOpts, TestAPI } from "./base"
 import { AppStatus } from "../../../db/utils"
 import { constants } from "@budibase/backend-core"
 
@@ -108,13 +108,14 @@ export class ApplicationAPI extends TestAPI {
   }
 
   getAppPackage = async (
-    appId: string,
-    expectations?: Expectations
+    { appId, fromRoute }: { appId: string; fromRoute?: string },
+    opts?: RequestOpts
   ): Promise<FetchAppPackageResponse> => {
-    return await this._get<FetchAppPackageResponse>(
-      `/api/applications/${appId}/appPackage`,
-      { expectations }
-    )
+    let url = `/api/applications/${appId}/appPackage`
+    if (fromRoute) {
+      url += `?fromRoute=${encodeURIComponent(fromRoute)}`
+    }
+    return await this._get<FetchAppPackageResponse>(url, opts)
   }
 
   update = async (

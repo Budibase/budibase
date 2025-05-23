@@ -1,10 +1,5 @@
-import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
-import {
-  DocumentType,
-  WorkspaceApp,
-  SEPARATOR,
-  WithoutDocMetadata,
-} from "@budibase/types"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { WorkspaceApp, WithoutDocMetadata } from "@budibase/types"
 
 async function guardName(name: string, id?: string) {
   const existingWorkspaceApps = await fetch()
@@ -39,7 +34,7 @@ export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
   await guardName(workspaceApp.name)
 
   const response = await db.put({
-    _id: `${DocumentType.WORKSPACE_APP}${SEPARATOR}${utils.newid()}`,
+    _id: docIds.generateWorkspaceAppID(),
     ...workspaceApp,
   })
   return {
