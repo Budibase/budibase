@@ -4,7 +4,7 @@ import { appStore } from "@/stores/builder"
 import { BudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
 
-export const INITIAL_NAVIGATION_STATE = {
+export const INITIAL_NAVIGATION_STATE: AppNavigation = {
   navigation: "Top",
   links: [],
   textAlign: "Left",
