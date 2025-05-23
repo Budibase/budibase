@@ -5,6 +5,7 @@ import {
   SEPARATOR,
   WithoutDocMetadata,
 } from "@budibase/types"
+import sdk from "../.."
 
 async function guardName(name: string, id?: string) {
   const existingWorkspaceApps = await fetch()
@@ -43,9 +44,9 @@ export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
     ...workspaceApp,
   })
   return {
+    ...workspaceApp,
     _id: response.id!,
     _rev: response.rev!,
-    ...workspaceApp,
   }
 }
 
@@ -58,9 +59,9 @@ export async function update(
 
   const response = await db.put(workspaceApp)
   return {
+    ...workspaceApp,
     _id: response.id!,
     _rev: response.rev!,
-    ...workspaceApp,
   }
 }
 
@@ -80,4 +81,9 @@ export async function remove(
     }
     throw e
   }
+
+  const screensToDelete = (await sdk.screens.fetch()).filter(
+    s => s.workspaceAppId === workspaceAppId
+  )
+  await db.bulkRemove(screensToDelete)
 }

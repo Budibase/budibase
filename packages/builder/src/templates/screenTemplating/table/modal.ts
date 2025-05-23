@@ -13,10 +13,12 @@ const modal = async ({
   tableOrView,
   permissions,
   screens,
+  workspaceAppId,
 }: {
   tableOrView: SourceOption
   permissions: UIPermissions
   screens: ScreenDoc[]
+  workspaceAppId: string | undefined
 }) => {
   /*
     Create Row
@@ -155,7 +157,7 @@ const modal = async ({
     .gridDesktopColSpan(1, 13)
     .gridDesktopRowSpan(3, 21)
 
-  const template = new Screen()
+  const template = new Screen(workspaceAppId)
     .route(getValidRoute(screens, tableOrView.name, permissions.write))
     .instanceName(`${tableOrView.name} - List and details`)
     .customProps({ layout: "grid" })

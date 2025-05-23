@@ -20,6 +20,8 @@
   import { makeTableOption, makeViewOption } from "./utils"
   import type { Screen, Table, ViewV2 } from "@budibase/types"
 
+  export let workspaceAppId: string | undefined
+
   let mode: string
 
   let screenDetailsModal: Modal
@@ -71,7 +73,10 @@
 
   const createScreen = async (screenTemplate: Screen): Promise<Screen> => {
     try {
-      return await screenStore.save(screenTemplate)
+      return await screenStore.save({
+        ...screenTemplate,
+        workspaceAppId: workspaceAppId!, // TODO
+      })
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
@@ -119,8 +124,8 @@
   const createBasicScreen = async ({ route }: { route: string }) => {
     const screenTemplates =
       mode === AutoScreenTypes.BLANK
-        ? screenTemplating.blank({ route, screens })
-        : screenTemplating.pdf({ route, screens })
+        ? screenTemplating.blank({ route, screens, workspaceAppId })
+        : screenTemplating.pdf({ route, screens, workspaceAppId })
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
@@ -134,6 +139,7 @@
             tableOrView,
             type,
             permissions: permissions[tableOrView.id],
+            workspaceAppId,
           })
         )
       )
@@ -151,6 +157,7 @@
             tableOrView,
             type,
             permissions: permissions[tableOrView.id],
+            workspaceAppId,
           })
         )
       )

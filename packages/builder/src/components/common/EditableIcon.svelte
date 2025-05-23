@@ -26,7 +26,7 @@
 </div>
 
 <Modal bind:this={modal}>
-  <ChooseIconModal {name} {color} on:change />
+  <ChooseIconModal bind:name bind:color on:change />
 </Modal>
 
 <style>

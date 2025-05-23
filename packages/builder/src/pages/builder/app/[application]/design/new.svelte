@@ -5,7 +5,7 @@
   let newScreenModal: NewScreen
 
   onMount(() => {
-    newScreenModal.show()
+    newScreenModal.open()
   })
 </script>
 

@@ -10,8 +10,9 @@ interface MenuItem {
   name: string
   keyBind: string | null
   visible: boolean
-  disabled: boolean
+  disabled?: boolean
   callback: () => void
+  isNew?: boolean
 }
 
 interface ContextMenuState {
