@@ -2734,6 +2734,17 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click candlestick",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked candlestick",
+            "key": "candlestick"
+          }
+        ]
+      },
+      {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
