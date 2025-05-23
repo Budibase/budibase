@@ -46,9 +46,10 @@
       modalSteps = [CreationStep.APP_PICKER, CreationStep.SCREEN_TYPE_PICKER]
     } else {
       modalSteps = [CreationStep.SCREEN_TYPE_PICKER]
+      workspaceAppId =
+        addToWorkspaceId || $workspaceAppStore.workspaceApps[0]?._id
     }
 
-    workspaceAppId = addToWorkspaceId
     currentStepIndex = 0
     selectedType = undefined
 
