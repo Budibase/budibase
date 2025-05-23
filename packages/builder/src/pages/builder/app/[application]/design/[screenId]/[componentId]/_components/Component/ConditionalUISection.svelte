@@ -65,7 +65,7 @@
     <ActionButton fullWidth on:click={openDrawer}>{conditionText}</ActionButton>
   </div>
 </DetailSummary>
-<Drawer bind:this={drawer} title="Conditions">
+<Drawer bind:this={drawer} title="Conditions" on:drawerHide on:drawerShow>
   <svelte:fragment slot="description">
     Show, hide and update components in response to conditions being met.
   </svelte:fragment>

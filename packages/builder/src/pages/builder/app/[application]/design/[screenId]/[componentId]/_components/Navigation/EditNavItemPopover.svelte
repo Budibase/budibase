@@ -146,6 +146,8 @@
       onSave={async value => {
         update("_styles")({ custom: value })
       }}
+      on:drawerShow={() => drawerCount++}
+      on:drawerHide={() => drawerCount--}
     />
     <ConditionalUISection
       componentInstance={navItem}
@@ -156,6 +158,8 @@
       onSave={async value => {
         update("_conditions")(value)
       }}
+      on:drawerShow={() => drawerCount++}
+      on:drawerHide={() => drawerCount--}
     />
   </div>
 </Popover>

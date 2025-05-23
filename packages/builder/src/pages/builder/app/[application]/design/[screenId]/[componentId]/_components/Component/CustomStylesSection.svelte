@@ -68,7 +68,7 @@
   </div>
 </DetailSummary>
 {#key componentInstance?._id}
-  <Drawer bind:this={drawer} title="Custom CSS">
+  <Drawer bind:this={drawer} title="Custom CSS" on:drawerHide on:drawerShow>
     <svelte:fragment slot="description">
       <div class="header">
         Your CSS will overwrite styles for:
