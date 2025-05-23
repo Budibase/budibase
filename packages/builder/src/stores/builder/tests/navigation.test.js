@@ -70,13 +70,13 @@ describe("Navigation store", () => {
       links,
     }))
 
-    const saveSpy = vi
-      .spyOn(ctx.test.navigationStore, "save")
-      .mockImplementation(() => {})
+    await ctx.test.navigationStore.addLink({
+      url: "/test-url",
+      title: "Testing",
+      roleId: "BASIC",
+    })
 
-    await ctx.test.navigationStore.saveLink("/test-url", "Testing", "BASIC")
-
-    expect(saveSpy).toBeCalledWith({
+    expect(get(ctx.test.navigationStore)).toEqual({
       ...INITIAL_NAVIGATION_STATE,
       links: [
         ...links,
@@ -105,7 +105,11 @@ describe("Navigation store", () => {
       .spyOn(ctx.test.navigationStore, "save")
       .mockImplementation(() => {})
 
-    await ctx.test.navigationStore.saveLink("/home", "Home", "BASIC")
+    await ctx.test.navigationStore.addLink({
+      url: "/home",
+      title: "Home",
+      roleId: "BASIC",
+    })
 
     expect(saveSpy).not.toHaveBeenCalled()
   })

@@ -34,7 +34,15 @@ export class NavigationStore extends BudiStore<AppNavigation> {
     }
   }
 
-  async saveLink(url: string, title: string, roleId: string) {
+  async addLink({
+    url,
+    title,
+    roleId,
+  }: {
+    url: string
+    title: string
+    roleId: string
+  }) {
     const navigation = get(this.store)
     let links: AppNavigationLink[] = [...(navigation?.links ?? [])]
 
@@ -49,7 +57,8 @@ export class NavigationStore extends BudiStore<AppNavigation> {
       type: "link",
       roleId,
     })
-    await this.save({
+
+    this.syncAppNavigation({
       ...navigation,
       links: [...links],
     })
@@ -84,6 +93,13 @@ export class NavigationStore extends BudiStore<AppNavigation> {
   syncMetadata(metadata: UIObject) {
     const { navigation } = metadata
     this.syncAppNavigation(navigation)
+  }
+
+  async refresh() {
+    const appId = get(appStore).appId
+    const appPackage = await API.fetchAppPackage(appId)
+
+    this.syncAppNavigation(appPackage.application.navigation)
   }
 }
 

@@ -40,7 +40,7 @@ export async function save(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
   const db = context.getAppDB()
-  const screen = ctx.request.body
+  const { navigationLinkLabel, ...screen } = ctx.request.body
 
   const isCreation = !screen._id
 
@@ -93,6 +93,15 @@ export async function save(
   if (isCreation) {
     await events.screen.created(screen)
   }
+
+  if (navigationLinkLabel && isCreation) {
+    await sdk.navigation.addLink({
+      label: navigationLinkLabel,
+      url: screen.routing.route,
+      roleId: screen.routing.roleId,
+    })
+  }
+
   ctx.message = `Screen ${screen.name} saved.`
   ctx.body = {
     ...savedScreen,
@@ -107,6 +116,8 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const screen = await db.get<Screen>(id)
 
   await db.remove(id, ctx.params.screenRev)
+
+  await sdk.navigation.deleteLink(screen.routing.route)
 
   await events.screen.deleted(screen)
   ctx.body = {
