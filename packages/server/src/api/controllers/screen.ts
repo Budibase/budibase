@@ -1,4 +1,4 @@
-import { DocumentType, generateScreenID } from "../../db/utils"
+import { DocumentType } from "../../db/utils"
 import {
   context,
   db as dbCore,
@@ -44,11 +44,9 @@ export async function save(
 
   const isCreation = !screen._id
 
-  if (!screen._id) {
-    screen._id = generateScreenID()
-  }
-
-  const response = await db.put(screen)
+  const savedScreen = isCreation
+    ? await sdk.screens.create(screen)
+    : await sdk.screens.update(screen)
 
   // Find any custom components being used
   let pluginNames: string[] = []
@@ -94,11 +92,6 @@ export async function save(
 
   if (isCreation) {
     await events.screen.created(screen)
-  }
-  const savedScreen = {
-    ...screen,
-    _id: response.id,
-    _rev: response.rev,
   }
 
   if (navigationLinkLabel && isCreation) {
