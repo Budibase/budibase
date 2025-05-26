@@ -89,6 +89,13 @@
           />
         {/if}
         <SideNavLink
+          icon="Data"
+          text="Data"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
           icon="RailLeft"
           text="Design"
           url={$url("./design")}
@@ -99,13 +106,6 @@
           icon="Workflow"
           text="Automations"
           url={$url("./automation")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
-          icon="Data"
-          text="Data"
-          url={$url("./data")}
           {collapsed}
           on:click={keepCollapsed}
         />
