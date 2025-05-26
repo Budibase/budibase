@@ -408,7 +408,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     await Promise.all(promises)
 
-    navigationStore.refresh()
+    appStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()
     this.update(state => {

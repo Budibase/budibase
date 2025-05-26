@@ -4,13 +4,15 @@ import { appStore } from "@/stores/builder"
 import { BudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
 
-export const INITIAL_NAVIGATION_STATE = {
+export interface AppNavigationStore extends AppNavigation {}
+
+export const INITIAL_NAVIGATION_STATE: AppNavigationStore = {
   navigation: "Top",
   links: [],
   textAlign: "Left",
 }
 
-export class NavigationStore extends BudiStore<AppNavigation> {
+export class NavigationStore extends BudiStore<AppNavigationStore> {
   constructor() {
     super(INITIAL_NAVIGATION_STATE)
   }
