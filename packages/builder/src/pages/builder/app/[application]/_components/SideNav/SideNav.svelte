@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionButton, Context, Icon, StatusLight } from "@budibase/bbui"
+  import { Context, Icon, StatusLight } from "@budibase/bbui"
   import { createLocalStorageStore } from "@budibase/frontend-core"
   import { url } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
