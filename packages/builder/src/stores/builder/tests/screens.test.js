@@ -32,11 +32,11 @@ vi.mock("@/stores/builder", async () => {
     subscribe: mockAppStore.subscribe,
     update: mockAppStore.update,
     set: mockAppStore.set,
+    refresh: vi.fn(),
   }
 
   const navigationStore = {
     deleteLink: vi.fn(),
-    refresh: vi.fn(),
   }
 
   return {
