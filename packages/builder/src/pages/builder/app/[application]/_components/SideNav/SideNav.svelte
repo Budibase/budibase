@@ -79,7 +79,7 @@
 
     <div class="nav_body">
       <div class="links">
-        {#if $featureFlags.AI_AGENTS || true}
+        {#if $featureFlags.AI_AGENTS}
           <SideNavLink
             icon="Algorithm"
             text="Agent"
