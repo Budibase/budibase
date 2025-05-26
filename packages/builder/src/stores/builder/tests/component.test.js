@@ -129,9 +129,8 @@ describe("Component store", () => {
       .mockResolvedValue(mockAPIResponse)
 
     const fakeAppId = "abc123"
-    const components = await ctx.test.componentStore.refreshDefinitions(
-      fakeAppId
-    )
+    const components =
+      await ctx.test.componentStore.refreshDefinitions(fakeAppId)
 
     expect(components).toStrictEqual(mockAPIResponse)
     expect(ctx.test.store.components).toStrictEqual(mockAPIResponse)
@@ -154,9 +153,8 @@ describe("Component store", () => {
       .mockResolvedValue(mockAPIResponse)
 
     const fakeAppId = "abc123"
-    const components = await ctx.test.componentStore.refreshDefinitions(
-      fakeAppId
-    )
+    const components =
+      await ctx.test.componentStore.refreshDefinitions(fakeAppId)
 
     expect(components).toStrictEqual(mockAPIResponse)
     expect(ctx.test.store.components).toStrictEqual(mockAPIResponse)

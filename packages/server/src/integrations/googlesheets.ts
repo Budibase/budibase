@@ -352,9 +352,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
             err.message.startsWith("No values in the header row") ||
             err.message.startsWith("All your header cells are blank")
           ) {
-            errors[
-              sheet.title
-            ] = `Failed to find a header row in sheet "${sheet.title}", is the first row blank?`
+            errors[sheet.title] =
+              `Failed to find a header row in sheet "${sheet.title}", is the first row blank?`
             return
           }
 

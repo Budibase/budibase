@@ -92,33 +92,36 @@ async function parseSchema(view: CreateViewRequest) {
   }
   const finalViewSchema =
     view.schema &&
-    Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
-      let fieldRelatedSchema:
-        | Record<string, RequiredKeys<RelationSchemaField>>
-        | undefined
+    Object.entries(view.schema).reduce(
+      (p, [fieldName, schemaValue]) => {
+        let fieldRelatedSchema:
+          | Record<string, RequiredKeys<RelationSchemaField>>
+          | undefined
 
-      if (schemaValue.columns) {
-        fieldRelatedSchema = Object.entries(schemaValue.columns).reduce<
-          NonNullable<typeof fieldRelatedSchema>
-        >((acc, [key, fieldSchema]) => {
-          acc[key] = {
-            visible: fieldSchema.visible,
-            readonly: fieldSchema.readonly,
-            order: fieldSchema.order,
-            width: fieldSchema.width,
-            icon: fieldSchema.icon,
-          }
-          return acc
-        }, {})
-        schemaValue.columns = fieldRelatedSchema
-      }
+        if (schemaValue.columns) {
+          fieldRelatedSchema = Object.entries(schemaValue.columns).reduce<
+            NonNullable<typeof fieldRelatedSchema>
+          >((acc, [key, fieldSchema]) => {
+            acc[key] = {
+              visible: fieldSchema.visible,
+              readonly: fieldSchema.readonly,
+              order: fieldSchema.order,
+              width: fieldSchema.width,
+              icon: fieldSchema.icon,
+            }
+            return acc
+          }, {})
+          schemaValue.columns = fieldRelatedSchema
+        }
 
-      const fieldSchema = stripUnknownFields(schemaValue)
-      stripUndefinedFields(fieldSchema)
+        const fieldSchema = stripUnknownFields(schemaValue)
+        stripUndefinedFields(fieldSchema)
 
-      p[fieldName] = fieldSchema
-      return p
-    }, {} as Record<string, RequiredKeys<ViewFieldMetadata>>)
+        p[fieldName] = fieldSchema
+        return p
+      },
+      {} as Record<string, RequiredKeys<ViewFieldMetadata>>
+    )
   return finalViewSchema
 }
 

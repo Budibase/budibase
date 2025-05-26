@@ -67,7 +67,7 @@ export type APICallConfig<RequestT, ResponseT> = {
 
 export type APICallParams<
   RequestT = null,
-  ResponseT = void
+  ResponseT = void,
 > = RequestT extends null
   ? Pick<APICallConfig<RequestT, ResponseT>, "url"> &
       Partial<APICallConfig<RequestT, ResponseT>>

@@ -1265,7 +1265,7 @@ if (descriptions.length) {
           (
             rows: Row[],
             schema: TableSchema
-          ) => Promise<ValidateTableImportResponse>
+          ) => Promise<ValidateTableImportResponse>,
         ][] = [
           [
             "validateNewTableImport",

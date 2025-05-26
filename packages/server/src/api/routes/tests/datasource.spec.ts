@@ -640,9 +640,8 @@ if (datasources.length) {
         })
 
         it("should be able to export and reimport a schema", async () => {
-          let { schema } = await config.api.datasource.externalSchema(
-            datasource
-          )
+          let { schema } =
+            await config.api.datasource.externalSchema(datasource)
 
           if (isPostgres) {
             // pg_dump 17 puts this config parameter into the dump but no DB < 17

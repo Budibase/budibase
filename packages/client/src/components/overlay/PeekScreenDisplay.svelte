@@ -130,7 +130,11 @@
     width: calc(100% + 80px);
     height: 640px;
     max-height: calc(100vh - 120px);
-    transition: width 1s ease, height 1s ease, top 1s ease, left 1s ease;
+    transition:
+      width 1s ease,
+      height 1s ease,
+      top 1s ease,
+      left 1s ease;
     border-radius: var(--spectrum-global-dimension-size-100);
   }
 
