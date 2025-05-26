@@ -114,7 +114,7 @@
         {#if updateAvailable && $isOnlyUser}
           <SideNavLink
             icon="Circle"
-            url={$url("./settings/general#version")}
+            url={$url("./settings/general")}
             text="Update available"
             forceActive={false}
           >
