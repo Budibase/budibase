@@ -110,38 +110,36 @@
           on:click={keepCollapsed}
         />
       </div>
-    </div>
-
-    <div class="links">
-      {#if updateAvailable && $isOnlyUser}
+      <div class="links">
+        {#if updateAvailable && $isOnlyUser}
+          <SideNavLink
+            icon="Circle"
+            url={$url("./settings/general#version")}
+            text="Update available"
+            forceActive={false}
+          >
+            <StatusLight notice slot="icon" size="L" />
+          </SideNavLink>
+        {/if}
         <SideNavLink
-          icon="Circle"
-          url={$url("./settings/general#version")}
-          text="Update available"
-          forceActive={false}
-        >
-          <StatusLight notice slot="icon" size="L" />
-        </SideNavLink>
-      {/if}
-      <SideNavLink
-        icon="User"
-        text="Users"
-        on:click={() => {
-          builderStore.showBuilderSidePanel()
-          keepCollapsed()
-        }}
-        {collapsed}
-      />
-      <SideNavLink
-        icon="Settings"
-        text="Settings"
-        url={$url("./settings")}
-        {collapsed}
-        on:click={keepCollapsed}
-      />
-      <SideNavUserSettings {collapsed} />
+          icon="User"
+          text="Users"
+          on:click={() => {
+            builderStore.showBuilderSidePanel()
+            keepCollapsed()
+          }}
+          {collapsed}
+        />
+        <SideNavLink
+          icon="Settings"
+          text="Settings"
+          url={$url("./settings")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavUserSettings {collapsed} />
+      </div>
     </div>
-
     <div class="popover-container"></div>
   </div>
 </div>
@@ -181,7 +179,6 @@
     border-right: var(--nav-border);
     transition: width 130ms ease-out;
     overflow: hidden;
-    gap: var(--nav-padding);
     padding-bottom: var(--nav-padding);
   }
   .nav:not(.pinned).focused {
@@ -228,10 +225,6 @@
     transition: color 130ms ease-out;
     color: var(--spectrum-global-color-gray-800);
   }
-  .nav_title:hover {
-    cursor: pointer;
-    color: var(--spectrum-global-color-gray-900);
-  }
   .nav_title h1 {
     font-size: 18px;
     font-weight: 500;
@@ -248,9 +241,10 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: flex-start;
+    justify-content: space-between;
     flex: 1 1 auto;
-    gap: 12px;
+    padding: var(--nav-padding) 0;
+    gap: 2px;
   }
 
   /* Popover container */
