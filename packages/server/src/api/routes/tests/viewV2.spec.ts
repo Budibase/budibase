@@ -3156,7 +3156,7 @@ if (descriptions.length) {
               order?: SortOrder
               type?: SortType
             },
-            string[]
+            string[],
           ][] = [
             [
               {

@@ -176,7 +176,9 @@
     display: grid;
     grid-template-columns: 90px 1fr;
     align-items: start;
-    transition: background 130ms ease-out, border-color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
     border-left: 4px solid transparent;
     margin: 0 calc(-1 * var(--spacing-xl));
     padding: 0 var(--spacing-xl) 0 calc(var(--spacing-xl) - 4px);
