@@ -90,6 +90,7 @@
       text={workspaceApp.name}
       showTooltip
       nonSelectable
+      scrollable
     >
       <Icon
         on:click={e => openContextMenu(e, workspaceApp)}
