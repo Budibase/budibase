@@ -68,7 +68,6 @@
       </a>
       <div class="nav_title">
         <h1>{$appStore.name}</h1>
-        <Icon name="ChevronDown" size="XS" />
       </div>
       <Icon
         name="MarginLeft"
@@ -152,7 +151,9 @@
     display: contents;
     --nav-logo-width: 20px;
     --nav-padding: 12px;
-    --nav-collapsed-width: calc(var(--nav-logo-width) + var(--nav-padding) * 2);
+    --nav-collapsed-width: calc(
+      var(--nav-logo-width) + var(--nav-padding) * 2 + 2px
+    );
     --nav-width: 240px;
     --nav-border: 1px solid var(--spectrum-global-color-gray-200);
   }
@@ -182,7 +183,6 @@
     overflow: hidden;
     gap: var(--nav-padding);
     padding-bottom: var(--nav-padding);
-    box-sizing: border-box;
   }
   .nav:not(.pinned).focused {
     width: var(--nav-width);
