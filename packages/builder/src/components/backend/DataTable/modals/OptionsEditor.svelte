@@ -181,7 +181,9 @@
 
   /* Options row */
   .option {
-    transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
+    transition:
+      background-color 130ms ease-in-out,
+      color 130ms ease-in-out,
       border-color 130ms ease-in-out;
     display: flex;
     flex-direction: row;

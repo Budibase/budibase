@@ -19,7 +19,7 @@ export const sleep = (ms: number) =>
  */
 export const sequential = <
   TReturn,
-  TFunction extends (...args: any[]) => Promise<TReturn>
+  TFunction extends (...args: any[]) => Promise<TReturn>,
 >(
   fn: TFunction
 ): TFunction => {
