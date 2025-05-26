@@ -9,8 +9,8 @@ export default async (ctx: UserCtx, next: any) => {
     env.isWorker() || !appId
       ? hasBuilderPermissions
       : env.isApps()
-      ? isBuilder
-      : undefined
+        ? isBuilder
+        : undefined
   if (!builderFn) {
     throw new Error("Service name unknown - middleware inactive.")
   }

@@ -145,7 +145,9 @@
     min-height: 147px;
     max-height: calc(100% - 147px);
     position: relative;
-    transition: height 300ms ease-out, max-height 300ms ease-out;
+    transition:
+      height 300ms ease-out,
+      max-height 300ms ease-out;
     height: 210px;
   }
   .screens.searching {
