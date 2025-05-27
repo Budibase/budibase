@@ -15,7 +15,7 @@
   } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
-  import type { AgentChat } from "@budibase/types"
+  import type { AgentChat, CreateToolSourceRequest } from "@budibase/types"
   import { onDestroy, onMount } from "svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { API } from "@/api"
@@ -50,19 +50,20 @@
   let inputValue = ""
   let chat: AgentChat = { title: "", messages: [] }
   let loading: boolean = false
-  let wrapper: HTMLDivElement
+  let chatAreaElement: HTMLDivElement
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
   let toolSourceModal: Modal
   let toolConfigModal: Modal
-  let selectedToolSource = null
+  let selectedToolSource: any = null
   let toolConfig = {
     apiKey: "",
-    guidelines: ""
+    guidelines: "",
+    type: "GITHUB" as const
   }
 
-  // Access the chat history from the store
   $: chatHistory = $agentsStore.chats || []
+  $: toolSources = $agentsStore.toolSources || []
 
   import { tick } from "svelte"
 
@@ -72,8 +73,8 @@
 
   async function scrollToBottom() {
     await tick()
-    if (wrapper) {
-      wrapper.scrollTop = wrapper.scrollHeight
+    if (chatAreaElement) {
+      chatAreaElement.scrollTop = chatAreaElement.scrollHeight
     }
   }
 
@@ -140,9 +141,10 @@
     agentsStore.clearCurrentChatId()
   }
 
-  const selectChat = (selectedChat: AgentChat) => {
+  const selectChat = async (selectedChat: AgentChat) => {
     chat = { ...selectedChat }
     agentsStore.setCurrentChatId(selectedChat._id!)
+    await scrollToBottom()
   }
 
   const startNewChat = () => {
@@ -150,11 +152,15 @@
     agentsStore.clearCurrentChatId()
   }
 
-  const openToolConfig = (toolSource) => {
+  const openToolConfig = (toolSource: any) => {
     selectedToolSource = toolSource
     toolConfig = {
       apiKey: "",
-      guidelines: ""
+      guidelines: "",
+      // TODO: make this less shit
+      type: toolSource.name === "Github" ? "GITHUB" :
+            toolSource.name === "Confluence" ? "ATLASSIAN" :
+            "BUDIBASE"
     }
     toolSourceModal.hide()
     toolConfigModal.show()
@@ -167,7 +173,16 @@
 
   const handleConfigSave = async () => {
     try {
-      await API.createToolSource(toolConfig)
+      const toolSourceData: CreateToolSourceRequest = {
+        type: toolConfig.type,
+        disabledTools: [],
+        auth: {
+          apiKey: toolConfig.apiKey,
+          guidelines: toolConfig.guidelines
+        }
+      }
+      
+      await agentsStore.createToolSource(toolSourceData)
       notifications.success("Tool Source saved successfully.")
       toolConfigModal.hide()
     } catch (err) {
@@ -177,25 +192,26 @@
   }
 
   onMount(async () => {
-    // Fetch agent history
     await agentsStore.init()
 
-    // Init history for this app
     chat = { title: "", messages: [] }
 
     // Ensure we always autoscroll to reveal new messages
     observer = new MutationObserver(async () => {
-      // Use this approach as a backup to catch any DOM changes
       await tick()
-      wrapper.scrollTop = wrapper.scrollHeight
+      if (chatAreaElement) {
+        chatAreaElement.scrollTop = chatAreaElement.scrollHeight
+      }
     })
-    observer.observe(wrapper, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    })
+    
+    if (chatAreaElement) {
+      observer.observe(chatAreaElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      })
+    }
 
-    // Set initial focus on the textarea
     await tick()
     if (textareaElement) {
       textareaElement.focus()
@@ -207,9 +223,8 @@
   })
 </script>
 
-<div class="page" bind:this={wrapper}>
+<div class="page">
   <div class="layout">
-    <!-- Left Sidebar for Chat History -->
     <div class="history-panel">
       <Panel customWidth={300}>
         <div class="chat-history">
@@ -221,7 +236,7 @@
           </div>
           <div class="history-list">
             {#each chatHistory as chatItem}
-              <div 
+              <button
                 class="history-item" 
                 class:active={$agentsStore.currentChatId === chatItem._id}
                 on:click={() => selectChat(chatItem)}
@@ -232,7 +247,7 @@
                 <div class="chat-preview">
                   {chatItem.messages.length > 0 ? chatItem.messages[chatItem.messages.length - 1]?.content?.slice(0, 50) + "..." : "No messages"}
                 </div>
-              </div>
+              </button>
             {/each}
             {#if chatHistory.length === 0}
               <div class="empty-state">
@@ -244,8 +259,7 @@
       </Panel>
     </div>
 
-    <!-- Main Chat Area -->
-    <div class="chat-area">
+    <div class="chat-area" bind:this={chatAreaElement}>
       <Chatbox bind:chat {loading} />
       <div class="controls">
         <ActionButton quiet on:click={reset}>Reset history</ActionButton>
@@ -262,7 +276,6 @@
       </div>
     </div>
 
-    <!-- Right Panel for Tools -->
     <div class="panel-container">
       <Panel
         customWidth={400}
@@ -282,6 +295,25 @@
                     Add Tools
                   </Button>
                 </div>
+                
+                {#if toolSources.length > 0}
+                  <div class="saved-tools-list">
+                    {#each toolSources as toolSource}
+                      <div class="saved-tool-item">
+                        <div class="tool-info">
+                          <div class="tool-name">{toolSource.type}</div>
+                        </div>
+                        <div class="tool-actions">
+                          <Button size="XS" secondary>Edit</Button>
+                        </div>
+                      </div>
+                    {/each}
+                  </div>
+                {:else}
+                  <div class="no-tools-message">
+                    <Body size="S">No tools connected yet. Click "Add Tools" to get started!</Body>
+                  </div>
+                {/if}
               </div>
             </Tab>
             <Tab title="Deploy">
@@ -414,6 +446,7 @@
   }
 
   .agent-actions-heading {
+    margin-top: var(--spacing-xl);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -509,6 +542,7 @@
     margin-bottom: var(--spacing-s);
     cursor: pointer;
     transition: all 0.2s ease;
+    width: 100%;
   }
 
   .history-item:hover {
@@ -542,5 +576,51 @@
     text-align: center;
     padding: var(--spacing-xl);
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .saved-tools-section {
+    margin-top: var(--spacing-xl);
+  }
+
+  .saved-tools-list {
+    margin-top: var(--spacing-m);
+  }
+
+  .saved-tool-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-m);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
+    margin-bottom: var(--spacing-s);
+    background-color: var(--background);
+  }
+
+  .tool-info {
+    flex: 1;
+  }
+
+  .tool-name {
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .tool-details {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .tool-actions {
+    display: flex;
+    gap: var(--spacing-s);
+  }
+
+  .no-tools-message {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--spectrum-global-color-gray-600);
+    margin-top: var(--spacing-xl);
   }
 </style>

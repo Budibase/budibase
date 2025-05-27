@@ -81,7 +81,7 @@ export async function agentChat(
     messages: response.messages,
   }
 
-  const db = context.getGlobalDB()
+  const db = context.getAppDB()
   const { rev } = await db.put(newChat)
   newChat._rev = rev
   ctx.body = newChat
@@ -97,7 +97,7 @@ export async function remove(ctx: UserCtx<void, void>) {
 export async function fetchHistory(
   ctx: UserCtx<void, FetchAgentHistoryResponse>
 ) {
-  const db = context.getGlobalDB()
+  const db = context.getAppDB()
   const history = await db.allDocs<AgentChat>(
     docIds.getDocParams(DocumentType.AGENT_CHAT, undefined, {
       include_docs: true,
