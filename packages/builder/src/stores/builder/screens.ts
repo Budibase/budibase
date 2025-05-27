@@ -18,13 +18,12 @@ import {
   Component,
   ComponentDefinition,
   DeleteScreenResponse,
-  FeatureFlag,
   FetchAppPackageResponse,
+  SaveScreenRequest,
   SaveScreenResponse,
   Screen,
   ScreenVariant,
 } from "@budibase/types"
-import { featureFlag } from "@/helpers"
 
 interface ScreenState {
   screens: Screen[]
@@ -39,7 +38,7 @@ export const initialScreenState: ScreenState = {
 export class ScreenStore extends BudiStore<ScreenState> {
   history: HistoryStore<Screen>
   delete: (screens: Screen) => Promise<void>
-  save: (screen: Screen) => Promise<Screen>
+  save: (screen: SaveScreenRequest) => Promise<Screen>
 
   constructor() {
     super(initialScreenState)
@@ -89,10 +88,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {FetchAppPackageResponse} pkg
    */
   syncAppScreens(pkg: FetchAppPackageResponse) {
-    let screens = [...pkg.screens]
-    if (featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-      screens = [...pkg.workspaceApps.flatMap(p => p.screens)]
-    }
+    const screens = [...pkg.screens]
     this.update(state => ({
       ...state,
       screens,
@@ -220,9 +216,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * Core save method. If creating a new screen, the store will sync the target
    * screen id to ensure that it is selected in the builder
    *
-   * @param {Screen} screen The screen being modified/created
+   * @param {Screen} screenRequest The screen being modified/created
    */
-  async saveScreen(screen: Screen) {
+  async saveScreen(screenRequest: SaveScreenRequest) {
+    const { navigationLinkLabel, ...screen } = screenRequest
     const appState = get(appStore)
 
     // Validate screen structure if the app supports it
@@ -235,7 +232,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Save screen
     const creatingNewScreen = screen._id === undefined
-    const savedScreen = await API.saveScreen(screen)
+    const savedScreen = await API.saveScreen({ ...screen, navigationLinkLabel })
 
     // Update state
     this.update(state => {
@@ -261,6 +258,14 @@ export class ScreenStore extends BudiStore<ScreenState> {
     })
 
     await this.syncScreenData(savedScreen)
+
+    if (navigationLinkLabel) {
+      await navigationStore.addLink({
+        url: screen.routing.route,
+        title: navigationLinkLabel,
+        roleId: screen.routing.roleId,
+      })
+    }
 
     return savedScreen
   }
@@ -402,7 +407,8 @@ export class ScreenStore extends BudiStore<ScreenState> {
         deleteUrls.push(screen.routing.route)
       })
     await Promise.all(promises)
-    await navigationStore.deleteLink(deleteUrls)
+
+    appStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()
     this.update(state => {

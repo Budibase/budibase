@@ -88,6 +88,19 @@
       color: #888;
       font-weight: 400;
     }
+
+    /* Inject latest font CSS from bbui.css, as the real file is versioned with the client lib */
+    .spectrum {
+      --font-sans:
+        "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+      --font-accent:
+        "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+      --spectrum-alias-body-text-font-family: var(--font-sans) !important;
+      --spectrum-global-font-family-base: var(--font-sans) !important;
+      --spectrum-global-font-line-height-small: 1.4 !important;
+    }
   </style>
 
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->

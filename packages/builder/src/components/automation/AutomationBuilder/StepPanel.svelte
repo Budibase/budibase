@@ -210,7 +210,9 @@
     flex-direction: column;
     min-height: 200px;
     max-height: 550px;
-    transition: height 300ms ease-out, max-height 300ms ease-out;
+    transition:
+      height 300ms ease-out,
+      max-height 300ms ease-out;
     height: 400px;
     box-sizing: border-box;
   }

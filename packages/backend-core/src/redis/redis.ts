@@ -202,23 +202,26 @@ class RedisWrapper {
 
       span.addTags({ numKeysFound: response.length })
 
-      return zip(keys, response).reduce((acc, [key, result]) => {
-        if (key === undefined || result === undefined) {
-          throw new Error(
-            `Keys and response length mismatch: ${keys.length} vs ${response.length}`
-          )
-        }
+      return zip(keys, response).reduce(
+        (acc, [key, result]) => {
+          if (key === undefined || result === undefined) {
+            throw new Error(
+              `Keys and response length mismatch: ${keys.length} vs ${response.length}`
+            )
+          }
 
-        try {
-          acc[key] = result ? (JSON.parse(result) as T) : null
-        } catch (err) {
-          // TODO: this is a filthy lie but downstream code expects this, I have
-          // no idea how it actually works if if this branch is ever hit in
-          // practice.
-          acc[key] = result as T
-        }
-        return acc
-      }, {} as Record<string, T | null>)
+          try {
+            acc[key] = result ? (JSON.parse(result) as T) : null
+          } catch (err) {
+            // TODO: this is a filthy lie but downstream code expects this, I have
+            // no idea how it actually works if if this branch is ever hit in
+            // practice.
+            acc[key] = result as T
+          }
+          return acc
+        },
+        {} as Record<string, T | null>
+      )
     })
   }
 
@@ -242,11 +245,14 @@ class RedisWrapper {
     return await this.trace("RedisWrapper.bulkStore", async span => {
       span.addTags({ numKeys: Object.keys(data).length, expirySeconds })
 
-      const dataToStore = Object.entries(data).reduce((acc, [key, value]) => {
-        acc[this.prefixed(key)] =
-          typeof value === "object" ? JSON.stringify(value) : value
-        return acc
-      }, {} as Record<string, any>)
+      const dataToStore = Object.entries(data).reduce(
+        (acc, [key, value]) => {
+          acc[this.prefixed(key)] =
+            typeof value === "object" ? JSON.stringify(value) : value
+          return acc
+        },
+        {} as Record<string, any>
+      )
 
       const pipeline = this.client.pipeline()
       pipeline.mset(dataToStore)

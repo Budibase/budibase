@@ -70,6 +70,9 @@
   button.is-disabled {
     cursor: default;
   }
+  .spectrum-Button {
+    padding-bottom: calc(var(--spectrum-button-padding-y) - 1px);
+  }
   .spectrum-Button-label {
     white-space: nowrap;
     overflow: hidden;
@@ -100,8 +103,11 @@
   .spectrum-Button .spectrum-Button-label + .spectrum-Icon {
     margin-left: var(--spectrum-button-primary-icon-gap);
     margin-right: calc(
-      -1 * (var(--spectrum-button-primary-textonly-padding-left-adjusted) -
-            var(--spectrum-button-primary-padding-left-adjusted))
+      -1 *
+        (
+          var(--spectrum-button-primary-textonly-padding-left-adjusted) -
+            var(--spectrum-button-primary-padding-left-adjusted)
+        )
     );
   }
 </style>

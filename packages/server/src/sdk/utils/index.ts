@@ -21,7 +21,7 @@ function isEnvironmentVariableKey(str: string) {
 }
 
 export async function processEnvironmentVariable<
-  T extends string | Record<string, string>
+  T extends string | Record<string, string>,
 >(value: T): Promise<T> {
   let envVariables: Record<string, string>
   const getEnvVariables = async () => {
