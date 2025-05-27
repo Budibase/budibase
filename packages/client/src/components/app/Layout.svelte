@@ -5,6 +5,7 @@
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
+  import Logo from "./Logo.svelte"
   import {
     getActiveConditions,
     reduceConditionActions,
@@ -55,6 +56,10 @@
     Small: "s",
     "Extra small": "xs",
   }
+
+  export let logoPosition = "top" // "top" or "bottom"
+  export let titleSize = "S"
+  export let titleColor // CSS color string, only affects title
 
   let mobileOpen = false
 
@@ -266,27 +271,23 @@
                 </div>
               {/if}
               <div class="logo">
-                {#if !hideLogo}
-                  {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
-                    <a
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                      use:linkable
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else if logoLinkUrl}
-                    <a
-                      target={openLogoLinkInNewTab ? "_blank" : "_self"}
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else}
-                    <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                  {/if}
+                {#if logoPosition === "top"}
+                  <Logo
+                    {logoUrl}
+                    {logoLinkUrl}
+                    {openLogoLinkInNewTab}
+                    {hideLogo}
+                    {title}
+                    {linkable}
+                    {isInternal}
+                    {getSanitizedUrl}
+                    {logoHeight}
+                  />
                 {/if}
                 {#if !hideTitle && title}
-                  <Heading size="S" {textAlign}>{title}</Heading>
+                  <Heading size={titleSize} {textAlign} {titleColor}
+                    >{title}</Heading
+                  >
                 {/if}
               </div>
               {#if !embedded}
@@ -322,6 +323,19 @@
             {/if}
             {#if !embedded}
               <div class="user left">
+                {#if logoPosition === "bottom"}
+                  <Logo
+                    {logoUrl}
+                    {logoLinkUrl}
+                    {openLogoLinkInNewTab}
+                    {hideLogo}
+                    {title}
+                    {linkable}
+                    {isInternal}
+                    {getSanitizedUrl}
+                    {logoHeight}
+                  />
+                {/if}
                 <UserMenu />
               </div>
             {/if}
@@ -594,6 +608,11 @@
     top: 0;
     left: 0;
     box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
+  }
+  .user.left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
   }
   .mobile .user.left {
     display: none;
