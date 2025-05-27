@@ -138,7 +138,7 @@
     }
   }
 
-  $: if (data?.name && !validationState.touched.urlPrefix) {
+  $: if (isNew && data?.name && !validationState.touched.urlPrefix) {
     data.urlPrefix = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
   }
 </script>
