@@ -298,6 +298,8 @@ export async function fetchAppPackage(
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
+
+    application.navigation = matchedWorkspaceApp.navigation
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(
