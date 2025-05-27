@@ -18,7 +18,6 @@
   let modal: Modal
   export const show = () => modal.show()
 
-  let errors: Partial<Record<keyof WorkspaceApp, string>> = {}
   let data: WorkspaceApp
   let iconColor: string
 
@@ -28,6 +27,11 @@
 
   const requiredString = (errorMessage: string) =>
     z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
+
+  let validationState: {
+    errors: Partial<Record<keyof WorkspaceApp, string>>
+    touched: Partial<Record<keyof WorkspaceApp, boolean>>
+  }
 
   const validateWorkspaceApp = (workspaceApp: Partial<WorkspaceApp>) => {
     const validator = z.object({
@@ -61,9 +65,9 @@
     }) satisfies ZodType<WorkspaceApp>
 
     const validationResult = validator.safeParse(workspaceApp)
-    errors = {}
+    validationState.errors = {}
     if (!validationResult.success) {
-      errors = Object.entries(
+      validationState.errors = Object.entries(
         validationResult.error.formErrors.fieldErrors
       ).reduce<Record<string, string>>((acc, [field, errors]) => {
         if (errors[0]) {
@@ -85,6 +89,7 @@
       icon: workspaceApp?.icon ?? "Monitoring",
       iconColor: workspaceApp?.iconColor,
     }
+    validationState = { errors: {}, touched: {} }
     iconColor = workspaceApp?.iconColor ?? ""
   }
 
@@ -132,6 +137,10 @@
       data.urlPrefix = `/${data.urlPrefix}`
     }
   }
+
+  $: if (data?.name && !validationState.touched.urlPrefix) {
+    data.urlPrefix = `/${encodeURI(data.name.toLowerCase().replace(/\s+/g, "-"))}`
+  }
 </script>
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
@@ -139,14 +148,20 @@
     <Input
       label="App Name"
       on:enterkey={onEnterKey}
+      on:focus={() => {
+        validationState.touched.name = true
+      }}
       bind:value={data.name}
-      error={errors.name}
+      error={validationState.errors.name}
     />
     <Input
-      label="Project url"
+      label="Base url"
       on:enterkey={onEnterKey}
+      on:focus={() => {
+        validationState.touched.urlPrefix = true
+      }}
       bind:value={data.urlPrefix}
-      error={errors.urlPrefix}
+      error={validationState.errors.urlPrefix}
     />
 
     <Label size="L">Icon</Label>
