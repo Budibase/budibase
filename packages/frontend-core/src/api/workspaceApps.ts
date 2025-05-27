@@ -22,30 +22,21 @@ export const buildWorkspaceAppEndpoints = (
   API: BaseAPIClient
 ): WorkspaceAppEndpoints => ({
   fetch: async () => {
-    const result = await API.get<FetchWorkspaceAppResponse>({
+    return await API.get({
       url: "/api/workspaceApp",
     })
-    return result
   },
   create: async workspaceApp => {
-    const result = await API.post<
-      InsertWorkspaceAppRequest,
-      InsertWorkspaceAppResponse
-    >({
+    return await API.post({
       url: "/api/workspaceApp",
       body: workspaceApp,
     })
-    return result
   },
   update: async workspaceApp => {
-    const result = await API.put<
-      UpdateWorkspaceAppRequest,
-      UpdateWorkspaceAppResponse
-    >({
+    return await API.put({
       url: `/api/workspaceApp/${workspaceApp._id}`,
       body: workspaceApp,
     })
-    return result
   },
 
   delete: async (id, rev) => {
