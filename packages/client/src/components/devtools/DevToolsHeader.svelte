@@ -1,6 +1,6 @@
 <script>
   import { Heading, Select, ActionButton } from "@budibase/bbui"
-  import { devToolsStore, appStore } from "@/stores"
+  import { devToolsStore } from "@/stores"
   import { getContext, onMount } from "svelte"
   import { API } from "@/api"
 
@@ -61,7 +61,7 @@
       icon="LinkOut"
       on:click={() => {
         window.parent.closePreview?.()
-        window.open(`/${$appStore.appId}`, "_blank")
+        window.open(window.parent.previewFullscreenUrl, "_blank")
       }}
     >
       Fullscreen

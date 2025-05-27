@@ -26,6 +26,8 @@
       previewStore.showPreview(false)
     }
   })
+
+  $: window.previewFullscreenUrl = src
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
