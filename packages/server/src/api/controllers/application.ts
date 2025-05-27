@@ -294,7 +294,10 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+  if (
+    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    !isBuilder
+  ) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : "/"

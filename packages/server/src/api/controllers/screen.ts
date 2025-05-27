@@ -109,6 +109,7 @@ export async function save(
       label: navigationLinkLabel,
       url: screen.routing.route,
       roleId: screen.routing.roleId,
+      workspaceId: screen.workspaceAppId,
     })
   }
 

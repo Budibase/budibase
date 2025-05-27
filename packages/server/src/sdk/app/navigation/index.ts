@@ -1,30 +1,45 @@
-import { context } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import sdk from "../.."
-import { App, AppNavigation } from "@budibase/types"
+import { App, AppNavigation, FeatureFlag } from "@budibase/types"
 
 export async function addLink({
   label,
   url,
   roleId,
+  workspaceId,
 }: {
   label: string
   url: string
   roleId: string
+  workspaceId: string | undefined
 }) {
-  const appMetadata = await sdk.applications.metadata.get()
-  appMetadata.navigation ??= {
-    navigation: "Top",
-  }
-  appMetadata.navigation.links ??= []
-  appMetadata.navigation.links.push({
-    text: label,
-    url,
-    roleId,
-    type: "link",
-  })
+  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+    const appMetadata = await sdk.applications.metadata.get()
+    appMetadata.navigation ??= {
+      navigation: "Top",
+    }
+    appMetadata.navigation.links ??= []
+    appMetadata.navigation.links.push({
+      text: label,
+      url,
+      roleId,
+      type: "link",
+    })
 
-  const db = context.getAppDB()
-  await db.put(appMetadata)
+    const db = context.getAppDB()
+    await db.put(appMetadata)
+  } else {
+    const workspaceApp = (await sdk.workspaceApps.get(workspaceId!))!
+    workspaceApp.navigation.links ??= []
+    workspaceApp.navigation.links.push({
+      text: label,
+      url,
+      roleId,
+      type: "link",
+    })
+
+    await sdk.workspaceApps.update(workspaceApp)
+  }
 }
 
 export async function deleteLink(route: string) {
