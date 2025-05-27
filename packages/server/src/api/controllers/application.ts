@@ -298,9 +298,16 @@ export async function fetchAppPackage(
     (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
     !isBuilder
   ) {
-    const urlPath = ctx.headers.referer
+    let urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : "/"
+
+    const isProdApp = dbCore.isProdAppID(appId)
+    if (isProdApp) {
+      urlPath = urlPath.replace(`/app${application.url}/`, "/")
+    } else {
+      urlPath = urlPath.replace(`/${application.appId}/`, "/")
+    }
 
     let allWorkspaceApps = await sdk.workspaceApps.fetch()
     // Sort decending to ensure we match the most strict, removing match conflicts

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
   import {
@@ -6,19 +6,22 @@
     themeStore,
     selectedScreen,
     appStore,
+    selectedWorkspaceApp,
   } from "@/stores/builder"
   import { ProgressCircle } from "@budibase/bbui"
+  import { featureFlags } from "@/stores/portal"
 
   $: route = $selectedScreen?.routing.route || "/"
-  $: src = `/${$appStore.appId}#${route}`
+  $: src = $featureFlags.WORKSPACE_APPS
+    ? `/${$appStore.appId}${$selectedWorkspaceApp!.urlPrefix}#${route}`
+    : `/${$appStore.appId}#${route}`
 
   const close = () => {
     previewStore.showPreview(false)
   }
 
   onMount(() => {
-    window.isBuilder = true
-    window.closePreview = () => {
+    ;(window as any).closePreview = () => {
       previewStore.showPreview(false)
     }
   })
