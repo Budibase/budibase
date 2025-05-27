@@ -281,8 +281,8 @@ export async function fetchAppPackage(
   }
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const fromRoute = ctx.request.query.fromRoute
-    if (typeof fromRoute === "string") {
+    const { referer } = ctx.headers
+    if (referer) {
       let allWorkspaceApps = await sdk.workspaceApps.fetch()
       // Sort decending to ensure we match the most strict, removing match conflicts
       allWorkspaceApps = allWorkspaceApps.sort((a, b) =>
@@ -290,7 +290,7 @@ export async function fetchAppPackage(
       )
 
       const matchedWorkspaceApp = allWorkspaceApps.find(a =>
-        fromRoute.startsWith(a.urlPrefix)
+        referer.startsWith(a.urlPrefix)
       )
       if (matchedWorkspaceApp) {
         screens = screens.filter(
