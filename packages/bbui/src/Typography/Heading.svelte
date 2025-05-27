@@ -6,7 +6,7 @@
   export let textAlign: string | undefined = undefined
   export let noPadding: boolean = false
   export let weight: "light" | "heavy" | "default" = "default"
-  export let titleColor
+  export let titleColor: string | undefined = undefined
 </script>
 
 <h1
