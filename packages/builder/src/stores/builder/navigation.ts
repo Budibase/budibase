@@ -1,7 +1,7 @@
-import { get } from "svelte/store"
+import { derived, get, Writable } from "svelte/store"
 import { API } from "@/api"
 import { appStore, workspaceAppStore } from "@/stores/builder"
-import { BudiStore } from "../BudiStore"
+import { DerivedBudiStore } from "../BudiStore"
 import {
   AppNavigation,
   AppNavigationLink,
@@ -19,9 +19,28 @@ export const INITIAL_NAVIGATION_STATE: AppNavigationStore = {
   textAlign: "Left",
 }
 
-export class NavigationStore extends BudiStore<AppNavigationStore> {
+export interface DerivedAppNavigationStore extends AppNavigationStore {}
+
+export class NavigationStore extends DerivedBudiStore<
+  AppNavigationStore,
+  DerivedAppNavigationStore
+> {
   constructor() {
-    super(INITIAL_NAVIGATION_STATE)
+    const makeDerivedStore = (store: Writable<AppNavigationStore>) => {
+      return derived(
+        [store, selectedWorkspaceApp],
+        ([$store, $selectedWorkspaceApp]) => {
+          const navigation = $selectedWorkspaceApp?.navigation
+
+          return {
+            ...$store,
+            ...(navigation ?? INITIAL_NAVIGATION_STATE),
+          }
+        }
+      )
+    }
+
+    super(INITIAL_NAVIGATION_STATE, makeDerivedStore)
   }
 
   syncAppNavigation(nav?: AppNavigation) {
