@@ -294,11 +294,10 @@ export async function fetchAppPackage(
     const matchedWorkspaceApp = allWorkspaceApps.find(a =>
       urlPath.startsWith(a.urlPrefix)
     )
-    if (matchedWorkspaceApp) {
-      screens = screens.filter(
-        s => s.workspaceAppId === matchedWorkspaceApp._id
-      )
+    if (!matchedWorkspaceApp) {
+      ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
+    screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(
