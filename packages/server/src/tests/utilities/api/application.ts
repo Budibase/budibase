@@ -108,14 +108,13 @@ export class ApplicationAPI extends TestAPI {
   }
 
   getAppPackage = async (
-    { appId, fromRoute }: { appId: string; fromRoute?: string },
+    appId: string,
     opts?: RequestOpts
   ): Promise<FetchAppPackageResponse> => {
-    let url = `/api/applications/${appId}/appPackage`
-    if (fromRoute) {
-      url += `?fromRoute=${encodeURIComponent(fromRoute)}`
-    }
-    return await this._get<FetchAppPackageResponse>(url, opts)
+    return await this._get<FetchAppPackageResponse>(
+      `/api/applications/${appId}/appPackage`,
+      opts
+    )
   }
 
   update = async (

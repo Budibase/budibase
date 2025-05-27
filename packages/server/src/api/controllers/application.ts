@@ -281,22 +281,23 @@ export async function fetchAppPackage(
   }
 
   if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const { referer } = ctx.headers
-    if (referer) {
-      let allWorkspaceApps = await sdk.workspaceApps.fetch()
-      // Sort decending to ensure we match the most strict, removing match conflicts
-      allWorkspaceApps = allWorkspaceApps.sort((a, b) =>
-        b.urlPrefix.localeCompare(a.urlPrefix)
-      )
+    const urlPath = ctx.headers.referer
+      ? new URL(ctx.headers.referer).pathname
+      : "/"
 
-      const matchedWorkspaceApp = allWorkspaceApps.find(a =>
-        referer.startsWith(a.urlPrefix)
+    let allWorkspaceApps = await sdk.workspaceApps.fetch()
+    // Sort decending to ensure we match the most strict, removing match conflicts
+    allWorkspaceApps = allWorkspaceApps.sort((a, b) =>
+      b.urlPrefix.localeCompare(a.urlPrefix)
+    )
+
+    const matchedWorkspaceApp = allWorkspaceApps.find(a =>
+      urlPath.startsWith(a.urlPrefix)
+    )
+    if (matchedWorkspaceApp) {
+      screens = screens.filter(
+        s => s.workspaceAppId === matchedWorkspaceApp._id
       )
-      if (matchedWorkspaceApp) {
-        screens = screens.filter(
-          s => s.workspaceAppId === matchedWorkspaceApp._id
-        )
-      }
     }
   }
 
