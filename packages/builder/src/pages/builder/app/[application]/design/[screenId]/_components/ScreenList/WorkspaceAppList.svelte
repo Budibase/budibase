@@ -136,6 +136,10 @@
     padding-left: 8px;
   }
 
+  .project-app-nav-item {
+    margin-bottom: var(--spacing-xs);
+  }
+
   .project-app-nav-item :global(.nav-item-content .icon) {
     margin-right: 4px;
   }
