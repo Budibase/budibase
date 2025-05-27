@@ -113,7 +113,7 @@
         return keepOpen
       }}
     >
-      <div class="subHeading" class:inline>
+      <div class:inline>
         Select which app you would like to add your screen to
       </div>
       <Select
