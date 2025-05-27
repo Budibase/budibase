@@ -266,7 +266,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     await this.syncScreenData(savedScreen)
 
     if (featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-      workspaceAppStore.fetch()
+      workspaceAppStore.refresh()
     } else if (navigationLinkLabel) {
       await navigationStore.addLink({
         url: screen.routing.route,
@@ -420,6 +420,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     await Promise.all(promises)
 
     appStore.refresh()
+    workspaceAppStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()
     this.update(state => {

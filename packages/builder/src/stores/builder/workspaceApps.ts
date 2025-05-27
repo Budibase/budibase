@@ -63,6 +63,10 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     }))
   }
 
+  async refresh() {
+    return this.fetch()
+  }
+
   async add(workspaceApp: WorkspaceApp) {
     const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
     this.store.update(state => {
