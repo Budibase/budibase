@@ -173,7 +173,7 @@
     align-items: stretch;
     gap: 8px;
     padding: var(--spacing-xl);
-    max-height: 200px;
+    max-height: 270px;
     overflow: scroll;
   }
   .settings :global(.property-group-container) {
