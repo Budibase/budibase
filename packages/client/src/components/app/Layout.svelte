@@ -548,9 +548,6 @@
     gap: var(--spacing-m);
     flex: 1 1 auto;
   }
-  .logo img {
-    height: var(--logoHeight);
-  }
   .logo :global(h1) {
     font-weight: 600;
     flex: 1 1 auto;
@@ -654,9 +651,7 @@
     transform: translateX(0);
     width: 250px;
     max-width: 75%;
-    transition:
-      transform 0.26s ease-in-out,
-      opacity 0.26s ease-in-out;
+    transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
     height: var(--height);
     opacity: 0;
     background: var(--navBackground);
