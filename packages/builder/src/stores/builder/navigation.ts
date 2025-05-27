@@ -4,13 +4,15 @@ import { appStore } from "@/stores/builder"
 import { BudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
 
-export const INITIAL_NAVIGATION_STATE = {
+export interface AppNavigationStore extends AppNavigation {}
+
+export const INITIAL_NAVIGATION_STATE: AppNavigationStore = {
   navigation: "Top",
   links: [],
   textAlign: "Left",
 }
 
-export class NavigationStore extends BudiStore<AppNavigation> {
+export class NavigationStore extends BudiStore<AppNavigationStore> {
   constructor() {
     super(INITIAL_NAVIGATION_STATE)
   }
@@ -34,7 +36,15 @@ export class NavigationStore extends BudiStore<AppNavigation> {
     }
   }
 
-  async saveLink(url: string, title: string, roleId: string) {
+  async addLink({
+    url,
+    title,
+    roleId,
+  }: {
+    url: string
+    title: string
+    roleId: string
+  }) {
     const navigation = get(this.store)
     let links: AppNavigationLink[] = [...(navigation?.links ?? [])]
 
@@ -49,7 +59,8 @@ export class NavigationStore extends BudiStore<AppNavigation> {
       type: "link",
       roleId,
     })
-    await this.save({
+
+    this.syncAppNavigation({
       ...navigation,
       links: [...links],
     })
@@ -84,6 +95,13 @@ export class NavigationStore extends BudiStore<AppNavigation> {
   syncMetadata(metadata: UIObject) {
     const { navigation } = metadata
     this.syncAppNavigation(navigation)
+  }
+
+  async refresh() {
+    const appId = get(appStore).appId
+    const appPackage = await API.fetchAppPackage(appId)
+
+    this.syncAppNavigation(appPackage.application.navigation)
   }
 }
 

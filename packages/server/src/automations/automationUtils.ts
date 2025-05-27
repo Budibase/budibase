@@ -198,9 +198,8 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
     if (extension.startsWith(".")) {
       extension = extension.substring(1, extension.length)
     }
-    const attachmentResult = await objectStore.processAutomationAttachment(
-      attachment
-    )
+    const attachmentResult =
+      await objectStore.processAutomationAttachment(attachment)
 
     let s3Key = ""
     if (
