@@ -50,7 +50,7 @@ export const buildWorkspaceAppEndpoints = (
 
   delete: async (id, rev) => {
     return await API.delete({
-      url: `/api/screens/${id}/${rev}`,
+      url: `/api/workspaceApp/${id}/${rev}`,
     })
   },
 })

@@ -25,7 +25,7 @@
       warning: true,
       onConfirm: async () => {
         try {
-          await workspaceAppStore.delete(workspaceApp._id, workspaceApp._rev)
+          await workspaceAppStore.delete(workspaceApp._id!, workspaceApp._rev!)
           notifications.success(
             `App '${workspaceApp.name}' deleted successfully`
           )
