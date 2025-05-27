@@ -5,6 +5,7 @@ import {
   FeatureFlag,
   RequiredKeys,
   UpdateWorkspaceAppRequest,
+  InsertWorkspaceAppRequest,
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
 import { screenStore, selectedScreen } from "./screens"
@@ -67,7 +68,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     return this.fetch()
   }
 
-  async add(workspaceApp: WorkspaceApp) {
+  async add(workspaceApp: InsertWorkspaceAppRequest) {
     const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
     this.store.update(state => {
       state.workspaceApps.push(createdWorkspaceApp.workspaceApp)
