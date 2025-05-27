@@ -35,6 +35,7 @@ import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
 import { AgentEndpoints } from "./agents"
+import { NavigationEndpoints } from "./navigation"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -66,7 +67,7 @@ export type APICallConfig<RequestT, ResponseT> = {
 
 export type APICallParams<
   RequestT = null,
-  ResponseT = void
+  ResponseT = void,
 > = RequestT extends null
   ? Pick<APICallConfig<RequestT, ResponseT>, "url"> &
       Partial<APICallConfig<RequestT, ResponseT>>
@@ -141,4 +142,5 @@ export type APIClient = BaseAPIClient &
     rowActions: RowActionEndpoints
     viewV2: ViewV2Endpoints
     oauth2: OAuth2Endpoints
+    navigation: NavigationEndpoints
   }

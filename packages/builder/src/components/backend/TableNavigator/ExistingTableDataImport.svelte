@@ -247,7 +247,10 @@
     text-rendering: optimizeLegibility;
     min-width: auto;
     outline: none;
-    font-feature-settings: "case" 1, "rlig" 1, "calt" 0;
+    font-feature-settings:
+      "case" 1,
+      "rlig" 1,
+      "calt" 0;
     -webkit-box-align: center;
     user-select: none;
     flex-shrink: 0;

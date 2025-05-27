@@ -12,8 +12,8 @@
   $: format = isTimeOnly
     ? "HH:mm:ss"
     : isDateOnly
-    ? "MMMM D YYYY"
-    : "MMMM D YYYY, HH:mm"
+      ? "MMMM D YYYY"
+      : "MMMM D YYYY, HH:mm"
 </script>
 
 <div>

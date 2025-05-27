@@ -125,8 +125,8 @@ const isSelfHost = env.isProd() && env.SELF_HOSTED
 export const HOST_ADDRESS = isSelfHost
   ? "host.docker.internal"
   : isCloud
-  ? ""
-  : "localhost"
+    ? ""
+    : "localhost"
 
 export function generateColumnDefinition(config: {
   externalType: string
