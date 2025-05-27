@@ -42,7 +42,7 @@ class TriggerBuilder {
 
   protected trigger<
     TStep extends AutomationTriggerStepId,
-    TInput = AutomationTriggerInputs<TStep>
+    TInput = AutomationTriggerInputs<TStep>,
   >(stepId: TStep) {
     return (inputs: TInput) => {
       const definition: AutomationTriggerDefinition =
@@ -145,7 +145,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
 }
 
 class StepBuilder<
-  TStep extends AutomationTriggerStepId
+  TStep extends AutomationTriggerStepId,
 > extends BranchStepBuilder<TStep> {
   private readonly config: TestConfiguration
   private readonly _trigger: AutomationTrigger
@@ -181,7 +181,9 @@ class StepBuilder<
     return new AutomationRunner<TStep>(this.config, automation)
   }
 
-  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
+  async test(
+    triggerOutput: AutomationTriggerOutputs<TStep> & TestAutomationRequest
+  ) {
     const runner = await this.save()
     return await runner.test(triggerOutput)
   }
@@ -203,11 +205,12 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
     this.automation = automation
   }
 
-  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
+  async test(
+    triggerOutput: AutomationTriggerOutputs<TStep> & TestAutomationRequest
+  ) {
     const response = await this.config.api.automation.test(
       this.automation._id!,
-      // TODO: figure out why this cast is needed.
-      triggerOutput as TestAutomationRequest
+      triggerOutput
     )
 
     if (isDidNotTriggerResponse(response)) {

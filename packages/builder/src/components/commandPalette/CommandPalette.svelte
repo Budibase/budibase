@@ -437,7 +437,9 @@
     padding: var(--spacing-s) var(--spacing-xl);
     cursor: pointer;
     overflow: hidden;
-    transition: color 130ms ease-out, background-color 130ms ease-out;
+    transition:
+      color 130ms ease-out,
+      background-color 130ms ease-out;
   }
   .command:hover,
   .selected {

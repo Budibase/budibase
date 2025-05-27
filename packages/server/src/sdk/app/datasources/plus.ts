@@ -22,9 +22,8 @@ function checkForSchemaErrors(schema: Record<string, Table>) {
         columnName.includes(".")
       )
       if (invalidColumnName) {
-        errors[
-          tableName
-        ] = `Column '${invalidColumnName}' is not supported as it contains a dot.`
+        errors[tableName] =
+          `Column '${invalidColumnName}' is not supported as it contains a dot.`
       }
     }
   }

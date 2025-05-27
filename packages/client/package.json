@@ -35,7 +35,9 @@
     "sanitize-html": "^2.13.0",
     "screenfull": "^6.0.1",
     "shortid": "^2.2.15",
-    "svelte-spa-router": "^4.0.1"
+    "svelte-spa-router": "^4.0.1",
+    "jsbarcode": "^3.11.6",
+    "@svelte-put/qr": "^1.2.1"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "1.4.0",

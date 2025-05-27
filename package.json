@@ -6,7 +6,7 @@
     "@babel/eslint-parser": "7.25.9",
     "@babel/preset-env": "^7.22.5",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@types/node": "^20.17.9",
+    "@types/node": "^22.15.3",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "8.17.0",
     "@vitest/eslint-plugin": "^1.1.14",
@@ -24,8 +24,8 @@
     "load-tsconfig": "^0.2.5",
     "madge": "^6.0.0",
     "nx-cloud": "16.0.5",
-    "prettier": "2.8.8",
-    "prettier-plugin-svelte": "^2.3.0",
+    "prettier": "3.5.3",
+    "prettier-plugin-svelte": "^3.4.0",
     "proper-lockfile": "^4.1.2",
     "svelte": "4.2.19",
     "svelte-check": "^4.1.5",
@@ -119,9 +119,11 @@
     "fast-xml-parser": "4.4.1",
     "@azure/identity": "4.2.1",
     "kind-of": "6.0.3",
-    "globals": "15.13.0"
+    "**/nan": "2.22.0",
+    "globals": "15.13.0",
+    "esm": "npm:esm-wallaby@3.2.32"
   },
   "engines": {
-    "node": ">=20.0.0 <21.0.0"
+    "node": ">=22.0.0 <23.0.0"
   }
 }

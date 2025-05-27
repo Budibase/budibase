@@ -29,7 +29,12 @@ import { AddressInfo } from "net"
 import fs from "fs"
 import bson from "bson"
 
-let STARTUP_RAN = false
+export type State = "uninitialised" | "starting" | "ready"
+let STATE: State = "uninitialised"
+
+export function getState(): State {
+  return STATE
+}
 
 async function initRoutes(app: Koa) {
   if (!env.isTest()) {
@@ -57,25 +62,19 @@ async function initPro() {
   })
 }
 
-function shutdown(server?: Server) {
-  if (server) {
-    server.close()
-    server.destroy()
-  }
-}
-
 export async function startup(
-  opts: { app?: Koa; server?: Server; rerun?: boolean } = {}
+  opts: { app?: Koa; server?: Server; force?: boolean } = {}
 ) {
-  const { app, server, rerun } = opts
-  if (STARTUP_RAN && !rerun) {
+  const { app, server } = opts
+  if (STATE !== "uninitialised" && !opts.force) {
+    console.log("Budibase already started")
     return
   }
+  STATE = "starting"
   printFeatures()
   if (env.BUDIBASE_ENVIRONMENT) {
     console.log(`service running environment: "${env.BUDIBASE_ENVIRONMENT}"`)
   }
-  STARTUP_RAN = true
   if (app && server && !env.CLUSTER_MODE) {
     console.log(`Budibase running on ${JSON.stringify(server.address())}`)
     const address = server.address() as AddressInfo
@@ -175,7 +174,7 @@ export async function startup(
           console.log("Admin account automatically created for", bbAdminEmail)
         } catch (e) {
           logging.logAlert("Error creating initial admin user. Exiting.", e)
-          shutdown(server)
+          throw e
         }
       }
     })
@@ -187,4 +186,6 @@ export async function startup(
 
   console.log("Initialising JS runner")
   jsRunner.init()
+
+  STATE = "ready"
 }

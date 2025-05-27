@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { Layout } from "@budibase/bbui"
-  import { sortedScreens } from "@/stores/builder"
-  import ScreenNavItem from "./ScreenNavItem.svelte"
-  import { goto } from "@roxi/routify"
-  import { getVerticalResizeActions } from "@/components/common/resizable"
   import NavHeader from "@/components/common/NavHeader.svelte"
+  import { getVerticalResizeActions } from "@/components/common/resizable"
+  import { sortedScreens } from "@/stores/builder"
+  import { Layout } from "@budibase/bbui"
   import type { Screen } from "@budibase/types"
+  import NewScreenModal from "../../../_components/NewScreen/index.svelte"
+  import ScreenNavItem from "./ScreenNavItem.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -13,6 +13,7 @@
   let searchValue = ""
   let screensContainer: HTMLDivElement
   let scrolling = false
+  let newScreenModal: NewScreenModal
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
@@ -44,7 +45,7 @@
       placeholder="Search for screens"
       bind:value={searchValue}
       bind:search={searching}
-      onAdd={() => $goto("../new")}
+      onAdd={() => newScreenModal.show()}
     />
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
@@ -69,6 +70,8 @@
   />
 </div>
 
+<NewScreenModal bind:this={newScreenModal} />
+
 <style>
   .screens {
     display: flex;
@@ -76,7 +79,9 @@
     min-height: 147px;
     max-height: calc(100% - 147px);
     position: relative;
-    transition: height 300ms ease-out, max-height 300ms ease-out;
+    transition:
+      height 300ms ease-out,
+      max-height 300ms ease-out;
     height: 210px;
   }
   .screens.searching {

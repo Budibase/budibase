@@ -16,7 +16,6 @@ import {
   DocumentType,
   generateAppID,
   generateDevAppID,
-  generateScreenID,
   getLayoutParams,
 } from "../../db/utils"
 import {
@@ -26,6 +25,7 @@ import {
   docIds,
   env as envCore,
   events,
+  features,
   objectStore,
   roles,
   tenancy,
@@ -69,6 +69,7 @@ import {
   UnpublishAppResponse,
   SetRevertableAppVersionResponse,
   ErrorCode,
+  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -180,10 +181,20 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  const db = context.getAppDB()
-  let screen = createSampleDataTableScreen()
-  screen._id = generateScreenID()
-  await db.put(screen)
+  let workspaceAppId: string | undefined
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const appMetadata = await sdk.applications.metadata.get()
+
+    const workspaceApp = await sdk.workspaceApps.create({
+      name: appMetadata.name,
+      urlPrefix: "/",
+      icon: "Monitoring",
+    })
+    workspaceAppId = workspaceApp._id!
+  }
+
+  const screen = createSampleDataTableScreen(workspaceAppId)
+  await sdk.screens.create(screen)
 }
 
 async function addSampleDataNavLinks() {
@@ -426,7 +437,7 @@ async function performAppCreate(
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
-    if (latestMigrationId) {
+    if (latestMigrationId && !isImport) {
       // Initialise the app migration version as the latest one
       await appMigrations.updateAppMigrationMetadata({
         appId,
