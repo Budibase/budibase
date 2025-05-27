@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import { onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
   import {
@@ -13,7 +13,7 @@
 
   $: route = $selectedScreen?.routing.route || "/"
   $: src = $featureFlags.WORKSPACE_APPS
-    ? `/${$appStore.appId}${$selectedWorkspaceApp!.urlPrefix}#${route}`
+    ? `/${$appStore.appId}${$selectedWorkspaceApp.urlPrefix}#${route}`
     : `/${$appStore.appId}#${route}`
 
   const close = () => {
@@ -21,7 +21,8 @@
   }
 
   onMount(() => {
-    ;(window as any).closePreview = () => {
+    window.isBuilder = true
+    window.closePreview = () => {
       previewStore.showPreview(false)
     }
   })
