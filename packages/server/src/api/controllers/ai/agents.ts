@@ -1,6 +1,6 @@
 import { ai } from "@budibase/pro"
 import * as tools from "../../../ai/tools"
-import { context, docIds, events } from "@budibase/backend-core"
+import { context, docIds, events, HTTPError } from "@budibase/backend-core"
 import {
   ChatAgentRequest,
   ChatAgentResponse,
@@ -11,8 +11,11 @@ import {
   AgentToolSource,
   CreateToolSourceRequest
 } from "@budibase/types"
-import { atlassianClient, githubClient } from "../../../ai/tools/mcp"
-import { generateAgentChatID, generateAgentToolSourceID } from "@budibase/backend-core/src/docIds"
+import {
+  ConfluenceClient,
+  GitHubClient,
+  budibase
+} from "../../../ai/tools"
 
 export async function agentChat(
   ctx: UserCtx<ChatAgentRequest, ChatAgentResponse>
@@ -20,15 +23,23 @@ export async function agentChat(
   const model = await ai.getLLMOrThrow()
   const chat = ctx.request.body
 
-  // Initialize Atlassian client to fetch MCP tools dynamically
-  const atlassianTools = await atlassianClient.fetchTools()
-  const githubTools = await githubClient.fetchTools()
 
-  const prompt = new ai.LLMRequest()
+  let prompt = new ai.LLMRequest()
     .addSystemMessage(ai.agentSystemPrompt(ctx.user))
     .addMessages(chat.messages)
     .addTools(tools.budibase)
-    .addTools([...atlassianTools, ...githubTools])
+
+  // TODO: temporary until dynamically loaded from DB
+  // TODO: need to read the DB, check the tool sources
+  // TODO: For the connected ones
+  // TODO: inject toolsources API keys into the clients
+  // TODO: filter out the tools that aren't needed
+  const ghClient = new GitHubClient()
+  const confluenceClient = new ConfluenceClient()
+  prompt = prompt
+    .addTools(ghClient.getTools())
+    .addTools(confluenceClient.getTools())
+
   const response = await model.chat(prompt)
 
   // Process tool calls to add debug information to messages instead of using separate tool messages
@@ -113,9 +124,23 @@ export async function fetchToolSources(ctx: UserCtx<void, void>) {
       include_docs: true,
     })
   )
-  // TODO: pull back all the tools for each tool source
 
-  ctx.body = toolSources.rows.map(row => row.doc!)
+  // TODO: review, could probably be better
+  const SourceToToolMap = {
+    BUDIBASE: budibase,
+    GITHUB: new GitHubClient().getTools(),
+    CONFLUENCE: new ConfluenceClient().getTools()
+  }
+
+  const sourcesWithTools = toolSources.rows.map(row => {
+    const doc = row.doc!
+    return {
+      ...doc,
+      tools: SourceToToolMap[doc.type as keyof typeof SourceToToolMap] || []
+    }
+  })
+
+  ctx.body = sourcesWithTools
 }
 
 export async function createToolSource(
@@ -123,7 +148,7 @@ export async function createToolSource(
 ) {
   const db = context.getAppDB()
   const toolSource = ctx.request.body
-  toolSource._id = generateAgentToolSourceID()
+  toolSource._id = docIds.generateAgentToolSourceID()
 
   await db.put(toolSource)
   // TODO: handle PH events
@@ -132,12 +157,25 @@ export async function createToolSource(
   ctx.status = 201
 }
 
-// export async function updateToolSource(ctx: UserCtx<void, void>) {
-//   const db = context.getAppDB()
-//   const history = await db.allDocs<AgentChat>(
-//     docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
-//       include_docs: true,
-//     })
-//   )
-//   ctx.body = history.rows.map(row => row.doc!)
-// }
+export async function updateToolSource(
+  ctx: UserCtx<CreateToolSourceRequest, void>
+) {
+  const toolSource = ctx.request.body
+
+  if (!toolSource._id || !toolSource._rev) {
+    throw new HTTPError("_id or _rev fields missing", 400)
+  }
+
+  const db = context.getAppDB()
+
+  const response = await db.put(toolSource)
+  toolSource._rev = response.rev
+
+  await db.put(toolSource)
+  // TODO: Needs a proper type for the return
+  ctx.body = {
+    message: `Toolsource updated successfully`,
+    toolSource
+  }
+  ctx.status = 200
+}

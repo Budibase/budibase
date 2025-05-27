@@ -1,2 +1,3 @@
 export { default as budibase } from "./budibase"
-export { atlassianClient, githubClient } from "./mcp"
+export { ConfluenceClient } from "./confluence"
+export { GitHubClient } from "./github"

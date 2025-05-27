@@ -4,7 +4,7 @@
     Banner,
     Body,
     Button,
-    Heading,
+    Heading, Icon,
     Input,
     Modal,
     ModalContent,
@@ -12,6 +12,7 @@
     Tab,
     Tabs,
     TextArea,
+    Toggle,
   } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
@@ -56,6 +57,8 @@
   let toolSourceModal: Modal
   let toolConfigModal: Modal
   let selectedToolSource: any = null
+  let selectedConfigToolSource: any = null
+  let panelView: "tools" | "toolConfig" = "tools"
   let toolConfig = {
     apiKey: "",
     guidelines: "",
@@ -191,6 +194,36 @@
     }
   }
 
+  const openToolsConfig = (toolSource: any) => {
+    selectedConfigToolSource = toolSource
+    panelView = "toolConfig"
+  }
+
+  const backToToolsList = () => {
+    panelView = "tools"
+    selectedConfigToolSource = null
+  }
+
+  const toggleTool = (toolName: string) => {
+    if (!selectedConfigToolSource) return
+    
+    const currentDisabled = selectedConfigToolSource.disabledTools || []
+    const isDisabled = currentDisabled.includes(toolName)
+    
+    if (isDisabled) {
+      // Enable the tool by removing from disabled list
+      selectedConfigToolSource.disabledTools = currentDisabled.filter(name => name !== toolName)
+    } else {
+      // Disable the tool by adding to disabled list
+      selectedConfigToolSource.disabledTools = [...currentDisabled, toolName]
+    }
+  }
+
+  const saveToolConfig = () => {
+    // Placeholder for now - just show success message
+    notifications.success("Tool configuration saved successfully.")
+  }
+
   onMount(async () => {
     await agentsStore.init()
 
@@ -284,35 +317,74 @@
           <Tabs selected="Tools">
             <Tab title="Tools">
               <div class="tab-content">
-                <div class="agent-info">
-                  Add tools to give your agent knowledge and allow it to take action.
-                </div>
-                <div class="agent-actions-heading">
-                  <Heading size="XS">
-                    Tools and Knowledge
-                  </Heading>
-                  <Button size="S" cta on:click={() => toolSourceModal.show()}>
-                    Add Tools
-                  </Button>
-                </div>
-                
-                {#if toolSources.length > 0}
-                  <div class="saved-tools-list">
-                    {#each toolSources as toolSource}
-                      <div class="saved-tool-item">
-                        <div class="tool-info">
-                          <div class="tool-name">{toolSource.type}</div>
-                        </div>
-                        <div class="tool-actions">
-                          <Button size="XS" secondary>Edit</Button>
-                        </div>
-                      </div>
-                    {/each}
+                {#if panelView === "tools"}
+                  <div class="agent-info">
+                    Add tools to give your agent knowledge and allow it to take action.
                   </div>
-                {:else}
-                  <div class="no-tools-message">
-                    <Body size="S">No tools connected yet. Click "Add Tools" to get started!</Body>
+                  <div class="agent-actions-heading">
+                    <Heading size="XS">
+                      Tools and Knowledge
+                    </Heading>
+                    <Button size="S" cta on:click={() => toolSourceModal.show()}>
+                      Add Tools
+                    </Button>
                   </div>
+                  
+                  {#if toolSources.length > 0}
+                    <div class="saved-tools-list">
+                      {#each toolSources as toolSource}
+                        <div class="saved-tool-item">
+                          <div class="tool-info">
+                            <div class="tool-name">{toolSource.type}</div>
+                          </div>
+                          <div class="tool-actions">
+                            <Icon size="S" hoverable name="BackAndroid" on:click={() => openToolsConfig(toolSource)}/>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {:else}
+                    <div class="no-tools-message">
+                      <Body size="S">No tools connected yet. Click "Add Tools" to get started!</Body>
+                    </div>
+                  {/if}
+                {:else if panelView === "toolConfig"}
+                  <div class="tool-config-header">
+                    <Button size="S" quiet on:click={backToToolsList}>
+                      <Icon name="BackAndroid" />
+                      Back
+                    </Button>
+                    <Heading size="XS">
+                      Configure {selectedConfigToolSource?.type} Tools
+                    </Heading>
+                  </div>
+                  
+                  {#if selectedConfigToolSource?.tools}
+                    <div class="tools-list">
+                      {#each selectedConfigToolSource.tools as tool}
+                        <div class="tool-toggle-item">
+                          <div class="tool-toggle-info">
+                            <div class="tool-toggle-name">{tool.name}</div>
+                            <div class="tool-toggle-description">{tool.description}</div>
+                          </div>
+                          <Toggle 
+                            value={!selectedConfigToolSource.disabledTools?.includes(tool.name)}
+                            on:change={() => toggleTool(tool.name)}
+                          />
+                        </div>
+                      {/each}
+                    </div>
+                    
+                    <div class="tool-config-actions">
+                      <Button size="S" cta on:click={saveToolConfig}>
+                        Save Configuration
+                      </Button>
+                    </div>
+                  {:else}
+                    <div class="no-tools-message">
+                      <Body size="S">No tools available for this source.</Body>
+                    </div>
+                  {/if}
                 {/if}
               </div>
             </Tab>
@@ -615,12 +687,59 @@
   .tool-actions {
     display: flex;
     gap: var(--spacing-s);
+    transform: rotate(180deg);
   }
 
   .no-tools-message {
     text-align: center;
     padding: var(--spacing-xl);
     color: var(--spectrum-global-color-gray-600);
+    margin-top: var(--spacing-xl);
+  }
+
+  .tool-config-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .tool-toggle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-m);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
+    background-color: var(--background);
+  }
+
+  .tool-toggle-info {
+    flex: 1;
+    margin-right: var(--spacing-m);
+  }
+
+  .tool-toggle-name {
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .tool-toggle-description {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .tool-config-actions {
+    display: flex;
+    justify-content: flex-end;
     margin-top: var(--spacing-xl);
   }
 </style>

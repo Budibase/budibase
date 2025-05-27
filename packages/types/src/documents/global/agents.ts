@@ -6,7 +6,7 @@ export interface AgentChat extends Document {
 }
 
 export interface AgentToolSource extends Document {
-  type: "GITHUB" | "ATLASSIAN" | "BUDIBASE"
+  type: "GITHUB" | "CONFLUENCE" | "BUDIBASE"
   disabledTools: string[]
   auth: object
 }
