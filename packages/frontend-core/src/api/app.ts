@@ -18,8 +18,6 @@ import {
   PublishAppResponse,
   RevertAppClientResponse,
   RevertAppResponse,
-  SetRevertableAppVersionRequest,
-  SetRevertableAppVersionResponse,
   SyncAppResponse,
   UnpublishAppResponse,
   UpdateAppClientResponse,
@@ -56,10 +54,6 @@ export interface AppEndpoints {
   fetchComponentLibDefinitions: (
     appId: string
   ) => Promise<FetchAppDefinitionResponse>
-  setRevertableVersion: (
-    appId: string,
-    revertableVersion: string
-  ) => Promise<SetRevertableAppVersionResponse>
   addSampleData: (appId: string) => Promise<AddAppSampleDataResponse>
 
   // Missing request or response types
@@ -265,24 +259,6 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   addSampleData: async appId => {
     return await API.post({
       url: `/api/applications/${appId}/sample`,
-    })
-  },
-
-  /**
-   * Sets the revertable version of an app.
-   * Used when manually reverting to older client versions.
-   * @param appId the app ID
-   * @param revertableVersion the version number
-   */
-  setRevertableVersion: async (appId, revertableVersion) => {
-    return await API.post<
-      SetRevertableAppVersionRequest,
-      SetRevertableAppVersionResponse
-    >({
-      url: `/api/applications/${appId}/setRevertableVersion`,
-      body: {
-        revertableVersion,
-      },
     })
   },
 })
