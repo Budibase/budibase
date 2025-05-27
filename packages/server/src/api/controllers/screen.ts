@@ -109,7 +109,7 @@ export async function save(
       label: navigationLinkLabel,
       url: screen.routing.route,
       roleId: screen.routing.roleId,
-      workspaceId: screen.workspaceAppId,
+      workspaceAppId: screen.workspaceAppId,
     })
   }
 
@@ -128,7 +128,7 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
 
   await db.remove(id, ctx.params.screenRev)
 
-  await sdk.navigation.deleteLink(screen.routing.route)
+  await sdk.navigation.deleteLink(screen.routing.route, screen.workspaceAppId)
 
   await events.screen.deleted(screen)
   ctx.body = {
