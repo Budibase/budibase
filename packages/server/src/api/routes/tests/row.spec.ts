@@ -3201,7 +3201,7 @@ if (descriptions.length) {
             await config.api.table.save(table1)
           })
 
-          it.only("should allow creation of rows", async () => {
+          it("should allow creation of rows", async () => {
             const row1 = await config.api.row.save(table2._id!, { name: "one" })
             const row2 = await config.api.row.save(table2._id!, { name: "two" })
 
