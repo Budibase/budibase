@@ -98,6 +98,7 @@ export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
 export type APIRequestStepInputs = {
   query: {
     queryId: string
+    [key: string]: any
   }
 }
 

@@ -26,6 +26,7 @@ interface BuilderQueryStore {
 
 interface DerivedQueryStore extends BuilderQueryStore {
   selected?: Query
+  listByType?: Query[]
 }
 
 export class QueryStore extends DerivedBudiStore<
