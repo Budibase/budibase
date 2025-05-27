@@ -69,7 +69,7 @@
 
   const onAdd = (e: Event) => {
     if (!workspaceAppsEnabled) {
-      newScreenModal.show()
+      newScreenModal.open()
       return
     }
 
