@@ -3,6 +3,7 @@ import {
   WorkspaceApp,
   UIWorkspaceApp,
   FeatureFlag,
+  RequiredKeys,
   UpdateWorkspaceAppRequest,
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
@@ -70,8 +71,18 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     })
   }
 
-  async edit(workspaceApp: UpdateWorkspaceAppRequest) {
-    const updatedWorkspaceApp = await API.workspaceApp.update(workspaceApp)
+  async edit(workspaceApp: WorkspaceApp) {
+    const safeWorkspaceApp: RequiredKeys<UpdateWorkspaceAppRequest> = {
+      _id: workspaceApp._id!,
+      _rev: workspaceApp._rev!,
+      name: workspaceApp.name,
+      urlPrefix: workspaceApp.urlPrefix,
+      icon: workspaceApp.icon,
+      iconColor: workspaceApp.iconColor,
+      navigation: workspaceApp.navigation,
+    }
+
+    const updatedWorkspaceApp = await API.workspaceApp.update(safeWorkspaceApp)
     this.store.update(state => {
       const index = state.workspaceApps.findIndex(
         app => app._id === workspaceApp._id

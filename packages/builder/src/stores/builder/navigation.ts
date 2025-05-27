@@ -1,8 +1,15 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
-import { appStore } from "@/stores/builder"
+import { appStore, workspaceAppStore } from "@/stores/builder"
 import { BudiStore } from "../BudiStore"
-import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
+import {
+  AppNavigation,
+  AppNavigationLink,
+  FeatureFlag,
+  UIObject,
+} from "@budibase/types"
+import { featureFlag } from "@/helpers"
+import { selectedWorkspaceApp } from "./workspaceApps"
 
 export interface AppNavigationStore extends AppNavigation {}
 
@@ -29,10 +36,18 @@ export class NavigationStore extends BudiStore<AppNavigationStore> {
   }
 
   async save(navigation: AppNavigation) {
-    const appId = get(appStore).appId
-    const app = await API.saveAppMetadata(appId, { navigation })
-    if (app.navigation) {
-      this.syncAppNavigation(app.navigation)
+    if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+      const appId = get(appStore).appId
+      const app = await API.saveAppMetadata(appId, { navigation })
+      if (app.navigation) {
+        this.syncAppNavigation(app.navigation)
+      }
+    } else {
+      const $selectedWorkspaceApp = get(selectedWorkspaceApp)!
+      workspaceAppStore.edit({
+        ...$selectedWorkspaceApp,
+        navigation,
+      })
     }
   }
 
