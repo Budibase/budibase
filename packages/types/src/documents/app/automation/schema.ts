@@ -59,6 +59,8 @@ import {
   RowUpdatedTriggerOutputs,
   WebhookTriggerOutputs,
   RowActionTriggerInputs,
+  APIRequestStepInputs,
+  APIRequestStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -81,6 +83,10 @@ export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.EXECUTE_QUERY]: ActionImplementation<
     ExecuteQueryStepInputs,
     ExecuteQueryStepOutputs
+  >
+  [AutomationActionStepId.API_REQUEST]: ActionImplementation<
+    APIRequestStepInputs,
+    APIRequestStepOutputs
   >
   [AutomationActionStepId.EXECUTE_SCRIPT]: ActionImplementation<
     ExecuteScriptStepInputs,
@@ -182,6 +188,8 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
     ? DeleteRowStepInputs
     : T extends AutomationActionStepId.EXECUTE_QUERY
     ? ExecuteQueryStepInputs
+    : T extends AutomationActionStepId.API_REQUEST
+    ? APIRequestStepInputs
     : T extends AutomationActionStepId.EXECUTE_SCRIPT
     ? ExecuteScriptStepInputs
     : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
@@ -231,6 +239,8 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
     ? DeleteRowStepOutputs
     : T extends AutomationActionStepId.EXECUTE_QUERY
     ? ExecuteQueryStepOutputs
+    : T extends AutomationActionStepId.API_REQUEST
+    ? APIRequestStepOutputs
     : T extends AutomationActionStepId.EXECUTE_SCRIPT
     ? ExecuteScriptStepOutputs
     : T extends AutomationActionStepId.FILTER
@@ -285,6 +295,9 @@ export type DeleteRowStep =
 export type ExecuteQueryStep =
   AutomationStepSchema<AutomationActionStepId.EXECUTE_QUERY>
 
+export type APIRequestStep =
+  AutomationStepSchema<AutomationActionStepId.API_REQUEST>
+
 export type ExecuteScriptStep =
   AutomationStepSchema<AutomationActionStepId.EXECUTE_SCRIPT>
 
@@ -336,6 +349,7 @@ export type AutomationStep =
   | DelayStep
   | DeleteRowStep
   | ExecuteQueryStep
+  | APIRequestStep
   | ExecuteScriptStep
   | ExecuteScriptV2Step
   | FilterStep

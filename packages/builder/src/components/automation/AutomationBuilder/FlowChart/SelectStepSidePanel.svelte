@@ -109,13 +109,14 @@
 
   const categories = [
     {
-      name: "Records",
+      name: "Data",
       items: actions.filter(([k]) =>
         [
           AutomationActionStepId.CREATE_ROW,
           AutomationActionStepId.UPDATE_ROW,
           AutomationActionStepId.DELETE_ROW,
           AutomationActionStepId.QUERY_ROWS,
+          AutomationActionStepId.API_REQUEST,
           AutomationActionStepId.EXECUTE_QUERY,
         ].includes(k as AutomationActionStepId)
       ),
