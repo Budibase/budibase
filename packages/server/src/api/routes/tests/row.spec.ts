@@ -82,7 +82,16 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "/rows ($dbName)",
-    ({ config, dsProvider, isInternal, isMSSQL, isOracle, isSql }) => {
+    ({
+      config,
+      dsProvider,
+      isInternal,
+      isMySQL,
+      isMariaDB,
+      isMSSQL,
+      isOracle,
+      isSql,
+    }) => {
       let table: Table
       let datasource: Datasource | undefined
       let client: Knex | undefined
@@ -3143,14 +3152,30 @@ if (descriptions.length) {
 
             await client!.schema.createTable("table1_table2", table => {
               table.increments("id").primary()
-              table
-                .integer("table1_id")
-                .references("table1_id_foo")
-                .inTable(table1Id)
-              table
-                .integer("table2_id")
-                .references("table2_id_bar")
-                .inTable(table2Id)
+
+              // For some reason MySQL and MariaDB use a different types for
+              // `.increments(...)` and `.integer(...)` fields, making it
+              // invalid to create a foreign key reference to them. We use
+              // `.specificType(...)` to ensure the types match.
+              if (isMariaDB || isMySQL) {
+                table
+                  .specificType("table1_id", "int(10) unsigned")
+                  .references("table1_id_foo")
+                  .inTable(table1Id)
+                table
+                  .specificType("table2_id", "int(10) unsigned")
+                  .references("table2_id_bar")
+                  .inTable(table2Id)
+              } else {
+                table
+                  .integer("table1_id")
+                  .references("table1_id_foo")
+                  .inTable(table1Id)
+                table
+                  .integer("table2_id")
+                  .references("table2_id_bar")
+                  .inTable(table2Id)
+              }
               table.unique(["table1_id", "table2_id"])
             })
 
@@ -3176,7 +3201,7 @@ if (descriptions.length) {
             await config.api.table.save(table1)
           })
 
-          it("should allow creation of rows", async () => {
+          it.only("should allow creation of rows", async () => {
             const row1 = await config.api.row.save(table2._id!, { name: "one" })
             const row2 = await config.api.row.save(table2._id!, { name: "two" })
 
