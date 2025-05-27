@@ -1,6 +1,6 @@
 import { ai } from "@budibase/pro"
 import * as tools from "../../../ai/tools"
-import { context, docIds } from "@budibase/backend-core"
+import { context, docIds, events } from "@budibase/backend-core"
 import {
   ChatAgentRequest,
   ChatAgentResponse,
@@ -8,8 +8,11 @@ import {
   UserCtx,
   FetchAgentHistoryResponse,
   AgentChat,
+  AgentToolSource,
+  CreateToolSourceRequest
 } from "@budibase/types"
 import { atlassianClient, githubClient } from "../../../ai/tools/mcp"
+import { generateAgentChatID, generateAgentToolSourceID } from "@budibase/backend-core/src/docIds"
 
 export async function agentChat(
   ctx: UserCtx<ChatAgentRequest, ChatAgentResponse>
@@ -102,3 +105,39 @@ export async function fetchHistory(
   )
   ctx.body = history.rows.map(row => row.doc!)
 }
+
+export async function fetchToolSources(ctx: UserCtx<void, void>) {
+  const db = context.getAppDB()
+  const toolSources = await db.allDocs<AgentToolSource>(
+    docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
+      include_docs: true,
+    })
+  )
+  // TODO: pull back all the tools for each tool source
+
+  ctx.body = toolSources.rows.map(row => row.doc!)
+}
+
+export async function createToolSource(
+  ctx: UserCtx<CreateToolSourceRequest, { created: true }>
+) {
+  const db = context.getAppDB()
+  const toolSource = ctx.request.body
+  toolSource._id = generateAgentToolSourceID()
+
+  await db.put(toolSource)
+  // TODO: handle PH events
+  // await events.toolsource.created(toolSource)
+  ctx.body = { created: true }
+  ctx.status = 201
+}
+
+// export async function updateToolSource(ctx: UserCtx<void, void>) {
+//   const db = context.getAppDB()
+//   const history = await db.allDocs<AgentChat>(
+//     docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
+//       include_docs: true,
+//     })
+//   )
+//   ctx.body = history.rows.map(row => row.doc!)
+// }

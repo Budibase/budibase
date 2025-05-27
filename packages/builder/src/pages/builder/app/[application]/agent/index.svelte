@@ -1,11 +1,51 @@
 <script lang="ts">
-  import { ActionButton, notifications, Button, Tooltip } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Banner,
+    Body,
+    Button,
+    Heading,
+    Input,
+    Modal,
+    ModalContent,
+    notifications,
+    Tab,
+    Tabs,
+    TextArea,
+  } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
   import type { AgentChat } from "@budibase/types"
-  import { API } from "@/api"
   import { onDestroy, onMount } from "svelte"
   import Panel from "@/components/design/Panel.svelte"
+  import { API } from "@/api"
+
+  const ToolSources = [
+    {
+      name: "Budibase",
+      description: "Connect agent to your Budibase tools"
+    },
+    {
+      name: "Github",
+      description: "Automate development workflows."
+    },
+    {
+      name: "Confluence",
+      description: "Connect agent to your teams documentation"
+    },
+    {
+      name: "Sharepoint",
+      description: "Sharepoint stuff"
+    },
+    {
+      name: "JIRA Service Manaagement",
+      description: "Automate ITSM Workflows"
+    },
+    {
+      name: "Bamboo",
+      description: "Automate HR workflows"
+    },
+  ]
 
   let inputValue = ""
   let chat: AgentChat = { title: "", messages: [] }
@@ -13,10 +53,19 @@
   let wrapper: HTMLDivElement
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
+  let toolSourceModal: Modal
+  let toolConfigModal: Modal
+  let selectedToolSource = null
+  let toolConfig = {
+    apiKey: "",
+    guidelines: ""
+  }
 
-  // Use Svelte's tick function to wait for DOM updates
+  // Access the chat history from the store
+  $: chatHistory = $agentsStore.chats || []
+
   import { tick } from "svelte"
-  
+
   $: if (chat.messages.length) {
     scrollToBottom()
   }
@@ -39,30 +88,37 @@
     if (!chat) {
       chat = { title: "", messages: [] }
     }
-    
+
     const userMessage = { role: "user", content: inputValue }
-    
+
     const updatedChat = {
       ...chat,
-      messages: [...chat.messages, userMessage] 
+      messages: [...chat.messages, userMessage],
     }
-    
+
     // Update local display immediately with user message
     chat = updatedChat
-    
+
     // Ensure we scroll to the new message
     await scrollToBottom()
-    
+
     inputValue = ""
     loading = true
 
     try {
       // Send copy with new message to API
       const response = await API.agentChat(updatedChat)
-      
+
       // Update chat with response from API
       chat = response
-      
+
+      // Update the current chat ID in the store
+      if (response._id) {
+        agentsStore.setCurrentChatId(response._id)
+        // Refresh chat history to include the new/updated chat
+        await agentsStore.fetchChats()
+      }
+
       // Scroll to the response
       await scrollToBottom()
     } catch (err: any) {
@@ -81,6 +137,43 @@
 
   const reset = async () => {
     chat = { title: "", messages: [] }
+    agentsStore.clearCurrentChatId()
+  }
+
+  const selectChat = (selectedChat: AgentChat) => {
+    chat = { ...selectedChat }
+    agentsStore.setCurrentChatId(selectedChat._id!)
+  }
+
+  const startNewChat = () => {
+    chat = { title: "", messages: [] }
+    agentsStore.clearCurrentChatId()
+  }
+
+  const openToolConfig = (toolSource) => {
+    selectedToolSource = toolSource
+    toolConfig = {
+      apiKey: "",
+      guidelines: ""
+    }
+    toolSourceModal.hide()
+    toolConfigModal.show()
+  }
+
+  const handleConfigBack = () => {
+    toolConfigModal.hide()
+    toolSourceModal.show()
+  }
+
+  const handleConfigSave = async () => {
+    try {
+      await API.createToolSource(toolConfig)
+      notifications.success("Tool Source saved successfully.")
+      toolConfigModal.hide()
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error saving Tool Source")
+    }
   }
 
   onMount(async () => {
@@ -101,7 +194,7 @@
       subtree: true,
       attributes: true,
     })
-    
+
     // Set initial focus on the textarea
     await tick()
     if (textareaElement) {
@@ -116,6 +209,42 @@
 
 <div class="page" bind:this={wrapper}>
   <div class="layout">
+    <!-- Left Sidebar for Chat History -->
+    <div class="history-panel">
+      <Panel customWidth={300}>
+        <div class="chat-history">
+          <div class="history-header">
+            <Heading size="XS">Chat History</Heading>
+            <Button size="S" cta on:click={startNewChat}>
+              New Chat
+            </Button>
+          </div>
+          <div class="history-list">
+            {#each chatHistory as chatItem}
+              <div 
+                class="history-item" 
+                class:active={$agentsStore.currentChatId === chatItem._id}
+                on:click={() => selectChat(chatItem)}
+              >
+                <div class="chat-title">
+                  {chatItem.title || "Untitled Chat"}
+                </div>
+                <div class="chat-preview">
+                  {chatItem.messages.length > 0 ? chatItem.messages[chatItem.messages.length - 1]?.content?.slice(0, 50) + "..." : "No messages"}
+                </div>
+              </div>
+            {/each}
+            {#if chatHistory.length === 0}
+              <div class="empty-state">
+                <Body size="S">No chat history yet. Start a new conversation!</Body>
+              </div>
+            {/if}
+          </div>
+        </div>
+      </Panel>
+    </div>
+
+    <!-- Main Chat Area -->
     <div class="chat-area">
       <Chatbox bind:chat {loading} />
       <div class="controls">
@@ -132,18 +261,101 @@
       />
       </div>
     </div>
+
+    <!-- Right Panel for Tools -->
     <div class="panel-container">
       <Panel
         customWidth={400}
       >
-        <div class="debug-panel">
-          <h3>Train</h3>
-          <p>fooooo</p>
+        <div class="agent-panel">
+          <Tabs selected="Tools">
+            <Tab title="Tools">
+              <div class="tab-content">
+                <div class="agent-info">
+                  Add tools to give your agent knowledge and allow it to take action.
+                </div>
+                <div class="agent-actions-heading">
+                  <Heading size="XS">
+                    Tools and Knowledge
+                  </Heading>
+                  <Button size="S" cta on:click={() => toolSourceModal.show()}>
+                    Add Tools
+                  </Button>
+                </div>
+              </div>
+            </Tab>
+            <Tab title="Deploy">
+              <div class="tab-content">
+                Deploy
+              </div>
+            </Tab>
+          </Tabs>
         </div>
       </Panel>
     </div>
   </div>
 </div>
+<Modal bind:this={toolSourceModal}>
+  <ModalContent
+    title="Tools"
+    size="L"
+    showCancelButton={false}
+    showConfirmButton={false}
+    showCloseIcon
+    onCancel={() => toolSourceModal.hide()}
+  >
+    <Banner
+      extraButtonAction={() => {}}
+      extraButtonText="Vote"
+      showCloseButton={false}
+      icon="Hand"
+    >
+      Vote for which tools we add next
+    </Banner>
+    <section class="tool-source-tiles">
+      {#each ToolSources as toolSource}
+        <div class="tool-source-tile">
+          <Heading size="XS">{toolSource.name}</Heading>
+          <Body size="S">
+            {toolSource.description}
+          </Body>
+          <Button cta size="S" on:click={() => openToolConfig(toolSource)}>
+            Connect
+          </Button>
+        </div>
+      {/each}
+    </section>
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={toolConfigModal}>
+  <ModalContent
+    title={`Configure ${selectedToolSource?.name || 'Tool'}`}
+    size="M"
+    showCancelButton={true}
+    cancelText="Back"
+    showConfirmButton={true}
+    confirmText="Save"
+    showCloseIcon
+    onCancel={handleConfigBack}
+    onConfirm={handleConfigSave}
+  >
+    <div class="config-form">
+      <Input
+        label="API Key"
+        bind:value={toolConfig.apiKey}
+        type="password"
+        placeholder="Enter your API key"
+      />
+      <TextArea
+        label="Tool Source Guidelines"
+        bind:value={toolConfig.guidelines}
+        placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
+        rows={6}
+      />
+    </div>
+  </ModalContent>
+</Modal>
 
 <style>
   .page {
@@ -156,32 +368,75 @@
     overflow-y: scroll;
     overflow-x: hidden;
   }
-  
+
   .layout {
     display: flex;
     flex-direction: row;
     height: 100%;
     width: 100%;
   }
-  
+
+  .history-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 300px;
+    display: flex;
+  }
+
   .chat-area {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    max-width: calc(100% - 400px);
+    margin-left: 300px;
+    max-width: calc(100% - 700px);
   }
-  
+
   .panel-container {
     position: fixed;
     top: 0;
     right: 0;
-    height: 100vh;
+    height: 100%;
     width: 400px;
+    display: flex;
   }
-  
-  .debug-panel {
-    padding: var(--spacing-l);
+
+  .agent-panel {
+    padding: var(--spacing-xl);
+  }
+
+  .agent-info {
+    padding: var(--spacing-m);
+    border: 1px solid black;
+    border-radius: 5px;
+  }
+
+  .agent-actions-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tab-content {
+    padding: var(--spacing-xl);
+  }
+
+  .tool-source-tiles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .tool-source-tile {
+    padding: var(--spacing-xl);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100px;
+    border-radius: 5px;
   }
 
   .input-wrapper {
@@ -220,5 +475,72 @@
     bottom: 8px;
     right: calc(50% - 300px);
     z-index: 1;
+  }
+
+  .config-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+  }
+
+  .chat-history {
+    padding: var(--spacing-xl);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-l);
+  }
+
+  .history-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .history-item {
+    padding: var(--spacing-m);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
+    margin-bottom: var(--spacing-s);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .history-item:hover {
+    background-color: var(--spectrum-global-color-gray-100);
+    border-color: var(--spectrum-global-color-blue-400);
+  }
+
+  .history-item.active {
+    background-color: var(--spectrum-global-color-blue-100);
+    border-color: var(--spectrum-global-color-blue-500);
+  }
+
+  .chat-title {
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+    margin-bottom: var(--spacing-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-preview {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

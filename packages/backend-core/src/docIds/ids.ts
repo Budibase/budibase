@@ -132,3 +132,7 @@ export const generateOAuth2LogID = (id: string) => {
 export const generateAgentChatID = () => {
   return `${DocumentType.AGENT_CHAT}${SEPARATOR}${newid()}`
 }
+
+export const generateAgentToolSourceID = () => {
+  return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
+}

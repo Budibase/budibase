@@ -1,7 +1,9 @@
 import {
   AgentChat,
+  AgentToolSource,
   ChatAgentRequest,
   ChatAgentResponse,
+  CreateToolSourceRequest,
   FetchAgentHistoryResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
@@ -11,6 +13,9 @@ export interface AgentEndpoints {
 
   removeChat: (historyId: string) => Promise<void>
   fetchChats: () => Promise<FetchAgentHistoryResponse>
+
+  fetchToolSources: () => Promise<AgentToolSource[]>
+  createToolSource: (toolSource: CreateToolSourceRequest) => Promise<AgentToolSource>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -31,6 +36,19 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   fetchChats: async () => {
     return await API.get({
       url: "/api/agent/history",
+    })
+  },
+
+  fetchToolSources: async () => {
+    return await API.get({
+      url: "/api/agent/toolsource",
+    })
+  },
+
+  createToolSource: async (toolSource: CreateToolSourceRequest) => {
+    return await API.post({
+      url: "/api/agent/toolsource",
+      body: toolSource,
     })
   },
 })

@@ -4,3 +4,9 @@ export interface AgentChat extends Document {
   title: string
   messages: Message[]
 }
+
+export interface AgentToolSource extends Document {
+  type: "GITHUB" | "ATLASSIAN" | "BUDIBASE"
+  disabledTools: string[]
+  auth: object
+}

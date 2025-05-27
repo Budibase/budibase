@@ -2,7 +2,6 @@ import { Tool } from "@budibase/types"
 import { MCPBaseClient } from "./mcpBase"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { handleToolError } from "./errorHandler";
 
 
 export class AtlassianClient extends MCPBaseClient {
@@ -77,7 +76,7 @@ export class AtlassianClient extends MCPBaseClient {
               })
               return typeof result === "string" ? result : JSON.stringify(result)
             } catch (error) {
-              return handleToolError(tool.name, error, params);
+              console.log(error)
             }
           }
         }
