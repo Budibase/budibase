@@ -53,7 +53,8 @@ import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { dataFilters, helpers } from "@budibase/shared-core"
 import { isRelationshipColumn } from "../../../db/utils"
-import { isEqual, omit, without } from "lodash"
+import { isEqual, omit } from "lodash"
+import { promise } from "zod"
 
 interface ManyRelationship {
   tableId?: string
@@ -363,9 +364,6 @@ export class ExternalRequest<T extends Operation> {
               tableId: field.through || field.tableId,
               isUpdate: false,
               key: field.fieldName,
-
-              // TODO(samwho): old broken version
-              // key: otherKey,
               [otherKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
               [thisKey]: `{{ literal ${tablePrimary} }}`,
@@ -572,20 +570,25 @@ export class ExternalRequest<T extends Operation> {
         })
       )
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
+      const promises: Promise<unknown>[] = []
       if (!existingRelationship) {
-        await makeExternalQuery({
-          endpoint: getEndpoint(tableId, operation),
-          // if we're doing many relationships then we're writing, only one response
-          body,
-          filters: this.prepareFilters(id, {}, linkTable),
-        })
+        promises.push(
+          makeExternalQuery({
+            endpoint: getEndpoint(tableId, operation),
+            // if we're doing many relationships then we're writing, only one response
+            body,
+            filters: this.prepareFilters(id, {}, linkTable),
+          })
+        )
       } else {
         // remove the relationship from cache so it isn't adjusted again
         rows.splice(rows.indexOf(existingRelationship), 1)
       }
+      await Promise.all(promises)
     }
 
     // finally cleanup anything that needs to be removed
+    const promises: Promise<unknown>[] = []
     for (const [field, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if it's not the foreign key skip it, nothing to do
@@ -598,17 +601,19 @@ export class ExternalRequest<T extends Operation> {
       for (const row of rows) {
         const rowId = generateIdForRow(row, table)
         if (isMany) {
-          await this.removeManyToManyRelationships(rowId, table)
+          promises.push(this.removeManyToManyRelationships(rowId, table))
         } else {
-          await this.removeOneToManyRelationships(rowId, table, field)
+          promises.push(this.removeOneToManyRelationships(rowId, table, field))
         }
       }
     }
+    await Promise.all(promises)
   }
 
   async removeRelationshipsToRow(table: Table, rowId: string) {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
+    const promises: Promise<unknown>[] = []
     for (const column of Object.values(table.schema)) {
       if (!isRelationshipColumn(column) || isOneToMany(column)) {
         continue
@@ -624,16 +629,15 @@ export class ExternalRequest<T extends Operation> {
       for (const row of rows) {
         const rowId = generateIdForRow(row, table)
         if (isMany) {
-          await this.removeManyToManyRelationships(rowId, table)
+          promises.push(this.removeManyToManyRelationships(rowId, table))
         } else {
-          await this.removeOneToManyRelationships(
-            rowId,
-            table,
-            column.fieldName
+          promises.push(
+            this.removeOneToManyRelationships(rowId, table, column.fieldName)
           )
         }
       }
     }
+    await Promise.all(promises)
   }
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
