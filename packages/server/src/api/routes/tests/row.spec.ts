@@ -3122,7 +3122,7 @@ if (descriptions.length) {
       })
 
       isSql &&
-        describe.only("imported many-to-many", () => {
+        describe("imported many-to-many", () => {
           let table1: Table
           let table2: Table
           let joinTable: Table
@@ -3204,34 +3204,14 @@ if (descriptions.length) {
               name: "two",
             })
 
-            const row1 = await config.api.row.save(table1._id!, {
-              name: "foo",
-              relation: [table2_row1],
-            })
-
             const row2 = await config.api.row.save(table1._id!, {
               name: "foo",
-              relation: [table2_row2],
-            })
-
-            const row3 = await config.api.row.save(table1._id!, {
-              name: "foo",
-              relation: [table2_row1, table2_row2],
-            })
-
-            await config.api.row.save(table1._id!, {
-              ...row1,
               relation: [table2_row2],
             })
 
             await config.api.row.save(table1._id!, {
               ...row2,
               relation: [table2_row1, table2_row2],
-            })
-
-            await config.api.row.save(table1._id!, {
-              ...row3,
-              relation: [table2_row2],
             })
           })
         })

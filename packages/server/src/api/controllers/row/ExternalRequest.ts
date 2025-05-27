@@ -53,6 +53,7 @@ import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { dataFilters, helpers } from "@budibase/shared-core"
 import { isRelationshipColumn } from "../../../db/utils"
+import { isEqual, omit, without } from "lodash"
 
 interface ManyRelationship {
   tableId?: string
@@ -84,8 +85,8 @@ export type ExternalRequestReturnType<T extends Operation> =
   T extends Operation.READ
     ? ExternalReadRequestReturnType
     : T extends Operation.COUNT
-      ? number
-      : { row: Row; table: Table }
+    ? number
+    : { row: Row; table: Table }
 
 /**
  * This function checks the incoming parameters to make sure all the inputs are
@@ -361,7 +362,6 @@ export class ExternalRequest<T extends Operation> {
             manyRelationships.push({
               tableId: field.through || field.tableId,
               isUpdate: false,
-              // TODO(samwho): new correct(?) version
               key: field.fieldName,
 
               // TODO(samwho): old broken version
@@ -536,11 +536,21 @@ export class ExternalRequest<T extends Operation> {
         row,
         linkPrimary,
         linkSecondary,
+        relationshipType,
       }: {
         row: Row
         linkPrimary: string
         linkSecondary?: string
+        relationshipType: RelationshipType
       }) => {
+        // In many-to-many relationships, the table will contain 3 fields: a
+        // primary key (usually an auto-incrementing ID), and then the 2 foreign
+        // keys that link to the two tables. So a row is equal if the 2
+        // non-primary keys match the body.
+        if (relationshipType === RelationshipType.MANY_TO_MANY) {
+          return isEqual(omit(row, [linkPrimary]), omit(body, [linkPrimary]))
+        }
+
         const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
           row[linkPrimary] === body?.[linkPrimary]
@@ -553,8 +563,13 @@ export class ExternalRequest<T extends Operation> {
         return matchesPrimaryLink && matchesSecondaryLink
       }
 
-      const existingRelationship = rows.find((row: { [key: string]: any }) =>
-        relationshipMatchPredicate({ row, linkPrimary, linkSecondary })
+      const existingRelationship = rows.find(row =>
+        relationshipMatchPredicate({
+          row,
+          linkPrimary,
+          linkSecondary,
+          relationshipType: relationship.relationshipType,
+        })
       )
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
       if (!existingRelationship) {
@@ -569,6 +584,7 @@ export class ExternalRequest<T extends Operation> {
         rows.splice(rows.indexOf(existingRelationship), 1)
       }
     }
+
     // finally cleanup anything that needs to be removed
     for (const [field, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
@@ -599,12 +615,11 @@ export class ExternalRequest<T extends Operation> {
       }
 
       const relatedKey = this.getLookupRelationsKey(column)
-      const relatedByTable = related[relatedKey]
-      if (!relatedByTable) {
+      if (!related[relatedKey]) {
         continue
       }
 
-      const { rows, isMany, tableId } = relatedByTable
+      const { rows, isMany, tableId } = related[relatedKey]!
       const table = this.getTable(tableId)!
       for (const row of rows) {
         const rowId = generateIdForRow(row, table)
