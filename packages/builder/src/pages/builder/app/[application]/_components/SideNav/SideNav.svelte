@@ -4,7 +4,7 @@
   import { url } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
   import { appStore, builderStore, isOnlyUser } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
+  import { featureFlags, admin } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
@@ -111,7 +111,7 @@
         />
       </div>
       <div class="links">
-        {#if updateAvailable && $isOnlyUser}
+        {#if updateAvailable && $isOnlyUser && !$admin.isDev}
           <SideNavLink
             icon="Circle"
             url={$url("./settings/general")}
