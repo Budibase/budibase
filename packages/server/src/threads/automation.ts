@@ -633,6 +633,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
     appId,
     automationId,
     task: async () => {
+      await context.ensureSnippetContext()
       const envVars = await sdkUtils.getEnvironmentVariables()
       await context.doInEnvironmentContext(envVars, async () => {
         const orchestrator = new Orchestrator(job)

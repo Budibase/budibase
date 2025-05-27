@@ -121,6 +121,7 @@
 <style>
   .spectrum-Textfield {
     width: 100%;
+    --spectrum-textfield-padding-bottom: var(--spectrum-textfield-padding-top);
   }
 
   input::placeholder {

@@ -62,12 +62,15 @@ export class RestImporter {
     const response = await db.bulkDocs(queries)
 
     // create index to seperate queries and errors
-    const queryIndex = queries.reduce((acc, query) => {
-      if (query._id) {
-        acc[query._id] = query
-      }
-      return acc
-    }, {} as { [key: string]: Query })
+    const queryIndex = queries.reduce(
+      (acc, query) => {
+        if (query._id) {
+          acc[query._id] = query
+        }
+        return acc
+      },
+      {} as { [key: string]: Query }
+    )
 
     // check for failed writes
     response.forEach((query: any) => {

@@ -16,6 +16,7 @@ export enum AutomationIOType {
   DATE = "date",
   DATETIME = "datetime",
   ATTACHMENT = "attachment",
+  LONGFORM = "longform",
 }
 
 export enum AutomationCustomIOType {

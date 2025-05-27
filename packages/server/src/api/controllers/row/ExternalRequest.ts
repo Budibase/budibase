@@ -84,8 +84,8 @@ export type ExternalRequestReturnType<T extends Operation> =
   T extends Operation.READ
     ? ExternalReadRequestReturnType
     : T extends Operation.COUNT
-    ? number
-    : { row: Row; table: Table }
+      ? number
+      : { row: Row; table: Table }
 
 /**
  * This function checks the incoming parameters to make sure all the inputs are

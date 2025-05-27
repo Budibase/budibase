@@ -61,7 +61,7 @@ export default abstract class BaseDataFetch<
     schema?: Record<string, any> | null
     primaryDisplay?: string
   },
-  TQuery extends {} = SearchFilters
+  TQuery extends {} = SearchFilters,
 > {
   API: APIClient
   features: {

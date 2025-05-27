@@ -56,7 +56,7 @@ export interface AppNavigationLink {
   url: string
   id?: string
   roleId?: string
-  type?: string
+  type: "link" | "sublinks"
   subLinks?: AppNavigationLink[]
 }
 

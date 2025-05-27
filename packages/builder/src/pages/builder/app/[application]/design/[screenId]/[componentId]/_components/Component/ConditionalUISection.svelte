@@ -76,7 +76,9 @@
   .highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-left: 4px solid var(--spectrum-semantic-informative-color-background);
-    transition: background 130ms ease-out, border-color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
     margin: -4px calc(-1 * var(--spacing-xl));
     padding: 4px var(--spacing-xl) 4px calc(var(--spacing-xl) - 4px);
   }
