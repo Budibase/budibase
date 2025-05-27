@@ -354,7 +354,9 @@
     padding: var(--spacing-s) var(--spacing-m);
     border-radius: 4px;
     border: var(--border-light);
-    transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
+    transition:
+      background-color 130ms ease-in-out,
+      color 130ms ease-in-out,
       border-color 130ms ease-in-out;
     gap: var(--spacing-m);
     display: flex;
@@ -397,7 +399,9 @@
     padding: var(--spacing-m);
     border-radius: 4px;
     background-color: var(--spectrum-global-color-gray-200);
-    transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
+    transition:
+      background-color 130ms ease-in-out,
+      color 130ms ease-in-out,
       border-color 130ms ease-in-out;
     word-wrap: break-word;
   }

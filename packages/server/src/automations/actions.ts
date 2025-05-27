@@ -131,7 +131,7 @@ export async function getActionDefinitions(): Promise<
 export async function getAction<
   TStep extends AutomationActionStepId,
   TInputs = AutomationStepInputs<TStep>,
-  TOutputs = AutomationStepOutputs<TStep>
+  TOutputs = AutomationStepOutputs<TStep>,
 >(stepId: TStep): Promise<ActionImplementation<TInputs, TOutputs> | undefined> {
   if (ACTION_IMPLS[stepId as keyof ActionImplType] != null) {
     return ACTION_IMPLS[

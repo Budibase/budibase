@@ -775,8 +775,8 @@ const automationActions = (store: AutomationStore) => ({
       const icon = isTrigger(pathBlock)
         ? pathBlock.icon
         : isLoopBlock
-        ? "Reuse"
-        : pathBlock.icon
+          ? "Reuse"
+          : pathBlock.icon
 
       if (blockIdx === 0 && isTrigger(pathBlock)) {
         if (isRowUpdateTrigger(pathBlock) || isRowSaveTrigger(pathBlock)) {

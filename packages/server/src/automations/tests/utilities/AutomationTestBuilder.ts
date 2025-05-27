@@ -42,7 +42,7 @@ class TriggerBuilder {
 
   protected trigger<
     TStep extends AutomationTriggerStepId,
-    TInput = AutomationTriggerInputs<TStep>
+    TInput = AutomationTriggerInputs<TStep>,
   >(stepId: TStep) {
     return (inputs: TInput) => {
       const definition: AutomationTriggerDefinition =
@@ -146,7 +146,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
 }
 
 class StepBuilder<
-  TStep extends AutomationTriggerStepId
+  TStep extends AutomationTriggerStepId,
 > extends BranchStepBuilder<TStep> {
   private readonly config: TestConfiguration
   private readonly _trigger: AutomationTrigger
