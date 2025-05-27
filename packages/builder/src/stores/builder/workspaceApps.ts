@@ -6,7 +6,7 @@ import {
   UpdateWorkspaceAppRequest,
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
-import { screenStore } from "./screens"
+import { screenStore, selectedScreen } from "./screens"
 import { featureFlag } from "@/helpers"
 import { API } from "@/api"
 
@@ -97,3 +97,15 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 }
 
 export const workspaceAppStore = new WorkspaceAppStore()
+
+export const selectedWorkspaceApp = derived(
+  [workspaceAppStore, selectedScreen],
+  ([$workspaceAppStore, $selectedScreen]) => {
+    if (!$selectedScreen) {
+      return undefined
+    }
+    return $workspaceAppStore.workspaceApps.find(
+      a => a._id === $selectedScreen.workspaceAppId
+    )
+  }
+)
