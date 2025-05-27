@@ -54,7 +54,6 @@ import { makeExternalQuery } from "../../../integrations/base/query"
 import { dataFilters, helpers } from "@budibase/shared-core"
 import { isRelationshipColumn } from "../../../db/utils"
 import { isEqual, omit } from "lodash"
-import { promise } from "zod"
 
 interface ManyRelationship {
   tableId?: string
