@@ -76,13 +76,6 @@ export interface ImportToUpdateAppResponse {
   message: string
 }
 
-export interface SetRevertableAppVersionRequest {
-  revertableVersion: string
-}
-export interface SetRevertableAppVersionResponse {
-  message: string
-}
-
 export interface ExportAppDumpRequest {
   excludeRows: boolean
   encryptPassword?: string
