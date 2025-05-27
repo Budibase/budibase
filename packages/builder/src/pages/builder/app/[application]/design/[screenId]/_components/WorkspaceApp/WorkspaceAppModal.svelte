@@ -46,9 +46,9 @@
         }
       ),
       urlPrefix: requiredString("Url prefix is required.")
-        .regex(/^\/\w*$/, {
+        .regex(/^\/[\w-]*$/, {
           message:
-            "Url must start with / and contain only alphanumeric characters.",
+            "Url prefix must start with a slash and can only contain alphanumeric characters, hyphens, and underscores.",
         })
         .refine(
           val =>
@@ -139,7 +139,7 @@
   }
 
   $: if (data?.name && !validationState.touched.urlPrefix) {
-    data.urlPrefix = `/${encodeURI(data.name.toLowerCase().replace(/\s+/g, "-"))}`
+    data.urlPrefix = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
   }
 </script>
 
@@ -150,6 +150,7 @@
       on:enterkey={onEnterKey}
       on:focus={() => {
         validationState.touched.name = true
+        delete validationState.errors.name
       }}
       bind:value={data.name}
       error={validationState.errors.name}
@@ -159,6 +160,7 @@
       on:enterkey={onEnterKey}
       on:focus={() => {
         validationState.touched.urlPrefix = true
+        delete validationState.errors.urlPrefix
       }}
       bind:value={data.urlPrefix}
       error={validationState.errors.urlPrefix}
