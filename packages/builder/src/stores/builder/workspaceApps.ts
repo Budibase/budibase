@@ -19,6 +19,7 @@ interface WorkspaceAppStoreState {
 
 interface DerivedWorkspaceAppStoreState {
   workspaceApps: UIWorkspaceApp[]
+  selectedWorkspaceApp: UIWorkspaceApp | undefined
 }
 
 export class WorkspaceAppStore extends DerivedBudiStore<
@@ -27,20 +28,27 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 > {
   constructor() {
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
-      return derived([store, screenStore], ([$store, $screenStore]) => {
-        const workspaceApps = $store.workspaceApps
-          .map<UIWorkspaceApp>(workspaceApp => {
-            return {
-              ...workspaceApp,
-              screens: $screenStore.screens.filter(
-                s => s.workspaceAppId === workspaceApp._id
-              ),
-            }
-          })
-          .sort((a, b) => a.name.localeCompare(b.name))
+      return derived(
+        [store, screenStore, selectedScreen],
+        ([$store, $screenStore, $selectedScreen]) => {
+          const workspaceApps = $store.workspaceApps
+            .map<UIWorkspaceApp>(workspaceApp => {
+              return {
+                ...workspaceApp,
+                screens: $screenStore.screens.filter(
+                  s => s.workspaceAppId === workspaceApp._id
+                ),
+              }
+            })
+            .sort((a, b) => a.name.localeCompare(b.name))
 
-        return { workspaceApps }
-      })
+          const selectedWorkspaceApp = $selectedScreen
+            ? workspaceApps.find(a => a._id === $selectedScreen.workspaceAppId)
+            : undefined
+
+          return { workspaceApps, selectedWorkspaceApp }
+        }
+      )
     }
 
     super(
@@ -113,15 +121,3 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 }
 
 export const workspaceAppStore = new WorkspaceAppStore()
-
-export const selectedWorkspaceApp = derived(
-  [workspaceAppStore, selectedScreen],
-  ([$workspaceAppStore, $selectedScreen]) => {
-    if (!$selectedScreen) {
-      return undefined
-    }
-    return $workspaceAppStore.workspaceApps.find(
-      a => a._id === $selectedScreen.workspaceAppId
-    )
-  }
-)

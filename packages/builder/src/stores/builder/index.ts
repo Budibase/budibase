@@ -1,4 +1,5 @@
 import { layoutStore } from "./layouts"
+import { workspaceAppStore } from "./workspaceApps"
 import { appStore } from "./app"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
@@ -37,7 +38,6 @@ import { flags } from "./flags"
 import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
-import { workspaceAppStore, selectedWorkspaceApp } from "./workspaceApps"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 
@@ -81,7 +81,6 @@ export {
   screenComponentErrorList,
   oauth2,
   workspaceAppStore,
-  selectedWorkspaceApp,
 }
 
 export const reset = () => {

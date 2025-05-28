@@ -6,14 +6,14 @@
     themeStore,
     selectedScreen,
     appStore,
-    selectedWorkspaceApp,
+    workspaceAppStore,
   } from "@/stores/builder"
   import { ProgressCircle } from "@budibase/bbui"
   import { featureFlags } from "@/stores/portal"
 
   $: route = $selectedScreen?.routing.route || "/"
   $: src = $featureFlags.WORKSPACE_APPS
-    ? `/${$appStore.appId}${$selectedWorkspaceApp.urlPrefix}#${route}`
+    ? `/${$appStore.appId}${$workspaceAppStore.selectedWorkspaceApp.urlPrefix}#${route}`
     : `/${$appStore.appId}#${route}`
 
   const close = () => {

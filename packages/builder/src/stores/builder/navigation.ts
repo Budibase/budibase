@@ -9,7 +9,6 @@ import {
   UIObject,
 } from "@budibase/types"
 import { featureFlag } from "@/helpers"
-import { selectedWorkspaceApp } from "./workspaceApps"
 
 export interface AppNavigationStore extends AppNavigation {}
 
@@ -28,9 +27,9 @@ export class NavigationStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Writable<AppNavigationStore>) => {
       return derived(
-        [store, selectedWorkspaceApp],
-        ([$store, $selectedWorkspaceApp]) => {
-          const navigation = $selectedWorkspaceApp?.navigation
+        [store, workspaceAppStore],
+        ([$store, $workspaceAppStore]) => {
+          const navigation = $workspaceAppStore.selectedWorkspaceApp?.navigation
 
           return {
             ...$store,
@@ -62,9 +61,9 @@ export class NavigationStore extends DerivedBudiStore<
         this.syncAppNavigation(app.navigation)
       }
     } else {
-      const $selectedWorkspaceApp = get(selectedWorkspaceApp)!
+      const $workspaceAppStore = get(workspaceAppStore)
       workspaceAppStore.edit({
-        ...$selectedWorkspaceApp,
+        ...$workspaceAppStore.selectedWorkspaceApp!,
         navigation,
       })
     }
