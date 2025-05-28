@@ -7,6 +7,7 @@ import {
   TableRequest,
   ViewV2,
   AutoFieldSubType,
+  WithoutDocMetadata,
 } from "@budibase/types"
 import { context, HTTPError } from "@budibase/backend-core"
 import {
@@ -102,7 +103,7 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
-export async function create(table: Omit<Table, "_id" | "_rev">) {
+export async function create(table: WithoutDocMetadata<Table>) {
   const datasourceId = getDatasourceId(table)
 
   const tableToCreate = { ...table, created: true }

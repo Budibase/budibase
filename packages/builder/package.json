@@ -61,7 +61,6 @@
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.11.2",
     "@dagrejs/dagre": "1.1.4",
-    "@fontsource/source-sans-pro": "^5.0.3",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-brands-svg-icons": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
@@ -86,6 +85,7 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@budibase/client": "*",
     "@babel/plugin-transform-runtime": "^7.13.10",
     "@babel/preset-env": "^7.13.12",
     "@rollup/plugin-replace": "^5.0.3",

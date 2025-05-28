@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 
 interface DatasourceBaseActions<
-  TSaveDefinitionRequest = UpdateViewRequest | SaveTableRequest
+  TSaveDefinitionRequest = UpdateViewRequest | SaveTableRequest,
 > {
   saveDefinition: (newDefinition: TSaveDefinitionRequest) => Promise<void>
   addRow: (row: SaveRowRequest) => Promise<UIRow | undefined>
@@ -27,5 +27,6 @@ export interface DatasourceViewActions
 export interface DatasourceNonPlusActions
   extends DatasourceBaseActions<never> {}
 
-export type DatasourceActions =
-  | DatasourceTableActions & DatasourceViewActions & DatasourceNonPlusActions
+export type DatasourceActions = DatasourceTableActions &
+  DatasourceViewActions &
+  DatasourceNonPlusActions

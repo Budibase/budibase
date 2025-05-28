@@ -16,7 +16,6 @@ import {
   DocumentType,
   generateAppID,
   generateDevAppID,
-  generateScreenID,
   getLayoutParams,
 } from "../../db/utils"
 import {
@@ -26,10 +25,12 @@ import {
   docIds,
   env as envCore,
   events,
+  features,
   objectStore,
   roles,
   tenancy,
   users,
+  utils,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -64,11 +65,10 @@ import {
   DeleteAppResponse,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
-  SetRevertableAppVersionRequest,
   AddAppSampleDataResponse,
   UnpublishAppResponse,
-  SetRevertableAppVersionResponse,
   ErrorCode,
+  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -180,10 +180,20 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  const db = context.getAppDB()
-  let screen = createSampleDataTableScreen()
-  screen._id = generateScreenID()
-  await db.put(screen)
+  let workspaceAppId: string | undefined
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const appMetadata = await sdk.applications.metadata.get()
+
+    const workspaceApp = await sdk.workspaceApps.create({
+      name: appMetadata.name,
+      urlPrefix: "/",
+      icon: "Monitoring",
+    })
+    workspaceAppId = workspaceApp._id!
+  }
+
+  const screen = createSampleDataTableScreen(workspaceAppId)
+  await sdk.screens.create(screen)
 }
 
 async function addSampleDataNavLinks() {
@@ -260,11 +270,33 @@ export async function fetchAppPackage(
     )
   }
 
-  // Only filter screens if the user is not a builder
-  if (!users.isBuilder(ctx.user, appId)) {
+  // Only filter screens if the user is not a builder call
+  const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
+  if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
+  }
+
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const urlPath = ctx.headers.referer
+      ? new URL(ctx.headers.referer).pathname
+      : "/"
+
+    let allWorkspaceApps = await sdk.workspaceApps.fetch()
+    // Sort decending to ensure we match the most strict, removing match conflicts
+    allWorkspaceApps = allWorkspaceApps.sort((a, b) =>
+      b.urlPrefix.localeCompare(a.urlPrefix)
+    )
+
+    const matchedWorkspaceApp = allWorkspaceApps.find(a =>
+      urlPath.startsWith(a.urlPrefix)
+    )
+    if (matchedWorkspaceApp) {
+      screens = screens.filter(
+        s => s.workspaceAppId === matchedWorkspaceApp._id
+      )
+    }
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(
@@ -426,7 +458,7 @@ async function performAppCreate(
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
-    if (latestMigrationId) {
+    if (latestMigrationId && !isImport) {
       // Initialise the app migration version as the latest one
       await appMigrations.updateAppMigrationMetadata({
         appId,
@@ -608,6 +640,10 @@ export async function update(
 export async function updateClient(
   ctx: UserCtx<void, UpdateAppClientResponse>
 ) {
+  // Don't allow updating in dev
+  if (env.isDev() && !env.isTest()) {
+    ctx.throw(400, "Updating or reverting apps is not supported in dev")
+  }
   // Get current app version
   const application = await sdk.applications.metadata.get()
   const currentVersion = application.version
@@ -637,6 +673,11 @@ export async function updateClient(
 export async function revertClient(
   ctx: UserCtx<void, RevertAppClientResponse>
 ) {
+  // Don't allow reverting in dev
+  if (env.isDev() && !env.isTest()) {
+    ctx.throw(400, "Updating or reverting apps is not supported in dev")
+  }
+
   // Check app can be reverted
   const application = await sdk.applications.metadata.get()
   if (!application.revertableVersion) {
@@ -883,20 +924,6 @@ export async function updateAppPackage(
     await cache.app.invalidateAppMetadata(appId)
     return newAppPackage
   })
-}
-
-export async function setRevertableVersion(
-  ctx: UserCtx<SetRevertableAppVersionRequest, SetRevertableAppVersionResponse>
-) {
-  if (!env.isDev()) {
-    ctx.status = 403
-    return
-  }
-  const db = context.getAppDB()
-  const app = await sdk.applications.metadata.get()
-  app.revertableVersion = ctx.request.body.revertableVersion
-  await db.put(app)
-  ctx.body = { message: "Revertable version updated." }
 }
 
 async function migrateAppNavigation() {

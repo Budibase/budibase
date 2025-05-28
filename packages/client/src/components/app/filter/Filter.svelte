@@ -32,6 +32,7 @@
   export let showClear: boolean | undefined = false
   export let filterConfig: FilterConfig[] | undefined = []
   export let targetComponent: any
+  export let size: string | undefined = "M"
 
   const memoFilters = memo({} as Record<string, SearchFilter>)
   const component = getContext("component")
@@ -405,6 +406,7 @@
       {#each visibleFilters || [] as config}
         {@const filter = $memoFilters[config.field]}
         <FilterButton
+          {size}
           {config}
           {filter}
           {schema}
@@ -424,7 +426,7 @@
         />
       {/each}
       {#if showClear && Object.keys(filters).length}
-        <Button size={"S"} secondary on:click={clearAll}>Clear all</Button>
+        <Button {size} secondary on:click={clearAll}>Clear all</Button>
       {/if}
     </Container>
   </div>

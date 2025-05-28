@@ -381,7 +381,9 @@
     border-radius: 8px;
     padding: 0 12px;
     margin-bottom: 0px;
-    transition: box-shadow 0.2s, background 0.2s;
+    transition:
+      box-shadow 0.2s,
+      background 0.2s;
     border: 0.5px solid var(--spectrum-alias-border-color);
     background: var(--spectrum-alias-background-color-secondary);
     display: flex;
