@@ -12,11 +12,17 @@ import {
 import { encodeJSBinding } from "@budibase/string-templates"
 import { environmentVariables } from "@budibase/pro"
 import { mocks } from "@budibase/backend-core/tests"
+import { setEnv } from "@budibase/backend-core"
 
 describe("API REST request", () => {
   const config = new TestConfiguration()
+  let envCleanup: () => void
 
   beforeAll(async () => {
+    envCleanup = setEnv({
+      ENCRYPTION_KEY: "some-key",
+    })
+
     await config.init()
     // No snippet/js support in queries. Snippet support in auto
     config.app = await config.api.application.update(config.getAppId(), {
@@ -50,6 +56,7 @@ describe("API REST request", () => {
   })
 
   afterAll(async () => {
+    envCleanup()
     config.end()
   })
 
