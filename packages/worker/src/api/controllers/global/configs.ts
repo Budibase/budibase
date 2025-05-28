@@ -36,6 +36,7 @@ import {
   SaveConfigResponse,
   SettingsBrandingConfig,
   SettingsInnerConfig,
+  SMTPConfig,
   SSOConfig,
   SSOConfigType,
   UploadConfigFileResponse,
@@ -380,19 +381,23 @@ async function handleConfigType(type: ConfigType, config: Config) {
     await enrichOIDCLogos(config)
   } else if (type === ConfigType.AI) {
     await handleAIConfig(config)
+  } else if (type === ConfigType.SMTP) {
+    await handleSMTPConfig(config)
   }
 }
 
 async function handleAIConfig(config: AIConfig) {
   await pro.sdk.ai.enrichAIConfig(config)
-  stripApiKeys(config)
-}
-
-function stripApiKeys(config: AIConfig) {
   for (const key in config?.config) {
     if (config.config[key].apiKey) {
       config.config[key].apiKey = PASSWORD_REPLACEMENT
     }
+  }
+}
+
+async function handleSMTPConfig(config: SMTPConfig) {
+  if (config.config.auth?.pass) {
+    config.config.auth.pass = PASSWORD_REPLACEMENT
   }
 }
 
