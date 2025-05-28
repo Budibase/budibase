@@ -1,6 +1,7 @@
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 import { z } from "zod"
+import { ChatCompletionContentPart } from "openai/resources/chat/completions"
 
 export interface SystemMessage {
   role: "system"
@@ -10,6 +11,11 @@ export interface SystemMessage {
 export interface UserMessage {
   role: "user"
   content: string
+}
+
+export interface FileContentMessage {
+  role: "user"
+  content: ChatCompletionContentPart[]
 }
 
 export interface AssistantMessage {
@@ -27,6 +33,7 @@ export interface ToolMessage {
 export type Message =
   | SystemMessage
   | UserMessage
+  | FileContentMessage
   | AssistantMessage
   | ToolMessage
 

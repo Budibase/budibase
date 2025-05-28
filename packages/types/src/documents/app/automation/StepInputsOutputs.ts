@@ -219,7 +219,16 @@ export type GenerateTextStepOutputs = {
   success: boolean
   response?: string
 }
+export type ExtractDocumentDataStepInputs = {
+  documentUrl: string
+  schema: Record<string, any>
+}
 
+export type ExtractDocumentDataStepOutputs = {
+  response?: string
+  success: boolean
+  data?: Record<string, any>
+}
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API

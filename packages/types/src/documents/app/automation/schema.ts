@@ -69,6 +69,8 @@ import {
   SummariseStepOutputs,
   GenerateTextStepInputs,
   GenerateTextStepOutputs,
+  ExtractDocumentDataStepOutputs,
+  ExtractDocumentDataStepInputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -171,6 +173,10 @@ export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.GENERATE_TEXT]: ActionImplementation<
     GenerateTextStepInputs,
     GenerateTextStepOutputs
+  >
+  [AutomationActionStepId.EXTRACT_DOCUMENT_DATA]: ActionImplementation<
+    ExtractDocumentDataStepInputs,
+    ExtractDocumentDataStepOutputs
   >
 } & (T extends "self"
   ? {
@@ -394,6 +400,9 @@ export type SummariseStep =
 export type GenerateTextStep =
   AutomationStepSchema<AutomationActionStepId.GENERATE_TEXT>
 
+export type ExtractDocumentDataStep =
+  AutomationStepSchema<AutomationActionStepId.EXTRACT_DOCUMENT_DATA>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
   | CollectStep
@@ -424,7 +433,7 @@ export type AutomationStep =
   | TranslateStep
   | SummariseStep
   | GenerateTextStep
-
+  | ExtractDocumentDataStep
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
 ): step is BranchStep {
