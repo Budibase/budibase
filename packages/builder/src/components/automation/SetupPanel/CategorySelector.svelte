@@ -76,7 +76,7 @@
   </div>
 
   <ActionButton on:click={addCategory} icon="Add" quiet={false}>
-    Add Category
+    Add category
   </ActionButton>
 </div>
 

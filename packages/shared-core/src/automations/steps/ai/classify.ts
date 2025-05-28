@@ -19,8 +19,8 @@ export const definition: AutomationStepDefinition = {
     inputs: {
       properties: {
         textInput: {
-          type: AutomationIOType.STRING,
-          title: "Text to Classify",
+          type: AutomationIOType.LONGFORM,
+          title: "Text",
           description: "The text content you want the AI to classify.",
         },
         categoryItems: {

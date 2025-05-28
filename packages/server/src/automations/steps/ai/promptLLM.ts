@@ -15,7 +15,7 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLM({ model: inputs.model })
+    const llm = await ai.getLLM()
     const response = await llm?.prompt(inputs.prompt)
     return {
       response: response?.message,

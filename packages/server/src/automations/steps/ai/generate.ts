@@ -63,7 +63,7 @@ Generate the content based on these instructions. Format appropriately for a ${i
 function getContentTypePrompt(contentType: ContentType): string | void {
   switch (contentType) {
     case ContentType.EMAIL:
-      return "You are writing an email. Include an appropriate subject line, greeting, body, and signature."
+      return "You are writing an email. Include an appropriate, greeting, body, and signature."
     case ContentType.DOCUMENT:
       return "You are writing a formal document. Include appropriate headings, sections, and formatting."
     case ContentType.BLOG_POST:

@@ -3,7 +3,6 @@ import {
   AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
-  Model,
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
@@ -24,11 +23,6 @@ export const definition: AutomationStepDefinition = {
         prompt: {
           type: AutomationIOType.STRING,
           title: "Prompt",
-        },
-        model: {
-          type: AutomationIOType.STRING,
-          title: "Model",
-          enum: Object.values(Model),
         },
       },
       required: ["prompt", "model"],

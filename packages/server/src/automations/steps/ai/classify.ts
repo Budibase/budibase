@@ -25,7 +25,6 @@ export async function run({
   try {
     const llm = await ai.getLLMOrThrow()
 
-    // Extract categories
     const categories = inputs.categoryItems!.map(item => item.category)
 
     const request = ai.classifyText(inputs.textInput, categories)
