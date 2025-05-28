@@ -9,6 +9,7 @@ import {
   UIObject,
 } from "@budibase/types"
 import { featureFlag } from "@/helpers"
+import { featureFlags } from "../portal"
 
 export interface AppNavigationStore extends AppNavigation {}
 
@@ -27,8 +28,11 @@ export class NavigationStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Writable<AppNavigationStore>) => {
       return derived(
-        [store, workspaceAppStore],
-        ([$store, $workspaceAppStore]) => {
+        [store, workspaceAppStore, featureFlags],
+        ([$store, $workspaceAppStore, $featureFlags]) => {
+          if (!$featureFlags.WORKSPACE_APPS) {
+            return $store
+          }
           const navigation = $workspaceAppStore.selectedWorkspaceApp?.navigation
 
           return {
