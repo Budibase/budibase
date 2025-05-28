@@ -348,8 +348,8 @@ export async function ensureSnippetContext() {
   let snippets: Snippet[] | undefined
   const db = getAppDB()
   if (db) {
-    const app = await db.get<App>(DocumentType.APP_METADATA)
-    snippets = app.snippets
+    const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+    snippets = app?.snippets
   }
 
   // Always set snippets to a non-null value so that we can tell we've attempted
