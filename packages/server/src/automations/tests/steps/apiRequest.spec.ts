@@ -3,7 +3,6 @@ import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import * as setup from "../utilities"
 import {
-  AppEnvironment,
   AutomationActionStepId,
   AutomationStepOutputs,
   BodyType,
@@ -12,7 +11,7 @@ import {
 } from "@budibase/types"
 import { encodeJSBinding } from "@budibase/string-templates"
 import { environmentVariables } from "@budibase/pro"
-import { mocks } from "@budibase/backend-core/tests/core/utilities"
+import { mocks } from "@budibase/backend-core/tests"
 
 describe("API REST request", () => {
   const config = new TestConfiguration()

@@ -1,27 +1,42 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
   import { queries, datasources } from "@/stores/builder"
-  import { Select, ActionButton, Input, DetailSummary, Divider } from "@budibase/bbui"
+  import { Select, ActionButton, DetailSummary, Divider } from "@budibase/bbui"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import PropField from "../PropField.svelte"
-  import { type EnrichedBinding, SourceName } from "@budibase/types"
-  import { customQueryIconColor, customQueryIconText } from "@/helpers/data/utils"
-    import { goto, params } from "@roxi/routify"
+  import {
+    type APIRequestStepInputs,
+    type EnrichedBinding,
+    type Query,
+    type QueryParameter,
+    SourceName,
+  } from "@budibase/types"
+  import {
+    customQueryIconColor,
+    customQueryIconText,
+  } from "@/helpers/data/utils"
+  import { goto, params } from "@roxi/routify"
+  import { type AutomationContext } from "@/stores/builder/automations"
 
   const dispatch = createEventDispatcher()
 
-  export let value: { queryId?: string, [key: string]?: string; } | undefined = undefined
+  type QueryWithIcon = Query & { icon: string }
+
+  export let value: Partial<APIRequestStepInputs["query"]> | undefined =
+    undefined
   export let bindings: EnrichedBinding[] | undefined = undefined
-  export let context: AutomationContext | undefined
+  export let context: AutomationContext | undefined = undefined
 
   const onChangeQuery = (e: CustomEvent) => {
-    (value ??= {}).queryId = e.detail
+    if (!value) value = {}
+    value.queryId = e.detail
     dispatch("change", value)
   }
 
-  const onChange = (e, field) => {
-    (value ??= {})[field.name] = e.detail
+  const onChange = (e: CustomEvent, field: QueryParameter) => {
+    if (!value) value = {}
+    value[field.name] = e.detail
     dispatch("change", value)
   }
 
@@ -30,54 +45,50 @@
 
   // Selected query and source
   $: query = $queries.list.find(query => query._id === value?.queryId)
-  $: dataSource = $datasources?.list?.find(
-    ds => ds._id === query?.datasourceId
-  )
+  $: dataSource = $datasources?.list?.find(ds => ds._id === query?.datasourceId)
 
-  const getQueryOptions = (queries: Query[]) => {
-    return $queries.list.reduce((acc, q) => {
-        const datasource = $datasources?.list?.find(
-          ds => ds._id === q?.datasourceId
-        )
-        if(datasource?.source === SourceName.REST){
-          acc.push({
-            ...q,
-            icon: getQueryIcon(
-              customQueryIconText(datasource, q),
-              customQueryIconColor(datasource, q)
-            ),
-          })
-        }
-        return acc
-      }, [])
+  const getQueryOptions = (queries: Query[]): QueryWithIcon[] => {
+    return queries.reduce<QueryWithIcon[]>((acc, q) => {
+      const datasource = $datasources?.list?.find(
+        ds => ds._id === q?.datasourceId
+      )
+      if (datasource?.source === SourceName.REST) {
+        acc.push({
+          ...q,
+          icon: getQueryIcon(
+            customQueryIconText(datasource, q),
+            customQueryIconColor(datasource, q)
+          ),
+        })
+      }
+      return acc
+    }, [])
   }
 
   // Verb icon builder
   const getQueryIcon = (
-    verb: string,
-    color: string = '#53a761',
+    verb: string = "-",
+    color: string = "#53a761"
   ): string => {
-    const fontSize = 64 * 1;
+    const fontSize = 64 * 1
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" style="width:1em;height:1em" viewBox="0 0 100 100" aria-label="${verb ? verb.toUpperCase() : "none"}">
         <text x="50" y="55" text-anchor="middle" dominant-baseline="middle"
               font-size="${fontSize}" font-family="sans-serif" fill="${color}">
           ${verb ? verb.toUpperCase() : "none"}
         </text>
-      </svg>`.trim();
+      </svg>`.trim()
 
-    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
   }
 
   const getFieldDefault = (name: string) => {
-    if(!query?.fields){
-      return 
+    if (!query?.fields) {
+      return
     }
     const field = query?.parameters?.find(f => f.name === name)
-    return field.default
+    return field?.default
   }
-
-
 </script>
 
 <div class="wrap">
@@ -93,10 +104,11 @@
 
     <ActionButton
       icon="Add"
+      disabled={!dataSource?._id}
       on:click={() => {
         $goto(`/builder/app/:application/data/query/new/:id`, {
           application: $params.application,
-          id: dataSource._id,
+          id: dataSource?._id,
         })
       }}
     />
@@ -116,7 +128,7 @@
               placeholder={getFieldDefault(field.name)}
               {context}
               panel={AutomationBindingPanel}
-              value={value[field.name]}
+              value={value?.[field.name]}
               on:change={e => onChange(e, field)}
               {bindings}
               updateOnChange={false}

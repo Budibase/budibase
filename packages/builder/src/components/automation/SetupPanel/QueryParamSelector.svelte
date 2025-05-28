@@ -5,21 +5,31 @@
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import PropField from "./PropField.svelte"
-  import { type EnrichedBinding, SourceName } from "@budibase/types"
+  import {
+    type EnrichedBinding,
+    type ExecuteQueryStepInputs,
+    type Query,
+    type QueryParameter,
+    SourceName,
+  } from "@budibase/types"
+  import { type AutomationContext } from "@/stores/builder/automations"
 
   const dispatch = createEventDispatcher()
 
-  export let value: { queryId?: string, [key: string]?: string } | undefined = undefined
+  export let value: Partial<ExecuteQueryStepInputs["query"]> | undefined =
+    undefined
   export let bindings: EnrichedBinding[] | undefined = undefined
   export let context: AutomationContext | undefined
 
   const onChangeQuery = (e: CustomEvent) => {
-    (value ??= {}).queryId = e.detail
+    if (!value) value = {}
+    value.queryId = e.detail
     dispatch("change", value)
   }
 
-  const onChange = (e, field) => {
-    (value ??= {})[field.name] = e.detail
+  const onChange = (e: CustomEvent, field: QueryParameter) => {
+    if (!value) value = {}
+    value[field.name] = e.detail
     dispatch("change", value)
   }
 
@@ -28,17 +38,23 @@
   $: queryOptions = getQueryOptions($queries.list, query?._id)
 
   // Get all queries except REST
-  const getQueryOptions = (queries: Query[], selectedQueryId: string | undefined) => {
-    return $queries.list.reduce((acc, q) => {
-        const datasource = $datasources?.list?.find(
-          ds => ds._id === q?.datasourceId
-        )
-        // If a rest query is already selected, allow it to stay
-        if(datasource?.source !== SourceName.REST || selectedQueryId && (q._id === selectedQueryId)){
-          acc.push(q)
-        }
-        return acc
-      }, [])
+  const getQueryOptions = (
+    queries: Query[],
+    selectedQueryId: string | undefined
+  ) => {
+    return queries.reduce<Query[]>((acc, q) => {
+      const datasource = $datasources?.list?.find(
+        ds => ds._id === q?.datasourceId
+      )
+      // If a rest query is already selected, allow it to stay
+      if (
+        datasource?.source !== SourceName.REST ||
+        (selectedQueryId && q._id === selectedQueryId)
+      ) {
+        acc.push(q)
+      }
+      return acc
+    }, [])
   }
 
   // Ensure any nullish queryId values get set to empty string so
@@ -50,7 +66,7 @@
   <div class="field-width">
     <Select
       on:change={onChangeQuery}
-      value={value.queryId}
+      value={value?.queryId}
       options={queryOptions}
       getOptionValue={query => query._id}
       getOptionLabel={query => query.name}
@@ -65,7 +81,7 @@
         <DrawerBindableInput
           {context}
           panel={AutomationBindingPanel}
-          value={value[field.name]}
+          value={value?.[field.name]}
           on:change={e => onChange(e, field)}
           {bindings}
           updateOnChange={false}

@@ -88,6 +88,7 @@ export type DiscordStepInputs = {
 export type ExecuteQueryStepInputs = {
   query: {
     queryId: string
+    [key: string]: any
   }
 }
 

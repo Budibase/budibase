@@ -64,8 +64,12 @@
     automationStore.actions.setPermissions(role, $memoAutomation)
 
   // Reset the panel scroll when the target node is changed
-  $: if (configPanel && configPanel?.scrollTop > 0 && selectedNodeId) {
-    configPanel.scrollTop = 0
+  $: resetScroll(selectedNodeId)
+
+  const resetScroll = (selectedNodeId: string | undefined) => {
+    if (configPanel && configPanel?.scrollTop > 0 && selectedNodeId) {
+      configPanel.scrollTop = 0
+    }
   }
 
   const fetchPermissions = async (automationId?: string) => {
