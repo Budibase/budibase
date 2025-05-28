@@ -4,7 +4,6 @@ export enum FeatureFlag {
   AI_JS_GENERATION = "AI_JS_GENERATION",
   AI_TABLE_GENERATION = "AI_TABLE_GENERATION",
   AI_AGENTS = "AI_AGENTS",
-  AI_AUTOMATION_STEPS = "AI_AUTOMATION_STEPS",
   WORKSPACE_APPS = "WORKSPACE_APPS",
 
   // Account-portal
@@ -22,7 +21,6 @@ export const FeatureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.DIRECT_LOGIN_TO_ACCOUNT_PORTAL]: false,
 
   [FeatureFlag.DEBUG_UI]: false,
-  [FeatureFlag.AI_AUTOMATION_STEPS]: false,
 }
 
 export type FeatureFlags = typeof FeatureFlagDefaults

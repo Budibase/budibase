@@ -33,8 +33,6 @@
       key !== AutomationActionStepId.BRANCH && action.deprecated !== true
   )
 
-  $: aiStepsEnabled = $featureFlags.AI_AUTOMATION_STEPS
-
   $: {
     const triggerStepId = $selectedAutomation.data?.definition.trigger.stepId
     if (triggerStepId && !collectBlockAllowedSteps.includes(triggerStepId)) {
@@ -125,22 +123,18 @@
         )
       ),
     },
-    ...(aiStepsEnabled
-      ? [
-          {
-            name: "AI",
-            items: actions.filter(([k]) =>
-              [
-                AutomationActionStepId.PROMPT_LLM,
-                AutomationActionStepId.CLASSIFY_CONTENT,
-                AutomationActionStepId.TRANSLATE,
-                AutomationActionStepId.SUMMARISE,
-                AutomationActionStepId.GENERATE_TEXT,
-              ].includes(k as AutomationActionStepId)
-            ),
-          },
-        ]
-      : []),
+    {
+      name: "AI",
+      items: actions.filter(([k]) =>
+        [
+          AutomationActionStepId.PROMPT_LLM,
+          AutomationActionStepId.CLASSIFY_CONTENT,
+          AutomationActionStepId.TRANSLATE,
+          AutomationActionStepId.SUMMARISE,
+          AutomationActionStepId.GENERATE_TEXT,
+        ].includes(k as AutomationActionStepId)
+      ),
+    },
     {
       name: "Apps",
       items: actions.filter(([k]) =>

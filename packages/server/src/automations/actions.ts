@@ -125,10 +125,7 @@ export async function getActionDefinitions(): Promise<
 > {
   if (env.SELF_HOSTED) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition
-
-    if (await features.isEnabled(FeatureFlag.AI_AUTOMATION_STEPS)) {
-      BUILTIN_ACTION_DEFINITIONS["OPENAI"].deprecated = true
-    }
+    BUILTIN_ACTION_DEFINITIONS["OPENAI"].deprecated = true
   }
 
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
