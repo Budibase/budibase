@@ -2,7 +2,7 @@ import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "@/api"
 import { Constants } from "@budibase/frontend-core"
-import { componentStore, appStore } from "@/stores/builder"
+import { componentStore, appStore, workspaceAppStore } from "@/stores/builder"
 import { initialScreenState, ScreenStore } from "@/stores/builder/screens"
 import {
   getScreenFixture,
@@ -39,6 +39,10 @@ vi.mock("@/stores/builder", async () => {
     deleteLink: vi.fn(),
   }
 
+  const workspaceAppStore = {
+    refresh: vi.fn(),
+  }
+
   return {
     componentStore,
     appStore,
@@ -47,6 +51,7 @@ vi.mock("@/stores/builder", async () => {
       update: mockLayoutStore.update,
       subscribe: mockComponentStore.subscribe,
     },
+    workspaceAppStore,
   }
 })
 
@@ -506,6 +511,7 @@ describe("Screens store", () => {
     }))
 
     const deleteSpy = vi.spyOn(API, "deleteScreen")
+    const refreshWorkspaceAppSpy = vi.spyOn(workspaceAppStore, "refresh")
 
     await bb.screenStore.delete(existingScreens[2].json())
 
@@ -514,6 +520,7 @@ describe("Screens store", () => {
     })
 
     expect(deleteSpy).toBeCalled()
+    expect(refreshWorkspaceAppSpy).toHaveBeenCalledOnce()
 
     expect(bb.store.screens.length).toBe(2)
 
