@@ -9,7 +9,6 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
 } from "@/constants/backend"
 import { FieldType } from "@budibase/types"
-import manifest from "@budibase/client/manifest.json"
 
 const getDocId = () => {
   return v4().replace(/-/g, "")
@@ -30,8 +29,110 @@ export const getComponentFixture = type => {
   return new Component(type)
 }
 
-// All currently defined component definitions in the client.
-export const COMPONENT_DEFINITIONS = manifest
+// Sample Definitions
+export const COMPONENT_DEFINITIONS = {
+  form: {
+    name: "Form",
+    hasChildren: true,
+    illegalChildren: ["section", "form", "formblock"],
+  },
+  formblock: {
+    name: "Form Block",
+    block: true,
+    settings: [
+      {
+        type: "table",
+        key: "dataSource",
+      },
+    ],
+  },
+  cardsblock: {
+    block: true,
+    name: "Cards Block",
+    settings: [
+      {
+        type: "dataSource",
+        label: "Data",
+        key: "dataSource",
+        required: true,
+      },
+      {
+        section: true,
+        name: "Cards",
+        settings: [
+          {
+            type: "text",
+            key: "cardTitle",
+            label: "Title",
+            nested: true,
+            resetOn: "dataSource",
+          },
+          {
+            type: "text",
+            key: "cardSubtitle",
+            label: "Subtitle",
+            nested: true,
+            resetOn: "dataSource",
+          },
+          {
+            type: "text",
+            key: "cardDescription",
+            label: "Description",
+            nested: true,
+            resetOn: "dataSource",
+          },
+          {
+            type: "text",
+            key: "cardImageURL",
+            label: "Image URL",
+            nested: true,
+            resetOn: "dataSource",
+          },
+        ],
+      },
+    ],
+  },
+  container: {
+    name: "Container",
+  },
+  rowexplorer: {
+    name: "Row Explorer",
+    settings: [
+      {
+        // combo unique to the row explorer
+        type: "multifield",
+        selectAllFields: true,
+        key: "detailFields",
+      },
+    ],
+  },
+  dataprovider: {
+    name: "Data Provider",
+    settings: [
+      {
+        type: "dataSource",
+      },
+    ],
+  },
+  table: {
+    name: "Table",
+    settings: [
+      {
+        type: "dataProvider",
+        key: "dataProvider",
+      },
+    ],
+  },
+  stringfield: {
+    name: "Text Field",
+    settings: [
+      {
+        type: "field/string",
+        key: "field",
+      },
+    ],
+  },
+}
 
 // Sample plugin definitions
 export const PLUGIN_DEFINITIONS = {
