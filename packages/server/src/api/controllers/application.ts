@@ -316,7 +316,7 @@ export async function fetchAppPackage(
     )
 
     const matchedWorkspaceApp = allWorkspaceApps.find(a =>
-      urlPath.startsWith(`${baseAppUrl}${a.urlPrefix}`)
+      urlPath.startsWith(`${baseAppUrl}${a.urlPrefix}`.replace(/\/$/, ""))
     )
     if (!matchedWorkspaceApp) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
