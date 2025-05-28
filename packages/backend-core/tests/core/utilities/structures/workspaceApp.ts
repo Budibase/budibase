@@ -12,6 +12,9 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
     _rev: undefined,
     createdAt: undefined,
     updatedAt: undefined,
+    navigation: {
+      navigation: "Top",
+    },
 
     ...props,
   }
