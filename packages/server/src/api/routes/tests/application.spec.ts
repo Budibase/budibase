@@ -314,7 +314,7 @@ describe("/applications", () => {
 
         it("should retrieve all the screens for builder calls", async () => {
           await config.api.workspaceApp.create(
-            structures.workspaceApps.workspaceApp()
+            structures.workspaceApps.createRequest()
           )
 
           const res = await config.api.application.getAppPackage(app.appId)
@@ -338,11 +338,15 @@ describe("/applications", () => {
 
             const { workspaceApp: workspaceApp1 } =
               await config.api.workspaceApp.create(
-                structures.workspaceApps.workspaceApp({ urlPrefix: "/app1" })
+                structures.workspaceApps.createRequest({
+                  urlPrefix: "/app1",
+                })
               )
             const { workspaceApp: workspaceApp2 } =
               await config.api.workspaceApp.create(
-                structures.workspaceApps.workspaceApp({ urlPrefix: "/app2" })
+                structures.workspaceApps.createRequest({
+                  urlPrefix: "/app2",
+                })
               )
 
             workspaceAppInfo = []
