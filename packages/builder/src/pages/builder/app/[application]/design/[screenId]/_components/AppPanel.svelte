@@ -10,7 +10,12 @@
   } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider } from "@budibase/bbui"
+  import {
+    AbsTooltip,
+    ActionButton,
+    Divider,
+    TooltipPosition,
+  } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
@@ -34,15 +39,19 @@
   <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
-      <ActionButton
-        quiet
-        icon="Play"
-        on:click={() => window.open(liveUrl)}
-        disabled={!isPublished}
-        tooltip={isPublished ? "" : "Publish your app first"}
+      <AbsTooltip
+        text={isPublished ? "" : "Publish your app first"}
+        position={TooltipPosition.Right}
       >
-        View live
-      </ActionButton>
+        <ActionButton
+          quiet
+          icon="Play"
+          on:click={() => window.open(liveUrl)}
+          disabled={!isPublished}
+        >
+          View live
+        </ActionButton>
+      </AbsTooltip>
     </div>
     <div class="header-right">
       <UndoRedoControl store={screenStore.history} />
