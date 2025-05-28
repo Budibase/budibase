@@ -40,6 +40,7 @@ import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
 
 import { FetchAppPackageResponse } from "@budibase/types"
+import { selectedAppUrls } from "./appUrls"
 
 export {
   componentTreeNodesStore,
@@ -81,6 +82,7 @@ export {
   screenComponentErrorList,
   oauth2,
   workspaceAppStore,
+  selectedAppUrls,
 }
 
 export const reset = () => {

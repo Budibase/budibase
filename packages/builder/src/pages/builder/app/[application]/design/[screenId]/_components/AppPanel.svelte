@@ -1,10 +1,12 @@
-<script>
+<script lang="ts">
   import AppPreview from "./AppPreview.svelte"
   import {
     screenStore,
     appStore,
     selectedScreen,
     previewStore,
+    deploymentStore,
+    selectedAppUrls,
   } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
@@ -14,6 +16,10 @@
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
+
+  $: isPublished = $deploymentStore.isPublished
+
+  $: liveUrl = $selectedAppUrls.liveUrl
 
   const previewApp = () => {
     previewStore.showPreview(true)
@@ -28,9 +34,18 @@
   <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
-      <UndoRedoControl store={screenStore.history} />
+      <ActionButton
+        quiet
+        icon="Play"
+        on:click={() => window.open(liveUrl)}
+        disabled={!isPublished}
+        tooltip={isPublished ? "" : "Publish your app first"}
+      >
+        View live
+      </ActionButton>
     </div>
     <div class="header-right">
+      <UndoRedoControl store={screenStore.history} />
       <div class="actions">
         {#if !isPDF}
           {#if $appStore.clientFeatures.devicePreview}
