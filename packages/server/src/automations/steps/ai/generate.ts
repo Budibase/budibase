@@ -77,6 +77,6 @@ function getContentTypePrompt(contentType: ContentType): string | void {
     case ContentType.OTHER:
       return "You are generating text content."
     default:
-      return utils.unreachable(contentType as never)
+      return utils.unreachable(contentType)
   }
 }
