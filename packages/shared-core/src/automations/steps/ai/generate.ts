@@ -23,12 +23,12 @@ export const definition: AutomationStepDefinition = {
       properties: {
         contentType: {
           type: AutomationIOType.STRING,
-          title: "Content Type",
+          title: "Content type",
           enum: Object.values(ContentType),
           pretty: Object.values(PrettyContentTypes),
         },
         instructions: {
-          type: AutomationIOType.STRING,
+          type: AutomationIOType.LONGFORM,
           title: "Instructions",
           description:
             "Provide guidance to help the AI produce content in the format that you want",

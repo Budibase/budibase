@@ -21,7 +21,7 @@ export const definition: AutomationStepDefinition = {
     inputs: {
       properties: {
         prompt: {
-          type: AutomationIOType.STRING,
+          type: AutomationIOType.LONGFORM,
           title: "Prompt",
         },
       },
