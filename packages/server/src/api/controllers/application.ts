@@ -298,25 +298,13 @@ export async function fetchAppPackage(
     (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
     !isBuilder
   ) {
-    let urlPath = ctx.headers.referer
+    const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : "/"
 
-    let baseAppUrl: string
-    if (dbCore.isProdAppID(appId)) {
-      baseAppUrl = `/app/${application.url}`.replace("//", "/")
-    } else {
-      baseAppUrl = `/${application.appId}`
-    }
-
-    let allWorkspaceApps = await sdk.workspaceApps.fetch()
-    // Sort decending to ensure we match the most strict, removing match conflicts
-    allWorkspaceApps = allWorkspaceApps.sort((a, b) =>
-      b.urlPrefix.localeCompare(a.urlPrefix)
-    )
-
-    const matchedWorkspaceApp = allWorkspaceApps.find(a =>
-      urlPath.startsWith(`${baseAppUrl}${a.urlPrefix}`.replace(/\/$/, ""))
+    const matchedWorkspaceApp = await sdk.workspaceApps.getMatchedWorkspace(
+      urlPath,
+      application
     )
     if (!matchedWorkspaceApp) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
