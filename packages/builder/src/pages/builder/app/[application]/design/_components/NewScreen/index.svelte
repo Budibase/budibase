@@ -31,7 +31,7 @@
   export let inline: boolean = false
   export let submitOnClick: boolean = false
 
-  let modalSteps: CreationStep[]
+  let modalSteps: CreationStep[] = []
   let currentStepIndex: number
 
   let workspaceAppId: string | undefined = undefined
