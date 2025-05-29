@@ -5,23 +5,15 @@ import {
   AutomationIOType,
 } from "@budibase/types"
 
-enum Model {
-  GPT_4O_MINI = "gpt-4o-mini",
-  GPT_4O = "gpt-4o",
-  GPT_4 = "gpt-4",
-  GPT_35_TURBO = "gpt-3.5-turbo",
-}
-
 export const definition: AutomationStepDefinition = {
-  name: "OpenAI",
-  tagline: "Send prompts to ChatGPT",
+  name: "LLM Prompt",
+  tagline: "Send prompts to LLM",
   icon: "Algorithm",
-  description: "Interact with the OpenAI ChatGPT API.",
+  description: "Interact with an LLM.",
   type: AutomationStepType.ACTION,
   internal: true,
   features: {},
-  deprecated: false,
-  stepId: AutomationActionStepId.OPENAI,
+  stepId: AutomationActionStepId.PROMPT_LLM,
   inputs: {
     prompt: "",
   },
@@ -29,13 +21,8 @@ export const definition: AutomationStepDefinition = {
     inputs: {
       properties: {
         prompt: {
-          type: AutomationIOType.STRING,
+          type: AutomationIOType.LONGFORM,
           title: "Prompt",
-        },
-        model: {
-          type: AutomationIOType.STRING,
-          title: "Model",
-          enum: Object.values(Model),
         },
       },
       required: ["prompt", "model"],

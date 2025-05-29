@@ -41,6 +41,7 @@
   } from "@/components/common/bindings"
   import Editor from "@/components/integration/QueryEditor.svelte"
   import WebhookDisplay from "@/components/automation/Shared/WebhookDisplay.svelte"
+  import CategorySelector from "./CategorySelector.svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
   export let context: {} | undefined
@@ -238,6 +239,10 @@
           isTestModal: false,
         }
       },
+      fullWidth: true,
+    },
+    [SchemaFieldTypes.CATEGORIES]: {
+      comp: CategorySelector,
       fullWidth: true,
     },
   }

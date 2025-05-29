@@ -20,10 +20,15 @@
   const dispatch = createEventDispatcher<{
     change: any
     enterkey: KeyboardEvent
+    blur: any
   }>()
   const onChange = (e: any) => {
     value = e.detail
     dispatch("change", e.detail)
+  }
+
+  const onBlur = () => {
+    dispatch("blur", value)
   }
 
   const onKeyDown = (e: KeyboardEvent) => {
@@ -50,7 +55,7 @@
     on:change={onChange}
     on:click
     on:input
-    on:blur
+    on:blur={onBlur}
     on:focus
     on:keyup
     on:keydown
