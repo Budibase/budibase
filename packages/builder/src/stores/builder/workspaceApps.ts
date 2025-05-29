@@ -8,7 +8,7 @@ import {
   InsertWorkspaceAppRequest,
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
-import { screenStore, selectedScreen } from "./screens"
+import { selectedScreen, sortedScreens } from "./screens"
 import { featureFlag } from "@/helpers"
 import { API } from "@/api"
 
@@ -29,13 +29,13 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
       return derived(
-        [store, screenStore, selectedScreen],
-        ([$store, $screenStore, $selectedScreen]) => {
+        [store, sortedScreens, selectedScreen],
+        ([$store, $sortedScreens, $selectedScreen]) => {
           const workspaceApps = $store.workspaceApps
             .map<UIWorkspaceApp>(workspaceApp => {
               return {
                 ...workspaceApp,
-                screens: $screenStore.screens.filter(
+                screens: $sortedScreens.filter(
                   s => s.workspaceAppId === workspaceApp._id
                 ),
               }
