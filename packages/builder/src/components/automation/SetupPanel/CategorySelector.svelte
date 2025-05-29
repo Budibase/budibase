@@ -53,7 +53,7 @@
 <div class="category-selector">
   <div class="categories-list">
     {#each categories as cat, index}
-      <div class="category-item" transition:slide>
+      <div class="category-item">
         <div class="category-row">
           <div class="input-group">
             <Input
