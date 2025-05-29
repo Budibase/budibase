@@ -13,7 +13,6 @@ import { suppressWarnings } from "./helpers/warnings"
 import loadPhosphorIcons from "@budibase/bbui/phosphor-icons.js"
 import App from "./App.svelte"
 
-// Init phosphor icons
 loadPhosphorIcons()
 
 // Suppress svelte runtime warnings

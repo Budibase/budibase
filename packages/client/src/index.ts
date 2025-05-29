@@ -33,18 +33,6 @@ import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
 import BlockComponent from "./components/BlockComponent.svelte"
 import Block from "./components/Block.svelte"
-import "@budibase/frontend-core/src/themes/midnight.css"
-import { initShortcuts } from "./shortcuts"
-import { getAppStore, getNavigateStore, getFetchStore } from "./store"
-import { createClient } from "./api/websocket"
-import { redirectIfNeeded } from "./utils/url"
-import { DIRECTORY_APP_TYPES } from "./constants/apps"
-import Button from "./components/app/Button.svelte"
-import DatePicker from "./components/app/DatePicker/DatePicker.svelte"
-import { setLocalStorage } from "./utils/localStorageUtils"
-import * as components from "./utils/components"
-import { get as getStore } from "svelte/store"
-import loadPhosphorIcons from "@budibase/bbui/phosphor-icons.js"
 
 // Set up global PWA install prompt handler
 if (typeof window !== "undefined") {
@@ -60,9 +48,6 @@ import * as svelte from "svelte"
 import * as internal from "svelte/internal"
 window.svelte_internal = internal
 window.svelte = svelte
-
-// Initialise phosphor icons
-loadPhosphorIcons()
 
 // Extend global window scope
 declare global {
