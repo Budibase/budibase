@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Button, Icon } from "@budibase/bbui"
+  import { Heading, Body, Button, Icon, Helpers } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
@@ -9,7 +9,6 @@
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
   import FavouriteAppButton from "@/pages/builder/portal/apps/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
-  import { getPhosphorIcon } from "@budibase/bbui/utils/iconMapping"
 
   export let app
   export let lockedAction
@@ -78,7 +77,7 @@
     <div class="app-icon">
       <Icon
         size="L"
-        name={getPhosphorIcon(app.icon?.name || "Apps")}
+        name={Helpers.getPhosphorIcon(app.icon?.name || "Apps")}
         color={app.icon?.color}
       />
     </div>

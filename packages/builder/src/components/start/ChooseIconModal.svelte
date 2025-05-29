@@ -1,7 +1,12 @@
 <script lang="ts">
-  import { ColorPicker, Icon, Label, ModalContent } from "@budibase/bbui"
+  import {
+    ColorPicker,
+    Icon,
+    Label,
+    ModalContent,
+    Helpers,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { getPhosphorIcon } from "@budibase/bbui/utils/iconMapping"
 
   export let name: string
   export let color: string
@@ -55,7 +60,7 @@
           class:selected={item === name}
           on:click={() => (name = item)}
         >
-          <Icon name={getPhosphorIcon(item)} />
+          <Icon name={Helpers.getPhosphorIcon(item)} />
         </div>
       {/each}
     </div>

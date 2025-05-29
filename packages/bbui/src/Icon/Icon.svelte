@@ -1,7 +1,7 @@
 <script lang="ts">
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { TooltipPosition, TooltipType } from "../constants"
-  import { getPhosphorIcon } from "../utils/iconMapping"
+  import { getPhosphorIcon } from "../helpers"
 
   export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" | "Custom" = "M"
   export let name: string = "plus"
