@@ -100,6 +100,10 @@ export async function save(
     }
   }
 
+  if (screen.routing.homeScreen) {
+    await sdk.screens.ensureHomepageUniqueness(screen)
+  }
+
   if (isCreation) {
     await events.screen.created(screen)
   }
