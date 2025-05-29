@@ -23,6 +23,7 @@ import { MiscAPI } from "./misc"
 import { OAuth2API } from "./oauth2"
 import { AssetsAPI } from "./assets"
 import { AIAPI } from "./ai"
+import { WorkspaceAppAPI } from "./workspaceApp"
 
 export default class API {
   ai: AIAPI
@@ -48,6 +49,7 @@ export default class API {
   viewV2: ViewV2API
   webhook: WebhookAPI
   assets: AssetsAPI
+  workspaceApp: WorkspaceAppAPI
 
   public: {
     user: UserPublicAPI
@@ -77,6 +79,7 @@ export default class API {
     this.viewV2 = new ViewV2API(config)
     this.webhook = new WebhookAPI(config)
     this.assets = new AssetsAPI(config)
+    this.workspaceApp = new WorkspaceAppAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
     }
