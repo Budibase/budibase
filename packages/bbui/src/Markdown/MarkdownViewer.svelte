@@ -19,11 +19,7 @@
       ref.innerHTML = ""
       return
     }
-    let parsed = marked.parse(markdown)
-    if (typeof parsed !== "string") {
-      parsed = await parsed
-    }
-    ref.innerHTML = parsed
+    ref.innerHTML = marked.parse(markdown, { async: false })
   }
 </script>
 
