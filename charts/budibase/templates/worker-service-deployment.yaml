@@ -142,8 +142,6 @@ spec:
           value: {{ .Values.globals.posthogToken }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
-        - name: ACCOUNT_PORTAL_API_KEY
-          value: {{ .Values.globals.accountPortalApiKey | quote }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
         - name: COOKIE_DOMAIN
