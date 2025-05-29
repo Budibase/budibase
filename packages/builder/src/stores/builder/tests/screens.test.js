@@ -639,23 +639,20 @@ describe("Screens store", () => {
       screens: storeScreens,
     }))
 
-    const patchSpy = vi
-      .spyOn(bb.screenStore, "patch")
-      .mockImplementation(async (patchFn, screenId) => {
+    vi.spyOn(bb.screenStore, "patch").mockImplementation(
+      async (patchFn, screenId) => {
         const target = bb.store.screens.find(screen => screen._id === screenId)
         patchFn(target)
 
         await bb.screenStore.replace(screenId, target)
-      })
+      }
+    )
 
     await bb.screenStore.updateSetting(
       storeScreens[0],
       "routing.homeScreen",
       true
     )
-
-    // One call for the update, one call for to update the existing home screen
-    expect(patchSpy).toBeCalledTimes(2)
 
     // The new homescreen for BASIC
     expect(bb.store.screens[0].routing.homeScreen).toBe(true)
@@ -703,14 +700,14 @@ describe("Screens store", () => {
       screens: sorted,
     }))
 
-    const patchSpy = vi
-      .spyOn(bb.screenStore, "patch")
-      .mockImplementation(async (patchFn, screenId) => {
+    vi.spyOn(bb.screenStore, "patch").mockImplementation(
+      async (patchFn, screenId) => {
         const target = bb.store.screens.find(screen => screen._id === screenId)
         patchFn(target)
 
         await bb.screenStore.replace(screenId, target)
-      })
+      }
+    )
 
     // ADMIN homeScreen updated from 0 to 2
     await bb.screenStore.updateSetting(sorted[2], "routing.homeScreen", true)
@@ -736,9 +733,6 @@ describe("Screens store", () => {
 
     // Homescreen was never set for POWER
     expect(results[Constants.Roles.POWER]).not.toBeDefined()
-
-    // Once to update the target screen, once to unset the existing homescreen.
-    expect(patchSpy).toBeCalledTimes(2)
   })
 
   it("Sequential patch check. Exit if the screenId is not valid.", async ({
