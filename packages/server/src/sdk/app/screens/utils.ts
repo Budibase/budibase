@@ -7,7 +7,9 @@ export async function ensureHomepageUniqueness(screen: Screen) {
     s => s._id !== screen._id && s.workspaceAppId === screen.workspaceAppId
   )
 
-  const toModify = otherScreens.filter(s => s.routing.homeScreen)
+  const toModify = otherScreens.filter(
+    s => s.routing.homeScreen && s.routing.roleId === screen.routing.roleId
+  )
   if (!toModify.length) {
     return
   }
