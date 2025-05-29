@@ -174,7 +174,6 @@ export type ClassifyContentStepInputs = {
 
 export type ClassifyContentStepOutputs = {
   category?: string
-  confidence?: number
   success: boolean
   response?: string
 }
@@ -215,7 +214,6 @@ export type GenerateTextStepInputs = {
 }
 
 export type GenerateTextStepOutputs = {
-  generatedText?: string
   success: boolean
   response?: string
 }
