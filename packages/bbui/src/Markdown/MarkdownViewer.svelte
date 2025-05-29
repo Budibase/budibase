@@ -19,7 +19,7 @@
       ref.innerHTML = ""
       return
     }
-    ref.innerHTML = marked.parse(markdown)
+    ref.innerHTML = marked.parse(markdown, { async: false })
   }
 </script>
 
