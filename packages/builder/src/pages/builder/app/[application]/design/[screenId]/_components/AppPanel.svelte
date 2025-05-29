@@ -10,12 +10,7 @@
   } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import {
-    AbsTooltip,
-    ActionButton,
-    Divider,
-    TooltipPosition,
-  } from "@budibase/bbui"
+  import { ActionButton, Divider, Link } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
@@ -39,19 +34,9 @@
   <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
-      <AbsTooltip
-        text={isPublished ? "" : "Publish your app first"}
-        position={TooltipPosition.Right}
-      >
-        <ActionButton
-          quiet
-          icon="Play"
-          on:click={() => window.open(liveUrl)}
-          disabled={!isPublished}
-        >
-          View live
-        </ActionButton>
-      </AbsTooltip>
+      {#if isPublished}
+        <Link href={liveUrl} target="_blank">{liveUrl}</Link>
+      {/if}
     </div>
     <div class="header-right">
       <UndoRedoControl store={screenStore.history} />
@@ -110,10 +95,10 @@
 
   .header-left {
     display: flex;
+    padding-left: var(--spacing-s);
+    align-items: center;
   }
-  .header-left :global(div) {
-    border-right: none;
-  }
+
   .header-right {
     margin-left: auto;
     display: flex;
