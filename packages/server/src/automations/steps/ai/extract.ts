@@ -1,17 +1,13 @@
 import { ai } from "@budibase/pro"
 import * as automationUtils from "../../automationUtils"
 import {
+  DocumentSourceType,
   ExtractFileDataStepInputs,
   ExtractFileDataStepOutputs,
-  RowAttachment,
 } from "@budibase/types"
 import { objectStore } from "@budibase/backend-core"
 import { Readable } from "stream"
 import fetch from "node-fetch"
-import { contentType, lookup } from "mime-types"
-import { LLMRequest } from "packages/pro/src/ai"
-import { sanitizeBucket } from "@budibase/backend-core/src/objectStore"
-import { sanitizeKey } from "@budibase/backend-core/src/objectStore"
 
 export async function run({
   inputs,
@@ -30,13 +26,16 @@ export async function run({
   try {
     const llm = await ai.getLLMOrThrow()
 
-    let filename: string
-    let contentType: string | undefined
-    let fileIdOrDataUrl: string
-    let request: LLMRequest
+    let filename
+    let contentType
+    let fileIdOrDataUrl
+    let request
 
-    if (inputs.file.startsWith("http") || inputs.file.startsWith("https")) {
-      let fileUrl = inputs.file
+    if (
+      inputs.source === DocumentSourceType.URL &&
+      typeof inputs.file === "string"
+    ) {
+      const fileUrl = inputs.file
       const response = await fetch(fileUrl)
       if (!response.ok) {
         throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
@@ -54,34 +53,29 @@ export async function run({
           filename += `.${imageType}`
         }
       }
+
+      fileIdOrDataUrl = await llm.uploadFile(stream, filename, contentType)
+    } else if (
+      inputs.source === DocumentSourceType.ATTACHMENT &&
+      typeof inputs.file !== "string"
+    ) {
+      const attachment = inputs.file
+      const bucket = objectStore.ObjectStoreBuckets.APPS
+      const stream = await objectStore.getReadStream(bucket, inputs.file.key!)
+
+      filename = attachment.name || "document"
       fileIdOrDataUrl = await llm.uploadFile(
         stream,
         filename,
-        "assistants",
-        contentType
+        attachment.extension
       )
-      request = ai.extractDocumentData(inputs.schema, fileIdOrDataUrl)
-    } else if (inputs.file.includes(objectStore.SIGNED_FILE_PREFIX)) {
-      // We now know this is a object store url.
-      const { bucket, path } = objectStore.extractBucketAndPath(inputs.file!)!
-
-      const stream = await objectStore.getReadStream(bucket, path)
-      filename = path.split("/").pop() || "document"
-
-      fileIdOrDataUrl = await llm.uploadFile(
-        stream,
-        filename,
-        "assistants",
-        inputs.fileType === "PDF" ? "application/pdf" : "image/jpeg"
-      )
-      request = ai.extractDocumentData(inputs.schema, fileIdOrDataUrl)
-      request.withFormat("json")
     } else {
-      throw new Error("Invalid file input")
+      throw new Error("Invalid file input – source and file type do not match")
     }
 
+    request = ai.extractDocumentData(inputs.schema, fileIdOrDataUrl)
+    request.withFormat("json")
     const llmResponse = await llm.prompt(request)
-
     let data
     try {
       data = JSON.parse(llmResponse.message)
@@ -96,7 +90,7 @@ export async function run({
     }
 
     return {
-      data,
+      data: data.data, // completions api won't return a json array, so we need to return a wrapper object
       success: true,
     }
   } catch (err: any) {

@@ -220,8 +220,8 @@ export type GenerateTextStepOutputs = {
   response?: string
 }
 export type ExtractFileDataStepInputs = {
-  file: string
-  fileType: "PDF" | "Image"
+  file: RowAttachment | string
+  source: "URL" | "Attachment"
   schema: Record<string, any>
 }
 

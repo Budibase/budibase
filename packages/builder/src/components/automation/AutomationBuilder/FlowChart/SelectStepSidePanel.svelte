@@ -11,7 +11,7 @@
   import Panel from "@/components/design/Panel.svelte"
   import { AutomationActionStepId, BlockDefinitionTypes } from "@budibase/types"
   import { automationStore, selectedAutomation } from "@/stores/builder"
-  import { admin, licensing, featureFlags } from "@/stores/portal"
+  import { admin, licensing } from "@/stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import type { AutomationStepDefinition } from "@budibase/types"

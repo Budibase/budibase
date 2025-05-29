@@ -323,3 +323,8 @@ export const PrettyContentTypes = {
   [ContentType.PROPOSAL]: "Proposal",
   [ContentType.OTHER]: "Other",
 }
+
+export enum DocumentSourceType {
+  URL = "URL",
+  ATTACHMENT = "Attachment",
+}

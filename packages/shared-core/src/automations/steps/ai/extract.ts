@@ -4,6 +4,7 @@ import {
   AutomationIOType,
   AutomationStepDefinition,
   AutomationStepType,
+  DocumentSourceType,
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
@@ -24,9 +25,15 @@ export const definition: AutomationStepDefinition = {
           description:
             "Attachment or Link to the document to extract data from.",
         },
-        fileType: {
+        source: {
           type: AutomationIOType.STRING,
-          enum: ["PDF", "Image"],
+          enum: Object.values(DocumentSourceType),
+          title: "Source",
+          description: "The source of the document to extract data from.",
+        },
+        fileType: {
+          dependsOn: "source",
+          type: AutomationIOType.STRING,
           title: "File Type",
           description: "The type of the file to extract data from.",
         },
