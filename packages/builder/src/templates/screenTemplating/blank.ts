@@ -13,7 +13,7 @@ const blank = ({
   screens: ScreenDoc[]
   workspaceAppId: string | undefined
 }) => {
-  const validRoute = getValidRoute(screens, route, Roles.BASIC)
+  const validRoute = getValidRoute(screens, route, Roles.BASIC, workspaceAppId)
 
   const template = new Screen(workspaceAppId)
     .instanceName("Blank screen")
