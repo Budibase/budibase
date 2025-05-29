@@ -2428,6 +2428,14 @@
           {
             "label": "Clicked segment",
             "key": "segment"
+          },
+          {
+            "label": "Segment Index",
+            "key": "index"
+          },
+          {
+            "label": "Segment Percentage",
+            "key": "percentage"
           }
         ]
       },
