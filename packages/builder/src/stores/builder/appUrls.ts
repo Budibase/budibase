@@ -11,11 +11,11 @@ function buildUrl({ paths, route }: { paths: string[]; route: string }) {
     .map(trimSlashes)
     .filter(x => x)
     .join("/")
-  let url = `${protocol}//${host}/${parsedPaths}/`
+  let url = `${protocol}//${host}/${parsedPaths}`
 
   route = trimSlashes(route)
   if (route) {
-    url += `#/${route}`
+    url += `/#/${route}`
   }
   return url
 }
