@@ -9,7 +9,7 @@
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
   import FavouriteAppButton from "@/pages/builder/portal/apps/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
-  import { getPhosphorIcon } from "@/utils/iconMapping"
+  import { getPhosphorIcon } from "@budibase/bbui/utils/iconMapping"
 
   export let app
   export let lockedAction

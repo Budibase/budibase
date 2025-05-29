@@ -1,6 +1,6 @@
 <script>
   import { IconAvatar } from "@budibase/bbui"
-  import { getPhosphorIcon } from "@/utils/iconMapping"
+  import { getPhosphorIcon } from "@budibase/bbui/utils/iconMapping"
 
   export let value
   export let row

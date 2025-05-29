@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ColorPicker, Icon, Label, ModalContent } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { getPhosphorIcon } from "@/utils/iconMapping"
+  import { getPhosphorIcon } from "@budibase/bbui/utils/iconMapping"
 
   export let name: string
   export let color: string

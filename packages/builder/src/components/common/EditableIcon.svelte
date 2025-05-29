@@ -1,7 +1,7 @@
 <script lang="ts">
   import ChooseIconModal from "@/components/start/ChooseIconModal.svelte"
   import { Icon, Modal } from "@budibase/bbui"
-  import { getPhosphorIcon } from "@/utils/iconMapping"
+  import { getPhosphorIcon } from "@budibase/bbui/utils/iconMapping"
 
   export let name: string
   export let size: "M" = "M"

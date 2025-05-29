@@ -1,6 +1,4 @@
-// import { comprehensiveIconMap } from "./comprehensiveIconMapping"
-
-export const databaseIconMap: Record<string, string> = {
+export const iconMap: Record<string, string> = {
   Apps: "dots-nine",
   Actions: "pencil-ruler",
   ConversionFunnel: "funnel-simple",
@@ -27,11 +25,6 @@ export const databaseIconMap: Record<string, string> = {
   Demographic: "users-three",
 }
 
-export const spectrumToPhosphorMap: Record<string, string> = {
-  //   ...comprehensiveIconMap,
-  ...databaseIconMap,
-}
-
 export const getPhosphorIcon = (spectrumIcon: string): string => {
-  return spectrumToPhosphorMap[spectrumIcon] || spectrumIcon
+  return iconMap[spectrumIcon] || spectrumIcon
 }

@@ -8,7 +8,7 @@
   import { sdk } from "@budibase/shared-core"
   import { Icon } from "@budibase/bbui"
   import { contextMenuStore } from "@/stores/builder"
-  import { getPhosphorIcon } from "@/utils/iconMapping"
+  import { getPhosphorIcon } from "@budibase/bbui/utils/iconMapping"
 
   export let app
 
