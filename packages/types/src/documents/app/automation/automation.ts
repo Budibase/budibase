@@ -328,3 +328,17 @@ export enum DocumentSourceType {
   URL = "URL",
   ATTACHMENT = "Attachment",
 }
+
+export const ImageContentTypes = [
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "bmp",
+  "tiff",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/bmp",
+  "image/tiff",
+]
