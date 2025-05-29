@@ -7,7 +7,7 @@ import {
   LogicalOperator,
 } from "../../../sdk"
 import { HttpMethod } from "../query"
-import { Row } from "../row"
+import { Row, RowAttachment } from "../row"
 import {
   LoopStepType,
   EmailAttachment,
@@ -219,12 +219,13 @@ export type GenerateTextStepOutputs = {
   success: boolean
   response?: string
 }
-export type ExtractDocumentDataStepInputs = {
-  documentUrl: string
+export type ExtractFileDataStepInputs = {
+  file: string
+  fileType: "PDF" | "Image"
   schema: Record<string, any>
 }
 
-export type ExtractDocumentDataStepOutputs = {
+export type ExtractFileDataStepOutputs = {
   response?: string
   success: boolean
   data?: Record<string, any>

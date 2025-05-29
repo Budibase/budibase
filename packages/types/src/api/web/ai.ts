@@ -14,15 +14,6 @@ export interface UserMessage {
   content: UserContent
 }
 
-export interface FileContentMessage {
-  role: "user"
-  content: openai.ChatCompletionContentPart.File[]
-}
-
-export interface ImageUrlMessage {
-  role: "user"
-  content: openai.ChatCompletionContentPartImage[]
-}
 export interface AssistantMessage {
   role: "assistant"
   content: string | null

@@ -1,53 +1,50 @@
 import { ai } from "@budibase/pro"
 import * as automationUtils from "../../automationUtils"
 import {
-  ExtractDocumentDataStepInputs,
-  ExtractDocumentDataStepOutputs,
+  ExtractFileDataStepInputs,
+  ExtractFileDataStepOutputs,
+  RowAttachment,
 } from "@budibase/types"
 import { objectStore } from "@budibase/backend-core"
-import { toFile } from "openai"
-import {
-  getReadStream,
-  getObjectMetadata,
-} from "@budibase/backend-core/src/objectStore"
 import { Readable } from "stream"
 import fetch from "node-fetch"
+import { contentType, lookup } from "mime-types"
+import { LLMRequest } from "packages/pro/src/ai"
+import { sanitizeBucket } from "@budibase/backend-core/src/objectStore"
+import { sanitizeKey } from "@budibase/backend-core/src/objectStore"
 
 export async function run({
   inputs,
 }: {
-  inputs: ExtractDocumentDataStepInputs
-}): Promise<ExtractDocumentDataStepOutputs> {
-  if (!inputs.documentUrl || !inputs.schema) {
+  inputs: ExtractFileDataStepInputs
+}): Promise<ExtractFileDataStepOutputs> {
+  if (!inputs.file || !inputs.schema) {
     return {
       success: false,
       data: {},
       response:
-        "Extract Document Data AI Step Failed: Document URL and Schema are required.",
+        "Extract Document Data AI Step Failed: File and Schema are required.",
     }
   }
 
   try {
     const llm = await ai.getLLMOrThrow()
 
-    let stream: Readable
     let filename: string
     let contentType: string | undefined
+    let fileIdOrDataUrl: string
+    let request: LLMRequest
 
-    // We might want ti handle the case where the user supplies their own URL
-    if (
-      inputs.documentUrl.startsWith("http://") ||
-      inputs.documentUrl.startsWith("https://")
-    ) {
-      const response = await fetch(inputs.documentUrl)
+    if (inputs.file.startsWith("http") || inputs.file.startsWith("https")) {
+      let fileUrl = inputs.file
+      const response = await fetch(fileUrl)
       if (!response.ok) {
         throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
       }
-      stream = response.body as Readable
+      const stream = response.body as Readable
       contentType = response.headers.get("content-type") || undefined
 
-      filename =
-        inputs.documentUrl.split("/").pop()?.split("?")[0] || "document"
+      filename = fileUrl.split("/").pop()?.split("?")[0] || "document"
 
       if (!filename.includes(".") && contentType) {
         if (contentType.includes("pdf")) {
@@ -57,31 +54,37 @@ export async function run({
           filename += `.${imageType}`
         }
       }
-      // Now we handle the standard case where the user supplies a signed urel.
+      fileIdOrDataUrl = await llm.uploadFile(
+        stream,
+        filename,
+        "assistants",
+        contentType
+      )
+      request = ai.extractDocumentData(inputs.schema, fileIdOrDataUrl)
+    } else if (inputs.file.includes(objectStore.SIGNED_FILE_PREFIX)) {
+      // We now know this is a object store url.
+      const { bucket, path } = objectStore.extractBucketAndPath(inputs.file!)!
+
+      const stream = await objectStore.getReadStream(bucket, path)
+      filename = path.split("/").pop() || "document"
+
+      fileIdOrDataUrl = await llm.uploadFile(
+        stream,
+        filename,
+        "assistants",
+        inputs.fileType === "PDF" ? "application/pdf" : "image/jpeg"
+      )
+      request = ai.extractDocumentData(inputs.schema, fileIdOrDataUrl)
+      request.withFormat("json")
     } else {
-      const { bucket, path } = objectStore.extractBucketAndPath(
-        inputs.documentUrl
-      )!
-      console.log(path)
-      stream = await getReadStream(bucket, path)
-      filename = path.split("/").pop() || "document.pdf"
+      throw new Error("Invalid file input")
     }
 
-    const fileId = await llm.uploadFile(
-      stream,
-      filename,
-      "assistants",
-      "image/png"
-    )
-    const request = ai.extractDocumentData(inputs.schema, fileId)
-    request.withFormat("json")
-    console.log(request)
     const llmResponse = await llm.prompt(request)
 
-    let extractedData = {}
-
+    let data
     try {
-      extractedData = llmResponse.message
+      data = JSON.parse(llmResponse.message)
     } catch (err: any) {
       console.error("Error parsing JSON response:", err)
       return {
@@ -93,7 +96,7 @@ export async function run({
     }
 
     return {
-      data: extractedData,
+      data,
       success: true,
     }
   } catch (err: any) {

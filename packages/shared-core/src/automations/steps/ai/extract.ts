@@ -1,5 +1,6 @@
 import {
   AutomationActionStepId,
+  AutomationCustomIOType,
   AutomationIOType,
   AutomationStepDefinition,
   AutomationStepType,
@@ -17,14 +18,21 @@ export const definition: AutomationStepDefinition = {
   schema: {
     inputs: {
       properties: {
-        documentUrl: {
+        file: {
           type: AutomationIOType.STRING,
-          title: "Document URL",
-          description: "URL or path to the PDF or image to extract data from.",
+          title: "Document",
+          description:
+            "Attachment or Link to the document to extract data from.",
+        },
+        fileType: {
+          type: AutomationIOType.STRING,
+          enum: ["PDF", "Image"],
+          title: "File Type",
+          description: "The type of the file to extract data from.",
         },
         schema: {
-          type: AutomationIOType.JSON,
-          title: "Data Schema",
+          customType: AutomationCustomIOType.TRIGGER_SCHEMA,
+          title: "Data schema",
           description:
             'Schema defining the structure of data to extract. Example: {"name": "string", "price": "number"}',
         },
