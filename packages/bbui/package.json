@@ -11,7 +11,8 @@
     },
     "./package.json": "./package.json",
     "./spectrum-icons-rollup.js": "./src/spectrum-icons-rollup.js",
-    "./spectrum-icons-vite.js": "./src/spectrum-icons-vite.js"
+    "./spectrum-icons-vite.js": "./src/spectrum-icons-vite.js",
+    "./utils/*": "./src/utils/*"
   },
   "scripts": {
     "build": "vite build",
