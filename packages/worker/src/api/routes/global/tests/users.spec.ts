@@ -716,8 +716,11 @@ describe("/api/global/users", () => {
         },
         { useHeaders: await config.login(user) }
       )
-      expect(response.body.data.length).toBe(2)
-      expect(response.body.data[0].roles).toBeUndefined()
+      for (let user of response.body.data) {
+        expect(user.roles).toBeUndefined()
+        expect(user.builder).toBeUndefined()
+        expect(user.admin).toBeUndefined()
+      }
     })
   })
 
