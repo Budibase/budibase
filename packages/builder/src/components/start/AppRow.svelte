@@ -9,6 +9,7 @@
   import getAppContextMenuItems from "./getAppContextMenuItems.js"
   import FavouriteAppButton from "@/pages/builder/portal/apps/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
+  import { getPhosphorIcon } from "@/utils/iconMapping"
 
   export let app
   export let lockedAction
@@ -75,7 +76,11 @@
 >
   <div class="title">
     <div class="app-icon">
-      <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
+      <Icon
+        size="L"
+        name={getPhosphorIcon(app.icon?.name || "Apps")}
+        color={app.icon?.color}
+      />
     </div>
     <div class="name">
       <Heading size="S">
@@ -98,7 +103,7 @@
   </div>
 
   <div class="title app-status" class:deployed={app.deployed}>
-    <Icon size="L" name={app.deployed ? "GlobeCheck" : "GlobeStrike"} />
+    <Icon size="L" name={app.deployed ? "globe-check" : "globe-slash"} />
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
@@ -115,7 +120,7 @@
             on:click={openContextMenu}
             size="S"
             hoverable
-            name="MoreSmallList"
+            name="dots-three-horizontal"
           />
         </div>
       {:else}

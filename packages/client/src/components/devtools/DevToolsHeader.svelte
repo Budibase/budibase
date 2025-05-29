@@ -49,7 +49,7 @@
   {#if !$context.device.mobile}
     <ActionButton
       quiet
-      icon="Code"
+      icon="code"
       on:click={() => devToolsStore.actions.setVisible(!$devToolsStore.visible)}
     >
       DevTools
@@ -58,7 +58,7 @@
   {#if window.parent.isBuilder}
     <ActionButton
       quiet
-      icon="LinkOut"
+      icon="arrow-square-out"
       on:click={() => {
         window.parent.closePreview?.()
         window.open(`/${$appStore.appId}`, "_blank")
@@ -68,7 +68,7 @@
     </ActionButton>
     <ActionButton
       quiet
-      icon="Close"
+      icon="x"
       on:click={() => window.parent.closePreview?.()}
     >
       Close

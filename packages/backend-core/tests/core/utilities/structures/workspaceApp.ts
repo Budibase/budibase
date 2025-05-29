@@ -5,7 +5,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   const result: RequiredKeys<WorkspaceApp> = {
     name: generator.word(),
     urlPrefix: `/${generator.word()}`,
-    icon: "Monitoring",
+    icon: "activity",
     iconColor: undefined,
 
     _id: undefined,

@@ -20,13 +20,13 @@
     switch (alertType) {
       case "error":
       case "negative":
-        return "Alert"
+        return "warning"
       case "success":
-        return "CheckmarkCircle"
+        return "check-circle"
       case "help":
-        return "Help"
+        return "question"
       default:
-        return "Info"
+        return "info"
     }
   }
 </script>
@@ -61,7 +61,7 @@
         class="docs-link"
       >
         {linkText}
-        <Icon name="LinkOut" size="XS" />
+        <Icon name="arrow-square-out" size="XS" />
       </a>
     </div>
   {/if}

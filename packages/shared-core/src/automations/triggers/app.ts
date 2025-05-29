@@ -10,7 +10,7 @@ import {
 export const definition: AutomationTriggerDefinition = {
   name: "App Action",
   event: AutomationEventType.APP_TRIGGER,
-  icon: "Apps",
+  icon: "squares-four",
   tagline: "Automation fired from the frontend",
   description: "Trigger an automation from an action inside your app",
   stepId: AutomationTriggerStepId.APP,

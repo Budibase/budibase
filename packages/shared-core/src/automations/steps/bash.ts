@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Bash Scripting",
   tagline: "Execute a bash command",
-  icon: "JourneyEvent",
+  icon: "git-branch",
   description: "Run a bash script",
   type: AutomationStepType.ACTION,
   internal: true,
@@ -25,7 +25,7 @@ export const definition: AutomationStepDefinition = {
         code: {
           type: AutomationIOType.STRING,
           customType: AutomationCustomIOType.CODE,
-          title: "Code",
+          title: "code",
         },
       },
       required: ["code"],

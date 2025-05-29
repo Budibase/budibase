@@ -1,9 +1,10 @@
 <script lang="ts">
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { TooltipPosition, TooltipType } from "../constants"
+  import { getPhosphorIcon } from "../utils/iconMapping"
 
-  export let name: string = "Add"
   export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" | "Custom" = "M"
+  export let name: string = "plus"
   export let hidden: boolean = false
   export let hoverable: boolean = false
   export let disabled: boolean = false
@@ -16,6 +17,32 @@
   export let tooltipWrap: boolean = true
   export let newStyles: boolean = false
   export let customSize: number | undefined = undefined
+  export let weight:
+    | "thin"
+    | "light"
+    | "regular"
+    | "bold"
+    | "fill"
+    | "duotone" = "regular"
+
+  const sizeMap = {
+    XS: "0.75rem",
+    S: "1rem",
+    M: "1.25rem",
+    L: "1.5rem",
+    XL: "2rem",
+    XXL: "2.5rem",
+    Custom: customSize ? `${customSize}px` : "1.25rem",
+  }
+
+  const fontSize = sizeMap[size]
+
+  $: phosphorIconName = getPhosphorIcon(name)
+
+  $: phosphorClass =
+    weight === "regular"
+      ? `ph ph-${phosphorIconName}`
+      : `ph-${weight} ph-${phosphorIconName}`
 </script>
 
 <AbsTooltip
@@ -27,30 +54,25 @@
 >
   <div class="icon" class:newStyles>
     <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-    <svg
+    <i
       on:contextmenu
       on:click
       on:mouseover
       on:mouseleave
       class:hoverable
       class:disabled
-      class="spectrum-Icon spectrum-Icon--size{size}"
-      focusable="false"
-      aria-hidden={hidden}
-      aria-label={name}
-      style={`${color ? `color: ${color};` : ""} 
+      class="{phosphorClass} spectrum-Icon spectrum-Icon--size{size}"
+      style={`font-size: ${fontSize}; ${color ? `color: ${color};` : ""} 
       ${
         hoverColor
           ? `--hover-color: ${hoverColor}`
           : "--hover-color: var(--spectrum-alias-icon-color-selected-hover)"
       }; 
-      ${customSize ? `width: ${customSize}px; height: ${customSize}px;` : ""}`}
-    >
-      <use
-        style="pointer-events: none;"
-        xlink:href="#spectrum-icon-18-{name}"
-      />
-    </svg>
+      line-height: 1; vertical-align: middle;`}
+      aria-hidden={hidden ? "true" : "false"}
+      aria-label={tooltip || name}
+      title={tooltip}
+    />
   </div>
 </AbsTooltip>
 
@@ -63,29 +85,44 @@
   .newStyles {
     color: var(--spectrum-global-color-gray-700);
   }
-  svg {
+  i {
     transition: color var(--spectrum-global-animation-duration-100, 130ms);
   }
-  svg.hoverable {
+  i.hoverable {
     pointer-events: all;
   }
-  svg.hoverable:hover {
+  i.hoverable:hover {
     color: var(--hover-color) !important;
     cursor: pointer;
   }
-  svg.hoverable:active {
+  i.hoverable:active {
     color: var(--spectrum-global-color-blue-400) !important;
   }
-  .newStyles svg.hoverable:hover,
-  .newStyles svg.hoverable:active {
+  .newStyles i.hoverable:hover,
+  .newStyles i.hoverable:active {
     color: var(--spectrum-global-color-gray-900) !important;
   }
-  svg.disabled {
+  i.disabled {
     color: var(--spectrum-global-color-gray-500) !important;
     pointer-events: none !important;
   }
+  /* Keep the original size classes for compatibility but make them control font-size */
   .spectrum-Icon--sizeXS {
-    width: var(--spectrum-global-dimension-size-150);
-    height: var(--spectrum-global-dimension-size-150);
+    font-size: 0.75rem;
+  }
+  .spectrum-Icon--sizeS {
+    font-size: 1rem;
+  }
+  .spectrum-Icon--sizeM {
+    font-size: 1.25rem;
+  }
+  .spectrum-Icon--sizeL {
+    font-size: 1.5rem;
+  }
+  .spectrum-Icon--sizeXL {
+    font-size: 2rem;
+  }
+  .spectrum-Icon--sizeXXL {
+    font-size: 2.5rem;
   }
 </style>

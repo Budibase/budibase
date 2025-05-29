@@ -184,7 +184,7 @@
         dismissable
         action={() => goToAutomationError(appId)}
         type="error"
-        icon="Alert"
+        icon="warning"
         actionMessage={errorCount(automationErrors[appId]) > 1
           ? "View errors"
           : "View error"}

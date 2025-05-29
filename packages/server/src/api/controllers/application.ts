@@ -187,7 +187,7 @@ async function addSampleDataScreen() {
     const workspaceApp = await sdk.workspaceApps.create({
       name: appMetadata.name,
       urlPrefix: "/",
-      icon: "Monitoring",
+      icon: "activity",
     })
     workspaceAppId = workspaceApp._id!
   }

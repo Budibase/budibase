@@ -1,12 +1,16 @@
 <script>
   import { IconAvatar } from "@budibase/bbui"
+  import { getPhosphorIcon } from "@/utils/iconMapping"
 
   export let value
   export let row
 </script>
 
 <div class="align">
-  <IconAvatar icon={row?.icon?.name || "Apps"} color={row?.icon?.color} />
+  <IconAvatar
+    icon={getPhosphorIcon(row?.icon?.name || "Apps")}
+    color={row?.icon?.color}
+  />
   <div class="text">
     {value}
   </div>

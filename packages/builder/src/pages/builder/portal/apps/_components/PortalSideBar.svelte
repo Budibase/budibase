@@ -33,7 +33,7 @@
   </div>
   <div class="side-bar-nav">
     <NavItem
-      icon="WebPages"
+      icon="browser"
       text="All apps"
       on:click={() => {
         onAgents = false

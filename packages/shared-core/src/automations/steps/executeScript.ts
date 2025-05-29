@@ -11,7 +11,7 @@ export const definition: AutomationStepDefinition = {
   name: "JS Scripting",
   tagline: "Execute JavaScript Code",
   deprecated: true,
-  icon: "Code",
+  icon: "code",
   description: "Run a piece of JavaScript code in your automation",
   type: AutomationStepType.ACTION,
   internal: true,

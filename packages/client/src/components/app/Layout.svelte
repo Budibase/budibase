@@ -241,7 +241,7 @@
                 <div class="burger">
                   <Icon
                     hoverable
-                    name="ShowMenu"
+                    name="dots-three-vertical"
                     on:click={() => (mobileOpen = !mobileOpen)}
                   />
                 </div>
@@ -329,7 +329,7 @@
     <div class="side-panel-header">
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
+        name="sidebar"
         hoverable
         on:click={sidePanelStore.actions.close}
       />

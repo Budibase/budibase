@@ -273,7 +273,7 @@
             </span>
             {#if editable}
               <Icon
-                name="Close"
+                name="x"
                 size="XS"
                 hoverable
                 on:click={() => toggleRow(relationship)}
@@ -284,7 +284,7 @@
       {/each}
       {#if editable}
         <div class="add" on:click={open}>
-          <Icon name="Add" size="S" />
+          <Icon name="plus" size="S" />
         </div>
       {/if}
     </div>
@@ -329,7 +329,7 @@
                 </span>
               </div>
               {#if isRowSelected(row)}
-                <Icon size="S" name="Checkmark" color="var(--accent-color)" />
+                <Icon size="S" name="check" color="var(--accent-color)" />
               {/if}
             </div>
           {/each}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ColorPicker, Icon, Label, ModalContent } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
+  import { getPhosphorIcon } from "@/utils/iconMapping"
 
   export let name: string
   export let color: string
@@ -8,30 +9,30 @@
   const dispatch = createEventDispatcher()
 
   let iconsList = [
-    "Apps",
-    "Actions",
-    "ConversionFunnel",
-    "App",
-    "Briefcase",
-    "Money",
-    "ShoppingCart",
-    "Form",
-    "Help",
-    "Monitoring",
-    "Sandbox",
-    "Project",
-    "Organisations",
-    "Magnify",
-    "Launch",
-    "Car",
-    "Camera",
-    "Bug",
-    "Channel",
-    "Calculator",
-    "Calendar",
-    "GraphDonut",
-    "GraphBarHorizontal",
-    "Demographic",
+    "Apps", // dots-nine
+    "Actions", // pencil-ruler?
+    "ConversionFunnel", //funnel-simple
+    "App", // app-store-logo
+    "Briefcase", //briefcase
+    "Money", //money
+    "ShoppingCart", //shopping-cart
+    "Form", //list
+    "Help", //question
+    "Monitoring", //monitor
+    "Sandbox", //columns
+    "Project", //folder
+    "Organisations", //city
+    "Magnify", //magnifying-glass
+    "Launch", //rocket-launch
+    "Car", //car
+    "Camera", //camera
+    "Bug", //bug
+    "Channel", //snowflake
+    "Calculator", //calculator
+    "Calendar", //calendar-dots
+    "GraphDonut", //chart-donut
+    "GraphBarHorizontal", //chart-bar-horizontal
+    "Demographic", //users-three
   ]
 
   const save = async () => {
@@ -54,7 +55,7 @@
           class:selected={item === name}
           on:click={() => (name = item)}
         >
-          <Icon name={item} />
+          <Icon name={getPhosphorIcon(item)} />
         </div>
       {/each}
     </div>

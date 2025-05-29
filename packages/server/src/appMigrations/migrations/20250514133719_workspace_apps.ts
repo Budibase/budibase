@@ -14,7 +14,7 @@ const migration = async () => {
     const workspaceApp = await sdk.workspaceApps.create({
       name: application.name,
       urlPrefix: "/",
-      icon: "Monitoring",
+      icon: "activity",
     })
     workspaceAppId = workspaceApp._id
   }

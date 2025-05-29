@@ -28,7 +28,7 @@
   $: containsActiveLink = (subLinks || []).some(x => isBuilderActive(x.url))
   $: expanded = !!$navStateStore[text] || containsActiveLink
   $: renderLeftNav = leftNav || mobile
-  $: icon = !renderLeftNav || expanded ? "ChevronDown" : "ChevronRight"
+  $: icon = !renderLeftNav || expanded ? "caret-down" : "caret-right"
 
   const onClickLink = () => {
     dispatch("clickLink")

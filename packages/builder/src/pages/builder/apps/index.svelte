@@ -106,7 +106,7 @@
             <ActionMenu align="right">
               <div slot="control" class="avatar">
                 <UserAvatar size="M" user={$auth.user} showTooltip={false} />
-                <Icon size="L" name="ChevronDown" />
+                <Icon size="L" name="caret-down" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
                 My profile
@@ -183,7 +183,7 @@
                         {/if}
                       </Body>
                     </div>
-                    <Icon name="ChevronRight" />
+                    <Icon name="caret-right" />
                   </a>
                 {/each}
               </Layout>

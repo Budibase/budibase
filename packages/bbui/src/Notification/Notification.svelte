@@ -4,7 +4,7 @@
   import { createEventDispatcher } from "svelte"
 
   export let type: string = "info"
-  export let icon: string = "Info"
+  export let icon: string = "info"
   export let message: string = ""
   export let dismissable: boolean = false
   export let actionMessage: string | null = null

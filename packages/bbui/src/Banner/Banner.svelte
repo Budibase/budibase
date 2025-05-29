@@ -4,7 +4,7 @@
   let dispatch = createEventDispatcher()
 
   export let type = "info"
-  export let icon = "Info"
+  export let icon = "info"
   export let size = "S"
   export let extraButtonText
   export let extraButtonAction

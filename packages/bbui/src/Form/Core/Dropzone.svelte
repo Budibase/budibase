@@ -178,7 +178,7 @@
           {/if}
           {#if !disabled}
             <div class="delete-button" on:click={removeFile}>
-              <Icon name="Delete" />
+              <Icon name="trash" />
             </div>
           {/if}
         </div>
@@ -197,14 +197,14 @@
           class:visible={selectedImageIdx > 0}
           on:click={navigateLeft}
         >
-          <Icon name="ChevronLeft" />
+          <Icon name="caret-left" />
         </div>
         <div
           class="nav right"
           class:visible={selectedImageIdx < fileCount - 1}
           on:click={navigateRight}
         >
-          <Icon name="ChevronRight" />
+          <Icon name="caret-right" />
         </div>
         {#if maximum !== 1}
           <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
@@ -224,7 +224,7 @@
             {/if}
             {#if !disabled}
               <div class="delete-button" on:click={removeFile}>
-                <Icon name="Delete" />
+                <Icon name="trash" />
               </div>
             {/if}
           </div>
