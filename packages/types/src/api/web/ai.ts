@@ -1,7 +1,8 @@
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 import { z } from "zod"
-import { ChatCompletionContentPart } from "openai/resources/chat/completions"
+
+export type UserContent = string | openai.ChatCompletionContentPart[]
 
 export interface SystemMessage {
   role: "system"
@@ -10,14 +11,18 @@ export interface SystemMessage {
 
 export interface UserMessage {
   role: "user"
-  content: string
+  content: UserContent
 }
 
 export interface FileContentMessage {
   role: "user"
-  content: ChatCompletionContentPart[]
+  content: openai.ChatCompletionContentPart.File[]
 }
 
+export interface ImageUrlMessage {
+  role: "user"
+  content: openai.ChatCompletionContentPartImage[]
+}
 export interface AssistantMessage {
   role: "assistant"
   content: string | null
@@ -33,7 +38,6 @@ export interface ToolMessage {
 export type Message =
   | SystemMessage
   | UserMessage
-  | FileContentMessage
   | AssistantMessage
   | ToolMessage
 
