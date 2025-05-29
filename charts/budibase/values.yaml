@@ -78,8 +78,6 @@ globals:
   offlineMode: "0"
   # @ignore (only needs to be set in our cloud environment)
   accountPortalUrl: ""
-  # @ignore (only needs to be set in our cloud environment)
-  accountPortalApiKey: ""
   # -- Sets the domain attribute of the cookie that Budibase uses to store session information.
   # See <https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent>
   # for details on why you might want to set this.

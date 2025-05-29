@@ -25,7 +25,7 @@ export const getAccount = async (
   const response = await api.post(`/api/accounts/search`, {
     body: payload,
     headers: {
-      [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
+      [Header.API_KEY]: env.INTERNAL_API_KEY,
     },
   })
 
@@ -49,7 +49,7 @@ export const getAccountByTenantId = async (
   const response = await api.post(`/api/accounts/search`, {
     body: payload,
     headers: {
-      [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
+      [Header.API_KEY]: env.INTERNAL_API_KEY,
     },
   })
 
@@ -69,7 +69,7 @@ export const getStatus = async (): Promise<
   }
   const response = await api.get(`/api/status`, {
     headers: {
-      [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
+      [Header.API_KEY]: env.INTERNAL_API_KEY,
     },
   })
   const json = await response.json()
