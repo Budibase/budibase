@@ -329,6 +329,12 @@ export enum DocumentSourceType {
   ATTACHMENT = "Attachment",
 }
 
+export enum SupportedFileType {
+  PDF = "pdf",
+  JPG = "jpg",
+  PNG = "png",
+}
+
 export const ImageContentTypes = [
   "png",
   "jpg",

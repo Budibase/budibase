@@ -41,19 +41,9 @@ export async function run({
         throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
       }
       const stream = response.body as Readable
-      contentType = response.headers.get("content-type") || undefined
+      contentType = response.headers.get("content-type") || inputs.fileType
 
-      filename = fileUrl.split("/").pop()?.split("?")[0] || "document"
-
-      if (!filename.includes(".") && contentType) {
-        if (contentType.includes("pdf")) {
-          filename += ".pdf"
-        } else if (contentType.includes("image/")) {
-          const imageType = contentType.split("/")[1]
-          filename += `.${imageType}`
-        }
-      }
-
+      filename = `document.${inputs.fileType}`
       fileIdOrDataUrl = await llm.uploadFile(stream, filename, contentType)
     } else if (
       inputs.source === DocumentSourceType.ATTACHMENT &&

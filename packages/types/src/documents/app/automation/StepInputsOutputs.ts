@@ -222,6 +222,7 @@ export type GenerateTextStepOutputs = {
 export type ExtractFileDataStepInputs = {
   file: RowAttachment | string
   source: "URL" | "Attachment"
+  fileType?: string
   schema: Record<string, any>
 }
 

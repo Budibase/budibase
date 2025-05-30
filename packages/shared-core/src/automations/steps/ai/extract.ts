@@ -5,6 +5,7 @@ import {
   AutomationStepDefinition,
   AutomationStepType,
   DocumentSourceType,
+  SupportedFileType,
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
@@ -34,8 +35,9 @@ export const definition: AutomationStepDefinition = {
         fileType: {
           dependsOn: { field: "source", value: "URL" },
           type: AutomationIOType.STRING,
+          enum: Object.values(SupportedFileType),
           title: "File Type",
-          description: "The type of the file to extract data from.",
+          description: "The type of file at the URL",
         },
         schema: {
           customType: AutomationCustomIOType.TRIGGER_SCHEMA,
