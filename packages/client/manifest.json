@@ -4919,6 +4919,51 @@
             "barTitle": "3 columns"
           }
         ]
+      },
+      {
+        "section": true,
+        "name": "Uploader Text Settings",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Title Text",
+            "key": "titleText",
+            "dependsOn": [
+              {
+                "setting": "compact",
+                "value": false
+              },
+              {
+                "setting": "disabled",
+                "value": false
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "label": "Upload text",
+            "key": "clickText",
+            "dependsOn": {
+              "setting": "disabled",
+              "value": false
+            }
+          },
+          {
+            "type": "text",
+            "label": "Sub text",
+            "key": "addText",
+            "dependsOn": [
+              {
+                "setting": "compact",
+                "value": false
+              },
+              {
+                "setting": "disabled",
+                "value": false
+              }
+            ]
+          }
+        ]
       }
     ]
   },
@@ -5008,6 +5053,51 @@
             "value": 2,
             "barIcon": "ViewColumn",
             "barTitle": "3 columns"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Uploader Text Settings",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Title Text",
+            "key": "titleText",
+            "dependsOn": [
+              {
+                "setting": "compact",
+                "value": false
+              },
+              {
+                "setting": "disabled",
+                "value": false
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "label": "Upload text",
+            "key": "clickText",
+            "dependsOn": {
+              "setting": "disabled",
+              "value": false
+            }
+          },
+          {
+            "type": "text",
+            "label": "Sub text",
+            "key": "addText",
+            "dependsOn": [
+              {
+                "setting": "compact",
+                "value": false
+              },
+              {
+                "setting": "disabled",
+                "value": false
+              }
+            ]
           }
         ]
       }
