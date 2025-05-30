@@ -32,7 +32,7 @@ export const definition: AutomationStepDefinition = {
           description: "The source of the document to extract data from.",
         },
         fileType: {
-          dependsOn: "source",
+          dependsOn: { field: "source", value: "URL" },
           type: AutomationIOType.STRING,
           title: "File Type",
           description: "The type of the file to extract data from.",
