@@ -8,6 +8,7 @@
     deploymentStore,
     selectedAppUrls,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
   import { ActionButton, Divider, Link } from "@budibase/bbui"
@@ -34,7 +35,7 @@
   <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
-      {#if isPublished}
+      {#if $featureFlags.WORKSPACE_APPS && isPublished}
         <Link href={liveUrl} target="_blank">{liveUrl}</Link>
       {/if}
     </div>
