@@ -1,5 +1,5 @@
 <script>
-  import { IconAvatar, Helpers } from "@budibase/bbui"
+  import { IconAvatar } from "@budibase/bbui"
 
   export let value
   export let row
@@ -7,7 +7,7 @@
 
 <div class="align">
   <IconAvatar
-    icon={Helpers.getPhosphorIcon(row?.icon?.name || "Apps")}
+    icon={row?.icon?.name || "squares-four"}
     color={row?.icon?.color}
   />
   <div class="text">

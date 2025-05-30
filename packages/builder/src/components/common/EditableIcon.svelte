@@ -1,6 +1,6 @@
 <script lang="ts">
   import ChooseIconModal from "@/components/start/ChooseIconModal.svelte"
-  import { Icon, Modal, Helpers } from "@budibase/bbui"
+  import { Icon, Modal } from "@budibase/bbui"
 
   export let name: string
   export let size: "M" = "M"
@@ -22,10 +22,10 @@
       />
     </div>
     <div class="normal">
-      <Icon name={Helpers.getPhosphorIcon(name || "Apps")} {size} {color} />
+      <Icon name={name || "squares-four"} {size} {color} />
     </div>
   {:else}
-    <Icon name={Helpers.getPhosphorIcon(name)} {size} {color} />
+    <Icon {name} {size} {color} />
   {/if}
 </div>
 

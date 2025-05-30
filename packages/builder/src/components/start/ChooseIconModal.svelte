@@ -60,7 +60,7 @@
           class:selected={item === name}
           on:click={() => (name = item)}
         >
-          <Icon name={Helpers.getPhosphorIcon(item)} />
+          <Icon name={item} />
         </div>
       {/each}
     </div>

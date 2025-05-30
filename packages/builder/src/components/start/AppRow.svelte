@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Button, Icon, Helpers } from "@budibase/bbui"
+  import { Heading, Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
@@ -77,7 +77,7 @@
     <div class="app-icon">
       <Icon
         size="L"
-        name={Helpers.getPhosphorIcon(app.icon?.name || "Apps")}
+        name={app.icon?.name || "squares-four"}
         color={app.icon?.color}
       />
     </div>
