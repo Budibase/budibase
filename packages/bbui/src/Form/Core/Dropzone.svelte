@@ -320,7 +320,7 @@
           <h2
             class="spectrum-Heading spectrum-Heading--sizeL spectrum-Heading--light spectrum-IllustratedMessage-heading"
           >
-            {titleText}
+            {titleText || "Drag and drop your file"}
           </h2>
         {/if}
         {#if !disabled}
@@ -328,11 +328,11 @@
             class="spectrum-Body spectrum-Body--sizeS spectrum-IllustratedMessage-description"
           >
             <label for={fieldId} class="spectrum-Link">
-              {clickText}
+              {clickText || "Click to select a file"}
             </label>
             {#if !compact}
               <br />
-              {addText}
+              {addText || "or drop it here"}
             {/if}
           </p>
           {#if fileTags.length}
