@@ -68,7 +68,7 @@
 
     const items = [
       {
-        icon: "ShowOneLayer",
+        icon: "stack",
         name: "Paste inside",
         keyBind: null,
         visible: true,
@@ -76,7 +76,7 @@
         callback: () => pasteComponent("inside"),
       },
       {
-        icon: "Duplicate",
+        icon: "copy",
         name: "Duplicate",
         keyBind: null,
         visible: true,
@@ -84,7 +84,7 @@
         callback: screenDetailsModal.show,
       },
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,

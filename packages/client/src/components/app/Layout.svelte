@@ -215,7 +215,7 @@
   class:mobile={!!mobile}
   data-id={screenId}
   data-name="Screen"
-  data-icon="WebPage"
+  data-icon="browser"
 >
   <div class="screen-wrapper layout-body">
     {#if typeClass !== "none"}
@@ -223,7 +223,7 @@
         class="interactive component {navigationId}"
         data-id={navigationId}
         data-name="Navigation"
-        data-icon="Visibility"
+        data-icon="eye"
       >
         <div
           class="nav-wrapper {navigationId}-dom"

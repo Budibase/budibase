@@ -108,11 +108,11 @@
                 <UserAvatar size="M" user={$auth.user} showTooltip={false} />
                 <Icon size="L" name="caret-down" />
               </div>
-              <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+              <MenuItem icon="user-circle-gear" on:click={() => userInfoModal.show()}>
                 My profile
               </MenuItem>
               <MenuItem
-                icon="LockClosed"
+                icon="lock"
                 on:click={() => {
                   if (isOwner) {
                     window.location.href = `${$admin.accountPortalUrl}/portal/account`
@@ -125,13 +125,13 @@
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
                 <MenuItem
-                  icon="UserDeveloper"
+                  icon="user-gear"
                   on:click={() => $goto("../portal")}
                 >
                   Open developer mode
                 </MenuItem>
               {/if}
-              <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+              <MenuItem icon="sign-out" on:click={logout}>Log out</MenuItem>
             </ActionMenu>
           </div>
           <Layout noPadding gap="XS">
