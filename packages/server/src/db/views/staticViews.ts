@@ -1,6 +1,7 @@
 import { context, features } from "@budibase/backend-core"
 import { SEPARATOR, ViewName } from "../utils"
 import {
+  DBView,
   DocumentType,
   FeatureFlag,
   LinkDocument,
@@ -66,7 +67,7 @@ export async function createLinkView() {
 export async function createRoutingView() {
   const db = context.getAppDB()
   const designDoc = await db.get<any>("_design/database")
-  let view = {
+  let view: DBView = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
       if (doc._id.startsWith("${SCREEN_PREFIX}")) {
@@ -88,6 +89,7 @@ export async function createRoutingView() {
         })
       }
     }`,
+      version: 2,
     }
   }
   designDoc.views = {
