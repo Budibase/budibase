@@ -29,9 +29,14 @@ const migration = async () => {
     }))
 
   const designDoc = await db.get<DesignDocument>("_design/database")
-  // Remove the routing view to be recreated (and updated to support workspace apps)
-  delete designDoc.views?.[ViewName.ROUTING]
-  docsToUpdate.push(designDoc)
+  if (
+    designDoc.views?.[ViewName.ROUTING] &&
+    designDoc.views[ViewName.ROUTING].version !== 2
+  ) {
+    // Remove the routing view to be recreated (and updated to support workspace apps)
+    delete designDoc.views?.[ViewName.ROUTING]
+    docsToUpdate.push(designDoc)
+  }
 
   await db.bulkDocs(docsToUpdate)
 }
