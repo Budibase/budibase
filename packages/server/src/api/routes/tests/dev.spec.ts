@@ -1,5 +1,5 @@
-const setup = require("./utilities")
-const { events } = require("@budibase/backend-core")
+import * as setup from "./utilities"
+import { events } from "@budibase/backend-core"
 
 describe("/dev", () => {
   let request = setup.getRequest()

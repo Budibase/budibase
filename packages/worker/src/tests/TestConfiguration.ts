@@ -46,6 +46,7 @@ class TestConfiguration {
   user?: User
   apiKey?: string
   userPassword = "password123!"
+  sessions: string[] = []
 
   constructor(opts: { openServer: boolean } = { openServer: true }) {
     // default to cloud hosting
@@ -185,12 +186,19 @@ class TestConfiguration {
     })
   }
 
+  hasSession(user: User) {
+    return this.sessions.includes(user._id!)
+  }
+
   async createSession(user: User) {
-    return this._createSession({
-      userId: user._id!,
-      tenantId: user.tenantId,
-      email: user.email,
-    })
+    if (!this.hasSession(user)) {
+      this.sessions.push(user._id!)
+      return this._createSession({
+        userId: user._id!,
+        tenantId: user.tenantId,
+        email: user.email,
+      })
+    }
   }
 
   cookieHeader(cookies: any) {
@@ -210,6 +218,11 @@ class TestConfiguration {
     } finally {
       this.user = oldUser
     }
+  }
+
+  async login(user: User) {
+    await this.createSession(user)
+    return this.authHeaders(user)
   }
 
   authHeaders(user: User) {
@@ -279,10 +292,10 @@ class TestConfiguration {
     })
   }
 
-  async createUser(opts?: Partial<User>) {
+  async createUser(userCfg?: Partial<User>) {
     let user = structures.users.user()
     if (user) {
-      user = { ...user, ...opts }
+      user = { ...user, ...userCfg }
     }
     const response = await this._req(user, null, controllers.users.save)
     const body = response as SaveUserResponse
