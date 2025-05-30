@@ -10,6 +10,7 @@ import {
   navigationStore,
   previewStore,
   selectedComponent,
+  workspaceAppStore,
 } from "@/stores/builder"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
@@ -18,6 +19,7 @@ import {
   Component,
   ComponentDefinition,
   DeleteScreenResponse,
+  FeatureFlag,
   FetchAppPackageResponse,
   SaveScreenRequest,
   SaveScreenResponse,
@@ -25,6 +27,7 @@ import {
   ScreenVariant,
   WithRequired,
 } from "@budibase/types"
+import { featureFlag } from "@/helpers"
 
 interface ScreenState {
   screens: Screen[]
@@ -262,7 +265,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     await this.syncScreenData(savedScreen)
 
-    if (navigationLinkLabel) {
+    if (featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+      workspaceAppStore.refresh()
+    } else if (navigationLinkLabel) {
       await navigationStore.addLink({
         url: screen.routing.route,
         title: navigationLinkLabel,
@@ -415,6 +420,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     await Promise.all(promises)
 
     appStore.refresh()
+    workspaceAppStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()
     this.update(state => {

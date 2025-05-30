@@ -1,16 +1,10 @@
 <script>
   import { onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
-  import {
-    previewStore,
-    themeStore,
-    selectedScreen,
-    appStore,
-  } from "@/stores/builder"
+  import { previewStore, selectedAppUrls, themeStore } from "@/stores/builder"
   import { ProgressCircle } from "@budibase/bbui"
 
-  $: route = $selectedScreen?.routing.route || "/"
-  $: src = `/${$appStore.appId}#${route}`
+  $: src = $selectedAppUrls.previewUrl
 
   const close = () => {
     previewStore.showPreview(false)
@@ -22,6 +16,8 @@
       previewStore.showPreview(false)
     }
   })
+
+  $: window.previewFullscreenUrl = src
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

@@ -16,7 +16,9 @@ export async function fetch(
   return screens
 }
 
-export async function create(screen: WithoutDocMetadata<Screen>) {
+export async function create(
+  screen: WithoutDocMetadata<Screen>
+): Promise<Screen> {
   const db = context.getAppDB()
 
   const response = await db.put({ ...screen, _id: generateScreenID() })
@@ -27,7 +29,7 @@ export async function create(screen: WithoutDocMetadata<Screen>) {
   }
 }
 
-export async function update(screen: Screen) {
+export async function update(screen: Screen): Promise<Screen> {
   const db = context.getAppDB()
 
   const response = await db.put(screen)

@@ -5,6 +5,14 @@ import {
   updateReferencesInObject,
 } from "@/dataBinding"
 
+vi.mock("@/stores/builder", async () => {
+  const workspaceAppStore = {}
+
+  return {
+    workspaceAppStore,
+  }
+})
+
 describe("Builder dataBinding", () => {
   beforeEach(() => {
     vi.clearAllMocks()

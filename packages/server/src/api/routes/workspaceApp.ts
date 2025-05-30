@@ -23,6 +23,7 @@ const updateSchema = Joi.object({
   _id: Joi.string().required(),
   _rev: Joi.string().required(),
   ...baseSchema,
+  navigation: Joi.object().required(),
 })
 
 function workspaceAppValidator(

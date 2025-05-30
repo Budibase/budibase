@@ -6,6 +6,14 @@ import { BuilderSocketEvent } from "@budibase/shared-core"
 
 vi.mock("../websocket.js")
 
+vi.mock("@/stores/builder", async () => {
+  const workspaceAppStore = {}
+
+  return {
+    workspaceAppStore,
+  }
+})
+
 describe("Builder store", () => {
   beforeEach(ctx => {
     vi.clearAllMocks()

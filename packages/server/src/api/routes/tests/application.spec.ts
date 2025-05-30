@@ -314,7 +314,7 @@ describe("/applications", () => {
 
         it("should retrieve all the screens for builder calls", async () => {
           await config.api.workspaceApp.create(
-            structures.workspaceApps.workspaceApp()
+            structures.workspaceApps.createRequest()
           )
 
           const res = await config.api.application.getAppPackage(app.appId)
@@ -338,11 +338,15 @@ describe("/applications", () => {
 
             const { workspaceApp: workspaceApp1 } =
               await config.api.workspaceApp.create(
-                structures.workspaceApps.workspaceApp({ urlPrefix: "/app1" })
+                structures.workspaceApps.createRequest({
+                  urlPrefix: "/app1",
+                })
               )
             const { workspaceApp: workspaceApp2 } =
               await config.api.workspaceApp.create(
-                structures.workspaceApps.workspaceApp({ urlPrefix: "/app2" })
+                structures.workspaceApps.createRequest({
+                  urlPrefix: "/app2",
+                })
               )
 
             workspaceAppInfo = []
@@ -374,27 +378,10 @@ describe("/applications", () => {
             workspaceAppInfo[0].screens.unshift(...appPackage.screens)
           })
 
-          it("should retrieve only the screens for a the workspace all with no referer", async () => {
-            const res = await config.api.application.getAppPackage(app.appId, {
-              headers: {
-                [Header.TYPE]: "client",
-              },
-            })
-
-            expect(res.screens).toHaveLength(2)
-            expect(res.screens).toEqual(
-              expect.arrayContaining(
-                workspaceAppInfo[0].screens.map(s =>
-                  expect.objectContaining({ _id: s._id })
-                )
-              )
-            )
-          })
-
           it("should retrieve only the screens for a the workspace all with empty prefix", async () => {
             await config.withHeaders(
               {
-                referer: "http://localhost:10000/",
+                referer: `http://localhost:10000/${config.appId}`,
               },
               async () => {
                 const res = await config.api.application.getAppPackage(
@@ -422,7 +409,7 @@ describe("/applications", () => {
             const { urlPrefix } = workspaceAppInfo[1].workspaceApp
             await config.withHeaders(
               {
-                referer: `http://localhost:10000${urlPrefix}`,
+                referer: `http://localhost:10000/${config.appId}${urlPrefix}`,
               },
               async () => {
                 const res = await config.api.application.getAppPackage(
@@ -450,7 +437,7 @@ describe("/applications", () => {
             const { urlPrefix } = workspaceAppInfo[1].workspaceApp
             await config.withHeaders(
               {
-                referer: `http://localhost:10000${urlPrefix}/page-1`,
+                referer: `http://localhost:10000/${config.appId}${urlPrefix}/page-1`,
               },
               async () => {
                 const res = await config.api.application.getAppPackage(
@@ -471,6 +458,36 @@ describe("/applications", () => {
                   )
                 )
               }
+            )
+          })
+
+          it("should retrieve only the screens for a the workspace for prod app", async () => {
+            await config.publish()
+            await config.withProdApp(() =>
+              config.withHeaders(
+                {
+                  referer: `http://localhost:10000/app${config.prodApp?.url}`,
+                },
+                async () => {
+                  const res = await config.api.application.getAppPackage(
+                    app.appId,
+                    {
+                      headers: {
+                        [Header.TYPE]: "client",
+                      },
+                    }
+                  )
+
+                  expect(res.screens).toHaveLength(2)
+                  expect(res.screens).toEqual(
+                    expect.arrayContaining(
+                      workspaceAppInfo[0].screens.map(s =>
+                        expect.objectContaining({ _id: s._id })
+                      )
+                    )
+                  )
+                }
+              )
             )
           })
         })
