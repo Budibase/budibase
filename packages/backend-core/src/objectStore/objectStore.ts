@@ -200,7 +200,7 @@ export async function upload({
     : extension
       ? CONTENT_TYPE_MAP[extension.toLowerCase()]
       : CONTENT_TYPE_MAP.txt
-  console.log(finalContentType)
+
   const config: PutObjectCommandInput = {
     // windows file paths need to be converted to forward slashes for s3
     Bucket: sanitizeBucket(bucketName),
@@ -269,7 +269,7 @@ export async function streamUpload({
       ? CONTENT_TYPE_MAP[extension.toLowerCase()]
       : CONTENT_TYPE_MAP.txt
   }
-  console.log(contentType)
+
   const bucket = sanitizeBucket(bucketName),
     objKey = sanitizeKey(filename)
   const params = {
