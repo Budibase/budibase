@@ -7,9 +7,11 @@
   import PropField from "../PropField.svelte"
   import {
     type APIRequestStepInputs,
+    type Datasource,
     type EnrichedBinding,
     type Query,
     type QueryParameter,
+    type UIInternalDatasource,
     SourceName,
   } from "@budibase/types"
   import {
@@ -18,6 +20,7 @@
   } from "@/helpers/data/utils"
   import { goto, params } from "@roxi/routify"
   import { type AutomationContext } from "@/stores/builder/automations"
+  import { runtimeToReadableBinding } from "@/dataBinding"
 
   const dispatch = createEventDispatcher()
 
@@ -27,6 +30,8 @@
     undefined
   export let bindings: EnrichedBinding[] | undefined = undefined
   export let context: AutomationContext | undefined = undefined
+  export let dataSource: Datasource | UIInternalDatasource | undefined =
+    undefined
 
   const onChangeQuery = (e: CustomEvent) => {
     if (!value) value = {}
@@ -45,7 +50,8 @@
 
   // Selected query and source
   $: query = $queries.list.find(query => query._id === value?.queryId)
-  $: dataSource = $datasources?.list?.find(ds => ds._id === query?.datasourceId)
+  $: queryDataSource =
+    $datasources?.list?.find(ds => ds._id === query?.datasourceId) || dataSource
 
   const getQueryOptions = (queries: Query[]): QueryWithIcon[] => {
     return queries.reduce<QueryWithIcon[]>((acc, q) => {
@@ -87,7 +93,7 @@
       return
     }
     const field = query?.parameters?.find(f => f.name === name)
-    return field?.default
+    return runtimeToReadableBinding(bindings, field?.default)
   }
 </script>
 
@@ -104,11 +110,11 @@
 
     <ActionButton
       icon="Add"
-      disabled={!dataSource?._id}
+      disabled={!queryDataSource?._id}
       on:click={() => {
         $goto(`/builder/app/:application/data/query/new/:id`, {
           application: $params.application,
-          id: dataSource?._id,
+          id: queryDataSource?._id,
         })
       }}
     />

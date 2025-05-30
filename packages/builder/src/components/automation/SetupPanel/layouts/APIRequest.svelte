@@ -84,10 +84,7 @@
   $: readablePreview = runtimeToReadableBinding(restBindings, requestPreview)
 
   // Parse the bindings of the request body when present.
-  $: readableBody =
-    query?.fields?.bodyType !== BodyType.NONE
-      ? runtimeToReadableBinding(restBindings, query?.fields?.requestBody)
-      : null
+  $: readableBody = parseBody(query?.fields?.requestBody)
 
   // Show only enabled headers and make any bindings readable
   $: queryHeaders = query?.fields?.headers
@@ -99,6 +96,15 @@
       return [key, runtimeToReadableBinding(restBindings, val)]
     })
   $: parsedHeaders = Object.fromEntries(parsedHeaderEntries)
+
+  const parseBody = (body: any) => {
+    if (query?.fields?.bodyType === BodyType.NONE) {
+      return null
+    }
+
+    const bodyString = typeof body === "string" ? body : JSON.stringify(body)
+    return runtimeToReadableBinding(restBindings, bodyString)
+  }
 
   const getRESTPreview = (query: Query | undefined) => {
     if (!query) return
@@ -179,6 +185,7 @@
           {context}
           bindings={restBindings}
           {value}
+          {dataSource}
           on:change={e => {
             defaultChange({ [fieldKey]: e.detail }, block)
           }}
@@ -212,7 +219,7 @@
 
   {#if query}
     <Divider noMargin />
-    <DetailSummary name="Query details" padded={false} initiallyShow>
+    <DetailSummary name="Request details" padded={false} initiallyShow>
       <div class="info">
         {#if auth}
           <span class="auth-wrap">

@@ -17,6 +17,7 @@
   import type { AutomationStepDefinition } from "@budibase/types"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
+  import NewPill from "@/components/common/NewPill.svelte"
 
   export let block
   export let onClose = () => {}
@@ -284,9 +285,7 @@
                 {:else if isDisabled}
                   <Icon name="Help" tooltip={checkDisabled(idx).message} />
                 {:else if action.new}
-                  <Tags>
-                    <Tag emphasized>New</Tag>
-                  </Tags>
+                  <NewPill />
                 {/if}
               </div>
             </div>
