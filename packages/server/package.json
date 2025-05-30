@@ -182,7 +182,6 @@
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
     "typescript": "5.7.2",
-    "update-dotenv": "1.1.1",
     "yargs": "^13.2.4",
     "zod": "^3.23.8"
   },
