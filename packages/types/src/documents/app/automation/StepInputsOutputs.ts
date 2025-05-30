@@ -226,11 +226,17 @@ export type ExtractFileDataStepInputs = {
   schema: Record<string, any>
 }
 
-export type ExtractFileDataStepOutputs = {
-  response?: string
-  success: boolean
-  data?: Record<string, any>
-}
+export type ExtractFileDataStepOutputs = 
+  | {
+      success: true
+      data: Record<string, any>
+      response?: string
+    }
+  | {
+      success: false
+      data?: Record<string, any>
+      response?: string
+    }
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API

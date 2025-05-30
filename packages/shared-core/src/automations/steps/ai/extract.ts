@@ -37,13 +37,13 @@ export const definition: AutomationStepDefinition = {
           type: AutomationIOType.STRING,
           enum: Object.values(SupportedFileType),
           title: "File Type",
-          description: "The type of file at the URL",
+          description: "The type of file at the URL.",
         },
         schema: {
           customType: AutomationCustomIOType.TRIGGER_SCHEMA,
           title: "Data schema",
           description:
-            'Schema defining the structure of data to extract. Example: {"name": "string", "price": "number"}',
+            'Schema defining the structure of data to extract. Example: {"name": "string", "price": "number"}.',
         },
       },
       required: ["documentUrl", "schema"],

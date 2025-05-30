@@ -1,4 +1,4 @@
-import { ai } from "@budibase/pro"
+import { ai, LLMPromptResponse } from "@budibase/pro"
 import * as automationUtils from "../../automationUtils"
 import {
   DocumentSourceType,
@@ -8,6 +8,43 @@ import {
 import { objectStore } from "@budibase/backend-core"
 import { Readable } from "stream"
 import fetch from "node-fetch"
+
+async function processUrlFile(
+  fileUrl: string,
+  fileType: string | undefined,
+  llm: any
+): Promise<string> {
+  const response = await fetch(fileUrl)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
+  }
+  const stream = response.body as Readable
+  const contentType = response.headers.get("content-type") || fileType
+  const filename = `document.${fileType}`
+  return await llm.uploadFile(stream, filename, contentType)
+}
+
+async function processAttachmentFile(
+  attachment: any,
+  llm: any
+): Promise<string> {
+  const bucket = objectStore.ObjectStoreBuckets.APPS
+  const stream = await objectStore.getReadStream(bucket, attachment.key!)
+  const filename = attachment.name || "document"
+  return await llm.uploadFile(stream, filename, attachment.extension)
+}
+
+async function parseAIResponse(
+  llmResponse: LLMPromptResponse
+): Promise<Record<string, any>> {
+  try {
+    const data = JSON.parse(llmResponse.message)
+    return data.data
+  } catch (err: any) {
+    console.error("Error parsing JSON response:", err)
+    throw new Error("Could not parse AI response as valid JSON.")
+  }
+}
 
 export async function run({
   inputs,
@@ -26,61 +63,30 @@ export async function run({
   try {
     const llm = await ai.getLLMOrThrow()
 
-    let filename
-    let contentType
-    let fileIdOrDataUrl
-    let request
+    let fileIdOrDataUrl: string
 
     if (
       inputs.source === DocumentSourceType.URL &&
       typeof inputs.file === "string"
     ) {
-      const fileUrl = inputs.file
-      const response = await fetch(fileUrl)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
-      }
-      const stream = response.body as Readable
-      contentType = response.headers.get("content-type") || inputs.fileType
-
-      filename = `document.${inputs.fileType}`
-      fileIdOrDataUrl = await llm.uploadFile(stream, filename, contentType)
+      fileIdOrDataUrl = await processUrlFile(inputs.file, inputs.fileType, llm)
     } else if (
       inputs.source === DocumentSourceType.ATTACHMENT &&
       typeof inputs.file !== "string"
     ) {
-      const attachment = inputs.file
-      const bucket = objectStore.ObjectStoreBuckets.APPS
-      const stream = await objectStore.getReadStream(bucket, inputs.file.key!)
-
-      filename = attachment.name || "document"
-      fileIdOrDataUrl = await llm.uploadFile(
-        stream,
-        filename,
-        attachment.extension
-      )
+      fileIdOrDataUrl = await processAttachmentFile(inputs.file, llm)
     } else {
       throw new Error("Invalid file input – source and file type do not match")
     }
 
-    request = ai.extractDocumentData(inputs.schema, fileIdOrDataUrl)
+    const request = ai.extractDocumentData(inputs.schema, fileIdOrDataUrl)
     request.withFormat("json")
     const llmResponse = await llm.prompt(request)
-    let data
-    try {
-      data = JSON.parse(llmResponse.message)
-    } catch (err: any) {
-      console.error("Error parsing JSON response:", err)
-      return {
-        success: false,
-        data: {},
-        response:
-          "Extract Document Data AI Step Failed: Could not parse AI response as valid JSON.",
-      }
-    }
+
+    const data = await parseAIResponse(llmResponse)
 
     return {
-      data: data.data, // completions api won't return a json array, so we need to return a wrapper object
+      data,
       success: true,
     }
   } catch (err: any) {
