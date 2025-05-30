@@ -333,18 +333,15 @@ export enum SupportedFileType {
   PDF = "pdf",
   JPG = "jpg",
   PNG = "png",
+  JPEG = "jpeg",
 }
 
 export const ImageContentTypes = [
   "png",
   "jpg",
   "jpeg",
-  "gif",
-  "bmp",
-  "tiff",
   "image/png",
   "image/jpeg",
-  "image/gif",
-  "image/bmp",
-  "image/tiff",
+  "image/jpg",
+  "image/jpeg",
 ]
