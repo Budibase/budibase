@@ -6,6 +6,7 @@ import * as deleteRow from "./steps/deleteRow"
 import * as executeScript from "./steps/executeScript"
 import * as executeScriptV2 from "./steps/executeScriptV2"
 import * as executeQuery from "./steps/executeQuery"
+import * as apiRequest from "./steps/apiRequest"
 import * as outgoingWebhook from "./steps/outgoingWebhook"
 import * as serverLog from "./steps/serverLog"
 import * as discord from "./steps/discord"
@@ -47,6 +48,7 @@ const ACTION_IMPLS: ActionImplType = {
   EXECUTE_SCRIPT: executeScript.run,
   EXECUTE_SCRIPT_V2: executeScriptV2.run,
   EXECUTE_QUERY: executeQuery.run,
+  API_REQUEST: apiRequest.run,
   SERVER_LOG: serverLog.run,
   DELAY: delay.run,
   FILTER: filter.run,
@@ -74,6 +76,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   EXECUTE_SCRIPT: automations.steps.executeScript.definition,
   EXECUTE_SCRIPT_V2: automations.steps.executeScriptV2.definition,
   EXECUTE_QUERY: automations.steps.executeQuery.definition,
+  API_REQUEST: automations.steps.apiRequest.definition,
   SERVER_LOG: automations.steps.serverLog.definition,
   DELAY: automations.steps.delay.definition,
   FILTER: automations.steps.filter.definition,

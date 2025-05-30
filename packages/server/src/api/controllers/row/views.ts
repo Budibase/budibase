@@ -27,7 +27,7 @@ export async function searchView(
     .map(([key]) => key)
   const { body } = ctx.request
 
-  await context.ensureSnippetContext(true)
+  await context.ensureSnippetContext()
 
   const searchOptions: RequiredKeys<RowSearchParams> = {
     tableId: view.tableId,

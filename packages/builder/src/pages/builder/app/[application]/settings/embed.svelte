@@ -64,7 +64,6 @@
   .embed-code {
     display: flex;
     align-items: center;
-    /* justify-content: center; */
     background-color: var(
       --spectrum-textfield-m-background-color,
       var(--spectrum-global-color-gray-50)
