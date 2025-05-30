@@ -1,19 +1,17 @@
-// mock the email system
 jest.mock("nodemailer")
 import { TestConfiguration, structures, mocks } from "../../../../tests"
 
 mocks.email.mock()
-import { events } from "@budibase/backend-core"
+import { configs, events } from "@budibase/backend-core"
 import { GetPublicSettingsResponse, Config, ConfigType } from "@budibase/types"
+
+const { google, smtp, settings, oidc } = structures.configs
 
 describe("configs", () => {
   const config = new TestConfiguration()
 
   beforeEach(async () => {
     await config.beforeAll()
-  })
-
-  beforeEach(() => {
     jest.clearAllMocks()
   })
 
@@ -22,38 +20,20 @@ describe("configs", () => {
   })
 
   const saveConfig = async (conf: Config, _id?: string, _rev?: string) => {
-    const data = {
-      ...conf,
-      _id,
-      _rev,
-    }
+    const data = { ...conf, _id, _rev }
     const res = await config.api.configs.saveConfig(data)
     return { ...data, ...res }
   }
 
-  const saveSettingsConfig = async (
-    conf?: any,
-    _id?: string,
-    _rev?: string
-  ) => {
-    const settingsConfig = structures.configs.settings(conf)
-    return saveConfig(settingsConfig, _id, _rev)
-  }
-
   describe("POST /api/global/configs", () => {
     describe("google", () => {
-      const saveGoogleConfig = async (
-        conf?: any,
-        _id?: string,
-        _rev?: string
-      ) => {
-        const googleConfig = structures.configs.google(conf)
-        return saveConfig(googleConfig, _id, _rev)
-      }
+      afterEach(async () => {
+        await config.deleteConfig(ConfigType.GOOGLE)
+      })
 
       describe("create", () => {
         it("should create activated google config", async () => {
-          await saveGoogleConfig()
+          await saveConfig(google())
           expect(events.auth.SSOCreated).toHaveBeenCalledTimes(1)
           expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.GOOGLE)
           expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
@@ -61,25 +41,23 @@ describe("configs", () => {
           expect(events.auth.SSOActivated).toHaveBeenCalledWith(
             ConfigType.GOOGLE
           )
-          await config.deleteConfig(ConfigType.GOOGLE)
         })
 
         it("should create deactivated google config", async () => {
-          await saveGoogleConfig({ activated: false })
+          await saveConfig(google({ activated: false }))
           expect(events.auth.SSOCreated).toHaveBeenCalledTimes(1)
           expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.GOOGLE)
           expect(events.auth.SSOActivated).not.toHaveBeenCalled()
           expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
-          await config.deleteConfig(ConfigType.GOOGLE)
         })
       })
 
       describe("update", () => {
         it("should update google config to deactivated", async () => {
-          const googleConf = await saveGoogleConfig()
+          const googleConf = await saveConfig(google())
           jest.clearAllMocks()
-          await saveGoogleConfig(
-            { ...googleConf.config, activated: false },
+          await saveConfig(
+            google({ activated: false }),
             googleConf._id,
             googleConf._rev
           )
@@ -90,14 +68,13 @@ describe("configs", () => {
           expect(events.auth.SSODeactivated).toHaveBeenCalledWith(
             ConfigType.GOOGLE
           )
-          await config.deleteConfig(ConfigType.GOOGLE)
         })
 
         it("should update google config to activated", async () => {
-          const googleConf = await saveGoogleConfig({ activated: false })
+          const googleConf = await saveConfig(google({ activated: false }))
           jest.clearAllMocks()
-          await saveGoogleConfig(
-            { ...googleConf.config, activated: true },
+          await saveConfig(
+            google({ activated: true }),
             googleConf._id,
             googleConf._rev
           )
@@ -108,48 +85,64 @@ describe("configs", () => {
           expect(events.auth.SSOActivated).toHaveBeenCalledWith(
             ConfigType.GOOGLE
           )
-          await config.deleteConfig(ConfigType.GOOGLE)
+        })
+
+        it("should not overwrite secret when updating google config", async () => {
+          await saveConfig(google({ clientSecret: "spooky" }))
+
+          const conf = await config.api.configs.getConfig(ConfigType.GOOGLE)
+          await saveConfig(conf)
+
+          await config.doInTenant(async () => {
+            const rawConf = await configs.getGoogleConfig()
+            expect(rawConf!.clientSecret).toEqual("spooky")
+          })
+        })
+      })
+
+      describe("get", () => {
+        it("should not leak credentials", async () => {
+          await saveConfig(google())
+          const conf = await config.api.configs.getConfig(ConfigType.GOOGLE)
+          expect(conf.config.clientSecret).toEqual("--secret-value--")
         })
       })
     })
 
     describe("oidc", () => {
-      const saveOIDCConfig = async (
-        conf?: any,
-        _id?: string,
-        _rev?: string
-      ) => {
-        const oidcConfig = structures.configs.oidc(conf)
-        return saveConfig(oidcConfig, _id, _rev)
-      }
+      beforeEach(async () => {
+        await config.deleteConfig(ConfigType.OIDC)
+      })
+
+      afterEach(async () => {
+        await config.deleteConfig(ConfigType.OIDC)
+      })
 
       describe("create", () => {
         it("should create activated OIDC config", async () => {
-          await saveOIDCConfig()
+          await saveConfig(oidc())
           expect(events.auth.SSOCreated).toHaveBeenCalledTimes(1)
           expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.OIDC)
           expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
           expect(events.auth.SSOActivated).toHaveBeenCalledTimes(1)
           expect(events.auth.SSOActivated).toHaveBeenCalledWith(ConfigType.OIDC)
-          await config.deleteConfig(ConfigType.OIDC)
         })
 
         it("should create deactivated OIDC config", async () => {
-          await saveOIDCConfig({ activated: false })
+          await saveConfig(oidc({ activated: false }))
           expect(events.auth.SSOCreated).toHaveBeenCalledTimes(1)
           expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.OIDC)
           expect(events.auth.SSOActivated).not.toHaveBeenCalled()
           expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
-          await config.deleteConfig(ConfigType.OIDC)
         })
       })
 
       describe("update", () => {
         it("should update OIDC config to deactivated", async () => {
-          const oidcConf = await saveOIDCConfig()
+          const oidcConf = await saveConfig(oidc())
           jest.clearAllMocks()
-          await saveOIDCConfig(
-            { ...oidcConf.config.configs[0], activated: false },
+          await saveConfig(
+            oidc({ activated: false }),
             oidcConf._id,
             oidcConf._rev
           )
@@ -160,14 +153,13 @@ describe("configs", () => {
           expect(events.auth.SSODeactivated).toHaveBeenCalledWith(
             ConfigType.OIDC
           )
-          await config.deleteConfig(ConfigType.OIDC)
         })
 
         it("should update OIDC config to activated", async () => {
-          const oidcConf = await saveOIDCConfig({ activated: false })
+          const oidcConf = await saveConfig(oidc({ activated: false }))
           jest.clearAllMocks()
-          await saveOIDCConfig(
-            { ...oidcConf.config.configs[0], activated: true },
+          await saveConfig(
+            oidc({ activated: true }),
             oidcConf._id,
             oidcConf._rev
           )
@@ -176,50 +168,88 @@ describe("configs", () => {
           expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
           expect(events.auth.SSOActivated).toHaveBeenCalledTimes(1)
           expect(events.auth.SSOActivated).toHaveBeenCalledWith(ConfigType.OIDC)
-          await config.deleteConfig(ConfigType.OIDC)
+        })
+
+        it("should not overwrite secret when updating OIDC config", async () => {
+          await saveConfig(oidc({ clientSecret: "spooky" }))
+          const conf = await config.api.configs.getConfig(ConfigType.OIDC)
+          await saveConfig(conf)
+          await config.doInTenant(async () => {
+            const rawConf = await configs.getOIDCConfig()
+            expect(rawConf!.clientSecret).toEqual("spooky")
+          })
+        })
+      })
+
+      describe("get", () => {
+        it("should not leak credentials", async () => {
+          await saveConfig(oidc({ clientSecret: "spooky" }))
+          const conf = await config.api.configs.getConfig(ConfigType.OIDC)
+          expect(conf.config.configs[0].clientSecret).toEqual(
+            "--secret-value--"
+          )
         })
       })
     })
 
     describe("smtp", () => {
-      const saveSMTPConfig = async (
-        conf?: any,
-        _id?: string,
-        _rev?: string
-      ) => {
-        const smtpConfig = structures.configs.smtp(conf)
-        return saveConfig(smtpConfig, _id, _rev)
-      }
+      beforeEach(async () => {
+        await config.deleteConfig(ConfigType.SMTP)
+      })
+
+      afterEach(async () => {
+        await config.deleteConfig(ConfigType.SMTP)
+      })
 
       describe("create", () => {
         it("should create SMTP config", async () => {
-          await config.deleteConfig(ConfigType.SMTP)
-          await saveSMTPConfig()
+          await saveConfig(smtp())
           expect(events.email.SMTPUpdated).not.toHaveBeenCalled()
           expect(events.email.SMTPCreated).toHaveBeenCalledTimes(1)
-          await config.deleteConfig(ConfigType.SMTP)
         })
       })
 
       describe("update", () => {
         it("should update SMTP config", async () => {
-          const smtpConf = await saveSMTPConfig()
+          const smtpConf = await saveConfig(smtp())
           jest.clearAllMocks()
-          await saveSMTPConfig(smtpConf.config, smtpConf._id, smtpConf._rev)
+          await saveConfig(smtp({ secure: true }), smtpConf._id, smtpConf._rev)
           expect(events.email.SMTPCreated).not.toHaveBeenCalled()
           expect(events.email.SMTPUpdated).toHaveBeenCalledTimes(1)
-          await config.deleteConfig(ConfigType.SMTP)
+        })
+
+        it("should not overwrite secret when updating SMTP config", async () => {
+          await saveConfig(smtp({ auth: { user: "jeff", pass: "spooky" } }))
+          const conf = await config.api.configs.getConfig(ConfigType.SMTP)
+          await saveConfig(conf)
+          await config.doInTenant(async () => {
+            const rawConf = await configs.getSMTPConfig()
+            expect(rawConf!.auth!.pass).toEqual("spooky")
+          })
+        })
+      })
+
+      describe("get", () => {
+        it("should not leak credentials", async () => {
+          await saveConfig(smtp({ auth: { user: "jeff", pass: "spooky" } }))
+          const conf = await config.api.configs.getConfig(ConfigType.SMTP)
+          expect(conf.config.auth!.pass).toEqual("--secret-value--")
         })
       })
     })
 
     describe("settings", () => {
+      beforeEach(async () => {
+        await config.deleteConfig(ConfigType.SETTINGS)
+      })
+
+      afterEach(async () => {
+        await config.deleteConfig(ConfigType.SETTINGS)
+      })
+
       describe("create", () => {
         it("should create settings config with default settings", async () => {
-          await config.deleteConfig(ConfigType.SETTINGS)
-
-          await saveSettingsConfig()
-
+          await saveConfig(settings())
           expect(events.org.nameUpdated).not.toHaveBeenCalled()
           expect(events.org.logoUpdated).not.toHaveBeenCalled()
           expect(events.org.platformURLUpdated).not.toHaveBeenCalled()
@@ -234,7 +264,7 @@ describe("configs", () => {
             platformUrl: "http://example.com",
           }
 
-          await saveSettingsConfig(conf)
+          await saveConfig(settings(conf))
 
           expect(events.org.nameUpdated).toHaveBeenCalledTimes(1)
           expect(events.org.logoUpdated).toHaveBeenCalledTimes(1)
@@ -247,13 +277,13 @@ describe("configs", () => {
         it("should update settings config", async () => {
           config.selfHosted()
           await config.deleteConfig(ConfigType.SETTINGS)
-          const settingsConfig = await saveSettingsConfig()
+          const settingsConfig = await saveConfig(settings())
           settingsConfig.config.company = "acme"
           settingsConfig.config.logoUrl = "http://example.com"
           settingsConfig.config.platformUrl = "http://example.com"
 
-          await saveSettingsConfig(
-            settingsConfig.config,
+          await saveConfig(
+            settingsConfig,
             settingsConfig._id,
             settingsConfig._rev
           )
@@ -282,16 +312,24 @@ describe("configs", () => {
   })
 
   describe("GET /api/global/configs/public", () => {
+    beforeEach(async () => {
+      await config.deleteConfig(ConfigType.SETTINGS)
+    })
+
+    afterEach(async () => {
+      await config.deleteConfig(ConfigType.SETTINGS)
+    })
+
     it("should return the expected public settings", async () => {
-      await saveSettingsConfig()
+      await saveConfig(settings())
       mocks.pro.features.isSSOEnforced.mockResolvedValue(false)
 
       const res = await config.api.configs.getPublicSettings()
       const body = res.body as GetPublicSettingsResponse
 
       const expected = {
-        _id: "config_settings",
-        type: "settings",
+        _id: `config_${ConfigType.SETTINGS}`,
+        type: ConfigType.SETTINGS,
         config: {
           company: "Budibase",
           emailBrandingEnabled: true,

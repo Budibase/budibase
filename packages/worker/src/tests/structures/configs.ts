@@ -5,9 +5,13 @@ import {
   SMTPConfig,
   GoogleConfig,
   OIDCConfig,
+  GoogleInnerConfig,
+  OIDCInnerConfig,
+  SMTPInnerConfig,
+  SettingsInnerConfig,
 } from "@budibase/types"
 
-export function oidc(conf?: any): OIDCConfig {
+export function oidc(conf?: Partial<OIDCInnerConfig>): OIDCConfig {
   return {
     type: ConfigType.OIDC,
     config: {
@@ -20,6 +24,7 @@ export function oidc(conf?: any): OIDCConfig {
           name: "Active Directory",
           uuid: utils.newid(),
           activated: true,
+          scopes: [],
           ...conf,
         },
       ],
@@ -27,7 +32,7 @@ export function oidc(conf?: any): OIDCConfig {
   }
 }
 
-export function google(conf?: any): GoogleConfig {
+export function google(conf?: Partial<GoogleInnerConfig>): GoogleConfig {
   return {
     type: ConfigType.GOOGLE,
     config: {
@@ -39,7 +44,7 @@ export function google(conf?: any): GoogleConfig {
   }
 }
 
-export function smtp(conf?: any): SMTPConfig {
+export function smtp(conf?: Partial<SMTPInnerConfig>): SMTPConfig {
   return {
     type: ConfigType.SMTP,
     config: {
@@ -70,7 +75,7 @@ export function smtpEthereal(): SMTPConfig {
   }
 }
 
-export function settings(conf?: any): SettingsConfig {
+export function settings(conf?: Partial<SettingsInnerConfig>): SettingsConfig {
   return {
     type: ConfigType.SETTINGS,
     config: {
