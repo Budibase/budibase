@@ -1,6 +1,13 @@
-import { context } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import { SEPARATOR, ViewName } from "../utils"
-import { DocumentType, LinkDocument, Row, SearchIndex } from "@budibase/types"
+import {
+  DBView,
+  DocumentType,
+  FeatureFlag,
+  LinkDocument,
+  Row,
+  SearchIndex,
+} from "@budibase/types"
 
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
@@ -60,7 +67,7 @@ export async function createLinkView() {
 export async function createRoutingView() {
   const db = context.getAppDB()
   const designDoc = await db.get<any>("_design/database")
-  const view = {
+  let view: DBView = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
       if (doc._id.startsWith("${SCREEN_PREFIX}")) {
@@ -70,6 +77,20 @@ export async function createRoutingView() {
         })
       }
     }`,
+  }
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    view = {
+      // if using variables in a map function need to inject them before use
+      map: `function(doc) {
+      if (doc._id.startsWith("${SCREEN_PREFIX}")) {
+        emit([doc.workspaceAppId, doc._id], {
+          id: doc._id,
+          routing: doc.routing,
+        })
+      }
+    }`,
+      version: 2,
+    }
   }
   designDoc.views = {
     ...designDoc.views,

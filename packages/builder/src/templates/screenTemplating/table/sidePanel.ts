@@ -153,7 +153,14 @@ const sidePanel = async ({
     .gridDesktopRowSpan(3, 21)
 
   const template = new Screen(workspaceAppId)
-    .route(getValidRoute(screens, tableOrView.name, permissions.write))
+    .route(
+      getValidRoute(
+        screens,
+        tableOrView.name,
+        permissions.write,
+        workspaceAppId
+      )
+    )
     .instanceName(`${tableOrView.name} - List and details`)
     .customProps({ layout: "grid" })
     .role(permissions.write)

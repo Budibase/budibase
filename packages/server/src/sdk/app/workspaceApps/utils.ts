@@ -1,11 +1,12 @@
-import { App, WorkspaceApp } from "@budibase/types"
+import { WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 import { db } from "@budibase/backend-core"
 
-export async function getMatchedWorkspace(fromUrl: string, application: App) {
-  const baseAppUrl = db.isProdAppID(application.appId)
-    ? `/app/${application.url}`.replace("//", "/")
-    : `/${application.appId}`
+export async function getMatchedWorkspaceApp(fromUrl: string | undefined) {
+  const app = await sdk.applications.metadata.get()
+  const baseAppUrl = db.isProdAppID(app.appId)
+    ? `/app/${app.url}`.replace("//", "/")
+    : `/${app.appId}`
 
   let allWorkspaceApps = await sdk.workspaceApps.fetch()
   // Sort decending to ensure we match the most strict, removing match conflicts
@@ -14,7 +15,9 @@ export async function getMatchedWorkspace(fromUrl: string, application: App) {
   )
 
   function isWorkspaceAppMatch({ urlPrefix }: WorkspaceApp) {
-    return fromUrl.startsWith(`${baseAppUrl}${urlPrefix}`.replace(/\/$/, ""))
+    return (fromUrl || "/").startsWith(
+      `${baseAppUrl}${urlPrefix}`.replace(/\/$/, "")
+    )
   }
 
   const matchedWorkspaceApp = allWorkspaceApps.find(isWorkspaceAppMatch)

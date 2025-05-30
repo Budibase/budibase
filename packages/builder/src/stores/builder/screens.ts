@@ -481,26 +481,23 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Ensure we don't have more than one home screen for this new role.
     // This could happen after updating multiple different settings.
-    const state = get(this.store)
-    const updatedScreen = state.screens.find(s => s._id === screen._id)
-    if (!updatedScreen) {
-      return
-    }
-    const otherHomeScreens = state.screens.filter(s => {
-      return (
-        s.routing.roleId === updatedScreen.routing.roleId &&
-        s.routing.homeScreen &&
-        s._id !== screen._id
-      )
-    })
-    if (otherHomeScreens.length && updatedScreen.routing.homeScreen) {
-      const patchFn = (screen: Screen) => {
+    this.store.update(state => {
+      const otherHomeScreens = state.screens.filter(s => {
+        return (
+          s.workspaceAppId === screen.workspaceAppId &&
+          s.routing.roleId === screen.routing.roleId &&
+          s.routing.homeScreen &&
+          s._id !== screen._id
+        )
+      })
+
+      for (const screen of otherHomeScreens) {
         screen.routing.homeScreen = false
       }
-      for (let otherHomeScreen of otherHomeScreens) {
-        await this.patch(patchFn, otherHomeScreen._id)
-      }
-    }
+
+      return state
+    })
+    await appStore.refresh()
   }
 
   // Move to layouts store
