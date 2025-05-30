@@ -1,10 +1,6 @@
-import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
-import {
-  DocumentType,
-  WorkspaceApp,
-  SEPARATOR,
-  WithoutDocMetadata,
-} from "@budibase/types"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
+import sdk from "../.."
 
 async function guardName(name: string, id?: string) {
   const existingWorkspaceApps = await fetch()
@@ -39,13 +35,13 @@ export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
   await guardName(workspaceApp.name)
 
   const response = await db.put({
-    _id: `${DocumentType.WORKSPACE_APP}${SEPARATOR}${utils.newid()}`,
+    _id: docIds.generateWorkspaceAppID(),
     ...workspaceApp,
   })
   return {
+    ...workspaceApp,
     _id: response.id!,
     _rev: response.rev!,
-    ...workspaceApp,
   }
 }
 
@@ -58,9 +54,9 @@ export async function update(
 
   const response = await db.put(workspaceApp)
   return {
+    ...workspaceApp,
     _id: response.id!,
     _rev: response.rev!,
-    ...workspaceApp,
   }
 }
 
@@ -80,4 +76,9 @@ export async function remove(
     }
     throw e
   }
+
+  const screensToDelete = (await sdk.screens.fetch()).filter(
+    s => s.workspaceAppId === workspaceAppId
+  )
+  await db.bulkRemove(screensToDelete)
 }

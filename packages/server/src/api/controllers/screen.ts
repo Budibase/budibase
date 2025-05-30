@@ -3,12 +3,14 @@ import {
   context,
   db as dbCore,
   events,
+  features,
   roles,
   tenancy,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
 import {
   DeleteScreenResponse,
+  FeatureFlag,
   FetchScreenResponse,
   Plugin,
   SaveScreenRequest,
@@ -43,6 +45,14 @@ export async function save(
   const { navigationLinkLabel, ...screen } = ctx.request.body
 
   const isCreation = !screen._id
+
+  if (
+    (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    screen.workspaceAppId &&
+    !(await sdk.workspaceApps.get(screen.workspaceAppId))
+  ) {
+    ctx.throw("workspaceAppId is not valid")
+  }
 
   const savedScreen = isCreation
     ? await sdk.screens.create(screen)
