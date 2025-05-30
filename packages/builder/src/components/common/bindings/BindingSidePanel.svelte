@@ -269,7 +269,7 @@
     {#if selectedCategory}
       <div class="header">
         <Icon
-          name="BackAndroid"
+          name="arrow-left"
           hoverable
           size="S"
           on:click={() => (selectedCategory = null)}
@@ -280,7 +280,7 @@
             <div class="add-snippet-button">
               <Icon
                 size="S"
-                name="Add"
+                name="plus"
                 hoverable
                 newStyles
                 on:click={createSnippet}
@@ -289,7 +289,7 @@
           {:else}
             <div class="title">
               <Tags>
-                <Tag icon="LockClosed">Premium</Tag>
+                <Tag icon="lock">Premium</Tag>
               </Tags>
             </div>
           {/if}
@@ -310,7 +310,7 @@
           </div>
           <Icon
             size="S"
-            name="Close"
+            name="x"
             hoverable
             newStyles
             on:click={stopSearching}
@@ -319,7 +319,7 @@
           <div class="title">Bindings</div>
           <Icon
             size="S"
-            name="Search"
+            name="magnifying-glass"
             hoverable
             newStyles
             on:click={startSearching}
@@ -341,7 +341,7 @@
               name={categoryIcons[categoryName]}
             />
             <span class="category-name">{categoryName} </span>
-            <span class="category-chevron"><Icon name="ChevronRight" /></span>
+            <span class="category-chevron"><Icon name="caret-right" /></span>
           </li>
         {/each}
       </ul>
@@ -423,7 +423,7 @@
               >
                 {snippet.name}
                 <Icon
-                  name="Edit"
+                  name="pencil"
                   hoverable
                   newStyles
                   size="S"

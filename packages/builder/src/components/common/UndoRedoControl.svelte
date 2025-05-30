@@ -37,13 +37,13 @@
   {#if showButtonGroup}
     <div class="group">
       <ActionButton
-        icon="Undo"
+        icon="arrow-counter-clockwise"
         quiet
         on:click={store.undo}
         disabled={!$store.canUndo}
       />
       <ActionButton
-        icon="Redo"
+        icon="arrow-clockwise"
         quiet
         on:click={store.redo}
         disabled={!$store.canRedo}
@@ -51,13 +51,13 @@
     </div>
   {:else}
     <Icon
-      name="Undo"
+      name="arrow-counter-clockwise"
       hoverable
       on:click={store.undo}
       disabled={!$store.canUndo}
     />
     <Icon
-      name="Redo"
+      name="arrow-clockwise"
       hoverable
       on:click={store.redo}
       disabled={!$store.canRedo}

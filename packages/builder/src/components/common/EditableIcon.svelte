@@ -15,7 +15,11 @@
 <div class="editable-icon">
   {#if !disabled}
     <div class="hover" on:click={modal.show}>
-      <Icon name="Edit" {size} color="var(--spectrum-global-color-gray-600)" />
+      <Icon
+        name="pencil"
+        {size}
+        color="var(--spectrum-global-color-gray-600)"
+      />
     </div>
     <div class="normal">
       <Icon name={Helpers.getPhosphorIcon(name || "Apps")} {size} {color} />

@@ -95,10 +95,10 @@
 <div class="ai-gen-container" class:expanded>
   {#if suggestedCode !== null}
     <div class="floating-actions">
-      <Button cta size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
+      <Button cta size="S" icon="check-circle" on:click={acceptSuggestion}>
         Accept
       </Button>
-      <Button primary size="S" icon="Delete" on:click={rejectSuggestion}
+      <Button primary size="S" icon="trash" on:click={rejectSuggestion}
         >Reject</Button
       >
     </div>

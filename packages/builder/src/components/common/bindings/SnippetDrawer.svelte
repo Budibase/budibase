@@ -99,7 +99,7 @@
         {#if nameError}
           <AbsTooltip text={nameError} type={TooltipType.Negative}>
             <Icon
-              name="Help"
+              name="question"
               size="S"
               color="var(--spectrum-global-color-red-400)"
             />

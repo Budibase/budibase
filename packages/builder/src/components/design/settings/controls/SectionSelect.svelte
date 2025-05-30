@@ -11,23 +11,23 @@
   let layoutMap = {
     mainSidebar: {
       name: "Main with Sidebar",
-      icon: "ColumnTwoB",
+      icon: "columns",
     },
     sidebarMain: {
       name: "Sidebar with Main",
-      icon: "ColumnTwoC",
+      icon: "columns",
     },
     oneColumn: {
       name: "One column",
-      icon: "LoupeView",
+      icon: "magnifying-glass",
     },
     twoColumns: {
       name: "Two columns",
-      icon: "ColumnTwoA",
+      icon: "columns",
     },
     threeColumns: {
       name: "Three columns",
-      icon: "ViewColumn",
+      icon: "columns",
     },
   }
 </script>

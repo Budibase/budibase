@@ -59,7 +59,7 @@
     class="searchButton"
     class:hide={search}
   >
-    <Icon size="S" name="Search" hoverable hoverColor="var(--ink)" />
+    <Icon size="S" name="magnifying-glass" hoverable hoverColor="var(--ink)" />
   </div>
 
   <div
@@ -68,7 +68,7 @@
     class="addButton"
     class:rotate={search}
   >
-    <Icon name="Add" hoverable hoverColor="var(--ink)" />
+    <Icon name="plus" hoverable hoverColor="var(--ink)" />
   </div>
 </div>
 

@@ -10,7 +10,7 @@
   import type { ScreenUsage } from "@budibase/types"
 
   export let screens: ScreenUsage[] = []
-  export let icon = "DeviceDesktop"
+  export let icon = "desktop"
   export let accentColor: string | null | undefined = null
   export let showCount = false
   export let align = PopoverAlignment.Left
