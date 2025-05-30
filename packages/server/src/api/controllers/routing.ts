@@ -64,15 +64,19 @@ async function getRoutingStructure(
   return { routes: routing.json }
 }
 
+function getReferer(ctx: UserCtx) {
+  return ctx.headers.referer ? new URL(ctx.headers.referer).pathname : ""
+}
+
 export async function fetch(ctx: UserCtx<void, FetchScreenRoutingResponse>) {
-  const urlPath = new URL(ctx.headers.referer || "").pathname
+  const urlPath = getReferer(ctx)
   ctx.body = await getRoutingStructure(urlPath)
 }
 
 export async function clientFetch(
   ctx: UserCtx<void, FetchClientScreenRoutingResponse>
 ) {
-  const urlPath = new URL(ctx.headers.referer || "").pathname
+  const urlPath = getReferer(ctx)
   const routing = await getRoutingStructure(urlPath)
   let roleId = ctx.user?.role?._id
   const roleIds = roleId ? await roles.getUserRoleIdHierarchy(roleId) : []

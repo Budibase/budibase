@@ -298,7 +298,9 @@ export async function fetchAppPackage(
     (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
     !isBuilder
   ) {
-    const urlPath = new URL(ctx.headers.referer || "").pathname
+    const urlPath = ctx.headers.referer
+      ? new URL(ctx.headers.referer).pathname
+      : ""
 
     const matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
