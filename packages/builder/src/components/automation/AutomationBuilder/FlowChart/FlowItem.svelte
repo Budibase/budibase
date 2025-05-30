@@ -186,7 +186,7 @@
               <InfoDisplay
                 title={triggerInfo.title}
                 body="This trigger is tied to your '{triggerInfo.tableName}' table"
-                icon="InfoOutline"
+                icon="info"
               />
             </div>
           {/if}

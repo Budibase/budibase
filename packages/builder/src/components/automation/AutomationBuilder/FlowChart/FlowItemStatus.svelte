@@ -57,7 +57,7 @@
     ) {
       return {
         message: "Stopped",
-        icon: "Alert",
+        icon: "warning",
         type: FlowStatusType.WARN,
       }
     }
@@ -70,7 +70,7 @@
       if (outputs.success == false) {
         return {
           message: "Stopped",
-          icon: "Alert",
+          icon: "warning",
           type: FlowStatusType.WARN,
         }
       }
@@ -92,12 +92,13 @@
   {#if blockRef}
     {#if isTriggerBlock}
       <span class="block-type">
-        <ActionButton size="S" active={false} icon="Workflow">
+        <ActionButton size="S" active={false} icon="tree-structure">
           Trigger
         </ActionButton>
       </span>
     {:else if blockRef.looped}
-      <ActionButton size="S" active={false} icon="Reuse">Looping</ActionButton>
+      <ActionButton size="S" active={false} icon="recycle">Looping</ActionButton
+      >
     {:else}
       <span />
     {/if}

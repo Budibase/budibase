@@ -88,7 +88,7 @@
       }}
     />
     <Icon
-      name="Close"
+      name="x"
       hoverable
       on:click={() => {
         automationStore.actions.selectNode()
@@ -101,7 +101,7 @@
         <ActionButton
           quiet
           noPadding
-          icon="RotateCW"
+          icon="arrow-clockwise"
           on:click={async () => {
             if (loopBlock) {
               await automationStore.actions.removeLooping(blockRef)
@@ -116,7 +116,7 @@
       <ActionButton
         quiet
         noPadding
-        icon="DeleteOutline"
+        icon="trash"
         on:click={async () => {
           if (!blockRef) {
             return
