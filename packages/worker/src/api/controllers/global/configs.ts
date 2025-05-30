@@ -13,7 +13,6 @@ import {
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
-  AIConfig,
   AIInnerConfig,
   Config,
   ConfigChecklistResponse,
@@ -36,6 +35,7 @@ import {
   SaveConfigResponse,
   SettingsBrandingConfig,
   SettingsInnerConfig,
+  SMTPInnerConfig,
   SSOConfig,
   SSOConfigType,
   UploadConfigFileResponse,
@@ -158,7 +158,23 @@ async function hasActivatedConfig(ssoConfigs?: SSOConfigs) {
   return !!Object.values(ssoConfigs).find(c => c?.activated)
 }
 
-async function verifySettingsConfig(
+async function processSMTPConfig(
+  config: SMTPInnerConfig,
+  existingConfig?: SMTPInnerConfig
+) {
+  await email.verifyConfig(config)
+  if (config.auth?.pass === PASSWORD_REPLACEMENT) {
+    // if the password is being replaced, use the existing password
+    if (existingConfig && existingConfig.auth?.pass) {
+      config.auth.pass = existingConfig.auth.pass
+    } else {
+      // otherwise, throw an error
+      throw new BadRequestError("SMTP password is required")
+    }
+  }
+}
+
+async function processSettingsConfig(
   config: SettingsInnerConfig & SettingsBrandingConfig,
   existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
 ) {
@@ -203,19 +219,37 @@ async function verifySSOConfig(type: SSOConfigType, config: SSOConfig) {
   }
 }
 
-async function verifyGoogleConfig(config: GoogleInnerConfig) {
+async function processGoogleConfig(
+  config: GoogleInnerConfig,
+  existing?: GoogleInnerConfig
+) {
   await verifySSOConfig(ConfigType.GOOGLE, config)
+
+  if (existing && config.clientSecret === PASSWORD_REPLACEMENT) {
+    config.clientSecret = existing.clientSecret
+  }
 }
 
-async function verifyOIDCConfig(config: OIDCConfigs) {
+async function processOIDCConfig(config: OIDCConfigs, existing?: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
+
+  if (existing) {
+    for (const c of config.configs) {
+      const existingConfig = existing.configs.find(e => e.uuid === c.uuid)
+      if (!existingConfig) {
+        continue
+      }
+      if (c.clientSecret === PASSWORD_REPLACEMENT) {
+        c.clientSecret = existingConfig.clientSecret
+      }
+    }
+  }
 }
 
 export async function processAIConfig(
   newConfig: AIInnerConfig,
   existingConfig: AIInnerConfig
 ) {
-  // ensure that the redacted API keys are not overwritten in the DB
   for (const key in existingConfig) {
     if (newConfig[key]?.apiKey === PASSWORD_REPLACEMENT) {
       newConfig[key].apiKey = existingConfig[key].apiKey
@@ -256,16 +290,16 @@ export async function save(
   try {
     switch (type) {
       case ConfigType.SMTP:
-        await email.verifyConfig(config)
+        await processSMTPConfig(config, existingConfig?.config)
         break
       case ConfigType.SETTINGS:
-        await verifySettingsConfig(config, existingConfig?.config)
+        await processSettingsConfig(config, existingConfig?.config)
         break
       case ConfigType.GOOGLE:
-        await verifyGoogleConfig(config)
+        await processGoogleConfig(config, existingConfig?.config)
         break
       case ConfigType.OIDC:
-        await verifyOIDCConfig(config)
+        await processOIDCConfig(config, existingConfig?.config)
         break
       case ConfigType.AI:
         if (existingConfig) {
@@ -353,45 +387,48 @@ async function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
 }
 
 export async function find(ctx: UserCtx<void, FindConfigResponse>) {
-  try {
-    // Find the config with the most granular scope based on context
-    const type = ctx.params.type
-    let scopedConfig = await configs.getConfig(type)
+  // Find the config with the most granular scope based on context
+  const type = ctx.params.type
+  let config = await configs.getConfig(type)
 
-    if (scopedConfig) {
-      await handleConfigType(type, scopedConfig)
-    } else if (type === ConfigType.AI) {
-      scopedConfig = { type: ConfigType.AI, config: {} }
-      await handleAIConfig(scopedConfig)
-    } else {
-      // If no config found and not AI type, just return an empty body
-      ctx.body = {}
-      return
+  if (!config && type === ConfigType.AI) {
+    config = { type: ConfigType.AI, config: {} }
+  }
+
+  if (!config) {
+    ctx.body = {}
+    return
+  }
+
+  switch (type) {
+    case ConfigType.OIDC_LOGOS:
+      await enrichOIDCLogos(config)
+      break
+    case ConfigType.AI:
+      await pro.sdk.ai.enrichAIConfig(config)
+      break
+  }
+
+  stripSecrets(config)
+  ctx.body = config
+}
+
+function stripSecrets(config: Config) {
+  if (isAIConfig(config)) {
+    for (const key in config.config) {
+      if (config.config[key].apiKey) {
+        config.config[key].apiKey = PASSWORD_REPLACEMENT
+      }
     }
-
-    ctx.body = scopedConfig
-  } catch (err: any) {
-    ctx.throw(err?.status || 400, err)
-  }
-}
-
-async function handleConfigType(type: ConfigType, config: Config) {
-  if (type === ConfigType.OIDC_LOGOS) {
-    await enrichOIDCLogos(config)
-  } else if (type === ConfigType.AI) {
-    await handleAIConfig(config)
-  }
-}
-
-async function handleAIConfig(config: AIConfig) {
-  await pro.sdk.ai.enrichAIConfig(config)
-  stripApiKeys(config)
-}
-
-function stripApiKeys(config: AIConfig) {
-  for (const key in config?.config) {
-    if (config.config[key].apiKey) {
-      config.config[key].apiKey = PASSWORD_REPLACEMENT
+  } else if (isSMTPConfig(config)) {
+    if (config.config.auth?.pass) {
+      config.config.auth.pass = PASSWORD_REPLACEMENT
+    }
+  } else if (isGoogleConfig(config)) {
+    config.config.clientSecret = PASSWORD_REPLACEMENT
+  } else if (isOIDCConfig(config)) {
+    for (const c of config.config.configs) {
+      c.clientSecret = PASSWORD_REPLACEMENT
     }
   }
 }
