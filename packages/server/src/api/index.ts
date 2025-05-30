@@ -43,7 +43,7 @@ if (apiEnabled()) {
   router
     .use(
       compress({
-        threshold: 2048,
+        threshold: 2049,
         gzip: {
           flush: zlib.constants.Z_SYNC_FLUSH,
         },
