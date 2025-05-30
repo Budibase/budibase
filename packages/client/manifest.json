@@ -5759,6 +5759,12 @@
         "wide": true
       },
       {
+        "type": "text",
+        "key": "buttonText",
+        "label": "Button text",
+        "defaultValue": "Apply"
+      },
+      {
         "type": "boolean",
         "label": "Persist filters",
         "key": "persistFilters",
