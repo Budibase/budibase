@@ -46,7 +46,7 @@
         <ScreenErrorsButton />
       </div>
       <Divider vertical />
-      <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+      <ActionButton quiet icon="play-circle" on:click={previewApp}>
         Preview
       </ActionButton>
     </div>

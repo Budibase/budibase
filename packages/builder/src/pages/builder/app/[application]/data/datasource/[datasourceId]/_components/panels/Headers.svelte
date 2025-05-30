@@ -46,7 +46,7 @@
     bindings={restBindings}
   />
   <div>
-    <ActionButton icon="Add" on:click={() => addHeader.addEntry()}>
+    <ActionButton icon="plus" on:click={() => addHeader.addEntry()}>
       Add header
     </ActionButton>
   </div>

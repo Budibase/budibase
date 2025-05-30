@@ -44,11 +44,11 @@
   width={320}
 >
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="ColorPalette" quiet selected={open} on:click={show} />
+    <ActionButton icon="paint-palette" quiet selected={open} on:click={show} />
   </svelte:fragment>
 
   <div class="info">
-    <Icon name="InfoOutline" size="S" />
+    <Icon name="info" size="S" />
     <Body size="S">
       These settings apply to all screens.<br />
       PDFs are always light theme.

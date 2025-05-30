@@ -108,7 +108,10 @@
                 <UserAvatar size="M" user={$auth.user} showTooltip={false} />
                 <Icon size="L" name="caret-down" />
               </div>
-              <MenuItem icon="user-circle-gear" on:click={() => userInfoModal.show()}>
+              <MenuItem
+                icon="user-circle-gear"
+                on:click={() => userInfoModal.show()}
+              >
                 My profile
               </MenuItem>
               <MenuItem
@@ -124,10 +127,7 @@
                 Update password
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
-                <MenuItem
-                  icon="user-gear"
-                  on:click={() => $goto("../portal")}
-                >
+                <MenuItem icon="user-gear" on:click={() => $goto("../portal")}>
                   Open developer mode
                 </MenuItem>
               {/if}

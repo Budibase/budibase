@@ -38,7 +38,7 @@
   <div class="info">
     <div class="header-container">
       {#if showWarning}
-        <Icon name="Alert" />
+        <Icon name="warning" />
       {/if}
       <Heading size="XS" weight="light">
         <span class="nowrap">

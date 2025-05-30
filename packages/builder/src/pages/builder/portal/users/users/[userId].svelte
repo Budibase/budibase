@@ -275,7 +275,10 @@
               <Icon hoverable name="dots-three" />
             </span>
             {#if !isSSO}
-              <MenuItem on:click={resetPasswordModal.show} icon="arrow-clockwise">
+              <MenuItem
+                on:click={resetPasswordModal.show}
+                icon="arrow-clockwise"
+              >
                 Force password reset
               </MenuItem>
             {/if}

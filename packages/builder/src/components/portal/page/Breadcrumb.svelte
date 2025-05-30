@@ -9,7 +9,7 @@
   <a href={url}>
     {text}
   </a>
-  <Icon name="ChevronRight" />
+  <Icon name="caret-right" />
 </div>
 
 <style>
