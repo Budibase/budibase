@@ -65,10 +65,8 @@
           // Percentage calculation:
           // get value column from all rows
           const rowValues = dataProvider.rows.map(row => {
-            console.log(typeof row[valueColumn])
             return row[valueColumn]
           })
-          console.log("rowValues", rowValues)
 
           // get total of all value columns
           const initialValue = 0
