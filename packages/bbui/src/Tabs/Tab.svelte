@@ -8,6 +8,7 @@
   export let href = "#"
   export let link = false
 
+  $: phosphorClass = `ph ph-${icon}`
   const dispatch = createEventDispatcher()
   let selected = getContext("tab")
   let observer
@@ -78,14 +79,12 @@
     tabindex="0"
   >
     {#if icon}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM"
-        focusable="false"
+      <i
+        class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeM"
+        style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
         aria-hidden="true"
         aria-label="Folder"
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      />
     {/if}
     <span class="spectrum-Tabs-itemLabel">{title}</span>
   </a>
@@ -104,14 +103,12 @@
     tabindex="0"
   >
     {#if icon}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM"
-        focusable="false"
+      <i
+        class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeM"
+        style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
         aria-hidden="true"
         aria-label="Folder"
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      />
     {/if}
     <span class="spectrum-Tabs-itemLabel">{title}</span>
   </div>
@@ -136,5 +133,10 @@
   }
   .link {
     user-select: none;
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
   }
 </style>

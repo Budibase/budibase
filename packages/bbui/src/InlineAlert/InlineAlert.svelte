@@ -13,6 +13,7 @@
   export let linkText: string = ""
 
   $: icon = selectIcon(type)
+  $: phosphorClass = `ph ph-${icon}`
   // if newlines used, convert them to different elements
   $: split = message.split("\n")
 
@@ -32,13 +33,11 @@
 </script>
 
 <div class="spectrum-InLineAlert spectrum-InLineAlert--{type}">
-  <svg
-    class="spectrum-Icon spectrum-Icon--sizeM spectrum-InLineAlert-icon"
-    focusable="false"
+  <i
+    class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeM spectrum-InLineAlert-icon"
+    style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
     aria-hidden="true"
-  >
-    <use xlink:href="#spectrum-icon-18-{icon}" />
-  </svg>
+  />
   <div class="spectrum-InLineAlert-header">{header}</div>
   <slot>
     {#each split as splitMsg}
@@ -96,5 +95,10 @@
     display: flex;
     align-items: center;
     gap: 5px;
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
   }
 </style>

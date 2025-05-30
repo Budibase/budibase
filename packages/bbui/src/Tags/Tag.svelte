@@ -9,6 +9,8 @@
   export let disabled: boolean = false
   export let closable: boolean = false
   export let emphasized: boolean = false
+
+  $: phosphorClass = `ph ph-${icon}`
 </script>
 
 <div
@@ -22,14 +24,12 @@
     <Avatar url={avatar} />
   {/if}
   {#if icon}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeS"
-      focusable="false"
+    <i
+      class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeS"
+      style="font-size: 1rem; line-height: 1; vertical-align: middle;"
       aria-hidden="true"
       aria-label="Tag"
-    >
-      <use xlink:href="#spectrum-icon-24-{icon}" />
-    </svg>
+    />
   {/if}
   <span class="spectrum-Tags-itemLabel"><slot /></span>
   {#if closable}
@@ -46,5 +46,10 @@
   .is-emphasized {
     border-color: var(--spectrum-global-color-blue-700);
     color: var(--spectrum-global-color-blue-700);
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
   }
 </style>

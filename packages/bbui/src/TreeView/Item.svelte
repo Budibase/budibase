@@ -4,6 +4,8 @@
   export let href: string | null = null
   export let title: string
   export let icon: string | undefined
+
+  $: phosphorClass = `ph ph-${icon}`
 </script>
 
 <li
@@ -22,14 +24,12 @@
       </svg>
     {/if}
     {#if icon}
-      <svg
-        class="spectrum-TreeView-itemIcon spectrum-Icon spectrum-Icon--sizeM"
-        focusable="false"
+      <i
+        class="{phosphorClass} spectrum-TreeView-itemIcon spectrum-Icon spectrum-Icon--sizeM"
+        style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
         aria-hidden="true"
         aria-label="Layers"
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      />
     {/if}
     <span class="spectrum-TreeView-itemLabel">{title}</span>
   </a>
@@ -39,3 +39,10 @@
     </ul>
   {/if}
 </li>
+
+<style>
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
+  }
+</style>

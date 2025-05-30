@@ -18,6 +18,7 @@
   let showTooltip = false
 
   $: accentStyle = getAccentStyle(accentColor)
+  $: phosphorClass = `ph ph-${icon}`
 
   const getAccentStyle = (color: string | null) => {
     if (!color) {
@@ -47,14 +48,12 @@
   style={accentStyle}
 >
   {#if icon}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeS"
-      focusable="false"
+    <i
+      class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeS"
+      style="font-size: 1rem; line-height: 1; vertical-align: middle;"
       aria-hidden="true"
       aria-label={icon}
-    >
-      <use xlink:href="#spectrum-icon-18-{icon}" />
-    </svg>
+    />
   {/if}
   {#if $$slots}
     <span class="spectrum-ActionButton-label"><slot /></span>
@@ -78,7 +77,7 @@
     width: 100%;
   }
   .active,
-  .active svg {
+  .active i {
     color: var(--spectrum-global-color-blue-600);
   }
   :global([dir="ltr"] .spectrum-ActionButton .spectrum-Icon) {
@@ -124,5 +123,9 @@
   }
   .accent:hover {
     filter: brightness(1.2);
+  }
+  i {
+    transition: color ease-out 130ms;
+    pointer-events: none;
   }
 </style>

@@ -11,18 +11,17 @@
   export let action: ((_dismiss: () => void) => void) | null = null
   export let wide: boolean = false
 
+  $: phosphorClass = `ph ph-${icon}`
   const dispatch = createEventDispatcher<{ dismiss: void }>()
 </script>
 
 <div class="spectrum-Toast spectrum-Toast--{type}" class:wide>
   {#if icon}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Toast-typeIcon"
-      focusable="false"
+    <i
+      class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeM spectrum-Toast-typeIcon"
+      style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
       aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-{icon}" />
-    </svg>
+    />
   {/if}
   <div class="spectrum-Toast-body" class:actionBody={!!action}>
     <div class="wrap spectrum-Toast-content">{message || ""}</div>
@@ -70,5 +69,10 @@
     display: flex;
     width: 100%;
     align-items: center;
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
   }
 </style>

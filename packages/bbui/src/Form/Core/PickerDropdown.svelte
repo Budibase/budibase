@@ -113,15 +113,11 @@
     class:is-full-width={!secondaryOptions.length}
   >
     {#if iconData}
-      <svg
-        width="16px"
-        height="16px"
-        class="spectrum-Icon iconPadding"
-        style="color: {iconData?.color}"
-        focusable="false"
-      >
-        <use xlink:href="#spectrum-icon-18-{iconData?.icon}" />
-      </svg>
+      <i
+        class="ph ph-{iconData?.icon} spectrum-Icon iconPadding"
+        style="color: {iconData?.color}; font-size: 1rem; line-height: 1; vertical-align: middle;"
+        aria-hidden="true"
+      />
     {/if}
     <input
       {id}
@@ -421,6 +417,11 @@
 
   /* Fix being able to hover and select titles */
   .spectrum-Menu-item.title {
+    pointer-events: none;
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
     pointer-events: none;
   }
 </style>

@@ -12,6 +12,7 @@
   export let extraLinkAction
   export let showCloseButton = true
 
+  $: phosphorClass = `ph ph-${icon}`
   let show = true
 
   function clear() {
@@ -22,13 +23,13 @@
 
 {#if show}
   <div class="spectrum-Toast spectrum-Toast--{type}">
-    <svg
-      class="spectrum-Icon spectrum-Icon--size{size} spectrum-Toast-typeIcon"
-      focusable="false"
+    <i
+      class="{phosphorClass} spectrum-Icon spectrum-Icon--size{size} spectrum-Toast-typeIcon"
+      style="font-size: {size === 'S'
+        ? '1rem'
+        : '1.125rem'}; line-height: 1; vertical-align: middle;"
       aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-{icon}" />
-    </svg>
+    />
     <div class="spectrum-Toast-body">
       <div class="spectrum-Toast-content row-content">
         <slot />
@@ -98,5 +99,10 @@
 
   u {
     font-weight: 600;
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
   }
 </style>

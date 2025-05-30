@@ -212,7 +212,7 @@
                 PDF
                 {#if !$licensing.pdfEnabled}
                   <Tags>
-                    <Tag icon="LockClosed">Premium</Tag>
+                    <Tag icon="lock">Premium</Tag>
                   </Tags>
                 {/if}
               </Body>

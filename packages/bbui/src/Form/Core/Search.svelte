@@ -47,13 +47,11 @@
     class:is-focused={focus}
     class:is-disabled={disabled}
   >
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-icon"
-      focusable="false"
+    <i
+      class="ph ph-magnifying-glass spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-icon"
+      style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
       aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-Magnify" />
-    </svg>
+    />
     <input
       {disabled}
       {id}
@@ -101,5 +99,10 @@
   }
   .spectrum-Search-clearButton {
     position: absolute;
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
   }
 </style>

@@ -104,20 +104,18 @@
     class:is-focused={focus}
     class="spectrum-Textfield"
   >
-    <svg
+    <i
       class:close-color={hbsValue.length}
       class:focused={iconFocused}
-      class="hoverable icon-position spectrum-Icon spectrum-Icon--sizeS spectrum-Textfield-validationIcon"
-      focusable="false"
+      class="hoverable icon-position spectrum-Icon spectrum-Icon--sizeS spectrum-Textfield-validationIcon ph ph-{!hbsValue.length
+        ? 'key'
+        : 'x'}"
+      style="font-size: 1rem; line-height: 1; vertical-align: middle;"
       aria-hidden="true"
       on:click={() => {
         hbsValue.length ? removeVariable() : openPopover()
       }}
-    >
-      <use
-        xlink:href={`#spectrum-icon-18-${!hbsValue.length ? "Key" : "Close"}`}
-      />
-    </svg>
+    />
 
     <input
       bind:this={field}
@@ -185,24 +183,20 @@
       <Divider noMargin />
       {#if environmentVariablesEnabled}
         <div on:click={() => showModal()} class="add-variable">
-          <svg
-            class="spectrum-Icon spectrum-Icon--sizeS"
-            focusable="false"
+          <i
+            class="ph ph-plus spectrum-Icon spectrum-Icon--sizeS"
+            style="font-size: 1rem; line-height: 1; vertical-align: middle;"
             aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-icon-18-Add" />
-          </svg>
+          />
           <div class="primary-text">Add Variable</div>
         </div>
       {:else}
         <div on:click={() => handleUpgradePanel()} class="add-variable">
-          <svg
-            class="spectrum-Icon spectrum-Icon--sizeS"
-            focusable="false"
+          <i
+            class="ph ph-arrow-up spectrum-Icon spectrum-Icon--sizeS"
+            style="font-size: 1rem; line-height: 1; vertical-align: middle;"
             aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-icon-18-ArrowUp" />
-          </svg>
+          />
           <div class="primary-text">Upgrade plan</div>
         </div>
       {/if}
@@ -274,5 +268,14 @@
 
   .close-color:hover {
     color: var(--spectrum-global-color-blue-400) !important;
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
+  }
+  i.hoverable {
+    pointer-events: all;
+    cursor: pointer;
   }
 </style>
