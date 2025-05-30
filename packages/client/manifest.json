@@ -2409,6 +2409,15 @@
         "required": true
       },
       {
+        "type": "text",
+        "label": "Format label",
+        "key": "formatLabel",
+        "contextAccess": {
+          "global": false,
+          "self": true
+        }
+      },
+      {
         "type": "field",
         "label": "Data column",
         "key": "valueColumn",
@@ -2531,6 +2540,12 @@
         "label": "Legend",
         "key": "legend",
         "defaultValue": false
+      }
+    ],
+    "context": [
+      {
+        "type": "schema",
+        "scope": "local"
       }
     ]
   },

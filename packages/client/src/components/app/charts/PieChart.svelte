@@ -5,6 +5,7 @@
   export let title
   export let dataProvider
   export let labelColumn
+  // export let formatLabel
   export let valueColumn
   export let height
   export let width
@@ -14,6 +15,8 @@
   export let palette
   export let c1, c2, c3, c4, c5
   export let onClick
+
+  // console.log(formatLabel)
 
   $: labelType =
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
