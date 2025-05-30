@@ -15,6 +15,9 @@
   export let maximum = undefined
   export let span
   export let helpText = null
+  export let titleText
+  export let clickText
+  export let addText
   export let type = FieldType.ATTACHMENTS
   export let fieldApiMapper = {
     get: value => value,
@@ -93,6 +96,9 @@
       {maximum}
       {extensions}
       {compact}
+      {titleText}
+      {clickText}
+      {addText}
     />
   {/if}
 </Field>

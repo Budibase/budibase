@@ -15,6 +15,7 @@
 
   export let disabled = false
   export let size = "S"
+  export let buttonText = "Apply"
 
   export let filter: SearchFilter | undefined = undefined
   export let config: FilterConfig | undefined = undefined
@@ -146,8 +147,10 @@
   {operators}
   {schema}
   {config}
+  {buttonText}
   on:change
 >
+  {buttonText}
   <div slot="anchor">
     <div class="filter-button-wrap" class:inactive={!filter}>
       <!-- svelte-ignore a11y-click-events-have-key-events -->
