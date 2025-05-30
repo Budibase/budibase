@@ -24,15 +24,7 @@
     "dev": "npm run dev:stack:init && nodemon",
     "dev:built": "yarn run run:docker",
     "test": "bash scripts/test.sh",
-    "test:watch": "jest --watch",
-    "env:multi:enable": "node scripts/multiTenancy.js enable",
-    "env:multi:disable": "node scripts/multiTenancy.js disable",
-    "env:selfhost:enable": "node scripts/selfhost.js enable",
-    "env:selfhost:disable": "node scripts/selfhost.js disable",
-    "env:localdomain:enable": "node scripts/localdomain.js enable",
-    "env:localdomain:disable": "node scripts/localdomain.js disable",
-    "env:account:enable": "node scripts/account.js enable",
-    "env:account:disable": "node scripts/account.js disable"
+    "test:watch": "jest --watch"
   },
   "author": "Budibase",
   "license": "GPL-3.0",
