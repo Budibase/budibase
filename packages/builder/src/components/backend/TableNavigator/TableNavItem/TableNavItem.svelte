@@ -21,7 +21,7 @@
   const getContextMenuItems = () => {
     return [
       {
-        icon: "Edit",
+        icon: "pencil",
         name: "Edit",
         keyBind: null,
         visible: table?.sourceType !== DB_TYPE_EXTERNAL,
@@ -29,7 +29,7 @@
         callback: editModal.show,
       },
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
@@ -61,7 +61,7 @@
   on:click
 >
   {#if table._id !== TableNames.USERS}
-    <Icon s on:click={openContextMenu} hoverable name="MoreSmallList" />
+    <Icon s on:click={openContextMenu} hoverable name="dots-three" />
   {/if}
 </NavItem>
 <EditModal {table} bind:this={editModal} />

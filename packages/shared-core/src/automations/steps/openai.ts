@@ -15,7 +15,7 @@ enum Model {
 export const definition: AutomationStepDefinition = {
   name: "OpenAI",
   tagline: "Send prompts to ChatGPT",
-  icon: "Algorithm",
+  icon: "flow-arrow",
   description: "Interact with the OpenAI ChatGPT API.",
   type: AutomationStepType.ACTION,
   internal: true,

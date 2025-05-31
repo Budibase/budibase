@@ -54,7 +54,7 @@
     </div>
     {#if error}
       <div class="error-icon">
-        <Icon name="Alert" />
+        <Icon name="warning" />
       </div>
     {/if}
   </div>

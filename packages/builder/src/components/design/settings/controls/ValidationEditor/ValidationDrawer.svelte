@@ -365,13 +365,13 @@
                   on:change={e => (rule.error = e.detail)}
                 />
                 <Icon
-                  name="Duplicate"
+                  name="copy"
                   hoverable
                   size="S"
                   on:click={() => duplicateRule(rule.id)}
                 />
                 <Icon
-                  name="Close"
+                  name="x"
                   hoverable
                   size="S"
                   on:click={() => removeRule(rule.id)}
@@ -381,7 +381,7 @@
           </div>
         {/if}
         <div class="button">
-          <Button secondary icon="Add" on:click={addRule}>Add Rule</Button>
+          <Button secondary icon="plus" on:click={addRule}>Add Rule</Button>
         </div>
       </Layout>
     </Layout>

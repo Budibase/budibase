@@ -262,7 +262,7 @@
             {#if option.tag}
               <span class="option-tag">
                 <Tags>
-                  <Tag icon="LockClosed">{option.tag}</Tag>
+                  <Tag icon="lock">{option.tag}</Tag>
                 </Tags>
               </span>
             {/if}

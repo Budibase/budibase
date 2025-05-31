@@ -121,7 +121,7 @@
       <div class="binding-arrow" class:expanded>
         {#if expandable}
           <Icon
-            name="Play"
+            name="play"
             hoverable
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
@@ -151,7 +151,7 @@
       {#if showCopyIcon}
         <div class="copy-value-icon">
           <Icon
-            name="Copy"
+            name="copy"
             size="XS"
             hoverable
             color="var(--spectrum-global-color-gray-600)"

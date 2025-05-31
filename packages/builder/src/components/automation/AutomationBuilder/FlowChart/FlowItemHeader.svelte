@@ -218,12 +218,12 @@
         {#if !showTestStatus}
           {#if !isHeaderTrigger && !isLooped && !isBranch && (block?.features?.[Features.LOOPING] || !block.features)}
             <AbsTooltip type="info" text="Add looping">
-              <Icon on:click={addLooping} hoverable name="RotateCW" />
+              <Icon on:click={addLooping} hoverable name="arrow-clockwise" />
             </AbsTooltip>
           {/if}
           {#if !isHeaderTrigger}
             <AbsTooltip type="negative" text="Delete step">
-              <Icon on:click={deleteStep} hoverable name="DeleteOutline" />
+              <Icon on:click={deleteStep} hoverable name="trash" />
             </AbsTooltip>
           {/if}
         {/if}
@@ -245,7 +245,7 @@
         <div class="error-container">
           <AbsTooltip type="negative" text={automationNameError}>
             <div class="error-icon">
-              <Icon size="S" name="Alert" />
+              <Icon size="S" name="warning" />
             </div>
           </AbsTooltip>
         </div>

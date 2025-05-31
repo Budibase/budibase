@@ -118,7 +118,7 @@
   </div>
   {#if editable}
     <div class="arrow" on:click={open}>
-      <Icon name="ChevronDown" />
+      <Icon name="caret-down" />
     </div>
   {/if}
 </div>
@@ -142,7 +142,7 @@
             </span>
           </div>
           {#if values.includes(option)}
-            <Icon name="Checkmark" color="var(--accent-color)" />
+            <Icon name="check" color="var(--accent-color)" />
           {/if}
         </div>
       {/each}

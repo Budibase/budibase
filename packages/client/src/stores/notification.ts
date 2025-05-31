@@ -78,13 +78,13 @@ const createNotificationStore = () => {
     actions: {
       send,
       info: (msg: string, autoDismiss?: boolean, duration?: number) =>
-        send(msg, "info", "Info", autoDismiss ?? true, duration),
+        send(msg, "info", "info", autoDismiss ?? true, duration),
       success: (msg: string, autoDismiss?: boolean, duration?: number) =>
-        send(msg, "success", "CheckmarkCircle", autoDismiss ?? true, duration),
+        send(msg, "success", "check-circle", autoDismiss ?? true, duration),
       warning: (msg: string, autoDismiss?: boolean, duration?: number) =>
-        send(msg, "warning", "Alert", autoDismiss ?? true, duration),
+        send(msg, "warning", "warning", autoDismiss ?? true, duration),
       error: (msg: string, autoDismiss?: boolean, duration?: number) =>
-        send(msg, "error", "Alert", autoDismiss ?? false, duration),
+        send(msg, "error", "warning", autoDismiss ?? false, duration),
       blockNotifications,
       dismiss,
     },

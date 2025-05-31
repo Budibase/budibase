@@ -6,7 +6,7 @@
   import type { FieldApi, FieldState, FieldValidation } from "@/types"
 
   type Size = "XS" | "S" | "M" | "L" | "XL" | "Custom"
-  type IconType = "Star" | "Heart"
+  type IconType = "star" | "heart"
   type ColourVariant =
     | "Primary"
     | "Secondary"
@@ -23,7 +23,7 @@
   export let numberOfStars: number = 5
   export let size: Size = "L"
   export let customSize: number
-  export let type: IconType = "Star"
+  export let type: IconType = "star"
   export let variant: ColourVariant = "Primary"
 
   export let validation: FieldValidation

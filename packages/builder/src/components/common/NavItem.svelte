@@ -103,7 +103,7 @@
         class="icon arrow"
         on:click={onIconClick}
       >
-        <Icon size="S" name="ChevronRight" />
+        <Icon size="S" name="caret-right" />
       </div>
     {/if}
 

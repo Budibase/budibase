@@ -100,7 +100,7 @@
 
   {#if exceed}
     <div class="user-notification">
-      <Icon name="Info" />
+      <Icon name="info" />
       {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
       users. Upgrade your plan to add more users
     </div>

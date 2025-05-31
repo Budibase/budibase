@@ -201,7 +201,7 @@
 
 <DetailPopover bind:this={popover} title="Configure calculations" width={480}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="WebPage" quiet on:click={openPopover} selected={open}>
+    <ActionButton icon="browser" quiet on:click={openPopover} selected={open}>
       Configure calculations{count ? `: ${count}` : ""}
     </ActionButton>
   </svelte:fragment>
@@ -223,7 +223,7 @@
         />
         <Icon
           hoverable
-          name="Delete"
+          name="trash"
           size="S"
           on:click={() => deleteCalc(idx)}
           color="var(--spectrum-global-color-gray-700)"
@@ -242,7 +242,7 @@
   <div class="buttons">
     <ActionButton
       quiet
-      icon="Add"
+      icon="plus"
       on:click={addCalc}
       disabled={calculations.length >= 5}
     >
@@ -250,7 +250,7 @@
     </ActionButton>
   </div>
   <InfoDisplay
-    icon="Help"
+    icon="question"
     quiet
     body="Most calculations only work with numeric columns and a maximum of 5 calculations can be added at once."
   />

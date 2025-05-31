@@ -87,7 +87,7 @@
           <Divider noMargin />
           {#if filteredResults?.[idx]?.outputs?.iterations}
             <div style="display: flex; padding: 10px 10px 0px 12px;">
-              <Icon name="Reuse" />
+              <Icon name="recycle" />
               <div style="margin-left: 10px;">
                 <Label>
                   This loop ran {filteredResults?.[idx]?.outputs.iterations} times.</Label

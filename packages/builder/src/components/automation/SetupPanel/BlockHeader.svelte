@@ -174,7 +174,7 @@
       <div class="error-icon">
         <Icon
           size="S"
-          name="Alert"
+          name="warning"
           tooltip={blockNameError}
           tooltipPosition={TooltipPosition.Left}
         />

@@ -84,7 +84,7 @@
     on:mouseout={() => (iconHovered = false)}
   >
     <Icon
-      name="Delete"
+      name="trash"
       size="S"
       {tooltip}
       tooltipPosition={TooltipPosition.Top}

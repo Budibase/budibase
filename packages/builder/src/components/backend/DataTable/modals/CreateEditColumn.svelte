@@ -244,7 +244,7 @@
       runtimeBinding: `${makePropSafe("now")}`,
       readableBinding: `Date`,
       category: "Date",
-      icon: "Date",
+      icon: "calendar",
       display: {
         name: "Server date",
       },
@@ -744,7 +744,7 @@
           type={TooltipType.Info}
           text={"Rich text includes support for images, link"}
         >
-          <Icon size="XS" name="InfoOutline" />
+          <Icon size="XS" name="info" />
         </AbsTooltip>
       </div>
 
@@ -801,7 +801,7 @@
                 ? undefined
                 : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
             >
-              <Icon size="XS" name="InfoOutline" />
+              <Icon size="XS" name="info" />
             </AbsTooltip>
           </div>
           <Toggle

@@ -71,7 +71,7 @@
               `${$screenStore.selectedScreenId}-screen`}
             opened
             scrollable
-            icon="WebPage"
+            icon="browser"
             on:drop={onDrop}
             on:click={() => {
               componentStore.select(`${$screenStore.selectedScreenId}-screen`)
@@ -86,7 +86,7 @@
             <Icon
               size="S"
               hoverable
-              name="MoreSmallList"
+              name="dots-three"
               on:click={e => openScreenContextMenu(e, $selectedScreen?.props)}
             />
           </NavItem>

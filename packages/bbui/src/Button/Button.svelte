@@ -20,6 +20,7 @@
   export let ref = undefined
   export let reverse = false
 
+  $: phosphorClass = `ph ph-${icon}`
   const dispatch = createEventDispatcher()
 </script>
 
@@ -48,14 +49,16 @@
       <span class="spectrum-Button-label"><slot /></span>
     {/if}
     {#if icon}
-      <svg
-        class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-        focusable="false"
+      <i
+        class="{phosphorClass} spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
+        style="font-size: {size === 'S'
+          ? '1rem'
+          : size === 'M'
+            ? '1.125rem'
+            : '1.25rem'}; line-height: 1; vertical-align: middle;"
         aria-hidden="true"
         aria-label={icon}
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      />
     {/if}
     {#if $$slots && !reverse}
       <span class="spectrum-Button-label"><slot /></span>
@@ -109,5 +112,10 @@
             var(--spectrum-button-primary-padding-left-adjusted)
         )
     );
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
   }
 </style>

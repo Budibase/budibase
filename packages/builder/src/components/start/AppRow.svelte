@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Button, Icon } from "@budibase/bbui"
+  import { Heading, Body, Button, Icon, Helpers } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
@@ -75,7 +75,11 @@
 >
   <div class="title">
     <div class="app-icon">
-      <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
+      <Icon
+        size="L"
+        name={Helpers.getPhosphorIcon(app.icon?.name || "Apps")}
+        color={app.icon?.color}
+      />
     </div>
     <div class="name">
       <Heading size="S">
@@ -98,7 +102,7 @@
   </div>
 
   <div class="title app-status" class:deployed={app.deployed}>
-    <Icon size="L" name={app.deployed ? "GlobeCheck" : "GlobeStrike"} />
+    <Icon size="L" name={app.deployed ? "globe-check" : "globe-slash"} />
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
@@ -115,7 +119,7 @@
             on:click={openContextMenu}
             size="S"
             hoverable
-            name="MoreSmallList"
+            name="dots-three-horizontal"
           />
         </div>
       {:else}

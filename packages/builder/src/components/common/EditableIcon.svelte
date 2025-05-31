@@ -1,6 +1,6 @@
 <script lang="ts">
   import ChooseIconModal from "@/components/start/ChooseIconModal.svelte"
-  import { Icon, Modal } from "@budibase/bbui"
+  import { Icon, Modal, Helpers } from "@budibase/bbui"
 
   export let name: string
   export let size: "M" = "M"
@@ -15,18 +15,22 @@
 <div class="editable-icon">
   {#if !disabled}
     <div class="hover" on:click={modal.show}>
-      <Icon name="Edit" {size} color="var(--spectrum-global-color-gray-600)" />
+      <Icon
+        name="pencil"
+        {size}
+        color="var(--spectrum-global-color-gray-600)"
+      />
     </div>
     <div class="normal">
-      <Icon name={name || "Apps"} {size} {color} />
+      <Icon name={Helpers.getPhosphorIcon(name || "Apps")} {size} {color} />
     </div>
   {:else}
-    <Icon {name} {size} {color} />
+    <Icon name={Helpers.getPhosphorIcon(name)} {size} {color} />
   {/if}
 </div>
 
 <Modal bind:this={modal}>
-  <ChooseIconModal bind:name bind:color on:change />
+  <ChooseIconModal {name} {color} on:change />
 </Modal>
 
 <style>

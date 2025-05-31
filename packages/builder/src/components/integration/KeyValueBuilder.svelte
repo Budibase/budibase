@@ -184,12 +184,12 @@
         <Toggle bind:value={fieldActivity[idx]} on:change={changed} />
       {/if}
       {#if !readOnly}
-        <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
+        <Icon hoverable name="x" on:click={() => deleteEntry(idx)} />
       {/if}
       {#if menuItems?.length && showMenu}
         <ActionMenu>
           <div slot="control" class="control icon">
-            <Icon size="S" hoverable name="MoreSmallList" />
+            <Icon size="S" hoverable name="dots-three" />
           </div>
           {#each menuItems as item}
             <MenuItem on:click={() => item.onClick(field)}>
@@ -205,7 +205,7 @@
   <div>
     <ActionButton
       disabled={actionButtonDisabled}
-      icon="Add"
+      icon="plus"
       on:click={addEntry}
     >
       {#if customButtonText}

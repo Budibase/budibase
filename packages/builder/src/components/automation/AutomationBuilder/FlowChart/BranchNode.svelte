@@ -62,7 +62,7 @@
   const getContextMenuItems = () => {
     return [
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
@@ -80,7 +80,7 @@
         },
       },
       {
-        icon: "ArrowLeft",
+        icon: "arrow-left",
         name: "Move left",
         keyBind: null,
         visible: true,
@@ -94,7 +94,7 @@
         },
       },
       {
-        icon: "ArrowRight",
+        icon: "arrow-right",
         name: "Move right",
         keyBind: null,
         visible: true,
@@ -208,7 +208,7 @@
         />
         <div class="actions">
           <Icon
-            name="Info"
+            name="info"
             tooltip="Branch sequencing checks each option in order and follows the first one that matches the rules."
           />
           <Icon

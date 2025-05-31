@@ -50,7 +50,7 @@
   {#if $deploymentStore.isPublished}
     <div class="row top">
       <Icon
-        name="CheckmarkCircle"
+        name="check-circle"
         color="var(--spectrum-global-color-green-400)"
         size="L"
       />
@@ -71,7 +71,7 @@
   {:else}
     <div class="row">
       <Icon
-        name="Alert"
+        name="warning"
         color="var(--spectrum-global-color-yellow-400)"
         size="M"
       />

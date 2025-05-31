@@ -186,7 +186,7 @@
         </Button>
       {:else}
         <div class="edit-info">
-          <Icon size="M" name="InfoOutline" />
+          <Icon size="M" name="info" />
           <Body size="S">Unpublish your app to edit name and URL</Body>
         </div>
       {/if}

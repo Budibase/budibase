@@ -221,7 +221,7 @@
                   style="background: var(--spectrum-global-color-{color}); color: {checkColor};"
                 >
                   {#if value === `var(--spectrum-global-color-${color})`}
-                    <Icon name="Checkmark" size="S" />
+                    <Icon name="check" size="S" />
                   {/if}
                 </div>
               </div>
@@ -241,7 +241,7 @@
           />
           <Icon
             size="S"
-            name="Close"
+            name="x"
             hoverable
             on:click={() => onChange(undefined)}
           />

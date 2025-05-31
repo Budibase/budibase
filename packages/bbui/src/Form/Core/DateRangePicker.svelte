@@ -74,7 +74,7 @@
     {ignoreTimezones}
   />
   <div class="arrow">
-    <Icon name="ChevronRight" />
+    <Icon name="caret-right" />
   </div>
   <CoreDatePicker
     value={parsedTo}

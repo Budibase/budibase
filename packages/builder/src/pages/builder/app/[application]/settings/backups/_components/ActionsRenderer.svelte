@@ -46,7 +46,7 @@
   {#if row.type !== BackupType.RESTORE}
     <ActionMenu align="right">
       <div slot="control">
-        <Icon size="M" hoverable name="MoreSmallList" />
+        <Icon size="M" hoverable name="dots-three" />
       </div>
       <AbsTooltip
         position={TooltipPosition.Left}
@@ -54,14 +54,14 @@
       >
         <MenuItem
           on:click={restoreDialog.show}
-          icon="Revert"
+          icon="arrow-counter-clockwise"
           disabled={!$isOnlyUser}
         >
           Restore
         </MenuItem>
       </AbsTooltip>
-      <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
-      <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
+      <MenuItem on:click={deleteDialog.show} icon="trash">Delete</MenuItem>
+      <MenuItem on:click={downloadExport} icon="download">Download</MenuItem>
     </ActionMenu>
   {/if}
 </div>

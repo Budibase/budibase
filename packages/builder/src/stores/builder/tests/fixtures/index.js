@@ -39,7 +39,7 @@ export const PLUGIN_DEFINITIONS = {
     component: "plugin/budi-video",
     description: "Embedded video component.",
     friendlyName: "Budi Video",
-    icon: "VideoOutline",
+    icon: "film-slate",
     name: "budi-video",
   },
 }

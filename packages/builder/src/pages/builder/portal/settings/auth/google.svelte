@@ -182,7 +182,7 @@
               class="copy"
               on:click={() => copyToClipboard(field.placeholder)}
             >
-              <Icon size="S" name="Copy" />
+              <Icon size="S" name="copy" />
             </div>
           {/if}
         </div>

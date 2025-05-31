@@ -6,7 +6,7 @@
   import getAppContextMenuItems from "@/components/start/getAppContextMenuItems.js"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import { sdk } from "@budibase/shared-core"
-  import { Icon } from "@budibase/bbui"
+  import { Icon, Helpers } from "@budibase/bbui"
   import { contextMenuStore } from "@/stores/builder"
 
   export let app
@@ -43,7 +43,7 @@
   <NavItem
     on:contextmenu={e => openContextMenu(e, app)}
     text={app.name}
-    icon={app.icon?.name || "Apps"}
+    icon={Helpers.getPhosphorIcon(app.icon?.name || "Apps")}
     iconColor={app.icon?.color}
     selected={$params.appId === app.appId}
     hovering={contextMenuOpen}
@@ -58,7 +58,7 @@
           on:click={e => openContextMenu(e, app)}
           size="S"
           hoverable
-          name="MoreSmallList"
+          name="dots-three-horizontal"
         />
       {/if}
     </div>

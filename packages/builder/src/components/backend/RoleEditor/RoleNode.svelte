@@ -89,8 +89,8 @@
     </div>
     {#if data.custom}
       <div class="buttons">
-        <Icon size="S" name="Edit" hoverable on:click={openPopover} />
-        <Icon size="S" name="Delete" hoverable on:click={deleteModal?.show} />
+        <Icon size="S" name="pencil" hoverable on:click={openPopover} />
+        <Icon size="S" name="trash" hoverable on:click={deleteModal?.show} />
       </div>
     {/if}
   </div>

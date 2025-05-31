@@ -385,33 +385,33 @@
                   sortOrder === "Ascending"}
                 on:click={() => sortBy(schema[field])}
               >
-                <div class="title">{getDisplayName(schema[field])}</div>
-                {#if schema[field]?.autocolumn}
-                  <svg
-                    class="spectrum-Icon spectrum-Table-autoIcon"
-                    focusable="false"
-                  >
-                    <use xlink:href="#spectrum-icon-18-MagicWand" />
-                  </svg>
-                {/if}
-                {#if sortColumn === field}
-                  <svg
-                    class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                    focusable="false"
-                    aria-hidden="true"
-                  >
-                    <use xlink:href="#spectrum-css-icon-Arrow100" />
-                  </svg>
-                {/if}
-                {#if allowEditColumns && schema[field]?.editable !== false}
-                  <svg
-                    class="spectrum-Icon spectrum-Table-editIcon"
-                    focusable="false"
-                    on:click={e => editColumn(e, field)}
-                  >
-                    <use xlink:href="#spectrum-icon-18-Edit" />
-                  </svg>
-                {/if}
+                <div class="title" title={field}>
+                  {getDisplayName(schema[field])}
+                  {#if schema[field]?.autocolumn}
+                    <i
+                      class="ph ph-magic-wand spectrum-Icon spectrum-Table-autoIcon"
+                      style="font-size: 1rem; line-height: 1;"
+                      aria-hidden="true"
+                    />
+                  {/if}
+                  {#if sortColumn === field}
+                    <svg
+                      class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
+                      focusable="false"
+                      aria-hidden="true"
+                    >
+                      <use xlink:href="#spectrum-css-icon-Arrow100" />
+                    </svg>
+                  {/if}
+                  {#if allowEditColumns && schema[field]?.editable !== false}
+                    <i
+                      class="ph ph-pencil spectrum-Icon spectrum-Table-editIcon"
+                      style="font-size: 1rem; line-height: 1; cursor: pointer;"
+                      aria-hidden="true"
+                      on:click={e => editColumn(e, field)}
+                    />
+                  {/if}
+                </div>
               </div>
             {/each}
           </div>
@@ -479,12 +479,11 @@
               <slot name="placeholder" />
             {:else}
               <div class="placeholder-content">
-                <svg
-                  class="spectrum-Icon spectrum-Icon--sizeXXL"
-                  focusable="false"
-                >
-                  <use xlink:href="#spectrum-icon-18-Table" />
-                </svg>
+                <i
+                  class="ph ph-table spectrum-Icon spectrum-Icon--sizeXXL"
+                  style="font-size: 2rem; line-height: 1;"
+                  aria-hidden="true"
+                />
                 <div>{placeholderText}</div>
               </div>
             {/if}
@@ -702,5 +701,14 @@
       var(--spectrum-alias-font-size-default)
     );
     text-align: center;
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
+  }
+  i.spectrum-Table-editIcon {
+    pointer-events: all;
+    cursor: pointer;
   }
 </style>

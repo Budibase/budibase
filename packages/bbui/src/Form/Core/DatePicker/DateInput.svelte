@@ -36,13 +36,11 @@
     class:is-invalid={!!error}
   >
     {#if !!error}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-        focusable="false"
+      <i
+        class="ph ph-warning spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+        style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
         aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-icon-18-Alert" />
-      </svg>
+      />
     {/if}
     <input
       {disabled}
@@ -90,5 +88,10 @@
     border-right-width: 1px;
     border-top-right-radius: var(--spectrum-textfield-border-radius);
     border-bottom-right-radius: var(--spectrum-textfield-border-radius);
+  }
+
+  i {
+    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    pointer-events: none;
   }
 </style>

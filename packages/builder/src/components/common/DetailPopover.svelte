@@ -43,7 +43,7 @@
       <div class="detail-popover__title">
         {title}
         <Icon
-          name="Close"
+          name="x"
           hoverable
           color="var(--spectrum-global-color-gray-600)"
           hoverColor="var(--spectrum-global-color-gray-900)"

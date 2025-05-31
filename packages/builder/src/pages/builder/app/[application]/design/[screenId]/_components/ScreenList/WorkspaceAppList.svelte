@@ -46,14 +46,14 @@
 
     const items = [
       {
-        icon: "Add",
+        icon: "plus",
         name: "Add screen",
         keyBind: null,
         visible: true,
         callback: () => newScreenModal.open(workspaceApp._id!),
       },
       {
-        icon: "Edit",
+        icon: "pencil",
         name: "Edit",
         keyBind: null,
         visible: true,
@@ -62,7 +62,7 @@
         },
       },
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
