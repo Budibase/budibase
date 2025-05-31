@@ -89,7 +89,7 @@
       </Button>
     </div>
   {/if}
-  <Divider />
+  <Divider id="version" />
   <Layout gap="XS" noPadding>
     <Heading size="S">App version</Heading>
     {#if $admin.isDev}

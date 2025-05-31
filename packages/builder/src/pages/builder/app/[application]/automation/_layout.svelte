@@ -13,6 +13,7 @@
   } from "@/stores/builder"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
   import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
+  import TopBar from "@/components/common/TopBar.svelte"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -35,59 +36,67 @@
 </script>
 
 <!-- routify:options index=3 -->
-<div class="root">
-  <AutomationPanel {modal} {webhookModal} />
-  <div class="content drawer-container">
-    {#if $automationStore.automations?.length}
-      <slot />
-    {:else}
-      <div class="centered">
-        <div class="main">
-          <Layout gap="S" justifyItems="center">
-            <svg
-              width="60px"
-              height="60px"
-              class="spectrum-Icon"
-              focusable="false"
-            >
-              <use xlink:href="#spectrum-icon-18-WorkflowAdd" />
-            </svg>
-            <Heading size="M">You have no automations</Heading>
-            <Body size="M">Let's fix that. Call the bots!</Body>
-            <Button on:click={() => modal.show()} size="M" cta>
-              Create automation
-            </Button>
-          </Layout>
+<div class="wrapper">
+  <TopBar breadcrumbs={[{ text: "Automations" }]} icon="Workflow"></TopBar>
+  <div class="root">
+    <AutomationPanel {modal} {webhookModal} />
+    <div class="content drawer-container">
+      {#if $automationStore.automations?.length}
+        <slot />
+      {:else}
+        <div class="centered">
+          <div class="main">
+            <Layout gap="S" justifyItems="center">
+              <svg
+                width="60px"
+                height="60px"
+                class="spectrum-Icon"
+                focusable="false"
+              >
+                <use xlink:href="#spectrum-icon-18-WorkflowAdd" />
+              </svg>
+              <Heading size="M">You have no automations</Heading>
+              <Body size="M">Let's fix that. Call the bots!</Body>
+              <Button on:click={() => modal.show()} size="M" cta>
+                Create automation
+              </Button>
+            </Layout>
+          </div>
         </div>
+      {/if}
+    </div>
+
+    {#if blockRefs[$automationStore.selectedNodeId] && $automationStore.selectedNodeId}
+      <div class="step-panel">
+        <StepPanel />
       </div>
     {/if}
+
+    {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
+      <SelectStepSidePanel
+        block={$automationStore.actionPanelBlock}
+        onClose={() => automationStore.actions.closeActionPanel()}
+      />
+    {/if}
   </div>
-
-  {#if blockRefs[$automationStore.selectedNodeId] && $automationStore.selectedNodeId}
-    <div class="step-panel">
-      <StepPanel />
-    </div>
-  {/if}
-
-  {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
-    <SelectStepSidePanel
-      block={$automationStore.actionPanelBlock}
-      onClose={() => automationStore.actions.closeActionPanel()}
-    />
-  {/if}
-
-  <Modal bind:this={modal}>
-    <CreateAutomationModal {webhookModal} />
-  </Modal>
-  <Modal bind:this={webhookModal}>
-    <CreateWebhookModal />
-  </Modal>
 </div>
 
+<Modal bind:this={modal}>
+  <CreateAutomationModal {webhookModal} />
+</Modal>
+<Modal bind:this={webhookModal}>
+  <CreateWebhookModal />
+</Modal>
+
 <style>
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1 1 auto;
+  }
   .root {
     flex: 1 1 auto;
-    height: 0;
     display: grid;
     grid-auto-flow: column dense;
     grid-template-columns: 260px minmax(510px, 1fr) fit-content(500px);
