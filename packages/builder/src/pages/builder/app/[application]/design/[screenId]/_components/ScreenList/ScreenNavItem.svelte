@@ -100,7 +100,7 @@
 <NavItem
   on:contextmenu={e => openContextMenu(e, screen)}
   scrollable
-  icon={screen.routing.homeScreen ? "Home" : null}
+  icon={screen.routing.homeScreen ? "house" : null}
   indentLevel={0}
   selected={$screenStore.selectedScreenId === screen._id}
   hovering={screen._id === $contextMenuStore.id}
