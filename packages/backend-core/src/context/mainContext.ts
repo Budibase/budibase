@@ -336,7 +336,7 @@ export function doInIPContext(ip: string, task: any) {
   return newContext({ ip }, task)
 }
 
-export async function ensureSnippetContext(enabled = !env.isTest()) {
+export async function ensureSnippetContext() {
   const ctx = getCurrentContext()
 
   // If we've already added snippets to context, continue
@@ -347,9 +347,9 @@ export async function ensureSnippetContext(enabled = !env.isTest()) {
   // Otherwise get snippets for this app and update context
   let snippets: Snippet[] | undefined
   const db = getAppDB()
-  if (db && enabled) {
-    const app = await db.get<App>(DocumentType.APP_METADATA)
-    snippets = app.snippets
+  if (db) {
+    const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+    snippets = app?.snippets
   }
 
   // Always set snippets to a non-null value so that we can tell we've attempted

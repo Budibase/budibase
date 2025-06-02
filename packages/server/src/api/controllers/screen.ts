@@ -1,14 +1,16 @@
-import { DocumentType, generateScreenID } from "../../db/utils"
+import { DocumentType } from "../../db/utils"
 import {
   context,
   db as dbCore,
   events,
+  features,
   roles,
   tenancy,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
 import {
   DeleteScreenResponse,
+  FeatureFlag,
   FetchScreenResponse,
   Plugin,
   SaveScreenRequest,
@@ -40,15 +42,21 @@ export async function save(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
   const db = context.getAppDB()
-  let screen = ctx.request.body
+  const { navigationLinkLabel, ...screen } = ctx.request.body
 
-  let eventFn
-  if (!screen._id) {
-    screen._id = generateScreenID()
-    eventFn = events.screen.created
+  const isCreation = !screen._id
+
+  if (
+    (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    screen.workspaceAppId &&
+    !(await sdk.workspaceApps.get(screen.workspaceAppId))
+  ) {
+    ctx.throw("workspaceAppId is not valid")
   }
 
-  const response = await db.put(screen)
+  const savedScreen = isCreation
+    ? await sdk.screens.create(screen)
+    : await sdk.screens.update(screen)
 
   // Find any custom components being used
   let pluginNames: string[] = []
@@ -92,14 +100,18 @@ export async function save(
     }
   }
 
-  if (eventFn) {
-    await eventFn(screen)
+  if (isCreation) {
+    await events.screen.created(screen)
   }
-  const savedScreen = {
-    ...screen,
-    _id: response.id,
-    _rev: response.rev,
+
+  if (navigationLinkLabel && isCreation) {
+    await sdk.navigation.addLink({
+      label: navigationLinkLabel,
+      url: screen.routing.route,
+      roleId: screen.routing.roleId,
+    })
   }
+
   ctx.message = `Screen ${screen.name} saved.`
   ctx.body = {
     ...savedScreen,
@@ -114,6 +126,8 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const screen = await db.get<Screen>(id)
 
   await db.remove(id, ctx.params.screenRev)
+
+  await sdk.navigation.deleteLink(screen.routing.route)
 
   await events.screen.deleted(screen)
   ctx.body = {

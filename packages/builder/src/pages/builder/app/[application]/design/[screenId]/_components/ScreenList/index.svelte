@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { Layout } from "@budibase/bbui"
-  import { sortedScreens } from "@/stores/builder"
-  import ScreenNavItem from "./ScreenNavItem.svelte"
-  import { goto } from "@roxi/routify"
-  import { getVerticalResizeActions } from "@/components/common/resizable"
   import NavHeader from "@/components/common/NavHeader.svelte"
-  import type { Screen } from "@budibase/types"
+  import { getVerticalResizeActions } from "@/components/common/resizable"
+  import { contextMenuStore, sortedScreens } from "@/stores/builder"
+  import { workspaceAppStore } from "@/stores/builder/workspaceApps"
+  import { featureFlags } from "@/stores/portal"
+  import { Layout } from "@budibase/bbui"
+  import type { Screen, UIWorkspaceApp } from "@budibase/types"
+  import NewScreenModal from "../../../_components/NewScreen/index.svelte"
+  import WorkspaceAppModal from "../WorkspaceApp/WorkspaceAppModal.svelte"
+  import ScreenNavItem from "./ScreenNavItem.svelte"
+  import WorkspaceAppList from "./WorkspaceAppList.svelte"
+
+  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -13,8 +19,15 @@
   let searchValue = ""
   let screensContainer: HTMLDivElement
   let scrolling = false
+  let newScreenModal: NewScreenModal
+
+  let workspaceAppModal: WorkspaceAppModal
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
+  $: filteredWorkspaceApps = getFilteredWorkspaceApps(
+    $workspaceAppStore.workspaceApps,
+    searchValue
+  )
 
   const handleOpenSearch = async () => {
     screensContainer.scroll({ top: 0, behavior: "smooth" })
@@ -32,8 +45,59 @@
     })
   }
 
+  const getFilteredWorkspaceApps = (
+    workspaceApps: UIWorkspaceApp[],
+    searchValue: string
+  ) => {
+    if (!searchValue) {
+      return workspaceApps
+    }
+
+    const filteredProjects: UIWorkspaceApp[] = []
+    for (const workspaceApp of workspaceApps) {
+      filteredProjects.push({
+        ...workspaceApp,
+        screens: getFilteredScreens(workspaceApp.screens, searchValue),
+      })
+    }
+    return filteredProjects
+  }
+
   const handleScroll = (e: any) => {
     scrolling = e.target.scrollTop !== 0
+  }
+
+  const onAdd = (e: Event) => {
+    if (!workspaceAppsEnabled) {
+      newScreenModal.open()
+      return
+    }
+
+    const items = [
+      {
+        name: "Add app",
+        keyBind: null,
+        visible: true,
+        disabled: false,
+        callback: () => {
+          workspaceAppModal.show()
+        },
+        isNew: true,
+      },
+      {
+        name: "Add screen",
+        keyBind: null,
+        visible: true,
+        callback: () => newScreenModal.open(),
+      },
+    ]
+
+    const boundingBox = (e.currentTarget as HTMLElement).getBoundingClientRect()
+
+    contextMenuStore.open("newProject", items, {
+      x: boundingBox.x,
+      y: boundingBox.y + boundingBox.height,
+    })
   }
 </script>
 
@@ -44,11 +108,13 @@
       placeholder="Search for screens"
       bind:value={searchValue}
       bind:search={searching}
-      onAdd={() => $goto("../new")}
+      {onAdd}
     />
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
-    {#if filteredScreens?.length}
+    {#if workspaceAppsEnabled}
+      <WorkspaceAppList workspaceApps={filteredWorkspaceApps} {searchValue} />
+    {:else if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <ScreenNavItem {screen} />
       {/each}
@@ -69,6 +135,9 @@
   />
 </div>
 
+<WorkspaceAppModal bind:this={workspaceAppModal} />
+<NewScreenModal bind:this={newScreenModal} />
+
 <style>
   .screens {
     display: flex;
@@ -76,7 +145,9 @@
     min-height: 147px;
     max-height: calc(100% - 147px);
     position: relative;
-    transition: height 300ms ease-out, max-height 300ms ease-out;
+    transition:
+      height 300ms ease-out,
+      max-height 300ms ease-out;
     height: 210px;
   }
   .screens.searching {

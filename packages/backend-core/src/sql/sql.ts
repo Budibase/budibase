@@ -1237,6 +1237,9 @@ class InternalBuilder {
     // to make sure result is deterministic
     const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
     if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
+      if (primaryKey[0] === undefined) {
+        throw new Error(`Primary key not found for table ${this.table.name}`)
+      }
       query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query

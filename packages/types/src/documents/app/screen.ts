@@ -29,6 +29,7 @@ export interface Screen extends Document {
   pluginAdded?: boolean
   onLoad?: EventHandler[]
   variant?: ScreenVariant
+  workspaceAppId?: string
 }
 
 export interface ScreenRoutesViewOutput extends Document {

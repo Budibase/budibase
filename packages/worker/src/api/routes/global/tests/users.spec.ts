@@ -704,6 +704,24 @@ describe("/api/global/users", () => {
       expect(response.body.data.length).toBe(1)
       expect(response.body.data[0].email).toBe(user.email)
     })
+
+    it("should strip users if accessing as an end user", async () => {
+      const user = await config.createUser({
+        admin: { global: false },
+        builder: { global: false },
+      })
+      const response = await config.api.users.searchUsers(
+        {
+          query: {},
+        },
+        { useHeaders: await config.login(user) }
+      )
+      for (let user of response.body.data) {
+        expect(user.roles).toBeUndefined()
+        expect(user.builder).toBeUndefined()
+        expect(user.admin).toBeUndefined()
+      }
+    })
   })
 
   describe("DELETE /api/global/users/:userId", () => {

@@ -1,12 +1,28 @@
-import { findClosestMatchingComponent } from "@/helpers/components"
 import { getDatasourceForProvider, getSchemaForDatasource } from "@/dataBinding"
+import {
+  findClosestMatchingComponent,
+  getComponentContexts,
+} from "@/helpers/components"
+import type { Component, Screen } from "@budibase/types"
 
-export const getComponentFieldOptions = (asset, id, type, loose = true) => {
-  const form = findClosestMatchingComponent(
-    asset,
-    id,
-    component => component._component === "@budibase/standard-components/form"
-  )
+const hasFormContext = (component: Component) => {
+  const contexts = getComponentContexts(component._component)
+  return contexts.some(context => context.type === "form")
+}
+
+export const getComponentFieldOptions = (
+  asset: Screen | undefined,
+  id: string,
+  type: string,
+  loose = true
+) => {
+  if (!asset) {
+    return []
+  }
+  const form = findClosestMatchingComponent(asset.props, id, hasFormContext)
+  if (!form) {
+    return []
+  }
   const datasource = getDatasourceForProvider(asset, form)
   const schema = getSchemaForDatasource(asset, datasource, {
     formSchema: true,

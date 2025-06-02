@@ -12,6 +12,7 @@ import {
 import { configs, cache, objectStore, HTTPError } from "@budibase/backend-core"
 import ical from "ical-generator"
 import _ from "lodash"
+import { marked } from "marked"
 
 import nodemailer from "nodemailer"
 import SMTPTransport from "nodemailer/lib/smtp-transport"
@@ -97,7 +98,10 @@ async function buildEmail(
   }
   context = {
     ...context,
-    contents,
+    contents:
+      purpose === EmailTemplatePurpose.CUSTOM
+        ? marked.parse(contents || "")
+        : contents,
     email,
     name,
     user: user || {},

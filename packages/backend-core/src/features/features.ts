@@ -53,6 +53,10 @@ export function parseEnvFlags(flags: string): EnvFlagEntry[] {
   return result
 }
 
+export function getEnvFlags() {
+  return parseEnvFlags(env.TENANT_FEATURE_FLAGS || "")
+}
+
 export class FlagSet<T extends { [name: string]: boolean }> {
   // This is used to safely cache flags sets in the current request context.
   // Because multiple sets could theoretically exist, we don't want the cache of
@@ -89,9 +93,7 @@ export class FlagSet<T extends { [name: string]: boolean }> {
       const currentTenantId = context.getTenantId()
       const specificallySetFalse = new Set<string>()
 
-      for (const { tenantId, key, value } of parseEnvFlags(
-        env.TENANT_FEATURE_FLAGS || ""
-      )) {
+      for (const { tenantId, key, value } of getEnvFlags()) {
         if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
           continue
         }

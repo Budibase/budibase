@@ -664,12 +664,41 @@ if (descriptions.length) {
               parameters: { number: 0 },
             })
 
-            const rows = await client(tableName).select("*")
+            const rows = await client(tableName).select("*").orderBy("id")
             expect(rows).toHaveLength(6)
             expect(rows[5].number).toEqual(0)
 
             const rowsWith999 = rows.filter(row => row.number === 999)
             expect(rowsWith999).toHaveLength(0)
+          })
+
+          it("should be able to create a new row with a JS value of empty string, falling back to the default", async () => {
+            const query = await createQuery({
+              name: "New Query",
+              queryVerb: "create",
+              fields: {
+                sql: client(tableName)
+                  .insert({ name: client.raw("{{ name }}") })
+                  .toString(),
+              },
+              parameters: [
+                {
+                  name: "name",
+                  default: "abc",
+                },
+              ],
+            })
+
+            await config.api.query.execute(query._id!, {
+              parameters: { name: "" },
+            })
+
+            const rows = await client(tableName).select("*").orderBy("id")
+            expect(rows).toHaveLength(6)
+            expect(rows[5].name).toEqual("abc")
+
+            const rowsWithEmptyName = rows.filter(row => row.name === "")
+            expect(rowsWithEmptyName).toHaveLength(0)
           })
         })
 

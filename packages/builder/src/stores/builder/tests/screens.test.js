@@ -32,6 +32,7 @@ vi.mock("@/stores/builder", async () => {
     subscribe: mockAppStore.subscribe,
     update: mockAppStore.update,
     set: mockAppStore.set,
+    refresh: vi.fn(),
   }
 
   const navigationStore = {
@@ -245,7 +246,9 @@ describe("Screens store", () => {
 
     expect(bb.store.screens.length).toBe(1)
 
-    expect(bb.store.screens[0]).toStrictEqual(newDoc)
+    expect(bb.store.screens[0]).toStrictEqual({
+      ...newDoc,
+    })
 
     expect(bb.store.selectedScreenId).toBe(newDocId)
 
@@ -808,6 +811,9 @@ describe("Screens store", () => {
       screen.name = "updated"
     }, existingDocId)
 
-    expect(saveSpy).toBeCalledWith({ ...original, name: "updated" })
+    expect(saveSpy).toBeCalledWith({
+      ...original,
+      name: "updated",
+    })
   })
 })

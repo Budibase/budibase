@@ -43,6 +43,7 @@ export enum DocumentType {
   OAUTH2_CONFIG = "oauth2",
   OAUTH2_CONFIG_LOG = "oauth2log",
   AGENT_CHAT = "agentchat",
+  WORKSPACE_APP = "workspace_app",
 }
 
 // Because DocumentTypes can overlap, we need to make sure that we search

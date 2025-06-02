@@ -74,8 +74,8 @@
           flex: 3;
           overflow: scroll;
           {{#if (and ${safe("state")}.${safe(stateKey)} ${safe(
-          "device"
-        )}.${safe("mobile")}) }}
+            "device"
+          )}.${safe("mobile")}) }}
             display: none;
           {{/if}}
         `,
@@ -168,8 +168,8 @@
           border-radius: 4px;
           flex: 4;
           {{#if (or ${safe("state")}.${safe(stateKey)} ${safe("device")}.${safe(
-          "mobile"
-        )}) }}
+            "mobile"
+          )}) }}
             display: none;
           {{/if}}
           `,
