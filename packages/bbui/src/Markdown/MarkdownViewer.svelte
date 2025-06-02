@@ -8,7 +8,7 @@
 
   $: updateValue(ref, value)
 
-  const updateValue = (
+  const updateValue = async (
     ref: HTMLDivElement | undefined,
     markdown: string | undefined
   ) => {

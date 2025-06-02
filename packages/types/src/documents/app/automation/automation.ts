@@ -71,6 +71,7 @@ export enum AutomationActionStepId {
   SERVER_LOG = "SERVER_LOG",
   DELAY = "DELAY",
   FILTER = "FILTER",
+  API_REQUEST = "API_REQUEST",
   QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
   COLLECT = "COLLECT",

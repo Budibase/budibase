@@ -33,6 +33,7 @@ import {
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
+  StrippedUser,
   UnsavedUser,
   UpdateInviteRequest,
   UpdateInviteResponse,
@@ -64,6 +65,15 @@ const generatePassword = (length: number) => {
   return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
     .join("")
     .slice(0, length)
+}
+
+const stripUsers = (users: (User | StrippedUser)[]): StrippedUser[] => {
+  return users.map(user => ({
+    _id: user._id,
+    email: user.email,
+    tenantId: user.tenantId,
+    userId: user.userId,
+  }))
 }
 
 export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
@@ -249,18 +259,8 @@ export const destroy = async (ctx: UserCtx<void, DeleteUserResponse>) => {
   }
 }
 
-export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
-  const body = ctx.request.body
-  const users = await userSdk.db.getUsersByAppAccess({
-    appId: body.appId,
-    limit: body.limit,
-  })
-
-  ctx.body = { data: users }
-}
-
 export const search = async (
-  ctx: Ctx<SearchUsersRequest, SearchUsersResponse>
+  ctx: UserCtx<SearchUsersRequest, SearchUsersResponse>
 ) => {
   const body = ctx.request.body
 
@@ -287,8 +287,13 @@ export const search = async (
     }
   }
 
+  let response: SearchUsersResponse = { data: [] }
+
   if (body.paginate === false) {
-    await getAppUsers(ctx)
+    response.data = await userSdk.db.getUsersByAppAccess({
+      appId: body.appId,
+      limit: body.limit,
+    })
   } else {
     const paginated = await userSdk.core.paginatedUsers(body)
     // user hashed password shouldn't ever be returned
@@ -297,8 +302,18 @@ export const search = async (
         delete user.password
       }
     }
-    ctx.body = paginated
+    response = {
+      data: paginated.data,
+      hasNextPage: paginated.hasNextPage,
+      nextPage: paginated.nextPage,
+    }
   }
+
+  if (!users.hasBuilderPermissions(ctx.user)) {
+    response.data = stripUsers(response.data)
+  }
+
+  ctx.body = response
 }
 
 // called internally by app server user fetch

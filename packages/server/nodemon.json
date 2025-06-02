@@ -5,7 +5,8 @@
     "../pro/src",
     "../types/src",
     "../shared-core/src",
-    "../string-templates/src"
+    "../string-templates/src",
+    "../../.env"
   ],
   "ext": "js,ts,json,svelte,hbs",
   "ignore": [

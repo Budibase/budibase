@@ -69,6 +69,8 @@ import {
   SummariseStepOutputs,
   GenerateTextStepInputs,
   GenerateTextStepOutputs,
+  APIRequestStepInputs,
+  APIRequestStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -91,6 +93,10 @@ export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.EXECUTE_QUERY]: ActionImplementation<
     ExecuteQueryStepInputs,
     ExecuteQueryStepOutputs
+  >
+  [AutomationActionStepId.API_REQUEST]: ActionImplementation<
+    APIRequestStepInputs,
+    APIRequestStepOutputs
   >
   [AutomationActionStepId.EXECUTE_SCRIPT]: ActionImplementation<
     ExecuteScriptStepInputs,
@@ -212,9 +218,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
           ? DeleteRowStepInputs
           : T extends AutomationActionStepId.EXECUTE_QUERY
             ? ExecuteQueryStepInputs
-            : T extends AutomationActionStepId.EXECUTE_SCRIPT
-              ? ExecuteScriptStepInputs
-              : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
+            : T extends AutomationActionStepId.API_REQUEST
+              ? APIRequestStepInputs
+              : T extends AutomationActionStepId.EXECUTE_SCRIPT
                 ? ExecuteScriptStepInputs
                 : T extends AutomationActionStepId.FILTER
                   ? FilterStepInputs
@@ -271,31 +277,31 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
           ? DeleteRowStepOutputs
           : T extends AutomationActionStepId.EXECUTE_QUERY
             ? ExecuteQueryStepOutputs
-            : T extends AutomationActionStepId.EXECUTE_SCRIPT
-              ? ExecuteScriptStepOutputs
-              : T extends AutomationActionStepId.FILTER
-                ? FilterStepOutputs
-                : T extends AutomationActionStepId.QUERY_ROWS
-                  ? QueryRowsStepOutputs
-                  : T extends AutomationActionStepId.SEND_EMAIL_SMTP
-                    ? BaseAutomationOutputs
-                    : T extends AutomationActionStepId.SERVER_LOG
-                      ? ServerLogStepOutputs
-                      : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
-                        ? TriggerAutomationStepOutputs
-                        : T extends AutomationActionStepId.UPDATE_ROW
-                          ? UpdateRowStepOutputs
-                          : T extends AutomationActionStepId.OUTGOING_WEBHOOK
-                            ? ExternalAppStepOutputs
-                            : T extends AutomationActionStepId.discord
+            : T extends AutomationActionStepId.API_REQUEST
+              ? APIRequestStepOutputs
+              : T extends AutomationActionStepId.EXECUTE_SCRIPT
+                ? ExecuteScriptStepOutputs
+                : T extends AutomationActionStepId.FILTER
+                  ? FilterStepOutputs
+                  : T extends AutomationActionStepId.QUERY_ROWS
+                    ? QueryRowsStepOutputs
+                    : T extends AutomationActionStepId.SEND_EMAIL_SMTP
+                      ? BaseAutomationOutputs
+                      : T extends AutomationActionStepId.SERVER_LOG
+                        ? ServerLogStepOutputs
+                        : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
+                          ? TriggerAutomationStepOutputs
+                          : T extends AutomationActionStepId.UPDATE_ROW
+                            ? UpdateRowStepOutputs
+                            : T extends AutomationActionStepId.OUTGOING_WEBHOOK
                               ? ExternalAppStepOutputs
-                              : T extends AutomationActionStepId.slack
+                              : T extends AutomationActionStepId.discord
                                 ? ExternalAppStepOutputs
-                                : T extends AutomationActionStepId.zapier
-                                  ? ZapierStepOutputs
-                                  : T extends AutomationActionStepId.integromat
-                                    ? ExternalAppStepOutputs
-                                    : T extends AutomationActionStepId.n8n
+                                : T extends AutomationActionStepId.slack
+                                  ? ExternalAppStepOutputs
+                                  : T extends AutomationActionStepId.zapier
+                                    ? ZapierStepOutputs
+                                    : T extends AutomationActionStepId.integromat
                                       ? ExternalAppStepOutputs
                                       : T extends AutomationActionStepId.EXECUTE_BASH
                                         ? BashStepOutputs
@@ -334,6 +340,9 @@ export type DeleteRowStep =
 
 export type ExecuteQueryStep =
   AutomationStepSchema<AutomationActionStepId.EXECUTE_QUERY>
+
+export type APIRequestStep =
+  AutomationStepSchema<AutomationActionStepId.API_REQUEST>
 
 export type ExecuteScriptStep =
   AutomationStepSchema<AutomationActionStepId.EXECUTE_SCRIPT>
@@ -401,6 +410,7 @@ export type AutomationStep =
   | DelayStep
   | DeleteRowStep
   | ExecuteQueryStep
+  | APIRequestStep
   | ExecuteScriptStep
   | ExecuteScriptV2Step
   | FilterStep

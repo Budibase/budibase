@@ -170,7 +170,7 @@ function enrichParameters(
   // make sure parameters are fully enriched with defaults
   for (const parameter of query.parameters) {
     let value = requestParameters[parameter.name]
-    if (value == null) {
+    if (value == null || value === "") {
       value = parameter.default
     }
     if (query.nullDefaultSupport && paramNotSet(value)) {
