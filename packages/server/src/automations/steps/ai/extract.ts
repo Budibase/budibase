@@ -8,11 +8,12 @@ import {
 import { objectStore } from "@budibase/backend-core"
 import { Readable } from "stream"
 import fetch from "node-fetch"
+import { LLM } from "packages/pro/src/ai/models/base"
 
 async function processUrlFile(
   fileUrl: string,
   fileType: string | undefined,
-  llm: any
+  llm: LLM
 ): Promise<string> {
   const response = await fetch(fileUrl)
   if (!response.ok) {
@@ -26,7 +27,7 @@ async function processUrlFile(
 
 async function processAttachmentFile(
   attachment: any,
-  llm: any
+  llm: LLM
 ): Promise<string> {
   const bucket = objectStore.ObjectStoreBuckets.APPS
   const stream = await objectStore.getReadStream(bucket, attachment.key!)

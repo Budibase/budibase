@@ -1,6 +1,7 @@
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 import { z } from "zod"
+import { Readable } from "node:stream"
 
 export type UserContent = string | openai.ChatCompletionContentPart[]
 
@@ -88,4 +89,14 @@ export interface GenerateTablesRequest {
 
 export interface GenerateTablesResponse {
   createdTables: { id: string; name: string }[]
+}
+
+export interface UploadFileRequest {
+  data: Readable | Buffer
+  filename: string
+  contentType: string
+}
+
+export interface UploadFileResponse {
+  file: string
 }

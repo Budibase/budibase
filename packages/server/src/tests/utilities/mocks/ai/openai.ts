@@ -112,3 +112,41 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
     })
     .persist()
 }
+
+interface FileUploadResponse {
+  id: string
+  object: string
+  bytes: number
+  created_at: number
+  filename: string
+  purpose: string
+}
+
+export const mockOpenAIFileUpload = (
+  fileId = "file-test123",
+  opts?: { status?: number; error?: any }
+) => {
+  if (opts?.error) {
+    return nock("https://api.openai.com")
+      .post("/v1/files")
+      .reply(opts.status || 400, opts.error)
+      .persist()
+  }
+
+  return nock("https://api.openai.com")
+    .post("/v1/files")
+    .reply((uri: string, body: any) => {
+      const filename = body.filename || "test-file.pdf"
+
+      const response: FileUploadResponse = {
+        id: fileId,
+        object: "file",
+        bytes: 1024,
+        created_at: Math.floor(Date.now() / 1000),
+        filename: filename,
+        purpose: "assistants",
+      }
+      return [200, response]
+    })
+    .persist()
+}
