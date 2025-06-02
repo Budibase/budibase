@@ -6,7 +6,7 @@
     "../types/src",
     "../shared-core/src",
     "../string-templates/src",
-    ".env"
+    "../../.env"
   ],
   "ext": "js,ts,json,svelte,hbs",
   "ignore": [
