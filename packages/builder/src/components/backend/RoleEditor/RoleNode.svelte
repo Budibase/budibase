@@ -209,7 +209,7 @@
     align-items: center;
     gap: 6px;
   }
-  .buttons :global(.spectrum-Icon) {
+  .buttons :global(i) {
     color: var(--spectrum-global-color-gray-600);
   }
 

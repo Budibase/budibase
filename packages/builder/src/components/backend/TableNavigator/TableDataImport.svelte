@@ -321,7 +321,7 @@
     align-items: center;
     gap: 4px;
   }
-  .fieldStatusFailure :global(.spectrum-Icon) {
+  .fieldStatusFailure :global(i) {
     width: 12px;
   }
 </style>

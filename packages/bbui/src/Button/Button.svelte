@@ -103,7 +103,7 @@
   .spectrum-Button--secondary.new-styles.is-disabled {
     color: var(--spectrum-global-color-gray-500);
   }
-  .spectrum-Button .spectrum-Button-label + .spectrum-Icon {
+  .spectrum-Button .spectrum-Button-label + i {
     margin-left: var(--spectrum-button-primary-icon-gap);
     margin-right: calc(
       -1 *

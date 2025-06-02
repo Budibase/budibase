@@ -7,7 +7,7 @@
   import "@phosphor-icons/web/fill"
   import "@phosphor-icons/web/duotone"
 
-  export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" = "M"
+  export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" = "M"
   export let name: string = "plus"
   export let hidden: boolean = false
   export let hoverable: boolean = false
@@ -15,7 +15,7 @@
   export let color: string | undefined = undefined
   export let hoverColor: string | undefined = undefined
   export let tooltip: string | undefined = undefined
-  export let weight: "regular" | "fill" = "regular"
+  export let weight: "regular" | "bold" | "fill" = "regular"
 
   const sizeMap = {
     XS: "0.75rem",
@@ -24,6 +24,7 @@
     L: "1.5rem",
     XL: "2rem",
     XXL: "2.5rem",
+    XXXL: "5rem",
   }
 
   $: phosphorIconName = getPhosphorIcon(name)
@@ -75,7 +76,7 @@
 
 <style>
   i {
-    display: grid;
+    display: block;
     place-items: center;
     color: var(--color);
     transition: color 130ms ease-out;

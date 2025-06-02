@@ -596,7 +596,7 @@
     opacity: 1;
     transition: opacity 0.2s ease;
   }
-  .spectrum-Table-headCell .spectrum-Icon {
+  .spectrum-Table-headCell i {
     pointer-events: all;
     margin-left: var(
       --spectrum-table-header-sort-icon-gap,

@@ -187,12 +187,12 @@
   }
 
   .title :global(.spectrum-Heading),
-  .title :global(.spectrum-Icon),
+  .title :global(i),
   .title :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .app-status:not(.deployed) :global(.spectrum-Icon),
+  .app-status:not(.deployed) :global(i),
   .app-status:not(.deployed) :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-600);
   }

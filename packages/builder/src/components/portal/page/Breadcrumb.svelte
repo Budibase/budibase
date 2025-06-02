@@ -23,7 +23,7 @@
     font-size: 16px;
     font-weight: 600;
   }
-  div :global(.spectrum-Icon),
+  div :global(i),
   a {
     color: inherit;
     transition: color 130ms ease-out;

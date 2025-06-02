@@ -100,7 +100,7 @@
   .onboarding-type-wrap .onboarding-type-text {
     padding-left: var(--spectrum-alias-item-padding-xl);
   }
-  .onboarding-type-wrap :global(.spectrum-Icon) {
+  .onboarding-type-wrap :global(i) {
     min-width: var(--spectrum-icon-size-m);
   }
   .onboarding-type-wrap :global(.spectrum-Heading) {

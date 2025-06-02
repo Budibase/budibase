@@ -1,15 +1,12 @@
 <script lang="ts">
-  import "@phosphor-icons/web/thin"
-  import "@phosphor-icons/web/light"
   import "@phosphor-icons/web/regular"
   import "@phosphor-icons/web/bold"
   import "@phosphor-icons/web/fill"
-  import "@phosphor-icons/web/duotone"
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { TooltipPosition, TooltipType } from "../constants"
   import InnerIcon from "./InnerIcon.svelte"
 
-  export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" = "M"
+  export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" = "M"
   export let name: string = "plus"
   export let hidden: boolean = false
   export let hoverable: boolean = false
@@ -21,7 +18,7 @@
   export let tooltipType: TooltipType = TooltipType.Default
   export let tooltipColor: string | undefined = undefined
   export let tooltipWrap: boolean = true
-  export let weight: "regular" | "fill" = "regular"
+  export let weight: "regular" | "bold" | "fill" = "regular"
 </script>
 
 {#if tooltip}

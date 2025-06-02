@@ -498,7 +498,7 @@
     gap: var(--spacing-m);
     align-items: center;
   }
-  ul.category-list :global(.spectrum-Icon) {
+  ul.category-list :global(i) {
     margin: -4px 0;
   }
   ul.category-list .category-name {

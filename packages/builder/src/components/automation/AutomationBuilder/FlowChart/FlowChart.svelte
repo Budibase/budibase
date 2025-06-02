@@ -334,7 +334,7 @@
 
   .canvas-heading-left .group :global(.spectrum-Button),
   .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .canvas-heading-left .group :global(.spectrum-Icon) {
+  .canvas-heading-left .group :global(i) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .canvas-heading-left .group :global(.spectrum-Button),

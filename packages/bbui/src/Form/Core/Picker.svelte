@@ -372,7 +372,7 @@
   .option-tag {
     margin: 0 var(--spacing-m) 0 var(--spacing-m);
   }
-  .option-tag :global(.spectrum-Tags-item > .spectrum-Icon) {
+  .option-tag :global(.spectrum-Tags-item > i) {
     margin-top: 2px;
   }
 

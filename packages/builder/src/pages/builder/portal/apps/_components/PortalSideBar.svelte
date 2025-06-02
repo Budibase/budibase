@@ -124,7 +124,7 @@
     gap: var(--spacing-l);
     padding: 0 var(--spacing-l);
   }
-  .side-bar-controls :global(.spectrum-Icon) {
+  .side-bar-controls :global(i) {
     color: var(--spectrum-global-color-gray-700);
   }
 

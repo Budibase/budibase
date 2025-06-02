@@ -389,7 +389,7 @@
       max-width: none;
     }
     /*  Hide download apps icon */
-    .app-actions :global(> .spectrum-Icon) {
+    .app-actions :global(> i) {
       display: none;
     }
     .app-actions > :global(*) {

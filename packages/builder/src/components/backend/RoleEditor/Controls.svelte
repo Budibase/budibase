@@ -46,7 +46,7 @@
   }
   .top-right :global(.spectrum-Button),
   .top-right :global(.spectrum-ActionButton),
-  .top-right :global(.spectrum-Icon) {
+  .top-right :global(i) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .top-right :global(.spectrum-Button),

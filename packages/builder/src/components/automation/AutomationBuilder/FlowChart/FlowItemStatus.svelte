@@ -142,7 +142,7 @@
     pointer-events: none;
   }
   .flow-item-status :global(.spectrum-ActionButton),
-  .flow-item-status :global(.spectrum-ActionButton .spectrum-Icon) {
+  .flow-item-status :global(.spectrum-ActionButton i) {
     color: var(--spectrum-alias-text-color-hover);
   }
   .flow-success :global(.spectrum-ActionButton) {
@@ -157,7 +157,7 @@
     background-color: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-gray-300);
   }
-  .flow-warn :global(.spectrum-ActionButton .spectrum-Icon) {
+  .flow-warn :global(.spectrum-ActionButton i) {
     color: var(--spectrum-global-color-yellow-600);
   }
 </style>

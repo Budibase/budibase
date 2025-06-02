@@ -1,4 +1,6 @@
 <script>
+  import { Icon } from "@budibase/bbui"
+
   export let backgroundColour
   export let imageSrc
   export let name
@@ -21,15 +23,7 @@
       class:error={imageError}
     />
     <div style={`display:${imageError ? "block" : "none"}`}>
-      <svg
-        width="26px"
-        height="26px"
-        class="spectrum-Icon"
-        style="color: white"
-        focusable="false"
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      <Icon name={icon} size="XL" color="white" />
     </div>
     <div class={overlayEnabled ? "template-thumbnail-action-overlay" : ""}>
       <slot />
