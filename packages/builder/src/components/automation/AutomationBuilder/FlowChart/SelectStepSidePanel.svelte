@@ -17,6 +17,7 @@
   import type { AutomationStepDefinition } from "@budibase/types"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
+  import NewPill from "@/components/common/NewPill.svelte"
 
   export let block
   export let onClose = () => {}
@@ -109,13 +110,14 @@
 
   const categories = [
     {
-      name: "Records",
+      name: "Data",
       items: actions.filter(([k]) =>
         [
           AutomationActionStepId.CREATE_ROW,
           AutomationActionStepId.UPDATE_ROW,
           AutomationActionStepId.DELETE_ROW,
           AutomationActionStepId.QUERY_ROWS,
+          AutomationActionStepId.API_REQUEST,
           AutomationActionStepId.EXECUTE_QUERY,
         ].includes(k as AutomationActionStepId)
       ),
@@ -283,9 +285,7 @@
                 {:else if isDisabled}
                   <Icon name="Help" tooltip={checkDisabled(idx).message} />
                 {:else if action.new}
-                  <Tags>
-                    <Tag emphasized>New</Tag>
-                  </Tags>
+                  <NewPill />
                 {/if}
               </div>
             </div>
