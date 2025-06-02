@@ -13,11 +13,14 @@
     isOnlyUser,
     appStore,
     deploymentStore,
+    workspaceAppStore,
   } from "@/stores/builder"
   import { admin } from "@/stores/portal"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
+  import PublishModal from "@/components/deploy/PublishModal.svelte"
 
   let versionModal
+  let publishModal
   let showNpsSurvey = false
   let publishButton
   let publishSuccessPopover
@@ -63,7 +66,7 @@
     <div class="app-action-button publish">
       <Button
         cta
-        on:click={publish}
+        on:click={publishModal.show}
         disabled={$deploymentStore.isPublishing}
         bind:ref={publishButton}
       >
@@ -78,6 +81,7 @@
 {/if}
 
 <VersionModal hideIcon bind:this={versionModal} />
+<PublishModal targetId={$workspaceAppStore.workspaceApps[0]?._id} bind:this={publishModal} />
 
 <Popover
   anchor={publishButton}

@@ -1,8 +1,8 @@
 <script>
   import "@spectrum-css/accordion"
 
-  export let itemName
-  export let initialOpen
+  export let itemName = undefined
+  export let initialOpen = false
   export let header
   export let bold = true
 
