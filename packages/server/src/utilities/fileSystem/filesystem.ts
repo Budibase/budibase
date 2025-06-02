@@ -39,7 +39,7 @@ export const checkDevelopmentEnvironment = () => {
     fs.mkdirSync(budibaseTempDir())
   }
   let error
-  if (!fs.existsSync(join(process.cwd(), ".env"))) {
+  if (!fs.existsSync(join(TOP_LEVEL_PATH, ".env"))) {
     error = "Must run via yarn once to generate environment."
   }
   if (error) {

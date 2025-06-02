@@ -14,6 +14,7 @@ if (!LOADED && coreEnv.isDev() && !coreEnv.isTest()) {
   require("dotenv").config({
     path: join(TOP_LEVEL_PATH, ".env"),
   })
+  coreEnv.init()
   LOADED = true
 }
 
