@@ -5,7 +5,8 @@
     "../pro",
     "../types",
     "../shared-core",
-    "../string-templates"
+    "../string-templates",
+    "../../.env"
   ],
   "ext": "js,ts,json",
   "ignore": ["**/*.spec.ts", "**/*.spec.js", "../*/dist/**/*"],
