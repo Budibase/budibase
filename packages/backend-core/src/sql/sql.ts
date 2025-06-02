@@ -4,9 +4,9 @@ import {
   extractDate,
   getNativeSql,
   isExternalTable,
-  isInvalidISODateString,
   isValidFilter,
   isValidISODateString,
+  isValidISODateStringWithoutTimezone,
   isValidTime,
   sqlLog,
   validateManyToMany,
@@ -429,12 +429,19 @@ class InternalBuilder {
           return null
         }
         return new Date(date)
-      } else {
-        if (isInvalidISODateString(input)) {
-          return null
-        }
+      } else if (schema.ignoreTimezones) {
         if (isValidISODateString(input)) {
           return new Date(input.trim())
+        } else if (isValidISODateStringWithoutTimezone(input)) {
+          return new Date(input.trim() + "Z")
+        } else {
+          return null
+        }
+      } else {
+        if (isValidISODateString(input)) {
+          return new Date(input.trim())
+        } else {
+          return null
         }
       }
     }
