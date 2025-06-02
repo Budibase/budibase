@@ -86,7 +86,7 @@
       _rev: workspaceApp?._rev,
       name: workspaceApp?.name ?? "",
       urlPrefix: workspaceApp?.urlPrefix ?? "",
-      icon: workspaceApp?.icon ?? "Monitoring",
+      icon: workspaceApp?.icon ?? "monitor",
       iconColor: workspaceApp?.iconColor,
     }
     validationState = { errors: {}, touched: {} }

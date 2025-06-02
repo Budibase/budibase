@@ -48,9 +48,7 @@
   style={accentStyle}
 >
   {#if icon}
-    <div class="icon-wrapper">
-      <Icon name={icon} size="M" />
-    </div>
+    <Icon name={icon} size="M" />
   {/if}
   {#if $$slots}
     <span class="spectrum-ActionButton-label"><slot /></span>
