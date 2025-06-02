@@ -10,10 +10,7 @@ import "@budibase/frontend-core/src/themes/midnight.css"
 import "@spectrum-css/page/dist/index-vars.css"
 import "./global.css"
 import { suppressWarnings } from "./helpers/warnings"
-import loadPhosphorIcons from "@budibase/bbui/phosphor-icons.js"
 import App from "./App.svelte"
-
-loadPhosphorIcons()
 
 // Suppress svelte runtime warnings
 suppressWarnings([

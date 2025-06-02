@@ -1224,7 +1224,3 @@ export const SpectrumIconMap: Record<string, string> = {
 export function getPhosphorIcon(icon: string): string {
   return SpectrumIconMap[icon] || icon
 }
-
-export function isSpectrumIcon(icon: string) {
-  return SpectrumIconMap[icon] != null
-}

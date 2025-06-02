@@ -5930,11 +5930,6 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/fieldlabel/-/fieldlabel-3.0.1.tgz#39f7c0f25cc2ff402afeff005341b0832f7c588c"
   integrity sha512-LMfwrwIq8wEEvxFLobdLvXRwKrp8o9Fty4iJ9aYl2Rj1uXkfRd8qLz9HGZjLEE1OuJgoTBgamYABl7EvoA5PLw==
 
-"@spectrum-css/icon@3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/icon/-/icon-3.0.1.tgz#e300a6fc353c85c6b5d6e7a364408a940c31b177"
-  integrity sha512-cGFtIrcQ/7tthdkHK1npuEFiCdYVHLqwmLxghUYQw8Tb8KgJaw3OBO1tpjgsUizexNgu26BjVRIbGxNWuBXIHQ==
-
 "@spectrum-css/illustratedmessage@3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/illustratedmessage/-/illustratedmessage-3.0.2.tgz#6a480be98b027e050b086e7899e40d87adb0a8c0"

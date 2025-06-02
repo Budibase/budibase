@@ -63,11 +63,11 @@
             props: {
               options: [
                 {
-                  barIcon: "ModernGridView",
+                  barIcon: "grid-four",
                   value: "flex",
                 },
                 {
-                  barIcon: "ViewGrid",
+                  barIcon: "squares-four",
                   value: "grid",
                 },
               ],

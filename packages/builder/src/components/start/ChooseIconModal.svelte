@@ -12,33 +12,34 @@
   export let color: string
 
   const dispatch = createEventDispatcher()
-
-  let iconsList = [
-    "Apps", // dots-nine
-    "Actions", // pencil-ruler?
-    "ConversionFunnel", //funnel-simple
-    "App", // app-store-logo
-    "Briefcase", //briefcase
-    "Money", //money
-    "ShoppingCart", //shopping-cart
-    "Form", //list
-    "Help", //question
-    "Monitoring", //monitor
-    "Sandbox", //columns
-    "Project", //folder
-    "Organisations", //city
-    "Magnify", //magnifying-glass
-    "Launch", //rocket-launch
-    "Car", //car
-    "Camera", //camera
-    "Bug", //bug
-    "Channel", //snowflake
-    "Calculator", //calculator
-    "Calendar", //calendar-dots
-    "GraphDonut", //chart-donut
-    "GraphBarHorizontal", //chart-bar-horizontal
-    "Demographic", //users-three
+  const iconsList = [
+    "dots-nine",
+    "pencil-ruler",
+    "funnel-simple",
+    "app-store-logo",
+    "briefcase",
+    "money",
+    "shopping-cart",
+    "list",
+    "question",
+    "monitor",
+    "columns",
+    "folder",
+    "city",
+    "magnifying-glass",
+    "rocket-launch",
+    "car",
+    "camera",
+    "bug",
+    "snowflake",
+    "calculator",
+    "calendar-dots",
+    "chart-donut",
+    "chart-bar-horizontal",
+    "users-three",
   ]
+
+  $: phosphorIcon = Helpers.getPhosphorIcon(name)
 
   const save = async () => {
     dispatch("change", { color, name })
@@ -57,10 +58,15 @@
       {#each iconsList as item}
         <div
           class="icon-item"
-          class:selected={item === name}
+          class:selected={item === phosphorIcon}
           on:click={() => (name = item)}
         >
-          <Icon name={item} />
+          <Icon
+            name={item}
+            size="L"
+            hoverable
+            hoverColor={"var(--spectrum-global-color-blue-600)"}
+          />
         </div>
       {/each}
     </div>
