@@ -1,4 +1,9 @@
-import { AccountMetadata, PlatformUser, User } from "../../documents"
+import {
+  AccountMetadata,
+  PlatformUser,
+  StrippedUser,
+  User,
+} from "../../documents"
 import { SearchFilters } from "../../sdk"
 
 export interface Invite {
@@ -88,7 +93,7 @@ export interface SearchUsersRequest {
   paginate?: boolean
 }
 export interface SearchUsersResponse {
-  data: User[]
+  data: User[] | StrippedUser[]
   hasNextPage?: boolean
   nextPage?: string
 }

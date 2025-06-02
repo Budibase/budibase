@@ -75,6 +75,8 @@ export interface User extends Document {
   tours?: Record<string, Date> // deprecated and no longer saved
 }
 
+export type StrippedUser = Pick<User, "_id" | "tenantId" | "email" | "userId">
+
 export interface UserBindings extends Document {
   firstName?: string
   lastName?: string

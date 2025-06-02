@@ -23,7 +23,7 @@
   export let key: string | null = null
   export let disableBindings: boolean = false
   export let forceModal: boolean = false
-  export let context = null
+  export let context: any | undefined = undefined
   export let autocomplete: boolean | undefined = undefined
   export let multiline: boolean = false
 

@@ -1,10 +1,15 @@
-const TestConfig = require("../../../../../tests/utilities/TestConfiguration")
-const { RestImporter } = require("../index")
-const fs = require("fs")
-const path = require("path")
-const { events } = require("@budibase/backend-core")
+import TestConfig from "../../../../../tests/utilities/TestConfiguration"
+import { RestImporter } from "../index"
+import fs from "fs"
+import path from "path"
+import { events } from "@budibase/backend-core"
 
-const getData = file => {
+type Assertions = Record<
+  DatasetKey,
+  { name?: string; source?: string; count?: number }
+>
+
+const getData = (file: string) => {
   return fs.readFileSync(
     path.join(__dirname, `../sources/tests/${file}`),
     "utf8"
@@ -41,6 +46,8 @@ const datasets = {
   curl,
 }
 
+type DatasetKey = keyof typeof datasets
+
 describe("Rest Importer", () => {
   const config = new TestConfig()
 
@@ -48,29 +55,40 @@ describe("Rest Importer", () => {
     await config.init()
   })
 
-  let restImporter
+  let restImporter: RestImporter
 
-  const init = async data => {
+  const init = async (data: string) => {
     restImporter = new RestImporter(data)
     await restImporter.init()
   }
 
-  const runTest = async (test, assertions) => {
+  const runTest = async (
+    test: (
+      key: DatasetKey,
+      data: string,
+      assertions: Assertions
+    ) => Promise<void>,
+    assertions: Assertions
+  ) => {
     await config.doInContext(config.appId, async () => {
       for (let [key, data] of Object.entries(datasets)) {
-        await test(key, data, assertions)
+        await test(key as DatasetKey, data, assertions)
       }
     })
   }
 
-  const testGetInfo = async (key, data, assertions) => {
+  const testGetInfo = async (
+    key: DatasetKey,
+    data: string,
+    assertions: Assertions
+  ) => {
     await init(data)
     const info = await restImporter.getInfo()
     expect(info.name).toBe(assertions[key].name)
   }
 
   it("gets info", async () => {
-    const assertions = {
+    const assertions: Assertions = {
       // openapi2 (swagger)
       oapi2CrudJson: {
         name: "CRUD",
@@ -105,7 +123,11 @@ describe("Rest Importer", () => {
     await runTest(testGetInfo, assertions)
   })
 
-  const testImportQueries = async (key, data, assertions) => {
+  const testImportQueries = async (
+    key: DatasetKey,
+    data: string,
+    assertions: Assertions
+  ) => {
     await init(data)
     const datasource = await config.createDatasource()
     const importResult = await restImporter.importQueries(datasource._id)
@@ -123,7 +145,7 @@ describe("Rest Importer", () => {
   it("imports queries", async () => {
     // simple sanity assertions that the whole dataset
     // makes it through the importer
-    const assertions = {
+    const assertions: Assertions = {
       // openapi2 (swagger)
       oapi2CrudJson: {
         count: 6,
