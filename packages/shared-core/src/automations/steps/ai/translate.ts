@@ -5,40 +5,31 @@ import {
   AutomationIOType,
 } from "@budibase/types"
 
-enum Model {
-  GPT_4O_MINI = "gpt-4o-mini",
-  GPT_4O = "gpt-4o",
-  GPT_4 = "gpt-4",
-  GPT_35_TURBO = "gpt-3.5-turbo",
-}
-
 export const definition: AutomationStepDefinition = {
-  name: "OpenAI",
-  tagline: "Send prompts to ChatGPT",
-  icon: "Algorithm",
-  description: "Interact with the OpenAI ChatGPT API.",
+  name: "Translate",
+  tagline: "Translate text to a different language",
+  icon: "GlobeGrid",
+  description: "Translate text to a different language.",
   type: AutomationStepType.ACTION,
   internal: true,
   features: {},
-  deprecated: false,
-  stepId: AutomationActionStepId.OPENAI,
+  stepId: AutomationActionStepId.TRANSLATE,
   inputs: {
     prompt: "",
   },
   schema: {
     inputs: {
       properties: {
-        prompt: {
+        text: {
           type: AutomationIOType.STRING,
-          title: "Prompt",
+          title: "Text",
         },
-        model: {
+        language: {
           type: AutomationIOType.STRING,
-          title: "Model",
-          enum: Object.values(Model),
+          title: "Language",
         },
       },
-      required: ["prompt", "model"],
+      required: ["text", "language"],
     },
     outputs: {
       properties: {
@@ -48,7 +39,7 @@ export const definition: AutomationStepDefinition = {
         },
         response: {
           type: AutomationIOType.STRING,
-          description: "What was output",
+          description: "What was the translated text",
         },
       },
       required: ["success", "response"],

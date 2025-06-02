@@ -59,6 +59,16 @@ import {
   RowUpdatedTriggerOutputs,
   WebhookTriggerOutputs,
   RowActionTriggerInputs,
+  ClassifyContentStepOutputs,
+  ClassifyContentStepInputs,
+  PromptLLMStepOutputs,
+  PromptLLMStepInputs,
+  TranslateStepOutputs,
+  TranslateStepInputs,
+  SummariseStepInputs,
+  SummariseStepOutputs,
+  GenerateTextStepInputs,
+  GenerateTextStepOutputs,
   APIRequestStepInputs,
   APIRequestStepOutputs,
 } from "./StepInputsOutputs"
@@ -148,6 +158,26 @@ export type ActionImplementations<T extends Hosting> = {
     OpenAIStepInputs,
     OpenAIStepOutputs
   >
+  [AutomationActionStepId.CLASSIFY_CONTENT]: ActionImplementation<
+    ClassifyContentStepInputs,
+    ClassifyContentStepOutputs
+  >
+  [AutomationActionStepId.PROMPT_LLM]: ActionImplementation<
+    PromptLLMStepInputs,
+    PromptLLMStepOutputs
+  >
+  [AutomationActionStepId.TRANSLATE]: ActionImplementation<
+    TranslateStepInputs,
+    TranslateStepOutputs
+  >
+  [AutomationActionStepId.SUMMARISE]: ActionImplementation<
+    SummariseStepInputs,
+    SummariseStepOutputs
+  >
+  [AutomationActionStepId.GENERATE_TEXT]: ActionImplementation<
+    GenerateTextStepInputs,
+    GenerateTextStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -226,7 +256,17 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                 ? LoopStepInputs
                                                 : T extends AutomationActionStepId.BRANCH
                                                   ? BranchStepInputs
-                                                  : never
+                                                  : T extends AutomationActionStepId.CLASSIFY_CONTENT
+                                                    ? ClassifyContentStepInputs
+                                                    : T extends AutomationActionStepId.PROMPT_LLM
+                                                      ? PromptLLMStepInputs
+                                                      : T extends AutomationActionStepId.TRANSLATE
+                                                        ? TranslateStepInputs
+                                                        : T extends AutomationActionStepId.SUMMARISE
+                                                          ? SummariseStepInputs
+                                                          : T extends AutomationActionStepId.GENERATE_TEXT
+                                                            ? GenerateTextStepInputs
+                                                            : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -243,29 +283,29 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
               ? APIRequestStepOutputs
               : T extends AutomationActionStepId.EXECUTE_SCRIPT
                 ? ExecuteScriptStepOutputs
-                : T extends AutomationActionStepId.FILTER
-                  ? FilterStepOutputs
-                  : T extends AutomationActionStepId.QUERY_ROWS
-                    ? QueryRowsStepOutputs
-                    : T extends AutomationActionStepId.SEND_EMAIL_SMTP
-                      ? BaseAutomationOutputs
-                      : T extends AutomationActionStepId.SERVER_LOG
-                        ? ServerLogStepOutputs
-                        : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
-                          ? TriggerAutomationStepOutputs
-                          : T extends AutomationActionStepId.UPDATE_ROW
-                            ? UpdateRowStepOutputs
-                            : T extends AutomationActionStepId.OUTGOING_WEBHOOK
-                              ? ExternalAppStepOutputs
-                              : T extends AutomationActionStepId.discord
+                : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
+                  ? ExecuteScriptStepOutputs
+                  : T extends AutomationActionStepId.FILTER
+                    ? FilterStepOutputs
+                    : T extends AutomationActionStepId.QUERY_ROWS
+                      ? QueryRowsStepOutputs
+                      : T extends AutomationActionStepId.SEND_EMAIL_SMTP
+                        ? BaseAutomationOutputs
+                        : T extends AutomationActionStepId.SERVER_LOG
+                          ? ServerLogStepOutputs
+                          : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
+                            ? TriggerAutomationStepOutputs
+                            : T extends AutomationActionStepId.UPDATE_ROW
+                              ? UpdateRowStepOutputs
+                              : T extends AutomationActionStepId.OUTGOING_WEBHOOK
                                 ? ExternalAppStepOutputs
-                                : T extends AutomationActionStepId.slack
+                                : T extends AutomationActionStepId.discord
                                   ? ExternalAppStepOutputs
-                                  : T extends AutomationActionStepId.zapier
-                                    ? ZapierStepOutputs
-                                    : T extends AutomationActionStepId.integromat
-                                      ? ExternalAppStepOutputs
-                                      : T extends AutomationActionStepId.n8n
+                                  : T extends AutomationActionStepId.slack
+                                    ? ExternalAppStepOutputs
+                                    : T extends AutomationActionStepId.zapier
+                                      ? ZapierStepOutputs
+                                      : T extends AutomationActionStepId.integromat
                                         ? ExternalAppStepOutputs
                                         : T extends AutomationActionStepId.EXECUTE_BASH
                                           ? BashStepOutputs
@@ -273,7 +313,17 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                             ? OpenAIStepOutputs
                                             : T extends AutomationActionStepId.LOOP
                                               ? BaseAutomationOutputs
-                                              : never
+                                              : T extends AutomationActionStepId.CLASSIFY_CONTENT
+                                                ? ClassifyContentStepOutputs
+                                                : T extends AutomationActionStepId.PROMPT_LLM
+                                                  ? PromptLLMStepOutputs
+                                                  : T extends AutomationActionStepId.TRANSLATE
+                                                    ? TranslateStepOutputs
+                                                    : T extends AutomationActionStepId.SUMMARISE
+                                                      ? SummariseStepOutputs
+                                                      : T extends AutomationActionStepId.GENERATE_TEXT
+                                                        ? GenerateTextStepOutputs
+                                                        : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -342,6 +392,21 @@ export type OpenAIStep = AutomationStepSchema<AutomationActionStepId.OPENAI>
 
 export type LoopStep = AutomationStepSchema<AutomationActionStepId.LOOP>
 
+export type ClassifyContentStep =
+  AutomationStepSchema<AutomationActionStepId.CLASSIFY_CONTENT>
+
+export type PromptLLMStep =
+  AutomationStepSchema<AutomationActionStepId.PROMPT_LLM>
+
+export type TranslateStep =
+  AutomationStepSchema<AutomationActionStepId.TRANSLATE>
+
+export type SummariseStep =
+  AutomationStepSchema<AutomationActionStepId.SUMMARISE>
+
+export type GenerateTextStep =
+  AutomationStepSchema<AutomationActionStepId.GENERATE_TEXT>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
   | CollectStep
@@ -368,6 +433,11 @@ export type AutomationStep =
   | ExecuteBashStep
   | OpenAIStep
   | BranchStep
+  | ClassifyContentStep
+  | PromptLLMStep
+  | TranslateStep
+  | SummariseStep
+  | GenerateTextStep
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
