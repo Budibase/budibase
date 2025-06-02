@@ -52,7 +52,7 @@
   on:contextmenu={openContextMenu}
   indentLevel={1}
   border={idx > 0}
-  icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
+  icon={table._id === TableNames.USERS ? "users-three" : "table"}
   text={table.name}
   hovering={table._id === $contextMenuStore.id}
   selected={$isActive("./table/:tableId") &&

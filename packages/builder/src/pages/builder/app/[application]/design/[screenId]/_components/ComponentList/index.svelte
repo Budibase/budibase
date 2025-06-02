@@ -98,9 +98,7 @@
             selected={$componentStore.selectedComponentId === navComponentId}
             opened
             scrollable
-            icon={$selectedScreen?.showNavigation
-              ? "Visibility"
-              : "VisibilityOff"}
+            icon={$selectedScreen?.showNavigation ? "eye" : "eye-slash"}
             on:drop={onDrop}
             on:click={() => {
               componentStore.select(

@@ -1,7 +1,7 @@
 <script lang="ts">
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { TooltipPosition, TooltipType } from "../constants"
-  import { getPhosphorIcon } from "../helpers"
+  import { getPhosphorIcon, isSpectrumIcon } from "../helpers"
 
   export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" | "Custom" = "M"
   export let name: string = "plus"
@@ -15,7 +15,6 @@
   export let tooltipType: TooltipType = TooltipType.Default
   export let tooltipColor: string | undefined = undefined
   export let tooltipWrap: boolean = true
-  export let newStyles: boolean = false
   export let customSize: number | undefined = undefined
   export let weight:
     | "thin"
@@ -35,14 +34,20 @@
     Custom: customSize ? `${customSize}px` : "1.25rem",
   }
 
-  const fontSize = sizeMap[size]
-
+  $: fontSize = sizeMap[size]
   $: phosphorIconName = getPhosphorIcon(name)
-
-  $: phosphorClass =
-    weight === "regular"
-      ? `ph ph-${phosphorIconName}`
-      : `ph-${weight} ph-${phosphorIconName}`
+  $: phosphorClass = `ph ph-${weight} ph-${phosphorIconName}`
+  $: legacy = name !== phosphorIconName
+  $: {
+    if (legacy) {
+      console.error(
+        "[Spectrum > Phosphor]: need to migrate",
+        name,
+        "to",
+        phosphorIconName
+      )
+    }
+  }
 </script>
 
 <AbsTooltip
@@ -52,7 +57,7 @@
   color={tooltipColor}
   noWrap={tooltipWrap}
 >
-  <div class="icon" class:newStyles>
+  <div class="icon" class:legacy>
     <!-- svelte-ignore a11y-mouse-events-have-key-events -->
     <i
       on:contextmenu
@@ -61,14 +66,8 @@
       on:mouseleave
       class:hoverable
       class:disabled
-      class="{phosphorClass} spectrum-Icon spectrum-Icon--size{size}"
-      style={`font-size: ${fontSize}; ${color ? `color: ${color};` : ""} 
-      ${
-        hoverColor
-          ? `--hover-color: ${hoverColor}`
-          : "--hover-color: var(--spectrum-alias-icon-color-selected-hover)"
-      }; 
-      line-height: 1; vertical-align: middle;`}
+      class={phosphorClass}
+      style={`--size:${fontSize}; --color:${color}; --hover-color: ${hoverColor}`}
       aria-hidden={hidden ? "true" : "false"}
       aria-label={tooltip || name}
       title={tooltip}
@@ -82,47 +81,25 @@
     display: grid;
     place-items: center;
   }
-  .newStyles {
-    color: var(--spectrum-global-color-gray-700);
+  .icon.legacy {
+    border: 1px solid red;
   }
   i {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
+    color: var(--color, var(--spectrum-global-color-gray-700));
+    transition: color 130ms ease-out;
   }
   i.hoverable {
     pointer-events: all;
   }
   i.hoverable:hover {
-    color: var(--hover-color) !important;
+    color: var(--hover-color, var(--spectrum-global-color-gray-900));
     cursor: pointer;
   }
   i.hoverable:active {
-    color: var(--spectrum-global-color-blue-400) !important;
-  }
-  .newStyles i.hoverable:hover,
-  .newStyles i.hoverable:active {
-    color: var(--spectrum-global-color-gray-900) !important;
+    color: var(--spectrum-global-color-gray-900);
   }
   i.disabled {
-    color: var(--spectrum-global-color-gray-500) !important;
-    pointer-events: none !important;
-  }
-  /* Keep the original size classes for compatibility but make them control font-size */
-  .spectrum-Icon--sizeXS {
-    font-size: 0.75rem;
-  }
-  .spectrum-Icon--sizeS {
-    font-size: 1rem;
-  }
-  .spectrum-Icon--sizeM {
-    font-size: 1.25rem;
-  }
-  .spectrum-Icon--sizeL {
-    font-size: 1.5rem;
-  }
-  .spectrum-Icon--sizeXL {
-    font-size: 2rem;
-  }
-  .spectrum-Icon--sizeXXL {
-    font-size: 2.5rem;
+    color: var(--spectrum-global-color-gray-500);
+    pointer-events: none;
   }
 </style>

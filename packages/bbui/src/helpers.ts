@@ -257,7 +257,8 @@ export function rgbToHex(rgbStr: string | undefined): string {
     .toUpperCase()}`
 }
 
-export const iconMap: Record<string, string> = {
+// Icon conversions for app icons
+export const AppIconMap: Record<string, string> = {
   Apps: "dots-nine",
   Actions: "pencil-ruler",
   ConversionFunnel: "funnel-simple",
@@ -285,7 +286,7 @@ export const iconMap: Record<string, string> = {
 }
 
 // Comprehensive Spectrum to Phosphor mapping
-export const comprehensiveIconMap: Record<string, string> = {
+export const SpectrumIconMap: Record<string, string> = {
   "123": "list-numbers",
   "3DMaterials": "cube",
   ABC: "text-aa",
@@ -444,7 +445,7 @@ export const comprehensiveIconMap: Record<string, string> = {
   CollectionExclude: "stack",
   CollectionLink: "stack",
   ColorFill: "paint-bucket",
-  ColorPalette: "paint-palette",
+  ColorPalette: "palette",
   ColorWheel: "circle-half-tilt",
   ColumnSettings: "columns",
   ColumnTwoA: "columns",
@@ -1220,6 +1221,10 @@ export const comprehensiveIconMap: Record<string, string> = {
   ZoomOut: "magnifying-glass-minus",
 }
 
-export function getPhosphorIcon(spectrumIcon: string): string {
-  return iconMap[spectrumIcon] || spectrumIcon
+export function getPhosphorIcon(icon: string): string {
+  return SpectrumIconMap[icon] || icon
+}
+
+export function isSpectrumIcon(icon: string) {
+  return SpectrumIconMap[icon] != null
 }

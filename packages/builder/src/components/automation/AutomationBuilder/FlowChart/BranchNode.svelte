@@ -217,7 +217,7 @@
             }}
             size="S"
             hoverable
-            name="MoreSmallList"
+            name="dots-three"
           />
         </div>
       </div>

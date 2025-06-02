@@ -243,7 +243,7 @@
     return ThemeOptions.map(themeMeta => ({
       type: "Change Builder Theme",
       name: themeMeta.name,
-      icon: "paint-palette",
+      icon: "palette",
       action: () =>
         themeStore.update(state => {
           state.theme = themeMeta.id

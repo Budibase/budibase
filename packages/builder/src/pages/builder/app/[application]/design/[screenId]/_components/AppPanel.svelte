@@ -36,7 +36,7 @@
           {#if $appStore.clientFeatures.devicePreview}
             <ActionButton
               quiet
-              icon={mobile ? "DevicePhone" : "DeviceDesktop"}
+              icon={mobile ? "device-mobile" : "desktop"}
               selected
               on:click={togglePreviewDevice}
             />

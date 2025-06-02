@@ -114,7 +114,7 @@
     on:click={e => openContextMenu(e, screen)}
     size="S"
     hoverable
-    name="MoreSmallList"
+    name="dots-three"
   />
   <div slot="right" class="icon">
     <RoleIndicator roleId={screen.routing.roleId} />

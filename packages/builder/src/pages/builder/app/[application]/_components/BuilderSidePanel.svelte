@@ -620,7 +620,7 @@
           userOnboardResponse = null
         }}
       >
-        <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
+        <Icon name={!filterByAppAccess || query ? "x" : "magnifying-glass"} />
       </span>
     </div>
 

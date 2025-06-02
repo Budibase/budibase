@@ -96,7 +96,7 @@
         on:click={e => openContextMenu(e, workspaceApp)}
         size="S"
         hoverable
-        name="MoreSmallList"
+        name="dots-three"
       />
       <div slot="icon">
         <Icon

@@ -44,7 +44,7 @@
   width={320}
 >
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="paint-palette" quiet selected={open} on:click={show} />
+    <ActionButton icon="palette" quiet selected={open} on:click={show} />
   </svelte:fragment>
 
   <div class="info">
