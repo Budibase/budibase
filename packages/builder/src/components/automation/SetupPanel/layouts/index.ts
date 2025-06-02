@@ -1,7 +1,9 @@
+import APIRequest from "./APIRequest.svelte"
 import { DrawerBindableInput } from "@/components/common/bindings"
 import { automationStore, selectedAutomation } from "@/stores/builder"
 import { Divider, Helpers, Select } from "@budibase/bbui"
 import {
+  AutomationActionStepId,
   AutomationEventType,
   AutomationStep,
   AutomationStepType,
@@ -11,14 +13,14 @@ import {
   Row,
 } from "@budibase/types"
 import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
-import { RowSelector, TableSelector } from "."
+import { RowSelector, TableSelector } from "../"
 import { get, Writable } from "svelte/store"
 import {
   type StepInputs,
   type SchemaConfigProps,
   type FormUpdate,
 } from "@/types/automations"
-import RowFetch from "./RowFetch.svelte"
+import RowFetch from "../RowFetch.svelte"
 
 export const getInputValue = (inputData: StepInputs, key: string) => {
   const idxInput = inputData as Record<string, unknown>
@@ -326,5 +328,12 @@ export const getCustomStepLayout = (
       ...getTriggerRowSelector(),
     ]
     return layout
+  } else if (block.stepId === AutomationActionStepId.API_REQUEST) {
+    return [
+      {
+        comp: APIRequest,
+        wrapped: false,
+      },
+    ]
   }
 }

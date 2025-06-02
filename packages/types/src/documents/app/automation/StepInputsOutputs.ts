@@ -88,10 +88,22 @@ export type DiscordStepInputs = {
 export type ExecuteQueryStepInputs = {
   query: {
     queryId: string
+    [key: string]: any
   }
 }
 
 export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
+  info?: any
+}
+
+export type APIRequestStepInputs = {
+  query: {
+    queryId: string
+    [key: string]: any
+  }
+}
+
+export type APIRequestStepOutputs = BaseAutomationOutputs & {
   info?: any
 }
 
