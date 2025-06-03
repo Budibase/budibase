@@ -205,7 +205,12 @@
         >
           <span class="spectrum-Menu-itemLabel">{placeholderOption}</span>
           <div class="check">
-            <Icon name="check" size="S" />
+            <Icon
+              name="check"
+              size="S"
+              weight="bold"
+              color="var(--spectrum-global-color-blue-500)"
+            />
           </div>
         </li>
       {/if}
@@ -257,7 +262,12 @@
               </span>
             {/if}
             <div class="check">
-              <Icon name="check" size="S" />
+              <Icon
+                name="check"
+                size="S"
+                weight="bold"
+                color="var(--spectrum-global-color-blue-500)"
+              />
             </div>
           </li>
         {/each}
@@ -305,10 +315,6 @@
   }
   li.is-selected .check {
     display: block;
-  }
-  .spectrum-Menu-checkmark {
-    align-self: center;
-    margin-top: 0;
   }
   .option-extra {
     padding-right: 8px;
