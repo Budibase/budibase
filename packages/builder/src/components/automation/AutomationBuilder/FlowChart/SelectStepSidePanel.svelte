@@ -81,34 +81,7 @@
     return disabledStates[idx as keyof typeof disabledStates]
   }
 
-  const collectDisabledMessage = () => {
-    if (collectBlockExists) {
-      return "Only one Collect step allowed"
-    }
-    if (!lastStep) {
-      return "Only available as the last step"
-    }
-  }
-
-  const allActions: Record<string, AutomationStepDefinition> = {}
-  actions.forEach(([k, v]) => {
-    if (!v.deprecated) {
-      allActions[k] = v
-    }
-  })
-
-  const plugins = actions.reduce(
-    (acc: Record<string, AutomationStepDefinition>, elm) => {
-      const [k, v] = elm
-      if (v.custom) {
-        acc[k] = v
-      }
-      return acc
-    },
-    {}
-  )
-
-  const categories = [
+  $: categories = [
     {
       name: "Data",
       items: actions.filter(([k]) =>
@@ -153,6 +126,18 @@
       ),
     },
     {
+      name: "AI",
+      items: actions.filter(([k]) =>
+        [
+          AutomationActionStepId.PROMPT_LLM,
+          AutomationActionStepId.CLASSIFY_CONTENT,
+          AutomationActionStepId.TRANSLATE,
+          AutomationActionStepId.SUMMARISE,
+          AutomationActionStepId.GENERATE_TEXT,
+        ].includes(k as AutomationActionStepId)
+      ),
+    },
+    {
       name: "Apps",
       items: actions.filter(([k]) =>
         [
@@ -166,6 +151,33 @@
       ),
     },
   ]
+
+  const collectDisabledMessage = () => {
+    if (collectBlockExists) {
+      return "Only one Collect step allowed"
+    }
+    if (!lastStep) {
+      return "Only available as the last step"
+    }
+  }
+
+  const allActions: Record<string, AutomationStepDefinition> = {}
+  actions.forEach(([k, v]) => {
+    if (!v.deprecated) {
+      allActions[k] = v
+    }
+  })
+
+  const plugins = actions.reduce(
+    (acc: Record<string, AutomationStepDefinition>, elm) => {
+      const [k, v] = elm
+      if (v.custom) {
+        acc[k] = v
+      }
+      return acc
+    },
+    {}
+  )
 
   $: filteredCategories = categories
     .map(category => ({
