@@ -361,7 +361,7 @@
             hide()
           }}
         >
-          {buttonText}
+          {buttonText || "Apply"}
         </Button>
       {/if}
     </div>
