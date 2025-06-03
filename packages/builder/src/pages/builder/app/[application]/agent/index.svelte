@@ -162,7 +162,7 @@
       guidelines: "",
       // TODO: make this less shit
       type: toolSource.name === "Github" ? "GITHUB" :
-            toolSource.name === "Confluence" ? "ATLASSIAN" :
+            toolSource.name === "Confluence" ? "CONFLUENCE" :
             "BUDIBASE"
     }
     toolSourceModal.hide()
@@ -219,9 +219,16 @@
     }
   }
 
-  const saveToolConfig = () => {
-    // Placeholder for now - just show success message
-    notifications.success("Tool configuration saved successfully.")
+  const saveToolConfig = async () => {
+    if (!selectedConfigToolSource) return
+    
+    try {
+      await agentsStore.updateToolSource(selectedConfigToolSource)
+      notifications.success("Tool configuration saved successfully.")
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error saving tool configuration")
+    }
   }
 
   onMount(async () => {
@@ -354,9 +361,6 @@
                       <Icon name="BackAndroid" />
                       Back
                     </Button>
-                    <Heading size="XS">
-                      Configure {selectedConfigToolSource?.type} Tools
-                    </Heading>
                   </div>
                   
                   {#if selectedConfigToolSource?.tools}
@@ -609,27 +613,28 @@
 
   .history-item {
     padding: var(--spacing-m);
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--spectrum-alias-border-color);
     border-radius: 8px;
     margin-bottom: var(--spacing-s);
     cursor: pointer;
     transition: all 0.2s ease;
     width: 100%;
+    background-color: var(--spectrum-alias-background-color-default);
   }
 
   .history-item:hover {
-    background-color: var(--spectrum-global-color-gray-100);
-    border-color: var(--spectrum-global-color-blue-400);
+    background-color: var(--spectrum-alias-background-color-hover);
+    border-color: var(--spectrum-alias-border-color-hover);
   }
 
   .history-item.active {
-    background-color: var(--spectrum-global-color-blue-100);
-    border-color: var(--spectrum-global-color-blue-500);
+    background-color: var(--spectrum-alias-background-color-selected);
+    border-color: var(--spectrum-alias-border-color-selected);
   }
 
   .chat-title {
     font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--spectrum-alias-text-color);
     margin-bottom: var(--spacing-xs);
     white-space: nowrap;
     overflow: hidden;

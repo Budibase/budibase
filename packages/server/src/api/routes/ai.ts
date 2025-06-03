@@ -11,6 +11,7 @@ router.post("/api/agent/chat", auth.adminOnly, ai.agentChat)
 router.delete("/api/agent/history/:historyId", auth.adminOnly, ai.remove)
 router.get("/api/agent/history", auth.adminOnly, ai.fetchHistory)
 router.post("/api/agent/toolsource", auth.builderOrAdmin, ai.createToolSource)
+router.put("/api/agent/toolsource", auth.builderOrAdmin, ai.updateToolSource)
 router.get("/api/agent/toolsource", auth.builderOrAdmin, ai.fetchToolSources)
 
 router.post("/api/ai/cron", auth.builderOrAdmin, ai.generateCronExpression)

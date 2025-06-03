@@ -22,23 +22,46 @@ export async function agentChat(
 ) {
   const model = await ai.getLLMOrThrow()
   const chat = ctx.request.body
-
+  const db = context.getAppDB()
 
   let prompt = new ai.LLMRequest()
     .addSystemMessage(ai.agentSystemPrompt(ctx.user))
     .addMessages(chat.messages)
-    .addTools(tools.budibase)
 
-  // TODO: temporary until dynamically loaded from DB
-  // TODO: need to read the DB, check the tool sources
-  // TODO: For the connected ones
-  // TODO: inject toolsources API keys into the clients
-  // TODO: filter out the tools that aren't needed
-  const ghClient = new GitHubClient()
-  const confluenceClient = new ConfluenceClient()
-  prompt = prompt
-    .addTools(ghClient.getTools())
-    .addTools(confluenceClient.getTools())
+  const toolSources = await db.allDocs<AgentToolSource>(
+    docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
+      include_docs: true,
+    })
+  )
+
+  for (const row of toolSources.rows) {
+    const toolSource = row.doc!
+    const disabledTools = toolSource.disabledTools || []
+    
+    let toolsToAdd: any[] = []
+    
+    switch (toolSource.type) {
+      case "BUDIBASE": {
+        toolsToAdd = tools.budibase.filter(tool => !disabledTools.includes(tool.name))
+        break
+      }
+      case "GITHUB": {
+        const ghClient = new GitHubClient()
+        toolsToAdd = ghClient.getTools().filter(tool => !disabledTools.includes(tool.name))
+        break
+      }
+      case "CONFLUENCE": {
+        const confluenceClient = new ConfluenceClient()
+        toolsToAdd = confluenceClient.getTools().filter(tool => !disabledTools.includes(tool.name))
+        break
+      }
+    }
+    
+    if (toolsToAdd.length > 0) {
+      console.log(toolsToAdd)
+      prompt = prompt.addTools(toolsToAdd)
+    }
+  }
 
   const response = await model.chat(prompt)
 
@@ -92,7 +115,6 @@ export async function agentChat(
     messages: response.messages,
   }
 
-  const db = context.getAppDB()
   const { rev } = await db.put(newChat)
   newChat._rev = rev
   ctx.body = newChat
@@ -158,7 +180,7 @@ export async function createToolSource(
 }
 
 export async function updateToolSource(
-  ctx: UserCtx<CreateToolSourceRequest, void>
+  ctx: UserCtx<CreateToolSourceRequest, AgentToolSource>
 ) {
   const toolSource = ctx.request.body
 
@@ -172,10 +194,6 @@ export async function updateToolSource(
   toolSource._rev = response.rev
 
   await db.put(toolSource)
-  // TODO: Needs a proper type for the return
-  ctx.body = {
-    message: `Toolsource updated successfully`,
-    toolSource
-  }
+  ctx.body = toolSource
   ctx.status = 200
 }

@@ -52,6 +52,21 @@ export class AgentsStore extends BudiStore<AgentStore> {
     return newToolSource
   }
 
+  updateToolSource = async (toolSource: AgentToolSource) => {
+    const updatedToolSource = await API.updateToolSource(toolSource)
+    this.update(state => {
+      const index = state.toolSources.findIndex(ts => ts._id === toolSource._id)
+      if (index !== -1) {
+        state.toolSources[index] = {
+          ...updatedToolSource,
+          tools: state.toolSources[index].tools
+        }
+      }
+      return state
+    })
+    return updatedToolSource
+  }
+
   setCurrentChatId = (chatId: string) => {
     this.update(state => {
       state.currentChatId = chatId

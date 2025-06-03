@@ -16,6 +16,7 @@ export interface AgentEndpoints {
 
   fetchToolSources: () => Promise<AgentToolSource[]>
   createToolSource: (toolSource: CreateToolSourceRequest) => Promise<AgentToolSource>
+  updateToolSource: (toolSource: AgentToolSource) => Promise<AgentToolSource>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -47,6 +48,13 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
 
   createToolSource: async (toolSource: CreateToolSourceRequest) => {
     return await API.post({
+      url: "/api/agent/toolsource",
+      body: toolSource,
+    })
+  },
+
+  updateToolSource: async (toolSource: AgentToolSource) => {
+    return await API.put({
       url: "/api/agent/toolsource",
       body: toolSource,
     })
