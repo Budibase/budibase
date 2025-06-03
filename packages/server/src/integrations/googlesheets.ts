@@ -324,7 +324,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
+    entities: Record<string, Table>,
+    filter?: string[]
   ): Promise<Schema> {
     // not fully configured yet
     if (!this.config.auth) {
@@ -332,7 +333,9 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     }
     await this.connect()
 
-    const sheets = this.client.sheetsByIndex.filter(s => entities[s.title])
+    const sheets = this.client.sheetsByIndex.filter(
+      s => !filter || filter.includes(s.title)
+    )
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
 
