@@ -176,7 +176,7 @@
         />
       {:else}
         <div>
-          {#if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI].includes(filter.type)}
+          {#if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI, FieldType.BARCODEQR].includes(filter.type)}
             <Input
               disabled={filter.noValue}
               value={readableValue}

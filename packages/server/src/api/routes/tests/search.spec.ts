@@ -852,7 +852,11 @@ if (descriptions.length) {
                 })
               })
 
-            const stringTypes = [FieldType.STRING, FieldType.LONGFORM] as const
+            const stringTypes = [
+              FieldType.STRING,
+              FieldType.LONGFORM,
+              FieldType.BARCODEQR,
+            ] as const
             describe.each(stringTypes)("%s", type => {
               beforeAll(async () => {
                 tableOrViewId = await createTableOrView({

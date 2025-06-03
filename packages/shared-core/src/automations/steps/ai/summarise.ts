@@ -5,40 +5,38 @@ import {
   AutomationIOType,
 } from "@budibase/types"
 
-enum Model {
-  GPT_4O_MINI = "gpt-4o-mini",
-  GPT_4O = "gpt-4o",
-  GPT_4 = "gpt-4",
-  GPT_35_TURBO = "gpt-3.5-turbo",
+enum SummariseLength {
+  SHORT = "Short",
+  MEDIUM = "Medium",
+  LONG = "Long",
 }
 
 export const definition: AutomationStepDefinition = {
-  name: "OpenAI",
-  tagline: "Send prompts to ChatGPT",
-  icon: "Algorithm",
-  description: "Interact with the OpenAI ChatGPT API.",
+  name: "Summarise",
+  tagline: "Summarise text",
+  icon: "Summarize",
+  description: "Summarise text.",
   type: AutomationStepType.ACTION,
   internal: true,
   features: {},
-  deprecated: false,
-  stepId: AutomationActionStepId.OPENAI,
+  stepId: AutomationActionStepId.SUMMARISE,
   inputs: {
     prompt: "",
   },
   schema: {
     inputs: {
       properties: {
-        prompt: {
-          type: AutomationIOType.STRING,
-          title: "Prompt",
+        text: {
+          type: AutomationIOType.LONGFORM,
+          title: "Text",
         },
-        model: {
+        length: {
           type: AutomationIOType.STRING,
-          title: "Model",
-          enum: Object.values(Model),
+          title: "Length",
+          enum: Object.values(SummariseLength),
         },
       },
-      required: ["prompt", "model"],
+      required: ["text", "length"],
     },
     outputs: {
       properties: {
@@ -48,7 +46,7 @@ export const definition: AutomationStepDefinition = {
         },
         response: {
           type: AutomationIOType.STRING,
-          description: "What was output",
+          description: "What was the summarised text",
         },
       },
       required: ["success", "response"],
