@@ -23,8 +23,12 @@ import {
 import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { quotas, ai } from "@budibase/pro"
-import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
+import {
+  MockLLMResponseFn,
+  MockLLMResponseOpts,
+} from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
+import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
 
 function dedent(str: string) {
   return str
@@ -115,6 +119,22 @@ const allProviders: TestSetup[] = [
       defaultModel: "claude-3-5-sonnet-20240620",
     }),
     mockLLMResponse: mockAnthropicResponse,
+  },
+  {
+    name: "Azure OpenAI API key with custom config",
+    setup: customAIConfig({
+      provider: "AzureOpenAI",
+      defaultModel: "gpt-4o-realtime-preview-1001",
+      baseUrl: "https://azure.example.com",
+    }),
+    mockLLMResponse: (
+      answer: string | ((prompt: string) => string),
+      opts?: MockLLMResponseOpts
+    ) =>
+      mockAzureOpenAIResponse(answer, {
+        baseUrl: "https://azure.example.com",
+        ...opts,
+      }),
   },
   {
     name: "BudibaseAI",

@@ -46,7 +46,7 @@ interface ChatCompletionResponse {
   usage: Usage
 }
 
-export const mockChatGPTResponse: MockLLMResponseFn = (
+export const mockAzureOpenAIResponse: MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
   opts?: MockLLMResponseOpts
 ) => {
@@ -57,8 +57,8 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
       response_format: ai.parseResponseFormat(opts.format),
     })
   }
-  return nock(opts?.baseUrl || "https://api.openai.com")
-    .post("/v1/chat/completions", body)
+  return nock(opts?.baseUrl || "https://api.azure.com")
+    .post(new RegExp("/deployments/.*?/chat/completions"), body)
     .reply((uri: string, body: nock.Body) => {
       const req = body as ChatCompletionRequest
       const messages = req.messages
@@ -107,44 +107,6 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
             rejected_prediction_tokens: 0,
           },
         },
-      }
-      return [200, response]
-    })
-    .persist()
-}
-
-interface FileUploadResponse {
-  id: string
-  object: string
-  bytes: number
-  created_at: number
-  filename: string
-  purpose: string
-}
-
-export const mockOpenAIFileUpload = (
-  fileId = "file-test123",
-  opts?: { status?: number; error?: any }
-) => {
-  if (opts?.error) {
-    return nock("https://api.openai.com")
-      .post("/v1/files")
-      .reply(opts.status || 400, opts.error)
-      .persist()
-  }
-
-  return nock("https://api.openai.com")
-    .post("/v1/files")
-    .reply((uri: string, body: any) => {
-      const filename = body.filename || "test-file.pdf"
-
-      const response: FileUploadResponse = {
-        id: fileId,
-        object: "file",
-        bytes: 1024,
-        created_at: Math.floor(Date.now() / 1000),
-        filename: filename,
-        purpose: "assistants",
       }
       return [200, response]
     })
