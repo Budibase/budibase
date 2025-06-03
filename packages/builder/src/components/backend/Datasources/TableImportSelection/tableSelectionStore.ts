@@ -3,10 +3,7 @@ import { keepOpen, notifications } from "@budibase/bbui"
 import { datasources, tables } from "@/stores/builder"
 import { Datasource } from "@budibase/types"
 
-export const createTableSelectionStore = (
-  integration: any,
-  datasource: Datasource
-) => {
+export const createTableSelectionStore = (datasource: Datasource) => {
   const tableNamesStore = writable<string[]>([])
   const selectedTableNamesStore = writable<string[]>([])
   const errorStore = writable<Error | null>(null)
