@@ -366,7 +366,7 @@
                             <svelte:component this={Logos[toolSource.type]} height="26" width="26" />
                           </div>
                           <div class="tool-info">
-                            <div class="tool-name">{toolSource.type}</div>
+                            <div class="tool-name">{ToolSources.find(ts => ts.type === toolSource.type)?.name}</div>
                           </div>
                           <div class="tool-actions">
                             <Icon
@@ -394,7 +394,7 @@
                       hoverable
                       on:click={backToToolsList}
                     />
-                    <Heading size="S">{selectedConfigToolSource.type}</Heading>
+                    <Heading size="S">{ToolSources.find(ts => selectedConfigToolSource.type === ts.type)?.name}</Heading>
                     <Button size="S" cta on:click={saveToolConfig}>
                       Save Configuration
                     </Button>
@@ -404,6 +404,11 @@
                     <div class="tools-list">
                       {#each selectedConfigToolSource.tools as tool}
                         <div class="tool-toggle-item">
+                          <div class="tool-toggle-icon">
+                            {#if Logos[selectedConfigToolSource.type]}
+                              <svelte:component this={Logos[selectedConfigToolSource.type]} height="20" width="20" />
+                            {/if}
+                          </div>
                           <div class="tool-toggle-info">
                             <div class="tool-toggle-name">{tool.name}</div>
                             <div class="tool-toggle-description">
@@ -774,17 +779,23 @@
 
   .tool-toggle-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     padding: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
     background-color: var(--background);
+    gap: var(--spacing-m);
+  }
+
+  .tool-toggle-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
 
   .tool-toggle-info {
     flex: 1;
-    margin-right: var(--spacing-m);
   }
 
   .tool-toggle-name {
