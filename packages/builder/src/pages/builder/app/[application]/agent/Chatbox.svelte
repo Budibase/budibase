@@ -19,7 +19,7 @@
                   .map(part =>
                     part.type === "text"
                       ? part.text
-                      : `[${part.type} content not supported]`
+                      : `${part.type} content not supported`
                   )
                   .join("")
               : "[Empty message]"}
