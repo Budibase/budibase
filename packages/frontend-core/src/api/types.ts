@@ -36,6 +36,7 @@ import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
 import { AgentEndpoints } from "./agents"
 import { NavigationEndpoints } from "./navigation"
+import { WorkspaceAppEndpoints } from "./workspaceApps"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -143,4 +144,5 @@ export type APIClient = BaseAPIClient &
     viewV2: ViewV2Endpoints
     oauth2: OAuth2Endpoints
     navigation: NavigationEndpoints
+    workspaceApp: WorkspaceAppEndpoints
   }

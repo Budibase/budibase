@@ -32,16 +32,7 @@
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
     "dev": "yarn run dev:stack:up && nodemon",
     "dev:built": "yarn run dev:stack:up && yarn run run:docker",
-    "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts",
-    "initialise": "node scripts/initialise.js",
-    "env:multi:enable": "node scripts/multiTenancy.js enable",
-    "env:multi:disable": "node scripts/multiTenancy.js disable",
-    "env:selfhost:enable": "node scripts/selfhost.js enable",
-    "env:selfhost:disable": "node scripts/selfhost.js disable",
-    "env:localdomain:enable": "node scripts/localdomain.js enable",
-    "env:localdomain:disable": "node scripts/localdomain.js disable",
-    "env:account:enable": "node scripts/account.js enable",
-    "env:account:disable": "node scripts/account.js disable"
+    "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts"
   },
   "keywords": [
     "budibase"
@@ -182,7 +173,6 @@
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
     "typescript": "5.7.2",
-    "update-dotenv": "1.1.1",
     "yargs": "^13.2.4",
     "zod": "^3.23.8"
   },

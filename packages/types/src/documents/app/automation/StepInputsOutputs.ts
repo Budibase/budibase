@@ -88,10 +88,22 @@ export type DiscordStepInputs = {
 export type ExecuteQueryStepInputs = {
   query: {
     queryId: string
+    [key: string]: any
   }
 }
 
 export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
+  info?: any
+}
+
+export type APIRequestStepInputs = {
+  query: {
+    queryId: string
+    [key: string]: any
+  }
+}
+
+export type APIRequestStepOutputs = BaseAutomationOutputs & {
   info?: any
 }
 
@@ -174,7 +186,6 @@ export type ClassifyContentStepInputs = {
 
 export type ClassifyContentStepOutputs = {
   category?: string
-  confidence?: number
   success: boolean
   response?: string
 }
@@ -215,7 +226,6 @@ export type GenerateTextStepInputs = {
 }
 
 export type GenerateTextStepOutputs = {
-  generatedText?: string
   success: boolean
   response?: string
 }

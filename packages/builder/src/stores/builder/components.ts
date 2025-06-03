@@ -238,7 +238,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     const settings = this.getComponentSettings(component._component)
     const { parent, screen, useDefaultValues } = opts || {}
     const treeId = parent || component._id
-    if (!screen) {
+    if (!screen || !treeId) {
       return
     }
     settings.forEach((setting: ComponentSetting) => {
@@ -285,7 +285,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
           // Autofill form field names
           // Get all available field names in this form schema
           let fieldOptions = getComponentFieldOptions(
-            screen.props,
+            screen,
             treeId,
             setting.type,
             false

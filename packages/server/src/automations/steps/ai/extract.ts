@@ -80,7 +80,7 @@ export async function run({
       throw new Error("Invalid file input – source and file type do not match")
     }
 
-    const request = ai.extractDocumentData(inputs.schema, fileIdOrDataUrl)
+    const request = ai.extractFileData(inputs.schema, fileIdOrDataUrl)
     request.withFormat("json")
     const llmResponse = await llm.prompt(request)
 

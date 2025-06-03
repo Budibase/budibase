@@ -15,7 +15,6 @@ export async function run({
   if (!inputs.contentType || !inputs.instructions) {
     return {
       success: false,
-      generatedText: "",
       response:
         "Generate Text AI Step Failed: Content Type and Instructions are required.",
     }
@@ -41,20 +40,18 @@ Generate the content based on these instructions. Format appropriately for a ${i
 
     if (generatedText) {
       return {
-        generatedText,
+        response: generatedText,
         success: true,
       }
     }
 
     return {
       success: false,
-      generatedText: "",
       response: "Generate Text AI Step Failed: AI did not return any content.",
     }
   } catch (err: any) {
     return {
       success: false,
-      generatedText: "",
       response: automationUtils.getError(err),
     }
   }
