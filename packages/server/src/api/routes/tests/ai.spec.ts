@@ -291,7 +291,7 @@ describe("BudibaseAI", () => {
     beforeAll(() => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
-        INTERNAL_API_KEY: internalApiKey,
+        ACCOUNT_PORTAL_API_KEY: internalApiKey,
       })
       featureCleanup = features.testutils.setFeatureFlags("*", {
         AI_JS_GENERATION: true,
