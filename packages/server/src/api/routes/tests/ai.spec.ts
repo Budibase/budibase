@@ -1037,7 +1037,7 @@ describe("BudibaseAI", () => {
       expect(response.file).toBe(mockFileId)
     })
 
-    it("handles upload with various content types", async () => {
+    it("handles upload with img base64 data", async () => {
       const mockFileId = "file-xyz789"
       mockOpenAIFileUpload(mockFileId)
 
