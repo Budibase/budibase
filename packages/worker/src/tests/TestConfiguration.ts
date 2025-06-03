@@ -37,10 +37,13 @@ import {
 } from "@budibase/types"
 import API from "./api"
 import jwt, { Secret } from "jsonwebtoken"
+import http from "http"
 
 class TestConfiguration {
-  server: any
-  request: any
+  server?: http.Server<typeof http.IncomingMessage, typeof http.ServerResponse>
+
+  request?: supertest.SuperTest<supertest.Test>
+
   api: API
   tenantId: string
   user?: User
