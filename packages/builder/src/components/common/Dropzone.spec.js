@@ -24,7 +24,7 @@ describe("Dropzone", () => {
       return () => {}
     })
     instance = render(Dropzone, { props: { fileSizeLimit: 1000000 } }) // 1MB
-    const fileInput = instance.getByLabelText("Select a file to upload")
+    const fileInput = instance.getByLabelText("Click to select a file")
     const file = new File(["hello".repeat(2000000)], "hello.png", {
       type: "image/png",
     })
@@ -40,7 +40,7 @@ describe("Dropzone", () => {
       return () => {}
     })
     instance = render(Dropzone, { props: { fileSizeLimit: 1000000 } }) // 1MB
-    const fileInput = instance.getByLabelText("Select a file to upload")
+    const fileInput = instance.getByLabelText("Click to select a file")
     const file = new File(["hello".repeat(2000000)], "hello.png", {
       type: "image/png",
     })
