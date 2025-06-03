@@ -85,15 +85,7 @@ app.use(api.routes())
 
 const server = http.createServer(app.callback())
 
-let isShuttingDown = false
-
 const shutdown = async (signal?: string) => {
-  if (isShuttingDown) {
-    console.log("Shutdown already in progress, skipping...")
-    return
-  }
-  isShuttingDown = true
-
   console.log(
     `Worker service shutting down gracefully... ${signal ? `Signal: ${signal}` : ""}`
   )
