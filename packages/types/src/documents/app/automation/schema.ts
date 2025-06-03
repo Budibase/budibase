@@ -272,7 +272,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                           ? SummariseStepInputs
                                                           : T extends AutomationActionStepId.GENERATE_TEXT
                                                             ? GenerateTextStepInputs
-                                                            : never
+                                                            : T extends AutomationActionStepId.EXTRACT_FILE_DATA
+                                                              ? ExtractFileDataStepInputs
+                                                              : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -329,7 +331,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                       ? SummariseStepOutputs
                                                       : T extends AutomationActionStepId.GENERATE_TEXT
                                                         ? GenerateTextStepOutputs
-                                                        : never
+                                                        : T extends AutomationActionStepId.EXTRACT_FILE_DATA
+                                                          ? ExtractFileDataStepOutputs
+                                                          : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -448,6 +452,7 @@ export type AutomationStep =
   | SummariseStep
   | GenerateTextStep
   | ExtractFileDataStep
+
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
 ): step is BranchStep {
