@@ -1,13 +1,12 @@
 import fs, { PathLike } from "fs"
 import { budibaseTempDir } from "../budibaseDir"
-import { resolve, join } from "path"
+import { join } from "path"
 import env from "../../environment"
 import tar from "tar"
 
 import { v4 as uuid } from "uuid"
 
-export const TOP_LEVEL_PATH =
-  env.TOP_LEVEL_PATH || resolve(join(__dirname, "..", "..", ".."))
+export const TOP_LEVEL_PATH = env.TOP_LEVEL_PATH
 export const DEV_ASSET_PATH = join(TOP_LEVEL_PATH, "packages", "server")
 
 /**
@@ -40,7 +39,7 @@ export const checkDevelopmentEnvironment = () => {
     fs.mkdirSync(budibaseTempDir())
   }
   let error
-  if (!fs.existsSync(join(process.cwd(), ".env"))) {
+  if (!fs.existsSync(join(TOP_LEVEL_PATH, ".env"))) {
     error = "Must run via yarn once to generate environment."
   }
   if (error) {

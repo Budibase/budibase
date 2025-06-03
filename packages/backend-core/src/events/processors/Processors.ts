@@ -42,10 +42,10 @@ export default class Processor implements EventProcessor {
     }
   }
 
-  shutdown() {
+  async shutdown() {
     for (const eventProcessor of this.processors) {
       if (eventProcessor.shutdown) {
-        eventProcessor.shutdown()
+        await eventProcessor.shutdown()
       }
     }
   }

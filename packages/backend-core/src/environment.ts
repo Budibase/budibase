@@ -2,6 +2,19 @@ import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
 import { cloneDeep } from "lodash"
 import { createSecretKey } from "crypto"
+import { join, resolve } from "path"
+
+const TOP_LEVEL_PATH =
+  process.env.TOP_LEVEL_PATH ||
+  process.env.SERVER_TOP_LEVEL_PATH ||
+  resolve(join(__dirname, "..", "..", ".."))
+let LOADED = false
+if (!LOADED && isDev() && !isTest()) {
+  require("dotenv").config({
+    path: join(TOP_LEVEL_PATH, ".env"),
+  })
+  LOADED = true
+}
 
 function isTest() {
   return isJest()
@@ -23,12 +36,6 @@ function parseIntSafe(number?: string) {
   if (number) {
     return parseInt(number)
   }
-}
-
-let LOADED = false
-if (!LOADED && isDev() && !isTest()) {
-  require("dotenv").config()
-  LOADED = true
 }
 
 const DefaultBucketName = {
@@ -121,6 +128,20 @@ function isQA() {
   return environment.BUDIBASE_ENVIRONMENT === "QA"
 }
 
+function getServiceName() {
+  if (process.env.SERVICE) {
+    return process.env.SERVICE
+  }
+  // monorepo services can be named with specific environment variables
+  if (process.env.APPS_SERVICE) {
+    return process.env.APPS_SERVICE
+  }
+  if (process.env.WORKER_SERVICE) {
+    return process.env.WORKER_SERVICE
+  }
+  return "budibase"
+}
+
 const environment = {
   isTest,
   isJest,
@@ -190,7 +211,7 @@ const environment = {
   USE_COUCH: process.env.USE_COUCH || true,
   MOCK_REDIS: process.env.MOCK_REDIS,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
-  SERVICE: process.env.SERVICE || "budibase",
+  SERVICE: getServiceName(),
   LOG_LEVEL: process.env.LOG_LEVEL || "info",
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
