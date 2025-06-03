@@ -76,7 +76,7 @@
 
 <style>
   i {
-    display: block;
+    display: grid;
     place-items: center;
     color: var(--color);
     transition: color 130ms ease-out;
