@@ -5049,45 +5049,35 @@
       {
         "section": true,
         "name": "Uploader Text Settings",
+        "dependsOn": [
+          {
+            "setting": "disabled",
+            "value": false
+          }
+        ],
         "settings": [
           {
             "type": "text",
             "label": "Title Text",
             "key": "titleText",
-            "dependsOn": [
-              {
-                "setting": "compact",
-                "value": false
-              },
-              {
-                "setting": "disabled",
-                "value": false
-              }
-            ]
-          },
-          {
-            "type": "text",
-            "label": "Upload text",
-            "key": "clickText",
             "dependsOn": {
-              "setting": "disabled",
+              "setting": "compact",
               "value": false
             }
           },
           {
             "type": "text",
+            "label": "Upload text",
+            "key": "clickText"
+          },
+          {
+            "type": "text",
             "label": "Sub text",
             "key": "addText",
-            "dependsOn": [
-              {
-                "setting": "compact",
-                "value": false
-              },
-              {
-                "setting": "disabled",
-                "value": false
-              }
-            ]
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
           }
         ]
       }
