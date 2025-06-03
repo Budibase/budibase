@@ -14,7 +14,7 @@ export const definition: AutomationStepDefinition = {
   tagline: "Extract structured data from documents using AI",
   description:
     "Extracts structured data from PDF or image according to provided schema.",
-  stepId: AutomationActionStepId.EXTRACT_DOCUMENT_DATA,
+  stepId: AutomationActionStepId.EXTRACT_FILE_DATA,
   internal: true,
   inputs: {},
   schema: {

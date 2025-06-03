@@ -236,7 +236,7 @@ export type ExtractFileDataStepInputs = {
   schema: Record<string, any>
 }
 
-export type ExtractFileDataStepOutputs = 
+export type ExtractFileDataStepOutputs =
   | {
       success: true
       data: Record<string, any>
