@@ -46,7 +46,7 @@ export const definition: AutomationStepDefinition = {
             'Schema defining the structure of data to extract. Example: {"name": "string", "price": "number"}.',
         },
       },
-      required: ["documentUrl", "schema"],
+      required: ["file", "schema"],
     },
     outputs: {
       properties: {
