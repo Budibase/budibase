@@ -107,7 +107,7 @@ gracefulShutdown(server, {
   signals: "SIGINT SIGTERM",
   timeout: 30000,
   onShutdown: shutdown,
-  forceExit: !env.isTest,
+  forceExit: !env.isTest(),
   finally: () => {
     console.log("Worker service shutdown complete")
   },
@@ -116,7 +116,7 @@ gracefulShutdown(server, {
 process.on("uncaughtException", async err => {
   logging.logAlert("Uncaught exception.", err)
   await shutdown()
-  if (!env.isTest) {
+  if (!env.isTest()) {
     process.exit(1)
   }
 })
@@ -124,7 +124,7 @@ process.on("uncaughtException", async err => {
 process.on("unhandledRejection", async reason => {
   logging.logAlert("Unhandled Promise Rejection", reason as Error)
   await shutdown()
-  if (!env.isTest) {
+  if (!env.isTest()) {
     process.exit(1)
   }
 })
