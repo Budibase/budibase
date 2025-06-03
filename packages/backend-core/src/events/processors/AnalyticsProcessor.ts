@@ -56,9 +56,9 @@ export default class AnalyticsProcessor implements EventProcessor {
     }
   }
 
-  shutdown() {
+  async shutdown() {
     if (this.posthog) {
-      this.posthog.shutdown()
+      await this.posthog.shutdown()
     }
   }
 }
