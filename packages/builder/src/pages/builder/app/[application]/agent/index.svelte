@@ -4,7 +4,8 @@
     Banner,
     Body,
     Button,
-    Heading, Icon,
+    Heading,
+    Icon,
     Input,
     Modal,
     ModalContent,
@@ -24,27 +25,33 @@
   const ToolSources = [
     {
       name: "Budibase",
-      description: "Connect agent to your Budibase tools"
+      type: "BUDIBASE",
+      description: "Connect agent to your Budibase tools",
     },
     {
       name: "Github",
-      description: "Automate development workflows."
+      type: "GITHUB",
+      description: "Automate development workflows.",
     },
     {
       name: "Confluence",
-      description: "Connect agent to your teams documentation"
+      type: "CONFLUENCE",
+      description: "Connect agent to your teams documentation",
     },
     {
       name: "Sharepoint",
-      description: "Sharepoint stuff"
+      type: "SHAREPOINT",
+      description: "Sharepoint stuff",
     },
     {
       name: "JIRA Service Manaagement",
-      description: "Automate ITSM Workflows"
+      type: "JIRA_SM",
+      description: "Automate ITSM Workflows",
     },
     {
       name: "Bamboo",
-      description: "Automate HR workflows"
+      type: "BAMBOO",
+      description: "Automate HR workflows",
     },
   ]
 
@@ -62,7 +69,7 @@
   let toolConfig = {
     apiKey: "",
     guidelines: "",
-    type: "GITHUB" as const
+    type: "GITHUB" as const,
   }
 
   $: chatHistory = $agentsStore.chats || []
@@ -160,10 +167,7 @@
     toolConfig = {
       apiKey: "",
       guidelines: "",
-      // TODO: make this less shit
-      type: toolSource.name === "Github" ? "GITHUB" :
-            toolSource.name === "Confluence" ? "CONFLUENCE" :
-            "BUDIBASE"
+      type: toolSource.type,
     }
     toolSourceModal.hide()
     toolConfigModal.show()
@@ -181,10 +185,10 @@
         disabledTools: [],
         auth: {
           apiKey: toolConfig.apiKey,
-          guidelines: toolConfig.guidelines
-        }
+          guidelines: toolConfig.guidelines,
+        },
       }
-      
+
       await agentsStore.createToolSource(toolSourceData)
       notifications.success("Tool Source saved successfully.")
       toolConfigModal.hide()
@@ -206,13 +210,15 @@
 
   const toggleTool = (toolName: string) => {
     if (!selectedConfigToolSource) return
-    
+
     const currentDisabled = selectedConfigToolSource.disabledTools || []
     const isDisabled = currentDisabled.includes(toolName)
-    
+
     if (isDisabled) {
       // Enable the tool by removing from disabled list
-      selectedConfigToolSource.disabledTools = currentDisabled.filter(name => name !== toolName)
+      selectedConfigToolSource.disabledTools = currentDisabled.filter(
+        name => name !== toolName
+      )
     } else {
       // Disable the tool by adding to disabled list
       selectedConfigToolSource.disabledTools = [...currentDisabled, toolName]
@@ -221,7 +227,7 @@
 
   const saveToolConfig = async () => {
     if (!selectedConfigToolSource) return
-    
+
     try {
       await agentsStore.updateToolSource(selectedConfigToolSource)
       notifications.success("Tool configuration saved successfully.")
@@ -243,7 +249,7 @@
         chatAreaElement.scrollTop = chatAreaElement.scrollHeight
       }
     })
-    
+
     if (chatAreaElement) {
       observer.observe(chatAreaElement, {
         childList: true,
@@ -270,14 +276,12 @@
         <div class="chat-history">
           <div class="history-header">
             <Heading size="XS">Chat History</Heading>
-            <Button size="S" cta on:click={startNewChat}>
-              New Chat
-            </Button>
+            <Button size="S" cta on:click={startNewChat}>New Chat</Button>
           </div>
           <div class="history-list">
             {#each chatHistory as chatItem}
               <button
-                class="history-item" 
+                class="history-item"
                 class:active={$agentsStore.currentChatId === chatItem._id}
                 on:click={() => selectChat(chatItem)}
               >
@@ -285,13 +289,19 @@
                   {chatItem.title || "Untitled Chat"}
                 </div>
                 <div class="chat-preview">
-                  {chatItem.messages.length > 0 ? chatItem.messages[chatItem.messages.length - 1]?.content?.slice(0, 50) + "..." : "No messages"}
+                  {chatItem.messages.length > 0
+                    ? chatItem.messages[
+                        chatItem.messages.length - 1
+                      ]?.content?.slice(0, 50) + "..."
+                    : "No messages"}
                 </div>
               </button>
             {/each}
             {#if chatHistory.length === 0}
               <div class="empty-state">
-                <Body size="S">No chat history yet. Start a new conversation!</Body>
+                <Body size="S"
+                  >No chat history yet. Start a new conversation!</Body
+                >
               </div>
             {/if}
           </div>
@@ -305,38 +315,39 @@
         <ActionButton quiet on:click={reset}>Reset history</ActionButton>
       </div>
       <div class="input-wrapper">
-      <textarea
-        bind:value={inputValue}
-        bind:this={textareaElement}
-        class="input spectrum-Textfield-input"
-        on:keydown={handleKeyDown}
-        placeholder="Ask anything"
-        disabled={loading}
-      />
+        <textarea
+          bind:value={inputValue}
+          bind:this={textareaElement}
+          class="input spectrum-Textfield-input"
+          on:keydown={handleKeyDown}
+          placeholder="Ask anything"
+          disabled={loading}
+        />
       </div>
     </div>
 
     <div class="panel-container">
-      <Panel
-        customWidth={400}
-      >
+      <Panel customWidth={400}>
         <div class="agent-panel">
           <Tabs selected="Tools">
             <Tab title="Tools">
               <div class="tab-content">
                 {#if panelView === "tools"}
                   <div class="agent-info">
-                    Add tools to give your agent knowledge and allow it to take action.
+                    Add tools to give your agent knowledge and allow it to take
+                    action.
                   </div>
                   <div class="agent-actions-heading">
-                    <Heading size="XS">
-                      Tools and Knowledge
-                    </Heading>
-                    <Button size="S" cta on:click={() => toolSourceModal.show()}>
+                    <Heading size="XS">Tools and Knowledge</Heading>
+                    <Button
+                      size="S"
+                      cta
+                      on:click={() => toolSourceModal.show()}
+                    >
                       Add Tools
                     </Button>
                   </div>
-                  
+
                   {#if toolSources.length > 0}
                     <div class="saved-tools-list">
                       {#each toolSources as toolSource}
@@ -345,44 +356,55 @@
                             <div class="tool-name">{toolSource.type}</div>
                           </div>
                           <div class="tool-actions">
-                            <Icon size="S" hoverable name="BackAndroid" on:click={() => openToolsConfig(toolSource)}/>
+                            <Icon
+                              size="S"
+                              hoverable
+                              name="BackAndroid"
+                              on:click={() => openToolsConfig(toolSource)}
+                            />
                           </div>
                         </div>
                       {/each}
                     </div>
                   {:else}
                     <div class="no-tools-message">
-                      <Body size="S">No tools connected yet. Click "Add Tools" to get started!</Body>
+                      <Body size="S"
+                        >No tools connected yet. Click "Add Tools" to get
+                        started!</Body
+                      >
                     </div>
                   {/if}
                 {:else if panelView === "toolConfig"}
                   <div class="tool-config-header">
-                    <Button size="S" quiet on:click={backToToolsList}>
-                      <Icon name="BackAndroid" />
-                      Back
+                    <Icon
+                      name="BackAndroid"
+                      hoverable
+                      on:click={backToToolsList}
+                    />
+                    <Heading size="S">{selectedConfigToolSource.type}</Heading>
+                    <Button size="S" cta on:click={saveToolConfig}>
+                      Save Configuration
                     </Button>
                   </div>
-                  
+
                   {#if selectedConfigToolSource?.tools}
                     <div class="tools-list">
                       {#each selectedConfigToolSource.tools as tool}
                         <div class="tool-toggle-item">
                           <div class="tool-toggle-info">
                             <div class="tool-toggle-name">{tool.name}</div>
-                            <div class="tool-toggle-description">{tool.description}</div>
+                            <div class="tool-toggle-description">
+                              {tool.description}
+                            </div>
                           </div>
-                          <Toggle 
-                            value={!selectedConfigToolSource.disabledTools?.includes(tool.name)}
+                          <Toggle
+                            value={!selectedConfigToolSource.disabledTools?.includes(
+                              tool.name
+                            )}
                             on:change={() => toggleTool(tool.name)}
                           />
                         </div>
                       {/each}
-                    </div>
-                    
-                    <div class="tool-config-actions">
-                      <Button size="S" cta on:click={saveToolConfig}>
-                        Save Configuration
-                      </Button>
                     </div>
                   {:else}
                     <div class="no-tools-message">
@@ -393,9 +415,7 @@
               </div>
             </Tab>
             <Tab title="Deploy">
-              <div class="tab-content">
-                Deploy
-              </div>
+              <div class="tab-content">Deploy</div>
             </Tab>
           </Tabs>
         </div>
@@ -438,7 +458,7 @@
 
 <Modal bind:this={toolConfigModal}>
   <ModalContent
-    title={`Configure ${selectedToolSource?.name || 'Tool'}`}
+    title={`Configure ${selectedToolSource?.name || "Tool"}`}
     size="M"
     showCancelButton={true}
     cancelText="Back"
@@ -516,9 +536,12 @@
   }
 
   .agent-info {
-    padding: var(--spacing-m);
-    border: 1px solid black;
-    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2e3851;
+    border-radius: var(--border-radius-m);
+    padding: var(--spacing-s);
   }
 
   .agent-actions-heading {
@@ -604,6 +627,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--spacing-l);
+    margin-top: var(--spacing-l);
   }
 
   .history-list {
@@ -655,10 +679,6 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .saved-tools-section {
-    margin-top: var(--spacing-xl);
-  }
-
   .saved-tools-list {
     margin-top: var(--spacing-m);
   }
@@ -704,9 +724,10 @@
 
   .tool-config-header {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: var(--spacing-m);
     margin-bottom: var(--spacing-xl);
+    align-items: center;
   }
 
   .tools-list {

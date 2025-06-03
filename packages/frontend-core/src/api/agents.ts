@@ -15,7 +15,9 @@ export interface AgentEndpoints {
   fetchChats: () => Promise<FetchAgentHistoryResponse>
 
   fetchToolSources: () => Promise<AgentToolSource[]>
-  createToolSource: (toolSource: CreateToolSourceRequest) => Promise<AgentToolSource>
+  createToolSource: (
+    toolSource: CreateToolSourceRequest
+  ) => Promise<AgentToolSource>
   updateToolSource: (toolSource: AgentToolSource) => Promise<AgentToolSource>
 }
 

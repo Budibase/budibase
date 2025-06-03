@@ -9,13 +9,9 @@ import {
   FetchAgentHistoryResponse,
   AgentChat,
   AgentToolSource,
-  CreateToolSourceRequest
+  CreateToolSourceRequest,
 } from "@budibase/types"
-import {
-  ConfluenceClient,
-  GitHubClient,
-  budibase
-} from "../../../ai/tools"
+import { ConfluenceClient, GitHubClient, budibase } from "../../../ai/tools"
 
 export async function agentChat(
   ctx: UserCtx<ChatAgentRequest, ChatAgentResponse>
@@ -37,26 +33,32 @@ export async function agentChat(
   for (const row of toolSources.rows) {
     const toolSource = row.doc!
     const disabledTools = toolSource.disabledTools || []
-    
+
     let toolsToAdd: any[] = []
-    
+
     switch (toolSource.type) {
       case "BUDIBASE": {
-        toolsToAdd = tools.budibase.filter(tool => !disabledTools.includes(tool.name))
+        toolsToAdd = tools.budibase.filter(
+          tool => !disabledTools.includes(tool.name)
+        )
         break
       }
       case "GITHUB": {
         const ghClient = new GitHubClient()
-        toolsToAdd = ghClient.getTools().filter(tool => !disabledTools.includes(tool.name))
+        toolsToAdd = ghClient
+          .getTools()
+          .filter(tool => !disabledTools.includes(tool.name))
         break
       }
       case "CONFLUENCE": {
         const confluenceClient = new ConfluenceClient()
-        toolsToAdd = confluenceClient.getTools().filter(tool => !disabledTools.includes(tool.name))
+        toolsToAdd = confluenceClient
+          .getTools()
+          .filter(tool => !disabledTools.includes(tool.name))
         break
       }
     }
-    
+
     if (toolsToAdd.length > 0) {
       console.log(toolsToAdd)
       prompt = prompt.addTools(toolsToAdd)
@@ -69,15 +71,19 @@ export async function agentChat(
   const processedMessages = [...response.messages]
   for (let i = 0; i < processedMessages.length; i++) {
     const message = processedMessages[i]
-    if (message.role === 'assistant' && message.tool_calls?.length) {
+    if (message.role === "assistant" && message.tool_calls?.length) {
       // For each tool call, add debug information to the assistant message content
       let toolDebugInfo = "\n\n**Tool Calls:**\n"
-      
+
       for (const toolCall of message.tool_calls) {
-        let toolParams = '{}'
+        let toolParams = "{}"
         try {
           // Try to parse and prettify the JSON arguments
-          toolParams = JSON.stringify(JSON.parse(toolCall.function.arguments), null, 2)
+          toolParams = JSON.stringify(
+            JSON.parse(toolCall.function.arguments),
+            null,
+            2
+          )
         } catch (e) {
           // If not valid JSON, use as is
           toolParams = toolCall.function.arguments
@@ -85,7 +91,7 @@ export async function agentChat(
 
         toolDebugInfo += `\n**Tool:** ${toolCall.function.name}\n**Parameters:**\n\`\`\`json\n${toolParams}\n\`\`\`\n`
       }
-      
+
       // Append tool debug info to the message content
       if (message.content) {
         message.content += toolDebugInfo
@@ -151,14 +157,14 @@ export async function fetchToolSources(ctx: UserCtx<void, void>) {
   const SourceToToolMap = {
     BUDIBASE: budibase,
     GITHUB: new GitHubClient().getTools(),
-    CONFLUENCE: new ConfluenceClient().getTools()
+    CONFLUENCE: new ConfluenceClient().getTools(),
   }
 
   const sourcesWithTools = toolSources.rows.map(row => {
     const doc = row.doc!
     return {
       ...doc,
-      tools: SourceToToolMap[doc.type as keyof typeof SourceToToolMap] || []
+      tools: SourceToToolMap[doc.type as keyof typeof SourceToToolMap] || [],
     }
   })
 

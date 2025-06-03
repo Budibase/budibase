@@ -68,12 +68,12 @@
   :global(.assistant strong) {
     color: var(--spectrum-global-color-static-seafoam-700);
   }
-  
+
   :global(.assistant h3) {
     margin-top: var(--spacing-m);
     color: var(--spectrum-global-color-static-seafoam-700);
   }
-  
+
   :global(.assistant pre) {
     background-color: var(--grey-2);
     border: 1px solid var(--grey-3);

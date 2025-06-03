@@ -1,6 +1,10 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import { AgentChat, AgentToolSource, CreateToolSourceRequest } from "@budibase/types"
+import {
+  AgentChat,
+  AgentToolSource,
+  CreateToolSourceRequest,
+} from "@budibase/types"
 
 interface AgentStore {
   chats: AgentChat[]
@@ -59,7 +63,7 @@ export class AgentsStore extends BudiStore<AgentStore> {
       if (index !== -1) {
         state.toolSources[index] = {
           ...updatedToolSource,
-          tools: state.toolSources[index].tools
+          tools: state.toolSources[index].tools,
         }
       }
       return state
