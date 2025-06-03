@@ -40,9 +40,10 @@ import jwt, { Secret } from "jsonwebtoken"
 import http from "http"
 
 class TestConfiguration {
-  server?: http.Server<typeof http.IncomingMessage, typeof http.ServerResponse>
+  server: http.Server<typeof http.IncomingMessage, typeof http.ServerResponse> =
+    undefined!
 
-  request?: supertest.SuperTest<supertest.Test>
+  request: supertest.SuperTest<supertest.Test> = undefined!
 
   api: API
   tenantId: string
