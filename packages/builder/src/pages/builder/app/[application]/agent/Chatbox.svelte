@@ -14,10 +14,15 @@
         <MarkdownViewer
           value={typeof message.content === "string"
             ? message.content
-            : message.content
-                .filter(part => part.type === "text")
-                .map(part => part.text)
-                .join("")}
+            : message.content.length > 0
+              ? message.content
+                  .map(part =>
+                    part.type === "text"
+                      ? part.text
+                      : `[${part.type} content not supported]`
+                  )
+                  .join("")
+              : "[Empty message]"}
         />
       </div>
     {:else if message.role === "assistant" && message.content}
