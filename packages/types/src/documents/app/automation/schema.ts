@@ -447,7 +447,7 @@ export type AutomationStep =
   | TranslateStep
   | SummariseStep
   | GenerateTextStep
-  | ExtractFileDataStep
+  git c| ExtractFileDataStep
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
 ): step is BranchStep {
