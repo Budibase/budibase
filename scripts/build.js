@@ -3,7 +3,7 @@
 const start = Date.now()
 
 const fs = require("fs")
-const { cp, readdir, copyFile, mkdir } = require("node:fs/promises")
+const { readdir, copyFile, mkdir } = require("node:fs/promises")
 const path = require("path")
 
 const { build } = require("esbuild")

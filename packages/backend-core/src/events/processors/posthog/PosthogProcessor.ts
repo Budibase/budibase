@@ -110,7 +110,7 @@ export default class PosthogProcessor implements EventProcessor {
     this.posthog.groupIdentify(payload)
   }
 
-  shutdown() {
-    this.posthog.shutdown()
+  async shutdown() {
+    await this.posthog.shutdown()
   }
 }

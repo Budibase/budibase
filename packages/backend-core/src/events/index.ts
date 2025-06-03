@@ -9,7 +9,7 @@ import { processors } from "./processors"
 
 export function initAsyncEvents() {}
 
-export const shutdown = () => {
-  processors.shutdown()
+export const shutdown = async () => {
+  await processors.shutdown()
   console.log("Events shutdown")
 }
