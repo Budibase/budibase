@@ -96,6 +96,8 @@ export interface LLMConfigOptions {
   model: string
   apiKey?: string
   maxTokens?: number
+  // Primarily here for Azure OpenAI, because each customer has their own endpoint
+  baseUrl?: string
 }
 
 export interface LLMProviderConfig extends LLMConfigOptions {
