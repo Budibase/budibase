@@ -5,6 +5,7 @@
   import type { AgentChat } from "@budibase/types"
   import { API } from "@/api"
   import { onDestroy, onMount } from "svelte"
+  import TopBar from "@/components/common/TopBar.svelte"
 
   let inputValue = ""
   let chat: AgentChat = { title: "", messages: [] }
@@ -64,22 +65,31 @@
   })
 </script>
 
-<div class="page" bind:this={wrapper}>
-  <Chatbox bind:chat {loading} />
-  <div class="controls">
-    <ActionButton quiet on:click={reset}>Reset history</ActionButton>
-  </div>
-  <div class="input-wrapper">
-    <textarea
-      bind:value={inputValue}
-      class="input spectrum-Textfield-input"
-      on:keydown={handleKeyDown}
-      placeholder="Ask anything"
-    />
+<div class="wrapper">
+  <TopBar breadcrumbs={[{ text: "Agent" }]} icon="Algorithm"></TopBar>
+  <div class="page" bind:this={wrapper}>
+    <Chatbox bind:chat {loading} />
+    <div class="controls">
+      <ActionButton quiet on:click={reset}>Reset history</ActionButton>
+    </div>
+    <div class="input-wrapper">
+      <textarea
+        bind:value={inputValue}
+        class="input spectrum-Textfield-input"
+        on:keydown={handleKeyDown}
+        placeholder="Ask anything"
+      />
+    </div>
   </div>
 </div>
 
 <style>
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1 1 auto;
+  }
   .page {
     height: 0;
     flex: 1 1 auto;
@@ -90,7 +100,6 @@
     overflow-y: scroll;
     overflow-x: hidden;
   }
-
   .input-wrapper {
     position: sticky;
     bottom: 0;

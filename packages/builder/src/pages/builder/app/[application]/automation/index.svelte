@@ -3,7 +3,9 @@
   import { automationStore } from "@/stores/builder"
 
   $: {
-    if ($automationStore.automations?.length) {
+    if ($automationStore.selectedAutomationId) {
+      $redirect(`./${$automationStore.selectedAutomationId}`)
+    } else if ($automationStore.automations?.length) {
       $redirect(`./${$automationStore.automations[0]._id}`)
     }
   }
