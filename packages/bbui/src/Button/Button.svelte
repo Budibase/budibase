@@ -2,6 +2,7 @@
   import "@spectrum-css/button/dist/index-vars.css"
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { createEventDispatcher } from "svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let type = undefined
   export let disabled = false
@@ -20,7 +21,6 @@
   export let ref = undefined
   export let reverse = false
 
-  $: phosphorClass = `ph ph-${icon}`
   const dispatch = createEventDispatcher()
 </script>
 
@@ -49,16 +49,9 @@
       <span class="spectrum-Button-label"><slot /></span>
     {/if}
     {#if icon}
-      <i
-        class="{phosphorClass} spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-        style="font-size: {size === 'S'
-          ? '1rem'
-          : size === 'M'
-            ? '1.125rem'
-            : '1.25rem'}; line-height: 1; vertical-align: middle;"
-        aria-hidden="true"
-        aria-label={icon}
-      />
+      <span class="icon">
+        <Icon name={icon} size={size.toUpperCase()} />
+      </span>
     {/if}
     {#if $$slots && !reverse}
       <span class="spectrum-Button-label"><slot /></span>
@@ -69,6 +62,8 @@
 <style>
   button {
     position: relative;
+    display: flex;
+    gap: var(--spacing-s);
   }
   button.is-disabled {
     cursor: default;
@@ -102,20 +97,5 @@
   }
   .spectrum-Button--secondary.new-styles.is-disabled {
     color: var(--spectrum-global-color-gray-500);
-  }
-  .spectrum-Button .spectrum-Button-label + i {
-    margin-left: var(--spectrum-button-primary-icon-gap);
-    margin-right: calc(
-      -1 *
-        (
-          var(--spectrum-button-primary-textonly-padding-left-adjusted) -
-            var(--spectrum-button-primary-padding-left-adjusted)
-        )
-    );
-  }
-
-  i {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
-    pointer-events: none;
   }
 </style>
