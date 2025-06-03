@@ -243,7 +243,7 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const { tableId, viewId } = utils.getSourceId(ctx)
 
-  await context.ensureSnippetContext(true)
+  await context.ensureSnippetContext()
 
   const searchRequest = ctx.request.body
   let { query } = searchRequest
