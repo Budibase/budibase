@@ -88,7 +88,7 @@ const server = http.createServer(app.callback())
 const shutdown = async () => {
   console.log("Worker service shutting down gracefully...")
   timers.cleanup()
-  events.shutdown()
+  await events.shutdown()
   await redis.clients.shutdown()
   await queue.shutdown()
 }
