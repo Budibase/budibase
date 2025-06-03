@@ -17,10 +17,20 @@
   } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
-  import type { AgentChat, CreateToolSourceRequest } from "@budibase/types"
+  import type { AgentChat, AgentToolSource, CreateToolSourceRequest } from "@budibase/types"
   import { onDestroy, onMount } from "svelte"
+  import { type ComponentType } from "svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { API } from "@/api"
+  import BudibaseLogo from "./logos/Budibase.svelte"
+  import GithubLogo from "./logos/Github.svelte"
+  import ConfluenceLogo from "./logos/Confluence.svelte"
+
+  const Logos: Partial<Record<AgentToolSource["type"], ComponentType>> = {
+    BUDIBASE: BudibaseLogo,
+    CONFLUENCE: ConfluenceLogo,
+    GITHUB: GithubLogo,
+  }
 
   const ToolSources = [
     {
@@ -352,6 +362,9 @@
                     <div class="saved-tools-list">
                       {#each toolSources as toolSource}
                         <div class="saved-tool-item">
+                          <div class="tool-icon">
+                            <svelte:component this={Logos[toolSource.type]} height="26" width="26" />
+                          </div>
                           <div class="tool-info">
                             <div class="tool-name">{toolSource.type}</div>
                           </div>
@@ -432,22 +445,30 @@
     showCloseIcon
     onCancel={() => toolSourceModal.hide()}
   >
-    <Banner
-      extraButtonAction={() => {}}
-      extraButtonText="Vote"
-      showCloseButton={false}
-      icon="Hand"
-    >
-      Vote for which tools we add next
-    </Banner>
+    <div class="vote-banner">
+      <Icon name="Hand"/>
+      <span>
+        Vote for which tools we add next
+      </span>
+      <Button>Vote</Button>
+    </div>
     <section class="tool-source-tiles">
       {#each ToolSources as toolSource}
         <div class="tool-source-tile">
-          <Heading size="XS">{toolSource.name}</Heading>
+          <div class="tool-source-header">
+            <div class="tool-source-icon">
+              {#if Logos[toolSource.type]}
+                <svelte:component this={Logos[toolSource.type]} height="24" width="24" />
+              {/if}
+            </div>
+            <Heading size="XS">{toolSource.name}</Heading>
+          </div>
           <Body size="S">
             {toolSource.description}
           </Body>
-          <Button cta size="S" on:click={() => openToolConfig(toolSource)}>
+          <Button cta size="S"
+                  disabled={toolSources.some(ts => ts.type === toolSource.type)}
+                  on:click={() => openToolConfig(toolSource)}>
             Connect
           </Button>
         </div>
@@ -571,6 +592,19 @@
     border-radius: 5px;
   }
 
+  .tool-source-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    margin-bottom: var(--spacing-s);
+  }
+
+  .tool-source-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .input-wrapper {
     position: sticky;
     bottom: 0;
@@ -688,6 +722,7 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-m);
+    gap: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
     margin-bottom: var(--spacing-s);
@@ -768,4 +803,18 @@
     justify-content: flex-end;
     margin-top: var(--spacing-xl);
   }
+
+  .vote-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-l);
+    background-color: #2e3851;
+    border-radius: var(--border-radius-m);
+    padding: var(--spacing-s);
+  }
+
+  .vote-banner:last-child {
+    margin-left: auto;
+  }
+
 </style>
