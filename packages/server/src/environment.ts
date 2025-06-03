@@ -3,12 +3,16 @@ import { ServiceType } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
-import { join } from "path"
+import { join, resolve } from "path"
 
+const TOP_LEVEL_PATH =
+  process.env.TOP_LEVEL_PATH ||
+  process.env.SERVER_TOP_LEVEL_PATH ||
+  resolve(join(__dirname, "..", "..", ".."))
 let LOADED = false
 if (!LOADED && coreEnv.isDev() && !coreEnv.isTest()) {
   require("dotenv").config({
-    path: join(__dirname, "..", ".env"),
+    path: join(TOP_LEVEL_PATH, ".env"),
   })
   LOADED = true
 }
@@ -41,8 +45,9 @@ const DEFAULT_AUTOMATION_TIMEOUT =
 const environment = {
   // features
   APP_FEATURES: process.env.APP_FEATURES,
-  // important - prefer app port to generic port
-  PORT: process.env.APP_PORT || process.env.PORT,
+  // important - prefer app port to generic port, APPS_PORT to align with other APPS
+  // named environment variables, APP_PORT deprecated
+  PORT: process.env.APP_PORT || process.env.APPS_PORT || process.env.PORT,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL,
   MINIO_URL: process.env.MINIO_URL,
@@ -68,6 +73,7 @@ const environment = {
   DISABLE_AUTO_PROD_APP_SYNC: process.env.DISABLE_AUTO_PROD_APP_SYNC,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   // minor
+  APPS_SERVICE: process.env.APPS_SERVICE,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
@@ -105,8 +111,7 @@ const environment = {
   JS_PER_REQUEST_TIMEOUT_MS: parseIntSafe(
     process.env.JS_PER_REQUEST_TIME_LIMIT_MS
   ),
-  TOP_LEVEL_PATH:
-    process.env.TOP_LEVEL_PATH || process.env.SERVER_TOP_LEVEL_PATH,
+  TOP_LEVEL_PATH: TOP_LEVEL_PATH,
   APP_MIGRATION_TIMEOUT: parseIntSafe(process.env.APP_MIGRATION_TIMEOUT),
   JS_RUNNER_MEMORY_LIMIT:
     parseIntSafe(process.env.JS_RUNNER_MEMORY_LIMIT) ||
