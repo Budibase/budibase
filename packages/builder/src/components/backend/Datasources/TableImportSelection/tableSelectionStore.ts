@@ -1,12 +1,16 @@
 import { derived, writable, get } from "svelte/store"
 import { keepOpen, notifications } from "@budibase/bbui"
 import { datasources, tables } from "@/stores/builder"
+import { Datasource } from "@budibase/types"
 
-export const createTableSelectionStore = (integration, datasource) => {
-  const tableNamesStore = writable([])
-  const selectedTableNamesStore = writable([])
-  const errorStore = writable(null)
-  const loadingStore = writable(true)
+export const createTableSelectionStore = (
+  integration: any,
+  datasource: Datasource
+) => {
+  const tableNamesStore = writable<string[]>([])
+  const selectedTableNamesStore = writable<string[]>([])
+  const errorStore = writable<Error | null>(null)
+  const loadingStore = writable<boolean>(true)
 
   datasources.getTableNames(datasource).then(tableNames => {
     tableNamesStore.set(tableNames)
@@ -17,11 +21,11 @@ export const createTableSelectionStore = (integration, datasource) => {
     loadingStore.set(false)
   })
 
-  const setSelectedTableNames = selectedTableNames => {
+  const setSelectedTableNames = (selectedTableNames: string[]) => {
     selectedTableNamesStore.set(selectedTableNames)
   }
 
-  const importSelectedTables = async onComplete => {
+  const importSelectedTables = async (onComplete: () => any) => {
     errorStore.set(null)
 
     try {
@@ -29,7 +33,7 @@ export const createTableSelectionStore = (integration, datasource) => {
       await tables.fetch()
       notifications.success(`Tables fetched successfully.`)
       await onComplete()
-    } catch (err) {
+    } catch (err: any) {
       errorStore.set(err)
       return keepOpen
     }
