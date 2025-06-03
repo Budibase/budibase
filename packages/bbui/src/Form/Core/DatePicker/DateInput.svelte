@@ -36,11 +36,12 @@
     class:is-invalid={!!error}
   >
     {#if !!error}
-      <i
-        class="ph ph-warning spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-        style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
-        aria-hidden="true"
-      />
+      <div class="error-icon">
+        <Icon
+          name="warning"
+          color="var(--spectrum-semantic-negative-color-icon)"
+        />
+      </div>
     {/if}
     <input
       {disabled}
@@ -89,9 +90,10 @@
     border-top-right-radius: var(--spectrum-textfield-border-radius);
     border-bottom-right-radius: var(--spectrum-textfield-border-radius);
   }
-
-  i {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
-    pointer-events: none;
+  .error-icon {
+    position: absolute;
+    right: 8px;
+    bottom: calc(var(--spectrum-textfield-height) / 2);
+    transform: translateY(50%);
   }
 </style>
