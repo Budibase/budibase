@@ -332,7 +332,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     }
     await this.connect()
 
-    const sheets = this.client.sheetsByIndex
+    const sheets = this.client.sheetsByIndex.filter(s => entities[s.title])
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
 
