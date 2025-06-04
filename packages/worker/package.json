@@ -21,19 +21,10 @@
     "run:docker": "node dist/index.js",
     "debug": "yarn build && node --expose-gc --inspect=9223 dist/index.js",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
-    "dev:stack:init": "node ./scripts/dev/manage.js init",
-    "dev": "npm run dev:stack:init && nodemon",
-    "dev:built": "yarn run dev:stack:init && yarn run run:docker",
+    "dev": "nodemon",
+    "dev:built": "yarn run run:docker",
     "test": "bash scripts/test.sh",
-    "test:watch": "jest --watch",
-    "env:multi:enable": "node scripts/multiTenancy.js enable",
-    "env:multi:disable": "node scripts/multiTenancy.js disable",
-    "env:selfhost:enable": "node scripts/selfhost.js enable",
-    "env:selfhost:disable": "node scripts/selfhost.js disable",
-    "env:localdomain:enable": "node scripts/localdomain.js enable",
-    "env:localdomain:disable": "node scripts/localdomain.js disable",
-    "env:account:enable": "node scripts/account.js enable",
-    "env:account:disable": "node scripts/account.js disable"
+    "test:watch": "jest --watch"
   },
   "author": "Budibase",
   "license": "GPL-3.0",
@@ -102,8 +93,7 @@
     "superagent": "^10.1.1",
     "supertest": "6.3.3",
     "timekeeper": "2.2.0",
-    "typescript": "5.7.2",
-    "update-dotenv": "1.1.1"
+    "typescript": "5.7.2"
   },
   "resolutions": {
     "@budibase/pro": "npm:@budibase/pro@latest"

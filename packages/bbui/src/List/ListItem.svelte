@@ -57,7 +57,9 @@
     flex-direction: row;
     justify-content: space-between;
     border: 1px solid var(--spectrum-global-color-gray-300);
-    transition: background 130ms ease-out, border-color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
     gap: var(--spacing-m);
     color: var(--spectrum-global-color-gray-800);
     cursor: pointer;
@@ -112,7 +114,9 @@
     padding: 4px;
     border-radius: 4px;
     border: 1px solid var(--spectrum-global-color-gray-300);
-    transition: background-color 130ms ease-out, border-color 130ms ease-out,
+    transition:
+      background-color 130ms ease-out,
+      border-color 130ms ease-out,
       color 130ms ease-out;
   }
   .list-item.large.hoverable:not(.selected):hover .list-item__icon {

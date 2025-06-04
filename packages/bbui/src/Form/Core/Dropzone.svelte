@@ -26,6 +26,9 @@
   export let fileTags = []
   export let maximum = null
   export let extensions = "*"
+  export let titleText = null
+  export let clickText = null
+  export let addText = null
 
   const dispatch = createEventDispatcher()
   const imageExtensions = [
@@ -317,7 +320,7 @@
           <h2
             class="spectrum-Heading spectrum-Heading--sizeL spectrum-Heading--light spectrum-IllustratedMessage-heading"
           >
-            Drag and drop your file
+            {titleText || "Drag and drop your file"}
           </h2>
         {/if}
         {#if !disabled}
@@ -325,11 +328,11 @@
             class="spectrum-Body spectrum-Body--sizeS spectrum-IllustratedMessage-description"
           >
             <label for={fieldId} class="spectrum-Link">
-              Select a file to upload
+              {clickText || "Click to select a file"}
             </label>
             {#if !compact}
               <br />
-              from your computer
+              {addText || "or drop it here"}
             {/if}
           </p>
           {#if fileTags.length}

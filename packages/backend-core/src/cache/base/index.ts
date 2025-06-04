@@ -76,10 +76,13 @@ export default class BaseCache {
     opts = { useTenancy: true }
   ) {
     if (opts.useTenancy) {
-      data = Object.entries(data).reduce((acc, [key, value]) => {
-        acc[generateTenantKey(key)] = value
-        return acc
-      }, {} as Record<string, any>)
+      data = Object.entries(data).reduce(
+        (acc, [key, value]) => {
+          acc[generateTenantKey(key)] = value
+          return acc
+        },
+        {} as Record<string, any>
+      )
     }
 
     const client = await this.getClient()

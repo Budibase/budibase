@@ -48,6 +48,8 @@ import { buildRowActionEndpoints } from "./rowActions"
 import { buildOAuth2Endpoints } from "./oauth2"
 import { buildAgentEndpoints } from "./agents"
 import { buildFeatureFlagEndpoints } from "./features"
+import { buildNavigationEndpoints } from "./navigation"
+import { buildWorkspaceAppEndpoints } from "./workspaceApps"
 
 export type { APIClient } from "./types"
 
@@ -296,5 +298,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     viewV2: buildViewV2Endpoints(API),
     rowActions: buildRowActionEndpoints(API),
     oauth2: buildOAuth2Endpoints(API),
+    navigation: buildNavigationEndpoints(API),
+    workspaceApp: buildWorkspaceAppEndpoints(API),
   }
 }

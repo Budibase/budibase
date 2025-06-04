@@ -324,7 +324,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
+    entities: Record<string, Table>,
+    filter?: string[]
   ): Promise<Schema> {
     // not fully configured yet
     if (!this.config.auth) {
@@ -332,7 +333,9 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     }
     await this.connect()
 
-    const sheets = this.client.sheetsByIndex
+    const sheets = this.client.sheetsByIndex.filter(
+      s => !filter || filter.includes(s.title)
+    )
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
 
@@ -352,9 +355,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
             err.message.startsWith("No values in the header row") ||
             err.message.startsWith("All your header cells are blank")
           ) {
-            errors[
-              sheet.title
-            ] = `Failed to find a header row in sheet "${sheet.title}", is the first row blank?`
+            errors[sheet.title] =
+              `Failed to find a header row in sheet "${sheet.title}", is the first row blank?`
             return
           }
 

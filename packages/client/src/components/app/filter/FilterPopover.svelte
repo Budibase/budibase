@@ -42,6 +42,7 @@
   export let showPopover: boolean = true
   export let filter: SearchFilter | undefined = undefined
   export let schema: TableSchema | null = null
+  export let buttonText: string | undefined = undefined
   export let config: FilterConfig | undefined = undefined
   export let operators:
     | {
@@ -360,7 +361,7 @@
             hide()
           }}
         >
-          Apply
+          {buttonText || "Apply"}
         </Button>
       {/if}
     </div>

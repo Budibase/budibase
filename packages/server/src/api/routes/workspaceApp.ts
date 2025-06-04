@@ -8,9 +8,11 @@ import Joi from "joi"
 
 const baseSchema = {
   name: Joi.string().required(),
-  urlPrefix: Joi.string().required(),
+  urlPrefix: Joi.string()
+    .required()
+    .regex(/^\/\w*$/),
   icon: Joi.string().required(),
-  iconColor: Joi.string().required(),
+  iconColor: Joi.string().optional(),
 }
 
 const insertSchema = Joi.object({
@@ -31,6 +33,11 @@ function workspaceAppValidator(
 
 const router: Router = new Router()
 
+router.get(
+  "/api/workspaceApp",
+  authorized(PermissionType.BUILDER),
+  controller.fetch
+)
 router.post(
   "/api/workspaceApp",
   authorized(PermissionType.BUILDER),

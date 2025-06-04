@@ -9,7 +9,9 @@ export interface FetchClientScreenRoutingResponse
 
 export type FetchScreenResponse = Screen[]
 
-export interface SaveScreenRequest extends Screen {}
+export interface SaveScreenRequest extends Screen {
+  navigationLinkLabel?: string
+}
 export interface SaveScreenResponse extends Screen {}
 
 export interface DeleteScreenResponse {

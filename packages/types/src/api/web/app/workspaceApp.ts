@@ -11,7 +11,7 @@ export interface InsertWorkspaceAppRequest {
   name: string
   urlPrefix: string
   icon: string
-  iconColor: string
+  iconColor?: string
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -24,9 +24,13 @@ export interface UpdateWorkspaceAppRequest {
   name: string
   urlPrefix: string
   icon: string
-  iconColor: string
+  iconColor?: string
 }
 
 export interface UpdateWorkspaceAppResponse {
   workspaceApp: WorkspaceAppResponse
+}
+
+export interface FetchWorkspaceAppResponse {
+  workspaceApps: WorkspaceAppResponse[]
 }
