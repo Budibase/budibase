@@ -9,7 +9,7 @@ export const mockAnthropicResponse: MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
   opts?: MockLLMResponseOpts
 ) => {
-  return nock(opts?.host || "https://api.anthropic.com")
+  return nock(opts?.baseUrl || "https://api.anthropic.com")
     .post("/v1/messages")
     .reply((uri: string, body: nock.Body) => {
       const req = body as AnthropicClient.MessageCreateParamsNonStreaming

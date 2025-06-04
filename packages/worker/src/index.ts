@@ -85,10 +85,12 @@ app.use(api.routes())
 
 const server = http.createServer(app.callback())
 
-const shutdown = async () => {
-  console.log("Worker service shutting down gracefully...")
+const shutdown = async (signal?: string) => {
+  console.log(
+    `Worker service shutting down gracefully... ${signal ? `Signal: ${signal}` : ""}`
+  )
   timers.cleanup()
-  events.shutdown()
+  await events.shutdown()
   await redis.clients.shutdown()
   await queue.shutdown()
 }
@@ -97,7 +99,7 @@ gracefulShutdown(server, {
   signals: "SIGINT SIGTERM",
   timeout: 30000,
   onShutdown: shutdown,
-  forceExit: !env.isTest,
+  forceExit: !env.isTest(),
   finally: () => {
     console.log("Worker service shutdown complete")
   },
@@ -106,7 +108,7 @@ gracefulShutdown(server, {
 process.on("uncaughtException", async err => {
   logging.logAlert("Uncaught exception.", err)
   await shutdown()
-  if (!env.isTest) {
+  if (!env.isTest()) {
     process.exit(1)
   }
 })
@@ -114,7 +116,7 @@ process.on("uncaughtException", async err => {
 process.on("unhandledRejection", async reason => {
   logging.logAlert("Unhandled Promise Rejection", reason as Error)
   await shutdown()
-  if (!env.isTest) {
+  if (!env.isTest()) {
     process.exit(1)
   }
 })
