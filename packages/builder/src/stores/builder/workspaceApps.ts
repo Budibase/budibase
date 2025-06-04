@@ -89,9 +89,12 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
   async delete(id: string, rev: string) {
     await API.workspaceApp.delete(id, rev)
+
     this.store.update(state => {
-      state.workspaceApps = state.workspaceApps.filter(app => app._id !== id)
-      return state
+      return {
+        ...state,
+        workspaceApps: state.workspaceApps.filter(app => app._id !== id),
+      }
     })
   }
 }
