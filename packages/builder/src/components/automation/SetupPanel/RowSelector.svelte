@@ -256,7 +256,7 @@
 </script>
 
 {#each schemaFields || [] as [field, schema]}
-  {#if !isAutoincrement(field) && Object.hasOwn(editableFields, field)}
+  {#if !isAutoincrement(schema) && Object.hasOwn(editableFields, field)}
     <PropField
       label={field}
       fullWidth={fullWidth || isFullWidth(schema.type)}
