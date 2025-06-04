@@ -7,7 +7,7 @@
   $: {
     if (
       featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS) &&
-      $workspaceAppStore.workspaceApps.length > 0
+      workspaceAppStore.workspaceApps?.[0]?.screens?.[0]
     ) {
       $redirect(`./${$workspaceAppStore.workspaceApps[0].screens[0]._id}`)
     } else if ($screenStore.screens.length > 0) {
