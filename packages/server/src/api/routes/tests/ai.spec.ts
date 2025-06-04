@@ -1048,7 +1048,7 @@ describe("BudibaseAI", () => {
 
       const testData = Buffer.from("test file content")
       const response = await config.api.ai.uploadFile({
-        data: testData,
+        data: testData.toString("base64"),
         filename: "test.pdf",
         contentType: "application/pdf",
         licenseKey,
@@ -1071,7 +1071,7 @@ describe("BudibaseAI", () => {
       const testData = Buffer.from("invalid content")
       await config.api.ai.uploadFile(
         {
-          data: testData,
+          data: testData.toString("base64"),
           filename: "test.txt",
           contentType: "text/plain",
           licenseKey,
@@ -1087,7 +1087,7 @@ describe("BudibaseAI", () => {
       const testData = Buffer.from("test content")
       await config.api.ai.uploadFile(
         {
-          data: testData,
+          data: testData.toString("base64"),
           filename: "test.pdf",
           contentType: "application/pdf",
           licenseKey,

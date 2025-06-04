@@ -18,17 +18,7 @@ export async function uploadFile(
   }
   const llm = await ai.getLLMOrThrow()
 
-  // Whenever we send the bugger to budicloud we need to deserialize it back to buffer
-  let data = ctx.request.body.data
-  if (
-    data &&
-    typeof data === "object" &&
-    "type" in data &&
-    data.type === "Buffer" &&
-    "data" in data
-  ) {
-    data = Buffer.from(data.data as number[])
-  }
+  const data = Buffer.from(ctx.request.body.data, "base64")
 
   const response = await llm.uploadFile(
     data,

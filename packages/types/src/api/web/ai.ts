@@ -92,7 +92,7 @@ export interface GenerateTablesResponse {
 }
 
 export interface UploadFileRequest {
-  data: Readable | Buffer
+  data: string
   filename: string
   contentType: string
 }

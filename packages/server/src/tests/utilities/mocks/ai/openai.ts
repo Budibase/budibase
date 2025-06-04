@@ -8,7 +8,7 @@ const SPACE_REGEX = /\s+/g
 
 interface Message {
   role: string
-  content: string
+  content: string | any[]
 }
 
 interface Choice {
@@ -62,7 +62,21 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
     .reply((uri: string, body: nock.Body) => {
       const req = body as ChatCompletionRequest
       const messages = req.messages
-      const prompt = messages[0].content
+      
+      // Handle both simple string content and complex content arrays
+      let prompt: string
+      const messageContent = messages[0].content
+      if (typeof messageContent === "string") {
+        prompt = messageContent
+      } else if (Array.isArray(messageContent)) {
+        // Extract text content from complex content array
+        const textParts = messageContent
+          .filter((part: any) => part.type === "text")
+          .map((part: any) => part.text)
+        prompt = textParts.join(" ")
+      } else {
+        prompt = ""
+      }
 
       let content
       if (typeof answer === "function") {
@@ -80,7 +94,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
       // We mock token usage because we use it to calculate Budibase AI quota
       // usage when Budibase AI is enabled, and some tests assert against quota
       // usage to make sure we're tracking correctly.
-      const prompt_tokens = messages[0].content.split(SPACE_REGEX).length
+      const prompt_tokens = prompt.split(SPACE_REGEX).length
       const completion_tokens = content.split(SPACE_REGEX).length
 
       const response: ChatCompletionResponse = {
