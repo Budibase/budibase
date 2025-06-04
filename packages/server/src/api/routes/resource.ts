@@ -6,9 +6,9 @@ import { permissions } from "@budibase/backend-core"
 const router: Router = new Router()
 
 router.post(
-  "/api/resources/analyze",
+  "/api/resources/analyse",
   authorized(permissions.BUILDER),
-  controller.analyzeResources
+  controller.analyse
 )
 
 export default router

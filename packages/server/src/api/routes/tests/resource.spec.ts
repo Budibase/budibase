@@ -31,7 +31,7 @@ describe("/api/resources/analyze", () => {
       // Save the screen to the database so it can be found
       await config.api.screen.save(screen)
 
-      const result = await config.api.resource.analyze({
+      const result = await config.api.resource.analyse({
         workspaceAppIds: [screen.workspaceAppId!],
       })
 
@@ -52,7 +52,7 @@ describe("/api/resources/analyze", () => {
         .onRowSaved({ tableId: table._id! })
         .save()
 
-      const result = await config.api.resource.analyze({
+      const result = await config.api.resource.analyse({
         automationIds: [automation._id!],
       })
 
@@ -68,7 +68,7 @@ describe("/api/resources/analyze", () => {
     })
 
     it("should handle empty inputs", async () => {
-      await config.api.resource.analyze(
+      await config.api.resource.analyse(
         {
           workspaceAppIds: [],
           automationIds: [],

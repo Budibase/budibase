@@ -9,7 +9,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 
-export async function analyzeResources(
+export async function analyse(
   ctx: UserCtx<ResourceAnalysisRequest, ResourceAnalysisResponse>
 ) {
   const { workspaceAppIds, automationIds } = ctx.request.body
@@ -45,7 +45,9 @@ export async function analyzeResources(
     for (let search of toSearchFor) {
       if (
         json.includes(search.id) &&
-        !resources.find(resource => resource.id === search.id && resource.usedBy === usedById)
+        !resources.find(
+          resource => resource.id === search.id && resource.usedBy === usedById
+        )
       ) {
         resources.push({
           ...search,
