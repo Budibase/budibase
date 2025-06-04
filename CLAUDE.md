@@ -26,6 +26,7 @@
 - When you're writing tests, you don't need to assert or do conditional checks
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
+- Use British English rather than American English, apart from the word Color.
 
 ## Pull requests
 
