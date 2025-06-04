@@ -24,7 +24,6 @@ import {
 import { builderSocket } from "../../websockets"
 import sdk from "../../sdk"
 import { sdk as sharedSdk } from "@budibase/shared-core"
-import { defaultAppNavigator } from "../../constants/definitions"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const screens = await sdk.screens.fetch()
@@ -54,14 +53,16 @@ export async function save(
     ) {
       ctx.throw("workspaceAppId is not valid")
     } else {
-      const appMetadata = await sdk.applications.metadata.get()
-      const newWorkspaceApp = await sdk.workspaceApps.create({
-        name: appMetadata.name,
-        urlPrefix: "/",
-        icon: "Monitoring",
-        navigation: defaultAppNavigator(appMetadata.name),
-      })
-      screen.workspaceAppId = newWorkspaceApp._id
+      let [workspaceApp] = await sdk.workspaceApps.fetch()
+      if (!workspaceApp) {
+        const appMetadata = await sdk.applications.metadata.get()
+        workspaceApp = await sdk.workspaceApps.create({
+          name: appMetadata.name,
+          urlPrefix: "/",
+          icon: "Monitoring",
+        })
+      }
+      screen.workspaceAppId = workspaceApp._id
     }
   }
 
