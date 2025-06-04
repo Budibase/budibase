@@ -3885,6 +3885,73 @@ if (descriptions.length) {
         })
       })
 
+      describe("datetime fields", () => {
+        it("should save and retrieve datetime fields", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00.000Z",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000Z")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000Z")
+        })
+
+        it("should save and retrieve datetime fields without timezone", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  ignoreTimezones: true,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000")
+        })
+
+        it("should be able to save a date with a timezone in an ignore timezone field", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  ignoreTimezones: true,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00.000Z",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000")
+        })
+      })
+
       if (isInternal || isMSSQL) {
         describe("Fields with spaces", () => {
           let table: Table
