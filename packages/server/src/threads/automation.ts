@@ -67,11 +67,18 @@ function getLoopIterable(step: LoopStep): any[] {
   const option = step.inputs.option
   let input = step.inputs.binding
 
-  if (option === LoopStepType.ARRAY && typeof input === "string") {
-    if (input === "") {
-      input = []
-    } else {
-      input = JSON.parse(input)
+  if (option === LoopStepType.ARRAY) {
+    // If input is already an array (e.g., from JavaScript step), use it directly
+    if (Array.isArray(input)) {
+      return input
+    }
+    // If input is a string, parse it as JSON
+    if (typeof input === "string") {
+      if (input === "") {
+        input = []
+      } else {
+        input = JSON.parse(input)
+      }
     }
   }
 
