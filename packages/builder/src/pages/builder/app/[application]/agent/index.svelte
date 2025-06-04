@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
     ActionButton,
-    Banner,
     Body,
     Button,
     Heading,
@@ -17,7 +16,11 @@
   } from "@budibase/bbui"
   import { agentsStore } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
-  import type { AgentChat, AgentToolSource, CreateToolSourceRequest } from "@budibase/types"
+  import type {
+    AgentChat,
+    CreateToolSourceRequest,
+    UserMessage,
+  } from "@budibase/types"
   import { onDestroy, onMount } from "svelte"
   import { type ComponentType } from "svelte"
   import Panel from "@/components/design/Panel.svelte"
@@ -26,7 +29,7 @@
   import GithubLogo from "./logos/Github.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
 
-  const Logos: Partial<Record<AgentToolSource["type"], ComponentType>> = {
+  const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
     CONFLUENCE: ConfluenceLogo,
     GITHUB: GithubLogo,
@@ -110,7 +113,7 @@
       chat = { title: "", messages: [] }
     }
 
-    const userMessage = { role: "user", content: inputValue }
+    const userMessage: UserMessage = { role: "user", content: inputValue }
 
     const updatedChat = {
       ...chat,
@@ -227,7 +230,7 @@
     if (isDisabled) {
       // Enable the tool by removing from disabled list
       selectedConfigToolSource.disabledTools = currentDisabled.filter(
-        name => name !== toolName
+        (name: string) => name !== toolName
       )
     } else {
       // Disable the tool by adding to disabled list
@@ -363,10 +366,18 @@
                       {#each toolSources as toolSource}
                         <div class="saved-tool-item">
                           <div class="tool-icon">
-                            <svelte:component this={Logos[toolSource.type]} height="26" width="26" />
+                            <svelte:component
+                              this={Logos[toolSource.type]}
+                              height="26"
+                              width="26"
+                            />
                           </div>
                           <div class="tool-info">
-                            <div class="tool-name">{ToolSources.find(ts => ts.type === toolSource.type)?.name}</div>
+                            <div class="tool-name">
+                              {ToolSources.find(
+                                ts => ts.type === toolSource.type
+                              )?.name}
+                            </div>
                           </div>
                           <div class="tool-actions">
                             <Icon
@@ -394,7 +405,11 @@
                       hoverable
                       on:click={backToToolsList}
                     />
-                    <Heading size="S">{ToolSources.find(ts => selectedConfigToolSource.type === ts.type)?.name}</Heading>
+                    <Heading size="S"
+                      >{ToolSources.find(
+                        ts => selectedConfigToolSource.type === ts.type
+                      )?.name}</Heading
+                    >
                     <Button size="S" cta on:click={saveToolConfig}>
                       Save Configuration
                     </Button>
@@ -406,7 +421,11 @@
                         <div class="tool-toggle-item">
                           <div class="tool-toggle-icon">
                             {#if Logos[selectedConfigToolSource.type]}
-                              <svelte:component this={Logos[selectedConfigToolSource.type]} height="20" width="20" />
+                              <svelte:component
+                                this={Logos[selectedConfigToolSource.type]}
+                                height="20"
+                                width="20"
+                              />
                             {/if}
                           </div>
                           <div class="tool-toggle-info">
@@ -451,10 +470,8 @@
     onCancel={() => toolSourceModal.hide()}
   >
     <div class="vote-banner">
-      <Icon name="Hand"/>
-      <span>
-        Vote for which tools we add next
-      </span>
+      <Icon name="Hand" />
+      <span> Vote for which tools we add next </span>
       <Button>Vote</Button>
     </div>
     <section class="tool-source-tiles">
@@ -463,7 +480,11 @@
           <div class="tool-source-header">
             <div class="tool-source-icon">
               {#if Logos[toolSource.type]}
-                <svelte:component this={Logos[toolSource.type]} height="24" width="24" />
+                <svelte:component
+                  this={Logos[toolSource.type]}
+                  height="24"
+                  width="24"
+                />
               {/if}
             </div>
             <Heading size="XS">{toolSource.name}</Heading>
@@ -471,9 +492,12 @@
           <Body size="S">
             {toolSource.description}
           </Body>
-          <Button cta size="S"
-                  disabled={toolSources.some(ts => ts.type === toolSource.type)}
-                  on:click={() => openToolConfig(toolSource)}>
+          <Button
+            cta
+            size="S"
+            disabled={toolSources.some(ts => ts.type === toolSource.type)}
+            on:click={() => openToolConfig(toolSource)}
+          >
             Connect
           </Button>
         </div>
@@ -505,7 +529,6 @@
         label="Tool Source Guidelines"
         bind:value={toolConfig.guidelines}
         placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
-        rows={6}
       />
     </div>
   </ModalContent>
@@ -744,11 +767,6 @@
     margin-bottom: var(--spacing-xs);
   }
 
-  .tool-details {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
-  }
-
   .tool-actions {
     display: flex;
     gap: var(--spacing-s);
@@ -809,12 +827,6 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .tool-config-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: var(--spacing-xl);
-  }
-
   .vote-banner {
     display: flex;
     align-items: center;
@@ -827,5 +839,4 @@
   .vote-banner:last-child {
     margin-left: auto;
   }
-
 </style>

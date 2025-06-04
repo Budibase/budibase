@@ -1,6 +1,7 @@
 import {
   AgentChat,
   AgentToolSource,
+  AgentToolSourceWithTools,
   ChatAgentRequest,
   ChatAgentResponse,
   CreateToolSourceRequest,
@@ -14,7 +15,7 @@ export interface AgentEndpoints {
   removeChat: (historyId: string) => Promise<void>
   fetchChats: () => Promise<FetchAgentHistoryResponse>
 
-  fetchToolSources: () => Promise<AgentToolSource[]>
+  fetchToolSources: () => Promise<AgentToolSourceWithTools[]>
   createToolSource: (
     toolSource: CreateToolSourceRequest
   ) => Promise<AgentToolSource>

@@ -71,8 +71,8 @@ yarn dev:server             # Start only server/worker
 ```bash
 yarn test                   # Run all tests
 yarn lint                   # Run ESLint and Prettier
-yarn lint:fix              # Auto-fix linting issues
-yarn check:types           # TypeScript type checking
+yarn lint:fix:prettier      # Auto-fix linting issues
+yarn check:types            # TypeScript type checking. If this fails due to @budibase/types module, you need to run a yarn build first and then run the type check again.
 ```
 
 **Process Management:**
@@ -104,7 +104,7 @@ The project includes an AI agent system with configurable tool sources:
 ### Adding New Components
 1. Create component in appropriate package (`bbui` for reusable, `builder` for builder-specific)
 2. Follow existing patterns for props, styling, and exports
-3. Add TypeScript types if needed
+3. Add TypeScript types if needed. Follow the rules defined in tsconfig and tsconfig.build.json at the different package levels. Avoid use of explicit any unless absolutely necessary.
 4. Update package exports in `index.ts`
 
 ### Database Changes

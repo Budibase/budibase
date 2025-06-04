@@ -1,6 +1,6 @@
 import { ai } from "@budibase/pro"
 import * as tools from "../../../ai/tools"
-import { context, docIds, events, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   ChatAgentRequest,
   ChatAgentResponse,
@@ -9,6 +9,7 @@ import {
   FetchAgentHistoryResponse,
   AgentChat,
   AgentToolSource,
+  AgentToolSourceWithTools,
   CreateToolSourceRequest,
 } from "@budibase/types"
 import { ConfluenceClient, GitHubClient, budibase } from "../../../ai/tools"
@@ -145,7 +146,9 @@ export async function fetchHistory(
   ctx.body = history.rows.map(row => row.doc!)
 }
 
-export async function fetchToolSources(ctx: UserCtx<void, void>) {
+export async function fetchToolSources(
+  ctx: UserCtx<void, AgentToolSourceWithTools[]>
+) {
   const db = context.getAppDB()
   const toolSources = await db.allDocs<AgentToolSource>(
     docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
@@ -160,15 +163,13 @@ export async function fetchToolSources(ctx: UserCtx<void, void>) {
     CONFLUENCE: new ConfluenceClient().getTools(),
   }
 
-  const sourcesWithTools = toolSources.rows.map(row => {
+  ctx.body = toolSources.rows.map(row => {
     const doc = row.doc!
     return {
       ...doc,
       tools: SourceToToolMap[doc.type as keyof typeof SourceToToolMap] || [],
     }
   })
-
-  ctx.body = sourcesWithTools
 }
 
 export async function createToolSource(

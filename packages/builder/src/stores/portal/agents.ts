@@ -3,13 +3,14 @@ import { BudiStore } from "../BudiStore"
 import {
   AgentChat,
   AgentToolSource,
+  AgentToolSourceWithTools,
   CreateToolSourceRequest,
 } from "@budibase/types"
 
 interface AgentStore {
   chats: AgentChat[]
   currentChatId?: string
-  toolSources: AgentToolSource[]
+  toolSources: AgentToolSourceWithTools[]
 }
 
 export class AgentsStore extends BudiStore<AgentStore> {
@@ -49,11 +50,15 @@ export class AgentsStore extends BudiStore<AgentStore> {
 
   createToolSource = async (toolSource: CreateToolSourceRequest) => {
     const newToolSource = await API.createToolSource(toolSource)
+    const newToolSourceWithTools: AgentToolSourceWithTools = {
+      ...newToolSource,
+      tools: [],
+    }
     this.update(state => {
-      state.toolSources = [...state.toolSources, newToolSource]
+      state.toolSources = [...state.toolSources, newToolSourceWithTools]
       return state
     })
-    return newToolSource
+    return newToolSourceWithTools
   }
 
   updateToolSource = async (toolSource: AgentToolSource) => {
