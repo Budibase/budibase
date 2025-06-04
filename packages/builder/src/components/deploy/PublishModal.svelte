@@ -2,6 +2,8 @@
   import { Modal, ModalContent, Checkbox, Accordion, Layout, Heading, Body } from "@budibase/bbui"
   import { workspaceAppStore, automationStore } from "@/stores/builder"
   import { onMount } from "svelte"
+  import type { UsedResource } from "@budibase/types"
+  import { API } from "@/api"
 
   export let targetId: string
 
@@ -9,6 +11,7 @@
   let target: { type: "app" | "automation", id: string, name: string } | undefined
   let selectedApps: Record<string, boolean> = {}
   let selectedAutomations: Record<string, boolean> = {}
+  let usedResources: UsedResource[] = []
 
   $: automations = $automationStore.automations
   $: filteredAutomations = removeTarget(automations)
@@ -16,6 +19,7 @@
   $: filteredApps = removeTarget(apps)
   $: selectedAppNames = getSelectedNames(selectedApps, apps)
   $: selectedAutomationNames = getSelectedNames(selectedAutomations, automations)
+  $: getUsedResources(getSelectedIds(selectedApps), getSelectedIds(selectedAutomations))
 
   export function show() {
     publishModal.show()
@@ -25,8 +29,20 @@
     publishModal.hide()
   }
 
+  async function getUsedResources(appIds: string[], automationIds: string[]) {
+    const { resources } = await API.resource.analyse({
+      automationIds: automationIds,
+      workspaceAppIds: appIds,
+    })
+    usedResources = resources
+  }
+
+  function getSelectedIds(list: Record<string, boolean>) {
+    return Object.entries(list).filter(([_, selected]) => selected).map(([id]) => id) || []
+  }
+
   function getSelectedNames(list: Record<string, boolean>, items: { _id?: string, name: string }[]) {
-    const selectedIds = Object.entries(list).filter(([_, selected]) => selected).map(([id]) => id)
+    const selectedIds = getSelectedIds(list)
     return items.filter(item => selectedIds.find(id => id === item._id)).map(item => item.name)
   }
 
@@ -85,7 +101,7 @@
           {/if}
         </Accordion>
         <Accordion header="Show everything that will be published" noPadding bold={false}>
-          <Body size="XS">Resources: Budibase DB, PostgreSQL DB, REST API, REST API 2, REST API 3, REST API 4, REST API 5.</Body>
+          <Body size="XS">Resources: {usedResources.map(resource => resource.name).join(", ")}</Body>
           {#if selectedAppNames.length}
             <Body size="XS">Apps: {selectedAppNames.join(", ")}</Body>
           {/if}
