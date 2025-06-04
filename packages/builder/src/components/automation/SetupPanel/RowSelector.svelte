@@ -361,7 +361,7 @@
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <ul class="spectrum-Menu" role="listbox">
     {#each schemaFields || [] as [field, schema]}
-      {#if !isAutoincrement(field)}
+      {#if !isAutoincrement(schema)}
         <li
           class="table_field spectrum-Menu-item"
           class:is-selected={Object.hasOwn(editableFields, field)}
