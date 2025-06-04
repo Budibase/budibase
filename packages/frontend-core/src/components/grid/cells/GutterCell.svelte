@@ -131,7 +131,7 @@
   .delete:hover {
     cursor: pointer;
   }
-  .delete:hover :global(.spectrum-Icon) {
+  .delete:hover :global(.icon) {
     color: var(--spectrum-global-color-red-600) !important;
   }
 

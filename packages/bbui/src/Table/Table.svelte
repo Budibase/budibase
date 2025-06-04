@@ -6,6 +6,7 @@
   import { cloneDeep, deepGet } from "../helpers"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
   import Checkbox from "../Form/Checkbox.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   /**
    /**
@@ -388,26 +389,26 @@
                 <div class="title" title={field}>
                   {getDisplayName(schema[field])}
                   {#if schema[field]?.autocolumn}
-                    <i
-                      class="ph ph-magic-wand spectrum-Icon spectrum-Table-autoIcon"
-                      style="font-size: 1rem; line-height: 1;"
-                      aria-hidden="true"
+                    <Icon
+                      name="magic-wand"
+                      size="S"
+                      color="var(--spectrum-global-color-gray-600)"
                     />
                   {/if}
                   {#if sortColumn === field}
-                    <svg
-                      class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                      focusable="false"
-                      aria-hidden="true"
-                    >
-                      <use xlink:href="#spectrum-css-icon-Arrow100" />
-                    </svg>
+                    <Icon
+                      name="caret-down"
+                      size="S"
+                      color="var(--spectrum-global-color-gray-700)"
+                    />
                   {/if}
                   {#if allowEditColumns && schema[field]?.editable !== false}
-                    <i
-                      class="ph ph-pencil spectrum-Icon spectrum-Table-editIcon"
-                      style="font-size: 1rem; line-height: 1; cursor: pointer;"
-                      aria-hidden="true"
+                    <Icon
+                      name="pencil"
+                      size="S"
+                      hoverable
+                      color="var(--spectrum-global-color-gray-600)"
+                      hoverColor="var(--spectrum-global-color-gray-900)"
                       on:click={e => editColumn(e, field)}
                     />
                   {/if}
@@ -479,10 +480,10 @@
               <slot name="placeholder" />
             {:else}
               <div class="placeholder-content">
-                <i
-                  class="ph ph-table spectrum-Icon spectrum-Icon--sizeXXL"
-                  style="font-size: 2rem; line-height: 1;"
-                  aria-hidden="true"
+                <Icon
+                  name="table"
+                  size="XXL"
+                  color="var(--spectrum-global-color-gray-600)"
                 />
                 <div>{placeholderText}</div>
               </div>
@@ -592,24 +593,11 @@
     overflow: visible;
     text-overflow: ellipsis;
   }
-  .spectrum-Table-headCell:hover .spectrum-Table-editIcon {
-    opacity: 1;
-    transition: opacity 0.2s ease;
-  }
-  .spectrum-Table-headCell i {
-    pointer-events: all;
+  .spectrum-Table-headCell :global(.icon) {
     margin-left: var(
       --spectrum-table-header-sort-icon-gap,
       var(--spectrum-global-dimension-size-125)
     );
-  }
-  .spectrum-Table-editIcon,
-  .spectrum-Table-autoIcon {
-    width: var(--spectrum-global-dimension-size-150);
-    height: var(--spectrum-global-dimension-size-150);
-  }
-  .spectrum-Table-editIcon {
-    opacity: 0;
   }
 
   /* Table rows */
@@ -703,12 +691,4 @@
     text-align: center;
   }
 
-  i {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
-    pointer-events: none;
-  }
-  i.spectrum-Table-editIcon {
-    pointer-events: all;
-    cursor: pointer;
-  }
 </style>

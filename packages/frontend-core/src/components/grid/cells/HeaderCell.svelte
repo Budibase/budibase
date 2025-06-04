@@ -433,10 +433,10 @@
   }
 
   /* Icon colors */
-  .header-cell :global(.spectrum-Icon) {
+  .header-cell :global(.icon) {
     color: var(--spectrum-global-color-gray-600);
   }
-  .header-cell :global(.spectrum-Icon.hoverable:hover) {
+  .header-cell :global(.icon.hoverable:hover) {
     color: var(--spectrum-global-color-gray-800) !important;
     cursor: pointer;
   }

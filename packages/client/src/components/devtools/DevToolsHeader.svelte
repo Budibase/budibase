@@ -93,7 +93,7 @@
   }
   .dev-preview-header :global(.spectrum-Heading),
   .dev-preview-header :global(.spectrum-Picker-menuIcon),
-  .dev-preview-header :global(.spectrum-Icon),
+  .dev-preview-header :global(.icon),
   .dev-preview-header :global(.spectrum-Picker-label),
   .dev-preview-header :global(.spectrum-ActionButton) {
     font-weight: 600;

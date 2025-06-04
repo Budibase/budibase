@@ -8,7 +8,7 @@
     FieldType,
     RangeOperator,
   } from "@budibase/types"
-  import { type PopoverAPI, Helpers } from "@budibase/bbui"
+  import { type PopoverAPI, Helpers, Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { type Writable } from "svelte/store"
   import { isArrayOperator } from "@/utils/filtering"
@@ -36,7 +36,7 @@
   let filterMeta: string | undefined
   let filterTitle: string | undefined
 
-  $: icon = !filter ? "selection-plus" : "xcircle"
+  $: iconName = !filter ? "selection-plus" : "x-circle"
   $: fieldSchema = config ? schema?.[config?.field] : undefined
   $: filterOp = filter
     ? operators?.find(op => op.value === filter.operator)
@@ -172,14 +172,7 @@
             }
           }}
         >
-          <svg
-            class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-            focusable="false"
-            aria-hidden="true"
-            aria-label={icon}
-          >
-            <use xlink:href="#spectrum-icon-18-{icon}" />
-          </svg>
+          <Icon name={iconName} size={size} />
         </div>
 
         <span class="spectrum-Button-label" class:truncate>
@@ -202,11 +195,7 @@
   .toggle-wrap {
     z-index: 1;
   }
-  .toggle-wrap svg {
-    scale: 90%;
-    pointer-events: none;
-  }
-  .filter-button-wrap.inactive .spectrum-Button .spectrum-Icon {
+  .filter-button-wrap.inactive .spectrum-Button :global(.icon) {
     color: var(--grey-6);
   }
 

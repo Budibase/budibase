@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   let dispatch = createEventDispatcher()
 
@@ -12,7 +13,6 @@
   export let extraLinkAction
   export let showCloseButton = true
 
-  $: phosphorClass = `ph ph-${icon}`
   let show = true
 
   function clear() {
@@ -23,12 +23,9 @@
 
 {#if show}
   <div class="spectrum-Toast spectrum-Toast--{type}">
-    <i
-      class="{phosphorClass} spectrum-Icon spectrum-Icon--size{size} spectrum-Toast-typeIcon"
-      style="font-size: {size === 'S'
-        ? '1rem'
-        : '1.125rem'}; line-height: 1; vertical-align: middle;"
-      aria-hidden="true"
+    <Icon
+      name={icon}
+      {size}
     />
     <div class="spectrum-Toast-body">
       <div class="spectrum-Toast-content row-content">
@@ -55,13 +52,10 @@
           on:click={clear}
         >
           <div class="spectrum-ClearButton-fill">
-            <svg
-              class="spectrum-ClearButton-icon spectrum-Icon spectrum-UIIcon-Cross100"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Cross100" />
-            </svg>
+            <Icon
+              name="x"
+              {size}
+            />
           </div>
         </button>
       </div>

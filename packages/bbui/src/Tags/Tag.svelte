@@ -2,6 +2,7 @@
   import "@spectrum-css/tags/dist/index-vars.css"
   import Avatar from "../Avatar/Avatar.svelte"
   import ClearButton from "../ClearButton/ClearButton.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let icon: string = ""
   export let avatar: string = ""
@@ -9,8 +10,6 @@
   export let disabled: boolean = false
   export let closable: boolean = false
   export let emphasized: boolean = false
-
-  $: phosphorClass = `ph ph-${icon}`
 </script>
 
 <div
@@ -24,11 +23,9 @@
     <Avatar url={avatar} />
   {/if}
   {#if icon}
-    <i
-      class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeS"
-      style="font-size: 1rem; line-height: 1; vertical-align: middle;"
-      aria-hidden="true"
-      aria-label="Tag"
+    <Icon
+      name={icon}
+      size="S"
     />
   {/if}
   <span class="spectrum-Tags-itemLabel"><slot /></span>

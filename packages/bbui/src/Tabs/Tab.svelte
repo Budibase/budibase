@@ -1,14 +1,13 @@
 <script>
   import { getContext, onDestroy, createEventDispatcher } from "svelte"
   import Portal from "svelte-portal"
+  import Icon from "../Icon/Icon.svelte"
 
   export let title
   export let icon = ""
   export let id = undefined
   export let href = "#"
   export let link = false
-
-  $: phosphorClass = `ph ph-${icon}`
   const dispatch = createEventDispatcher()
   let selected = getContext("tab")
   let observer
@@ -79,11 +78,9 @@
     tabindex="0"
   >
     {#if icon}
-      <i
-        class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeM"
-        style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
-        aria-hidden="true"
-        aria-label="Folder"
+      <Icon
+        name={icon}
+        size="M"
       />
     {/if}
     <span class="spectrum-Tabs-itemLabel">{title}</span>
@@ -103,11 +100,9 @@
     tabindex="0"
   >
     {#if icon}
-      <i
-        class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeM"
-        style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
-        aria-hidden="true"
-        aria-label="Folder"
+      <Icon
+        name={icon}
+        size="M"
       />
     {/if}
     <span class="spectrum-Tabs-itemLabel">{title}</span>

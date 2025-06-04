@@ -443,7 +443,7 @@
     padding: 4px;
     border-radius: 4px;
   }
-  .add :global(.spectrum-Icon) {
+  .add :global(.icon) {
     width: 12px;
     height: 12px;
   }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ActionButton } from "../"
+  import Icon from "../Icon/Icon.svelte"
 
   import { createEventDispatcher } from "svelte"
 
@@ -11,16 +12,14 @@
   export let action: ((_dismiss: () => void) => void) | null = null
   export let wide: boolean = false
 
-  $: phosphorClass = `ph ph-${icon}`
   const dispatch = createEventDispatcher<{ dismiss: void }>()
 </script>
 
 <div class="spectrum-Toast spectrum-Toast--{type}" class:wide>
   {#if icon}
-    <i
-      class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeM spectrum-Toast-typeIcon"
-      style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
-      aria-hidden="true"
+    <Icon
+      name={icon}
+      size="M"
     />
   {/if}
   <div class="spectrum-Toast-body" class:actionBody={!!action}>
@@ -38,13 +37,10 @@
         on:click={() => dispatch("dismiss")}
       >
         <div class="spectrum-ClearButton-fill">
-          <svg
-            class="spectrum-ClearButton-icon spectrum-Icon spectrum-UIIcon-Cross100"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Cross100" />
-          </svg>
+          <Icon
+            name="x"
+            size="M"
+          />
         </div>
       </button>
     </div>

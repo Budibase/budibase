@@ -401,11 +401,11 @@
     max-width: 100%;
     gap: var(--spacing-xs);
   }
-  .nav :global(.spectrum-Icon) {
+  .nav :global(.icon) {
     color: var(--navTextColor);
     opacity: 0.75;
   }
-  .nav :global(.spectrum-Icon:hover) {
+  .nav :global(.icon:hover) {
     color: var(--navTextColor);
     opacity: 1;
   }

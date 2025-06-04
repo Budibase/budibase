@@ -13,7 +13,6 @@
   export let linkText: string = ""
 
   $: icon = selectIcon(type)
-  $: phosphorClass = `ph ph-${icon}`
   // if newlines used, convert them to different elements
   $: split = message.split("\n")
 
@@ -33,10 +32,9 @@
 </script>
 
 <div class="spectrum-InLineAlert spectrum-InLineAlert--{type}">
-  <i
-    class="{phosphorClass} spectrum-Icon spectrum-Icon--sizeM spectrum-InLineAlert-icon"
-    style="font-size: 1.125rem; line-height: 1; vertical-align: middle;"
-    aria-hidden="true"
+  <Icon
+    name={icon}
+    size="M"
   />
   <div class="spectrum-InLineAlert-header">{header}</div>
   <slot>
