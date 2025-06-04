@@ -46,7 +46,7 @@ interface ChatCompletionResponse {
   usage: Usage
 }
 
-export const mockChatGPTResponse: MockLLMResponseFn = (
+export const mockAzureOpenAIResponse: MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
   opts?: MockLLMResponseOpts
 ) => {
@@ -57,8 +57,8 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
       response_format: ai.parseResponseFormat(opts.format),
     })
   }
-  return nock(opts?.baseUrl || "https://api.openai.com")
-    .post("/v1/chat/completions", body)
+  return nock(opts?.baseUrl || "https://api.azure.com")
+    .post(new RegExp("/deployments/.*?/chat/completions"), body)
     .reply((uri: string, body: nock.Body) => {
       const req = body as ChatCompletionRequest
       const messages = req.messages
