@@ -5,12 +5,55 @@ export interface AgentChat extends Document {
   messages: Message[]
 }
 
-export interface AgentToolSource extends Document {
-  type: "GITHUB" | "CONFLUENCE" | "BUDIBASE"
-  disabledTools: string[]
-  auth: object
+export interface BaseToolSourceAuth {
+  guidelines?: string
 }
 
-export interface AgentToolSourceWithTools extends AgentToolSource {
+export interface GitHubToolAuth extends BaseToolSourceAuth {
+  apiKey: string
+  baseUrl?: string
+}
+
+export interface ConfluenceToolAuth extends BaseToolSourceAuth {
+  apiKey: string
+  email: string
+  baseUrl?: string
+}
+
+export interface BudibaseToolAuth extends BaseToolSourceAuth {}
+
+export type AgentToolSourceAuth =
+  | GitHubToolAuth
+  | ConfluenceToolAuth
+  | BudibaseToolAuth
+
+export interface GitHubToolSource extends Document {
+  type: "GITHUB"
+  disabledTools: string[]
+  auth: GitHubToolAuth
+}
+
+export interface ConfluenceToolSource extends Document {
+  type: "CONFLUENCE"
+  disabledTools: string[]
+  auth: ConfluenceToolAuth
+}
+
+export interface BudibaseToolSource extends Document {
+  type: "BUDIBASE"
+  disabledTools: string[]
+  auth: BudibaseToolAuth
+}
+
+export type AgentToolSource =
+  | GitHubToolSource
+  | ConfluenceToolSource
+  | BudibaseToolSource
+
+export type AgentToolSourceWithTools = (
+  | GitHubToolSource
+  | ConfluenceToolSource
+  | BudibaseToolSource
+) & {
   tools: Tool[]
 }

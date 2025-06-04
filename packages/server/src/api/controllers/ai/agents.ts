@@ -45,14 +45,18 @@ export async function agentChat(
         break
       }
       case "GITHUB": {
-        const ghClient = new GitHubClient()
+        const ghClient = new GitHubClient(toolSource.auth?.apiKey)
         toolsToAdd = ghClient
           .getTools()
           .filter(tool => !disabledTools.includes(tool.name))
         break
       }
       case "CONFLUENCE": {
-        const confluenceClient = new ConfluenceClient()
+        const confluenceClient = new ConfluenceClient(
+          toolSource.auth?.apiKey,
+          toolSource.auth?.email,
+          toolSource.auth?.baseUrl
+        )
         toolsToAdd = confluenceClient
           .getTools()
           .filter(tool => !disabledTools.includes(tool.name))
@@ -61,7 +65,6 @@ export async function agentChat(
     }
 
     if (toolsToAdd.length > 0) {
-      console.log(toolsToAdd)
       prompt = prompt.addTools(toolsToAdd)
     }
   }
@@ -156,18 +159,31 @@ export async function fetchToolSources(
     })
   )
 
-  // TODO: review, could probably be better
-  const SourceToToolMap = {
-    BUDIBASE: budibase,
-    GITHUB: new GitHubClient().getTools(),
-    CONFLUENCE: new ConfluenceClient().getTools(),
-  }
-
   ctx.body = toolSources.rows.map(row => {
     const doc = row.doc!
+    let tools: any[] = []
+
+    switch (doc.type) {
+      case "BUDIBASE":
+        tools = budibase
+        break
+      case "GITHUB":
+        const ghClient = new GitHubClient(doc.auth?.apiKey)
+        tools = ghClient.getTools()
+        break
+      case "CONFLUENCE":
+        const confluenceClient = new ConfluenceClient(
+          doc.auth?.apiKey,
+          doc.auth?.email,
+          doc.auth?.baseUrl
+        )
+        tools = confluenceClient.getTools()
+        break
+    }
+
     return {
       ...doc,
-      tools: SourceToToolMap[doc.type as keyof typeof SourceToToolMap] || [],
+      tools,
     }
   })
 }

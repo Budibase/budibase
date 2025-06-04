@@ -79,11 +79,7 @@
   let selectedToolSource: any = null
   let selectedConfigToolSource: any = null
   let panelView: "tools" | "toolConfig" = "tools"
-  let toolConfig = {
-    apiKey: "",
-    guidelines: "",
-    type: "GITHUB" as const,
-  }
+  let toolConfig: Record<string, string> = {}
 
   $: chatHistory = $agentsStore.chats || []
   $: toolSources = $agentsStore.toolSources || []
@@ -177,11 +173,7 @@
 
   const openToolConfig = (toolSource: any) => {
     selectedToolSource = toolSource
-    toolConfig = {
-      apiKey: "",
-      guidelines: "",
-      type: toolSource.type,
-    }
+    toolConfig = {}
     toolSourceModal.hide()
     toolConfigModal.show()
   }
@@ -193,13 +185,12 @@
 
   const handleConfigSave = async () => {
     try {
+      const authConfig = { ...toolConfig }
+
       const toolSourceData: CreateToolSourceRequest = {
-        type: toolConfig.type,
+        type: selectedToolSource.type,
         disabledTools: [],
-        auth: {
-          apiKey: toolConfig.apiKey,
-          guidelines: toolConfig.guidelines,
-        },
+        auth: authConfig,
       }
 
       await agentsStore.createToolSource(toolSourceData)
@@ -519,17 +510,58 @@
     onConfirm={handleConfigSave}
   >
     <div class="config-form">
-      <Input
-        label="API Key"
-        bind:value={toolConfig.apiKey}
-        type="password"
-        placeholder="Enter your API key"
-      />
-      <TextArea
-        label="Tool Source Guidelines"
-        bind:value={toolConfig.guidelines}
-        placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
-      />
+      {#if selectedToolSource}
+        {#if selectedToolSource.type === "GITHUB"}
+          <Input
+            label="API Key"
+            bind:value={toolConfig.apiKey}
+            type="password"
+            placeholder="Enter your GitHub API token"
+          />
+          <Input
+            label="Base URL (Optional)"
+            bind:value={toolConfig.baseUrl}
+            type="text"
+            placeholder="https://api.github.com (leave empty for default)"
+          />
+          <TextArea
+            label="Tool Source Guidelines"
+            bind:value={toolConfig.guidelines}
+            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
+          />
+        {:else if selectedToolSource.type === "CONFLUENCE"}
+          <Input
+            label="API Key"
+            bind:value={toolConfig.apiKey}
+            type="password"
+            placeholder="Enter your Confluence API token"
+          />
+          <Input
+            label="Email Address"
+            bind:value={toolConfig.email}
+            type="email"
+            placeholder="your.email@domain.com"
+            helpText="Your Atlassian account email address"
+          />
+          <Input
+            label="Base URL (Optional)"
+            bind:value={toolConfig.baseUrl}
+            type="text"
+            placeholder="https://your-domain.atlassian.net"
+          />
+          <TextArea
+            label="Tool Source Guidelines"
+            bind:value={toolConfig.guidelines}
+            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
+          />
+        {:else if selectedToolSource.type === "BUDIBASE"}
+          <TextArea
+            label="Tool Source Guidelines"
+            bind:value={toolConfig.guidelines}
+            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
+          />
+        {/if}
+      {/if}
     </div>
   </ModalContent>
 </Modal>

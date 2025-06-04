@@ -49,9 +49,9 @@ export class AgentsStore extends BudiStore<AgentStore> {
   }
 
   createToolSource = async (toolSource: CreateToolSourceRequest) => {
-    const newToolSource = await API.createToolSource(toolSource)
+    await API.createToolSource(toolSource)
     const newToolSourceWithTools: AgentToolSourceWithTools = {
-      ...newToolSource,
+      ...toolSource,
       tools: [],
     }
     this.update(state => {
