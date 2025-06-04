@@ -64,30 +64,20 @@ function matchesLoopFailureCondition(step: LoopStep, currentItem: any) {
 // function handles the various ways that a LoopStep can be configured, parsing
 // the input and returning an array of items to loop over.
 function getLoopIterable(step: LoopStep): any[] {
-  const option = step.inputs.option
   let input = step.inputs.binding
 
-  if (option === LoopStepType.ARRAY) {
-    // If input is already an array (e.g., from JavaScript step), use it directly
-    if (Array.isArray(input)) {
-      return input
-    }
-    // If input is a string, parse it as JSON
-    if (typeof input === "string") {
-      if (input === "") {
-        input = []
-      } else {
+  if (Array.isArray(input)) {
+    return input
+  } else if (typeof input === "string") {
+    if (input === "") {
+      input = []
+    } else {
+      try {
         input = JSON.parse(input)
+      } catch (e) {
+        input = automationUtils.stringSplit(input)
       }
     }
-  }
-
-  if (option === LoopStepType.STRING && Array.isArray(input)) {
-    input = input.join(",")
-  }
-
-  if (option === LoopStepType.STRING && typeof input === "string") {
-    input = automationUtils.stringSplit(input)
   }
 
   return Array.isArray(input) ? input : [input]

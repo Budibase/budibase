@@ -560,7 +560,7 @@ describe("Attempt to run a basic loop automation", () => {
     expect(results.steps[2].outputs.rows).toHaveLength(0)
   })
 
-  it.only("should successfully loop over an array returned by a JavaScript step with Array input type", async () => {
+  it("should successfully loop over an array returned by a JavaScript step with Array input type", async () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()
       .executeScript({
