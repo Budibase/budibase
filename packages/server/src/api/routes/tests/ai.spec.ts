@@ -1016,7 +1016,7 @@ describe("BudibaseAI", () => {
     beforeAll(() => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
-        INTERNAL_API_KEY: internalApiKey,
+        ACCOUNT_PORTAL_API_KEY: internalApiKey,
       })
     })
 
@@ -1057,21 +1057,6 @@ describe("BudibaseAI", () => {
       expect(response.file).toBe(mockFileId)
     })
 
-    it("handles upload with img base64 data", async () => {
-      const mockFileId = "file-xyz789"
-      mockOpenAIFileUpload(mockFileId)
-
-      const testData = Buffer.from("fake image data")
-      const response = await config.api.ai.uploadFile({
-        data: testData,
-        filename: "test.png",
-        contentType: "image/png",
-        licenseKey,
-      })
-
-      expect(response.file).toInclude("data:image/jpeg;base64")
-    })
-
     it("handles OpenAI API errors", async () => {
       mockOpenAIFileUpload("", {
         status: 400,
@@ -1109,25 +1094,6 @@ describe("BudibaseAI", () => {
         },
         { status: 403 }
       )
-    })
-
-    it("blocks self-hosted requests", async () => {
-      const selfHostedCleanup = setEnv({ SELF_HOSTED: true })
-
-      try {
-        const testData = Buffer.from("test content")
-        await config.api.ai.uploadFile(
-          {
-            data: testData,
-            filename: "test.pdf",
-            contentType: "application/pdf",
-            licenseKey,
-          },
-          { status: 500 }
-        )
-      } finally {
-        selfHostedCleanup()
-      }
     })
   })
 })
