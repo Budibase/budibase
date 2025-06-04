@@ -2,7 +2,7 @@ import { ResponseFormat } from "@budibase/types"
 import { Scope } from "nock"
 
 export interface MockLLMResponseOpts {
-  host?: string
+  baseUrl?: string
   format?: ResponseFormat
 }
 
