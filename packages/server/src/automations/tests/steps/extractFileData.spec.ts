@@ -1,19 +1,14 @@
 import { basicTableWithAttachmentField } from "../../../tests/utilities/structures"
 import { objectStore, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import {
-  Table,
-  DocumentSourceType,
-  SupportedFileType,
-  Model,
-} from "@budibase/types"
+import { Table, DocumentSourceType, SupportedFileType } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
 import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
-async function uploadTestFile(filename: string, content: string = "test data") {
+async function uploadTestFile(filename: string, content: string) {
   let bucket = objectStore.ObjectStoreBuckets.APPS
   await objectStore.upload({
     bucket,
@@ -25,12 +20,11 @@ async function uploadTestFile(filename: string, content: string = "test data") {
 
 describe("test the extract file data action", () => {
   const config = new TestConfiguration()
-  let table: Table
   let resetEnv: () => void | undefined
 
   beforeEach(async () => {
     await config.init()
-    table = await config.api.table.save(basicTableWithAttachmentField())
+    await config.api.table.save(basicTableWithAttachmentField())
     await config.api.automation.deleteAll()
     resetEnv = setCoreEnv({ SELF_HOSTED: true, OPENAI_API_KEY: "abc123" })
   })
