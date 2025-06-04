@@ -52,15 +52,10 @@ export async function save(
       !(await sdk.workspaceApps.get(screen.workspaceAppId))
     ) {
       ctx.throw("workspaceAppId is not valid")
-    } else {
+    } else if (!screen.workspaceAppId) {
       let [workspaceApp] = await sdk.workspaceApps.fetch()
       if (!workspaceApp) {
-        const appMetadata = await sdk.applications.metadata.get()
-        workspaceApp = await sdk.workspaceApps.create({
-          name: appMetadata.name,
-          urlPrefix: "/",
-          icon: "Monitoring",
-        })
+        workspaceApp = await sdk.workspaceApps.createDefaultWorkspaceApp()
       }
       screen.workspaceAppId = workspaceApp._id
     }

@@ -182,13 +182,7 @@ async function addSampleDataDocs() {
 async function addSampleDataScreen() {
   let workspaceAppId: string | undefined
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const appMetadata = await sdk.applications.metadata.get()
-
-    const workspaceApp = await sdk.workspaceApps.create({
-      name: appMetadata.name,
-      urlPrefix: "/",
-      icon: "Monitoring",
-    })
+    const workspaceApp = await sdk.workspaceApps.createDefaultWorkspaceApp()
     workspaceAppId = workspaceApp._id!
   }
 
