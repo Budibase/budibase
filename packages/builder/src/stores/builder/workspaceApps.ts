@@ -54,6 +54,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
       return
     }
+
     const { workspaceApps } = await API.workspaceApp.fetch()
     this.update(state => ({
       ...state,
@@ -64,10 +65,10 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
   async add(workspaceApp: WorkspaceApp) {
     const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
-    this.store.update(state => {
-      state.workspaceApps.push(createdWorkspaceApp.workspaceApp)
-      return state
-    })
+    this.store.update(state => ({
+      ...state,
+      workspaceApps: [...state.workspaceApps, createdWorkspaceApp.workspaceApp],
+    }))
   }
 
   async edit(workspaceApp: UpdateWorkspaceAppRequest) {
