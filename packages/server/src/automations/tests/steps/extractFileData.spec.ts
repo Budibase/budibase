@@ -8,12 +8,12 @@ import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
-async function uploadTestFile(filename: string, content: string) {
+async function uploadTestFile(filename: string, content?: string) {
   let bucket = objectStore.ObjectStoreBuckets.APPS
   await objectStore.upload({
     bucket,
     filename,
-    body: Buffer.from(content),
+    body: Buffer.from(content || "test data"),
   })
   return filename
 }
