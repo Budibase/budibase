@@ -13,6 +13,7 @@ import {
 import { get } from "svelte/store"
 import { navigationStore } from "./navigation"
 import { workspaceAppStore } from "./workspaceApps"
+import { screenStore } from "./screens"
 
 interface ClientFeatures {
   spectrumThemes: boolean
@@ -206,6 +207,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     const { appId } = get(this.store)
     const appPackage = await API.fetchAppPackage(appId)
     this.syncAppPackage(appPackage)
+    screenStore.syncAppScreens(appPackage)
 
     workspaceAppStore.fetch()
   }

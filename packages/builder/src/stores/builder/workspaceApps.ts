@@ -9,6 +9,7 @@ import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
 import { featureFlag } from "@/helpers"
 import { API } from "@/api"
+import { appStore } from "./app"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
@@ -97,6 +98,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
         workspaceApps: state.workspaceApps.filter(app => app._id !== id),
       }
     })
+
+    appStore.refresh()
   }
 }
 
