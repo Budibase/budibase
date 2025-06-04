@@ -24,6 +24,7 @@ import {
 import { builderSocket } from "../../websockets"
 import sdk from "../../sdk"
 import { sdk as sharedSdk } from "@budibase/shared-core"
+import { defaultAppNavigator } from "../../constants/definitions"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   const screens = await sdk.screens.fetch()
@@ -46,12 +47,22 @@ export async function save(
 
   const isCreation = !screen._id
 
-  if (
-    (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
-    screen.workspaceAppId &&
-    !(await sdk.workspaceApps.get(screen.workspaceAppId))
-  ) {
-    ctx.throw("workspaceAppId is not valid")
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    if (
+      screen.workspaceAppId &&
+      !(await sdk.workspaceApps.get(screen.workspaceAppId))
+    ) {
+      ctx.throw("workspaceAppId is not valid")
+    } else {
+      const appMetadata = await sdk.applications.metadata.get()
+      const newWorkspaceApp = await sdk.workspaceApps.create({
+        name: appMetadata.name,
+        urlPrefix: "/",
+        icon: "Monitoring",
+        navigation: defaultAppNavigator(appMetadata.name),
+      })
+      screen.workspaceAppId = newWorkspaceApp._id
+    }
   }
 
   const savedScreen = isCreation
