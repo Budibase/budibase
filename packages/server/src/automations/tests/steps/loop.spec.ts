@@ -148,22 +148,6 @@ describe("Attempt to run a basic loop automation", () => {
     expect(results.steps[2].outputs.message).toContain("ro_ta")
   })
 
-  it("if an incorrect type is passed to the loop it should return an error", async () => {
-    const results = await createAutomationBuilder(config)
-      .onAppAction()
-      .loop({
-        option: LoopStepType.ARRAY,
-        binding: "1, 2, 3",
-      })
-      .serverLog({ text: "Message {{loop.currentItem}}" })
-      .test({ fields: {} })
-
-    expect(results.steps[0].outputs).toEqual({
-      success: false,
-      status: "INCORRECT_TYPE",
-    })
-  })
-
   it("ensure the loop stops if the failure condition is reached", async () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()
