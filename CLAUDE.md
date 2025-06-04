@@ -24,7 +24,7 @@
 - In application code use console.log instead of pino the logging framework.
   We have made it so that console.log statements are redirected to pino.
 - When you're writing tests, you don't need to assert or do conditional checks
-  on intermediate states. Just assert the final outcome you want to assert
+  on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
 
 ## Pull requests
