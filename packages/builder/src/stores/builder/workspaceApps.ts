@@ -10,6 +10,7 @@ import { screenStore } from "./screens"
 import { featureFlag } from "@/helpers"
 import { API } from "@/api"
 import { appStore } from "./app"
+import * as screenTemplating from "@/templates/screenTemplating"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
@@ -65,11 +66,21 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   }
 
   async add(workspaceApp: WorkspaceApp) {
-    const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
+    const { workspaceApp: createdWorkspaceApp } =
+      await API.workspaceApp.create(workspaceApp)
     this.store.update(state => ({
       ...state,
-      workspaceApps: [...state.workspaceApps, createdWorkspaceApp.workspaceApp],
+      workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
     }))
+
+    await screenStore.save({
+      ...screenTemplating.blank({
+        route: "/",
+        screens: [],
+        workspaceAppId: createdWorkspaceApp._id,
+      })[0].data,
+      workspaceAppId: createdWorkspaceApp._id,
+    })
   }
 
   async edit(workspaceApp: UpdateWorkspaceAppRequest) {
