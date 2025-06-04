@@ -132,6 +132,16 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
 
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const allScreens = await sdk.screens.fetch()
+    const appScreens = allScreens.filter(
+      s => s.workspaceAppId === screen.workspaceAppId
+    )
+    if (appScreens.filter(s => s._id !== id).length === 0) {
+      ctx.throw("Cannot delete the last screen in a workspace app", 409)
+    }
+  }
+
   await db.remove(id, ctx.params.screenRev)
 
   await sdk.navigation.deleteLink(screen.routing.route)
