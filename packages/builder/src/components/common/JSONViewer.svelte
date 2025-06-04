@@ -126,6 +126,8 @@
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
             on:click={() => (expanded = !expanded)}
+            size="XS"
+            weight="fill"
           />
         {/if}
       </div>
@@ -152,7 +154,7 @@
         <div class="copy-value-icon">
           <Icon
             name="copy"
-            size="XS"
+            size="S"
             hoverable
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
@@ -191,12 +193,12 @@
 
   /* Expand arrow */
   .binding-arrow {
-    margin: -3px 6px -2px 4px;
-    flex: 0 0 9px;
+    margin: 3px 6px 0 4px;
+    flex: 0 0 10px;
     transition: transform 130ms ease-out;
   }
-  .binding-arrow :global(svg) {
-    width: 9px;
+  .binding-arrow :global(i) {
+    width: 10px;
   }
   .binding-arrow.expanded {
     transform: rotate(90deg);
