@@ -7,7 +7,7 @@ LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-ho
 
 
 # handle node-gyp
-RUN apk add --no-cache --virtual .gyp python3 make g++ jq
+RUN apk add --no-cache --virtual .gyp python3=~3.13 make g++ jq
 RUN yarn global add pm2
 
 WORKDIR /
