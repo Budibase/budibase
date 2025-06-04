@@ -1,23 +1,82 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { Screen, Automation } from "@budibase/types"
+import { ResourceType, UsedByType, Table } from "@budibase/types"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import { basicTable, basicScreen } from "../../../tests/utilities/structures"
 
-describe("/api/apps/:appId/resources/analyze", () => {
+describe("/api/resources/analyze", () => {
   const config = new TestConfiguration()
+  let table: Table
 
   beforeAll(async () => {
     await config.init()
+    table = await config.api.table.save(basicTable())
   })
 
   afterAll(config.end)
 
   describe("resource analysis", () => {
-    it("should analyze screens for datasource usage", async () => {})
+    it("should analyze screens for datasource usage", async () => {
+      const screen = basicScreen()
+      screen.props._children?.push({
+        _id: "child-props",
+        _instanceName: "child",
+        _styles: {},
+        _component: "@budibase/standard-components/dataprovider",
+        datasource: {
+          tableId: table._id,
+          type: "table",
+        },
+      })
 
-    it("should analyze automations for datasource usage", async () => {})
+      // Save the screen to the database so it can be found
+      await config.api.screen.save(screen)
 
-    it("should handle empty inputs", async () => {})
+      const result = await config.api.resource.analyze({
+        workspaceAppIds: [screen.workspaceAppId!],
+      })
 
-    it("should handle missing request body", async () => {})
+      expect(result.body.resources).toContainEqual(
+        expect.objectContaining({
+          id: table._id,
+          name: table.name,
+          type: ResourceType.TABLE,
+          usedBy: screen.workspaceAppId!,
+          usedByType: UsedByType.WORKSPACE,
+        })
+      )
+    })
+
+    it("should analyze automations for datasource usage", async () => {
+      // Create an automation using the builder
+      const { automation } = await createAutomationBuilder(config)
+        .onRowSaved({ tableId: table._id! })
+        .save()
+
+      const result = await config.api.resource.analyze({
+        automationIds: [automation._id!],
+      })
+
+      expect(result.body.resources).toContainEqual(
+        expect.objectContaining({
+          id: table._id,
+          name: table.name,
+          type: ResourceType.TABLE,
+          usedBy: automation._id,
+          usedByType: UsedByType.AUTOMATION,
+        })
+      )
+    })
+
+    it("should handle empty inputs", async () => {
+      await config.api.resource.analyze(
+        {
+          workspaceAppIds: [],
+          automationIds: [],
+        },
+        {
+          status: 401,
+        }
+      )
+    })
   })
 })

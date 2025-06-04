@@ -42,18 +42,16 @@ export async function analyzeResources(
     usedById: string,
     usedByType: UsedByType
   ) => {
-    const resources: UsedResource[] = []
     for (let search of toSearchFor) {
       if (
         json.includes(search.id) &&
-        resources.find(resource => resource.id !== search.id)
+        !resources.find(resource => resource.id === search.id && resource.usedBy === usedById)
       ) {
         resources.push({
           ...search,
           usedBy: usedById,
           usedByType: usedByType,
         })
-        break
       }
     }
   }
@@ -73,17 +71,23 @@ export async function analyzeResources(
     }
 
     for (let workspaceAppId of workspaceAppIds) {
-      for (let screen of workspaceAppScreens[workspaceAppId]) {
+      const screens = workspaceAppScreens[workspaceAppId] || []
+      for (let screen of screens) {
         const json = JSON.stringify(screen)
         searchForResource(json, screen.workspaceAppId!, UsedByType.WORKSPACE)
       }
     }
   }
   if (automationIds?.length) {
-    const automations = await sdk.automations.find(automationIds)
-    for (let automation of automations) {
-      const json = JSON.stringify(automation)
-      searchForResource(json, automation._id!, UsedByType.AUTOMATION)
+    try {
+      const automations = await sdk.automations.find(automationIds)
+      for (let automation of automations) {
+        const json = JSON.stringify(automation)
+        searchForResource(json, automation._id!, UsedByType.AUTOMATION)
+      }
+    } catch (error) {
+      // If automation lookup fails, continue without them
+      console.warn("Failed to find automations:", error)
     }
   }
 
