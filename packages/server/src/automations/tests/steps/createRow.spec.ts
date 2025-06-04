@@ -4,7 +4,7 @@ import {
 } from "../../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { FilterCondition, Row, Table } from "@budibase/types"
+import { FilterCondition, Row, Table, FieldType, AutomationStatus } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 async function uploadTestFile(filename: string) {
@@ -288,5 +288,60 @@ describe("test the create row action", () => {
       'Error: Attachments must have both "url" and "filename" keys. You have provided: wrongKey, anotherWrongKey'
     )
     expect(result.steps[2].outputs.status).toEqual("No branch condition met")
+  })
+
+  describe("BUDI-9185: Junction table field selection", () => {
+    it("should be able to create rows in junction tables with foreign key fields", async () => {
+      // Create a simulated junction table with foreign key fields marked as autocolumn
+      // This simulates the external database junction table scenario
+      const junctionTable = await config.api.table.save({
+        name: "jt_products_categories_categories_products", // Junction table naming pattern
+        type: "table",
+        schema: {
+          products_id: {
+            name: "products_id",
+            type: FieldType.NUMBER,
+            autocolumn: true,
+            autoReason: "foreign_key",
+          },
+          categories_id: {
+            name: "categories_id", 
+            type: FieldType.NUMBER,
+            autocolumn: true,
+            autoReason: "foreign_key",
+          },
+        },
+      })
+
+      expect(junctionTable).toBeDefined()
+      expect(junctionTable.schema).toBeDefined()
+
+      // Verify the fields are marked as autocolumn foreign keys
+      expect(junctionTable.schema.products_id.autocolumn).toBe(true)
+      expect(junctionTable.schema.products_id.autoReason).toBe("foreign_key")
+      expect(junctionTable.schema.categories_id.autocolumn).toBe(true)
+      expect(junctionTable.schema.categories_id.autoReason).toBe("foreign_key")
+
+      // Test that we can create a row automation for the junction table
+      // This should work with our fix that allows junction table foreign keys to be editable
+      const result = await createAutomationBuilder(config)
+        .onAppAction()
+        .createRow({
+          row: {
+            tableId: junctionTable._id!,
+            products_id: 123,
+            categories_id: 456,
+          },
+        })
+        .test({ fields: {} })
+
+      expect(result.steps).toHaveLength(1)
+      expect(result.steps[0].outputs.success).toBe(true)
+      expect(result.status).toBe(AutomationStatus.SUCCESS)
+      
+      // Verify the created row contains the foreign key values
+      expect(result.steps[0].outputs.row.products_id).toBe(123)
+      expect(result.steps[0].outputs.row.categories_id).toBe(456)
+    })
   })
 })

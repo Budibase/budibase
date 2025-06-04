@@ -87,7 +87,20 @@
     schemaFields = Object.entries(table?.schema ?? {})
       .filter(entry => {
         const [, field] = entry
-        return field.type !== "formula" && !field.autocolumn
+        if (field.type === "formula") {
+          return false
+        }
+        
+        // For junction tables (many-to-many relationship tables), allow foreign key fields
+        // to be editable even if they're marked as autocolumn
+        const isJunctionTable = table?.name?.startsWith("jt_")
+        const isForeignKeyField = field.autocolumn && field.autoReason === "foreign_key"
+        
+        if (isJunctionTable && isForeignKeyField) {
+          return true
+        }
+        
+        return !field.autocolumn
       })
       .sort(([nameA], [nameB]) => {
         return nameA < nameB ? -1 : 1
@@ -252,7 +265,7 @@
 </script>
 
 {#each schemaFields || [] as [field, schema]}
-  {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
+  {#if (!schema.autocolumn || (table?.name?.startsWith("jt_") && schema.autocolumn && schema.autoReason === "foreign_key")) && Object.hasOwn(editableFields, field)}
     <PropField
       label={field}
       fullWidth={fullWidth || isFullWidth(schema.type)}
@@ -357,7 +370,7 @@
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <ul class="spectrum-Menu" role="listbox">
     {#each schemaFields || [] as [field, schema]}
-      {#if !schema.autocolumn}
+      {#if !schema.autocolumn || (table?.name?.startsWith("jt_") && schema.autocolumn && schema.autoReason === "foreign_key")}
         <li
           class="table_field spectrum-Menu-item"
           class:is-selected={Object.hasOwn(editableFields, field)}
