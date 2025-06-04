@@ -22,7 +22,6 @@ import {
   BranchStep,
   LoopStep,
   ContextEmitter,
-  LoopStepType,
   AutomationTriggerResult,
   AutomationResults,
   AutomationStepResult,
