@@ -373,7 +373,7 @@ export class UserDB {
 
     const account = await accountSdk.getAccountByTenantId(tenantId)
     const isSSOEnforced = await UserDB.features.isSSOEnforced()
-    
+
     return UserDB.quotas.addUsers(
       newUsers.length,
       newCreators.length,
@@ -382,7 +382,7 @@ export class UserDB {
           if (isSSOEnforced && user.password) {
             delete user.password
           }
-          
+
           usersToSave.push(
             UserDB.buildUser(
               user,

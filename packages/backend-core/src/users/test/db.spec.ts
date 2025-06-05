@@ -237,7 +237,8 @@ describe("UserDB", () => {
             }),
           ]
 
-          const result: BulkUserCreated = await db.bulkCreate(usersWithPasswords)
+          const result: BulkUserCreated =
+            await db.bulkCreate(usersWithPasswords)
 
           expect(result.successful).toHaveLength(2)
           expect(result.unsuccessful).toHaveLength(0)
@@ -272,12 +273,18 @@ describe("UserDB", () => {
             return user
           })
 
-          const result: BulkUserCreated = await db.bulkCreate(usersWithoutPasswords)
+          const result: BulkUserCreated = await db.bulkCreate(
+            usersWithoutPasswords
+          )
 
           expect(result.successful).toHaveLength(2)
           expect(result.unsuccessful).toHaveLength(0)
-          expect(result.successful[0].email).toBe(usersWithoutPasswords[0].email)
-          expect(result.successful[1].email).toBe(usersWithoutPasswords[1].email)
+          expect(result.successful[0].email).toBe(
+            usersWithoutPasswords[0].email
+          )
+          expect(result.successful[1].email).toBe(
+            usersWithoutPasswords[1].email
+          )
         })
       })
 
@@ -296,7 +303,8 @@ describe("UserDB", () => {
             }),
           ]
 
-          const result: BulkUserCreated = await db.bulkCreate(usersWithPasswords)
+          const result: BulkUserCreated =
+            await db.bulkCreate(usersWithPasswords)
 
           expect(result.successful).toHaveLength(2)
           expect(result.unsuccessful).toHaveLength(0)
