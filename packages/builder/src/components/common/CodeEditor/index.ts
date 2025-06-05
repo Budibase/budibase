@@ -45,7 +45,7 @@ const buildHelperInfoNode = (helper: Helper) => {
 const toSpectrumIcon = (name: string) => {
   return `
     <i class="ph ph-${name}"
-       style="color:var(--spectrum-global-color-gray-700)" 
+       style="color:var(--spectrum-global-color-gray-700); font-size: 14px;" 
        aria-label="${name}-section-icon"
        aria-hidden="false"></i>
   `
