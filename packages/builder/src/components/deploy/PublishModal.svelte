@@ -30,6 +30,9 @@
   }
 
   async function getUsedResources(appIds: string[], automationIds: string[]) {
+    if (!appIds.length && !automationIds.length) {
+      return
+    }
     const { resources } = await API.resource.analyse({
       automationIds: automationIds,
       workspaceAppIds: appIds,
@@ -58,10 +61,12 @@
     const app = apps.find(app => app._id === targetId)
     if (app) {
       target = { type: "app", id: targetId, name: app.name }
+      selectedApps[targetId] = true
     }
     const automation = automations.find(automation => automation._id === targetId)
     if (automation) {
       target = { type: "automation", id: targetId, name: automation.name }
+      selectedAutomations[targetId] = true
     }
   })
 </script>
