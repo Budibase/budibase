@@ -15,6 +15,7 @@
   export let width
   export let animate
   export let yAxisUnits
+  export let onClick
 
   $: series = getSeries(
     dataProvider,
@@ -43,6 +44,15 @@
       zoom: {
         enabled: false,
       },
+      events: {
+        // Clicking on a Candlestick
+        dataPointSelection: function (event, chartContext, opts) {
+          const candlelstickIndex = opts.dataPointIndex
+          const row = dataProvider.rows[candlelstickIndex]
+          console.log(row)
+          handleCandlestickClick(row)
+        },
+      },
     },
     xaxis: {
       tooltip: {
@@ -61,6 +71,10 @@
         text: yAxisLabel,
       },
     },
+  }
+
+  function handleCandlestickClick(candlestick) {
+    onClick?.({ candlestick })
   }
 
   const getValueAsUnixTime = (dataprovider, dateColumn, row) => {
@@ -134,4 +148,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} on:click={handleCandlestickClick} />

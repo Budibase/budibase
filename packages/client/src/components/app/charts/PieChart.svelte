@@ -1,10 +1,14 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
   import { formatters, parsePalette } from "./utils"
+  import { generateGoldenSample } from "@budibase/frontend-core/src/utils/rows"
+  import { getContext } from "svelte"
+  import { get } from "svelte/store"
 
   export let title
   export let dataProvider
   export let labelColumn
+  export let formatLabel
   export let valueColumn
   export let height
   export let width
@@ -13,6 +17,12 @@
   export let legend
   export let palette
   export let c1, c2, c3, c4, c5
+  export let onClick
+
+  const component = getContext("component")
+  const context = getContext("context")
+
+  console.log(formatLabel)
 
   $: labelType =
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
@@ -20,6 +30,7 @@
       : "category"
   $: series = getSeries(dataProvider, valueColumn)
   $: labels = getLabels(dataProvider, labelColumn, labelType)
+  $: id = $component.id
 
   $: options = {
     series,
@@ -55,7 +66,48 @@
       zoom: {
         enabled: false,
       },
+      events: {
+        // Clicking on a slice of the pie
+        dataPointSelection: function (event, chartContext, opts) {
+          const segmentIndex = opts.dataPointIndex
+          const row = dataProvider.rows[segmentIndex]
+
+          // Percentage calculation:
+          // get value column from all rows
+          const rowValues = dataProvider.rows.map(row => {
+            return row[valueColumn]
+          })
+
+          // get total of all value columns
+          const initialValue = 0
+          const total = rowValues.reduce(
+            (accumulator, currentValue) => accumulator + currentValue,
+            initialValue
+          )
+
+          const percentage = ((row[valueColumn] / total) * 100).toFixed(1)
+
+          handleSegmentClick(row, segmentIndex + 1, percentage)
+        },
+      },
     },
+  }
+
+  function handleSegmentClick(segment, index, percentage) {
+    onClick?.({ segment, index, percentage })
+  }
+
+  export const getAdditionalDataContext = () => {
+    rows = dataProvider.rows
+    const goldenRow = generateGoldenSample(rows)
+    return { [id]: goldenRow }
+  }
+
+  const createFormatter = column => {
+    if (typeof column.format !== "string" || !column.format.trim().length) {
+      return null
+    }
+    return row => processStringSync(column.format, { [id]: row })
   }
 
   const getSeries = (dataProvider, valueColumn) => {
@@ -96,4 +148,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} on:click={handleSegmentClick} />
