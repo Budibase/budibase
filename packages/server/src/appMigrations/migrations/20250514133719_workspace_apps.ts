@@ -1,6 +1,6 @@
-import { Screen } from "@budibase/types"
+import { DesignDocument, Document, Screen } from "@budibase/types"
 import sdk from "../../sdk"
-import { context } from "@budibase/backend-core"
+import { context, ViewName } from "@budibase/backend-core"
 
 const migration = async () => {
   const screens = await sdk.screens.fetch()
@@ -15,19 +15,31 @@ const migration = async () => {
       name: application.name,
       urlPrefix: "/",
       icon: "Monitoring",
+      navigation: application.navigation!,
     })
     workspaceAppId = workspaceApp._id
   }
 
   const db = context.getAppDB()
-  await db.bulkDocs(
-    screens
-      .filter(s => !s.workspaceAppId)
-      .map<Screen>(s => ({
-        ...s,
-        workspaceAppId,
-      }))
-  )
+  const docsToUpdate: Document[] = screens
+    .filter(s => !s.workspaceAppId)
+    .map<Screen>(s => ({
+      ...s,
+      workspaceAppId,
+    }))
+
+  const designDoc = await db.get<DesignDocument>("_design/database")
+  if (
+    designDoc.views?.[ViewName.ROUTING] &&
+    // If there is no version, it is an old view
+    designDoc.views[ViewName.ROUTING].version === undefined
+  ) {
+    // Remove the routing view to be recreated (and updated to support workspace apps)
+    delete designDoc.views?.[ViewName.ROUTING]
+    docsToUpdate.push(designDoc)
+  }
+
+  await db.bulkDocs(docsToUpdate)
 }
 
 export default migration

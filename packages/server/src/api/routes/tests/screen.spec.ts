@@ -226,7 +226,7 @@ describe("/screens", () => {
 
       it("should not allow deleting the last screen", async () => {
         const { workspaceApp } = await config.api.workspaceApp.create(
-          structures.workspaceApps.workspaceApp()
+          structures.workspaceApps.createRequest()
         )
         const screen = await config.api.screen.save({
           ...basicScreen(),
@@ -241,7 +241,7 @@ describe("/screens", () => {
 
       it("should allow deleting other screens", async () => {
         const { workspaceApp } = await config.api.workspaceApp.create(
-          structures.workspaceApps.workspaceApp()
+          structures.workspaceApps.createRequest()
         )
         const screens = await Promise.all(
           Array.from({ length: 3 }).map(() =>
@@ -273,11 +273,11 @@ describe("/screens", () => {
       it("should allow deleting screens for other apps", async () => {
         const { workspaceApp: workspaceApp1 } =
           await config.api.workspaceApp.create(
-            structures.workspaceApps.workspaceApp()
+            structures.workspaceApps.createRequest()
           )
         const { workspaceApp: workspaceApp2 } =
           await config.api.workspaceApp.create(
-            structures.workspaceApps.workspaceApp()
+            structures.workspaceApps.createRequest()
           )
         const app1Screens = await Promise.all(
           Array.from({ length: 3 }).map(() =>
