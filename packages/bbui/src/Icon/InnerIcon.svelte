@@ -29,18 +29,7 @@
 
   $: phosphorIconName = getPhosphorIcon(name)
   $: phosphorClass = `ph ph-${weight} ph-${phosphorIconName}`
-  $: legacy = name !== phosphorIconName
   $: style = generateStyle(size, color, hoverColor)
-  $: {
-    if (legacy) {
-      console.error(
-        "[Spectrum > Phosphor]: need to migrate",
-        name,
-        "to",
-        phosphorIconName
-      )
-    }
-  }
 
   const generateStyle = (
     sizeProp: typeof size,
