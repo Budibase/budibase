@@ -11,7 +11,6 @@ import {
   UpdateAppRequest,
 } from "@budibase/types"
 import { get } from "svelte/store"
-import { navigationStore } from "./navigation"
 import { initialise } from "."
 
 interface ClientFeatures {
@@ -146,8 +145,6 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       clientLibPath,
     }))
     this.syncApp(application)
-
-    navigationStore.syncAppNavigation(application.navigation)
   }
 
   syncClientFeatures(features: Partial<ClientFeatures>) {
