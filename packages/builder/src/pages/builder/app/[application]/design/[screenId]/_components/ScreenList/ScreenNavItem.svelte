@@ -16,6 +16,7 @@
   import type { Screen } from "@budibase/types"
 
   export let screen
+  export let deletionAllowed: boolean
 
   let confirmDeleteDialog: ConfirmDialog
   let screenDetailsModal: Modal
@@ -88,7 +89,7 @@
         name: "Delete",
         keyBind: null,
         visible: true,
-        disabled: false,
+        disabled: !deletionAllowed,
         callback: confirmDeleteDialog.show,
       },
     ]
