@@ -10,5 +10,5 @@
   ],
   "ext": "js,ts,json",
   "ignore": ["**/*.spec.ts", "**/*.spec.js", "../*/dist/**/*"],
-  "exec": "yarn build && node --no-node-snapshot dist/index.js"
+  "exec": "yarn build && node --enable-source-maps --no-node-snapshot dist/index.js"
 }

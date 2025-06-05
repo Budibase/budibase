@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Body,
     FancyCheckboxGroup,
@@ -9,12 +9,13 @@
   import Spinner from "@/components/common/Spinner.svelte"
   import { IntegrationTypes } from "@/constants/backend"
   import { createTableSelectionStore } from "./tableSelectionStore"
+  import type { Datasource } from "@budibase/types"
 
-  export let integration
-  export let datasource
-  export let onComplete = () => {}
+  export let integration: { name: string }
+  export let datasource: Datasource
+  export let onComplete: () => void = () => {}
 
-  $: store = createTableSelectionStore(integration, datasource)
+  $: store = createTableSelectionStore(datasource)
 
   $: isSheets = integration.name === IntegrationTypes.GOOGLE_SHEETS
   $: tableType = isSheets ? "sheets" : "tables"
@@ -45,7 +46,7 @@
       <Spinner size="20" />
     </div>
   {:else}
-    <Layout noPadding no>
+    <Layout noPadding>
       <Body size="S">{description}</Body>
 
       <FancyCheckboxGroup
@@ -58,7 +59,7 @@
         <InlineAlert
           type="error"
           header="Error fetching {tableType}"
-          message={$store.error.description}
+          message={$store.error.message}
         />
       {/if}
     </Layout>
