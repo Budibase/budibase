@@ -690,5 +690,4 @@
     );
     text-align: center;
   }
-
 </style>

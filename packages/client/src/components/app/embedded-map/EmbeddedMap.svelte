@@ -68,8 +68,7 @@
 
   // Map and marker configuration
   const defaultMarkerOptions = {
-    html:
-      '<div><i class="ph ph-map-pin" style="font-size: 26px; color: #b12b27;" aria-hidden="true"></i></div>',
+    html: '<div><i class="ph ph-map-pin" style="font-size: 26px; color: #b12b27;" aria-hidden="true"></i></div>',
     className: "embedded-map-marker",
     iconSize: [26, 26],
     iconAnchor: [13, 26],

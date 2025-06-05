@@ -32,10 +32,7 @@
 </script>
 
 <div class="spectrum-InLineAlert spectrum-InLineAlert--{type}">
-  <Icon
-    name={icon}
-    size="M"
-  />
+  <Icon name={icon} size="M" />
   <div class="spectrum-InLineAlert-header">{header}</div>
   <slot>
     {#each split as splitMsg}
@@ -93,10 +90,5 @@
     display: flex;
     align-items: center;
     gap: 5px;
-  }
-
-  i {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
-    pointer-events: none;
   }
 </style>

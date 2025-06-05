@@ -16,14 +16,8 @@
     checked={!!value}
   />
   <span class="spectrum-Checkbox-box">
-    <Icon
-      name="check"
-      size="S"
-    />
-    <Icon
-      name="minus"
-      size="S"
-    />
+    <Icon name="check" size="S" />
+    <Icon name="minus" size="S" />
   </span>
 </label>
 

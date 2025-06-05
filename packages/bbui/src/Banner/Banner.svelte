@@ -23,10 +23,7 @@
 
 {#if show}
   <div class="spectrum-Toast spectrum-Toast--{type}">
-    <Icon
-      name={icon}
-      {size}
-    />
+    <Icon name={icon} {size} />
     <div class="spectrum-Toast-body">
       <div class="spectrum-Toast-content row-content">
         <slot />
@@ -52,10 +49,7 @@
           on:click={clear}
         >
           <div class="spectrum-ClearButton-fill">
-            <Icon
-              name="x"
-              {size}
-            />
+            <Icon name="x" {size} />
           </div>
         </button>
       </div>
@@ -93,10 +87,5 @@
 
   u {
     font-weight: 600;
-  }
-
-  i {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
-    pointer-events: none;
   }
 </style>

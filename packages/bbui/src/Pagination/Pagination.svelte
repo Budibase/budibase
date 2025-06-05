@@ -19,10 +19,7 @@
     on:click={hasPrevPage ? goToPrevPage : null}
     class:is-disabled={!hasPrevPage}
   >
-    <Icon
-      name="caret-left"
-      size="M"
-    />
+    <Icon name="caret-left" size="M" />
   </div>
   <span class="spectrum-Body--secondary spectrum-Pagination-counter">
     Page {page}
@@ -32,10 +29,7 @@
     on:click={hasNextPage ? goToNextPage : null}
     class:is-disabled={!hasNextPage}
   >
-    <Icon
-      name="caret-right"
-      size="M"
-    />
+    <Icon name="caret-right" size="M" />
   </div>
 </nav>
 

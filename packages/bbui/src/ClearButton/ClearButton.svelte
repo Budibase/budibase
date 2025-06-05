@@ -11,8 +11,5 @@
   class:spectrum-ClearButton--small={small}
   {disabled}
 >
-  <Icon
-    name="x"
-    size={small ? "XS" : "S"}
-  />
+  <Icon name="x" size={small ? "XS" : "S"} />
 </button>

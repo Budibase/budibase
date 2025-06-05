@@ -172,7 +172,7 @@
             }
           }}
         >
-          <Icon name={iconName} size={size} />
+          <Icon name={iconName} {size} />
         </div>
 
         <span class="spectrum-Button-label" class:truncate>

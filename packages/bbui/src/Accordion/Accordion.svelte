@@ -25,10 +25,7 @@
       >
         {header}
       </button>
-      <Icon
-        name="caret-right"
-        size="S"
-      />
+      <Icon name="caret-right" size="S" />
     </h3>
     <div class="spectrum-Accordion-itemContent" role={itemName}>
       <slot />

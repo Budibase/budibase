@@ -23,10 +23,7 @@
     <Avatar url={avatar} />
   {/if}
   {#if icon}
-    <Icon
-      name={icon}
-      size="S"
-    />
+    <Icon name={icon} size="S" />
   {/if}
   <span class="spectrum-Tags-itemLabel"><slot /></span>
   {#if closable}
@@ -43,10 +40,5 @@
   .is-emphasized {
     border-color: var(--spectrum-global-color-blue-700);
     color: var(--spectrum-global-color-blue-700);
-  }
-
-  i {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
-    pointer-events: none;
   }
 </style>

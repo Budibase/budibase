@@ -78,10 +78,7 @@
     tabindex="0"
   >
     {#if icon}
-      <Icon
-        name={icon}
-        size="M"
-      />
+      <Icon name={icon} size="M" />
     {/if}
     <span class="spectrum-Tabs-itemLabel">{title}</span>
   </a>
@@ -100,10 +97,7 @@
     tabindex="0"
   >
     {#if icon}
-      <Icon
-        name={icon}
-        size="M"
-      />
+      <Icon name={icon} size="M" />
     {/if}
     <span class="spectrum-Tabs-itemLabel">{title}</span>
   </div>
@@ -128,10 +122,5 @@
   }
   .link {
     user-select: none;
-  }
-
-  i {
-    transition: color var(--spectrum-global-animation-duration-100, 130ms);
-    pointer-events: none;
   }
 </style>

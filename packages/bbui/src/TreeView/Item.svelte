@@ -15,16 +15,10 @@
 >
   <a on:click class="spectrum-TreeView-itemLink" {href}>
     {#if $$slots.default}
-      <Icon
-        name="caret-right"
-        size="M"
-      />
+      <Icon name="caret-right" size="M" />
     {/if}
     {#if icon}
-      <Icon
-        name={icon}
-        size="M"
-      />
+      <Icon name={icon} size="M" />
     {/if}
     <span class="spectrum-TreeView-itemLabel">{title}</span>
   </a>
