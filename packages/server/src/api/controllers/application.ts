@@ -203,6 +203,7 @@ async function addSampleDataScreen() {
           },
         ],
       },
+      isDefault: true,
     })
 
     workspaceAppId = workspaceApp._id
