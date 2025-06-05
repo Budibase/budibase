@@ -33,6 +33,11 @@ describe("/screens", () => {
     screen = await config.createScreen()
   })
 
+  function popRandomScreen(screens: Screen[]) {
+    const index = Math.floor(Math.random() * screens.length)
+    return screens.splice(index, 1)[0]
+  }
+
   describe("fetch", () => {
     it("should create the sample data screen", async () => {
       const screens = await config.api.screen.list()
@@ -247,22 +252,17 @@ describe("/screens", () => {
           )
         )
 
-        function popRandomScreen() {
-          const index = Math.floor(Math.random() * screens.length)
-          return screens.splice(index, 1)[0]
-        }
-
-        let screenToDelete = popRandomScreen()
+        let screenToDelete = popRandomScreen(screens)
         await config.api.screen.destroy(
           screenToDelete._id!,
           screenToDelete._rev!
         )
-        screenToDelete = popRandomScreen()
+        screenToDelete = popRandomScreen(screens)
         await config.api.screen.destroy(
           screenToDelete._id!,
           screenToDelete._rev!
         )
-        screenToDelete = popRandomScreen()
+        screenToDelete = popRandomScreen(screens)
         await config.api.screen.destroy(
           screenToDelete._id!,
           screenToDelete._rev!,
@@ -296,11 +296,6 @@ describe("/screens", () => {
             })
           )
         )
-
-        function popRandomScreen(screens: Screen[]) {
-          const index = Math.floor(Math.random() * screens.length)
-          return screens.splice(index, 1)[0]
-        }
 
         let screenToDelete = popRandomScreen(app1Screens)
         await config.api.screen.destroy(
