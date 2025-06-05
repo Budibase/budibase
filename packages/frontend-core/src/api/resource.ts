@@ -19,7 +19,7 @@ export const buildResourceEndpoints = (
     workspaceAppIds?: string[]
   }) => {
     return await API.post<ResourceAnalysisRequest, ResourceAnalysisResponse>({
-      url: `/api/resource/analyse`,
+      url: `/api/resources/analyse`,
       body,
     })
   },

@@ -29,6 +29,7 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
+  $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id
 
   const publish = async () => {
     await deploymentStore.publishApp(false)
@@ -81,7 +82,9 @@
 {/if}
 
 <VersionModal hideIcon bind:this={versionModal} />
-<PublishModal targetId={$workspaceAppStore.workspaceApps[0]?._id} bind:this={publishModal} />
+{#if selectedWorkspaceAppId}
+  <PublishModal targetId={selectedWorkspaceAppId} bind:this={publishModal} />
+{/if}
 
 <Popover
   anchor={publishButton}

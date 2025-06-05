@@ -3,6 +3,7 @@
   import { workspaceAppStore, automationStore } from "@/stores/builder"
   import type { UsedResource } from "@budibase/types"
   import { API } from "@/api"
+  import { onMount } from "svelte"
 
   type PossibleTarget = { _id?: string, name: string }
 
@@ -55,6 +56,9 @@
   }
 
   function findTarget(targetId: string, apps: PossibleTarget[], automations: PossibleTarget[]) {
+    // reset the list of selected if an app/automation added or target changes
+    selectedApps = {}
+    selectedAutomations = {}
     const app = apps?.find(app => app._id === targetId)
     if (app) {
       selectedApps[targetId] = true
@@ -77,7 +81,7 @@
 <Modal bind:this={publishModal}>
   <ModalContent
     title="Publish"
-    confirmText="Revert"
+    confirmText="Publish"
     onConfirm={publish}
   >
     <Layout noPadding gap="XS">
@@ -95,7 +99,7 @@
             <Heading size="XS">Apps</Heading>
             {#each filteredApps as app}
               {#if app._id}
-                <Checkbox text={`${app.name} app`} bind:value={selectedApps[app._id]} />
+                <Checkbox text={`${app.name}`} bind:value={selectedApps[app._id]} />
               {/if}
             {/each}
           {/if}
