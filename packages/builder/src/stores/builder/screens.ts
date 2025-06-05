@@ -58,7 +58,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.replace = this.replace.bind(this)
     this.saveScreen = this.saveScreen.bind(this)
     this.deleteScreen = this.deleteScreen.bind(this)
-    this.syncScreenData = this.syncScreenData.bind(this)
     this.updateSetting = this.updateSetting.bind(this)
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
     this.removeCustomLayout = this.removeCustomLayout.bind(this)
@@ -263,11 +262,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
       return state
     })
 
-    await this.syncScreenData(savedScreen)
-
-    if (featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-      workspaceAppStore.refresh()
-    } else if (navigationLinkLabel) {
+    if (
+      !featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS) &&
+      navigationLinkLabel
+    ) {
       await navigationStore.addLink({
         url: screen.routing.route,
         title: navigationLinkLabel,
@@ -278,28 +276,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
     appStore.refresh()
 
     return savedScreen
-  }
-
-  /**
-   * After saving a screen, sync plugins and routes to the appStore
-   * @param {Screen} savedScreen
-   */
-  async syncScreenData(savedScreen: Screen) {
-    const appState = get(appStore)
-    // If plugins changed we need to fetch the latest app metadata
-    let usedPlugins = appState.usedPlugins
-    if (savedScreen.pluginAdded) {
-      const { application } = await API.fetchAppPackage(appState.appId)
-      usedPlugins = application.usedPlugins || []
-    }
-
-    const routesResponse = await API.fetchAppRoutes()
-
-    appStore.update(state => ({
-      ...state,
-      routes: routesResponse.routes,
-      usedPlugins: usedPlugins,
-    }))
   }
 
   /**
@@ -499,7 +475,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
       return state
     })
-    await appStore.refresh()
   }
 
   // Move to layouts store
