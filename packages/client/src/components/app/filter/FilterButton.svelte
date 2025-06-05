@@ -14,7 +14,7 @@
   import { isArrayOperator } from "@/utils/filtering"
 
   export let disabled = false
-  export let size = "S"
+  export let size: "S" | "M" | "L" = "S"
   export let buttonText = "Apply"
 
   export let filter: SearchFilter | undefined = undefined

@@ -8557,20 +8557,8 @@
         "type": "select",
         "label": "Size",
         "key": "size",
-        "options": ["XS", "S", "M", "L", "XL", "Custom"],
+        "options": ["XS", "S", "M", "L", "XL"],
         "defaultValue": "L"
-      },
-      {
-        "type": "number",
-        "label": "Custom size (px)",
-        "key": "customSize",
-        "min": 1,
-        "max": 72,
-        "defaultValue": 32,
-        "dependsOn": {
-          "setting": "size",
-          "value": "Custom"
-        }
       },
       {
         "type": "select",
