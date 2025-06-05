@@ -7,7 +7,7 @@ import {
   LogicalOperator,
 } from "../../../sdk"
 import { HttpMethod } from "../query"
-import { Row } from "../row"
+import { Row, RowAttachment } from "../row"
 import {
   LoopStepType,
   EmailAttachment,
@@ -229,7 +229,24 @@ export type GenerateTextStepOutputs = {
   success: boolean
   response?: string
 }
+export type ExtractFileDataStepInputs = {
+  file: RowAttachment | string
+  source: "URL" | "Attachment"
+  fileType?: string
+  schema: Record<string, any>
+}
 
+export type ExtractFileDataStepOutputs =
+  | {
+      success: true
+      data: Record<string, any>
+      response?: string
+    }
+  | {
+      success: false
+      data?: Record<string, any>
+      response?: string
+    }
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API

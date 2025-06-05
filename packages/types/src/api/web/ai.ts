@@ -2,6 +2,8 @@ import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 import { z } from "zod"
 
+export type UserContent = string | openai.ChatCompletionContentPart[]
+
 export interface SystemMessage {
   role: "system"
   content: string
@@ -9,7 +11,7 @@ export interface SystemMessage {
 
 export interface UserMessage {
   role: "user"
-  content: string
+  content: UserContent
 }
 
 export interface AssistantMessage {
@@ -86,4 +88,14 @@ export interface GenerateTablesRequest {
 
 export interface GenerateTablesResponse {
   createdTables: { id: string; name: string }[]
+}
+
+export interface UploadFileRequest {
+  data: string
+  filename: string
+  contentType: string
+}
+
+export interface UploadFileResponse {
+  file: string
 }

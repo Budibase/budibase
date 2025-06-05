@@ -9,6 +9,8 @@ import { derived, Readable } from "svelte/store"
 import { screenStore } from "./screens"
 import { featureFlag } from "@/helpers"
 import { API } from "@/api"
+import { appStore } from "./app"
+import * as screenTemplating from "@/templates/screenTemplating"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
@@ -54,6 +56,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
       return
     }
+
     const { workspaceApps } = await API.workspaceApp.fetch()
     this.update(state => ({
       ...state,
@@ -63,10 +66,20 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   }
 
   async add(workspaceApp: WorkspaceApp) {
-    const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
-    this.store.update(state => {
-      state.workspaceApps.push(createdWorkspaceApp.workspaceApp)
-      return state
+    const { workspaceApp: createdWorkspaceApp } =
+      await API.workspaceApp.create(workspaceApp)
+    this.store.update(state => ({
+      ...state,
+      workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
+    }))
+
+    await screenStore.save({
+      ...screenTemplating.blank({
+        route: "/",
+        screens: [],
+        workspaceAppId: createdWorkspaceApp._id,
+      })[0].data,
+      workspaceAppId: createdWorkspaceApp._id,
     })
   }
 
@@ -89,10 +102,15 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
   async delete(id: string, rev: string) {
     await API.workspaceApp.delete(id, rev)
+
     this.store.update(state => {
-      state.workspaceApps = state.workspaceApps.filter(app => app._id !== id)
-      return state
+      return {
+        ...state,
+        workspaceApps: state.workspaceApps.filter(app => app._id !== id),
+      }
     })
+
+    appStore.refresh()
   }
 }
 

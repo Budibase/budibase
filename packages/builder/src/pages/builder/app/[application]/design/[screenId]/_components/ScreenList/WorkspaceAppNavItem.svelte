@@ -16,7 +16,7 @@
 
 {#each workspaceApp.screens as screen (screen._id)}
   <div class="screen">
-    <ScreenNavItem {screen} />
+    <ScreenNavItem {screen} deletionAllowed={workspaceApp.screens.length > 1} />
   </div>
 {:else}
   <Layout paddingY="none" paddingX="L">

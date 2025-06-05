@@ -26,6 +26,7 @@ import * as promptLLM from "./steps/ai/promptLLM"
 import * as translate from "./steps/ai/translate"
 import * as summarise from "./steps/ai/summarise"
 import * as generate from "./steps/ai/generate"
+import * as extract from "./steps/ai/extract"
 import env from "../environment"
 import {
   PluginType,
@@ -66,6 +67,7 @@ const ACTION_IMPLS: ActionImplType = {
   TRANSLATE: translate.run,
   SUMMARISE: summarise.run,
   GENERATE_TEXT: generate.run,
+  EXTRACT_FILE_DATA: extract.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -100,6 +102,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   TRANSLATE: automations.steps.translate.definition,
   SUMMARISE: automations.steps.summarise.definition,
   GENERATE_TEXT: automations.steps.generate.definition,
+  EXTRACT_FILE_DATA: automations.steps.extract.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: automations.steps.discord.definition,
   slack: automations.steps.slack.definition,
