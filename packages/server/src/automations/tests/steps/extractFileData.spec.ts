@@ -46,8 +46,7 @@ describe("test the extract file data action", () => {
           name: "John Doe",
           email: "john@example.com",
         },
-      }),
-      { format: "json" }
+      })
     )
 
     mockOpenAIFileUpload("file-id-123")
@@ -56,7 +55,7 @@ describe("test the extract file data action", () => {
     let attachmentObject = {
       key: filename,
       name: "test-document.pdf",
-      extension: "pdf",
+      extension: "application/pdf",
       size: 100,
     }
 

@@ -62,7 +62,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
     .reply((uri: string, body: nock.Body) => {
       const req = body as ChatCompletionRequest
       const messages = req.messages
-      
+
       // Handle both simple string content and complex content arrays
       let prompt: string
       const messageContent = messages[0].content
