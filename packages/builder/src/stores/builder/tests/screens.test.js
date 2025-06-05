@@ -10,7 +10,6 @@ import {
   COMPONENT_DEFINITIONS,
   componentDefinitionMap,
   getScreenDocId,
-  getPluginFixture,
   componentsToNested,
 } from "./fixtures"
 
@@ -286,86 +285,14 @@ describe("Screens store", () => {
       .spyOn(API, "saveScreen")
       .mockResolvedValue(existingScreens[2].json())
 
-    const routeSpy = vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
-      routes: [],
-    })
-
     // Saved the existing screen having modified it.
     await bb.screenStore.save(existingScreens[2].json())
 
-    expect(routeSpy).toHaveBeenCalled()
+    expect(appStore.refresh).toHaveBeenCalledOnce()
     expect(saveSpy).toHaveBeenCalled()
 
     // On save, the screen is spliced back into the store with the saved content
     expect(bb.store.screens[2]).toStrictEqual(existingScreens[2].json())
-  })
-
-  it("Sync API data to relevant stores on save. Updated plugins", async ({
-    bb,
-  }) => {
-    const coreScreen = getScreenFixture()
-
-    const newDocId = getScreenDocId()
-    const newDoc = { ...coreScreen.json(), _id: newDocId, pluginAdded: true }
-
-    // Fake plugins
-    const plugins = Array(2)
-      .fill()
-      .map(() => getPluginFixture())
-
-    appStore.update(() => ({
-      usedPlugins: [],
-    }))
-
-    const appPackageSpy = vi
-      .spyOn(API, "fetchAppPackage")
-      .mockImplementation(appId => {
-        return {
-          application: {
-            appId: appId,
-            usedPlugins: plugins,
-          },
-        }
-      })
-
-    const routeSpy = vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
-      routes: [],
-    })
-
-    await bb.screenStore.syncScreenData(newDoc)
-
-    expect(routeSpy).toHaveBeenCalled()
-    expect(appPackageSpy).toHaveBeenCalled()
-
-    expect(get(appStore).usedPlugins).toStrictEqual(plugins)
-  })
-
-  it("Sync API updates to relevant stores on save. Plugins unchanged", async ({
-    bb,
-  }) => {
-    const coreScreen = getScreenFixture()
-
-    const newDocId = getScreenDocId()
-    const newDoc = { ...coreScreen.json(), _id: newDocId }
-    const plugin = getPluginFixture()
-
-    // Set existing plugin
-    appStore.update(() => ({
-      usedPlugins: [plugin],
-    }))
-
-    const appPackageSpy = vi.spyOn(API, "fetchAppPackage")
-    const routeSpy = vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
-      routes: [],
-    })
-
-    await bb.screenStore.syncScreenData(newDoc)
-
-    expect(routeSpy).toHaveBeenCalled()
-    expect(appPackageSpy).not.toHaveBeenCalled()
-
-    // Ensure nothing was updated
-    expect(get(appStore).usedPlugins).toStrictEqual([plugin])
   })
 
   it("Proceed to patch if appropriate config are supplied", async ({ bb }) => {
