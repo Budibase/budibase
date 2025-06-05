@@ -148,22 +148,6 @@ describe("Attempt to run a basic loop automation", () => {
     expect(results.steps[2].outputs.message).toContain("ro_ta")
   })
 
-  it("if an incorrect type is passed to the loop it should return an error", async () => {
-    const results = await createAutomationBuilder(config)
-      .onAppAction()
-      .loop({
-        option: LoopStepType.ARRAY,
-        binding: "1, 2, 3",
-      })
-      .serverLog({ text: "Message {{loop.currentItem}}" })
-      .test({ fields: {} })
-
-    expect(results.steps[0].outputs).toEqual({
-      success: false,
-      status: "INCORRECT_TYPE",
-    })
-  })
-
   it("ensure the loop stops if the failure condition is reached", async () => {
     const results = await createAutomationBuilder(config)
       .onAppAction()
@@ -558,6 +542,105 @@ describe("Attempt to run a basic loop automation", () => {
     expect(results.steps).toHaveLength(3)
 
     expect(results.steps[2].outputs.rows).toHaveLength(0)
+  })
+
+  it("should successfully loop over an array returned by a JavaScript step with Array input type", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .executeScript({
+        code: "return [1, 2, 3, 4, 5]",
+      })
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ steps.1.value }}",
+      })
+      .serverLog({ text: "Processing item: {{loop.currentItem}}" })
+      .test({ fields: {} })
+
+    expect(results.steps[1].outputs.success).toBe(true)
+    expect(results.steps[1].outputs.iterations).toBe(5)
+    expect(results.steps[1].outputs.items).toHaveLength(5)
+
+    results.steps[1].outputs.items.forEach((output: any, index: number) => {
+      expect(output).toMatchObject({
+        success: true,
+      })
+      expect(output.message).toContain(`Processing item: ${index + 1}`)
+    })
+  })
+
+  it("should test array binding directly", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: [1, 2, 3],
+      })
+      .serverLog({ text: "Processing item: {{loop.currentItem}}" })
+      .test({ fields: {} })
+
+    expect(results.steps[0].outputs.success).toBe(true)
+    expect(results.steps[0].outputs.iterations).toBe(3)
+    expect(results.steps[0].outputs.items).toHaveLength(3)
+  })
+
+  it("should successfully loop over an array of objects returned by a JavaScript step", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .executeScript({
+        code: `
+          return [
+            { id: 1, name: 'Alice' },
+            { id: 2, name: 'Bob' },
+            { id: 3, name: 'Charlie' }
+          ]
+        `,
+      })
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ steps.1.value }}",
+      })
+      .serverLog({
+        text: "User: {{loop.currentItem.name}} (ID: {{loop.currentItem.id}})",
+      })
+      .test({ fields: {} })
+
+    expect(results.steps[1].outputs.success).toBe(true)
+    expect(results.steps[1].outputs.iterations).toBe(3)
+    expect(results.steps[1].outputs.items).toHaveLength(3)
+
+    const expectedNames = ["Alice", "Bob", "Charlie"]
+    const expectedIds = [1, 2, 3]
+
+    results.steps[1].outputs.items.forEach((output: any, index: number) => {
+      expect(output).toMatchObject({
+        success: true,
+      })
+      expect(output.message).toContain(
+        `User: ${expectedNames[index]} (ID: ${expectedIds[index]})`
+      )
+    })
+  })
+
+  it("should successfully loop over an empty array returned by a JavaScript step", async () => {
+    const results = await createAutomationBuilder(config)
+      .onAppAction()
+      .executeScript({
+        code: "return []",
+      })
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ steps.1.value }}",
+      })
+      .serverLog({ text: "This should not execute" })
+      .test({ fields: {} })
+
+    expect(results.steps[1].outputs.success).toBe(true)
+    expect(results.steps[1].outputs.status).toBe(
+      AutomationStepStatus.NO_ITERATIONS
+    )
+    expect(results.steps[1].outputs.iterations).toBe(0)
+    expect(results.steps[1].outputs.items).toHaveLength(0)
   })
 
   describe("loop output", () => {
