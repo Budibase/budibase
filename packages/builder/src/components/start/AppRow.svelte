@@ -78,7 +78,7 @@
       <Icon
         size="L"
         name={app.icon?.name || "squares-four"}
-        color={app.icon?.color}
+        color={app.icon?.color || "var(--spectrum-global-color-gray-700)"}
       />
     </div>
     <div class="name">
@@ -187,7 +187,6 @@
   }
 
   .title :global(.spectrum-Heading),
-  .title :global(i),
   .title :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-900);
   }

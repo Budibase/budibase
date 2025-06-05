@@ -115,7 +115,7 @@
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
         <Icon
-          color={iconColor}
+          color={iconColor || "var(--spectrum-global-color-gray-700)"}
           size="S"
           name={icon}
           tooltip={iconTooltip}
