@@ -69,7 +69,6 @@ import {
   UnpublishAppResponse,
   ErrorCode,
   FeatureFlag,
-  WorkspaceApp,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -182,16 +181,34 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  let workspaceApp: WorkspaceApp | undefined
+  let workspaceAppId: string | undefined
 
   const workspaceAppEnabled = await features.isEnabled(
     FeatureFlag.WORKSPACE_APPS
   )
   if (workspaceAppEnabled) {
-    workspaceApp = await sdk.workspaceApps.createDefaultWorkspaceApp()
+    const appMetadata = await sdk.applications.metadata.get()
+    const workspaceApp = await sdk.workspaceApps.create({
+      name: appMetadata.name,
+      urlPrefix: "/",
+      icon: "Monitoring",
+      navigation: {
+        ...defaultAppNavigator(appMetadata.name),
+        links: [
+          {
+            text: "Inventory",
+            url: "/inventory",
+            type: "link",
+            roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          },
+        ],
+      },
+    })
+
+    workspaceAppId = workspaceApp._id
   }
 
-  const screen = createSampleDataTableScreen(workspaceApp?._id)
+  const screen = createSampleDataTableScreen(workspaceAppId)
   await sdk.screens.create(screen)
 
   if (!workspaceAppEnabled) {
