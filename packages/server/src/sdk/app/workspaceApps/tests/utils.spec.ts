@@ -31,6 +31,7 @@ describe("workspaceApps utils", () => {
           const result = await getMatchedWorkspaceApp(
             `/${config.getAppId()}${closingChar}`
           )
+          expect(result).toBeDefined()
           expect(result?._id).toEqual(workspaceApps[0]._id)
         })
       })
@@ -40,6 +41,7 @@ describe("workspaceApps utils", () => {
           const result = await getMatchedWorkspaceApp(
             `/${config.getAppId()}/app${closingChar}`
           )
+          expect(result).toBeDefined()
           expect(result?._id).toEqual(workspaceApps[1]._id)
         })
       })
@@ -49,7 +51,17 @@ describe("workspaceApps utils", () => {
           const result = await getMatchedWorkspaceApp(
             `/${config.getAppId()}/app2${closingChar}`
           )
+          expect(result).toBeDefined()
           expect(result?._id).toEqual(workspaceApps[2]._id)
+        })
+      })
+
+      it("should return undefined for partial matching paths", async () => {
+        await config.doInContext(config.getAppId(), async () => {
+          const result = await getMatchedWorkspaceApp(
+            `/${config.getAppId()}/app22${closingChar}`
+          )
+          expect(result).toBeUndefined()
         })
       })
     }
