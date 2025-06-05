@@ -13,7 +13,8 @@ export async function addLink({
   roleId: string
   workspaceAppId: string | undefined
 }) {
-  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+  {
+    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
     const appMetadata = await sdk.applications.metadata.get()
     appMetadata.navigation ??= {
       navigation: "Top",
@@ -28,7 +29,9 @@ export async function addLink({
 
     const db = context.getAppDB()
     await db.put(appMetadata)
-  } else {
+  }
+
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const workspaceApp = (await sdk.workspaceApps.get(workspaceAppId!))!
     workspaceApp.navigation.links ??= []
     workspaceApp.navigation.links.push({
