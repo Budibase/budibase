@@ -17,6 +17,7 @@ import {
   DeploymentStatus,
   DeploymentProgressResponse,
   Automation,
+  PublishAppRequest,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -147,16 +148,11 @@ export async function deploymentProgress(
 }
 
 export const publishApp = async function (
-  ctx: UserCtx<void, PublishAppResponse>
+  ctx: UserCtx<PublishAppRequest, PublishAppResponse>
 ) {
   let deployment = new Deployment()
-  console.log("Deployment object created")
   deployment.setStatus(DeploymentStatus.PENDING)
-  console.log("Deployment object set to pending")
   deployment = await storeDeploymentHistory(deployment)
-  console.log("Stored deployment history")
-
-  console.log("Deploying app...")
 
   let app
   let replication
@@ -182,11 +178,8 @@ export const publishApp = async function (
     }
     replication = new dbCore.Replication(config)
     const devDb = context.getDevAppDB()
-    console.log("Compacting development DB")
     await devDb.compact()
-    console.log("Replication object created")
     await replication.replicate(replication.appReplicateOpts())
-    console.log("replication complete.. replacing app meta doc")
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
@@ -206,9 +199,7 @@ export const publishApp = async function (
     delete appDoc.automationErrors
     await db.put(appDoc)
     await cache.app.invalidateAppMetadata(productionAppId)
-    console.log("New app doc written successfully.")
     await initDeployedApp(productionAppId)
-    console.log("Deployed app initialised, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
     app = appDoc

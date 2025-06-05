@@ -38,7 +38,7 @@
     if (workspaceEnabled) {
       publishModal.show()
     } else {
-      await deploymentStore.publishApp(false)
+      await deploymentStore.publishApp()
       publishSuccessPopover?.show()
     }
   }
@@ -90,7 +90,11 @@
 
 <VersionModal hideIcon bind:this={versionModal} />
 {#if selectedWorkspaceAppId && workspaceEnabled}
-  <PublishModal targetId={selectedWorkspaceAppId} bind:this={publishModal} />
+  <PublishModal
+    targetId={selectedWorkspaceAppId}
+    bind:this={publishModal}
+    on:success={() => publishSuccessPopover?.show()}
+  />
 {/if}
 
 <Popover

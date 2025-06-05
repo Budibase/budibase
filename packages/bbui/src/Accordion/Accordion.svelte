@@ -33,7 +33,13 @@
         <use xlink:href="#spectrum-css-icon-Chevron100" />
       </svg>
     </h3>
-    <div class="spectrum-Accordion-itemContent" role={itemName} style={noPadding ? "padding-left: 20px; padding-bottom: 0;" : "padding-left: 30px;"}>
+    <div
+      class="spectrum-Accordion-itemContent"
+      role={itemName}
+      style={noPadding
+        ? "padding-left: 20px; padding-bottom: 0;"
+        : "padding-left: 30px;"}
+    >
       <slot />
     </div>
   </div>
