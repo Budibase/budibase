@@ -48,16 +48,10 @@ export async function save(
 
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     if (
-      screen.workspaceAppId &&
+      !screen.workspaceAppId ||
       !(await sdk.workspaceApps.get(screen.workspaceAppId))
     ) {
       ctx.throw("workspaceAppId is not valid")
-    } else if (!screen.workspaceAppId) {
-      let [workspaceApp] = await sdk.workspaceApps.fetch()
-      if (!workspaceApp) {
-        workspaceApp = await sdk.workspaceApps.createDefaultWorkspaceApp()
-      }
-      screen.workspaceAppId = workspaceApp._id
     }
   }
 
@@ -107,6 +101,10 @@ export async function save(
     }
   }
 
+  if (screen.routing.homeScreen) {
+    await sdk.screens.ensureHomepageUniqueness(screen)
+  }
+
   if (isCreation) {
     await events.screen.created(screen)
   }
@@ -116,6 +114,7 @@ export async function save(
       label: navigationLinkLabel,
       url: screen.routing.route,
       roleId: screen.routing.roleId,
+      workspaceAppId: screen.workspaceAppId,
     })
   }
 
@@ -144,7 +143,7 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
 
   await db.remove(id, ctx.params.screenRev)
 
-  await sdk.navigation.deleteLink(screen.routing.route)
+  await sdk.navigation.deleteLink(screen.routing.route, screen.workspaceAppId)
 
   await events.screen.deleted(screen)
   ctx.body = {

@@ -1,19 +1,40 @@
-import { RequiredKeys, WorkspaceApp } from "@budibase/types"
+import {
+  InsertWorkspaceAppRequest,
+  RequiredKeys,
+  WorkspaceApp,
+} from "@budibase/types"
 import { generator } from "./generator"
 
 export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   const result: RequiredKeys<WorkspaceApp> = {
-    name: generator.word(),
-    urlPrefix: `/${generator.word()}`,
-    icon: "activity",
+    name: generator.guid(),
+    urlPrefix: `/${generator.guid().replace(/-/g, "")}`,
+    icon: "monitor",
     iconColor: undefined,
 
     _id: undefined,
     _rev: undefined,
     createdAt: undefined,
     updatedAt: undefined,
+    navigation: {
+      navigation: "Top",
+    },
 
     ...props,
+  }
+  return result
+}
+
+export function createRequest(
+  props?: Partial<InsertWorkspaceAppRequest>
+): InsertWorkspaceAppRequest {
+  const workspace = workspaceApp(props)
+
+  const result: RequiredKeys<InsertWorkspaceAppRequest> = {
+    name: workspace.name,
+    urlPrefix: workspace.urlPrefix,
+    icon: workspace.icon,
+    iconColor: workspace.iconColor,
   }
   return result
 }

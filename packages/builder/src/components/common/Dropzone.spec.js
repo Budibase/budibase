@@ -6,6 +6,14 @@ import { admin } from "@/stores/portal"
 
 vi.spyOn(notifications, "error").mockImplementation(() => {})
 
+vi.mock("@/stores/builder", async () => {
+  const workspaceAppStore = {}
+
+  return {
+    workspaceAppStore,
+  }
+})
+
 describe("Dropzone", () => {
   let instance = null
 
