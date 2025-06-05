@@ -49,7 +49,8 @@ export async function deleteLink(
   route: string,
   workspaceAppId: string | undefined
 ) {
-  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+  {
+    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
     const appMetadata = await sdk.applications.metadata.get()
     const navigation = appMetadata.navigation
     if (!navigation || !navigation.links?.length) {
@@ -75,7 +76,8 @@ export async function deleteLink(
       },
     }
     await db.put(updatedMetadata)
-  } else {
+  }
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const workspaceApp = (await sdk.workspaceApps.get(workspaceAppId!))!
 
     workspaceApp.navigation.links ??= []

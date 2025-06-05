@@ -58,13 +58,15 @@ export class NavigationStore extends DerivedBudiStore<
   }
 
   async save(navigation: AppNavigation) {
-    if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    {
+      // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
       const appId = get(appStore).appId
       const app = await API.saveAppMetadata(appId, { navigation })
       if (app.navigation) {
         this.syncAppNavigation(app.navigation)
       }
-    } else {
+    }
+    if (featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
       const $workspaceAppStore = get(workspaceAppStore)
       workspaceAppStore.edit({
         ...$workspaceAppStore.selectedWorkspaceApp!,
