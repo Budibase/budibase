@@ -127,6 +127,29 @@
           />
         {/if}
         <PropertyControl
+          label="Background"
+          control={ColorPicker}
+          onChange={color => update("navBackground", color)}
+          value={$nav.navBackground || DefaultAppTheme.navBackground}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Text"
+          control={ColorPicker}
+          onChange={color => update("navTextColor", color)}
+          value={$nav.navTextColor || DefaultAppTheme.navTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+      </div>
+    </DetailSummary>
+
+    <DetailSummary name="Title" initiallyShow collapsible={false}>
+      <div class="settings">
+        <PropertyControl
           label="Show title"
           control={Checkbox}
           value={!$nav.hideTitle}
@@ -172,24 +195,6 @@
             }}
           />
         {/if}
-        <PropertyControl
-          label="Background"
-          control={ColorPicker}
-          onChange={color => update("navBackground", color)}
-          value={$nav.navBackground || DefaultAppTheme.navBackground}
-          props={{
-            spectrumTheme: $themeStore.theme,
-          }}
-        />
-        <PropertyControl
-          label="Text"
-          control={ColorPicker}
-          onChange={color => update("navTextColor", color)}
-          value={$nav.navTextColor || DefaultAppTheme.navTextColor}
-          props={{
-            spectrumTheme: $themeStore.theme,
-          }}
-        />
       </div>
     </DetailSummary>
 
