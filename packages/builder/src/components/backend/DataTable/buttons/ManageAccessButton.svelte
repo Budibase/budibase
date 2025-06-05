@@ -168,7 +168,7 @@
         subtitle={role.uiMetadata.description}
         hoverable
         selected={selectedRole === role._id}
-        icon="circle"
+        icon="StatusLight"
         iconColor={role.uiMetadata.color}
         on:click={() => changePermission(role._id)}
       />
@@ -179,7 +179,7 @@
         subtitle={role.uiMetadata.description}
         hoverable
         selected={selectedRole === role._id}
-        icon="circle"
+        icon="StatusLight"
         iconColor={role.uiMetadata.color}
         on:click={() => changePermission(role._id)}
       />
