@@ -116,7 +116,7 @@
       <WorkspaceAppList workspaceApps={filteredWorkspaceApps} {searchValue} />
     {:else if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
-        <ScreenNavItem {screen} />
+        <ScreenNavItem {screen} deletionAllowed />
       {/each}
     {:else}
       <Layout paddingY="none" paddingX="L">

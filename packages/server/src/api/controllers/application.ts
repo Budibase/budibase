@@ -188,24 +188,7 @@ async function addSampleDataScreen() {
     FeatureFlag.WORKSPACE_APPS
   )
   if (workspaceAppEnabled) {
-    const appMetadata = await sdk.applications.metadata.get()
-
-    workspaceApp = await sdk.workspaceApps.create({
-      name: appMetadata.name,
-      urlPrefix: "/",
-      icon: "Monitoring",
-      navigation: {
-        ...defaultAppNavigator(appMetadata.name),
-        links: [
-          {
-            text: "Inventory",
-            url: "/inventory",
-            type: "link",
-            roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-          },
-        ],
-      },
-    })
+    workspaceApp = await sdk.workspaceApps.createDefaultWorkspaceApp()
   }
 
   const screen = createSampleDataTableScreen(workspaceApp?._id)

@@ -275,6 +275,8 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     }
 
+    appStore.refresh()
+
     return savedScreen
   }
 

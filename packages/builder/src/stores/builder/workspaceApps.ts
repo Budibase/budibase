@@ -1,16 +1,18 @@
+import { API } from "@/api"
+import { featureFlag } from "@/helpers"
 import { DerivedBudiStore } from "@/stores/BudiStore"
+import * as screenTemplating from "@/templates/screenTemplating"
 import {
-  WorkspaceApp,
-  UIWorkspaceApp,
   FeatureFlag,
-  RequiredKeys,
-  UpdateWorkspaceAppRequest,
   InsertWorkspaceAppRequest,
+  RequiredKeys,
+  UIWorkspaceApp,
+  UpdateWorkspaceAppRequest,
+  WorkspaceApp,
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
-import { selectedScreen, sortedScreens } from "./screens"
-import { featureFlag } from "@/helpers"
-import { API } from "@/api"
+import { appStore } from "./app"
+import { screenStore, selectedScreen, sortedScreens } from "./screens"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
@@ -64,6 +66,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
       return
     }
+
     const { workspaceApps } = await API.workspaceApp.fetch()
     this.update(state => ({
       ...state,
@@ -71,16 +74,25 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       loading: false,
     }))
   }
-
   async refresh() {
     return this.fetch()
   }
 
   async add(workspaceApp: InsertWorkspaceAppRequest) {
-    const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
-    this.store.update(state => {
-      state.workspaceApps.push(createdWorkspaceApp.workspaceApp)
-      return state
+    const { workspaceApp: createdWorkspaceApp } =
+      await API.workspaceApp.create(workspaceApp)
+    this.store.update(state => ({
+      ...state,
+      workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
+    }))
+
+    await screenStore.save({
+      ...screenTemplating.blank({
+        route: "/",
+        screens: [],
+        workspaceAppId: createdWorkspaceApp._id,
+      })[0].data,
+      workspaceAppId: createdWorkspaceApp._id,
     })
   }
 
@@ -113,10 +125,15 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
   async delete(id: string, rev: string) {
     await API.workspaceApp.delete(id, rev)
+
     this.store.update(state => {
-      state.workspaceApps = state.workspaceApps.filter(app => app._id !== id)
-      return state
+      return {
+        ...state,
+        workspaceApps: state.workspaceApps.filter(app => app._id !== id),
+      }
     })
+
+    appStore.refresh()
   }
 }
 

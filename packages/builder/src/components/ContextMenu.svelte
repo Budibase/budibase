@@ -1,6 +1,12 @@
-<script>
+<script lang="ts">
   import { contextMenuStore } from "@/stores/builder"
-  import { Menu, MenuItem, Popover } from "@budibase/bbui"
+  import {
+    AbsTooltip,
+    Menu,
+    MenuItem,
+    Popover,
+    TooltipPosition,
+  } from "@budibase/bbui"
   import NewPill from "./common/NewPill.svelte"
 
   let dropdown
@@ -12,7 +18,7 @@
     }
   }
 
-  const handleItemClick = async itemCallback => {
+  const handleItemClick = async (itemCallback: () => void | Promise<void>) => {
     await itemCallback()
     contextMenuStore.close()
   }
@@ -40,19 +46,21 @@
   <Menu>
     {#each $contextMenuStore.items as item}
       {#if item.visible}
-        <MenuItem
-          icon={item.icon}
-          keyBind={item.keyBind}
-          on:click={() => handleItemClick(item.callback)}
-          disabled={item.disabled}
-        >
-          {item.name}
-          <div slot="right">
-            {#if item.isNew}
-              <NewPill />
-            {/if}
-          </div>
-        </MenuItem>
+        <AbsTooltip text={item.tooltip} position={TooltipPosition.Right}>
+          <MenuItem
+            icon={item.icon}
+            keyBind={item.keyBind ?? undefined}
+            on:click={() => handleItemClick(item.callback)}
+            disabled={item.disabled}
+          >
+            {item.name}
+            <div slot="right">
+              {#if item.isNew}
+                <NewPill />
+              {/if}
+            </div>
+          </MenuItem>
+        </AbsTooltip>
       {/if}
     {/each}
   </Menu>
