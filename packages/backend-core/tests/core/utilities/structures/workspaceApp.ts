@@ -7,8 +7,8 @@ import { generator } from "./generator"
 
 export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   const result: RequiredKeys<WorkspaceApp> = {
-    name: generator.word(),
-    urlPrefix: `/${generator.word()}`,
+    name: generator.guid(),
+    urlPrefix: `/${generator.guid().replace(/-/g, "")}`,
     icon: "Monitoring",
     iconColor: undefined,
 
