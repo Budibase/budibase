@@ -3,12 +3,14 @@ import {
   context,
   db as dbCore,
   events,
+  features,
   roles,
   tenancy,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
 import {
   DeleteScreenResponse,
+  FeatureFlag,
   FetchScreenResponse,
   Plugin,
   SaveScreenRequest,
@@ -43,6 +45,21 @@ export async function save(
   const { navigationLinkLabel, ...screen } = ctx.request.body
 
   const isCreation = !screen._id
+
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    if (
+      screen.workspaceAppId &&
+      !(await sdk.workspaceApps.get(screen.workspaceAppId))
+    ) {
+      ctx.throw("workspaceAppId is not valid")
+    } else if (!screen.workspaceAppId) {
+      let [workspaceApp] = await sdk.workspaceApps.fetch()
+      if (!workspaceApp) {
+        workspaceApp = await sdk.workspaceApps.createDefaultWorkspaceApp()
+      }
+      screen.workspaceAppId = workspaceApp._id
+    }
+  }
 
   const savedScreen = isCreation
     ? await sdk.screens.create(screen)
@@ -114,6 +131,16 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const db = context.getAppDB()
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
+
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const allScreens = await sdk.screens.fetch()
+    const appScreens = allScreens.filter(
+      s => s.workspaceAppId === screen.workspaceAppId
+    )
+    if (appScreens.filter(s => s._id !== id).length === 0) {
+      ctx.throw("Cannot delete the last screen in a workspace app", 409)
+    }
+  }
 
   await db.remove(id, ctx.params.screenRev)
 

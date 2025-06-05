@@ -1,12 +1,13 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import * as setup from "./utilities"
 const { basicLayout } = setup.structures
-const { events } = require("@budibase/backend-core")
+import { events } from "@budibase/backend-core"
+import { Layout } from "@budibase/types"
 
 describe("/layouts", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let layout
+  let layout: Layout
 
   afterAll(setup.afterAll)
 

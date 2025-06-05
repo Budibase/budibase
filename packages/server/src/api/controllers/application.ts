@@ -30,6 +30,7 @@ import {
   roles,
   tenancy,
   users,
+  utils,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -181,13 +182,7 @@ async function addSampleDataDocs() {
 async function addSampleDataScreen() {
   let workspaceAppId: string | undefined
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const appMetadata = await sdk.applications.metadata.get()
-
-    const workspaceApp = await sdk.workspaceApps.create({
-      name: appMetadata.name,
-      urlPrefix: "/",
-      icon: "Monitoring",
-    })
+    const workspaceApp = await sdk.workspaceApps.createDefaultWorkspaceApp()
     workspaceAppId = workspaceApp._id!
   }
 
@@ -269,11 +264,36 @@ export async function fetchAppPackage(
     )
   }
 
-  // Only filter screens if the user is not a builder
-  if (!users.isBuilder(ctx.user, appId)) {
+  // Only filter screens if the user is not a builder call
+  const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
+  if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
+  }
+
+  if (
+    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    !isBuilder
+  ) {
+    const urlPath = ctx.headers.referer
+      ? new URL(ctx.headers.referer).pathname
+      : "/"
+
+    let allWorkspaceApps = await sdk.workspaceApps.fetch()
+    // Sort decending to ensure we match the most strict, removing match conflicts
+    allWorkspaceApps = allWorkspaceApps.sort((a, b) =>
+      b.urlPrefix.localeCompare(a.urlPrefix)
+    )
+
+    const matchedWorkspaceApp = allWorkspaceApps.find(a =>
+      urlPath.startsWith(a.urlPrefix)
+    )
+    if (matchedWorkspaceApp) {
+      screens = screens.filter(
+        s => s.workspaceAppId === matchedWorkspaceApp._id
+      )
+    }
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(

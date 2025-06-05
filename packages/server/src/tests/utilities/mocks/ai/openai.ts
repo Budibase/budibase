@@ -57,7 +57,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
       response_format: ai.parseResponseFormat(opts.format),
     })
   }
-  return nock(opts?.host || "https://api.openai.com")
+  return nock(opts?.baseUrl || "https://api.openai.com")
     .post("/v1/chat/completions", body)
     .reply((uri: string, body: nock.Body) => {
       const req = body as ChatCompletionRequest

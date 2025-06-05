@@ -1,5 +1,6 @@
 import {
-  AIConfig,
+  ConfigType,
+  ConfigTypeToConfig,
   SaveConfigRequest,
   SaveConfigResponse,
 } from "@budibase/types"
@@ -23,12 +24,16 @@ export class ConfigAPI extends TestAPI {
   }
 
   getAIConfig = async () => {
+    return await this.getConfig(ConfigType.AI)
+  }
+
+  getConfig = async <T extends ConfigType>(type: T) => {
     const resp = await this.request
-      .get(`/api/global/configs/ai`)
+      .get(`/api/global/configs/${type}`)
       .set(this.config.defaultHeaders())
       .expect(200)
       .expect("Content-Type", /json/)
-    return resp.body as AIConfig
+    return resp.body as ConfigTypeToConfig<T>
   }
 
   saveConfig = async (
