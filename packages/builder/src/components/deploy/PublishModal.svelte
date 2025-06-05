@@ -1,14 +1,14 @@
 <script lang="ts">
   import { Modal, ModalContent, Checkbox, Accordion, Layout, Heading, Body } from "@budibase/bbui"
   import { workspaceAppStore, automationStore } from "@/stores/builder"
-  import { onMount } from "svelte"
   import type { UsedResource } from "@budibase/types"
   import { API } from "@/api"
+
+  type PossibleTarget = { _id?: string, name: string }
 
   export let targetId: string
 
   let publishModal: Modal
-  let target: { type: "app" | "automation", id: string, name: string } | undefined
   let selectedApps: Record<string, boolean> = {}
   let selectedAutomations: Record<string, boolean> = {}
   let usedResources: UsedResource[] = []
@@ -17,6 +17,7 @@
   $: filteredAutomations = removeTarget(automations)
   $: apps = $workspaceAppStore.workspaceApps
   $: filteredApps = removeTarget(apps)
+  $: target = findTarget(targetId, apps, automations)
   $: selectedAppNames = getSelectedNames(selectedApps, apps)
   $: selectedAutomationNames = getSelectedNames(selectedAutomations, automations)
   $: getUsedResources(getSelectedIds(selectedApps), getSelectedIds(selectedAutomations))
@@ -53,22 +54,24 @@
     return list?.filter(item => item._id !== targetId) || []
   }
 
+  function findTarget(targetId: string, apps: PossibleTarget[], automations: PossibleTarget[]) {
+    const app = apps?.find(app => app._id === targetId)
+    if (app) {
+      selectedApps[targetId] = true
+      selectedApps = selectedApps
+      return { type: "app", id: targetId, name: app.name }
+    }
+    const automation = automations?.find(automation => automation._id === targetId)
+    if (automation) {
+      selectedAutomations[targetId] = true
+      selectedAutomations = selectedAutomations
+      return { type: "automation", id: targetId, name: automation.name }
+    }
+  }
+
   function publish() {
 
   }
-
-  onMount(() => {
-    const app = apps.find(app => app._id === targetId)
-    if (app) {
-      target = { type: "app", id: targetId, name: app.name }
-      selectedApps[targetId] = true
-    }
-    const automation = automations.find(automation => automation._id === targetId)
-    if (automation) {
-      target = { type: "automation", id: targetId, name: automation.name }
-      selectedAutomations[targetId] = true
-    }
-  })
 </script>
 
 <Modal bind:this={publishModal}>
