@@ -69,6 +69,8 @@ import {
   SummariseStepOutputs,
   GenerateTextStepInputs,
   GenerateTextStepOutputs,
+  ExtractFileDataStepOutputs,
+  ExtractFileDataStepInputs,
   APIRequestStepInputs,
   APIRequestStepOutputs,
 } from "./StepInputsOutputs"
@@ -178,6 +180,10 @@ export type ActionImplementations<T extends Hosting> = {
     GenerateTextStepInputs,
     GenerateTextStepOutputs
   >
+  [AutomationActionStepId.EXTRACT_FILE_DATA]: ActionImplementation<
+    ExtractFileDataStepInputs,
+    ExtractFileDataStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -266,7 +272,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                           ? SummariseStepInputs
                                                           : T extends AutomationActionStepId.GENERATE_TEXT
                                                             ? GenerateTextStepInputs
-                                                            : never
+                                                            : T extends AutomationActionStepId.EXTRACT_FILE_DATA
+                                                              ? ExtractFileDataStepInputs
+                                                              : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -323,7 +331,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                       ? SummariseStepOutputs
                                                       : T extends AutomationActionStepId.GENERATE_TEXT
                                                         ? GenerateTextStepOutputs
-                                                        : never
+                                                        : T extends AutomationActionStepId.EXTRACT_FILE_DATA
+                                                          ? ExtractFileDataStepOutputs
+                                                          : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -407,6 +417,9 @@ export type SummariseStep =
 export type GenerateTextStep =
   AutomationStepSchema<AutomationActionStepId.GENERATE_TEXT>
 
+export type ExtractFileDataStep =
+  AutomationStepSchema<AutomationActionStepId.EXTRACT_FILE_DATA>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
   | CollectStep
@@ -438,6 +451,7 @@ export type AutomationStep =
   | TranslateStep
   | SummariseStep
   | GenerateTextStep
+  | ExtractFileDataStep
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
