@@ -23,19 +23,35 @@ describe("workspaceApps utils", () => {
     }
   })
 
-  describe("getMatchedWorkspaceApp", () => {
-    it("should be able to get the base workspaceApp without slash", async () => {
-      await config.doInContext(config.getAppId(), async () => {
-        const result = await getMatchedWorkspaceApp(`/${config.getAppId()}`)
-        expect(result?._id).toEqual(workspaceApps[0]._id)
+  describe.each(["", "/"])(
+    "getMatchedWorkspaceApp (url closing char: %s)",
+    closingChar => {
+      it("should be able to get the base workspaceApp", async () => {
+        await config.doInContext(config.getAppId(), async () => {
+          const result = await getMatchedWorkspaceApp(
+            `/${config.getAppId()}${closingChar}`
+          )
+          expect(result?._id).toEqual(workspaceApps[0]._id)
+        })
       })
-    })
 
-    it("should be able to get the base workspaceApp with slash", async () => {
-      await config.doInContext(config.getAppId(), async () => {
-        const result = await getMatchedWorkspaceApp(`/${config.getAppId()}/`)
-        expect(result?._id).toEqual(workspaceApps[0]._id)
+      it("should be able to get the a workspaceApp by its path", async () => {
+        await config.doInContext(config.getAppId(), async () => {
+          const result = await getMatchedWorkspaceApp(
+            `/${config.getAppId()}/app${closingChar}`
+          )
+          expect(result?._id).toEqual(workspaceApps[1]._id)
+        })
       })
-    })
-  })
+
+      it("should be able to get the a workspaceApp by its path for overlapping urls", async () => {
+        await config.doInContext(config.getAppId(), async () => {
+          const result = await getMatchedWorkspaceApp(
+            `/${config.getAppId()}/app2${closingChar}`
+          )
+          expect(result?._id).toEqual(workspaceApps[2]._id)
+        })
+      })
+    }
+  )
 })
