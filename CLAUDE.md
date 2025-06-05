@@ -29,7 +29,7 @@
 
 ## Pull requests
 
-- Always sespect the format of pull_request_template.md. Some sections may not
+- Always respect the format of pull_request_template.md. Some sections may not
   be required, you are free to ignore them. Don't add new sections, though.
 - When you open a pull request, always open it as a draft so that it can be
   reviewed by a human.
