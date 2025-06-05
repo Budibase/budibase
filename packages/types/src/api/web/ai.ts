@@ -1,7 +1,6 @@
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 import { z } from "zod"
-import { Readable } from "node:stream"
 
 export type UserContent = string | openai.ChatCompletionContentPart[]
 

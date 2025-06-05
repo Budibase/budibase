@@ -1,7 +1,7 @@
 import { basicTableWithAttachmentField } from "../../../tests/utilities/structures"
 import { objectStore, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { Table, DocumentSourceType, SupportedFileType } from "@budibase/types"
+import { DocumentSourceType, SupportedFileType } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
 import {
