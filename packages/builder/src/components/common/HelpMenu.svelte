@@ -1,5 +1,4 @@
 <script>
-  import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
   import { Popover, Heading, Body, Icon } from "@budibase/bbui"
   import { licensing } from "@/stores/portal"
   import { isPremiumOrAbove } from "@/helpers/planTitle"
