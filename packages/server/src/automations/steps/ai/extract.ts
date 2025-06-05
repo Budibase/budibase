@@ -80,7 +80,6 @@ export async function run({
     }
 
     const request = ai.extractFileData(inputs.schema, fileIdOrDataUrl)
-    request.withFormat("json")
     const llmResponse = await llm.prompt(request)
 
     const data = await parseAIResponse(llmResponse)
