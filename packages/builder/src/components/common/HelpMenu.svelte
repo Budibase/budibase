@@ -1,6 +1,6 @@
 <script>
   import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
-  import { Popover, Heading, Body } from "@budibase/bbui"
+  import { Popover, Heading, Body, Icon } from "@budibase/bbui"
   import { licensing } from "@/stores/portal"
   import { isPremiumOrAbove } from "@/helpers/planTitle"
   import { ChangelogURL } from "@/constants"
@@ -19,20 +19,20 @@
       <div class="header">
         <Heading size="XS">Help resources</Heading>
         <button on:click={hide} class="closeButton">
-          <FontAwesomeIcon name="fa-solid fa-xmark" />
+          <Icon name="x" />
         </button>
       </div>
       <div class="divider" />
       <a target="_blank" href="https://docs.budibase.com/docs">
         <div class="icon">
-          <FontAwesomeIcon name="fa-solid fa-book" />
+          <Icon name="book" />
         </div>
         <Body size="S">Help docs</Body>
       </a>
       <div class="divider" />
       <a target="_blank" href={ChangelogURL}>
         <div class="icon">
-          <FontAwesomeIcon name="fa-solid fa-rectangle-list" />
+          <Icon name="list-bullets" />
         </div>
         <Body size="S">Changelog</Body>
       </a>
@@ -42,21 +42,21 @@
         href="https://github.com/Budibase/budibase/discussions"
       >
         <div class="icon">
-          <FontAwesomeIcon name="fa-brands fa-github" />
+          <Icon name="github-logo" />
         </div>
         <Body size="S">Discussions</Body>
       </a>
       <div class="divider" />
       <a target="_blank" href="https://discord.com/invite/ZepTmGbtfF">
         <div class="icon">
-          <FontAwesomeIcon name="fa-brands fa-discord" />
+          <Icon name="discord-logo" />
         </div>
         <Body size="S">Discord</Body>
       </a>
       <div class="divider" />
       <a target="_blank" href="https://vimeo.com/showcase/budibase-university">
         <div class="icon">
-          <FontAwesomeIcon name="fa-solid fa-play" />
+          <Icon name="play" />
         </div>
         <Body size="S">Budibase University</Body>
       </a>
@@ -68,14 +68,14 @@
       >
         <div class="premiumLinkContent" class:disabled={!premiumOrAboveLicense}>
           <div class="icon">
-            <FontAwesomeIcon name="fa-solid fa-envelope" />
+            <Icon name="envelope" />
           </div>
           <Body size="S">Email support</Body>
         </div>
         {#if !premiumOrAboveLicense}
           <div class="premiumBadge">
             <div class="icon">
-              <FontAwesomeIcon name="fa-solid fa-lock" />
+              <Icon name="lock" />
             </div>
             <Body size="XS">Premium</Body>
           </div>
@@ -157,16 +157,13 @@
     background-color: var(--spectrum-global-color-gray-200);
   }
 
-  a:last-child {
-    padding: 8px 12px;
-  }
-
   .icon {
     font-size: 13px;
-    margin-right: 7px;
+    margin-right: 8px;
     min-width: 18px;
     justify-content: center;
     display: flex;
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .premiumLinkContent {
