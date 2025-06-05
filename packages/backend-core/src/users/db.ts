@@ -373,27 +373,25 @@ export class UserDB {
 
     const account = await accountSdk.getAccountByTenantId(tenantId)
     const isSSOEnforced = await UserDB.features.isSSOEnforced()
-
+    
     return UserDB.quotas.addUsers(
       newUsers.length,
       newCreators.length,
       async () => {
-        // create the promises array that will be called by bulkDocs
         newUsers.forEach((user: any) => {
-          // When SSO is enforced, remove passwords to prevent "Password change is disabled" error
           if (isSSOEnforced && user.password) {
             delete user.password
           }
-
+          
           usersToSave.push(
             UserDB.buildUser(
               user,
               {
                 hashPassword: true,
-                requirePassword: user.requirePassword !== false, // Default to true unless explicitly set to false
+                requirePassword: user.requirePassword !== false,
               },
               tenantId,
-              undefined, // no dbUser
+              undefined,
               account
             )
           )
