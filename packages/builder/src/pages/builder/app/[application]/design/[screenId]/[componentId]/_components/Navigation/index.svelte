@@ -26,13 +26,13 @@
   import { getBindableProperties } from "@/dataBinding"
 
   const positionOptions = [
-    { value: "Top", barIcon: "PaddingTop" },
-    { value: "Left", barIcon: "PaddingLeft" },
+    { value: "Top", barIcon: "align-top" },
+    { value: "Left", barIcon: "align-left" },
   ]
   const alignmentOptions = [
-    { value: "Left", barIcon: "TextAlignLeft" },
-    { value: "Center", barIcon: "TextAlignCenter" },
-    { value: "Right", barIcon: "TextAlignRight" },
+    { value: "Left", barIcon: "text-align-left" },
+    { value: "Center", barIcon: "text-align-center" },
+    { value: "Right", barIcon: "text-align-right" },
   ]
   const widthOptions = ["Max", "Large", "Medium", "Small"]
 

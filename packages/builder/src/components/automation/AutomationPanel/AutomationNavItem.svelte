@@ -40,7 +40,7 @@
 
   const getContextMenuItems = () => {
     const pause = {
-      icon: automation.disabled ? "CheckmarkCircle" : "Cancel",
+      icon: automation.disabled ? "check-circle" : "pause",
       name: automation.disabled ? "Activate" : "Pause",
       keyBind: null,
       visible: true,
