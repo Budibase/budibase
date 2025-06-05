@@ -15,6 +15,8 @@
     deploymentStore,
     workspaceAppStore,
   } from "@/stores/builder"
+  import { featureFlag } from "@/helpers"
+  import { FeatureFlag } from "@budibase/types"
   import { admin } from "@/stores/portal"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
   import PublishModal from "@/components/deploy/PublishModal.svelte"
@@ -24,6 +26,7 @@
   let showNpsSurvey = false
   let publishButton
   let publishSuccessPopover
+  const workspaceEnabled = featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)
 
   $: updateAvailable =
     $appStore.upgradableVersion &&
@@ -32,8 +35,12 @@
   $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id
 
   const publish = async () => {
-    await deploymentStore.publishApp(false)
-    publishSuccessPopover?.show()
+    if (workspaceEnabled) {
+      publishModal.show()
+    } else {
+      await deploymentStore.publishApp(false)
+      publishSuccessPopover?.show()
+    }
   }
 </script>
 
@@ -67,7 +74,7 @@
     <div class="app-action-button publish">
       <Button
         cta
-        on:click={publishModal.show}
+        on:click={publish}
         disabled={$deploymentStore.isPublishing}
         bind:ref={publishButton}
       >
@@ -82,7 +89,7 @@
 {/if}
 
 <VersionModal hideIcon bind:this={versionModal} />
-{#if selectedWorkspaceAppId}
+{#if selectedWorkspaceAppId && workspaceEnabled}
   <PublishModal targetId={selectedWorkspaceAppId} bind:this={publishModal} />
 {/if}
 
