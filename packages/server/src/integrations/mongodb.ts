@@ -304,7 +304,7 @@ const getSchema = () => {
     },
     extra: {
       collection: {
-        displayName: "stack",
+        displayName: "Collection",
         type: DatasourceFieldType.STRING,
         required: true,
       },
