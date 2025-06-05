@@ -382,14 +382,13 @@ describe("Google Sheets Integration", () => {
       expect(mock.cell("A3")).toEqual(null)
       expect(mock.cell("B3")).toEqual(null)
 
-      const renamedRow = await config.api.row.get(table._id!, row._id!)
+      const renamedRow = await config.api.row.get(renamedTable._id!, row._id!)
       expect(renamedRow.renamed).toEqual("Test Contact")
       expect(renamedRow.description).toEqual("original description")
       expect(renamedRow.name).not.toBeDefined()
     })
 
-    // TODO: this gets the error "Sheet is not large enough to fit 27 columns. Resize the sheet first."
-    it.skip("should be able to add a new column", async () => {
+    it("should be able to add a new column", async () => {
       const updatedTable = await config.api.table.save({
         ...table,
         schema: {
@@ -434,6 +433,56 @@ describe("Google Sheets Integration", () => {
       const updatedRow = await config.api.row.get(table._id!, row._id!)
       expect(updatedRow.name).toEqual("Test Contact")
       expect(updatedRow.description).not.toBeDefined()
+    })
+
+    it("should be able to add a new column and then move it", async () => {
+      await config.api.row.save(table._id!, {
+        name: "Test Contact",
+        description: "original description",
+      })
+
+      const updatedTable = await config.api.table.save({
+        ...table,
+        schema: {
+          ...table.schema,
+          newColumn: {
+            name: "newColumn",
+            type: FieldType.STRING,
+          },
+        },
+      })
+
+      expect(updatedTable.schema.newColumn).toBeDefined()
+      expect(mock.cell("A1")).toEqual("name")
+      expect(mock.cell("B1")).toEqual("description")
+      expect(mock.cell("C1")).toEqual("newColumn")
+
+      mock.swapColumns(`${updatedTable.name}!B1`, `${updatedTable.name}!C1`)
+
+      let rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(1)
+      expect(rows[0].name).toEqual("Test Contact")
+      expect(rows[0].description).toEqual("original description")
+      expect(rows[0].newColumn).toEqual(undefined)
+
+      await config.api.row.save(table._id!, {
+        ...rows[0],
+        newColumn: "new value",
+      })
+
+      expect(mock.cell("A1")).toEqual("name")
+      expect(mock.cell("B1")).toEqual("newColumn")
+      expect(mock.cell("C1")).toEqual("description")
+
+      expect(mock.cell("A2")).toEqual("Test Contact")
+      expect(mock.cell("B2")).toEqual("new value")
+      expect(mock.cell("C2")).toEqual("original description")
+
+      rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(1)
+      expect(rows[0].name).toEqual("Test Contact")
+      expect(rows[0].description).toEqual("original description")
+      expect(rows[0].newColumn).toEqual("new value")
     })
   })
 

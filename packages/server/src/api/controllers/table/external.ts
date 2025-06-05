@@ -53,6 +53,7 @@ export async function updateTable(
     builderSocket?.emitDatasourceUpdate(ctx, datasource)
     return { table, oldTable }
   } catch (err: any) {
+    throw err
     if (err instanceof Error) {
       ctx.throw(400, err.message)
     } else {
