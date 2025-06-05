@@ -49,8 +49,10 @@ class Routing {
  * @returns The routing structure, this is the full structure designed for use in the builder,
  * if the client routing is required then the updateRoutingStructureForUserRole should be used.
  */
-async function getRoutingStructure(): Promise<{ routes: ScreenRoutingJson }> {
-  const screenRoutes = await getRoutingInfo()
+async function getRoutingStructure(
+  urlPath: string
+): Promise<{ routes: ScreenRoutingJson }> {
+  const screenRoutes = await getRoutingInfo(urlPath)
   const routing = new Routing()
 
   for (let screenRoute of screenRoutes) {
@@ -62,14 +64,20 @@ async function getRoutingStructure(): Promise<{ routes: ScreenRoutingJson }> {
   return { routes: routing.json }
 }
 
+function getReferer(ctx: UserCtx) {
+  return ctx.headers.referer ? new URL(ctx.headers.referer).pathname : ""
+}
+
 export async function fetch(ctx: UserCtx<void, FetchScreenRoutingResponse>) {
-  ctx.body = await getRoutingStructure()
+  const urlPath = getReferer(ctx)
+  ctx.body = await getRoutingStructure(urlPath)
 }
 
 export async function clientFetch(
   ctx: UserCtx<void, FetchClientScreenRoutingResponse>
 ) {
-  const routing = await getRoutingStructure()
+  const urlPath = getReferer(ctx)
+  const routing = await getRoutingStructure(urlPath)
   let roleId = ctx.user?.role?._id
   const roleIds = roleId ? await roles.getUserRoleIdHierarchy(roleId) : []
   for (let topLevel of Object.values(routing.routes) as any) {

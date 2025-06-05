@@ -1,14 +1,16 @@
 import {
   Ctx,
+  FetchWorkspaceAppResponse,
   InsertWorkspaceAppRequest,
   InsertWorkspaceAppResponse,
-  WorkspaceApp,
-  WorkspaceAppResponse,
   UpdateWorkspaceAppRequest,
   UpdateWorkspaceAppResponse,
-  FetchWorkspaceAppResponse,
+  WithoutDocMetadata,
+  WorkspaceApp,
+  WorkspaceAppResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { defaultAppNavigator } from "../../constants/definitions"
 
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
@@ -20,6 +22,7 @@ function toWorkspaceAppResponse(
     urlPrefix: workspaceApp.urlPrefix,
     icon: workspaceApp.icon,
     iconColor: workspaceApp.iconColor,
+    navigation: workspaceApp.navigation,
   }
 }
 
@@ -34,11 +37,12 @@ export async function create(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
-  const newWorkspaceApp = {
+  const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     urlPrefix: body.urlPrefix,
     icon: body.icon,
     iconColor: body.iconColor,
+    navigation: defaultAppNavigator(body.name),
   }
 
   const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)
@@ -64,6 +68,7 @@ export async function edit(
     urlPrefix: body.urlPrefix,
     icon: body.icon,
     iconColor: body.iconColor,
+    navigation: body.navigation,
   }
 
   const workspaceApp = await sdk.workspaceApps.update(toUpdate)
