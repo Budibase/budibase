@@ -278,13 +278,7 @@
         {#if selectedCategory === "Snippets"}
           {#if enableSnippets}
             <div class="add-snippet-button">
-              <Icon
-                size="S"
-                name="plus"
-                hoverable
-                newStyles
-                on:click={createSnippet}
-              />
+              <Icon size="S" name="plus" hoverable on:click={createSnippet} />
             </div>
           {:else}
             <div class="title">
@@ -308,20 +302,13 @@
               autofocus
             />
           </div>
-          <Icon
-            size="S"
-            name="x"
-            hoverable
-            newStyles
-            on:click={stopSearching}
-          />
+          <Icon size="S" name="x" hoverable on:click={stopSearching} />
         {:else}
           <div class="title">Bindings</div>
           <Icon
             size="S"
             name="magnifying-glass"
             hoverable
-            newStyles
             on:click={startSearching}
           />
         {/if}
@@ -425,7 +412,6 @@
                 <Icon
                   name="pencil"
                   hoverable
-                  newStyles
                   size="S"
                   on:click={e => editSnippet(e, snippet)}
                 />

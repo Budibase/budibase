@@ -86,7 +86,7 @@
         {/if}
         <span />
         {#if !empty}
-          <Icon name="copy" newStyles size="S" hoverable on:click={copy} />
+          <Icon name="copy" size="S" hoverable on:click={copy} />
         {/if}
       {/if}
     </div>
