@@ -64,7 +64,6 @@
   on:mouseover
   on:mouseleave
   on:focus
-  class:legacy
   class:hoverable
   class:disabled
   class={phosphorClass}
@@ -95,8 +94,5 @@
   i.disabled {
     color: var(--spectrum-global-color-gray-500);
     pointer-events: none;
-  }
-  i.legacy {
-    outline: 1px solid red;
   }
 </style>
