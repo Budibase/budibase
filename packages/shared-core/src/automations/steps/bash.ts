@@ -25,7 +25,7 @@ export const definition: AutomationStepDefinition = {
         code: {
           type: AutomationIOType.STRING,
           customType: AutomationCustomIOType.CODE,
-          title: "code",
+          title: "Code",
         },
       },
       required: ["code"],
