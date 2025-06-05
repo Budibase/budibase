@@ -13,6 +13,7 @@ interface MenuItem {
   disabled?: boolean
   callback: () => void
   isNew?: boolean
+  tooltip?: string
 }
 
 interface ContextMenuState {
