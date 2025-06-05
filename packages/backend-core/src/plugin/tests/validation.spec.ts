@@ -118,7 +118,7 @@ function mockComponentSchema() {
           {
             type: "text",
             key: "text",
-            label: "article",
+            label: "Text",
           },
         ],
       },
