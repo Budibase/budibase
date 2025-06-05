@@ -82,3 +82,12 @@ export async function remove(
   )
   await db.bulkRemove(screensToDelete)
 }
+
+export async function createDefaultWorkspaceApp() {
+  const appMetadata = await sdk.applications.metadata.get()
+  return create({
+    name: appMetadata.name,
+    urlPrefix: "/",
+    icon: "monitor",
+  })
+}

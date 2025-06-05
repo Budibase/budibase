@@ -83,6 +83,7 @@ export enum AutomationActionStepId {
   TRANSLATE = "TRANSLATE",
   SUMMARISE = "SUMMARISE",
   GENERATE_TEXT = "GENERATE_TEXT",
+  EXTRACT_FILE_DATA = "EXTRACT_FILE_DATA",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -154,7 +155,7 @@ export interface BaseIOStructure {
   customType?: AutomationCustomIOType
   title?: string
   description?: string
-  dependsOn?: string
+  dependsOn?: string | { field: string; value: string | string[] }
   enum?: string[]
   pretty?: string[]
   properties?: AutomationIOProps
@@ -323,3 +324,25 @@ export const PrettyContentTypes = {
   [ContentType.PROPOSAL]: "Proposal",
   [ContentType.OTHER]: "Other",
 }
+
+export enum DocumentSourceType {
+  URL = "URL",
+  ATTACHMENT = "Attachment",
+}
+
+export enum SupportedFileType {
+  PDF = "pdf",
+  JPG = "jpg",
+  PNG = "png",
+  JPEG = "jpeg",
+}
+
+export const ImageContentTypes = [
+  "png",
+  "jpg",
+  "jpeg",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/jpeg",
+]
