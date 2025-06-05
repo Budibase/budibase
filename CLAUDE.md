@@ -35,6 +35,9 @@
   reviewed by a human.
 - Before opening a pull request, always make sure that the branch you're pushing
   is up to date with master.
+- If you're working on a bug, the name of the PR should start with the bug ID
+  in square brackets, e.g. [BUDI-1234]. The link to the bug should go into the
+  "Addresses" section of pull_request_template.md.
 
 ## Architecture
 
