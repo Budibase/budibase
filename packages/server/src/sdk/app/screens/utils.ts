@@ -14,7 +14,7 @@ export async function ensureHomepageUniqueness(screen: Screen) {
     return
   }
 
-  for (const screen of otherScreens) {
+  for (const screen of toModify) {
     screen.routing.homeScreen = false
     await sdk.screens.update(screen)
   }
