@@ -91,6 +91,7 @@
         visible: true,
         disabled: !deletionAllowed,
         callback: confirmDeleteDialog.show,
+        tooltip: deletionAllowed ? "" : "At least one screen is required",
       },
     ]
 
