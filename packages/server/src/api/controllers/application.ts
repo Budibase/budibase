@@ -76,6 +76,7 @@ import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
+import { defaultAppNavigator } from "../../constants/definitions"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -181,41 +182,56 @@ async function addSampleDataDocs() {
 
 async function addSampleDataScreen() {
   let workspaceAppId: string | undefined
-  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const appMetadata = await sdk.applications.metadata.get()
 
+  const workspaceAppEnabled = await features.isEnabled(
+    FeatureFlag.WORKSPACE_APPS
+  )
+  if (workspaceAppEnabled) {
+    const appMetadata = await sdk.applications.metadata.get()
     const workspaceApp = await sdk.workspaceApps.create({
       name: appMetadata.name,
       urlPrefix: "/",
       icon: "Monitoring",
+      navigation: {
+        ...defaultAppNavigator(appMetadata.name),
+        links: [
+          {
+            text: "Inventory",
+            url: "/inventory",
+            type: "link",
+            roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          },
+        ],
+      },
     })
-    workspaceAppId = workspaceApp._id!
+
+    workspaceAppId = workspaceApp._id
   }
 
   const screen = createSampleDataTableScreen(workspaceAppId)
   await sdk.screens.create(screen)
-}
 
-async function addSampleDataNavLinks() {
-  const db = context.getAppDB()
-  let app = await sdk.applications.metadata.get()
-  if (!app.navigation) {
-    return
+  if (!workspaceAppEnabled) {
+    const db = context.getAppDB()
+    let app = await sdk.applications.metadata.get()
+    if (!app.navigation) {
+      return
+    }
+    if (!app.navigation.links) {
+      app.navigation.links = []
+    }
+    app.navigation.links.push({
+      text: "Inventory",
+      url: "/inventory",
+      type: "link",
+      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    })
+
+    await db.put(app)
+
+    // remove any cached metadata, so that it will be updated
+    await cache.app.invalidateAppMetadata(app.appId)
   }
-  if (!app.navigation.links) {
-    app.navigation.links = []
-  }
-  app.navigation.links.push({
-    text: "Inventory",
-    url: "/inventory",
-    type: "link",
-    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-  })
-
-  await db.put(app)
-
-  // remove any cached metadata, so that it will be updated
-  await cache.app.invalidateAppMetadata(app.appId)
 }
 
 export const addSampleData = async (
@@ -278,25 +294,22 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+  if (
+    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    !isBuilder
+  ) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
-      : "/"
+      : ""
 
-    let allWorkspaceApps = await sdk.workspaceApps.fetch()
-    // Sort decending to ensure we match the most strict, removing match conflicts
-    allWorkspaceApps = allWorkspaceApps.sort((a, b) =>
-      b.urlPrefix.localeCompare(a.urlPrefix)
-    )
-
-    const matchedWorkspaceApp = allWorkspaceApps.find(a =>
-      urlPath.startsWith(a.urlPrefix)
-    )
-    if (matchedWorkspaceApp) {
-      screens = screens.filter(
-        s => s.workspaceAppId === matchedWorkspaceApp._id
-      )
+    const matchedWorkspaceApp =
+      await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+    if (!matchedWorkspaceApp) {
+      ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
+    screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
+
+    application.navigation = matchedWorkspaceApp.navigation
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(
@@ -382,14 +395,7 @@ async function performAppCreate(
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       status: AppStatus.DEV,
-      navigation: {
-        navigation: "Top",
-        title: name,
-        navWidth: "Large",
-        navBackground: "var(--spectrum-global-color-static-blue-1200)",
-        navTextColor: "var(--spectrum-global-color-static-white)",
-        links: [],
-      },
+      navigation: defaultAppNavigator(name),
       theme: DefaultAppTheme,
       customTheme: {
         primaryColor: "var(--spectrum-global-color-blue-700)",
@@ -455,7 +461,6 @@ async function performAppCreate(
       try {
         await addSampleDataDocs()
         await addSampleDataScreen()
-        await addSampleDataNavLinks()
 
         // Fetch the latest version of the app after these changes
         newApplication = await sdk.applications.metadata.get()

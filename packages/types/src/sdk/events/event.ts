@@ -438,5 +438,5 @@ export interface EventProcessor {
   ): Promise<void>
   identify?(identity: Identity, timestamp?: string | number): Promise<void>
   identifyGroup?(group: Group, timestamp?: string | number): Promise<void>
-  shutdown?(): void
+  shutdown?(): Promise<void>
 }

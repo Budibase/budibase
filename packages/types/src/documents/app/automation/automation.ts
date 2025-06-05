@@ -39,6 +39,7 @@ export enum AutomationCustomIOType {
   AUTOMATION_FIELDS = "automationFields",
   MULTI_ATTACHMENTS = "multi_attachments",
   TRIGGER_FILTER = "trigger_filter",
+  CATEGORIES = "categories",
 }
 
 export enum AutomationTriggerStepId {
@@ -77,6 +78,12 @@ export enum AutomationActionStepId {
   OPENAI = "OPENAI",
   TRIGGER_AUTOMATION_RUN = "TRIGGER_AUTOMATION_RUN",
   BRANCH = "BRANCH",
+  CLASSIFY_CONTENT = "CLASSIFY_CONTENT",
+  PROMPT_LLM = "PROMPT_LLM",
+  TRANSLATE = "TRANSLATE",
+  SUMMARISE = "SUMMARISE",
+  GENERATE_TEXT = "GENERATE_TEXT",
+  EXTRACT_FILE_DATA = "EXTRACT_FILE_DATA",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -148,7 +155,7 @@ export interface BaseIOStructure {
   customType?: AutomationCustomIOType
   title?: string
   description?: string
-  dependsOn?: string
+  dependsOn?: string | { field: string; value: string | string[] }
   enum?: string[]
   pretty?: string[]
   properties?: AutomationIOProps
@@ -297,3 +304,45 @@ export enum LoopStepType {
   ARRAY = "Array",
   STRING = "String",
 }
+
+export enum ContentType {
+  EMAIL = "email",
+  DOCUMENT = "document",
+  BLOG_POST = "blog_post",
+  CHAT_MESSAGE = "chat_message",
+  LETTER = "letter",
+  PROPOSAL = "proposal",
+  OTHER = "other",
+}
+
+export const PrettyContentTypes = {
+  [ContentType.EMAIL]: "Email",
+  [ContentType.DOCUMENT]: "Document",
+  [ContentType.BLOG_POST]: "Blog post",
+  [ContentType.CHAT_MESSAGE]: "Chat message",
+  [ContentType.LETTER]: "Letter",
+  [ContentType.PROPOSAL]: "Proposal",
+  [ContentType.OTHER]: "Other",
+}
+
+export enum DocumentSourceType {
+  URL = "URL",
+  ATTACHMENT = "Attachment",
+}
+
+export enum SupportedFileType {
+  PDF = "pdf",
+  JPG = "jpg",
+  PNG = "png",
+  JPEG = "jpeg",
+}
+
+export const ImageContentTypes = [
+  "png",
+  "jpg",
+  "jpeg",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/jpeg",
+]
