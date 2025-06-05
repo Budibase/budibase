@@ -16,6 +16,7 @@ import type {
   WorksheetDimension,
   WorksheetDimensionProperties,
   WorksheetProperties,
+  WorksheetGridProperties,
   CellData,
   CellBorder,
   CellFormat,
@@ -100,6 +101,12 @@ interface AddSheetResponse {
   properties: WorksheetProperties
 }
 
+// https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets/request#UpdateSheetPropertiesRequest
+interface UpdateSheetPropertiesRequest {
+  properties: Partial<WorksheetProperties>
+  fields: string
+}
+
 interface DeleteRangeRequest {
   range: GridRange
   shiftDimension: WorksheetDimension
@@ -116,6 +123,7 @@ interface BatchUpdateRequest {
     addSheet?: AddSheetRequest
     deleteRange?: DeleteRangeRequest
     deleteSheet?: DeleteSheetRequest
+    updateSheetProperties?: UpdateSheetPropertiesRequest
   }[]
   includeSpreadsheetInResponse: boolean
   responseRanges: string[]
@@ -251,6 +259,26 @@ export class GoogleSheetsMock {
       throw new Error(`Cell ${cell} not found`)
     }
     cellData.userEnteredValue = this.createValue(value)
+  }
+
+  public swapColumns(columnA: string, columnB: string): void {
+    const rangeA = this.parseA1Notation(columnA)
+    const rangeB = this.parseA1Notation(columnB)
+
+    if (rangeA.sheetId !== rangeB.sheetId) {
+      throw new Error("Cannot swap columns from different sheets")
+    }
+
+    const sheet = this.getSheetById(rangeA.sheetId)
+    if (!sheet) {
+      throw new Error(`Sheet ${rangeA.sheetId} not found`)
+    }
+
+    sheet.data[0].rowData.forEach(row => {
+      const temp = row.values[rangeA.startColumnIndex]
+      row.values[rangeA.startColumnIndex] = row.values[rangeB.startColumnIndex]
+      row.values[rangeB.startColumnIndex] = temp
+    })
   }
 
   public sheet(name: string | number): Sheet | undefined {
@@ -480,18 +508,31 @@ export class GoogleSheetsMock {
     }
 
     for (const request of batchUpdateRequest.requests) {
+      let didWork = false
       if (request.addSheet) {
         response.replies.push({
           addSheet: this.handleAddSheet(request.addSheet),
         })
+        didWork = true
       }
       if (request.deleteRange) {
         this.handleDeleteRange(request.deleteRange)
         response.replies.push({})
+        didWork = true
       }
       if (request.deleteSheet) {
         this.handleDeleteSheet(request.deleteSheet)
         response.replies.push({})
+        didWork = true
+      }
+      if (request.updateSheetProperties) {
+        this.handleUpdateSheetProperties(request.updateSheetProperties)
+        response.replies.push({})
+        didWork = true
+      }
+
+      if (!didWork) {
+        throw new Error("No valid request found in batch update")
       }
     }
 
@@ -569,6 +610,104 @@ export class GoogleSheetsMock {
     this.spreadsheet.sheets.splice(sheetId, 1)
   }
 
+  private handleUpdateSheetProperties(request: UpdateSheetPropertiesRequest) {
+    if (request.fields !== "gridProperties") {
+      throw new Error(
+        `Only 'gridProperties' field updates are supported, got: ${request.fields}`
+      )
+    }
+
+    if (!request.properties || !request.properties.gridProperties) {
+      throw new Error("No grid properties provided for update")
+    }
+
+    if (request.properties.sheetId === undefined) {
+      throw new Error("No sheet ID provided for update")
+    }
+
+    this.resizeGrid(
+      request.properties.sheetId,
+      request.properties.gridProperties
+    )
+  }
+
+  private resizeGrid(
+    sheetId: number,
+    newGridProperties: WorksheetGridProperties
+  ) {
+    const sheet = this.getSheetById(sheetId)
+    if (!sheet) {
+      throw new Error(`Sheet with ID ${sheetId} not found`)
+    }
+
+    const currentGridProperties = sheet.properties.gridProperties
+    if (!newGridProperties) {
+      throw new Error("No grid properties provided for update")
+    }
+
+    if (newGridProperties.rowCount !== undefined) {
+      const diff = newGridProperties.rowCount - currentGridProperties.rowCount
+      if (diff < 0) {
+        this.removeRows(sheet, currentGridProperties.rowCount + diff, -diff)
+      } else if (diff > 0) {
+        this.addEmptyRows(sheet, diff)
+      }
+    }
+
+    if (newGridProperties.columnCount !== undefined) {
+      const diff =
+        newGridProperties.columnCount - currentGridProperties.columnCount
+
+      if (diff < 0) {
+        this.removeColumns(
+          sheet,
+          currentGridProperties.columnCount + diff,
+          -diff
+        )
+      } else if (diff > 0) {
+        this.addEmptyColumns(sheet, diff)
+      }
+    }
+  }
+
+  private addEmptyRows(sheet: Sheet, count: number): void {
+    const rowData = sheet.data[0].rowData
+    const rowMetadata = sheet.data[0].rowMetadata
+
+    const newRows = this.createEmptyRows(count, rowData[0].values.length)
+    rowData.push(...newRows)
+
+    const newMetadata = this.createDimensionMetadata(count)
+    rowMetadata.push(...newMetadata)
+
+    sheet.properties.gridProperties.rowCount += count
+  }
+
+  private removeRows(sheet: Sheet, startIndex: number, count: number): void {
+    sheet.data[0].rowData.splice(startIndex, count)
+    sheet.data[0].rowMetadata.splice(startIndex, count)
+    sheet.properties.gridProperties.rowCount -= count
+  }
+
+  private addEmptyColumns(sheet: Sheet, count: number): void {
+    for (const row of sheet.data[0].rowData) {
+      row.values.push(...this.createEmptyCells(count))
+    }
+
+    const newMetadata = this.createDimensionMetadata(count)
+    sheet.data[0].columnMetadata.push(...newMetadata)
+
+    sheet.properties.gridProperties.columnCount += count
+  }
+
+  private removeColumns(sheet: Sheet, startIndex: number, count: number): void {
+    for (const row of sheet.data[0].rowData) {
+      row.values.splice(startIndex, count)
+    }
+    sheet.data[0].columnMetadata.splice(startIndex, count)
+    sheet.properties.gridProperties.columnCount -= count
+  }
+
   private handleGetSpreadsheet(): Spreadsheet {
     return this.spreadsheet
   }
@@ -587,26 +726,6 @@ export class GoogleSheetsMock {
       updatedData: valueRange,
     }
     return response
-  }
-
-  private iterateRange(range: GridRange, cb: (cell: CellData) => void) {
-    const {
-      sheetId,
-      startRowIndex,
-      endRowIndex,
-      startColumnIndex,
-      endColumnIndex,
-    } = this.ensureGridRange(range)
-
-    for (let row = startRowIndex; row <= endRowIndex; row++) {
-      for (let col = startColumnIndex; col <= endColumnIndex; col++) {
-        const cell = this.getCellNumericIndexes(sheetId, row, col)
-        if (!cell) {
-          throw new Error("Cell not found")
-        }
-        cb(cell)
-      }
-    }
   }
 
   private iterateValueRange(
@@ -799,34 +918,45 @@ export class GoogleSheetsMock {
     }
   }
 
-  private createEmptyGrid(numRows: number, numCols: number): GridData {
-    const rowData: RowData[] = []
-    for (let row = 0; row < numRows; row++) {
-      const cells: CellData[] = []
-      for (let col = 0; col < numCols; col++) {
-        cells.push(this.createCellData(null))
-      }
-      rowData.push({ values: cells })
+  private createEmptyCells(cols: number): CellData[] {
+    const cells: CellData[] = []
+    for (let i = 0; i < cols; i++) {
+      cells.push(this.createCellData(null))
     }
-    const rowMetadata: WorksheetDimensionProperties[] = []
-    for (let row = 0; row < numRows; row++) {
-      rowMetadata.push({
-        hiddenByFilter: false,
-        hiddenByUser: false,
-        pixelSize: 100,
-        developerMetadata: [],
-      })
-    }
-    const columnMetadata: WorksheetDimensionProperties[] = []
-    for (let col = 0; col < numCols; col++) {
-      columnMetadata.push({
-        hiddenByFilter: false,
-        hiddenByUser: false,
-        pixelSize: 100,
-        developerMetadata: [],
-      })
-    }
+    return cells
+  }
 
+  private createEmptyRowData(cols: number): RowData {
+    return { values: this.createEmptyCells(cols) }
+  }
+
+  private createEmptyRows(count: number, cols: number): RowData[] {
+    const rows: RowData[] = []
+    for (let i = 0; i < count; i++) {
+      rows.push(this.createEmptyRowData(cols))
+    }
+    return rows
+  }
+
+  private createDimensionMetadata(
+    count: number
+  ): WorksheetDimensionProperties[] {
+    const metadata: WorksheetDimensionProperties[] = []
+    for (let i = 0; i < count; i++) {
+      metadata.push({
+        hiddenByFilter: false,
+        hiddenByUser: false,
+        pixelSize: 100,
+        developerMetadata: [],
+      })
+    }
+    return metadata
+  }
+
+  private createEmptyGrid(numRows: number, numCols: number): GridData {
+    const rowData = this.createEmptyRows(numRows, numCols)
+    const rowMetadata = this.createDimensionMetadata(numRows)
+    const columnMetadata = this.createDimensionMetadata(numCols)
     return {
       startRow: 0,
       startColumn: 0,

@@ -312,11 +312,13 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     if (id) {
       table._id = id
     }
-    // build schema from headers
+    // build schema from headers, filtering out empty ones
     for (let header of headerValues) {
-      table.schema[header] = {
-        name: header,
-        type: FieldType.STRING,
+      if (header && header.trim()) {
+        table.schema[header] = {
+          name: header,
+          type: FieldType.STRING,
+        }
       }
     }
     return table
@@ -378,13 +380,72 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       )
     }
 
-    let externalTables = finaliseExternalTables(tables, entities)
+    // Check for column order changes in Google Sheets and force fresh schema if detected
+    const entitiesWithColumnOrderChanges = this.detectColumnOrderChanges(
+      tables,
+      entities
+    )
+
+    let externalTables = finaliseExternalTables(
+      tables,
+      entitiesWithColumnOrderChanges
+    )
     errors = { ...errors, ...checkExternalTables(externalTables) }
     return { tables: externalTables, errors }
   }
 
+  /**
+   * Detects when column order has changed in Google Sheets and removes those tables
+   * from entities so they get a fresh schema build instead of merging with stale cached data
+   */
+  private detectColumnOrderChanges(
+    newTables: Record<string, Table>,
+    entities: Record<string, Table>
+  ): Record<string, Table> {
+    if (!entities) {
+      return {}
+    }
+
+    const filteredEntities = { ...entities }
+
+    for (const [tableName, newTable] of Object.entries(newTables)) {
+      const existingTable = entities[tableName]
+      if (!existingTable) {
+        continue // New table, no need to check
+      }
+
+      // Get column names in order from both tables
+      const newColumnOrder = Object.keys(newTable.schema)
+      const existingColumnOrder = Object.keys(existingTable.schema)
+
+      // Check if column order has changed
+      // We compare the order of common columns to detect reordering
+      const commonColumns = newColumnOrder.filter(col =>
+        existingColumnOrder.includes(col)
+      )
+
+      if (commonColumns.length > 0) {
+        const newOrder = commonColumns
+        const existingOrder = existingColumnOrder.filter(col =>
+          commonColumns.includes(col)
+        )
+
+        // If the order of common columns has changed, force fresh schema
+        if (JSON.stringify(newOrder) !== JSON.stringify(existingOrder)) {
+          console.log(
+            `Column order changed in Google Sheet "${tableName}", refreshing schema`
+          )
+          delete filteredEntities[tableName]
+        }
+      }
+    }
+
+    return filteredEntities
+  }
+
   async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const sheet = json.table.name
+
     switch (json.operation) {
       case Operation.CREATE:
         return this.create({ sheet, row: json.body as Row })
@@ -463,7 +524,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   private async updateTable(table: TableRequest) {
     await this.connect()
-    const sheet = this.client.sheetsByTitle[table.name]
+    let sheet = this.client.sheetsByTitle[table.name]
     await sheet.loadHeaderRow()
 
     if (table._rename) {
@@ -496,11 +557,30 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           column.type !== FieldType.FORMULA &&
           column.type !== FieldType.AI
         ) {
-          updatedHeaderValues.push(key)
+          const firstBlankIndex = updatedHeaderValues.findIndex(
+            value => !value || value.trim() === ""
+          )
+          if (firstBlankIndex === -1) {
+            updatedHeaderValues.push(key)
+          } else {
+            updatedHeaderValues.splice(firstBlankIndex, 1, key)
+          }
         }
       }
 
       try {
+        if (updatedHeaderValues.length > sheet.headerValues.length) {
+          await sheet.resize({
+            rowCount: sheet.rowCount,
+            columnCount: updatedHeaderValues.length,
+          })
+
+          this.client.resetLocalCache()
+          await this.client.loadInfo()
+          await sheet.loadHeaderRow()
+          sheet = this.client.sheetsByTitle[table.name]
+        }
+
         await sheet.setHeaderRow(updatedHeaderValues)
       } catch (err) {
         console.error("Error updating table in google sheets", err)
