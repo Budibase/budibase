@@ -31,7 +31,8 @@ const migration = async () => {
   const designDoc = await db.get<DesignDocument>("_design/database")
   if (
     designDoc.views?.[ViewName.ROUTING] &&
-    designDoc.views[ViewName.ROUTING].version !== 2
+    // If there is no version, it is an old view
+    designDoc.views[ViewName.ROUTING].version === undefined
   ) {
     // Remove the routing view to be recreated (and updated to support workspace apps)
     delete designDoc.views?.[ViewName.ROUTING]
