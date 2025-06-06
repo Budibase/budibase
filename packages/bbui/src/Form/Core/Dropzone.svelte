@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/dropzone/dist/index-vars.css"
   import "@spectrum-css/typography/dist/index-vars.css"
   import "@spectrum-css/illustratedmessage/dist/index-vars.css"
@@ -9,28 +9,33 @@
   import Tag from "../../Tags/Tag.svelte"
   import Tags from "../../Tags/Tags.svelte"
   import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
+  import type { UIFile } from "@budibase/types"
 
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
 
-  export let value = []
-  export let id = null
-  export let disabled = false
-  export let compact = false
-  export let fileSizeLimit = BYTES_IN_MB * 20
-  export let processFiles = null
-  export let deleteAttachments = null
-  export let handleFileTooLarge = null
-  export let handleTooManyFiles = null
-  export let gallery = true
-  export let fileTags = []
-  export let maximum = null
-  export let extensions = "*"
-  export let titleText = null
-  export let clickText = null
-  export let addText = null
+  export let value: UIFile[] = []
+  export let id: string | null = null
+  export let disabled: boolean = false
+  export let compact: boolean = false
+  export let fileSizeLimit: number = BYTES_IN_MB * 20
+  export let processFiles: ((_files: FileList) => Promise<UIFile[]>) | null =
+    null
+  export let deleteAttachments: ((_keys: string[]) => Promise<void>) | null =
+    null
+  export let handleFileTooLarge:
+    | ((_limit: number, _currentFiles: UIFile[]) => void)
+    | null = null
+  export let handleTooManyFiles: ((_maximum: number) => void) | null = null
+  export let gallery: boolean = true
+  export let fileTags: string[] = []
+  export let maximum: number | undefined = undefined
+  export let extensions: string = "*"
+  export let titleText: string | null = null
+  export let clickText: string | null = null
+  export let addText: string | null = null
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: UIFile[] | FileList }>()
   const imageExtensions = [
     "png",
     "tiff",
@@ -47,8 +52,8 @@
 
   let selectedImageIdx = 0
   let fileDragged = false
-  let selectedUrl
-  let fileInput
+  let selectedUrl: string | undefined
+  let fileInput: HTMLInputElement
   let loading = false
 
   $: selectedImage = value?.[selectedImageIdx] ?? null
@@ -63,12 +68,12 @@
     } else if (selectedImage && isImage) {
       try {
         let reader = new FileReader()
-        reader.readAsDataURL(selectedImage)
+        reader.readAsDataURL(selectedImage as any)
         reader.onload = e => {
-          selectedUrl = e.target.result
+          selectedUrl = e.target?.result as string
         }
       } catch (error) {
-        selectedUrl = null
+        selectedUrl = undefined
       }
     }
   }
@@ -76,7 +81,7 @@
   $: showDropzone =
     (!maximum || (maximum && (value?.length || 0) < maximum)) && !disabled
 
-  async function processFileList(fileList) {
+  async function processFileList(fileList: FileList) {
     if (
       handleFileTooLarge &&
       Array.from(fileList).some(file => file.size >= fileSizeLimit)
@@ -128,23 +133,29 @@
     selectedImageIdx += 1
   }
 
-  function handleFile(evt) {
-    processFileList(evt.target.files)
+  function handleFile(evt: Event) {
+    const target = evt.target as HTMLInputElement
+
+    if (target?.files) {
+      processFileList(target.files)
+    }
   }
 
-  function handleDragOver(evt) {
+  function handleDragOver(evt: DragEvent) {
     evt.preventDefault()
     fileDragged = true
   }
 
-  function handleDragLeave(evt) {
+  function handleDragLeave(evt: DragEvent) {
     evt.preventDefault()
     fileDragged = false
   }
 
-  function handleDrop(evt) {
+  function handleDrop(evt: DragEvent) {
     evt.preventDefault()
-    processFileList(evt.dataTransfer.files)
+    if (evt.dataTransfer?.files) {
+      processFileList(evt.dataTransfer.files)
+    }
     fileDragged = false
   }
 </script>

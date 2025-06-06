@@ -5,7 +5,7 @@
 
   export let id: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let labelPosition: string = "above"
+  export let labelPosition: "above" = "above"
   export let error: string | undefined = undefined
   export let helpText: string | undefined = undefined
   export let tooltip: string | undefined = undefined
