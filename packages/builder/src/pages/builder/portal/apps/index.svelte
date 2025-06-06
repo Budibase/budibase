@@ -207,7 +207,11 @@
         <Layout noPadding gap="XS">
           <Heading size="L">{welcomeHeader}</Heading>
           <Body size="M">
-            Below you'll find the list of apps that you have access to
+            {#if $featureFlags.WORKSPACE_APPS}
+              Below you'll find the list of workspaces that you have access to
+            {:else}
+              Below you'll find the list of apps that you have access to
+            {/if}
           </Body>
         </Layout>
       </div>
