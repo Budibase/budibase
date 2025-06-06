@@ -81,19 +81,12 @@
   let mounted = false
   let isEditorInitialised = false
   let queuedRefresh = false
-  let editorWidth: number | null = null
   let isAIGeneratedContent = false
 
   // Theming!
   let currentTheme = $themeStore?.theme
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
-
-  const updateEditorWidth = () => {
-    if (editorEle) {
-      editorWidth = editorEle.offsetWidth
-    }
-  }
 
   $: aiGenEnabled =
     $featureFlags.AI_JS_GENERATION && mode.name === "javascript" && !readonly
@@ -432,16 +425,6 @@
     editorEle.addEventListener("wheel", e => {
       e.stopPropagation()
     })
-
-    // Need to get the width of the drawer to pass to the prompt component
-    updateEditorWidth()
-    const resizeObserver = new ResizeObserver(() => {
-      updateEditorWidth()
-    })
-    resizeObserver.observe(editorEle)
-    return () => {
-      resizeObserver.disconnect()
-    }
   })
 
   onDestroy(() => {
