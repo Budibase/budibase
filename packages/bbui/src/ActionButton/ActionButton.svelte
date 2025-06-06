@@ -48,7 +48,7 @@
   style={accentStyle}
 >
   {#if icon}
-    <Icon name={icon} size="M" />
+    <Icon name={icon} size="M" color="var(--spectrum-global-color-gray-600)" />
   {/if}
   {#if $$slots}
     <span class="spectrum-ActionButton-label"><slot /></span>
@@ -103,6 +103,9 @@
   }
   .is-selected.disabled :global(i) {
     color: var(--spectrum-global-color-gray-500);
+  }
+  .spectrum-ActionButton-label {
+    font-weight: 500;
   }
   .tooltip {
     position: absolute;
