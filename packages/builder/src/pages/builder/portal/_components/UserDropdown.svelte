@@ -30,7 +30,7 @@
     <UserAvatar size="M" user={$auth.user} showTooltip={false} />
     <Icon size="L" name="caret-down" />
   </div>
-  <MenuItem icon="user-pencil" on:click={() => profileModal.show()}>
+  <MenuItem icon="user-gear" on:click={() => profileModal.show()}>
     My profile
   </MenuItem>
   <MenuItem icon="moon" on:click={() => themeModal.show()}>Theme</MenuItem>

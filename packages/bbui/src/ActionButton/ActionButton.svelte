@@ -48,7 +48,13 @@
   style={accentStyle}
 >
   {#if icon}
-    <Icon name={icon} size="M" color="var(--spectrum-global-color-gray-600)" />
+    <Icon
+      name={icon}
+      size="M"
+      color="var(--spectrum-global-color-gray-600)"
+      hoverable="true"
+      hovercolor="var(--spectrum-global-color-gray-800)"
+    />
   {/if}
   {#if $$slots}
     <span class="spectrum-ActionButton-label"><slot /></span>
