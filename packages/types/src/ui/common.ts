@@ -18,3 +18,12 @@ export interface UIViewResource {
   tableId: string
   resourceId: string
 }
+
+export interface UIFile {
+  size: number
+  name: string
+  url: string
+  extension: string
+  key: string
+  type?: string
+}

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Button,
     Label,
@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
   import { appStore, initialise } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal"
+  import { appsStore, featureFlags } from "@/stores/portal"
   import { API } from "@/api"
   import { writable } from "svelte/store"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
@@ -17,17 +17,42 @@
   import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { createEventDispatcher } from "svelte"
 
+  interface FormValues {
+    name: string
+    url: string | undefined
+    iconName: string
+    iconColor: string
+  }
+
+  export let app: any = null // This will be set by the parent component
+  export let filteredApps: any[] = [] // This will be set by the parent component
+
+  export let appName: string | undefined = ""
+  export let appURL: string | undefined = ""
+  export let appIconName: string | undefined = ""
+  export let appIconColor: string | undefined = ""
+
+  export let appMeta: FormValues = {
+    url: undefined,
+    name: "",
+    iconName: "",
+    iconColor: "",
+  }
+
   export let alignActions = "left"
 
-  const values = writable({})
+  const values = writable<FormValues>(appMeta)
   const validation = createValidationStore()
   const dispatch = createEventDispatcher()
 
   let updating = false
   let initialised = false
 
+  let appOrWorkspace: "workspace" | "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+
   $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
-  $: app = filteredApps.length ? filteredApps[0] : {}
+  $: app = filteredApps[0]
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
   $: appName = $appStore.name
@@ -38,11 +63,11 @@
   $: appMeta = {
     name: appName,
     url: appURL,
-    iconName: appIconName,
-    iconColor: appIconColor,
+    iconName: appIconName || "",
+    iconColor: appIconColor || "",
   }
 
-  const initForm = appMeta => {
+  const initForm = (appMeta: FormValues) => {
     values.set({
       ...appMeta,
     })
@@ -53,7 +78,7 @@
     }
   }
 
-  const validate = vals => {
+  const validate = (vals: Record<string, any>) => {
     const { url } = vals || {}
     validation.check({
       ...vals,
@@ -65,7 +90,7 @@
   $: initForm(appMeta)
   $: validate($values)
 
-  const resolveAppUrl = (template, name) => {
+  const resolveAppUrl = (name: string | undefined) => {
     let parsedName
     const resolvedName = resolveAppName(null, name)
     parsedName = resolvedName ? resolvedName.toLowerCase() : ""
@@ -73,40 +98,51 @@
     return encodeURI(parsedUrl)
   }
 
-  const nameToUrl = appName => {
-    let resolvedUrl = resolveAppUrl(null, appName)
+  const nameToUrl = (appName: string | undefined) => {
+    let resolvedUrl = resolveAppUrl(appName)
     tidyUrl(resolvedUrl)
   }
 
-  const resolveAppName = (template, name) => {
+  const resolveAppName = (
+    template: { name: string } | null,
+    name: string | undefined
+  ) => {
     if (template && !name) {
       return template.name
     }
     return name ? name.trim() : null
   }
 
-  const tidyUrl = url => {
+  const tidyUrl = (url: string | undefined) => {
     if (url && !url.startsWith("/")) {
       url = `/${url}`
     }
-    $values.url = url === "" ? null : url
+    $values.url = url === "" ? undefined : url
   }
 
-  const updateIcon = e => {
+  const updateIcon = (e: CustomEvent<{ name: string; color: string }>) => {
     const { name, color } = e.detail
     $values.iconColor = color
     $values.iconName = name
   }
 
   const setupValidation = async () => {
-    appValidation.name(validation, {
-      apps: $appsStore.apps,
-      currentApp: app,
-    })
-    appValidation.url(validation, {
-      apps: $appsStore.apps,
-      currentApp: app,
-    })
+    appValidation.name(
+      validation,
+      {
+        apps: $appsStore.apps,
+        currentApp: app,
+      },
+      appOrWorkspace
+    )
+    appValidation.url(
+      validation,
+      {
+        apps: $appsStore.apps,
+        currentApp: app,
+      },
+      appOrWorkspace
+    )
   }
 
   async function updateApp() {
@@ -142,7 +178,7 @@
         bind:value={$values.name}
         error={$validation.touched.name && $validation.errors.name}
         on:blur={() => ($validation.touched.name = true)}
-        on:change={nameToUrl($values.name)}
+        on:change={() => nameToUrl($values.name)}
         disabled={appDeployed}
       />
     </div>
@@ -152,17 +188,16 @@
         bind:value={$values.url}
         error={$validation.touched.url && $validation.errors.url}
         on:blur={() => ($validation.touched.url = true)}
-        on:change={tidyUrl($values.url)}
+        on:change={() => tidyUrl($values.url)}
         placeholder={$values.url
           ? $values.url
-          : `/${resolveAppUrl(null, $values.name)}`}
+          : `/${resolveAppUrl($values.name)}`}
         disabled={appDeployed}
       />
     </div>
     <div class="field">
       <Label size="L">Icon</Label>
       <EditableIcon
-        {app}
         size="XL"
         name={$values.iconName}
         color={$values.iconColor}

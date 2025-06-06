@@ -3,7 +3,7 @@
   import { Icon, Modal } from "@budibase/bbui"
 
   export let name: string
-  export let size: "M" = "M"
+  export let size: "M" | "L" | "XL" = "M"
   export let color: string
   export let disabled: boolean = false
 

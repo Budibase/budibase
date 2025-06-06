@@ -2,11 +2,11 @@
   import Field from "./Field.svelte"
   import EnvDropdown from "./Core/EnvDropdown.svelte"
   import { createEventDispatcher } from "svelte"
-  import type { EnvDropdownType } from "../types"
+  import type { EnvDropdownType, LabelPosition } from "../types"
 
   export let value: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let labelPosition: string = "above"
+  export let labelPosition: LabelPosition = "above"
   export let placeholder: string | undefined = undefined
   export let type: EnvDropdownType = "text"
   export let disabled = false

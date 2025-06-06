@@ -2,6 +2,7 @@ import { derived, Readable } from "svelte/store"
 import { admin } from "./admin"
 import { auth } from "./auth"
 import { sdk } from "@budibase/shared-core"
+import { featureFlags } from "./featureFlags"
 
 interface MenuItem {
   title: string
@@ -10,8 +11,8 @@ interface MenuItem {
 }
 
 export const menu: Readable<MenuItem[]> = derived(
-  [admin, auth],
-  ([$admin, $auth]) => {
+  [admin, auth, featureFlags],
+  ([$admin, $auth, $featureFlags]) => {
     const user = $auth?.user
     const isAdmin = user != null && sdk.users.isAdmin(user)
     const isGlobalBuilder = user != null && sdk.users.isGlobalBuilder(user)
@@ -32,7 +33,7 @@ export const menu: Readable<MenuItem[]> = derived(
     // Pages that all devs and admins can access
     let menu: MenuItem[] = [
       {
-        title: "Apps",
+        title: $featureFlags.WORKSPACE_APPS ? "Workspaces" : "Apps",
         href: "/builder/portal/apps",
       },
     ]

@@ -2,12 +2,13 @@
   import { createEventDispatcher } from "svelte"
   import Multiselect from "./Core/Multiselect.svelte"
   import Field from "./Field.svelte"
+  import type { LabelPosition } from "../types"
 
   export let value: string[] | string = []
   export let label: string | undefined = undefined
   export let disabled = false
   export let readonly = false
-  export let labelPosition = "above"
+  export let labelPosition: LabelPosition = "above"
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
   export let options: Option[] = []

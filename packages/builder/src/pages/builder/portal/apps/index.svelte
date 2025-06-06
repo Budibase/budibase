@@ -26,6 +26,7 @@
     licensing,
     enrichedApps,
     sortBy,
+    featureFlags,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
@@ -206,7 +207,11 @@
         <Layout noPadding gap="XS">
           <Heading size="L">{welcomeHeader}</Heading>
           <Body size="M">
-            Below you'll find the list of apps that you have access to
+            {#if $featureFlags.WORKSPACE_APPS}
+              Below you'll find the list of workspaces that you have access to
+            {:else}
+              Below you'll find the list of apps that you have access to
+            {/if}
           </Body>
         </Layout>
       </div>
@@ -222,7 +227,11 @@
                 cta
                 on:click={usersLimitLockAction || initiateAppCreation}
               >
-                Create new app
+                {#if $featureFlags.WORKSPACE_APPS}
+                  Create new workspace
+                {:else}
+                  Create new app
+                {/if}
               </Button>
               {#if $appsStore.apps?.length > 0 && !$admin.offlineMode}
                 <Button

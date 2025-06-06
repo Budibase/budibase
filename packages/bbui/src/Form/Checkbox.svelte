@@ -2,10 +2,11 @@
   import Field from "./Field.svelte"
   import Checkbox from "./Core/Checkbox.svelte"
   import { createEventDispatcher } from "svelte"
+  import type { LabelPosition } from "../types"
 
   export let value: boolean | undefined = undefined
   export let label: string | undefined = undefined
-  export let labelPosition: "above" | "below" = "above"
+  export let labelPosition: LabelPosition = "above"
   export let text: string | undefined = undefined
   export let disabled: boolean = false
   export let error: string | undefined = undefined

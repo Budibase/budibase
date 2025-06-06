@@ -2,10 +2,11 @@
   import Field from "./Field.svelte"
   import TextArea from "./Core/TextArea.svelte"
   import { createEventDispatcher } from "svelte"
+  import type { LabelPosition } from "../types"
 
   export let value: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let labelPosition = "above"
+  export let labelPosition: LabelPosition = "above"
   export let placeholder: string | undefined = undefined
   export let readonly: boolean = false
   export let disabled: boolean = false

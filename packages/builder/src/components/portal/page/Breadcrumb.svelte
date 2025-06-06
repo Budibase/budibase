@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
 
-  export let url
-  export let text
+  export let url: string | undefined = undefined
+  export let text: string
 </script>
 
 <div>

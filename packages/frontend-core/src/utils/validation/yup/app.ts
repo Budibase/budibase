@@ -1,19 +1,26 @@
 import { string, mixed } from "yup"
 import { APP_NAME_REGEX, APP_URL_REGEX } from "../../../constants"
+import { App } from "@budibase/types"
+import { ValidationStore } from "."
+import { Helpers } from "@budibase/bbui"
 
-export const name = (validation, { apps, currentApp } = { apps: [] }) => {
+export const name = (
+  validation: ValidationStore,
+  { apps, currentApp }: { apps: App[]; currentApp?: App } = { apps: [] },
+  appOrWorkspace: "app" | "workspace"
+) => {
   validation.addValidator(
     "name",
     string()
       .trim()
-      .required("Your application must have a name")
+      .required(`Your ${appOrWorkspace} must have a name`)
       .matches(
         APP_NAME_REGEX,
-        "App name must be letters, numbers and spaces only"
+        `${Helpers.capitalise(appOrWorkspace)} name must be letters, numbers and spaces only`
       )
       .test(
         "non-existing-app-name",
-        "Another app with the same name already exists",
+        `Another ${appOrWorkspace} with the same name already exists`,
         value => {
           if (!value) {
             // exit early, above validator will fail
@@ -30,17 +37,21 @@ export const name = (validation, { apps, currentApp } = { apps: [] }) => {
   )
 }
 
-export const url = (validation, { apps, currentApp } = { apps: [] }) => {
+export const url = (
+  validation: ValidationStore,
+  { apps, currentApp }: { apps: App[]; currentApp?: App } = { apps: [] },
+  appOrWorkspace: "app" | "workspace"
+) => {
   validation.addValidator(
     "url",
     string()
       .trim()
       .nullable()
-      .required("Your application must have a url")
+      .required(`Your ${appOrWorkspace} must have a url`)
       .matches(APP_URL_REGEX, "Please enter a valid url")
       .test(
         "non-existing-app-url",
-        "Another app with the same URL already exists",
+        `Another ${appOrWorkspace} with the same URL already exists`,
         value => {
           if (!value) {
             return true
@@ -75,7 +86,10 @@ export const url = (validation, { apps, currentApp } = { apps: [] }) => {
   )
 }
 
-export const file = (validation, { template } = {}) => {
+export const file = (
+  validation: ValidationStore,
+  { template }: { template?: { fromFile: boolean } | null } = {}
+) => {
   const templateToUse =
     template && Object.keys(template).length === 0 ? null : template
   validation.addValidator(
