@@ -26,6 +26,7 @@ export async function analyseMinimal({
       }))
     )
 
+  let internalTableFound = false
   const resources: UsedResource[] = []
   const searchForResource = (
     json: string,
@@ -39,6 +40,9 @@ export async function analyseMinimal({
           resource => resource.id === search.id && resource.usedBy === usedById
         )
       ) {
+        if (search.type === ResourceType.TABLE) {
+          internalTableFound = true
+        }
         resources.push({
           ...search,
           usedBy: usedById,
@@ -77,6 +81,19 @@ export async function analyseMinimal({
     for (let automation of automations) {
       const json = JSON.stringify(automation)
       searchForResource(json, automation._id!, UsedByType.AUTOMATION)
+    }
+  }
+
+  // internal table found, need to make sure all internal tables have been added
+  if (internalTableFound) {
+    for (let table of tables) {
+      if (!resources.find(resource => resource.id === table._id)) {
+        resources.push({
+          id: table._id!,
+          name: table.name,
+          type: ResourceType.TABLE,
+        })
+      }
     }
   }
   return resources

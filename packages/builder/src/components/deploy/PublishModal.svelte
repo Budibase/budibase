@@ -1,19 +1,20 @@
 <script lang="ts">
   import {
+    Accordion,
+    Body,
+    Checkbox,
+    Heading,
+    Layout,
     Modal,
     ModalContent,
-    Checkbox,
-    Accordion,
-    Layout,
-    Heading,
-    Body,
   } from "@budibase/bbui"
   import {
-    workspaceAppStore,
     automationStore,
     deploymentStore,
+    workspaceAppStore,
   } from "@/stores/builder"
   import type { UsedResource } from "@budibase/types"
+  import { ResourceType } from "@budibase/types"
   import { API } from "@/api"
   import { createEventDispatcher } from "svelte"
 
@@ -55,11 +56,29 @@
     if (!appIds.length && !automationIds.length) {
       return
     }
-    const { resources } = await API.resource.analyse({
+    let { resources } = await API.resource.analyse({
       automationIds: automationIds,
       workspaceAppIds: appIds,
     })
-    usedResources = resources
+    // cut out the list of tables, these are internal, if any are present
+    // we just say the "Budibase DB" will be deployed
+    const table = resources.find(
+      resource => resource.type === ResourceType.TABLE
+    )
+    if (table) {
+      resources = [
+        {
+          ...table,
+          id: "INTERNAL_DB",
+          type: ResourceType.DATASOURCE,
+          name: "Budibase DB",
+        },
+        ...resources,
+      ]
+    }
+    usedResources = resources.filter(
+      resource => resource.type === ResourceType.DATASOURCE
+    )
   }
 
   function getSelectedIds(list: Record<string, boolean>) {
