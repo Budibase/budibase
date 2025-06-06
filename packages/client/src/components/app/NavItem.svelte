@@ -9,6 +9,7 @@
   export let text
   export let subLinks
   export let internalLink
+  export let customStyles
   export let leftNav = false
   export let mobile = false
   export let navStateStore
@@ -58,6 +59,7 @@
       on:click={onClickLink}
       use:active={url}
       class:builderActive
+      style={customStyles}
     >
       {text}
     </a>

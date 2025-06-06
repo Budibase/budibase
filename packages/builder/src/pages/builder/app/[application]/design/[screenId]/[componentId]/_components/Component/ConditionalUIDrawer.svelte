@@ -20,9 +20,10 @@
   export let conditions = []
   export let bindings = []
   export let componentBindings = []
+  export let actionOptions = null
 
   const flipDurationMs = 150
-  const actionOptions = [
+  const defaultActionOptions = [
     {
       label: "Hide component",
       value: "hide",
@@ -56,6 +57,8 @@
   ]
 
   let dragDisabled = true
+
+  $: finalActionOptions = actionOptions ?? defaultActionOptions
 
   $: settings = componentStore
     .getComponentSettings($selectedComponent?._component)
@@ -193,7 +196,7 @@
               </div>
               <Select
                 placeholder={false}
-                options={actionOptions}
+                options={finalActionOptions}
                 bind:value={condition.action}
               />
               {#if condition.action === "update"}
