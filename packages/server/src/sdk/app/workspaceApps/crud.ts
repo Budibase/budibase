@@ -46,15 +46,20 @@ export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
 }
 
 export async function update(
-  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt">
-) {
+  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt" | "isDefault">
+): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
   await guardName(workspaceApp.name, workspaceApp._id)
 
-  const response = await db.put(workspaceApp)
-  return {
+  const persisted = (await get(workspaceApp._id!))!
+  const docToUpdate = {
+    ...persisted,
     ...workspaceApp,
+  }
+  const response = await db.put(docToUpdate)
+  return {
+    ...docToUpdate,
     _id: response.id!,
     _rev: response.rev!,
   }

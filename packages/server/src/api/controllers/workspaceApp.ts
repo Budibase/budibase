@@ -23,6 +23,7 @@ function toWorkspaceAppResponse(
     icon: workspaceApp.icon,
     iconColor: workspaceApp.iconColor,
     navigation: workspaceApp.navigation,
+    isDefault: workspaceApp.isDefault,
   }
 }
 
@@ -43,6 +44,7 @@ export async function create(
     icon: body.icon,
     iconColor: body.iconColor,
     navigation: defaultAppNavigator(body.name),
+    isDefault: false,
   }
 
   const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)

@@ -19,6 +19,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
     navigation: {
       navigation: "Top",
     },
+    isDefault: false,
 
     ...props,
   }

@@ -62,7 +62,7 @@
         ),
       icon: z.string(),
       iconColor: z.string().optional(),
-    }) satisfies ZodType<Omit<WorkspaceApp, "navigation">>
+    }) satisfies ZodType<Omit<WorkspaceApp, "navigation" | "isDefault">>
 
     const validationResult = validator.safeParse(workspaceApp)
     validationState.errors = {}
@@ -89,6 +89,7 @@
       icon: workspaceApp?.icon ?? "Monitoring",
       iconColor: workspaceApp?.iconColor,
       navigation: workspaceApp?.navigation ?? { navigation: "Top" },
+      isDefault: workspaceApp?.isDefault ?? false,
     }
     validationState = { errors: {}, touched: {} }
     iconColor = workspaceApp?.iconColor ?? ""
@@ -114,6 +115,7 @@
         await workspaceAppStore.edit({
           ...workspaceAppData,
           navigation: workspaceApp!.navigation,
+          isDefault: workspaceApp!.isDefault,
           _id: workspaceApp!._id!,
           _rev: workspaceApp!._rev!,
         })
