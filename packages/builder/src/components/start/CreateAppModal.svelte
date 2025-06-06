@@ -217,6 +217,11 @@
       isValid: $encryptionValidation.valid,
     },
   }
+
+  function onDropFile(e: CustomEvent<any[]>) {
+    $values.file = e.detail?.[0]
+    $validation.touched.file = true
+  }
 </script>
 
 <ModalContent
@@ -241,10 +246,7 @@
         gallery={false}
         label="File to import"
         value={$values.file ? [$values.file] : []}
-        on:change={e => {
-          $values.file = e.detail?.[0]
-          $validation.touched.file = true
-        }}
+        on:change={onDropFile}
       />
     {/if}
     <Input
