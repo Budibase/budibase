@@ -26,6 +26,7 @@
     licensing,
     enrichedApps,
     sortBy,
+    featureFlags,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
@@ -222,7 +223,11 @@
                 cta
                 on:click={usersLimitLockAction || initiateAppCreation}
               >
-                Create new app
+                {#if $featureFlags.WORKSPACE_APPS}
+                  Create new workspace
+                {:else}
+                  Create new app
+                {/if}
               </Button>
               {#if $appsStore.apps?.length > 0 && !$admin.offlineMode}
                 <Button

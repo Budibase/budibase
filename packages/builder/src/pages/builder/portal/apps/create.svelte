@@ -5,7 +5,12 @@
   import CreateAppModal from "@/components/start/CreateAppModal.svelte"
   import TemplateDisplay from "@/components/common/TemplateDisplay.svelte"
   import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
-  import { appsStore, templates, licensing } from "@/stores/portal"
+  import {
+    appsStore,
+    templates,
+    licensing,
+    featureFlags,
+  } from "@/stores/portal"
   import { Breadcrumbs, Breadcrumb, Header } from "@/components/portal/page"
 
   let template
@@ -33,6 +38,15 @@
       creationModal.show()
     }
   }
+
+  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "Workspaces" : "Apps"
+
+  $: createNewText = $featureFlags.WORKSPACE_APPS
+    ? "Create new workspace"
+    : "Create new app"
+  $: importText = $featureFlags.WORKSPACE_APPS
+    ? "Import workspace"
+    : "Import app"
 </script>
 
 {#if !$appsStore.apps.length}
@@ -41,13 +55,13 @@
   <Page>
     <Layout noPadding gap="L">
       <Breadcrumbs>
-        <Breadcrumb url={$url("./")} text="Apps" />
-        <Breadcrumb text="Create new app" />
+        <Breadcrumb url={$url("./")} text={appsOrWorkspaces} />
+        <Breadcrumb text={createNewText} />
       </Breadcrumbs>
-      <Header title={"Create new app"}>
+      <Header title={createNewText}>
         <div slot="buttons">
           <Button size="M" secondary on:click={initiateAppImport}>
-            Import app
+            {importText}
           </Button>
           <Button size="M" cta on:click={initiateAppCreation}>
             Start from scratch
