@@ -422,6 +422,24 @@ export async function coreOutputProcessing(
           row[property] = row[property].toISOString().slice(0, 10)
         }
       }
+    } else if (column.type === FieldType.DATETIME && column.ignoreTimezones) {
+      for (const row of rows) {
+        if (typeof row[property] === "string") {
+          row[property] = new Date(row[property])
+        }
+        if (row[property] instanceof Date) {
+          row[property] = row[property].toISOString().replace("Z", "")
+        }
+      }
+    } else if (column.type === FieldType.DATETIME) {
+      for (const row of rows) {
+        if (typeof row[property] === "string") {
+          row[property] = new Date(row[property])
+        }
+        if (row[property] instanceof Date) {
+          row[property] = row[property].toISOString()
+        }
+      }
     } else if (column.type === FieldType.LINK) {
       for (let row of rows) {
         // if relationship is empty - remove the array, this has been part of the API for some time

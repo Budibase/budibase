@@ -10,6 +10,7 @@ import {
   navigationStore,
   previewStore,
   selectedComponent,
+  workspaceAppStore,
 } from "@/stores/builder"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
@@ -18,6 +19,7 @@ import {
   Component,
   ComponentDefinition,
   DeleteScreenResponse,
+  FeatureFlag,
   FetchAppPackageResponse,
   SaveScreenRequest,
   SaveScreenResponse,
@@ -25,6 +27,7 @@ import {
   ScreenVariant,
   WithRequired,
 } from "@budibase/types"
+import { featureFlag } from "@/helpers"
 
 interface ScreenState {
   screens: Screen[]
@@ -55,7 +58,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.replace = this.replace.bind(this)
     this.saveScreen = this.saveScreen.bind(this)
     this.deleteScreen = this.deleteScreen.bind(this)
-    this.syncScreenData = this.syncScreenData.bind(this)
     this.updateSetting = this.updateSetting.bind(this)
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
     this.removeCustomLayout = this.removeCustomLayout.bind(this)
@@ -260,9 +262,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
       return state
     })
 
-    await this.syncScreenData(savedScreen)
-
-    if (navigationLinkLabel) {
+    if (
+      !featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS) &&
+      navigationLinkLabel
+    ) {
       await navigationStore.addLink({
         url: screen.routing.route,
         title: navigationLinkLabel,
@@ -270,29 +273,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     }
 
+    appStore.refresh()
+
     return savedScreen
-  }
-
-  /**
-   * After saving a screen, sync plugins and routes to the appStore
-   * @param {Screen} savedScreen
-   */
-  async syncScreenData(savedScreen: Screen) {
-    const appState = get(appStore)
-    // If plugins changed we need to fetch the latest app metadata
-    let usedPlugins = appState.usedPlugins
-    if (savedScreen.pluginAdded) {
-      const { application } = await API.fetchAppPackage(appState.appId)
-      usedPlugins = application.usedPlugins || []
-    }
-
-    const routesResponse = await API.fetchAppRoutes()
-
-    appStore.update(state => ({
-      ...state,
-      routes: routesResponse.routes,
-      usedPlugins: usedPlugins,
-    }))
   }
 
   /**
@@ -415,6 +398,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     await Promise.all(promises)
 
     appStore.refresh()
+    workspaceAppStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()
     this.update(state => {
@@ -475,26 +459,22 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Ensure we don't have more than one home screen for this new role.
     // This could happen after updating multiple different settings.
-    const state = get(this.store)
-    const updatedScreen = state.screens.find(s => s._id === screen._id)
-    if (!updatedScreen) {
-      return
-    }
-    const otherHomeScreens = state.screens.filter(s => {
-      return (
-        s.routing.roleId === updatedScreen.routing.roleId &&
-        s.routing.homeScreen &&
-        s._id !== screen._id
-      )
-    })
-    if (otherHomeScreens.length && updatedScreen.routing.homeScreen) {
-      const patchFn = (screen: Screen) => {
+    this.store.update(state => {
+      const otherHomeScreens = state.screens.filter(s => {
+        return (
+          s.workspaceAppId === screen.workspaceAppId &&
+          s.routing.roleId === screen.routing.roleId &&
+          s.routing.homeScreen &&
+          s._id !== screen._id
+        )
+      })
+
+      for (const screen of otherHomeScreens) {
         screen.routing.homeScreen = false
       }
-      for (let otherHomeScreen of otherHomeScreens) {
-        await this.patch(patchFn, otherHomeScreen._id)
-      }
-    }
+
+      return state
+    })
   }
 
   // Move to layouts store

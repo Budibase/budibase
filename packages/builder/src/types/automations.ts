@@ -44,6 +44,7 @@ export enum SchemaFieldTypes {
   STRING = "string",
   QUERY_PARAMS = "query_params",
   QUERY_LIMIT = "query_limit",
+  CATEGORIES = "categories",
 }
 
 export type KeyValuePair = {
@@ -152,6 +153,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
   [AutomationCustomIOType.WEBHOOK_URL]: SchemaFieldTypes.WEBHOOK_URL,
   [AutomationCustomIOType.QUERY_LIMIT]: SchemaFieldTypes.QUERY_LIMIT,
   [AutomationCustomIOType.QUERY_PARAMS]: SchemaFieldTypes.QUERY_PARAMS,
+  [AutomationCustomIOType.CATEGORIES]: SchemaFieldTypes.CATEGORIES,
   ["fields"]: SchemaFieldTypes.FIELDS,
 }
 
