@@ -2,15 +2,6 @@ import { newTool } from "@budibase/types"
 import sdk from "../../../sdk"
 import { z } from "zod"
 
-const JSONValue = z.union([
-  z.string(),
-  z.number(),
-  z.boolean(),
-  z.null(),
-  z.array(z.lazy(() => JSONValue)),      // recursive array of JSONValues
-  z.record(z.lazy(() => JSONValue)),     // recursive object of JSONValues
-])
-
 export default [
   newTool({
     name: "list_rows",
@@ -43,13 +34,19 @@ export default [
 
   newTool({
     name: "create_row",
-    description: "Create a new row in a table",
+    description: "Create a new row",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to create the row in"),
-      data: z.record(JSONValue).optional().describe("The data for the new row as key-value pairs matching the table schema. Use get_table first to see required fields."),
+      data: z.string().describe("JSON string with row data"),
     }),
-    handler: async ({ tableId, data }: { tableId: string; data?: any }) => {
-      const row = await sdk.rows.save(tableId, data, undefined)
+    handler: async ({ tableId, data }: { tableId: string; data: string }) => {
+      let parsedData
+      try {
+        parsedData = JSON.parse(data)
+      } catch (error) {
+        return `Error: Invalid JSON in data parameter: ${error}`
+      }
+      const row = await sdk.rows.save(tableId, parsedData, undefined)
       const formatted = JSON.stringify(row, null, 2)
       return `Successfully created new row:\n\n${formatted}`
     },
