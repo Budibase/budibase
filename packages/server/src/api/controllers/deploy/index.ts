@@ -21,6 +21,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
+import { buildPublishFilter } from "./filters"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -150,6 +151,7 @@ export async function deploymentProgress(
 export const publishApp = async function (
   ctx: UserCtx<PublishAppRequest, PublishAppResponse>
 ) {
+  const { automationIds, workspaceAppIds } = ctx.request.body
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)
@@ -178,8 +180,20 @@ export const publishApp = async function (
     }
     replication = new dbCore.Replication(config)
     const devDb = context.getDevAppDB()
+    const publishFilter =
+      automationIds || workspaceAppIds
+        ? buildPublishFilter({
+            automationIds,
+            workspaceAppIds,
+          })
+        : undefined
     await devDb.compact()
-    await replication.replicate(replication.appReplicateOpts())
+    await replication.replicate(
+      replication.appReplicateOpts({
+        // filters automations, screen and workspace documents based on supplied filters
+        filter: publishFilter,
+      })
+    )
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
