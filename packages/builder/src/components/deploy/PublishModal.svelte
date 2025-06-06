@@ -8,7 +8,11 @@
     Heading,
     Body,
   } from "@budibase/bbui"
-  import { workspaceAppStore, automationStore, deploymentStore } from "@/stores/builder"
+  import {
+    workspaceAppStore,
+    automationStore,
+    deploymentStore,
+  } from "@/stores/builder"
   import type { UsedResource } from "@budibase/types"
   import { API } from "@/api"
   import { createEventDispatcher } from "svelte"
@@ -105,7 +109,10 @@
   }
 
   async function publish() {
-    const getIds = (list: Record<string, boolean>) => Object.entries(list).filter(([_, selected]) => selected).map(([id]) => id)
+    const getIds = (list: Record<string, boolean>) =>
+      Object.entries(list)
+        .filter(([_, selected]) => selected)
+        .map(([id]) => id)
     await deploymentStore.publishApp({
       automationIds: getIds(selectedAutomations),
       workspaceAppIds: getIds(selectedApps),

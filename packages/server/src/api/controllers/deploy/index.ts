@@ -182,7 +182,7 @@ export const publishApp = async function (
     const devDb = context.getDevAppDB()
     const publishFilter =
       automationIds || workspaceAppIds
-        ? buildPublishFilter({
+        ? await buildPublishFilter({
             automationIds,
             workspaceAppIds,
           })

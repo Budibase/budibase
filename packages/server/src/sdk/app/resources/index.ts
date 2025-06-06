@@ -122,4 +122,5 @@ export async function analyseAll(toCheck: {
       )
     }
   }
+  return resources
 }
