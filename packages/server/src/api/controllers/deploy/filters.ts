@@ -6,6 +6,7 @@ type Filter = PouchDB.Replication.ReplicateOptions["filter"]
 export function buildPublishFilter(opts?: {
   automationIds?: string[]
   workspaceAppIds?: string[]
+  resourceIds?: string[]
 }): Filter {
   const autoIdFormat = DocumentType.AUTOMATION + SEPARATOR,
     screenIdFormat = DocumentType.SCREEN + SEPARATOR,
