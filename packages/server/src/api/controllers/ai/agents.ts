@@ -11,8 +11,45 @@ import {
   AgentToolSource,
   AgentToolSourceWithTools,
   CreateToolSourceRequest,
+  Message,
 } from "@budibase/types"
-import { ConfluenceClient, GitHubClient, budibase } from "../../../ai/tools"
+import { ConfluenceClient, GitHubClient, BambooHRClient, budibase } from "../../../ai/tools"
+
+function addDebugInformation(messages: Message[]) {
+  const processedMessages = [...messages]
+  for (let i = 0; i < processedMessages.length; i++) {
+    const message = processedMessages[i]
+    if (message.role === "assistant" && message.tool_calls?.length) {
+      // For each tool call, add debug information to the assistant message content
+      let toolDebugInfo = "\n\n**Tool Calls:**\n"
+
+      for (const toolCall of message.tool_calls) {
+        let toolParams = "{}"
+        try {
+          // Try to parse and prettify the JSON arguments
+          toolParams = JSON.stringify(
+            JSON.parse(toolCall.function.arguments),
+            null,
+            2
+          )
+        } catch (e) {
+          // If not valid JSON, use as is
+          toolParams = toolCall.function.arguments
+        }
+
+        toolDebugInfo += `\n**Tool:** ${toolCall.function.name}\n**Parameters:**\n\`\`\`json\n${toolParams}\n\`\`\`\n`
+      }
+
+      // Append tool debug info to the message content
+      if (message.content) {
+        message.content += toolDebugInfo
+      } else {
+        message.content = toolDebugInfo
+      }
+    }
+  }
+  return processedMessages
+}
 
 export async function agentChat(
   ctx: UserCtx<ChatAgentRequest, ChatAgentResponse>
@@ -62,6 +99,16 @@ export async function agentChat(
           .filter(tool => !disabledTools.includes(tool.name))
         break
       }
+      case "BAMBOOHR": {
+        const bamboohrClient = new BambooHRClient(
+          toolSource.auth?.apiKey,
+          toolSource.auth?.subdomain
+        )
+        toolsToAdd = bamboohrClient
+          .getTools()
+          .filter(tool => !disabledTools.includes(tool.name))
+        break
+      }
     }
 
     if (toolsToAdd.length > 0) {
@@ -72,39 +119,8 @@ export async function agentChat(
   const response = await model.chat(prompt)
 
   // Process tool calls to add debug information to messages instead of using separate tool messages
-  const processedMessages = [...response.messages]
-  for (let i = 0; i < processedMessages.length; i++) {
-    const message = processedMessages[i]
-    if (message.role === "assistant" && message.tool_calls?.length) {
-      // For each tool call, add debug information to the assistant message content
-      let toolDebugInfo = "\n\n**Tool Calls:**\n"
-
-      for (const toolCall of message.tool_calls) {
-        let toolParams = "{}"
-        try {
-          // Try to parse and prettify the JSON arguments
-          toolParams = JSON.stringify(
-            JSON.parse(toolCall.function.arguments),
-            null,
-            2
-          )
-        } catch (e) {
-          // If not valid JSON, use as is
-          toolParams = toolCall.function.arguments
-        }
-
-        toolDebugInfo += `\n**Tool:** ${toolCall.function.name}\n**Parameters:**\n\`\`\`json\n${toolParams}\n\`\`\`\n`
-      }
-
-      // Append tool debug info to the message content
-      if (message.content) {
-        message.content += toolDebugInfo
-      } else {
-        message.content = toolDebugInfo
-      }
-    }
-  }
-  response.messages = processedMessages
+  // TODO: replace with better debug UI
+  response.messages = addDebugInformation(response.messages)
 
   if (!chat._id) {
     chat._id = docIds.generateAgentChatID()
@@ -179,6 +195,13 @@ export async function fetchToolSources(
         )
         tools = confluenceClient.getTools()
         break
+      case "BAMBOOHR":
+        const bamboohrClient = new BambooHRClient(
+          doc.auth?.apiKey,
+          doc.auth?.subdomain,
+        )
+        tools = bamboohrClient.getTools()
+        break
     }
 
     return {
@@ -216,7 +239,25 @@ export async function updateToolSource(
   const response = await db.put(toolSource)
   toolSource._rev = response.rev
 
-  await db.put(toolSource)
   ctx.body = toolSource
   ctx.status = 200
+}
+
+export async function deleteToolSource(
+  ctx: UserCtx<void, { deleted: true }>
+) {
+  const toolSourceId = ctx.params.toolSourceId
+  const db = context.getAppDB()
+
+  try {
+    const toolSource = await db.get(toolSourceId)
+    await db.remove(toolSource)
+    ctx.body = { deleted: true }
+    ctx.status = 200
+  } catch (error: any) {
+    if (error.status === 404) {
+      throw new HTTPError("Tool source not found", 404)
+    }
+    throw error
+  }
 }

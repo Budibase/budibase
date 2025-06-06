@@ -28,11 +28,13 @@
   import BudibaseLogo from "./logos/Budibase.svelte"
   import GithubLogo from "./logos/Github.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
+  import BambooHRLogo from "./logos/BambooHR.svelte"
 
   const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
     CONFLUENCE: ConfluenceLogo,
     GITHUB: GithubLogo,
+    BAMBOOHR: BambooHRLogo,
   }
 
   const ToolSources = [
@@ -62,9 +64,9 @@
       description: "Automate ITSM Workflows",
     },
     {
-      name: "Bamboo",
-      type: "BAMBOO",
-      description: "Automate HR workflows",
+      name: "BambooHR",
+      type: "BAMBOOHR",
+      description: "Automate HR workflows and employee management",
     },
   ]
 
@@ -76,8 +78,10 @@
   let textareaElement: HTMLTextAreaElement
   let toolSourceModal: Modal
   let toolConfigModal: Modal
+  let deleteConfirmModal: Modal
   let selectedToolSource: any = null
   let selectedConfigToolSource: any = null
+  let toolSourceToDelete: any = null
   let panelView: "tools" | "toolConfig" = "tools"
   let toolConfig: Record<string, string> = {}
 
@@ -178,6 +182,36 @@
     toolConfigModal.show()
   }
 
+  const editToolSource = (toolSource: any) => {
+    selectedToolSource = {
+      ...ToolSources.find(ts => ts.type === toolSource.type),
+      _id: toolSource._id,
+      _rev: toolSource._rev,
+      existingToolSource: toolSource
+    }
+    toolConfig = { ...toolSource.auth }
+    toolConfigModal.show()
+  }
+
+  const confirmDeleteToolSource = (toolSource: any) => {
+    toolSourceToDelete = toolSource
+    deleteConfirmModal.show()
+  }
+
+  const deleteToolSource = async () => {
+    if (!toolSourceToDelete) return
+    
+    try {
+      await agentsStore.deleteToolSource(toolSourceToDelete._id)
+      notifications.success("Tool source deleted successfully.")
+      deleteConfirmModal.hide()
+      toolSourceToDelete = null
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error deleting tool source")
+    }
+  }
+
   const handleConfigBack = () => {
     toolConfigModal.hide()
     toolSourceModal.show()
@@ -187,18 +221,30 @@
     try {
       const authConfig = { ...toolConfig }
 
-      const toolSourceData: CreateToolSourceRequest = {
-        type: selectedToolSource.type,
-        disabledTools: [],
-        auth: authConfig,
+      if (selectedToolSource.existingToolSource) {
+        // Update existing tool source
+        const updatedToolSource = {
+          ...selectedToolSource.existingToolSource,
+          auth: authConfig,
+        }
+        await agentsStore.updateToolSource(updatedToolSource)
+        notifications.success("Tool source updated successfully.")
+      } else {
+        // Create new tool source
+        const toolSourceData: CreateToolSourceRequest = {
+          type: selectedToolSource.type,
+          disabledTools: [],
+          auth: authConfig,
+        }
+        await agentsStore.createToolSource(toolSourceData)
+        notifications.success("Tool source saved successfully.")
       }
-
-      await agentsStore.createToolSource(toolSourceData)
-      notifications.success("Tool Source saved successfully.")
+      
+      await agentsStore.fetchToolSources()
       toolConfigModal.hide()
     } catch (err) {
       console.error(err)
-      notifications.error("Error saving Tool Source")
+      notifications.error(selectedToolSource.existingToolSource ? "Error updating tool source" : "Error saving tool source")
     }
   }
 
@@ -374,9 +420,23 @@
                             <Icon
                               size="S"
                               hoverable
-                              name="BackAndroid"
-                              on:click={() => openToolsConfig(toolSource)}
+                              name="Edit"
+                              on:click={() => editToolSource(toolSource)}
                             />
+                            <Icon
+                              size="S"
+                              hoverable
+                              name="Delete"
+                              on:click={() => confirmDeleteToolSource(toolSource)}
+                            />
+                            <div class="tool-source-detail">
+                              <Icon
+                                size="S"
+                                hoverable
+                                name="BackAndroid"
+                                on:click={() => openToolsConfig(toolSource)}
+                              />
+                            </div>
                           </div>
                         </div>
                       {/each}
@@ -499,7 +559,7 @@
 
 <Modal bind:this={toolConfigModal}>
   <ModalContent
-    title={`Configure ${selectedToolSource?.name || "Tool"}`}
+    title={`${selectedToolSource?.existingToolSource ? 'Edit' : 'Configure'} ${selectedToolSource?.name || "Tool"}`}
     size="M"
     showCancelButton={true}
     cancelText="Back"
@@ -554,6 +614,25 @@
             bind:value={toolConfig.guidelines}
             placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
           />
+        {:else if selectedToolSource.type === "BAMBOOHR"}
+          <Input
+            label="API Key"
+            bind:value={toolConfig.apiKey}
+            type="password"
+            placeholder="Enter your BambooHR API key"
+          />
+          <Input
+            label="Subdomain"
+            bind:value={toolConfig.subdomain}
+            type="text"
+            placeholder="your-company"
+            helpText="Your BambooHR subdomain (e.g., 'mycompany' for mycompany.bamboohr.com)"
+          />
+          <TextArea
+            label="Tool Source Guidelines"
+            bind:value={toolConfig.guidelines}
+            placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
+          />
         {:else if selectedToolSource.type === "BUDIBASE"}
           <TextArea
             label="Tool Source Guidelines"
@@ -561,6 +640,40 @@
             placeholder="Add additional information to help guide the Budibase agent in the usage of this tool"
           />
         {/if}
+      {/if}
+    </div>
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={deleteConfirmModal}>
+  <ModalContent
+    title="Delete Tool Source"
+    size="S"
+    showCancelButton={true}
+    cancelText="Cancel"
+    showConfirmButton={true}
+    confirmText="Delete"
+    showCloseIcon
+    onCancel={() => deleteConfirmModal.hide()}
+    onConfirm={deleteToolSource}
+  >
+    <div class="delete-confirm-content">
+      <Body size="S">
+        Are you sure you want to delete this tool source? This action cannot be undone.
+      </Body>
+      {#if toolSourceToDelete}
+        <div class="tool-source-preview">
+          <div class="tool-icon">
+            <svelte:component
+              this={Logos[toolSourceToDelete.type]}
+              height="20"
+              width="20"
+            />
+          </div>
+          <span class="tool-name">
+            {ToolSources.find(ts => ts.type === toolSourceToDelete.type)?.name}
+          </span>
+        </div>
       {/if}
     </div>
   </ModalContent>
@@ -802,6 +915,9 @@
   .tool-actions {
     display: flex;
     gap: var(--spacing-s);
+  }
+
+  .tool-source-detail {
     transform: rotate(180deg);
   }
 
@@ -870,5 +986,26 @@
 
   .vote-banner:last-child {
     margin-left: auto;
+  }
+
+  .delete-confirm-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+  }
+
+  .tool-source-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: var(--spacing-m);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
+    background-color: var(--spectrum-alias-background-color-secondary);
+  }
+
+  .tool-source-preview .tool-name {
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

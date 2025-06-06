@@ -20,6 +20,7 @@ export interface AgentEndpoints {
     toolSource: CreateToolSourceRequest
   ) => Promise<{ created: true }>
   updateToolSource: (toolSource: AgentToolSource) => Promise<AgentToolSource>
+  deleteToolSource: (toolSourceId: string) => Promise<{ deleted: true }>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -60,6 +61,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     return await API.put({
       url: "/api/agent/toolsource",
       body: toolSource as any,
+    })
+  },
+
+  deleteToolSource: async (toolSourceId: string) => {
+    return await API.delete({
+      url: `/api/agent/toolsource/${toolSourceId}`,
     })
   },
 })
