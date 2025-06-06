@@ -58,19 +58,25 @@ export async function agentChat(
   const chat = ctx.request.body
   const db = context.getAppDB()
 
-  let prompt = new ai.LLMRequest()
-    .addSystemMessage(ai.agentSystemPrompt(ctx.user))
-    .addMessages(chat.messages)
-
   const toolSources = await db.allDocs<AgentToolSource>(
     docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
       include_docs: true,
     })
   )
 
+  let prompt = new ai.LLMRequest()
+    .addSystemMessage(ai.agentSystemPrompt(ctx.user))
+    .addMessages(chat.messages)
+
+  let toolGuidelines = ""
+
   for (const row of toolSources.rows) {
     const toolSource = row.doc!
     const disabledTools = toolSource.disabledTools || []
+
+    if (toolSource.auth?.guidelines) {
+      toolGuidelines += `\n\nWhen using ${toolSource.type} tools, ensure you follow these guidelines:\n${toolSource.auth.guidelines}`
+    }
 
     let toolsToAdd: any[] = []
 
@@ -114,6 +120,11 @@ export async function agentChat(
     if (toolsToAdd.length > 0) {
       prompt = prompt.addTools(toolsToAdd)
     }
+  }
+
+  // Append tool guidelines to the system prompt if any exist
+  if (toolGuidelines) {
+    prompt = prompt.addSystemMessage(toolGuidelines)
   }
 
   const response = await model.chat(prompt)
