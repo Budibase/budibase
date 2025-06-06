@@ -12,8 +12,9 @@
     featureFlags,
   } from "@/stores/portal"
   import { Breadcrumbs, Breadcrumb, Header } from "@/components/portal/page"
+  import type { AppTemplate } from "@/types"
 
-  let template: { fromFile: true } | null
+  let template: AppTemplate | null
   let creationModal: Modal
   let appLimitModal: AppLimitModal
 

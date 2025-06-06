@@ -18,17 +18,9 @@
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
   import type { CreateAppRequest } from "@budibase/types"
+  import type { AppTemplate } from "@/types"
 
-  type Template = {
-    key: string
-    name: string
-    fromFile: boolean
-    image: string
-    background: string
-    icon: string
-  }
-
-  export let template: Template
+  export let template: AppTemplate | null
 
   let creating = false
   let defaultAppName: string
@@ -86,7 +78,7 @@
       : `${appPrefix}${resolveAppUrl(template, $values.name)}`
   }`
 
-  const resolveAppUrl = (template: Template, name: string) => {
+  const resolveAppUrl = (template: AppTemplate | null, name: string) => {
     let parsedName
     const resolvedName = resolveAppName(template, name)
     parsedName = resolvedName ? resolvedName.toLowerCase() : ""
@@ -94,7 +86,7 @@
     return encodeURI(parsedUrl)
   }
 
-  const resolveAppName = (template: Template, name: string) => {
+  const resolveAppName = (template: AppTemplate | null, name: string) => {
     if (template && !template.fromFile) {
       return template.name
     }

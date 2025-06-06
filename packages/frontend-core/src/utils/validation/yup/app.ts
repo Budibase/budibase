@@ -85,7 +85,7 @@ export const url = (
 
 export const file = (
   validation: ValidationStore,
-  { template }: { template?: { fromFile: boolean } } = {}
+  { template }: { template?: { fromFile: boolean } | null } = {}
 ) => {
   const templateToUse =
     template && Object.keys(template).length === 0 ? null : template
