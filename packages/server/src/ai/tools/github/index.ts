@@ -24,14 +24,10 @@ export class GitHubClient {
             .describe("The GitHub username or organization name"),
         }),
         handler: async ({ owner }) => {
-          try {
-            const { data } = await this.octokit.repos.listForUser({
-              username: owner,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.repos.listForUser({
+            username: owner,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -42,12 +38,8 @@ export class GitHubClient {
           org: z.string().describe("The GitHub organization name"),
         }),
         handler: async ({ org }) => {
-          try {
-            const { data } = await this.octokit.repos.listForOrg({ org })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.repos.listForOrg({ org })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -63,12 +55,8 @@ export class GitHubClient {
           repo: z.string().describe("The repository name"),
         }),
         handler: async ({ owner, repo }) => {
-          try {
-            const { data } = await this.octokit.repos.get({ owner, repo })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.repos.get({ owner, repo })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -79,14 +67,10 @@ export class GitHubClient {
           username: z.string().describe("The GitHub username"),
         }),
         handler: async ({ username }) => {
-          try {
-            const { data } = await this.octokit.users.getByUsername({
-              username,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.users.getByUsername({
+            username,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -106,16 +90,12 @@ export class GitHubClient {
             .describe("State of issues to return"),
         }),
         handler: async ({ owner, repo, state = "open" }) => {
-          try {
-            const { data } = await this.octokit.issues.listForRepo({
-              owner,
-              repo,
-              state: state as "open" | "closed" | "all",
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.issues.listForRepo({
+            owner,
+            repo,
+            state: state as "open" | "closed" | "all",
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -132,16 +112,12 @@ export class GitHubClient {
           issue_number: z.number().describe("The issue number"),
         }),
         handler: async ({ owner, repo, issue_number }) => {
-          try {
-            const { data } = await this.octokit.issues.get({
-              owner,
-              repo,
-              issue_number,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.issues.get({
+            owner,
+            repo,
+            issue_number,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -163,18 +139,17 @@ export class GitHubClient {
             .describe("Labels to add to the issue"),
         }),
         handler: async ({ owner, repo, title, body, labels }) => {
-          try {
-            const { data } = await this.octokit.issues.create({
-              owner,
-              repo,
-              title,
-              body,
-              labels,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          // Ensure proper formatting by converting escaped newlines to actual newlines
+          const formattedBody = body.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
+          
+          const { data } = await this.octokit.issues.create({
+            owner,
+            repo,
+            title,
+            body: formattedBody,
+            labels,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -212,23 +187,22 @@ export class GitHubClient {
           state,
           labels,
         }) => {
-          try {
-            const updateData: any = {}
-            if (title) updateData.title = title
-            if (body) updateData.body = body
-            if (state) updateData.state = state
-            if (labels) updateData.labels = labels
-
-            const { data } = await this.octokit.issues.update({
-              owner,
-              repo,
-              issue_number,
-              ...updateData,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
+          const updateData: any = {}
+          if (title) updateData.title = title
+          if (body) {
+            // Ensure proper formatting by converting escaped newlines to actual newlines
+            updateData.body = body.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
           }
+          if (state) updateData.state = state
+          if (labels) updateData.labels = labels
+
+          const { data } = await this.octokit.issues.update({
+            owner,
+            repo,
+            issue_number,
+            ...updateData,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -248,16 +222,12 @@ export class GitHubClient {
             .describe("State of pull requests to return"),
         }),
         handler: async ({ owner, repo, state = "open" }) => {
-          try {
-            const { data } = await this.octokit.pulls.list({
-              owner,
-              repo,
-              state: state as "open" | "closed" | "all",
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.pulls.list({
+            owner,
+            repo,
+            state: state as "open" | "closed" | "all",
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -274,16 +244,12 @@ export class GitHubClient {
           pull_number: z.number().describe("The pull request number"),
         }),
         handler: async ({ owner, repo, pull_number }) => {
-          try {
-            const { data } = await this.octokit.pulls.get({
-              owner,
-              repo,
-              pull_number,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.pulls.get({
+            owner,
+            repo,
+            pull_number,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -305,16 +271,12 @@ export class GitHubClient {
             ),
         }),
         handler: async ({ owner, repo, path }) => {
-          try {
-            const { data } = await this.octokit.repos.listCommits({
-              owner,
-              repo,
-              path,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.repos.listCommits({
+            owner,
+            repo,
+            path,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -331,16 +293,12 @@ export class GitHubClient {
           ref: z.string().describe("The commit SHA"),
         }),
         handler: async ({ owner, repo, ref }) => {
-          try {
-            const { data } = await this.octokit.repos.getCommit({
-              owner,
-              repo,
-              ref,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.repos.getCommit({
+            owner,
+            repo,
+            ref,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -356,15 +314,11 @@ export class GitHubClient {
           repo: z.string().describe("The repository name"),
         }),
         handler: async ({ owner, repo }) => {
-          try {
-            const { data } = await this.octokit.repos.listBranches({
-              owner,
-              repo,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.repos.listBranches({
+            owner,
+            repo,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -380,15 +334,11 @@ export class GitHubClient {
           repo: z.string().describe("The repository name"),
         }),
         handler: async ({ owner, repo }) => {
-          try {
-            const { data } = await this.octokit.actions.listRepoWorkflows({
-              owner,
-              repo,
-            })
-            return JSON.stringify(data, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const { data } = await this.octokit.actions.listRepoWorkflows({
+            owner,
+            repo,
+          })
+          return JSON.stringify(data, null, 2)
         },
       }),
 
@@ -411,21 +361,17 @@ export class GitHubClient {
             ),
         }),
         handler: async ({ owner, repo, workflow_id, ref = "main" }) => {
-          try {
-            await this.octokit.actions.createWorkflowDispatch({
-              owner,
-              repo,
-              workflow_id,
-              ref,
-            })
-            return JSON.stringify(
-              { success: true, message: "Workflow dispatch created" },
-              null,
-              2
-            )
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          await this.octokit.actions.createWorkflowDispatch({
+            owner,
+            repo,
+            workflow_id,
+            ref,
+          })
+          return JSON.stringify(
+            { success: true, message: "Workflow dispatch created" },
+            null,
+            2
+          )
         },
       }),
     ]

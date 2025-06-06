@@ -63,15 +63,11 @@ export class BambooHRClient {
             .describe("Comma-separated list of fields to retrieve"),
         }),
         handler: async ({ employee_id, fields }: { employee_id: string; fields?: string }) => {
-          try {
-            const params = fields ? `?fields=${fields}` : ""
-            const employee = await this.makeRequest(
-              `/employees/${employee_id}${params}`
-            )
-            return JSON.stringify(employee, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const params = fields ? `?fields=${fields}` : ""
+          const employee = await this.makeRequest(
+            `/employees/${employee_id}${params}`
+          )
+          return JSON.stringify(employee, null, 2)
         },
       }),
 
@@ -85,13 +81,9 @@ export class BambooHRClient {
             .describe("Comma-separated list of fields to retrieve"),
         }),
         handler: async ({ fields }: { fields?: string }) => {
-          try {
-            const params = fields ? `?fields=${fields}` : ""
-            const employees = await this.makeRequest(`/employees/directory${params}`)
-            return JSON.stringify(employees, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const params = fields ? `?fields=${fields}` : ""
+          const employees = await this.makeRequest(`/employees/directory${params}`)
+          return JSON.stringify(employees, null, 2)
         },
       }),
 
@@ -107,16 +99,12 @@ export class BambooHRClient {
             .describe("Filter by specific employee ID"),
         }),
         handler: async ({ start_date, end_date, employee_id }: { start_date: string; end_date: string; employee_id?: string }) => {
-          try {
-            let endpoint = `/time_off/requests/?start=${start_date}&end=${end_date}`
-            if (employee_id) {
-              endpoint += `&employeeId=${employee_id}`
-            }
-            const timeOffRequests = await this.makeRequest(endpoint)
-            return JSON.stringify(timeOffRequests, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
+          let endpoint = `/time_off/requests/?start=${start_date}&end=${end_date}`
+          if (employee_id) {
+            endpoint += `&employeeId=${employee_id}`
           }
+          const timeOffRequests = await this.makeRequest(endpoint)
+          return JSON.stringify(timeOffRequests, null, 2)
         },
       }),
 
@@ -134,16 +122,12 @@ export class BambooHRClient {
             .describe("Comma-separated list of fields to include"),
         }),
         handler: async ({ format = "JSON", fields }: { format?: "JSON" | "XML" | "CSV" | "PDF" | "XLS"; fields?: string }) => {
-          try {
-            const params = new URLSearchParams({ format })
-            if (fields) {
-              params.append("fields", fields)
-            }
-            const report = await this.makeRequest(`/reports/custom?${params}`)
-            return JSON.stringify(report, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
+          const params = new URLSearchParams({ format })
+          if (fields) {
+            params.append("fields", fields)
           }
+          const report = await this.makeRequest(`/reports/custom?${params}`)
+          return JSON.stringify(report, null, 2)
         },
       }),
 
@@ -154,12 +138,8 @@ export class BambooHRClient {
           employee_id: z.string().describe("The employee ID"),
         }),
         handler: async ({ employee_id }: { employee_id: string }) => {
-          try {
-            const files = await this.makeRequest(`/employees/${employee_id}/files/view/`)
-            return JSON.stringify(files, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const files = await this.makeRequest(`/employees/${employee_id}/files/view/`)
+          return JSON.stringify(files, null, 2)
         },
       }),
 
@@ -168,12 +148,8 @@ export class BambooHRClient {
         description: "Get list of custom fields configured in BambooHR",
         parameters: z.object({}),
         handler: async () => {
-          try {
-            const fields = await this.makeRequest("/meta/fields/")
-            return JSON.stringify(fields, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const fields = await this.makeRequest("/meta/fields/")
+          return JSON.stringify(fields, null, 2)
         },
       }),
 
@@ -182,12 +158,8 @@ export class BambooHRClient {
         description: "Get list of available tables in BambooHR",
         parameters: z.object({}),
         handler: async () => {
-          try {
-            const tables = await this.makeRequest("/meta/tables/")
-            return JSON.stringify(tables, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const tables = await this.makeRequest("/meta/tables/")
+          return JSON.stringify(tables, null, 2)
         },
       }),
 
@@ -199,14 +171,10 @@ export class BambooHRClient {
           table_name: z.string().describe("The table name"),
         }),
         handler: async ({ employee_id, table_name }: { employee_id: string; table_name: string }) => {
-          try {
-            const tableData = await this.makeRequest(
-              `/employees/${employee_id}/tables/${table_name}`
-            )
-            return JSON.stringify(tableData, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const tableData = await this.makeRequest(
+            `/employees/${employee_id}/tables/${table_name}`
+          )
+          return JSON.stringify(tableData, null, 2)
         },
       }),
 
@@ -220,13 +188,9 @@ export class BambooHRClient {
             .describe("Date to check (YYYY-MM-DD), defaults to today"),
         }),
         handler: async ({ date }: { date?: string }) => {
-          try {
-            const endpoint = date ? `/time_off/whos_out/?start=${date}&end=${date}` : "/time_off/whos_out/"
-            const whoIsOut = await this.makeRequest(endpoint)
-            return JSON.stringify(whoIsOut, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const endpoint = date ? `/time_off/whos_out/?start=${date}&end=${date}` : "/time_off/whos_out/"
+          const whoIsOut = await this.makeRequest(endpoint)
+          return JSON.stringify(whoIsOut, null, 2)
         },
       }),
     ]

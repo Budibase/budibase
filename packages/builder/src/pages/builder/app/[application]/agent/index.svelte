@@ -361,9 +361,6 @@
 
     <div class="chat-area" bind:this={chatAreaElement}>
       <Chatbox bind:chat {loading} />
-      <div class="controls">
-        <ActionButton quiet on:click={reset}>Reset history</ActionButton>
-      </div>
       <div class="input-wrapper">
         <textarea
           bind:value={inputValue}

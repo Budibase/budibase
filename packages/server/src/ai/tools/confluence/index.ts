@@ -80,22 +80,18 @@ export class ConfluenceClient {
           status = "current",
           limit = 10,
         }) => {
-          try {
-            const params = new URLSearchParams({
-              limit: limit.toString(),
-              status,
-            })
-            if (title) {
-              params.append("title", title)
-            }
-            if (spaceKey) {
-              params.append("space-key", spaceKey)
-            }
-            const results = await this.makeRequest(`/content?${params}`)
-            return JSON.stringify(results, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
+          const params = new URLSearchParams({
+            limit: limit.toString(),
+            status,
+          })
+          if (title) {
+            params.append("title", title)
           }
+          if (spaceKey) {
+            params.append("space-key", spaceKey)
+          }
+          const results = await this.makeRequest(`/content?${params}`)
+          return JSON.stringify(results, null, 2)
         },
       }),
 
@@ -110,15 +106,11 @@ export class ConfluenceClient {
             .describe("Body format (storage, atlas_doc_format, view)"),
         }),
         handler: async ({ page_id, bodyFormat = "storage" }) => {
-          try {
-            const params = new URLSearchParams({
-              "body-format": bodyFormat,
-            })
-            const page = await this.makeRequest(`/pages/${page_id}?${params}`)
-            return JSON.stringify(page, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const params = new URLSearchParams({
+            "body-format": bodyFormat,
+          })
+          const page = await this.makeRequest(`/pages/${page_id}?${params}`)
+          return JSON.stringify(page, null, 2)
         },
       }),
 
@@ -134,21 +126,17 @@ export class ConfluenceClient {
           status: z.string().optional().describe("Space status filter"),
         }),
         handler: async ({ limit = 25, type, status }) => {
-          try {
-            const params = new URLSearchParams({
-              limit: limit.toString(),
-            })
-            if (type) {
-              params.append("type", type)
-            }
-            if (status) {
-              params.append("status", status)
-            }
-            const spaces = await this.makeRequest(`/spaces?${params}`)
-            return JSON.stringify(spaces, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
+          const params = new URLSearchParams({
+            limit: limit.toString(),
+          })
+          if (type) {
+            params.append("type", type)
           }
+          if (status) {
+            params.append("status", status)
+          }
+          const spaces = await this.makeRequest(`/spaces?${params}`)
+          return JSON.stringify(spaces, null, 2)
         },
       }),
 
@@ -159,12 +147,8 @@ export class ConfluenceClient {
           space_id: z.string().describe("The Confluence space ID"),
         }),
         handler: async ({ space_id }) => {
-          try {
-            const space = await this.makeRequest(`/spaces/${space_id}`)
-            return JSON.stringify(space, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
-          }
+          const space = await this.makeRequest(`/spaces/${space_id}`)
+          return JSON.stringify(space, null, 2)
         },
       }),
 
@@ -192,29 +176,28 @@ export class ConfluenceClient {
           parent_id,
           status = "current",
         }) => {
-          try {
-            const body: any = {
-              spaceId: space_id,
-              status,
-              title,
-              body: {
-                representation: "storage",
-                value: content,
-              },
-            }
-
-            if (parent_id) {
-              body.parentId = parent_id
-            }
-
-            const page = await this.makeRequest("/pages", {
-              method: "POST",
-              body: JSON.stringify(body),
-            })
-            return JSON.stringify(page, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
+          // Ensure proper formatting by converting escaped newlines to actual newlines
+          const formattedContent = content.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
+          
+          const body: any = {
+            spaceId: space_id,
+            status,
+            title,
+            body: {
+              representation: "storage",
+              value: formattedContent,
+            },
           }
+
+          if (parent_id) {
+            body.parentId = parent_id
+          }
+
+          const page = await this.makeRequest("/pages", {
+            method: "POST",
+            body: JSON.stringify(body),
+          })
+          return JSON.stringify(page, null, 2)
         },
       }),
 
@@ -232,29 +215,28 @@ export class ConfluenceClient {
             .describe("The current version number of the page"),
         }),
         handler: async ({ page_id, title, content, version }) => {
-          try {
-            const body = {
-              id: page_id,
-              status: "current",
-              title,
-              body: {
-                representation: "storage",
-                value: content,
-              },
-              version: {
-                number: version + 1,
-                message: "Updated via Budibase Agent",
-              },
-            }
-
-            const page = await this.makeRequest(`/pages/${page_id}`, {
-              method: "PUT",
-              body: JSON.stringify(body),
-            })
-            return JSON.stringify(page, null, 2)
-          } catch (error: any) {
-            return `Error: ${error.message}`
+          // Ensure proper formatting by converting escaped newlines to actual newlines
+          const formattedContent = content.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
+          
+          const body = {
+            id: page_id,
+            status: "current",
+            title,
+            body: {
+              representation: "storage",
+              value: formattedContent,
+            },
+            version: {
+              number: version + 1,
+              message: "Updated via Budibase Agent",
+            },
           }
+
+          const page = await this.makeRequest(`/pages/${page_id}`, {
+            method: "PUT",
+            body: JSON.stringify(body),
+          })
+          return JSON.stringify(page, null, 2)
         },
       }),
     ]
