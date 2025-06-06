@@ -6,7 +6,7 @@
   export let id: string | undefined = undefined
   export let label: string | undefined = undefined
   export let labelPosition: "above" = "above"
-  export let error: string | undefined = undefined
+  export let error: string | undefined | false = undefined
   export let helpText: string | undefined = undefined
   export let tooltip: string | undefined = undefined
 </script>

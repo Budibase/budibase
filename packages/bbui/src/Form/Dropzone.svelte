@@ -4,11 +4,11 @@
   import { createEventDispatcher } from "svelte"
   import type { UIFile } from "@budibase/types"
 
-  export let value: UIFile[] = []
+  export let value: UIFile[] | File[] = []
   export let label: string | undefined = undefined
   export let labelPosition: "above" = "above"
   export let disabled: boolean = false
-  export let error: string | undefined = undefined
+  export let error: string | undefined | false = undefined
   export let fileSizeLimit: number | undefined = undefined
   export let processFiles:
     | ((_files: FileList) => Promise<UIFile[]>)
@@ -17,7 +17,7 @@
     | ((_keys: string[]) => Promise<void>)
     | undefined = undefined
   export let handleFileTooLarge:
-    | ((_limit: number, _currentFiles: UIFile[]) => void)
+    | ((_limit: number, _currentFiles: UIFile[] | File[]) => void)
     | undefined = undefined
   export let handleTooManyFiles: ((_maximum: number) => void) | undefined =
     undefined
@@ -27,9 +27,9 @@
   export let compact: boolean = false
   export let helpText: string | undefined = undefined
 
-  const dispatch = createEventDispatcher<{ change: UIFile[] | FileList }>()
-  const onChange = (e: CustomEvent<UIFile[] | FileList>) => {
-    value = e.detail as UIFile[]
+  const dispatch = createEventDispatcher<{ change: UIFile[] | File[] }>()
+  const onChange = (e: CustomEvent<UIFile[] | File[]>) => {
+    value = e.detail
     dispatch("change", e.detail)
   }
 </script>

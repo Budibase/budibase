@@ -14,7 +14,7 @@
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
 
-  export let value: UIFile[] = []
+  export let value: UIFile[] | File[] = []
   export let id: string | null = null
   export let disabled: boolean = false
   export let compact: boolean = false
@@ -24,7 +24,7 @@
   export let deleteAttachments: ((_keys: string[]) => Promise<void>) | null =
     null
   export let handleFileTooLarge:
-    | ((_limit: number, _currentFiles: UIFile[]) => void)
+    | ((_limit: number, _currentFiles: UIFile[] | File[]) => void)
     | null = null
   export let handleTooManyFiles: ((_maximum: number) => void) | null = null
   export let gallery: boolean = true
@@ -35,7 +35,7 @@
   export let clickText: string | null = null
   export let addText: string | null = null
 
-  const dispatch = createEventDispatcher<{ change: UIFile[] | FileList }>()
+  const dispatch = createEventDispatcher<{ change: UIFile[] | File[] }>()
   const imageExtensions = [
     "png",
     "tiff",
@@ -59,11 +59,13 @@
   $: selectedImage = value?.[selectedImageIdx] ?? null
   $: fileCount = value?.length ?? 0
   $: isImage =
-    imageExtensions.includes(selectedImage?.extension?.toLowerCase()) ||
+    (selectedImage &&
+      "extension" in selectedImage &&
+      imageExtensions.includes(selectedImage?.extension?.toLowerCase())) ||
     selectedImage?.type?.startsWith("image")
 
   $: {
-    if (selectedImage?.url) {
+    if (selectedImage && "url" in selectedImage && selectedImage?.url) {
       selectedUrl = selectedImage?.url
     } else if (selectedImage && isImage) {
       try {
@@ -100,25 +102,27 @@
       loading = true
       try {
         const processedFiles = await processFiles(fileList)
-        const newValue = [...value, ...processedFiles]
+        const newValue = [...(value as UIFile[]), ...processedFiles]
         dispatch("change", newValue)
         selectedImageIdx = newValue.length - 1
       } finally {
         loading = false
       }
     } else {
-      dispatch("change", fileList)
+      dispatch("change", Array.from(fileList))
     }
   }
 
   async function removeFile() {
     dispatch(
       "change",
-      value.filter((x, idx) => idx !== selectedImageIdx)
+      value.filter((_x, idx) => idx !== selectedImageIdx) as UIFile[] | File[]
     )
     if (deleteAttachments) {
       await deleteAttachments(
-        value.filter((x, idx) => idx === selectedImageIdx).map(item => item.key)
+        value
+          .filter((_x, idx) => idx === selectedImageIdx)
+          .map(item => ("key" in item && item.key) || "")
       )
       fileInput.value = ""
     }
