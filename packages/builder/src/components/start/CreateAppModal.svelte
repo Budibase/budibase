@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { initialise } from "@/stores/builder"
   import { API } from "@/api"
-  import { appsStore, admin, auth } from "@/stores/portal"
+  import { appsStore, admin, auth, featureFlags } from "@/stores/portal"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
@@ -59,18 +59,18 @@
 
     defaultAppName =
       lastChar && lastChar.toLowerCase() == "s"
-        ? `${$auth.user?.firstName} app`
-        : `${$auth.user?.firstName}s app`
+        ? `${$auth.user?.firstName} ${appOrWorkspace}`
+        : `${$auth.user?.firstName}s ${appOrWorkspace}`
 
     $values.name = resolveAppName(
       template,
-      !$auth.user?.firstName ? "My app" : defaultAppName
+      !$auth.user?.firstName ? `My ${appOrWorkspace}` : defaultAppName
     )
     nameToUrl($values.name)
     await setupValidation()
   })
 
-  const appPrefix = "/app"
+  $: appPrefix = `/${appOrWorkspace}`
 
   $: appUrl = `${window.location.origin}${
     $values.url
@@ -173,10 +173,13 @@
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
+  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
   $: stepConfig = {
     [Step.CONFIG]: {
-      title: "Create your app",
-      confirmText: template?.fromFile ? "Import app" : "Create app",
+      title: `Create your ${appOrWorkspace}`,
+      confirmText: template?.fromFile
+        ? `Import ${appOrWorkspace}`
+        : `Create ${appOrWorkspace}`,
       onConfirm: async () => {
         if (encryptedFile) {
           currentStep = Step.SET_PASSWORD
@@ -185,7 +188,9 @@
           try {
             await createNewApp()
           } catch (error: any) {
-            notifications.error(`Error creating app - ${error.message}`)
+            notifications.error(
+              `Error creating ${appOrWorkspace} - ${error.message}`
+            )
           }
         }
       },
@@ -193,12 +198,12 @@
     },
     [Step.SET_PASSWORD]: {
       title: "Provide the export password",
-      confirmText: "Import app",
+      confirmText: `Import ${appOrWorkspace}`,
       onConfirm: async () => {
         try {
           await createNewApp()
         } catch (e: any) {
-          let message = "Error creating app"
+          let message = `Error creating ${appOrWorkspace}`
           if (e.message) {
             message += `: ${lowercase(e.message)}`
           }
