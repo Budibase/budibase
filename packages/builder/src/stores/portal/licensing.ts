@@ -57,10 +57,8 @@ interface LicensingState {
   userCount?: number
   userLimit?: number
   aiCreditsLimit?: number
-  actionsLimit?: number
   userLimitReached: boolean
   aiCreditsExceeded: boolean
-  actionsExceeded: boolean
   errUserLimit: boolean
 }
 
@@ -106,7 +104,6 @@ class LicensingStore extends BudiStore<LicensingState> {
       userLimit: undefined,
       userLimitReached: false,
       errUserLimit: false,
-      actionsExceeded: false,
       // AI Limits
       aiCreditsExceeded: false,
     })
@@ -134,16 +131,6 @@ class LicensingStore extends BudiStore<LicensingState> {
       return false
     }
     return aiCredits > aiCreditsLimit
-  }
-
-  actionsExceeded(
-    actions: number,
-    actionsLimit = get(this.store).actionsLimit
-  ) {
-    if (actionsLimit === UNLIMITED || actionsLimit === undefined) {
-      return false
-    }
-    return actions > actionsLimit
   }
 
   async isCloud() {
@@ -316,18 +303,12 @@ class LicensingStore extends BudiStore<LicensingState> {
     const userLimit = userQuota.value
     const aiCreditsQuota = license.quotas.usage.monthly.budibaseAICredits
     const aiCreditsLimit = aiCreditsQuota.value
-    const actionsQuota = license.quotas.usage.monthly.actions
-    const actionsLimit = actionsQuota.value
     const userCount = usage.usageQuota.users
     const userLimitReached = this.usersLimitReached(userCount, userLimit)
     const userLimitExceeded = this.usersLimitExceeded(userCount, userLimit)
     const aiCreditsExceeded = this.aiCreditsExceeded(
       usage.monthly.current.budibaseAICredits,
       aiCreditsLimit
-    )
-    const actionsExceeded = this.actionsExceeded(
-      usage.monthly.current.actions,
-      actionsLimit
     )
     const isCloudAccount = await this.isCloud()
     const errUserLimit =
@@ -351,9 +332,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         userLimitReached,
         errUserLimit,
         aiCreditsLimit,
-        actionsLimit,
         aiCreditsExceeded,
-        actionsExceeded,
       }
     })
   }
