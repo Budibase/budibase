@@ -139,7 +139,6 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
     return await API.post({
       url: "/api/applications",
       body: app,
-      json: false,
     })
   },
 
