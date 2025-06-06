@@ -24,7 +24,7 @@
 <div>
   <Input readonly {value} {label} />
   <div class="icon" on:click={() => copyToClipboard(value)}>
-    <Icon size="S" name="Copy" />
+    <Icon size="S" name="copy" />
   </div>
 </div>
 

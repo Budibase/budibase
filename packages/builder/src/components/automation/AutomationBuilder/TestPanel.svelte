@@ -8,7 +8,7 @@
 
 <div class="title">
   <div class="title-text">
-    <Icon name="MultipleCheck" />
+    <Icon name="squares-four" />
     <div>Test Details</div>
   </div>
   <div>
@@ -17,7 +17,7 @@
         $automationStore.showTestPanel = false
       }}
       hoverable
-      name="Close"
+      name="x"
     />
   </div>
 </div>

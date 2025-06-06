@@ -19,7 +19,7 @@
 
 <div class="align">
   <div class="spacing">
-    <Icon name="WebPage" />
+    <Icon name="browser" />
   </div>
   {count}
 </div>

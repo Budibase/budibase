@@ -123,15 +123,11 @@
         height="28px"
       />
     {:else}
-      <svg
-        width="28px"
-        height="28px"
-        class="spectrum-Icon"
-        style="color:var(--spectrum-global-color-gray-700);"
-        focusable="false"
-      >
-        <use xlink:href="#spectrum-icon-18-{block.icon}" />
-      </svg>
+      <Icon
+        name={block.icon}
+        size="XL"
+        color="var(--spectrum-global-color-gray-700)"
+      />
     {/if}
     <div class="heading">
       {#if isTrigger}
@@ -174,7 +170,7 @@
       <div class="error-icon">
         <Icon
           size="S"
-          name="Alert"
+          name="warning"
           tooltip={blockNameError}
           tooltipPosition={TooltipPosition.Left}
         />
@@ -226,7 +222,7 @@
     min-width: 0;
   }
 
-  .error-icon :global(.spectrum-Icon) {
+  .error-icon :global(i) {
     fill: var(--spectrum-global-color-red-600);
   }
 

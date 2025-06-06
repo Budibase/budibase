@@ -63,7 +63,7 @@
     {:else}
       <div class="icon" class:open>
         <Icon
-          name="Add"
+          name="plus"
           size="L"
           color="var(--spectrum-global-color-gray-600)"
         />
@@ -78,7 +78,7 @@
         hoverable
         on:click={() => (calculation = false)}
         selected={!calculation}
-        icon="Rail"
+        icon="sidebar"
       />
     </div>
     <div>

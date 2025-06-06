@@ -84,7 +84,7 @@
     on:mouseout={() => (iconHovered = false)}
   >
     <Icon
-      name="Delete"
+      name="trash"
       size="S"
       {tooltip}
       tooltipPosition={TooltipPosition.Top}
@@ -104,10 +104,10 @@
     pointer-events: all;
     cursor: pointer;
   }
-  .edge-label:hover :global(.spectrum-Icon) {
+  .edge-label:hover :global(i) {
     color: var(--spectrum-global-color-red-400);
   }
-  .edge-label :global(.spectrum-Icon) {
+  .edge-label :global(i) {
     background: var(--background-color);
     color: var(--spectrum-global-color-gray-600);
   }

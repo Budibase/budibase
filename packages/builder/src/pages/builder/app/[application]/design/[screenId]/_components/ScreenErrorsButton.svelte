@@ -51,7 +51,7 @@
       disabled={!hasErrors}
       on:click={() => popover.show()}
       size="M"
-      icon="Alert"
+      icon="warning"
     />
     {#if hasErrors}
       <div class="error-indicator">
@@ -74,7 +74,7 @@
     {#each $screenComponentErrorList as error}
       <div class="error">
         <Icon
-          name="Alert"
+          name="warning"
           color="var(--spectrum-global-color-static-red-600)"
           size="S"
         />

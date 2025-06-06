@@ -19,7 +19,7 @@
   $: text = `${item}${selectedRows?.length === 1 ? "" : "s"}`
 </script>
 
-<Button icon="Delete" warning quiet on:click={modal.show}>
+<Button icon="trash" warning quiet on:click={modal.show}>
   Delete
   {selectedRows.length}
   {text}

@@ -8,7 +8,7 @@
 {#if $selectedScreen}
   <Panel
     title={$selectedScreen.routing.route}
-    icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
+    icon={$selectedScreen.routing.route === "/" ? "house" : "browser"}
     borderLeft
     wide
   >

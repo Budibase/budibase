@@ -269,7 +269,7 @@
     {#if selectedCategory}
       <div class="header">
         <Icon
-          name="BackAndroid"
+          name="arrow-left"
           hoverable
           size="S"
           on:click={() => (selectedCategory = null)}
@@ -278,18 +278,12 @@
         {#if selectedCategory === "Snippets"}
           {#if enableSnippets}
             <div class="add-snippet-button">
-              <Icon
-                size="S"
-                name="Add"
-                hoverable
-                newStyles
-                on:click={createSnippet}
-              />
+              <Icon size="S" name="plus" hoverable on:click={createSnippet} />
             </div>
           {:else}
             <div class="title">
               <Tags>
-                <Tag icon="LockClosed">Premium</Tag>
+                <Tag icon="lock">Premium</Tag>
               </Tags>
             </div>
           {/if}
@@ -308,20 +302,13 @@
               autofocus
             />
           </div>
-          <Icon
-            size="S"
-            name="Close"
-            hoverable
-            newStyles
-            on:click={stopSearching}
-          />
+          <Icon size="S" name="x" hoverable on:click={stopSearching} />
         {:else}
           <div class="title">Bindings</div>
           <Icon
             size="S"
-            name="Search"
+            name="magnifying-glass"
             hoverable
-            newStyles
             on:click={startSearching}
           />
         {/if}
@@ -341,7 +328,7 @@
               name={categoryIcons[categoryName]}
             />
             <span class="category-name">{categoryName} </span>
-            <span class="category-chevron"><Icon name="ChevronRight" /></span>
+            <span class="category-chevron"><Icon name="caret-right" /></span>
           </li>
         {/each}
       </ul>
@@ -423,9 +410,8 @@
               >
                 {snippet.name}
                 <Icon
-                  name="Edit"
+                  name="pencil"
                   hoverable
-                  newStyles
                   size="S"
                   on:click={e => editSnippet(e, snippet)}
                 />
@@ -498,7 +484,7 @@
     gap: var(--spacing-m);
     align-items: center;
   }
-  ul.category-list :global(.spectrum-Icon) {
+  ul.category-list :global(i) {
     margin: -4px 0;
   }
   ul.category-list .category-name {

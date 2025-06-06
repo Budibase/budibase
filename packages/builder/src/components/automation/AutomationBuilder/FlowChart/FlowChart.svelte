@@ -95,7 +95,7 @@
   </div>
   <div class="actions-right">
     <ActionButton
-      icon="Play"
+      icon="play"
       quiet
       disabled={!automation?.definition?.trigger}
       on:click={() => {
@@ -110,7 +110,7 @@
       hoverable={false}
     >
       <ActionButton
-        icon="Folder"
+        icon="folder"
         quiet
         selected={prodErrors}
         on:click={() => {
@@ -154,8 +154,8 @@
 
         <div class="zoom">
           <div class="group">
-            <ActionButton icon="Add" quiet on:click={draggable.zoomIn} />
-            <ActionButton icon="Remove" quiet on:click={draggable.zoomOut} />
+            <ActionButton icon="plus" quiet on:click={draggable.zoomIn} />
+            <ActionButton icon="minus" quiet on:click={draggable.zoomOut} />
           </div>
         </div>
 
@@ -334,7 +334,7 @@
 
   .canvas-heading-left .group :global(.spectrum-Button),
   .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .canvas-heading-left .group :global(.spectrum-Icon) {
+  .canvas-heading-left .group :global(i) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .canvas-heading-left .group :global(.spectrum-Button),

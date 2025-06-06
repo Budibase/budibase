@@ -56,7 +56,7 @@
     {plugin.schema.type.charAt(0).toUpperCase() + plugin.schema.type.slice(1)}
   </div>
   <div>
-    <Icon name="ChevronRight" />
+    <Icon name="caret-right" />
   </div>
 </div>
 

@@ -17,7 +17,7 @@
 {#if stepCount === 1}
   <div class="stretch">
     <ActionButton
-      icon="MultipleAdd"
+      icon="plus"
       secondary
       on:click={() => {
         stepAction("addStep")
@@ -32,7 +32,7 @@
       <ActionButton
         size="S"
         secondary
-        icon="ChevronLeft"
+        icon="caret-left"
         disabled={currentStep === 0}
         on:click={() => {
           stepAction("previousStep")
@@ -44,7 +44,7 @@
         size="S"
         secondary
         disabled={currentStep === stepCount - 1}
-        icon="ChevronRight"
+        icon="caret-right"
         on:click={() => {
           stepAction("nextStep")
         }}
@@ -54,7 +54,7 @@
       <ActionButton
         size="S"
         secondary
-        icon="Close"
+        icon="x"
         disabled={stepCount === 1}
         on:click={() => {
           stepAction("removeStep")
@@ -65,7 +65,7 @@
       <ActionButton
         size="S"
         secondary
-        icon="MultipleAdd"
+        icon="plus"
         on:click={() => {
           stepAction("addStep")
         }}

@@ -189,7 +189,7 @@
                 style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
                 on:mousedown={() => (dragDisabled = false)}
               >
-                <Icon name="DragHandle" size="XL" />
+                <Icon name="dots-six" size="XL" />
               </div>
               <Select
                 placeholder={false}
@@ -267,13 +267,13 @@
                 />
               {/if}
               <Icon
-                name="Duplicate"
+                name="copy"
                 hoverable
                 size="S"
                 on:click={() => duplicateCondition(condition.id)}
               />
               <Icon
-                name="Close"
+                name="x"
                 hoverable
                 size="S"
                 on:click={() => removeCondition(condition.id)}
@@ -285,7 +285,7 @@
         <Body size="S">Add your first condition to get started.</Body>
       {/if}
       <div>
-        <Button secondary icon="Add" on:click={addCondition}>
+        <Button secondary icon="plus" on:click={addCondition}>
           Add condition
         </Button>
       </div>

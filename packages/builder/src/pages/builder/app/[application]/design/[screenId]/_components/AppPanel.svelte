@@ -46,7 +46,7 @@
           {#if $appStore.clientFeatures.devicePreview}
             <ActionButton
               quiet
-              icon={mobile ? "DevicePhone" : "DeviceDesktop"}
+              icon={mobile ? "device-mobile" : "desktop"}
               selected
               on:click={togglePreviewDevice}
             />
@@ -56,7 +56,7 @@
         <ScreenErrorsButton />
       </div>
       <Divider vertical />
-      <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+      <ActionButton quiet icon="play-circle" on:click={previewApp}>
         Preview
       </ActionButton>
     </div>

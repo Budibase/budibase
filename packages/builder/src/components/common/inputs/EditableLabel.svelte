@@ -35,14 +35,19 @@
       <Label {size}>{value || defaultValue}</Label>
     {/if}
     <div class="hide">
-      <Icon name="Edit" hoverable size="S" on:click={() => setEditing(true)} />
+      <Icon
+        name="pencil"
+        hoverable
+        size="S"
+        on:click={() => setEditing(true)}
+      />
     </div>
   {:else}
     <div class="input">
       <Input placeholder={defaultValue} bind:value on:change />
     </div>
     <Icon
-      name="SaveFloppy"
+      name="floppy-disk"
       hoverable
       size="S"
       on:click={() => {

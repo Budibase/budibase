@@ -73,7 +73,7 @@
       <Menu>
         {#if $menu.multiRowMode}
           <MenuItem
-            icon="Duplicate"
+            icon="copy"
             disabled={!$config.canAddRows || $selectedRowCount > 50}
             on:click={() => dispatch("request-bulk-duplicate")}
             on:click={menu.actions.close}
@@ -81,7 +81,7 @@
             Duplicate {$selectedRowCount} rows
           </MenuItem>
           <MenuItem
-            icon="Delete"
+            icon="trash"
             disabled={!$config.canDeleteRows}
             on:click={() => dispatch("request-bulk-delete")}
             on:click={menu.actions.close}
@@ -90,7 +90,7 @@
           </MenuItem>
         {:else if $menu.multiCellMode}
           <MenuItem
-            icon="Copy"
+            icon="copy"
             disabled={!$copyAllowed}
             on:click={() => dispatch("copy")}
             on:click={menu.actions.close}
@@ -98,7 +98,7 @@
             Copy
           </MenuItem>
           <MenuItem
-            icon="Paste"
+            icon="clipboard-text"
             disabled={!$pasteAllowed}
             on:click={() => dispatch("paste")}
             on:click={menu.actions.close}
@@ -106,7 +106,7 @@
             Paste
           </MenuItem>
           <MenuItem
-            icon="Delete"
+            icon="trash"
             disabled={!$config.canEditRows}
             on:click={() => dispatch("request-bulk-delete")}
           >
@@ -114,7 +114,7 @@
           </MenuItem>
         {:else}
           <MenuItem
-            icon="Copy"
+            icon="copy"
             disabled={!$copyAllowed}
             on:click={() => dispatch("copy")}
             on:click={menu.actions.close}
@@ -122,7 +122,7 @@
             Copy
           </MenuItem>
           <MenuItem
-            icon="Paste"
+            icon="clipboard-text"
             disabled={!$pasteAllowed}
             on:click={() => dispatch("paste")}
             on:click={menu.actions.close}
@@ -130,7 +130,7 @@
             Paste
           </MenuItem>
           <MenuItem
-            icon="Maximize"
+            icon="arrows-out-simple"
             disabled={isNewRow ||
               !$config.canEditRows ||
               !$config.canExpandRows}
@@ -140,7 +140,7 @@
             Edit row in modal
           </MenuItem>
           <MenuItem
-            icon="Copy"
+            icon="copy"
             disabled={isNewRow || !$focusedRow?._id || !$hasBudibaseIdentifiers}
             on:click={() => copyToClipboard($focusedRow?._id)}
             on:click={menu.actions.close}
@@ -148,7 +148,7 @@
             Copy row _id
           </MenuItem>
           <MenuItem
-            icon="Copy"
+            icon="copy"
             disabled={isNewRow ||
               !$focusedRow?._rev ||
               !$hasBudibaseIdentifiers}
@@ -158,14 +158,14 @@
             Copy row _rev
           </MenuItem>
           <MenuItem
-            icon="Duplicate"
+            icon="copy"
             disabled={isNewRow || !$config.canAddRows}
             on:click={duplicateRow}
           >
             Duplicate row
           </MenuItem>
           <MenuItem
-            icon="Delete"
+            icon="trash"
             disabled={isNewRow || !$config.canDeleteRows}
             on:click={deleteRow}
           >
@@ -173,7 +173,7 @@
           </MenuItem>
           {#if $config.aiEnabled}
             <MenuItem
-              icon="MagicWand"
+              icon="magic-wand"
               disabled={isNewRow || !hasAIColumns}
               on:click={generateAIColumns}
             >

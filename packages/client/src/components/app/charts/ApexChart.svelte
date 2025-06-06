@@ -70,7 +70,10 @@
         empty: true,
       }}
     >
-      <Icon name="Alert" color="var(--spectrum-global-color-static-red-600)" />
+      <Icon
+        name="warning"
+        color="var(--spectrum-global-color-static-red-600)"
+      />
       Add rows to your data source to start using your component
     </div>
   {/if}

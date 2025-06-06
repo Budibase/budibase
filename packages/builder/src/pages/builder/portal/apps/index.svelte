@@ -184,7 +184,7 @@
         dismissable
         action={() => goToAutomationError(appId)}
         type="error"
-        icon="Alert"
+        icon="warning"
         actionMessage={errorCount(automationErrors[appId]) > 1
           ? "View errors"
           : "View error"}
@@ -389,7 +389,7 @@
       max-width: none;
     }
     /*  Hide download apps icon */
-    .app-actions :global(> .spectrum-Icon) {
+    .app-actions :global(> i) {
       display: none;
     }
     .app-actions > :global(*) {

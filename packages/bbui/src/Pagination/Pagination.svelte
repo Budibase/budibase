@@ -2,6 +2,7 @@
   import "@spectrum-css/pagination/dist/index-vars.css"
   import "@spectrum-css/actionbutton/dist/index-vars.css"
   import "@spectrum-css/typography/dist/index-vars.css"
+  import Icon from "../Icon/Icon.svelte"
 
   export let page: number
   export let goToPrevPage: () => void
@@ -18,14 +19,7 @@
     on:click={hasPrevPage ? goToPrevPage : null}
     class:is-disabled={!hasPrevPage}
   >
-    <svg
-      class="spectrum-Icon spectrum-UIIcon-ChevronLeft100"
-      focusable="false"
-      aria-hidden="true"
-      aria-label="ChevronLeft"
-    >
-      <use xlink:href="#spectrum-css-icon-Chevron100" />
-    </svg>
+    <Icon name="caret-left" size="M" />
   </div>
   <span class="spectrum-Body--secondary spectrum-Pagination-counter">
     Page {page}
@@ -35,14 +29,7 @@
     on:click={hasNextPage ? goToNextPage : null}
     class:is-disabled={!hasNextPage}
   >
-    <svg
-      class="spectrum-Icon spectrum-UIIcon-ChevronRight100"
-      focusable="false"
-      aria-hidden="true"
-      aria-label="ChevronLeft"
-    >
-      <use xlink:href="#spectrum-css-icon-Chevron100" />
-    </svg>
+    <Icon name="caret-right" size="M" />
   </div>
 </nav>
 

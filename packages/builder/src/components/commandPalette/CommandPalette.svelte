@@ -37,7 +37,7 @@
       type: "Access",
       name: "Invite users and manage app access",
       description: "",
-      icon: "User",
+      icon: "user",
       action: () => builderStore.showBuilderSidePanel(),
       requiresApp: true,
     },
@@ -46,7 +46,7 @@
       type: "Publish",
       name: "App",
       description: "Deploy your application",
-      icon: "Box",
+      icon: "cube",
       action: deployApp,
       requiresApp: true,
     },
@@ -54,21 +54,21 @@
       type: "Preview",
       name: "App",
       description: "",
-      icon: "Play",
+      icon: "play",
       action: () => previewStore.showPreview(true),
       requiresApp: true,
     },
     {
       type: "Preview",
       name: "Published App",
-      icon: "Play",
+      icon: "play",
       action: () => window.open(`/app${$appStore.url}`),
       requiresApp: true,
     },
     {
       type: "Support",
       name: "Raise Github Discussion",
-      icon: "Help",
+      icon: "question",
       action: () =>
         window.open(`https://github.com/Budibase/budibase/discussions/new`),
       requiresApp: true,
@@ -76,7 +76,7 @@
     {
       type: "Support",
       name: "Raise A Bug",
-      icon: "Bug",
+      icon: "bug",
       action: () =>
         window.open(
           `https://github.com/Budibase/budibase/issues/new?assignees=&labels=bug&template=bug_report.md&title=`
@@ -126,7 +126,7 @@
     return routes.map(route => ({
       type: "Navigate",
       name: route.name,
-      icon: "Compass",
+      icon: "compass",
       action: () => {
         const gotoParams = route.url.includes(":application")
           ? { application: $params.application }
@@ -141,7 +141,7 @@
     return datasources.map(datasource => ({
       type: "Datasource",
       name: datasource.name,
-      icon: "Data",
+      icon: "database",
       action: () =>
         $goto(`/builder/app/:application/data/datasource/:id`, {
           application: $params.application,
@@ -155,7 +155,7 @@
     return tables.map(table => ({
       type: "Table",
       name: table.name,
-      icon: "Table",
+      icon: "table",
       action: () =>
         $goto(`/builder/app/:application/data/table/:id`, {
           application: $params.application,
@@ -169,7 +169,7 @@
     return views.map(view => ({
       type: "View",
       name: view.name,
-      icon: "Remove",
+      icon: "minus",
       action: () => {
         $goto(`/builder/app/:application/data/view/:name`, {
           application: $params.application,
@@ -184,7 +184,7 @@
     return views.map(view => ({
       type: "View",
       name: view.name,
-      icon: "Remove",
+      icon: "minus",
       action: () => {
         $goto(`/builder/app/:application/data/table/:tableId/:viewId`, {
           application: $params.application,
@@ -200,7 +200,7 @@
     return queries.map(query => ({
       type: "Query",
       name: query.name,
-      icon: "SQLQuery",
+      icon: "database",
       action: () =>
         $goto(`/builder/app/:application/data/query/:id`, {
           application: $params.application,
@@ -214,7 +214,7 @@
     return screens.map(screen => ({
       type: "Screen",
       name: screen.routing.route,
-      icon: "WebPage",
+      icon: "browser",
       action: () =>
         $goto(`/builder/app/:application/design/:screenId/:componentId`, {
           application: $params.application,
@@ -229,7 +229,7 @@
     return automations.map(automation => ({
       type: "Automation",
       name: automation.name,
-      icon: "ShareAndroid",
+      icon: "share-network",
       action: () =>
         $goto(`/builder/app/:application/automation/:id`, {
           application: $params.application,
@@ -243,7 +243,7 @@
     return ThemeOptions.map(themeMeta => ({
       type: "Change Builder Theme",
       name: themeMeta.name,
-      icon: "ColorPalette",
+      icon: "palette",
       action: () =>
         themeStore.update(state => {
           state.theme = themeMeta.id
@@ -261,7 +261,7 @@
       .map(([flag, value]) => ({
         type: "Feature Flag",
         name: `${value ? "Disable" : "Enable"} <code>${flag}</code>`,
-        icon: "Flag",
+        icon: "flag",
         action: () => {
           featureFlags.setFlag(flag, !value)
         },
@@ -359,7 +359,7 @@
 >
   <div class="content">
     <div class="title">
-      <Icon size="XL" name="Search" />
+      <Icon size="XL" name="magnifying-glass" />
       <Input bind:value={search} quiet placeholder="Search for command" />
     </div>
     <div class="commands">

@@ -177,9 +177,9 @@
               bind:value={filter.value}
             />
           {/if}
-          <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
+          <Icon hoverable name="x" on:click={() => removeFilter(idx)} />
         {:else}
-          <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
+          <Icon hoverable name="x" on:click={() => removeFilter(idx)} />
           <!-- empty div to preserve spacing -->
           <div />
         {/if}

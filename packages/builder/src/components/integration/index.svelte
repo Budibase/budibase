@@ -139,7 +139,7 @@
                               query.fields.steps[index].key
                             query.fields.steps[index].key = target
                           }}
-                          icon="ChevronUp"
+                          icon="caret-up"
                         />
                       {/if}
                       {#if index < query.fields.steps.length - 1}
@@ -153,7 +153,7 @@
                               query.fields.steps[index].key
                             query.fields.steps[index].key = target
                           }}
-                          icon="ChevronDown"
+                          icon="caret-down"
                         />
                       {/if}
                     </div>
@@ -164,7 +164,7 @@
                         query.fields.steps.splice(index, 1)
                         query.fields.steps = [...query.fields.steps]
                       }}
-                      icon="DeleteOutline"
+                      icon="trash"
                     />
                   </div>
                 </div>
@@ -201,7 +201,7 @@
               <Icon
                 disabled={!editable}
                 hoverable
-                name="AddCircle"
+                name="plus-circle"
                 size="S"
                 readOnly={!editable}
                 on:click={() => {

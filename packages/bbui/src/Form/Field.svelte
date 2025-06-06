@@ -21,7 +21,7 @@
       <div class="error">{error}</div>
     {:else if helpText}
       <div class="helpText">
-        <Icon name="HelpOutline" /> <span>{helpText}</span>
+        <Icon name="question" /> <span>{helpText}</span>
       </div>
     {/if}
   </div>

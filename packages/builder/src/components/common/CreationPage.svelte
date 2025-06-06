@@ -9,7 +9,7 @@
 <section class="page">
   {#if showClose}
     <div class="closeButton">
-      <Icon hoverable name="Close" on:click={onClose} />
+      <Icon hoverable name="x" on:click={onClose} />
     </div>
   {/if}
   <div class="heading">

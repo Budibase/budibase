@@ -33,7 +33,7 @@
 <DetailPopover bind:this={popover} title="Column settings">
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="ColumnSettings"
+      icon="columns"
       quiet
       size="M"
       on:click={popover?.open}

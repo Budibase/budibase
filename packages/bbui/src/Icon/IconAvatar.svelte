@@ -42,11 +42,11 @@
     place-items: center;
     border-radius: 50%;
   }
-  .icon :global(.spectrum-Icon) {
+  .icon :global(i) {
     width: 22px;
     height: 22px;
   }
-  .icon.filled :global(.spectrum-Icon) {
+  .icon.filled :global(i) {
     width: 16px;
     height: 16px;
   }
@@ -55,7 +55,7 @@
     height: 18px;
     flex: 0 0 18px;
   }
-  .icon.size--XS :global(.spectrum-Icon) {
+  .icon.size--XS :global(i) {
     width: 10px;
     height: 10px;
   }
@@ -64,11 +64,11 @@
     height: 22px;
     flex: 0 0 22px;
   }
-  .icon.size--S :global(.spectrum-Icon) {
+  .icon.size--S :global(i) {
     width: 16px;
     height: 16px;
   }
-  .icon.size--S.filled :global(.spectrum-Icon) {
+  .icon.size--S.filled :global(i) {
     width: 12px;
     height: 12px;
   }
@@ -77,11 +77,11 @@
     height: 40px;
     flex: 0 0 40px;
   }
-  .icon.size--L :global(.spectrum-Icon) {
+  .icon.size--L :global(i) {
     width: 28px;
     height: 28px;
   }
-  .icon.size--L.filled :global(.spectrum-Icon) {
+  .icon.size--L.filled :global(i) {
     width: 22px;
     height: 22px;
   }

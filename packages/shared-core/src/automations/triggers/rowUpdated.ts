@@ -10,7 +10,7 @@ import {
 export const definition: AutomationTriggerDefinition = {
   name: "Row Updated",
   event: AutomationEventType.ROW_UPDATE,
-  icon: "Refresh",
+  icon: "arrow-clockwise",
   tagline: "Row is updated in {{inputs.enriched.table.name}}",
   description: "Fired when a row is updated in your database",
   stepId: AutomationTriggerStepId.ROW_UPDATED,

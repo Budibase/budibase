@@ -32,7 +32,7 @@
   export let showClear: boolean | undefined = false
   export let filterConfig: FilterConfig[] | undefined = []
   export let targetComponent: any
-  export let size: string | undefined = "M"
+  export let size: "S" | "M" | "L" = "M"
   export let buttonText: string | undefined = "Apply"
 
   const memoFilters = memo({} as Record<string, SearchFilter>)

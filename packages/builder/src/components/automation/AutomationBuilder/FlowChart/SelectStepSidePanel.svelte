@@ -292,11 +292,11 @@
                 {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
                   <div class="tag-color">
                     <Tags>
-                      <Tag icon="LockClosed">Premium</Tag>
+                      <Tag icon="lock">Premium</Tag>
                     </Tags>
                   </div>
                 {:else if isDisabled}
-                  <Icon name="Help" tooltip={checkDisabled(idx).message} />
+                  <Icon name="question" tooltip={checkDisabled(idx).message} />
                 {:else if action.new}
                   <NewPill />
                 {/if}

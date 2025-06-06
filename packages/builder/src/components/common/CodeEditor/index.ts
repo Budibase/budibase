@@ -43,15 +43,12 @@ const buildHelperInfoNode = (helper: Helper) => {
 }
 
 const toSpectrumIcon = (name: string) => {
-  return `<svg
-    class="spectrum-Icon spectrum-Icon--sizeS"
-    focusable="false"
-    aria-hidden="false"
-    aria-label="${name}-section-icon"
-    style="color:var(--spectrum-global-color-gray-700)"
-  >
-    <use style="pointer-events: none;" xlink:href="#spectrum-icon-18-${name}" />
-  </svg>`
+  return `
+    <i class="ph ph-${name}"
+       style="color:var(--spectrum-global-color-gray-700); font-size: 14px;" 
+       aria-label="${name}-section-icon"
+       aria-hidden="false"></i>
+  `
 }
 
 const buildSectionHeader = (

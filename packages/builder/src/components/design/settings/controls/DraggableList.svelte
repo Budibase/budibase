@@ -3,7 +3,7 @@
   import { createEventDispatcher, setContext } from "svelte"
   import { generate } from "shortid"
   import { writable, get } from "svelte/store"
-  import DragHandle from "./drag-handle.svelte"
+  import { Icon } from "@budibase/bbui"
 
   export let items = []
   export let showHandle = true
@@ -116,7 +116,10 @@
               inactive = true
             }}
           >
-            <DragHandle />
+            <Icon
+              name="dots-six"
+              color="var(--spectrum-global-color-gray-700)"
+            />
           </div>
         {/if}
       </div>
@@ -184,17 +187,16 @@
     padding-right: var(--spacing-s);
   }
   .handle {
-    display: flex;
-    height: var(--spectrum-global-dimension-size-150);
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    margin-right: var(--spacing-s);
+    margin-left: 2px;
   }
   .handle:hover {
     cursor: grab;
   }
-  .handle :global(svg) {
-    fill: var(--spectrum-global-color-gray-500);
-    margin-right: var(--spacing-m);
-    margin-left: 2px;
-    width: var(--spectrum-global-dimension-size-65);
-    height: 100%;
+  .handle:hover :global(i) {
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>
