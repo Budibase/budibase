@@ -17,10 +17,15 @@
   import TemplateCard from "@/components/common/TemplateCard.svelte"
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
+  import type { CreateAppRequest } from "@budibase/types"
 
   type Template = {
+    key: string
     name: string
     fromFile: boolean
+    image: string
+    background: string
+    icon: string
   }
 
   export let template: Template
@@ -31,7 +36,8 @@
   const values = writable<{
     name: string
     url: string | null
-    file?: { name: string }
+    file?: File
+    encryptionPassword?: string
   }>({
     name: "",
     url: null,
@@ -95,7 +101,7 @@
     return name ? name.trim() : ""
   }
 
-  const tidyUrl = (url: string) => {
+  const tidyUrl = (url: string | null) => {
     if (url && !url.startsWith("/")) {
       url = `/${url}`
     }
@@ -127,23 +133,24 @@
     creating = true
 
     try {
-      // Create form data to create app
-      let data = new FormData()
-      data.append("name", $values.name.trim())
+      const data: CreateAppRequest = {
+        name: $values.name.trim(),
+      }
+
       if ($values.url) {
-        data.append("url", $values.url.trim())
+        data.url = $values.url.trim()
       }
 
       if (template?.fromFile) {
-        data.append("useTemplate", true)
-        data.append("fileToImport", $values.file)
+        data.useTemplate = true
+        data.fileToImport = $values.file?.name
         if ($values.encryptionPassword?.trim()) {
-          data.append("encryptionPassword", $values.encryptionPassword.trim())
+          data.encryptionPassword = $values.encryptionPassword.trim()
         }
       } else if (template) {
-        data.append("useTemplate", true)
-        data.append("templateName", template.name)
-        data.append("templateKey", template.key)
+        data.useTemplate = true
+        data.templateName = template.name
+        data.templateKey = template.key
       }
 
       // Create App
@@ -233,7 +240,7 @@
         error={$validation.touched.file && $validation.errors.file}
         gallery={false}
         label="File to import"
-        value={[$values.file]}
+        value={$values.file ? [$values.file] : []}
         on:change={e => {
           $values.file = e.detail?.[0]
           $validation.touched.file = true
@@ -246,7 +253,7 @@
       disabled={creating}
       error={$validation.touched.name && $validation.errors.name}
       on:blur={() => ($validation.touched.name = true)}
-      on:change={nameToUrl($values.name)}
+      on:change={() => nameToUrl($values.name)}
       label="Name"
       placeholder={defaultAppName}
     />
@@ -256,7 +263,7 @@
         disabled={creating}
         error={$validation.touched.url && $validation.errors.url}
         on:blur={() => ($validation.touched.url = true)}
-        on:change={tidyUrl($values.url)}
+        on:change={() => tidyUrl($values.url)}
         label="URL"
         placeholder={$values.url
           ? $values.url
