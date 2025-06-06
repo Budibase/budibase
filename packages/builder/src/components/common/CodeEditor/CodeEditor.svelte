@@ -470,7 +470,6 @@
   <AIGen
     {bindings}
     {value}
-    parentWidth={editorWidth}
     on:update={handleAICodeUpdate}
     on:accept={() => {
       dispatch("change", editor.state.doc.toString())
