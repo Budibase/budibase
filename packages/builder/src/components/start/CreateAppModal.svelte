@@ -53,19 +53,19 @@
   $: encryptedFile = !!filename && isEncryptedRegex.test(filename)
 
   onMount(async () => {
-    const lastChar = $auth.user?.firstName
-      ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
-      : null
+    if ($auth.user?.firstName) {
+      const lastChar = $auth.user?.firstName
+        ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
+        : null
+      defaultAppName =
+        lastChar && lastChar.toLowerCase() == "s"
+          ? `${$auth.user.firstName} ${appOrWorkspace}`
+          : `${$auth.user.firstName}s ${appOrWorkspace}`
+    } else {
+      defaultAppName = `My ${appOrWorkspace}`
+    }
 
-    defaultAppName =
-      lastChar && lastChar.toLowerCase() == "s"
-        ? `${$auth.user?.firstName} ${appOrWorkspace}`
-        : `${$auth.user?.firstName}s ${appOrWorkspace}`
-
-    $values.name = resolveAppName(
-      template,
-      !$auth.user?.firstName ? `My ${appOrWorkspace}` : defaultAppName
-    )
+    $values.name = resolveAppName(template, defaultAppName)
     nameToUrl($values.name)
     await setupValidation()
   })
@@ -107,8 +107,8 @@
 
   const setupValidation = async () => {
     const applications = svelteGet(appsStore).apps
-    appValidation.name(validation, { apps: applications })
-    appValidation.url(validation, { apps: applications })
+    appValidation.name(validation, { apps: applications }, appOrWorkspace)
+    appValidation.url(validation, { apps: applications }, appOrWorkspace)
     appValidation.file(validation, { template })
 
     encryptionValidation.addValidatorType("encryptionPassword", "text", true)
@@ -173,7 +173,10 @@
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
+
+  let appOrWorkspace: "workspace" | "app"
   $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+
   $: stepConfig = {
     [Step.CONFIG]: {
       title: `Create your ${appOrWorkspace}`,
