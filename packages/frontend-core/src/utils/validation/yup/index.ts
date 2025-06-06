@@ -1,31 +1,49 @@
-import { object, string, number } from "yup"
-import { writable, get } from "svelte/store"
+import { object, string, number, AnySchema } from "yup"
+import { writable, get, type Writable } from "svelte/store"
 import { Helpers, notifications } from "@budibase/bbui"
 
+type ValidationState = {
+  values: Record<string, any>
+  errors: Record<string, string | null>
+  touched: Record<string, boolean>
+  valid: boolean
+}
+
+type ValidatorMap = Record<string, AnySchema>
+
+type AddValidatorTypeOptions = {
+  minLength?: number
+}
+
 export const createValidationStore = () => {
-  const DEFAULT = {
+  const DEFAULT: ValidationState = {
     values: {},
     errors: {},
     touched: {},
     valid: false,
   }
 
-  const validator = {}
-  const validation = writable(DEFAULT)
+  const validator: ValidatorMap = {}
+  const validation: Writable<ValidationState> = writable(DEFAULT)
 
-  const addValidator = (propertyName, propertyValidator) => {
-    if (!propertyValidator || !propertyName) {
-      return
-    }
+  const addValidator = (
+    propertyName: string,
+    propertyValidator: AnySchema | null
+  ) => {
+    if (!propertyValidator || !propertyName) return
     validator[propertyName] = propertyValidator
   }
 
-  const addValidatorType = (propertyName, type, required, options) => {
-    if (!type || !propertyName) {
-      return
-    }
+  const addValidatorType = (
+    propertyName: string,
+    type: string,
+    required?: boolean,
+    options?: AddValidatorTypeOptions
+  ) => {
+    if (!type || !propertyName) return
 
-    let propertyValidator
+    let propertyValidator: AnySchema
+
     switch (type) {
       case "number":
         propertyValidator = number().nullable()
@@ -45,15 +63,16 @@ export const createValidationStore = () => {
     }
 
     if (options?.minLength) {
-      propertyValidator = propertyValidator.min(options.minLength)
+      propertyValidator = (propertyValidator as any).min(options.minLength)
     }
 
     validator[propertyName] = propertyValidator
   }
 
-  const observe = async (propertyName, value) => {
-    const values = get(validation).values
-    let fieldIsValid
+  const observe = async (propertyName: string, value: any) => {
+    const { values } = get(validation)
+    let fieldIsValid = false
+
     if (!Object.prototype.hasOwnProperty.call(values, propertyName)) {
       // Initial setup
       values[propertyName] = value
@@ -72,7 +91,7 @@ export const createValidationStore = () => {
       })
       await obj.validateAt(propertyName, { [propertyName]: value })
       fieldIsValid = true
-    } catch (error) {
+    } catch (error: any) {
       const [fieldError] = error.errors
       if (fieldError) {
         validation.update(store => {
@@ -103,21 +122,23 @@ export const createValidationStore = () => {
     }
   }
 
-  const check = async values => {
+  const check = async (values: Record<string, any>) => {
     const obj = object().shape(validator)
     // clear the previous errors
     const properties = Object.keys(validator)
-    properties.forEach(property => (get(validation).errors[property] = null))
+    properties.forEach(property => {
+      get(validation).errors[property] = null
+    })
 
     let validationError = false
     try {
       await obj.validate(values, { abortEarly: false })
-    } catch (error) {
+    } catch (error: any) {
       if (!error.inner) {
-        notifications.error("Unexpected validation error", error)
+        notifications.error("Unexpected validation error")
         validationError = true
       } else {
-        error.inner.forEach(err => {
+        error.inner.forEach((err: any) => {
           validation.update(store => {
             store.errors[err.path] = Helpers.capitalise(err.message)
             return store
@@ -149,3 +170,5 @@ export const createValidationStore = () => {
     observe,
   }
 }
+
+export type ValidationStore = ReturnType<typeof createValidationStore>

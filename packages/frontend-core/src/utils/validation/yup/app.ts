@@ -1,7 +1,12 @@
 import { string, mixed } from "yup"
 import { APP_NAME_REGEX, APP_URL_REGEX } from "../../../constants"
+import { App } from "@budibase/types"
+import { ValidationStore } from "."
 
-export const name = (validation, { apps, currentApp } = { apps: [] }) => {
+export const name = (
+  validation: ValidationStore,
+  { apps, currentApp }: { apps: App[]; currentApp?: App } = { apps: [] }
+) => {
   validation.addValidator(
     "name",
     string()
@@ -30,7 +35,10 @@ export const name = (validation, { apps, currentApp } = { apps: [] }) => {
   )
 }
 
-export const url = (validation, { apps, currentApp } = { apps: [] }) => {
+export const url = (
+  validation: ValidationStore,
+  { apps, currentApp }: { apps: App[]; currentApp?: App } = { apps: [] }
+) => {
   validation.addValidator(
     "url",
     string()
@@ -75,7 +83,10 @@ export const url = (validation, { apps, currentApp } = { apps: [] }) => {
   )
 }
 
-export const file = (validation, { template } = {}) => {
+export const file = (
+  validation: ValidationStore,
+  { template }: { template?: { fromFile: boolean } } = {}
+) => {
   const templateToUse =
     template && Object.keys(template).length === 0 ? null : template
   validation.addValidator(
