@@ -46,12 +46,13 @@ export async function save(
 
   const isCreation = !screen._id
 
-  if (
-    (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
-    screen.workspaceAppId &&
-    !(await sdk.workspaceApps.get(screen.workspaceAppId))
-  ) {
-    ctx.throw("workspaceAppId is not valid")
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    if (
+      !screen.workspaceAppId ||
+      !(await sdk.workspaceApps.get(screen.workspaceAppId))
+    ) {
+      ctx.throw("workspaceAppId is not valid")
+    }
   }
 
   const savedScreen = isCreation
@@ -100,6 +101,10 @@ export async function save(
     }
   }
 
+  if (screen.routing.homeScreen) {
+    await sdk.screens.ensureHomepageUniqueness(screen)
+  }
+
   if (isCreation) {
     await events.screen.created(screen)
   }
@@ -109,6 +114,7 @@ export async function save(
       label: navigationLinkLabel,
       url: screen.routing.route,
       roleId: screen.routing.roleId,
+      workspaceAppId: screen.workspaceAppId,
     })
   }
 
@@ -125,9 +131,19 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
 
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    const allScreens = await sdk.screens.fetch()
+    const appScreens = allScreens.filter(
+      s => s.workspaceAppId === screen.workspaceAppId
+    )
+    if (appScreens.filter(s => s._id !== id).length === 0) {
+      ctx.throw("Cannot delete the last screen in a workspace app", 409)
+    }
+  }
+
   await db.remove(id, ctx.params.screenRev)
 
-  await sdk.navigation.deleteLink(screen.routing.route)
+  await sdk.navigation.deleteLink(screen.routing.route, screen.workspaceAppId)
 
   await events.screen.deleted(screen)
   ctx.body = {

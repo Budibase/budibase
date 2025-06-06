@@ -30,8 +30,15 @@
 
 ## Pull requests
 
-- Respect the format of pull_request_template.md. Some sections may not be
-  required, you are free to ignore them. Don't add new sections, though.
+- Always respect the format of pull_request_template.md. Some sections may not
+  be required, you are free to ignore them. Don't add new sections, though.
+- When you open a pull request, always open it as a draft so that it can be
+  reviewed by a human.
+- Before opening a pull request, always make sure that the branch you're pushing
+  is up to date with master.
+- If you're working on a bug, the name of the PR should start with the bug ID
+  in square brackets, e.g. [BUDI-1234]. The link to the bug should go into the
+  "Addresses" section of pull_request_template.md.
 
 ## Architecture
 

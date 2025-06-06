@@ -301,19 +301,22 @@ const newScreen = async ({
   const tableScreenRoute = getValidRoute(
     screens,
     tableOrView.name,
-    permissions.write
+    permissions.write,
+    workspaceAppId
   )
 
   const updateScreenRoute = getValidRoute(
     screens,
     `/${tableOrView.name}/edit/:id`,
-    permissions.write
+    permissions.write,
+    workspaceAppId
   )
 
   const createScreenRoute = getValidRoute(
     screens,
     `/${tableOrView.name}/new`,
-    permissions.write
+    permissions.write,
+    workspaceAppId
   )
 
   const tableScreenTemplate = getTableScreenTemplate({
