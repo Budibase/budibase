@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     sideBarCollapsed,
     enrichedApps,
@@ -10,9 +10,9 @@
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
 
-  let searchString
-  let onAgents = $page.path.endsWith("/agents")
-  let openedApp
+  let searchString: string
+  let onAgents: boolean = $page.path.endsWith("/agents")
+  let openedApp: string | undefined
 
   $: filteredApps = $enrichedApps.filter(app => {
     return (
@@ -84,7 +84,7 @@
             on:click={() => {
               onAgents = true
               openedApp = undefined
-              agentsStore.setCurrentChatId(chat._id)
+              agentsStore.setCurrentChatId(chat._id || "")
               $goto("./agents")
             }}
             {selected}

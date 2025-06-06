@@ -7,7 +7,7 @@
   export let placeholder: string
   export let value: string
   export let onAdd: (_e: Event) => void
-  export let search: boolean
+  export let search: boolean = false
 
   let searchInput: HTMLInputElement
 
