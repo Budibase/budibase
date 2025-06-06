@@ -189,7 +189,13 @@
                 style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
                 on:mousedown={() => (dragDisabled = false)}
               >
-                <Icon name="dots-six" size="XL" />
+                <Icon
+                  name="dots-six-vertical"
+                  size="L"
+                  color="var(--spectrum-global-color-gray-600)"
+                  hoverable="true"
+                  hovercolor="var(--spectrum-global-color-gray-800)"
+                />
               </div>
               <Select
                 placeholder={false}
