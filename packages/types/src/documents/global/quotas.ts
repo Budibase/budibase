@@ -45,7 +45,6 @@ export interface MonthlyUsage {
   [MonthlyQuotaName.QUERIES]: number
   [MonthlyQuotaName.AUTOMATIONS]: number
   [MonthlyQuotaName.BUDIBASE_AI_CREDITS]: number
-  [MonthlyQuotaName.ACTIONS]: number
   triggers: {
     [key in MonthlyQuotaName]?: QuotaTriggers
   }

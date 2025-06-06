@@ -24,7 +24,6 @@ export enum MonthlyQuotaName {
   QUERIES = "queries",
   AUTOMATIONS = "automations",
   BUDIBASE_AI_CREDITS = "budibaseAICredits",
-  ACTIONS = "actions",
 }
 
 export enum ConstantQuotaName {
@@ -64,7 +63,6 @@ export type MonthlyQuotas = {
   [MonthlyQuotaName.QUERIES]: Quota
   [MonthlyQuotaName.AUTOMATIONS]: Quota
   [MonthlyQuotaName.BUDIBASE_AI_CREDITS]: Quota
-  [MonthlyQuotaName.ACTIONS]: Quota
 }
 
 export type StaticQuotas = {
