@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { url } from "@roxi/routify"
   import FirstAppOnboarding from "./onboarding/index.svelte"
   import { Layout, Page, Button, Modal } from "@budibase/bbui"
@@ -13,12 +13,14 @@
   } from "@/stores/portal"
   import { Breadcrumbs, Breadcrumb, Header } from "@/components/portal/page"
 
-  let template
-  let creationModal = false
-  let appLimitModal
+  let template: { fromFile: true } | null
+  let creationModal: Modal
+  let appLimitModal: AppLimitModal
+
+  $: licensedApps = $licensing?.usageMetrics?.apps || 0
 
   const initiateAppCreation = () => {
-    if ($licensing?.usageMetrics?.apps >= 100) {
+    if (licensedApps >= 100) {
       appLimitModal.show()
     } else {
       template = null
@@ -31,7 +33,7 @@
   }
 
   const initiateAppImport = () => {
-    if ($licensing?.usageMetrics?.apps >= 100) {
+    if (licensedApps >= 100) {
       appLimitModal.show()
     } else {
       template = { fromFile: true }
@@ -71,12 +73,7 @@
       <TemplateDisplay templates={$templates} />
     </Layout>
   </Page>
-  <Modal
-    bind:this={creationModal}
-    padding={false}
-    width="600px"
-    on:hide={stopAppCreation}
-  >
+  <Modal bind:this={creationModal} on:hide={stopAppCreation}>
     <CreateAppModal {template} />
   </Modal>
   <AppLimitModal bind:this={appLimitModal} />
