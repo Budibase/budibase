@@ -11,11 +11,13 @@ export enum UsedByType {
 export enum ResourceType {
   DATASOURCE = "datasource",
   TABLE = "table",
+  ROW_ACTION = "row_action",
+  QUERY = "query",
 }
 
 export interface UsedResource {
   id: string
-  name: string
+  name?: string
   type: ResourceType
   usedBy: string
   usedByType: UsedByType

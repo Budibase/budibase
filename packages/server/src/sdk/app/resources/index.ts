@@ -1,7 +1,7 @@
 import sdk from "../.."
 import { ResourceType, Screen, UsedByType, UsedResource } from "@budibase/types"
 
-export async function analyse({
+export async function analyseMinimal({
   automationIds,
   workspaceAppIds,
 }: {
@@ -82,4 +82,44 @@ export async function analyse({
   return resources
 }
 
-export async function fullList() {}
+export async function analyseAll(toCheck: {
+  automationIds?: string[]
+  workspaceAppIds?: string[]
+}) {
+  const minimalResources = await analyseMinimal(toCheck)
+  // copy list, will expand it with queries and row actions
+  const [rowActions, queries] = await Promise.all([
+    sdk.rowActions.getAll(),
+    sdk.queries.fetch(),
+  ])
+
+  let resources: UsedResource[] = [...minimalResources]
+  for (let resource of minimalResources) {
+    // datasources and tables will have their ID in the row action ID
+    const tableActions = rowActions.filter(action =>
+      action._id!.includes(resource.id)
+    )
+    resources.concat(
+      tableActions.map(action => ({
+        ...resource,
+        id: action._id!,
+        name: undefined,
+        type: ResourceType.ROW_ACTION,
+      }))
+    )
+    // queries only apply to datasources
+    if (resource.type === ResourceType.DATASOURCE) {
+      const datasourceQueries = queries.filter(
+        query => query.datasourceId === resource.id
+      )
+      resources.concat(
+        datasourceQueries.map(query => ({
+          ...resource,
+          id: query._id!,
+          name: query.name,
+          type: ResourceType.QUERY,
+        }))
+      )
+    }
+  }
+}
