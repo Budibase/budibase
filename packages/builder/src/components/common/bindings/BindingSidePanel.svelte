@@ -323,12 +323,19 @@
             }}
           >
             <Icon
-              size="S"
-              color="var(--spectrum-global-color-gray-700)"
+              size="M"
+              color="var(--spectrum-global-color-gray-600)"
               name={categoryIcons[categoryName]}
             />
             <span class="category-name">{categoryName} </span>
-            <span class="category-chevron"><Icon name="caret-right" /></span>
+            <span class="category-chevron"
+              ><Icon
+                name="caret-right"
+                color="var(--spectrum-global-color-gray-600)"
+                size="XS"
+                weight="regular"
+              /></span
+            >
           </li>
         {/each}
       </ul>
@@ -491,8 +498,7 @@
     text-transform: capitalize;
   }
   ul.category-list .category-chevron {
-    flex: 1;
-    text-align: right;
+    margin-left: auto;
   }
   ul.category-list .category-chevron :global(div.icon),
   .cat-heading :global(div.icon) {
