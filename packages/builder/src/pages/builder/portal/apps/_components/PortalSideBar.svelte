@@ -9,6 +9,7 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
+  import { Helpers } from "@budibase/bbui"
 
   let searchString: string
   let onAgents: boolean = $page.path.endsWith("/agents")
@@ -20,13 +21,15 @@
       app.name.toLowerCase().includes(searchString.toLowerCase())
     )
   })
+
+  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 </script>
 
 <div class="side-bar" class:collapsed={$sideBarCollapsed}>
   <div class="side-bar-controls">
     <NavHeader
-      title="Apps"
-      placeholder="Search for apps"
+      title={Helpers.capitalise(appsOrWorkspaces)}
+      placeholder={`Search for ${appsOrWorkspaces}`}
       bind:value={searchString}
       onAdd={() => $goto("./create")}
     />
@@ -34,7 +37,7 @@
   <div class="side-bar-nav">
     <NavItem
       icon="WebPages"
-      text="All apps"
+      text={`All ${appsOrWorkspaces}`}
       on:click={() => {
         onAgents = false
         $goto("./")
