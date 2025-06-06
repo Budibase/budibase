@@ -1,10 +1,18 @@
+import { MenuItem } from "@/types"
+
 const getAppContextMenuItems = ({
   app,
   onDuplicate,
   onExportDev,
   onExportProd,
   onDelete,
-}) => {
+}: {
+  app: { deployed: boolean }
+  onDuplicate: () => void
+  onExportDev: () => void
+  onExportProd: () => void
+  onDelete: () => void
+}): MenuItem[] => {
   return [
     {
       icon: "Copy",
