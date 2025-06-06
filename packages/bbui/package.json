@@ -94,6 +94,16 @@
             "target": "build"
           }
         ]
+      },
+      "dev": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
       }
     }
   }
