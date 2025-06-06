@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { writable, get as svelteGet } from "svelte/store"
   import {
     notifications,
@@ -18,12 +18,24 @@
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
 
-  export let template
+  type Template = {
+    name: string
+    fromFile: boolean
+  }
+
+  export let template: Template
 
   let creating = false
-  let defaultAppName
+  let defaultAppName: string
 
-  const values = writable({ name: "", url: null })
+  const values = writable<{
+    name: string
+    url: string | null
+    file?: { name: string }
+  }>({
+    name: "",
+    url: null,
+  })
   const validation = createValidationStore()
   const encryptionValidation = createValidationStore()
   const isEncryptedRegex = /^.*\.enc.*\.tar\.gz$/gm
@@ -40,7 +52,7 @@
 
   // filename should be separated to avoid updates everytime any other form element changes
   $: filename = $values.file?.name
-  $: encryptedFile = isEncryptedRegex.test(filename)
+  $: encryptedFile = !!filename && isEncryptedRegex.test(filename)
 
   onMount(async () => {
     const lastChar = $auth.user?.firstName
@@ -50,7 +62,7 @@
     defaultAppName =
       lastChar && lastChar.toLowerCase() == "s"
         ? `${$auth.user?.firstName} app`
-        : `${$auth.user.firstName}s app`
+        : `${$auth.user?.firstName}s app`
 
     $values.name = resolveAppName(
       template,
@@ -68,7 +80,7 @@
       : `${appPrefix}${resolveAppUrl(template, $values.name)}`
   }`
 
-  const resolveAppUrl = (template, name) => {
+  const resolveAppUrl = (template: Template, name: string) => {
     let parsedName
     const resolvedName = resolveAppName(template, name)
     parsedName = resolvedName ? resolvedName.toLowerCase() : ""
@@ -76,21 +88,21 @@
     return encodeURI(parsedUrl)
   }
 
-  const resolveAppName = (template, name) => {
+  const resolveAppName = (template: Template, name: string) => {
     if (template && !template.fromFile) {
       return template.name
     }
-    return name ? name.trim() : null
+    return name ? name.trim() : ""
   }
 
-  const tidyUrl = url => {
+  const tidyUrl = (url: string) => {
     if (url && !url.startsWith("/")) {
       url = `/${url}`
     }
     $values.url = url === "" ? null : url
   }
 
-  const nameToUrl = appName => {
+  const nameToUrl = (appName: string) => {
     let resolvedUrl = resolveAppUrl(template, appName)
     tidyUrl(resolvedUrl)
   }
@@ -173,7 +185,7 @@
         } else {
           try {
             await createNewApp()
-          } catch (error) {
+          } catch (error: any) {
             notifications.error(`Error creating app - ${error.message}`)
           }
         }
@@ -186,7 +198,7 @@
       onConfirm: async () => {
         try {
           await createNewApp()
-        } catch (e) {
+        } catch (e: any) {
           let message = "Error creating app"
           if (e.message) {
             message += `: ${lowercase(e.message)}`
