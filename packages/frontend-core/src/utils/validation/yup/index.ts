@@ -4,7 +4,7 @@ import { Helpers, notifications } from "@budibase/bbui"
 
 type ValidationState = {
   values: Record<string, any>
-  errors: Record<string, string | null>
+  errors: Record<string, string>
   touched: Record<string, boolean>
   valid: boolean
 }
@@ -86,7 +86,7 @@ export const createValidationStore = () => {
     const obj = object().shape(validator)
     try {
       validation.update(store => {
-        store.errors[propertyName] = null
+        delete store.errors[propertyName]
         return store
       })
       await obj.validateAt(propertyName, { [propertyName]: value })
@@ -127,7 +127,7 @@ export const createValidationStore = () => {
     // clear the previous errors
     const properties = Object.keys(validator)
     properties.forEach(property => {
-      get(validation).errors[property] = null
+      delete get(validation).errors[property]
     })
 
     let validationError = false
