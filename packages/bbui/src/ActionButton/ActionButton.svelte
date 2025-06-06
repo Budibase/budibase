@@ -52,8 +52,8 @@
       name={icon}
       size="M"
       color="var(--spectrum-global-color-gray-600)"
-      hoverable="true"
-      hovercolor="var(--spectrum-global-color-gray-800)"
+      hoverable
+      hoverColor="var(--spectrum-global-color-gray-800)"
     />
   {/if}
   {#if $$slots}

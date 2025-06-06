@@ -305,7 +305,13 @@
 
     {#if !$config.quiet}
       <div class="column-icon">
-        <Icon size="S" name={getColumnIcon(column)} />
+        <Icon
+          name={getColumnIcon(column)}
+          size="M"
+          color="var(--spectrum-global-color-gray-600)"
+          hoverable
+          hoverColor="var(--spectrum-global-color-gray-800)"
+        />
       </div>
     {/if}
     <div class="search-icon" on:click={startSearching}>
@@ -428,7 +434,7 @@
   }
   .header-cell :global(.cell) {
     padding: 0 var(--cell-padding);
-    gap: calc(2 * var(--cell-spacing));
+    gap: calc(1.5 * var(--cell-spacing));
     background: var(--header-cell-background);
   }
 
@@ -461,7 +467,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    font-weight: 600;
+    font-weight: 500;
   }
   .header-cell.searching .name {
     opacity: 0;
