@@ -43,6 +43,7 @@
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
+  import { BudibaseRoleOptions, BudibaseRoles } from "@/constants"
 
   let query = null
   let loaded = false
@@ -55,7 +56,7 @@
   let email
   let error
   let form
-  let creationRoleType = Constants.BudibaseRoles.AppUser
+  let creationRoleType = BudibaseRoles.AppUser
   let creationAccessType = Constants.Roles.BASIC
 
   let appInvites = []
@@ -383,15 +384,15 @@
         email: newUserEmail,
         userInfo: {
           builder: {
-            global: creationRoleType === Constants.BudibaseRoles.Admin,
-            creator: creationRoleType === Constants.BudibaseRoles.Creator,
+            global: creationRoleType === BudibaseRoles.Admin,
+            creator: creationRoleType === BudibaseRoles.Creator,
           },
-          admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
+          admin: { global: creationRoleType === BudibaseRoles.Admin },
         },
       },
     ]
 
-    const notCreatingAdmin = creationRoleType !== Constants.BudibaseRoles.Admin
+    const notCreatingAdmin = creationRoleType !== BudibaseRoles.Admin
     const isCreator = creationAccessType === Constants.Roles.CREATOR
     if (notCreatingAdmin && isCreator) {
       payload[0].userInfo.builder.apps = [prodAppId]
@@ -544,11 +545,11 @@
   const checkAppAccess = e => {
     // Ensure we don't get into an invalid combo of tenant role and app access
     if (
-      e.detail === Constants.BudibaseRoles.AppUser &&
+      e.detail === BudibaseRoles.AppUser &&
       creationAccessType === Constants.Roles.CREATOR
     ) {
       creationAccessType = Constants.Roles.BASIC
-    } else if (e.detail === Constants.BudibaseRoles.Admin) {
+    } else if (e.detail === BudibaseRoles.Admin) {
       creationAccessType = Constants.Roles.CREATOR
     }
   }
@@ -856,9 +857,9 @@
             <FancySelect
               bind:value={creationRoleType}
               options={sdk.users.isAdmin($auth.user)
-                ? Constants.BudibaseRoleOptions
-                : Constants.BudibaseRoleOptions.filter(
-                    option => option.value !== Constants.BudibaseRoles.Admin
+                ? BudibaseRoleOptions
+                : BudibaseRoleOptions.filter(
+                    option => option.value !== BudibaseRoles.Admin
                   )}
               label="Role"
               on:change={checkAppAccess}
@@ -868,18 +869,17 @@
                 placeholder={false}
                 bind:value={creationAccessType}
                 allowPublic={false}
-                allowCreator={creationRoleType !==
-                  Constants.BudibaseRoles.AppUser}
+                allowCreator={creationRoleType !== BudibaseRoles.AppUser}
                 quiet={true}
                 autoWidth
                 align="right"
                 fancySelect
-                allowedRoles={creationRoleType === Constants.BudibaseRoles.Admin
+                allowedRoles={creationRoleType === BudibaseRoles.Admin
                   ? [Constants.Roles.CREATOR]
                   : null}
                 footer={getRoleFooter({
                   isAdminOrGlobalBuilder:
-                    creationRoleType === Constants.BudibaseRoles.Admin,
+                    creationRoleType === BudibaseRoles.Admin,
                 })}
               />
             </span>
