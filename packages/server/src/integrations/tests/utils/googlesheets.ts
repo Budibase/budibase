@@ -447,7 +447,17 @@ export class GoogleSheetsMock {
       throw new Error(`Sheet ${sheetId} not found`)
     }
 
-    const newRows = body.values.map(v => this.valuesToRowData(v))
+    // Ensure new rows have the same column count as the sheet
+    const currentColumnCount = sheet.properties.gridProperties.columnCount
+    const newRows = body.values.map(v => {
+      const rowData = this.valuesToRowData(v)
+      // Pad the row with empty cells if needed to match the sheet's column count
+      while (rowData.values.length < currentColumnCount) {
+        rowData.values.push(this.createCellData(null))
+      }
+      return rowData
+    })
+
     const newMetadata = newRows.map(() => ({
       hiddenByUser: false,
       hiddenByFilter: false,
@@ -765,28 +775,31 @@ export class GoogleSheetsMock {
       endColumnIndex,
     } = this.parseA1Notation(range)
 
+    const sheet = this.getSheetById(sheetId)
+    if (!sheet) {
+      throw new Error(`Sheet ${sheetId} not found`)
+    }
+
     const valueRange: ValueRange = {
       range,
       majorDimension: "ROWS",
       values: [],
     }
 
+    const data = sheet.data[0]
+
     for (let row = startRowIndex; row <= endRowIndex; row++) {
       const values: Value[] = []
+      const rowData = data.rowData[row]
+
       for (let col = startColumnIndex; col <= endColumnIndex; col++) {
-        const cell = this.getCellNumericIndexes(sheetId, row, col)
-        if (!cell) {
-          const sheet = this.getSheetById(sheetId)
-          if (!sheet) {
-            throw new Error(`Sheet ${sheetId} not found`)
-          }
-          const sheetRows = sheet.data[0].rowData.length
-          const sheetCols = sheet.data[0].rowData[0].values.length
-          throw new Error(
-            `Failed to find cell at ${row}, ${col}. Range: ${valueRange.range}. Sheet dimensions: ${sheetRows}x${sheetCols}.`
-          )
+        let cellValue: Value = null
+
+        if (rowData && rowData.values && rowData.values[col]) {
+          cellValue = this.cellValue(rowData.values[col])
         }
-        values.push(this.cellValue(cell))
+
+        values.push(cellValue)
       }
 
       valueRange.values.push(values)
@@ -811,14 +824,15 @@ export class GoogleSheetsMock {
         continue
       }
 
+      let lastNonEmptyIndex = -1
       for (let i = row.length - 1; i >= 0; i--) {
         const cell = row[i]
-        if (cell == null || cell === "") {
-          row.pop()
-        } else {
+        if (cell != null && cell !== "") {
+          lastNonEmptyIndex = i
           break
         }
       }
+      row.splice(lastNonEmptyIndex + 1)
 
       for (let i = 0; i < row.length; i++) {
         const cell = row[i]
