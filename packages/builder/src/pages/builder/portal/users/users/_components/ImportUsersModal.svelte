@@ -7,10 +7,10 @@
     notifications,
     Icon,
   } from "@budibase/bbui"
-  import { groups, licensing, admin } from "@/stores/portal"
+  import { groups, licensing, admin, featureFlags } from "@/stores/portal"
   import { emailValidator } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
-  import { BudibaseRoleOptions } from "@/constants"
+  import { getBudibaseRoleOptions } from "@/constants"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -29,10 +29,12 @@
   $: exceed = licensing.usersLimitExceeded(userCount)
   $: importDisabled =
     !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
-  $: roleOptions = BudibaseRoleOptions.map(option => ({
-    ...option,
-    label: `${option.label} - ${option.subtitle}`,
-  }))
+  $: roleOptions = getBudibaseRoleOptions($featureFlags.WORKSPACE_APPS).map(
+    option => ({
+      ...option,
+      label: `${option.label} - ${option.subtitle}`,
+    })
+  )
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
 

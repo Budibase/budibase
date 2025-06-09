@@ -39,7 +39,7 @@
   import { API } from "@/api"
   import {
     BudibaseRoles,
-    ExtendedBudibaseRoleOptions,
+    getExtendedBudibaseRoleOptions,
     OnboardingType,
   } from "@/constants"
   import { sdk } from "@budibase/shared-core"
@@ -144,11 +144,16 @@
     successful: [],
     unsuccessful: [],
   }
-  $: setEnrichedUsers($fetch.rows as User[], tenantOwner)
+  $: setEnrichedUsers(
+    $fetch.rows as User[],
+    tenantOwner,
+    $featureFlags.WORKSPACE_APPS
+  )
 
   const setEnrichedUsers = async (
     rows: User[],
-    owner: AccountMetadata | null
+    owner: AccountMetadata | null,
+    workspaceAppsEnabled: boolean
   ) => {
     enrichedUsers = rows?.map<EnrichedUser>(user => {
       const userGroups: UserGroup[] = []
@@ -164,7 +169,7 @@
       if (owner) {
         user.tenantOwnerEmail = owner.email
       }
-      const role = ExtendedBudibaseRoleOptions.find(
+      const role = getExtendedBudibaseRoleOptions(workspaceAppsEnabled).find(
         x => x.value === users.getUserRole(user)
       )!
       return {
