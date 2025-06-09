@@ -312,7 +312,6 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     if (id) {
       table._id = id
     }
-    // build schema from headers
     for (let header of headerValues) {
       table.schema[header] = {
         name: header,
@@ -385,6 +384,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   async query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse> {
     const sheet = json.table.name
+
     switch (json.operation) {
       case Operation.CREATE:
         return this.create({ sheet, row: json.body as Row })
@@ -463,7 +463,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
   private async updateTable(table: TableRequest) {
     await this.connect()
-    const sheet = this.client.sheetsByTitle[table.name]
+    let sheet = this.client.sheetsByTitle[table.name]
     await sheet.loadHeaderRow()
 
     if (table._rename) {
@@ -501,6 +501,18 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       }
 
       try {
+        if (updatedHeaderValues.length > sheet.gridProperties.columnCount) {
+          await sheet.resize({
+            rowCount: sheet.rowCount,
+            columnCount: updatedHeaderValues.length,
+          })
+
+          this.client.resetLocalCache()
+          await this.client.loadInfo()
+          sheet = this.client.sheetsByTitle[table.name]
+          await sheet.loadHeaderRow()
+        }
+
         await sheet.setHeaderRow(updatedHeaderValues)
       } catch (err) {
         console.error("Error updating table in google sheets", err)
