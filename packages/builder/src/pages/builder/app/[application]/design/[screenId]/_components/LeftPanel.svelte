@@ -8,7 +8,13 @@
   import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
   import NewPill from "@/components/common/NewPill.svelte"
 
-  const [resizable, resizableHandle] = getHorizontalResizeActions()
+  let panelWidth = 230 // default width
+
+  // Update panelWidth on resize
+  const [resizable, resizableHandle] = getHorizontalResizeActions(
+    undefined,
+    (w = 0) => (panelWidth = w - 80)
+  )
 
   const Tabs = {
     Components: "Components",
