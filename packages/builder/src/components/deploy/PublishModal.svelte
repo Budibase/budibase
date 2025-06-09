@@ -30,9 +30,9 @@
   const dispatcher = createEventDispatcher()
 
   $: automations = $automationStore.automations
-  $: filteredAutomations = removeRowActionAutomations(removeTarget(automations))
+  $: filteredAutomations = removeRowActionAutomations(removeTarget(targetId, automations))
   $: apps = $workspaceAppStore.workspaceApps
-  $: filteredApps = removeTarget(apps)
+  $: filteredApps = removeTarget(targetId, apps)
   $: target = findTarget(targetId, apps, automations)
   $: selectedAppNames = getSelectedNames(selectedApps, apps)
   $: selectedAutomationNames = getSelectedNames(
@@ -99,8 +99,8 @@
       .map(item => item.name)
   }
 
-  function removeTarget<T extends { _id?: string }>(list: T[]): T[] {
-    return list?.filter(item => item._id !== targetId) || []
+  function removeTarget<T extends { _id?: string }>(target: string, list: T[]): T[] {
+    return list?.filter(item => item._id !== target) || []
   }
 
   function removeRowActionAutomations(automations: Automation[]) {
@@ -193,11 +193,13 @@
           noPadding
           bold={false}
         >
-          <Body size="XS"
-            >Resources: {usedResources
-              .map(resource => resource.name)
-              .join(", ")}</Body
-          >
+          {#if usedResources.length}
+            <Body size="XS"
+              >Resources: {usedResources
+                .map(resource => resource.name)
+                .join(", ")}</Body
+            >
+          {/if}
           {#if selectedAppNames.length}
             <Body size="XS">Apps: {selectedAppNames.join(", ")}</Body>
           {/if}
