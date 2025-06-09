@@ -98,10 +98,13 @@ export function generateMakeRequestWithFormData(
 
 export function mockWorkerUserAPI(...seedUsers: User[]) {
   const users: Record<string, User> = {
-    ...seedUsers.reduce((acc, user) => {
-      acc[user._id!] = user
-      return acc
-    }, {} as Record<string, User>),
+    ...seedUsers.reduce(
+      (acc, user) => {
+        acc[user._id!] = user
+        return acc
+      },
+      {} as Record<string, User>
+    ),
   }
 
   nock(environment.WORKER_URL!)

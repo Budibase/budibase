@@ -82,7 +82,16 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "/rows ($dbName)",
-    ({ config, dsProvider, isInternal, isMSSQL, isOracle, isSql }) => {
+    ({
+      config,
+      dsProvider,
+      isInternal,
+      isMySQL,
+      isMariaDB,
+      isMSSQL,
+      isOracle,
+      isSql,
+    }) => {
       let table: Table
       let datasource: Datasource | undefined
       let client: Knex | undefined
@@ -2828,6 +2837,9 @@ if (descriptions.length) {
         let m2mData: Row[]
 
         beforeAll(async () => {
+          o2mTable = await config.api.table.save(defaultTable())
+          m2mTable = await config.api.table.save(defaultTable())
+
           const table = await config.api.table.save(
             defaultTable({ schema: relSchema() })
           )
@@ -3117,6 +3129,117 @@ if (descriptions.length) {
           })
         })
       })
+
+      isSql &&
+        describe("imported many-to-many", () => {
+          let table1: Table
+          let table2: Table
+          let joinTable: Table
+
+          beforeAll(async () => {
+            const table1Id = "table1_" + generator.guid()
+            const table2Id = "table2_" + generator.guid()
+
+            await client!.schema.createTable(table1Id, table => {
+              table.increments("table1_id_foo").primary()
+              table.string("name")
+            })
+
+            await client!.schema.createTable(table2Id, table => {
+              table.increments("table2_id_bar").primary()
+              table.string("name")
+            })
+
+            await client!.schema.createTable("table1_table2", table => {
+              table.increments("id").primary()
+
+              // For some reason MySQL and MariaDB use a different types for
+              // `.increments(...)` and `.integer(...)` fields, making it
+              // invalid to create a foreign key reference to them. We use
+              // `.specificType(...)` to ensure the types match.
+              if (isMariaDB || isMySQL) {
+                table
+                  .specificType("table1_id", "int(10) unsigned")
+                  .references("table1_id_foo")
+                  .inTable(table1Id)
+                table
+                  .specificType("table2_id", "int(10) unsigned")
+                  .references("table2_id_bar")
+                  .inTable(table2Id)
+              } else {
+                table
+                  .integer("table1_id")
+                  .references("table1_id_foo")
+                  .inTable(table1Id)
+                table
+                  .integer("table2_id")
+                  .references("table2_id_bar")
+                  .inTable(table2Id)
+              }
+              table.unique(["table1_id", "table2_id"])
+            })
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+
+            table1 = resp.datasource.entities![table1Id]!
+            table2 = resp.datasource.entities![table2Id]!
+            joinTable = resp.datasource.entities!["table1_table2"]!
+
+            table1.schema.relation = {
+              name: "relation",
+              type: FieldType.LINK,
+              tableId: table2._id!,
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              fieldName: "table2_id_bar",
+              through: joinTable._id!,
+              throughFrom: "table2_id",
+              throughTo: "table1_id",
+            }
+
+            await config.api.table.save(table1)
+          })
+
+          it("should allow creation of rows", async () => {
+            const row1 = await config.api.row.save(table2._id!, { name: "one" })
+            const row2 = await config.api.row.save(table2._id!, { name: "two" })
+
+            await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [row1],
+            })
+
+            await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [row2],
+            })
+
+            await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [row1, row2],
+            })
+          })
+
+          it("should allow updating of rows", async () => {
+            const table2_row1 = await config.api.row.save(table2._id!, {
+              name: "one",
+            })
+            const table2_row2 = await config.api.row.save(table2._id!, {
+              name: "two",
+            })
+
+            const row2 = await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [table2_row2],
+            })
+
+            await config.api.row.save(table1._id!, {
+              ...row2,
+              relation: [table2_row1, table2_row2],
+            })
+          })
+        })
 
       // Upserting isn't yet supported in MSSQL or Oracle, see:
       //   https://github.com/knex/knex/pull/6050
@@ -3759,6 +3882,73 @@ if (descriptions.length) {
               "foo9",
             ])
           )
+        })
+      })
+
+      describe("datetime fields", () => {
+        it("should save and retrieve datetime fields", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00.000Z",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000Z")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000Z")
+        })
+
+        it("should save and retrieve datetime fields without timezone", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  ignoreTimezones: true,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000")
+        })
+
+        it("should be able to save a date with a timezone in an ignore timezone field", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  ignoreTimezones: true,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00.000Z",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000")
         })
       })
 

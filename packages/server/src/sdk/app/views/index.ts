@@ -446,7 +446,7 @@ export async function enrichSchema(
     schema[key] = {
       ...tableSchema[key],
       ...ui,
-      order: anyViewOrder ? ui?.order ?? undefined : tableSchema[key]?.order,
+      order: anyViewOrder ? (ui?.order ?? undefined) : tableSchema[key]?.order,
       // When this was written, the only column types in FieldSchema to have columns
       // field were the relationship columns. We blank this out here to make sure it's
       // not set on non-relationship columns, then below we populate it by calling

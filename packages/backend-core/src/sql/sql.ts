@@ -4,9 +4,9 @@ import {
   extractDate,
   getNativeSql,
   isExternalTable,
-  isInvalidISODateString,
   isValidFilter,
   isValidISODateString,
+  isValidISODateStringWithoutTimezone,
   isValidTime,
   sqlLog,
   validateManyToMany,
@@ -429,12 +429,19 @@ class InternalBuilder {
           return null
         }
         return new Date(date)
-      } else {
-        if (isInvalidISODateString(input)) {
-          return null
-        }
+      } else if (schema.ignoreTimezones) {
         if (isValidISODateString(input)) {
           return new Date(input.trim())
+        } else if (isValidISODateStringWithoutTimezone(input)) {
+          return new Date(input.trim() + "Z")
+        } else {
+          return null
+        }
+      } else {
+        if (isValidISODateString(input)) {
+          return new Date(input.trim())
+        } else {
+          return null
         }
       }
     }
@@ -1237,6 +1244,9 @@ class InternalBuilder {
     // to make sure result is deterministic
     const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
     if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
+      if (primaryKey[0] === undefined) {
+        throw new Error(`Primary key not found for table ${this.table.name}`)
+      }
       query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query

@@ -41,6 +41,7 @@
   } from "@/components/common/bindings"
   import Editor from "@/components/integration/QueryEditor.svelte"
   import WebhookDisplay from "@/components/automation/Shared/WebhookDisplay.svelte"
+  import CategorySelector from "./CategorySelector.svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
   export let context: {} | undefined
@@ -240,6 +241,10 @@
       },
       fullWidth: true,
     },
+    [SchemaFieldTypes.CATEGORIES]: {
+      comp: CategorySelector,
+      fullWidth: true,
+    },
   }
 
   $: isTrigger = block?.type === AutomationStepType.TRIGGER
@@ -266,7 +271,17 @@
       return false
     }
     const dependsOn = value?.dependsOn
-    return !dependsOn || !!getInputValue(inputData, dependsOn)
+    if (!dependsOn) return true
+
+    if (typeof dependsOn === "string") {
+      return !!getInputValue(inputData, dependsOn)
+    }
+
+    const fieldValue = getInputValue(inputData, dependsOn.field) as string
+    if (Array.isArray(dependsOn.value)) {
+      return dependsOn.value.includes(fieldValue)
+    }
+    return fieldValue === dependsOn.value
   }
 
   const defaultChange = (

@@ -1,6 +1,6 @@
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-import { events, roles } from "@budibase/backend-core"
+import { events, features, roles } from "@budibase/backend-core"
 import {
   Screen,
   Role,
@@ -10,6 +10,7 @@ import {
 } from "@budibase/types"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 import { SAMPLE_DATA_SCREEN_NAME } from "../../../constants/screens"
+import { structures } from "@budibase/backend-core/tests"
 
 const {
   basicScreen,
@@ -31,6 +32,11 @@ describe("/screens", () => {
     await config.init()
     screen = await config.createScreen()
   })
+
+  function popRandomScreen(screens: Screen[]) {
+    const index = Math.floor(Math.random() * screens.length)
+    return screens.splice(index, 1)[0]
+  }
 
   describe("fetch", () => {
     it("should create the sample data screen", async () => {
@@ -203,6 +209,110 @@ describe("/screens", () => {
         config,
         method: "DELETE",
         url: `/api/screens/${screen._id}/${screen._rev}`,
+      })
+    })
+
+    describe("workspace apps", () => {
+      let featureCleanup: () => void
+      beforeAll(() => {
+        featureCleanup = features.testutils.setFeatureFlags("*", {
+          WORKSPACE_APPS: true,
+        })
+      })
+
+      afterAll(() => {
+        featureCleanup()
+      })
+
+      it("should not allow deleting the last screen", async () => {
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest()
+        )
+        const screen = await config.api.screen.save({
+          ...basicScreen(),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        await config.api.screen.destroy(screen._id!, screen._rev!, {
+          status: 409,
+          body: { message: "Cannot delete the last screen in a workspace app" },
+        })
+      })
+
+      it("should allow deleting other screens", async () => {
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest()
+        )
+        const screens = await Promise.all(
+          Array.from({ length: 3 }).map(() =>
+            config.api.screen.save({
+              ...basicScreen(),
+              workspaceAppId: workspaceApp._id,
+            })
+          )
+        )
+
+        let screenToDelete = popRandomScreen(screens)
+        await config.api.screen.destroy(
+          screenToDelete._id!,
+          screenToDelete._rev!
+        )
+        screenToDelete = popRandomScreen(screens)
+        await config.api.screen.destroy(
+          screenToDelete._id!,
+          screenToDelete._rev!
+        )
+        screenToDelete = popRandomScreen(screens)
+        await config.api.screen.destroy(
+          screenToDelete._id!,
+          screenToDelete._rev!,
+          { status: 409 }
+        )
+      })
+
+      it("should allow deleting screens for other apps", async () => {
+        const { workspaceApp: workspaceApp1 } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest()
+          )
+        const { workspaceApp: workspaceApp2 } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest()
+          )
+        const app1Screens = await Promise.all(
+          Array.from({ length: 3 }).map(() =>
+            config.api.screen.save({
+              ...basicScreen(),
+              workspaceAppId: workspaceApp1._id,
+            })
+          )
+        )
+        // Other screens
+        await Promise.all(
+          Array.from({ length: 2 }).map(() =>
+            config.api.screen.save({
+              ...basicScreen(),
+              workspaceAppId: workspaceApp2._id,
+            })
+          )
+        )
+
+        let screenToDelete = popRandomScreen(app1Screens)
+        await config.api.screen.destroy(
+          screenToDelete._id!,
+          screenToDelete._rev!
+        )
+        screenToDelete = popRandomScreen(app1Screens)
+        await config.api.screen.destroy(
+          screenToDelete._id!,
+          screenToDelete._rev!
+        )
+        screenToDelete = popRandomScreen(app1Screens)
+        await config.api.screen.destroy(
+          screenToDelete._id!,
+          screenToDelete._rev!,
+          { status: 409 }
+        )
       })
     })
   })

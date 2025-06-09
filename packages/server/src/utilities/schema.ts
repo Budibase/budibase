@@ -106,7 +106,7 @@ export function validate(
       } else if (
         // If provided must be a valid date
         columnType === FieldType.DATETIME &&
-        sql.utils.isInvalidISODateString(columnData)
+        !sql.utils.isValidISODateString(columnData)
       ) {
         results.schemaValidation[columnName] = false
       } else if (

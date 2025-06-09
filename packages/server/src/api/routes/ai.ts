@@ -42,5 +42,6 @@ router.get("/api/agent/toolsource", auth.builderOrAdmin, ai.fetchToolSources)
 router.post("/api/ai/cron", auth.builderOrAdmin, ai.generateCronExpression)
 router.post("/api/ai/js", auth.builderOrAdmin, ai.generateJs)
 router.post("/api/ai/chat", middleware.licenseAuth, ai.chatCompletion)
+router.post("/api/ai/upload-file", middleware.licenseAuth, ai.uploadFile)
 
 export default router

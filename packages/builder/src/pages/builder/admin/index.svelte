@@ -95,9 +95,8 @@
             if (!formData.password) {
               fieldError["password"] = "Please enter a password"
             } else if (formData.password.length < passwordMinLength) {
-              fieldError[
-                "password"
-              ] = `Password must be at least ${passwordMinLength} characters`
+              fieldError["password"] =
+                `Password must be at least ${passwordMinLength} characters`
             } else {
               fieldError["password"] = undefined
             }

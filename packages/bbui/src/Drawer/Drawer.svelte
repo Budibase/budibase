@@ -227,8 +227,12 @@
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
-    transition: transform 260ms ease-out, bottom 260ms ease-out,
-      left 260ms ease-out, width 260ms ease-out, height 260ms ease-out;
+    transition:
+      transform 260ms ease-out,
+      bottom 260ms ease-out,
+      left 260ms ease-out,
+      width 260ms ease-out,
+      height 260ms ease-out;
     display: flex;
     flex-direction: column;
     align-items: stretch;

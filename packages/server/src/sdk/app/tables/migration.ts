@@ -185,10 +185,13 @@ abstract class UserColumnMigrator<T> implements ColumnMigrator {
   async doMigration(): Promise<MigrationResult> {
     let oldTable = cloneDeep(this.table)
     let rows = await sdk.rows.fetchRaw(this.table._id!)
-    let rowsById = rows.reduce((acc, row) => {
-      acc[row._id!] = row
-      return acc
-    }, {} as Record<string, Row>)
+    let rowsById = rows.reduce(
+      (acc, row) => {
+        acc[row._id!] = row
+        return acc
+      },
+      {} as Record<string, Row>
+    )
 
     let links = await sdk.links.fetchWithDocument(this.table._id!)
     for (let link of links) {
