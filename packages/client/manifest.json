@@ -412,7 +412,7 @@
   },
   "buttongroup": {
     "name": "Button group",
-    "icon": "rectangles-four",
+    "icon": "circles-three-plus",
     "hasChildren": false,
     "size": {
       "width": 200,
@@ -629,7 +629,7 @@
   "button": {
     "name": "Button",
     "description": "This component is a button",
-    "icon": "rectangle",
+    "icon": "circle",
     "editable": true,
     "size": {
       "width": 120,

@@ -48,10 +48,9 @@
   </svelte:fragment>
 
   <div class="info">
-    <Icon name="info" size="S" />
+    <Icon name="info" size="S" color="var(--spectrum-global-color-gray-600)" />
     <Body size="S">
-      These settings apply to all screens.<br />
-      PDFs are always light theme.
+      These settings apply to all screens. PDFs are always light theme.
     </Body>
   </div>
   <Layout noPadding gap="S">
@@ -91,6 +90,7 @@
     background-color: var(--background-alt);
     padding: 12px;
     display: flex;
+    align-items: flex-start;
     border-radius: 4px;
     gap: 4px;
   }

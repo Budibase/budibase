@@ -130,7 +130,7 @@ export const TypeIconMap = {
   [FieldType.ATTACHMENT_SINGLE]: "file",
   [FieldType.LINK]: "arrow-circle-up-right",
   [FieldType.FORMULA]: "calculator",
-  [FieldType.AI]: "magic-wand",
+  [FieldType.AI]: "sparkle",
   [FieldType.JSON]: "brackets-angle",
   [FieldType.BIGINT]: "text-bolder",
   [FieldType.AUTO]: "shapes",
