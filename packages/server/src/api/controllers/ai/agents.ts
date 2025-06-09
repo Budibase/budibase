@@ -1,5 +1,4 @@
 import { ai } from "@budibase/pro"
-import * as tools from "../../../ai/tools"
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   ChatAgentRequest,
@@ -14,7 +13,7 @@ import {
   CreateToolSourceRequest,
   Message,
 } from "@budibase/types"
-import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base/ToolSourceRegistry"
+import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 
 function addDebugInformation(messages: Message[]) {
   const processedMessages = [...messages]
@@ -153,50 +152,18 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   for (const row of toolSources.rows) {
     const toolSource = row.doc!
-    const disabledTools = toolSource.disabledTools || []
+    const toolSourceInstance = createToolSourceInstance(toolSource)
 
-    if (toolSource.auth?.guidelines) {
-      toolGuidelines += `\n\nWhen using ${toolSource.type} tools, ensure you follow these guidelines:\n${toolSource.auth.guidelines}`
+    if (!toolSourceInstance) {
+      continue
     }
 
-    let toolsToAdd: any[] = []
-
-    switch (toolSource.type) {
-      case "BUDIBASE": {
-        toolsToAdd = tools.budibase.filter(
-          tool => !disabledTools.includes(tool.name)
-        )
-        break
-      }
-      case "GITHUB": {
-        const ghClient = new GitHubClient(toolSource.auth?.apiKey)
-        toolsToAdd = ghClient
-          .getTools()
-          .filter(tool => !disabledTools.includes(tool.name))
-        break
-      }
-      case "CONFLUENCE": {
-        const confluenceClient = new ConfluenceClient(
-          toolSource.auth?.apiKey,
-          toolSource.auth?.email,
-          toolSource.auth?.baseUrl
-        )
-        toolsToAdd = confluenceClient
-          .getTools()
-          .filter(tool => !disabledTools.includes(tool.name))
-        break
-      }
-      case "BAMBOOHR": {
-        const bamboohrClient = new BambooHRClient(
-          toolSource.auth?.apiKey,
-          toolSource.auth?.subdomain
-        )
-        toolsToAdd = bamboohrClient
-          .getTools()
-          .filter(tool => !disabledTools.includes(tool.name))
-        break
-      }
+    const guidelines = toolSourceInstance.getGuidelines()
+    if (guidelines) {
+      toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
     }
+
+    const toolsToAdd = toolSourceInstance.getEnabledTools()
 
     if (toolsToAdd.length > 0) {
       prompt = prompt.addTools(toolsToAdd)
