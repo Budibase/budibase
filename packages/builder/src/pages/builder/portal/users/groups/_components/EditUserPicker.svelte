@@ -43,7 +43,7 @@
 <div bind:this={popoverAnchor}>
   <Button on:click={popover.show()} cta>Add user</Button>
 </div>
-<Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+<Popover align="left" bind:this={popover} anchor={popoverAnchor}>
   <UserGroupPicker
     bind:searchTerm
     labelKey="email"
