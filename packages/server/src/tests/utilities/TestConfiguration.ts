@@ -104,6 +104,7 @@ export default class TestConfiguration {
   app?: App
   prodApp?: App
   prodAppId?: string
+  defaultToProdApp: boolean
   user?: User
   userMetadataId?: string
   table?: Table
@@ -127,6 +128,7 @@ export default class TestConfiguration {
     }
     this.appId = undefined
     this.allApps = []
+    this.defaultToProdApp = false
 
     this.api = new API(this)
   }
@@ -399,7 +401,8 @@ export default class TestConfiguration {
     builder: boolean
     prodApp: boolean
   }) {
-    const appId = prodApp ? this.getProdAppId() : this.getAppId()
+    const appId =
+      this.defaultToProdApp || prodApp ? this.getProdAppId() : this.getAppId()
     return context.doInAppContext(appId, async () => {
       userId = !userId ? `us_uuid1` : userId
       if (!this.request) {
@@ -471,6 +474,15 @@ export default class TestConfiguration {
     }
   }
 
+  async defaultToProduction(cb: () => Promise<unknown>) {
+    this.defaultToProdApp = true
+    try {
+      await cb()
+    } finally {
+      this.defaultToProdApp = false
+    }
+  }
+
   defaultHeaders(
     extras: Record<string, string | string[]> = {},
     prodApp = false
@@ -492,7 +504,7 @@ export default class TestConfiguration {
       ...extras,
     }
 
-    if (prodApp) {
+    if (this.defaultToProdApp || prodApp) {
       headers[constants.Header.APP_ID] = this.prodAppId
     } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
@@ -507,7 +519,7 @@ export default class TestConfiguration {
     prodApp = true,
     extras = {},
   }: { prodApp?: boolean; extras?: Record<string, string | string[]> } = {}) {
-    const appId = prodApp ? this.prodAppId : this.appId
+    const appId = this.defaultToProdApp || prodApp ? this.prodAppId : this.appId
 
     const headers: Record<string, string> = {
       Accept: "application/json",

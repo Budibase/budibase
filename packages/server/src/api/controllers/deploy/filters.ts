@@ -4,7 +4,6 @@ import {
   DocumentType,
   ResourceType,
   SEPARATOR,
-  UsedResource,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -18,33 +17,32 @@ const AUTOMATION_ID_FORMAT = DocumentType.AUTOMATION + SEPARATOR,
   ROW_ACTION_ID_FORMAT = DocumentType.ROW_ACTIONS + SEPARATOR,
   QUERY_ID_FORMAT = DocumentType.QUERY + SEPARATOR
 
-function getSpecificResourceIDs(
-  type: ResourceType,
-  resources: UsedResource[]
-): string[] {
-  return resources
-    .filter(resource => resource.type === type)
-    .map(resource => resource.id)
-}
-
 export async function buildPublishFilter(opts: {
   automationIds?: string[]
   workspaceAppIds?: string[]
 }): Promise<Filter> {
   const resources = await sdk.resources.analyseAll(opts)
-  const tableIds = getSpecificResourceIDs(ResourceType.TABLE, resources),
-    datasourceIds = getSpecificResourceIDs(ResourceType.DATASOURCE, resources),
-    rowActionIds = getSpecificResourceIDs(ResourceType.ROW_ACTION, resources),
-    queryIds = getSpecificResourceIDs(ResourceType.QUERY, resources)
+  const getSpecificResourceIDs = (type: ResourceType) => {
+    return resources
+      .filter(resource => resource.type === type)
+      .map(resource => resource.id)
+  }
+  const tableIds = getSpecificResourceIDs(ResourceType.TABLE),
+    datasourceIds = getSpecificResourceIDs(ResourceType.DATASOURCE),
+    rowActionIds = getSpecificResourceIDs(ResourceType.ROW_ACTION),
+    queryIds = getSpecificResourceIDs(ResourceType.QUERY)
+  const automationIds = (opts.automationIds || []).concat(
+    getSpecificResourceIDs(ResourceType.AUTOMATION)
+  )
+  const workspaceAppIds = opts.workspaceAppIds || []
   return (doc: Document) => {
-    if (opts?.automationIds && doc._id?.startsWith(AUTOMATION_ID_FORMAT)) {
-      return opts.automationIds.includes(doc._id)
+    if (doc._id?.startsWith(AUTOMATION_ID_FORMAT)) {
+      return automationIds.includes(doc._id)
     } else if (
-      opts?.workspaceAppIds &&
-      (doc._id?.startsWith(SCREEN_ID_FORMAT) ||
-        doc._id?.startsWith(WORKSPACE_APP_ID_FORMAT))
+      doc._id?.startsWith(SCREEN_ID_FORMAT) ||
+      doc._id?.startsWith(WORKSPACE_APP_ID_FORMAT)
     ) {
-      return opts.workspaceAppIds.includes(doc._id)
+      return workspaceAppIds.includes(doc._id)
     } else if (doc._id?.startsWith(TABLE_ID_FORMAT)) {
       return tableIds.includes(doc._id)
     } else if (doc._id?.startsWith(DATASOURCE_ID_FORMAT)) {

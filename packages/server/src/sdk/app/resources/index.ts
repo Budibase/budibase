@@ -1,5 +1,10 @@
 import sdk from "../.."
-import { ResourceType, Screen, UsedResource } from "@budibase/types"
+import {
+  ResourceType,
+  Screen,
+  TableRowActions,
+  UsedResource,
+} from "@budibase/types"
 
 export async function analyseMinimal({
   automationIds,
@@ -103,14 +108,15 @@ export async function analyseAll(toCheck: {
   ])
 
   let resources: UsedResource[] = [...minimalResources]
+  let usedActions: TableRowActions[] = []
   for (let resource of minimalResources) {
     // datasources and tables will have their ID in the row action ID
     const tableActions = rowActions.filter(action =>
       action._id!.includes(resource.id)
     )
+    usedActions = usedActions.concat(tableActions)
     resources = resources.concat(
       tableActions.map(action => ({
-        ...resource,
         id: action._id!,
         name: undefined,
         type: ResourceType.ROW_ACTION,
@@ -123,7 +129,6 @@ export async function analyseAll(toCheck: {
       )
       resources = resources.concat(
         datasourceQueries.map(query => ({
-          ...resource,
           id: query._id!,
           name: query.name,
           type: ResourceType.QUERY,
@@ -131,5 +136,23 @@ export async function analyseAll(toCheck: {
       )
     }
   }
+
+  // make sure row action automations have been added to the list
+  const actionAutomationIds = usedActions.flatMap(actionDoc =>
+    Object.values(actionDoc.actions).map(action => action.automationId)
+  )
+  const missingAutomationIds = actionAutomationIds.filter(
+    id => !resources.find(resource => resource.id === id)
+  )
+  const automations = await sdk.automations.find(missingAutomationIds)
+  // add missing automations to resources
+  automations.map(automation =>
+    resources.push({
+      id: automation._id!,
+      name: automation.name,
+      type: ResourceType.AUTOMATION,
+    })
+  )
+
   return resources
 }

@@ -13,6 +13,7 @@ export enum ResourceType {
   TABLE = "table",
   ROW_ACTION = "row_action",
   QUERY = "query",
+  AUTOMATION = "automation",
 }
 
 export interface UsedResource {

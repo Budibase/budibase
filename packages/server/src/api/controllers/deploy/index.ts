@@ -151,7 +151,11 @@ export async function deploymentProgress(
 export const publishApp = async function (
   ctx: UserCtx<PublishAppRequest, PublishAppResponse>
 ) {
-  const { automationIds, workspaceAppIds } = ctx.request.body
+  let automationIds: string[] | undefined, workspaceAppIds: string[] | undefined
+  if (ctx.request.body) {
+    automationIds = ctx.request.body.automationIds
+    workspaceAppIds = ctx.request.body.workspaceAppIds
+  }
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)

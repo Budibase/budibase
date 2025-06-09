@@ -1,6 +1,7 @@
 import {
   App,
-  PublishResponse,
+  PublishAppRequest,
+  PublishAppResponse,
   type CreateAppRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
@@ -35,12 +36,13 @@ export class ApplicationAPI extends TestAPI {
 
   publish = async (
     appId?: string,
+    body?: PublishAppRequest,
     expectations?: Expectations
-  ): Promise<PublishResponse> => {
+  ): Promise<PublishAppResponse> => {
     if (!appId) {
       appId = this.config.getAppId()
     }
-    return await this._post<PublishResponse>(
+    return await this._post<PublishAppResponse>(
       `/api/applications/${appId}/publish`,
       {
         // While the publish endpoint does take an :appId parameter, it doesn't
@@ -48,6 +50,7 @@ export class ApplicationAPI extends TestAPI {
         headers: {
           [constants.Header.APP_ID]: appId,
         },
+        body,
         expectations,
       }
     )
