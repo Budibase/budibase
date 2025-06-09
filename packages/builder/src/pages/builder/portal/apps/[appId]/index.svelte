@@ -78,7 +78,6 @@
       onExportDev: appContextMenuModals.showExportDevModal,
       onExportProd: appContextMenuModals.showExportProdModal,
       onDelete: appContextMenuModals.showDeleteModal,
-      workspaceAppsEnabled: featureFlag.isEnabled("WORKSPACE_APPS"),
     })
 
     contextMenuStore.open(`${app.appId}-view`, items, {

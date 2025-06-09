@@ -1,3 +1,4 @@
+import { featureFlag } from "@/helpers"
 import { MenuItem } from "@/types"
 
 const getAppContextMenuItems = ({
@@ -6,16 +7,16 @@ const getAppContextMenuItems = ({
   onExportDev,
   onExportProd,
   onDelete,
-  workspaceAppsEnabled,
 }: {
   app: { deployed: boolean }
   onDuplicate: () => void
   onExportDev: () => void
   onExportProd: () => void
   onDelete: () => void
-  workspaceAppsEnabled: boolean
 }): MenuItem[] => {
-  const appOrWorkspace = workspaceAppsEnabled ? "workspace" : "app"
+  const appOrWorkspace = featureFlag.isEnabled("WORKSPACE_APPS")
+    ? "workspace"
+    : "app"
   return [
     {
       icon: "Copy",
