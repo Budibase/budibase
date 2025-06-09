@@ -508,31 +508,22 @@ export class GoogleSheetsMock {
     }
 
     for (const request of batchUpdateRequest.requests) {
-      let didWork = false
       if (request.addSheet) {
         response.replies.push({
           addSheet: this.handleAddSheet(request.addSheet),
         })
-        didWork = true
       }
       if (request.deleteRange) {
         this.handleDeleteRange(request.deleteRange)
         response.replies.push({})
-        didWork = true
       }
       if (request.deleteSheet) {
         this.handleDeleteSheet(request.deleteSheet)
         response.replies.push({})
-        didWork = true
       }
       if (request.updateSheetProperties) {
         this.handleUpdateSheetProperties(request.updateSheetProperties)
         response.replies.push({})
-        didWork = true
-      }
-
-      if (!didWork) {
-        throw new Error("No valid request found in batch update")
       }
     }
 
@@ -552,8 +543,8 @@ export class GoogleSheetsMock {
       title: "Sheet",
       sheetId: this.spreadsheet.sheets.length,
       gridProperties: {
-        rowCount: 100,
-        columnCount: 26,
+        rowCount: 5,
+        columnCount: 5,
       },
       dataSourceSheetProperties: {} as DataSourceSheetProperties,
       ...opts,
@@ -822,7 +813,7 @@ export class GoogleSheetsMock {
 
       for (let i = row.length - 1; i >= 0; i--) {
         const cell = row[i]
-        if (cell == null) {
+        if (cell == null || cell === "") {
           row.pop()
         } else {
           break
