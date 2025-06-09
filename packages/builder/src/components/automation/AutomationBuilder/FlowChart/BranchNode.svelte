@@ -215,7 +215,8 @@
             on:click={e => {
               openContextMenu(e)
             }}
-            size="S"
+            size="M"
+            weight="bold"
             hoverable
             name="dots-three"
           />

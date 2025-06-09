@@ -154,7 +154,7 @@
         <div>
           <ListItem
             title="Row is deleted"
-            icon="table"
+            icon="trash-simple"
             hoverable
             on:click={() => createAutomation(TriggerStepID.ROW_DELETED)}
             iconColor="var(--spectrum-global-color-gray-600)"

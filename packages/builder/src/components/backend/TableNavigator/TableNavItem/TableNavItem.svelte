@@ -61,7 +61,7 @@
   on:click
 >
   {#if table._id !== TableNames.USERS}
-    <Icon s on:click={openContextMenu} hoverable name="dots-three" />
+    <Icon s on:click={openContextMenu} hoverable name="dots-three" size="M" />
   {/if}
 </NavItem>
 <EditModal {table} bind:this={editModal} />

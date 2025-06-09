@@ -72,7 +72,7 @@
   on:click={() => goto(`./query/${query._id}`)}
   selectedBy={$userSelectedResourceMap[query._id]}
 >
-  <Icon size="S" hoverable name="dots-three" on:click={openContextMenu} />
+  <Icon size="M" hoverable name="dots-three" on:click={openContextMenu} />
 </NavItem>
 
 <DeleteDataConfirmModal source={query} bind:this={confirmDeleteModal} />

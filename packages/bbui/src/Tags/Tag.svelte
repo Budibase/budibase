@@ -35,6 +35,8 @@
   .spectrum-Tags-item {
     margin-bottom: 0;
     margin-top: 0;
+    gap: 3px;
+    border-radius: 8px;
   }
 
   .is-emphasized {
