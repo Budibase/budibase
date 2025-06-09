@@ -211,7 +211,8 @@ export interface DatasourcePlus extends IntegrationBase {
   query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse>
   buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
+    entities: Record<string, Table>,
+    filter?: string[]
   ): Promise<Schema>
   getTableNames(): Promise<string[]>
 }

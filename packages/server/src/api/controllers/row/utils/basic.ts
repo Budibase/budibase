@@ -168,8 +168,8 @@ export async function basicProcessing({
     const array: Row[] = Array.isArray(value)
       ? value
       : typeof value === "string"
-      ? JSON.parse(value)
-      : undefined
+        ? JSON.parse(value)
+        : undefined
     if (array && Array.isArray(array)) {
       thisRow[col] = array
       // make sure all of them have an _id

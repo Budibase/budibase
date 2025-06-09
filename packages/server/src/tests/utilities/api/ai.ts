@@ -7,6 +7,8 @@ import {
   GenerateJsResponse,
   GenerateTablesRequest,
   GenerateTablesResponse,
+  UploadFileRequest,
+  UploadFileResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 import { constants } from "@budibase/backend-core"
@@ -41,6 +43,21 @@ export class AIAPI extends TestAPI {
       headers[constants.Header.LICENSE_KEY] = req.licenseKey
     }
     return await this._post<ChatCompletionResponse>(`/api/ai/chat`, {
+      body: req,
+      headers,
+      expectations,
+    })
+  }
+
+  uploadFile = async (
+    req: UploadFileRequest & { licenseKey?: string },
+    expectations?: Expectations
+  ): Promise<UploadFileResponse> => {
+    const headers: Record<string, string> = {}
+    if (req.licenseKey) {
+      headers[constants.Header.LICENSE_KEY] = req.licenseKey
+    }
+    return await this._post<UploadFileResponse>(`/api/ai/upload-file`, {
       body: req,
       headers,
       expectations,

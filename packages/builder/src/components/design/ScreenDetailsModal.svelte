@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ModalContent, Input } from "@budibase/bbui"
+  import { ModalContent, Input, keepOpen } from "@budibase/bbui"
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import { get } from "svelte/store"
   import { screenStore } from "@/stores/builder"
@@ -42,8 +42,13 @@
         screen.routing.roleId === role
     )
   }
+  $: disabled = !route || !!error || !touched
 
   const confirmScreenDetails = async () => {
+    if (disabled) {
+      return keepOpen
+    }
+
     await onConfirm({
       route,
     })
@@ -58,7 +63,7 @@
   onConfirm={confirmScreenDetails}
   {onCancel}
   cancelText={"Back"}
-  disabled={!route || !!error || !touched}
+  {disabled}
 >
   <form on:submit|preventDefault={() => modal.confirm()}>
     <Input

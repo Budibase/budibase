@@ -1,23 +1,28 @@
-<script>
+<script lang="ts">
+  import { onMount } from "svelte"
   import NewScreen from "./_components/NewScreen/index.svelte"
-  import { screenStore } from "@/stores/builder"
-  import { goto } from "@roxi/routify"
 
-  $: onClose = getOnClose($screenStore)
+  let newScreenModal: NewScreen
 
-  const getOnClose = ({ screens, selectedScreenId }) => {
-    if (!screens?.length) {
-      return null
-    }
-    if (selectedScreenId) {
-      return () => {
-        $goto(`./${selectedScreenId}`)
-      }
-    }
-    return () => {
-      $goto(`./${screens[0]._id}`)
-    }
-  }
+  onMount(() => {
+    newScreenModal.open()
+  })
 </script>
 
-<NewScreen {onClose} />
+<div class="new-screen-picker">
+  <NewScreen bind:this={newScreenModal} inline submitOnClick />
+</div>
+
+<style>
+  .new-screen-picker {
+    display: flex;
+    justify-content: center;
+    flex: 1 1 auto;
+    padding-top: 40px;
+  }
+
+  .new-screen-picker :global(.spectrum-Modal) {
+    border: none;
+    background: none;
+  }
+</style>

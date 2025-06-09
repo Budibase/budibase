@@ -1,4 +1,5 @@
 import { layoutStore } from "./layouts"
+import { workspaceAppStore } from "./workspaceApps"
 import { appStore } from "./app"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
@@ -39,6 +40,7 @@ import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
 
 import { FetchAppPackageResponse } from "@budibase/types"
+import { selectedAppUrls } from "./appUrls"
 
 export {
   componentTreeNodesStore,
@@ -79,6 +81,8 @@ export {
   screenComponentErrors,
   screenComponentErrorList,
   oauth2,
+  workspaceAppStore,
+  selectedAppUrls,
 }
 
 export const reset = () => {
@@ -100,6 +104,7 @@ const refreshBuilderData = async () => {
     tables.init(),
     roles.fetch(),
     flags.fetch(),
+    workspaceAppStore.fetch(),
   ])
 }
 

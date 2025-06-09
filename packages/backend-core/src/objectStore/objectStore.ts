@@ -198,8 +198,8 @@ export async function upload({
   const finalContentType = contentType
     ? contentType
     : extension
-    ? CONTENT_TYPE_MAP[extension.toLowerCase()]
-    : CONTENT_TYPE_MAP.txt
+      ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+      : CONTENT_TYPE_MAP.txt
   const config: PutObjectCommandInput = {
     // windows file paths need to be converted to forward slashes for s3
     Bucket: sanitizeBucket(bucketName),
