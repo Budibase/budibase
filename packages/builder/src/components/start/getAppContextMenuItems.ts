@@ -6,13 +6,16 @@ const getAppContextMenuItems = ({
   onExportDev,
   onExportProd,
   onDelete,
+  workspaceAppsEnabled,
 }: {
   app: { deployed: boolean }
   onDuplicate: () => void
   onExportDev: () => void
   onExportProd: () => void
   onDelete: () => void
+  workspaceAppsEnabled: boolean
 }): MenuItem[] => {
+  const appOrWorkspace = workspaceAppsEnabled ? "workspace" : "app"
   return [
     {
       icon: "Copy",
@@ -24,7 +27,7 @@ const getAppContextMenuItems = ({
     },
     {
       icon: "Export",
-      name: "Export latest edited app",
+      name: `Export latest edited ${appOrWorkspace}`,
       keyBind: null,
       visible: true,
       disabled: false,
@@ -32,7 +35,7 @@ const getAppContextMenuItems = ({
     },
     {
       icon: "Export",
-      name: "Export latest published app",
+      name: `Export latest published ${appOrWorkspace}`,
       keyBind: null,
       visible: true,
       disabled: !app.deployed,

@@ -24,6 +24,7 @@
   import { ClientAppSkeleton } from "@budibase/frontend-core"
   import { contextMenuStore } from "@/stores/builder"
   import type { EnrichedApp } from "@/types"
+  import { featureFlag } from "@/helpers"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)!
   $: iframeUrl = getIframeURL(app)
@@ -77,6 +78,7 @@
       onExportDev: appContextMenuModals.showExportDevModal,
       onExportProd: appContextMenuModals.showExportProdModal,
       onDelete: appContextMenuModals.showDeleteModal,
+      workspaceAppsEnabled: featureFlag.isEnabled("WORKSPACE_APPS"),
     })
 
     contextMenuStore.open(`${app.appId}-view`, items, {
