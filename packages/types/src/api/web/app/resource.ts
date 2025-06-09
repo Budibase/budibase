@@ -19,8 +19,6 @@ export interface UsedResource {
   id: string
   name?: string
   type: ResourceType
-  usedBy?: string
-  usedByType?: UsedByType
 }
 
 export interface ResourceAnalysisResponse {

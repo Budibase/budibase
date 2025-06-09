@@ -1,5 +1,5 @@
 import sdk from "../.."
-import { ResourceType, Screen, UsedByType, UsedResource } from "@budibase/types"
+import { ResourceType, Screen, UsedResource } from "@budibase/types"
 
 export async function analyseMinimal({
   automationIds,
@@ -28,25 +28,17 @@ export async function analyseMinimal({
 
   let internalTableFound = false
   const resources: UsedResource[] = []
-  const searchForResource = (
-    json: string,
-    usedById: string,
-    usedByType: UsedByType
-  ) => {
+  const searchForResource = (json: string) => {
     for (let search of toSearchFor) {
       if (
         json.includes(search.id) &&
-        !resources.find(
-          resource => resource.id === search.id && resource.usedBy === usedById
-        )
+        !resources.find(resource => resource.id === search.id)
       ) {
         if (search.type === ResourceType.TABLE) {
           internalTableFound = true
         }
         resources.push({
           ...search,
-          usedBy: usedById,
-          usedByType: usedByType,
         })
       }
     }
@@ -70,7 +62,7 @@ export async function analyseMinimal({
       const screens = workspaceAppScreens[workspaceAppId] || []
       for (let screen of screens) {
         const json = JSON.stringify(screen)
-        searchForResource(json, screen.workspaceAppId!, UsedByType.WORKSPACE)
+        searchForResource(json)
       }
     }
   }
@@ -80,7 +72,7 @@ export async function analyseMinimal({
     })
     for (let automation of automations) {
       const json = JSON.stringify(automation)
-      searchForResource(json, automation._id!, UsedByType.AUTOMATION)
+      searchForResource(json)
     }
   }
 

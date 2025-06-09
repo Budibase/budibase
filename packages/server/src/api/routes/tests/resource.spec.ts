@@ -1,5 +1,5 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import { ResourceType, UsedByType, Table } from "@budibase/types"
+import { ResourceType, Table } from "@budibase/types"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable, basicScreen } from "../../../tests/utilities/structures"
 
@@ -40,8 +40,6 @@ describe("/api/resources/analyze", () => {
           id: table._id,
           name: table.name,
           type: ResourceType.TABLE,
-          usedBy: screen.workspaceAppId!,
-          usedByType: UsedByType.WORKSPACE,
         })
       )
     })
@@ -61,8 +59,6 @@ describe("/api/resources/analyze", () => {
           id: table._id,
           name: table.name,
           type: ResourceType.TABLE,
-          usedBy: automation._id,
-          usedByType: UsedByType.AUTOMATION,
         })
       )
     })
