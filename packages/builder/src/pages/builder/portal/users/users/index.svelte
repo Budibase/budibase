@@ -289,7 +289,12 @@
 
   async function createUsers() {
     try {
-      bulkSaveResponse = await users.create(await removingDuplicities(userData))
+      bulkSaveResponse = (await users.create(
+        await removingDuplicities(userData)
+      )) || {
+        successful: [],
+        unsuccessful: [],
+      }
       notifications.success("Successfully created user")
       await groups.init()
       passwordModal.show()

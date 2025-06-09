@@ -54,7 +54,7 @@ export interface BulkUserDeleted {
 }
 
 export interface BulkUserResponse {
-  created: BulkUserCreated
+  created?: BulkUserCreated
   deleted?: BulkUserDeleted
   message?: string
 }

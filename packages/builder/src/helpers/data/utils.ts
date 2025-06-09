@@ -1,6 +1,6 @@
 import { IntegrationTypes } from "@/constants/backend"
 import { findHBSBlocks } from "@budibase/string-templates"
-import { Datasource, Query } from "@budibase/types"
+import { Query, SourceName } from "@budibase/types"
 
 export function breakQueryString(qs: string) {
   if (!qs) {
@@ -72,7 +72,10 @@ export function queryParametersToKeyValue(
   return obj
 }
 
-export function customQueryIconText(datasource: Datasource, query: Query) {
+export function customQueryIconText(
+  datasource: { source: SourceName },
+  query: Query
+) {
   if (datasource.source !== IntegrationTypes.REST) {
     return
   }
@@ -90,7 +93,10 @@ export function customQueryIconText(datasource: Datasource, query: Query) {
   }
 }
 
-export function customQueryIconColor(datasource: Datasource, query: Query) {
+export function customQueryIconColor(
+  datasource: { source: SourceName },
+  query: Query
+) {
   if (datasource.source !== IntegrationTypes.REST) {
     return
   }
