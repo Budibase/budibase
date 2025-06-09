@@ -23,8 +23,16 @@ vi.mock("@/stores/builder", async () => {
     set: mockAppStore.set,
   }
 
+  const mockWorkspaceAppStore = writable()
+  const workspaceAppStore = {
+    subscribe: mockWorkspaceAppStore.subscribe,
+    update: mockWorkspaceAppStore.update,
+    set: mockWorkspaceAppStore.set,
+  }
+
   return {
     appStore,
+    workspaceAppStore,
   }
 })
 

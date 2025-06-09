@@ -134,6 +134,7 @@
           AutomationActionStepId.TRANSLATE,
           AutomationActionStepId.SUMMARISE,
           AutomationActionStepId.GENERATE_TEXT,
+          AutomationActionStepId.EXTRACT_FILE_DATA,
         ].includes(k as AutomationActionStepId)
       ),
     },
