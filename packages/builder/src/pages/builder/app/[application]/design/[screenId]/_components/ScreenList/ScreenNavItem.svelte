@@ -17,7 +17,7 @@
 
   export let screen
   export let deletionAllowed: boolean
-  export let panelWidth: Number
+  export let panelWidth: Number | undefined
 
   let confirmDeleteDialog: ConfirmDialog
   let screenDetailsModal: Modal
