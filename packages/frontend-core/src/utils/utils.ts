@@ -59,15 +59,19 @@ export const sequential = <
  * @param minDelay the minimum delay between invocations
  * @returns a debounced version of the callback
  */
-export const debounce = (callback: Function, minDelay = 1000) => {
+export const debounce = <T extends (...args: any[]) => any>(
+  callback: T,
+  minDelay = 1000
+) => {
   let timeout: ReturnType<typeof setTimeout>
-  return async (...params: any[]) => {
+  return async (...params: Parameters<T>): Promise<ReturnType<T>> => {
     return new Promise(resolve => {
       if (timeout) {
         clearTimeout(timeout)
       }
       timeout = setTimeout(async () => {
-        resolve(await callback(...params))
+        const result = await callback(...params)
+        resolve(result)
       }, minDelay)
     })
   }
