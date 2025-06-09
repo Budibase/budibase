@@ -445,7 +445,7 @@
         <textarea
           bind:value={inputValue}
           bind:this={textareaElement}
-          lass="input spectrum-Textfield-input"
+          class="input spectrum-Textfield-input"
           on:keydown={handleKeyDown}
           placeholder="Ask anything"
           disabled={loading}
