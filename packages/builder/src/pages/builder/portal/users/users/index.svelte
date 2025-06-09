@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Heading,
     Body,
@@ -53,12 +53,12 @@
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers = []
   let tenantOwner
-  let createUserModal,
-    inviteConfirmationModal,
-    onboardingTypeModal,
-    passwordModal,
-    importUsersModal,
-    userLimitReachedModal
+  let createUserModal: Modal,
+    inviteConfirmationModal: Modal,
+    onboardingTypeModal: Modal,
+    passwordModal: Modal,
+    importUsersModal: Modal,
+    userLimitReachedModal: Modal
   let searchEmail = undefined
   let selectedRows = []
   let selectedInvites = []
