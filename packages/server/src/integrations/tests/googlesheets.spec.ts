@@ -4,6 +4,7 @@ import nock from "nock"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import {
   Datasource,
+  FieldSchema,
   FieldType,
   Row,
   SourceName,
@@ -310,6 +311,31 @@ describe("Google Sheets Integration", () => {
 
       expect(mock.cell("A3")).toEqual("Test Contact")
       expect(mock.cell("B3")).toEqual("original description")
+    })
+
+    it("should be able to add new rows outside of the size limits of the sheet", async () => {
+      const schema: Record<string, FieldSchema> = table.schema
+      for (let i = 0; i < 100; i++) {
+        schema[`field_${i}`] = {
+          name: `field_${i}`,
+          type: FieldType.STRING,
+        }
+      }
+      await config.api.table.save({ ...table, schema })
+
+      const row: Row = {
+        name: "Test Contact",
+        description: "original description",
+      }
+      for (let i = 0; i < 100; i++) {
+        row[`field_${i}`] = `value_${i}`
+      }
+      const createdRow = await config.api.row.save(table._id!, row)
+      expect(createdRow.name).toEqual("Test Contact")
+      expect(createdRow.description).toEqual("original description")
+      for (let i = 0; i < 100; i++) {
+        expect(createdRow[`field_${i}`]).toEqual(`value_${i}`)
+      }
     })
 
     it("should be able to add multiple rows", async () => {

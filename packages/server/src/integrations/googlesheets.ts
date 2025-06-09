@@ -312,13 +312,10 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     if (id) {
       table._id = id
     }
-    // build schema from headers, filtering out empty ones
     for (let header of headerValues) {
-      if (header && header.trim()) {
-        table.schema[header] = {
-          name: header,
-          type: FieldType.STRING,
-        }
+      table.schema[header] = {
+        name: header,
+        type: FieldType.STRING,
       }
     }
     return table
@@ -512,8 +509,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
           this.client.resetLocalCache()
           await this.client.loadInfo()
-          await sheet.loadHeaderRow()
           sheet = this.client.sheetsByTitle[table.name]
+          await sheet.loadHeaderRow()
         }
 
         await sheet.setHeaderRow(updatedHeaderValues)

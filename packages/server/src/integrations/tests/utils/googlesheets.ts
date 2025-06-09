@@ -805,7 +805,47 @@ export class GoogleSheetsMock {
       valueRange.values.push(values)
     }
 
-    return this.trimValueRange(valueRange)
+    const trimmed = this.trimValueRange(valueRange)
+    return trimmed
+  }
+
+  private printValueRange(valueRange: ValueRange): string {
+    if (!valueRange.values || valueRange.values.length === 0) {
+      return `**Range:** ${valueRange.range}\n\n*No data*`
+    }
+
+    const values = valueRange.values
+
+    // Find the maximum number of columns across all rows
+    const maxCols = Math.max(...values.map(row => row.length))
+
+    // Pad all rows to have the same number of columns
+    const paddedValues = values.map(row => {
+      const paddedRow = [...row]
+      while (paddedRow.length < maxCols) {
+        paddedRow.push("")
+      }
+      return paddedRow.map(cell => cell?.toString() || "")
+    })
+
+    // Create markdown table
+    let table = `**Range:** ${valueRange.range}\n\n`
+
+    if (paddedValues.length > 0) {
+      // Header row (first row of data)
+      const headerRow = paddedValues[0]
+      table += "| " + headerRow.join(" | ") + " |\n"
+
+      // Separator row
+      table += "| " + headerRow.map(() => "---").join(" | ") + " |\n"
+
+      // Data rows (remaining rows)
+      for (let i = 1; i < paddedValues.length; i++) {
+        table += "| " + paddedValues[i].join(" | ") + " |\n"
+      }
+    }
+
+    return table
   }
 
   // When Google Sheets returns a value range, it will trim the data down to the
@@ -1110,41 +1150,66 @@ export class GoogleSheetsMock {
     if (title.includes(" ")) {
       title = `'${title}'`
     }
-    const topLeftLetter = this.numberToLetter(startColumnIndex)
-    const bottomRightLetter = this.numberToLetter(endColumnIndex)
+    const topLeftLetters = this.numberToLetters(startColumnIndex)
+    const bottomRightLetters = this.numberToLetters(endColumnIndex)
     const topLeftRow = startRowIndex + 1
     const bottomRightRow = endRowIndex + 1
-    return `${title}!${topLeftLetter}${topLeftRow}:${bottomRightLetter}${bottomRightRow}`
+    return `${title}!${topLeftLetters}${topLeftRow}:${bottomRightLetters}${bottomRightRow}`
   }
 
-  /**
-   * Parses a cell reference into a row and column.
-   * @param cell a string of the form A1, B2, etc.
-   * @returns
-   */
   private parseCell(cell: string): Partial<Range> {
+    // Check if the cell starts with a number (row-only reference like "1")
     const firstChar = cell.slice(0, 1)
     if (this.isInteger(firstChar)) {
       return { row: parseInt(cell) - 1 }
     }
-    const column = this.letterToNumber(firstChar)
-    if (cell.length === 1) {
+
+    // Find where the letters end and numbers begin
+    let letterEnd = 0
+    for (let i = 0; i < cell.length; i++) {
+      if (this.isInteger(cell[i])) {
+        break
+      }
+      letterEnd = i + 1
+    }
+
+    // Extract the column letters
+    const columnLetters = cell.slice(0, letterEnd)
+    const column = this.lettersToNumber(columnLetters)
+
+    // If there's no number part, it's a column-only reference
+    if (letterEnd === cell.length) {
       return { column }
     }
-    const number = cell.slice(1)
+
+    // Extract and parse the row number
+    const number = cell.slice(letterEnd)
     return { row: parseInt(number) - 1, column }
+  }
+
+  private lettersToNumber(letters: string): number {
+    let result = 0
+    for (let i = 0; i < letters.length; i++) {
+      result = result * 26 + (letters.charCodeAt(i) - 64)
+    }
+    return result - 1 // Convert to 0-based indexing
+  }
+
+  private numberToLetters(number: number): string {
+    let result = ""
+    number = number + 1 // Convert from 0-based to 1-based
+
+    while (number > 0) {
+      number--
+      result = String.fromCharCode((number % 26) + 65) + result
+      number = Math.floor(number / 26)
+    }
+
+    return result
   }
 
   private isInteger(value: string): boolean {
     return !isNaN(parseInt(value))
-  }
-
-  private letterToNumber(letter: string): number {
-    return letter.charCodeAt(0) - 65
-  }
-
-  private numberToLetter(number: number): string {
-    return String.fromCharCode(number + 65)
   }
 
   private getSheetByName(name: string): Sheet | undefined {
