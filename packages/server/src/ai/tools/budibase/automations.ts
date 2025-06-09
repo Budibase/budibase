@@ -28,17 +28,32 @@ export default [
 
   newTool({
     name: "trigger_automation",
-    description: "Manually trigger an automation with optional input data (only works for APP trigger type automations)",
+    description:
+      "Manually trigger an automation with optional input data (only works for APP trigger type automations)",
     parameters: z.object({
       automationId: z.string().describe("The ID of the automation to trigger"),
-      fields: z.object({}).optional().describe("Input fields/data to pass to the automation as JSON object"),
+      fields: z
+        .object({})
+        .optional()
+        .describe("Input fields/data to pass to the automation as JSON object"),
       timeout: z.number().optional().describe("Timeout in seconds (optional)"),
     }),
-    handler: async ({ automationId, fields, timeout }: { automationId: string; fields?: Record<string, any>; timeout?: number }) => {
-      const result = await sdk.automations.execution.trigger(automationId, fields || {}, timeout)
+    handler: async ({
+      automationId,
+      fields,
+      timeout,
+    }: {
+      automationId: string
+      fields?: Record<string, any>
+      timeout?: number
+    }) => {
+      const result = await sdk.automations.execution.trigger(
+        automationId,
+        fields || {},
+        timeout
+      )
       const formatted = JSON.stringify(result, null, 2)
       return `Successfully triggered automation:\n\n${formatted}`
     },
   }),
-
 ]

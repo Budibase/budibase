@@ -6,7 +6,7 @@ import env from "../../../environment"
 import sdk from "../.."
 
 export async function trigger(
-  automationId: string, 
+  automationId: string,
   fields: Record<string, any> = {},
   timeout?: number
 ) {
@@ -20,7 +20,9 @@ export async function trigger(
   // Check if automation has APP trigger (required for manual triggering)
   const triggerType = automation.definition?.trigger?.stepId
   if (triggerType !== "APP") {
-    throw new Error(`Cannot manually trigger automation '${automation.name}'. Only automations with APP trigger type can be manually triggered. This automation has trigger type: ${triggerType}`)
+    throw new Error(
+      `Cannot manually trigger automation '${automation.name}'. Only automations with APP trigger type can be manually triggered. This automation has trigger type: ${triggerType}`
+    )
   }
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
@@ -48,7 +50,7 @@ export async function trigger(
       fields,
       appId,
     })
-    
+
     return {
       message: `Automation ${automation._id} has been triggered.`,
       automation,

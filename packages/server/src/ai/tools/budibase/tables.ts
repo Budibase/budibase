@@ -1,4 +1,4 @@
-import { newTool, TableSourceType } from "@budibase/types"
+import { newTool } from "@budibase/types"
 import sdk from "../../../sdk"
 import { z } from "zod"
 

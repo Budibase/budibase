@@ -1,6 +1,5 @@
 <script lang="ts">
   import {
-    ActionButton,
     Body,
     Button,
     Heading,
@@ -129,39 +128,116 @@
     inputValue = ""
     loading = true
 
+    let streamingContent = ""
+    let isToolCall = false
+    let toolCallInfo: string = ""
+
     try {
-      // Send copy with new message to API
-      const response = await API.agentChat(updatedChat)
+      await API.agentChatStream(
+        updatedChat,
+        chunk => {
+          if (chunk.type === "content") {
+            // Accumulate streaming content
+            streamingContent += chunk.content || ""
 
-      // Update chat with response from API
-      chat = response
+            // Update chat with partial content
+            const updatedMessages = [...updatedChat.messages]
 
-      // Update the current chat ID in the store
-      if (response._id) {
-        agentsStore.setCurrentChatId(response._id)
-        // Refresh chat history to include the new/updated chat
-        await agentsStore.fetchChats()
-      }
+            // Find or create assistant message
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content =
+                streamingContent + (isToolCall ? toolCallInfo : "")
+            } else {
+              updatedMessages.push({
+                role: "assistant",
+                content: streamingContent + (isToolCall ? toolCallInfo : ""),
+              })
+            }
 
-      // Scroll to the response
-      await scrollToBottom()
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            // Auto-scroll as content streams
+            scrollToBottom()
+          } else if (chunk.type === "tool_call_start") {
+            isToolCall = true
+            toolCallInfo = `\n\n**🔧 Executing Tool:** ${chunk.toolCall?.name}\n**Parameters:**\n\`\`\`json\n${chunk.toolCall?.arguments}\n\`\`\`\n`
+
+            const updatedMessages = [...updatedChat.messages]
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content = streamingContent + toolCallInfo
+            } else {
+              updatedMessages.push({
+                role: "assistant",
+                content: streamingContent + toolCallInfo,
+              })
+            }
+
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            scrollToBottom()
+          } else if (chunk.type === "tool_call_result") {
+            const resultInfo = chunk.toolResult?.error
+              ? `\n**❌ Tool Error:** ${chunk.toolResult.error}`
+              : `\n**✅ Tool Result:** Complete`
+
+            toolCallInfo += resultInfo
+
+            const updatedMessages = [...updatedChat.messages]
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content = streamingContent + toolCallInfo
+            }
+
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            scrollToBottom()
+          } else if (chunk.type === "chat_saved") {
+            // Update complete response
+            if (chunk.chat) {
+              chat = chunk.chat
+
+              if (chunk.chat._id) {
+                agentsStore.setCurrentChatId(chunk.chat._id)
+                // Refresh chat history to include the new/updated chat
+                agentsStore.fetchChats()
+              }
+            }
+
+            loading = false
+            scrollToBottom()
+          } else if (chunk.type === "error") {
+            notifications.error(chunk.content || "An error occurred")
+            loading = false
+          }
+        },
+        error => {
+          console.error("Streaming error:", error)
+          notifications.error(error.message)
+          loading = false
+        }
+      )
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
+      loading = false
     }
-
-    loading = false
 
     // Return focus to textarea after the response
     await tick()
     if (textareaElement) {
       textareaElement.focus()
     }
-  }
-
-  const reset = async () => {
-    chat = { title: "", messages: [] }
-    agentsStore.clearCurrentChatId()
   }
 
   const selectChat = async (selectedChat: AgentChat) => {
@@ -187,7 +263,7 @@
       ...ToolSources.find(ts => ts.type === toolSource.type),
       _id: toolSource._id,
       _rev: toolSource._rev,
-      existingToolSource: toolSource
+      existingToolSource: toolSource,
     }
     toolConfig = { ...toolSource.auth }
     toolConfigModal.show()
@@ -200,7 +276,7 @@
 
   const deleteToolSource = async () => {
     if (!toolSourceToDelete) return
-    
+
     try {
       await agentsStore.deleteToolSource(toolSourceToDelete._id)
       notifications.success("Tool source deleted successfully.")
@@ -239,12 +315,16 @@
         await agentsStore.createToolSource(toolSourceData)
         notifications.success("Tool source saved successfully.")
       }
-      
+
       await agentsStore.fetchToolSources()
       toolConfigModal.hide()
     } catch (err) {
       console.error(err)
-      notifications.error(selectedToolSource.existingToolSource ? "Error updating tool source" : "Error saving tool source")
+      notifications.error(
+        selectedToolSource.existingToolSource
+          ? "Error updating tool source"
+          : "Error saving tool source"
+      )
     }
   }
 
@@ -365,7 +445,7 @@
         <textarea
           bind:value={inputValue}
           bind:this={textareaElement}
-          class="input spectrum-Textfield-input"
+          lass="input spectrum-Textfield-input"
           on:keydown={handleKeyDown}
           placeholder="Ask anything"
           disabled={loading}
@@ -424,7 +504,8 @@
                               size="S"
                               hoverable
                               name="Delete"
-                              on:click={() => confirmDeleteToolSource(toolSource)}
+                              on:click={() =>
+                                confirmDeleteToolSource(toolSource)}
                             />
                             <div class="tool-source-detail">
                               <Icon
@@ -556,7 +637,9 @@
 
 <Modal bind:this={toolConfigModal}>
   <ModalContent
-    title={`${selectedToolSource?.existingToolSource ? 'Edit' : 'Configure'} ${selectedToolSource?.name || "Tool"}`}
+    title={`${selectedToolSource?.existingToolSource ? "Edit" : "Configure"} ${
+      selectedToolSource?.name || "Tool"
+    }`}
     size="M"
     showCancelButton={true}
     cancelText="Back"
@@ -656,7 +739,8 @@
   >
     <div class="delete-confirm-content">
       <Body size="S">
-        Are you sure you want to delete this tool source? This action cannot be undone.
+        Are you sure you want to delete this tool source? This action cannot be
+        undone.
       </Body>
       {#if toolSourceToDelete}
         <div class="tool-source-preview">
@@ -804,13 +888,6 @@
 
   textarea::placeholder {
     color: var(--spectrum-global-color-gray-600);
-  }
-
-  .controls {
-    position: fixed;
-    bottom: 8px;
-    right: calc(50% - 300px);
-    z-index: 1;
   }
 
   .config-form {

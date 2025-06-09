@@ -13,7 +13,12 @@ import {
   CreateToolSourceRequest,
   Message,
 } from "@budibase/types"
-import { ConfluenceClient, GitHubClient, BambooHRClient, budibase } from "../../../ai/tools"
+import {
+  ConfluenceClient,
+  GitHubClient,
+  BambooHRClient,
+  budibase,
+} from "../../../ai/tools"
 
 function addDebugInformation(messages: Message[]) {
   const processedMessages = [...messages]
@@ -157,6 +162,154 @@ export async function agentChat(
   ctx.body = newChat
 }
 
+export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
+  const model = await ai.getLLMOrThrow()
+  const chat = ctx.request.body
+  const db = context.getAppDB()
+
+  // Set SSE headers and status
+  ctx.status = 200
+  ctx.set("Content-Type", "text/event-stream")
+  ctx.set("Cache-Control", "no-cache")
+  ctx.set("Connection", "keep-alive")
+  ctx.set("Access-Control-Allow-Origin", "*")
+  ctx.set("Access-Control-Allow-Headers", "Cache-Control")
+
+  const toolSources = await db.allDocs<AgentToolSource>(
+    docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
+      include_docs: true,
+    })
+  )
+
+  let prompt = new ai.LLMRequest()
+    .addSystemMessage(ai.agentSystemPrompt(ctx.user))
+    .addMessages(chat.messages)
+
+  let toolGuidelines = ""
+
+  for (const row of toolSources.rows) {
+    const toolSource = row.doc!
+    const disabledTools = toolSource.disabledTools || []
+
+    if (toolSource.auth?.guidelines) {
+      toolGuidelines += `\n\nWhen using ${toolSource.type} tools, ensure you follow these guidelines:\n${toolSource.auth.guidelines}`
+    }
+
+    let toolsToAdd: any[] = []
+
+    switch (toolSource.type) {
+      case "BUDIBASE": {
+        toolsToAdd = tools.budibase.filter(
+          tool => !disabledTools.includes(tool.name)
+        )
+        break
+      }
+      case "GITHUB": {
+        const ghClient = new GitHubClient(toolSource.auth?.apiKey)
+        toolsToAdd = ghClient
+          .getTools()
+          .filter(tool => !disabledTools.includes(tool.name))
+        break
+      }
+      case "CONFLUENCE": {
+        const confluenceClient = new ConfluenceClient(
+          toolSource.auth?.apiKey,
+          toolSource.auth?.email,
+          toolSource.auth?.baseUrl
+        )
+        toolsToAdd = confluenceClient
+          .getTools()
+          .filter(tool => !disabledTools.includes(tool.name))
+        break
+      }
+      case "BAMBOOHR": {
+        const bamboohrClient = new BambooHRClient(
+          toolSource.auth?.apiKey,
+          toolSource.auth?.subdomain
+        )
+        toolsToAdd = bamboohrClient
+          .getTools()
+          .filter(tool => !disabledTools.includes(tool.name))
+        break
+      }
+    }
+
+    if (toolsToAdd.length > 0) {
+      prompt = prompt.addTools(toolsToAdd)
+    }
+  }
+
+  // Append tool guidelines to the system prompt if any exist
+  if (toolGuidelines) {
+    prompt = prompt.addSystemMessage(toolGuidelines)
+  }
+
+  try {
+    let finalMessages: Message[] = []
+    let totalTokens = 0
+
+    for await (const chunk of model.chatStream(prompt)) {
+      // Send chunk to client
+      ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
+
+      if (chunk.type === "done") {
+        finalMessages = chunk.messages || []
+        totalTokens = chunk.tokensUsed || 0
+        break
+      } else if (chunk.type === "error") {
+        ctx.res.write(
+          `data: ${JSON.stringify({
+            type: "error",
+            content: chunk.content,
+          })}\n\n`
+        )
+        ctx.res.end()
+        return
+      }
+    }
+
+    // Save chat to database after streaming is complete
+    if (finalMessages.length > 0) {
+      if (!chat._id) {
+        chat._id = docIds.generateAgentChatID()
+      }
+
+      if (!chat.title || chat.title === "") {
+        const titlePrompt = new ai.LLMRequest()
+          .addSystemMessage(ai.agentHistoryTitleSystemPrompt())
+          .addMessages(finalMessages)
+        const { message } = await model.prompt(titlePrompt)
+        chat.title = message
+      }
+
+      const newChat: AgentChat = {
+        _id: chat._id,
+        _rev: chat._rev,
+        title: chat.title,
+        messages: addDebugInformation(finalMessages),
+      }
+
+      const { rev } = await db.put(newChat)
+
+      // Send final chat info
+      ctx.res.write(
+        `data: ${JSON.stringify({
+          type: "chat_saved",
+          chat: { ...newChat, _rev: rev },
+          tokensUsed: totalTokens,
+        })}\n\n`
+      )
+    }
+
+    ctx.res.end()
+  } catch (error: any) {
+    ctx.res.write(
+      `data: ${JSON.stringify({ type: "error", content: error.message })}\n\n`
+    )
+    ctx.res.end()
+  }
+}
+
 export async function remove(ctx: UserCtx<void, void>) {
   const db = context.getGlobalDB()
   const historyId = ctx.params.historyId
@@ -209,7 +362,7 @@ export async function fetchToolSources(
       case "BAMBOOHR":
         const bamboohrClient = new BambooHRClient(
           doc.auth?.apiKey,
-          doc.auth?.subdomain,
+          doc.auth?.subdomain
         )
         tools = bamboohrClient.getTools()
         break
@@ -254,9 +407,7 @@ export async function updateToolSource(
   ctx.status = 200
 }
 
-export async function deleteToolSource(
-  ctx: UserCtx<void, { deleted: true }>
-) {
+export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const toolSourceId = ctx.params.toolSourceId
   const db = context.getAppDB()
 

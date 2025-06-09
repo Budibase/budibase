@@ -60,37 +60,58 @@ export class ConfluenceClient {
   getTools() {
     return [
       newTool({
-        name: "confluence_search_content",
-        description: "Search for content in Confluence using v2 API",
+        name: "confluence_text_search",
+        description:
+          "Perform deep text search across Confluence content using CQL",
         parameters: z.object({
-          title: z.string().optional().describe("Search by title"),
+          query: z.string().describe("Text to search for in content"),
           spaceKey: z.string().optional().describe("Filter by space key"),
-          status: z
-            .string()
+          contentType: z
+            .enum(["page", "blogpost", "comment", "attachment"])
             .optional()
-            .describe("Content status (e.g., current, draft)"),
+            .describe("Type of content to search"),
           limit: z
             .number()
             .optional()
             .describe("Maximum number of results to return"),
         }),
-        handler: async ({
-          title,
-          spaceKey,
-          status = "current",
-          limit = 10,
-        }) => {
-          const params = new URLSearchParams({
-            limit: limit.toString(),
-            status,
-          })
-          if (title) {
-            params.append("title", title)
-          }
+        handler: async ({ query, spaceKey, contentType, limit = 10 }) => {
+          // Use v1 API for CQL search as v2 doesn't support full CQL
+          const url = `${this.baseUrl}/wiki/rest/api/content/search`
+
+          // Build CQL query for text search
+          let cql = `text ~ "${query}~"`
+
           if (spaceKey) {
-            params.append("space-key", spaceKey)
+            cql += ` AND space = "${spaceKey}"`
           }
-          const results = await this.makeRequest(`/content?${params}`)
+
+          if (contentType) {
+            cql += ` AND type = "${contentType}"`
+          }
+
+          const params = new URLSearchParams({
+            cql,
+            limit: limit.toString(),
+            expand: "body.storage,space,version,history.lastUpdated",
+          })
+
+          const response = await fetch(`${url}?${params}`, {
+            headers: {
+              Authorization: this.getAuthHeader(),
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          })
+
+          if (!response.ok) {
+            const errorText = await response.text()
+            throw new Error(
+              `HTTP ${response.status}: ${response.statusText} - ${errorText}`
+            )
+          }
+
+          const results = await response.json()
           return JSON.stringify(results, null, 2)
         },
       }),
@@ -177,8 +198,10 @@ export class ConfluenceClient {
           status = "current",
         }) => {
           // Ensure proper formatting by converting escaped newlines to actual newlines
-          const formattedContent = content.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
-          
+          const formattedContent = content
+            .replace(/\\n/g, "\n")
+            .replace(/\\r\\n/g, "\n")
+
           const body: any = {
             spaceId: space_id,
             status,
@@ -216,8 +239,10 @@ export class ConfluenceClient {
         }),
         handler: async ({ page_id, title, content, version }) => {
           // Ensure proper formatting by converting escaped newlines to actual newlines
-          const formattedContent = content.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
-          
+          const formattedContent = content
+            .replace(/\\n/g, "\n")
+            .replace(/\\r\\n/g, "\n")
+
           const body = {
             id: page_id,
             status: "current",
