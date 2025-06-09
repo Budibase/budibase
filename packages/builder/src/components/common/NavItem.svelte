@@ -128,7 +128,7 @@
     <div
       class="text"
       title={showTooltip ? text : null}
-      style={"max-width: " + panelWidth + "px;"}
+      style={panelWidth ? `max-width: ${panelWidth}px;` : ""}
     >
       <span title={text}>{text}</span>
       {#if selectedBy}
