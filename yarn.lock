@@ -6058,7 +6058,7 @@
   dependencies:
     "@types/retry" "*"
 
-"@types/qs@*", "@types/qs@^6.9.15":
+"@types/qs@*":
   version "6.9.16"
   resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.16.tgz#52bba125a07c0482d26747d5d4947a64daf8f794"
   integrity sha512-7i+zxXdPD0T4cKDuxCUXJ4wHcsJLwENa6Z3dCu8cfCK743OGy5Nu1RmAGqDPsoTDINVEcdXKRvR/zre+P2Ku1A==
@@ -16317,20 +16317,18 @@ open@^7.3.1:
     is-docker "^2.0.0"
     is-wsl "^2.1.1"
 
-openai@4.59.0:
-  version "4.59.0"
-  resolved "https://registry.yarnpkg.com/openai/-/openai-4.59.0.tgz#3961d11a9afb5920e1bd475948a87969e244fc08"
-  integrity sha512-3bn7FypMt2R1ZDuO0+GcXgBEnVFhIzrpUkb47pQRoYvyfdZ2fQXcuP14aOc4C8F9FvCtZ/ElzJmVzVqnP4nHNg==
+openai@4.98.0:
+  version "4.98.0"
+  resolved "https://registry.yarnpkg.com/openai/-/openai-4.98.0.tgz#81d8228e06e5d9195bac3b170af42a5454391999"
+  integrity sha512-TmDKur1WjxxMPQAtLG5sgBSCJmX7ynTsGmewKzoDwl1fRxtbLOsiR0FA/AOAAtYUmP6azal+MYQuOENfdU+7yg==
   dependencies:
     "@types/node" "^18.11.18"
     "@types/node-fetch" "^2.6.4"
-    "@types/qs" "^6.9.15"
     abort-controller "^3.0.0"
     agentkeepalive "^4.2.1"
     form-data-encoder "1.7.2"
     formdata-node "^4.3.2"
     node-fetch "^2.6.7"
-    qs "^6.10.3"
 
 openapi-response-validator@^9.2.0:
   version "9.3.1"
@@ -17864,7 +17862,7 @@ qrcode-generator@^1.4.4:
   resolved "https://registry.yarnpkg.com/qrcode-generator/-/qrcode-generator-1.4.4.tgz#63f771224854759329a99048806a53ed278740e7"
   integrity sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==
 
-qs@6.13.0, qs@^6.10.3, qs@^6.11.0, qs@^6.4.0:
+qs@6.13.0, qs@^6.11.0, qs@^6.4.0:
   version "6.13.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.13.0.tgz#6ca3bd58439f7e245655798997787b0d88a51906"
   integrity sha512-+38qI9SOr8tfZ4QmJNplMUxqjbe7LKvvZgWdExBOmd+egZTtjLB67Gu0HRX3u/XOq7UU2Nx6nsjvS16Z9uwfpg==

@@ -1,6 +1,9 @@
 import { z } from "zod"
 import { zodResponseFormat } from "openai/helpers/zod"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
+import {
+  mockChatGPTResponse,
+  mockOpenAIFileUpload,
+} from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
 import { configs, env, features, setEnv } from "@budibase/backend-core"
@@ -1002,6 +1005,95 @@ describe("BudibaseAI", () => {
 
       const employees = await config.api.row.fetch(createdTables[1].id)
       expect(employees).toHaveLength(5)
+    })
+  })
+
+  describe("POST /api/ai/upload-file", () => {
+    let licenseKey = "test-key"
+    let internalApiKey = "api-key"
+
+    let envCleanup: () => void
+    beforeAll(() => {
+      envCleanup = setEnv({
+        SELF_HOSTED: false,
+        ACCOUNT_PORTAL_API_KEY: internalApiKey,
+      })
+    })
+
+    afterAll(() => {
+      envCleanup()
+    })
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+      const license: License = {
+        plan: {
+          type: PlanType.FREE,
+          model: PlanModel.PER_USER,
+          usesInvoicing: false,
+        },
+        features: [Feature.BUDIBASE_AI],
+        quotas: {} as any,
+        tenantId: config.tenantId,
+      }
+      nock(env.ACCOUNT_PORTAL_URL)
+        .get(`/api/license/${licenseKey}`)
+        .reply(200, license)
+    })
+
+    it("handles file upload successfully", async () => {
+      const mockFileId = "file-abc123"
+      mockOpenAIFileUpload(mockFileId)
+
+      const testData = Buffer.from("test file content")
+      const response = await config.api.ai.uploadFile({
+        data: testData.toString("base64"),
+        filename: "test.pdf",
+        contentType: "application/pdf",
+        licenseKey,
+      })
+
+      expect(response.file).toBe(mockFileId)
+    })
+
+    it("handles OpenAI API errors", async () => {
+      mockOpenAIFileUpload("", {
+        status: 400,
+        error: {
+          error: {
+            message: "Invalid file format",
+            type: "invalid_request_error",
+          },
+        },
+      })
+
+      const testData = Buffer.from("invalid content")
+      await config.api.ai.uploadFile(
+        {
+          data: testData.toString("base64"),
+          filename: "test.txt",
+          contentType: "text/plain",
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("requires valid license", async () => {
+      nock.cleanAll()
+      nock(env.ACCOUNT_PORTAL_URL).get(`/api/license/${licenseKey}`).reply(404)
+
+      const testData = Buffer.from("test content")
+      await config.api.ai.uploadFile(
+        {
+          data: testData.toString("base64"),
+          filename: "test.pdf",
+          contentType: "application/pdf",
+          licenseKey,
+        },
+        { status: 403 }
+      )
     })
   })
 })

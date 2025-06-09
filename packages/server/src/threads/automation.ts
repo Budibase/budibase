@@ -22,7 +22,6 @@ import {
   BranchStep,
   LoopStep,
   ContextEmitter,
-  LoopStepType,
   AutomationTriggerResult,
   AutomationResults,
   AutomationStepResult,
@@ -64,23 +63,20 @@ function matchesLoopFailureCondition(step: LoopStep, currentItem: any) {
 // function handles the various ways that a LoopStep can be configured, parsing
 // the input and returning an array of items to loop over.
 function getLoopIterable(step: LoopStep): any[] {
-  const option = step.inputs.option
   let input = step.inputs.binding
 
-  if (option === LoopStepType.ARRAY && typeof input === "string") {
+  if (Array.isArray(input)) {
+    return input
+  } else if (typeof input === "string") {
     if (input === "") {
       input = []
     } else {
-      input = JSON.parse(input)
+      try {
+        input = JSON.parse(input)
+      } catch (e) {
+        input = automationUtils.stringSplit(input)
+      }
     }
-  }
-
-  if (option === LoopStepType.STRING && Array.isArray(input)) {
-    input = input.join(",")
-  }
-
-  if (option === LoopStepType.STRING && typeof input === "string") {
-    input = automationUtils.stringSplit(input)
   }
 
   return Array.isArray(input) ? input : [input]

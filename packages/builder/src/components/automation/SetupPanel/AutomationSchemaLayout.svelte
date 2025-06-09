@@ -271,7 +271,17 @@
       return false
     }
     const dependsOn = value?.dependsOn
-    return !dependsOn || !!getInputValue(inputData, dependsOn)
+    if (!dependsOn) return true
+
+    if (typeof dependsOn === "string") {
+      return !!getInputValue(inputData, dependsOn)
+    }
+
+    const fieldValue = getInputValue(inputData, dependsOn.field) as string
+    if (Array.isArray(dependsOn.value)) {
+      return dependsOn.value.includes(fieldValue)
+    }
+    return fieldValue === dependsOn.value
   }
 
   const defaultChange = (
