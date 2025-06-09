@@ -13,8 +13,8 @@
     deploymentStore,
     workspaceAppStore,
   } from "@/stores/builder"
-  import type { UsedResource } from "@budibase/types"
-  import { ResourceType } from "@budibase/types"
+  import type { UsedResource, Automation } from "@budibase/types"
+  import { ResourceType, AutomationEventType } from "@budibase/types"
   import { API } from "@/api"
   import { createEventDispatcher } from "svelte"
 
@@ -30,7 +30,7 @@
   const dispatcher = createEventDispatcher()
 
   $: automations = $automationStore.automations
-  $: filteredAutomations = removeTarget(automations)
+  $: filteredAutomations = removeRowActionAutomations(removeTarget(automations))
   $: apps = $workspaceAppStore.workspaceApps
   $: filteredApps = removeTarget(apps)
   $: target = findTarget(targetId, apps, automations)
@@ -101,6 +101,10 @@
 
   function removeTarget<T extends { _id?: string }>(list: T[]): T[] {
     return list?.filter(item => item._id !== targetId) || []
+  }
+
+  function removeRowActionAutomations(automations: Automation[]) {
+    return automations?.filter(automation => automation.definition.trigger.event !== AutomationEventType.ROW_ACTION)
   }
 
   function findTarget(

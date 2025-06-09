@@ -14,7 +14,9 @@
     appStore,
     deploymentStore,
     workspaceAppStore,
+    automationStore,
   } from "@/stores/builder"
+  import { page } from "@roxi/routify"
   import { featureFlag } from "@/helpers"
   import { FeatureFlag } from "@budibase/types"
   import { admin } from "@/stores/portal"
@@ -32,7 +34,10 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
+  $: inAutomations = $page.path.includes("automation")
+  $: inDesign = $page.path.includes("design")
   $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id
+  $: selectedAutomationId = $automationStore.selectedAutomationId
 
   const publish = async () => {
     if (workspaceEnabled) {
@@ -89,9 +94,9 @@
 {/if}
 
 <VersionModal hideIcon bind:this={versionModal} />
-{#if selectedWorkspaceAppId && workspaceEnabled}
+{#if workspaceEnabled}
   <PublishModal
-    targetId={selectedWorkspaceAppId}
+    targetId={inDesign ? selectedWorkspaceAppId : inAutomations ? selectedAutomationId : undefined}
     bind:this={publishModal}
     on:success={() => publishSuccessPopover?.show()}
   />
