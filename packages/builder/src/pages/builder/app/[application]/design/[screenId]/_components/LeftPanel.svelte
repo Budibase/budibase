@@ -27,7 +27,7 @@
 
 <div class="panel" use:resizable>
   <div class="content">
-    <ScreenList />
+    <ScreenList {panelWidth} />
     <div class="tabs">
       {#each Object.values(Tabs) as tab}
         <ActionButton

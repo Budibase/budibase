@@ -17,6 +17,7 @@
 
   export let screen
   export let deletionAllowed: boolean
+  export let panelWidth: Number
 
   let confirmDeleteDialog: ConfirmDialog
   let screenDetailsModal: Modal
@@ -111,6 +112,7 @@
   rightAlignIcon
   showTooltip
   selectedBy={$userSelectedResourceMap[screen._id]}
+  {panelWidth}
 >
   <Icon
     on:click={e => openContextMenu(e, screen)}
