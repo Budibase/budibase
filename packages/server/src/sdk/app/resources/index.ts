@@ -108,7 +108,7 @@ export async function analyseAll(toCheck: {
     const tableActions = rowActions.filter(action =>
       action._id!.includes(resource.id)
     )
-    resources.concat(
+    resources = resources.concat(
       tableActions.map(action => ({
         ...resource,
         id: action._id!,
@@ -121,7 +121,7 @@ export async function analyseAll(toCheck: {
       const datasourceQueries = queries.filter(
         query => query.datasourceId === resource.id
       )
-      resources.concat(
+      resources = resources.concat(
         datasourceQueries.map(query => ({
           ...resource,
           id: query._id!,

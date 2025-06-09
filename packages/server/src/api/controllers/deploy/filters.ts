@@ -10,7 +10,7 @@ import sdk from "../../../sdk"
 
 type Filter = PouchDB.Replication.ReplicateOptions["filter"]
 
-const AUTO_ID_FORMAT = DocumentType.AUTOMATION + SEPARATOR,
+const AUTOMATION_ID_FORMAT = DocumentType.AUTOMATION + SEPARATOR,
   SCREEN_ID_FORMAT = DocumentType.SCREEN + SEPARATOR,
   WORKSPACE_APP_ID_FORMAT = DocumentType.WORKSPACE + SEPARATOR,
   TABLE_ID_FORMAT = DocumentType.TABLE + SEPARATOR,
@@ -37,7 +37,7 @@ export async function buildPublishFilter(opts: {
     rowActionIds = getSpecificResourceIDs(ResourceType.ROW_ACTION, resources),
     queryIds = getSpecificResourceIDs(ResourceType.QUERY, resources)
   return (doc: Document) => {
-    if (opts?.automationIds && doc._id?.startsWith(AUTO_ID_FORMAT)) {
+    if (opts?.automationIds && doc._id?.startsWith(AUTOMATION_ID_FORMAT)) {
       return opts.automationIds.includes(doc._id)
     } else if (
       opts?.workspaceAppIds &&
