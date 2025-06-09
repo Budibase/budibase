@@ -1,3 +1,5 @@
+import { AppNavigation } from "../../../documents"
+
 export interface WorkspaceAppResponse {
   _id: string
   _rev: string
@@ -5,6 +7,8 @@ export interface WorkspaceAppResponse {
   urlPrefix: string
   icon: string
   iconColor?: string
+  navigation: AppNavigation
+  isDefault: boolean
 }
 
 export interface InsertWorkspaceAppRequest {
@@ -25,6 +29,7 @@ export interface UpdateWorkspaceAppRequest {
   urlPrefix: string
   icon: string
   iconColor?: string
+  navigation: AppNavigation
 }
 
 export interface UpdateWorkspaceAppResponse {
