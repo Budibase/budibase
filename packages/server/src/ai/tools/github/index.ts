@@ -140,8 +140,10 @@ export class GitHubClient {
         }),
         handler: async ({ owner, repo, title, body, labels }) => {
           // Ensure proper formatting by converting escaped newlines to actual newlines
-          const formattedBody = body.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
-          
+          const formattedBody = body
+            .replace(/\\n/g, "\n")
+            .replace(/\\r\\n/g, "\n")
+
           const { data } = await this.octokit.issues.create({
             owner,
             repo,
@@ -191,7 +193,9 @@ export class GitHubClient {
           if (title) updateData.title = title
           if (body) {
             // Ensure proper formatting by converting escaped newlines to actual newlines
-            updateData.body = body.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
+            updateData.body = body
+              .replace(/\\n/g, "\n")
+              .replace(/\\r\\n/g, "\n")
           }
           if (state) updateData.state = state
           if (labels) updateData.labels = labels

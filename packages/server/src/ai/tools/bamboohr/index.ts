@@ -1,6 +1,7 @@
 import { newTool } from "@budibase/types"
 import fetch from "node-fetch"
 import { z } from "zod"
+import env from "../../../environment"
 
 export class BambooHRClient {
   private apiKey: string
@@ -8,8 +9,8 @@ export class BambooHRClient {
   private baseUrl: string
 
   constructor(apiKey?: string, subdomain?: string) {
-    this.apiKey = apiKey || process.env.BAMBOOHR_API_KEY || ""
-    this.subdomain = subdomain || process.env.BAMBOOHR_SUBDOMAIN || ""
+    this.apiKey = apiKey || env.BAMBOOHR_API_KEY || ""
+    this.subdomain = subdomain || env.BAMBOOHR_SUBDOMAIN || ""
     this.baseUrl = `https://api.bamboohr.com/api/gateway.php/${this.subdomain}/v1`
   }
 
@@ -58,12 +59,18 @@ export class BambooHRClient {
         parameters: z.object({
           employee_id: z.string().describe("The employee ID"),
           fields: z
-            .string()
+            .array(z.string())
             .optional()
-            .describe("Comma-separated list of fields to retrieve"),
+            .describe("List of fields to retrieve"),
         }),
-        handler: async ({ employee_id, fields }: { employee_id: string; fields?: string }) => {
-          const params = fields ? `?fields=${fields}` : ""
+        handler: async ({
+          employee_id,
+          fields,
+        }: {
+          employee_id: string
+          fields?: string[]
+        }) => {
+          const params = fields ? `?fields=${fields.join(",")}` : ""
           const employee = await this.makeRequest(
             `/employees/${employee_id}${params}`
           )
@@ -76,13 +83,15 @@ export class BambooHRClient {
         description: "List all employees",
         parameters: z.object({
           fields: z
-            .string()
+            .array(z.string())
             .optional()
-            .describe("Comma-separated list of fields to retrieve"),
+            .describe("List of fields to retrieve"),
         }),
-        handler: async ({ fields }: { fields?: string }) => {
-          const params = fields ? `?fields=${fields}` : ""
-          const employees = await this.makeRequest(`/employees/directory${params}`)
+        handler: async ({ fields }: { fields?: string[] }) => {
+          const params = fields ? `?fields=${fields.join(",")}` : ""
+          const employees = await this.makeRequest(
+            `/employees/directory${params}`
+          )
           return JSON.stringify(employees, null, 2)
         },
       }),
@@ -98,7 +107,15 @@ export class BambooHRClient {
             .optional()
             .describe("Filter by specific employee ID"),
         }),
-        handler: async ({ start_date, end_date, employee_id }: { start_date: string; end_date: string; employee_id?: string }) => {
+        handler: async ({
+          start_date,
+          end_date,
+          employee_id,
+        }: {
+          start_date: string
+          end_date: string
+          employee_id?: string
+        }) => {
           let endpoint = `/time_off/requests/?start=${start_date}&end=${end_date}`
           if (employee_id) {
             endpoint += `&employeeId=${employee_id}`
@@ -117,14 +134,20 @@ export class BambooHRClient {
             .optional()
             .describe("Report format"),
           fields: z
-            .string()
+            .array(z.string())
             .optional()
-            .describe("Comma-separated list of fields to include"),
+            .describe("List of fields to include"),
         }),
-        handler: async ({ format = "JSON", fields }: { format?: "JSON" | "XML" | "CSV" | "PDF" | "XLS"; fields?: string }) => {
+        handler: async ({
+          format = "JSON",
+          fields,
+        }: {
+          format?: "JSON" | "XML" | "CSV" | "PDF" | "XLS"
+          fields?: string[]
+        }) => {
           const params = new URLSearchParams({ format })
           if (fields) {
-            params.append("fields", fields)
+            params.append("fields", fields.join(","))
           }
           const report = await this.makeRequest(`/reports/custom?${params}`)
           return JSON.stringify(report, null, 2)
@@ -138,7 +161,9 @@ export class BambooHRClient {
           employee_id: z.string().describe("The employee ID"),
         }),
         handler: async ({ employee_id }: { employee_id: string }) => {
-          const files = await this.makeRequest(`/employees/${employee_id}/files/view/`)
+          const files = await this.makeRequest(
+            `/employees/${employee_id}/files/view/`
+          )
           return JSON.stringify(files, null, 2)
         },
       }),
@@ -170,7 +195,13 @@ export class BambooHRClient {
           employee_id: z.string().describe("The employee ID"),
           table_name: z.string().describe("The table name"),
         }),
-        handler: async ({ employee_id, table_name }: { employee_id: string; table_name: string }) => {
+        handler: async ({
+          employee_id,
+          table_name,
+        }: {
+          employee_id: string
+          table_name: string
+        }) => {
           const tableData = await this.makeRequest(
             `/employees/${employee_id}/tables/${table_name}`
           )
@@ -188,7 +219,9 @@ export class BambooHRClient {
             .describe("Date to check (YYYY-MM-DD), defaults to today"),
         }),
         handler: async ({ date }: { date?: string }) => {
-          const endpoint = date ? `/time_off/whos_out/?start=${date}&end=${date}` : "/time_off/whos_out/"
+          const endpoint = date
+            ? `/time_off/whos_out/?start=${date}&end=${date}`
+            : "/time_off/whos_out/"
           const whoIsOut = await this.makeRequest(endpoint)
           return JSON.stringify(whoIsOut, null, 2)
         },

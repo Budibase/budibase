@@ -50,7 +50,7 @@ export function newTool<T extends z.ZodType>(tool: ToolArgs<T>): Tool<T> {
       return result
     } catch (error: any) {
       console.error(`[TOOL ERROR] Tool '${tool.name}' failed:`, error)
-      
+
       // Still return the error message for the Agent
       return `Error executing ${tool.name}: ${error.message}`
     }

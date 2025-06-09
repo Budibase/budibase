@@ -1,6 +1,7 @@
 import { newTool } from "@budibase/types"
 import fetch from "node-fetch"
 import { z } from "zod"
+import env from "../../../environment"
 
 export class ConfluenceClient {
   private apiToken: string
@@ -8,12 +9,10 @@ export class ConfluenceClient {
   private baseUrl: string
 
   constructor(apiToken?: string, email?: string, baseUrl?: string) {
-    this.apiToken = apiToken || process.env.ATLASSIAN_API_TOKEN || ""
-    this.email = email || process.env.ATLASSIAN_EMAIL || ""
+    this.apiToken = apiToken || env.ATLASSIAN_API_TOKEN || ""
+    this.email = email || env.ATLASSIAN_EMAIL || ""
     this.baseUrl =
-      baseUrl ||
-      process.env.ATLASSIAN_BASE_URL ||
-      "https://budibase.atlassian.net"
+      baseUrl || env.ATLASSIAN_BASE_URL || "https://budibase.atlassian.net"
   }
 
   /**
@@ -34,7 +33,14 @@ export class ConfluenceClient {
   /**
    * Make API request to Confluence v2 API
    */
-  private async makeRequest(endpoint: string, options: any = {}): Promise<any> {
+  private async makeRequest(
+    endpoint: string,
+    options: {
+      method?: string
+      body?: string
+      headers?: Record<string, string>
+    } = {}
+  ): Promise<any> {
     const url = `${this.baseUrl}/wiki/api/v2${endpoint}`
 
     const response = await fetch(url, {
@@ -66,9 +72,9 @@ export class ConfluenceClient {
           title: z.string().optional().describe("Search by title"),
           spaceKey: z.string().optional().describe("Filter by space key"),
           status: z
-            .string()
+            .enum(["current", "draft", "archived"])
             .optional()
-            .describe("Content status (e.g., current, draft)"),
+            .describe("Content status"),
           limit: z
             .number()
             .optional()
@@ -123,7 +129,10 @@ export class ConfluenceClient {
             .optional()
             .describe("Maximum number of spaces to return"),
           type: z.string().optional().describe("Space type filter"),
-          status: z.string().optional().describe("Space status filter"),
+          status: z
+            .enum(["current", "archived"])
+            .optional()
+            .describe("Space status filter"),
         }),
         handler: async ({ limit = 25, type, status }) => {
           const params = new URLSearchParams({
@@ -165,9 +174,9 @@ export class ConfluenceClient {
             .describe("The page content in Confluence storage format"),
           parent_id: z.string().optional().describe("Optional parent page ID"),
           status: z
-            .string()
+            .enum(["current", "draft"])
             .optional()
-            .describe("Page status (current, draft)"),
+            .describe("Page status"),
         }),
         handler: async ({
           space_id,
@@ -177,8 +186,10 @@ export class ConfluenceClient {
           status = "current",
         }) => {
           // Ensure proper formatting by converting escaped newlines to actual newlines
-          const formattedContent = content.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
-          
+          const formattedContent = content
+            .replace(/\\n/g, "\n")
+            .replace(/\\r\\n/g, "\n")
+
           const body: any = {
             spaceId: space_id,
             status,
@@ -216,8 +227,10 @@ export class ConfluenceClient {
         }),
         handler: async ({ page_id, title, content, version }) => {
           // Ensure proper formatting by converting escaped newlines to actual newlines
-          const formattedContent = content.replace(/\\n/g, '\n').replace(/\\r\\n/g, '\n')
-          
+          const formattedContent = content
+            .replace(/\\n/g, "\n")
+            .replace(/\\r\\n/g, "\n")
+
           const body = {
             id: page_id,
             status: "current",

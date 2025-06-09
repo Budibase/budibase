@@ -1,6 +1,5 @@
 <script lang="ts">
   import {
-    ActionButton,
     Body,
     Button,
     Heading,
@@ -159,11 +158,6 @@
     }
   }
 
-  const reset = async () => {
-    chat = { title: "", messages: [] }
-    agentsStore.clearCurrentChatId()
-  }
-
   const selectChat = async (selectedChat: AgentChat) => {
     chat = { ...selectedChat }
     agentsStore.setCurrentChatId(selectedChat._id!)
@@ -187,7 +181,7 @@
       ...ToolSources.find(ts => ts.type === toolSource.type),
       _id: toolSource._id,
       _rev: toolSource._rev,
-      existingToolSource: toolSource
+      existingToolSource: toolSource,
     }
     toolConfig = { ...toolSource.auth }
     toolConfigModal.show()
@@ -200,7 +194,7 @@
 
   const deleteToolSource = async () => {
     if (!toolSourceToDelete) return
-    
+
     try {
       await agentsStore.deleteToolSource(toolSourceToDelete._id)
       notifications.success("Tool source deleted successfully.")
@@ -239,12 +233,16 @@
         await agentsStore.createToolSource(toolSourceData)
         notifications.success("Tool source saved successfully.")
       }
-      
+
       await agentsStore.fetchToolSources()
       toolConfigModal.hide()
     } catch (err) {
       console.error(err)
-      notifications.error(selectedToolSource.existingToolSource ? "Error updating tool source" : "Error saving tool source")
+      notifications.error(
+        selectedToolSource.existingToolSource
+          ? "Error updating tool source"
+          : "Error saving tool source"
+      )
     }
   }
 
@@ -424,7 +422,8 @@
                               size="S"
                               hoverable
                               name="Delete"
-                              on:click={() => confirmDeleteToolSource(toolSource)}
+                              on:click={() =>
+                                confirmDeleteToolSource(toolSource)}
                             />
                             <div class="tool-source-detail">
                               <Icon
@@ -556,7 +555,9 @@
 
 <Modal bind:this={toolConfigModal}>
   <ModalContent
-    title={`${selectedToolSource?.existingToolSource ? 'Edit' : 'Configure'} ${selectedToolSource?.name || "Tool"}`}
+    title={`${selectedToolSource?.existingToolSource ? "Edit" : "Configure"} ${
+      selectedToolSource?.name || "Tool"
+    }`}
     size="M"
     showCancelButton={true}
     cancelText="Back"
@@ -656,7 +657,8 @@
   >
     <div class="delete-confirm-content">
       <Body size="S">
-        Are you sure you want to delete this tool source? This action cannot be undone.
+        Are you sure you want to delete this tool source? This action cannot be
+        undone.
       </Body>
       {#if toolSourceToDelete}
         <div class="tool-source-preview">
@@ -804,13 +806,6 @@
 
   textarea::placeholder {
     color: var(--spectrum-global-color-gray-600);
-  }
-
-  .controls {
-    position: fixed;
-    bottom: 8px;
-    right: calc(50% - 300px);
-    z-index: 1;
   }
 
   .config-form {

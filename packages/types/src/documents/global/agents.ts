@@ -51,7 +51,6 @@ export interface BudibaseToolSource extends Document {
   auth: BudibaseToolAuth
 }
 
-
 export interface BambooHRToolSource extends Document {
   type: "BAMBOOHR"
   disabledTools: string[]

@@ -79,7 +79,9 @@ export class AgentsStore extends BudiStore<AgentStore> {
   deleteToolSource = async (toolSourceId: string) => {
     await API.deleteToolSource(toolSourceId)
     this.update(state => {
-      state.toolSources = state.toolSources.filter(ts => ts._id !== toolSourceId)
+      state.toolSources = state.toolSources.filter(
+        ts => ts._id !== toolSourceId
+      )
       return state
     })
   }

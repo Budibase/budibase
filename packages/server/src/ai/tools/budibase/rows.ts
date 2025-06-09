@@ -11,7 +11,7 @@ export default [
       limit: z.number().optional().describe("Maximum number of rows to return"),
       startKey: z.string().optional().describe("Start key for pagination"),
     }),
-    handler: async ({ tableId }: { tableId: string; limit?: number; startKey?: string }) => {
+    handler: async ({ tableId }) => {
       const rows = await sdk.rows.fetch(tableId)
       const formatted = JSON.stringify(rows, null, 2)
       return `Here are the rows for table ${tableId}:\n\n${formatted}`
@@ -25,7 +25,7 @@ export default [
       tableId: z.string().describe("The ID of the table"),
       rowId: z.string().describe("The ID of the row to retrieve"),
     }),
-    handler: async ({ tableId, rowId }: { tableId: string; rowId: string }) => {
+    handler: async ({ tableId, rowId }) => {
       const row = await sdk.rows.find(tableId, rowId)
       const formatted = JSON.stringify(row, null, 2)
       return `Here is the row data:\n\n${formatted}`
@@ -39,7 +39,7 @@ export default [
       tableId: z.string().describe("The ID of the table to create the row in"),
       data: z.string().describe("JSON string with row data"),
     }),
-    handler: async ({ tableId, data }: { tableId: string; data: string }) => {
+    handler: async ({ tableId, data }) => {
       let parsedData
       try {
         parsedData = JSON.parse(data)
@@ -58,9 +58,12 @@ export default [
     parameters: z.object({
       tableId: z.string().describe("The ID of the table"),
       rowId: z.string().describe("The ID of the row to update"),
-      data: z.object({}).optional().describe("The updated data as key-value pairs"),
+      data: z
+        .object({})
+        .optional()
+        .describe("The updated data as key-value pairs"),
     }),
-    handler: async ({ tableId, rowId, data }: { tableId: string; rowId: string; data?: any }) => {
+    handler: async ({ tableId, rowId, data }) => {
       const rowData = { ...data, _id: rowId }
       const row = await sdk.rows.save(tableId, rowData, undefined)
       const formatted = JSON.stringify(row, null, 2)
@@ -73,22 +76,29 @@ export default [
     description: "Search for rows in a table based on criteria",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to search"),
-      query: z.object({}).optional().describe("Search criteria as key-value pairs"),
-      sort: z.object({
-        column: z.string().describe("Column to sort by"),
-        order: z.enum(["ascending", "descending"]).describe("Sort order"),
-      }).optional().describe("Sort configuration"),
+      query: z
+        .object({})
+        .optional()
+        .describe("Search criteria as key-value pairs"),
+      sort: z
+        .object({
+          column: z.string().describe("Column to sort by"),
+          order: z.enum(["ascending", "descending"]).describe("Sort order"),
+        })
+        .optional()
+        .describe("Sort configuration"),
       limit: z.number().optional().describe("Maximum number of results"),
     }),
-    handler: async ({ tableId, query, sort, limit }: { tableId: string; query?: any; sort?: { column: string; order: string }; limit?: number }) => {
+    handler: async ({ tableId, query, sort, limit }) => {
       const searchParams: any = {
         tableId,
         query,
-        limit
+        limit,
       }
       if (sort) {
         searchParams.sort = sort.column
-        searchParams.sortOrder = sort.order === "ascending" ? "ascending" : "descending"
+        searchParams.sortOrder =
+          sort.order === "ascending" ? "ascending" : "descending"
       }
 
       const rows = await sdk.rows.search(searchParams)

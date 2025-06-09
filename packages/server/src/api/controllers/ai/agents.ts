@@ -1,10 +1,10 @@
 import { ai } from "@budibase/pro"
-import * as tools from "../../../ai/tools"
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   ChatAgentRequest,
   ChatAgentResponse,
   DocumentType,
+  Tool,
   UserCtx,
   FetchAgentHistoryResponse,
   AgentChat,
@@ -13,7 +13,7 @@ import {
   CreateToolSourceRequest,
   Message,
 } from "@budibase/types"
-import { ConfluenceClient, GitHubClient, BambooHRClient, budibase } from "../../../ai/tools"
+import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base/ToolSourceRegistry"
 
 function addDebugInformation(messages: Message[]) {
   const processedMessages = [...messages]
@@ -72,51 +72,19 @@ export async function agentChat(
 
   for (const row of toolSources.rows) {
     const toolSource = row.doc!
-    const disabledTools = toolSource.disabledTools || []
+    const toolSourceInstance = createToolSourceInstance(toolSource)
 
-    if (toolSource.auth?.guidelines) {
-      toolGuidelines += `\n\nWhen using ${toolSource.type} tools, ensure you follow these guidelines:\n${toolSource.auth.guidelines}`
+    if (!toolSourceInstance) {
+      console.warn(`Skipping unknown tool source type: ${toolSource.type}`)
+      continue
     }
 
-    let toolsToAdd: any[] = []
-
-    switch (toolSource.type) {
-      case "BUDIBASE": {
-        toolsToAdd = tools.budibase.filter(
-          tool => !disabledTools.includes(tool.name)
-        )
-        break
-      }
-      case "GITHUB": {
-        const ghClient = new GitHubClient(toolSource.auth?.apiKey)
-        toolsToAdd = ghClient
-          .getTools()
-          .filter(tool => !disabledTools.includes(tool.name))
-        break
-      }
-      case "CONFLUENCE": {
-        const confluenceClient = new ConfluenceClient(
-          toolSource.auth?.apiKey,
-          toolSource.auth?.email,
-          toolSource.auth?.baseUrl
-        )
-        toolsToAdd = confluenceClient
-          .getTools()
-          .filter(tool => !disabledTools.includes(tool.name))
-        break
-      }
-      case "BAMBOOHR": {
-        const bamboohrClient = new BambooHRClient(
-          toolSource.auth?.apiKey,
-          toolSource.auth?.subdomain
-        )
-        toolsToAdd = bamboohrClient
-          .getTools()
-          .filter(tool => !disabledTools.includes(tool.name))
-        break
-      }
+    const guidelines = toolSourceInstance.getGuidelines()
+    if (guidelines) {
+      toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
     }
 
+    const toolsToAdd = toolSourceInstance.getEnabledTools()
     if (toolsToAdd.length > 0) {
       prompt = prompt.addTools(toolsToAdd)
     }
@@ -188,32 +156,11 @@ export async function fetchToolSources(
 
   ctx.body = toolSources.rows.map(row => {
     const doc = row.doc!
-    let tools: any[] = []
+    const toolSourceInstance = createToolSourceInstance(doc)
 
-    switch (doc.type) {
-      case "BUDIBASE":
-        tools = budibase
-        break
-      case "GITHUB":
-        const ghClient = new GitHubClient(doc.auth?.apiKey)
-        tools = ghClient.getTools()
-        break
-      case "CONFLUENCE":
-        const confluenceClient = new ConfluenceClient(
-          doc.auth?.apiKey,
-          doc.auth?.email,
-          doc.auth?.baseUrl
-        )
-        tools = confluenceClient.getTools()
-        break
-      case "BAMBOOHR":
-        const bamboohrClient = new BambooHRClient(
-          doc.auth?.apiKey,
-          doc.auth?.subdomain,
-        )
-        tools = bamboohrClient.getTools()
-        break
-    }
+    const tools: Tool[] = toolSourceInstance
+      ? toolSourceInstance.getTools()
+      : []
 
     return {
       ...doc,
@@ -254,9 +201,7 @@ export async function updateToolSource(
   ctx.status = 200
 }
 
-export async function deleteToolSource(
-  ctx: UserCtx<void, { deleted: true }>
-) {
+export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const toolSourceId = ctx.params.toolSourceId
   const db = context.getAppDB()
 
