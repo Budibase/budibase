@@ -100,7 +100,7 @@ const form = async ({
   }
 
   const template = new Screen(workspaceAppId)
-    .route(getValidRoute(screens, typeSpecificRoute, role))
+    .route(getValidRoute(screens, typeSpecificRoute, role, workspaceAppId))
     .instanceName(`${tableOrView.name} - Form`)
     .role(role)
     .autoTableId(tableOrView.id)

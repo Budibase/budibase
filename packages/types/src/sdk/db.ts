@@ -39,6 +39,7 @@ export type DBView = {
   reduce?: string
   meta?: ViewTemplateOpts
   groupBy?: string
+  version?: number
 }
 
 export interface DesignDocument extends Document {
