@@ -4,12 +4,10 @@
   import { parseToCsv } from "@/helpers/data/utils"
   import { onMount } from "svelte"
   import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
+  import type { BulkUserCreated } from "@budibase/types"
 
   export let userData: { email: string; password: string }[]
-  export let createUsersResponse: {
-    successful: { email: string; password: string }[]
-    unsuccessful: { email: string; reason: string }[]
-  }
+  export let createUsersResponse: BulkUserCreated
 
   let hasSuccess: boolean
   let hasFailure: boolean

@@ -55,10 +55,7 @@ export interface UserEndpoints {
   getUserCountByApp: (appId: string) => Promise<number>
   getAccountHolder: () => Promise<LookupAccountHolderResponse>
   searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
-  createUsers: (
-    users: UnsavedUser[],
-    groups: any[]
-  ) => Promise<BulkUserCreated | undefined>
+  createUsers: (users: UnsavedUser[], groups: any[]) => Promise<BulkUserCreated>
   updateUserInvite: (
     code: string,
     data: UpdateInviteRequest
