@@ -125,7 +125,11 @@
         />
       </div>
     {/if}
-    <div class="text" title={showTooltip ? text : null}>
+    <div
+      class="text"
+      title={showTooltip ? text : null}
+      style={"max-width: " + panelWidth + "px;"}
+    >
       <span title={text}>{text}</span>
       {#if selectedBy}
         <UserAvatars size="XS" users={selectedBy} />
@@ -284,7 +288,6 @@
   }
   .scrollable .text {
     flex: 0 0 auto;
-    max-width: 160px;
     width: auto;
   }
 
