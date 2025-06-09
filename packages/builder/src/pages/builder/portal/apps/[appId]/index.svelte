@@ -24,7 +24,6 @@
   import { ClientAppSkeleton } from "@budibase/frontend-core"
   import { contextMenuStore } from "@/stores/builder"
   import type { EnrichedApp } from "@/types"
-  import { featureFlag } from "@/helpers"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)!
   $: iframeUrl = getIframeURL(app)
