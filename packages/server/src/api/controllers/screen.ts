@@ -48,16 +48,10 @@ export async function save(
 
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     if (
-      screen.workspaceAppId &&
+      !screen.workspaceAppId ||
       !(await sdk.workspaceApps.get(screen.workspaceAppId))
     ) {
       ctx.throw("workspaceAppId is not valid")
-    } else if (!screen.workspaceAppId) {
-      let [workspaceApp] = await sdk.workspaceApps.fetch()
-      if (!workspaceApp) {
-        workspaceApp = await sdk.workspaceApps.createDefaultWorkspaceApp()
-      }
-      screen.workspaceAppId = workspaceApp._id
     }
   }
 
