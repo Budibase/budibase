@@ -23,7 +23,7 @@
 
   let workspaceAppModal: WorkspaceAppModal
 
-  export let panelWidth: Number | undefined
+  export let panelWidth: number | undefined = undefined
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
   $: filteredWorkspaceApps = getFilteredWorkspaceApps(

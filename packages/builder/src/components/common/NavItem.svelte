@@ -27,7 +27,7 @@
   export let hovering: boolean = false
   export let disabled: boolean = false
   export let nonSelectable: boolean = false
-  export let panelWidth: Number | undefined
+  export let panelWidth: number | undefined = undefined
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
