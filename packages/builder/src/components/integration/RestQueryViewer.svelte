@@ -108,7 +108,7 @@
 
   $: builtQuery = buildQuery(query, runtimeUrlQueries, requestBindings)
   $: originalQuery = mounted
-    ? originalQuery ?? cloneDeep(builtQuery)
+    ? (originalQuery ?? cloneDeep(builtQuery))
     : undefined
   $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 

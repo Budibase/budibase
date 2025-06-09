@@ -322,9 +322,8 @@ describe("/automations", () => {
 
     it("triggers a synchronous automation", async () => {
       mocks.licenses.useSyncAutomations()
-      const { automation } = await config.api.automation.post(
-        collectAutomation()
-      )
+      const { automation } =
+        await config.api.automation.post(collectAutomation())
       await config.api.automation.trigger(
         automation._id!,
         {
@@ -526,15 +525,12 @@ describe("/automations", () => {
 
   describe("fetch", () => {
     it("return all the automations for an instance", async () => {
-      const { automation: automation1 } = await config.api.automation.post(
-        newAutomation()
-      )
-      const { automation: automation2 } = await config.api.automation.post(
-        newAutomation()
-      )
-      const { automation: automation3 } = await config.api.automation.post(
-        newAutomation()
-      )
+      const { automation: automation1 } =
+        await config.api.automation.post(newAutomation())
+      const { automation: automation2 } =
+        await config.api.automation.post(newAutomation())
+      const { automation: automation3 } =
+        await config.api.automation.post(newAutomation())
 
       const { automations } = await config.api.automation.fetch()
       expect(automations).toEqual(
@@ -588,9 +584,8 @@ describe("/automations", () => {
 
   describe("checkForCollectStep", () => {
     it("should return true if a collect step exists in an automation", async () => {
-      const { automation } = await config.api.automation.post(
-        collectAutomation()
-      )
+      const { automation } =
+        await config.api.automation.post(collectAutomation())
       expect(sdk.automations.utils.checkForCollectStep(automation)).toEqual(
         true
       )

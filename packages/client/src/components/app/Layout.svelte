@@ -613,7 +613,9 @@
     transform: translateX(0);
     width: 250px;
     max-width: 75%;
-    transition: transform 0.26s ease-in-out, opacity 0.26s ease-in-out;
+    transition:
+      transform 0.26s ease-in-out,
+      opacity 0.26s ease-in-out;
     height: var(--height);
     opacity: 0;
     background: var(--navBackground);

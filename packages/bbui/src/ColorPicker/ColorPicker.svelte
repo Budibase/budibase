@@ -278,9 +278,12 @@
     place-items: center;
   }
   .fill.placeholder {
-    background-position: 0 0, 10px 10px;
+    background-position:
+      0 0,
+      10px 10px;
     background-size: 20px 20px;
-    background-image: linear-gradient(
+    background-image:
+      linear-gradient(
         45deg,
         #eee 25%,
         transparent 25%,

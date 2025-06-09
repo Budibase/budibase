@@ -1,3 +1,4 @@
+/* Custom variables */
 :root {
   --background: #ffffff;
   --ink: #000000;
@@ -71,7 +72,6 @@
   --font-serif: "Georgia", Cambria, Times New Roman, Times, serif;
   --font-mono: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
     monospace;
-  --spectrum-alias-body-text-font-family: var(--font-sans);
 
   font-size: 16px;
   --font-size-xs: 0.75rem;
@@ -116,9 +116,17 @@
   --border-blue: 2px var(--blue) solid;
   --border-transparent: 2px transparent solid;
 
-  --spectrum-alias-text-color-disabled: var(--spectrum-global-color-gray-600);
 }
 
+/* Spectrum overrides */
+.spectrum {
+  --spectrum-alias-body-text-font-family: var(--font-sans) !important;
+  --spectrum-global-font-family-base: var(--font-sans) !important;
+  --spectrum-global-font-line-height-small: 1.4 !important;
+  --spectrum-alias-text-color-disabled: var(--spectrum-global-color-gray-600) !important;
+}
+
+/* Generic styles */
 a {
   text-decoration: none;
 }

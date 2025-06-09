@@ -11,7 +11,19 @@
   {#each chat.messages as message}
     {#if message.role === "user"}
       <div class="message user">
-        <MarkdownViewer value={message.content} />
+        <MarkdownViewer
+          value={typeof message.content === "string"
+            ? message.content
+            : message.content.length > 0
+              ? message.content
+                  .map(part =>
+                    part.type === "text"
+                      ? part.text
+                      : `${part.type} content not supported`
+                  )
+                  .join("")
+              : "[Empty message]"}
+        />
       </div>
     {:else if message.role === "assistant" && message.content}
       <div class="message assistant">

@@ -40,9 +40,8 @@ export async function verify(
   ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
 ) {
   const { datasource } = ctx.request.body
-  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
-    datasource
-  )
+  const enrichedDatasource =
+    await sdk.datasources.getAndMergeDatasource(datasource)
   const connector = await sdk.datasources.getConnector(enrichedDatasource)
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
@@ -59,9 +58,8 @@ export async function information(
   ctx: UserCtx<FetchDatasourceInfoRequest, FetchDatasourceInfoResponse>
 ) {
   const { datasource } = ctx.request.body
-  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
-    datasource
-  )
+  const enrichedDatasource =
+    await sdk.datasources.getAndMergeDatasource(datasource)
   const connector = (await sdk.datasources.getConnector(
     enrichedDatasource
   )) as DatasourcePlus
@@ -293,9 +291,8 @@ export async function getExternalSchema(
   ctx: UserCtx<void, FetchExternalSchemaResponse>
 ) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
-  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
-    datasource
-  )
+  const enrichedDatasource =
+    await sdk.datasources.getAndMergeDatasource(datasource)
   const connector = await sdk.datasources.getConnector(enrichedDatasource)
 
   if (!connector.getExternalSchema) {

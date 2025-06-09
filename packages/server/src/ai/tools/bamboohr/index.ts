@@ -1,6 +1,7 @@
 import { newTool } from "@budibase/types"
 import fetch from "node-fetch"
 import { z } from "zod"
+import env from "../../../environment"
 
 export class BambooHRClient {
   private apiKey: string
@@ -8,8 +9,8 @@ export class BambooHRClient {
   private baseUrl: string
 
   constructor(apiKey?: string, subdomain?: string) {
-    this.apiKey = apiKey || process.env.BAMBOOHR_API_KEY || ""
-    this.subdomain = subdomain || process.env.BAMBOOHR_SUBDOMAIN || ""
+    this.apiKey = apiKey || env.BAMBOOHR_API_KEY || ""
+    this.subdomain = subdomain || env.BAMBOOHR_SUBDOMAIN || ""
     this.baseUrl = `https://api.bamboohr.com/api/gateway.php/${this.subdomain}/v1`
   }
 
@@ -58,18 +59,18 @@ export class BambooHRClient {
         parameters: z.object({
           employee_id: z.string().describe("The employee ID"),
           fields: z
-            .string()
+            .array(z.string())
             .optional()
-            .describe("Comma-separated list of fields to retrieve"),
+            .describe("List of fields to retrieve"),
         }),
         handler: async ({
           employee_id,
           fields,
         }: {
           employee_id: string
-          fields?: string
+          fields?: string[]
         }) => {
-          const params = fields ? `?fields=${fields}` : ""
+          const params = fields ? `?fields=${fields.join(",")}` : ""
           const employee = await this.makeRequest(
             `/employees/${employee_id}${params}`
           )
@@ -82,12 +83,12 @@ export class BambooHRClient {
         description: "List all employees",
         parameters: z.object({
           fields: z
-            .string()
+            .array(z.string())
             .optional()
-            .describe("Comma-separated list of fields to retrieve"),
+            .describe("List of fields to retrieve"),
         }),
-        handler: async ({ fields }: { fields?: string }) => {
-          const params = fields ? `?fields=${fields}` : ""
+        handler: async ({ fields }: { fields?: string[] }) => {
+          const params = fields ? `?fields=${fields.join(",")}` : ""
           const employees = await this.makeRequest(
             `/employees/directory${params}`
           )
@@ -133,20 +134,20 @@ export class BambooHRClient {
             .optional()
             .describe("Report format"),
           fields: z
-            .string()
+            .array(z.string())
             .optional()
-            .describe("Comma-separated list of fields to include"),
+            .describe("List of fields to include"),
         }),
         handler: async ({
           format = "JSON",
           fields,
         }: {
           format?: "JSON" | "XML" | "CSV" | "PDF" | "XLS"
-          fields?: string
+          fields?: string[]
         }) => {
           const params = new URLSearchParams({ format })
           if (fields) {
-            params.append("fields", fields)
+            params.append("fields", fields.join(","))
           }
           const report = await this.makeRequest(`/reports/custom?${params}`)
           return JSON.stringify(report, null, 2)
