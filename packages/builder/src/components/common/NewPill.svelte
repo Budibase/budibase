@@ -5,11 +5,12 @@
 
 <style>
   .new {
-    font-size: 8px;
-    background: var(--bb-indigo);
-    border-radius: 2px;
+    font-size: 10px;
+    background: rgba(172, 175, 255, 0.2);
+    border: 0.5px solid rgba(172, 175, 255, 0.2);
+    border-radius: 4px;
     padding: 1px 3px;
-    color: white;
-    font-weight: bold;
+    color: rgb(149, 153, 255);
+    font-weight: 500;
   }
 </style>

@@ -10,7 +10,7 @@ import {
 export const definition: AutomationTriggerDefinition = {
   name: "Row Created",
   event: AutomationEventType.ROW_SAVE,
-  icon: "table",
+  icon: "rows-plus-bottom",
   tagline: "Row is added to {{inputs.enriched.table.name}}",
   description: "Fired when a row is added to your database",
   stepId: AutomationTriggerStepId.ROW_SAVED,

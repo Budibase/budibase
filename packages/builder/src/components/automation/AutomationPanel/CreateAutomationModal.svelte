@@ -4,7 +4,6 @@
   import {
     notifications,
     Input,
-    InlineAlert,
     ModalContent,
     Layout,
     Body,
@@ -59,14 +58,6 @@
   onConfirm={createAutomation}
   disabled={!selectedTrigger || !name}
 >
-  <InlineAlert
-    header="You must publish your app to activate your automations."
-    message="To test your automation before publishing, you can use the 'Run Test' functionality on the next screen."
-  />
-  <Body size="S">
-    Please name your automation, then select a trigger.<br />
-    Every automation must start with a trigger.
-  </Body>
   <Input
     bind:value={name}
     on:input={() => (nameTouched = true)}
@@ -75,7 +66,7 @@
   />
 
   <Layout noPadding gap="XS">
-    <Label size="S">Trigger</Label>
+    <Label size="S">Select a trigger</Label>
     <div class="item-list">
       {#each triggers as [_, trigger]}
         <div
@@ -83,12 +74,10 @@
           class:selected={selectedTrigger === trigger.name}
           on:click={() => selectTrigger(trigger)}
         >
-          <div class="item-body">
-            <Icon name={trigger.icon} />
-            <span class="icon-spacing">
-              <Body size="S">{trigger.name}</Body></span
-            >
+          <div class="icon-container">
+            <Icon name={trigger.icon} size="M" color="rgb(142, 185, 252)" />
           </div>
+          <Body size="S">{trigger.name}</Body>
         </div>
       {/each}
     </div>
@@ -96,13 +85,6 @@
 </ModalContent>
 
 <style>
-  .icon-spacing {
-    margin-left: var(--spacing-m);
-  }
-  .item-body {
-    display: flex;
-    margin-left: var(--spacing-m);
-  }
   .item-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -111,20 +93,29 @@
 
   .item {
     cursor: pointer;
-    display: grid;
-    grid-gap: var(--spectrum-alias-grid-margin-xsmall);
-    padding: var(--spectrum-alias-item-padding-s);
-    background: var(--spectrum-alias-background-color-secondary);
-    transition: 0.3s all;
-    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    border-radius: 8px;
+    padding: var(--spacing-s) var(--spacing-m);
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-50);
+    transition: 0.1s all;
     box-sizing: border-box;
-    border-width: 2px;
+  }
+
+  .icon-container {
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    padding: 4px;
+    border-radius: 8px;
   }
 
   .item:hover {
-    background: var(--spectrum-alias-background-color-tertiary);
+    background: var(--spectrum-global-color-gray-75);
   }
   .selected {
-    background: var(--spectrum-alias-background-color-tertiary);
+    background: var(--spectrum-global-color-gray-75);
+    border: 0.5px solid var(--spectrum-global-color-blue-600);
   }
 </style>

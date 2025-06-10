@@ -141,10 +141,7 @@
   .flow-item-status .block-type {
     pointer-events: none;
   }
-  .flow-item-status :global(.spectrum-ActionButton),
-  .flow-item-status :global(.spectrum-ActionButton i) {
-    color: var(--spectrum-alias-text-color-hover);
-  }
+
   .flow-success :global(.spectrum-ActionButton) {
     background-color: var(--spectrum-semantic-positive-color-status);
     border-color: var(--spectrum-semantic-positive-color-status);

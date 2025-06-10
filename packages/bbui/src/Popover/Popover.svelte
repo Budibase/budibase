@@ -158,7 +158,7 @@
 <style>
   .spectrum-Popover {
     min-width: var(--spectrum-global-dimension-size-2000);
-    border-color: var(--spectrum-global-color-gray-300);
+    border-color: var(--spectrum-global-color-gray-200);
     overflow: auto;
     transition: opacity 260ms ease-out;
     filter: none;

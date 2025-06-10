@@ -169,7 +169,7 @@
       <Heading>Backups</Heading>
       {#if !$licensing.backupsEnabled}
         <Tags>
-          <Tag icon="lock">Premium</Tag>
+          <Tag icon="lock" emphasized>Premium</Tag>
         </Tags>
       {/if}
     </div>

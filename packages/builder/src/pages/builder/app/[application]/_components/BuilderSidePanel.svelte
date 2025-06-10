@@ -326,10 +326,10 @@
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
-  /*  
+  /*
     Create pseudo users from the "users" attribute on app groups.
     These users will appear muted in the UI and show the ROLE
-    inherited from their parent group. The users allow assigning of user 
+    inherited from their parent group. The users allow assigning of user
     specific roles for the app.
   */
   const buildGroupUsers = (userGroups, filteredUsers) => {
@@ -585,7 +585,7 @@
       {/if}
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="align-right"
+        name="arrow-line-right"
         hoverable
         on:click={() => {
           builderStore.hideBuilderSidePanel()

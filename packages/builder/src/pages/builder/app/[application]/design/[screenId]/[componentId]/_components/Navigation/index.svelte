@@ -26,8 +26,8 @@
   import { getBindableProperties } from "@/dataBinding"
 
   const positionOptions = [
-    { value: "Top", barIcon: "align-top" },
-    { value: "Left", barIcon: "align-left" },
+    { value: "Top", barIcon: "browser" },
+    { value: "Left", barIcon: "sidebar-simple" },
   ]
   const alignmentOptions = [
     { value: "Left", barIcon: "text-align-left" },

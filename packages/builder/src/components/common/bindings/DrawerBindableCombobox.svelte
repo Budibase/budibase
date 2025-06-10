@@ -73,7 +73,7 @@
   />
   {#if !disabled}
     <div class="icon" on:click={bindingDrawer.show}>
-      <Icon size="S" name="lightning" />
+      <Icon size="S" weight="fill" name="lightning" />
     </div>
   {/if}
 </div>

@@ -51,7 +51,7 @@
       <div class="app-action" id="builder-app-users-button">
         <ActionButton
           quiet
-          icon="users-three"
+          icon="users"
           on:click={() => {
             builderStore.showBuilderSidePanel()
           }}

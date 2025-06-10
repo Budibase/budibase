@@ -144,7 +144,7 @@
   {#if fieldIcon}
     {#if !useOptionIconImage}
       <span class="option-extra icon">
-        <Icon size="S" name={fieldIcon} />
+        <Icon size="M" name={fieldIcon} />
       </span>
     {:else}
       <span class="option-extra icon field-icon">
@@ -237,7 +237,11 @@
                     height="15"
                   />
                 {:else}
-                  <Icon size="S" name={getOptionIcon(option, idx)} />
+                  <Icon
+                    size="M"
+                    color="var(--spectrum-global-color-gray-600)"
+                    name={getOptionIcon(option, idx)}
+                  />
                 {/if}
               </span>
             {/if}

@@ -73,7 +73,11 @@
           >
             {#each subLinks as subLink (subLink.id)}
               <div class="subLink" animate:flip={{ duration: flipDurationMs }}>
-                <Icon name="dots-six" size="XL" />
+                <Icon
+                  name="dots-six-vertical"
+                  size="L"
+                  color="var(--spectrum-global-color-gray-600)"
+                />
                 <Input bind:value={subLink.text} placeholder="Text" />
                 <DrawerBindableCombobox
                   value={subLink.url}

@@ -118,7 +118,7 @@
                   style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
                   on:mousedown={() => (dragDisabled = false)}
                 >
-                  <Icon name="dots-six" size="XL" />
+                  <Icon name="dots-six-vertical" size="L" />
                 </div>
                 <Select
                   bind:value={column.name}

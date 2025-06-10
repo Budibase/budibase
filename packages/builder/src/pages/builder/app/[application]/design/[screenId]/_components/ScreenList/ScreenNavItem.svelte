@@ -114,7 +114,7 @@
 >
   <Icon
     on:click={e => openContextMenu(e, screen)}
-    size="S"
+    size="M"
     hoverable
     name="dots-three"
   />

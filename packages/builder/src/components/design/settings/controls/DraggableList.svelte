@@ -117,8 +117,9 @@
             }}
           >
             <Icon
-              name="dots-six"
+              name="dots-six-vertical"
               color="var(--spectrum-global-color-gray-700)"
+              size="S"
             />
           </div>
         {/if}

@@ -41,13 +41,15 @@
     </div>
     <div class="header-right">
       <UndoRedoControl store={screenStore.history} />
+      <div class="divider-container">
+        <Divider size="S" vertical />
+      </div>
       <div class="actions">
         {#if !isPDF}
           {#if $appStore.clientFeatures.devicePreview}
             <ActionButton
               quiet
-              icon={mobile ? "device-mobile" : "desktop"}
-              selected
+              icon={mobile ? "device-mobile-camera" : "monitor"}
               on:click={togglePreviewDevice}
             />
           {/if}
@@ -55,8 +57,10 @@
         {/if}
         <ScreenErrorsButton />
       </div>
-      <Divider vertical />
-      <ActionButton quiet icon="play-circle" on:click={previewApp}>
+      <div class="divider-container">
+        <Divider size="S" vertical />
+      </div>
+      <ActionButton quiet icon="play" on:click={previewApp}>
         Preview
       </ActionButton>
     </div>
@@ -106,7 +110,12 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-m);
+  }
+  .divider-container {
+    display: flex;
+    align-items: center;
+    height: 18px;
   }
   .content {
     flex: 1 1 auto;
@@ -114,7 +123,7 @@
   .actions {
     display: flex;
     flex-direction: row;
-    gap: 4px;
+    gap: 2px;
     align-items: center;
   }
 </style>

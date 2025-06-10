@@ -67,7 +67,7 @@
     />
   </div>
   {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
-    <Icon on:click={openContextMenu} size="S" hoverable name="dots-three" />
+    <Icon on:click={openContextMenu} size="M" hoverable name="dots-three" />
   {/if}
 </NavItem>
 <UpdateDatasourceModal {datasource} bind:this={editModal} />

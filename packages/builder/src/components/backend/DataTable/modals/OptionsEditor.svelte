@@ -114,7 +114,7 @@
         class:invalid={!option.valid}
       >
         <div class="drag-handle">
-          <Icon name="dots-six" size="L" />
+          <Icon name="dots-six-vertical" size="L" />
         </div>
         <div
           id="color-{option.id}"

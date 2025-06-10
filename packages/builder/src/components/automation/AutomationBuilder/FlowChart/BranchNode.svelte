@@ -215,7 +215,8 @@
             on:click={e => {
               openContextMenu(e)
             }}
-            size="S"
+            size="M"
+            weight="bold"
             hoverable
             name="dots-three"
           />
@@ -291,11 +292,10 @@
     display: inline-block;
   }
   .block {
-    width: 360px;
-    font-size: 16px;
-    background-color: var(--background);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px 4px 4px 4px;
+    width: 320px;
+    background-color: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
     cursor: default;
   }
 

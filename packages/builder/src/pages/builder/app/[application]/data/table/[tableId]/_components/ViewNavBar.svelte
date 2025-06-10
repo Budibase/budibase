@@ -204,6 +204,8 @@
       <Icon
         on:click={openTableContextMenu}
         hoverable
+        size="M"
+        weight="bold"
         name="dots-three"
         color="var(--spectrum-global-color-gray-600)"
         hoverColor="var(--spectrum-global-color-gray-900)"
@@ -230,6 +232,8 @@
           <Icon
             on:click={e => openViewContextMenu(e, view)}
             hoverable
+            size="M"
+            weight="bold"
             name="dots-three"
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
@@ -255,6 +259,8 @@
           <Icon
             on:click={e => openViewContextMenu(e, view)}
             hoverable
+            size="M"
+            weight="bold"
             name="dots-three"
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
