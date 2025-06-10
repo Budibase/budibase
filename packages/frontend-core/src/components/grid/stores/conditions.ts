@@ -72,8 +72,18 @@ export const initialise = (context: StoreContext) => {
     const $metadata = get(metadata)
     let metadataUpdates: Record<string, any> = {}
     for (let row of $rows) {
-      if (!row._rev || $metadata[row._id]?.version !== row._rev) {
-        metadataUpdates[row._id] = evaluateConditions(row, $conditions)
+      // Always re-evaluate conditions when rows change, not just when _rev changes
+      // This ensures conditional formatting is updated even when data changes
+      // but the revision field remains the same (e.g., after external data updates)
+      const currentMetadata = $metadata[row._id]
+      const newMetadata = evaluateConditions(row, $conditions)
+
+      // Only update if metadata actually changed to avoid unnecessary re-renders
+      if (
+        !currentMetadata ||
+        JSON.stringify(currentMetadata) !== JSON.stringify(newMetadata)
+      ) {
+        metadataUpdates[row._id] = newMetadata
       }
     }
     if (Object.keys(metadataUpdates).length) {
