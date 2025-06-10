@@ -80,6 +80,7 @@ export async function createASession(
   createSession: CreateSession
 ) {
   const existingSessions = await getSessionsForUser(userId)
+  let invalidatedSessionCount = 0
 
   // if we're at or over the session limit, remove the oldest sessions
   if (existingSessions.length >= MAX_SESSIONS_PER_USER) {
@@ -93,6 +94,8 @@ export async function createASession(
     const sessionIdsToInvalidate = sortedSessions
       .slice(0, sessionsToRemove)
       .map(session => session.sessionId)
+    
+    invalidatedSessionCount = sessionIdsToInvalidate.length
     
     await invalidateSessions(userId, { 
       sessionIds: sessionIdsToInvalidate, 
@@ -113,7 +116,11 @@ export async function createASession(
     userId,
   }
   await client.store(key, session, EXPIRY_SECONDS)
-  return session
+  
+  return {
+    session,
+    invalidatedSessionCount
+  }
 }
 
 export async function updateSessionTTL(session: Session) {

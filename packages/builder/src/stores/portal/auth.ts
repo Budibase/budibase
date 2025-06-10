@@ -3,6 +3,7 @@ import { API } from "@/api"
 import { admin } from "./admin"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
+import { notifications } from "@budibase/bbui"
 import {
   GetGlobalSelfResponse,
   isSSOUser,
@@ -123,7 +124,16 @@ class AuthStore extends BudiStore<PortalAuthStore> {
 
   async login(username: string, password: string, targetTenantId?: string) {
     const tenantId = targetTenantId || get(this.store).tenantId
-    await API.logIn(tenantId, username, password)
+    const loginResult = await API.logIn(tenantId, username, password)
+    
+    // Show notification if sessions were invalidated
+    if (loginResult.invalidatedSessionCount && loginResult.invalidatedSessionCount > 0) {
+      const sessionText = loginResult.invalidatedSessionCount === 1 ? "session" : "sessions"
+      notifications.info(
+        `You've been logged out of ${loginResult.invalidatedSessionCount} other ${sessionText} because users are only allowed 3 active sessions at any one time.`
+      )
+    }
+    
     await this.getSelf()
   }
 
