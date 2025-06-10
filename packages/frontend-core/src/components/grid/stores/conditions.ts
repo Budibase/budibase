@@ -78,8 +78,8 @@ export const initialise = (context: StoreContext) => {
         !row._rev ||
         // _rev changed since last evaluation
         $metadata[row._id].version !== row._rev ||
-        // "rev" indicates that this is an external row, we have no way to know
-        // if it has changed, so we always re-evaluate
+        // this is an external row, we have no way to know if it has changed, so
+        // we always re-evaluate
         row._rev === EXTERNAL_ROW_REV
       if (!changed) {
         continue
