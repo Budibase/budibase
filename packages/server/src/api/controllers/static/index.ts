@@ -232,7 +232,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     ctx.redirect("/builder/bblogo.png")
     return
   }
-  // No app ID found, cannot serve - return message insteadc
+  // No app ID found, cannot serve - return message instead
   const appId = context.getAppId()
   if (!appId) {
     ctx.body = "No content found - requires app ID"
