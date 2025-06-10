@@ -96,7 +96,11 @@
 <VersionModal hideIcon bind:this={versionModal} />
 {#if workspaceEnabled}
   <PublishModal
-    targetId={inDesign ? selectedWorkspaceAppId : inAutomations ? selectedAutomationId : undefined}
+    targetId={inDesign
+      ? selectedWorkspaceAppId
+      : inAutomations
+        ? selectedAutomationId
+        : undefined}
     bind:this={publishModal}
     on:success={() => publishSuccessPopover?.show()}
   />
