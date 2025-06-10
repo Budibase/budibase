@@ -49,7 +49,6 @@
         dataPointSelection: function (event, chartContext, opts) {
           const candlelstickIndex = opts.dataPointIndex
           const row = dataProvider.rows[candlelstickIndex]
-          console.log(row)
           handleCandlestickClick(row)
         },
       },
