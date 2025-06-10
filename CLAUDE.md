@@ -56,7 +56,8 @@
 
 - If you're browsing the Budibase product in a browser, you can find
   comprehensive documentation at https://docs.budibase.com
-- The local URL for the development server is http://localhost:10000
+- The local URL for the development server is http://localhost:10000. Before
+  running `yarn dev`, check to see if the development server is already running.
 - The product is split up by app, so to find things like data sources and
   automations you must first make sure to select an app.
 
