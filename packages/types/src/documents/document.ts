@@ -14,7 +14,6 @@ export enum DocumentType {
   APP_DEV = "app_dev",
   APP_METADATA = "app_metadata",
   ROLE = "role",
-  MIGRATIONS = "migrations",
   DEV_INFO = "devinfo",
   AUTOMATION_LOG = "log_au",
   ACCOUNT_METADATA = "acc_metadata",
@@ -37,7 +36,6 @@ export enum DocumentType {
   USER_FLAG = "flag",
   AUTOMATION_METADATA = "meta_au",
   AUDIT_LOG = "al",
-  APP_MIGRATION_METADATA = "_design/migrations",
   SCIM_LOG = "scimlog",
   ROW_ACTIONS = "ra",
   OAUTH2_CONFIG = "oauth2",
@@ -72,6 +70,7 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.QUERY,
   DocumentType.METADATA,
   DocumentType.MEM_VIEW,
+  DocumentType.WORKSPACE_APP,
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,
