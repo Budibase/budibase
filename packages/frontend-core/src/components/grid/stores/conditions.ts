@@ -5,6 +5,7 @@ import {
   EmptyFilterOption,
   UIRow,
   UICondition,
+  EXTERNAL_ROW_REV,
 } from "@budibase/types"
 import { Store as StoreContext } from "."
 
@@ -79,7 +80,7 @@ export const initialise = (context: StoreContext) => {
         $metadata[row._id].version !== row._rev ||
         // "rev" indicates that this is an external row, we have no way to know
         // if it has changed, so we always re-evaluate
-        row._rev === "rev"
+        row._rev === EXTERNAL_ROW_REV
       if (!changed) {
         continue
       }
