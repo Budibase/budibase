@@ -536,7 +536,7 @@ describe("/applications", () => {
       expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
-    it("should publish app with filtered resources", async () => {
+    it("should publish app with filtered resources, filtering by automation", async () => {
       // create data resources
       const table = await config.createTable(basicTable())
       // all internal resources are published if any used
@@ -592,6 +592,39 @@ describe("/applications", () => {
         expect(
           Object.values(actions).find(action => action.id === rowAction.id)
         ).toBeDefined()
+      })
+    })
+
+    it("should publish app with filtered resources, filtering by workspace app", async () => {
+      // create two screens with different workspaceAppIds
+      const publishedScreen = await config.api.screen.save({
+        ...basicScreen("/published-screen"),
+        workspaceAppId: "workspace-app-1",
+        name: "published-screen",
+      })
+
+      const unpublishedScreen = await config.api.screen.save({
+        ...basicScreen("/unpublished-screen"),
+        workspaceAppId: "workspace-app-2",
+        name: "unpublished-screen",
+      })
+
+      await config.api.application.filteredPublish(app.appId, {
+        workspaceAppIds: ["workspace-app-1"],
+      })
+
+      await config.defaultToProduction(async () => {
+        const screens = await config.api.screen.list()
+
+        // published screen should be included
+        expect(
+          screens.find(screen => screen._id === publishedScreen._id)
+        ).toBeDefined()
+
+        // unpublished screen should not be included
+        expect(
+          screens.find(screen => screen._id === unpublishedScreen._id)
+        ).toBeUndefined()
       })
     })
   })
