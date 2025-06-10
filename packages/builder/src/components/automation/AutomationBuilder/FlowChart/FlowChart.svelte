@@ -23,6 +23,8 @@
   import { onMount } from "svelte"
   import { environment } from "@/stores/portal"
   import Count from "../../SetupPanel/Count.svelte"
+  import AutomationLogsPanel from "./AutomationLogsPanel.svelte"
+  import LogDetailsPanel from "./LogDetailsPanel.svelte"
 
   export let automation
 
@@ -36,6 +38,10 @@
   let draggable
 
   let prodErrors
+  let showLogsPanel = false
+  let showLogDetails = false
+  let selectedLog = null
+  let viewMode = "editor" // "editor" or "logs"
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -85,12 +91,70 @@
       console.error(error)
     }
   })
+
+  function toggleLogsPanel() {
+    showLogsPanel = !showLogsPanel
+    if (showLogsPanel) {
+      showLogDetails = false
+      selectedLog = null
+      viewMode = "logs"
+    } else {
+      viewMode = "editor"
+    }
+  }
+
+  function handleSelectLog(log) {
+    selectedLog = log
+    showLogDetails = true
+    showLogsPanel = false
+  }
+
+  function handleBackToLogs() {
+    showLogDetails = false
+    showLogsPanel = true
+    selectedLog = null
+  }
+
+  function closeAllPanels() {
+    showLogsPanel = false
+    showLogDetails = false
+    selectedLog = null
+    viewMode = "editor"
+  }
 </script>
 
 <div class="automation-heading">
   <div class="actions-left">
     <div class="automation-name">
       {automation.name}
+    </div>
+    <div class="view-mode-toggle">
+      <div class="group">
+        <ActionButton
+          icon="Edit"
+          quiet
+          selected={viewMode === "editor"}
+          on:click={() => {
+            viewMode = "editor"
+            closeAllPanels()
+          }}
+        >
+          Editor
+        </ActionButton>
+        <ActionButton
+          icon="AppleFiles"
+          quiet
+          selected={viewMode === "logs" || showLogsPanel || showLogDetails}
+          on:click={() => {
+            viewMode = "logs"
+            if (!showLogsPanel && !showLogDetails) {
+              toggleLogsPanel()
+            }
+          }}
+        >
+          Logs
+        </ActionButton>
+      </div>
     </div>
   </div>
   <div class="actions-right">
@@ -104,31 +168,6 @@
     >
       Run test
     </ActionButton>
-    <Count
-      count={prodErrors}
-      tooltip={"There are errors in production"}
-      hoverable={false}
-    >
-      <ActionButton
-        icon="Folder"
-        quiet
-        selected={prodErrors}
-        on:click={() => {
-          const params = new URLSearchParams({
-            ...(prodErrors ? { open: "error" } : {}),
-            automationId: automation._id,
-          })
-          window.open(
-            `/builder/app/${
-              $appStore.appId
-            }/settings/automations?${params.toString()}`,
-            "_blank"
-          )
-        }}
-      >
-        Logs
-      </ActionButton>
-    </Count>
 
     {#if !isRowAction}
       <div class="toggle-active setting-spacing">
@@ -193,6 +232,8 @@
               isLast={blocks?.length - 1 === idx}
               automation={$memoAutomation}
               blocks={blockRefs}
+              logData={selectedLog}
+              {viewMode}
             />
           {/each}
         {/if}
@@ -221,6 +262,22 @@
 >
   <TestDataModal />
 </Modal>
+
+{#if showLogsPanel}
+  <AutomationLogsPanel
+    {automation}
+    onClose={closeAllPanels}
+    onSelectLog={handleSelectLog}
+  />
+{/if}
+
+{#if showLogDetails && selectedLog}
+  <LogDetailsPanel
+    log={selectedLog}
+    onClose={closeAllPanels}
+    onBack={handleBackToLogs}
+  />
+{/if}
 
 <style>
   .main-flow {
@@ -267,6 +324,11 @@
   }
 
   .canvas-heading-left {
+    display: flex;
+    gap: var(--spacing-l);
+  }
+
+  .view-mode-toggle {
     display: flex;
     gap: var(--spacing-l);
   }
@@ -332,17 +394,31 @@
     border-bottom-right-radius: 0;
   }
 
+  .actions-left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+
   .canvas-heading-left .group :global(.spectrum-Button),
   .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .canvas-heading-left .group :global(.spectrum-Icon) {
+  .canvas-heading-left .group :global(.spectrum-Icon),
+  .view-mode-toggle .group :global(.spectrum-Button),
+  .view-mode-toggle .group :global(.spectrum-ActionButton),
+  .view-mode-toggle .group :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .canvas-heading-left .group :global(.spectrum-Button),
-  .canvas-heading-left .group :global(.spectrum-ActionButton) {
+  .canvas-heading-left .group :global(.spectrum-ActionButton),
+  .view-mode-toggle .group :global(.spectrum-Button),
+  .view-mode-toggle .group :global(.spectrum-ActionButton) {
     background: var(--spectrum-global-color-gray-200) !important;
   }
   .canvas-heading-left .group :global(.spectrum-Button:hover),
-  .canvas-heading-left .group :global(.spectrum-ActionButton:hover) {
+  .canvas-heading-left .group :global(.spectrum-ActionButton:hover),
+  .view-mode-toggle .group :global(.spectrum-Button:hover),
+  .view-mode-toggle .group :global(.spectrum-ActionButton:hover) {
     background: var(--spectrum-global-color-gray-300) !important;
   }
 </style>

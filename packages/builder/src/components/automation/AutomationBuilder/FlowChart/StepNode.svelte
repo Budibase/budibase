@@ -14,6 +14,8 @@
   export let automation
   export let blocks
   export let isLast = false
+  export let logData = null
+  export let viewMode = "editor"
 
   const memoEnvVariables = memo($environment.variables)
   const view = getContext("draggableView")
@@ -25,6 +27,34 @@
   $: pathToCurrentNode = blockRef?.pathTo
   $: isBranch = step.stepId === AutomationActionStepId.BRANCH
   $: branches = step.inputs?.branches
+
+  // Log execution state
+  $: logStepData = getLogStepData(logData, step, stepIdx)
+  $: stepStatus = getStepStatus(logStepData)
+
+  function getLogStepData(logData, step, stepIdx) {
+    if (!logData || viewMode !== "logs") return null
+    
+    // For trigger step
+    if (step.type === "TRIGGER") {
+      return logData.trigger
+    }
+    
+    // For action steps (skip trigger in steps array)
+    const actionSteps = logData.steps?.slice(1) || []
+    return actionSteps[stepIdx - 1] // stepIdx includes trigger, so subtract 1
+  }
+
+  function getStepStatus(stepData) {
+    if (!stepData) return null
+    
+    if (stepData.outputs?.success === false) {
+      return "error"
+    } else if (stepData.outputs?.success === true) {
+      return "success"
+    }
+    return "unknown"
+  }
 
   // All bindings available to this point
   $: availableBindings = automationStore.actions.getPathBindings(
@@ -152,6 +182,8 @@
               pathTo={pathToCurrentNode}
               {automation}
               {blocks}
+              {logData}
+              {viewMode}
             />
           {/each}
         </div>
@@ -168,6 +200,9 @@
       {automation}
       {bindings}
       draggable={step.type !== "TRIGGER"}
+      {stepStatus}
+      {logStepData}
+      {viewMode}
     />
   </div>
 {/if}

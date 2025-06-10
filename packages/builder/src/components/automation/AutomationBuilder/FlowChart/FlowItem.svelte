@@ -17,6 +17,9 @@
   export let blockRef
   export let automation
   export let draggable = true
+  export let stepStatus = null
+  export let logStepData = null
+  export let viewMode = "editor"
 
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
@@ -167,8 +170,12 @@
         {/if}
         <div
           class="block-core"
+          class:log-success={viewMode === "logs" && stepStatus === "success"}
+          class:log-error={viewMode === "logs" && stepStatus === "error"}
           on:click={async () => {
-            await automationStore.actions.selectNode(block.id)
+            if (viewMode === "editor") {
+              await automationStore.actions.selectNode(block.id)
+            }
           }}
         >
           <div class="blockSection block-info">
@@ -179,6 +186,16 @@
               on:update={e =>
                 automationStore.actions.updateBlockTitle(block, e.detail)}
             />
+            {#if viewMode === "logs" && stepStatus}
+              <div class="log-status-badge">
+                <span class="status-indicator status-{stepStatus}">
+                  {stepStatus === "success" ? "✓" : "✗"}
+                </span>
+                <span class="status-text">
+                  {stepStatus === "success" ? "Success" : "Error"}
+                </span>
+              </div>
+            {/if}
           </div>
 
           {#if isTrigger && triggerInfo}
@@ -334,5 +351,58 @@
 
   .block-info {
     pointer-events: none;
+  }
+
+  .log-success .block-content {
+    border-color: var(--spectrum-global-color-green-600);
+    border-width: 2px;
+  }
+
+  .log-error .block-content {
+    border-color: var(--spectrum-global-color-red-600);
+    border-width: 2px;
+  }
+
+  .log-status-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .status-indicator {
+    font-weight: bold;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  .status-indicator.status-success {
+    background: var(--spectrum-global-color-green-600);
+  }
+
+  .status-indicator.status-error {
+    background: var(--spectrum-global-color-red-600);
+  }
+
+  .status-text {
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .log-success .status-text {
+    color: var(--spectrum-global-color-green-800);
+  }
+
+  .log-error .status-text {
+    color: var(--spectrum-global-color-red-800);
   }
 </style>
