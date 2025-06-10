@@ -561,7 +561,7 @@ describe("/applications", () => {
           .onRowSaved({ tableId: table._id! })
           .save()
 
-      await config.api.application.publish(app.appId, {
+      await config.api.application.filteredPublish(app.appId, {
         automationIds: [automation._id!],
       })
 

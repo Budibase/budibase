@@ -36,6 +36,13 @@ export class ApplicationAPI extends TestAPI {
 
   publish = async (
     appId?: string,
+    expectations?: Expectations
+  ): Promise<PublishAppResponse> => {
+    return this.filteredPublish(appId, undefined, expectations)
+  }
+
+  filteredPublish = async (
+    appId?: string,
     body?: PublishAppRequest,
     expectations?: Expectations
   ): Promise<PublishAppResponse> => {
