@@ -1,4 +1,4 @@
-import { User, UserStatus } from "@budibase/types"
+import { User, UserStatus, BulkUserCreated } from "@budibase/types"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { UserDB } from "../db"
 import { searchExistingEmails } from "../lookup"
@@ -31,6 +31,10 @@ const features = { isSSOEnforced: jest.fn(), isAppBuildersEnabled: jest.fn() }
 describe("UserDB", () => {
   beforeAll(() => {
     db.init(quotas, groups, features)
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
   describe("save", () => {
@@ -181,6 +185,160 @@ describe("UserDB", () => {
           expect(await searchExistingEmails([previousEmail, newEmail])).toEqual(
             [previousEmail, newEmail]
           )
+        })
+      })
+    })
+  })
+
+  describe("bulkCreate", () => {
+    describe("when SSO is NOT enforced", () => {
+      beforeEach(() => {
+        features.isSSOEnforced.mockResolvedValue(false)
+      })
+
+      it("should require passwords for bulk created users", async () => {
+        await config.doInTenant(async () => {
+          const usersWithoutPasswords: User[] = [
+            {
+              ...structures.users.user({
+                email: generator.email({}),
+                tenantId: config.getTenantId(),
+              }),
+            },
+            {
+              ...structures.users.user({
+                email: generator.email({}),
+                tenantId: config.getTenantId(),
+              }),
+            },
+          ].map(user => {
+            delete user.password
+            return user
+          })
+
+          await expect(db.bulkCreate(usersWithoutPasswords)).rejects.toBe(
+            "Password must be specified."
+          )
+        })
+      })
+
+      it("should successfully create users with passwords", async () => {
+        await config.doInTenant(async () => {
+          const usersWithPasswords: User[] = [
+            structures.users.user({
+              email: generator.email({}),
+              password: "validPassword123!",
+              tenantId: config.getTenantId(),
+            }),
+            structures.users.user({
+              email: generator.email({}),
+              password: "validPassword456!",
+              tenantId: config.getTenantId(),
+            }),
+          ]
+
+          const result: BulkUserCreated =
+            await db.bulkCreate(usersWithPasswords)
+
+          expect(result.successful).toHaveLength(2)
+          expect(result.unsuccessful).toHaveLength(0)
+          expect(result.successful[0].email).toBe(usersWithPasswords[0].email)
+          expect(result.successful[1].email).toBe(usersWithPasswords[1].email)
+        })
+      })
+    })
+
+    describe("when SSO IS enforced", () => {
+      beforeEach(() => {
+        features.isSSOEnforced.mockResolvedValue(true)
+      })
+
+      it("should allow bulk creation of users without passwords", async () => {
+        await config.doInTenant(async () => {
+          const usersWithoutPasswords: User[] = [
+            {
+              ...structures.users.user({
+                email: generator.email({}),
+                tenantId: config.getTenantId(),
+              }),
+            },
+            {
+              ...structures.users.user({
+                email: generator.email({}),
+                tenantId: config.getTenantId(),
+              }),
+            },
+          ].map(user => {
+            delete user.password
+            return user
+          })
+
+          const result: BulkUserCreated = await db.bulkCreate(
+            usersWithoutPasswords
+          )
+
+          expect(result.successful).toHaveLength(2)
+          expect(result.unsuccessful).toHaveLength(0)
+          expect(result.successful[0].email).toBe(
+            usersWithoutPasswords[0].email
+          )
+          expect(result.successful[1].email).toBe(
+            usersWithoutPasswords[1].email
+          )
+        })
+      })
+
+      it("should allow bulk creation of users with passwords when SSO is enforced", async () => {
+        await config.doInTenant(async () => {
+          const usersWithPasswords: User[] = [
+            structures.users.user({
+              email: generator.email({}),
+              password: "validPassword123!",
+              tenantId: config.getTenantId(),
+            }),
+            structures.users.user({
+              email: generator.email({}),
+              password: "validPassword456!",
+              tenantId: config.getTenantId(),
+            }),
+          ]
+
+          const result: BulkUserCreated =
+            await db.bulkCreate(usersWithPasswords)
+
+          expect(result.successful).toHaveLength(2)
+          expect(result.unsuccessful).toHaveLength(0)
+        })
+      })
+
+      it("should handle mixed scenarios with some users having passwords and others not", async () => {
+        await config.doInTenant(async () => {
+          const mixedUsers: User[] = [
+            structures.users.user({
+              email: generator.email({}),
+              password: "validPassword123!",
+              tenantId: config.getTenantId(),
+            }),
+            {
+              ...structures.users.user({
+                email: generator.email({}),
+                tenantId: config.getTenantId(),
+              }),
+              password: undefined,
+            },
+            {
+              ...structures.users.user({
+                email: generator.email({}),
+                tenantId: config.getTenantId(),
+              }),
+              password: "",
+            },
+          ]
+
+          const result: BulkUserCreated = await db.bulkCreate(mixedUsers)
+
+          expect(result.successful).toHaveLength(3)
+          expect(result.unsuccessful).toHaveLength(0)
         })
       })
     })

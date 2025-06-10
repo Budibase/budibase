@@ -1,11 +1,24 @@
 # Budibase Agent Guide
 
+## Architecture
+
+- Workspace uses Lerna monorepo with packages in `packages/`
+- Main packages: server, worker, backend-core, frontend-core, client, builder, shared-core, bbui
+- Use `@budibase/` scoped imports between packages
+- Backend packages (NodeJS): server, worker, backend-core
+- Frontend packages (browser): builder, frontend-core, bbui
+- Shared (NodeJS and browser): shared-core
+
 ## Build/Test Commands
 
-- Build: `yarn build` (all packages) or `yarn build:apps` (server/worker only)
+- Build: `yarn build`
 - Lint: `yarn lint` (check) or `yarn lint:fix` (fix)
 - Test: `yarn test <filename>` run inside of a packages/\* directory
 - Type check: `yarn check:types`
+- packages/server tests: if you're working on a test that uses the
+  `datasourceDescribe` function, that means you can pass `DATASOURCE=` as an env
+  var to the test to narrow it down to one specific database. The database strings
+  you can use can be found on `DatabaseName` in `packages/server/src/integrations/tests/utils/index.ts`
 
 ## Code Style
 
@@ -39,11 +52,13 @@
   in square brackets, e.g. [BUDI-1234]. The link to the bug should go into the
   "Addresses" section of pull_request_template.md.
 
-## Architecture
+## Browser use
 
-- Workspace uses Lerna monorepo with packages in `packages/`
-- Main packages: server, worker, backend-core, frontend-core, client, builder
-- Use `@budibase/` scoped imports between packages
+- If you're browsing the Budibase product in a browser, you can find
+  comprehensive documentation at https://docs.budibase.com
+- The local URL for the development server is http://localhost:10000
+- The product is split up by app, so to find things like data sources and
+  automations you must first make sure to select an app.
 
 ## Misc
 
