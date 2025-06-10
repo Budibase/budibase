@@ -40,6 +40,17 @@
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
 
+## Test style - packages/server
+
+- When building automations utilise the `createAutomationBuilder` function
+  found in `packages/server/src/automations/tests/utilities/AutomationTestBuilder.ts`
+- When building tables, datasources, queries and various other Budibase resources check for functions like `basicTable`
+  found in `packages/server/src/tests/utilities/structures.ts` - use these to create a basic table, you can provide
+  extended configuration if required through the `extra` prop.
+- Use `TestConfiguration` in `packages/server/src/tests/TestConfiguration.ts` for every API test case - 
+  this can be used to access the test API under `new TestConfiguration().api`, a list of functions and 
+  request/response types can be found in `packages/server/src/tests/utilities/api`.
+
 ## Pull requests
 
 - Always respect the format of pull_request_template.md. Some sections may not
