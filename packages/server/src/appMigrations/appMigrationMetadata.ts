@@ -1,5 +1,11 @@
-import { Duration, cache, db, env } from "@budibase/backend-core"
-import { Database, DocumentType, Document } from "@budibase/types"
+import {
+  DesignDocuments,
+  Duration,
+  cache,
+  db,
+  env,
+} from "@budibase/backend-core"
+import { Database, Document } from "@budibase/types"
 
 export interface AppMigrationDoc extends Document {
   version: string
@@ -12,7 +18,7 @@ async function getFromDB(appId: string) {
   return db.doWithDB(
     appId,
     (db: Database) => {
-      return db.get<AppMigrationDoc>(DocumentType.APP_MIGRATION_METADATA)
+      return db.get<AppMigrationDoc>(DesignDocuments.MIGRATIONS)
     },
     { skip_setup: true }
   )
@@ -67,7 +73,7 @@ export async function updateAppMigrationMetadata({
     }
 
     appMigrationDoc = {
-      _id: DocumentType.APP_MIGRATION_METADATA,
+      _id: DesignDocuments.MIGRATIONS,
       version: "",
       history: {},
     }
