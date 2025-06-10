@@ -37,7 +37,7 @@ export async function destroy(ctx: UserCtx<void, DeleteLayoutResponse>) {
     layoutRev = ctx.params.layoutRev
 
   const layoutsUsedByScreens = (await sdk.screens.fetch()).map(
-    element => element.layoutId
+    screen => screen.layoutId
   )
   if (layoutsUsedByScreens.includes(layoutId)) {
     ctx.throw(400, "Cannot delete a layout that's being used by a screen")

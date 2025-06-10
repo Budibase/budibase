@@ -238,7 +238,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     const settings = this.getComponentSettings(component._component)
     const { parent, screen, useDefaultValues } = opts || {}
     const treeId = parent || component._id
-    if (!screen) {
+    if (!screen || !treeId) {
       return
     }
     settings.forEach((setting: ComponentSetting) => {
@@ -285,7 +285,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
           // Autofill form field names
           // Get all available field names in this form schema
           let fieldOptions = getComponentFieldOptions(
-            screen.props,
+            screen,
             treeId,
             setting.type,
             false
@@ -1085,6 +1085,32 @@ export class ComponentStore extends BudiStore<ComponentState> {
     await this.patch(this.updateComponentSetting(name, value))
   }
 
+  isDatasourceUpdated(
+    component: Component,
+    setting: ComponentSetting | undefined,
+    update: any
+  ): boolean {
+    if (setting?.type !== "dataSource") {
+      return false
+    }
+
+    const current = component[setting.key]
+
+    if (!current || current.type !== update?.type) {
+      return true
+    }
+
+    // Legacy support.
+    if (current?.type === "view" && update.type === "view") {
+      // Could have the same tableId but the view name is different
+      return current.name !== update.name || current.tableId !== update.tableId
+    }
+
+    // In the case of a query, we need to check if _id actually changed
+    // as we currently allow query param updates.
+    return update.type === "query" && current._id !== update?._id
+  }
+
   updateComponentSetting(name: string, value: any) {
     return (component: Component) => {
       if (!name || !component) {
@@ -1100,12 +1126,25 @@ export class ComponentStore extends BudiStore<ComponentState> {
         (setting: ComponentSetting) => setting.key === name
       )
 
+      // Datasource setting changes should only count if the source has been entirely replaced
+      const isDatasource = updatedSetting?.type === "dataSource"
+      const sourceModified = this.isDatasourceUpdated(
+        component,
+        updatedSetting,
+        value
+      )
+
       // Reset dependent fields
       settings.forEach((setting: ComponentSetting) => {
         const needsReset =
           name === setting.resetOn ||
           (Array.isArray(setting.resetOn) && setting.resetOn.includes(name))
+
         if (needsReset) {
+          // Ignore the reset if the updated datasource was not replaced
+          if (isDatasource && !sourceModified) {
+            return
+          }
           component[setting.key] = setting.defaultValue || null
         }
       })

@@ -5026,6 +5026,41 @@
             "barTitle": "3 columns"
           }
         ]
+      },
+      {
+        "section": true,
+        "name": "Uploader Text Settings",
+        "dependsOn": [
+          {
+            "setting": "disabled",
+            "value": false
+          }
+        ],
+        "settings": [
+          {
+            "type": "text",
+            "label": "Title Text",
+            "key": "titleText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          },
+          {
+            "type": "text",
+            "label": "Upload text",
+            "key": "clickText"
+          },
+          {
+            "type": "text",
+            "label": "Sub text",
+            "key": "addText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          }
+        ]
       }
     ]
   },
@@ -5115,6 +5150,41 @@
             "value": 2,
             "barIcon": "ViewColumn",
             "barTitle": "3 columns"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Uploader Text Settings",
+        "dependsOn": [
+          {
+            "setting": "disabled",
+            "value": false
+          }
+        ],
+        "settings": [
+          {
+            "type": "text",
+            "label": "Title Text",
+            "key": "titleText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          },
+          {
+            "type": "text",
+            "label": "Upload text",
+            "key": "clickText"
+          },
+          {
+            "type": "text",
+            "label": "Sub text",
+            "key": "addText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
           }
         ]
       }
@@ -5774,6 +5844,13 @@
         ],
         "defaultValue": "M",
         "wide": true
+      },
+      {
+        "type": "text",
+        "key": "buttonText",
+        "label": "Button text",
+        "placeholder": "Apply",
+        "defaultValue": "Apply"
       },
       {
         "type": "boolean",

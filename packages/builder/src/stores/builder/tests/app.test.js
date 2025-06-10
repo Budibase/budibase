@@ -18,6 +18,18 @@ vi.mock("@/api", () => {
   }
 })
 
+vi.mock("@/stores/builder", async () => {
+  const navigationStore = {
+    syncAppNavigation: vi.fn(),
+  }
+  const workspaceAppStore = {}
+
+  return {
+    navigationStore,
+    workspaceAppStore,
+  }
+})
+
 describe("Application Meta Store", () => {
   beforeEach(async ctx => {
     vi.clearAllMocks()

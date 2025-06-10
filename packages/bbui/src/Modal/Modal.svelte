@@ -79,7 +79,12 @@
     hide,
     toggle,
     cancel,
-  } as { show: () => void; hide: () => void; toggle: () => void; cancel: () => void })
+  } as {
+    show: () => void
+    hide: () => void
+    toggle: () => void
+    cancel: () => void
+  })
 
   onMount(() => {
     document.addEventListener("keydown", handleKey)

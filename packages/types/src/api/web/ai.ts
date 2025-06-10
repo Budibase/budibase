@@ -2,6 +2,8 @@ import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 import { z } from "zod"
 
+export type UserContent = string | openai.ChatCompletionContentPart[]
+
 export interface SystemMessage {
   role: "system"
   content: string
@@ -9,7 +11,7 @@ export interface SystemMessage {
 
 export interface UserMessage {
   role: "user"
-  content: string
+  content: UserContent
 }
 
 export interface AssistantMessage {
@@ -41,11 +43,26 @@ export interface ToolArgs<T extends z.ZodType> {
 }
 
 export function newTool<T extends z.ZodType>(tool: ToolArgs<T>): Tool<T> {
+  // Create error-aware handler that logs failures to server logs
+  const errorAwareHandler = async (args: z.infer<T>): Promise<string> => {
+    console.debug(`[TOOL DEBUG] Executing tool: ${tool.name}`)
+    try {
+      const result = await tool.handler(args)
+      console.debug(`[TOOL DEBUG] Tool ${tool.name} succeeded`)
+      return result
+    } catch (error: any) {
+      console.error(`[TOOL ERROR] Tool '${tool.name}' failed:`, error)
+
+      // Still return the error message for the Agent
+      return `Error executing ${tool.name}: ${error.message}`
+    }
+  }
+
   return {
     strict: tool.strict ?? true,
     parameters: tool.parameters ?? (z.object({}) as unknown as T),
     description: tool.description,
-    handler: tool.handler,
+    handler: errorAwareHandler,
     name: tool.name,
   }
 }
@@ -86,4 +103,14 @@ export interface GenerateTablesRequest {
 
 export interface GenerateTablesResponse {
   createdTables: { id: string; name: string }[]
+}
+
+export interface UploadFileRequest {
+  data: string
+  filename: string
+  contentType: string
+}
+
+export interface UploadFileResponse {
+  file: string
 }

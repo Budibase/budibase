@@ -354,7 +354,9 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-m);
-    transition: background 130ms ease-out, color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      color 130ms ease-out;
     color: var(--spectrum-global-color-gray-600);
   }
   .nav-item.hidden {
