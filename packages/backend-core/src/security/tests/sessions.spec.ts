@@ -1,6 +1,15 @@
 import * as sessions from "../sessions"
 import { generator, DBTestConfiguration } from "../../../tests"
 
+async function createSession(userId: string, tenantId: string, email: string) {
+  return await sessions.createASession(userId, {
+    sessionId: generator.guid(),
+    tenantId,
+    csrfToken: generator.hash(),
+    email,
+  })
+}
+
 describe("sessions", () => {
   const config = new DBTestConfiguration()
 
@@ -20,47 +29,17 @@ describe("sessions", () => {
         const email = generator.email({ domain: "example.com" })
         const tenantId = config.getTenantId()
 
-        // Create first session
-        const result1 = await sessions.createASession(userId, {
-          sessionId: generator.guid(),
-          tenantId: tenantId,
-          csrfToken: generator.hash(),
-          email: email,
-        })
-        const session1 = result1.session
+        const one = await createSession(userId, tenantId, email)
+        const two = await createSession(userId, tenantId, email)
+        const three = await createSession(userId, tenantId, email)
 
-        let userSessions = await sessions.getSessionsForUser(userId)
-        expect(userSessions).toHaveLength(1)
-
-        // Create second session
-        const result2 = await sessions.createASession(userId, {
-          sessionId: generator.guid(),
-          tenantId: tenantId,
-          csrfToken: generator.hash(),
-          email: email,
-        })
-        const session2 = result2.session
-
-        userSessions = await sessions.getSessionsForUser(userId)
-        expect(userSessions).toHaveLength(2)
-
-        // Create third session
-        const result3 = await sessions.createASession(userId, {
-          sessionId: generator.guid(),
-          tenantId: tenantId,
-          csrfToken: generator.hash(),
-          email: email,
-        })
-        const session3 = result3.session
-
-        userSessions = await sessions.getSessionsForUser(userId)
+        const userSessions = await sessions.getSessionsForUser(userId)
         expect(userSessions).toHaveLength(3)
 
-        // Verify all 3 sessions are active
         const sessionIds = userSessions.map(s => s.sessionId)
-        expect(sessionIds).toContain(session1.sessionId)
-        expect(sessionIds).toContain(session2.sessionId)
-        expect(sessionIds).toContain(session3.sessionId)
+        expect(sessionIds).toContain(one.session.sessionId)
+        expect(sessionIds).toContain(two.session.sessionId)
+        expect(sessionIds).toContain(three.session.sessionId)
       })
     })
 
@@ -70,55 +49,27 @@ describe("sessions", () => {
         const email = generator.email({ domain: "example.com" })
         const tenantId = config.getTenantId()
 
-        // Create 3 sessions
-        const result1 = await sessions.createASession(userId, {
-          sessionId: generator.guid(),
-          tenantId: tenantId,
-          csrfToken: generator.hash(),
-          email: email,
-        })
-        const session1 = result1.session
+        const one = await createSession(userId, tenantId, email)
 
-        const result2 = await sessions.createASession(userId, {
-          sessionId: generator.guid(),
-          tenantId: tenantId,
-          csrfToken: generator.hash(),
-          email: email,
-        })
-        const session2 = result2.session
+        const two = await createSession(userId, tenantId, email)
 
-        const result3 = await sessions.createASession(userId, {
-          sessionId: generator.guid(),
-          tenantId: tenantId,
-          csrfToken: generator.hash(),
-          email: email,
-        })
-        const session3 = result3.session
+        const three = await createSession(userId, tenantId, email)
 
         let userSessions = await sessions.getSessionsForUser(userId)
         expect(userSessions).toHaveLength(3)
 
-        // Create 4th session - should invalidate the oldest (session1)
-        const result4 = await sessions.createASession(userId, {
-          sessionId: generator.guid(),
-          tenantId: tenantId,
-          csrfToken: generator.hash(),
-          email: email,
-        })
-        const session4 = result4.session
+        const four = await createSession(userId, tenantId, email)
 
         userSessions = await sessions.getSessionsForUser(userId)
         expect(userSessions).toHaveLength(3)
 
-        // Verify session1 is gone, but sessions 2, 3, and 4 remain
         const sessionIds = userSessions.map(s => s.sessionId)
-        expect(sessionIds).not.toContain(session1.sessionId)
-        expect(sessionIds).toContain(session2.sessionId)
-        expect(sessionIds).toContain(session3.sessionId)
-        expect(sessionIds).toContain(session4.sessionId)
-        
-        // Verify that creating the 4th session reported 1 invalidated session
-        expect(result4.invalidatedSessionCount).toBe(1)
+        expect(sessionIds).not.toContain(one.session.sessionId)
+        expect(sessionIds).toContain(two.session.sessionId)
+        expect(sessionIds).toContain(three.session.sessionId)
+        expect(sessionIds).toContain(four.session.sessionId)
+
+        expect(four.invalidatedSessionCount).toBe(1)
       })
     })
   })

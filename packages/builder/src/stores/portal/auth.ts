@@ -122,16 +122,18 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     }
   }
 
-  checkSessionNotificationParams() {
-    const invalidatedCount = localStorage.getItem("bb-sessions-invalidated")
+  checkIfSessionsInvalidatedAndNotify() {
+    const invalidatedCount = parseInt(
+      localStorage.getItem("bb-sessions-invalidated") || "0",
+      10
+    )
 
-    if (invalidatedCount && parseInt(invalidatedCount) > 0) {
-      const count = parseInt(invalidatedCount)
-      const sessionText = count === 1 ? "session" : "sessions"
+    if (invalidatedCount > 0) {
+      const sessionText = invalidatedCount === 1 ? "session" : "sessions"
       notifications.info(
-        `You've been logged out of ${count} other ${sessionText} because users are only allowed 3 active sessions at any one time.`
+        `You've been logged out of ${invalidatedCount} other ${sessionText} because users are only allowed 3 active sessions at any one time.`
       )
-      localStorage.removeItem("sessionInvalidated")
+      localStorage.removeItem("bb-sessions-invalidated")
     }
   }
 
@@ -141,7 +143,6 @@ class AuthStore extends BudiStore<PortalAuthStore> {
 
     await this.getSelf()
 
-    // Return session invalidation count for the calling component to handle
     return {
       invalidatedSessionCount: loginResult.invalidatedSessionCount || 0,
     }

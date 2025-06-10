@@ -12,7 +12,6 @@ import {
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
-// Extended login response that includes session invalidation information
 export interface ExtendedLoginResponse extends LoginResponse {
   invalidatedSessionCount?: number
 }
@@ -51,14 +50,18 @@ export const buildAuthEndpoints = (API: BaseAPIClient): AuthEndpoints => ({
         username,
         password,
       },
-      parseResponse: async (response) => {
-        const data = await response.json() as LoginResponse
-        const invalidatedSessionCount = response.headers.get("X-Session-Invalidated-Count")
+      parseResponse: async response => {
+        const data = (await response.json()) as LoginResponse
+        const invalidatedSessionCount = response.headers.get(
+          "X-Session-Invalidated-Count"
+        )
         return {
           ...data,
-          invalidatedSessionCount: invalidatedSessionCount ? parseInt(invalidatedSessionCount) : 0
+          invalidatedSessionCount: invalidatedSessionCount
+            ? parseInt(invalidatedSessionCount)
+            : 0,
         } as ExtendedLoginResponse
-      }
+      },
     })
   },
 

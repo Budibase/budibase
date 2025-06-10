@@ -15,8 +15,7 @@ const EXPIRY_SECONDS = env.SESSION_EXPIRY_SECONDS
   ? parseInt(env.SESSION_EXPIRY_SECONDS)
   : Duration.fromDays(7).toSeconds()
 
-// maximum number of concurrent sessions per user
-const MAX_SESSIONS_PER_USER = 3
+const MAX_SESSIONS_PER_USER = 1
 
 function makeSessionID(userId: string, sessionId: string) {
   return `${userId}/${sessionId}`
@@ -82,15 +81,12 @@ export async function createASession(
   const existingSessions = await getSessionsForUser(userId)
   let invalidatedSessionCount = 0
 
-  // if we're at or over the session limit, remove the oldest sessions
   if (existingSessions.length >= MAX_SESSIONS_PER_USER) {
-    // sort by creation time (oldest first)
     const sortedSessions = existingSessions.sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     )
 
-    // calculate how many sessions to remove to make room for the new one
     const sessionsToRemove = existingSessions.length - MAX_SESSIONS_PER_USER + 1
     const sessionIdsToInvalidate = sortedSessions
       .slice(0, sessionsToRemove)
