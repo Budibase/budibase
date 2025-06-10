@@ -13,6 +13,7 @@ import {
   App,
 } from "@budibase/types"
 import backups from "../backups"
+import { processMigrations } from "../../../appMigrations/migrationsProcessor"
 import { getAppMigrationCacheKey } from "../../../appMigrations"
 
 export type FileAttributes = {
@@ -168,6 +169,7 @@ export async function updateWithExport(
     }
 
     await cache.destroy(getAppMigrationCacheKey(devId))
+    await processMigrations(devId)
   } finally {
     await tempDb.destroy()
   }
