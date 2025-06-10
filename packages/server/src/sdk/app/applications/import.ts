@@ -8,6 +8,7 @@ import {
   App,
 } from "@budibase/types"
 import backups from "../backups"
+import { getAppMigrationCacheKey } from "../../../appMigrations"
 
 export type FileAttributes = {
   type: string
@@ -134,6 +135,8 @@ export async function updateWithExport(
     await appDb.bulkDocs(
       mergeUpdateAndDeleteDocuments(toUpdate, toDelete, newMetadata)
     )
+
+    await cache.destroy(getAppMigrationCacheKey(devId))
   } finally {
     await tempDb.destroy()
   }

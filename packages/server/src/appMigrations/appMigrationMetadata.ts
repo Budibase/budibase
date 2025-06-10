@@ -24,10 +24,11 @@ async function getFromDB(appId: string) {
   )
 }
 
-const getCacheKey = (appId: string) => `appmigrations_${env.VERSION}_${appId}`
+export const getAppMigrationCacheKey = (appId: string) =>
+  `appmigrations_${env.VERSION}_${appId}`
 
 export async function getAppMigrationVersion(appId: string): Promise<string> {
-  const cacheKey = getCacheKey(appId)
+  const cacheKey = getAppMigrationCacheKey(appId)
 
   let version: string | undefined = await cache.get(cacheKey)
 
@@ -91,7 +92,7 @@ export async function updateAppMigrationMetadata({
   }
   await appDb.put(updatedMigrationDoc)
 
-  const cacheKey = getCacheKey(appId)
+  const cacheKey = getAppMigrationCacheKey(appId)
 
   await cache.destroy(cacheKey)
 }
