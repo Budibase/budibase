@@ -41,9 +41,9 @@
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { capitalise } from "@/helpers"
   import {
-    getBudibaseRoleOptions,
+    BudibaseRoleOptions,
     BudibaseRoles,
-    getExtendedBudibaseRoleOptions,
+    ExtendedBudibaseRoleOptions,
   } from "@/constants"
 
   export let userId
@@ -341,8 +341,8 @@
               disabled={!sdk.users.isAdmin($auth.user) || isTenantOwner}
               value={isTenantOwner ? "owner" : globalRole}
               options={isTenantOwner
-                ? getExtendedBudibaseRoleOptions($featureFlags.WORKSPACE_APPS)
-                : getBudibaseRoleOptions($featureFlags.WORKSPACE_APPS)}
+                ? ExtendedBudibaseRoleOptions
+                : BudibaseRoleOptions}
               on:change={updateUserRole}
             />
           </div>

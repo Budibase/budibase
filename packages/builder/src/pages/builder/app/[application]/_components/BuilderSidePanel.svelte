@@ -27,7 +27,6 @@
     users,
     auth,
     admin,
-    featureFlags,
   } from "@/stores/portal"
   import {
     fetchData,
@@ -44,7 +43,7 @@
   import { fly } from "svelte/transition"
   import InfoDisplay from "../design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BuilderGroupPopover from "./BuilderGroupPopover.svelte"
-  import { getBudibaseRoleOptions, BudibaseRoles } from "@/constants"
+  import { BudibaseRoleOptions, BudibaseRoles } from "@/constants"
 
   let query = null
   let loaded = false
@@ -858,8 +857,8 @@
             <FancySelect
               bind:value={creationRoleType}
               options={sdk.users.isAdmin($auth.user)
-                ? getBudibaseRoleOptions($featureFlags.WORKSPACE_APPS)
-                : getBudibaseRoleOptions($featureFlags.WORKSPACE_APPS).filter(
+                ? BudibaseRoleOptions
+                : BudibaseRoleOptions.filter(
                     option => option.value !== BudibaseRoles.Admin
                   )}
               label="Role"

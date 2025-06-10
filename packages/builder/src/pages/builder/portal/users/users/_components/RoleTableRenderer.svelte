@@ -1,10 +1,10 @@
 <script>
-  import { getExtendedBudibaseRoleOptions } from "@/constants"
-  import { users, featureFlags } from "@/stores/portal"
+  import { ExtendedBudibaseRoleOptions } from "@/constants"
+  import { users } from "@/stores/portal"
 
   export let row
 
-  $: role = getExtendedBudibaseRoleOptions($featureFlags.WORKSPACE_APPS).find(
+  $: role = ExtendedBudibaseRoleOptions.find(
     x => x.value === users.getUserRole(row)
   )
   $: value = role?.label || "Not available"
