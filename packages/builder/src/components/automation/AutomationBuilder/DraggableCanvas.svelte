@@ -154,7 +154,7 @@
   let bgDim = 24
 
   // Scale prop background dots
-  let dotDefault = 0.5
+  let dotDefault = 1
 
   let viewDragStart = { x: 0, y: 0 }
   let viewDragOffset = [0, 0]
@@ -569,7 +569,7 @@
       patternUnits="userSpaceOnUse"
       patternTransform={`translate(${offsetX - 2}, ${offsetY - 2})`}
     >
-      <ellipse rx="2" ry="2" cx="2" cy="2" />
+      <ellipse rx="1" ry="1" cx="1" cy="1" />
     </pattern>
     <rect x="0" y="0" width="100%" height="100%" fill="url(#dot-pattern)" />
   </svg>
@@ -644,7 +644,7 @@
     left: 0;
     pointer-events: none;
     z-index: -1;
-    background-color: var(--spectrum-global-color-gray-75);
+    background-color: var(--spectrum-global-color-gray-50);
   }
 
   .draggable-background :global(ellipse) {
