@@ -644,7 +644,7 @@
     left: 0;
     pointer-events: none;
     z-index: -1;
-    background-color: var(--spectrum-global-color-gray-50);
+    background-color: var(--spectrum-global-color-gray-75);
   }
 
   .draggable-background :global(ellipse) {
