@@ -1,6 +1,5 @@
 import { queue, logging } from "@budibase/backend-core"
 import { Job } from "bull"
-import { MIGRATIONS } from "./migrations"
 import { processMigrations } from "./migrationsProcessor"
 
 const MAX_ATTEMPTS = 3
@@ -37,7 +36,7 @@ export function init() {
 async function processMessage(job: Job<AppMigrationJob>) {
   const { appId } = job.data
 
-  await processMigrations(appId, MIGRATIONS)
+  await processMigrations(appId)
 }
 
 export function getAppMigrationQueue() {
