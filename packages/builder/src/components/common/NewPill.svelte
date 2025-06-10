@@ -10,6 +10,7 @@
     border: 0.5px solid rgba(172, 175, 255, 0.2);
     border-radius: 4px;
     padding: 1px 3px;
-    color: rgb(172, 175, 255);
+    color: rgb(149, 153, 255);
+    font-weight: 500;
   }
 </style>
