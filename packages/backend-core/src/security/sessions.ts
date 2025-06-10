@@ -15,7 +15,7 @@ const EXPIRY_SECONDS = env.SESSION_EXPIRY_SECONDS
   ? parseInt(env.SESSION_EXPIRY_SECONDS)
   : Duration.fromDays(7).toSeconds()
 
-const MAX_SESSIONS_PER_USER = 1
+const MAX_SESSIONS_PER_USER = 3
 
 function makeSessionID(userId: string, sessionId: string) {
   return `${userId}/${sessionId}`
