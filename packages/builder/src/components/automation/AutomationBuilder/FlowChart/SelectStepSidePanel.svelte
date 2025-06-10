@@ -298,7 +298,7 @@
                 {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
                   <div class="tag-color">
                     <Tags>
-                      <Tag icon="lock">Premium</Tag>
+                      <Tag icon="lock" emphasized>Premium</Tag>
                     </Tags>
                   </div>
                 {:else if isDisabled}

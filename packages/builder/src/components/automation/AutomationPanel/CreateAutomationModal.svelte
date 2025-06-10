@@ -4,7 +4,6 @@
   import {
     notifications,
     Input,
-    InlineAlert,
     ModalContent,
     Layout,
     Body,
@@ -100,8 +99,8 @@
     border-radius: 8px;
     padding: var(--spacing-s) var(--spacing-m);
     border: 0.5px solid var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-alias-background-color-secondary);
-    transition: 0.3s all;
+    background: var(--spectrum-global-color-gray-50);
+    transition: 0.1s all;
     box-sizing: border-box;
   }
 
@@ -113,10 +112,10 @@
   }
 
   .item:hover {
-    background: var(--spectrum-alias-background-color-tertiary);
+    background: var(--spectrum-global-color-gray-75);
   }
   .selected {
-    background: var(--spectrum-alias-background-color-tertiary);
+    background: var(--spectrum-global-color-gray-75);
     border: 0.5px solid var(--spectrum-global-color-blue-600);
   }
 </style>
