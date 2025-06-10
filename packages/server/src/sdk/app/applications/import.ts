@@ -91,7 +91,9 @@ async function removeImportableDocuments(db: Database) {
     )
   }
 
-  const designDocs = await db.getMultiple(DESIGN_DOCUMENTS_TO_IMPORT)
+  const designDocs = await db.getMultiple(DESIGN_DOCUMENTS_TO_IMPORT, {
+    allowMissing: true,
+  })
   documentRefs.push(
     ...designDocs.map(doc => ({
       _id: doc._id!,
@@ -120,7 +122,9 @@ async function getImportableDocuments(db: Database) {
     documents = documents.concat(response.rows.map(row => row.doc!))
   }
 
-  const designDocs = await db.getMultiple(DESIGN_DOCUMENTS_TO_IMPORT)
+  const designDocs = await db.getMultiple(DESIGN_DOCUMENTS_TO_IMPORT, {
+    allowMissing: true,
+  })
   documents.push(...designDocs)
 
   // remove the _rev, stops it being written
