@@ -72,6 +72,7 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.QUERY,
   DocumentType.METADATA,
   DocumentType.MEM_VIEW,
+  DocumentType.WORKSPACE_APP,
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,
