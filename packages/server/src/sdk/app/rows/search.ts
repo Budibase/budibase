@@ -68,13 +68,25 @@ export async function search(
 
     const isExternalTable = isExternalTableID(table._id!)
 
+    let hadOriginalFilters = false
     if (options.query) {
+      // Check if the original query had any filters before processing
+      hadOriginalFilters = dataFilters.hasFilters(options.query)
+      
       const visibleFields = (
         options.fields || Object.keys(table.schema)
       ).filter(field => table.schema[field]?.visible !== false)
 
       const queryableFields = await getQueryableFields(table, visibleFields)
       options.query = removeInvalidFilters(options.query, queryableFields)
+      
+      // If the original query had filters but after removal there are none,
+      // this means we were filtering on invalid fields - return empty results
+      if (hadOriginalFilters && !dataFilters.hasFilters(options.query)) {
+        return {
+          rows: [],
+        }
+      }
     } else {
       options.query = {}
     }
@@ -117,6 +129,15 @@ export async function search(
     span.addTags({
       cleanedQuery: options.query,
     })
+
+    // If the original query had filters but after cleanup there are none,
+    // this means we were filtering on empty/null values - return empty results
+    if (hadOriginalFilters && !dataFilters.hasFilters(options.query)) {
+      span.addTags({ emptyQueryAfterCleanup: true })
+      return {
+        rows: [],
+      }
+    }
 
     if (
       !dataFilters.hasFilters(options.query) &&
