@@ -203,6 +203,7 @@ async function addSampleDataScreen() {
           },
         ],
       },
+      isDefault: true,
     })
 
     workspaceAppId = workspaceApp._id
@@ -211,7 +212,8 @@ async function addSampleDataScreen() {
   const screen = createSampleDataTableScreen(workspaceAppId)
   await sdk.screens.create(screen)
 
-  if (!workspaceAppEnabled) {
+  {
+    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
     const db = context.getAppDB()
     let app = await sdk.applications.metadata.get()
     if (!app.navigation) {
