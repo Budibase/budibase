@@ -8,13 +8,7 @@
   import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
   import NewPill from "@/components/common/NewPill.svelte"
 
-  let panelWidth = 230 // default width
-
-  // Update panelWidth on resize
-  const [resizable, resizableHandle] = getHorizontalResizeActions(
-    undefined,
-    (w = 0) => (panelWidth = w - 80)
-  )
+  const [resizable, resizableHandle] = getHorizontalResizeActions()
 
   const Tabs = {
     Components: "Components",
@@ -27,7 +21,7 @@
 
 <div class="panel" use:resizable>
   <div class="content">
-    <ScreenList {panelWidth} />
+    <ScreenList />
     <div class="tabs">
       {#each Object.values(Tabs) as tab}
         <ActionButton

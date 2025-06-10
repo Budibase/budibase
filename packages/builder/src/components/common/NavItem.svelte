@@ -27,7 +27,6 @@
   export let hovering: boolean = false
   export let disabled: boolean = false
   export let nonSelectable: boolean = false
-  export let panelWidth: number | undefined = undefined
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -125,11 +124,7 @@
         />
       </div>
     {/if}
-    <div
-      class="text"
-      title={showTooltip ? text : null}
-      style={panelWidth ? `max-width: ${panelWidth}px;` : ""}
-    >
+    <div class="text" title={showTooltip ? text : null}>
       <span title={text}>{text}</span>
       {#if selectedBy}
         <UserAvatars size="XS" users={selectedBy} />

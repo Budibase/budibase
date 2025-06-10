@@ -23,8 +23,6 @@
 
   let workspaceAppModal: WorkspaceAppModal
 
-  export let panelWidth: number | undefined = undefined
-
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
   $: filteredWorkspaceApps = getFilteredWorkspaceApps(
     $workspaceAppStore.workspaceApps,
@@ -118,7 +116,7 @@
       <WorkspaceAppList workspaceApps={filteredWorkspaceApps} {searchValue} />
     {:else if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
-        <ScreenNavItem {screen} {panelWidth} deletionAllowed />
+        <ScreenNavItem {screen} deletionAllowed />
       {/each}
     {:else}
       <Layout paddingY="none" paddingX="L">

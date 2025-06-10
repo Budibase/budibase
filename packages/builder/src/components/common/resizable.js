@@ -28,9 +28,7 @@ const getResizeActions = (
     const handleMouseMove = e => {
       e.preventDefault() // Prevent highlighting while dragging
       const change = e[mouseMoveEventProperty] - startPosition
-      const newValue = startProperty + change
-      element.style[cssProperty] = `${newValue}px`
-      setValue(element[elementProperty]) // Use the DOM property after setting the style
+      element.style[cssProperty] = `${startProperty + change}px`
     }
 
     const handleMouseUp = e => {
