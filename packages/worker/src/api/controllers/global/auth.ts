@@ -247,15 +247,7 @@ export const googleCallback = async (ctx: Ctx<void, void>, next: Next) => {
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("google-internal", user.email)
       })
-
-      // Check if sessions were invalidated and include in redirect URL
-      const invalidatedCount = ctx.get("X-Session-Invalidated-Count")
-      let redirectUrl = env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT
-      if (invalidatedCount && parseInt(invalidatedCount) > 0) {
-        const separator = redirectUrl.includes("?") ? "&" : "?"
-        redirectUrl += `${separator}sessionInvalidated=${invalidatedCount}`
-      }
-      ctx.redirect(redirectUrl)
+      ctx.redirect(env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT)
     }
   )(ctx, next)
 }
@@ -322,15 +314,7 @@ export const oidcCallback = async (ctx: Ctx<void, void>, next: Next) => {
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("oidc", user.email)
       })
-
-      // Check if sessions were invalidated and include in redirect URL
-      const invalidatedCount = ctx.get("X-Session-Invalidated-Count")
-      let redirectUrl = env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT
-      if (invalidatedCount && parseInt(invalidatedCount) > 0) {
-        const separator = redirectUrl.includes("?") ? "&" : "?"
-        redirectUrl += `${separator}sessionInvalidated=${invalidatedCount}`
-      }
-      ctx.redirect(redirectUrl)
+      ctx.redirect(env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT)
     }
   )(ctx, next)
 }
