@@ -58,6 +58,8 @@
   comprehensive documentation at https://docs.budibase.com
 - The local URL for the development server is http://localhost:10000. Before
   running `yarn dev`, check to see if the development server is already running.
+- The default login for local development is email "local@budibase.com" and
+  password "cheekychuckles".
 - The product is split up by app, so to find things like data sources and
   automations you must first make sure to select an app.
 
