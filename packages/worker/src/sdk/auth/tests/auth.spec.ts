@@ -68,5 +68,30 @@ describe("auth", () => {
         expect(await sessions.getSessionsForUser(user._id!)).toHaveLength(0)
       })
     })
+
+    it("loginUser should return session invalidation count", async () => {
+      await context.doInTenant(structures.tenant.id(), async () => {
+        const user = await config.createUser()
+
+        // First login
+        const loginResult1 = await loginUser(user)
+        expect(loginResult1.invalidatedSessionCount).toBe(0)
+
+        // Second login - should not invalidate since limit is 3
+        const loginResult2 = await loginUser(user)
+        expect(loginResult2.invalidatedSessionCount).toBe(0)
+
+        // Third login - should not invalidate since limit is 3
+        const loginResult3 = await loginUser(user)
+        expect(loginResult3.invalidatedSessionCount).toBe(0)
+
+        // Fourth login - should invalidate 1 session since limit is 3
+        const loginResult4 = await loginUser(user)
+        expect(loginResult4.invalidatedSessionCount).toBe(1)
+
+        // Verify only 3 sessions remain
+        expect(await sessions.getSessionsForUser(user._id!)).toHaveLength(3)
+      })
+    })
   })
 })

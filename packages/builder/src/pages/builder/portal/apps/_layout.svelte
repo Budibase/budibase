@@ -17,6 +17,9 @@
   let loaded = !!$appsStore.apps?.length
 
   onMount(async () => {
+    // Check for session notification parameters in URL
+    auth.checkSessionNotificationParams()
+
     try {
       const promises = [licensing.init()]
 
