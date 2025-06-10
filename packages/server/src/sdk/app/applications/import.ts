@@ -22,7 +22,7 @@ export type FileAttributes = {
 }
 
 const DESIGN_DOCUMENTS_TO_IMPORT = [
-  DesignDocuments.SQLLITE,
+  DesignDocuments.SQLITE,
   DesignDocuments.MIGRATIONS,
 ]
 

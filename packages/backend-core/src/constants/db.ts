@@ -80,6 +80,6 @@ export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
 export { DEFAULT_BB_DATASOURCE_ID } from "@budibase/shared-core"
 
 export const enum DesignDocuments {
-  SQLLITE = SQLITE_DESIGN_DOC_ID,
+  SQLITE = SQLITE_DESIGN_DOC_ID,
   MIGRATIONS = "_design/migrations",
 }
