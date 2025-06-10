@@ -3,6 +3,7 @@ import {
   Document,
   DocumentType,
   ResourceType,
+  Screen,
   SEPARATOR,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -38,10 +39,12 @@ export async function buildPublishFilter(opts: {
   return (doc: Document) => {
     if (doc._id?.startsWith(AUTOMATION_ID_FORMAT)) {
       return automationIds.includes(doc._id)
-    } else if (
-      doc._id?.startsWith(SCREEN_ID_FORMAT) ||
-      doc._id?.startsWith(WORKSPACE_APP_ID_FORMAT)
-    ) {
+    } else if (doc._id?.startsWith(SCREEN_ID_FORMAT)) {
+      const screen = doc as Screen
+      return (
+        screen.workspaceAppId && workspaceAppIds.includes(screen.workspaceAppId)
+      )
+    } else if (doc._id?.startsWith(WORKSPACE_APP_ID_FORMAT)) {
       return workspaceAppIds.includes(doc._id)
     } else if (doc._id?.startsWith(TABLE_ID_FORMAT)) {
       return tableIds.includes(doc._id)
