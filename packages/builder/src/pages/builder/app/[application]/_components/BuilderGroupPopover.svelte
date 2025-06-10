@@ -13,7 +13,7 @@
 
 <div class="icon">
   <Icon
-    name="Info"
+    name="info"
     size="XS"
     color="grey"
     hoverable

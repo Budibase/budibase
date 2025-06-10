@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "API Request",
   tagline: "Execute a REST request",
-  icon: "GlobeGrid",
+  icon: "globe",
   description: "Execute a HTTP query from a REST datasource",
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.API_REQUEST,

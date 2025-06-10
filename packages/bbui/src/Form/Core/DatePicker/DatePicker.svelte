@@ -56,7 +56,7 @@
   focused={isOpen}
   value={parsedValue}
   on:click={popover?.show}
-  icon={timeOnly ? "Clock" : "Calendar"}
+  icon={timeOnly ? "clock" : "calendar"}
 />
 
 <Popover

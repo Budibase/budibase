@@ -61,7 +61,7 @@
       target="_blank"
       href="https://docs.budibase.com/docs/automation-steps"
     >
-      <Icon name="InfoOutline" />
+      <Icon name="info" />
       <span>Learn about automations</span>
     </a>
   </ModalContent>

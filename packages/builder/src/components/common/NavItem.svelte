@@ -103,7 +103,7 @@
         class="icon arrow"
         on:click={onIconClick}
       >
-        <Icon size="S" name="ChevronRight" />
+        <Icon size="S" name="caret-right" />
       </div>
     {/if}
 
@@ -115,7 +115,7 @@
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
         <Icon
-          color={iconColor}
+          color={iconColor || "var(--spectrum-global-color-gray-700)"}
           size="S"
           name={icon}
           tooltip={iconTooltip}

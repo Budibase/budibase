@@ -9,7 +9,7 @@
 </script>
 
 <ActionButton
-  icon={hideAutocolumns ? "VisibilityOff" : "Visibility"}
+  icon={hideAutocolumns ? "eye-slash" : "eye"}
   primary
   quiet
   on:click={hideOrUnhide}

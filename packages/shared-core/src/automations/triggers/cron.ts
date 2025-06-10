@@ -10,7 +10,7 @@ import {
 export const definition: AutomationTriggerDefinition = {
   name: "Cron Trigger",
   event: AutomationEventType.CRON_TRIGGER,
-  icon: "Clock",
+  icon: "clock",
   tagline: "Cron Trigger (<b>{{inputs.cron}}</b>)",
   description: "Triggers automation on a cron schedule.",
   stepId: AutomationTriggerStepId.CRON,

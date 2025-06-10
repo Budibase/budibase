@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   description: "Send an email using SMTP",
   tagline: "Send SMTP email to {{inputs.to}}",
-  icon: "Email",
+  icon: "envelope",
   name: "Send Email (SMTP)",
   type: AutomationStepType.ACTION,
   internal: true,

@@ -90,7 +90,7 @@ class DeploymentStore extends DerivedBudiStore<
       if (showNotification) {
         notifications.send("App published successfully", {
           type: "success",
-          icon: "GlobeCheck",
+          icon: "globe",
         })
       }
       await this.completePublish()
@@ -120,7 +120,7 @@ class DeploymentStore extends DerivedBudiStore<
       await appsStore.load()
       notifications.send("App unpublished", {
         type: "success",
-        icon: "GlobeStrike",
+        icon: "globe",
       })
     } catch (err) {
       notifications.error("Error unpublishing app")

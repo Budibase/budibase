@@ -1,10 +1,11 @@
 <script lang="ts">
   import { ActionButton } from "../"
+  import Icon from "../Icon/Icon.svelte"
 
   import { createEventDispatcher } from "svelte"
 
   export let type: string = "info"
-  export let icon: string = "Info"
+  export let icon: string = "info"
   export let message: string = ""
   export let dismissable: boolean = false
   export let actionMessage: string | null = null
@@ -16,13 +17,14 @@
 
 <div class="spectrum-Toast spectrum-Toast--{type}" class:wide>
   {#if icon}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Toast-typeIcon"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-{icon}" />
-    </svg>
+    <div class="toast-icon">
+      <Icon
+        name={icon}
+        size="L"
+        color="var(--spectrum-global-color-static-white)"
+        weight="bold"
+      />
+    </div>
   {/if}
   <div class="spectrum-Toast-body" class:actionBody={!!action}>
     <div class="wrap spectrum-Toast-content">{message || ""}</div>
@@ -39,13 +41,7 @@
         on:click={() => dispatch("dismiss")}
       >
         <div class="spectrum-ClearButton-fill">
-          <svg
-            class="spectrum-ClearButton-icon spectrum-Icon spectrum-UIIcon-Cross100"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Cross100" />
-          </svg>
+          <Icon name="x" size="M" />
         </div>
       </button>
     </div>
@@ -56,19 +52,21 @@
   .wrap {
     overflow-wrap: anywhere;
   }
-
   .spectrum-Toast {
     pointer-events: all;
   }
-
   .wide {
     width: 100%;
   }
-
   .actionBody {
     justify-content: space-between;
     display: flex;
     width: 100%;
     align-items: center;
+  }
+  .toast-icon {
+    margin: 0 10px 0 -4px;
+    display: grid;
+    place-items: center;
   }
 </style>

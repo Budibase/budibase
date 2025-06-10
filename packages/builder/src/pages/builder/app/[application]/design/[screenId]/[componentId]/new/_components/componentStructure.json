@@ -53,7 +53,7 @@
   },
   {
     "name": "Form",
-    "icon": "Form",
+    "icon": "list",
     "children": [
       "form",
       "formstep",

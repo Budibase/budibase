@@ -7,6 +7,7 @@
   import "@spectrum-css/fieldgroup/dist/index-vars.css"
   import "@spectrum-css/radio/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
+  import { Icon } from "@budibase/bbui"
 
   export let direction: "horizontal" | "vertical" = "vertical"
   export let value: V[] = []
@@ -34,6 +35,7 @@
   {#if options && Array.isArray(options)}
     {#each options as option}
       {@const optionValue = getOptionValue(option)}
+      {@const checked = value.includes(optionValue)}
       <div
         title={getOptionLabel(option)}
         class="spectrum-Checkbox spectrum-FieldGroup-item"
@@ -46,17 +48,17 @@
             on:change={() => onChange(optionValue)}
             type="checkbox"
             class="spectrum-Checkbox-input"
-            checked={value.includes(optionValue)}
+            {checked}
             {disabled}
           />
           <span class="spectrum-Checkbox-box">
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
+            <span class="icon" class:checked>
+              <Icon
+                name="check"
+                weight="bold"
+                color="var(--spectrum-global-color-gray-50)"
+              />
+            </span>
           </span>
           <span class="spectrum-Checkbox-label">{getOptionLabel(option)}</span>
         </label>
@@ -71,5 +73,18 @@
   }
   .readonly {
     pointer-events: none;
+  }
+  .icon {
+    display: none;
+    left: 50%;
+    top: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+  .icon.checked {
+    display: block;
+  }
+  .icon :global(i) {
+    font-size: 14px;
   }
 </style>

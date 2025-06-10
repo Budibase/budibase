@@ -1,38 +1,45 @@
 <script lang="ts">
-  import { ColorPicker, Icon, Label, ModalContent } from "@budibase/bbui"
+  import {
+    ColorPicker,
+    Icon,
+    Label,
+    ModalContent,
+    Helpers,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   export let name: string
   export let color: string
 
   const dispatch = createEventDispatcher()
-
-  let iconsList = [
-    "Apps",
-    "Actions",
-    "ConversionFunnel",
-    "App",
-    "Briefcase",
-    "Money",
-    "ShoppingCart",
-    "Form",
-    "Help",
-    "Monitoring",
-    "Sandbox",
-    "Project",
-    "Organisations",
-    "Magnify",
-    "Launch",
-    "Car",
-    "Camera",
-    "Bug",
-    "Channel",
-    "Calculator",
-    "Calendar",
-    "GraphDonut",
-    "GraphBarHorizontal",
-    "Demographic",
+  const iconsList = [
+    "dots-nine",
+    "pencil-ruler",
+    "funnel-simple",
+    "app-store-logo",
+    "briefcase",
+    "money",
+    "shopping-cart",
+    "list",
+    "question",
+    "monitor",
+    "columns",
+    "folder",
+    "city",
+    "magnifying-glass",
+    "rocket-launch",
+    "car",
+    "camera",
+    "bug",
+    "snowflake",
+    "calculator",
+    "calendar-dots",
+    "chart-donut",
+    "chart-bar-horizontal",
+    "users-three",
   ]
+
+  $: phosphorIcon = Helpers.getPhosphorIcon(name)
 
   const save = async () => {
     dispatch("change", { color, name })
@@ -51,10 +58,15 @@
       {#each iconsList as item}
         <div
           class="icon-item"
-          class:selected={item === name}
+          class:selected={item === phosphorIcon}
           on:click={() => (name = item)}
         >
-          <Icon name={item} />
+          <Icon
+            name={item}
+            size="L"
+            hoverable
+            hoverColor={"var(--spectrum-global-color-blue-600)"}
+          />
         </div>
       {/each}
     </div>

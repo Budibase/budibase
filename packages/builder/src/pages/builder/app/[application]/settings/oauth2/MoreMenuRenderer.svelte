@@ -42,10 +42,10 @@
 
 <ActionMenu align="right">
   <div slot="control" class="control icon">
-    <Icon size="S" hoverable name="MoreSmallList" />
+    <Icon size="S" hoverable name="dots-three" />
   </div>
-  <MenuItem on:click={onEdit} icon="Edit">Edit</MenuItem>
-  <MenuItem on:click={onDelete} icon="Delete">Delete</MenuItem>
+  <MenuItem on:click={onEdit} icon="pencil">Edit</MenuItem>
+  <MenuItem on:click={onDelete} icon="trash">Delete</MenuItem>
 </ActionMenu>
 
 <Modal bind:this={modal}>

@@ -281,7 +281,7 @@
     class:active={isAddingComponent}
     on:click={toggleAddComponent}
   >
-    <Icon size="XL" name="Add">Component</Icon>
+    <Icon size="XL" name="plus">Component</Icon>
   </div>
 </div>
 <ConfirmDialog

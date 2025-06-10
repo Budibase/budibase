@@ -575,7 +575,7 @@
       class="header"
     >
       {#if invitingFlow}
-        <Icon name="BackAndroid" />
+        <Icon name="arrow-left" />
       {/if}
       <Heading size="S">{invitingFlow ? "Invite new user" : "Users"}</Heading>
     </div>
@@ -585,7 +585,7 @@
       {/if}
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
+        name="align-right"
         hoverable
         on:click={() => {
           builderStore.hideBuilderSidePanel()
@@ -620,7 +620,7 @@
           userOnboardResponse = null
         }}
       >
-        <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
+        <Icon name={!filterByAppAccess || query ? "x" : "magnifying-glass"} />
       </span>
     </div>
 
@@ -628,7 +628,7 @@
       {#if !$deploymentStore.isPublished}
         <div class="alert">
           <InfoDisplay
-            icon="AlertCircleFilled"
+            icon="warning-circle"
             warning
             title="App unpublished"
             body="Users won't be able to access your app until you've published it"

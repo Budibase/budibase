@@ -386,13 +386,9 @@
             tooltipPosition={TooltipPosition.Left}
           />
           <div class="field_name spectrum-Menu-itemLabel">{field}</div>
-          <svg
-            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Checkmark100" />
-          </svg>
+          <div class="check">
+            <Icon name="check" />
+          </div>
         </li>
       {/if}
     {/each}
@@ -409,5 +405,12 @@
   /* Override for general json field override */
   .prop-control-wrap :global(.icon.json-slot-icon) {
     right: 1px !important;
+  }
+
+  .check {
+    display: none;
+  }
+  li.is-selected .check {
+    display: block;
   }
 </style>

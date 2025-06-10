@@ -8,7 +8,7 @@ import {
 
 export const definition: AutomationStepDefinition = {
   name: "Branch",
-  icon: "Branch3",
+  icon: "git-branch",
   tagline: "Branch from this step",
   description: "Branching",
   stepId: AutomationActionStepId.BRANCH,

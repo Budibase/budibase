@@ -1,7 +1,6 @@
 <script>
   import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
   import { Modal, ModalContent, Body, Heading } from "@budibase/bbui"
-  import FontAwesomeIcon from "@/components/common/FontAwesomeIcon.svelte"
 
   const handleOpen = (modal, params) => {
     if (params["?promptQuery"] && modal?.show) {
@@ -25,7 +24,6 @@
     showCloseIcon={false}
   >
     <div slot="header" class="header">
-      <FontAwesomeIcon name="fa-solid fa-circle-check" />
       <Heading size="M">You're ready to query your data!</Heading>
     </div>
     <div class="body">
@@ -43,12 +41,6 @@
   .header {
     display: flex;
     align-items: center;
-  }
-
-  .header :global(svg) {
-    margin-right: 10px;
-    margin-bottom: 1px;
-    color: #009562;
   }
 
   .body :global(p:first-child) {

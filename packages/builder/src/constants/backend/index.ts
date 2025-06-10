@@ -137,7 +137,7 @@ export const FIELDS: Record<string, UIField> = {
   SIGNATURE_SINGLE: {
     name: "Signature",
     type: FieldType.SIGNATURE_SINGLE,
-    icon: "AnnotatePen",
+    icon: "pen-nib",
     constraints: {
       presence: false,
     },

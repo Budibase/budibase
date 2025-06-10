@@ -1,13 +1,13 @@
 <script>
   import { getContext, onDestroy, createEventDispatcher } from "svelte"
   import Portal from "svelte-portal"
+  import Icon from "../Icon/Icon.svelte"
 
   export let title
   export let icon = ""
   export let id = undefined
   export let href = "#"
   export let link = false
-
   const dispatch = createEventDispatcher()
   let selected = getContext("tab")
   let observer
@@ -78,14 +78,7 @@
     tabindex="0"
   >
     {#if icon}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM"
-        focusable="false"
-        aria-hidden="true"
-        aria-label="Folder"
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      <Icon name={icon} size="M" />
     {/if}
     <span class="spectrum-Tabs-itemLabel">{title}</span>
   </a>
@@ -104,14 +97,7 @@
     tabindex="0"
   >
     {#if icon}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM"
-        focusable="false"
-        aria-hidden="true"
-        aria-label="Folder"
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      <Icon name={icon} size="M" />
     {/if}
     <span class="spectrum-Tabs-itemLabel">{title}</span>
   </div>

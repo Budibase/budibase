@@ -233,13 +233,13 @@
             {:else}
               Failure
               {#if errors[column.name]}
-                <Icon name="Help" tooltip={errors[column.name]} />
+                <Icon name="question" tooltip={errors[column.name]} />
               {/if}
             {/if}
           </span>
           <Icon
             size="S"
-            name="Close"
+            name="x"
             hoverable
             on:click={() => deleteColumn(column.name)}
           />
@@ -321,7 +321,7 @@
     align-items: center;
     gap: 4px;
   }
-  .fieldStatusFailure :global(.spectrum-Icon) {
+  .fieldStatusFailure :global(i) {
     width: 12px;
   }
 </style>

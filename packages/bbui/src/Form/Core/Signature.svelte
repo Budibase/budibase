@@ -140,7 +140,7 @@
       {#if updated && saveIcon}
         <span class="save">
           <Icon
-            name="Checkmark"
+            name="check"
             hoverable
             tooltip={"Save"}
             tooltipPosition={"top"}
@@ -154,7 +154,7 @@
       {#if signatureFile?.url && !updated}
         <span class="delete">
           <Icon
-            name="DeleteOutline"
+            name="trash"
             hoverable
             tooltip={"Delete"}
             tooltipPosition={"top"}
@@ -192,7 +192,7 @@
       {#if editable}
         <div class="indicator-overlay">
           <div class="sign-here">
-            <Icon name="Close" />
+            <Icon name="x" />
             <hr />
           </div>
         </div>

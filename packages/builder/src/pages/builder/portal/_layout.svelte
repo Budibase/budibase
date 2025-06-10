@@ -86,7 +86,7 @@
           </Tabs>
         </div>
         <div class="mobile">
-          <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
+          <Icon hoverable name="list-bullets" on:click={showMobileMenu} />
         </div>
         <div class="desktop">
           <UpgradeButton />

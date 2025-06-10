@@ -175,7 +175,7 @@
   />
   {#if value?.type === "query"}
     <div class="icon">
-      <Icon hoverable name="Settings" on:click={openQueryParamsDrawer} />
+      <Icon hoverable name="gear" on:click={openQueryParamsDrawer} />
     </div>
     <Drawer title={"Query Bindings"} bind:this={drawer}>
       <Button slot="buttons" cta on:click={saveQueryParams}>Save</Button>
@@ -204,7 +204,7 @@
   {/if}
   {#if value?.type === "custom"}
     <div class="icon">
-      <Icon hoverable name="Settings" on:click={openCustomDrawer} />
+      <Icon hoverable name="gear" on:click={openCustomDrawer} />
     </div>
     <Drawer title="Custom data" bind:this={drawer}>
       <div slot="buttons" style="display:contents">

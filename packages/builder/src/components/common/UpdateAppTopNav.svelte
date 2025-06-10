@@ -14,7 +14,7 @@
 >
   <slot />
   <span class="edit-icon">
-    <Icon size="S" name="Edit" color={"var(--grey-7)"} />
+    <Icon size="S" name="pencil" color={"var(--grey-7)"} />
   </span>
 </div>
 

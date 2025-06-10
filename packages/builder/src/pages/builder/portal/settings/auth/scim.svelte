@@ -96,7 +96,7 @@
           </div>
 
           <div class="copy" on:click={() => copyToClipboard(setting.value)}>
-            <Icon size="S" name="Copy" />
+            <Icon size="S" name="copy" />
           </div>
         </div>
       </div>

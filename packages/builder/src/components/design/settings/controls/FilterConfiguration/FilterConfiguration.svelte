@@ -7,7 +7,7 @@
     getDatasourceForProvider,
   } from "@/dataBinding"
   import { selectedScreen } from "@/stores/builder"
-  import DraggableList from "../DraggableList/DraggableList.svelte"
+  import DraggableList from "../DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FilterSetting from "./FilterSetting.svelte"
   import { removeInvalidAddMissing } from "../GridColumnConfiguration/getColumns.js"

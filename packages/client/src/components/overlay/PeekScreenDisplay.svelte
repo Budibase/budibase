@@ -104,10 +104,15 @@
 {#if $peekStore.showPeek}
   <Modal fixed on:cancel={handleCancel}>
     <div class="actions spectrum--darkest" slot="outside">
-      <ActionButton size="S" quiet icon="OpenIn" on:click={handleFullscreen}>
+      <ActionButton
+        size="S"
+        quiet
+        icon="arrow-square-out"
+        on:click={handleFullscreen}
+      >
         Full screen
       </ActionButton>
-      <ActionButton size="S" quiet icon="Close" on:click={handleCancel}>
+      <ActionButton size="S" quiet icon="x" on:click={handleCancel}>
         Close
       </ActionButton>
     </div>

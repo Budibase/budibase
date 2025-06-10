@@ -27,7 +27,7 @@
       <Heading size="M">{title}</Heading>
       {#if !enabled}
         <Tags>
-          <Tag icon="LockClosed">{planType}</Tag>
+          <Tag icon="lock">{planType}</Tag>
         </Tags>
       {/if}
     </div>
@@ -62,7 +62,7 @@
           position={"right"}
         >
           <div class="icon" on:focus>
-            <Icon name="InfoOutline" size="L" disabled hoverable />
+            <Icon name="info" size="L" disabled hoverable />
           </div>
         </AbsTooltip>
       {/if}

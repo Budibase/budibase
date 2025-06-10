@@ -70,12 +70,12 @@
     <ActionButton
       size="S"
       quiet
-      icon="Delete"
+      icon="trash"
       on:click={() => removeField(field[0])}
     />
   {/each}
   <div style="margin-top: 10px">
-    <Button icon="AddCircle" secondary on:click={addField}>
+    <Button icon="plus-circle" secondary on:click={addField}>
       Add
       {fieldLabel}
     </Button>
