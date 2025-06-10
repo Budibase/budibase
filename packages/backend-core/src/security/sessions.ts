@@ -16,7 +16,7 @@ const EXPIRY_SECONDS = env.SESSION_EXPIRY_SECONDS
   : Duration.fromDays(7).toSeconds()
 
 // maximum number of concurrent sessions per user
-const MAX_SESSIONS_PER_USER = 1
+const MAX_SESSIONS_PER_USER = 3
 
 function makeSessionID(userId: string, sessionId: string) {
   return `${userId}/${sessionId}`
