@@ -1,14 +1,10 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
   import { formatters, parsePalette } from "./utils"
-  import { generateGoldenSample } from "@budibase/frontend-core/src/utils/rows"
-  import { getContext } from "svelte"
-  import { get } from "svelte/store"
 
   export let title
   export let dataProvider
   export let labelColumn
-  export let formatLabel
   export let valueColumn
   export let height
   export let width
@@ -19,18 +15,12 @@
   export let c1, c2, c3, c4, c5
   export let onClick
 
-  const component = getContext("component")
-  const context = getContext("context")
-
-  console.log(formatLabel)
-
   $: labelType =
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
       ? "datetime"
       : "category"
   $: series = getSeries(dataProvider, valueColumn)
   $: labels = getLabels(dataProvider, labelColumn, labelType)
-  $: id = $component.id
 
   $: options = {
     series,
@@ -95,19 +85,6 @@
 
   function handleSegmentClick(segment, index, percentage) {
     onClick?.({ segment, index, percentage })
-  }
-
-  export const getAdditionalDataContext = () => {
-    rows = dataProvider.rows
-    const goldenRow = generateGoldenSample(rows)
-    return { [id]: goldenRow }
-  }
-
-  const createFormatter = column => {
-    if (typeof column.format !== "string" || !column.format.trim().length) {
-      return null
-    }
-    return row => processStringSync(column.format, { [id]: row })
   }
 
   const getSeries = (dataProvider, valueColumn) => {
