@@ -48,7 +48,11 @@
   style={accentStyle}
 >
   {#if icon}
-    <Icon name={icon} size="M" color="var(--spectrum-global-color-gray-600)" />
+    <Icon
+      name={icon}
+      size="M"
+      color={`var(--spectrum-global-color-gray-${$$slots.default ? 600 : 700})`}
+    />
   {/if}
   {#if $$slots}
     <span class="spectrum-ActionButton-label"><slot /></span>
