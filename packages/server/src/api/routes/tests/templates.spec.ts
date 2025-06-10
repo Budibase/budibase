@@ -76,7 +76,9 @@ describe("/templates", () => {
   beforeAll(async () => {
     await config.init()
   })
+
   beforeEach(() => {
+    jest.clearAllMocks()
     nock.cleanAll()
     mockAgencyClientPortal()
   })
