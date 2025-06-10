@@ -45,7 +45,14 @@ const inline = async ({
   }
 
   const screenTemplate = new Screen(workspaceAppId)
-    .route(getValidRoute(screens, tableOrView.name, permissions.write))
+    .route(
+      getValidRoute(
+        screens,
+        tableOrView.name,
+        permissions.write,
+        workspaceAppId
+      )
+    )
     .instanceName(`${tableOrView.name} - List`)
     .customProps({ layout: "grid" })
     .role(permissions.write)

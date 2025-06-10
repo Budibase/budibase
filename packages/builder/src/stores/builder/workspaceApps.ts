@@ -1,14 +1,18 @@
+import { API } from "@/api"
+import { featureFlag } from "@/helpers"
 import { DerivedBudiStore } from "@/stores/BudiStore"
+import * as screenTemplating from "@/templates/screenTemplating"
 import {
-  WorkspaceApp,
-  UIWorkspaceApp,
   FeatureFlag,
+  InsertWorkspaceAppRequest,
+  RequiredKeys,
+  UIWorkspaceApp,
   UpdateWorkspaceAppRequest,
+  WorkspaceApp,
 } from "@budibase/types"
 import { derived, Readable } from "svelte/store"
-import { screenStore } from "./screens"
-import { featureFlag } from "@/helpers"
-import { API } from "@/api"
+import { appStore } from "./app"
+import { screenStore, selectedScreen, sortedScreens } from "./screens"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
@@ -17,6 +21,7 @@ interface WorkspaceAppStoreState {
 
 interface DerivedWorkspaceAppStoreState {
   workspaceApps: UIWorkspaceApp[]
+  selectedWorkspaceApp: UIWorkspaceApp | undefined
 }
 
 export class WorkspaceAppStore extends DerivedBudiStore<
@@ -25,20 +30,27 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 > {
   constructor() {
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
-      return derived([store, screenStore], ([$store, $screenStore]) => {
-        const workspaceApps = $store.workspaceApps
-          .map<UIWorkspaceApp>(workspaceApp => {
-            return {
-              ...workspaceApp,
-              screens: $screenStore.screens.filter(
-                s => s.workspaceAppId === workspaceApp._id
-              ),
-            }
-          })
-          .sort((a, b) => a.name.localeCompare(b.name))
+      return derived(
+        [store, sortedScreens, selectedScreen],
+        ([$store, $sortedScreens, $selectedScreen]) => {
+          const workspaceApps = $store.workspaceApps
+            .map<UIWorkspaceApp>(workspaceApp => {
+              return {
+                ...workspaceApp,
+                screens: $sortedScreens.filter(
+                  s => s.workspaceAppId === workspaceApp._id
+                ),
+              }
+            })
+            .sort((a, b) => a.name.localeCompare(b.name))
 
-        return { workspaceApps }
-      })
+          const selectedWorkspaceApp = $selectedScreen
+            ? workspaceApps.find(a => a._id === $selectedScreen.workspaceAppId)
+            : undefined
+
+          return { workspaceApps, selectedWorkspaceApp }
+        }
+      )
     }
 
     super(
@@ -54,6 +66,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
       return
     }
+
     const { workspaceApps } = await API.workspaceApp.fetch()
     this.update(state => ({
       ...state,
@@ -61,17 +74,40 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       loading: false,
     }))
   }
+  async refresh() {
+    return this.fetch()
+  }
 
-  async add(workspaceApp: WorkspaceApp) {
-    const createdWorkspaceApp = await API.workspaceApp.create(workspaceApp)
-    this.store.update(state => {
-      state.workspaceApps.push(createdWorkspaceApp.workspaceApp)
-      return state
+  async add(workspaceApp: InsertWorkspaceAppRequest) {
+    const { workspaceApp: createdWorkspaceApp } =
+      await API.workspaceApp.create(workspaceApp)
+    this.store.update(state => ({
+      ...state,
+      workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
+    }))
+
+    await screenStore.save({
+      ...screenTemplating.blank({
+        route: "/",
+        screens: [],
+        workspaceAppId: createdWorkspaceApp._id,
+      })[0].data,
+      workspaceAppId: createdWorkspaceApp._id,
     })
   }
 
-  async edit(workspaceApp: UpdateWorkspaceAppRequest) {
-    const updatedWorkspaceApp = await API.workspaceApp.update(workspaceApp)
+  async edit(workspaceApp: WorkspaceApp) {
+    const safeWorkspaceApp: RequiredKeys<UpdateWorkspaceAppRequest> = {
+      _id: workspaceApp._id!,
+      _rev: workspaceApp._rev!,
+      name: workspaceApp.name,
+      urlPrefix: workspaceApp.urlPrefix,
+      icon: workspaceApp.icon,
+      iconColor: workspaceApp.iconColor,
+      navigation: workspaceApp.navigation,
+    }
+
+    const updatedWorkspaceApp = await API.workspaceApp.update(safeWorkspaceApp)
     this.store.update(state => {
       const index = state.workspaceApps.findIndex(
         app => app._id === workspaceApp._id
@@ -89,10 +125,15 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
   async delete(id: string, rev: string) {
     await API.workspaceApp.delete(id, rev)
+
     this.store.update(state => {
-      state.workspaceApps = state.workspaceApps.filter(app => app._id !== id)
-      return state
+      return {
+        ...state,
+        workspaceApps: state.workspaceApps.filter(app => app._id !== id),
+      }
     })
+
+    appStore.refresh()
   }
 }
 

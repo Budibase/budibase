@@ -122,7 +122,7 @@ class UserStore extends BudiStore<UserState> {
   }
 
   async create(data: { users: UserInfo[]; groups: any[] }) {
-    let mappedUsers: UnsavedUser[] = data.users.map((user: any) => {
+    let mappedUsers: UnsavedUser[] = data.users.map(user => {
       const body: UnsavedUser = {
         email: user.email,
         password: user.password,

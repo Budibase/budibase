@@ -116,7 +116,7 @@
       <WorkspaceAppList workspaceApps={filteredWorkspaceApps} {searchValue} />
     {:else if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
-        <ScreenNavItem {screen} />
+        <ScreenNavItem {screen} deletionAllowed />
       {/each}
     {:else}
       <Layout paddingY="none" paddingX="L">
@@ -142,8 +142,8 @@
   .screens {
     display: flex;
     flex-direction: column;
-    min-height: 147px;
-    max-height: calc(100% - 147px);
+    min-height: 320px;
+    max-height: calc(100% - 320px);
     position: relative;
     transition:
       height 300ms ease-out,
