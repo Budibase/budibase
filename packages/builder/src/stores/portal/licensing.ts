@@ -316,7 +316,7 @@ class LicensingStore extends BudiStore<LicensingState> {
     const userLimit = userQuota.value
     const aiCreditsQuota = license.quotas.usage.monthly.budibaseAICredits
     const aiCreditsLimit = aiCreditsQuota.value
-    const actionsQuota = license.quotas.usage.monthly.actions
+    //const actionsQuota = license.quotas.usage.monthly.actions
     // TODO - use actionsQuota once account-portal changes have been deployed
     //const actionsLimit = actionsQuota.value
     const actionsLimit = UNLIMITED
