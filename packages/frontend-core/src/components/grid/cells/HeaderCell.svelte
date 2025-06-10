@@ -403,7 +403,7 @@
           Move right
         </MenuItem>
         <MenuItem
-          disabled={column.primaryDisplay || !$config.showControls}
+          disabled={column.primaryDisplay}
           icon="VisibilityOff"
           on:click={hideColumn}
         >
