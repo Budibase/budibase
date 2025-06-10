@@ -23,7 +23,7 @@ export async function loginUser(user: User) {
     tenantId,
     email: user.email,
   })
-  
+
   const token = jwt.sign(
     {
       userId: user._id,
@@ -33,10 +33,10 @@ export async function loginUser(user: User) {
     },
     coreEnv.JWT_SECRET!
   )
-  
+
   return {
     token,
-    invalidatedSessionCount: sessionResult.invalidatedSessionCount
+    invalidatedSessionCount: sessionResult.invalidatedSessionCount,
   }
 }
 

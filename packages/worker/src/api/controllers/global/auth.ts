@@ -59,10 +59,13 @@ async function passportCallback(
   setCookie(ctx, loginResult.token, Cookie.Auth, { sign: false })
   // set the token in a header as well for APIs
   ctx.set(Header.TOKEN, loginResult.token)
-  
+
   // add session invalidation info to response headers for frontend to handle
   if (loginResult.invalidatedSessionCount > 0) {
-    ctx.set("X-Session-Invalidated-Count", loginResult.invalidatedSessionCount.toString())
+    ctx.set(
+      "X-Session-Invalidated-Count",
+      loginResult.invalidatedSessionCount.toString()
+    )
   }
 }
 
@@ -244,7 +247,7 @@ export const googleCallback = async (ctx: Ctx<void, void>, next: Next) => {
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("google-internal", user.email)
       })
-      
+
       // Check if sessions were invalidated and include in redirect URL
       const invalidatedCount = ctx.get("X-Session-Invalidated-Count")
       let redirectUrl = env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT
@@ -319,7 +322,7 @@ export const oidcCallback = async (ctx: Ctx<void, void>, next: Next) => {
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("oidc", user.email)
       })
-      
+
       // Check if sessions were invalidated and include in redirect URL
       const invalidatedCount = ctx.get("X-Session-Invalidated-Count")
       let redirectUrl = env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT
