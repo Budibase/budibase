@@ -242,9 +242,9 @@
     display: inline-block;
   }
   .block {
-    width: 360px;
+    width: 320px;
     font-size: 16px;
-    border-radius: 4px;
+    border-radius: 12px;
     cursor: default;
   }
   .block .wrap {
@@ -260,12 +260,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--grey-3);
+    background-color: var(--grey-2);
     padding: 6px 0;
-    color: var(--grey-6);
+    color: var(--grey-4);
     cursor: grab;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
   }
   .block.draggable .wrap .handle.grabbing {
     cursor: grabbing;
@@ -277,9 +277,9 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-    background-color: var(--background);
-    border: 1px solid var(--grey-3);
-    border-radius: 4px;
+    background-color: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
   }
   .blockSection {
     padding: var(--spacing-xl);

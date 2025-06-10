@@ -124,14 +124,14 @@
       {#if externalActions[block.stepId]}
         <img
           alt={externalActions[block.stepId].name}
-          width="28px"
-          height="28px"
+          width="22px"
+          height="22px"
           src={externalActions[block.stepId].icon}
         />
       {:else}
         <Icon
           name={block.icon}
-          size="XL"
+          size="M"
           color="var(--spectrum-global-color-gray-700)"
         />
       {/if}

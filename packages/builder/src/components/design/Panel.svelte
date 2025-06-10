@@ -60,7 +60,7 @@
       {#if customTitleContent}
         <slot name="panel-title-content" />
       {:else}
-        <Body size="S">{title || ""}</Body>
+        <Body size="M">{title || ""}</Body>
       {/if}
     </div>
     {#if showAddButton}

@@ -203,8 +203,8 @@
     const { x, y } = pos
     const { w, h } = dims
     return `
-      --posX: ${x}px; --posY: ${y}px; 
-      --scale: ${scale}; 
+      --posX: ${x}px; --posY: ${y}px;
+      --scale: ${scale};
       --wrapH: ${h}px; --wrapW: ${w}px;
       `
   }
@@ -646,11 +646,11 @@
     left: 0;
     pointer-events: none;
     z-index: -1;
-    background-color: var(--spectrum-global-color-gray-50);
+    background-color: var(--spectrum-global-color-gray-75);
   }
 
   .draggable-background :global(svg g path) {
-    fill: #91919a;
+    fill: #46464698;
   }
 
   .draggable-background :global(svg g) {

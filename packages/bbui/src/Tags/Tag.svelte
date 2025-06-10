@@ -40,7 +40,9 @@
   }
 
   .is-emphasized {
-    border-color: var(--spectrum-global-color-blue-700);
-    color: var(--spectrum-global-color-blue-700);
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    border-radius: 6px;
+    padding: 1px 3px;
   }
 </style>
