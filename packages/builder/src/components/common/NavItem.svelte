@@ -283,6 +283,7 @@
   }
   .scrollable .text {
     flex: 0 0 auto;
+    max-width: calc(100% - 50px);
     width: auto;
   }
 
