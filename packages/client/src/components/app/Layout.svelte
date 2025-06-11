@@ -281,7 +281,6 @@
                     {linkable}
                     {isInternal}
                     {getSanitizedUrl}
-                    {logoHeight}
                   />
                 {/if}
                 {#if !hideTitle && title}
@@ -333,7 +332,6 @@
                     {linkable}
                     {isInternal}
                     {getSanitizedUrl}
-                    {logoHeight}
                   />
                 {/if}
                 <UserMenu />
