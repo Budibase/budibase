@@ -399,8 +399,7 @@ export default class TestConfiguration {
     builder: boolean
     prodApp: boolean
   }) {
-    const appId =
-      this.defaultToProdApp || prodApp ? this.getProdAppId() : this.getAppId()
+    const appId = prodApp ? this.getProdAppId() : this.getAppId()
     return context.doInAppContext(appId, async () => {
       userId = !userId ? `us_uuid1` : userId
       if (!this.request) {
@@ -493,7 +492,7 @@ export default class TestConfiguration {
       ...extras,
     }
 
-    if (this.defaultToProdApp || prodApp) {
+    if (prodApp) {
       headers[constants.Header.APP_ID] = this.prodAppId
     } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
@@ -508,7 +507,7 @@ export default class TestConfiguration {
     prodApp = true,
     extras = {},
   }: { prodApp?: boolean; extras?: Record<string, string | string[]> } = {}) {
-    const appId = this.defaultToProdApp || prodApp ? this.prodAppId : this.appId
+    const appId = prodApp ? this.prodAppId : this.appId
 
     const headers: Record<string, string> = {
       Accept: "application/json",

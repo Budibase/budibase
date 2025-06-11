@@ -36,7 +36,8 @@
     $appStore.upgradableVersion !== $appStore.version
   $: inAutomations = $page.path.includes("/automation/")
   $: inDesign = $page.path.includes("/design/")
-  $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id || undefined
+  $: selectedWorkspaceAppId =
+    $workspaceAppStore.selectedWorkspaceApp?._id || undefined
   $: selectedAutomationId = $automationStore.selectedAutomationId || undefined
 
   const publish = async () => {
