@@ -1,2 +1,5 @@
+export * from "./app"
+export * from "./automations"
 export * from "./bindings"
+export * from "./contextMenu"
 export * from "./oauth2"
