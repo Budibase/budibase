@@ -1,4 +1,4 @@
-export interface ResourceAnalysisRequest {
+export interface ResourceUsageRequest {
   workspaceAppIds?: string[]
   automationIds?: string[]
 }
@@ -22,6 +22,6 @@ export interface UsedResource {
   type: ResourceType
 }
 
-export interface ResourceAnalysisResponse {
+export interface ResourceUsageResponse {
   resources: UsedResource[]
 }

@@ -1,16 +1,13 @@
-import {
-  ResourceAnalysisRequest,
-  ResourceAnalysisResponse,
-} from "@budibase/types"
+import { ResourceUsageRequest, ResourceUsageResponse } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
 export class ResourceAPI extends TestAPI {
-  analyse = async (
-    request: ResourceAnalysisRequest,
+  searchForUsage = async (
+    request: ResourceUsageRequest,
     expectations?: Expectations
-  ): Promise<{ body: ResourceAnalysisResponse }> => {
-    const result = await this._post<ResourceAnalysisResponse>(
-      `/api/resources/analyse`,
+  ): Promise<{ body: ResourceUsageResponse }> => {
+    const result = await this._post<ResourceUsageResponse>(
+      `/api/resources/usage`,
       {
         expectations,
         body: request,

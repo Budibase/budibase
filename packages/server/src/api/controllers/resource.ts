@@ -1,13 +1,13 @@
 import {
-  ResourceAnalysisRequest,
-  ResourceAnalysisResponse,
+  ResourceUsageRequest,
+  ResourceUsageResponse,
   ResourceType,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
 export async function searchForResourceUsage(
-  ctx: UserCtx<ResourceAnalysisRequest, ResourceAnalysisResponse>
+  ctx: UserCtx<ResourceUsageRequest, ResourceUsageResponse>
 ) {
   const { workspaceAppIds, automationIds } = ctx.request.body
 

@@ -1,14 +1,11 @@
-import {
-  ResourceAnalysisRequest,
-  ResourceAnalysisResponse,
-} from "@budibase/types"
+import { ResourceUsageRequest, ResourceUsageResponse } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface ResourceEndpoints {
   searchForUsage: (body: {
     automationIds?: string[]
     workspaceAppIds?: string[]
-  }) => Promise<ResourceAnalysisResponse>
+  }) => Promise<ResourceUsageResponse>
 }
 
 export const buildResourceEndpoints = (
@@ -18,7 +15,7 @@ export const buildResourceEndpoints = (
     automationIds?: string[]
     workspaceAppIds?: string[]
   }) => {
-    return await API.post<ResourceAnalysisRequest, ResourceAnalysisResponse>({
+    return await API.post<ResourceUsageRequest, ResourceUsageResponse>({
       url: `/api/resources/usage`,
       body,
     })
