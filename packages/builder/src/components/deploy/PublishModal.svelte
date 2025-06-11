@@ -58,7 +58,7 @@
     if (!appIds.length && !automationIds.length) {
       return
     }
-    let { resources } = await API.resource.analyse({
+    let { resources } = await API.resource.searchForUsage({
       automationIds: automationIds,
       workspaceAppIds: appIds,
     })

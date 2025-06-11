@@ -6,7 +6,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 
-export async function analyse(
+export async function searchForResourceUsage(
   ctx: UserCtx<ResourceAnalysisRequest, ResourceAnalysisResponse>
 ) {
   const { workspaceAppIds, automationIds } = ctx.request.body

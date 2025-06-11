@@ -5,7 +5,7 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface ResourceEndpoints {
-  analyse: (body: {
+  searchForUsage: (body: {
     automationIds?: string[]
     workspaceAppIds?: string[]
   }) => Promise<ResourceAnalysisResponse>
@@ -14,12 +14,12 @@ export interface ResourceEndpoints {
 export const buildResourceEndpoints = (
   API: BaseAPIClient
 ): ResourceEndpoints => ({
-  analyse: async (body: {
+  searchForUsage: async (body: {
     automationIds?: string[]
     workspaceAppIds?: string[]
   }) => {
     return await API.post<ResourceAnalysisRequest, ResourceAnalysisResponse>({
-      url: `/api/resources/analyse`,
+      url: `/api/resources/usage`,
       body,
     })
   },
