@@ -15,6 +15,9 @@ import {
   GenerateAPIKeyRequest,
   GenerateAPIKeyResponse,
   GetGlobalSelfResponse,
+  QuotaType,
+  QuotaUsageType,
+  StaticQuotaName,
   UpdateSelfRequest,
   UpdateSelfResponse,
   User,
@@ -86,12 +89,12 @@ export async function fetchAPIKey(ctx: UserCtx<void, FetchAPIKeyResponse>) {
 /**
  *
  */
-const getUserSessionAttributes = (ctx: any) => ({
+const getUserSessionAttributes = (ctx: UserCtx) => ({
   account: ctx.user.account,
-  license: ctx.user.license,
+  license: ctx.user.license!,
   budibaseAccess: !!ctx.user.budibaseAccess,
   accountPortalAccess: !!ctx.user.accountPortalAccess,
-  csrfToken: ctx.user.csrfToken,
+  csrfToken: ctx.user.csrfToken!,
 })
 
 export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
@@ -122,6 +125,13 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
         model: llmConfig.model,
       }
     : undefined
+
+  if (flags?.WORKSPACE_APPS) {
+    // TODO: once the flag is clean, we should rename the original object instead
+    sessionAttributes.license.quotas[QuotaType.USAGE][QuotaUsageType.STATIC][
+      StaticQuotaName.APPS
+    ].name = "Workspaces"
+  }
 
   ctx.body = {
     ...enrichedUser,
