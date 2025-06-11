@@ -14,13 +14,7 @@ import {
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 import { notifications } from "@budibase/bbui"
-
-interface UserInfo {
-  email: string
-  password: string
-  forceResetPassword?: boolean
-  role: keyof typeof Constants.BudibaseRoles
-}
+import { UserInfo } from "@/types"
 
 type UserState = SearchUsersResponse & SearchUsersRequest
 
