@@ -1,5 +1,5 @@
 import * as setup from "./utilities"
-import { FieldType, Table } from "@budibase/types"
+import { FieldType, Table, TableSourceType } from "@budibase/types"
 
 describe("/api/public/v1/tables/:tableId/rows/search", () => {
   let config = setup.getConfig()
@@ -13,24 +13,24 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
     table = await config.api.table.save({
       name: "employees",
       type: "table",
-      sourceType: "internal",
+      sourceType: TableSourceType.INTERNAL,
       sourceId: "bb_internal",
       schema: {
         name: {
           name: "name",
           type: FieldType.STRING,
           constraints: {
-            type: "string"
-          }
+            type: "string",
+          },
         },
         job: {
           name: "job",
           type: FieldType.STRING,
           constraints: {
-            type: "string"
-          }
-        }
-      }
+            type: "string",
+          },
+        },
+      },
     })
 
     // Create some test data
@@ -45,9 +45,9 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
       const response = await config.api.public.row.search(table._id!, {
         query: {
           equal: {
-            "Banana": "Apples"  // Non-existent field with non-existent value
-          }
-        }
+            Banana: "Apples", // Non-existent field with non-existent value
+          },
+        },
       })
 
       expect(response.data).toHaveLength(0)
@@ -58,9 +58,9 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
       const response = await config.api.public.row.search(table._id!, {
         query: {
           equal: {
-            "name": "NonExistentName"
-          }
-        }
+            name: "NonExistentName",
+          },
+        },
       })
 
       expect(response.data).toHaveLength(0)
@@ -71,9 +71,9 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
       const response = await config.api.public.row.search(table._id!, {
         query: {
           equal: {
-            "name": "John"
-          }
-        }
+            name: "John",
+          },
+        },
       })
 
       expect(response.data).toHaveLength(1)
@@ -91,9 +91,9 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
       const response = await config.api.public.row.search(table._id!, {
         query: {
           equal: {
-            "name": ""
-          }
-        }
+            name: "",
+          },
+        },
       })
 
       expect(response.data).toHaveLength(0)
@@ -104,9 +104,9 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
       const response = await config.api.public.row.search(table._id!, {
         query: {
           equal: {
-            "name": null
-          }
-        }
+            name: null,
+          },
+        },
       })
 
       expect(response.data).toHaveLength(0)
