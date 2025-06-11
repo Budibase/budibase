@@ -65,28 +65,35 @@ if (descriptions.length) {
           otherColumn?: string
         }
       ) {
-        const relatedTable = await createTable({
-          name: { name: opts?.tableName || "name", type: FieldType.STRING },
-        })
+        const relatedTable = await config.api.table.save(
+          tableForDatasource(datasource, {
+            name: opts?.tableName,
+            schema: { name: { name: "name", type: FieldType.STRING } },
+          })
+        )
 
         const columnName = opts?.primaryColumn || "productCat"
-        //@ts-ignore - API accepts this structure, will build out rest of definition
-        const tableId = await createTable({
-          name: { name: opts?.tableName || "name", type: FieldType.STRING },
-          [columnName]: {
-            type: FieldType.LINK,
-            relationshipType: type,
-            name: columnName,
-            fieldName: opts?.otherColumn || "product",
-            tableId: relatedTable,
-            constraints: {
-              type: "array",
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            // @ts-expect-error - API accepts this structure, will build out rest of definition
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              [columnName]: {
+                type: FieldType.LINK,
+                relationshipType: type,
+                name: columnName,
+                fieldName: opts?.otherColumn || "product",
+                tableId: relatedTable._id!,
+                constraints: {
+                  type: "array",
+                },
+              },
             },
-          },
-        })
+          })
+        )
         return {
-          relatedTable: await config.api.table.get(relatedTable),
-          tableId,
+          relatedTable: await config.api.table.get(relatedTable._id!),
+          tableId: table._id!,
         }
       }
 
@@ -3016,14 +3023,16 @@ if (descriptions.length) {
 
             isSql &&
               describe("relationship - table with spaces", () => {
-                let primaryTable: Table, row: Row
+                let primaryTable: Table, row: Row, name: string
 
                 beforeAll(async () => {
+                  name = `${utils.newid()} space`
+
                   const { relatedTable, tableId } =
                     await basicRelationshipTables(
                       RelationshipType.ONE_TO_MANY,
                       {
-                        tableName: "table with spaces",
+                        tableName: name,
                         primaryColumn: "related",
                         otherColumn: "related",
                       }
@@ -3039,12 +3048,17 @@ if (descriptions.length) {
                     name: "foo",
                     related: [row._id],
                   })
+
+                  await config.api.row.save(tableOrViewId, {
+                    name: "bar",
+                    related: [row._id],
+                  })
                 })
 
                 it("should be able to search by table name with spaces", async () => {
                   await expectQuery({
                     equal: {
-                      ["table with spaces.name"]: "foo",
+                      [`${name}.name`]: "foo",
                     },
                   }).toContain([{ name: "foo" }])
                 })
