@@ -11,7 +11,7 @@ export async function analyse(
   const { workspaceAppIds, automationIds } = ctx.request.body
 
   if (!workspaceAppIds?.length && !automationIds?.length) {
-    ctx.throw(401, "No workspace apps or automations specified.")
+    ctx.throw(400, "No workspace apps or automations specified.")
   }
 
   ctx.body = {

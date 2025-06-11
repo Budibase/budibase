@@ -104,7 +104,6 @@ export default class TestConfiguration {
   app?: App
   prodApp?: App
   prodAppId?: string
-  defaultToProdApp: boolean
   user?: User
   userMetadataId?: string
   table?: Table
@@ -128,7 +127,6 @@ export default class TestConfiguration {
     }
     this.appId = undefined
     this.allApps = []
-    this.defaultToProdApp = false
 
     this.api = new API(this)
   }
@@ -471,15 +469,6 @@ export default class TestConfiguration {
       await cb()
     } finally {
       this.temporaryHeaders = undefined
-    }
-  }
-
-  async defaultToProduction(cb: () => Promise<unknown>) {
-    this.defaultToProdApp = true
-    try {
-      await cb()
-    } finally {
-      this.defaultToProdApp = false
     }
   }
 

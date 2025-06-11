@@ -565,7 +565,7 @@ describe("/applications", () => {
         automationIds: [automation._id!],
       })
 
-      await config.defaultToProduction(async () => {
+      await config.withProdApp(async () => {
         const { automations } = await config.api.automation.fetch()
         expect(
           automations.find(auto => auto._id === automation._id!)
@@ -613,7 +613,7 @@ describe("/applications", () => {
         workspaceAppIds: ["workspace-app-1"],
       })
 
-      await config.defaultToProduction(async () => {
+      await config.withProdApp(async () => {
         const screens = await config.api.screen.list()
 
         // published screen should be included

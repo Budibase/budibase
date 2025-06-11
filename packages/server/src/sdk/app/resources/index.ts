@@ -34,7 +34,7 @@ export async function analyseMinimal({
   let internalTableFound = false
   const resources: UsedResource[] = []
   const searchForResource = (json: string) => {
-    for (let search of toSearchFor) {
+    for (const search of toSearchFor) {
       if (
         json.includes(search.id) &&
         !resources.find(resource => resource.id === search.id)
@@ -53,7 +53,7 @@ export async function analyseMinimal({
     const screens = await sdk.screens.fetch()
     const workspaceAppScreens: Record<string, Screen[]> = {}
 
-    for (let screen of screens) {
+    for (const screen of screens) {
       if (!screen.workspaceAppId) {
         continue
       }
@@ -63,9 +63,9 @@ export async function analyseMinimal({
       workspaceAppScreens[screen.workspaceAppId].push(screen)
     }
 
-    for (let workspaceAppId of workspaceAppIds) {
+    for (const workspaceAppId of workspaceAppIds) {
       const screens = workspaceAppScreens[workspaceAppId] || []
-      for (let screen of screens) {
+      for (const screen of screens) {
         const json = JSON.stringify(screen)
         searchForResource(json)
       }
@@ -75,7 +75,7 @@ export async function analyseMinimal({
     const automations = await sdk.automations.find(automationIds, {
       allowMissing: true,
     })
-    for (let automation of automations) {
+    for (const automation of automations) {
       const json = JSON.stringify(automation)
       searchForResource(json)
     }
@@ -83,7 +83,7 @@ export async function analyseMinimal({
 
   // internal table found, need to make sure all internal tables have been added
   if (internalTableFound) {
-    for (let table of tables) {
+    for (const table of tables) {
       if (!resources.find(resource => resource.id === table._id)) {
         resources.push({
           id: table._id!,
@@ -109,7 +109,7 @@ export async function analyseAll(toCheck: {
 
   let resources: UsedResource[] = [...minimalResources]
   let usedActions: TableRowActions[] = []
-  for (let resource of minimalResources) {
+  for (const resource of minimalResources) {
     // datasources and tables will have their ID in the row action ID
     const tableActions = rowActions.filter(action =>
       action._id!.includes(resource.id)
@@ -146,11 +146,13 @@ export async function analyseAll(toCheck: {
   )
   const automations = await sdk.automations.find(missingAutomationIds)
   // add missing automations to resources
-  automations.map(automation =>
-    resources.push({
-      id: automation._id!,
-      name: automation.name,
-      type: ResourceType.AUTOMATION,
+  resources.push(
+    ...automations.map(automation => {
+      return {
+        id: automation._id!,
+        name: automation.name,
+        type: ResourceType.AUTOMATION,
+      }
     })
   )
 

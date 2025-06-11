@@ -20,7 +20,7 @@
 
   type PossibleTarget = { _id?: string; name: string }
 
-  export let targetId: string
+  export let targetId: string | undefined
 
   let publishModal: Modal
   let selectedApps: Record<string, boolean> = {}
@@ -29,11 +29,11 @@
 
   const dispatcher = createEventDispatcher()
 
-  $: automations = $automationStore.automations
+  $: automations = $automationStore.automations || []
   $: filteredAutomations = removeRowActionAutomations(
     removeTarget(targetId, automations)
   )
-  $: apps = $workspaceAppStore.workspaceApps
+  $: apps = $workspaceAppStore.workspaceApps || []
   $: filteredApps = removeTarget(targetId, apps)
   $: target = findTarget(targetId, apps, automations)
   $: selectedAppNames = getSelectedNames(selectedApps, apps)
@@ -102,24 +102,27 @@
   }
 
   function removeTarget<T extends { _id?: string }>(
-    target: string,
+    target: string | undefined,
     list: T[]
   ): T[] {
     return list?.filter(item => item._id !== target) || []
   }
 
   function removeRowActionAutomations(automations: Automation[]) {
-    return automations?.filter(
+    return automations.filter(
       automation =>
         automation.definition.trigger.event !== AutomationEventType.ROW_ACTION
     )
   }
 
   function findTarget(
-    targetId: string,
+    targetId: string | undefined,
     apps: PossibleTarget[],
     automations: PossibleTarget[]
   ) {
+    if (!targetId) {
+      return undefined
+    }
     // reset the list of selected if an app/automation added or target changes
     selectedApps = {}
     selectedAutomations = {}
@@ -157,12 +160,12 @@
     <Layout noPadding gap="XS">
       <span>Select the apps or automations you'd like to publish.</span>
       <div>
-        {#if target?.type === "automation"}
+        {#if targetId && target?.type === "automation"}
           <Checkbox
             text={`${target.name} ${target.type}`}
             bind:value={selectedAutomations[targetId]}
           />
-        {:else if target?.type === "app"}
+        {:else if targetId && target?.type === "app"}
           <Checkbox
             text={`${target.name} ${target.type}`}
             bind:value={selectedApps[targetId]}

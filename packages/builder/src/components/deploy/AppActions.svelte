@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Button,
     ActionButton,
@@ -17,30 +17,30 @@
     automationStore,
   } from "@/stores/builder"
   import { page } from "@roxi/routify"
-  import { featureFlag } from "@/helpers"
-  import { FeatureFlag } from "@budibase/types"
-  import { admin } from "@/stores/portal"
+  import { admin, featureFlags } from "@/stores/portal"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
   import PublishModal from "@/components/deploy/PublishModal.svelte"
 
-  let versionModal
-  let publishModal
-  let showNpsSurvey = false
-  let publishButton
-  let publishSuccessPopover
-  const workspaceEnabled = featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)
+  type ShowUI = { show: () => void }
 
+  let versionModal: ShowUI
+  let publishModal: ShowUI
+  let showNpsSurvey = false
+  let publishButton: any
+  let publishSuccessPopover: ShowUI | undefined
+
+  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
   $: updateAvailable =
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-  $: inAutomations = $page.path.includes("automation")
-  $: inDesign = $page.path.includes("design")
-  $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id
-  $: selectedAutomationId = $automationStore.selectedAutomationId
+  $: inAutomations = $page.path.includes("/automation/")
+  $: inDesign = $page.path.includes("/design/")
+  $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id || undefined
+  $: selectedAutomationId = $automationStore.selectedAutomationId || undefined
 
   const publish = async () => {
-    if (workspaceEnabled) {
+    if (workspaceAppsEnabled) {
       publishModal.show()
     } else {
       await deploymentStore.publishApp()
@@ -94,7 +94,7 @@
 {/if}
 
 <VersionModal hideIcon bind:this={versionModal} />
-{#if workspaceEnabled}
+{#if workspaceAppsEnabled}
   <PublishModal
     targetId={inDesign
       ? selectedWorkspaceAppId
