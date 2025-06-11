@@ -32,7 +32,15 @@ export async function buildPublishFilter(opts: {
   automationIds?: string[]
   workspaceAppIds?: string[]
 }): Promise<Filter> {
-  const resources = await sdk.resources.analyseAll(opts)
+  const resources = await sdk.resources.searchForUsages(
+    [
+      ResourceType.TABLE,
+      ResourceType.DATASOURCE,
+      ResourceType.QUERY,
+      ResourceType.ROW_ACTION,
+    ],
+    opts
+  )
   const getSpecificResourceIDs = (type: ResourceType) => {
     return resources
       .filter(resource => resource.type === type)

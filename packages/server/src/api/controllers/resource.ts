@@ -1,6 +1,7 @@
 import {
   ResourceAnalysisRequest,
   ResourceAnalysisResponse,
+  ResourceType,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../sdk"
@@ -15,9 +16,12 @@ export async function analyse(
   }
 
   ctx.body = {
-    resources: await sdk.resources.analyseMinimal({
-      automationIds,
-      workspaceAppIds,
-    }),
+    resources: await sdk.resources.searchForUsages(
+      [ResourceType.TABLE, ResourceType.DATASOURCE],
+      {
+        automationIds,
+        workspaceAppIds,
+      }
+    ),
   }
 }
