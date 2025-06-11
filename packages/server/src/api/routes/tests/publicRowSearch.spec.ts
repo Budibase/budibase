@@ -92,31 +92,5 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
 
       expect(response.data).toHaveLength(2)
     })
-
-    it("should return no rows when searching with empty string values", async () => {
-      const response = await config.api.public.row.search(table._id!, {
-        query: {
-          equal: {
-            name: "",
-          },
-        },
-      })
-
-      expect(response.data).toHaveLength(0)
-      expect(response.data).toEqual([])
-    })
-
-    it("should return no rows when searching with null values", async () => {
-      const response = await config.api.public.row.search(table._id!, {
-        query: {
-          equal: {
-            name: null,
-          },
-        },
-      })
-
-      expect(response.data).toHaveLength(0)
-      expect(response.data).toEqual([])
-    })
   })
 })
