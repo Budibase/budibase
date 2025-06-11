@@ -5,12 +5,12 @@
 
   export let value: any = undefined
   export let label: string | undefined = undefined
-  export let labelPosition = "above"
+  export let labelPosition: "above" = "above"
   export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
   export let readonly = false
-  export let error: string | undefined = undefined
+  export let error: string | undefined | false = undefined
   export let updateOnChange = true
   export let quiet = false
   export let autofocus: boolean | undefined = undefined
