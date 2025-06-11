@@ -3031,7 +3031,7 @@ if (descriptions.length) {
                 let primaryTable: Table, row: Row, name: string
 
                 beforeAll(async () => {
-                  name = `${utils.newid()} space`
+                  name = `${utils.newid().substring(0, 16)} space`
 
                   const { relatedTable, tableId } =
                     await basicRelationshipTables(
