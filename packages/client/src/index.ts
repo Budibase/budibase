@@ -110,7 +110,7 @@ export interface SDK {
   BlockComponent: typeof BlockComponent
 }
 
-let app: ClientApp
+let app: ClientApp | UpdatingApp
 
 const loadBudibase = async () => {
   // Update builder store with any builder flags
@@ -140,9 +140,11 @@ const loadBudibase = async () => {
   )
 
   if (window.MIGRATING_APP) {
-    new UpdatingApp({
-      target: window.document.body,
-    })
+    if (!app) {
+      app = new UpdatingApp({
+        target: window.document.body,
+      })
+    }
     return
   }
 
