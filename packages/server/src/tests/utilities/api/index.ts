@@ -19,6 +19,7 @@ import { PluginAPI } from "./plugin"
 import { WebhookAPI } from "./webhook"
 import { EnvironmentAPI } from "./environment"
 import { UserPublicAPI } from "./public/user"
+import { RowPublicAPI } from "./public/row"
 import { MiscAPI } from "./misc"
 import { OAuth2API } from "./oauth2"
 import { AssetsAPI } from "./assets"
@@ -53,6 +54,7 @@ export default class API {
 
   public: {
     user: UserPublicAPI
+    row: RowPublicAPI
   }
 
   constructor(config: TestConfiguration) {
@@ -82,6 +84,7 @@ export default class API {
     this.workspaceApp = new WorkspaceAppAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
+      row: new RowPublicAPI(config),
     }
   }
 }
