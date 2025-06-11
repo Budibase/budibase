@@ -930,6 +930,25 @@ if (descriptions.length) {
                 })
               })
 
+              describe("non-existent fields", () => {
+                it("should return 400 when searching for non-existent fields", async () => {
+                  await config.api.row.search(
+                    tableOrViewId,
+                    {
+                      query: {
+                        equal: { nonExistentField: "value" },
+                      },
+                    },
+                    {
+                      status: 400,
+                      body: {
+                        message: expect.stringContaining("field"),
+                      },
+                    }
+                  )
+                })
+              })
+
               describe("notEqual", () => {
                 it("successfully finds a row", async () => {
                   await expectQuery({

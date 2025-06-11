@@ -41,17 +41,23 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
   afterAll(setup.afterAll)
 
   describe("equal condition filtering", () => {
-    it("should return no rows when searching for non-existent field names", async () => {
-      const response = await config.api.public.row.search(table._id!, {
-        query: {
-          equal: {
-            Banana: "Apples", // Non-existent field with non-existent value
+    it("should return 400 when searching for non-existent field names", async () => {
+      await config.api.public.row.search(
+        table._id!,
+        {
+          query: {
+            equal: {
+              Banana: "Apples", // Non-existent field with non-existent value
+            },
           },
         },
-      })
-
-      expect(response.data).toHaveLength(0)
-      expect(response.data).toEqual([])
+        {
+          status: 400,
+          body: {
+            message: expect.stringContaining("field"),
+          },
+        }
+      )
     })
 
     it("should return no rows when searching for non-existent values in existing fields", async () => {
