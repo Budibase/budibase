@@ -233,7 +233,7 @@ if (descriptions.length) {
               },
               fields: ["name", "age"], // id is not in this list
             })
-          ).rejects.toThrow("Cannot search on field(s) that do not exist: id")
+          ).rejects.toThrow("Invalid filter field: id")
         })
       })
     }
