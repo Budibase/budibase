@@ -36,7 +36,7 @@ export function canCreateApps(user: User | ContextUser): boolean {
 // alias for hasAdminPermission, currently do the same thing
 // in future whether someone has admin permissions and whether they are
 // an admin for a specific resource could be separated
-export function isAdmin(user: User | ContextUser): boolean {
+export function isAdmin(user: User | ContextUser | undefined): boolean {
   if (!user) {
     return false
   }
