@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { goto } from "@roxi/routify"
   import NamePanel from "./_components/NamePanel.svelte"
   import ExampleApp from "./_components/ExampleApp.svelte"
@@ -6,22 +6,22 @@
   import { SplitPage } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
+  import type { CreateAppRequest } from "@budibase/types"
 
-  let name = "My first app"
-  let url = "my-first-app"
-  let appId = null
+  let name: string = "My first app"
+  let url: string = "my-first-app"
+  let appId: string | null = null
 
   let loading = false
 
   const createApp = async () => {
     loading = true
 
-    // Create form data to create app
-    // This is form based and not JSON
-    let data = new FormData()
-    data.append("name", name.trim())
-    data.append("url", url.trim())
-    data.append("useTemplate", false)
+    const data: CreateAppRequest = {
+      name: name.trim(),
+      url: url.trim(),
+      useTemplate: false,
+    }
 
     const createdApp = await API.createApp(data)
 
@@ -45,7 +45,7 @@
       await createApp()
 
       goToApp()
-    } catch (e) {
+    } catch (e: any) {
       loading = false
       notifications.error(e.message || "There was a problem creating your app")
     }

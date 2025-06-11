@@ -48,6 +48,7 @@ export const BudibaseRoleOptionsOld = [
   {
     label: "Developer",
     value: BudibaseRoles.Developer,
+    sortOrder: 2,
   },
 ]
 export const BudibaseRoleOptions = [
