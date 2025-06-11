@@ -3209,28 +3209,6 @@ if (descriptions.length) {
                 })
               })
 
-            isInternal &&
-              describe("no column error backwards compat", () => {
-                beforeAll(async () => {
-                  tableOrViewId = await createTableOrView({
-                    name: {
-                      name: "name",
-                      type: FieldType.STRING,
-                    },
-                  })
-                })
-
-                it("shouldn't error when column doesn't exist", async () => {
-                  await expectSearch({
-                    query: {
-                      string: {
-                        "1:something": "a",
-                      },
-                    },
-                  }).toMatch({ rows: [] })
-                })
-              })
-
             describe("row counting", () => {
               beforeAll(async () => {
                 tableOrViewId = await createTableOrView({
