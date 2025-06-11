@@ -1,26 +1,34 @@
-<script>
+<script lang="ts">
   import Field from "./Field.svelte"
   import CoreDropzone from "./Core/Dropzone.svelte"
   import { createEventDispatcher } from "svelte"
+  import type { UIFile } from "@budibase/types"
 
-  export let value = []
-  export let label = null
-  export let labelPosition = "above"
-  export let disabled = false
-  export let error = null
-  export let fileSizeLimit = undefined
-  export let processFiles = undefined
-  export let deleteAttachments = undefined
-  export let handleFileTooLarge = undefined
-  export let handleTooManyFiles = undefined
-  export let gallery = true
-  export let fileTags = []
-  export let maximum = undefined
-  export let compact = false
-  export let helpText = null
+  export let value: UIFile[] | File[] = []
+  export let label: string | undefined = undefined
+  export let labelPosition: "above" = "above"
+  export let disabled: boolean = false
+  export let error: string | undefined | false = undefined
+  export let fileSizeLimit: number | undefined = undefined
+  export let processFiles:
+    | ((_files: FileList) => Promise<UIFile[]>)
+    | undefined = undefined
+  export let deleteAttachments:
+    | ((_keys: string[]) => Promise<void>)
+    | undefined = undefined
+  export let handleFileTooLarge:
+    | ((_limit: number, _currentFiles: UIFile[] | File[]) => void)
+    | undefined = undefined
+  export let handleTooManyFiles: ((_maximum: number) => void) | undefined =
+    undefined
+  export let gallery: boolean = true
+  export let fileTags: string[] = []
+  export let maximum: number | undefined = undefined
+  export let compact: boolean = false
+  export let helpText: string | undefined = undefined
 
-  const dispatch = createEventDispatcher()
-  const onChange = e => {
+  const dispatch = createEventDispatcher<{ change: UIFile[] | File[] }>()
+  const onChange = (e: CustomEvent<UIFile[] | File[]>) => {
     value = e.detail
     dispatch("change", e.detail)
   }
@@ -28,7 +36,6 @@
 
 <Field {helpText} {label} {labelPosition} {error}>
   <CoreDropzone
-    {error}
     {disabled}
     {value}
     {fileSizeLimit}

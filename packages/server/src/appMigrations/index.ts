@@ -66,3 +66,12 @@ export async function checkMissingMigrations(
 
   return next()
 }
+
+export const isAppFullyMigrated = async (appId: string) => {
+  const latestMigration = getLatestEnabledMigrationId()
+  if (!latestMigration) {
+    return true
+  }
+  const latestMigrationApplied = await getAppMigrationVersion(appId)
+  return latestMigrationApplied >= latestMigration
+}

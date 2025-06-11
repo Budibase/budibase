@@ -174,6 +174,7 @@ export interface IntegrationBase {
   read?(query: any): Promise<any[] | any>
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
+  patch?(query: any): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
   getExternalSchema?(): Promise<string>
   defineTypeCastingFromSchema?(schema: {
