@@ -10,9 +10,8 @@
     Icon,
   } from "@budibase/bbui"
   import { groups, licensing } from "@/stores/portal"
-  import { emailValidator } from "@budibase/frontend-core"
+  import { Constants, emailValidator } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
-  import { BudibaseRoleOptions } from "@/constants"
 
   export let showOnboardingTypeModal
 
@@ -112,7 +111,7 @@
             inputType="email"
             bind:inputValue={input.email}
             bind:dropdownValue={input.role}
-            options={BudibaseRoleOptions}
+            options={Constants.BudibaseRoleOptions}
             error={input.error}
             on:blur={() => validateInput(input, index)}
           />

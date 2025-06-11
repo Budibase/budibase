@@ -40,11 +40,6 @@
   import { sdk } from "@budibase/shared-core"
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { capitalise } from "@/helpers"
-  import {
-    BudibaseRoleOptions,
-    BudibaseRoles,
-    ExtendedBudibaseRoleOptions,
-  } from "@/constants"
 
   export let userId
 
@@ -210,13 +205,13 @@
 
   async function updateUserRole({ detail }) {
     let flags = {}
-    if (detail === BudibaseRoles.Developer) {
+    if (detail === Constants.BudibaseRoles.Developer) {
       flags = { admin: { global: false }, builder: { global: true } }
-    } else if (detail === BudibaseRoles.Admin) {
+    } else if (detail === Constants.BudibaseRoles.Admin) {
       flags = { admin: { global: true }, builder: { global: true } }
-    } else if (detail === BudibaseRoles.AppUser) {
+    } else if (detail === Constants.BudibaseRoles.AppUser) {
       flags = { admin: { global: false }, builder: { global: false } }
-    } else if (detail === BudibaseRoles.Creator) {
+    } else if (detail === Constants.BudibaseRoles.Creator) {
       flags = {
         admin: { global: false },
         builder: {
@@ -341,8 +336,8 @@
               disabled={!sdk.users.isAdmin($auth.user) || isTenantOwner}
               value={isTenantOwner ? "owner" : globalRole}
               options={isTenantOwner
-                ? ExtendedBudibaseRoleOptions
-                : BudibaseRoleOptions}
+                ? Constants.ExtendedBudibaseRoleOptions
+                : Constants.BudibaseRoleOptions}
               on:change={updateUserRole}
             />
           </div>

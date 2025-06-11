@@ -8,9 +8,8 @@
     Icon,
   } from "@budibase/bbui"
   import { groups, licensing, admin } from "@/stores/portal"
-  import { emailValidator } from "@budibase/frontend-core"
+  import { emailValidator, Constants } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
-  import { BudibaseRoleOptions } from "@/constants"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -29,7 +28,7 @@
   $: exceed = licensing.usersLimitExceeded(userCount)
   $: importDisabled =
     !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
-  $: roleOptions = BudibaseRoleOptions.map(option => ({
+  $: roleOptions = Constants.BudibaseRoleOptions.map(option => ({
     ...option,
     label: `${option.label} - ${option.subtitle}`,
   }))

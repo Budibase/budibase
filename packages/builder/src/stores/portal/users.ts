@@ -1,6 +1,7 @@
 import { API } from "@/api"
 import { licensing } from "."
 import { sdk } from "@budibase/shared-core"
+import { Constants } from "@budibase/frontend-core"
 import {
   DeleteInviteUsersRequest,
   InviteUsersRequest,
@@ -14,7 +15,6 @@ import {
 import { BudiStore } from "../BudiStore"
 import { notifications } from "@budibase/bbui"
 import { UserInfo } from "@/types"
-import { BudibaseRoles } from "@/constants"
 
 type UserState = SearchUsersResponse & SearchUsersRequest
 
@@ -127,17 +127,17 @@ class UserStore extends BudiStore<UserState> {
       }
 
       switch (user.role) {
-        case BudibaseRoles.AppUser:
+        case Constants.BudibaseRoles.AppUser:
           body.builder = { global: false }
           body.admin = { global: false }
           break
-        case BudibaseRoles.Developer:
+        case Constants.BudibaseRoles.Developer:
           body.builder = { global: true }
           break
-        case BudibaseRoles.Creator:
+        case Constants.BudibaseRoles.Creator:
           body.builder = { creator: true, global: false }
           break
-        case BudibaseRoles.Admin:
+        case Constants.BudibaseRoles.Admin:
           body.admin = { global: true }
           body.builder = { global: true }
           break
@@ -184,18 +184,18 @@ class UserStore extends BudiStore<UserState> {
 
   getUserRole(user?: User & { tenantOwnerEmail?: string }) {
     if (!user) {
-      return BudibaseRoles.AppUser
+      return Constants.BudibaseRoles.AppUser
     }
     if (user.email === user.tenantOwnerEmail) {
-      return BudibaseRoles.Owner
+      return Constants.BudibaseRoles.Owner
     } else if (sdk.users.isAdmin(user)) {
-      return BudibaseRoles.Admin
+      return Constants.BudibaseRoles.Admin
     } else if (sdk.users.isBuilder(user)) {
-      return BudibaseRoles.Developer
+      return Constants.BudibaseRoles.Developer
     } else if (sdk.users.hasCreatorPermissions(user)) {
-      return BudibaseRoles.Creator
+      return Constants.BudibaseRoles.Creator
     } else {
-      return BudibaseRoles.AppUser
+      return Constants.BudibaseRoles.AppUser
     }
   }
 }

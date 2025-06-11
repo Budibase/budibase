@@ -1,10 +1,10 @@
 <script>
-  import { ExtendedBudibaseRoleOptions } from "@/constants"
   import { users } from "@/stores/portal"
+  import { Constants } from "@budibase/frontend-core"
 
   export let row
 
-  $: role = ExtendedBudibaseRoleOptions.find(
+  $: role = Constants.ExtendedBudibaseRoleOptions.find(
     x => x.value === users.getUserRole(row)
   )
   $: value = role?.label || "Not available"

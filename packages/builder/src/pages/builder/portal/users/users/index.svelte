@@ -35,13 +35,9 @@
   import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { get } from "svelte/store"
-  import { Utils, fetchData } from "@budibase/frontend-core"
+  import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "@/api"
-  import {
-    BudibaseRoles,
-    ExtendedBudibaseRoleOptions,
-    OnboardingType,
-  } from "@/constants"
+  import { OnboardingType } from "@/constants"
   import { sdk } from "@budibase/shared-core"
   import type {
     AccountMetadata,
@@ -164,7 +160,7 @@
       if (owner) {
         user.tenantOwnerEmail = owner.email
       }
-      const role = ExtendedBudibaseRoleOptions.find(
+      const role = Constants.ExtendedBudibaseRoleOptions.find(
         x => x.value === users.getUserRole(user)
       )!
       return {
@@ -172,7 +168,8 @@
         name: user.firstName ? user.firstName + " " + user.lastName : "",
         userGroups,
         __selectable:
-          role.value === BudibaseRoles.Owner || $auth.user?.email === user.email
+          role.value === Constants.BudibaseRoles.Owner ||
+          $auth.user?.email === user.email
             ? false
             : true,
         apps: sdk.users.userAppAccessList(user, $groups),
@@ -237,9 +234,9 @@
   async function createUserFlow() {
     const payload = userData?.users?.map(user => ({
       email: user.email,
-      builder: user.role === BudibaseRoles.Developer,
-      creator: user.role === BudibaseRoles.Creator,
-      admin: user.role === BudibaseRoles.Admin,
+      builder: user.role === Constants.BudibaseRoles.Developer,
+      creator: user.role === Constants.BudibaseRoles.Creator,
+      admin: user.role === Constants.BudibaseRoles.Admin,
       groups: userData.groups,
     }))
     try {
