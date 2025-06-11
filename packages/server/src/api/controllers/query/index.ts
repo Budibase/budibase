@@ -36,6 +36,7 @@ import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
 import { ObjectId } from "mongodb"
 import { merge } from "lodash"
+import { quotas } from "@budibase/pro"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -393,7 +394,9 @@ async function execute(
     }
 
     const { rows, pagination, extra, info } =
-      await Runner.run<QueryResponse>(inputs)
+      query.queryVerb === "read" || opts.isAutomation
+        ? await Runner.run<QueryResponse>(inputs)
+        : await quotas.addAction(() => Runner.run<QueryResponse>(inputs))
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw
