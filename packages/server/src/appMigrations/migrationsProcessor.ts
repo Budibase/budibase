@@ -6,10 +6,11 @@ import {
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
 import { AppMigration } from "."
+import { MIGRATIONS } from "./migrations"
 
 export async function processMigrations(
   appId: string,
-  migrations: AppMigration[]
+  migrations: AppMigration[] = MIGRATIONS
 ) {
   console.log(`Processing app migration for "${appId}"`)
   try {
