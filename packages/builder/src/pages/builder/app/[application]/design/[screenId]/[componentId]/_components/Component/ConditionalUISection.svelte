@@ -15,6 +15,8 @@
   export let componentDefinition
   export let componentBindings
   export let bindings
+  export let onSave = null
+  export let actionOptions
 
   let tempValue
   let drawer
@@ -28,7 +30,11 @@
 
   const save = async () => {
     try {
-      await componentStore.updateConditions(tempValue)
+      if (onSave) {
+        await onSave(tempValue)
+      } else {
+        await componentStore.updateConditions(tempValue)
+      }
     } catch (error) {
       notifications.error("Error updating conditions")
     }
@@ -59,7 +65,7 @@
     <ActionButton fullWidth on:click={openDrawer}>{conditionText}</ActionButton>
   </div>
 </DetailSummary>
-<Drawer bind:this={drawer} title="Conditions">
+<Drawer bind:this={drawer} title="Conditions" on:drawerHide on:drawerShow>
   <svelte:fragment slot="description">
     Show, hide and update components in response to conditions being met.
   </svelte:fragment>
@@ -69,6 +75,7 @@
     bind:conditions={tempValue}
     {bindings}
     {componentBindings}
+    {actionOptions}
   />
 </Drawer>
 

@@ -67,7 +67,10 @@ export async function patch(
     return save(ctx)
   }
   try {
-    const { row, table, oldRow } = await pickApi(tableId).patch(ctx)
+    const api = pickApi(tableId)
+    const { row, table, oldRow } = isExternalTableID(tableId)
+      ? await api.patch(ctx)
+      : await quotas.addAction(() => api.patch(ctx))
     if (!row) {
       ctx.throw(404, "Row not found")
     }
@@ -106,8 +109,10 @@ export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
   }
   const { row, table, squashed } = tableId.includes("datasource_plus")
     ? await sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
-    : await quotas.addRow(() =>
-        sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+    : await quotas.addAction(() =>
+        quotas.addRow(() =>
+          sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+        )
       )
 
   ctx.eventEmitter?.emitRow({
@@ -204,8 +209,10 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
   const { tableId } = utils.getSourceId(ctx)
-
-  const resp = await pickApi(tableId).destroy(ctx)
+  const api = pickApi(tableId)
+  const resp = isExternalTableID(tableId)
+    ? await api.destroy(ctx)
+    : await quotas.addAction(() => api.destroy(ctx))
   if (!tableId.includes("datasource_plus")) {
     await quotas.removeRow()
   }
