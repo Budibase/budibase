@@ -68,9 +68,7 @@ export async function search(
 
     const isExternalTable = isExternalTableID(table._id!)
 
-    let hadOriginalFilters = false
     if (options.query) {
-      hadOriginalFilters = dataFilters.hasFilters(options.query)
       const visibleFields = (
         options.fields || Object.keys(table.schema)
       ).filter(field => table.schema[field]?.visible !== false)
@@ -119,15 +117,6 @@ export async function search(
     span.addTags({
       cleanedQuery: options.query,
     })
-
-    // If the original query had filters but after cleanup there are none,
-    // this means we were filtering on empty/null values - return empty results
-    if (hadOriginalFilters && !dataFilters.hasFilters(options.query)) {
-      span.addTags({ emptyQueryAfterCleanup: true })
-      return {
-        rows: [],
-      }
-    }
 
     if (
       !dataFilters.hasFilters(options.query) &&
