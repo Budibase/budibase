@@ -8,6 +8,16 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
+/********************************************************************
+ *                                                                  *
+ *      This file contains filters that will be used in PouchDB     *
+ *      and CouchDB directly. Do not use functions outside this     *
+ *      file as part of the returned filter function as this        *
+ *      ties those functions to being used/accessible in the        *
+ *      PouchDB/CouchDB environments (keep these simple)            *
+ *                                                                  *
+ ********************************************************************/
+
 type Filter = PouchDB.Replication.ReplicateOptions["filter"]
 
 const AUTOMATION_ID_FORMAT = DocumentType.AUTOMATION + SEPARATOR,
