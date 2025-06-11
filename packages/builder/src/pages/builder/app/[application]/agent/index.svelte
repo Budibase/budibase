@@ -360,17 +360,19 @@
     {/if}
   </Panel>
 
-  <div class="chat-area" bind:this={chatAreaElement}>
-    <Chatbox bind:chat {loading} />
-    <div class="input-wrapper">
-      <textarea
-        bind:value={inputValue}
-        bind:this={textareaElement}
-        class="input spectrum-Textfield-input"
-        on:keydown={handleKeyDown}
-        placeholder="Ask anything"
-        disabled={loading}
-      />
+  <div class="chat-wrapper">
+    <div class="chat-area" bind:this={chatAreaElement}>
+      <Chatbox bind:chat {loading} />
+      <div class="input-wrapper">
+        <textarea
+          bind:value={inputValue}
+          bind:this={textareaElement}
+          class="input spectrum-Textfield-input"
+          on:keydown={handleKeyDown}
+          placeholder="Ask anything"
+          disabled={loading}
+        />
+      </div>
     </div>
   </div>
 
@@ -681,11 +683,17 @@
     align-items: stretch;
   }
 
+  .chat-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
   .chat-area {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    height: 0;
   }
 
   .agent-actions-heading {
@@ -734,7 +742,7 @@
     width: 600px;
     margin: 0 auto;
     background: var(--background-alt);
-    padding-bottom: 48px;
+    padding-bottom: 32px;
     display: flex;
     flex-direction: column;
   }
