@@ -17,7 +17,6 @@
   import TemplateCard from "@/components/common/TemplateCard.svelte"
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
-  import type { CreateAppRequest } from "@budibase/types"
   import type { AppTemplate } from "@/types"
 
   export let template: AppTemplate | null
@@ -125,24 +124,23 @@
     creating = true
 
     try {
-      const data: CreateAppRequest = {
-        name: $values.name.trim(),
-      }
-
+      // Create form data to create app
+      let data = new FormData()
+      data.append("name", $values.name.trim())
       if ($values.url) {
-        data.url = $values.url.trim()
+        data.append("url", $values.url.trim())
       }
 
       if (template?.fromFile) {
-        data.useTemplate = true
-        data.fileToImport = $values.file?.name
+        data.append("useTemplate", "true")
+        data.append("fileToImport", $values.file!)
         if ($values.encryptionPassword?.trim()) {
-          data.encryptionPassword = $values.encryptionPassword.trim()
+          data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
       } else if (template) {
-        data.useTemplate = true
-        data.templateName = template.name
-        data.templateKey = template.key
+        data.append("useTemplate", "true")
+        data.append("templateName", template.name)
+        data.append("templateKey", template.key)
       }
 
       // Create App

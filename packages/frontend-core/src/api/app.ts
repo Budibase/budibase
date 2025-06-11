@@ -42,7 +42,7 @@ export interface AppEndpoints {
   revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
   releaseAppLock: (appId: string) => Promise<ClearDevLockResponse>
   getAppDeployments: () => Promise<FetchDeploymentResponse>
-  createApp: (app: CreateAppRequest) => Promise<CreateAppResponse>
+  createApp: (app: CreateAppRequest | FormData) => Promise<CreateAppResponse>
   deleteApp: (appId: string) => Promise<DeleteAppResponse>
   duplicateApp: (
     appId: string,
@@ -141,6 +141,14 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * @param app the app to create
    */
   createApp: async app => {
+    if (app instanceof FormData) {
+      return await API.post({
+        url: "/api/applications",
+        body: app,
+        json: false,
+      })
+    }
+
     return await API.post({
       url: "/api/applications",
       body: app,
