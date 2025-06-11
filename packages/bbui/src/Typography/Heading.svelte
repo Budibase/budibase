@@ -6,14 +6,14 @@
   export let textAlign: string | undefined = undefined
   export let noPadding: boolean = false
   export let weight: "light" | "heavy" | "default" = "default"
-  export let titleColor: string | undefined = undefined
+  export let color: string | undefined = undefined
 </script>
 
 <h1
   data-testid="typography-heading"
   style={[
     textAlign ? `text-align: ${textAlign}` : "",
-    titleColor ? `color: ${titleColor}` : "",
+    color ? `color: ${color}` : "",
   ]
     .filter(Boolean)
     .join("; ")}

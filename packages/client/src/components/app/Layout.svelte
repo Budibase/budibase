@@ -59,7 +59,7 @@
 
   export let logoPosition = "top" // "top" or "bottom"
   export let titleSize = "S"
-  export let titleColor // CSS color string, only affects title
+  export let color // CSS color string, only affects title
 
   let mobileOpen = false
 
@@ -284,8 +284,7 @@
                   />
                 {/if}
                 {#if !hideTitle && title}
-                  <Heading size={titleSize} {textAlign} {titleColor}
-                    >{title}</Heading
+                  <Heading size={titleSize} {textAlign} {color}>{title}</Heading
                   >
                 {/if}
               </div>
