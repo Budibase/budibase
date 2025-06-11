@@ -1,6 +1,9 @@
 import { z } from "zod"
 import { zodResponseFormat } from "openai/helpers/zod"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
+import {
+  mockChatGPTResponse,
+  mockOpenAIFileUpload,
+} from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
 import { configs, env, features, setEnv } from "@budibase/backend-core"
@@ -20,8 +23,12 @@ import {
 import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { quotas, ai } from "@budibase/pro"
-import { MockLLMResponseFn } from "../../../tests/utilities/mocks/ai"
+import {
+  MockLLMResponseFn,
+  MockLLMResponseOpts,
+} from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
+import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
 
 function dedent(str: string) {
   return str
@@ -112,6 +119,22 @@ const allProviders: TestSetup[] = [
       defaultModel: "claude-3-5-sonnet-20240620",
     }),
     mockLLMResponse: mockAnthropicResponse,
+  },
+  {
+    name: "Azure OpenAI API key with custom config",
+    setup: customAIConfig({
+      provider: "AzureOpenAI",
+      defaultModel: "gpt-4o-realtime-preview-1001",
+      baseUrl: "https://azure.example.com",
+    }),
+    mockLLMResponse: (
+      answer: string | ((prompt: string) => string),
+      opts?: MockLLMResponseOpts
+    ) =>
+      mockAzureOpenAIResponse(answer, {
+        baseUrl: "https://azure.example.com",
+        ...opts,
+      }),
   },
   {
     name: "BudibaseAI",
@@ -982,6 +1005,95 @@ describe("BudibaseAI", () => {
 
       const employees = await config.api.row.fetch(createdTables[1].id)
       expect(employees).toHaveLength(5)
+    })
+  })
+
+  describe("POST /api/ai/upload-file", () => {
+    let licenseKey = "test-key"
+    let internalApiKey = "api-key"
+
+    let envCleanup: () => void
+    beforeAll(() => {
+      envCleanup = setEnv({
+        SELF_HOSTED: false,
+        ACCOUNT_PORTAL_API_KEY: internalApiKey,
+      })
+    })
+
+    afterAll(() => {
+      envCleanup()
+    })
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+      const license: License = {
+        plan: {
+          type: PlanType.FREE,
+          model: PlanModel.PER_USER,
+          usesInvoicing: false,
+        },
+        features: [Feature.BUDIBASE_AI],
+        quotas: {} as any,
+        tenantId: config.tenantId,
+      }
+      nock(env.ACCOUNT_PORTAL_URL)
+        .get(`/api/license/${licenseKey}`)
+        .reply(200, license)
+    })
+
+    it("handles file upload successfully", async () => {
+      const mockFileId = "file-abc123"
+      mockOpenAIFileUpload(mockFileId)
+
+      const testData = Buffer.from("test file content")
+      const response = await config.api.ai.uploadFile({
+        data: testData.toString("base64"),
+        filename: "test.pdf",
+        contentType: "application/pdf",
+        licenseKey,
+      })
+
+      expect(response.file).toBe(mockFileId)
+    })
+
+    it("handles OpenAI API errors", async () => {
+      mockOpenAIFileUpload("", {
+        status: 400,
+        error: {
+          error: {
+            message: "Invalid file format",
+            type: "invalid_request_error",
+          },
+        },
+      })
+
+      const testData = Buffer.from("invalid content")
+      await config.api.ai.uploadFile(
+        {
+          data: testData.toString("base64"),
+          filename: "test.txt",
+          contentType: "text/plain",
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("requires valid license", async () => {
+      nock.cleanAll()
+      nock(env.ACCOUNT_PORTAL_URL).get(`/api/license/${licenseKey}`).reply(404)
+
+      const testData = Buffer.from("test content")
+      await config.api.ai.uploadFile(
+        {
+          data: testData.toString("base64"),
+          filename: "test.pdf",
+          contentType: "application/pdf",
+          licenseKey,
+        },
+        { status: 403 }
+      )
     })
   })
 })

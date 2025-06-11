@@ -116,6 +116,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   make = this.step(AutomationActionStepId.integromat)
   discord = this.step(AutomationActionStepId.discord)
   delay = this.step(AutomationActionStepId.DELAY)
+  extractFileData = this.step(AutomationActionStepId.EXTRACT_FILE_DATA)
 
   protected addBranchStep(branchConfig: BranchConfig): void {
     const inputs: BranchStepInputs = {

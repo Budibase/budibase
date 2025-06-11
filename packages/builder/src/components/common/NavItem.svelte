@@ -222,6 +222,8 @@
   }
   .icon.right {
     order: 4;
+    flex: 1;
+    justify-content: flex-end;
   }
   .icon.arrow {
     flex: 0 0 20px;
@@ -281,7 +283,7 @@
   }
   .scrollable .text {
     flex: 0 0 auto;
-    max-width: 160px;
+    max-width: calc(100% - 50px);
     width: auto;
   }
 

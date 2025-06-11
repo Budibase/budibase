@@ -151,7 +151,7 @@
   }
 
   const debouncedEval = Utils.debounce(
-    (expression: string | null, context: any, snippets: Snippet[]) => {
+    (expression: string | null, context: any, snippets: Snippet[] | null) => {
       try {
         expressionError = undefined
         const output = processStringWithLogsSync(
