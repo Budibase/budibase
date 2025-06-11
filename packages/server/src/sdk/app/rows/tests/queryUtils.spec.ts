@@ -4,12 +4,12 @@ import {
   SearchFilters,
   Table,
 } from "@budibase/types"
-import { getQueryableFields, removeInvalidFilters } from "../queryUtils"
+import { getQueryableFields, validateFilters } from "../queryUtils"
 import { structures } from "../../../../api/routes/tests/utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("query utils", () => {
-  describe("removeInvalidFilters", () => {
+  describe("validateFilters", () => {
     const fullFilters: SearchFilters = {
       equal: { one: "foo" },
       $or: {
@@ -33,74 +33,23 @@ describe("query utils", () => {
       },
     }
 
-    it("can filter empty queries", () => {
-      const filters: SearchFilters = {}
-      const result = removeInvalidFilters(filters, [])
-      expect(result).toEqual({})
+    it("does not throw on empty filters", () => {
+      expect(() => validateFilters({}, [])).not.toThrow()
     })
 
-    it("does not trim any valid field", () => {
-      const result = removeInvalidFilters(fullFilters, [
-        "one",
-        "two",
-        "three",
-        "forth",
-      ])
-      expect(result).toEqual(fullFilters)
+    it("does not throw on valid fields", () => {
+      expect(() =>
+        validateFilters(fullFilters, ["one", "two", "three", "forth"])
+      ).not.toThrow()
     })
 
-    it("trims invalid field", () => {
-      const result = removeInvalidFilters(fullFilters, [
-        "one",
-        "three",
-        "forth",
-      ])
-      expect(result).toEqual({
-        equal: { one: "foo" },
-        $or: {
-          conditions: [
-            {
-              equal: { one: "foo2" },
-              notEmpty: { one: null },
-              $and: {
-                conditions: [
-                  {
-                    equal: { three: "baz" },
-                    notEmpty: { forth: null },
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        $and: {
-          conditions: [{ equal: { one: "foo2" }, notEmpty: { one: null } }],
-        },
-      })
+    it("throws on invalid fields", () => {
+      expect(() =>
+        validateFilters(fullFilters, ["one", "three", "forth"])
+      ).toThrow()
     })
 
-    it("trims invalid field keeping a valid fields", () => {
-      const result = removeInvalidFilters(fullFilters, ["three", "forth"])
-      const expected: SearchFilters = {
-        $or: {
-          conditions: [
-            {
-              $and: {
-                conditions: [
-                  {
-                    equal: { three: "baz" },
-                    notEmpty: { forth: null },
-                  },
-                ],
-              },
-            },
-          ],
-        },
-      }
-      expect(result).toEqual(expected)
-    })
-
-    it("keeps filter key numering", () => {
+    it("can handle numbered fields", () => {
       const prefixedFilters: SearchFilters = {
         equal: { "1:one": "foo" },
         $or: {
@@ -124,36 +73,12 @@ describe("query utils", () => {
         },
       }
 
-      const result = removeInvalidFilters(prefixedFilters, [
-        "one",
-        "three",
-        "forth",
-      ])
-      expect(result).toEqual({
-        equal: { "1:one": "foo" },
-        $or: {
-          conditions: [
-            {
-              equal: { "2:one": "foo2" },
-              notEmpty: { "4:one": null },
-              $and: {
-                conditions: [
-                  {
-                    equal: { "5:three": "baz" },
-                    notEmpty: { forth: null },
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        $and: {
-          conditions: [{ equal: { "6:one": "foo2" }, notEmpty: { one: null } }],
-        },
-      })
+      expect(() =>
+        validateFilters(prefixedFilters, ["one", "two", "three", "forth"])
+      ).not.toThrow()
     })
 
-    it("handles relationship filters", () => {
+    it("can handle relationships", () => {
       const prefixedFilters: SearchFilters = {
         $or: {
           conditions: [
@@ -170,20 +95,40 @@ describe("query utils", () => {
         },
       }
 
-      const result = removeInvalidFilters(prefixedFilters, [
-        "other.one",
-        "other.two",
-        "another.three",
-      ])
-      expect(result).toEqual({
+      expect(() =>
+        validateFilters(prefixedFilters, [
+          "other.one",
+          "other.two",
+          "other.three",
+          "another.three",
+        ])
+      ).not.toThrow()
+    })
+
+    it("throws on invalid relationship fields", () => {
+      const prefixedFilters: SearchFilters = {
         $or: {
           conditions: [
             { equal: { "1:other.one": "foo" } },
-            { equal: { "2:other.one": "foo2", "3:other.two": "bar" } },
-            { equal: { "another.three": "baz2" } },
+            {
+              equal: {
+                "2:other.one": "foo2",
+                "3:other.two": "bar",
+                "4:other.three": "baz",
+              },
+            },
+            { equal: { "another.four": "baz2" } },
           ],
         },
-      })
+      }
+
+      expect(() =>
+        validateFilters(prefixedFilters, [
+          "other.one",
+          "other.two",
+          "other.three",
+        ])
+      ).toThrow()
     })
   })
 

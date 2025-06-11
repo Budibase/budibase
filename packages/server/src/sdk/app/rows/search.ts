@@ -17,8 +17,7 @@ import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { checkFilters, searchInputMapping } from "./search/utils"
 import tracer from "dd-trace"
-import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
-import { HTTPError } from "@budibase/backend-core"
+import { getQueryableFields, validateFilters } from "./queryUtils"
 import { enrichSearchContext } from "../../../api/controllers/row/utils"
 
 export { isValidFilter } from "../../../integrations/utils"
@@ -71,21 +70,13 @@ export async function search(
 
     let hadOriginalFilters = false
     if (options.query) {
-      // Check if the original query had any filters before processing
       hadOriginalFilters = dataFilters.hasFilters(options.query)
-
       const visibleFields = (
         options.fields || Object.keys(table.schema)
       ).filter(field => table.schema[field]?.visible !== false)
 
       const queryableFields = await getQueryableFields(table, visibleFields)
-      options.query = removeInvalidFilters(options.query, queryableFields)
-
-      // If the original query had filters but after removal there are none,
-      // this means we were filtering on invalid fields - return 400 error
-      if (hadOriginalFilters && !dataFilters.hasFilters(options.query)) {
-        throw new HTTPError("Cannot search on field that does not exist", 400)
-      }
+      validateFilters(options.query, queryableFields)
     } else {
       options.query = {}
     }

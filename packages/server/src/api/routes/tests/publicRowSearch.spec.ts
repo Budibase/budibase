@@ -54,7 +54,7 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
         {
           status: 400,
           body: {
-            message: expect.stringContaining("field"),
+            message: expect.stringContaining("Banana"),
           },
         }
       )

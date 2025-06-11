@@ -942,7 +942,7 @@ if (descriptions.length) {
                     {
                       status: 400,
                       body: {
-                        message: expect.stringContaining("field"),
+                        message: expect.stringContaining("nonExistentField"),
                       },
                     }
                   )
