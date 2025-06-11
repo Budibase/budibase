@@ -4,24 +4,7 @@ import { API } from "@/api"
 import { auth } from "./auth"
 import { BudiStore } from "../BudiStore"
 import { App, UpdateAppRequest } from "@budibase/types"
-
-interface AppIdentifierMetadata {
-  devId?: string
-  devRev?: string
-  prodId?: string
-  prodRev?: string
-}
-
-interface AppUIMetadata {
-  deployed: boolean
-  lockedYou: boolean
-  lockedOther: boolean
-  favourite: boolean
-}
-
-interface StoreApp extends App, AppIdentifierMetadata {}
-
-interface EnrichedApp extends StoreApp, AppUIMetadata {}
+import { EnrichedApp, StoreApp } from "@/types"
 
 interface PortalAppsStore {
   apps: StoreApp[]
