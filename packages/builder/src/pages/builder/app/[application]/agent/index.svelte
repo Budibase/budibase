@@ -5,6 +5,7 @@
     Heading,
     Icon,
     Input,
+    Layout,
     Modal,
     ModalContent,
     notifications,
@@ -88,6 +89,9 @@
   $: toolSources = $agentsStore.toolSources || []
 
   import { tick } from "svelte"
+  import NavHeader from "@/components/common/NavHeader.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
 
   $: if (chat.messages.length) {
     scrollToBottom()
@@ -285,6 +289,15 @@
     }
   }
 
+  const getChatPreview = (chat: AgentChat): string => {
+    const messageCount = chat.messages.length
+    if (!messageCount) {
+      return "No messages"
+    }
+    const msg = chat.messages[messageCount - 1]?.content?.slice(0, 50)
+    return typeof msg === "string" ? msg : "No preview available"
+  }
+
   onMount(async () => {
     await agentsStore.init()
 
@@ -318,195 +331,172 @@
 </script>
 
 <div class="page">
-  <div class="layout">
-    <div class="history-panel">
-      <Panel customWidth={300}>
-        <div class="chat-history">
-          <div class="history-header">
-            <Heading size="XS">Chat History</Heading>
-            <Button size="S" cta on:click={startNewChat}>New Chat</Button>
-          </div>
-          <div class="history-list">
-            {#each chatHistory as chatItem}
-              <button
-                class="history-item"
-                class:active={$agentsStore.currentChatId === chatItem._id}
-                on:click={() => selectChat(chatItem)}
-              >
-                <div class="chat-title">
-                  {chatItem.title || "Untitled Chat"}
-                </div>
-                <div class="chat-preview">
-                  {chatItem.messages.length > 0
-                    ? chatItem.messages[
-                        chatItem.messages.length - 1
-                      ]?.content?.slice(0, 50) + "..."
-                    : "No messages"}
-                </div>
-              </button>
-            {/each}
-            {#if chatHistory.length === 0}
-              <div class="empty-state">
-                <Body size="S"
-                  >No chat history yet. Start a new conversation!</Body
-                >
-              </div>
-            {/if}
-          </div>
-        </div>
-      </Panel>
-    </div>
+  <Panel customWidth={260} borderRight noHeaderBorder>
+    <NavHeader
+      slot="panel-title-content"
+      title="Chats"
+      placeholder="Search for automations"
+      onAdd={startNewChat}
+      searchable={false}
+    />
 
-    <div class="chat-area" bind:this={chatAreaElement}>
-      <Chatbox bind:chat {loading} />
-      <div class="input-wrapper">
-        <textarea
-          bind:value={inputValue}
-          bind:this={textareaElement}
-          class="input spectrum-Textfield-input"
-          on:keydown={handleKeyDown}
-          placeholder="Ask anything"
-          disabled={loading}
-        />
+    {#each chatHistory as chatItem}
+      <NavItem
+        icon="Chat"
+        text={chatItem.title || "Untitled Chat"}
+        subtext={getChatPreview(chatItem)}
+        on:click={() => selectChat(chatItem)}
+        selected={$agentsStore.currentChatId === chatItem._id}
+        withActions={false}
+      />
+    {/each}
+    {#if !chatHistory.length}
+      <div class="empty-state">
+        <Body size="S">
+          No chat history yet.<br />
+          Start a new conversation!
+        </Body>
       </div>
-    </div>
+    {/if}
+  </Panel>
 
-    <div class="panel-container">
-      <Panel customWidth={400}>
-        <div class="agent-panel">
-          <Tabs selected="Tools">
-            <Tab title="Tools">
-              <div class="tab-content">
-                {#if panelView === "tools"}
-                  <div class="agent-info">
-                    Add tools to give your agent knowledge and allow it to take
-                    action.
-                  </div>
-                  <div class="agent-actions-heading">
-                    <Heading size="XS">Tools and Knowledge</Heading>
-                    <Button
-                      size="S"
-                      cta
-                      on:click={() => toolSourceModal.show()}
-                    >
-                      Add Tools
-                    </Button>
-                  </div>
-
-                  {#if toolSources.length > 0}
-                    <div class="saved-tools-list">
-                      {#each toolSources as toolSource}
-                        <div class="saved-tool-item">
-                          <div class="tool-icon">
-                            <svelte:component
-                              this={Logos[toolSource.type]}
-                              height="26"
-                              width="26"
-                            />
-                          </div>
-                          <div class="tool-info">
-                            <div class="tool-name">
-                              {ToolSources.find(
-                                ts => ts.type === toolSource.type
-                              )?.name}
-                            </div>
-                          </div>
-                          <div class="tool-actions">
-                            <Icon
-                              size="S"
-                              hoverable
-                              name="Edit"
-                              on:click={() => editToolSource(toolSource)}
-                            />
-                            <Icon
-                              size="S"
-                              hoverable
-                              name="Delete"
-                              on:click={() =>
-                                confirmDeleteToolSource(toolSource)}
-                            />
-                            <div class="tool-source-detail">
-                              <Icon
-                                size="S"
-                                hoverable
-                                name="BackAndroid"
-                                on:click={() => openToolsConfig(toolSource)}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      {/each}
-                    </div>
-                  {:else}
-                    <div class="no-tools-message">
-                      <Body size="S"
-                        >No tools connected yet. Click "Add Tools" to get
-                        started!</Body
-                      >
-                    </div>
-                  {/if}
-                {:else if panelView === "toolConfig"}
-                  <div class="tool-config-header">
-                    <Icon
-                      name="BackAndroid"
-                      hoverable
-                      on:click={backToToolsList}
-                    />
-                    <Heading size="S"
-                      >{ToolSources.find(
-                        ts => selectedConfigToolSource.type === ts.type
-                      )?.name}</Heading
-                    >
-                    <Button size="S" cta on:click={saveToolConfig}>
-                      Save Configuration
-                    </Button>
-                  </div>
-
-                  {#if selectedConfigToolSource?.tools}
-                    <div class="tools-list">
-                      {#each selectedConfigToolSource.tools as tool}
-                        <div class="tool-toggle-item">
-                          <div class="tool-toggle-icon">
-                            {#if Logos[selectedConfigToolSource.type]}
-                              <svelte:component
-                                this={Logos[selectedConfigToolSource.type]}
-                                height="20"
-                                width="20"
-                              />
-                            {/if}
-                          </div>
-                          <div class="tool-toggle-info">
-                            <div class="tool-toggle-name">{tool.name}</div>
-                            <div class="tool-toggle-description">
-                              {tool.description}
-                            </div>
-                          </div>
-                          <Toggle
-                            value={!selectedConfigToolSource.disabledTools?.includes(
-                              tool.name
-                            )}
-                            on:change={() => toggleTool(tool.name)}
-                          />
-                        </div>
-                      {/each}
-                    </div>
-                  {:else}
-                    <div class="no-tools-message">
-                      <Body size="S">No tools available for this source.</Body>
-                    </div>
-                  {/if}
-                {/if}
-              </div>
-            </Tab>
-            <Tab title="Deploy">
-              <div class="tab-content">Deploy</div>
-            </Tab>
-          </Tabs>
-        </div>
-      </Panel>
+  <div class="chat-area" bind:this={chatAreaElement}>
+    <Chatbox bind:chat {loading} />
+    <div class="input-wrapper">
+      <textarea
+        bind:value={inputValue}
+        bind:this={textareaElement}
+        class="input spectrum-Textfield-input"
+        on:keydown={handleKeyDown}
+        placeholder="Ask anything"
+        disabled={loading}
+      />
     </div>
   </div>
+
+  <Panel customWidth={320} borderLeft>
+    <Tabs selected="Tools">
+      <Tab title="Tools">
+        <div class="tab-content">
+          {#if panelView === "tools"}
+            <InfoDisplay
+              body="Add tools to give your agent knowledge and allow it to take
+                action"
+            />
+            <div class="agent-actions-heading">
+              <Heading size="XS">Tools and Knowledge</Heading>
+              <Button size="S" cta on:click={() => toolSourceModal.show()}>
+                Add Tools
+              </Button>
+            </div>
+
+            {#if toolSources.length > 0}
+              <div class="saved-tools-list">
+                {#each toolSources as toolSource}
+                  <div class="saved-tool-item">
+                    <div class="tool-icon">
+                      <svelte:component
+                        this={Logos[toolSource.type]}
+                        height="26"
+                        width="26"
+                      />
+                    </div>
+                    <div class="tool-info">
+                      <div class="tool-name">
+                        {ToolSources.find(ts => ts.type === toolSource.type)
+                          ?.name}
+                      </div>
+                    </div>
+                    <div class="tool-actions">
+                      <Icon
+                        size="S"
+                        hoverable
+                        name="Edit"
+                        on:click={() => editToolSource(toolSource)}
+                      />
+                      <Icon
+                        size="S"
+                        hoverable
+                        name="Delete"
+                        on:click={() => confirmDeleteToolSource(toolSource)}
+                      />
+                      <div class="tool-source-detail">
+                        <Icon
+                          size="S"
+                          hoverable
+                          name="BackAndroid"
+                          on:click={() => openToolsConfig(toolSource)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {:else}
+              <div class="empty-state">
+                <Body size="S">
+                  No tools connected yet.
+                  <br />
+                  Click "Add Tools" to get started!
+                </Body>
+              </div>
+            {/if}
+          {:else if panelView === "toolConfig"}
+            <div class="tool-config-header">
+              <Icon name="BackAndroid" hoverable on:click={backToToolsList} />
+              <Heading size="S"
+                >{ToolSources.find(
+                  ts => selectedConfigToolSource.type === ts.type
+                )?.name}</Heading
+              >
+              <Button size="S" cta on:click={saveToolConfig}>
+                Save Configuration
+              </Button>
+            </div>
+
+            {#if selectedConfigToolSource?.tools}
+              <div class="tools-list">
+                {#each selectedConfigToolSource.tools as tool}
+                  <div class="tool-toggle-item">
+                    <div class="tool-toggle-icon">
+                      {#if Logos[selectedConfigToolSource.type]}
+                        <svelte:component
+                          this={Logos[selectedConfigToolSource.type]}
+                          height="20"
+                          width="20"
+                        />
+                      {/if}
+                    </div>
+                    <div class="tool-toggle-info">
+                      <div class="tool-toggle-name">{tool.name}</div>
+                      <div class="tool-toggle-description">
+                        {tool.description}
+                      </div>
+                    </div>
+                    <Toggle
+                      value={!selectedConfigToolSource.disabledTools?.includes(
+                        tool.name
+                      )}
+                      on:change={() => toggleTool(tool.name)}
+                    />
+                  </div>
+                {/each}
+              </div>
+            {:else}
+              <div class="no-tools-message">
+                <Body size="S">No tools available for this source.</Body>
+              </div>
+            {/if}
+          {/if}
+        </div>
+      </Tab>
+      <Tab title="Deploy">
+        <div class="tab-content">Deploy</div>
+      </Tab>
+    </Tabs>
+  </Panel>
 </div>
+
 <Modal bind:this={toolSourceModal}>
   <ModalContent
     title="Tools"
@@ -680,61 +670,22 @@
 
 <style>
   .page {
-    height: 0;
     flex: 1 1 auto;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
     position: relative;
-    overflow-y: scroll;
+    overflow-y: hidden;
     overflow-x: hidden;
-  }
-
-  .layout {
-    display: flex;
     flex-direction: row;
     height: 100%;
     width: 100%;
-  }
-
-  .history-panel {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 300px;
-    display: flex;
+    align-items: stretch;
   }
 
   .chat-area {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    margin-left: 300px;
-    max-width: calc(100% - 700px);
-  }
-
-  .panel-container {
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100%;
-    width: 400px;
-    display: flex;
-  }
-
-  .agent-panel {
-    padding: var(--spacing-xl);
-  }
-
-  .agent-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2e3851;
-    border-radius: var(--border-radius-m);
-    padding: var(--spacing-s);
   }
 
   .agent-actions-heading {
@@ -745,7 +696,7 @@
   }
 
   .tab-content {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-s) var(--spacing-xl);
   }
 
   .tool-source-tiles {
@@ -814,21 +765,6 @@
     gap: var(--spacing-l);
   }
 
-  .chat-history {
-    padding: var(--spacing-xl);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-l);
-    margin-top: var(--spacing-l);
-  }
-
   .history-list {
     flex: 1;
     overflow-y: auto;
@@ -875,7 +811,9 @@
   .empty-state {
     text-align: center;
     padding: var(--spacing-xl);
-    color: var(--spectrum-global-color-gray-600);
+  }
+  .empty-state :global(p) {
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .saved-tools-list {

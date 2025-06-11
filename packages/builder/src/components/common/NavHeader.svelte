@@ -5,9 +5,10 @@
 
   export let title: string
   export let placeholder: string
-  export let value: string
+  export let value: string | undefined = undefined
   export let onAdd: (_e: Event) => void
   export let search: boolean = false
+  export let searchable = true
 
   let searchInput: HTMLInputElement
 
@@ -53,14 +54,17 @@
   <div class="title" class:hide={search}>
     <Body size="S">{title}</Body>
   </div>
-  <div
-    on:click={openSearch}
-    on:keydown={keyUtils.handleEnter(openSearch)}
-    class="searchButton"
-    class:hide={search}
-  >
-    <Icon size="S" name="Search" hoverable hoverColor="var(--ink)" />
-  </div>
+
+  {#if searchable}
+    <div
+      on:click={openSearch}
+      on:keydown={keyUtils.handleEnter(openSearch)}
+      class="searchButton"
+      class:hide={search}
+    >
+      <Icon size="S" name="Search" hoverable hoverColor="var(--ink)" />
+    </div>
+  {/if}
 
   <div
     on:click={handleAddButton}
