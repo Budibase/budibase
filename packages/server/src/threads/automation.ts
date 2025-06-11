@@ -41,6 +41,7 @@ import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 import tracer from "dd-trace"
 import { isPlainObject } from "lodash"
+import { quotas } from "@budibase/pro"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
@@ -429,7 +430,10 @@ class Orchestrator {
             break
           }
           default: {
-            addToContext(step, await this.executeStep(ctx, step))
+            addToContext(
+              step,
+              await quotas.addAction(() => this.executeStep(ctx, step))
+            )
             stepIndex++
             break
           }
