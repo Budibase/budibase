@@ -116,7 +116,6 @@
       )
       appName = `${appName} ${appsWithSameName.length + 1}`
 
-      // Create form data to create app
       const data = {
         name: appName,
         useTemplate: true,

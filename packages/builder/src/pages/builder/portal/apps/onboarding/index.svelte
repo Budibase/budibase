@@ -17,8 +17,6 @@
   const createApp = async () => {
     loading = true
 
-    // Create form data to create app
-    // This is form based and not JSON
     const data: CreateAppRequest = {
       name: name.trim(),
       url: url.trim(),
