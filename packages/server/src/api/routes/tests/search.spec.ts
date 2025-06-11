@@ -118,14 +118,17 @@ if (descriptions.length) {
         })
       })
 
-      async function createTable(schema?: TableSchema) {
+      async function createTableWithSchema(schema?: TableSchema) {
         const table = await config.api.table.save(
           tableForDatasource(datasource, { schema })
         )
         return table._id!
       }
 
-      async function createView(tableId: string, schema?: ViewV2Schema) {
+      async function createViewWithSchema(
+        tableId: string,
+        schema?: ViewV2Schema
+      ) {
         const view = await config.api.viewV2.create({
           tableId: tableId,
           name: generator.guid(),
@@ -175,14 +178,16 @@ if (descriptions.length) {
         }
 
         type CreateFn = (schema?: TableSchema) => Promise<string>
-        let tableOrView: [string, CreateFn][] = [["table", createTable]]
+        let tableOrView: [string, CreateFn][] = [
+          ["table", createTableWithSchema],
+        ]
 
         if (!isInMemory) {
           tableOrView.push([
             "view",
             async (schema?: TableSchema) => {
-              const tableId = await createTable(schema)
-              const viewId = await createView(
+              const tableId = await createTableWithSchema(schema)
+              const viewId = await createViewWithSchema(
                 tableId,
                 Object.keys(schema || {}).reduce<ViewV2Schema>(
                   (viewSchema, fieldName) => {
@@ -2457,7 +2462,7 @@ if (descriptions.length) {
             isSql &&
               describe("related formulas", () => {
                 beforeAll(async () => {
-                  const arrayTable = await createTable({
+                  const arrayTable = await createTableWithSchema({
                     name: { name: "name", type: FieldType.STRING },
                     array: {
                       name: "array",
@@ -3109,7 +3114,7 @@ if (descriptions.length) {
                 let relatedTable: string, relatedRows: Row[]
 
                 beforeAll(async () => {
-                  relatedTable = await createTable({
+                  relatedTable = await createTableWithSchema({
                     name: { name: "name", type: FieldType.STRING },
                   })
                   tableOrViewId = await createTableOrView({
@@ -3525,7 +3530,7 @@ if (descriptions.length) {
                 let row: Row
 
                 beforeAll(async () => {
-                  const toRelateTable = await createTable({
+                  const toRelateTable = await createTableWithSchema({
                     name: {
                       name: "name",
                       type: FieldType.STRING,
@@ -3629,7 +3634,7 @@ if (descriptions.length) {
             isSql &&
               describe("primaryDisplay", () => {
                 beforeAll(async () => {
-                  let toRelateTableId = await createTable({
+                  let toRelateTableId = await createTableWithSchema({
                     name: {
                       name: "name",
                       type: FieldType.STRING,
@@ -3989,7 +3994,8 @@ if (descriptions.length) {
                     relatedSchema[name] = { name, type: FieldType.NUMBER }
                     row[name] = i
                   }
-                  const relatedTable = await createTable(relatedSchema)
+                  const relatedTable =
+                    await createTableWithSchema(relatedSchema)
                   tableOrViewId = await createTableOrView({
                     name: { name: "name", type: FieldType.STRING },
                     related1: {
