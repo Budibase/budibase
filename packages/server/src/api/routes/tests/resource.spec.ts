@@ -70,7 +70,7 @@ describe("/api/resources/analyze", () => {
           automationIds: [],
         },
         {
-          status: 401,
+          status: 400,
         }
       )
     })
