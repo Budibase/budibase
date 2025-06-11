@@ -1,3 +1,5 @@
+import { App } from "@budibase/types"
+
 export type AppTemplate =
   | {
       fromFile: true
@@ -10,3 +12,21 @@ export type AppTemplate =
       background: string
       icon: string
     }
+
+export interface AppIdentifierMetadata {
+  devId?: string
+  devRev?: string
+  prodId?: string
+  prodRev?: string
+}
+
+export interface AppUIMetadata {
+  deployed: boolean
+  lockedYou: boolean
+  lockedOther: boolean
+  favourite: boolean
+}
+
+export interface StoreApp extends App, AppIdentifierMetadata {}
+
+export interface EnrichedApp extends StoreApp, AppUIMetadata {}
