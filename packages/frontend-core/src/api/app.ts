@@ -144,7 +144,6 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
     return await API.post({
       url: "/api/applications",
       body: app,
-      json: false,
     })
   },
 
@@ -156,7 +155,6 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
     return await API.post({
       url: `/api/applications/${appId}/duplicate`,
       body: app,
-      json: false,
     })
   },
 

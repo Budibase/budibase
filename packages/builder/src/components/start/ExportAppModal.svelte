@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+  import { featureFlags } from "@/stores/portal"
   import {
     ModalContent,
     keepOpen,
@@ -16,7 +17,7 @@
   let includeInternalTablesRows = true
   let encrypt = true
 
-  let password = null
+  let password: string | null = null
   const validation = createValidationStore()
   validation.addValidatorType("password", "password", true, { minLength: 12 })
   $: validation.observe("password", password)
@@ -24,10 +25,14 @@
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
 
+  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+
   $: exportButtonText = published ? "Export published" : "Export latest"
   $: stepConfig = {
     [Step.CONFIG]: {
-      title: published ? "Export published app" : "Export latest app",
+      title: published
+        ? `Export published ${appOrWorkspace}`
+        : `Export latest ${appOrWorkspace}`,
       confirmText: encrypt ? "Continue" : exportButtonText,
       onConfirm: () => {
         if (!encrypt) {
@@ -47,7 +52,7 @@
         if (!$validation.valid) {
           return keepOpen
         }
-        await exportApp(password)
+        await exportApp()
       },
       isValid: $validation.valid,
     },
@@ -63,10 +68,12 @@
         encryptPassword: password,
       })
       if (!downloaded) {
-        notifications.error("Error exporting the app.")
+        notifications.error(`Error exporting the ${appOrWorkspace}.`)
       }
-    } catch (error) {
-      notifications.error(error.message || "Error downloading the exported app")
+    } catch (error: any) {
+      notifications.error(
+        error.message || `Error downloading the exported ${appOrWorkspace}`
+      )
     }
   }
 </script>
@@ -88,7 +95,7 @@
     <InlineAlert
       header={encrypt
         ? "Please note Budibase does not encrypt attachments during the export process to ensure efficient export of large attachments."
-        : "Do not share your Budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."}
+        : "Do not share your Budibase exports publicly as they may contain sensitive information such as database credentials or secret keys."}
     />
   {/if}
   {#if currentStep === Step.SET_PASSWORD}

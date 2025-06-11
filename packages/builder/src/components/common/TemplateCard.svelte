@@ -1,9 +1,9 @@
-<script>
-  export let backgroundColour
-  export let imageSrc
-  export let name
-  export let icon
-  export let overlayEnabled = true
+<script lang="ts">
+  export let backgroundColour: string
+  export let imageSrc: string
+  export let name: string
+  export let icon: string
+  export let overlayEnabled: boolean = true
 
   let imageError = false
 
