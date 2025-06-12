@@ -32,9 +32,7 @@
   const dispatcher = createEventDispatcher()
 
   $: automations = $automationStore.automations || []
-  $: filteredAutomations = removeRowActionAutomations(
-    automations
-  )
+  $: filteredAutomations = removeRowActionAutomations(automations)
   $: apps = $workspaceAppStore.workspaceApps || []
   $: target = findTarget(targetId, apps, automations)
   $: selectedAppNames = getSelectedNames(selectedApps, apps)
@@ -147,7 +145,10 @@
     })
     // update the deployment status
     await workspaceDeploymentStore.fetch()
-    const publishedAutomations = getSelectedNames(selectedAutomations, filteredAutomations),
+    const publishedAutomations = getSelectedNames(
+        selectedAutomations,
+        filteredAutomations
+      ),
       publishedApps = getSelectedNames(selectedApps, apps)
     dispatcher("success", { publishedAutomations, publishedApps })
   }
@@ -217,8 +218,12 @@
         {/if}
         {#if apps.length || automations.length}
           <div class="select-clear-buttons">
-            <ActionButton quiet noPadding active on:click={selectAll}>Select all</ActionButton>
-            <ActionButton quiet noPadding on:click={clearAll}>Clear all</ActionButton>
+            <ActionButton quiet noPadding active on:click={selectAll}
+              >Select all</ActionButton
+            >
+            <ActionButton quiet noPadding on:click={clearAll}
+              >Clear all</ActionButton
+            >
           </div>
         {/if}
         <Accordion

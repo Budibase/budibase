@@ -18,20 +18,21 @@
     isOpen = false
   }
 
-  function getOpenClass(isOpen: boolean) {
-    return isOpen ? "is-open" : ""
-  }
-
   function headerSizeClass(size: "S" | "M" | "L") {
-    return size === "S" ? "spectrum-Accordion-itemHeaderS" :
-      size === "M" ? "spectrum-Accordion-itemHeaderM" :
-        "spectrum-Accordion-itemHeaderL"
+    return size === "S"
+      ? "spectrum-Accordion-itemHeaderS"
+      : size === "M"
+        ? "spectrum-Accordion-itemHeaderM"
+        : "spectrum-Accordion-itemHeaderL"
   }
 </script>
 
 <div class="spectrum-Accordion" role={itemName}>
-  <div class="spectrum-Accordion-item {getOpenClass(isOpen)}">
-    <h3 class="spectrum-Accordion-itemHeading" style={noPadding ? "margin-bottom: -10px;" : ""}>
+  <div class="spectrum-Accordion-item" class:is-open={isOpen}>
+    <h3
+      class="spectrum-Accordion-itemHeading"
+      style={noPadding ? "margin-bottom: -10px;" : ""}
+    >
       <button
         class={`spectrum-Accordion-itemHeader ${headerSizeClass(headerSize)}`}
         type="button"
@@ -52,7 +53,7 @@
       class="spectrum-Accordion-itemContent"
       role={itemName}
       style={noPadding
-        ? "padding-left: 20px; padding-bottom: 0px;"
+        ? "padding-left: 20px; padding-bottom: 0;"
         : "padding-left: 30px;"}
     >
       <slot />
