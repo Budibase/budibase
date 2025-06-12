@@ -2398,6 +2398,101 @@ if (descriptions.length) {
             `${uuid.v4()}.png`
           )
         })
+
+        !isInternal &&
+          describe("external database attachment authorization", () => {
+            it("should allow non-creator users to update attachment fields", async () => {
+              // Create a table with attachment field
+              const attachmentTable = await config.api.table.save(
+                defaultTable({
+                  schema: {
+                    name: {
+                      type: FieldType.STRING,
+                      name: "name",
+                      constraints: { presence: true },
+                    },
+                    attachment: {
+                      type: FieldType.ATTACHMENT_SINGLE,
+                      name: "attachment",
+                      constraints: { presence: false },
+                    },
+                  },
+                })
+              )
+
+              // Create a row with initial attachment as a creator user
+              const initialAttachment = generateAttachment(newCsv())
+              const createdRow = await config.api.row.save(
+                attachmentTable._id!,
+                {
+                  name: "test row",
+                  attachment: initialAttachment,
+                }
+              )
+
+              // Switch to a non-creator user context (use admin role but not creator)
+              await config.loginAsRole(
+                "ADMIN", // Admin role but not creator
+                async () => {
+                  // Try to update the row with a new attachment
+                  const newAttachment = generateAttachment(newCsv())
+                  const updatedRowData = {
+                    ...createdRow,
+                    attachment: newAttachment,
+                  }
+
+                  // This should NOT fail with "Not Authorized" error
+                  const updatedRow = await config.api.row.save(
+                    attachmentTable._id!,
+                    updatedRowData
+                  )
+
+                  expect(updatedRow.attachment.key).toBe(newAttachment.key)
+                  expect(updatedRow.name).toBe("test row")
+                }
+              )
+            })
+
+            it("should allow non-creator users to upload attachments to tables", async () => {
+              // Create a table
+              const attachmentTable = await config.api.table.save(
+                defaultTable({
+                  schema: {
+                    name: {
+                      type: FieldType.STRING,
+                      name: "name",
+                      constraints: { presence: true },
+                    },
+                    attachment: {
+                      type: FieldType.ATTACHMENT_SINGLE,
+                      name: "attachment",
+                      constraints: { presence: false },
+                    },
+                  },
+                })
+              )
+
+              // Switch to a non-creator user context
+              await config.loginAsRole("ADMIN", async () => {
+                // Try to upload an attachment to the table
+                // This should use the table-specific upload endpoint
+                // which requires TABLE.WRITE permissions instead of BUILDER permissions
+                const response = await config
+                  .request!.post(
+                    `/api/attachments/${attachmentTable._id}/upload`
+                  )
+                  .attach("file", Buffer.from("test content"), "test.txt")
+                  .set(config.defaultHeaders())
+                  .expect(200)
+
+                expect(response.body).toBeDefined()
+                expect(Array.isArray(response.body)).toBe(true)
+                expect(response.body.length).toBe(1)
+                expect(response.body[0]).toHaveProperty("key")
+                expect(response.body[0]).toHaveProperty("url")
+              })
+            })
+          })
       })
 
       describe("exportRows", () => {
