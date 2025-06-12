@@ -175,7 +175,9 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
     }
 
     // Create maps of production state for quick lookup
-    const prodAutomationIds = new Set(productionState.automations.map(a => a._id))
+    const prodAutomationIds = new Set(
+      productionState.automations.map(a => a._id)
+    )
     const prodWorkspaceAppIds = new Set(
       productionState.workspaceApps.map(w => w._id)
     )
@@ -189,7 +191,8 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
       }
     }
 
-    const workspaceApps: Record<string, { published: boolean; name: string }> = {}
+    const workspaceApps: Record<string, { published: boolean; name: string }> =
+      {}
     for (const workspaceApp of developmentState.workspaceApps) {
       workspaceApps[workspaceApp._id!] = {
         published: prodWorkspaceAppIds.has(workspaceApp._id!),

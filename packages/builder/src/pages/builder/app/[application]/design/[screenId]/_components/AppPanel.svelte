@@ -18,10 +18,11 @@
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
-  $: selectedWorkspaceAppId =
-    $workspaceAppStore.selectedWorkspaceApp?._id
+  $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id
 
-  $: isWorkspacePublished = selectedWorkspaceAppId && $workspaceDeploymentStore.workspaceApps?.[selectedWorkspaceAppId]?.published
+  $: isWorkspacePublished =
+    selectedWorkspaceAppId &&
+    $workspaceDeploymentStore.workspaceApps?.[selectedWorkspaceAppId]?.published
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
