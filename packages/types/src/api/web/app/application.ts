@@ -50,10 +50,16 @@ export interface AddAppSampleDataResponse {
 
 export type FetchAppsResponse = App[]
 
-export interface PublishedAppData {}
+export interface PublishedAppData {
+  name: string
+  appId: string
+  url: string
+  prodId: string
+  updatedAt: string
+}
 
 export interface FetchPublishedAppsResponse {
-  apps: PublishedAppData[]
+  apps: PublishedAppData[] | App[] // TODO: remove "| App[]" when cleaning the flag WORKSPACE_APPS
 }
 
 export interface PublishResponse {

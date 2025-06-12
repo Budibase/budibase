@@ -6,7 +6,9 @@
     admin,
     appsStore,
     auth,
+    clientAppsStore,
     enrichedApps,
+    featureFlags,
     groups,
     licensing,
     organisation,
@@ -31,7 +33,7 @@
   } from "@budibase/frontend-core"
   import { helpers, sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import type { User, UserGroup } from "@budibase/types"
+  import type { PublishedAppData, User, UserGroup } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import Spaceman from "assets/bb-space-man.svg"
@@ -47,7 +49,9 @@
   $: publishedApps = $enrichedApps.filter(
     app => app.status === AppStatus.DEPLOYED
   )
-  $: userApps = getUserApps(publishedApps, userGroups, $auth.user)
+  $: userApps = $featureFlags.WORKSPACE_APPS
+    ? $clientAppsStore.apps
+    : getUserApps(publishedApps, userGroups, $auth.user)
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUserApps(
@@ -77,7 +81,7 @@
     })
   }
 
-  function getUrl(app: EnrichedApp) {
+  function getUrl(app: EnrichedApp | PublishedAppData) {
     if (app.url) {
       return `/app${app.url}`
     } else {
@@ -97,6 +101,7 @@
     try {
       await organisation.init()
       await appsStore.load()
+      await clientAppsStore.load()
       await groups.init()
     } catch (error) {
       notifications.error("Error loading apps")
