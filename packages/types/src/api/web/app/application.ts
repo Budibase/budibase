@@ -50,6 +50,12 @@ export interface AddAppSampleDataResponse {
 
 export type FetchAppsResponse = App[]
 
+export interface PublishedAppData {}
+
+export interface FetchPublishedAppsResponse {
+  apps: PublishedAppData[]
+}
+
 export interface PublishResponse {
   _id: string
   status: string

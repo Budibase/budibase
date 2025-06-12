@@ -70,6 +70,7 @@ import {
   UnpublishAppResponse,
   ErrorCode,
   FeatureFlag,
+  FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -251,7 +252,9 @@ export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
     ctx.user
   )
 }
-export async function fetchPublished(ctx: UserCtx<void, FetchAppsResponse>) {
+export async function fetchClientApps(
+  ctx: UserCtx<void, FetchPublishedAppsResponse>
+) {
   const apps = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
@@ -259,7 +262,7 @@ export async function fetchPublished(ctx: UserCtx<void, FetchAppsResponse>) {
 
   const isBuilder = users.isBuilder(ctx.user)
   if (isBuilder || !(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
-    ctx.body = apps
+    ctx.body = { apps }
     return
   }
 
@@ -278,7 +281,7 @@ export async function fetchPublished(ctx: UserCtx<void, FetchAppsResponse>) {
     }
   }
 
-  ctx.body = result
+  ctx.body = { apps: result }
 }
 
 export async function fetchAppDefinition(
