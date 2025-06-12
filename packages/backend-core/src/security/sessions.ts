@@ -15,6 +15,8 @@ const EXPIRY_SECONDS = env.SESSION_EXPIRY_SECONDS
   ? parseInt(env.SESSION_EXPIRY_SECONDS)
   : Duration.fromDays(7).toSeconds()
 
+const MAX_SESSIONS_PER_USER = 3
+
 function makeSessionID(userId: string, sessionId: string) {
   return `${userId}/${sessionId}`
 }
@@ -76,8 +78,27 @@ export async function createASession(
   userId: string,
   createSession: CreateSession
 ) {
-  // invalidate all other sessions
-  await invalidateSessions(userId, { reason: "creation" })
+  const existingSessions = await getSessionsForUser(userId)
+  let invalidatedSessionCount = 0
+
+  if (existingSessions.length >= MAX_SESSIONS_PER_USER) {
+    const sortedSessions = existingSessions.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    )
+
+    const sessionsToRemove = existingSessions.length - MAX_SESSIONS_PER_USER + 1
+    const sessionIdsToInvalidate = sortedSessions
+      .slice(0, sessionsToRemove)
+      .map(session => session.sessionId)
+
+    invalidatedSessionCount = sessionIdsToInvalidate.length
+
+    await invalidateSessions(userId, {
+      sessionIds: sessionIdsToInvalidate,
+      reason: "session limit exceeded",
+    })
+  }
 
   const client = await redis.getSessionClient()
   const sessionId = createSession.sessionId
@@ -92,7 +113,11 @@ export async function createASession(
     userId,
   }
   await client.store(key, session, EXPIRY_SECONDS)
-  return session
+
+  return {
+    session,
+    invalidatedSessionCount,
+  }
 }
 
 export async function updateSessionTTL(session: Session) {

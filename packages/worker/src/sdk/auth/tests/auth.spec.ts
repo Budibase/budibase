@@ -68,5 +68,25 @@ describe("auth", () => {
         expect(await sessions.getSessionsForUser(user._id!)).toHaveLength(0)
       })
     })
+
+    it("loginUser should return session invalidation count", async () => {
+      await context.doInTenant(structures.tenant.id(), async () => {
+        const user = await config.createUser()
+
+        const loginResult1 = await loginUser(user)
+        expect(loginResult1.invalidatedSessionCount).toBe(0)
+
+        const loginResult2 = await loginUser(user)
+        expect(loginResult2.invalidatedSessionCount).toBe(0)
+
+        const loginResult3 = await loginUser(user)
+        expect(loginResult3.invalidatedSessionCount).toBe(0)
+
+        const loginResult4 = await loginUser(user)
+        expect(loginResult4.invalidatedSessionCount).toBe(1)
+
+        expect(await sessions.getSessionsForUser(user._id!)).toHaveLength(3)
+      })
+    })
   })
 })

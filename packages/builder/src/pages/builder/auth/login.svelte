@@ -35,11 +35,22 @@
       return
     }
     try {
-      await auth.login(formData?.username.trim(), formData?.password)
+      const loginResult = await auth.login(
+        formData?.username.trim(),
+        formData?.password
+      )
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
         notifications.success("Logged in successfully")
+
+        if (loginResult.invalidatedSessionCount > 0) {
+          localStorage.setItem(
+            "bb-sessions-invalidated",
+            loginResult.invalidatedSessionCount.toString()
+          )
+        }
+
         $goto("../portal")
       }
     } catch (err) {
