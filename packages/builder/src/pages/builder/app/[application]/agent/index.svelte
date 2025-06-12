@@ -128,28 +128,110 @@
     inputValue = ""
     loading = true
 
+    let streamingContent = ""
+    let isToolCall = false
+    let toolCallInfo: string = ""
+
     try {
-      // Send copy with new message to API
-      const response = await API.agentChat(updatedChat)
+      await API.agentChatStream(
+        updatedChat,
+        chunk => {
+          if (chunk.type === "content") {
+            // Accumulate streaming content
+            streamingContent += chunk.content || ""
 
-      // Update chat with response from API
-      chat = response
+            // Update chat with partial content
+            const updatedMessages = [...updatedChat.messages]
 
-      // Update the current chat ID in the store
-      if (response._id) {
-        agentsStore.setCurrentChatId(response._id)
-        // Refresh chat history to include the new/updated chat
-        await agentsStore.fetchChats()
-      }
+            // Find or create assistant message
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content =
+                streamingContent + (isToolCall ? toolCallInfo : "")
+            } else {
+              updatedMessages.push({
+                role: "assistant",
+                content: streamingContent + (isToolCall ? toolCallInfo : ""),
+              })
+            }
 
-      // Scroll to the response
-      await scrollToBottom()
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            // Auto-scroll as content streams
+            scrollToBottom()
+          } else if (chunk.type === "tool_call_start") {
+            isToolCall = true
+            toolCallInfo = `\n\n**🔧 Executing Tool:** ${chunk.toolCall?.name}\n**Parameters:**\n\`\`\`json\n${chunk.toolCall?.arguments}\n\`\`\`\n`
+
+            const updatedMessages = [...updatedChat.messages]
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content = streamingContent + toolCallInfo
+            } else {
+              updatedMessages.push({
+                role: "assistant",
+                content: streamingContent + toolCallInfo,
+              })
+            }
+
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            scrollToBottom()
+          } else if (chunk.type === "tool_call_result") {
+            const resultInfo = chunk.toolResult?.error
+              ? `\n**❌ Tool Error:** ${chunk.toolResult.error}`
+              : `\n**✅ Tool Result:** Complete`
+
+            toolCallInfo += resultInfo
+
+            const updatedMessages = [...updatedChat.messages]
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content = streamingContent + toolCallInfo
+            }
+
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            scrollToBottom()
+          } else if (chunk.type === "chat_saved") {
+            // Update complete response
+            if (chunk.chat) {
+              chat = chunk.chat
+
+              if (chunk.chat._id) {
+                agentsStore.setCurrentChatId(chunk.chat._id)
+                // Refresh chat history to include the new/updated chat
+                agentsStore.fetchChats()
+              }
+            }
+
+            loading = false
+            scrollToBottom()
+          } else if (chunk.type === "error") {
+            notifications.error(chunk.content || "An error occurred")
+            loading = false
+          }
+        },
+        error => {
+          console.error("Streaming error:", error)
+          notifications.error(error.message)
+          loading = false
+        }
+      )
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
+      loading = false
     }
-
-    loading = false
 
     // Return focus to textarea after the response
     await tick()

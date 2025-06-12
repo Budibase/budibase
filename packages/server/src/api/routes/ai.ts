@@ -18,6 +18,8 @@ router.post(
   chatAgentValidator(),
   ai.agentChat
 )
+router.post("/api/agent/chat", auth.builderOrAdmin, ai.agentChat)
+router.post("/api/agent/chat/stream", auth.builderOrAdmin, ai.agentChatStream)
 router.delete("/api/agent/history/:historyId", auth.builderOrAdmin, ai.remove)
 router.get("/api/agent/history", auth.builderOrAdmin, ai.fetchHistory)
 router.post(

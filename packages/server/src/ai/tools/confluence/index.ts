@@ -66,37 +66,53 @@ export class ConfluenceClient {
   getTools() {
     return [
       newTool({
-        name: "confluence_search_content",
-        description: "Search for content in Confluence using v2 API",
+        name: "confluence_text_search",
+        description:
+          "Perform deep text search across Confluence content using CQL",
         parameters: z.object({
-          title: z.string().optional().describe("Search by title"),
-          spaceKey: z.string().optional().describe("Filter by space key"),
-          status: z
-            .enum(["current", "draft", "archived"])
+          query: z.string().describe("Text to search for in content"),
+          contentType: z
+            .enum(["page", "blogpost", "comment", "attachment"])
             .optional()
-            .describe("Content status"),
+            .describe("Type of content to search"),
           limit: z
             .number()
             .optional()
             .describe("Maximum number of results to return"),
         }),
-        handler: async ({
-          title,
-          spaceKey,
-          status = "current",
-          limit = 10,
-        }) => {
+        handler: async ({ query, contentType, limit = 10 }) => {
+          // Use v1 API for CQL search as v2 doesn't support full CQL
+          const url = `${this.baseUrl}/wiki/rest/api/content/search`
+
+          // Build CQL query for text search
+          let cql = `text ~ "${query}~"`
+
+          if (contentType) {
+            cql += ` AND type = "${contentType}"`
+          }
+
           const params = new URLSearchParams({
+            cql,
             limit: limit.toString(),
-            status,
+            expand: "body.storage,space,version,history.lastUpdated",
           })
-          if (title) {
-            params.append("title", title)
+
+          const response = await fetch(`${url}?${params}`, {
+            headers: {
+              Authorization: this.getAuthHeader(),
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          })
+
+          if (!response.ok) {
+            const errorText = await response.text()
+            throw new Error(
+              `HTTP ${response.status}: ${response.statusText} - ${errorText}`
+            )
           }
-          if (spaceKey) {
-            params.append("space-key", spaceKey)
-          }
-          const results = await this.makeRequest(`/content?${params}`)
+
+          const results = await response.json()
           return JSON.stringify(results, null, 2)
         },
       }),
@@ -134,7 +150,7 @@ export class ConfluenceClient {
             .optional()
             .describe("Space status filter"),
         }),
-        handler: async ({ limit = 25, type, status }) => {
+        handler: async ({ limit = 100, type, status }) => {
           const params = new URLSearchParams({
             limit: limit.toString(),
           })

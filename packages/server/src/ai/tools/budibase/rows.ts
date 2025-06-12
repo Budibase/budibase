@@ -37,7 +37,11 @@ export default [
     description: "Create a new row",
     parameters: z.object({
       tableId: z.string().describe("The ID of the table to create the row in"),
-      data: z.string().describe("JSON string with row data"),
+      data: z
+        .string()
+        .describe(
+          "JSON string with row data. Ensure the schema for the table is known before writing a row."
+        ),
     }),
     handler: async ({ tableId, data }) => {
       let parsedData
