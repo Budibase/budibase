@@ -198,10 +198,10 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   const { rows } = isExternalTableID(tableId)
     ? await pickApi(tableId).bulkDestroy(ctx)
     : await quotas.addAction(async () => {
-      const response = await pickApi(tableId).bulkDestroy(ctx)
-      events.action.crudExecuted({ type: "delete" })
-      return response
-    })
+        const response = await pickApi(tableId).bulkDestroy(ctx)
+        events.action.crudExecuted({ type: "delete" })
+        return response
+      })
 
   if (!tableId.includes("datasource_plus")) {
     await quotas.removeRows(rows.length)
