@@ -530,37 +530,38 @@
     showCloseIcon
     onCancel={() => toolSourceModal.hide()}
   >
-    <div class="vote-banner">
-      <Icon name="Hand" />
-      <span> Vote for which tools we add next </span>
-      <Button>Vote</Button>
-    </div>
     <section class="tool-source-tiles">
       {#each ToolSources as toolSource}
         <div class="tool-source-tile">
           <div class="tool-source-header">
-            <div class="tool-source-icon">
-              {#if Logos[toolSource.type]}
+            {#if Logos[toolSource.type]}
+              <div class="tool-source-icon">
                 <svelte:component
                   this={Logos[toolSource.type]}
-                  height="24"
-                  width="24"
+                  height="20"
+                  width="20"
                 />
-              {/if}
-            </div>
+              </div>
+            {/if}
             <Heading size="XS">{toolSource.name}</Heading>
           </div>
-          <Body size="S">
-            {toolSource.description}
-          </Body>
-          <Button
-            cta
-            size="S"
-            disabled={toolSources.some(ts => ts.type === toolSource.type)}
-            on:click={() => openToolConfig(toolSource)}
-          >
-            Connect
-          </Button>
+          <div class="tool-source-description">
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              {toolSource.description}
+            </Body>
+          </div>
+          {#if toolSources.some(ts => ts.type === toolSource.type)}
+            <div class="tile-connected">
+              <Icon size="S" name="CheckmarkCircle" />
+              Connected
+            </div>
+          {:else}
+            <div>
+              <Button cta size="S" on:click={() => openToolConfig(toolSource)}>
+                Connect
+              </Button>
+            </div>
+          {/if}
         </div>
       {/each}
     </section>
@@ -721,7 +722,7 @@
   .tool-source-tiles {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
   }
 
   .tool-source-tile {
@@ -729,18 +730,33 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    height: 100px;
-    border-radius: 5px;
+    justify-content: flex-start;
+    gap: var(--spacing-m);
+    height: 110px;
+    border-radius: 4px;
   }
 
   .tool-source-header {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
-    margin-bottom: var(--spacing-s);
+    gap: var(--spacing-m);
   }
-
+  .tool-source-description {
+    flex: 1 1 auto;
+  }
+  .tool-source-description :global(p) {
+    overflow: hidden;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+  }
+  .tile-connected {
+    color: var(--spectrum-global-color-green-400);
+    display: flex;
+    gap: 6px;
+    font-size: 12px;
+  }
   .tool-source-icon {
     display: flex;
     align-items: center;
@@ -853,19 +869,6 @@
   }
   .tool-toggle-switch {
     margin-right: -14px;
-  }
-
-  .vote-banner {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-l);
-    background-color: #2e3851;
-    border-radius: var(--border-radius-m);
-    padding: var(--spacing-s);
-  }
-
-  .vote-banner:last-child {
-    margin-left: auto;
   }
 
   .delete-confirm-content {
