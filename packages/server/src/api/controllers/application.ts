@@ -268,15 +268,15 @@ export async function fetchClientApps(
 
   const result: App[] = []
   for (const app of apps) {
-    const workspaces = await db.doWithDB(app.appId, db =>
+    const workspaceApps = await db.doWithDB(app.appId, db =>
       sdk.workspaceApps.fetch(db)
     )
-    for (const workspace of workspaces) {
+    for (const workspaceApp of workspaceApps) {
       result.push({
         ...app,
-        appId: `${app.appId}_${workspace._id}`,
-        name: `${app.name} - ${workspace.name}`,
-        url: `${app.url}${workspace.urlPrefix}`,
+        appId: `${app.appId}_${workspaceApp._id}`,
+        name: `${workspaceApp.name}`,
+        url: `${app.url}${workspaceApp.urlPrefix}`,
       })
     }
   }
