@@ -10,7 +10,10 @@ import {
 } from "@budibase/types"
 import { generateRowActionsID } from "../../../db/utils"
 import automations from "../automations"
-import { automations as sharedAutomations } from "@budibase/shared-core"
+import {
+  isViewId,
+  automations as sharedAutomations,
+} from "@budibase/shared-core"
 import * as triggers from "../../../automations/triggers"
 import sdk from "../.."
 
@@ -170,7 +173,7 @@ async function updateDoc(
 
 async function guardView(tableId: string, viewId: string) {
   let view
-  if (docIds.isViewId(viewId)) {
+  if (isViewId(viewId)) {
     view = await sdk.views.get(viewId)
   }
   if (!view || view.tableId !== tableId) {

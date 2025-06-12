@@ -1,6 +1,6 @@
 import { DocumentType, permissions, roles } from "@budibase/backend-core"
 import { VirtualDocumentType } from "../db/utils"
-import { getDocumentType, getVirtualDocumentType } from "@budibase/types"
+import { getDocumentType, getVirtualDocumentType } from "@budibase/shared-core"
 
 export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
   permissions.PermissionLevel.WRITE,

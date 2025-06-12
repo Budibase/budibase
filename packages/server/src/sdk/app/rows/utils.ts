@@ -18,11 +18,16 @@ import {
 } from "@budibase/types"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
-import { extractViewInfoFromID, isRelationshipColumn } from "../../../db/utils"
+import { isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
-import { docIds, sql, SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
+import { sql, SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getTableFromSource } from "../../../api/controllers/row/utils"
 import env from "../../../environment"
+import {
+  getTableIdFromViewId,
+  isDatasourceOrDatasourcePlusId,
+  isViewId,
+} from "@budibase/shared-core"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.POSTGRES]: SqlClient.POSTGRES,
@@ -109,7 +114,7 @@ export async function enrichQueryJson(
   let table: Table
   if (typeof json.endpoint.entityId === "string") {
     let entityId = json.endpoint.entityId
-    if (docIds.isDatasourceId(entityId)) {
+    if (isDatasourceOrDatasourcePlusId(entityId)) {
       entityId = sql.utils.breakExternalTableId(entityId).tableName
     }
     table = tables[entityId]
@@ -375,9 +380,9 @@ export function isArrayFilter(operator: any): operator is ArrayOperator {
 }
 
 export function tryExtractingTableAndViewId(tableOrViewId: string) {
-  if (docIds.isViewId(tableOrViewId)) {
+  if (isViewId(tableOrViewId)) {
     return {
-      tableId: extractViewInfoFromID(tableOrViewId).tableId,
+      tableId: getTableIdFromViewId(tableOrViewId),
       viewId: tableOrViewId,
     }
   }
@@ -386,7 +391,7 @@ export function tryExtractingTableAndViewId(tableOrViewId: string) {
 }
 
 export function getSource(tableOrViewId: string) {
-  if (docIds.isViewId(tableOrViewId)) {
+  if (isViewId(tableOrViewId)) {
     return sdk.views.get(tableOrViewId)
   }
   return sdk.tables.getTable(tableOrViewId)

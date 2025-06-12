@@ -1,6 +1,6 @@
 import * as utils from "../../../../db/utils"
 
-import { docIds, sql } from "@budibase/backend-core"
+import { sql } from "@budibase/backend-core"
 import {
   Ctx,
   DatasourcePlusQueryResponse,
@@ -19,7 +19,7 @@ import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
 import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
-import { helpers } from "@budibase/shared-core"
+import { getTableIdFromViewId, helpers, isViewId } from "@budibase/shared-core"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -63,9 +63,9 @@ export function getSourceId(ctx: Ctx): { tableId: string; viewId?: string } {
   // top priority, use the URL first
   if (ctx.params?.sourceId) {
     const { sourceId } = ctx.params
-    if (docIds.isViewId(sourceId)) {
+    if (isViewId(sourceId)) {
       return {
-        tableId: utils.extractViewInfoFromID(sourceId).tableId,
+        tableId: getTableIdFromViewId(sourceId),
         viewId: sql.utils.encodeViewId(sourceId),
       }
     }

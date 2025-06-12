@@ -5,9 +5,10 @@ import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
 import { ensureQuerySet, ensureQueryUISet } from "./utils"
+import { getTableIdFromViewId } from "@budibase/shared-core"
 
 export async function get(viewId: string): Promise<ViewV2> {
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
   const table = await sdk.tables.getTable(tableId)
   const views = Object.values(table.views!).filter(isV2)
   const found = views.find(v => v.id === viewId)
@@ -20,7 +21,7 @@ export async function get(viewId: string): Promise<ViewV2> {
 export async function getEnriched(
   viewId: string
 ): Promise<ViewV2Enriched | undefined> {
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
   const table = await sdk.tables.getTable(tableId)
   const views = Object.values(table.views!).filter(isV2)
   const found = views.find(v => v.id === viewId)

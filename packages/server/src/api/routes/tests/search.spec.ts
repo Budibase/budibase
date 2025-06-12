@@ -3,7 +3,6 @@ import { datasourceDescribe } from "../../../integrations/tests/utils"
 import {
   context,
   db as dbCore,
-  docIds,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
   setEnv,
@@ -38,7 +37,7 @@ import {
 import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, isViewId } from "@budibase/shared-core"
 import { Knex } from "knex"
 import { generator, structures, mocks } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
@@ -146,7 +145,7 @@ if (descriptions.length) {
       }
 
       async function getTable(tableOrViewId: string): Promise<Table> {
-        if (docIds.isViewId(tableOrViewId)) {
+        if (isViewId(tableOrViewId)) {
           const view = await config.api.viewV2.get(tableOrViewId)
           return await config.api.table.get(view.tableId)
         } else {
@@ -4072,7 +4071,7 @@ if (descriptions.length) {
                           },
                         })
 
-                        if (docIds.isViewId(tableOrViewId)) {
+                        if (isViewId(tableOrViewId)) {
                           const view =
                             await config.api.viewV2.get(tableOrViewId)
                           await config.api.viewV2.update({
