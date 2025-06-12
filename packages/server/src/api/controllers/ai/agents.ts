@@ -137,7 +137,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.set("Connection", "keep-alive")
   ctx.set("Access-Control-Allow-Origin", "*")
   ctx.set("Access-Control-Allow-Headers", "Cache-Control")
-  
+
   // Disable buffering for better streaming
   ctx.res.setHeader("X-Accel-Buffering", "no") // Nginx
   ctx.res.setHeader("Transfer-Encoding", "chunked")
@@ -186,7 +186,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     for await (const chunk of model.chatStream(prompt)) {
       // Send chunk to client
       ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
-      
+
       if (chunk.type === "done") {
         finalMessages = chunk.messages || []
         totalTokens = chunk.tokensUsed || 0
