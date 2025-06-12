@@ -410,7 +410,7 @@
     </div>
   </div>
 
-  <Panel customWidth={320} borderLeft noHeaderBorder>
+  <Panel customWidth={320} borderLeft noHeaderBorder={panelView === "tools"}>
     <NavHeader
       slot="panel-title-content"
       title="Tools"
@@ -439,7 +439,7 @@
           </Body>
         </div>
       {/if}
-      <div slot="right">
+      <div slot="right" style="display:contents;">
         {#if panelView === "toolConfig"}
           <Button
             cta
@@ -450,80 +450,74 @@
         {/if}
       </div>
     </NavHeader>
-    <div class="tab-content">
+    {#if panelView === "tools"}
       <Layout paddingX="L" paddingY="none" gap="S">
-        {#if panelView === "tools"}
-          <InfoDisplay
-            body="Add tools to give your agent knowledge and allow it to take
+        <InfoDisplay
+          body="Add tools to give your agent knowledge and allow it to take
                 action"
-          />
-          <Layout noPadding noGap>
-            {#if toolSources.length > 0}
-              <div class="saved-tools-list">
-                {#each toolSources as toolSource}
-                  {@const menuCallback = createToolMenuCallback(toolSource)}
-                  <NavItem
-                    text={ToolSources.find(ts => ts.type === toolSource.type)
-                      ?.name || ""}
-                    on:click={() => openToolsConfig(toolSource)}
-                    on:contextmenu={menuCallback}
-                  >
-                    <div class="tool-icon" slot="icon">
-                      <svelte:component
-                        this={Logos[toolSource.type]}
-                        height="16"
-                        width="16"
-                      />
-                    </div>
-                    <Icon
-                      on:click={menuCallback}
-                      hoverable
-                      name="MoreSmallList"
-                    />
-                    <Icon size="S" name="ChevronRight" slot="right" />
-                  </NavItem>
-                {/each}
-              </div>
-            {:else}
-              <div class="empty-state">
-                <Body size="S">
-                  No tools connected yet.
-                  <br />
-                  Click "Add Tools" to get started!
-                </Body>
-              </div>
-            {/if}
-          </Layout>
-        {:else if panelView === "toolConfig"}
-          {#if selectedConfigToolSource?.tools}
-            <div class="tools-list">
-              {#each selectedConfigToolSource.tools as tool}
-                <div class="tool-toggle-item">
-                  <div class="tool-toggle-info">
-                    <div class="tool-toggle-name">{tool.name}</div>
-                    <div class="tool-toggle-description">
-                      {tool.description}
-                    </div>
-                  </div>
-                  <div class="tool-toggle-switch">
-                    <Toggle
-                      value={!selectedConfigToolSource.disabledTools?.includes(
-                        tool.name
-                      )}
-                      on:change={() => toggleTool(tool.name)}
-                    />
-                  </div>
+        />
+        {#if toolSources.length > 0}
+          <div class="saved-tools-list">
+            {#each toolSources as toolSource}
+              {@const menuCallback = createToolMenuCallback(toolSource)}
+              <NavItem
+                text={ToolSources.find(ts => ts.type === toolSource.type)
+                  ?.name || ""}
+                on:click={() => openToolsConfig(toolSource)}
+                on:contextmenu={menuCallback}
+              >
+                <div class="tool-icon" slot="icon">
+                  <svelte:component
+                    this={Logos[toolSource.type]}
+                    height="16"
+                    width="16"
+                  />
                 </div>
-              {/each}
-            </div>
-          {:else}
-            <div class="empty-state">
-              <Body size="S">No tools available for this source.</Body>
-            </div>
-          {/if}
+                <Icon on:click={menuCallback} hoverable name="MoreSmallList" />
+                <Icon size="S" name="ChevronRight" slot="right" />
+              </NavItem>
+            {/each}
+          </div>
+        {:else}
+          <div class="empty-state">
+            <Body size="S">
+              No tools connected yet.
+              <br />
+              Click "Add Tools" to get started!
+            </Body>
+          </div>
         {/if}
       </Layout>
-    </div>
+    {:else if panelView === "toolConfig"}
+      <Layout paddingX="L" paddingY="L" gap="S">
+        {#if selectedConfigToolSource?.tools}
+          <div class="tools-list">
+            {#each selectedConfigToolSource.tools as tool}
+              <div class="tool-toggle-item">
+                <div class="tool-toggle-info">
+                  <div class="tool-toggle-name">{tool.name}</div>
+                  <div class="tool-toggle-description">
+                    {tool.description}
+                  </div>
+                </div>
+                <div class="tool-toggle-switch">
+                  <Toggle
+                    value={!selectedConfigToolSource.disabledTools?.includes(
+                      tool.name
+                    )}
+                    on:change={() => toggleTool(tool.name)}
+                  />
+                </div>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <div class="empty-state">
+            <Body size="S">No tools available for this source.</Body>
+          </div>
+        {/if}
+      </Layout>
+    {/if}
   </Panel>
 </div>
 
