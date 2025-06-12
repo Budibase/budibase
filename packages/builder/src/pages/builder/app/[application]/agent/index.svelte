@@ -9,8 +9,6 @@
     Modal,
     ModalContent,
     notifications,
-    Tab,
-    Tabs,
     TextArea,
     Toggle,
   } from "@budibase/bbui"
