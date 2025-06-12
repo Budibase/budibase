@@ -29,6 +29,20 @@ const migration = async () => {
       workspaceAppId,
     }))
 
+  // TODO: this can be removed when shipped, put in here to fix already migrated dev environments
+  for (const workspaceApp of allWorkspaceApps) {
+    if (workspaceApp.url) {
+      continue
+    }
+
+    docsToUpdate.push({
+      ...workspaceApp,
+      // @ts-expect-error urlPrefix was deleted from the object
+      url: workspaceApp.urlPrefix,
+      urlPrefix: undefined,
+    })
+  }
+
   const designDoc = await db.get<DesignDocument>("_design/database")
   if (
     designDoc.views?.[ViewName.ROUTING] &&
