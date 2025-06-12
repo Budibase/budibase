@@ -283,7 +283,7 @@
 
   .pagination-wrapper {
     display: flex;
-    justify-content: center;
+    justify-content: right;
     padding: var(--spacing-m) 0;
     border-top: 1px solid var(--spectrum-global-color-gray-300);
     margin-top: var(--spacing-s);
