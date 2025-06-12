@@ -71,7 +71,6 @@ export class ConfluenceClient {
           "Perform deep text search across Confluence content using CQL",
         parameters: z.object({
           query: z.string().describe("Text to search for in content"),
-          spaceKey: z.string().optional().describe("Filter by space key"),
           contentType: z
             .enum(["page", "blogpost", "comment", "attachment"])
             .optional()
@@ -81,16 +80,12 @@ export class ConfluenceClient {
             .optional()
             .describe("Maximum number of results to return"),
         }),
-        handler: async ({ query, spaceKey, contentType, limit = 10 }) => {
+        handler: async ({ query, contentType, limit = 10 }) => {
           // Use v1 API for CQL search as v2 doesn't support full CQL
           const url = `${this.baseUrl}/wiki/rest/api/content/search`
 
           // Build CQL query for text search
           let cql = `text ~ "${query}~"`
-
-          if (spaceKey) {
-            cql += ` AND space = "${spaceKey}"`
-          }
 
           if (contentType) {
             cql += ` AND type = "${contentType}"`
@@ -155,7 +150,7 @@ export class ConfluenceClient {
             .optional()
             .describe("Space status filter"),
         }),
-        handler: async ({ limit = 25, type, status }) => {
+        handler: async ({ limit = 100, type, status }) => {
           const params = new URLSearchParams({
             limit: limit.toString(),
           })

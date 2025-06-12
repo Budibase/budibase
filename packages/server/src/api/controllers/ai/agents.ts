@@ -137,6 +137,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.set("Connection", "keep-alive")
   ctx.set("Access-Control-Allow-Origin", "*")
   ctx.set("Access-Control-Allow-Headers", "Cache-Control")
+  
+  // Disable buffering for better streaming
+  ctx.res.setHeader("X-Accel-Buffering", "no") // Nginx
+  ctx.res.setHeader("Transfer-Encoding", "chunked")
 
   const toolSources = await db.allDocs<AgentToolSource>(
     docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
@@ -182,7 +186,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     for await (const chunk of model.chatStream(prompt)) {
       // Send chunk to client
       ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
-
+      
       if (chunk.type === "done") {
         finalMessages = chunk.messages || []
         totalTokens = chunk.tokensUsed || 0
@@ -257,7 +261,14 @@ export async function fetchHistory(
       include_docs: true,
     })
   )
-  ctx.body = history.rows.map(row => row.doc!)
+  // Sort by creation time, newest first
+  ctx.body = history.rows
+    .map(row => row.doc!)
+    .sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return timeB - timeA // Newest first
+    })
 }
 
 export async function fetchToolSources(
