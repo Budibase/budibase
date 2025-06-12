@@ -247,10 +247,28 @@ export const addSampleData = async (
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
-  ctx.body = await sdk.applications.fetch(
+  const apps = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
   )
+
+  const result: FetchAppsResponse = []
+  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    for (const app of apps) {
+      const workspaceApps = await db.doWithDB(app.appId, db =>
+        sdk.workspaceApps.fetch(db)
+      )
+
+      result.push({
+        ...app,
+        defaultWorkspaceAppUrl: workspaceApps[0]?.urlPrefix || "",
+      })
+    }
+  } else {
+    result.push(...apps.map(a => ({ ...a, defaultWorkspaceAppUrl: "" })))
+  }
+
+  ctx.body = result
 }
 export async function fetchClientApps(
   ctx: UserCtx<void, FetchPublishedAppsResponse>
