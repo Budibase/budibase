@@ -881,11 +881,12 @@
     padding: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
-    background-color: var(--spectrum-alias-background-color-secondary);
+    background-color: var(--background-alt);
   }
 
   .tool-source-preview .tool-name {
     font-weight: 600;
     color: var(--spectrum-global-color-gray-900);
+    margin: 0;
   }
 </style>
