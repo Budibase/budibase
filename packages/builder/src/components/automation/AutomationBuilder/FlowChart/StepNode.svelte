@@ -1,6 +1,7 @@
 <script>
   import FlowItem from "./FlowItem.svelte"
   import BranchNode from "./BranchNode.svelte"
+  import { ViewMode } from "@/types/automations"
   import { AutomationActionStepId } from "@budibase/types"
   import { ActionButton, notifications } from "@budibase/bbui"
   import { automationStore } from "@/stores/builder"
@@ -15,7 +16,8 @@
   export let blocks
   export let isLast = false
   export let logData = null
-  export let viewMode = "editor"
+  export let viewMode = ViewMode.EDITOR
+  export let onStepSelect = () => {}
 
   const memoEnvVariables = memo($environment.variables)
   const view = getContext("draggableView")
@@ -33,21 +35,21 @@
   $: stepStatus = getStepStatus(logStepData)
 
   function getLogStepData(logData, step, stepIdx) {
-    if (!logData || viewMode !== "logs") return null
-    
+    if (!logData || viewMode !== ViewMode.LOGS) return null
+
     // For trigger step
     if (step.type === "TRIGGER") {
       return logData.trigger
     }
-    
-    // For action steps (skip trigger in steps array)
-    const actionSteps = logData.steps?.slice(1) || []
-    return actionSteps[stepIdx - 1] // stepIdx includes trigger, so subtract 1
+
+    // For action steps, find by stepId match instead of position
+    const logSteps = logData.steps || []
+    return logSteps.find(logStep => logStep.stepId === step.stepId)
   }
 
   function getStepStatus(stepData) {
     if (!stepData) return null
-    
+
     if (stepData.outputs?.success === false) {
       return "error"
     } else if (stepData.outputs?.success === true) {
@@ -184,6 +186,7 @@
               {blocks}
               {logData}
               {viewMode}
+              {onStepSelect}
             />
           {/each}
         </div>
@@ -203,6 +206,7 @@
       {stepStatus}
       {logStepData}
       {viewMode}
+      {onStepSelect}
     />
   </div>
 {/if}

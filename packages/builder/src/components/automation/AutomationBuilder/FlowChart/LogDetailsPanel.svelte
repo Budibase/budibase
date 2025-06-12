@@ -1,119 +1,113 @@
 <script>
-  import { Detail, Body, Tabs, Tab, Icon, Button } from "@budibase/bbui"
-  import FlowItemStatus from "./FlowItemStatus.svelte"
+  import { Body, Icon, ActionButton, Divider } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
   import JSONViewer from "@/components/common/JSONViewer.svelte"
   import { fly } from "svelte/transition"
   import dayjs from "dayjs"
   import StatusRenderer from "@/pages/builder/app/[application]/settings/automations/_components/StatusRenderer.svelte"
+
   export let log
-  export let onClose = () => {}
+  export let selectedStep = null
   export let onBack = () => {}
 
   let selectedTab = "Data in"
-  let selectedStep = null
+  const tabs = ["Data in", "Data out", "Issues"]
+
   $: logDate = log ? dayjs(log.createdAt).format("MMM DD, YYYY HH:mm:ss") : ""
-  $: triggerData = log?.trigger?.outputs || {}
-  $: stepsData = log?.steps?.slice(1) || [] // Skip trigger step
-  $: allOutputs = stepsData.reduce(
-    (acc, step, idx) => {
-      acc[`Step ${idx + 1} (${step.stepId})`] = step.outputs
-      return acc
-    },
-    { Trigger: triggerData }
-  )
+  $: currentStepData = getCurrentStepData(selectedStep)
 
-  $: allInputs = stepsData.reduce(
-    (acc, step, idx) => {
-      acc[`Step ${idx + 1} (${step.stepId})`] = step.inputs
-      return acc
-    },
-    { Trigger: log?.trigger?.inputs || {} }
-  )
+  function getCurrentStepData(step) {
+    if (!step) return null
 
-  $: errors = getErrors()
-
-  function getErrors() {
-    if (!log) return []
-
-    const errorList = []
-
-    // Check trigger errors
-    if (log.trigger?.outputs?.success === false) {
-      errorList.push({
-        step: "Trigger",
-        stepId: log.trigger.stepId,
-        message: log.trigger.outputs?.message || "Trigger failed",
-        outputs: log.trigger.outputs,
-      })
+    return {
+      inputs: step.inputs || {},
+      outputs: step.outputs || {},
+      errors: getStepErrors(step),
     }
+  }
+  function getStepErrors(step) {
+    if (!step || step.outputs?.success !== false) return []
 
-    // Check step errors
-    stepsData?.forEach((step, idx) => {
-      if (step.outputs?.success === false) {
-        errorList.push({
-          step: `Step ${idx + 1}`,
-          stepId: step.stepId,
-          message: step.outputs?.message || "Step failed",
-          outputs: step.outputs,
-        })
-      }
-    })
-
-    return errorList
+    return [
+      {
+        message: step.outputs?.message || "Step failed",
+        type: "error",
+      },
+    ]
   }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
-  <Panel titleCSS={false} customWidth={400} borderLeft>
-    <div slot="panel-title-content">
-      <div class="log-header-container">
-        <div class="log-title">
-          <Icon name="ChevronLeft" size="S" on:click={onBack} />
-          <Body size="S" textAlign="left">
-            {log?.automationName || "Automation"} log
-          </Body>
-        </div>
-        <div class="log-title">
-          <Body size="S" textAlign="left">
-            {logDate}
-          </Body>
-        </div>
+  <Panel customWidth={400} borderLeft titleCSS={false}>
+    <div slot="panel-title-content" class="log-header-container">
+      <div class="log-header-left">
+        <Icon name="ChevronLeft" hoverable on:click={onBack} />
+        <Body size="S" textAlign="left">
+          {log?.automationName || "Automation"} log
+        </Body>
+      </div>
+      <div class="log-header-right">
+        <Body
+          size="S"
+          textAlign="left"
+          color="var(--spectrum-global-color-gray-600)"
+        >
+          {logDate}
+        </Body>
+        <StatusRenderer value={log.status} />
       </div>
     </div>
 
-    <div class="steps-breakdown">
-      {#if log?.steps && log.steps.length > 0}
-        {#each log.steps as step, stepIdx}
-          <div class="step-item" on:click={() => (selectedStep = step)}>
-            <div class="step-content">
-              <div class="step-info">
-                <div class="step-icon">
-                  <!-- Placeholder icon -->
-                  <div class="icon-placeholder"></div>
+    {#if selectedStep}
+      <div class="panel-content">
+        <div class="tabs">
+          {#each tabs as tab}
+            <ActionButton
+              selected={tab === selectedTab}
+              quiet
+              on:click={() => (selectedTab = tab)}
+            >
+              {tab}
+              {#if tab === "Issues" && currentStepData?.errors?.length > 0}
+                <span class="error-count"
+                  >({currentStepData.errors.length})</span
+                >
+              {/if}
+            </ActionButton>
+          {/each}
+        </div>
+        <Divider noMargin />
+
+        <div class="step-data-viewer">
+          {#if selectedTab === "Data in"}
+            <JSONViewer value={currentStepData?.inputs} />
+          {:else if selectedTab === "Data out"}
+            <JSONViewer value={currentStepData?.outputs} />
+          {:else if selectedTab === "Issues"}
+            <div class="issues-panel">
+              {#if currentStepData?.errors?.length > 0}
+                {#each currentStepData.errors as error}
+                  <div class="issue error">
+                    <Icon name="Alert" />
+                    <span>{error.message}</span>
+                  </div>
+                {/each}
+              {:else}
+                <div class="no-issues">
+                  <Body size="S" textAlign="center">No issues found</Body>
                 </div>
-                <div class="step-details">
-                  <Detail size="S" weight="600">
-                    {stepIdx === 0 ? "TRIGGER" : `STEP ${stepIdx}`} ({step.stepId?.toUpperCase() ||
-                      "UNKNOWN"})
-                  </Detail>
-                  <Body size="XS">{step.name || "Unknown Step"}</Body>
-                  <Body size="XS"
-                    >{Object.keys(step.outputs || {}).length} keys</Body
-                  >
-                </div>
-              </div>
-              <div class="step-status">
-                <StatusRenderer value={step.status} />
-              </div>
+              {/if}
             </div>
-          </div>
-        {/each}
-      {:else}
-        <Body size="S" textAlign="center">No steps available</Body>
-      {/if}
-    </div>
+          {/if}
+        </div>
+      </div>
+    {:else}
+      <div class="no-step-selected">
+        <Body size="S" textAlign="center">
+          Select a step in the automation flow to view its data
+        </Body>
+      </div>
+    {/if}
   </Panel>
 </div>
 
@@ -134,103 +128,83 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-s);
+    flex: 1;
+    min-width: 0;
   }
 
-  .log-title {
+  .log-header-left {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    gap: var(--spacing-s);
-  }
-
-  .steps-breakdown {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    padding: var(--spacing-m);
-  }
-
-  .step-item {
-    border-radius: 6px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-global-color-gray-100);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .step-item:hover {
-    background: var(--spectrum-global-color-gray-200);
-    border-color: var(--spectrum-global-color-gray-400);
-  }
-
-  .step-content {
-    padding: var(--spacing-m);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .step-info {
-    display: flex;
     align-items: center;
     gap: var(--spacing-s);
     flex: 1;
   }
 
-  .step-icon {
-    width: 32px;
-    height: 32px;
+  .log-header-right {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-s);
+    flex-shrink: 0;
+  }
+
+  .panel-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .no-step-selected {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--spectrum-global-color-gray-300);
-    border-radius: 4px;
-  }
-
-  .icon-placeholder {
-    width: 16px;
-    height: 16px;
-    background: var(--spectrum-global-color-gray-500);
-    border-radius: 2px;
-  }
-
-  .step-details {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .step-details :global(.spectrum-Detail) {
-    color: var(--spectrum-global-color-gray-800);
-  }
-
-  .step-details :global(.spectrum-Body) {
+    height: 200px;
+    padding: var(--spacing-xl);
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .status-badge {
-    padding: 4px 12px;
-    border-radius: 16px;
+  .tabs {
+    display: flex;
+    gap: var(--spacing-s);
+    padding: var(--spacing-m) var(--spacing-l);
+    flex-shrink: 0;
+  }
+
+  .step-data-viewer {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-l);
+  }
+
+  .issues-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
+
+  .issue {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: var(--spacing-m);
+    border-radius: 4px;
+    background: var(--spectrum-semantic-negative-color-background);
+    border: 1px solid var(--spectrum-semantic-negative-color-border);
+    color: var(--spectrum-semantic-negative-color-text);
+  }
+
+  .no-issues {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 100px;
+    color: var(--spectrum-global-color-gray-600);
   }
 
-  .status-badge.success {
-    background: var(--spectrum-semantic-positive-color-background);
-    border: 1px solid var(--spectrum-semantic-positive-color-border);
-  }
-
-  .status-badge.success :global(.spectrum-Detail) {
-    color: var(--spectrum-semantic-positive-color-text);
-  }
-
-  .status-badge.error {
-    background: var(--spectrum-semantic-negative-color-background);
-    border: 1px solid var(--spectrum-semantic-negative-color-border);
-  }
-
-  .status-badge.error :global(.spectrum-Detail) {
-    color: var(--spectrum-semantic-negative-color-text);
+  .error-count {
+    margin-left: var(--spacing-xs);
+    font-size: 0.8em;
+    opacity: 0.8;
   }
 </style>

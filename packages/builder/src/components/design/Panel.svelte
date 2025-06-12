@@ -40,7 +40,8 @@
   style={panelStyle}
 >
   <div
-    class="header"
+    class:header={titleCSS}
+    class:custom-header={!titleCSS}
     class:custom={customHeaderContent}
     class:borderBottom={borderBottomHeader}
     class:noHeaderBorder
@@ -128,6 +129,14 @@
   .header.borderBottom {
     border-bottom: var(--border-light);
   }
+  .custom-header {
+    flex: 0 0 48px;
+    padding: 0 var(--spacing-l);
+    display: grid;
+    align-items: center;
+    border-bottom: var(--border-light);
+  }
+
   .title {
     flex: 1 1 auto;
     width: 0;

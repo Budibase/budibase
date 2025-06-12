@@ -5,6 +5,7 @@
     DataMode,
     FilterableRowTriggers,
     FlowStatusType,
+    ViewMode,
   } from "@/types/automations"
   import {
     type AutomationStep,
@@ -25,15 +26,17 @@
   export let block: AutomationStep | AutomationTrigger | undefined
   export let branch: Branch | undefined
   export let hideStatus: boolean | undefined = false
+  export let logStepData: any = null
+  export let viewMode: ViewMode = ViewMode.EDITOR
 
   $: blockRef = block?.id ? $selectedAutomation.blockRefs[block?.id] : null
   $: isTriggerBlock = block ? isTrigger(block) : false
 
   $: testResults = $automationStore.testResults as TestAutomationResponse
-  $: blockResult = automationStore.actions.processBlockResults(
-    testResults,
-    block
-  )
+  $: blockResult =
+    viewMode === ViewMode.LOGS && logStepData
+      ? logStepData
+      : automationStore.actions.processBlockResults(testResults, block)
   $: flowStatus = getFlowStatus(blockResult)
 
   const getFlowStatus = (
@@ -46,14 +49,21 @@
       return
     }
     const outputs = result?.outputs
+
+    // Only check for filtered row triggers when we have test results, not log data
     const isFilteredRowTrigger =
+      viewMode !== "logs" &&
       isTriggerBlock &&
+      testResults &&
       isDidNotTriggerResponse(testResults) &&
       FilterableRowTriggers.includes(block.stepId as AutomationTriggerStepId)
 
     if (
       isFilteredRowTrigger ||
-      (isFilterStep(block) && "result" in outputs && outputs.result === false)
+      (isFilterStep(block) &&
+        outputs &&
+        "result" in outputs &&
+        outputs.result === false)
     ) {
       return {
         message: "Stopped",
@@ -64,10 +74,11 @@
 
     if (branch && isBranchStep(block)) {
       // Do not give status markers to branch nodes that were not part of the run.
-      if ("branchId" in outputs && outputs.branchId !== branch.id) return
+      if (outputs && "branchId" in outputs && outputs.branchId !== branch.id)
+        return
 
       // Mark branches as stopped when no branch criteria was met
-      if (outputs.success == false) {
+      if (outputs && outputs.success == false) {
         return {
           message: "Stopped",
           icon: "Alert",

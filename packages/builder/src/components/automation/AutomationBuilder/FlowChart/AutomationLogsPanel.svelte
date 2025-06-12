@@ -1,15 +1,7 @@
 <script>
-  import {
-    Detail,
-    Body,
-    Select,
-    Button,
-    notifications,
-    Divider,
-    Pagination,
-  } from "@budibase/bbui"
+  import { Body, Select, notifications, Pagination } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
-  import { automationStore, appStore } from "@/stores/builder"
+  import { automationStore } from "@/stores/builder"
   import { createPaginationStore } from "@/helpers/pagination"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
@@ -30,7 +22,6 @@
   let status = null
   let timeRange = null
   let loaded = false
-  $: console.log($pageInfo)
   const timeOptions = [
     { value: "1-d", label: "Past day" },
     { value: "1-h", label: "Past 1 hour" },
@@ -114,13 +105,13 @@
     onSelectLog(log)
   }
 
-  function goToPrevPage() {
+  function _goToPrevPage() {
     if ($pageInfo.page > 0) {
       pageInfo.prevPage()
     }
   }
 
-  function goToNextPage() {
+  function _goToNextPage() {
     if ($pageInfo.hasNextPage) {
       pageInfo.nextPage()
     }
@@ -170,6 +161,8 @@
           {:else}
             <div class="logs-items">
               {#each runHistory as log, idx}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div class="log-item" on:click={() => selectLog(log)}>
                   <div class="log-content">
                     <div class="log-info">

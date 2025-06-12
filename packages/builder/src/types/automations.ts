@@ -23,6 +23,11 @@ export enum DataMode {
   ERRORS = "errors",
 }
 
+export enum ViewMode {
+  EDITOR = "editor",
+  LOGS = "logs",
+}
+
 export enum SchemaFieldTypes {
   LONGFORM = "longform",
   JSON = "json",

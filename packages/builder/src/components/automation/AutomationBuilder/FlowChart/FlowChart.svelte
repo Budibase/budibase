@@ -3,8 +3,8 @@
     automationStore,
     automationHistoryStore,
     selectedAutomation,
-    appStore,
   } from "@/stores/builder"
+  import { ViewMode } from "@/types/automations"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import {
@@ -22,7 +22,6 @@
   import DraggableCanvas from "../DraggableCanvas.svelte"
   import { onMount } from "svelte"
   import { environment } from "@/stores/portal"
-  import Count from "../../SetupPanel/Count.svelte"
   import AutomationLogsPanel from "./AutomationLogsPanel.svelte"
   import LogDetailsPanel from "./LogDetailsPanel.svelte"
 
@@ -37,11 +36,12 @@
   let treeEle
   let draggable
 
-  let prodErrors
+  let _prodErrors
   let showLogsPanel = false
   let showLogDetails = false
   let selectedLog = null
-  let viewMode = "editor" // "editor" or "logs"
+  let selectedStepData = null
+  let viewMode = ViewMode.EDITOR
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -51,9 +51,20 @@
   // Parse the automation tree state
   $: refresh($memoAutomation)
 
-  $: blocks = getBlocks($memoAutomation).filter(
-    x => x.stepId !== ActionStepID.LOOP
-  )
+  $: blocks = getBlocks($memoAutomation)
+    .filter(x => x.stepId !== ActionStepID.LOOP)
+    .filter(block => {
+      // In logs mode, only show steps that have corresponding log data
+      if (viewMode === ViewMode.LOGS && selectedLog) {
+        if (block.type === "TRIGGER") {
+          return !!selectedLog.trigger
+        }
+        return selectedLog.steps?.some(
+          logStep => logStep.stepId === block.stepId
+        )
+      }
+      return true
+    })
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const refresh = () => {
@@ -86,7 +97,7 @@
         automationId: automation._id,
         status: "error",
       })
-      prodErrors = response?.data?.length || 0
+      _prodErrors = response?.data?.length || 0
     } catch (error) {
       console.error(error)
     }
@@ -97,9 +108,9 @@
     if (showLogsPanel) {
       showLogDetails = false
       selectedLog = null
-      viewMode = "logs"
+      viewMode = ViewMode.LOGS
     } else {
-      viewMode = "editor"
+      viewMode = ViewMode.EDITOR
     }
   }
 
@@ -107,19 +118,30 @@
     selectedLog = log
     showLogDetails = true
     showLogsPanel = false
+    selectedStepData = null // Clear selected step when switching logs
   }
 
   function handleBackToLogs() {
     showLogDetails = false
     showLogsPanel = true
     selectedLog = null
+    selectedStepData = null
   }
 
   function closeAllPanels() {
     showLogsPanel = false
     showLogDetails = false
     selectedLog = null
-    viewMode = "editor"
+    selectedStepData = null
+    viewMode = ViewMode.EDITOR
+  }
+
+  function handleStepSelect(stepData) {
+    selectedStepData = stepData
+    if (!showLogDetails && selectedLog) {
+      showLogDetails = true
+      showLogsPanel = false
+    }
   }
 </script>
 
@@ -133,9 +155,9 @@
         <ActionButton
           icon="Edit"
           quiet
-          selected={viewMode === "editor"}
+          selected={viewMode === ViewMode.EDITOR}
           on:click={() => {
-            viewMode = "editor"
+            viewMode = ViewMode.EDITOR
             closeAllPanels()
           }}
         >
@@ -144,9 +166,11 @@
         <ActionButton
           icon="AppleFiles"
           quiet
-          selected={viewMode === "logs" || showLogsPanel || showLogDetails}
+          selected={viewMode === ViewMode.LOGS ||
+            showLogsPanel ||
+            showLogDetails}
           on:click={() => {
-            viewMode = "logs"
+            viewMode = ViewMode.LOGS
             if (!showLogsPanel && !showLogDetails) {
               toggleLogsPanel()
             }
@@ -234,6 +258,7 @@
               blocks={blockRefs}
               logData={selectedLog}
               {viewMode}
+              onStepSelect={handleStepSelect}
             />
           {/each}
         {/if}
@@ -274,6 +299,7 @@
 {#if showLogDetails && selectedLog}
   <LogDetailsPanel
     log={selectedLog}
+    selectedStep={selectedStepData}
     onClose={closeAllPanels}
     onBack={handleBackToLogs}
   />

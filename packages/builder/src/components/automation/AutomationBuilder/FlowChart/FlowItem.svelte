@@ -1,5 +1,6 @@
 <script>
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
+  import { ViewMode } from "@/types/automations"
   import { Modal } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
@@ -19,7 +20,8 @@
   export let draggable = true
   export let stepStatus = null
   export let logStepData = null
-  export let viewMode = "editor"
+  export let viewMode = ViewMode.EDITOR
+  export let onStepSelect = () => {}
 
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
@@ -157,7 +159,13 @@
         }}
       >
         <div class="block-float">
-          <FlowItemStatus {block} {automation} hideStatus={$view?.dragging} />
+          <FlowItemStatus
+            {block}
+            {automation}
+            hideStatus={$view?.dragging}
+            {logStepData}
+            {viewMode}
+          />
         </div>
         {#if draggable}
           <div
@@ -170,11 +178,14 @@
         {/if}
         <div
           class="block-core"
-          class:log-success={viewMode === "logs" && stepStatus === "success"}
-          class:log-error={viewMode === "logs" && stepStatus === "error"}
+          class:log-success={viewMode === ViewMode.LOGS &&
+            stepStatus === "success"}
+          class:log-error={viewMode === ViewMode.LOGS && stepStatus === "error"}
           on:click={async () => {
-            if (viewMode === "editor") {
+            if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
+            } else if (viewMode === ViewMode.LOGS && logStepData) {
+              onStepSelect(logStepData)
             }
           }}
         >
@@ -186,16 +197,6 @@
               on:update={e =>
                 automationStore.actions.updateBlockTitle(block, e.detail)}
             />
-            {#if viewMode === "logs" && stepStatus}
-              <div class="log-status-badge">
-                <span class="status-indicator status-{stepStatus}">
-                  {stepStatus === "success" ? "✓" : "✗"}
-                </span>
-                <span class="status-text">
-                  {stepStatus === "success" ? "Success" : "Error"}
-                </span>
-              </div>
-            {/if}
           </div>
 
           {#if isTrigger && triggerInfo}
@@ -396,13 +397,5 @@
   .status-text {
     font-weight: 600;
     text-transform: uppercase;
-  }
-
-  .log-success .status-text {
-    color: var(--spectrum-global-color-green-800);
-  }
-
-  .log-error .status-text {
-    color: var(--spectrum-global-color-red-800);
   }
 </style>
