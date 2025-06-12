@@ -62,12 +62,6 @@ export interface FetchPublishedAppsResponse {
   apps: PublishedAppData[]
 }
 
-export interface PublishResponse {
-  _id: string
-  status: string
-  appUrl: string
-}
-
 export interface UpdateAppRequest extends Partial<App> {}
 export interface UpdateAppResponse extends App {}
 export interface UpdateAppClientResponse extends App {}
