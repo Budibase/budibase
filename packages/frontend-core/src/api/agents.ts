@@ -7,36 +7,14 @@ import {
   CreateToolSourceRequest,
   FetchAgentHistoryResponse,
 } from "@budibase/types"
+import { LLMStreamChunk } from "@budibase/pro"
 import { BaseAPIClient } from "./types"
-
-export interface StreamChunk {
-  type:
-    | "content"
-    | "tool_call_start"
-    | "tool_call_result"
-    | "done"
-    | "error"
-    | "chat_saved"
-  content?: string
-  toolCall?: {
-    id: string
-    name: string
-    arguments: string
-  }
-  toolResult?: {
-    id: string
-    result: string
-    error?: string
-  }
-  chat?: AgentChat
-  tokensUsed?: number
-}
 
 export interface AgentEndpoints {
   agentChat: (chat: AgentChat) => Promise<ChatAgentResponse>
   agentChatStream: (
     chat: AgentChat,
-    onChunk: (chunk: StreamChunk) => void,
+    onChunk: (chunk: LLMStreamChunk) => void,
     onError?: (error: Error) => void
   ) => Promise<void>
 
@@ -103,7 +81,7 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
             try {
               const data = line.slice(6) // Remove 'data: ' prefix
               if (data.trim()) {
-                const chunk: StreamChunk = JSON.parse(data)
+                const chunk: LLMStreamChunk = JSON.parse(data)
                 onChunk(chunk)
               }
             } catch (parseError) {
