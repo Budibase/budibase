@@ -32,6 +32,7 @@ import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
 import { FIELDS, DB_TYPE_INTERNAL } from "@/constants/backend"
 import { FieldType } from "@budibase/types"
+import { getTableIdFromViewId } from "@budibase/shared-core"
 
 const { ContextScopes } = Constants
 
@@ -896,8 +897,7 @@ export const getSchemaForDatasourcePlus = (resourceId, options) => {
     ? {
         type: "viewV2",
         id: resourceId,
-        // TODO(samwho): update this to support ta_bb_* IDs (sample data)
-        tableId: resourceId.split("_").slice(1, 3).join("_"),
+        tableId: getTableIdFromViewId(resourceId),
       }
     : { type: "table", tableId: resourceId }
   return getSchemaForDatasource(null, datasource, options)
