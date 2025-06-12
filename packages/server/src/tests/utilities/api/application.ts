@@ -183,8 +183,11 @@ export class ApplicationAPI extends TestAPI {
   fetchClientApps = async (
     expectations?: Expectations
   ): Promise<FetchPublishedAppsResponse> => {
-    return await this._get<FetchPublishedAppsResponse>("/api/applications/client", {
-      expectations,
-    })
+    return await this._get<FetchPublishedAppsResponse>(
+      "/api/applications/client",
+      {
+        expectations,
+      }
+    )
   }
 }
