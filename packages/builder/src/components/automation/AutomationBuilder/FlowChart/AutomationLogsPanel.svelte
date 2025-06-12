@@ -1,7 +1,15 @@
 <script>
-  import { Body, Select, notifications, Pagination } from "@budibase/bbui"
+  import {
+    Body,
+    Select,
+    notifications,
+    Pagination,
+    Button,
+    Icon,
+  } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
   import { automationStore } from "@/stores/builder"
+  import { licensing, auth } from "@/stores/portal"
   import { createPaginationStore } from "@/helpers/pagination"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
@@ -22,12 +30,46 @@
   let status = null
   let timeRange = null
   let loaded = false
-  const timeOptions = [
+
+  // All available time options
+  const allTimeOptions = [
+    { value: "90-d", label: "Past 90 days" },
+    { value: "30-d", label: "Past 30 days" },
+    { value: "1-w", label: "Past week" },
     { value: "1-d", label: "Past day" },
     { value: "1-h", label: "Past 1 hour" },
     { value: "15-m", label: "Past 15 mins" },
     { value: "5-m", label: "Past 5 mins" },
   ]
+
+  // Get automation log retention days from license
+  $: automationLogRetentionDays =
+    $licensing.license?.quotas?.constant?.automationLogRetentionDays?.value || 1
+
+  // Filter time options based on plan restrictions
+  $: timeOptions = allTimeOptions.filter(option => {
+    if ($licensing.isFreePlan) {
+      // Free plan: only allow options that don't exceed 1 day
+      return ["1-d", "1-h", "15-m", "5-m"].includes(option.value)
+    }
+    if (!$licensing.isEnterprisePlan) {
+      // Non-enterprise plans: restrict longer retention periods
+      const retentionDays = automationLogRetentionDays
+      if (retentionDays <= 1) {
+        return ["1-d", "1-h", "15-m", "5-m"].includes(option.value)
+      } else if (retentionDays <= 7) {
+        return !["90-d", "30-d"].includes(option.value)
+      } else if (retentionDays <= 30) {
+        return option.value !== "90-d"
+      }
+    }
+    // Enterprise plan: allow all options
+    return true
+  })
+
+  // Show upgrade prompts for non-enterprise users with account portal access
+  $: showUpgradeButton =
+    !$licensing.isEnterprisePlan && $auth?.user?.accountPortalAccess
 
   const statusOptions = [
     { value: SUCCESS, label: "Success" },
@@ -101,22 +143,6 @@
     return finalHistory
   }
 
-  function selectLog(log) {
-    onSelectLog(log)
-  }
-
-  function _goToPrevPage() {
-    if ($pageInfo.page > 0) {
-      pageInfo.prevPage()
-    }
-  }
-
-  function _goToNextPage() {
-    if ($pageInfo.hasNextPage) {
-      pageInfo.nextPage()
-    }
-  }
-
   onMount(async () => {
     await fetchLogs(automation._id, status, 0, timeRange, true)
     loaded = true
@@ -152,6 +178,26 @@
         </div>
       </div>
 
+      <!-- Free plan message and upgrade prompt -->
+      {#if $licensing.isFreePlan}
+        <div class="plan-info">
+          <div class="plan-message">
+            <Icon name="Info" size="S" />
+            <Body size="S">
+              Free plan stores up to {automationLogRetentionDays} day{automationLogRetentionDays ===
+              1
+                ? ""
+                : "s"} of automation history
+            </Body>
+          </div>
+          {#if showUpgradeButton}
+            <Button size="S" cta on:click={$licensing.goToUpgradePage}>
+              Get more history
+            </Button>
+          {/if}
+        </div>
+      {/if}
+
       {#if runHistory}
         <div class="logs-list">
           {#if runHistory.length === 0}
@@ -163,7 +209,7 @@
               {#each runHistory as log, idx}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                <div class="log-item" on:click={() => selectLog(log)}>
+                <div class="log-item" on:click={() => onSelectLog(log)}>
                   <div class="log-content">
                     <div class="log-info">
                       <Body size="S" weight="600"
@@ -225,6 +271,24 @@
 
   .filter-group {
     flex: 1;
+  }
+
+  .plan-info {
+    background: var(--spectrum-global-color-gray-75);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--border-radius-s);
+    padding: var(--spacing-m);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .plan-message {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .logs-list {
