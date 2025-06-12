@@ -143,8 +143,6 @@
       automationIds: getIds(selectedAutomations),
       workspaceAppIds: getIds(selectedApps),
     })
-    // update the deployment status
-    await workspaceDeploymentStore.fetch()
     const publishedAutomations = getSelectedNames(
         selectedAutomations,
         filteredAutomations
