@@ -4,7 +4,7 @@
   import { keyUtils } from "@/helpers/keyUtils"
 
   export let title: string
-  export let placeholder: string
+  export let placeholder: string = ""
   export let value: string | undefined = undefined
   export let onAdd: (_e: Event) => void
   export let search: boolean = false

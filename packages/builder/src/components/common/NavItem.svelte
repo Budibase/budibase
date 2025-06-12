@@ -305,6 +305,7 @@
   }
   .subtext {
     color: var(--spectrum-global-color-gray-700);
+    font-weight: normal;
   }
 
   .actions {
