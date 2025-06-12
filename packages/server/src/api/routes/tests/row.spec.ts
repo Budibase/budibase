@@ -2454,7 +2454,6 @@ if (descriptions.length) {
             })
 
             it("should allow non-creator users to upload attachments to tables", async () => {
-              // Create a table
               const attachmentTable = await config.api.table.save(
                 defaultTable({
                   schema: {
@@ -2474,22 +2473,17 @@ if (descriptions.length) {
 
               // Switch to a non-creator user context
               await config.loginAsRole("ADMIN", async () => {
-                // Try to upload an attachment to the table
-                // This should use the table-specific upload endpoint
-                // which requires TABLE.WRITE permissions instead of BUILDER permissions
-                const response = await config
-                  .request!.post(
-                    `/api/attachments/${attachmentTable._id}/upload`
-                  )
-                  .attach("file", Buffer.from("test content"), "test.txt")
-                  .set(config.defaultHeaders())
-                  .expect(200)
+                const response = await config.api.attachment.upload(
+                  attachmentTable._id!,
+                  "test.txt",
+                  Buffer.from("test content")
+                )
 
-                expect(response.body).toBeDefined()
-                expect(Array.isArray(response.body)).toBe(true)
-                expect(response.body.length).toBe(1)
-                expect(response.body[0]).toHaveProperty("key")
-                expect(response.body[0]).toHaveProperty("url")
+                expect(response).toBeDefined()
+                expect(Array.isArray(response)).toBe(true)
+                expect(response.length).toBe(1)
+                expect(response[0]).toHaveProperty("key")
+                expect(response[0]).toHaveProperty("url")
               })
             })
           })
