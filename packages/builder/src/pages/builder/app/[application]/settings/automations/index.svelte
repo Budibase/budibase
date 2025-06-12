@@ -15,7 +15,6 @@
   $: isCloud = $admin.cloud
   $: chainAutomations = app?.automations?.chainAutomations ?? !isCloud
 
-
   async function save({ detail }) {
     try {
       await appsStore.save($appStore.appId, {

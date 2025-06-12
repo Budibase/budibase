@@ -26,7 +26,10 @@
   export let block: AutomationStep | AutomationTrigger | undefined
   export let branch: Branch | undefined
   export let hideStatus: boolean | undefined = false
-  export let logStepData: AutomationStepResult | AutomationTriggerResult | null = null
+  export let logStepData:
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | null = null
   export let viewMode: ViewMode = ViewMode.EDITOR
 
   $: blockRef = block?.id ? $selectedAutomation.blockRefs[block?.id] : null

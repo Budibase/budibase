@@ -454,19 +454,19 @@
     margin: 0 !important;
     transition: all 0.15s ease;
   }
-  
+
   .view-mode-toggle .group :global(.spectrum-ActionButton:hover) {
     background: var(--spectrum-global-color-gray-200) !important;
     color: var(--spectrum-global-color-gray-900) !important;
   }
-  
+
   .view-mode-toggle .group :global(.spectrum-ActionButton.is-selected) {
     background: var(--spectrum-global-color-gray-50) !important;
     color: var(--spectrum-global-color-gray-900) !important;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     font-weight: 600;
   }
-  
+
   .view-mode-toggle .group :global(.spectrum-Icon) {
     color: inherit !important;
   }
