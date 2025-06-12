@@ -171,34 +171,36 @@
             bind:value={selectedApps[targetId]}
           />
         {/if}
-        <Accordion
-          header="Publish multiple apps and automations"
-          noPadding
-          bold={false}
-        >
-          {#if filteredApps.length}
-            <Heading size="XS">Apps</Heading>
-            {#each filteredApps as app}
-              {#if app._id}
-                <Checkbox
-                  text={`${app.name}`}
-                  bind:value={selectedApps[app._id]}
-                />
-              {/if}
-            {/each}
-          {/if}
-          <Heading size="XS">Automations</Heading>
-          {#if filteredAutomations.length}
-            {#each filteredAutomations as automation}
-              {#if automation._id}
-                <Checkbox
-                  text={`${automation.name}`}
-                  bind:value={selectedAutomations[automation._id]}
-                />
-              {/if}
-            {/each}
-          {/if}
-        </Accordion>
+        {#if filteredApps.length || filteredAutomations.length}
+          <Accordion
+            header="Publish multiple apps and automations"
+            noPadding
+            bold={false}
+          >
+            {#if filteredApps.length}
+              <Heading size="XS">Apps</Heading>
+              {#each filteredApps as app}
+                {#if app._id}
+                  <Checkbox
+                    text={`${app.name}`}
+                    bind:value={selectedApps[app._id]}
+                  />
+                {/if}
+              {/each}
+            {/if}
+            {#if filteredAutomations.length}
+              <Heading size="XS">Automations</Heading>
+              {#each filteredAutomations as automation}
+                {#if automation._id}
+                  <Checkbox
+                    text={`${automation.name}`}
+                    bind:value={selectedAutomations[automation._id]}
+                  />
+                {/if}
+              {/each}
+            {/if}
+          </Accordion>
+        {/if}
         <Accordion
           header="Show everything that will be published"
           noPadding
