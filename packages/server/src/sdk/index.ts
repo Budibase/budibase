@@ -17,6 +17,7 @@ import * as oauth2 from "./app/oauth2"
 import * as ai from "./app/ai"
 import * as workspaceApps from "./app/workspaceApps"
 import * as navigation from "./app/navigation"
+import * as resources from "./app/resources"
 
 const sdk = {
   backups,
@@ -38,6 +39,7 @@ const sdk = {
   ai,
   workspaceApps,
   navigation,
+  resources,
 }
 
 // default export for TS

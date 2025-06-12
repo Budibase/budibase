@@ -3,12 +3,13 @@
   import Select from "./Core/Select.svelte"
   import { createEventDispatcher } from "svelte"
   import { PopoverAlignment } from "../constants"
+  import type { LabelPosition } from "../types"
 
   export let value: V | undefined = undefined
   export let label: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
-  export let labelPosition: string = "above"
+  export let labelPosition: LabelPosition = "above"
   export let error: string | undefined = undefined
   export let placeholder: string | boolean = "Choose an option"
   export let options: O[] = []

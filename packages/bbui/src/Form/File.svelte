@@ -2,9 +2,10 @@
   import Field from "./Field.svelte"
   import { CoreFile } from "./Core"
   import { createEventDispatcher } from "svelte"
+  import type { LabelPosition } from "../types"
 
   export let label: string | undefined = undefined
-  export let labelPosition: string = "above"
+  export let labelPosition: LabelPosition = "above"
   export let disabled: boolean = false
   export let allowClear: boolean | undefined = undefined
   export let handleFileTooLarge: (_file: File) => void = () => {}

@@ -99,9 +99,9 @@ export async function get(automationId: string) {
   return trimUnexpectedObjectFields(result)
 }
 
-export async function find(ids: string[]) {
+export async function find(ids: string[], opts?: { allowMissing?: boolean }) {
   const db = getDb()
-  const result = await db.getMultiple<PersistedAutomation>(ids)
+  const result = await db.getMultiple<PersistedAutomation>(ids, opts)
   return result.map(trimUnexpectedObjectFields)
 }
 

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     ModalContent,
     Input,
@@ -9,17 +9,21 @@
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
   import { writable, get } from "svelte/store"
   import * as appValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
-  import { appsStore, auth } from "@/stores/portal"
+  import { appsStore, auth, featureFlags } from "@/stores/portal"
   import { onMount } from "svelte"
   import { API } from "@/api"
   import { sdk } from "@budibase/shared-core"
+  import type { CreateAppRequest } from "@budibase/types"
 
-  export let appId
-  export let appName
+  export let appId: string
+  export let appName: string
   export let onDuplicateSuccess = () => {}
 
   const validation = createValidationStore()
-  const values = writable({ name: appName + " copy", url: null })
+  const values = writable<{ name: string; url: string | null }>({
+    name: appName + " copy",
+    url: null,
+  })
   const appPrefix = "/app"
 
   let defaultAppName = appName + " copy"
@@ -34,11 +38,14 @@
     })
   }
 
-  const resolveAppName = name => {
+  let appOrWorkspace: "workspace" | "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+
+  const resolveAppName = (name: string) => {
     return name ? name.trim() : null
   }
 
-  const resolveAppUrl = name => {
+  const resolveAppUrl = (name: string) => {
     let parsedName
     const resolvedName = resolveAppName(name)
     parsedName = resolvedName ? resolvedName.toLowerCase() : ""
@@ -46,12 +53,12 @@
     return encodeURI(parsedUrl)
   }
 
-  const nameToUrl = appName => {
+  const nameToUrl = (appName: string) => {
     let resolvedUrl = resolveAppUrl(appName)
     tidyUrl(resolvedUrl)
   }
 
-  const tidyUrl = url => {
+  const tidyUrl = (url: string | null) => {
     if (url && !url.startsWith("/")) {
       url = `/${url}`
     }
@@ -61,10 +68,12 @@
   const duplicateApp = async () => {
     duplicating = true
 
-    let data = new FormData()
-    data.append("name", $values.name.trim())
+    const data: CreateAppRequest = {
+      name: $values.name.trim(),
+    }
+
     if ($values.url) {
-      data.append("url", $values.url.trim())
+      data.url = $values.url.trim()
     }
 
     try {
@@ -84,8 +93,8 @@
 
   const setupValidation = async () => {
     const applications = get(appsStore).apps
-    appValidation.name(validation, { apps: applications })
-    appValidation.url(validation, { apps: applications })
+    appValidation.name(validation, { apps: applications }, appOrWorkspace)
+    appValidation.url(validation, { apps: applications }, appOrWorkspace)
 
     const { url } = $values
     validation.check({
@@ -126,7 +135,7 @@
       disabled={duplicating}
       error={$validation.touched.name && $validation.errors.name}
       on:blur={() => ($validation.touched.name = true)}
-      on:change={nameToUrl($values.name)}
+      on:change={() => nameToUrl($values.name)}
       label="Name"
       placeholder={defaultAppName}
     />
@@ -136,7 +145,7 @@
         disabled={duplicating}
         error={$validation.touched.url && $validation.errors.url}
         on:blur={() => ($validation.touched.url = true)}
-        on:change={tidyUrl($values.url)}
+        on:change={() => tidyUrl($values.url)}
         label="URL"
         placeholder={$values.url
           ? $values.url

@@ -15,6 +15,7 @@ import {
   GetDiagnosticsResponse,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
+  PublishAppRequest,
   PublishAppResponse,
   RevertAppClientResponse,
   RevertAppResponse,
@@ -32,13 +33,16 @@ export interface AppEndpoints {
     metadata: UpdateAppRequest
   ) => Promise<UpdateAppResponse>
   unpublishApp: (appId: string) => Promise<UnpublishAppResponse>
-  publishAppChanges: (appId: string) => Promise<PublishAppResponse>
+  publishAppChanges: (
+    appId: string,
+    opts?: PublishAppRequest
+  ) => Promise<PublishAppResponse>
   revertAppChanges: (appId: string) => Promise<RevertAppResponse>
   updateAppClientVersion: (appId: string) => Promise<UpdateAppClientResponse>
   revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
   releaseAppLock: (appId: string) => Promise<ClearDevLockResponse>
   getAppDeployments: () => Promise<FetchDeploymentResponse>
-  createApp: (app: CreateAppRequest) => Promise<CreateAppResponse>
+  createApp: (app: CreateAppRequest | FormData) => Promise<CreateAppResponse>
   deleteApp: (appId: string) => Promise<DeleteAppResponse>
   duplicateApp: (
     appId: string,
@@ -86,9 +90,10 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   /**
    * Publishes the current app.
    */
-  publishAppChanges: async appId => {
+  publishAppChanges: async (appId, opts) => {
     return await API.post({
       url: `/api/applications/${appId}/publish`,
+      body: opts,
     })
   },
 
@@ -136,10 +141,17 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * @param app the app to create
    */
   createApp: async app => {
+    if (app instanceof FormData) {
+      return await API.post({
+        url: "/api/applications",
+        body: app,
+        json: false,
+      })
+    }
+
     return await API.post({
       url: "/api/applications",
       body: app,
-      json: false,
     })
   },
 
@@ -151,7 +163,6 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
     return await API.post({
       url: `/api/applications/${appId}/duplicate`,
       body: app,
-      json: false,
     })
   },
 
