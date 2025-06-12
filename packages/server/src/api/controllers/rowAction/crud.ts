@@ -22,7 +22,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   const table = await getTable(ctx)
   const tableId = table._id!
 
-  const rowActions = await sdk.rowActions.getAll(tableId)
+  const rowActions = await sdk.rowActions.getAllForTable(tableId)
   if (!rowActions) {
     ctx.body = {
       actions: {},
