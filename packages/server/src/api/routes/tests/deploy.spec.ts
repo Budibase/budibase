@@ -1,5 +1,6 @@
 import * as setup from "./utilities"
 import { structures } from "@budibase/backend-core/tests"
+import { features } from "@budibase/backend-core"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { basicTable } from "../../../tests/utilities/structures"
 
@@ -9,6 +10,9 @@ describe("/api/deploy", () => {
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
+    features.testutils.setFeatureFlags("*", {
+      WORKSPACE_APPS: true,
+    })
     await config.init()
   })
 
@@ -17,10 +21,16 @@ describe("/api/deploy", () => {
   })
 
   describe("GET /api/deploy/status", () => {
-    it("returns empty state when no resources exist", async () => {
+    it("returns empty state when unpublished", async () => {
+      await config.api.application.unpublish(config.appId!)
       const res = await config.api.deploy.publishStatus()
-      expect(res.automations).toEqual({})
-      expect(res.workspaceApps).toEqual({})
+      for (const automation of Object.values(res.automations)) {
+        expect(automation.published).toBe(false)
+      }
+      // default screens will appear here
+      for (const workspaceApp of Object.values(res.workspaceApps)) {
+        expect(workspaceApp.published).toBe(false)
+      }
     })
 
     it("returns unpublished state for development-only resources", async () => {
@@ -55,13 +65,11 @@ describe("/api/deploy", () => {
     it("returns published state after full publish", async () => {
       const table = await config.api.table.save(basicTable())
 
-      // Create automation
       const { automation } = await createAutomationBuilder(config)
         .onRowSaved({ tableId: table._id! })
         .serverLog({ text: "Test automation" })
         .save()
 
-      // Create workspace app
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Test Workspace App",
@@ -69,7 +77,6 @@ describe("/api/deploy", () => {
         })
       )
 
-      // Publish all
       await config.api.application.publish(config.app!.appId)
 
       const res = await config.api.deploy.publishStatus()
@@ -101,7 +108,6 @@ describe("/api/deploy", () => {
           .serverLog({ text: "Unpublished automation" })
           .save()
 
-      // Create two workspace apps
       const { workspaceApp: publishedWorkspaceApp } =
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
@@ -118,7 +124,6 @@ describe("/api/deploy", () => {
           })
         )
 
-      // Filtered publish - only publish specific resources
       await config.api.application.filteredPublish(config.app!.appId, {
         automationIds: [publishedAutomation._id!],
         workspaceAppIds: [publishedWorkspaceApp._id!],
@@ -126,7 +131,6 @@ describe("/api/deploy", () => {
 
       const res = await config.api.deploy.publishStatus()
 
-      // Check published resources
       expect(res.automations[publishedAutomation._id!]).toEqual({
         published: true,
         name: publishedAutomation.name,
@@ -136,7 +140,6 @@ describe("/api/deploy", () => {
         name: publishedWorkspaceApp.name,
       })
 
-      // Check unpublished resources
       expect(res.automations[unpublishedAutomation._id!]).toEqual({
         published: false,
         name: unpublishedAutomation.name,
@@ -150,13 +153,11 @@ describe("/api/deploy", () => {
     it("handles app with no production database", async () => {
       const table = await config.api.table.save(basicTable())
 
-      // Create automation
       const { automation } = await createAutomationBuilder(config)
         .onRowSaved({ tableId: table._id! })
         .serverLog({ text: "Test automation" })
         .save()
 
-      // Create workspace app
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Test Workspace App",
@@ -164,7 +165,6 @@ describe("/api/deploy", () => {
         })
       )
 
-      // Don't publish - no production database should exist
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[automation._id!]).toEqual({
@@ -180,13 +180,11 @@ describe("/api/deploy", () => {
     it("returns only development resources that exist", async () => {
       const table = await config.api.table.save(basicTable())
 
-      // Create automation
       const { automation } = await createAutomationBuilder(config)
         .onRowSaved({ tableId: table._id! })
         .serverLog({ text: "Test automation" })
         .save()
 
-      // Publish all
       await config.api.application.publish(config.app!.appId)
 
       // Delete automation from development

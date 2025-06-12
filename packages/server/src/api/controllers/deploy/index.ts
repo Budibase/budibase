@@ -1,5 +1,11 @@
 import Deployment from "./Deployment"
-import { context, db as dbCore, events, cache } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  cache,
+  features,
+} from "@budibase/backend-core"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import {
   clearMetadata,
@@ -20,6 +26,7 @@ import {
   PublishAppRequest,
   PublishStatusResponse,
   WorkspaceApp,
+  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -151,6 +158,9 @@ export async function deploymentProgress(
 }
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
+  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+    return (ctx.body = { automations: {}, workspaceApps: {} })
+  }
   try {
     type State = { automations: Automation[]; workspaceApps: WorkspaceApp[] }
     let developmentState: State = { automations: [], workspaceApps: [] }
