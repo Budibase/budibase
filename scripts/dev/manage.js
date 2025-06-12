@@ -34,10 +34,10 @@ async function init() {
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
     PASSWORD_MIN_LENGTH: "1",
-    BB_ADMIN_USER_EMAIL: "",
-    BB_ADMIN_USER_PASSWORD: "",
     PLUGINS_DIR: "",
     BUDICLOUD_URL: "https://budibaseqa.app",
+    BB_ADMIN_USER_EMAIL: "local@budibase.com",
+    BB_ADMIN_USER_PASSWORD: "cheekychuckles",
   }
 
   config = { ...config, ...existingConfig }

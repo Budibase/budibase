@@ -196,6 +196,11 @@ export enum Event {
 
   // ROW ACTION
   ROW_ACTION_CREATED = "row_action:created",
+
+  //ACTION
+  ACTION_AUTOMATION_STEP_EXECUTED = "action:automation_step:executed",
+  ACTION_CRUD_EXECUTED = "action:crud:executed",
+  ACTION_AI_AGENT_EXECUTED = "action:ai_agent:executed",
 }
 
 export const UserGroupSyncEvents: Event[] = [
@@ -335,6 +340,11 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.PLUGIN_IMPORTED]: `Plugin imported`,
   [Event.PLUGIN_DELETED]: `Plugin deleted`,
   [Event.PLUGIN_INIT]: undefined,
+
+  // ACTIONS - NOT AUDITED
+  [Event.ACTION_AUTOMATION_STEP_EXECUTED]: undefined,
+  [Event.ACTION_CRUD_EXECUTED]: undefined,
+  [Event.ACTION_AI_AGENT_EXECUTED]: undefined,
 
   // ROLE - NOT AUDITED
   [Event.ROLE_CREATED]: undefined,

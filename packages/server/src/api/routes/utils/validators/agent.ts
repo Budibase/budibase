@@ -51,7 +51,6 @@ export function createToolSourceValidator() {
       type: Joi.string()
         .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
         .required(),
-      name: Joi.string().required(),
       description: OPTIONAL_STRING,
       auth: Joi.object({
         apiKey: OPTIONAL_STRING,
@@ -76,7 +75,6 @@ export function updateToolSourceValidator() {
       type: Joi.string()
         .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
         .required(),
-      name: Joi.string().required(),
       description: OPTIONAL_STRING,
       auth: Joi.object({
         apiKey: OPTIONAL_STRING,
