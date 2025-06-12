@@ -16,6 +16,7 @@ import {
   GetDiagnosticsResponse,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
+  PublishAppRequest,
   PublishAppResponse,
   RevertAppClientResponse,
   RevertAppResponse,
@@ -33,7 +34,10 @@ export interface AppEndpoints {
     metadata: UpdateAppRequest
   ) => Promise<UpdateAppResponse>
   unpublishApp: (appId: string) => Promise<UnpublishAppResponse>
-  publishAppChanges: (appId: string) => Promise<PublishAppResponse>
+  publishAppChanges: (
+    appId: string,
+    opts?: PublishAppRequest
+  ) => Promise<PublishAppResponse>
   revertAppChanges: (appId: string) => Promise<RevertAppResponse>
   updateAppClientVersion: (appId: string) => Promise<UpdateAppClientResponse>
   revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
@@ -88,9 +92,10 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   /**
    * Publishes the current app.
    */
-  publishAppChanges: async appId => {
+  publishAppChanges: async (appId, opts) => {
     return await API.post({
       url: `/api/applications/${appId}/publish`,
+      body: opts,
     })
   },
 

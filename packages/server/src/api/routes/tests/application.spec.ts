@@ -25,7 +25,13 @@ import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
 import nock from "nock"
 import path from "path"
-import { basicScreen, customScreen } from "../../../tests/utilities/structures"
+import {
+  basicScreen,
+  customScreen,
+  basicTable,
+  basicQuery,
+} from "../../../tests/utilities/structures"
+import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -769,6 +775,98 @@ describe("/applications", () => {
     it("should publish app with prod app ID", async () => {
       await config.api.application.publish(app.appId.replace("_dev", ""))
       expect(events.app.published).toHaveBeenCalledTimes(1)
+    })
+
+    it("should publish app with filtered resources, filtering by automation", async () => {
+      // create data resources
+      const table = await config.createTable(basicTable())
+      // all internal resources are published if any used
+      const tableUnused = await config.createTable(basicTable())
+      const datasource = await config.createDatasource()
+      const query = await config.createQuery(basicQuery(datasource._id!))
+
+      // automation to publish
+      const { automation } = await createAutomationBuilder(config)
+        .onRowSaved({ tableId: table._id! })
+        .executeQuery({ query: { queryId: query._id! } })
+        .save()
+
+      const rowAction = await config.api.rowAction.save(table._id!, {
+        name: "test",
+      })
+
+      // create some assets that won't be published
+      const unpublishedDatasource = await config.createDatasource()
+      const { automation: unpublishedAutomation } =
+        await createAutomationBuilder(config)
+          .onRowSaved({ tableId: table._id! })
+          .save()
+
+      await config.api.application.filteredPublish(app.appId, {
+        automationIds: [automation._id!],
+      })
+
+      await config.withProdApp(async () => {
+        const { automations } = await config.api.automation.fetch()
+        expect(
+          automations.find(auto => auto._id === automation._id!)
+        ).toBeDefined()
+        expect(
+          automations.find(auto => auto._id === unpublishedAutomation._id!)
+        ).toBeUndefined()
+        // row action automations should be published if row action published
+        expect(
+          automations.find(auto => auto._id === rowAction.automationId)
+        ).toBeDefined()
+
+        const datasources = await config.api.datasource.fetch()
+        expect(datasources.find(ds => ds._id === datasource._id!)).toBeDefined()
+        expect(
+          datasources.find(ds => ds._id === unpublishedDatasource._id!)
+        ).toBeUndefined()
+
+        const tables = await config.api.table.fetch()
+        expect(tables.find(tbl => tbl._id === table._id)).toBeDefined()
+        expect(tables.find(tbl => tbl._id === tableUnused._id)).toBeDefined()
+
+        const { actions } = await config.api.rowAction.find(table._id!)
+        expect(
+          Object.values(actions).find(action => action.id === rowAction.id)
+        ).toBeDefined()
+      })
+    })
+
+    it("should publish app with filtered resources, filtering by workspace app", async () => {
+      // create two screens with different workspaceAppIds
+      const publishedScreen = await config.api.screen.save({
+        ...basicScreen("/published-screen"),
+        workspaceAppId: "workspace-app-1",
+        name: "published-screen",
+      })
+
+      const unpublishedScreen = await config.api.screen.save({
+        ...basicScreen("/unpublished-screen"),
+        workspaceAppId: "workspace-app-2",
+        name: "unpublished-screen",
+      })
+
+      await config.api.application.filteredPublish(app.appId, {
+        workspaceAppIds: ["workspace-app-1"],
+      })
+
+      await config.withProdApp(async () => {
+        const screens = await config.api.screen.list()
+
+        // published screen should be included
+        expect(
+          screens.find(screen => screen._id === publishedScreen._id)
+        ).toBeDefined()
+
+        // unpublished screen should not be included
+        expect(
+          screens.find(screen => screen._id === unpublishedScreen._id)
+        ).toBeUndefined()
+      })
     })
   })
 
