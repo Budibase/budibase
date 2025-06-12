@@ -103,6 +103,8 @@ export function getVirtualDocumentType(
 export interface Document {
   _id?: string
   _rev?: string
+  // document has been tombstoned - needed for replication
+  _deleted?: boolean
   createdAt?: string | number
   updatedAt?: string
 }
