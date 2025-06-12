@@ -55,11 +55,11 @@ export interface PublishedAppData {
   appId: string
   url: string
   prodId: string
-  updatedAt: string
+  updatedAt?: string
 }
 
 export interface FetchPublishedAppsResponse {
-  apps: PublishedAppData[] | App[] // TODO: remove "| App[]" when cleaning the flag WORKSPACE_APPS
+  apps: PublishedAppData[]
 }
 
 export interface PublishResponse {

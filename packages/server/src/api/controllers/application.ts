@@ -255,28 +255,27 @@ export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
 export async function fetchClientApps(
   ctx: UserCtx<void, FetchPublishedAppsResponse>
 ) {
-  const apps = await sdk.applications.fetch(
-    ctx.query.status as AppStatus,
-    ctx.user
-  )
-
-  const isBuilder = users.isBuilder(ctx.user)
-  if (isBuilder || !(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
-    ctx.body = { apps }
-    return
+  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+    // Don't use this if workspaceapps are not enabled
+    ctx.throw(404)
   }
 
-  const result: App[] = []
+  const apps = await sdk.applications.fetch(AppStatus.DEPLOYED, ctx.user)
+
+  const result: FetchPublishedAppsResponse["apps"] = []
   for (const app of apps) {
     const workspaceApps = await db.doWithDB(app.appId, db =>
       sdk.workspaceApps.fetch(db)
     )
     for (const workspaceApp of workspaceApps) {
       result.push({
-        ...app,
+        // This is used as idempotency key for rendering in the frontend
         appId: `${app.appId}_${workspaceApp._id}`,
+        // TODO: this can be removed when the flag is cleaned from packages/builder/src/pages/builder/apps/index.svelte
+        prodId: app.appId,
         name: `${workspaceApp.name}`,
         url: `${app.url}${workspaceApp.urlPrefix}`,
+        updatedAt: app.updatedAt,
       })
     }
   }
