@@ -1,8 +1,8 @@
-import * as setup from "./utilities"
 import { FieldType, Table, TableSourceType } from "@budibase/types"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("/api/public/v1/tables/:tableId/rows/search", () => {
-  let config = setup.getConfig()
+  let config = new TestConfiguration()
   let table: Table
 
   beforeAll(async () => {
@@ -38,7 +38,9 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
     await config.api.row.save(table._id!, { name: "Jane", job: "Manager" })
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   describe("equal condition filtering", () => {
     it("should return 400 when searching for non-existent field names", async () => {
@@ -88,7 +90,7 @@ describe("/api/public/v1/tables/:tableId/rows/search", () => {
     })
 
     it("should return all rows when no query is provided", async () => {
-      const response = await config.api.public.row.search(table._id!, {})
+      const response = await config.api.public.row.search(table._id!)
 
       expect(response.data).toHaveLength(2)
     })
