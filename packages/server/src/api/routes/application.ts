@@ -20,7 +20,8 @@ router
     controller.create
   )
   .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
-  .get("/api/applications", controller.fetch)
+  .get("/api/applications", authorized(permissions.BUILDER), controller.fetch)
+  .get("/api/applications/published", controller.fetchPublished)
   .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)
   .put(
     "/api/applications/:appId",

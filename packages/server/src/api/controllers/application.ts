@@ -21,6 +21,7 @@ import {
 import {
   cache,
   context,
+  db,
   db as dbCore,
   docIds,
   env as envCore,
@@ -249,6 +250,35 @@ export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
     ctx.query.status as AppStatus,
     ctx.user
   )
+}
+export async function fetchPublished(ctx: UserCtx<void, FetchAppsResponse>) {
+  const apps = await sdk.applications.fetch(
+    ctx.query.status as AppStatus,
+    ctx.user
+  )
+
+  const isBuilder = users.isBuilder(ctx.user)
+  if (isBuilder || !(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+    ctx.body = apps
+    return
+  }
+
+  const result: App[] = []
+  for (const app of apps) {
+    const workspaces = await db.doWithDB(app.appId, db =>
+      sdk.workspaceApps.fetch(db)
+    )
+    for (const workspace of workspaces) {
+      result.push({
+        ...app,
+        appId: `${app.appId}_${workspace._id}`,
+        name: `${app.name} - ${workspace.name}`,
+        url: `${app.url}${workspace.urlPrefix}`,
+      })
+    }
+  }
+
+  ctx.body = result
 }
 
 export async function fetchAppDefinition(
