@@ -12,7 +12,7 @@
   export let schema
   export let maximum
 
-  const { API, notifications, props } = getContext("grid")
+  const { API, notifications, props, datasource } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
 
   let isOpen = false
@@ -55,7 +55,13 @@
       data.append("file", fileList[i])
     }
     try {
-      return await API.uploadBuilderAttachment(data)
+      const tableId = $datasource?.tableId || $datasource?.id
+      if (tableId) {
+        return await API.uploadAttachment(tableId, data)
+      } else {
+        // Fallback to builder endpoint if no table context
+        return await API.uploadBuilderAttachment(data)
+      }
     } catch (error) {
       $notifications.error(error.message || "Failed to upload attachment")
       return []
