@@ -25,6 +25,7 @@ import { OAuth2API } from "./oauth2"
 import { AssetsAPI } from "./assets"
 import { AIAPI } from "./ai"
 import { WorkspaceAppAPI } from "./workspaceApp"
+import { ResourceAPI } from "./resource"
 
 export default class API {
   ai: AIAPI
@@ -51,6 +52,7 @@ export default class API {
   webhook: WebhookAPI
   assets: AssetsAPI
   workspaceApp: WorkspaceAppAPI
+  resource: ResourceAPI
 
   public: {
     user: UserPublicAPI
@@ -82,6 +84,7 @@ export default class API {
     this.webhook = new WebhookAPI(config)
     this.assets = new AssetsAPI(config)
     this.workspaceApp = new WorkspaceAppAPI(config)
+    this.resource = new ResourceAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),

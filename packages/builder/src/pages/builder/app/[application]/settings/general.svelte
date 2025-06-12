@@ -45,9 +45,9 @@
   <Divider />
   <Heading size="S">App info</Heading>
   <UpdateAppForm />
-  <Divider />
-  <Heading size="S">Deployment</Heading>
   {#if $deploymentStore.isPublished}
+    <Divider />
+    <Heading size="S">Deployment</Heading>
     <div class="row top">
       <Icon
         name="CheckmarkCircle"
@@ -67,26 +67,6 @@
     <div class="row">
       <Button warning on:click={unpublishModal?.show}>Unpublish</Button>
       <Button secondary on:click={revertModal?.show}>Revert changes</Button>
-    </div>
-  {:else}
-    <div class="row">
-      <Icon
-        name="Alert"
-        color="var(--spectrum-global-color-yellow-400)"
-        size="M"
-      />
-      <Body size="S">
-        Your app hasn't been published yet and isn't available to users
-      </Body>
-    </div>
-    <div class="row">
-      <Button
-        cta
-        disabled={$deploymentStore.isPublishing}
-        on:click={deploymentStore.publishApp}
-      >
-        Publish
-      </Button>
     </div>
   {/if}
   <Divider />

@@ -50,12 +50,6 @@ export interface AddAppSampleDataResponse {
 
 export type FetchAppsResponse = App[]
 
-export interface PublishResponse {
-  _id: string
-  status: string
-  appUrl: string
-}
-
 export interface UpdateAppRequest extends Partial<App> {}
 export interface UpdateAppResponse extends App {}
 export interface UpdateAppClientResponse extends App {}
