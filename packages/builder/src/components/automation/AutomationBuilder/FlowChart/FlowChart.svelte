@@ -406,14 +406,17 @@
   }
 
   .group {
-    border-radius: 4px;
+    border-radius: 6px;
     display: flex;
     flex-direction: row;
+    background: var(--spectrum-global-color-gray-100);
+    padding: 2px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .group :global(> *:not(:first-child)) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    border-left: 2px solid var(--spectrum-global-color-gray-300);
+    border-left: none;
   }
   .group :global(> *:not(:last-child)) {
     border-top-right-radius: 0;
@@ -429,22 +432,42 @@
 
   .canvas-heading-left .group :global(.spectrum-Button),
   .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .canvas-heading-left .group :global(.spectrum-Icon),
-  .view-mode-toggle .group :global(.spectrum-Button),
-  .view-mode-toggle .group :global(.spectrum-ActionButton),
-  .view-mode-toggle .group :global(.spectrum-Icon) {
+  .canvas-heading-left .group :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .canvas-heading-left .group :global(.spectrum-Button),
-  .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .view-mode-toggle .group :global(.spectrum-Button),
-  .view-mode-toggle .group :global(.spectrum-ActionButton) {
+  .canvas-heading-left .group :global(.spectrum-ActionButton) {
     background: var(--spectrum-global-color-gray-200) !important;
   }
   .canvas-heading-left .group :global(.spectrum-Button:hover),
-  .canvas-heading-left .group :global(.spectrum-ActionButton:hover),
-  .view-mode-toggle .group :global(.spectrum-Button:hover),
-  .view-mode-toggle .group :global(.spectrum-ActionButton:hover) {
+  .canvas-heading-left .group :global(.spectrum-ActionButton:hover) {
     background: var(--spectrum-global-color-gray-300) !important;
+  }
+
+  .view-mode-toggle .group :global(.spectrum-ActionButton) {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: var(--spectrum-global-color-gray-700) !important;
+    font-weight: 500;
+    padding: 6px 12px !important;
+    margin: 0 !important;
+    transition: all 0.15s ease;
+  }
+  
+  .view-mode-toggle .group :global(.spectrum-ActionButton:hover) {
+    background: var(--spectrum-global-color-gray-200) !important;
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
+  
+  .view-mode-toggle .group :global(.spectrum-ActionButton.is-selected) {
+    background: var(--spectrum-global-color-gray-50) !important;
+    color: var(--spectrum-global-color-gray-900) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+  }
+  
+  .view-mode-toggle .group :global(.spectrum-Icon) {
+    color: inherit !important;
   }
 </style>
