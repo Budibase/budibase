@@ -35,6 +35,16 @@
     { value: "Right", barIcon: "TextAlignRight" },
   ]
   const widthOptions = ["Max", "Large", "Medium", "Small"]
+  const logoPositionOptions = [
+    { value: "top", barIcon: "PaddingTop" },
+    { value: "bottom", barIcon: "PaddingBottom" },
+  ]
+  const titleSizeOptions = [
+    { value: "XS", label: "XS" },
+    { value: "S", label: "S" },
+    { value: "M", label: "M" },
+    { value: "L", label: "L" },
+  ]
 
   $: bindings = getBindableProperties(
     $selectedScreen,
@@ -105,6 +115,40 @@
             }}
           />
         {/if}
+        {#if $nav.navigation === "Left"}
+          <PropertyControl
+            label="Logo position"
+            control={BarButtonList}
+            onChange={position => update("logoPosition", position)}
+            value={$nav.logoPosition || "top"}
+            props={{
+              options: logoPositionOptions,
+            }}
+          />
+        {/if}
+        <PropertyControl
+          label="Background"
+          control={ColorPicker}
+          onChange={color => update("navBackground", color)}
+          value={$nav.navBackground || DefaultAppTheme.navBackground}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Text"
+          control={ColorPicker}
+          onChange={color => update("navTextColor", color)}
+          value={$nav.navTextColor || DefaultAppTheme.navTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+      </div>
+    </DetailSummary>
+
+    <DetailSummary name="Title" initiallyShow collapsible={false}>
+      <div class="settings">
         <PropertyControl
           label="Show title"
           control={Checkbox}
@@ -131,25 +175,26 @@
               options: alignmentOptions,
             }}
           />
+          <PropertyControl
+            label="Title size"
+            control={Select}
+            onChange={size => update("titleSize", size)}
+            value={$nav.titleSize || "S"}
+            props={{
+              options: titleSizeOptions,
+              placeholder: null,
+            }}
+          />
+          <PropertyControl
+            label="Title color"
+            control={ColorPicker}
+            onChange={color => update("titleColor", color)}
+            value={$nav.titleColor}
+            props={{
+              spectrumTheme: $themeStore.theme,
+            }}
+          />
         {/if}
-        <PropertyControl
-          label="Background"
-          control={ColorPicker}
-          onChange={color => update("navBackground", color)}
-          value={$nav.navBackground || DefaultAppTheme.navBackground}
-          props={{
-            spectrumTheme: $themeStore.theme,
-          }}
-        />
-        <PropertyControl
-          label="Text"
-          control={ColorPicker}
-          onChange={color => update("navTextColor", color)}
-          value={$nav.navTextColor || DefaultAppTheme.navTextColor}
-          props={{
-            spectrumTheme: $themeStore.theme,
-          }}
-        />
       </div>
     </DetailSummary>
 

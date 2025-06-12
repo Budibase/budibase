@@ -8,7 +8,7 @@ export interface QuerySchema {
   subtype?: string
 }
 
-export type QueryVerb = "read" | "create" | "update" | "delete"
+export type QueryVerb = "read" | "create" | "update" | "delete" | "patch"
 
 export interface Query extends Document {
   datasourceId: string

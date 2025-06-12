@@ -14,12 +14,12 @@ router.post("/api/ai/tables", auth.builderOrAdmin, ai.generateTables)
 
 router.post(
   "/api/agent/chat",
-  auth.adminOnly,
+  auth.builderOrAdmin,
   chatAgentValidator(),
   ai.agentChat
 )
-router.delete("/api/agent/history/:historyId", auth.adminOnly, ai.remove)
-router.get("/api/agent/history", auth.adminOnly, ai.fetchHistory)
+router.delete("/api/agent/history/:historyId", auth.builderOrAdmin, ai.remove)
+router.get("/api/agent/history", auth.builderOrAdmin, ai.fetchHistory)
 router.post(
   "/api/agent/toolsource",
   auth.builderOrAdmin,
