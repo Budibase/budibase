@@ -10,7 +10,7 @@ export interface PublicSearchResponse {
 export class RowPublicAPI extends PublicAPI {
   search = async (
     tableId: string,
-    query: SearchRowRequest,
+    query?: SearchRowRequest,
     expectations?: Expectations
   ): Promise<PublicSearchResponse> => {
     return await this._post<PublicSearchResponse>(
