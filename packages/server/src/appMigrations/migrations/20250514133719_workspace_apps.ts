@@ -13,7 +13,7 @@ const migration = async () => {
   if (!workspaceAppId) {
     const workspaceApp = await sdk.workspaceApps.create({
       name: application.name,
-      urlPrefix: "/",
+      url: "/",
       icon: "Monitoring",
       navigation: application.navigation!,
       isDefault: true,
