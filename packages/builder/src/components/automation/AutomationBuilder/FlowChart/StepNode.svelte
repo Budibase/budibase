@@ -31,10 +31,10 @@
   $: branches = step.inputs?.branches
 
   // Log execution state
-  $: logStepData = getLogStepData(logData, step, stepIdx)
+  $: logStepData = getLogStepData(logData, step)
   $: stepStatus = getStepStatus(logStepData)
 
-  function getLogStepData(logData, step, stepIdx) {
+  function getLogStepData(logData, step) {
     if (!logData || viewMode !== ViewMode.LOGS) return null
 
     // For trigger step
