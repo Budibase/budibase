@@ -85,6 +85,7 @@
   let toolSourceToDelete: any = null
   let panelView: "tools" | "toolConfig" = "tools"
   let toolConfig: Record<string, string> = {}
+  let toolConfigChanged = false
 
   $: chatHistory = $agentsStore.chats || []
   $: toolSources = $agentsStore.toolSources || []
@@ -93,7 +94,6 @@
   import NavHeader from "@/components/common/NavHeader.svelte"
   import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import NavItem from "@/components/common/NavItem.svelte"
-  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { contextMenuStore } from "@/stores/builder"
 
   $: if (chat.messages.length) {
@@ -254,13 +254,14 @@
   }
 
   const openToolsConfig = (toolSource: any) => {
-    selectedConfigToolSource = toolSource
+    selectedConfigToolSource = { ...toolSource }
     panelView = "toolConfig"
   }
 
   const backToToolsList = () => {
     panelView = "tools"
     selectedConfigToolSource = null
+    toolConfigChanged = false
   }
 
   const toggleTool = (toolName: string) => {
@@ -278,14 +279,17 @@
       // Disable the tool by adding to disabled list
       selectedConfigToolSource.disabledTools = [...currentDisabled, toolName]
     }
+    toolConfigChanged = true
   }
 
   const saveToolConfig = async () => {
     if (!selectedConfigToolSource) return
-
     try {
-      await agentsStore.updateToolSource(selectedConfigToolSource)
+      selectedConfigToolSource = await agentsStore.updateToolSource(
+        selectedConfigToolSource
+      )
       notifications.success("Tool configuration saved successfully.")
+      toolConfigChanged = false
     } catch (err) {
       console.error(err)
       notifications.error("Error saving tool configuration")
@@ -367,7 +371,6 @@
     <NavHeader
       slot="panel-title-content"
       title="Chats"
-      placeholder="Search for automations"
       onAdd={startNewChat}
       searchable={false}
     />
@@ -407,113 +410,120 @@
     </div>
   </div>
 
-  <Panel customWidth={320} borderLeft>
-    <Tabs selected="Tools">
-      <Tab title="Tools">
-        <div class="tab-content">
-          <Layout paddingX="L" paddingY="S" gap="XS">
-            {#if panelView === "tools"}
-              <InfoDisplay
-                body="Add tools to give your agent knowledge and allow it to take
+  <Panel customWidth={320} borderLeft noHeaderBorder>
+    <NavHeader
+      slot="panel-title-content"
+      title="Tools"
+      onAdd={toolSourceModal?.show}
+      searchable={false}
+      showAddIcon={panelView === "tools"}
+    >
+      {#if panelView === "tools"}
+        <Body size="S">Tools</Body>
+      {:else}
+        <div class="tool-config-header">
+          <Icon
+            name="BackAndroid"
+            size="XS"
+            hoverable
+            on:click={backToToolsList}
+          />
+          <svelte:component
+            this={Logos[selectedConfigToolSource.type]}
+            height="16"
+            width="16"
+          />
+          <Body size="S">
+            {ToolSources.find(ts => selectedConfigToolSource.type === ts.type)
+              ?.name}
+          </Body>
+        </div>
+      {/if}
+      <div slot="right">
+        {#if panelView === "toolConfig"}
+          <Button
+            cta
+            size="S"
+            on:click={saveToolConfig}
+            disabled={!toolConfigChanged}>Save</Button
+          >
+        {/if}
+      </div>
+    </NavHeader>
+    <div class="tab-content">
+      <Layout paddingX="L" paddingY="none" gap="S">
+        {#if panelView === "tools"}
+          <InfoDisplay
+            body="Add tools to give your agent knowledge and allow it to take
                 action"
-              />
-              <Layout noPadding noGap>
-                <NavHeader
-                  title="Tools"
-                  searchable={false}
-                  onAdd={() => toolSourceModal.show()}
-                />
-                {#if toolSources.length > 0}
-                  <div class="saved-tools-list">
-                    {#each toolSources as toolSource}
-                      {@const menuCallback = createToolMenuCallback(toolSource)}
-                      <NavItem
-                        text={ToolSources.find(
-                          ts => ts.type === toolSource.type
-                        )?.name || ""}
-                        on:click={() => openToolsConfig(toolSource)}
-                        on:contextmenu={menuCallback}
-                      >
-                        <div class="tool-icon" slot="icon">
-                          <svelte:component
-                            this={Logos[toolSource.type]}
-                            height="16"
-                            width="16"
-                          />
-                        </div>
-                        <Icon
-                          on:click={menuCallback}
-                          hoverable
-                          name="MoreSmallList"
-                        />
-                        <Icon size="S" name="ChevronRight" slot="right" />
-                      </NavItem>
-                    {/each}
-                  </div>
-                {:else}
-                  <div class="empty-state">
-                    <Body size="S">
-                      No tools connected yet.
-                      <br />
-                      Click "Add Tools" to get started!
-                    </Body>
-                  </div>
-                {/if}
-              </Layout>
-            {:else if panelView === "toolConfig"}
-              <div class="tool-config-header">
-                <Icon name="BackAndroid" hoverable on:click={backToToolsList} />
-                <Heading size="S"
-                  >{ToolSources.find(
-                    ts => selectedConfigToolSource.type === ts.type
-                  )?.name}</Heading
-                >
-                <Button size="S" cta on:click={saveToolConfig}>
-                  Save Configuration
-                </Button>
-              </div>
-
-              {#if selectedConfigToolSource?.tools}
-                <div class="tools-list">
-                  {#each selectedConfigToolSource.tools as tool}
-                    <div class="tool-toggle-item">
-                      <div class="tool-toggle-icon">
-                        {#if Logos[selectedConfigToolSource.type]}
-                          <svelte:component
-                            this={Logos[selectedConfigToolSource.type]}
-                            height="20"
-                            width="20"
-                          />
-                        {/if}
-                      </div>
-                      <div class="tool-toggle-info">
-                        <div class="tool-toggle-name">{tool.name}</div>
-                        <div class="tool-toggle-description">
-                          {tool.description}
-                        </div>
-                      </div>
-                      <Toggle
-                        value={!selectedConfigToolSource.disabledTools?.includes(
-                          tool.name
-                        )}
-                        on:change={() => toggleTool(tool.name)}
+          />
+          <Layout noPadding noGap>
+            {#if toolSources.length > 0}
+              <div class="saved-tools-list">
+                {#each toolSources as toolSource}
+                  {@const menuCallback = createToolMenuCallback(toolSource)}
+                  <NavItem
+                    text={ToolSources.find(ts => ts.type === toolSource.type)
+                      ?.name || ""}
+                    on:click={() => openToolsConfig(toolSource)}
+                    on:contextmenu={menuCallback}
+                  >
+                    <div class="tool-icon" slot="icon">
+                      <svelte:component
+                        this={Logos[toolSource.type]}
+                        height="16"
+                        width="16"
                       />
                     </div>
-                  {/each}
-                </div>
-              {:else}
-                <div class="no-tools-message">
-                  <Body size="S">No tools available for this source.</Body>
-                </div>
-              {/if}
+                    <Icon
+                      on:click={menuCallback}
+                      hoverable
+                      name="MoreSmallList"
+                    />
+                    <Icon size="S" name="ChevronRight" slot="right" />
+                  </NavItem>
+                {/each}
+              </div>
+            {:else}
+              <div class="empty-state">
+                <Body size="S">
+                  No tools connected yet.
+                  <br />
+                  Click "Add Tools" to get started!
+                </Body>
+              </div>
             {/if}
           </Layout>
-        </div>
-      </Tab>
-      <Tab title="Deploy">
-        <div class="tab-content">Deploy</div>
-      </Tab>
-    </Tabs>
+        {:else if panelView === "toolConfig"}
+          {#if selectedConfigToolSource?.tools}
+            <div class="tools-list">
+              {#each selectedConfigToolSource.tools as tool}
+                <div class="tool-toggle-item">
+                  <div class="tool-toggle-info">
+                    <div class="tool-toggle-name">{tool.name}</div>
+                    <div class="tool-toggle-description">
+                      {tool.description}
+                    </div>
+                  </div>
+                  <div class="tool-toggle-switch">
+                    <Toggle
+                      value={!selectedConfigToolSource.disabledTools?.includes(
+                        tool.name
+                      )}
+                      on:change={() => toggleTool(tool.name)}
+                    />
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <div class="empty-state">
+              <Body size="S">No tools available for this source.</Body>
+            </div>
+          {/if}
+        {/if}
+      </Layout>
+    </div>
   </Panel>
 </div>
 
@@ -799,49 +809,16 @@
     margin-right: 4px;
   }
 
-  .saved-tool-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-m);
-    gap: var(--spacing-m);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
-    margin-bottom: var(--spacing-s);
-    background-color: var(--background);
-  }
-
-  .tool-info {
-    flex: 1;
-  }
-
   .tool-name {
     font-weight: 600;
     color: var(--spectrum-global-color-gray-900);
     margin-bottom: var(--spacing-xs);
   }
 
-  .tool-actions {
-    display: flex;
-    gap: var(--spacing-s);
-  }
-
-  .tool-source-detail {
-    transform: rotate(180deg);
-  }
-
-  .no-tools-message {
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--spectrum-global-color-gray-600);
-    margin-top: var(--spacing-xl);
-  }
-
   .tool-config-header {
     display: flex;
     flex-direction: row;
     gap: var(--spacing-m);
-    margin-bottom: var(--spacing-xl);
     align-items: center;
   }
 
@@ -850,6 +827,7 @@
     flex-direction: column;
     gap: var(--spacing-m);
     margin-bottom: var(--spacing-xl);
+    overflow: hidden;
   }
 
   .tool-toggle-item {
@@ -858,30 +836,29 @@
     padding: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
-    background-color: var(--background);
+    background-color: var(--background-alt);
     gap: var(--spacing-m);
   }
-
-  .tool-toggle-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
   .tool-toggle-info {
-    flex: 1;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
   }
-
   .tool-toggle-name {
-    font-weight: 600;
     color: var(--spectrum-global-color-gray-900);
     margin-bottom: var(--spacing-xs);
+    font-family: var(--font-mono), monospace;
+    font-size: 11px;
+    word-break: break-all;
   }
-
   .tool-toggle-description {
     font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-700);
+  }
+  .tool-toggle-switch {
+    margin-right: -14px;
   }
 
   .vote-banner {

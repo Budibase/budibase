@@ -9,6 +9,7 @@
   export let onAdd: (_e: Event) => void
   export let search: boolean = false
   export let searchable = true
+  export let showAddIcon = true
 
   let searchInput: HTMLInputElement
 
@@ -52,7 +53,11 @@
   />
 
   <div class="title" class:hide={search}>
-    <Body size="S">{title}</Body>
+    {#if $$slots.default}
+      <slot></slot>
+    {:else}
+      <Body size="S">{title}</Body>
+    {/if}
   </div>
 
   {#if searchable}
@@ -66,14 +71,18 @@
     </div>
   {/if}
 
-  <div
-    on:click={handleAddButton}
-    on:keydown={e => keyUtils.handleEnter(() => handleAddButton(e))}
-    class="addButton"
-    class:rotate={search}
-  >
-    <Icon name="Add" hoverable hoverColor="var(--ink)" />
-  </div>
+  {#if showAddIcon}
+    <div
+      on:click={handleAddButton}
+      on:keydown={e => keyUtils.handleEnter(() => handleAddButton(e))}
+      class="addButton"
+      class:rotate={search}
+    >
+      <Icon name="Add" hoverable hoverColor="var(--ink)" />
+    </div>
+  {/if}
+
+  <slot name="right" />
 </div>
 
 <style>
