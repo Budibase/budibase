@@ -14,14 +14,14 @@ router.post("/api/ai/tables", auth.builderOrAdmin, ai.generateTables)
 
 router.post(
   "/api/agent/chat",
-  auth.adminOnly,
+  auth.builderOrAdmin,
   chatAgentValidator(),
   ai.agentChat
 )
-router.post("/api/agent/chat", auth.adminOnly, ai.agentChat)
-router.post("/api/agent/chat/stream", auth.adminOnly, ai.agentChatStream)
-router.delete("/api/agent/history/:historyId", auth.adminOnly, ai.remove)
-router.get("/api/agent/history", auth.adminOnly, ai.fetchHistory)
+router.post("/api/agent/chat", auth.builderOrAdmin, ai.agentChat)
+router.post("/api/agent/chat/stream", auth.builderOrAdmin, ai.agentChatStream)
+router.delete("/api/agent/history/:historyId", auth.builderOrAdmin, ai.remove)
+router.get("/api/agent/history", auth.builderOrAdmin, ai.fetchHistory)
 router.post(
   "/api/agent/toolsource",
   auth.builderOrAdmin,

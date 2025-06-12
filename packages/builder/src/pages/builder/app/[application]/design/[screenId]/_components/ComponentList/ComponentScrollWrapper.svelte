@@ -9,19 +9,13 @@
     if (!bounds) {
       return
     }
-    const sidebarWidth = 310
     const navItemHeight = 32
     const { scrollLeft, scrollTop, offsetHeight } = scrollRef
     let scrollBounds = scrollRef.getBoundingClientRect()
     let newOffsets = {}
 
     // Calculate left offset
-    const offsetX = bounds.left + bounds.width + scrollLeft + 16
-    if (offsetX > sidebarWidth) {
-      newOffsets.left = offsetX - sidebarWidth
-    } else {
-      newOffsets.left = 0
-    }
+    newOffsets.left = scrollLeft + bounds.left
     if (newOffsets.left === scrollLeft) {
       delete newOffsets.left
     }

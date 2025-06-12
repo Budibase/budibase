@@ -1,4 +1,5 @@
 import { default as threadUtils } from "./utils"
+import { events } from "@budibase/backend-core"
 import { Job } from "bull"
 import { disableCronById } from "../automations/utils"
 import * as actions from "../automations/actions"
@@ -41,6 +42,7 @@ import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 import tracer from "dd-trace"
 import { isPlainObject } from "lodash"
+import { quotas } from "@budibase/pro"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
@@ -429,7 +431,14 @@ class Orchestrator {
             break
           }
           default: {
-            addToContext(step, await this.executeStep(ctx, step))
+            addToContext(
+              step,
+              await quotas.addAction(async () => {
+                const response = await this.executeStep(ctx, step)
+                events.action.automationStepExecuted({ stepId: step.stepId })
+                return response
+              })
+            )
             stepIndex++
             break
           }
