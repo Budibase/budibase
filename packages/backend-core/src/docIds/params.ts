@@ -6,7 +6,7 @@ import {
   ViewName,
 } from "../constants"
 import { getProdAppID } from "./conversions"
-import { DatabaseQueryOpts, VirtualDocumentType } from "@budibase/types"
+import { DatabaseQueryOpts } from "@budibase/types"
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
