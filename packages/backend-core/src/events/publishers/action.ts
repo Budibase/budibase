@@ -24,7 +24,7 @@ async function aiAgentExecuted(
   action: ActionAiAgentExecuted,
   timestamp?: string | number
 ) {
-  await publishEvent(Event.ACTION_CRUD_EXECUTED, action, timestamp)
+  await publishEvent(Event.ACTION_AI_AGENT_EXECUTED, action, timestamp)
 }
 
 export default {
