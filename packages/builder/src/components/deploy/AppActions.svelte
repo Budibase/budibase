@@ -28,6 +28,7 @@
   let showNpsSurvey = false
   let publishButton: any
   let publishSuccessPopover: ShowUI | undefined
+  let publishedAutomations: string[] = [], publishedApps: string[] = []
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
   $: updateAvailable =
@@ -103,7 +104,11 @@
         ? selectedAutomationId
         : undefined}
     bind:this={publishModal}
-    on:success={() => publishSuccessPopover?.show()}
+    on:success={(evt) => {
+      publishedAutomations = evt.detail.publishedAutomations
+      publishedApps = evt.detail.publishedApps
+      publishSuccessPopover?.show()
+    }}
   />
 {/if}
 
@@ -120,13 +125,23 @@
       size="L"
     />
     <Body size="S">
-      App published successfully
-      <br />
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div class="link" on:click={deploymentStore.viewPublishedApp}>
-        View app
-      </div>
+      {#if !workspaceAppsEnabled}
+        App published successfully
+        <br />
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="link" on:click={deploymentStore.viewPublishedApp}>
+          View app
+        </div>
+      {:else}
+        {#if publishedAutomations.length}
+          Automations published: {publishedAutomations.length}
+          <br />
+        {/if}
+        {#if publishedApps.length}
+          Apps published: {publishedApps.length}
+        {/if}
+      {/if}
     </Body>
   </div>
 </Popover>

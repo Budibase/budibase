@@ -144,7 +144,9 @@
       automationIds: getIds(selectedAutomations),
       workspaceAppIds: getIds(selectedApps),
     })
-    dispatcher("success")
+    const publishedAutomations = getSelectedNames(selectedAutomations, filteredAutomations),
+      publishedApps = getSelectedNames(selectedApps, apps)
+    dispatcher("success", { publishedAutomations, publishedApps })
   }
 
   function setAll(state: boolean) {
