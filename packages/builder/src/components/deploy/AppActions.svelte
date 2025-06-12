@@ -28,7 +28,8 @@
   let showNpsSurvey = false
   let publishButton: any
   let publishSuccessPopover: ShowUI | undefined
-  let publishedAutomations: string[] = [], publishedApps: string[] = []
+  let publishedAutomations: string[] = [],
+    publishedApps: string[] = []
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
   $: updateAvailable =
@@ -104,7 +105,7 @@
         ? selectedAutomationId
         : undefined}
     bind:this={publishModal}
-    on:success={(evt) => {
+    on:success={evt => {
       publishedAutomations = evt.detail.publishedAutomations
       publishedApps = evt.detail.publishedApps
       publishSuccessPopover?.show()
