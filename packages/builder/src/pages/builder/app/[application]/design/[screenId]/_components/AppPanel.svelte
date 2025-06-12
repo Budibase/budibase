@@ -5,8 +5,9 @@
     appStore,
     selectedScreen,
     previewStore,
-    deploymentStore,
     selectedAppUrls,
+    workspaceAppStore,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
@@ -17,8 +18,10 @@
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
+  $: selectedWorkspaceAppId =
+    $workspaceAppStore.selectedWorkspaceApp?._id
 
-  $: isPublished = $deploymentStore.isPublished
+  $: isWorkspacePublished = selectedWorkspaceAppId && $workspaceDeploymentStore.workspaceApps?.[selectedWorkspaceAppId]?.published
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
@@ -35,7 +38,7 @@
   <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
-      {#if $featureFlags.WORKSPACE_APPS && isPublished}
+      {#if $featureFlags.WORKSPACE_APPS && isWorkspacePublished}
         <Link href={liveUrl} target="_blank">{liveUrl}</Link>
       {/if}
     </div>

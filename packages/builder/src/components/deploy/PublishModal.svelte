@@ -12,6 +12,7 @@
     automationStore,
     deploymentStore,
     workspaceAppStore,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
   import type { UsedResource, Automation } from "@budibase/types"
   import { ResourceType, AutomationEventType } from "@budibase/types"
@@ -144,6 +145,8 @@
       automationIds: getIds(selectedAutomations),
       workspaceAppIds: getIds(selectedApps),
     })
+    // update the deployment status
+    await workspaceDeploymentStore.fetch()
     const publishedAutomations = getSelectedNames(selectedAutomations, filteredAutomations),
       publishedApps = getSelectedNames(selectedApps, apps)
     dispatcher("success", { publishedAutomations, publishedApps })
