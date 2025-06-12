@@ -3,10 +3,10 @@
     Accordion,
     Body,
     Checkbox,
-    Heading,
     Layout,
     Modal,
     ModalContent,
+    ActionButton,
   } from "@budibase/bbui"
   import {
     automationStore,
@@ -26,15 +26,15 @@
   let selectedApps: Record<string, boolean> = {}
   let selectedAutomations: Record<string, boolean> = {}
   let usedResources: UsedResource[] = []
+  let appAccordion: any, automationAccordion: any
 
   const dispatcher = createEventDispatcher()
 
   $: automations = $automationStore.automations || []
   $: filteredAutomations = removeRowActionAutomations(
-    removeTarget(targetId, automations)
+    automations
   )
   $: apps = $workspaceAppStore.workspaceApps || []
-  $: filteredApps = removeTarget(targetId, apps)
   $: target = findTarget(targetId, apps, automations)
   $: selectedAppNames = getSelectedNames(selectedApps, apps)
   $: selectedAutomationNames = getSelectedNames(
@@ -101,13 +101,6 @@
       .map(item => item.name)
   }
 
-  function removeTarget<T extends { _id?: string }>(
-    target: string | undefined,
-    list: T[]
-  ): T[] {
-    return list?.filter(item => item._id !== target) || []
-  }
-
   function removeRowActionAutomations(automations: Automation[]) {
     return automations.filter(
       automation =>
@@ -153,6 +146,25 @@
     })
     dispatcher("success")
   }
+
+  function setAll(state: boolean) {
+    for (const app of apps) {
+      selectedApps[app._id!] = state
+    }
+    for (const automation of filteredAutomations) {
+      selectedAutomations[automation._id!] = state
+    }
+  }
+
+  function selectAll() {
+    appAccordion.open()
+    automationAccordion.open()
+    setAll(true)
+  }
+
+  function clearAll() {
+    setAll(false)
+  }
 </script>
 
 <Modal bind:this={publishModal}>
@@ -160,46 +172,49 @@
     <Layout noPadding gap="XS">
       <span>Select the apps or automations you'd like to publish.</span>
       <div>
-        {#if targetId && target?.type === "automation"}
-          <Checkbox
-            text={`${target.name} ${target.type}`}
-            bind:value={selectedAutomations[targetId]}
-          />
-        {:else if targetId && target?.type === "app"}
-          <Checkbox
-            text={`${target.name} ${target.type}`}
-            bind:value={selectedApps[targetId]}
-          />
-        {/if}
-        {#if filteredApps.length || filteredAutomations.length}
+        {#if apps.length}
           <Accordion
-            header="Publish multiple apps and automations"
+            header="Apps"
+            headerSize="M"
             noPadding
+            initialOpen={target?.type === "app"}
             bold={false}
+            bind:this={appAccordion}
           >
-            {#if filteredApps.length}
-              <Heading size="XS">Apps</Heading>
-              {#each filteredApps as app}
-                {#if app._id}
-                  <Checkbox
-                    text={`${app.name}`}
-                    bind:value={selectedApps[app._id]}
-                  />
-                {/if}
-              {/each}
-            {/if}
-            {#if filteredAutomations.length}
-              <Heading size="XS">Automations</Heading>
-              {#each filteredAutomations as automation}
-                {#if automation._id}
-                  <Checkbox
-                    text={`${automation.name}`}
-                    bind:value={selectedAutomations[automation._id]}
-                  />
-                {/if}
-              {/each}
-            {/if}
+            {#each apps as app}
+              {#if app._id}
+                <Checkbox
+                  text={`${app.name}`}
+                  bind:value={selectedApps[app._id]}
+                />
+              {/if}
+            {/each}
           </Accordion>
+        {/if}
+        {#if filteredAutomations.length}
+          <Accordion
+            header="Automations"
+            headerSize="M"
+            noPadding
+            initialOpen={target?.type === "automation"}
+            bold={false}
+            bind:this={automationAccordion}
+          >
+            {#each filteredAutomations as automation}
+              {#if automation._id}
+                <Checkbox
+                  text={`${automation.name}`}
+                  bind:value={selectedAutomations[automation._id]}
+                />
+              {/if}
+            {/each}
+          </Accordion>
+        {/if}
+        {#if apps.length || automations.length}
+          <div class="select-clear-buttons">
+            <ActionButton quiet noPadding active on:click={selectAll}>Select all</ActionButton>
+            <ActionButton quiet noPadding on:click={clearAll}>Clear all</ActionButton>
+          </div>
         {/if}
         <Accordion
           header="Show everything that will be published"
@@ -226,3 +241,11 @@
     </Layout>
   </ModalContent>
 </Modal>
+
+<style>
+  .select-clear-buttons {
+    display: flex;
+    padding-top: var(--spacing-m);
+    gap: var(--spacing-l);
+  }
+</style>
