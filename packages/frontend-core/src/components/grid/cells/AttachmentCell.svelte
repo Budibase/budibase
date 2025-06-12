@@ -55,8 +55,6 @@
       data.append("file", fileList[i])
     }
     try {
-      // Use table-specific upload endpoint for table rows
-      // This requires TABLE.WRITE permissions instead of BUILDER permissions
       const tableId = $datasource?.tableId || $datasource?.id
       if (tableId) {
         return await API.uploadAttachment(tableId, data)
