@@ -7,6 +7,11 @@ export interface PublishAppRequest {
 
 export interface PublishAppResponse extends DeploymentDoc {}
 
+export interface PublishStatusResponse {
+  workspaceApps: Record<string, { published: boolean; name: string }>
+  automations: Record<string, { published: boolean; name: string }>
+}
+
 export interface DeploymentProgressResponse {
   _id: string
   appId: string

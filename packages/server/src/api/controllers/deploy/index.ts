@@ -18,6 +18,8 @@ import {
   DeploymentProgressResponse,
   Automation,
   PublishAppRequest,
+  PublishStatusResponse,
+  WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -145,6 +147,62 @@ export async function deploymentProgress(
       500,
       `Error fetching data for deployment ${ctx.params.deploymentId}`
     )
+  }
+}
+
+export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
+  try {
+    type State = { automations: Automation[]; workspaceApps: WorkspaceApp[] }
+    let developmentState: State = { automations: [], workspaceApps: [] }
+    let productionState: State = { automations: [], workspaceApps: [] }
+    const updateState = async (state: State) => {
+      const [automations, workspaceApps] = await Promise.all([
+        sdk.automations.fetch(),
+        sdk.workspaceApps.fetch(),
+      ])
+      state.automations = automations
+      state.workspaceApps = workspaceApps
+    }
+
+    await context.doInAppContext(context.getDevAppId(), async () =>
+      updateState(developmentState)
+    )
+    const prodDb = context.getProdAppDB()
+    if (await prodDb.exists()) {
+      await context.doInAppContext(context.getProdAppId(), async () =>
+        updateState(productionState)
+      )
+    }
+
+    // Create maps of production state for quick lookup
+    const prodAutomationIds = new Set(productionState.automations.map(a => a._id))
+    const prodWorkspaceAppIds = new Set(
+      productionState.workspaceApps.map(w => w._id)
+    )
+
+    // Build response maps comparing development vs production
+    const automations: Record<string, { published: boolean; name: string }> = {}
+    for (const automation of developmentState.automations) {
+      automations[automation._id!] = {
+        published: prodAutomationIds.has(automation._id!),
+        name: automation.name,
+      }
+    }
+
+    const workspaceApps: Record<string, { published: boolean; name: string }> = {}
+    for (const workspaceApp of developmentState.workspaceApps) {
+      workspaceApps[workspaceApp._id!] = {
+        published: prodWorkspaceAppIds.has(workspaceApp._id!),
+        name: workspaceApp.name,
+      }
+    }
+
+    ctx.body = {
+      automations,
+      workspaceApps,
+    }
+  } catch (err) {
+    ctx.throw(500, "Error fetching data for deployment status")
   }
 }
 
