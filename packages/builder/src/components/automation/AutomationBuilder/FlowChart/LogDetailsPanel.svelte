@@ -38,22 +38,28 @@
 </script>
 
 <div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
-  <Panel customWidth={400} borderLeft titleCSS={false}>
+  <Panel customWidth={400} borderLeft>
     <div slot="panel-title-content" class="log-header-container">
       <div class="log-header-left">
         <Icon name="ChevronLeft" hoverable on:click={onBack} />
-        <Body size="S" textAlign="left">
-          {log?.automationName || "Automation"} log
-        </Body>
+        <div class="log-title-section">
+          <div class="log-title">
+            <Body size="S" textAlign="left">
+              {log?.automationName || "Automation"} log
+            </Body>
+          </div>
+          <div class="log-metadata">
+            <Body
+              size="XS"
+              textAlign="left"
+              color="var(--spectrum-global-color-gray-600)"
+            >
+              {logDate}
+            </Body>
+          </div>
+        </div>
       </div>
-      <div class="log-header-right">
-        <Body
-          size="S"
-          textAlign="left"
-          color="var(--spectrum-global-color-gray-600)"
-        >
-          {logDate}
-        </Body>
+      <div class="log-status">
         <StatusRenderer value={log.status} />
       </div>
     </div>
@@ -127,9 +133,10 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
     flex: 1;
     min-width: 0;
+    padding: var(--spacing-xs) 0;
   }
 
   .log-header-left {
@@ -138,13 +145,31 @@
     align-items: center;
     gap: var(--spacing-s);
     flex: 1;
+    min-width: 0;
   }
 
-  .log-header-right {
+  .log-title-section {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .log-title {
+    display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+  }
+
+  .log-metadata {
+    display: flex;
+    align-items: center;
+    opacity: 0.8;
+  }
+
+  .log-status {
+    display: flex;
+    align-items: center;
     flex-shrink: 0;
   }
 
