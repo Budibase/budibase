@@ -11,7 +11,17 @@
   export let onBack = () => {}
 
   let selectedTab = "Data in"
-  const tabs = ["Data in", "Data out", "Issues"]
+
+  $: isTrigger = currentStepData?.inputs === null // null inputs so we know it is a trigger
+  $: console.log(log)
+  $: availableTabs = isTrigger
+    ? ["Data out", "Issues"]
+    : ["Data in", "Data out", "Issues"]
+  $: {
+    if (isTrigger && selectedTab === "Data in") {
+      selectedTab = "Data out"
+    }
+  }
 
   $: logDate = log ? dayjs(log.createdAt).format("MMM DD, YYYY HH:mm:ss") : ""
   $: currentStepData = getCurrentStepData(selectedStep)
@@ -67,7 +77,7 @@
     {#if selectedStep}
       <div class="panel-content">
         <div class="tabs">
-          {#each tabs as tab}
+          {#each availableTabs as tab}
             <ActionButton
               selected={tab === selectedTab}
               quiet
@@ -90,18 +100,19 @@
           {:else if selectedTab === "Data out"}
             <JSONViewer value={currentStepData?.outputs} />
           {:else if selectedTab === "Issues"}
-            <div class="issues-panel">
-              {#if currentStepData?.errors?.length > 0}
+            <div class="issues" class:empty={!currentStepData?.errors?.length}>
+              {#if currentStepData?.errors?.length === 0}
+                <span>There are no current issues</span>
+              {:else}
                 {#each currentStepData.errors as error}
                   <div class="issue error">
-                    <Icon name="Alert" />
-                    <span>{error.message}</span>
+                    <div class="icon"><Icon name="Alert" /></div>
+                    <div class="message">
+                      {error.message || "There was an error"}
+                    </div>
                   </div>
+                  <Divider noMargin />
                 {/each}
-              {:else}
-                <div class="no-issues">
-                  <Body size="S" textAlign="center">No issues found</Body>
-                </div>
               {/if}
             </div>
           {/if}
@@ -202,29 +213,37 @@
     padding: var(--spacing-l);
   }
 
-  .issues-panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-  }
-
   .issue {
     display: flex;
-    align-items: center;
     gap: var(--spacing-s);
-    padding: var(--spacing-m);
-    border-radius: 4px;
-    background: var(--spectrum-semantic-negative-color-background);
-    border: 1px solid var(--spectrum-semantic-negative-color-border);
-    color: var(--spectrum-semantic-negative-color-text);
+    width: 100%;
+    box-sizing: border-box;
+    padding-bottom: var(--spacing-l);
   }
 
-  .no-issues {
+  .issues {
+    width: 100%;
+    height: 100%;
     display: flex;
+    flex-direction: column;
+    word-break: break-word;
+  }
+
+  .issues.empty {
     align-items: center;
     justify-content: center;
-    height: 100px;
-    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .issue.error .icon {
+    color: var(--spectrum-global-color-static-red-600);
+  }
+
+  .issues :global(hr.spectrum-Divider:last-child) {
+    display: none;
+  }
+
+  .issues .issue:not(:first-child) {
+    padding-top: var(--spacing-l);
   }
 
   .error-count {
