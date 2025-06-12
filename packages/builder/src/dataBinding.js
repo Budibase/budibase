@@ -896,6 +896,7 @@ export const getSchemaForDatasourcePlus = (resourceId, options) => {
     ? {
         type: "viewV2",
         id: resourceId,
+        // TODO(samwho): update this to support ta_bb_* IDs (sample data)
         tableId: resourceId.split("_").slice(1, 3).join("_"),
       }
     : { type: "table", tableId: resourceId }
