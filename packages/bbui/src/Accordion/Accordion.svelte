@@ -1,24 +1,40 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/accordion"
 
-  export let itemName = undefined
-  export let initialOpen = false
-  export let header
-  export let bold = true
-  export let noPadding = false
+  export let itemName: string | undefined = undefined
+  export let initialOpen: boolean = false
+  export let header: string | undefined
+  export let headerSize: "S" | "M" | "L" = "S"
+  export let bold: boolean = true
+  export let noPadding: boolean = false
 
   let isOpen = initialOpen
 
-  function getOpenClass(isOpen) {
-    return isOpen ? "is-open" : ""
+  export function open() {
+    isOpen = true
+  }
+
+  export function close() {
+    isOpen = false
+  }
+
+  function headerSizeClass(size: "S" | "M" | "L") {
+    return size === "S"
+      ? "spectrum-Accordion-itemHeaderS"
+      : size === "M"
+        ? "spectrum-Accordion-itemHeaderM"
+        : "spectrum-Accordion-itemHeaderL"
   }
 </script>
 
 <div class="spectrum-Accordion" role={itemName}>
-  <div class="spectrum-Accordion-item {getOpenClass(isOpen)}">
-    <h3 class="spectrum-Accordion-itemHeading">
+  <div class="spectrum-Accordion-item" class:is-open={isOpen}>
+    <h3
+      class="spectrum-Accordion-itemHeading"
+      style={noPadding ? "margin-bottom: -10px;" : ""}
+    >
       <button
-        class="spectrum-Accordion-itemHeader"
+        class={`spectrum-Accordion-itemHeader ${headerSizeClass(headerSize)}`}
         type="button"
         style="--font-weight: {bold ? 'bold' : 'normal'}"
         on:click={() => (isOpen = !isOpen)}
@@ -58,7 +74,16 @@
   .spectrum-Accordion-itemHeader {
     text-transform: none;
     font-weight: var(--font-weight);
-    font-size: 0.875rem;
     min-height: auto;
+  }
+  .spectrum-Accordion-itemHeaderS {
+    font-size: 0.875rem;
+  }
+  .spectrum-Accordion-itemHeaderM {
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+  .spectrum-Accordion-itemHeaderL {
+    font-size: 1.5rem;
   }
 </style>
