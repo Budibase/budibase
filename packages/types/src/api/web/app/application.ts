@@ -48,7 +48,7 @@ export interface AddAppSampleDataResponse {
   message: string
 }
 
-export type FetchAppsResponse = App[]
+export type FetchAppsResponse = (App & { defaultWorkspaceAppUrl: string })[]
 
 export interface PublishedAppData {
   name: string

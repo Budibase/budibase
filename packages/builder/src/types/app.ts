@@ -27,6 +27,8 @@ export interface AppUIMetadata {
   favourite: boolean
 }
 
-export interface StoreApp extends App, AppIdentifierMetadata {}
+export interface StoreApp extends App, AppIdentifierMetadata {
+  defaultWorkspaceAppUrl: string
+}
 
 export interface EnrichedApp extends StoreApp, AppUIMetadata {}

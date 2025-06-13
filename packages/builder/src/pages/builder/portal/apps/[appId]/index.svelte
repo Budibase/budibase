@@ -35,10 +35,10 @@
   const getIframeURL = (app: EnrichedApp) => {
     loading = true
 
-    if (app.status === "published") {
-      return `/app${app.url}`
-    }
-    return `/${app.devId}`
+    const workspaceUrl =
+      app.status === "published" ? `/app${app.url}` : `/${app.devId}`
+
+    return `${workspaceUrl}${app.defaultWorkspaceAppUrl}`
   }
 
   let noScreens = false
