@@ -9,6 +9,7 @@ export interface OAuth2ConfigResponse {
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  scope?: string
 }
 
 export interface FetchOAuth2ConfigsResponse {
@@ -22,6 +23,7 @@ export interface InsertOAuth2ConfigRequest {
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  scope?: string
 }
 
 export interface InsertOAuth2ConfigResponse {
@@ -37,6 +39,7 @@ export interface UpdateOAuth2ConfigRequest {
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  scope?: string
 }
 
 export interface UpdateOAuth2ConfigResponse {
@@ -50,6 +53,7 @@ export interface ValidateConfigRequest {
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  scope?: string
 }
 
 export interface ValidateConfigResponse {
