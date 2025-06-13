@@ -10,8 +10,7 @@ async function guardName(name: string, id?: string) {
   }
 }
 
-export async function fetch(): Promise<WorkspaceApp[]> {
-  const db = context.getAppDB()
+export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
   const docs = await db.allDocs<WorkspaceApp>(
     docIds.getWorkspaceAppParams(null, { include_docs: true })
   )

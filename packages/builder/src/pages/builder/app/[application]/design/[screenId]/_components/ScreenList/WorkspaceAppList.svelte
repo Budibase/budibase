@@ -140,6 +140,10 @@
     margin-bottom: var(--spacing-xs);
   }
 
+  .project-app-nav-item :global(.nav-item-content) {
+    width: 100%;
+  }
+
   .project-app-nav-item :global(.nav-item-content .icon) {
     margin-right: 4px;
   }
