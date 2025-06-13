@@ -120,6 +120,6 @@ export async function validate(
   }
 
   const validation = await sdk.oauth2.validateConfig(config)
-  ctx.status = 201
+  ctx.status = 200
   ctx.body = validation
 }
