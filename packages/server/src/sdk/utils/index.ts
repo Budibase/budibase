@@ -21,7 +21,7 @@ function isEnvironmentVariableKey(str: string) {
 }
 
 export async function processEnvironmentVariable<
-  T extends string | Record<string, string>,
+  T extends string | Record<string, string> | undefined,
 >(value: T): Promise<T> {
   let envVariables: Record<string, string>
   const getEnvVariables = async () => {
@@ -31,8 +31,11 @@ export async function processEnvironmentVariable<
     return envVariables
   }
 
+  if (!value) {
+    return value
+  }
   if (typeof value !== "string") {
-    for (const key of Object.keys(value)) {
+    for (const key of Object.keys(value).filter(k => value[k])) {
       value[key] = await _processEnvironmentVariable(
         value[key],
         getEnvVariables
