@@ -124,6 +124,7 @@
       >
         <BlockComponent
           type="spectrumcard"
+          context="repeater"
           props={{
             title: cardTitle,
             subtitle: cardSubtitle,
