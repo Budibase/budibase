@@ -1,5 +1,6 @@
 <script>
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
+  import { ViewMode } from "@/types/automations"
   import { Modal } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
@@ -17,7 +18,10 @@
   export let blockRef
   export let automation
   export let draggable = true
-
+  export let stepStatus = null
+  export let logStepData = null
+  export let viewMode = ViewMode.EDITOR
+  export let onStepSelect = () => {}
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
   const contentPos = getContext("contentPos")
@@ -154,7 +158,13 @@
         }}
       >
         <div class="block-float">
-          <FlowItemStatus {block} {automation} hideStatus={$view?.dragging} />
+          <FlowItemStatus
+            {block}
+            {automation}
+            hideStatus={$view?.dragging}
+            {logStepData}
+            {viewMode}
+          />
         </div>
         {#if draggable}
           <div
@@ -167,8 +177,15 @@
         {/if}
         <div
           class="block-core"
+          class:log-success={viewMode === ViewMode.LOGS &&
+            stepStatus === "success"}
+          class:log-error={viewMode === ViewMode.LOGS && stepStatus === "error"}
           on:click={async () => {
-            await automationStore.actions.selectNode(block.id)
+            if (viewMode === ViewMode.EDITOR) {
+              await automationStore.actions.selectNode(block.id)
+            } else if (viewMode === ViewMode.LOGS && logStepData) {
+              onStepSelect(logStepData)
+            }
           }}
         >
           <div class="blockSection block-info">
@@ -334,5 +351,50 @@
 
   .block-info {
     pointer-events: none;
+  }
+
+  .log-success .block-content {
+    border-color: var(--spectrum-global-color-green-600);
+    border-width: 2px;
+  }
+
+  .log-error .block-content {
+    border-color: var(--spectrum-global-color-red-600);
+    border-width: 2px;
+  }
+
+  .log-status-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .status-indicator {
+    font-weight: bold;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  .status-indicator.status-success {
+    background: var(--spectrum-global-color-green-600);
+  }
+
+  .status-indicator.status-error {
+    background: var(--spectrum-global-color-red-600);
+  }
+
+  .status-text {
+    font-weight: 600;
+    text-transform: uppercase;
   }
 </style>

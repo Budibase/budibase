@@ -3,8 +3,8 @@
     automationStore,
     automationHistoryStore,
     selectedAutomation,
-    appStore,
   } from "@/stores/builder"
+  import { ViewMode } from "@/types/automations"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import {
@@ -22,7 +22,8 @@
   import DraggableCanvas from "../DraggableCanvas.svelte"
   import { onMount } from "svelte"
   import { environment } from "@/stores/portal"
-  import Count from "../../SetupPanel/Count.svelte"
+  import AutomationLogsPanel from "./AutomationLogsPanel.svelte"
+  import LogDetailsPanel from "./LogDetailsPanel.svelte"
 
   export let automation
 
@@ -35,7 +36,12 @@
   let treeEle
   let draggable
 
-  let prodErrors
+  let _prodErrors
+  let showLogsPanel = false
+  let showLogDetails = false
+  let selectedLog = null
+  let selectedStepData = null
+  let viewMode = ViewMode.EDITOR
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -45,7 +51,7 @@
   // Parse the automation tree state
   $: refresh($memoAutomation)
 
-  $: blocks = getBlocks($memoAutomation).filter(
+  $: blocks = getBlocks($memoAutomation, selectedLog).filter(
     x => x.stepId !== ActionStepID.LOOP
   )
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
@@ -54,13 +60,43 @@
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
   }
-
-  const getBlocks = automation => {
+  const getBlocks = (automation, selectedLog) => {
     let blocks = []
-    if (automation.definition.trigger) {
-      blocks.push(automation.definition.trigger)
+
+    // In logs mode, we need to show steps from the log data
+    if (viewMode === ViewMode.LOGS && selectedLog) {
+      if (automation.definition.trigger) {
+        blocks.push(automation.definition.trigger)
+      }
+
+      // Process steps in the order they appear in the log
+      // Filter out trigger steps from log steps (they shouldn't be there but sometimes are)
+      if (selectedLog.steps) {
+        selectedLog.steps
+          .filter(
+            logStep => logStep.stepId !== automation.definition.trigger?.stepId
+          )
+          .forEach(logStep => {
+            const currentStep = automation.definition.steps?.find(
+              step => step.id === logStep.id
+            )
+
+            if (currentStep) {
+              blocks.push(currentStep)
+            } else {
+              blocks.push({
+                ...logStep,
+              })
+            }
+          })
+      }
+    } else {
+      // Normal editor mode - show current automation steps
+      if (automation.definition.trigger) {
+        blocks.push(automation.definition.trigger)
+      }
+      blocks = blocks.concat(automation.definition.steps || [])
     }
-    blocks = blocks.concat(automation.definition.steps || [])
     return blocks
   }
 
@@ -80,17 +116,104 @@
         automationId: automation._id,
         status: "error",
       })
-      prodErrors = response?.data?.length || 0
+      _prodErrors = response?.data?.length || 0
     } catch (error) {
       console.error(error)
     }
   })
+
+  function toggleLogsPanel() {
+    showLogsPanel = !showLogsPanel
+    if (showLogsPanel) {
+      showLogDetails = false
+      selectedLog = null
+      viewMode = ViewMode.LOGS
+    } else {
+      viewMode = ViewMode.EDITOR
+    }
+  }
+
+  function enrichLog(definitions, log) {
+    if (!definitions || !log || !log.steps) {
+      return log
+    }
+
+    const enrichedLog = { ...log, steps: [...log.steps] }
+
+    for (let step of enrichedLog.steps) {
+      const trigger = definitions.TRIGGER[step.stepId]
+      const action = definitions.ACTION[step.stepId]
+
+      if (trigger || action) {
+        step.icon = trigger ? trigger.icon : action.icon
+        step.name = trigger ? trigger.name : action.name
+      }
+    }
+
+    return enrichedLog
+  }
+
+  function handleSelectLog(log) {
+    selectedLog = enrichLog($automationStore.blockDefinitions, log) ?? log
+    showLogDetails = true
+    showLogsPanel = false
+    selectedStepData = null // Clear selected step when switching logs
+  }
+
+  function handleBackToLogs() {
+    showLogDetails = false
+    showLogsPanel = true
+    selectedLog = null
+    selectedStepData = null
+  }
+
+  function closeAllPanels() {
+    showLogsPanel = false
+    showLogDetails = false
+    selectedLog = null
+    selectedStepData = null
+    viewMode = ViewMode.EDITOR
+  }
+
+  function handleStepSelect(stepData) {
+    selectedStepData = stepData
+  }
 </script>
 
 <div class="automation-heading">
   <div class="actions-left">
     <div class="automation-name">
       {automation.name}
+    </div>
+    <div class="view-mode-toggle">
+      <div class="group">
+        <ActionButton
+          icon="Edit"
+          quiet
+          selected={viewMode === ViewMode.EDITOR}
+          on:click={() => {
+            viewMode = ViewMode.EDITOR
+            closeAllPanels()
+          }}
+        >
+          Editor
+        </ActionButton>
+        <ActionButton
+          icon="AppleFiles"
+          quiet
+          selected={viewMode === ViewMode.LOGS ||
+            showLogsPanel ||
+            showLogDetails}
+          on:click={() => {
+            viewMode = ViewMode.LOGS
+            if (!showLogsPanel && !showLogDetails) {
+              toggleLogsPanel()
+            }
+          }}
+        >
+          Logs
+        </ActionButton>
+      </div>
     </div>
   </div>
   <div class="actions-right">
@@ -104,31 +227,6 @@
     >
       Run test
     </ActionButton>
-    <Count
-      count={prodErrors}
-      tooltip={"There are errors in production"}
-      hoverable={false}
-    >
-      <ActionButton
-        icon="Folder"
-        quiet
-        selected={prodErrors}
-        on:click={() => {
-          const params = new URLSearchParams({
-            ...(prodErrors ? { open: "error" } : {}),
-            automationId: automation._id,
-          })
-          window.open(
-            `/builder/app/${
-              $appStore.appId
-            }/settings/automations?${params.toString()}`,
-            "_blank"
-          )
-        }}
-      >
-        Logs
-      </ActionButton>
-    </Count>
 
     {#if !isRowAction}
       <div class="toggle-active setting-spacing">
@@ -193,6 +291,9 @@
               isLast={blocks?.length - 1 === idx}
               automation={$memoAutomation}
               blocks={blockRefs}
+              logData={selectedLog}
+              {viewMode}
+              onStepSelect={handleStepSelect}
             />
           {/each}
         {/if}
@@ -221,6 +322,23 @@
 >
   <TestDataModal />
 </Modal>
+
+{#if showLogsPanel}
+  <AutomationLogsPanel
+    {automation}
+    onClose={closeAllPanels}
+    onSelectLog={handleSelectLog}
+  />
+{/if}
+
+{#if showLogDetails && selectedLog}
+  <LogDetailsPanel
+    log={selectedLog}
+    selectedStep={selectedStepData}
+    onClose={closeAllPanels}
+    onBack={handleBackToLogs}
+  />
+{/if}
 
 <style>
   .main-flow {
@@ -267,6 +385,11 @@
   }
 
   .canvas-heading-left {
+    display: flex;
+    gap: var(--spacing-l);
+  }
+
+  .view-mode-toggle {
     display: flex;
     gap: var(--spacing-l);
   }
@@ -318,18 +441,28 @@
   }
 
   .group {
-    border-radius: 4px;
+    border-radius: 6px;
     display: flex;
     flex-direction: row;
+    background: var(--spectrum-global-color-gray-100);
+    padding: 2px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .group :global(> *:not(:first-child)) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    border-left: 2px solid var(--spectrum-global-color-gray-300);
+    border-left: none;
   }
   .group :global(> *:not(:last-child)) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+  }
+
+  .actions-left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-l);
   }
 
   .canvas-heading-left .group :global(.spectrum-Button),
@@ -344,5 +477,32 @@
   .canvas-heading-left .group :global(.spectrum-Button:hover),
   .canvas-heading-left .group :global(.spectrum-ActionButton:hover) {
     background: var(--spectrum-global-color-gray-300) !important;
+  }
+
+  .view-mode-toggle .group :global(.spectrum-ActionButton) {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: var(--spectrum-global-color-gray-700) !important;
+    font-weight: 500;
+    padding: 6px 12px !important;
+    margin: 0 !important;
+    transition: all 0.15s ease;
+  }
+
+  .view-mode-toggle .group :global(.spectrum-ActionButton:hover) {
+    background: var(--spectrum-global-color-gray-200) !important;
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
+
+  .view-mode-toggle .group :global(.spectrum-ActionButton.is-selected) {
+    background: var(--spectrum-global-color-gray-50) !important;
+    color: var(--spectrum-global-color-gray-900) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+  }
+
+  .view-mode-toggle .group :global(.spectrum-Icon) {
+    color: inherit !important;
   }
 </style>
