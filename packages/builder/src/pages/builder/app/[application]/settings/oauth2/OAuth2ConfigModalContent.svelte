@@ -71,6 +71,7 @@
       grantType: z.nativeEnum(OAuth2GrantType, {
         message: "Grant type is required.",
       }),
+      scope: z.union([z.string(), z.undefined()]),
     }) satisfies ZodType<InsertOAuth2ConfigRequest>
 
     const validationResult = validator.safeParse(config)
@@ -210,6 +211,12 @@
     placeholder="Type here..."
     bind:value={data.clientSecret}
     error={errors.clientSecret}
+  />
+  <Input
+    label="Scope"
+    placeholder="Space-separated scopes (optional)"
+    bind:value={data.scope}
+    error={errors.scope}
   />
   <Body size="S"
     >To learn how to configure OAuth2, our documentation <Link

@@ -20,6 +20,7 @@ const baseSchema = {
   grantType: Joi.string()
     .required()
     .valid(...Object.values(OAuth2GrantType)),
+  scope: Joi.string().optional().allow(""),
 }
 
 const insertSchema = Joi.object({
