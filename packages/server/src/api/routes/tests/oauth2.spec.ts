@@ -9,6 +9,7 @@ import {
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 import _ from "lodash/fp"
+import nock from "nock"
 
 describe("/oauth2", () => {
   let config = setup.getConfig()
@@ -30,7 +31,10 @@ describe("/oauth2", () => {
 
   beforeAll(async () => await config.init())
 
-  beforeEach(async () => await config.newTenant())
+  beforeEach(async () => {
+    await config.newTenant()
+    nock.cleanAll()
+  })
 
   const expectOAuth2ConfigId = expect.stringMatching(
     `^${DocumentType.OAUTH2_CONFIG}_.+$`
@@ -341,6 +345,100 @@ describe("/oauth2", () => {
         status: 404,
         body: { message: "OAuth2 config with id 'unexisting' not found." },
       })
+    })
+  })
+
+  describe("validate", () => {
+    function nockTokenCredentials(
+      request: {
+        oauth2Url: string
+        clientId: string
+        password: string
+        scope: string | undefined
+      },
+      result: {
+        code: number
+        body: any
+      }
+    ) {
+      const url = new URL(request.oauth2Url)
+      const token = generator.guid()
+
+      // Token request nock
+      nock(url.origin)
+        .post(url.pathname, body => {
+          return (
+            body.grant_type === "client_credentials" &&
+            (request.scope === undefined || body.scope === request.scope)
+          )
+        })
+        .basicAuth({ user: request.clientId, pass: request.password })
+        .reply(200, {
+          token_type: "Bearer",
+          access_token: token,
+        })
+
+      // Protected resource call
+      return nock("https://example.com", {
+        reqheaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .get("/")
+        .reply(result.code, result.body)
+    }
+
+    it("can validate configuration without scope", async () => {
+      const oauth2Config = makeOAuth2Config({ scope: undefined })
+
+      nockTokenCredentials(
+        {
+          oauth2Url: oauth2Config.url,
+          clientId: oauth2Config.clientId,
+          password: oauth2Config.clientSecret,
+          scope: undefined,
+        },
+        {
+          code: 200,
+          body: {
+            foo: "bar",
+          },
+        }
+      )
+
+      const { name, ...validationConfig } = oauth2Config
+
+      const response = await config.api.oauth2.validate(validationConfig, {
+        status: 200,
+      })
+      expect(response.valid).toBe(true)
+    })
+
+    it("can validate configuration with scope", async () => {
+      const scope = "read:users write:users"
+      const oauth2Config = makeOAuth2Config({ scope })
+
+      nockTokenCredentials(
+        {
+          oauth2Url: oauth2Config.url,
+          clientId: oauth2Config.clientId,
+          password: oauth2Config.clientSecret,
+          scope,
+        },
+        {
+          code: 200,
+          body: {
+            foo: "bar",
+          },
+        }
+      )
+
+      const { name, ...validationConfig } = oauth2Config
+
+      const response = await config.api.oauth2.validate(validationConfig, {
+        status: 200,
+      })
+      expect(response.valid).toBe(true)
     })
   })
 })
