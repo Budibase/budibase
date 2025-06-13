@@ -71,7 +71,10 @@
       grantType: z.nativeEnum(OAuth2GrantType, {
         message: "Grant type is required.",
       }),
-      scope: z.union([z.string(), z.undefined()]),
+      scope: z
+        .string()
+        .transform(s => s || undefined)
+        .optional(),
     }) satisfies ZodType<InsertOAuth2ConfigRequest>
 
     const validationResult = validator.safeParse(config)
@@ -106,6 +109,7 @@
         clientSecret: configData.clientSecret,
         method: configData.method,
         grantType: configData.grantType,
+        scope: configData.scope,
       })
       if (!connectionValidation.valid) {
         let message = "Connection settings could not be validated"
