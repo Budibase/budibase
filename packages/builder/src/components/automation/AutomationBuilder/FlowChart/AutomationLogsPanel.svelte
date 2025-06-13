@@ -31,7 +31,6 @@
   let timeRange = null
   let loaded = false
 
-  // All available time options
   const allTimeOptions = [
     { value: "90-d", label: "Past 90 days" },
     { value: "30-d", label: "Past 30 days" },
@@ -42,18 +41,14 @@
     { value: "5-m", label: "Past 5 mins" },
   ]
 
-  // Get automation log retention days from license
   $: automationLogRetentionDays =
     $licensing.license?.quotas?.constant?.automationLogRetentionDays?.value || 1
 
-  // Filter time options based on plan restrictions
   $: timeOptions = allTimeOptions.filter(option => {
     if ($licensing.isFreePlan) {
-      // Free plan: only allow options that don't exceed 1 day
       return ["1-d", "1-h", "15-m", "5-m"].includes(option.value)
     }
     if (!$licensing.isEnterprisePlan) {
-      // Non-enterprise plans: restrict longer retention periods
       const retentionDays = automationLogRetentionDays
       if (retentionDays <= 1) {
         return ["1-d", "1-h", "15-m", "5-m"].includes(option.value)
@@ -67,7 +62,6 @@
     return true
   })
 
-  // Show upgrade prompts for non-enterprise users with account portal access
   $: showUpgradeButton =
     !$licensing.isEnterprisePlan && $auth?.user?.accountPortalAccess
 
@@ -106,41 +100,11 @@
         startDate,
       })
       pageInfo.fetched(response.hasNextPage, response.nextPage)
-      runHistory = enrichHistory(
-        $automationStore.blockDefinitions,
-        response.data
-      )
+      runHistory = response.data
     } catch (error) {
       notifications.error("Error fetching automation logs")
       console.error(error)
     }
-  }
-
-  function enrichHistory(definitions, runHistory) {
-    if (!definitions) {
-      return []
-    }
-    const finalHistory = []
-    for (let history of runHistory) {
-      if (!history.steps) {
-        continue
-      }
-      let notFound = false
-      for (let step of history.steps) {
-        const trigger = definitions.TRIGGER[step.stepId],
-          action = definitions.ACTION[step.stepId]
-        if (!trigger && !action) {
-          notFound = true
-          break
-        }
-        step.icon = trigger ? trigger.icon : action.icon
-        step.name = trigger ? trigger.name : action.name
-      }
-      if (!notFound) {
-        finalHistory.push(history)
-      }
-    }
-    return finalHistory
   }
 
   onMount(async () => {

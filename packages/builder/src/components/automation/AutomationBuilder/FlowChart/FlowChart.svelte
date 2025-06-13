@@ -51,33 +51,52 @@
   // Parse the automation tree state
   $: refresh($memoAutomation)
 
-  $: blocks = getBlocks($memoAutomation)
-    .filter(x => x.stepId !== ActionStepID.LOOP)
-    .filter(block => {
-      // In logs mode, only show steps that have corresponding log data
-      if (viewMode === ViewMode.LOGS && selectedLog) {
-        if (block.type === "TRIGGER") {
-          return !!selectedLog.trigger
-        }
-        return selectedLog.steps?.some(
-          logStep => logStep.stepId === block.stepId
-        )
-      }
-      return true
-    })
+  $: blocks = getBlocks($memoAutomation, selectedLog).filter(
+    x => x.stepId !== ActionStepID.LOOP
+  )
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const refresh = () => {
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
   }
-
-  const getBlocks = automation => {
+  const getBlocks = (automation, selectedLog) => {
     let blocks = []
-    if (automation.definition.trigger) {
-      blocks.push(automation.definition.trigger)
+
+    // In logs mode, we need to show steps from the log data
+    if (viewMode === ViewMode.LOGS && selectedLog) {
+      if (automation.definition.trigger) {
+        blocks.push(automation.definition.trigger)
+      }
+
+      // Process steps in the order they appear in the log
+      // Filter out trigger steps from log steps (they shouldn't be there but sometimes are)
+      if (selectedLog.steps) {
+        selectedLog.steps
+          .filter(
+            logStep => logStep.stepId !== automation.definition.trigger?.stepId
+          )
+          .forEach(logStep => {
+            const currentStep = automation.definition.steps?.find(
+              step => step.id === logStep.id
+            )
+
+            if (currentStep) {
+              blocks.push(currentStep)
+            } else {
+              blocks.push({
+                ...logStep,
+              })
+            }
+          })
+      }
+    } else {
+      // Normal editor mode - show current automation steps
+      if (automation.definition.trigger) {
+        blocks.push(automation.definition.trigger)
+      }
+      blocks = blocks.concat(automation.definition.steps || [])
     }
-    blocks = blocks.concat(automation.definition.steps || [])
     return blocks
   }
 
@@ -114,8 +133,28 @@
     }
   }
 
+  function enrichLog(definitions, log) {
+    if (!definitions || !log || !log.steps) {
+      return log
+    }
+
+    const enrichedLog = { ...log, steps: [...log.steps] }
+
+    for (let step of enrichedLog.steps) {
+      const trigger = definitions.TRIGGER[step.stepId]
+      const action = definitions.ACTION[step.stepId]
+
+      if (trigger || action) {
+        step.icon = trigger ? trigger.icon : action.icon
+        step.name = trigger ? trigger.name : action.name
+      }
+    }
+
+    return enrichedLog
+  }
+
   function handleSelectLog(log) {
-    selectedLog = log
+    selectedLog = enrichLog($automationStore.blockDefinitions, log) ?? log
     showLogDetails = true
     showLogsPanel = false
     selectedStepData = null // Clear selected step when switching logs
@@ -138,10 +177,6 @@
 
   function handleStepSelect(stepData) {
     selectedStepData = stepData
-    if (!showLogDetails && selectedLog) {
-      showLogDetails = true
-      showLogsPanel = false
-    }
   }
 </script>
 

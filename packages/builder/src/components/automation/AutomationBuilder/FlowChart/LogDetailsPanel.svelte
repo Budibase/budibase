@@ -13,7 +13,6 @@
   let selectedTab = "Data in"
 
   $: isTrigger = currentStepData?.inputs === null // null inputs so we know it is a trigger
-  $: console.log(log)
   $: availableTabs = isTrigger
     ? ["Data out", "Issues"]
     : ["Data in", "Data out", "Issues"]

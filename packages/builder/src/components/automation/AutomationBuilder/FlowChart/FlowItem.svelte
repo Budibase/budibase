@@ -22,7 +22,6 @@
   export let logStepData = null
   export let viewMode = ViewMode.EDITOR
   export let onStepSelect = () => {}
-
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
   const contentPos = getContext("contentPos")

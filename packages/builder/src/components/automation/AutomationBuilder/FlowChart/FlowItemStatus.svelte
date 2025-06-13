@@ -34,7 +34,6 @@
 
   $: blockRef = block?.id ? $selectedAutomation.blockRefs[block?.id] : null
   $: isTriggerBlock = block ? isTrigger(block) : false
-
   $: testResults = $automationStore.testResults as TestAutomationResponse
   $: blockResult =
     viewMode === ViewMode.LOGS && logStepData
@@ -103,14 +102,14 @@
 </script>
 
 <div class="flow-item-status">
-  {#if blockRef}
+  {#if blockRef || viewMode === ViewMode.LOGS}
     {#if isTriggerBlock}
       <span class="block-type">
         <ActionButton size="S" active={false} icon="Workflow">
           Trigger
         </ActionButton>
       </span>
-    {:else if blockRef.looped}
+    {:else if blockRef?.looped && viewMode === ViewMode.EDITOR}
       <ActionButton size="S" active={false} icon="Reuse">Looping</ActionButton>
     {:else}
       <span />
