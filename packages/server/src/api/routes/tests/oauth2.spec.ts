@@ -13,15 +13,19 @@ import _ from "lodash/fp"
 describe("/oauth2", () => {
   let config = setup.getConfig()
 
-  function makeOAuth2Config(): InsertOAuth2ConfigRequest {
-    return {
+  function makeOAuth2Config({
+    scope,
+  }: { scope?: string } = {}): InsertOAuth2ConfigRequest {
+    const config = {
       name: generator.guid(),
       url: generator.url(),
       clientId: generator.guid(),
       clientSecret: generator.hash(),
       method: generator.pickone(Object.values(OAuth2CredentialsMethod)),
       grantType: generator.pickone(Object.values(OAuth2GrantType)),
+      scope,
     }
+    return config
   }
 
   beforeAll(async () => await config.init())
@@ -149,6 +153,29 @@ describe("/oauth2", () => {
         },
       ])
     })
+
+    it("can create a configuration with scope", async () => {
+      const scope = "read:users write:users"
+      const oauth2Config = makeOAuth2Config({ scope })
+      await config.api.oauth2.create(oauth2Config, { status: 201 })
+
+      const response = await config.api.oauth2.fetch()
+      expect(response).toEqual({
+        configs: [
+          {
+            _id: expectOAuth2ConfigId,
+            _rev: expect.stringMatching(/^1-\w+/),
+            name: oauth2Config.name,
+            url: oauth2Config.url,
+            clientId: oauth2Config.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
+            method: oauth2Config.method,
+            grantType: oauth2Config.grantType,
+            scope,
+          },
+        ],
+      })
+    })
   })
 
   describe("update", () => {
@@ -217,6 +244,68 @@ describe("/oauth2", () => {
           },
         }
       )
+    })
+
+    it("can update a configuration to add scope", async () => {
+      const configData = _.sample(existingConfigs)!
+      const newScope = "read:data write:data"
+
+      await config.api.oauth2.update({
+        ...configData,
+        scope: newScope,
+      })
+
+      const response = await config.api.oauth2.fetch()
+      expect(response.configs).toEqual(
+        expect.arrayContaining([
+          {
+            _id: configData._id,
+            _rev: expect.not.stringMatching(configData._rev),
+            name: configData.name,
+            url: configData.url,
+            clientId: configData.clientId,
+            clientSecret: PASSWORD_REPLACEMENT,
+            method: configData.method,
+            grantType: configData.grantType,
+            scope: newScope,
+          },
+        ])
+      )
+    })
+
+    it("can update a configuration to remove scope", async () => {
+      const configWithScope = makeOAuth2Config({
+        scope: "read:users write:users",
+      })
+      const createdConfig = await config.api.oauth2.create(configWithScope)
+
+      const { scope, ...configWithoutScope } = createdConfig.config
+      await config.api.oauth2.update(configWithoutScope)
+
+      const response = await config.api.oauth2.fetch()
+      const updatedConfig = response.configs.find(
+        c => c._id === createdConfig.config._id
+      )
+      expect(updatedConfig).not.toHaveProperty("scope")
+    })
+
+    it("can update a configuration to modify existing scope", async () => {
+      const configWithScope = makeOAuth2Config({
+        scope: "read:users write:users",
+      })
+      const createdConfig = await config.api.oauth2.create(configWithScope)
+
+      const newScope = "admin:all"
+      await config.api.oauth2.update({
+        ...createdConfig.config,
+        scope: newScope,
+      })
+
+      const response = await config.api.oauth2.fetch()
+      const updatedConfig = response.configs.find(
+        c => c._id === createdConfig.config._id
+      )
+      expect(updatedConfig?.scope).toBe(newScope)
     })
   })
 
