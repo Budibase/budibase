@@ -4,6 +4,8 @@ import {
   FetchOAuth2ConfigsResponse,
   UpdateOAuth2ConfigRequest,
   UpdateOAuth2ConfigResponse,
+  ValidateConfigRequest,
+  ValidateConfigResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -42,6 +44,16 @@ export class OAuth2API extends TestAPI {
 
   delete = async (id: string, rev: string, expectations?: Expectations) => {
     return await this._delete<void>(`/api/oauth2/${id}/${rev}`, {
+      expectations,
+    })
+  }
+
+  validate = async (
+    body: ValidateConfigRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<ValidateConfigResponse>("/api/oauth2/validate", {
+      body,
       expectations,
     })
   }
