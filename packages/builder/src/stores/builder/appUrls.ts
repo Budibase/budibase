@@ -28,7 +28,7 @@ export const selectedAppUrls = derived(
     const route = $selectedScreen?.routing.route || ""
     const workspacePrefix =
       $featureFlags.WORKSPACE_APPS && selectedWorkspaceApp
-        ? selectedWorkspaceApp.urlPrefix
+        ? selectedWorkspaceApp.url
         : ""
 
     const previewUrl = buildUrl({

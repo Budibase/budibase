@@ -3,7 +3,7 @@ import { AppNavigation } from "./app"
 
 export interface WorkspaceApp extends Document {
   name: string
-  urlPrefix: string
+  url: string
   icon: string
   iconColor?: string
 

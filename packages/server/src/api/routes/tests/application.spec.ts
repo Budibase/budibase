@@ -345,13 +345,13 @@ describe("/applications", () => {
             const { workspaceApp: workspaceApp1 } =
               await config.api.workspaceApp.create(
                 structures.workspaceApps.createRequest({
-                  urlPrefix: "/app1",
+                  url: "/app1",
                 })
               )
             const { workspaceApp: workspaceApp2 } =
               await config.api.workspaceApp.create(
                 structures.workspaceApps.createRequest({
-                  urlPrefix: "/app2",
+                  url: "/app2",
                 })
               )
 
@@ -417,10 +417,10 @@ describe("/applications", () => {
           it.each(["", "/"])(
             "should retrieve only the screens for a the workspace from the base url of it",
             async closingChar => {
-              const { urlPrefix } = workspaceAppInfo[1].workspaceApp
+              const { url } = workspaceAppInfo[1].workspaceApp
               await config.withHeaders(
                 {
-                  referer: `http://localhost:10000/${config.appId}${urlPrefix}${closingChar}`,
+                  referer: `http://localhost:10000/${config.appId}${url}${closingChar}`,
                 },
                 async () => {
                   const res = await config.api.application.getAppPackage(
@@ -446,10 +446,10 @@ describe("/applications", () => {
           )
 
           it("should retrieve only the screens for a the workspace from a page url", async () => {
-            const { urlPrefix } = workspaceAppInfo[1].workspaceApp
+            const { url } = workspaceAppInfo[1].workspaceApp
             await config.withHeaders(
               {
-                referer: `http://localhost:10000/${config.appId}${urlPrefix}#page-1`,
+                referer: `http://localhost:10000/${config.appId}${url}#page-1`,
               },
               async () => {
                 const res = await config.api.application.getAppPackage(

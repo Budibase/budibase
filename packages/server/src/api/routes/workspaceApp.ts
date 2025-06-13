@@ -8,7 +8,7 @@ import Joi from "joi"
 
 const baseSchema = {
   name: Joi.string().required(),
-  urlPrefix: Joi.string()
+  url: Joi.string()
     .required()
     .regex(/^\/\w*$/),
   icon: Joi.string().required(),
