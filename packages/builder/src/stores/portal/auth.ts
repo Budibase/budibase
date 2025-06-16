@@ -3,7 +3,6 @@ import { API } from "@/api"
 import { admin } from "./admin"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
-import { notifications } from "@budibase/bbui"
 import {
   GetGlobalSelfResponse,
   isSSOUser,
@@ -119,21 +118,6 @@ class AuthStore extends BudiStore<PortalAuthStore> {
       this.setUser(user)
     } catch (error) {
       this.setUser()
-    }
-  }
-
-  checkIfSessionsInvalidatedAndNotify() {
-    const invalidatedCount = parseInt(
-      localStorage.getItem("bb-sessions-invalidated") || "0",
-      10
-    )
-
-    if (invalidatedCount > 0) {
-      const sessionText = invalidatedCount === 1 ? "session" : "sessions"
-      notifications.info(
-        `You've been logged out of ${invalidatedCount} other ${sessionText} because users are only allowed 3 active sessions at any one time.`
-      )
-      localStorage.removeItem("bb-sessions-invalidated")
     }
   }
 

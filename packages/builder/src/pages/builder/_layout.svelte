@@ -2,7 +2,11 @@
   import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth, licensing, navigation } from "@/stores/portal"
   import { onMount } from "svelte"
-  import { CookieUtils, Constants } from "@budibase/frontend-core"
+  import {
+    CookieUtils,
+    Constants,
+    checkIfSessionsInvalidatedAndNotify,
+  } from "@budibase/frontend-core"
   import { API } from "@/api"
   import Branding from "./Branding.svelte"
   import ContextMenu from "@/components/ContextMenu.svelte"
@@ -97,6 +101,8 @@
       // being logged in
     }
     loaded = true
+
+    checkIfSessionsInvalidatedAndNotify()
 
     // lastly
     await analyticsPing()

@@ -14,7 +14,7 @@
   import PortalSideBar from "./_components/PortalSideBar.svelte"
 
   // Don't block loading if we've already hydrated state
-  let loaded = !!$appsStore.apps?.lengthcheckInvalidSessionsAndNotify
+  let loaded = !!$appsStore.apps?.length
 
   onMount(async () => {
     try {
@@ -44,7 +44,6 @@
       notifications.error("Error loading apps and templates")
     }
     loaded = true
-    auth.checkIfSessionsInvalidatedAndNotify()
   })
 </script>
 

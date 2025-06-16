@@ -3,7 +3,11 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import { Constants, CookieUtils } from "@budibase/frontend-core"
+  import {
+    Constants,
+    CookieUtils,
+    checkIfSessionsInvalidatedAndNotify,
+  } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
@@ -109,6 +113,8 @@
     await initialise()
     await authStore.actions.fetchUser()
     dataLoaded = true
+
+    checkIfSessionsInvalidatedAndNotify()
 
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
