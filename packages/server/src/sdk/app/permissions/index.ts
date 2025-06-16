@@ -1,4 +1,4 @@
-import { db, roles, context, docIds } from "@budibase/backend-core"
+import { roles, context } from "@budibase/backend-core"
 import {
   PermissionLevel,
   PermissionSource,
@@ -6,7 +6,7 @@ import {
   Role,
   Database,
 } from "@budibase/types"
-import { extractViewInfoFromID, getRoleParams } from "../../../db/utils"
+import { getRoleParams } from "../../../db/utils"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
@@ -14,6 +14,11 @@ import {
 import sdk from "../../../sdk"
 import { isV2 } from "../views"
 import { removeFromArray } from "../../../utilities"
+import {
+  getTableIdFromViewId,
+  isTableIdOrExternalTableId,
+  isViewId,
+} from "@budibase/shared-core"
 
 type ResourcePermissions = Record<
   string,
@@ -28,8 +33,8 @@ export const enum PermissionUpdateType {
 export async function getInheritablePermissions(
   resourceId: string
 ): Promise<ResourcePermissions | undefined> {
-  if (docIds.isViewId(resourceId)) {
-    return await getResourcePerms(extractViewInfoFromID(resourceId).tableId)
+  if (isViewId(resourceId)) {
+    return await getResourcePerms(getTableIdFromViewId(resourceId))
   }
 }
 
@@ -79,7 +84,7 @@ export async function getResourcePerms(
 export async function getDependantResources(
   resourceId: string
 ): Promise<Record<string, number> | undefined> {
-  if (db.isTableId(resourceId)) {
+  if (isTableIdOrExternalTableId(resourceId)) {
     const dependants: Record<string, Set<string>> = {}
 
     const table = await sdk.tables.getTable(resourceId)
