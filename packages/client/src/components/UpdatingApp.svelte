@@ -1,6 +1,9 @@
 <script>
   import { Updating } from "@budibase/frontend-core"
   import { API } from "../api"
+  import { onMount } from "svelte"
+  import { getThemeClassNames } from "@budibase/shared-core"
+  import { themeStore } from "@/stores"
 
   async function isMigrationDone() {
     const response = await API.getMigrationStatus()
@@ -10,14 +13,17 @@
   async function onMigrationDone() {
     window.location.reload()
   }
+
+  onMount(() => {
+    document.getElementById("clientAppSkeletonLoader")?.remove()
+  })
 </script>
 
-<div class="updating">
+<div
+  id="spectrum-root"
+  lang="en"
+  dir="ltr"
+  class="spectrum spectrum--medium {getThemeClassNames($themeStore.theme)}"
+>
   <Updating {isMigrationDone} {onMigrationDone} />
 </div>
-
-<style>
-  .updating {
-    font-family: var(--font-sans);
-  }
-</style>

@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
-  name: "Cron Trigger",
+  name: "CRON / Schedule",
   event: AutomationEventType.CRON_TRIGGER,
   icon: "clock",
   tagline: "Cron Trigger (<b>{{inputs.cron}}</b>)",

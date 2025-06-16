@@ -11,6 +11,9 @@ import {
 interface UserFetchQuery {
   appId?: string
   paginated?: boolean
+  string?: {
+    email: string
+  }
 }
 
 interface UserDefinition {

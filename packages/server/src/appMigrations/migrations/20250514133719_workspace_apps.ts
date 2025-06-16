@@ -16,6 +16,7 @@ const migration = async () => {
       urlPrefix: "/",
       icon: "monitor",
       navigation: application.navigation!,
+      isDefault: true,
     })
     workspaceAppId = workspaceApp._id
   }

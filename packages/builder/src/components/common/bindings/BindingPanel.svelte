@@ -73,8 +73,8 @@
   let evaluating = false
 
   const SidePanelIcons: Record<SidePanel, string> = {
-    Bindings: "FlashOn",
-    Evaluation: "Play",
+    Bindings: "lightning",
+    Evaluation: "play",
   }
 
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -151,7 +151,7 @@
   }
 
   const debouncedEval = Utils.debounce(
-    (expression: string | null, context: any, snippets: Snippet[]) => {
+    (expression: string | null, context: any, snippets: Snippet[] | null) => {
       try {
         expressionError = undefined
         const output = processStringWithLogsSync(

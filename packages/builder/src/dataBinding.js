@@ -874,7 +874,7 @@ const getEmbedBindings = () => {
       runtimeBinding: `${safeEmbed}`,
       readableBinding: `ParentWindow`,
       category: "Embed",
-      icon: "distribute-vertical",
+      icon: "code",
     },
   ]
   return bindings

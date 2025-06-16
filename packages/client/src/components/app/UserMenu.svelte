@@ -62,7 +62,7 @@
       </div>
     </svelte:fragment>
 
-    <MenuItem icon="user-pencil" on:click={() => profileModal?.show()}>
+    <MenuItem icon="user-gear" on:click={() => profileModal?.show()}>
       My profile
     </MenuItem>
     {#if !isSSO}
@@ -80,7 +80,7 @@
       </MenuItem>
     {/if}
 
-    <MenuItem icon="apps" on:click={goToPortal} disabled={embedded}>
+    <MenuItem icon="squares-four" on:click={goToPortal} disabled={embedded}>
       Go to portal
     </MenuItem>
     <MenuItem

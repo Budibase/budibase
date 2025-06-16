@@ -11,6 +11,7 @@
     notifications,
     Modal,
     Toggle,
+    Body,
     Button,
     ActionButton,
   } from "@budibase/bbui"
@@ -90,7 +91,9 @@
 <div class="automation-heading">
   <div class="actions-left">
     <div class="automation-name">
-      {automation.name}
+      <Body size="M">
+        {automation.name}
+      </Body>
     </div>
   </div>
   <div class="actions-right">

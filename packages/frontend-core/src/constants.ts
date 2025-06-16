@@ -48,6 +48,7 @@ export const BudibaseRoleOptionsOld = [
   {
     label: "Developer",
     value: BudibaseRoles.Developer,
+    sortOrder: 2,
   },
 ]
 export const BudibaseRoleOptions = [
@@ -117,20 +118,20 @@ export const EventPublishType = {
 export { ComponentContextScopes as ContextScopes } from "@budibase/types"
 
 export const TypeIconMap = {
-  [FieldType.STRING]: "article",
-  [FieldType.OPTIONS]: "caret-down",
+  [FieldType.STRING]: "text-align-left",
+  [FieldType.OPTIONS]: "caret-circle-down",
   [FieldType.DATETIME]: "calendar",
-  [FieldType.BARCODEQR]: "camera",
+  [FieldType.BARCODEQR]: "barcode",
   [FieldType.SIGNATURE_SINGLE]: "pen-nib",
   [FieldType.LONGFORM]: "text-align-left",
-  [FieldType.ARRAY]: "copy",
-  [FieldType.NUMBER]: "list-numbers",
-  [FieldType.BOOLEAN]: "intersect",
+  [FieldType.ARRAY]: "list-checks",
+  [FieldType.NUMBER]: "hash",
+  [FieldType.BOOLEAN]: "toggle-right",
   [FieldType.ATTACHMENTS]: "files",
-  [FieldType.ATTACHMENT_SINGLE]: "files",
-  [FieldType.LINK]: "database",
+  [FieldType.ATTACHMENT_SINGLE]: "file",
+  [FieldType.LINK]: "arrow-circle-up-right",
   [FieldType.FORMULA]: "calculator",
-  [FieldType.AI]: "magic-wand",
+  [FieldType.AI]: "sparkle",
   [FieldType.JSON]: "brackets-angle",
   [FieldType.BIGINT]: "text-bolder",
   [FieldType.AUTO]: "shapes",

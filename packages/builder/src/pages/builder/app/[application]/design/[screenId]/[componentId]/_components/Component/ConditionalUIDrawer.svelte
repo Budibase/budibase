@@ -20,9 +20,10 @@
   export let conditions = []
   export let bindings = []
   export let componentBindings = []
+  export let actionOptions = null
 
   const flipDurationMs = 150
-  const actionOptions = [
+  const defaultActionOptions = [
     {
       label: "Hide component",
       value: "hide",
@@ -56,6 +57,8 @@
   ]
 
   let dragDisabled = true
+
+  $: finalActionOptions = actionOptions ?? defaultActionOptions
 
   $: settings = componentStore
     .getComponentSettings($selectedComponent?._component)
@@ -189,11 +192,17 @@
                 style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
                 on:mousedown={() => (dragDisabled = false)}
               >
-                <Icon name="dots-six" size="XL" />
+                <Icon
+                  name="dots-six-vertical"
+                  size="L"
+                  color="var(--spectrum-global-color-gray-600)"
+                  hoverable="true"
+                  hovercolor="var(--spectrum-global-color-gray-800)"
+                />
               </div>
               <Select
                 placeholder={false}
-                options={actionOptions}
+                options={finalActionOptions}
                 bind:value={condition.action}
               />
               {#if condition.action === "update"}

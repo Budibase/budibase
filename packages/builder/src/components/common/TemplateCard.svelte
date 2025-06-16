@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
 
-  export let backgroundColour
-  export let imageSrc
-  export let name
-  export let icon
-  export let overlayEnabled = true
+  export let backgroundColour: string
+  export let imageSrc: string
+  export let name: string
+  export let icon: string
+  export let overlayEnabled: boolean = true
 
   let imageError = false
 

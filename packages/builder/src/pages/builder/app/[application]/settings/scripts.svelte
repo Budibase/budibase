@@ -95,7 +95,7 @@
       <Heading>App scripts</Heading>
       {#if !enabled}
         <Tags>
-          <Tag icon="lock">Enterprise</Tag>
+          <Tag icon="lock" emphasized>Enterprise</Tag>
         </Tags>
       {/if}
     </div>

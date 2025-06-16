@@ -22,16 +22,20 @@
         </button>
       </div>
       <div class="divider" />
-      <a target="_blank" href="https://docs.budibase.com/docs">
+      <a
+        class="help-item-container"
+        target="_blank"
+        href="https://docs.budibase.com/docs"
+      >
         <div class="icon">
-          <Icon name="book" />
+          <Icon name="book" color="rgb(230, 208, 255)" />
         </div>
         <Body size="S">Help docs</Body>
       </a>
       <div class="divider" />
-      <a target="_blank" href={ChangelogURL}>
+      <a target="_blank" class="help-item-container" href={ChangelogURL}>
         <div class="icon">
-          <Icon name="list-bullets" />
+          <Icon name="list-bullets" color="rgb(230, 208, 255)" />
         </div>
         <Body size="S">Changelog</Body>
       </a>
@@ -39,33 +43,46 @@
       <a
         target="_blank"
         href="https://github.com/Budibase/budibase/discussions"
+        class="help-item-container"
       >
         <div class="icon">
-          <Icon name="github-logo" />
+          <Icon name="github-logo" color="rgb(230, 208, 255)" />
         </div>
         <Body size="S">Discussions</Body>
       </a>
       <div class="divider" />
-      <a target="_blank" href="https://discord.com/invite/ZepTmGbtfF">
+      <a
+        target="_blank"
+        class="help-item-container"
+        href="https://discord.com/invite/ZepTmGbtfF"
+      >
         <div class="icon">
-          <Icon name="discord-logo" />
+          <Icon name="discord-logo" color="rgb(230, 208, 255)" />
         </div>
         <Body size="S">Discord</Body>
       </a>
       <div class="divider" />
-      <a target="_blank" href="https://vimeo.com/showcase/budibase-university">
+      <a
+        target="_blank"
+        class="help-item-container"
+        href="https://vimeo.com/showcase/budibase-university"
+      >
         <div class="icon">
-          <Icon name="play" />
+          <Icon name="graduation-cap" color="rgb(230, 208, 255)" />
         </div>
         <Body size="S">Budibase University</Body>
       </a>
       <div class="divider" />
       <a
+        class="help-item-container"
         href={premiumOrAboveLicense
           ? "mailto:support@budibase.com"
           : "/builder/portal/account/usage"}
       >
-        <div class="premiumLinkContent" class:disabled={!premiumOrAboveLicense}>
+        <div
+          class="premiumLinkContent help-item-container"
+          class:disabled={!premiumOrAboveLicense}
+        >
           <div class="icon">
             <Icon name="envelope" />
           </div>
@@ -74,7 +91,7 @@
         {#if !premiumOrAboveLicense}
           <div class="premiumBadge">
             <div class="icon">
-              <Icon name="lock" />
+              <Icon name="lock" size="S" />
             </div>
             <Body size="XS">Premium</Body>
           </div>
@@ -118,13 +135,19 @@
   }
 
   .divider {
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .header {
     display: flex;
     align-items: center;
     padding: 0 0 0 16px;
+  }
+
+  .help-item-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
   }
 
   .closeButton {
@@ -157,12 +180,10 @@
   }
 
   .icon {
-    font-size: 13px;
-    margin-right: 8px;
-    min-width: 18px;
-    justify-content: center;
-    display: flex;
-    color: var(--spectrum-global-color-gray-700);
+    background-color: rgba(189, 139, 252, 0.2);
+    border: 0.5px solid rgba(189, 139, 252, 0.2);
+    padding: 4px;
+    border-radius: 6px;
   }
 
   .premiumLinkContent {
@@ -176,10 +197,18 @@
 
   .premiumBadge {
     align-items: center;
-    margin-left: auto;
+    gap: 4px;
     display: flex;
-    border: 1px solid var(--spectrum-global-color-gray-400);
-    border-radius: 4px;
-    padding: 4px 7px 5px 8px;
+    margin-left: auto;
+    border-radius: 6px;
+    padding: 2px 4px 2px 4px;
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+  }
+  .premiumBadge .icon {
+    background-color: transparent;
+    border: transparent;
+    padding: 0px;
+    color: var(--spectrum-global-color-gray-700);
   }
 </style>
