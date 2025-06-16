@@ -46,7 +46,7 @@
       <Icon
         name={icon}
         size="S"
-        color="var(--spectrum-global-color-gray-600)"
+        color="var(--spectrum-global-color-gray-700)"
       />
     </div>
   {/if}
