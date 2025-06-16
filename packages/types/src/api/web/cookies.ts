@@ -11,3 +11,7 @@ export interface SessionCookie {
 export interface FeatureFlagCookie {
   flags: Record<string, boolean>
 }
+
+export interface LicenseFlagCookie {
+  flags: Record<string, boolean>
+}

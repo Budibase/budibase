@@ -131,6 +131,7 @@ const router: Router = new Router()
 router
   .use(middleware.errorHandling)
   .use(middleware.featureFlagCookie)
+  .use(middleware.licenseFlagCookie)
   .use(
     compress({
       threshold: 2048,

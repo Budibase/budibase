@@ -2,10 +2,15 @@ import {
   UserCtx,
   OverrideFeatureFlagRequest,
   FeatureFlagCookie,
+  FeatureFlag,
 } from "@budibase/types"
-import { Cookie, utils } from "@budibase/backend-core"
+import { Cookie, features, HTTPError, utils } from "@budibase/backend-core"
 
 export async function override(ctx: UserCtx<OverrideFeatureFlagRequest, void>) {
+  if (!(await features.isEnabled(FeatureFlag.DEBUG_UI))) {
+    throw new HTTPError("Feature flag override is not allowed", 403)
+  }
+
   const { flags } = ctx.request.body
 
   let cookie = utils.getCookie<FeatureFlagCookie>(ctx, Cookie.FeatureFlags)

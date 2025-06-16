@@ -9,8 +9,10 @@ import {
   PlanModel,
   QuotaUsage,
   StaticQuotaName,
+  Feature,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import { notifications } from "@budibase/bbui"
 
 const UNLIMITED = -1
 const ONE_DAY_MILLIS = 86400000
@@ -62,6 +64,7 @@ interface LicensingState {
   aiCreditsExceeded: boolean
   actionsExceeded: boolean
   errUserLimit: boolean
+  features?: Feature[]
 }
 
 class LicensingStore extends BudiStore<LicensingState> {
@@ -109,6 +112,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       actionsExceeded: false,
       // AI Limits
       aiCreditsExceeded: false,
+      features: [],
     })
   }
 
@@ -239,6 +243,7 @@ class LicensingStore extends BudiStore<LicensingState> {
         perAppBuildersEnabled,
         customAppScriptsEnabled,
         pdfEnabled,
+        features,
       }
     })
   }
@@ -356,6 +361,25 @@ class LicensingStore extends BudiStore<LicensingState> {
         actionsExceeded,
       }
     })
+  }
+
+  // License flag override methods
+  async setLicenseFeature(feature: Feature, enabled: boolean) {
+    try {
+      await API.overrideLicenseFlags({
+        [feature]: enabled,
+      })
+      await auth.getSelf() // Refresh auth store to update license flags
+      this.setLicense() // Update the license in the store
+      notifications.success(
+        `Feature ${feature} ${enabled ? "enabled" : "disabled"} successfully`
+      )
+    } catch (error) {
+      console.error("Error overriding license flags:", error)
+      notifications.error(
+        `Failed to set feature ${feature} to ${enabled}, see console for details`
+      )
+    }
   }
 }
 

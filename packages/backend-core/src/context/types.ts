@@ -25,5 +25,6 @@ export type ContextMap = {
     [key: string]: Record<string, boolean>
   }
   featureFlagOverrides?: Record<string, boolean>
+  licenseFlagOverrides?: Record<string, boolean>
   viewToTableCache?: Record<string, Table>
 }
