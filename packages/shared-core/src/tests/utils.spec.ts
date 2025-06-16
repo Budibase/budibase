@@ -16,9 +16,6 @@ describe("parallelForeach", () => {
   })
 
   afterEach(async () => {
-    // Wait a bit for any lingering promises to settle
-    await new Promise(resolve => setTimeout(resolve, 10))
-    
     // Restore original unhandled rejection listeners
     process.removeAllListeners("unhandledRejection")
     originalUnhandledRejection.forEach((listener: any) => {
@@ -54,7 +51,7 @@ describe("parallelForeach", () => {
         2
       )
     ).rejects.toThrow("Task failed")
-    
+
     expect(unhandledRejectionErrors).toHaveLength(0)
   })
 
@@ -67,12 +64,8 @@ describe("parallelForeach", () => {
         items,
         async item => {
           if (item === 5) {
-            // Add small delay to make timing more realistic
-            await new Promise(resolve => setTimeout(resolve, 10))
             throw new Error(`Task ${item} failed`)
           }
-          // Other tasks complete successfully  
-          await new Promise(resolve => setTimeout(resolve, 5))
         },
         3
       )
@@ -87,5 +80,23 @@ describe("parallelForeach", () => {
     // Wait a bit for any potential unhandled rejections to surface
     await new Promise(resolve => setTimeout(resolve, 50))
     expect(unhandledRejectionErrors.length).toBe(0)
+  })
+
+  it("should never run more than maxConcurrency tasks at once", async () => {
+    const items = Array.from({ length: 10 }, (_, i) => i + 1)
+    let runningTasks = 0
+
+    await utils.parallelForeach(
+      items,
+      async () => {
+        runningTasks++
+        expect(runningTasks).toBeLessThanOrEqual(3) // maxConcurrency is 3
+        await new Promise(resolve => setTimeout(resolve, 20)) // Simulate work
+        runningTasks--
+      },
+      3
+    )
+
+    expect(unhandledRejectionErrors).toHaveLength(0)
   })
 })
