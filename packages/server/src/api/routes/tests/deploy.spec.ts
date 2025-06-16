@@ -5,12 +5,13 @@ import { createAutomationBuilder } from "../../../automations/tests/utilities/Au
 import { basicTable } from "../../../tests/utilities/structures"
 
 describe("/api/deploy", () => {
-  let config = setup.getConfig()
+  let config = setup.getConfig(),
+    cleanup: () => void
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
-    features.testutils.setFeatureFlags("*", {
+    cleanup = features.testutils.setFeatureFlags("*", {
       WORKSPACE_APPS: true,
     })
     await config.init()
@@ -18,6 +19,7 @@ describe("/api/deploy", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    cleanup()
   })
 
   describe("GET /api/deploy/status", () => {
@@ -46,7 +48,7 @@ describe("/api/deploy", () => {
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Test Workspace App",
-          urlPrefix: "/testapp",
+          url: "/testapp",
         })
       )
 
@@ -73,7 +75,7 @@ describe("/api/deploy", () => {
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Test Workspace App",
-          urlPrefix: "/testapp",
+          url: "/testapp",
         })
       )
 
@@ -112,7 +114,7 @@ describe("/api/deploy", () => {
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
             name: "Published Workspace App",
-            urlPrefix: "/publishedapp",
+            url: "/publishedapp",
           })
         )
 
@@ -120,7 +122,7 @@ describe("/api/deploy", () => {
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
             name: "Unpublished Workspace App",
-            urlPrefix: "/unpublishedapp",
+            url: "/unpublishedapp",
           })
         )
 
@@ -163,7 +165,7 @@ describe("/api/deploy", () => {
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Test Workspace App",
-          urlPrefix: "/testapp",
+          url: "/testapp",
         })
       )
 
