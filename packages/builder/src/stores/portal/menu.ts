@@ -76,6 +76,10 @@ export const menu: Readable<MenuItem[]> = derived(
           title: "AI",
           href: "/builder/portal/settings/ai",
         },
+        {
+          title: "Captcha",
+          href: "/builder/portal/settings/captcha",
+        },
       ]
 
       if (!cloud) {

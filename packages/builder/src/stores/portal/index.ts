@@ -21,5 +21,6 @@ export { temporalStore } from "./temporal"
 export { navigation } from "./navigation"
 export { featureFlags } from "./featureFlags"
 export { agentsStore } from "./agents"
+export { captcha } from "./captcha"
 
 export const sideBarCollapsed = writable(false)
