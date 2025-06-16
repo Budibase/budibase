@@ -12,11 +12,11 @@ describe("workspaceApps utils", () => {
 
     workspaceApps = []
 
-    for (const urlPrefix of ["/", "/app", "/app2"]) {
+    for (const url of ["/", "/app", "/app2"]) {
       workspaceApps.push(
         (
           await config.api.workspaceApp.create(
-            structures.workspaceApps.createRequest({ urlPrefix })
+            structures.workspaceApps.createRequest({ url })
           )
         ).workspaceApp
       )
