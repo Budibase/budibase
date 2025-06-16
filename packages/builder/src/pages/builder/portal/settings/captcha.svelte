@@ -1,36 +1,64 @@
 <script>
+  // Most of this component has been copy-pasted here from branding.svelte or organisation.svelte
   import {
     Layout,
     Heading,
     Body,
+    Button,
     Divider,
-    File,
+    Label,
+    Input,
     notifications,
+    Toggle,
     Tags,
     Tag,
-    Button,
-    Toggle,
-    Input,
-    Label,
-    TextArea,
   } from "@budibase/bbui"
   import { auth, organisation, licensing, admin } from "@/stores/portal"
+  import { writable } from "svelte/store"
   import { API } from "@/api"
   import { onMount } from "svelte"
-  import { goto } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
+  import { redirect } from "@roxi/routify"
+
+  // Only admins allowed here
+  $: {
+    if (!sdk.users.isAdmin($auth.user)) {
+      $redirect("../../portal")
+    }
+  }
+  // Not sure if there needs to changes in $organisation
+  const values = writable({
+    isSSOEnforced: $organisation.isSSOEnforced,
+    company: $organisation.company,
+    platformUrl: $organisation.platformUrl,
+    analyticsEnabled: $organisation.analyticsEnabled,
+  })
+
+  let loading = false
+
+  const saveConfig = async () => {
+    loading = true
+    try {
+      await API.globalConfig.set("captcha", config)
+      notifications.success("CAPTCHA config saved")
+      updated = false
+    } catch (err) {
+      notifications.error("Failed to save CAPTCHA config")
+    } finally {
+      saving = false
+    }
+  }
+  let mounted = false
+  let saving = false
 
   let config = {}
   let updated = false
-
-  let mounted = false
-  let saving = false
 
   $: onConfigUpdate(config)
   $: initialised = Object.keys(config).length > 0
 
   $: isCloud = $admin.cloud
-  $: brandingEnabled = $licensing.brandingEnabled
+  $: captchaEnabled = $licensing.captchaEnabled
 
   const onConfigUpdate = () => {
     if (!mounted || updated || !initialised) {
@@ -69,12 +97,12 @@
     <Layout gap="XS" noPadding>
       <div class="title">
         <Heading size="M">CAPTCHA</Heading>
-        {#if !isCloud && !brandingEnabled}
+        {#if !isCloud && !captchaEnabled}
           <Tags>
             <Tag icon="LockClosed">Premium</Tag>
           </Tags>
         {/if}
-        {#if isCloud && !brandingEnabled}
+        {#if isCloud && !captchaEnabled}
           <Tags>
             <Tag icon="LockClosed">Premium</Tag>
           </Tags>
@@ -83,13 +111,22 @@
       <Body>Add enhanced security to your forms.</Body>
     </Layout>
     <Divider />
-    <div class="field">
-      <Label>Site Key</Label>
-      <Input></Input>
+    <div class="fields">
+      <div class="field">
+        <Label>Site Key</Label>
+        <Input bind:value={config.siteKey} />
+      </div>
+      <div class="field">
+        <Label>Secret Key</Label>
+        <Input bind:value={config.secretKey} />
+      </div>
+      <div class="field">
+        <Label size="L">Enabled</Label>
+        <Toggle text="" bind:value={$values.analyticsEnabled} />
+      </div>
     </div>
-    <div class="field">
-      <Label>Secret Key</Label>
-      <Input></Input>
+    <div>
+      <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
     </div>
   </Layout>
 {/if}

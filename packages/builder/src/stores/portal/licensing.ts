@@ -41,6 +41,7 @@ interface LicensingState {
   syncAutomationsEnabled: boolean
   triggerAutomationRunEnabled: boolean
   pdfEnabled: boolean
+  captchaEnabled: boolean
   // the currently used quotas from the db
   quotaUsage?: QuotaUsage
   // derived quota metrics for percentages used
