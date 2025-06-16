@@ -1,18 +1,16 @@
 <script lang="ts">
-  import { Body, Tags, Tag, Icon, TooltipPosition } from "@budibase/bbui"
+  import { Icon, TooltipPosition } from "@budibase/bbui"
   import {
     type AutomationStep,
     type AutomationTrigger,
     type Automation,
     AutomationStepType,
-    isBranchStep,
     isActionStep,
   } from "@budibase/types"
   import {
     type ExternalAction,
     externalActions,
   } from "@/components/automation/AutomationBuilder/FlowChart/ExternalActions"
-  import { automationStore } from "@/stores/builder"
   import { createEventDispatcher } from "svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
@@ -29,7 +27,6 @@
   $: stepNames = automation?.definition.stepNames || {}
   $: blockHeading = getHeading(itemName, block) || ""
   $: blockNameError = getStepNameError(blockHeading)
-  $: isBranch = block && isBranchStep(block)
 
   const getHeading = (
     itemName?: string,
@@ -44,7 +41,6 @@
 
   $: isTrigger = block?.type === AutomationStepType.TRIGGER
   $: allSteps = automation?.definition.steps || []
-  $: blockDefinition = automationStore.actions.getBlockDefinition(block)
 
   // Put the type in the header if they change the name
   // Otherwise the info is obscured
