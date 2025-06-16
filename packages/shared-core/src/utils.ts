@@ -50,7 +50,7 @@ export async function parallelForeach<T>(
     while (index < items.length) {
       const currentIndex = index++
       const item = items[currentIndex]
-      
+
       await task(item)
     }
   }
