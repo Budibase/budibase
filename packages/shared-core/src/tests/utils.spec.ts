@@ -6,8 +6,6 @@ describe("parallelForeach", () => {
 
   beforeEach(() => {
     unhandledRejectionErrors = []
-
-    // Capture unhandled promise rejections for testing
     originalUnhandledRejection = process.listeners("unhandledRejection")
     process.removeAllListeners("unhandledRejection")
     process.on("unhandledRejection", (reason: Error) => {
@@ -16,7 +14,6 @@ describe("parallelForeach", () => {
   })
 
   afterEach(async () => {
-    // Restore original unhandled rejection listeners
     process.removeAllListeners("unhandledRejection")
     originalUnhandledRejection.forEach((listener: any) => {
       process.on("unhandledRejection", listener)
@@ -58,9 +55,8 @@ describe("parallelForeach", () => {
   it("should handle errors without unhandled promise rejections", async () => {
     const items = [1, 2, 3, 4, 5, 6, 7, 8]
 
-    let caughtError: Error | null = null
-    try {
-      await utils.parallelForeach(
+    await expect(
+      utils.parallelForeach(
         items,
         async item => {
           if (item === 5) {
@@ -69,16 +65,8 @@ describe("parallelForeach", () => {
         },
         3
       )
-    } catch (error) {
-      caughtError = error as Error
-    }
+    ).rejects.toThrow("Task 5 failed")
 
-    // Verify the error was caught and is the expected error
-    expect(caughtError).toBeTruthy()
-    expect(caughtError?.message).toBe("Task 5 failed")
-
-    // Wait a bit for any potential unhandled rejections to surface
-    await new Promise(resolve => setTimeout(resolve, 50))
     expect(unhandledRejectionErrors.length).toBe(0)
   })
 
