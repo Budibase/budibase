@@ -10,6 +10,7 @@ export enum Cookie {
   DatasourceAuth = "budibase:datasourceauth",
   OIDC_CONFIG = "budibase:oidc:config",
   FeatureFlags = "budibase:featureflags",
+  LicenseFlags = "budibase:licenseflags",
 }
 
 export { Header } from "@budibase/shared-core"

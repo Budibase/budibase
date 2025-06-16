@@ -21,10 +21,10 @@
     views,
     viewsV2,
   } from "@/stores/builder"
-  import { themeStore, featureFlags } from "@/stores/portal"
+  import { themeStore, featureFlags, licensing } from "@/stores/portal"
   import { getContext } from "svelte"
   import { ThemeOptions } from "@budibase/shared-core"
-  import { FeatureFlag } from "@budibase/types"
+  import { FeatureFlag, Feature } from "@budibase/types"
 
   const modalContext = getContext(Context.Modal)
 
@@ -92,6 +92,7 @@
     ...automationCommands($automationStore?.automations || []),
     ...themeCommands(),
     ...featureFlagCommands($featureFlags),
+    ...licenseFlagCommands($featureFlags, $licensing.features),
   ]
   $: enrichedCommands = commands.map(cmd => ({
     ...cmd,
@@ -266,6 +267,21 @@
           featureFlags.setFlag(flag, !value)
         },
       }))
+  }
+
+  const licenseFlagCommands = (flags, features) => {
+    if (!flags.DEBUG_UI) {
+      return []
+    }
+
+    return Object.values(Feature).map(feature => ({
+      type: "License Feature",
+      name: `${features.includes(feature) ? "Disable" : "Enable"} <code>${feature}</code>`,
+      icon: "LockClosed",
+      action: () => {
+        licensing.setLicenseFeature(feature, !features.includes(feature))
+      },
+    }))
   }
 
   const filterResults = (commands, search, inApp) => {

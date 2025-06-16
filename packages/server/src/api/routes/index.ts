@@ -31,6 +31,7 @@ import { api as pro } from "@budibase/pro"
 import rowActionRoutes from "./rowAction"
 import oauth2Routes from "./oauth2"
 import featuresRoutes from "./features"
+import licenseFlagsRoutes from "./licenseFlags"
 import aiRoutes from "./ai"
 import workspaceAppsRoutes from "./workspaceApp"
 import navigationRoutes from "./navigation"
@@ -75,6 +76,7 @@ export const mainRoutes: Router[] = [
   rowActionRoutes,
   oauth2Routes,
   featuresRoutes,
+  licenseFlagsRoutes,
   workspaceAppsRoutes,
   navigationRoutes,
   resourceRoutes,

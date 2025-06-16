@@ -471,6 +471,17 @@ export async function doInFeatureFlagOverrideContext<T>(
   return await newContext({ featureFlagOverrides: value }, callback)
 }
 
+export function getLicenseFlagOverrides(): Record<string, boolean> {
+  return getCurrentContext()?.licenseFlagOverrides || {}
+}
+
+export async function doInLicenseFlagOverrideContext<T>(
+  value: Record<string, boolean>,
+  callback: () => Promise<T>
+) {
+  return await newContext({ licenseFlagOverrides: value }, callback)
+}
+
 export function getTableForView(viewId: string): Table | undefined {
   const context = getCurrentContext()
   if (!context) {

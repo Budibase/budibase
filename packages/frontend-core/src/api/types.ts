@@ -38,6 +38,7 @@ import { AgentEndpoints } from "./agents"
 import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
+import { LicenseFlagEndpoints } from "./licenseFlags"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -140,6 +141,7 @@ export type APIClient = BaseAPIClient &
   TemplateEndpoints &
   UserEndpoints &
   FeatureFlagEndpoints &
+  LicenseFlagEndpoints &
   ViewEndpoints & {
     resource: ResourceEndpoints
     rowActions: RowActionEndpoints

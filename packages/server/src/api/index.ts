@@ -36,7 +36,10 @@ router.get("/health", async ctx => {
 })
 router.get("/version", ctx => (ctx.body = envCore.VERSION))
 
-router.use(middleware.errorHandling).use(middleware.featureFlagCookie)
+router
+  .use(middleware.errorHandling)
+  .use(middleware.featureFlagCookie)
+  .use(middleware.licenseFlagCookie)
 
 // only add the routes if they are enabled
 if (apiEnabled()) {
