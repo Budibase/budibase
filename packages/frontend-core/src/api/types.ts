@@ -141,12 +141,12 @@ export type APIClient = BaseAPIClient &
   TemplateEndpoints &
   UserEndpoints &
   FeatureFlagEndpoints &
-  ViewEndpoints &
-  DeploymentEndpoints & {
+  ViewEndpoints & {
     resource: ResourceEndpoints
     rowActions: RowActionEndpoints
     viewV2: ViewV2Endpoints
     oauth2: OAuth2Endpoints
     navigation: NavigationEndpoints
     workspaceApp: WorkspaceAppEndpoints
+    deployment: DeploymentEndpoints
   }

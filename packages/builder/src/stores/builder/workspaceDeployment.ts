@@ -13,7 +13,8 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
   }
 
   async fetch() {
-    const { automations, workspaceApps } = await API.getPublishStatus()
+    const { automations, workspaceApps } =
+      await API.deployment.getPublishStatus()
     this.store.update(state => {
       state.automations = automations
       state.workspaceApps = workspaceApps

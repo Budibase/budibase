@@ -297,7 +297,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildMigrationEndpoints(API),
     ...buildAgentEndpoints(API),
     ...buildFeatureFlagEndpoints(API),
-    ...buildDeploymentEndpoints(API),
+    deployment: buildDeploymentEndpoints(API),
     viewV2: buildViewV2Endpoints(API),
     rowActions: buildRowActionEndpoints(API),
     oauth2: buildOAuth2Endpoints(API),

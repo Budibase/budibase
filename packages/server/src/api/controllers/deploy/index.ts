@@ -14,7 +14,6 @@ import {
 } from "../../../automations/utils"
 import { backups } from "@budibase/pro"
 import {
-  App,
   AppBackupTrigger,
   DeploymentDoc,
   FetchDeploymentResponse,
@@ -25,9 +24,7 @@ import {
   Automation,
   PublishAppRequest,
   PublishStatusResponse,
-  WorkspaceApp,
   FeatureFlag,
-  PublishStatusResource,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -35,11 +32,6 @@ import { buildPublishFilter } from "./filters"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
-
-async function getAppMetadata(opts: { production: boolean }) {
-  const db = opts.production ? context.getProdAppDB() : context.getDevAppDB()
-  return db.tryGet<App>(DocumentType.APP_METADATA)
-}
 
 // checks that deployments are in a good state, any pending will be updated
 async function checkAllDeployments(
@@ -167,71 +159,8 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
   if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
     return (ctx.body = { automations: {}, workspaceApps: {} })
   }
-  const prodDb = context.getProdAppDB()
-  const productionExists = await prodDb.exists()
-  type State = { automations: Automation[]; workspaceApps: WorkspaceApp[] }
-  const developmentState: State = { automations: [], workspaceApps: [] }
-  const productionState: State = { automations: [], workspaceApps: [] }
-  const updateState = async (state: State) => {
-    const [automations, workspaceApps] = await Promise.all([
-      sdk.automations.fetch(),
-      sdk.workspaceApps.fetch(),
-    ])
-    state.automations = automations
-    state.workspaceApps = workspaceApps
-  }
 
-  await context.doInAppContext(context.getDevAppId(), async () =>
-    updateState(developmentState)
-  )
-
-  if (productionExists) {
-    await context.doInAppContext(context.getProdAppId(), async () =>
-      updateState(productionState)
-    )
-  }
-
-  // Create maps of production state for quick lookup
-  const prodAutomationIds = new Set(productionState.automations.map(a => a._id))
-  const prodWorkspaceAppIds = new Set(
-    productionState.workspaceApps.map(w => w._id)
-  )
-
-  // Build response maps comparing development vs production
-  const automations: Record<string, PublishStatusResource> = {}
-  for (const automation of developmentState.automations) {
-    automations[automation._id!] = {
-      published: prodAutomationIds.has(automation._id!),
-      name: automation.name,
-    }
-  }
-
-  const workspaceApps: Record<string, PublishStatusResource> = {}
-  for (const workspaceApp of developmentState.workspaceApps) {
-    workspaceApps[workspaceApp._id!] = {
-      published: prodWorkspaceAppIds.has(workspaceApp._id!),
-      name: workspaceApp.name,
-    }
-  }
-
-  if (productionExists) {
-    const metadata = await getAppMetadata({ production: true })
-    if (metadata?.lastPublishedAt) {
-      const lastPublishedAt = metadata.lastPublishedAt
-      for (const automationId of Object.keys(automations)) {
-        if (lastPublishedAt[automationId]) {
-          automations[automationId].lastPublishedAt =
-            lastPublishedAt[automationId]
-        }
-      }
-      for (const workspaceAppId of Object.keys(workspaceApps)) {
-        if (lastPublishedAt[workspaceAppId]) {
-          workspaceApps[workspaceAppId].lastPublishedAt =
-            lastPublishedAt[workspaceAppId]
-        }
-      }
-    }
-  }
+  const { automations, workspaceApps } = await sdk.deployment.status()
 
   ctx.body = {
     automations,
@@ -292,13 +221,15 @@ export const publishApp = async function (
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
-    const appDoc = await getAppMetadata({ production: false })
+    const appDoc = await sdk.applications.metadata.tryGet({ production: false })
     if (!appDoc) {
       throw new Error(
         "Unable to publish - cannot retrieve development app metadata"
       )
     }
-    const prodAppDoc = await getAppMetadata({ production: true })
+    const prodAppDoc = await sdk.applications.metadata.tryGet({
+      production: true,
+    })
     if (prodAppDoc) {
       appDoc._rev = prodAppDoc._rev
     } else {
