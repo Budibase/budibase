@@ -43,38 +43,55 @@ export async function parallelForeach<T>(
   task: (item: T) => Promise<void>,
   maxConcurrency: number
 ): Promise<void> {
-  const promises: Promise<void>[] = []
   let index = 0
+  const executing = new Set<Promise<void>>()
 
-  const processItem = async (item: T) => {
-    try {
-      await task(item)
-    } finally {
-      processNext()
-    }
+  const executeTask = async (item: T): Promise<void> => {
+    await task(item)
   }
 
-  const processNext = () => {
+  const processNext = (): Promise<void> | null => {
     if (index >= items.length) {
-      // No more items to process
-      return
+      return null
     }
 
-    const item = items[index]
-    index++
+    const item = items[index++]
+    const promise = executeTask(item)
+    executing.add(promise)
 
-    const promise = processItem(item)
-    promises.push(promise)
+    // Clean up after completion
+    promise.finally(() => {
+      executing.delete(promise)
+    })
 
-    if (promises.length >= maxConcurrency) {
-      Promise.race(promises).then(processNext)
-    } else {
-      processNext()
+    return promise
+  }
+
+  const results: Promise<void>[] = []
+
+  // Process all items
+  while (index < items.length || executing.size > 0) {
+    // Start tasks up to max concurrency
+    while (executing.size < maxConcurrency && index < items.length) {
+      const promise = processNext()
+      if (promise) {
+        results.push(promise)
+      }
+    }
+
+    // If we have executing tasks, wait for at least one to complete
+    if (executing.size > 0) {
+      try {
+        await Promise.race(executing)
+      } catch (error) {
+        // Continue processing other tasks even if one fails
+        // The error will be caught by Promise.all below
+      }
     }
   }
-  processNext()
 
-  await Promise.all(promises)
+  // Wait for all tasks to complete and propagate any errors
+  await Promise.all(results)
 }
 
 export function filterValueToLabel() {
