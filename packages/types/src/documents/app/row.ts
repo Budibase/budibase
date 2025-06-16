@@ -1,6 +1,8 @@
 import { Document } from "../document"
 import { FieldSchema, FormulaType } from "./table"
 
+export const EXTERNAL_ROW_REV = "rev"
+
 export enum FieldType {
   /**
    * a primitive type, stores a string, called Text within Budibase. This is one of the default
