@@ -316,6 +316,8 @@
   /* Icon and colour alignment */
   .check {
     display: none;
+    margin-right: -8px;
+    padding-left: 8px;
   }
   li.is-selected .check {
     display: block;
