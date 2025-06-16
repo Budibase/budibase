@@ -607,7 +607,6 @@
   .user.left {
     display: flex;
     flex-direction: column;
-    align-items: inherit;
     gap: var(--spacing-m);
   }
   .mobile .user.left {
