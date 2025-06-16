@@ -26,7 +26,8 @@ import {
   PublishAppRequest,
   PublishStatusResponse,
   WorkspaceApp,
-  FeatureFlag, PublishStatusResource,
+  FeatureFlag,
+  PublishStatusResource,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -208,8 +209,7 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
       }
     }
 
-    const workspaceApps: Record<string, PublishStatusResource> =
-      {}
+    const workspaceApps: Record<string, PublishStatusResource> = {}
     for (const workspaceApp of developmentState.workspaceApps) {
       workspaceApps[workspaceApp._id!] = {
         published: prodWorkspaceAppIds.has(workspaceApp._id!),
@@ -223,12 +223,14 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
         const lastPublishedAt = metadata.lastPublishedAt
         for (const automationId of Object.keys(automations)) {
           if (lastPublishedAt[automationId]) {
-            automations[automationId].lastPublishedAt = lastPublishedAt[automationId]
+            automations[automationId].lastPublishedAt =
+              lastPublishedAt[automationId]
           }
         }
         for (const workspaceAppId of Object.keys(workspaceApps)) {
           if (lastPublishedAt[workspaceAppId]) {
-            workspaceApps[workspaceAppId].lastPublishedAt = lastPublishedAt[workspaceAppId]
+            workspaceApps[workspaceAppId].lastPublishedAt =
+              lastPublishedAt[workspaceAppId]
           }
         }
       }
@@ -298,7 +300,9 @@ export const publishApp = async function (
     const db = context.getProdAppDB()
     const appDoc = await getAppMetadata({ production: false })
     if (!appDoc) {
-      throw new Error("Unable to publish - cannot retrieve development app metadata")
+      throw new Error(
+        "Unable to publish - cannot retrieve development app metadata"
+      )
     }
     const prodAppDoc = await getAppMetadata({ production: true })
     if (prodAppDoc) {
@@ -314,7 +318,7 @@ export const publishApp = async function (
     if (automationIds?.length || workspaceAppIds?.length) {
       const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
       appDoc.lastPublishedAt = Object.fromEntries(
-        fullMap.map(id => [id, (new Date()).toISOString()])
+        fullMap.map(id => [id, new Date().toISOString()])
       )
     }
     // remove automation errors if they exist

@@ -7,7 +7,11 @@ export interface PublishAppRequest {
 
 export interface PublishAppResponse extends DeploymentDoc {}
 
-export type PublishStatusResource = { published: boolean; name: string, lastPublishedAt?: string }
+export type PublishStatusResource = {
+  published: boolean
+  name: string
+  lastPublishedAt?: string
+}
 
 export interface PublishStatusResponse {
   workspaceApps: Record<string, PublishStatusResource>
