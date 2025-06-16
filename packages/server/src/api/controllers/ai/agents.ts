@@ -333,7 +333,7 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const db = context.getAppDB()
 
   try {
-    const toolSource = await db.get(toolSourceId)
+    const toolSource = await db.get<AgentToolSource>(toolSourceId)
     await db.remove(toolSource)
     ctx.body = { deleted: true }
     ctx.status = 200

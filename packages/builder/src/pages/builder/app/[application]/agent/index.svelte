@@ -323,13 +323,12 @@
 
       await agentsStore.fetchToolSources()
       toolConfigModal.hide()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      notifications.error(
-        selectedToolSource.existingToolSource
-          ? "Error updating tool source"
-          : "Error saving tool source"
-      )
+      const message = selectedToolSource.existingToolSource
+        ? "Error updating tool source"
+        : "Error saving tool source"
+      notifications.error(`${message}: ${err.message}`)
     }
   }
 
