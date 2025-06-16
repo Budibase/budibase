@@ -18,9 +18,13 @@
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
   import getComponentContextMenuItems from "./getComponentContextMenuItems"
+  import { tick } from "svelte"
 
   export let components = []
   export let level = 0
+
+  let componentTreeInput
+  let editableMap = {}
 
   $: openNodes = $componentTreeNodesStore
 
@@ -85,6 +89,10 @@
     componentTreeNodesStore.toggleNode(componentId)
   }
 
+  const handleDblClick = component => {
+    console.log(component)
+  }
+
   const hover = hoverStore.hover
 
   const openContextMenu = (e, component, opened) => {
@@ -110,38 +118,48 @@
       on:click|stopPropagation={() => {
         componentStore.select(component._id)
       }}
+      on:dblclick|stopPropagation={() => handleDblClick(component)}
       id={`component-${component._id}`}
     >
-      <NavItem
-        compact
-        scrollable
-        draggable
-        on:dragend={dndStore.actions.reset}
-        on:dragstart={() => dndStore.actions.dragstart(component)}
-        on:dragover={dragover(component, index)}
-        on:iconClick={() => handleIconClick(component._id)}
-        on:drop={onDrop}
-        hovering={$hoverStore.componentId === component._id ||
-          component._id === $contextMenuStore.id}
-        on:mouseenter={() => hover(component._id)}
-        on:mouseleave={() => hover(null)}
-        text={getComponentText(component)}
-        icon={getComponentIcon(component)}
-        iconTooltip={getComponentName(component)}
-        withArrow={componentHasChildren(component)}
-        indentLevel={level}
-        selected={$componentStore.selectedComponentId === component._id}
-        {opened}
-        highlighted={isChildOfSelectedComponent(component)}
-        selectedBy={$userSelectedResourceMap[component._id]}
-      >
-        <Icon
-          size="S"
-          hoverable
-          name="MoreSmallList"
-          on:click={e => openContextMenu(e, component, opened)}
+      {#if true}
+        <NavItem
+          compact
+          scrollable
+          draggable
+          on:dragend={dndStore.actions.reset}
+          on:dragstart={() => dndStore.actions.dragstart(component)}
+          on:dragover={dragover(component, index)}
+          on:iconClick={() => handleIconClick(component._id)}
+          on:drop={onDrop}
+          hovering={$hoverStore.componentId === component._id ||
+            component._id === $contextMenuStore.id}
+          on:mouseenter={() => hover(component._id)}
+          on:mouseleave={() => hover(null)}
+          text={getComponentText(component)}
+          icon={getComponentIcon(component)}
+          iconTooltip={getComponentName(component)}
+          withArrow={componentHasChildren(component)}
+          indentLevel={level}
+          selected={$componentStore.selectedComponentId === component._id}
+          {opened}
+          highlighted={isChildOfSelectedComponent(component)}
+          selectedBy={$userSelectedResourceMap[component._id]}
+        >
+          <Icon
+            size="S"
+            hoverable
+            name="MoreSmallList"
+            on:click={e => openContextMenu(e, component, opened)}
+          />
+        </NavItem>
+      {:else}
+        <input
+          type="text"
+          on:blur={() => {
+            editableMap = { ...editableMap, [component._id]: false }
+          }}
         />
-      </NavItem>
+      {/if}
 
       {#if opened}
         <svelte:self
