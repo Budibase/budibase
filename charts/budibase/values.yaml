@@ -78,6 +78,8 @@ globals:
   offlineMode: "0"
   # @ignore (only needs to be set in our cloud environment)
   accountPortalUrl: ""
+  # @ignore (used for making internal API calls to the account portal when hosting in k8s)
+  internalAccountPortalUrl: ""
   # @ignore (only needs to be set in our cloud environment)
   accountPortalApiKey: ""
   # -- Sets the domain attribute of the cookie that Budibase uses to store session information.
