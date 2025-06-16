@@ -117,6 +117,7 @@
         <Icon
           size="S"
           name={icon}
+          color={iconColor}
           tooltip={iconTooltip}
           tooltipType={TooltipType.Info}
           tooltipPosition={TooltipPosition.Right}
