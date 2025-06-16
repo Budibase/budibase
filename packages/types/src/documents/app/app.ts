@@ -32,6 +32,8 @@ export interface App extends Document {
   updatedBy?: string
   pwa?: PWAManifest
   scripts?: AppScript[]
+  // stores a list of IDs and when they were last published (timestamp)
+  lastPublishedAt?: Record<string, string>
 }
 
 export interface AppInstance {

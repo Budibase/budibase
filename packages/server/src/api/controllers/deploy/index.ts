@@ -26,7 +26,7 @@ import {
   PublishAppRequest,
   PublishStatusResponse,
   WorkspaceApp,
-  FeatureFlag,
+  FeatureFlag, PublishStatusResource,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -34,6 +34,11 @@ import { buildPublishFilter } from "./filters"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
+
+async function getAppMetadata(opts: { production: boolean }) {
+  const db = opts.production ? context.getProdAppDB() : context.getDevAppDB()
+  return db.tryGet<App>(DocumentType.APP_METADATA)
+}
 
 // checks that deployments are in a good state, any pending will be updated
 async function checkAllDeployments(
@@ -162,6 +167,8 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
     return (ctx.body = { automations: {}, workspaceApps: {} })
   }
   try {
+    const prodDb = context.getProdAppDB()
+    const productionExists = await prodDb.exists()
     type State = { automations: Automation[]; workspaceApps: WorkspaceApp[] }
     let developmentState: State = { automations: [], workspaceApps: [] }
     let productionState: State = { automations: [], workspaceApps: [] }
@@ -177,8 +184,8 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
     await context.doInAppContext(context.getDevAppId(), async () =>
       updateState(developmentState)
     )
-    const prodDb = context.getProdAppDB()
-    if (await prodDb.exists()) {
+
+    if (productionExists) {
       await context.doInAppContext(context.getProdAppId(), async () =>
         updateState(productionState)
       )
@@ -193,7 +200,7 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
     )
 
     // Build response maps comparing development vs production
-    const automations: Record<string, { published: boolean; name: string }> = {}
+    const automations: Record<string, PublishStatusResource> = {}
     for (const automation of developmentState.automations) {
       automations[automation._id!] = {
         published: prodAutomationIds.has(automation._id!),
@@ -201,12 +208,29 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
       }
     }
 
-    const workspaceApps: Record<string, { published: boolean; name: string }> =
+    const workspaceApps: Record<string, PublishStatusResource> =
       {}
     for (const workspaceApp of developmentState.workspaceApps) {
       workspaceApps[workspaceApp._id!] = {
         published: prodWorkspaceAppIds.has(workspaceApp._id!),
         name: workspaceApp.name,
+      }
+    }
+
+    if (productionExists) {
+      const metadata = await getAppMetadata({ production: true })
+      if (metadata?.lastPublishedAt) {
+        const lastPublishedAt = metadata.lastPublishedAt
+        for (const automationId of Object.keys(automations)) {
+          if (lastPublishedAt[automationId]) {
+            automations[automationId].lastPublishedAt = lastPublishedAt[automationId]
+          }
+        }
+        for (const workspaceAppId of Object.keys(workspaceApps)) {
+          if (lastPublishedAt[workspaceAppId]) {
+            workspaceApps[workspaceAppId].lastPublishedAt = lastPublishedAt[workspaceAppId]
+          }
+        }
       }
     }
 
@@ -249,7 +273,7 @@ export const publishApp = async function (
         }
       )
     }
-    const config: any = {
+    const config = {
       source: devAppId,
       target: productionAppId,
     }
@@ -272,11 +296,14 @@ export const publishApp = async function (
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
-    const appDoc = await devDb.get<App>(DocumentType.APP_METADATA)
-    try {
-      const prodAppDoc = await db.get<App>(DocumentType.APP_METADATA)
+    const appDoc = await getAppMetadata({ production: false })
+    if (!appDoc) {
+      throw new Error("Unable to publish - cannot retrieve development app metadata")
+    }
+    const prodAppDoc = await getAppMetadata({ production: true })
+    if (prodAppDoc) {
       appDoc._rev = prodAppDoc._rev
-    } catch (err) {
+    } else {
       delete appDoc._rev
     }
 
@@ -284,6 +311,12 @@ export const publishApp = async function (
     deployment.appUrl = appDoc.url
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
+    if (automationIds?.length || workspaceAppIds?.length) {
+      const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
+      appDoc.lastPublishedAt = Object.fromEntries(
+        fullMap.map(id => [id, (new Date()).toISOString()])
+      )
+    }
     // remove automation errors if they exist
     delete appDoc.automationErrors
     await db.put(appDoc)

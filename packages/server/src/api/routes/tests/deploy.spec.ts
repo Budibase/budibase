@@ -134,10 +134,12 @@ describe("/api/deploy", () => {
       expect(res.automations[publishedAutomation._id!]).toEqual({
         published: true,
         name: publishedAutomation.name,
+        lastPublishedAt: expect.any(String),
       })
       expect(res.workspaceApps[publishedWorkspaceApp._id!]).toEqual({
         published: true,
         name: publishedWorkspaceApp.name,
+        lastPublishedAt: expect.any(String),
       })
 
       expect(res.automations[unpublishedAutomation._id!]).toEqual({
