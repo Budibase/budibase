@@ -36,7 +36,6 @@
   let treeEle
   let draggable
 
-  let _prodErrors
   let showLogsPanel = false
   let showLogDetails = false
   let selectedLog = null
@@ -70,7 +69,7 @@
       }
 
       // Process steps in the order they appear in the log
-      // Filter out trigger steps from log steps (they shouldn't be there but sometimes are)
+      // Annoyingly triggers are in the log steps, so we need to filter them out
       if (selectedLog.steps) {
         selectedLog.steps
           .filter(
@@ -112,11 +111,6 @@
     try {
       await automationStore.actions.initAppSelf()
       await environment.loadVariables()
-      const response = await automationStore.actions.getLogs({
-        automationId: automation._id,
-        status: "error",
-      })
-      _prodErrors = response?.data?.length || 0
     } catch (error) {
       console.error(error)
     }
