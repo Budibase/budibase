@@ -6,9 +6,10 @@ import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
 import { breakExternalTableId } from "../../../integrations/utils"
 import { ensureQuerySet, ensureQueryUISet } from "./utils"
+import { getTableIdFromViewId } from "@budibase/shared-core"
 
 export async function get(viewId: string): Promise<ViewV2> {
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const ds = await sdk.datasources.get(datasourceId)
@@ -25,7 +26,7 @@ export async function get(viewId: string): Promise<ViewV2> {
 export async function getEnriched(
   viewId: string
 ): Promise<ViewV2Enriched | undefined> {
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const ds = await sdk.datasources.get(datasourceId)

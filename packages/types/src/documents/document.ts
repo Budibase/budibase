@@ -45,17 +45,6 @@ export enum DocumentType {
   WORKSPACE_APP = "workspace_app",
 }
 
-// Because DocumentTypes can overlap, we need to make sure that we search
-// longest first to ensure we get the correct type.
-const sortedDocumentTypes = Object.values(DocumentType).sort(
-  (a, b) => b.length - a.length // descending
-)
-export function getDocumentType(id: string): DocumentType | undefined {
-  return sortedDocumentTypes.find(docType =>
-    id.startsWith(`${docType}${SEPARATOR}`)
-  )
-}
-
 // these are the core documents that make up the data, design
 // and automation sections of an app. This excludes any internal
 // rows as we shouldn't import data.
@@ -85,19 +74,6 @@ export enum InternalTable {
 export enum VirtualDocumentType {
   VIEW = "view",
   ROW_ACTION = "row_action",
-}
-
-// Because VirtualDocumentTypes can overlap, we need to make sure that we search
-// longest first to ensure we get the correct type.
-const sortedVirtualDocumentTypes = Object.values(VirtualDocumentType).sort(
-  (a, b) => b.length - a.length // descending
-)
-export function getVirtualDocumentType(
-  id: string
-): VirtualDocumentType | undefined {
-  return sortedVirtualDocumentTypes.find(docType =>
-    id.startsWith(`${docType}${SEPARATOR}`)
-  )
 }
 
 export interface Document {
