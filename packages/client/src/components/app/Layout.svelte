@@ -322,6 +322,7 @@
             {/if}
             {#if !embedded}
               <div class="user left">
+                <UserMenu />
                 {#if logoPosition === "bottom"}
                   <Logo
                     {logoUrl}
@@ -334,7 +335,6 @@
                     {getSanitizedUrl}
                   />
                 {/if}
-                <UserMenu />
               </div>
             {/if}
           </div>
@@ -606,7 +606,8 @@
   }
   .user.left {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: inherit;
     gap: var(--spacing-m);
   }
   .mobile .user.left {
