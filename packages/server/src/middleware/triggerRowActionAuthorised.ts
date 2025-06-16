@@ -1,9 +1,12 @@
 import { Next } from "koa"
 import { PermissionLevel, PermissionType, UserCtx } from "@budibase/types"
-import { docIds } from "@budibase/backend-core"
-import * as utils from "../db/utils"
 import sdk from "../sdk"
 import { authorizedResource } from "./authorized"
+import {
+  getTableIdFromViewId,
+  isTableIdOrExternalTableId,
+  isViewId,
+} from "@budibase/shared-core"
 
 export function triggerRowActionAuthorised(
   sourcePath: string,
@@ -14,16 +17,14 @@ export function triggerRowActionAuthorised(
       const sourceId: string = ctx.params[sourcePath]
       const rowActionId: string = ctx.params[actionPath]
 
-      const isTableId = docIds.isTableId(sourceId)
-      const isViewId = docIds.isViewId(sourceId)
-      if (!isTableId && !isViewId) {
+      if (!isTableIdOrExternalTableId(sourceId) && !isViewId(sourceId)) {
         ctx.throw(400, `'${sourceId}' is not a valid source id`)
       }
 
-      const tableId = isTableId
+      const tableId = isTableIdOrExternalTableId(sourceId)
         ? sourceId
-        : utils.extractViewInfoFromID(sourceId).tableId
-      const viewId = isTableId ? undefined : sourceId
+        : getTableIdFromViewId(sourceId)
+      const viewId = isTableIdOrExternalTableId(sourceId) ? undefined : sourceId
       return { tableId, viewId, rowActionId }
     }
 

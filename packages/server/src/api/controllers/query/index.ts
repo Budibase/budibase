@@ -396,7 +396,11 @@ async function execute(
     const { rows, pagination, extra, info } =
       query.queryVerb === "read" || opts.isAutomation
         ? await Runner.run<QueryResponse>(inputs)
-        : await quotas.addAction(() => Runner.run<QueryResponse>(inputs))
+        : await quotas.addAction(async () => {
+            const response = await Runner.run<QueryResponse>(inputs)
+            events.action.crudExecuted({ type: query.queryVerb })
+            return response
+          })
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw

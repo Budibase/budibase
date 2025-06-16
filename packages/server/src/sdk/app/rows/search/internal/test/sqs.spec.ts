@@ -36,7 +36,7 @@ describe("buildInternalFieldList", () => {
     private _table: Table & { _id: string }
 
     constructor() {
-      const name = generator.word()
+      const name = generator.guid()
       this._table = {
         ...structures.tableForDatasource({
           type: "datasource",

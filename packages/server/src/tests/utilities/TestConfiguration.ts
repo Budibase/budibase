@@ -416,6 +416,7 @@ export default class TestConfiguration {
           sessionId: this.sessionIdForUser(userId),
           tenantId: this.getTenantId(),
           email: user.email,
+          csrfToken: this.csrfToken,
         })
       }
       // have to fake this

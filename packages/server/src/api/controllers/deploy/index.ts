@@ -17,9 +17,11 @@ import {
   DeploymentStatus,
   DeploymentProgressResponse,
   Automation,
+  PublishAppRequest,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
+import { buildPublishFilter } from "./filters"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -147,16 +149,16 @@ export async function deploymentProgress(
 }
 
 export const publishApp = async function (
-  ctx: UserCtx<void, PublishAppResponse>
+  ctx: UserCtx<PublishAppRequest, PublishAppResponse>
 ) {
+  let automationIds: string[] | undefined, workspaceAppIds: string[] | undefined
+  if (ctx.request.body) {
+    automationIds = ctx.request.body.automationIds
+    workspaceAppIds = ctx.request.body.workspaceAppIds
+  }
   let deployment = new Deployment()
-  console.log("Deployment object created")
   deployment.setStatus(DeploymentStatus.PENDING)
-  console.log("Deployment object set to pending")
   deployment = await storeDeploymentHistory(deployment)
-  console.log("Stored deployment history")
-
-  console.log("Deploying app...")
 
   let app
   let replication
@@ -182,11 +184,20 @@ export const publishApp = async function (
     }
     replication = new dbCore.Replication(config)
     const devDb = context.getDevAppDB()
-    console.log("Compacting development DB")
+    const publishFilter =
+      automationIds || workspaceAppIds
+        ? await buildPublishFilter({
+            automationIds,
+            workspaceAppIds,
+          })
+        : undefined
     await devDb.compact()
-    console.log("Replication object created")
-    await replication.replicate(replication.appReplicateOpts())
-    console.log("replication complete.. replacing app meta doc")
+    await replication.replicate(
+      replication.appReplicateOpts({
+        // filters automations, screen and workspace documents based on supplied filters
+        filter: publishFilter,
+      })
+    )
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
@@ -206,9 +217,7 @@ export const publishApp = async function (
     delete appDoc.automationErrors
     await db.put(appDoc)
     await cache.app.invalidateAppMetadata(productionAppId)
-    console.log("New app doc written successfully.")
     await initDeployedApp(productionAppId)
-    console.log("Deployed app initialised, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
     app = appDoc
