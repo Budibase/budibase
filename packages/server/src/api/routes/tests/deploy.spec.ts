@@ -59,10 +59,12 @@ describe("/api/deploy", () => {
       expect(res.automations[automation._id!]).toEqual({
         published: false,
         name: automation.name,
+        unpublishedChanges: true,
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
         published: false,
         name: workspaceApp.name,
+        unpublishedChanges: true,
       })
     })
 
@@ -88,10 +90,12 @@ describe("/api/deploy", () => {
       expect(res.automations[automation._id!]).toEqual({
         published: true,
         name: automation.name,
+        unpublishedChanges: true,
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
         published: true,
         name: workspaceApp.name,
+        unpublishedChanges: true,
       })
     })
 
@@ -139,20 +143,24 @@ describe("/api/deploy", () => {
         published: true,
         name: publishedAutomation.name,
         lastPublishedAt: expect.any(String),
+        unpublishedChanges: false,
       })
       expect(res.workspaceApps[publishedWorkspaceApp._id!]).toEqual({
         published: true,
         name: publishedWorkspaceApp.name,
         lastPublishedAt: expect.any(String),
+        unpublishedChanges: false,
       })
 
       expect(res.automations[unpublishedAutomation._id!]).toEqual({
         published: false,
         name: unpublishedAutomation.name,
+        unpublishedChanges: true,
       })
       expect(res.workspaceApps[unpublishedWorkspaceApp._id!]).toEqual({
         published: false,
         name: unpublishedWorkspaceApp.name,
+        unpublishedChanges: true,
       })
     })
 
@@ -176,10 +184,12 @@ describe("/api/deploy", () => {
       expect(res.automations[automation._id!]).toEqual({
         published: false,
         name: automation.name,
+        unpublishedChanges: true,
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
         published: false,
         name: workspaceApp.name,
+        unpublishedChanges: true,
       })
     })
 

@@ -11,6 +11,7 @@ export type PublishStatusResource = {
   published: boolean
   name: string
   lastPublishedAt?: string
+  unpublishedChanges?: boolean
 }
 
 export interface PublishStatusResponse {

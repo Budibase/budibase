@@ -3,29 +3,49 @@ import {
   Automation,
   WorkspaceApp,
   PublishStatusResource,
+  Screen,
+  App,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
 export async function status() {
   const prodDb = context.getProdAppDB()
   const productionExists = await prodDb.exists()
-  type State = { automations: Automation[]; workspaceApps: WorkspaceApp[] }
-  const developmentState: State = { automations: [], workspaceApps: [] }
-  const productionState: State = { automations: [], workspaceApps: [] }
+  type State = {
+    automations: Automation[]
+    workspaceApps: WorkspaceApp[]
+    screens: Screen[]
+  }
+  const developmentState: State = {
+    automations: [],
+    workspaceApps: [],
+    screens: [],
+  }
+  const productionState: State = {
+    automations: [],
+    workspaceApps: [],
+    screens: [],
+  }
   const updateState = async (state: State) => {
-    const [automations, workspaceApps] = await Promise.all([
+    const [automations, workspaceApps, screens] = await Promise.all([
       sdk.automations.fetch(),
       sdk.workspaceApps.fetch(),
+      sdk.screens.fetch(),
     ])
     state.automations = automations
     state.workspaceApps = workspaceApps
+    state.screens = screens
   }
 
   await context.doInAppContext(context.getDevAppId(), async () =>
     updateState(developmentState)
   )
 
+  let metadata: App | undefined
   if (productionExists) {
+    metadata = await sdk.applications.metadata.tryGet({
+      production: true,
+    })
     await context.doInAppContext(context.getProdAppId(), async () =>
       updateState(productionState)
     )
@@ -40,38 +60,29 @@ export async function status() {
   // Build response maps comparing development vs production
   const automations: Record<string, PublishStatusResource> = {}
   for (const automation of developmentState.automations) {
+    const lastPublishedAt = metadata?.lastPublishedAt?.[automation._id!]
     automations[automation._id!] = {
       published: prodAutomationIds.has(automation._id!),
       name: automation.name,
+      lastPublishedAt,
+      unpublishedChanges:
+        !lastPublishedAt || automation.updatedAt! > lastPublishedAt,
     }
   }
 
   const workspaceApps: Record<string, PublishStatusResource> = {}
   for (const workspaceApp of developmentState.workspaceApps) {
+    const lastPublishedAt = metadata?.lastPublishedAt?.[workspaceApp._id!]
+    const workspaceScreens = developmentState.screens.filter(
+      screen => screen.workspaceAppId === workspaceApp._id
+    )
     workspaceApps[workspaceApp._id!] = {
       published: prodWorkspaceAppIds.has(workspaceApp._id!),
       name: workspaceApp.name,
-    }
-  }
-
-  if (productionExists) {
-    const metadata = await sdk.applications.metadata.tryGet({
-      production: true,
-    })
-    if (metadata?.lastPublishedAt) {
-      const lastPublishedAt = metadata.lastPublishedAt
-      for (const automationId of Object.keys(automations)) {
-        if (lastPublishedAt[automationId]) {
-          automations[automationId].lastPublishedAt =
-            lastPublishedAt[automationId]
-        }
-      }
-      for (const workspaceAppId of Object.keys(workspaceApps)) {
-        if (lastPublishedAt[workspaceAppId]) {
-          workspaceApps[workspaceAppId].lastPublishedAt =
-            lastPublishedAt[workspaceAppId]
-        }
-      }
+      lastPublishedAt,
+      unpublishedChanges:
+        !lastPublishedAt ||
+        !!workspaceScreens.find(screen => screen.updatedAt! > lastPublishedAt),
     }
   }
 
