@@ -12,7 +12,6 @@
     automationStore,
     deploymentStore,
     workspaceAppStore,
-    workspaceDeploymentStore,
   } from "@/stores/builder"
   import type { UsedResource, Automation } from "@budibase/types"
   import { ResourceType, AutomationEventType } from "@budibase/types"
