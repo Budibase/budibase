@@ -162,8 +162,6 @@
   }
   .nav-item.scrollable {
     flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
   }
   .nav-item.highlighted {
     background-color: var(--spectrum-global-color-gray-200);
@@ -198,7 +196,6 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
-    width: max-content;
     position: relative;
     padding-left: var(--spacing-l);
     box-sizing: border-box;
@@ -277,6 +274,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    overflow: hidden;
   }
   .text span {
     white-space: nowrap;
@@ -284,8 +282,7 @@
     text-overflow: ellipsis;
   }
   .scrollable .text {
-    flex: 0 0 auto;
-    max-width: 160px;
+    flex: 0 1 auto;
     width: auto;
   }
 

@@ -9,7 +9,7 @@
     ActionGroup,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { FieldType } from "@budibase/types"
+  import { AutoReason, FieldType } from "@budibase/types"
 
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import {
@@ -72,6 +72,10 @@
 
   $: initData(tableId, $memoStore?.meta?.fields, $memoStore?.row)
 
+  const isAutoincrement = field => {
+    return field.autocolumn && field.autoReason !== AutoReason.FOREIGN_KEY
+  }
+
   const initData = (tableId, metaFields, row) => {
     if (!tableId) {
       return
@@ -88,7 +92,7 @@
     schemaFields = Object.entries(table?.schema ?? {})
       .filter(entry => {
         const [, field] = entry
-        return field.type !== "formula" && !field.autocolumn
+        return field.type !== "formula" && !isAutoincrement(field)
       })
       .sort(([nameA], [nameB]) => {
         return nameA < nameB ? -1 : 1
@@ -253,7 +257,7 @@
 </script>
 
 {#each schemaFields || [] as [field, schema]}
-  {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
+  {#if !isAutoincrement(schema) && Object.hasOwn(editableFields, field)}
     <PropField
       label={field}
       fullWidth={fullWidth || isFullWidth(schema.type)}
@@ -355,7 +359,7 @@
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <ul class="spectrum-Menu" role="listbox">
     {#each schemaFields || [] as [field, schema]}
-      {#if !schema.autocolumn}
+      {#if !isAutoincrement(schema)}
         <li
           class="table_field spectrum-Menu-item"
           class:is-selected={Object.hasOwn(editableFields, field)}

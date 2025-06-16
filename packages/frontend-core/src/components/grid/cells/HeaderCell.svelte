@@ -405,7 +405,7 @@
           Move right
         </MenuItem>
         <MenuItem
-          disabled={column.primaryDisplay || !$config.showControls}
+          disabled={column.primaryDisplay}
           icon="eye-slash"
           on:click={hideColumn}
         >

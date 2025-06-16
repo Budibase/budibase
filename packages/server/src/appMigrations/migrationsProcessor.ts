@@ -6,10 +6,11 @@ import {
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
 import { AppMigration } from "."
+import { MIGRATIONS } from "./migrations"
 
 export async function processMigrations(
   appId: string,
-  migrations: AppMigration[]
+  migrations: AppMigration[] = MIGRATIONS
 ) {
   console.log(`Processing app migration for "${appId}"`)
   try {
@@ -26,11 +27,13 @@ export async function processMigrations(
           console.log(`Lock acquired starting app migration for "${appId}"`)
           let currentVersion = await getAppMigrationVersion(appId)
 
-          const pendingMigrations = migrations
-            .filter(m => m.id > currentVersion)
-            .sort((a, b) => a.id.localeCompare(b.id))
+          const currentIndexMigration = migrations.findIndex(
+            m => m.id === currentVersion
+          )
 
-          const migrationIds = migrations.map(m => m.id).sort()
+          const pendingMigrations = migrations.slice(currentIndexMigration + 1)
+
+          const migrationIds = migrations.map(m => m.id)
           console.log(
             `App migrations to run for "${appId}" - ${migrationIds.join(",")}`
           )

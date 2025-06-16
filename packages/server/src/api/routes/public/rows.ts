@@ -144,7 +144,7 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  *       - $ref: '#/components/parameters/tableId'
  *       - $ref: '#/components/parameters/appId'
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:

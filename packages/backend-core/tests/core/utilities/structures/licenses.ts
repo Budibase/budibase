@@ -54,6 +54,11 @@ export function quotas(): Quotas {
           value: 1,
           triggers: [],
         },
+        actions: {
+          name: "Actions",
+          value: 1,
+          triggers: [],
+        },
       },
       static: {
         rows: {

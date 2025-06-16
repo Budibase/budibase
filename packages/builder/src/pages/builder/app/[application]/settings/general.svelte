@@ -45,9 +45,9 @@
   <Divider />
   <Heading size="S">App info</Heading>
   <UpdateAppForm />
-  <Divider />
-  <Heading size="S">Deployment</Heading>
   {#if $deploymentStore.isPublished}
+    <Divider />
+    <Heading size="S">Deployment</Heading>
     <div class="row top">
       <Icon
         name="check-circle"

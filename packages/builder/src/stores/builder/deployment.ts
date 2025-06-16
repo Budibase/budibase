@@ -83,16 +83,13 @@ class DeploymentStore extends DerivedBudiStore<
     }
   }
 
-  async publishApp(showNotification = true) {
+  async publishApp(opts?: {
+    automationIds?: string[]
+    workspaceAppIds?: string[]
+  }) {
     try {
       this.update(state => ({ ...state, isPublishing: true }))
-      await API.publishAppChanges(get(appStore).appId)
-      if (showNotification) {
-        notifications.send("App published successfully", {
-          type: "success",
-          icon: "globe",
-        })
-      }
+      await API.publishAppChanges(get(appStore).appId, opts)
       await this.completePublish()
     } catch (error: any) {
       analytics.captureException(error)
