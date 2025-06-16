@@ -8,7 +8,10 @@ describe("/api/deploy", () => {
   let config = setup.getConfig(),
     cleanup: () => void
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    cleanup()
+    setup.afterAll()
+  })
 
   beforeAll(async () => {
     cleanup = features.testutils.setFeatureFlags("*", {
@@ -19,7 +22,6 @@ describe("/api/deploy", () => {
 
   beforeEach(async () => {
     await config.newTenant()
-    cleanup()
   })
 
   describe("GET /api/deploy/status", () => {
