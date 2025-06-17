@@ -5,11 +5,10 @@
   import { workspaceAppStore } from "@/stores/builder/workspaceApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
-  import type { Screen, UIWorkspaceApp } from "@budibase/types"
+  import { FeatureFlag, type Screen } from "@budibase/types"
   import NewScreenModal from "../../../_components/NewScreen/index.svelte"
   import WorkspaceAppModal from "../WorkspaceApp/WorkspaceAppModal.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
-  import WorkspaceAppList from "./WorkspaceAppList.svelte"
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
@@ -23,11 +22,10 @@
 
   let workspaceAppModal: WorkspaceAppModal
 
-  $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
-  $: filteredWorkspaceApps = getFilteredWorkspaceApps(
-    $workspaceAppStore.workspaceApps,
-    searchValue
-  )
+  $: allScreens = $featureFlags[FeatureFlag.WORKSPACE_APPS]
+    ? $workspaceAppStore.selectedWorkspaceApp?.screens || []
+    : $sortedScreens
+  $: filteredScreens = getFilteredScreens(allScreens, searchValue)
 
   const handleOpenSearch = async () => {
     screensContainer.scroll({ top: 0, behavior: "smooth" })
@@ -43,24 +41,6 @@
     return screens.filter(screen => {
       return !searchValue || screen.routing.route.includes(searchValue)
     })
-  }
-
-  const getFilteredWorkspaceApps = (
-    workspaceApps: UIWorkspaceApp[],
-    searchValue: string
-  ) => {
-    if (!searchValue) {
-      return workspaceApps
-    }
-
-    const filteredProjects: UIWorkspaceApp[] = []
-    for (const workspaceApp of workspaceApps) {
-      filteredProjects.push({
-        ...workspaceApp,
-        screens: getFilteredScreens(workspaceApp.screens, searchValue),
-      })
-    }
-    return filteredProjects
   }
 
   const handleScroll = (e: any) => {
@@ -112,9 +92,7 @@
     />
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
-    {#if workspaceAppsEnabled}
-      <WorkspaceAppList workspaceApps={filteredWorkspaceApps} {searchValue} />
-    {:else if filteredScreens?.length}
+    {#if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <ScreenNavItem {screen} deletionAllowed />
       {/each}
