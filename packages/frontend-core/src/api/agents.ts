@@ -6,8 +6,9 @@ import {
   ChatAgentResponse,
   CreateToolSourceRequest,
   FetchAgentHistoryResponse,
+  LLMStreamChunk,
 } from "@budibase/types"
-import { LLMStreamChunk } from "@budibase/pro"
+
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
