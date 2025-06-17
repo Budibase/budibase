@@ -40,6 +40,7 @@
   let showLogDetails = false
   let selectedLog = null
   let selectedStepData = null
+  let selectedLogStepId = null
   let viewMode = ViewMode.EDITOR
 
   $: $automationStore.showTestModal === true && testDataModal.show()
@@ -121,9 +122,13 @@
     if (showLogsPanel) {
       showLogDetails = false
       selectedLog = null
+      selectedLogStepId = null
       viewMode = ViewMode.LOGS
+      // Clear editor selection when switching to logs mode
+      automationStore.actions.selectNode(null)
     } else {
       viewMode = ViewMode.EDITOR
+      selectedLogStepId = null
     }
   }
 
@@ -152,6 +157,12 @@
     showLogDetails = true
     showLogsPanel = false
     selectedStepData = null // Clear selected step when switching logs
+    selectedLogStepId = null
+
+    // Auto-select trigger step when switching to log details
+    if (selectedLog?.trigger) {
+      handleStepSelect(selectedLog.trigger)
+    }
   }
 
   function handleBackToLogs() {
@@ -159,6 +170,7 @@
     showLogsPanel = true
     selectedLog = null
     selectedStepData = null
+    selectedLogStepId = null
   }
 
   function closeAllPanels() {
@@ -166,11 +178,14 @@
     showLogDetails = false
     selectedLog = null
     selectedStepData = null
+    selectedLogStepId = null
     viewMode = ViewMode.EDITOR
   }
 
   function handleStepSelect(stepData) {
     selectedStepData = stepData
+    // Track the selected step ID for visual feedback
+    selectedLogStepId = stepData?.stepId || stepData?.id
   }
 </script>
 
@@ -187,6 +202,7 @@
           selected={viewMode === ViewMode.EDITOR}
           on:click={() => {
             viewMode = ViewMode.EDITOR
+            selectedLogStepId = null
             closeAllPanels()
           }}
         >
@@ -200,6 +216,8 @@
             showLogDetails}
           on:click={() => {
             viewMode = ViewMode.LOGS
+            // Clear editor selection when switching to logs mode
+            automationStore.actions.selectNode(null)
             if (!showLogsPanel && !showLogDetails) {
               toggleLogsPanel()
             }
@@ -210,6 +228,7 @@
       </div>
     </div>
   </div>
+
   <div class="actions-right">
     <ActionButton
       icon="Play"
@@ -287,6 +306,7 @@
               blocks={blockRefs}
               logData={selectedLog}
               {viewMode}
+              {selectedLogStepId}
               onStepSelect={handleStepSelect}
             />
           {/each}
@@ -359,9 +379,13 @@
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
-  .automation-heading .actions-right {
-    display: flex;
-    gap: var(--spacing-xl);
+  .automation-name {
+    margin-right: var(--spacing-l);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .automation-name :global(.spectrum-Heading) {
@@ -386,6 +410,7 @@
   .view-mode-toggle {
     display: flex;
     gap: var(--spacing-l);
+    flex-shrink: 0;
   }
 
   .canvas-heading-left :global(div) {
@@ -434,7 +459,7 @@
     margin-right: 0px;
   }
 
-  .group {
+  .view-mode-toggle .group {
     border-radius: 6px;
     display: flex;
     flex-direction: row;
@@ -442,35 +467,51 @@
     padding: 2px;
     border: 1px solid var(--spectrum-global-color-gray-300);
   }
-  .group :global(> *:not(:first-child)) {
+  .view-mode-toggle .group :global(> *:not(:first-child)) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     border-left: none;
   }
-  .group :global(> *:not(:last-child)) {
+  .view-mode-toggle .group :global(> *:not(:last-child)) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+  }
+
+  .zoom .group {
+    border-radius: 4px;
+    display: flex;
+    flex-direction: row;
+  }
+  .zoom .group :global(> *:not(:first-child)) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: 2px solid var(--spectrum-global-color-gray-300);
+  }
+  .zoom .group :global(> *:not(:last-child)) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .zoom .group :global(.spectrum-Button),
+  .zoom .group :global(.spectrum-ActionButton) {
+    background: var(--spectrum-global-color-gray-200) !important;
+  }
+  .zoom .group :global(.spectrum-Button:hover),
+  .zoom .group :global(.spectrum-ActionButton:hover) {
+    background: var(--spectrum-global-color-gray-300) !important;
   }
 
   .actions-left {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--spacing-l);
+    flex: 1;
+    min-width: 0;
   }
 
-  .canvas-heading-left .group :global(.spectrum-Button),
-  .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .canvas-heading-left .group :global(.spectrum-Icon) {
-    color: var(--spectrum-global-color-gray-900) !important;
-  }
-  .canvas-heading-left .group :global(.spectrum-Button),
-  .canvas-heading-left .group :global(.spectrum-ActionButton) {
-    background: var(--spectrum-global-color-gray-200) !important;
-  }
-  .canvas-heading-left .group :global(.spectrum-Button:hover),
-  .canvas-heading-left .group :global(.spectrum-ActionButton:hover) {
-    background: var(--spectrum-global-color-gray-300) !important;
+  .actions-right {
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: center;
   }
 
   .view-mode-toggle .group :global(.spectrum-ActionButton) {

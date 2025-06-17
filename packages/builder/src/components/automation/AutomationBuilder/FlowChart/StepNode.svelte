@@ -17,6 +17,7 @@
   export let isLast = false
   export let logData = null
   export let viewMode = ViewMode.EDITOR
+  export let selectedLogStepId = null
   export let onStepSelect = () => {}
 
   const memoEnvVariables = memo($environment.variables)
@@ -186,6 +187,7 @@
               {blocks}
               {logData}
               {viewMode}
+              {selectedLogStepId}
               {onStepSelect}
             />
           {/each}
@@ -206,6 +208,7 @@
       {stepStatus}
       {logStepData}
       {viewMode}
+      {selectedLogStepId}
       {onStepSelect}
     />
   </div>

@@ -5,6 +5,7 @@
   import { fly } from "svelte/transition"
   import dayjs from "dayjs"
   import StatusRenderer from "@/pages/builder/app/[application]/settings/automations/_components/StatusRenderer.svelte"
+  import { AutomationTriggerStepId } from "@budibase/types"
 
   export let log
   export let selectedStep = null
@@ -12,19 +13,15 @@
 
   let selectedTab = "Data in"
 
-  $: isTrigger = currentStepData?.inputs === null // null inputs so we know it is a trigger
-  $: availableTabs = isTrigger
-    ? ["Data out", "Issues"]
-    : ["Data in", "Data out", "Issues"]
-  $: {
-    if (isTrigger && selectedTab === "Data in") {
-      selectedTab = "Data out"
-    }
-  }
+  $: isTrigger = Object.values(AutomationTriggerStepId).includes(
+    selectedStep?.stepId
+  )
+  $: hasInputData =
+    currentStepData?.inputs && Object.keys(currentStepData.inputs).length > 0
+  $: availableTabs = ["Data in", "Data out", "Issues"]
 
   $: logDate = log ? dayjs(log.createdAt).format("MMM DD, YYYY HH:mm:ss") : ""
   $: currentStepData = getCurrentStepData(selectedStep)
-
   function getCurrentStepData(step) {
     if (!step) return null
 
@@ -95,7 +92,15 @@
 
         <div class="step-data-viewer">
           {#if selectedTab === "Data in"}
-            <JSONViewer value={currentStepData?.inputs} />
+            {#if isTrigger && !hasInputData}
+              <div class="no-data-message">
+                <Body size="S" textAlign="center">
+                  No inputs available for trigger
+                </Body>
+              </div>
+            {:else}
+              <JSONViewer value={currentStepData?.inputs} />
+            {/if}
           {:else if selectedTab === "Data out"}
             <JSONViewer value={currentStepData?.outputs} />
           {:else if selectedTab === "Issues"}
@@ -191,6 +196,15 @@
   }
 
   .no-step-selected {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    padding: var(--spacing-xl);
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .no-data-message {
     display: flex;
     align-items: center;
     justify-content: center;
