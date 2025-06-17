@@ -19,6 +19,7 @@
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { onMount } from "svelte"
+  import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
 
   let loaded = false
   let form
@@ -43,13 +44,7 @@
         $goto("./reset")
       } else {
         notifications.success("Logged in successfully")
-
-        if (loginResult.invalidatedSessionCount > 0) {
-          localStorage.setItem(
-            "bb-sessions-invalidated",
-            loginResult.invalidatedSessionCount.toString()
-          )
-        }
+        pushNumSessionsInvalidated(loginResult.invalidatedSessionCount || 0)
 
         $goto("../portal")
       }

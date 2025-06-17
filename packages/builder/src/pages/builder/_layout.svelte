@@ -5,13 +5,14 @@
   import {
     CookieUtils,
     Constants,
-    checkIfSessionsInvalidatedAndNotify,
+    popNumSessionsInvalidated,
+    invalidationMessage,
   } from "@budibase/frontend-core"
   import { API } from "@/api"
   import Branding from "./Branding.svelte"
   import ContextMenu from "@/components/ContextMenu.svelte"
   import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, notifications } from "@budibase/bbui"
 
   let loaded = false
   let commandPaletteModal
@@ -102,7 +103,12 @@
     }
     loaded = true
 
-    checkIfSessionsInvalidatedAndNotify()
+    const invalidated = popNumSessionsInvalidated()
+    if (invalidated > 0) {
+      notifications.info(invalidationMessage(invalidated), {
+        duration: 5000,
+      })
+    }
 
     // lastly
     await analyticsPing()

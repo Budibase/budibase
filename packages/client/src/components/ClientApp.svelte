@@ -6,7 +6,8 @@
   import {
     Constants,
     CookieUtils,
-    checkIfSessionsInvalidatedAndNotify,
+    invalidationMessage,
+    popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
@@ -27,6 +28,7 @@
     sidePanelStore,
     modalStore,
     dataSourceStore,
+    notificationStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
@@ -114,7 +116,14 @@
     await authStore.actions.fetchUser()
     dataLoaded = true
 
-    checkIfSessionsInvalidatedAndNotify()
+    const invalidated = popNumSessionsInvalidated()
+    if (invalidated > 0) {
+      notificationStore.actions.info(
+        invalidationMessage(invalidated),
+        true,
+        5000
+      )
+    }
 
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()

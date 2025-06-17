@@ -9,13 +9,12 @@ import {
   SessionKey,
   CreateSession,
 } from "@budibase/types"
+import { MAX_SESSIONS_PER_USER } from "@budibase/shared-core"
 
 // a week expiry is the default
 const EXPIRY_SECONDS = env.SESSION_EXPIRY_SECONDS
   ? parseInt(env.SESSION_EXPIRY_SECONDS)
   : Duration.fromDays(7).toSeconds()
-
-const MAX_SESSIONS_PER_USER = 3
 
 function makeSessionID(userId: string, sessionId: string) {
   return `${userId}/${sessionId}`
