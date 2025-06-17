@@ -277,7 +277,7 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
 
   getPublishedApps: async () => {
     const response = await API.get<FetchPublishedAppsResponse>({
-      url: `/api/applications/client`,
+      url: `/api/client/applications`,
     })
     return response.apps
   },
