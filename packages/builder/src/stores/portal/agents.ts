@@ -6,6 +6,7 @@ import {
   AgentToolSourceWithTools,
   CreateToolSourceRequest,
 } from "@budibase/types"
+import { get } from "svelte/store"
 
 interface AgentStore {
   chats: AgentChat[]
@@ -84,6 +85,10 @@ export class AgentsStore extends BudiStore<AgentStore> {
       )
       return state
     })
+  }
+
+  getToolSource = (type: string) => {
+    return get(this.store).toolSources.find(ts => ts.type === type)
   }
 
   setCurrentChatId = (chatId: string) => {
