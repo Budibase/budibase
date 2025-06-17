@@ -38,7 +38,8 @@ const environment = {
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   REDIS_URL: process.env.REDIS_URL,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
-  INTERNAL_ACCOUNT_PORTAL_URL: process.env.INTERNAL_ACCOUNT_PORTAL_URL,
+  INTERNAL_ACCOUNT_PORTAL_URL:
+    process.env.INTERNAL_ACCOUNT_PORTAL_URL || process.env.ACCOUNT_PORTAL_URL,
   PLATFORM_URL: process.env.PLATFORM_URL,
   APPS_URL: process.env.APPS_URL,
   // ports
