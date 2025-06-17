@@ -193,7 +193,7 @@ async function addSampleDataScreen() {
     const appMetadata = await sdk.applications.metadata.get()
     const workspaceApp = await sdk.workspaceApps.create({
       name: appMetadata.name,
-      urlPrefix: "/",
+      url: "/",
       icon: "Monitoring",
       navigation: {
         ...defaultAppNavigator(appMetadata.name),
@@ -276,7 +276,7 @@ export async function fetchClientApps(
         // TODO: this can be removed when the flag is cleaned from packages/builder/src/pages/builder/apps/index.svelte
         prodId: app.appId,
         name: `${workspaceApp.name}`,
-        url: `${app.url}${workspaceApp.urlPrefix}`.replace(/\/$/, ""),
+        url: `${app.url}${workspaceApp.url || ""}`.replace(/\/$/, ""),
         updatedAt: app.updatedAt,
       })
     }
