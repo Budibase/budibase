@@ -12,6 +12,7 @@ import {
   FetchAppPackageResponse,
   FetchAppsResponse,
   FetchDeploymentResponse,
+  FetchPublishedAppsResponse,
   GetDiagnosticsResponse,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
@@ -59,6 +60,7 @@ export interface AppEndpoints {
     appId: string
   ) => Promise<FetchAppDefinitionResponse>
   addSampleData: (appId: string) => Promise<AddAppSampleDataResponse>
+  getPublishedApps: () => Promise<FetchPublishedAppsResponse["apps"]>
 
   // Missing request or response types
   importApps: (apps: any) => Promise<any>
@@ -271,5 +273,12 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
     return await API.post({
       url: `/api/applications/${appId}/sample`,
     })
+  },
+
+  getPublishedApps: async () => {
+    const response = await API.get<FetchPublishedAppsResponse>({
+      url: `/api/client/applications`,
+    })
+    return response.apps
   },
 })

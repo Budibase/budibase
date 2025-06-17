@@ -5,6 +5,7 @@ import {
   type CreateAppRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
+  type FetchPublishedAppsResponse,
   DuplicateAppResponse,
   UpdateAppRequest,
   UpdateAppResponse,
@@ -177,5 +178,16 @@ export class ApplicationAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<void> => {
     await this._post(`/api/applications/${appId}/sample`, { expectations })
+  }
+
+  fetchClientApps = async (
+    expectations?: Expectations
+  ): Promise<FetchPublishedAppsResponse> => {
+    return await this._get<FetchPublishedAppsResponse>(
+      "/api/client/applications",
+      {
+        expectations,
+      }
+    )
   }
 }
