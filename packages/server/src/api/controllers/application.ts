@@ -77,6 +77,7 @@ import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
 import { defaultAppNavigator } from "../../constants/definitions"
+import { processMigrations } from "../../appMigrations/migrationsProcessor"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -190,7 +191,7 @@ async function addSampleDataScreen() {
     const appMetadata = await sdk.applications.metadata.get()
     const workspaceApp = await sdk.workspaceApps.create({
       name: appMetadata.name,
-      urlPrefix: "/",
+      url: "/",
       icon: "Monitoring",
       navigation: {
         ...defaultAppNavigator(appMetadata.name),
@@ -465,12 +466,16 @@ async function performAppCreate(
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
-    if (latestMigrationId && !isImport) {
-      // Initialise the app migration version as the latest one
-      await appMigrations.updateAppMigrationMetadata({
-        appId,
-        version: latestMigrationId,
-      })
+    if (latestMigrationId) {
+      if (useTemplate) {
+        await processMigrations(appId)
+      } else if (!isImport) {
+        // Initialise the app migration version as the latest one
+        await appMigrations.updateAppMigrationMetadata({
+          appId,
+          version: latestMigrationId,
+        })
+      }
     }
 
     await cache.app.invalidateAppMetadata(appId, newApplication)

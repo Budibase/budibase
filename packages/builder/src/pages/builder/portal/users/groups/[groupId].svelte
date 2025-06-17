@@ -12,7 +12,7 @@
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { roles } from "@/stores/builder"
-  import { appsStore, auth, groups } from "@/stores/portal"
+  import { appsStore, auth, featureFlags, groups } from "@/stores/portal"
   import { onMount, setContext, getContext } from "svelte"
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
@@ -22,6 +22,7 @@
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
+  import { capitalise } from "@/helpers"
 
   export let groupId
 
@@ -112,6 +113,8 @@
       notifications.error("Error fetching user group data")
     }
   })
+
+  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 </script>
 
 {#if loaded}
@@ -147,7 +150,7 @@
     </Layout>
 
     <Layout noPadding gap="S">
-      <Heading size="S">Apps</Heading>
+      <Heading size="S">{capitalise(appsOrWorkspaces)}</Heading>
       <Table
         schema={appSchema}
         data={groupApps}
@@ -157,7 +160,9 @@
         on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
       >
         <div class="placeholder" slot="placeholder">
-          <Heading size="S">This group doesn't have access to any apps</Heading>
+          <Heading size="S"
+            >This group doesn't have access to any {appsOrWorkspaces}</Heading
+          >
         </div>
       </Table>
     </Layout>

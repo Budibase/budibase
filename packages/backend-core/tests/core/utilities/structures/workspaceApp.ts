@@ -8,7 +8,7 @@ import { generator } from "./generator"
 export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   const result: RequiredKeys<WorkspaceApp> = {
     name: generator.guid(),
-    urlPrefix: `/${generator.guid().replace(/-/g, "")}`,
+    url: `/${generator.guid().replace(/-/g, "")}`,
     icon: "Monitoring",
     iconColor: undefined,
 
@@ -33,7 +33,7 @@ export function createRequest(
 
   const result: RequiredKeys<InsertWorkspaceAppRequest> = {
     name: workspace.name,
-    urlPrefix: workspace.urlPrefix,
+    url: workspace.url,
     icon: workspace.icon,
     iconColor: workspace.iconColor,
   }
