@@ -11,7 +11,7 @@ async function guardName(name: string, id?: string) {
 }
 
 export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
-  if (!features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
     return []
   }
 
