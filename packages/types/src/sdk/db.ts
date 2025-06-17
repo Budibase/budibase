@@ -59,17 +59,6 @@ export interface DesignDocument extends Document {
   }
 }
 
-export type CouchFindOptions = {
-  selector: PouchDB.Find.Selector
-  fields?: string[]
-  sort?: {
-    [key: string]: SortOption
-  }[]
-  limit?: number
-  skip?: number
-  bookmark?: string
-}
-
 export type DatabaseOpts = {
   skip_setup?: boolean
 }
@@ -157,6 +146,9 @@ export interface Database {
   ): Promise<T[]>
   sqlPurgeDocument(docIds: string[] | string): Promise<void>
   sqlDiskCleanup(): Promise<void>
+  find<T extends Document>(
+    params: Nano.MangoQuery
+  ): Promise<Nano.MangoResponse<T>>
   allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>

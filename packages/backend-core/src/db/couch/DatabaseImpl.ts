@@ -1,4 +1,4 @@
-import Nano from "@budibase/nano"
+import Nano, { MangoQuery } from "@budibase/nano"
 import {
   AllDocsResponse,
   AnyDocument,
@@ -346,6 +346,16 @@ export class DatabaseImpl implements Database {
         db.bulk({
           docs: documents.map(d => ({ createdAt: now, ...d, updatedAt: now })),
         })
+    })
+  }
+
+  async find<T extends Document>(
+    params: Nano.MangoQuery
+  ): Promise<Nano.MangoResponse<T>> {
+    return this.performCall(db => {
+      return async () => {
+        return db.find(params)
+      }
     })
   }
 
