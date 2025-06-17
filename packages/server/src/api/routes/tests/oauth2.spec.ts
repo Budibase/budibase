@@ -10,6 +10,7 @@ import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 import _ from "lodash/fp"
 import nock from "nock"
+import { cache } from "@budibase/backend-core"
 
 describe("/oauth2", () => {
   let config = setup.getConfig()
@@ -311,6 +312,33 @@ describe("/oauth2", () => {
       )
       expect(updatedConfig?.scope).toBe(newScope)
     })
+
+    it("removes cached token after update operation", async () => {
+      const configData = _.sample(existingConfigs)!
+      const cacheKey = cache.CacheKey.OAUTH2_TOKEN(configData._id)
+
+      await config.doInTenant(async () => {
+        // Simulate a cached token
+        const mockToken = "Bearer mock-cached-token"
+        cache.store(cacheKey, mockToken, 3600)
+
+        // Verify token is cached
+        const cachedToken = await cache.get(cacheKey)
+        expect(cachedToken).toBe(mockToken)
+      })
+
+      // Update the configuration
+      await config.api.oauth2.update({
+        ...configData,
+        name: "updated name",
+      })
+
+      // Verify cached token is removed
+      const tokenAfterUpdate = await config.doInTenant(() =>
+        cache.get(cacheKey)
+      )
+      expect(tokenAfterUpdate).toBeNull()
+    })
   })
 
   describe("delete", () => {
@@ -345,6 +373,32 @@ describe("/oauth2", () => {
         status: 404,
         body: { message: "OAuth2 config with id 'unexisting' not found." },
       })
+    })
+
+    it("removes cached token after delete operation", async () => {
+      const configToDelete = _.sample(existingConfigs)!
+      const cacheKey = cache.CacheKey.OAUTH2_TOKEN(configToDelete._id)
+
+      await config.doInTenant(async () => {
+        // Simulate a cached token
+        const mockToken = "Bearer mock-cached-token"
+        cache.store(cacheKey, mockToken, 3600)
+
+        // Verify token is cached
+        const cachedToken = await cache.get(cacheKey)
+        expect(cachedToken).toBe(mockToken)
+      })
+
+      // Delete the configuration
+      await config.api.oauth2.delete(configToDelete._id, configToDelete._rev, {
+        status: 204,
+      })
+
+      // Verify cached token is removed
+      const tokenAfterDelete = await config.doInTenant(() =>
+        cache.get(cacheKey)
+      )
+      expect(tokenAfterDelete).toBeNull()
     })
   })
 
