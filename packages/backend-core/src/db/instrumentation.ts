@@ -1,4 +1,4 @@
-import {
+import Nano, {
   DocumentDestroyResponse,
   DocumentInsertResponse,
   DocumentBulkResponse,
@@ -118,6 +118,19 @@ export class DDInstrumentedDatabase implements Database {
     return tracer.trace("db.bulkDocs", span => {
       span.addTags({ db_name: this.name, num_docs: documents.length })
       return this.db.bulkDocs(documents)
+    })
+  }
+
+  async find<T extends Document>(
+    params: Nano.MangoQuery
+  ): Promise<Nano.MangoResponse<T>> {
+    return tracer.trace("db.find", async span => {
+      span.addTags({ db_name: this.name, ...params })
+      const resp = await this.db.find<T>(params)
+      span.addTags({
+        rows_length: resp.docs.length,
+      })
+      return resp
     })
   }
 

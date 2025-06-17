@@ -45,7 +45,7 @@
           message: "This name is already taken.",
         }
       ),
-      urlPrefix: requiredString("Url prefix is required.")
+      url: requiredString("Url prefix is required.")
         .regex(/^\/[\w-]*$/, {
           message:
             "Url prefix must start with a slash and can only contain alphanumeric characters, hyphens, and underscores.",
@@ -54,7 +54,7 @@
           val =>
             !$workspaceAppStore.workspaceApps
               .filter(a => a._id !== workspaceApp._id)
-              .map(a => a.urlPrefix.toLowerCase())
+              .map(a => a.url.toLowerCase())
               .includes(val.toLowerCase()),
           {
             message: "This url is already taken.",
@@ -85,7 +85,7 @@
       _id: workspaceApp?._id,
       _rev: workspaceApp?._rev,
       name: workspaceApp?.name ?? "",
-      urlPrefix: workspaceApp?.urlPrefix ?? "",
+      url: workspaceApp?.url ?? "",
       icon: workspaceApp?.icon ?? "monitor",
       iconColor: workspaceApp?.iconColor,
       navigation: workspaceApp?.navigation ?? { navigation: "Top" },
@@ -137,13 +137,13 @@
   }
 
   $: {
-    if (data && !data.urlPrefix.startsWith("/")) {
-      data.urlPrefix = `/${data.urlPrefix}`
+    if (data && !data.url.startsWith("/")) {
+      data.url = `/${data.url}`
     }
   }
 
-  $: if (isNew && data?.name && !validationState.touched.urlPrefix) {
-    data.urlPrefix = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
+  $: if (isNew && data?.name && !validationState.touched.url) {
+    data.url = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
   }
 </script>
 
@@ -163,11 +163,11 @@
       label="Base url"
       on:enterkey={onEnterKey}
       on:focus={() => {
-        validationState.touched.urlPrefix = true
-        delete validationState.errors.urlPrefix
+        validationState.touched.url = true
+        delete validationState.errors.url
       }}
-      bind:value={data.urlPrefix}
-      error={validationState.errors.urlPrefix}
+      bind:value={data.url}
+      error={validationState.errors.url}
     />
 
     <Label size="L">Icon</Label>

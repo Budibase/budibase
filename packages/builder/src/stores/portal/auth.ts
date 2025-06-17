@@ -123,8 +123,13 @@ class AuthStore extends BudiStore<PortalAuthStore> {
 
   async login(username: string, password: string, targetTenantId?: string) {
     const tenantId = targetTenantId || get(this.store).tenantId
-    await API.logIn(tenantId, username, password)
+    const loginResult = await API.logIn(tenantId, username, password)
+
     await this.getSelf()
+
+    return {
+      invalidatedSessionCount: loginResult.invalidatedSessionCount || 0,
+    }
   }
 
   async logout() {

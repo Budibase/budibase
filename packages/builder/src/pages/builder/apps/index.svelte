@@ -1,51 +1,64 @@
-<script>
+<script lang="ts">
+  import { gradient } from "@/actions"
+  import { API } from "@/api"
+  import { AppStatus } from "@/constants"
   import {
-    Heading,
-    Layout,
-    Divider,
-    ActionMenu,
-    MenuItem,
-    Page,
-    Icon,
-    Body,
-    Modal,
-    notifications,
-  } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import {
-    appsStore,
-    organisation,
     admin,
+    appsStore,
     auth,
+    clientAppsStore,
+    enrichedApps,
+    featureFlags,
     groups,
     licensing,
-    enrichedApps,
+    organisation,
   } from "@/stores/portal"
-  import { goto } from "@roxi/routify"
-  import { AppStatus } from "@/constants"
-  import { gradient } from "@/actions"
-  import { ProfileModal, ChangePasswordModal } from "@budibase/frontend-core"
-  import { processStringSync } from "@budibase/string-templates"
-  import Spaceman from "assets/bb-space-man.svg"
-  import Logo from "assets/bb-emblem.svg"
-  import { UserAvatar } from "@budibase/frontend-core"
+  import type { EnrichedApp } from "@/types"
+  import {
+    ActionMenu,
+    Body,
+    Divider,
+    Heading,
+    Icon,
+    Layout,
+    MenuItem,
+    Modal,
+    notifications,
+    Page,
+  } from "@budibase/bbui"
+  import {
+    ChangePasswordModal,
+    ProfileModal,
+    UserAvatar,
+  } from "@budibase/frontend-core"
   import { helpers, sdk } from "@budibase/shared-core"
-  import { API } from "@/api"
+  import { processStringSync } from "@budibase/string-templates"
+  import type { PublishedAppData, User, UserGroup } from "@budibase/types"
+  import { goto } from "@roxi/routify"
+  import Logo from "assets/bb-emblem.svg"
+  import Spaceman from "assets/bb-space-man.svg"
+  import { onMount } from "svelte"
 
-  let loaded = false
-  let userInfoModal
-  let changePasswordModal
+  let loaded: boolean = false
+  let userInfoModal: Modal
+  let changePasswordModal: Modal
 
   $: userGroups = $groups.filter(group =>
-    group.users.find(user => user._id === $auth.user?._id)
+    group.users?.find(user => user._id === $auth.user?._id)
   )
   $: publishedApps = $enrichedApps.filter(
     app => app.status === AppStatus.DEPLOYED
   )
-  $: userApps = getUserApps(publishedApps, userGroups, $auth.user)
+  $: userApps = $featureFlags.WORKSPACE_APPS
+    ? $clientAppsStore.apps
+    : getUserApps(publishedApps, userGroups, $auth.user)
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
-  function getUserApps(publishedApps, userGroups, user) {
+  function getUserApps(
+    publishedApps: EnrichedApp[],
+    userGroups: UserGroup[],
+    user: User | undefined
+  ) {
     if (sdk.users.isAdmin(user)) {
       return publishedApps
     }
@@ -53,7 +66,7 @@
       if (sdk.users.isBuilder(user, app.prodId)) {
         return true
       }
-      if (!Object.keys(user?.roles).length && user?.userGroups) {
+      if (!Object.keys(user?.roles || {}).length && user?.userGroups) {
         return userGroups.find(group => {
           return groups
             .getGroupAppIds(group)
@@ -61,14 +74,14 @@
             .includes(app.appId)
         })
       } else {
-        return Object.keys($auth.user?.roles)
+        return Object.keys($auth.user?.roles || {})
           .map(x => appsStore.extractAppId(x))
           .includes(app.appId)
       }
     })
   }
 
-  function getUrl(app) {
+  function getUrl(app: EnrichedApp | PublishedAppData) {
     if (app.url) {
       return `/app${app.url}`
     } else {
@@ -88,6 +101,7 @@
     try {
       await organisation.init()
       await appsStore.load()
+      await clientAppsStore.load()
       await groups.init()
     } catch (error) {
       notifications.error("Error loading apps")

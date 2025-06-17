@@ -184,7 +184,9 @@ const environment = {
   ACCOUNT_PORTAL_URL:
     process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",
   INTERNAL_ACCOUNT_PORTAL_URL:
-    process.env.INTERNAL_ACCOUNT_PORTAL_URL || "http://account-portal:80",
+    process.env.INTERNAL_ACCOUNT_PORTAL_URL ||
+    process.env.ACCOUNT_PORTAL_URL ||
+    "https://account.budibase.app",
   ACCOUNT_PORTAL_API_KEY: process.env.ACCOUNT_PORTAL_API_KEY || "",
   BUDICLOUD_URL: process.env.BUDICLOUD_URL || "https://budibase.app",
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
