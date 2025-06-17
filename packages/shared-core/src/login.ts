@@ -1,1 +1,1 @@
-export const MAX_SESSIONS_PER_USER = 1
+export const MAX_SESSIONS_PER_USER = 3
