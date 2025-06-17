@@ -16,8 +16,8 @@ describe("/oauth2", () => {
   let config = setup.getConfig()
 
   function makeOAuth2Config({
-    scope,
-  }: { scope?: string } = {}): InsertOAuth2ConfigRequest {
+    ...data
+  }: Partial<InsertOAuth2ConfigRequest> = {}): InsertOAuth2ConfigRequest {
     const config = {
       name: generator.guid(),
       url: generator.url(),
@@ -25,7 +25,7 @@ describe("/oauth2", () => {
       clientSecret: generator.hash(),
       method: generator.pickone(Object.values(OAuth2CredentialsMethod)),
       grantType: generator.pickone(Object.values(OAuth2GrantType)),
-      scope,
+      ...data,
     }
     return config
   }
@@ -34,7 +34,6 @@ describe("/oauth2", () => {
 
   beforeEach(async () => {
     await config.newTenant()
-    nock.cleanAll()
   })
 
   const expectOAuth2ConfigId = expect.stringMatching(
@@ -408,6 +407,7 @@ describe("/oauth2", () => {
         oauth2Url: string
         clientId: string
         password: string
+        grantType: OAuth2CredentialsMethod
         scope: string | undefined
       },
       result: {
@@ -419,18 +419,25 @@ describe("/oauth2", () => {
       const token = generator.guid()
 
       // Token request nock
-      nock(url.origin)
-        .post(url.pathname, body => {
-          return (
-            body.grant_type === "client_credentials" &&
-            (request.scope === undefined || body.scope === request.scope)
-          )
+      const tokenRequestNock = nock(url.origin).post(url.pathname, body => {
+        return (
+          body.grant_type === "client_credentials" &&
+          (request.scope === undefined || body.scope === request.scope) &&
+          (request.grantType !== OAuth2CredentialsMethod.BODY ||
+            (body.client_id === request.clientId &&
+              body.client_secret === request.password))
+        )
+      })
+      if (request.grantType === OAuth2CredentialsMethod.HEADER) {
+        tokenRequestNock.basicAuth({
+          user: request.clientId,
+          pass: request.password,
         })
-        .basicAuth({ user: request.clientId, pass: request.password })
-        .reply(200, {
-          token_type: "Bearer",
-          access_token: token,
-        })
+      }
+      tokenRequestNock.reply(200, {
+        token_type: "Bearer",
+        access_token: token,
+      })
 
       // Protected resource call
       return nock("https://example.com", {
@@ -442,6 +449,10 @@ describe("/oauth2", () => {
         .reply(result.code, result.body)
     }
 
+    beforeEach(() => {
+      nock.cleanAll()
+    })
+
     it("can validate configuration without scope", async () => {
       const oauth2Config = makeOAuth2Config({ scope: undefined })
 
@@ -450,6 +461,7 @@ describe("/oauth2", () => {
           oauth2Url: oauth2Config.url,
           clientId: oauth2Config.clientId,
           password: oauth2Config.clientSecret,
+          grantType: oauth2Config.method,
           scope: undefined,
         },
         {
@@ -477,6 +489,7 @@ describe("/oauth2", () => {
           oauth2Url: oauth2Config.url,
           clientId: oauth2Config.clientId,
           password: oauth2Config.clientSecret,
+          grantType: oauth2Config.method,
           scope,
         },
         {
