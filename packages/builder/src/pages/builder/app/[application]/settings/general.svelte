@@ -37,15 +37,15 @@
   }
 </script>
 
-<Layout noPadding>
+<Layout gap="S" noPadding>
   <Layout gap="XS" noPadding>
     <Heading>General settings</Heading>
     <Body>Control app version, deployment and settings</Body>
   </Layout>
-  <Divider />
+  <Divider noMargin />
   <Heading size="S">App info</Heading>
   <UpdateAppForm />
-  <Divider />
+  <Divider noMargin />
   <Heading size="S">Deployment</Heading>
   {#if $deploymentStore.isPublished}
     <div class="row top">
@@ -89,7 +89,7 @@
       </Button>
     </div>
   {/if}
-  <Divider />
+  <Divider noMargin />
   <Layout gap="XS" noPadding>
     <Heading size="S">App version</Heading>
     {#if $admin.isDev}
@@ -138,7 +138,7 @@
       {/if}
     {/if}
   </Layout>
-  <Divider />
+  <Divider noMargin />
   <Layout noPadding gap="XS">
     <Heading size="S">Export</Heading>
     <Body size="S">
@@ -157,7 +157,7 @@
       Export latest published app
     </Button>
   </div>
-  <Divider />
+  <Divider noMargin />
   <Layout noPadding gap="XS">
     <Heading size="S">Import</Heading>
     <Body size="S">Import an app export bundle to update this app</Body>
@@ -165,7 +165,7 @@
   <div class="row">
     <Button secondary on:click={importModal?.show}>Import app</Button>
   </div>
-  <Divider />
+  <Divider noMargin />
   <Heading size="S">Danger zone</Heading>
   <div class="row">
     <Button

@@ -1,5 +1,5 @@
 <script>
-  import { goto, url } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import {
     ActionMenu,
     Button,
@@ -17,7 +17,7 @@
     Banner,
     Table,
   } from "@budibase/bbui"
-  import { onMount, setContext } from "svelte"
+  import { onMount, setContext, getContext } from "svelte"
   import { users, auth, groups, appsStore, licensing } from "@/stores/portal"
   import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
@@ -25,15 +25,21 @@
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
   import GroupIcon from "../groups/_components/GroupIcon.svelte"
   import { Constants, UserAvatar } from "@budibase/frontend-core"
-  import { Breadcrumbs, Breadcrumb } from "@/components/portal/page"
   import RemoveGroupTableRenderer from "./_components/RemoveGroupTableRenderer.svelte"
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
+  import { bb } from "@/stores/bb"
 
   export let userId
+
+  const routing = getContext("routing")
+
+  // Override
+  $: params = $routing?.params
+  $: userId = params.userId
 
   $: groupSchema = {
     name: {
@@ -220,9 +226,13 @@
   }
 
   async function fetchUser() {
+    if (!userId) {
+      notifications.error("Need a valid userId buddy")
+      return
+    }
     user = await users.get(userId)
     if (!user?._id) {
-      $goto("./")
+      bb.settings("/people/users")
     }
     tenantOwner = await users.getAccountHolder()
   }
@@ -253,11 +263,6 @@
 
 {#if loaded}
   <Layout gap="L" noPadding>
-    <Breadcrumbs>
-      <Breadcrumb url={$url("./")} text="Users" />
-      <Breadcrumb text={user?.email} />
-    </Breadcrumbs>
-
     <div class="title">
       <div class="user-info">
         <UserAvatar size="XXL" {user} showTooltip={false} />
@@ -371,7 +376,9 @@
           allowEditRows={false}
           customPlaceholder
           customRenderers={customGroupTableRenderers}
-          on:click={e => $goto(`../groups/${e.detail._id}`)}
+          on:click={e => {
+            bb.settings(`/people/groups/${e.detail._id}`)
+          }}
         >
           <div class="placeholder" slot="placeholder">
             <Heading size="S">This user is not in any groups</Heading>

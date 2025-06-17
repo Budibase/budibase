@@ -9,12 +9,11 @@
     Table,
     notifications,
   } from "@budibase/bbui"
-  import { goto, url } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { Breadcrumb, Breadcrumbs } from "@/components/portal/page"
   import { roles } from "@/stores/builder"
   import { appsStore, auth, groups } from "@/stores/portal"
-  import { onMount, setContext } from "svelte"
+  import { onMount, setContext, getContext } from "svelte"
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
@@ -22,8 +21,15 @@
   import GroupUsers from "./_components/GroupUsers.svelte"
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
+  import { bb } from "@/stores/bb"
 
   export let groupId
+
+  const routing = getContext("routing")
+
+  // Override
+  $: params = $routing?.params
+  $: groupId = params.groupId
 
   const appSchema = {
     name: {
@@ -64,7 +70,7 @@
 
   $: {
     if (loaded && !group?._id) {
-      $goto("./")
+      bb.settings("/people/groups")
     }
   }
 
@@ -72,7 +78,7 @@
     try {
       await groups.delete(group)
       notifications.success("User group deleted successfully")
-      $goto("./")
+      bb.settings("/people/groups")
     } catch (error) {
       notifications.error(`Failed to delete user group`)
     }
@@ -110,11 +116,6 @@
 
 {#if loaded}
   <Layout noPadding gap="L">
-    <Breadcrumbs>
-      <Breadcrumb url={$url("./")} text="Groups" />
-      <Breadcrumb text={group?.name} />
-    </Breadcrumbs>
-
     <div class="header">
       <GroupIcon {group} size="L" />
       <Heading>{group?.name}</Heading>

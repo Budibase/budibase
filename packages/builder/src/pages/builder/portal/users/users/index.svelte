@@ -28,7 +28,6 @@
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
-  import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import InvitedModal from "./_components/InvitedModal.svelte"
@@ -38,6 +37,8 @@
   import { API } from "@/api"
   import { OnboardingType } from "@/constants"
   import { sdk } from "@budibase/shared-core"
+  import { bb } from "@/stores/bb"
+  import Page from "@/settings/Page.svelte"
 
   const fetch = fetchData({
     API,
@@ -61,7 +62,7 @@
     userLimitReachedModal
   let searchEmail = undefined
   let selectedRows = []
-  let selectedInvites = []
+
   let bulkSaveResponse
   let customRenderers = [
     { column: "email", component: EmailTableRenderer },
@@ -70,9 +71,6 @@
     { column: "role", component: RoleTableRenderer },
   ]
   let userData = []
-  let invitesLoaded = false
-  let pendingInvites = []
-  let parsedInvites = []
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !sdk.users.isAdmin($auth.user)
@@ -96,7 +94,7 @@
       width: "1fr",
     },
   }
-  $: pendingSchema = getPendingSchema(schema)
+
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: setEnrichedUsers($fetch.rows, tenantOwner)
@@ -133,30 +131,6 @@
       }
     })
   }
-  const getPendingSchema = tblSchema => {
-    if (!tblSchema) {
-      return {}
-    }
-    let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
-    pendingSchema.email.displayName = "Pending Users"
-    return pendingSchema
-  }
-
-  const invitesToSchema = invites => {
-    return invites.map(invite => {
-      const { admin, builder, userGroups, apps } = invite.info
-
-      return {
-        _id: invite.code,
-        email: invite.email,
-        builder,
-        admin,
-        userGroups: userGroups,
-        apps: apps ? [...new Set(Object.keys(apps))] : undefined,
-      }
-    })
-  }
-  $: parsedInvites = invitesToSchema(pendingInvites)
 
   const updateFetch = email => {
     fetch.update({
@@ -194,7 +168,6 @@
     }))
     try {
       inviteUsersResponse = await users.invite(payload)
-      pendingInvites = await users.getInvites()
       inviteConfirmationModal.show()
     } catch (error) {
       notifications.error("Error inviting user")
@@ -286,22 +259,8 @@
         )
       }
 
-      if (selectedInvites.length > 0) {
-        await users.removeInvites(
-          selectedInvites.map(invite => ({
-            code: invite._id,
-          }))
-        )
-        pendingInvites = await users.getInvites()
-      }
-
-      notifications.success(
-        `Successfully deleted ${
-          selectedRows.length + selectedInvites.length
-        } users`
-      )
+      notifications.success(`Successfully deleted ${selectedRows.length} users`)
       selectedRows = []
-      selectedInvites = []
       await fetch.refresh()
     } catch (error) {
       notifications.error("Error deleting users")
@@ -324,12 +283,6 @@
       notifications.error("Error fetching user group data")
     }
     try {
-      pendingInvites = await users.getInvites()
-      invitesLoaded = true
-    } catch (err) {
-      notifications.error("Error fetching user invitations")
-    }
-    try {
       tenantOwner = await users.getAccountHolder()
     } catch (err) {
       if (err.status !== 404) {
@@ -339,12 +292,11 @@
   })
 </script>
 
-<Layout noPadding gap="M">
+<Page noPadding gap="L">
   <Layout gap="XS" noPadding>
-    <Heading>Users</Heading>
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
-  <Divider />
+  <Divider noMargin />
   {#if $licensing.errUserLimit}
     <InlineAlert
       type="error"
@@ -386,11 +338,11 @@
       </div>
     {/if}
     <div class="controls-right">
-      {#if selectedRows.length > 0 || selectedInvites.length > 0}
+      {#if selectedRows.length > 0}
         <DeleteRowsButton
           item="user"
           on:updaterows
-          selectedRows={[...selectedRows, ...selectedInvites]}
+          selectedRows={[...selectedRows]}
           deleteRows={deleteUsers}
         />
       {/if}
@@ -398,7 +350,9 @@
     </div>
   </div>
   <Table
-    on:click={({ detail }) => $goto(`./${detail._id}`)}
+    on:click={({ detail }) => {
+      bb.settings(`/people/users/${detail._id}`)
+    }}
     {schema}
     bind:selectedRows
     data={enrichedUsers}
@@ -419,19 +373,7 @@
       goToNextPage={fetch.nextPage}
     />
   </div>
-
-  <Table
-    bind:selectedRows={selectedInvites}
-    schema={pendingSchema}
-    data={parsedInvites}
-    allowEditColumns={false}
-    allowEditRows={false}
-    allowSelectRows={!readonly}
-    {customRenderers}
-    loading={!invitesLoaded}
-    allowClickRows={false}
-  />
-</Layout>
+</Page>
 
 <Modal bind:this={createUserModal}>
   <AddUserModal {showOnboardingTypeModal} />
