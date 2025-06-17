@@ -10,12 +10,11 @@ async function guardName(name: string, id?: string) {
   }
 }
 
-export async function fetch(): Promise<WorkspaceApp[]> {
+export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
   if (!features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     return []
   }
 
-  const db = context.getAppDB()
   const docs = await db.allDocs<WorkspaceApp>(
     docIds.getWorkspaceAppParams(null, { include_docs: true })
   )
