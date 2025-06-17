@@ -68,7 +68,7 @@ export async function enrichWithDefaultWorkspaceAppUrl(apps: App[]) {
 
       result.push({
         ...app,
-        defaultWorkspaceAppUrl: workspaceApps[0]?.urlPrefix || "",
+        defaultWorkspaceAppUrl: workspaceApps[0]?.url || "",
       })
     }
   } else {
