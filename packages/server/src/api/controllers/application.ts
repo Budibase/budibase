@@ -274,7 +274,7 @@ export async function fetchClientApps(
         // TODO: this can be removed when the flag is cleaned from packages/builder/src/pages/builder/apps/index.svelte
         prodId: app.appId,
         name: `${workspaceApp.name}`,
-        url: `${app.url}${workspaceApp.urlPrefix}`.replace(/\/$/, ""),
+        url: `${app.url}${workspaceApp.url}`.replace(/\/$/, ""),
         updatedAt: app.updatedAt,
       })
     }

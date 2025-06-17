@@ -299,7 +299,7 @@ describe("/applications", () => {
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
             name: "Test Workspace App",
-            urlPrefix: "/testapp",
+            url: "/testapp",
           })
         )
         await config.publish()
@@ -323,7 +323,7 @@ describe("/applications", () => {
           await config.api.workspaceApp.create(
             structures.workspaceApps.createRequest({
               name: "App One",
-              urlPrefix: "/appone",
+              url: "/appone",
             })
           )
 
@@ -331,7 +331,7 @@ describe("/applications", () => {
           await config.api.workspaceApp.create(
             structures.workspaceApps.createRequest({
               name: "App Two",
-              urlPrefix: "/apptwo",
+              url: "/apptwo",
             })
           )
         const app = await config.publish()
@@ -373,7 +373,7 @@ describe("/applications", () => {
           await config.api.workspaceApp.create(
             structures.workspaceApps.createRequest({
               name: "App One",
-              urlPrefix: "/appone",
+              url: "/appone",
             })
           )
         app = await config.publish()
@@ -387,7 +387,7 @@ describe("/applications", () => {
           await config.api.workspaceApp.create(
             structures.workspaceApps.createRequest({
               name: "App Two",
-              urlPrefix: "/apptwo",
+              url: "/apptwo",
             })
           )
           await config.api.application.publish(secondApp.appId)
@@ -436,7 +436,7 @@ describe("/applications", () => {
           await config.api.workspaceApp.create(
             structures.workspaceApps.createRequest({
               name: "App One",
-              urlPrefix: "/appone",
+              url: "/appone",
             })
           )
         app = await config.publish()
@@ -445,7 +445,7 @@ describe("/applications", () => {
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
             name: "Another app",
-            urlPrefix: "/other",
+            url: "/other",
           })
         )
 
