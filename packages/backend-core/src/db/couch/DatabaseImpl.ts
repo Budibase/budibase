@@ -1,4 +1,4 @@
-import Nano, { MangoQuery } from "@budibase/nano"
+import Nano from "@budibase/nano"
 import {
   AllDocsResponse,
   AnyDocument,
