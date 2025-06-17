@@ -1,5 +1,5 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
+import { context, docIds, features, HTTPError } from "@budibase/backend-core"
+import { FeatureFlag, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 
 async function guardName(name: string, id?: string) {
@@ -11,6 +11,10 @@ async function guardName(name: string, id?: string) {
 }
 
 export async function fetch(): Promise<WorkspaceApp[]> {
+  if (!features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    return []
+  }
+
   const db = context.getAppDB()
   const docs = await db.allDocs<WorkspaceApp>(
     docIds.getWorkspaceAppParams(null, { include_docs: true })
