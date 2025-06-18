@@ -312,6 +312,9 @@ export class DatabaseImpl implements Database {
     if (!document._id) {
       document._id = newid()
     }
+    if (!document._rev) {
+      document.createdVersion = environment.VERSION
+    }
     return this.put(document, opts)
   }
 
@@ -323,7 +326,7 @@ export class DatabaseImpl implements Database {
       if (!document.createdAt) {
         document.createdAt = new Date().toISOString()
       }
-      if (!document.createdVersion) {
+      if (!document._rev) {
         document.createdVersion = environment.VERSION
       }
       document.updatedAt = new Date().toISOString()
@@ -348,7 +351,13 @@ export class DatabaseImpl implements Database {
     return this.performCallWithDBCreation(db => {
       return () =>
         db.bulk({
-          docs: documents.map(d => ({ createdAt: now, ...d, updatedAt: now })),
+          docs: documents.map(d => {
+            const doc: AnyDocument = { createdAt: now, ...d, updatedAt: now }
+            if (!doc._rev) {
+              doc.createdVersion = environment.VERSION
+            }
+            return doc
+          }),
         })
     })
   }
