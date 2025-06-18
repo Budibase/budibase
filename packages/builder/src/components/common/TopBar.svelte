@@ -24,7 +24,7 @@
 
 <div class="top-bar">
   {#if icon}
-    <Icon name={icon} size="L" />
+    <Icon name={icon} size="L" weight="fill" />
   {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}

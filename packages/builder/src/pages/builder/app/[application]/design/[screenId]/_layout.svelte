@@ -26,7 +26,7 @@
 
 {#if $selectedScreen}
   <div class="design">
-    <TopBar breadcrumbs={[{ text: "Design" }]} icon="RailLeft"></TopBar>
+    <TopBar breadcrumbs={[{ text: "Design" }]} icon="layout"></TopBar>
     <div class="content">
       <LeftPanel />
       <AppPanel />

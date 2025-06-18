@@ -447,7 +447,7 @@
 </script>
 
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Agent" }]} icon="Algorithm"></TopBar>
+  <TopBar breadcrumbs={[{ text: "Agent" }]} icon="cpu"></TopBar>
   <div class="page">
     <Panel customWidth={260} borderRight noHeaderBorder>
       <NavHeader
@@ -469,8 +469,8 @@
       {#if !chatHistory.length}
         <div class="empty-state">
           <Body size="S">
-          No chat history yet.<br />
-          Start a new conversation!
+            No chat history yet.<br />
+            Start a new conversation!
           </Body>
         </div>
       {/if}
@@ -480,14 +480,14 @@
       <div class="chat-area" bind:this={chatAreaElement}>
         <Chatbox bind:chat {loading} />
         <div class="input-wrapper">
-        <textarea
-          bind:value={inputValue}
-          bind:this={textareaElement}
-          class="input spectrum-Textfield-input"
-          on:keydown={handleKeyDown}
-          placeholder="Ask anything"
-          disabled={loading}
-        />
+          <textarea
+            bind:value={inputValue}
+            bind:this={textareaElement}
+            class="input spectrum-Textfield-input"
+            on:keydown={handleKeyDown}
+            placeholder="Ask anything"
+            disabled={loading}
+          />
         </div>
       </div>
     </div>
@@ -516,8 +516,8 @@
               width="16"
             />
             <Body size="S">
-            {ToolSources.find(ts => selectedConfigToolSource.type === ts.type)
-              ?.name}
+              {ToolSources.find(ts => selectedConfigToolSource.type === ts.type)
+                ?.name}
             </Body>
           </div>
         {/if}
@@ -544,7 +544,7 @@
                 {@const menuCallback = createToolMenuCallback(toolSource)}
                 <NavItem
                   text={ToolSources.find(ts => ts.type === toolSource.type)
-                  ?.name || ""}
+                    ?.name || ""}
                   on:click={() => openToolsConfig(toolSource)}
                   on:contextmenu={menuCallback}
                 >
@@ -555,7 +555,11 @@
                       width="16"
                     />
                   </div>
-                  <Icon on:click={menuCallback} hoverable name="MoreSmallList" />
+                  <Icon
+                    on:click={menuCallback}
+                    hoverable
+                    name="MoreSmallList"
+                  />
                   <Icon size="S" name="ChevronRight" slot="right" />
                 </NavItem>
               {/each}
@@ -563,9 +567,9 @@
           {:else}
             <div class="empty-state">
               <Body size="S">
-              No tools connected yet.
-              <br />
-              Click "Add Tools" to get started!
+                No tools connected yet.
+                <br />
+                Click "Add Tools" to get started!
               </Body>
             </div>
           {/if}
@@ -585,8 +589,8 @@
                   <div class="tool-toggle-switch">
                     <Toggle
                       value={!selectedConfigToolSource.disabledTools?.includes(
-                      tool.name
-                    )}
+                        tool.name
+                      )}
                       on:change={() => toggleTool(tool.name)}
                     />
                   </div>
@@ -603,7 +607,6 @@
     </Panel>
   </div>
 </div>
-
 
 <Modal bind:this={toolSourceModal}>
   <ModalContent

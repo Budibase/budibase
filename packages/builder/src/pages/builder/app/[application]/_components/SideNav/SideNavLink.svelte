@@ -16,7 +16,7 @@
     {#if $$slots.icon}
       <slot name="icon" />
     {:else}
-      <Icon name={icon} size="M" />
+      <Icon name={icon} size="M" weight="fill" />
     {/if}
   </div>
   <div class="link_text">{text}</div>

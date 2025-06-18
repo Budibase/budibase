@@ -70,8 +70,7 @@
         <h1>{$appStore.name}</h1>
       </div>
       <Icon
-        name="MarginLeft"
-        newStyles
+        name="sidebar-simple"
         hoverable
         on:click={() => pinned.set(!$pinned)}
       />
@@ -81,7 +80,7 @@
       <div class="links">
         {#if $featureFlags.AI_AGENTS}
           <SideNavLink
-            icon="Algorithm"
+            icon="cpu"
             text="Agent"
             url={$url("./agent")}
             {collapsed}
@@ -89,21 +88,21 @@
           />
         {/if}
         <SideNavLink
-          icon="Data"
+          icon="plugs-connected"
           text="Data"
           url={$url("./data")}
           {collapsed}
           on:click={keepCollapsed}
         />
         <SideNavLink
-          icon="RailLeft"
+          icon="layout"
           text="Design"
           url={$url("./design")}
           {collapsed}
           on:click={keepCollapsed}
         />
         <SideNavLink
-          icon="Workflow"
+          icon="lightning-a"
           text="Automations"
           url={$url("./automation")}
           {collapsed}
@@ -113,7 +112,7 @@
       <div class="links">
         {#if updateAvailable && $isOnlyUser && !$admin.isDev}
           <SideNavLink
-            icon="Circle"
+            icon="circle"
             url={$url("./settings/general")}
             text="Update available"
             forceActive={false}
@@ -122,7 +121,7 @@
           </SideNavLink>
         {/if}
         <SideNavLink
-          icon="User"
+          icon="users"
           text="Users"
           on:click={() => {
             builderStore.showBuilderSidePanel()
@@ -131,7 +130,7 @@
           {collapsed}
         />
         <SideNavLink
-          icon="Settings"
+          icon="gear"
           text="Settings"
           url={$url("./settings")}
           {collapsed}

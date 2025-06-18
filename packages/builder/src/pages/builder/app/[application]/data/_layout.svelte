@@ -21,7 +21,7 @@
 
 <!-- routify:options index=1 -->
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Data" }]} icon="Data"></TopBar>
+  <TopBar breadcrumbs={[{ text: "Data" }]} icon="plugs-connected"></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
       <Panel borderRight borderBottomHeader={false}>

@@ -37,7 +37,7 @@
 
 <!-- routify:options index=3 -->
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Automations" }]} icon="Workflow"></TopBar>
+  <TopBar breadcrumbs={[{ text: "Automations" }]} icon="lightning-a"></TopBar>
   <div class="root">
     <AutomationPanel {modal} {webhookModal} />
     <div class="content drawer-container">
