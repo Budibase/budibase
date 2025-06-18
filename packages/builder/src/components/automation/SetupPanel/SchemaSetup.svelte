@@ -124,7 +124,7 @@
       />
     </div>
   {/each}
-  <Button quiet secondary icon="Add" on:click={addField}>Add field</Button>
+  <Button quiet secondary icon="plus" on:click={addField}>Add field</Button>
 </div>
 
 <style>

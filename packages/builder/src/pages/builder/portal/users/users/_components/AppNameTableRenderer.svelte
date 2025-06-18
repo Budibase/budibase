@@ -6,7 +6,10 @@
 </script>
 
 <div class="align">
-  <IconAvatar icon={row?.icon?.name || "Apps"} color={row?.icon?.color} />
+  <IconAvatar
+    icon={row?.icon?.name || "squares-four"}
+    color={row?.icon?.color}
+  />
   <div class="text">
     {value}
   </div>

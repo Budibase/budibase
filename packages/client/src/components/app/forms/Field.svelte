@@ -170,12 +170,12 @@
           <slot />
           {#if fieldState.error}
             <div class="error">
-              <Icon name="Alert" />
+              <Icon name="warning" />
               <span>{fieldState.error}</span>
             </div>
           {:else if helpText}
             <div class="helpText">
-              <Icon name="HelpOutline" /> <span>{helpText}</span>
+              <Icon name="question" /> <span>{helpText}</span>
             </div>
           {/if}
         {/if}
