@@ -152,4 +152,4 @@
   }
 </script>
 
-<ApexChart {options} on:click{handleBarClick} />
+<ApexChart {options} />

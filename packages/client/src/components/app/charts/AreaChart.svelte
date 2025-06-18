@@ -168,4 +168,4 @@
   }
 </script>
 
-<ApexChart {options} on:click{handleLineClick} />
+<ApexChart {options} />

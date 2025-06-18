@@ -177,4 +177,4 @@
   }
 </script>
 
-<ApexChart {options} on:click{handleBucketClick} />
+<ApexChart {options} />

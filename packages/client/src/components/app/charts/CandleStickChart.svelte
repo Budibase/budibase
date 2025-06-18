@@ -147,4 +147,4 @@
   }
 </script>
 
-<ApexChart {options} on:click={handleCandlestickClick} />
+<ApexChart {options} />

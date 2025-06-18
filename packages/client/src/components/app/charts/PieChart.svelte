@@ -125,4 +125,4 @@
   }
 </script>
 
-<ApexChart {options} on:click={handleSegmentClick} />
+<ApexChart {options} />
