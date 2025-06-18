@@ -1,21 +1,18 @@
 import {
   InsertWorkspaceAppRequest,
   RequiredKeys,
+  WithoutDocMetadata,
   WorkspaceApp,
 } from "@budibase/types"
 import { generator } from "./generator"
 
 export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
-  const result: RequiredKeys<WorkspaceApp> = {
+  const result: RequiredKeys<WithoutDocMetadata<WorkspaceApp>> = {
     name: generator.guid(),
     url: `/${generator.guid().replace(/-/g, "")}`,
     icon: "Monitoring",
     iconColor: undefined,
 
-    _id: undefined,
-    _rev: undefined,
-    createdAt: undefined,
-    updatedAt: undefined,
     navigation: {
       navigation: "Top",
     },
