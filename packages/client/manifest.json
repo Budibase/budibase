@@ -185,13 +185,13 @@
           {
             "label": "Flex",
             "value": "flex",
-            "barIcon": "ModernGridView",
+            "barIcon": "rows",
             "barTitle": "Flex layout"
           },
           {
             "label": "Grid",
             "value": "grid",
-            "barIcon": "ViewGrid",
+            "barIcon": "grid-nine",
             "barTitle": "Grid layout"
           }
         ],
@@ -207,13 +207,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "TableSelectColumn",
+            "barIcon": "rows-plus-bottom",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "TableSelectRow",
+            "barIcon": "columns-plus-right",
             "barTitle": "Row layout"
           }
         ],

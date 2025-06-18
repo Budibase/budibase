@@ -63,11 +63,11 @@
             props: {
               options: [
                 {
-                  barIcon: "grid-four",
+                  barIcon: "rows",
                   value: "flex",
                 },
                 {
-                  barIcon: "squares-four",
+                  barIcon: "grid-nine",
                   value: "grid",
                 },
               ],
