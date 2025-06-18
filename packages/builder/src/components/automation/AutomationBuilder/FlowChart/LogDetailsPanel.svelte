@@ -13,9 +13,6 @@
 
   let selectedTab = "Data in"
 
-  $: isTrigger = Object.values(AutomationTriggerStepId).includes(
-    selectedStep?.stepId
-  )
   $: hasInputData =
     currentStepData?.inputs && Object.keys(currentStepData.inputs).length > 0
   $: availableTabs = ["Data in", "Data out", "Issues"]
@@ -92,11 +89,9 @@
 
         <div class="step-data-viewer">
           {#if selectedTab === "Data in"}
-            {#if isTrigger && !hasInputData}
+            {#if !hasInputData}
               <div class="no-data-message">
-                <Body size="S" textAlign="center">
-                  No inputs available for trigger
-                </Body>
+                <Body size="S" textAlign="center">No inputs available</Body>
               </div>
             {:else}
               <JSONViewer value={currentStepData?.inputs} />

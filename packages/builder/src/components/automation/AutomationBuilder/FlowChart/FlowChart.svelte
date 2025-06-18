@@ -182,6 +182,9 @@
     <div class="automation-name">
       {automation.name}
     </div>
+  </div>
+
+  <div class="actions-right">
     <div class="view-mode-toggle">
       <div class="group">
         <ActionButton
@@ -215,9 +218,7 @@
         </ActionButton>
       </div>
     </div>
-  </div>
 
-  <div class="actions-right">
     <ActionButton
       icon="Play"
       quiet
