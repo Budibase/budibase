@@ -1,6 +1,7 @@
 <script>
-  import { isActive, redirect, params } from "@roxi/routify"
+  import { isActive, redirect, params, beforeUrlChange } from "@roxi/routify"
   import { admin, auth, licensing, navigation } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "@/api"
@@ -8,9 +9,11 @@
   import ContextMenu from "@/components/ContextMenu.svelte"
   import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
   import { Modal } from "@budibase/bbui"
+  import SettingsModal from "@/components/settings/SettingsModal.svelte"
 
   let loaded = false
   let commandPaletteModal
+  let settingsModal
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -20,6 +23,10 @@
   $: user = $auth.user
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
+
+  $: if (settingsModal && $bb.settings.open) {
+    settingsModal.show()
+  }
 
   navigation.init($redirect)
 
@@ -169,6 +176,9 @@
     }
   }
 </script>
+
+<!-- Global settings modal -->
+<SettingsModal bind:this={settingsModal} on:hide={() => bb.hideSettings()} />
 
 <!--Portal branding overrides -->
 <Branding />
