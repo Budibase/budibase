@@ -10,7 +10,7 @@ export interface PublishAppResponse extends DeploymentDoc {}
 export type PublishStatusResource = {
   published: boolean
   name: string
-  lastPublishedAt?: string
+  publishedAt?: string
   unpublishedChanges?: boolean
 }
 

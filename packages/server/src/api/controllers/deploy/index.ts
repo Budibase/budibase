@@ -242,7 +242,7 @@ export const publishApp = async function (
     appDoc.instance._id = productionAppId
     if (automationIds?.length || workspaceAppIds?.length) {
       const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
-      appDoc.lastPublishedAt = Object.fromEntries(
+      appDoc.resourcesPublishedAt = Object.fromEntries(
         fullMap.map(id => [id, new Date().toISOString()])
       )
     }

@@ -34,7 +34,7 @@ export interface App extends Document {
   scripts?: AppScript[]
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
-  lastPublishedAt?: Record<string, string>
+  resourcesPublishedAt?: Record<string, string>
 }
 
 export interface AppInstance {

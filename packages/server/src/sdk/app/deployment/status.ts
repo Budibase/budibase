@@ -60,29 +60,29 @@ export async function status() {
   // Build response maps comparing development vs production
   const automations: Record<string, PublishStatusResource> = {}
   for (const automation of developmentState.automations) {
-    const lastPublishedAt = metadata?.lastPublishedAt?.[automation._id!]
+    const resourcePublishedAt = metadata?.resourcesPublishedAt?.[automation._id!]
     automations[automation._id!] = {
       published: prodAutomationIds.has(automation._id!),
       name: automation.name,
-      lastPublishedAt,
+      publishedAt: resourcePublishedAt,
       unpublishedChanges:
-        !lastPublishedAt || automation.updatedAt! > lastPublishedAt,
+        !resourcePublishedAt || automation.updatedAt! > resourcePublishedAt,
     }
   }
 
   const workspaceApps: Record<string, PublishStatusResource> = {}
   for (const workspaceApp of developmentState.workspaceApps) {
-    const lastPublishedAt = metadata?.lastPublishedAt?.[workspaceApp._id!]
+    const resourcePublishedAt = metadata?.resourcesPublishedAt?.[workspaceApp._id!]
     const workspaceScreens = developmentState.screens.filter(
       screen => screen.workspaceAppId === workspaceApp._id
     )
     workspaceApps[workspaceApp._id!] = {
       published: prodWorkspaceAppIds.has(workspaceApp._id!),
       name: workspaceApp.name,
-      lastPublishedAt,
+      publishedAt: resourcePublishedAt,
       unpublishedChanges:
-        !lastPublishedAt ||
-        !!workspaceScreens.find(screen => screen.updatedAt! > lastPublishedAt),
+        !resourcePublishedAt ||
+        !!workspaceScreens.find(screen => screen.updatedAt! > resourcePublishedAt),
     }
   }
 
