@@ -14,7 +14,6 @@
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import ButtonActionEditor from "@/components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "@/dataBinding"
-  import BarButtonList from "@/components/design/settings/controls/BarButtonList.svelte"
   import URLVariableTestInput from "@/components/design/settings/controls/URLVariableTestInput.svelte"
   import { DrawerBindableInput } from "@/components/common/bindings"
 
