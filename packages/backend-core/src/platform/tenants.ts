@@ -21,20 +21,12 @@ export async function getTenantIds(): Promise<string[]> {
 
 async function getTenants(): Promise<Tenants> {
   const db = getPlatformDB()
-  let tenants: Tenants
-
-  try {
-    tenants = await db.get(TENANT_DOC)
-  } catch (e: any) {
-    // doesn't exist yet - create
-    if (e.status === 404) {
-      tenants = await createTenantsDoc()
-    } else {
-      throw e
-    }
+  const tenants = await db.tryGet<Tenants>(TENANT_DOC)
+  if (tenants) {
+    return tenants
   }
 
-  return tenants
+  return await createTenantsDoc()
 }
 
 export async function exists(tenantId: string) {
@@ -53,15 +45,20 @@ function newTenantsDoc(): Tenants {
 
 async function createTenantsDoc(): Promise<Tenants> {
   const db = getPlatformDB()
-  let tenants = newTenantsDoc()
+  const tenants = newTenantsDoc()
 
   try {
     const response = await db.put(tenants)
     tenants._rev = response.rev
   } catch (e: any) {
-    // don't throw 409 is doc has already been created
+    // 409 happens if the doc has been created elsewhere
     if (e.status === 409) {
-      return db.get(TENANT_DOC)
+      const existing = await db.tryGet<Tenants>(TENANT_DOC)
+      if (!existing) {
+        // Shouldn't really happen, but if it does we'll throw the error.
+        throw e
+      }
+      return existing
     }
     throw e
   }

@@ -161,7 +161,10 @@ export async function updateUserOAuth(userId: string, oAuthConfig: any) {
 
   try {
     const db = getGlobalDB()
-    const dbUser = await db.get<any>(userId)
+    const dbUser = await db.tryGet<any>(userId)
+    if (!dbUser) {
+      return
+    }
 
     //Do not overwrite the refresh token if a valid one is not provided.
     if (typeof details.refreshToken !== "string") {

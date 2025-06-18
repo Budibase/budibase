@@ -1,15 +1,11 @@
-import { User, SearchIndex } from "@budibase/types"
+import { User, SearchIndex, DesignDocument } from "@budibase/types"
 import { getGlobalDB } from "../../context"
 
 export async function createUserIndex() {
   const db = getGlobalDB()
-  let designDoc
-  try {
-    designDoc = await db.get<any>("_design/database")
-  } catch (err: any) {
-    if (err.status === 404) {
-      designDoc = { _id: "_design/database" }
-    }
+  let designDoc = await db.tryGet<DesignDocument>("_design/database")
+  if (!designDoc) {
+    designDoc = { _id: "_design/database" }
   }
 
   const fn = function (user: User) {

@@ -43,14 +43,16 @@ type QuotaUpdateFn = (
   creatorsChange: number,
   cb?: () => Promise<any>
 ) => Promise<any>
-type GroupUpdateFn = (groupId: string, userIds: string[]) => Promise<any>
+type GroupUpdateFn = (group: UserGroup, userIds: string[]) => Promise<any>
 type FeatureFn = () => Promise<Boolean>
-type GroupGetFn = (ids: string[]) => Promise<UserGroup[]>
+type BulkGroupGetFn = (ids: string[]) => Promise<UserGroup[]>
+type GroupGetFn = (id: string) => Promise<UserGroup | undefined>
 type GroupBuildersFn = (user: User) => Promise<string[]>
 type QuotaFns = { addUsers: QuotaUpdateFn; removeUsers: QuotaUpdateFn }
 type GroupFns = {
   addUsers: GroupUpdateFn
-  getBulk: GroupGetFn
+  getBulk: BulkGroupGetFn
+  get: GroupGetFn
   getGroupBuilderAppIds: GroupBuildersFn
 }
 type CreateAdminUserOpts = {
@@ -239,17 +241,14 @@ export class UserDB {
     let dbUser: User | undefined
     if (_id) {
       // try to get existing user from db
-      try {
-        dbUser = await usersCore.getById(_id)
-        if (email && dbUser.email !== email && !opts.allowChangingEmail) {
-          throw new Error("Email address cannot be changed")
-        }
-      } catch (e: any) {
-        if (e.status === 404) {
-          // do nothing, save this new user with the id specified - required for SSO auth
-        } else {
-          throw e
-        }
+      dbUser = await usersCore.getById(_id)
+      if (
+        email &&
+        dbUser &&
+        dbUser.email !== email &&
+        !opts.allowChangingEmail
+      ) {
+        throw new Error("Email address cannot be changed")
       }
     }
 
@@ -296,10 +295,13 @@ export class UserDB {
       const groupPromises = []
       if (!_id) {
         if (userGroups.length > 0) {
-          for (let groupId of userGroups) {
-            groupPromises.push(
-              UserDB.groups.addUsers(groupId, [builtUser._id!])
-            )
+          for (const groupId of userGroups) {
+            groupPromises.push(async () => {
+              const group = await UserDB.groups.get(groupId)
+              if (group) {
+                await UserDB.groups.addUsers(group, [builtUser._id!])
+              }
+            })
           }
         }
       }
@@ -326,7 +328,7 @@ export class UserDB {
         await Promise.all(groupPromises)
 
         // finally returned the saved user from the db
-        return db.get(builtUser._id!)
+        return db.tryGet<User>(builtUser._id!)
       } catch (err: any) {
         if (err.status === 409) {
           throw "User exists already"
@@ -412,8 +414,13 @@ export class UserDB {
         if (Array.isArray(saved) && groups) {
           const groupPromises = []
           const createdUserIds = saved.map(user => user._id!)
-          for (let groupId of groups) {
-            groupPromises.push(UserDB.groups.addUsers(groupId, createdUserIds))
+          for (const groupId of groups) {
+            groupPromises.push(async () => {
+              const group = await UserDB.groups.get(groupId)
+              if (group) {
+                await UserDB.groups.addUsers(group, createdUserIds)
+              }
+            })
           }
           await Promise.all(groupPromises)
         }
@@ -522,7 +529,11 @@ export class UserDB {
 
   static async destroy(id: string) {
     const db = getGlobalDB()
-    const dbUser = (await db.get(id)) as User
+    const dbUser = await db.tryGet<User>(id)
+    if (!dbUser) {
+      return
+    }
+
     const userId = dbUser._id as string
 
     if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {

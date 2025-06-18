@@ -118,11 +118,6 @@ export interface Database {
 
   exists(): Promise<boolean>
   exists(docId: string): Promise<boolean>
-  /**
-   * @deprecated the plan is to get everything using `tryGet` instead, then rename
-   * `tryGet` to `get`.
-   */
-  get<T extends Document>(id?: string): Promise<T>
   tryGet<T extends Document>(id?: string): Promise<T | undefined>
   getMultiple<T extends Document>(
     ids?: string[],

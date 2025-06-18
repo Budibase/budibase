@@ -84,29 +84,17 @@ async function put(
   return { ok: true, id: output._id, rev: output._rev }
 }
 
-async function get<T extends Document>(db: Database, id: string): Promise<T> {
-  const cache = await getCache()
-  const cacheKey = makeCacheKey(db, id)
-  let cacheItem: CacheItem<T> = await cache.get(cacheKey)
-  if (!cacheItem) {
-    const doc = await db.get<T>(id)
-    cacheItem = makeCacheItem(doc)
-    await cache.store(cacheKey, cacheItem)
-  }
-  return cacheItem.doc
-}
-
 async function tryGet<T extends Document>(
   db: Database,
   id: string
-): Promise<T | null> {
+): Promise<T | undefined> {
   const cache = await getCache()
   const cacheKey = makeCacheKey(db, id)
   let cacheItem: CacheItem<T> | null = await cache.get(cacheKey)
   if (!cacheItem) {
     const doc = await db.tryGet<T>(id)
     if (!doc) {
-      return null
+      return undefined
     }
     cacheItem = makeCacheItem(doc)
     await cache.store(cacheKey, cacheItem)
@@ -139,13 +127,6 @@ export class Writethrough {
 
   async put(doc: any, writeRateMs: number = this.writeRateMs) {
     return put(this.db, doc, writeRateMs)
-  }
-
-  /**
-   * @deprecated use `tryGet` instead
-   */
-  async get<T extends Document>(id: string) {
-    return get<T>(this.db, id)
   }
 
   async tryGet<T extends Document>(id: string) {

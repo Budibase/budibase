@@ -1,4 +1,4 @@
-import { AnyDocument, Database, Document, DocumentType } from "@budibase/types"
+import { Database, Document, DocumentType } from "@budibase/types"
 
 import { BudibaseQueue, JobQueue } from "../queue"
 import * as dbUtils from "../db"
@@ -62,13 +62,7 @@ export class DocWritethroughProcessor {
       return
     }
     const db = dbUtils.getDB(dbName)
-    let doc: AnyDocument | undefined
-    try {
-      doc = await db.get(docId)
-    } catch {
-      doc = { _id: docId }
-    }
-
+    let doc = (await db.tryGet(docId)) || { _id: docId }
     doc = { ...doc, ...data }
     await db.put(doc)
   }

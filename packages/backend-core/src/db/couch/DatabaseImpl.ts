@@ -26,6 +26,7 @@ import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
 import { sqlLog } from "../../sql/utils"
+import { tracer } from "dd-trace"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -201,24 +202,25 @@ export class DatabaseImpl implements Database {
     }
   }
 
-  async get<T extends Document>(id?: string): Promise<T> {
-    return this.performCall(db => {
+  async tryGet<T extends Document>(id?: string): Promise<T | undefined> {
+    return await tracer.trace("DatabaseImpl.tryGet", async span => {
       if (!id) {
         throw new Error("Unable to get doc without a valid _id.")
       }
-      return () => db.get(id)
-    })
-  }
-
-  async tryGet<T extends Document>(id?: string): Promise<T | undefined> {
-    try {
-      return await this.get<T>(id)
-    } catch (err: any) {
-      if (err.statusCode === 404) {
-        return undefined
+      try {
+        return this.performCall(db => () => db.get(id))
+      } catch (err: any) {
+        span.addTags({
+          error: true,
+          statusCode: err.statusCode,
+          message: err.message,
+        })
+        if (err.statusCode === 404) {
+          return undefined
+        }
+        throw err
       }
-      throw err
-    }
+    })
   }
 
   async getMultiple<T extends Document>(
@@ -324,15 +326,9 @@ export class DatabaseImpl implements Database {
       }
       document.updatedAt = new Date().toISOString()
       if (opts?.force && document._id) {
-        try {
-          const existing = await this.get(document._id)
-          if (existing) {
-            document._rev = existing._rev
-          }
-        } catch (err: any) {
-          if (err.status !== 404) {
-            throw err
-          }
+        const existing = await this.tryGet(document._id)
+        if (existing) {
+          document._rev = existing._rev
         }
       }
       return () => db.insert(document)
@@ -467,14 +463,17 @@ export class DatabaseImpl implements Database {
   }
 
   async destroy() {
-    if (await this.exists(SQLITE_DESIGN_DOC_ID)) {
-      // delete the design document, then run the cleanup operation
-      const definition = await this.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-      // remove all tables - save the definition then trigger a cleanup
-      definition.sql.tables = {}
-      await this.put(definition)
-      await this.sqlDiskCleanup()
+    // delete the design document, then run the cleanup operation
+    const definition = await this.tryGet<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    if (!definition) {
+      return { ok: true }
     }
+
+    // remove all tables - save the definition then trigger a cleanup
+    definition.sql.tables = {}
+    await this.put(definition)
+    await this.sqlDiskCleanup()
+
     try {
       return await this.nano().db.destroy(this.name)
     } catch (err: any) {

@@ -15,7 +15,10 @@ const EXPIRY_SECONDS = 3600
  */
 async function populateFromDB(userId: string, tenantId: string) {
   const db = tenancy.getTenantDB(tenantId)
-  const user = await db.get<UserMetadata>(userId)
+  const user = await db.tryGet<UserMetadata>(userId)
+  if (!user) {
+    return undefined
+  }
   user.budibaseAccess = true
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(user.email)
@@ -80,7 +83,7 @@ export async function getUser({
     userId: string,
     tenantId: string,
     email?: string
-  ) => Promise<User>
+  ) => Promise<User | undefined>
 }) {
   if (!populateUser) {
     populateUser = populateFromDB
@@ -92,11 +95,18 @@ export async function getUser({
       tenantId = await platform.users.lookupTenantId(userId)
     }
   }
+  if (!tenantId) {
+    throw new Error(`No tenant ID provided for user ${userId}`)
+  }
   const client = await redis.getUserClient()
   // try cache
-  let user: User = await client.get(userId)
+  let user: User | null | undefined = await client.get(userId)
   if (!user) {
     user = await populateUser(userId, tenantId, email)
+    if (!user) {
+      // if user not found, return undefined
+      return undefined
+    }
     await client.store(userId, user, EXPIRY_SECONDS)
   }
   if (user && !user.tenantId && tenantId) {

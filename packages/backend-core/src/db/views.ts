@@ -32,15 +32,14 @@ async function removeDeprecated(db: Database, viewName: ViewName) {
   if (!DeprecatedViews[viewName]) {
     return
   }
-  try {
-    const designDoc = await db.get<DesignDocument>(DESIGN_DB)
-    for (let deprecatedNames of DeprecatedViews[viewName]) {
-      delete designDoc.views?.[deprecatedNames]
-    }
-    await db.put(designDoc)
-  } catch (err) {
-    // doesn't exist, ignore
+  const designDoc = await db.tryGet<DesignDocument>(DESIGN_DB)
+  if (!designDoc) {
+    return
   }
+  for (let deprecatedNames of DeprecatedViews[viewName]) {
+    delete designDoc.views?.[deprecatedNames]
+  }
+  await db.put(designDoc)
 }
 
 export async function createView(
@@ -48,11 +47,8 @@ export async function createView(
   viewJs: string,
   viewName: string
 ): Promise<void> {
-  let designDoc
-  try {
-    designDoc = await db.get<DesignDocument>(DESIGN_DB)
-  } catch (err) {
-    // no design doc, make one
+  let designDoc = await db.tryGet<DesignDocument>(DESIGN_DB)
+  if (!designDoc) {
     designDoc = DesignDoc()
   }
   const view: DBView = {

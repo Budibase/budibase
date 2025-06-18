@@ -84,9 +84,16 @@ export async function bulkUpdateGlobalUsers(users: User[]) {
   return (await db.bulkDocs(users)) as BulkDocsResponse
 }
 
-export async function getById(id: string, opts?: GetOpts): Promise<User> {
+export async function getById(
+  id: string,
+  opts?: GetOpts
+): Promise<User | undefined> {
   const db = context.getGlobalDB()
-  let user = await db.get<User>(id)
+  let user = await db.tryGet<User>(id)
+  if (!user) {
+    return undefined
+  }
+
   if (opts?.cleanup) {
     user = removeUserPassword(user) as User
   }
@@ -256,11 +263,14 @@ export async function paginatedUsers({
     opts.startkey = bookmark
   }
   // property specifies what to use for the page/anchor
-  let userList: User[],
+  let userList: User[] = [],
     property = "_id",
     getKey
   if (query?.equal?._id) {
-    userList = [await getById(query.equal._id)]
+    const user = await getById(query.equal._id)
+    if (user) {
+      userList = [user]
+    }
   } else if (appId) {
     userList = await searchGlobalUsersByApp(appId, opts)
     getKey = (doc: any) => getGlobalUserByAppPage(appId, doc)

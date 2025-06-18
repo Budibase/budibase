@@ -33,15 +33,7 @@ export async function getConfig<T extends Config>(
   type: ConfigType
 ): Promise<T | undefined> {
   const db = context.getGlobalDB()
-  try {
-    // await to catch error
-    return (await db.get(generateConfigID(type))) as T
-  } catch (e: any) {
-    if (e.status === 404) {
-      return
-    }
-    throw e
-  }
+  return await db.tryGet<T>(generateConfigID(type))
 }
 
 export async function save(
