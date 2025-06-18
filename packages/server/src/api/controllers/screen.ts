@@ -46,13 +46,11 @@ export async function save(
 
   const isCreation = !screen._id
 
-  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    if (
-      !screen.workspaceAppId ||
-      !(await sdk.workspaceApps.get(screen.workspaceAppId))
-    ) {
-      ctx.throw("workspaceAppId is not valid")
-    }
+  if (
+    !screen.workspaceAppId ||
+    !(await sdk.workspaceApps.get(screen.workspaceAppId))
+  ) {
+    ctx.throw("workspaceAppId is not valid")
   }
 
   const savedScreen = isCreation
