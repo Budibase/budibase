@@ -3,8 +3,6 @@ import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { UserDB } from "../db"
 import { searchExistingEmails } from "../lookup"
 
-const db = UserDB
-
 const config = new DBTestConfiguration()
 
 const quotas = {
@@ -25,12 +23,13 @@ const groups = {
   addUsers: jest.fn(),
   getBulk: jest.fn(),
   getGroupBuilderAppIds: jest.fn(),
+  get: jest.fn(),
 }
 const features = { isSSOEnforced: jest.fn(), isAppBuildersEnabled: jest.fn() }
 
 describe("UserDB", () => {
   beforeAll(() => {
-    db.init(quotas, groups, features)
+    UserDB.init(quotas, groups, features)
   })
 
   beforeEach(() => {
@@ -39,7 +38,7 @@ describe("UserDB", () => {
 
   describe("save", () => {
     describe("create", () => {
-      it("creating a new user will persist it", async () => {
+      it.only("creating a new user will persist it", async () => {
         const email = generator.email({})
         const user: User = structures.users.user({
           email,
@@ -47,9 +46,9 @@ describe("UserDB", () => {
         })
 
         await config.doInTenant(async () => {
-          const saveUserResponse = await db.save(user)
+          const saveUserResponse = await UserDB.save(user)
 
-          const persistedUser = await db.getUserByEmail(email)
+          const persistedUser = await UserDB.getUserByEmail(email)
           expect(persistedUser).toEqual({
             ...user,
             _id: saveUserResponse._id,
@@ -69,10 +68,10 @@ describe("UserDB", () => {
           tenantId: config.getTenantId(),
         })
 
-        await config.doInTenant(() => db.save(user))
+        await config.doInTenant(() => UserDB.save(user))
 
         await config.doInTenant(() =>
-          expect(db.save(user)).rejects.toThrow(
+          expect(UserDB.save(user)).rejects.toThrow(
             `Email already in use: '${email}'`
           )
         )
@@ -85,11 +84,11 @@ describe("UserDB", () => {
           tenantId: config.getTenantId(),
         })
 
-        await config.doInTenant(() => db.save(user))
+        await config.doInTenant(() => UserDB.save(user))
 
         config.newTenant()
         await config.doInTenant(() =>
-          expect(db.save(user)).rejects.toThrow(
+          expect(UserDB.save(user)).rejects.toThrow(
             `Email already in use: '${email}'`
           )
         )
@@ -101,7 +100,7 @@ describe("UserDB", () => {
 
       beforeEach(async () => {
         user = await config.doInTenant(() =>
-          db.save(
+          UserDB.save(
             structures.users.user({
               email: generator.email({}),
               tenantId: config.getTenantId(),
@@ -115,9 +114,9 @@ describe("UserDB", () => {
           const updatedName = generator.first()
           user.firstName = updatedName
 
-          await db.save(user)
+          await UserDB.save(user)
 
-          const persistedUser = await db.getUserByEmail(user.email)
+          const persistedUser = await UserDB.getUserByEmail(user.email)
           expect(persistedUser).toEqual(
             expect.objectContaining({
               _id: user._id,
@@ -132,7 +131,7 @@ describe("UserDB", () => {
       it("email cannot be updated by default", async () => {
         await config.doInTenant(async () => {
           await expect(
-            db.save({ ...user, email: generator.email({}) })
+            UserDB.save({ ...user, email: generator.email({}) })
           ).rejects.toThrow("Email address cannot be changed")
         })
       })
@@ -141,12 +140,12 @@ describe("UserDB", () => {
         await config.doInTenant(async () => {
           const newEmail = generator.email({})
 
-          await db.save(
+          await UserDB.save(
             { ...user, email: newEmail },
             { allowChangingEmail: true }
           )
 
-          const persistedUser = await db.getUserByEmail(newEmail)
+          const persistedUser = await UserDB.getUserByEmail(newEmail)
           expect(persistedUser).toEqual(
             expect.objectContaining({
               _id: user._id,
@@ -166,7 +165,7 @@ describe("UserDB", () => {
             [previousEmail]
           )
 
-          await db.save(
+          await UserDB.save(
             { ...user, email: newEmail },
             { allowChangingEmail: true }
           )
@@ -175,7 +174,7 @@ describe("UserDB", () => {
             [newEmail]
           )
 
-          await db.save(
+          await UserDB.save(
             structures.users.user({
               email: previousEmail,
               tenantId: config.getTenantId(),
@@ -216,7 +215,7 @@ describe("UserDB", () => {
             return user
           })
 
-          await expect(db.bulkCreate(usersWithoutPasswords)).rejects.toBe(
+          await expect(UserDB.bulkCreate(usersWithoutPasswords)).rejects.toBe(
             "Password must be specified."
           )
         })
@@ -238,7 +237,7 @@ describe("UserDB", () => {
           ]
 
           const result: BulkUserCreated =
-            await db.bulkCreate(usersWithPasswords)
+            await UserDB.bulkCreate(usersWithPasswords)
 
           expect(result.successful).toHaveLength(2)
           expect(result.unsuccessful).toHaveLength(0)
@@ -273,7 +272,7 @@ describe("UserDB", () => {
             return user
           })
 
-          const result: BulkUserCreated = await db.bulkCreate(
+          const result: BulkUserCreated = await UserDB.bulkCreate(
             usersWithoutPasswords
           )
 
@@ -304,7 +303,7 @@ describe("UserDB", () => {
           ]
 
           const result: BulkUserCreated =
-            await db.bulkCreate(usersWithPasswords)
+            await UserDB.bulkCreate(usersWithPasswords)
 
           expect(result.successful).toHaveLength(2)
           expect(result.unsuccessful).toHaveLength(0)
@@ -335,7 +334,7 @@ describe("UserDB", () => {
             },
           ]
 
-          const result: BulkUserCreated = await db.bulkCreate(mixedUsers)
+          const result: BulkUserCreated = await UserDB.bulkCreate(mixedUsers)
 
           expect(result.successful).toHaveLength(3)
           expect(result.unsuccessful).toHaveLength(0)
