@@ -59,15 +59,16 @@
             key: "props.layout",
             label: "Layout",
             defaultValue: "flex",
-            control: BarButtonList,
+            control: Select,
             props: {
+              placeholder: false,
               options: [
                 {
-                  barIcon: "rows",
+                  label: "Flex",
                   value: "flex",
                 },
                 {
-                  barIcon: "grid-nine",
+                  label: "Grid",
                   value: "grid",
                 },
               ],

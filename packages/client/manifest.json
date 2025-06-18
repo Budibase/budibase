@@ -180,19 +180,15 @@
         "label": "Layout",
         "key": "layout",
         "showInBar": true,
-        "barStyle": "buttons",
+        "placeholder": false,
         "options": [
           {
             "label": "Flex",
-            "value": "flex",
-            "barIcon": "rows",
-            "barTitle": "Flex layout"
+            "value": "flex"
           },
           {
             "label": "Grid",
-            "value": "grid",
-            "barIcon": "grid-nine",
-            "barTitle": "Grid layout"
+            "value": "grid"
           }
         ],
         "defaultValue": "grid"
