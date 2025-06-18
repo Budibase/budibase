@@ -607,7 +607,7 @@ describe("/applications", () => {
               for (const route of routes) {
                 const screen = await config.api.screen.save({
                   ...basicScreen(route),
-                  workspaceAppId: workspaceApp._id,
+                  workspaceAppId: workspaceApp._id!,
                 })
                 screens.push(screen)
               }
