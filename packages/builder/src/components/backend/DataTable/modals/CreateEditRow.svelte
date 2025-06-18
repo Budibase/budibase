@@ -33,9 +33,8 @@
       } else if (error.handled && response?.validationErrors) {
         const mappedErrors = {}
         for (let field in response.validationErrors) {
-          mappedErrors[
-            field
-          ] = `${field} ${response.validationErrors[field][0]}`
+          mappedErrors[field] =
+            `${field} ${response.validationErrors[field][0]}`
         }
         errors = mappedErrors
       } else {

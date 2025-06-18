@@ -1,4 +1,9 @@
-import { db as dbCore } from "@budibase/backend-core"
+import {
+  cache,
+  db as dbCore,
+  DesignDocuments,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   DocumentTypesToImport,
   Document,
@@ -8,11 +13,18 @@ import {
   App,
 } from "@budibase/types"
 import backups from "../backups"
+import { processMigrations } from "../../../appMigrations/migrationsProcessor"
+import { getAppMigrationCacheKey } from "../../../appMigrations"
 
 export type FileAttributes = {
   type: string
   path: string
 }
+
+const DESIGN_DOCUMENTS_TO_IMPORT = [
+  DesignDocuments.SQLITE,
+  DesignDocuments.MIGRATIONS,
+]
 
 async function getNewAppMetadata(
   tempDb: Database,
@@ -58,7 +70,9 @@ function mergeUpdateAndDeleteDocuments(
       finalToDelete.push(deleteDoc)
     }
   }
-  return [...updateDocs, ...finalToDelete, metadata]
+
+  const finalDocs = [...updateDocs, ...finalToDelete, metadata]
+  return finalDocs
 }
 
 async function removeImportableDocuments(db: Database) {
@@ -76,6 +90,17 @@ async function removeImportableDocuments(db: Database) {
       }))
     )
   }
+
+  const designDocs = await db.getMultiple(DESIGN_DOCUMENTS_TO_IMPORT, {
+    allowMissing: true,
+  })
+  documentRefs.push(
+    ...designDocs.map(doc => ({
+      _id: doc._id!,
+      _rev: doc._rev!,
+    }))
+  )
+
   // add deletion key
   return documentRefs.map(ref => ({ _deleted: true, ...ref }))
 }
@@ -90,16 +115,25 @@ async function getImportableDocuments(db: Database) {
       )
     )
   }
+
   // map the responses to the document itself
   let documents: Document[] = []
   for (let response of await Promise.all(docPromises)) {
     documents = documents.concat(response.rows.map(row => row.doc!))
   }
+
+  const designDocs = await db.getMultiple(DESIGN_DOCUMENTS_TO_IMPORT, {
+    allowMissing: true,
+  })
+  documents.push(...designDocs)
+
   // remove the _rev, stops it being written
+  const uniqueMap = new Map<string, Document>()
   documents.forEach(doc => {
     delete doc._rev
+    uniqueMap.set(doc._id!, doc)
   })
-  return documents
+  return Array.from(uniqueMap.values())
 }
 
 export async function updateWithExport(
@@ -131,9 +165,15 @@ export async function updateWithExport(
     // clear out the old documents
     const toDelete = await removeImportableDocuments(appDb)
     // now bulk update documents - add new ones, delete old ones and update common ones
-    await appDb.bulkDocs(
+    const updateDocsResult = await appDb.bulkDocs(
       mergeUpdateAndDeleteDocuments(toUpdate, toDelete, newMetadata)
     )
+    if (updateDocsResult.some(r => r.error)) {
+      throw new HTTPError("Error importing documents", 500)
+    }
+
+    await cache.destroy(getAppMigrationCacheKey(devId))
+    await processMigrations(devId)
   } finally {
     await tempDb.destroy()
   }

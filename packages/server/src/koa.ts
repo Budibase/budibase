@@ -55,7 +55,7 @@ export default function createKoaApp() {
     signals: "SIGINT SIGTERM",
     timeout: 30000, // in ms
     onShutdown: shutdown,
-    forceExit: !env.isTest,
+    forceExit: !env.isTest(),
     finally: () => {
       console.log("Server shutdown complete")
     },
@@ -69,7 +69,7 @@ export default function createKoaApp() {
       return
     }
     await shutdown()
-    if (!env.isTest) {
+    if (!env.isTest()) {
       process.exit(1)
     }
   })
@@ -77,7 +77,7 @@ export default function createKoaApp() {
   process.on("unhandledRejection", async reason => {
     logging.logAlert("Unhandled Promise Rejection", reason as Error)
     await shutdown()
-    if (!env.isTest) {
+    if (!env.isTest()) {
       process.exit(1)
     }
   })

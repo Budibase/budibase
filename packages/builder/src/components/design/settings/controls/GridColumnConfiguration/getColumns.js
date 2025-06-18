@@ -54,7 +54,7 @@ export const getDefault = (schema = {}) => {
       label: column.name,
       field: column.name,
       active: column.visible ?? true,
-      order: column.visible ? column.order ?? -1 : Number.MAX_SAFE_INTEGER,
+      order: column.visible ? (column.order ?? -1) : Number.MAX_SAFE_INTEGER,
     }))
 
   defaultValues.sort((a, b) => a.order - b.order)

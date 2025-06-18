@@ -852,7 +852,11 @@ if (descriptions.length) {
                 })
               })
 
-            const stringTypes = [FieldType.STRING, FieldType.LONGFORM] as const
+            const stringTypes = [
+              FieldType.STRING,
+              FieldType.LONGFORM,
+              FieldType.BARCODEQR,
+            ] as const
             describe.each(stringTypes)("%s", type => {
               beforeAll(async () => {
                 tableOrViewId = await createTableOrView({
@@ -3634,9 +3638,8 @@ if (descriptions.length) {
                     },
                   })
 
-                  const toRelateTable = await config.api.table.get(
-                    toRelateTableId
-                  )
+                  const toRelateTable =
+                    await config.api.table.get(toRelateTableId)
                   await config.api.table.save({
                     ...toRelateTable,
                     primaryDisplay: "name",
@@ -4053,9 +4056,8 @@ if (descriptions.length) {
                         })
 
                         if (docIds.isViewId(tableOrViewId)) {
-                          const view = await config.api.viewV2.get(
-                            tableOrViewId
-                          )
+                          const view =
+                            await config.api.viewV2.get(tableOrViewId)
                           await config.api.viewV2.update({
                             ...view,
                             schema: {

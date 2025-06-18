@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Modal, Helpers, notifications, Icon } from "@budibase/bbui"
   import {
-    navigationStore,
     screenStore,
     userSelectedResourceMap,
     contextMenuStore,
@@ -17,6 +16,7 @@
   import type { Screen } from "@budibase/types"
 
   export let screen
+  export let deletionAllowed: boolean
 
   let confirmDeleteDialog: ConfirmDialog
   let screenDetailsModal: Modal
@@ -33,15 +33,12 @@
     duplicateScreen.routing.homeScreen = false
 
     try {
-      // Create the screen
-      await screenStore.save(duplicateScreen)
+      const linkLabel = capitalise(duplicateScreen.routing.route.split("/")[1])
 
-      // Add new screen to navigation
-      await navigationStore.saveLink(
-        duplicateScreen.routing.route,
-        capitalise(duplicateScreen.routing.route.split("/")[1]),
-        duplicateScreen.routing.roleId
-      )
+      await screenStore.save({
+        ...duplicateScreen,
+        navigationLinkLabel: linkLabel,
+      })
     } catch (error) {
       notifications.error("Error duplicating screen")
     }
@@ -92,8 +89,9 @@
         name: "Delete",
         keyBind: null,
         visible: true,
-        disabled: false,
+        disabled: !deletionAllowed,
         callback: confirmDeleteDialog.show,
+        tooltip: deletionAllowed ? "" : "At least one screen is required",
       },
     ]
 
@@ -120,7 +118,7 @@
     hoverable
     name="MoreSmallList"
   />
-  <div slot="icon" class="icon">
+  <div slot="right" class="icon">
     <RoleIndicator roleId={screen.routing.roleId} />
   </div>
 </NavItem>

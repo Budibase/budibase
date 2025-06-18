@@ -170,7 +170,7 @@ function enrichParameters(
   // make sure parameters are fully enriched with defaults
   for (const parameter of query.parameters) {
     let value = requestParameters[parameter.name]
-    if (value == null) {
+    if (value == null || value === "") {
       value = parameter.default
     }
     if (query.nullDefaultSupport && paramNotSet(value)) {
@@ -392,9 +392,8 @@ async function execute(
       schema: query.schema,
     }
 
-    const { rows, pagination, extra, info } = await Runner.run<QueryResponse>(
-      inputs
-    )
+    const { rows, pagination, extra, info } =
+      await Runner.run<QueryResponse>(inputs)
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw

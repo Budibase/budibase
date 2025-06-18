@@ -60,10 +60,10 @@ export function format(json: JSONValue, colorOptions: ColorsOptions = {}) {
         color = /true/.test(match)
           ? colors.trueColor
           : /false/.test(match)
-          ? colors.falseColor
-          : /null/.test(match)
-          ? colors.nullColor
-          : color
+            ? colors.falseColor
+            : /null/.test(match)
+              ? colors.nullColor
+              : color
       }
       return `<span style="${style}color:${color}">${match}</span>`
     }

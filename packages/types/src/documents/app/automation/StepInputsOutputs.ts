@@ -7,7 +7,7 @@ import {
   LogicalOperator,
 } from "../../../sdk"
 import { HttpMethod } from "../query"
-import { Row } from "../row"
+import { Row, RowAttachment } from "../row"
 import {
   LoopStepType,
   EmailAttachment,
@@ -88,10 +88,22 @@ export type DiscordStepInputs = {
 export type ExecuteQueryStepInputs = {
   query: {
     queryId: string
+    [key: string]: any
   }
 }
 
 export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
+  info?: any
+}
+
+export type APIRequestStepInputs = {
+  query: {
+    queryId: string
+    [key: string]: any
+  }
+}
+
+export type APIRequestStepOutputs = BaseAutomationOutputs & {
   info?: any
 }
 
@@ -164,12 +176,89 @@ export type OpenAIStepInputs = {
   model: Model
 }
 
+export type ClassifyContentStepInputs = {
+  inputType: string
+  textInput: string
+  categoryItems: Array<{
+    category: string
+  }>
+}
+
+export type ClassifyContentStepOutputs = {
+  category?: string
+  success: boolean
+  response?: string
+}
+
+export type PromptLLMStepInputs = {
+  prompt: string
+  model: Model
+}
+
+export type PromptLLMStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type TranslateStepInputs = {
+  text: string
+  language: string
+}
+
+export type TranslateStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type SummariseStepInputs = {
+  text: string
+  length?: SummariseLength
+}
+
+export type SummariseStepOutputs = {
+  response?: string
+  success: boolean
+}
+
+export type GenerateTextStepInputs = {
+  contentType: string
+  instructions: string
+}
+
+export type GenerateTextStepOutputs = {
+  success: boolean
+  response?: string
+}
+export type ExtractFileDataStepInputs = {
+  file: RowAttachment | string
+  source: "URL" | "Attachment"
+  fileType?: string
+  schema: Record<string, any>
+}
+
+export type ExtractFileDataStepOutputs =
+  | {
+      success: true
+      data: Record<string, any>
+      response?: string
+    }
+  | {
+      success: false
+      data?: Record<string, any>
+      response?: string
+    }
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
   GPT_4 = "gpt-4",
   GPT_4O = "gpt-4o",
   GPT_4O_MINI = "gpt-4o-mini",
+}
+
+export enum SummariseLength {
+  SHORT = "short",
+  MEDIUM = "medium",
+  LONG = "long",
 }
 
 export type OpenAIStepOutputs = Omit<BaseAutomationOutputs, "response"> & {

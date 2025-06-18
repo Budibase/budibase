@@ -1,4 +1,5 @@
 import {
+  AutomationStepResult,
   AutomationStepResultOutputs,
   AutomationTriggerResultOutputs,
   LoopStepType,
@@ -36,4 +37,5 @@ export interface AutomationContext {
   loop?: { currentItem: any }
   _stepIndex: number
   _error: boolean
+  _stepResults: AutomationStepResult[]
 }

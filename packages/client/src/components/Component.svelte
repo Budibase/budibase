@@ -690,7 +690,9 @@
     gap: var(--spacing-m) !important;
     border: 2px dashed var(--spectrum-global-color-gray-400) !important;
     border-radius: 4px !important;
-    transition: padding 260ms ease-out, border 260ms ease-out;
+    transition:
+      padding 260ms ease-out,
+      border 260ms ease-out;
   }
   .interactive {
     cursor: default !important;

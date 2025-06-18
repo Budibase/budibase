@@ -312,7 +312,9 @@
     display: flex;
     align-items: center;
     border: 1px solid var(--spectrum-global-color-gray-200);
-    transition: background 130ms ease-out, border-color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
     flex-direction: row;
     justify-content: flex-start;
     padding: var(--spacing-s) var(--spacing-l);
