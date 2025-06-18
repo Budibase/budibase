@@ -203,7 +203,7 @@
           Editor
         </ActionButton>
         <ActionButton
-          icon="AppleFiles"
+          icon="list-checks"
           quiet
           selected={viewMode === ViewMode.LOGS ||
             showLogsPanel ||
