@@ -11,9 +11,33 @@ tk.freeze(initialTime)
 describe("DatabaseImpl", () => {
   const db = new DatabaseImpl(structures.db.id())
 
+  let mockedVersion: string
+
+  function generateNewMockedVersion() {
+    mockedVersion = structures.semver()
+
+    environment._set("VERSION", mockedVersion)
+  }
+
   beforeEach(() => {
     tk.freeze(initialTime)
-    environment._set("VERSION", "1.3.5")
+
+    generateNewMockedVersion()
+  })
+
+  describe("post", () => {
+    it("persists createdAt, updatedAt and createdVersion fields", async () => {
+      const id = generator.guid()
+      await db.post({ _id: id })
+
+      expect(await db.get(id)).toEqual({
+        _id: id,
+        _rev: expect.any(String),
+        createdAt: initialTime.toISOString(),
+        updatedAt: initialTime.toISOString(),
+        createdVersion: mockedVersion,
+      })
+    })
   })
 
   describe("put", () => {
@@ -26,17 +50,19 @@ describe("DatabaseImpl", () => {
         _rev: expect.any(String),
         createdAt: initialTime.toISOString(),
         updatedAt: initialTime.toISOString(),
-        createdVersion: "1.3.5",
+        createdVersion: mockedVersion,
       })
     })
 
-    it("updates updated at fields", async () => {
+    it("updates updatedAt, keeping createdAt and createdVersion fields", async () => {
       const id = generator.guid()
 
       await db.put({ _id: id })
       tk.travel(100)
 
-      environment._set("VERSION", "1.3.6")
+      const createdVersion = mockedVersion
+      generateNewMockedVersion()
+
       await db.put({ ...(await db.get(id)), newValue: 123 })
 
       expect(await db.get(id)).toEqual({
@@ -45,13 +71,13 @@ describe("DatabaseImpl", () => {
         newValue: 123,
         createdAt: initialTime.toISOString(),
         updatedAt: new Date().toISOString(),
-        createdVersion: "1.3.5",
+        createdVersion: createdVersion,
       })
     })
   })
 
   describe("bulkDocs", () => {
-    it("persists createdAt and updatedAt fields", async () => {
+    it("persists createdAt, updatedAt and createdVersion fields", async () => {
       const ids = generator.unique(() => generator.guid(), 5)
       await db.bulkDocs(ids.map(id => ({ _id: id })))
 
@@ -61,6 +87,7 @@ describe("DatabaseImpl", () => {
           _rev: expect.any(String),
           createdAt: initialTime.toISOString(),
           updatedAt: initialTime.toISOString(),
+          createdVersion: mockedVersion,
         })
       }
     })
@@ -71,6 +98,8 @@ describe("DatabaseImpl", () => {
       await db.bulkDocs(ids.map(id => ({ _id: id })))
       tk.travel(100)
 
+      const createdVersion = mockedVersion
+      generateNewMockedVersion()
       const docsToUpdate = await Promise.all(
         ids.map(async id => ({ ...(await db.get(id)), newValue: 123 }))
       )
@@ -83,6 +112,7 @@ describe("DatabaseImpl", () => {
           newValue: 123,
           createdAt: initialTime.toISOString(),
           updatedAt: new Date().toISOString(),
+          createdVersion: createdVersion,
         })
       }
     })
@@ -108,6 +138,7 @@ describe("DatabaseImpl", () => {
           newValue: 123,
           createdAt: initialTime.toISOString(),
           updatedAt: new Date().toISOString(),
+          createdVersion: mockedVersion,
         })
       }
       for (const { _id } of newDocs) {
@@ -116,6 +147,7 @@ describe("DatabaseImpl", () => {
           _rev: expect.any(String),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          createdVersion: mockedVersion,
         })
       }
     })

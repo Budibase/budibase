@@ -312,9 +312,6 @@ export class DatabaseImpl implements Database {
     if (!document._id) {
       document._id = newid()
     }
-    if (!document._rev) {
-      document.createdVersion = environment.VERSION
-    }
     return this.put(document, opts)
   }
 
