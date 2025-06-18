@@ -28,7 +28,7 @@
     >
       <div class="name">{name}</div>
       {#if collapsible}
-        <Icon size="S" name={show ? "Remove" : "Add"} />
+        <Icon size="S" name={show ? "minus" : "plus"} />
       {/if}
     </div>
   {/if}

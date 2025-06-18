@@ -77,7 +77,7 @@
   }
 </script>
 
-<Icon name="Settings" hoverable size="S" on:click={toggleOpen} />
+<Icon name="gear" weight="fill" hoverable size="S" on:click={toggleOpen} />
 
 <Popover
   open={isOpen}

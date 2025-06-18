@@ -6,7 +6,6 @@
   import StatePanel from "./StatePanel.svelte"
   import BindingsPanel from "./BindingsPanel.svelte"
   import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
-  import NewPill from "@/components/common/NewPill.svelte"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
 
@@ -31,9 +30,6 @@
         >
           <div class="tab-label">
             {tab}
-            {#if tab !== Tabs.Components}
-              <NewPill />
-            {/if}
           </div>
         </ActionButton>
       {/each}

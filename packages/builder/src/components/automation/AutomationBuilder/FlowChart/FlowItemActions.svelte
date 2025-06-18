@@ -12,32 +12,34 @@
   {#if !block.branchNode}
     <Icon
       hoverable
-      name="Branch3"
+      name="git-branch"
+      weight="fill"
       on:click={() => {
         dispatch("branch")
       }}
       tooltipType={TooltipType.Info}
       tooltipPosition={TooltipPosition.Left}
       tooltip={"Create branch"}
-      size={"S"}
+      size="S"
     />
   {/if}
   <Icon
     hoverable
-    name="AddCircle"
+    name="plus-circle"
+    weight="fill"
     on:click={() => {
       automationStore.actions.openActionPanel(block)
     }}
     tooltipType={TooltipType.Info}
     tooltipPosition={TooltipPosition.Right}
     tooltip={"Add a step"}
-    size={"S"}
+    size="S"
   />
 </div>
 
 <style>
   .action-bar {
-    background-color: var(--background);
+    background-color: var(--spectrum-global-color-gray-100);
     border-radius: 4px 4px 4px 4px;
     display: flex;
     gap: var(--spacing-m);

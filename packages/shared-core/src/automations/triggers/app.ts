@@ -8,9 +8,9 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
-  name: "App Action",
+  name: "User action",
   event: AutomationEventType.APP_TRIGGER,
-  icon: "Apps",
+  icon: "cursor-click",
   tagline: "Automation fired from the frontend",
   description: "Trigger an automation from an action inside your app",
   stepId: AutomationTriggerStepId.APP,

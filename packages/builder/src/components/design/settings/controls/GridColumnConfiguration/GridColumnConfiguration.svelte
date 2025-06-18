@@ -5,7 +5,7 @@
     getSchemaForDatasource,
   } from "@/dataBinding"
   import { selectedScreen, componentStore } from "@/stores/builder"
-  import DraggableList from "../DraggableList/DraggableList.svelte"
+  import DraggableList from "../DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
@@ -91,7 +91,7 @@
   .right-content {
     flex: 1;
     min-width: 0;
-    margin-left: 17.5px;
+    margin-left: 26px;
   }
   .sticky-item {
     list-style-type: none;
@@ -115,6 +115,7 @@
     transition: background-color ease-in-out 130ms;
     display: flex;
     align-items: center;
+    height: 32px;
     border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
     padding-left: var(--spacing-s);

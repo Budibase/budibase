@@ -8,7 +8,7 @@ import {
 
 export const definition: AutomationStepDefinition = {
   name: "Looping",
-  icon: "Reuse",
+  icon: "recycle",
   tagline: "Loop the block",
   description: "Loop",
   stepId: AutomationActionStepId.LOOP,

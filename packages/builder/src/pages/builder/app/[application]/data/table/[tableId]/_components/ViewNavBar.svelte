@@ -77,7 +77,7 @@
       table._id,
       [
         {
-          icon: "Edit",
+          icon: "pencil",
           name: "Edit",
           keyBind: null,
           visible: table?.sourceType !== DB_TYPE_EXTERNAL,
@@ -85,7 +85,7 @@
           callback: editTableModal?.show,
         },
         {
-          icon: "Delete",
+          icon: "trash",
           name: "Delete",
           keyBind: null,
           visible: true,
@@ -109,7 +109,7 @@
       view.id,
       [
         {
-          icon: "Edit",
+          icon: "pencil",
           name: "Edit",
           keyBind: null,
           visible: true,
@@ -117,7 +117,7 @@
           callback: editViewModal?.show,
         },
         {
-          icon: "Delete",
+          icon: "trash",
           name: "Delete",
           keyBind: null,
           visible: true,
@@ -204,7 +204,9 @@
       <Icon
         on:click={openTableContextMenu}
         hoverable
-        name="MoreSmallList"
+        size="M"
+        weight="bold"
+        name="dots-three"
         color="var(--spectrum-global-color-gray-600)"
         hoverColor="var(--spectrum-global-color-gray-900)"
       />
@@ -230,7 +232,9 @@
           <Icon
             on:click={e => openViewContextMenu(e, view)}
             hoverable
-            name="MoreSmallList"
+            size="M"
+            weight="bold"
+            name="dots-three"
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
           />
@@ -255,7 +259,9 @@
           <Icon
             on:click={e => openViewContextMenu(e, view)}
             hoverable
-            name="MoreSmallList"
+            size="M"
+            weight="bold"
+            name="dots-three"
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
           />
@@ -272,7 +278,7 @@
   {#if overflowedViews.length}
     <ActionMenu align="right" bind:this={overflowMenu}>
       <div slot="control" let:open>
-        <ActionButton icon="ChevronDown" quiet selected={open || viewHidden}>
+        <ActionButton icon="caret-down" quiet selected={open || viewHidden}>
           {overflowedViews.length} more
         </ActionButton>
       </div>
@@ -292,14 +298,14 @@
             >
               <MenuItem icon={viewHidden ? "Checkmark" : null}>
                 {view.name}
-                <Icon slot="right" name="ChevronRight" />
+                <Icon slot="right" name="caret-right" />
               </MenuItem>
             </a>
           </div>
-          <MenuItem icon="Edit" on:click={() => editOverflowView(view)}>
+          <MenuItem icon="pencil" on:click={() => editOverflowView(view)}>
             Edit
           </MenuItem>
-          <MenuItem icon="Delete" on:click={() => deleteOverflowView(view)}>
+          <MenuItem icon="trash" on:click={() => deleteOverflowView(view)}>
             Delete
           </MenuItem>
         </ActionMenu>

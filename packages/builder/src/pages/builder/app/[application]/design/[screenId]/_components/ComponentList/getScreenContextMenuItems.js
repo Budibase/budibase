@@ -19,7 +19,7 @@ const getContextMenuItems = (component, showCopy) => {
 
   return [
     {
-      icon: "Copy",
+      icon: "copy",
       name: "Copy",
       keyBind: "Ctrl+C",
       visible: showCopy,
@@ -27,7 +27,7 @@ const getContextMenuItems = (component, showCopy) => {
       callback: () => storeComponentForCopy(false),
     },
     {
-      icon: "LayersSendToBack",
+      icon: "stack",
       name: "Paste",
       keyBind: "Ctrl+V",
       visible: true,

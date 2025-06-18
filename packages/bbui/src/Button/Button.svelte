@@ -2,6 +2,7 @@
   import "@spectrum-css/button/dist/index-vars.css"
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { createEventDispatcher } from "svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let type = undefined
   export let disabled = false
@@ -48,14 +49,9 @@
       <span class="spectrum-Button-label"><slot /></span>
     {/if}
     {#if icon}
-      <svg
-        class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-        focusable="false"
-        aria-hidden="true"
-        aria-label={icon}
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      <span class="icon">
+        <Icon name={icon} size={size.toUpperCase()} />
+      </span>
     {/if}
     {#if $$slots && !reverse}
       <span class="spectrum-Button-label"><slot /></span>
@@ -66,6 +62,8 @@
 <style>
   button {
     position: relative;
+    display: flex;
+    gap: var(--spacing-s);
   }
   button.is-disabled {
     cursor: default;
@@ -99,15 +97,5 @@
   }
   .spectrum-Button--secondary.new-styles.is-disabled {
     color: var(--spectrum-global-color-gray-500);
-  }
-  .spectrum-Button .spectrum-Button-label + .spectrum-Icon {
-    margin-left: var(--spectrum-button-primary-icon-gap);
-    margin-right: calc(
-      -1 *
-        (
-          var(--spectrum-button-primary-textonly-padding-left-adjusted) -
-            var(--spectrum-button-primary-padding-left-adjusted)
-        )
-    );
   }
 </style>
