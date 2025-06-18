@@ -514,6 +514,10 @@ const rowActionHandler = async action => {
   })
 }
 
+const delayHandler = async action => {
+  return new Promise(resolve => setTimeout(resolve, 3000))
+}
+
 const handlerMap = {
   ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
@@ -537,6 +541,7 @@ const handlerMap = {
   ["Download File"]: downloadFileHandler,
   ["Row Action"]: rowActionHandler,
   ["Copy To Clipboard"]: copyToClipboardHandler,
+  ["Delay"]: delayHandler,
 }
 
 const confirmTextMap = {
