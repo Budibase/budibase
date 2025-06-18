@@ -169,11 +169,11 @@ export default class TestConfiguration {
     return this.prodAppId
   }
 
-  getUser(): User {
+  getUser() {
     if (!this.user) {
       throw new Error("User has not been initialised, call config.init() first")
     }
-    return this.user
+    return { ...this.user, _id: this.user._id! }
   }
 
   getUserDetails() {
@@ -416,6 +416,7 @@ export default class TestConfiguration {
           sessionId: this.sessionIdForUser(userId),
           tenantId: this.getTenantId(),
           email: user.email,
+          csrfToken: this.csrfToken,
         })
       }
       // have to fake this

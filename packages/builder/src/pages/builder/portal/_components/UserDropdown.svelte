@@ -34,18 +34,18 @@
     {:else}
       <div class="user-dropdown">
         <UserAvatar size="M" user={$auth.user} showTooltip={false} />
-        <Icon size="L" name="ChevronDown" />
+        <Icon size="L" name="caret-down" />
       </div>
     {/if}
   </svelte:fragment>
 
-  <MenuItem icon="UserEdit" on:click={() => profileModal.show()}>
+  <MenuItem icon="user-gear" on:click={() => profileModal.show()}>
     My profile
   </MenuItem>
-  <MenuItem icon="Moon" on:click={() => themeModal.show()}>Theme</MenuItem>
+  <MenuItem icon="moon" on:click={() => themeModal.show()}>Theme</MenuItem>
   {#if !$auth.isSSO}
     <MenuItem
-      icon="LockClosed"
+      icon="lock"
       on:click={() => {
         if (isOwner) {
           window.location.href = `${$admin.accountPortalUrl}/portal/account`
@@ -57,13 +57,13 @@
       Update password
     </MenuItem>
   {/if}
-  <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
+  <MenuItem icon="key" on:click={() => apiKeyModal.show()}>
     View API key
   </MenuItem>
-  <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
+  <MenuItem icon="code" on:click={() => $goto("../apps")}>
     Close developer mode
   </MenuItem>
-  <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+  <MenuItem icon="sign-out" on:click={logout}>Log out</MenuItem>
 </ActionMenu>
 
 <Modal bind:this={themeModal}>

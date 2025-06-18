@@ -1,19 +1,26 @@
-<script>
+<script lang="ts">
   import AppPreview from "./AppPreview.svelte"
   import {
     screenStore,
     appStore,
     selectedScreen,
     previewStore,
+    deploymentStore,
+    selectedAppUrls,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider } from "@budibase/bbui"
+  import { ActionButton, Divider, Link } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
+
+  $: isPublished = $deploymentStore.isPublished
+
+  $: liveUrl = $selectedAppUrls.liveUrl
 
   const previewApp = () => {
     previewStore.showPreview(true)
@@ -28,16 +35,21 @@
   <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
-      <UndoRedoControl store={screenStore.history} />
+      {#if $featureFlags.WORKSPACE_APPS && isPublished}
+        <Link href={liveUrl} target="_blank">{liveUrl}</Link>
+      {/if}
     </div>
     <div class="header-right">
+      <UndoRedoControl store={screenStore.history} />
+      <div class="divider-container">
+        <Divider size="S" vertical />
+      </div>
       <div class="actions">
         {#if !isPDF}
           {#if $appStore.clientFeatures.devicePreview}
             <ActionButton
               quiet
-              icon={mobile ? "DevicePhone" : "DeviceDesktop"}
-              selected
+              icon={mobile ? "device-mobile-camera" : "monitor"}
               on:click={togglePreviewDevice}
             />
           {/if}
@@ -45,8 +57,10 @@
         {/if}
         <ScreenErrorsButton />
       </div>
-      <Divider vertical />
-      <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+      <div class="divider-container">
+        <Divider size="S" vertical />
+      </div>
+      <ActionButton quiet icon="play" on:click={previewApp}>
         Preview
       </ActionButton>
     </div>
@@ -86,17 +100,22 @@
 
   .header-left {
     display: flex;
+    padding-left: var(--spacing-s);
+    align-items: center;
   }
-  .header-left :global(div) {
-    border-right: none;
-  }
+
   .header-right {
     margin-left: auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-m);
+  }
+  .divider-container {
+    display: flex;
+    align-items: center;
+    height: 18px;
   }
   .content {
     flex: 1 1 auto;
@@ -104,7 +123,7 @@
   .actions {
     display: flex;
     flex-direction: row;
-    gap: 4px;
+    gap: 2px;
     align-items: center;
   }
 </style>

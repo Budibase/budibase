@@ -15,6 +15,7 @@ const getTableScreenTemplate = ({
   tableOrView,
   permissions,
   gridLayout,
+  workspaceAppId,
 }: {
   route: string
   updateScreenRoute: string
@@ -22,6 +23,7 @@ const getTableScreenTemplate = ({
   tableOrView: SourceOption
   permissions: UIPermissions
   gridLayout: boolean
+  workspaceAppId: string | undefined
 }) => {
   const buttonGroup = new Component("@budibase/standard-components/buttongroup")
   const createButton = new Component("@budibase/standard-components/button")
@@ -85,7 +87,7 @@ const getTableScreenTemplate = ({
     .gridDesktopColSpan(1, 13)
     .gridDesktopRowSpan(3, 21)
 
-  const template = new Screen()
+  const template = new Screen(workspaceAppId)
     .route(route)
     .instanceName(`${tableOrView.name} - List`)
     .customProps({ layout: gridLayout ? "grid" : "flex" })
@@ -107,11 +109,13 @@ const getUpdateScreenTemplate = async ({
   tableScreenRoute,
   tableOrView,
   permissions,
+  workspaceAppId,
 }: {
   route: string
   tableScreenRoute: string
   tableOrView: SourceOption
   permissions: UIPermissions
+  workspaceAppId: string | undefined
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
@@ -196,7 +200,7 @@ const getUpdateScreenTemplate = async ({
     buttonsCollapsed: buttons.length > 5,
   })
 
-  const template = new Screen()
+  const template = new Screen(workspaceAppId)
     .route(route)
     .instanceName(`Update row`)
     .role(permissions.write)
@@ -215,11 +219,13 @@ const getCreateScreenTemplate = ({
   tableScreenRoute,
   tableOrView,
   permissions,
+  workspaceAppId,
 }: {
   route: string
   tableScreenRoute: string
   tableOrView: SourceOption
   permissions: UIPermissions
+  workspaceAppId: string | undefined
 }) => {
   const formBlockId = Helpers.uuid()
   const formId = `${formBlockId}-form`
@@ -267,7 +273,7 @@ const getCreateScreenTemplate = ({
       buttons: [saveButton.json()],
     })
 
-  const template = new Screen()
+  const template = new Screen(workspaceAppId)
     .route(route)
     .instanceName("Create row")
     .role(permissions.write)
@@ -285,27 +291,32 @@ const newScreen = async ({
   tableOrView,
   permissions,
   screens,
+  workspaceAppId,
 }: {
   tableOrView: SourceOption
   permissions: UIPermissions
   screens: ScreenDoc[]
+  workspaceAppId: string | undefined
 }) => {
   const tableScreenRoute = getValidRoute(
     screens,
     tableOrView.name,
-    permissions.write
+    permissions.write,
+    workspaceAppId
   )
 
   const updateScreenRoute = getValidRoute(
     screens,
     `/${tableOrView.name}/edit/:id`,
-    permissions.write
+    permissions.write,
+    workspaceAppId
   )
 
   const createScreenRoute = getValidRoute(
     screens,
     `/${tableOrView.name}/new`,
-    permissions.write
+    permissions.write,
+    workspaceAppId
   )
 
   const tableScreenTemplate = getTableScreenTemplate({
@@ -315,6 +326,7 @@ const newScreen = async ({
     permissions,
     tableOrView,
     gridLayout: true,
+    workspaceAppId,
   })
 
   const updateScreenTemplate = await getUpdateScreenTemplate({
@@ -322,6 +334,7 @@ const newScreen = async ({
     tableScreenRoute,
     tableOrView,
     permissions,
+    workspaceAppId,
   })
 
   const createScreenTemplate = getCreateScreenTemplate({
@@ -329,6 +342,7 @@ const newScreen = async ({
     tableScreenRoute,
     tableOrView,
     permissions,
+    workspaceAppId,
   })
 
   return [tableScreenTemplate, updateScreenTemplate, createScreenTemplate]

@@ -4,6 +4,8 @@
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
+  import CustomStylesSection from "../Component/CustomStylesSection.svelte"
+  import ConditionalUISection from "../Component/ConditionalUISection.svelte"
   import RoleSelect from "@/components/common/RoleSelect.svelte"
   import SubLinksDrawer from "./SubLinksDrawer.svelte"
   import { screenStore } from "@/stores/builder"
@@ -11,6 +13,16 @@
   export let anchor
   export let navItem
   export let bindings
+  let actionOptions = [
+    {
+      label: "Hide component",
+      value: "hide",
+    },
+    {
+      label: "Show component",
+      value: "show",
+    },
+  ]
 
   const draggable = getContext("draggable")
   const dispatch = createEventDispatcher()
@@ -47,7 +59,7 @@
   }
 </script>
 
-<Icon name={navItem.type === "sublinks" ? "Dropdown" : "Link"} size="S" />
+<Icon name={navItem.type === "sublinks" ? "caret-down" : "link"} size="S" />
 
 <Popover
   bind:this={popover}
@@ -125,6 +137,30 @@
       value={navItem.roleId}
       onChange={update("roleId")}
     />
+    <CustomStylesSection
+      componentInstance={navItem}
+      componentDefinition={null}
+      {bindings}
+      iconTooltip="Navigation item"
+      componentTitle={navItem.text}
+      onSave={async value => {
+        update("_styles")({ custom: value })
+      }}
+      on:drawerShow={() => drawerCount++}
+      on:drawerHide={() => drawerCount--}
+    />
+    <ConditionalUISection
+      componentInstance={navItem}
+      componentDefinition={null}
+      {bindings}
+      componentBindings={[]}
+      {actionOptions}
+      onSave={async value => {
+        update("_conditions")(value)
+      }}
+      on:drawerShow={() => drawerCount++}
+      on:drawerHide={() => drawerCount--}
+    />
   </div>
 </Popover>
 
@@ -137,5 +173,14 @@
     align-items: stretch;
     gap: 8px;
     padding: var(--spacing-xl);
+    max-height: 270px;
+    overflow: scroll;
+  }
+  .settings :global(.property-group-container) {
+    border: none;
+  }
+  .settings :global(.property-group-name),
+  .settings :global(.property-panel) {
+    padding: 5px 0;
   }
 </style>

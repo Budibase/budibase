@@ -84,7 +84,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
         id,
         stepId,
         name: opts?.stepName || schema.name,
-      })
+      } as AutomationStep)
       if (opts?.stepName) {
         this.stepNames[id] = opts.stepName
       }
@@ -97,6 +97,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   deleteRow = this.step(AutomationActionStepId.DELETE_ROW)
   sendSmtpEmail = this.step(AutomationActionStepId.SEND_EMAIL_SMTP)
   executeQuery = this.step(AutomationActionStepId.EXECUTE_QUERY)
+  apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
   loop = this.step(AutomationActionStepId.LOOP)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)
@@ -115,6 +116,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   make = this.step(AutomationActionStepId.integromat)
   discord = this.step(AutomationActionStepId.discord)
   delay = this.step(AutomationActionStepId.DELAY)
+  extractFileData = this.step(AutomationActionStepId.EXTRACT_FILE_DATA)
 
   protected addBranchStep(branchConfig: BranchConfig): void {
     const inputs: BranchStepInputs = {

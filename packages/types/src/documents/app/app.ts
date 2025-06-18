@@ -19,6 +19,7 @@ export interface App extends Document {
   revertableVersion?: string
   lockedBy?: User
   sessions?: SocketSession[]
+  // @deprecated  use workspace app navigation instead
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
   icon?: AppIcon
@@ -38,7 +39,7 @@ export interface AppInstance {
 }
 
 export interface AppNavigation {
-  navigation: string
+  navigation: "Top" | "Left"
   title?: string
   navWidth?: string
   sticky?: boolean
@@ -48,7 +49,7 @@ export interface AppNavigation {
   navBackground?: string
   navTextColor?: string
   links?: AppNavigationLink[]
-  textAlign?: string
+  textAlign?: "Left" | "Center" | "Right"
 }
 
 export interface AppNavigationLink {

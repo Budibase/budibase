@@ -6,18 +6,22 @@
   export let size = "S"
   export let position = TooltipPosition.Top
   export let noWrap = false
-  export let hoverColor = "var(--ink)"
 </script>
 
 <Icon
-  name={app?.favourite ? "Star" : "StarOutline"}
+  name="star"
   hoverable
-  color={app?.favourite ? "var(--spectrum-global-color-yellow-1000)" : null}
+  weight={app?.favourite ? "fill" : "regular"}
+  color={app?.favourite
+    ? "var(--spectrum-global-color-yellow-1000)"
+    : undefined}
   tooltip={app?.favourite ? "Remove from favourites" : "Add to favourites"}
   tooltipType={TooltipType.Info}
   tooltipPosition={position}
   tooltipWrap={noWrap}
-  {hoverColor}
+  hoverColor={app?.favourite
+    ? "var(--spectrum-global-color-yellow-700)"
+    : undefined}
   {size}
   on:click={async e => {
     e.stopPropagation()

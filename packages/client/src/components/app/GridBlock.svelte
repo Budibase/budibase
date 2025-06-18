@@ -269,7 +269,6 @@
     canEditColumns={false}
     canExpandRows={false}
     canSaveSchema={false}
-    showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
     buttons={enrichedButtons}

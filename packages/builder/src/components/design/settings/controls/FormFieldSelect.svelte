@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Combobox } from "@budibase/bbui"
   import { selectedScreen } from "@/stores/builder"
   import { getComponentFieldOptions } from "@/helpers/formFields"
@@ -8,7 +8,7 @@
   export let type
 
   $: options = getComponentFieldOptions(
-    $selectedScreen?.props,
+    $selectedScreen,
     componentInstance?._id,
     type
   )

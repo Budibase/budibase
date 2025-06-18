@@ -16,6 +16,7 @@
   import type { Screen } from "@budibase/types"
 
   export let screen
+  export let deletionAllowed: boolean
 
   let confirmDeleteDialog: ConfirmDialog
   let screenDetailsModal: Modal
@@ -68,7 +69,7 @@
 
     const items = [
       {
-        icon: "ShowOneLayer",
+        icon: "stack",
         name: "Paste inside",
         keyBind: null,
         visible: true,
@@ -76,7 +77,7 @@
         callback: () => pasteComponent("inside"),
       },
       {
-        icon: "Duplicate",
+        icon: "copy",
         name: "Duplicate",
         keyBind: null,
         visible: true,
@@ -84,12 +85,13 @@
         callback: screenDetailsModal.show,
       },
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
-        disabled: false,
+        disabled: !deletionAllowed,
         callback: confirmDeleteDialog.show,
+        tooltip: deletionAllowed ? "" : "At least one screen is required",
       },
     ]
 
@@ -100,7 +102,7 @@
 <NavItem
   on:contextmenu={e => openContextMenu(e, screen)}
   scrollable
-  icon={screen.routing.homeScreen ? "Home" : null}
+  icon={screen.routing.homeScreen ? "house" : null}
   indentLevel={0}
   selected={$screenStore.selectedScreenId === screen._id}
   hovering={screen._id === $contextMenuStore.id}
@@ -112,11 +114,11 @@
 >
   <Icon
     on:click={e => openContextMenu(e, screen)}
-    size="S"
+    size="M"
     hoverable
-    name="MoreSmallList"
+    name="dots-three"
   />
-  <div slot="icon" class="icon">
+  <div slot="right" class="icon">
     <RoleIndicator roleId={screen.routing.roleId} />
   </div>
 </NavItem>

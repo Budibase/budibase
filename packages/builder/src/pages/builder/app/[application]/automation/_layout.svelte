@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Layout, Button, Modal } from "@budibase/bbui"
+  import { Heading, Body, Layout, Button, Modal, Icon } from "@budibase/bbui"
   import AutomationPanel from "@/components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
@@ -47,14 +47,11 @@
         <div class="centered">
           <div class="main">
             <Layout gap="S" justifyItems="center">
-              <svg
-                width="60px"
-                height="60px"
-                class="spectrum-Icon"
-                focusable="false"
-              >
-                <use xlink:href="#spectrum-icon-18-WorkflowAdd" />
-              </svg>
+              <Icon
+                name="tree-structure"
+                size="XXXL"
+                color="var(--spectrum-global-color-gray-700)"
+              />
               <Heading size="M">You have no automations</Heading>
               <Body size="M">Let's fix that. Call the bots!</Body>
               <Button on:click={() => modal.show()} size="M" cta>

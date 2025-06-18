@@ -1,14 +1,19 @@
 import { SourceType } from "@budibase/types"
-import { docIds } from "@budibase/backend-core"
+import {
+  isDatasourceOrDatasourcePlusId,
+  isQueryId,
+  isTableIdOrExternalTableId,
+  isViewId,
+} from "@budibase/shared-core"
 
 export function getSourceType(sourceId: string): SourceType {
-  if (docIds.isTableId(sourceId)) {
+  if (isTableIdOrExternalTableId(sourceId)) {
     return SourceType.TABLE
-  } else if (docIds.isViewId(sourceId)) {
+  } else if (isViewId(sourceId)) {
     return SourceType.VIEW
-  } else if (docIds.isDatasourceId(sourceId)) {
+  } else if (isDatasourceOrDatasourcePlusId(sourceId)) {
     return SourceType.DATASOURCE
-  } else if (docIds.isQueryId(sourceId)) {
+  } else if (isQueryId(sourceId)) {
     return SourceType.QUERY
   }
   throw new Error(`Unknown source type for source "${sourceId}"`)

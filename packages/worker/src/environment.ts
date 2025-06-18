@@ -1,14 +1,18 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
-import { join } from "path"
+import { join, resolve } from "path"
 import cloneDeep from "lodash/cloneDeep"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 
+const TOP_LEVEL_PATH =
+  process.env.TOP_LEVEL_PATH ||
+  process.env.WORKER_TOP_LEVEL_PATH ||
+  resolve(join(__dirname, "..", "..", ".."))
 let LOADED = false
 if (!LOADED && coreEnv.isDev() && !coreEnv.isTest()) {
   require("dotenv").config({
-    path: join(__dirname, "..", ".env"),
+    path: join(TOP_LEVEL_PATH, ".env"),
   })
   LOADED = true
 }
@@ -34,12 +38,15 @@ const environment = {
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   REDIS_URL: process.env.REDIS_URL,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
+  INTERNAL_ACCOUNT_PORTAL_URL:
+    process.env.INTERNAL_ACCOUNT_PORTAL_URL || process.env.ACCOUNT_PORTAL_URL,
   PLATFORM_URL: process.env.PLATFORM_URL,
   APPS_URL: process.env.APPS_URL,
   // ports
   // prefer worker port to generic port
   PORT: process.env.WORKER_PORT || process.env.PORT,
   CLUSTER_PORT: process.env.CLUSTER_PORT,
+  WORKER_SERVICE: process.env.WORKER_SERVICE,
   // flags
   NODE_ENV: process.env.NODE_ENV,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
@@ -59,6 +66,7 @@ const environment = {
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
   SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
+  TOP_LEVEL_PATH: TOP_LEVEL_PATH,
   /**
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */

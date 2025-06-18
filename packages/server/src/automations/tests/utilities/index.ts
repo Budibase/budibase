@@ -1,7 +1,17 @@
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import env from "../../../environment"
-import { Automation, AutomationData, Datasource } from "@budibase/types"
+import {
+  Automation,
+  AutomationData,
+  Datasource,
+  GoogleSheetsQueryFields,
+  MongoQueryFields,
+  QueryParameter,
+  QueryVerb,
+  RestQueryFields,
+  SQLQueryFields,
+} from "@budibase/types"
 import { Knex } from "knex"
 import { getQueue } from "../.."
 import { Job } from "bull"
@@ -198,6 +208,34 @@ export async function saveTestQuery(
     schema: {},
     readable: true,
     queryVerb: "read",
+  })
+}
+
+export async function saveRESTQuery(
+  config: TestConfiguration,
+  datasource: Datasource,
+  fields?: RestQueryFields &
+    SQLQueryFields &
+    MongoQueryFields &
+    GoogleSheetsQueryFields,
+  parameters?: QueryParameter[],
+  verb?: QueryVerb
+) {
+  const requestFields =
+    fields ||
+    ({
+      bodyType: "none",
+    } as RestQueryFields)
+
+  return await config.api.query.save({
+    name: "test query",
+    datasourceId: datasource._id!,
+    parameters: parameters || [],
+    fields: requestFields,
+    transformer: "return data",
+    schema: {},
+    readable: true,
+    queryVerb: verb || "read",
   })
 }
 

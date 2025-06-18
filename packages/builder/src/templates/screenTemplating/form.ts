@@ -58,11 +58,13 @@ const form = async ({
   type,
   permissions,
   screens,
+  workspaceAppId,
 }: {
   tableOrView: any
   type: any
   permissions: any
   screens: ScreenDoc[]
+  workspaceAppId: string | undefined
 }) => {
   const id = Helpers.uuid()
   const typeSpecificRoute = getTypeSpecificRoute(tableOrView, type)
@@ -97,8 +99,8 @@ const form = async ({
     }
   }
 
-  const template = new Screen()
-    .route(getValidRoute(screens, typeSpecificRoute, role))
+  const template = new Screen(workspaceAppId)
+    .route(getValidRoute(screens, typeSpecificRoute, role, workspaceAppId))
     .instanceName(`${tableOrView.name} - Form`)
     .role(role)
     .autoTableId(tableOrView.id)

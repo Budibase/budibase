@@ -1,63 +1,43 @@
-import { db } from "@budibase/backend-core"
+import { db, HTTPError } from "@budibase/backend-core"
 import {
   FieldType,
   isLogicalSearchOperator,
   SearchFilters,
   Table,
 } from "@budibase/types"
-import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
 import { isInternal } from "../tables/utils"
 
-export const removeInvalidFilters = (
+export const validateFilters = (
   filters: SearchFilters,
   validFields: string[]
 ) => {
-  const result = cloneDeep(filters)
-
   validFields = validFields.map(f => f.toLowerCase())
-  for (const filterKey of Object.keys(
-    result || {}
-  ) as (keyof SearchFilters)[]) {
-    if (isLogicalSearchOperator(filterKey)) {
-      const filter = result[filterKey]
+  for (const key of Object.keys(filters || {}) as (keyof SearchFilters)[]) {
+    if (isLogicalSearchOperator(key)) {
+      const filter = filters[key]
+      if (!filter) {
+        continue
+      }
+      for (const condition of filter.conditions) {
+        validateFilters(condition, validFields)
+      }
+    } else {
+      const filter = filters[key]
       if (!filter || typeof filter !== "object") {
         continue
       }
-      const resultingConditions: SearchFilters[] = []
-      for (const condition of filter.conditions) {
-        const resultingCondition = removeInvalidFilters(condition, validFields)
-        if (Object.keys(resultingCondition || {}).length) {
-          resultingConditions.push(resultingCondition)
+
+      for (const key of Object.keys(filter)) {
+        if (
+          !validFields.includes(key.toLowerCase()) &&
+          !validFields.includes(db.removeKeyNumbering(key).toLowerCase())
+        ) {
+          throw new HTTPError(`Invalid filter field: ${key}`, 400)
         }
       }
-      if (resultingConditions.length) {
-        filter.conditions = resultingConditions
-      } else {
-        delete result[filterKey]
-      }
-      continue
-    }
-
-    const filter = result[filterKey]
-    if (!filter || typeof filter !== "object") {
-      continue
-    }
-
-    for (const columnKey of Object.keys(filter)) {
-      const possibleKeys = [columnKey, db.removeKeyNumbering(columnKey)].map(
-        c => c.toLowerCase()
-      )
-      if (!validFields.some(f => possibleKeys.includes(f.toLowerCase()))) {
-        delete filter[columnKey as keyof typeof filter]
-      }
-    }
-    if (!Object.keys(filter).length) {
-      delete result[filterKey]
     }
   }
-
-  return result
 }
 
 export const getQueryableFields = async (

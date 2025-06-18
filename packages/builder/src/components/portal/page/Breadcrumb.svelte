@@ -1,15 +1,15 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
 
-  export let url
-  export let text
+  export let url: string | undefined = undefined
+  export let text: string
 </script>
 
 <div>
   <a href={url}>
     {text}
   </a>
-  <Icon name="ChevronRight" />
+  <Icon name="caret-right" />
 </div>
 
 <style>
@@ -23,7 +23,7 @@
     font-size: 16px;
     font-weight: 600;
   }
-  div :global(.spectrum-Icon),
+  div :global(i),
   a {
     color: inherit;
     transition: color 130ms ease-out;

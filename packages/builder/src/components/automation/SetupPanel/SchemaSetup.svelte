@@ -31,8 +31,14 @@
 
   const dispatch = createEventDispatcher()
   const memoValue = memo({ data: {} })
+  let initialized = false
 
-  $: memoValue.set({ data: value })
+  $: {
+    if (!initialized || Object.keys($memoValue.data).length === 0) {
+      memoValue.set({ data: value })
+      initialized = true
+    }
+  }
 
   $: fieldsArray = $memoValue.data
     ? Object.entries($memoValue.data).map(([name, type]) => ({
@@ -118,7 +124,7 @@
       />
     </div>
   {/each}
-  <Button quiet secondary icon="Add" on:click={addField}>Add field</Button>
+  <Button quiet secondary icon="plus" on:click={addField}>Add field</Button>
 </div>
 
 <style>

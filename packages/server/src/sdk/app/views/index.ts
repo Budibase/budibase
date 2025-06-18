@@ -16,13 +16,14 @@ import {
   ViewV2ColumnEnriched,
   ViewV2Enriched,
 } from "@budibase/types"
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import {
+  getTableIdFromViewId,
   helpers,
+  isViewId,
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
-import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
@@ -37,14 +38,14 @@ function pickApi(tableId: any) {
 }
 
 export async function get(viewId: string): Promise<ViewV2> {
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
   return pickApi(tableId).get(viewId)
 }
 
 export async function getEnriched(
   viewId: string
 ): Promise<ViewV2Enriched | undefined> {
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
   return pickApi(tableId).getEnriched(viewId)
 }
 
@@ -72,21 +73,21 @@ export async function getTable(view: string | ViewV2): Promise<Table> {
   if (cached) {
     return cached
   }
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
   const table = await sdk.tables.getTable(tableId)
   context.setTableForView(viewId, table)
   return table
 }
 
 export function isView(view: any): view is ViewV2 {
-  return view.id && docIds.isViewId(view.id) && view.version === 2
+  return view.id && isViewId(view.id) && view.version === 2
 }
 
 export function isInternal(viewId: string) {
-  if (!docIds.isViewId(viewId)) {
+  if (!isViewId(viewId)) {
     return false
   }
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
   return !isExternalTableID(tableId)
 }
 
@@ -344,7 +345,7 @@ export function isV2(view: View | ViewV2) {
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const tableId = getTableIdFromViewId(viewId)
   return pickApi(tableId).remove(viewId)
 }
 
@@ -418,7 +419,7 @@ export async function enrichSchema(
         !helpers.schema.isDeprecatedSingleUserColumn(relTableField)
       ) {
         // Forcing the icon, otherwise we would need to pass the constraints to show the proper icon
-        enrichedFieldSchema.icon = "UserGroup"
+        enrichedFieldSchema.icon = "users-three"
       }
       result[relTableFieldName] = enrichedFieldSchema
     }

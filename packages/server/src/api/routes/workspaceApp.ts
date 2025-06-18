@@ -8,7 +8,7 @@ import Joi from "joi"
 
 const baseSchema = {
   name: Joi.string().required(),
-  urlPrefix: Joi.string()
+  url: Joi.string()
     .required()
     .regex(/^\/\w*$/),
   icon: Joi.string().required(),
@@ -23,6 +23,7 @@ const updateSchema = Joi.object({
   _id: Joi.string().required(),
   _rev: Joi.string().required(),
   ...baseSchema,
+  navigation: Joi.object().required(),
 })
 
 function workspaceAppValidator(

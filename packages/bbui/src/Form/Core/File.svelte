@@ -63,7 +63,7 @@
       <div class="filename">{statusText}</div>
       {#if !disabled || (allowClear === true && disabled)}
         <div class="delete-button" on:click={clearFile}>
-          <Icon name="Close" size="XS" />
+          <Icon name="x" size="XS" />
         </div>
       {/if}
     </div>
@@ -84,7 +84,7 @@
       {/if}
       {#if !disabled || (allowClear === true && disabled)}
         <div class="delete-button" on:click={clearFile}>
-          <Icon name="Close" size="XS" />
+          <Icon name="x" size="XS" />
         </div>
       {/if}
     </div>

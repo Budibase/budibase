@@ -3,7 +3,7 @@ import { Helpers } from "@budibase/bbui"
 import { ScreenVariant, Screen as ScreenDoc } from "@budibase/types"
 
 export class Screen extends BaseStructure<ScreenDoc> {
-  constructor() {
+  constructor(workspaceAppId: string | undefined) {
     super(true, {
       showNavigation: true,
       width: "Large",
@@ -31,6 +31,7 @@ export class Screen extends BaseStructure<ScreenDoc> {
         homeScreen: false,
       },
       name: "screen-id",
+      workspaceAppId,
     })
   }
 
@@ -83,8 +84,8 @@ export class Screen extends BaseStructure<ScreenDoc> {
 }
 
 export class PDFScreen extends Screen {
-  constructor() {
-    super()
+  constructor(workspaceAppId: string | undefined) {
+    super(workspaceAppId)
     this._json.variant = ScreenVariant.PDF
     this._json.width = "Max"
     this._json.showNavigation = false

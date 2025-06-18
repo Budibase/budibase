@@ -2,10 +2,11 @@
   import Field from "./Field.svelte"
   import Search from "./Core/Search.svelte"
   import { createEventDispatcher } from "svelte"
+  import type { LabelPosition } from "../types"
 
   export let value: string | undefined = undefined
   export let label: string | undefined = undefined
-  export let labelPosition: "above" | "below" = "above"
+  export let labelPosition: LabelPosition = "above"
   export let placeholder: string | undefined = undefined
   export let disabled = false
   export let updateOnChange = true

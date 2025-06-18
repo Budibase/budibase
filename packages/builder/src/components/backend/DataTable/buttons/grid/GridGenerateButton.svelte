@@ -111,7 +111,7 @@
       <div>
         <ListItem
           title="Table"
-          icon="TableEdit"
+          icon="table"
           hoverable
           on:click={() => startScreenWizard(AutoScreenTypes.TABLE)}
           iconColor="var(--spectrum-global-color-gray-600)"
@@ -120,7 +120,7 @@
       <div>
         <ListItem
           title="Form"
-          icon="Form"
+          icon="list"
           hoverable
           on:click={() => startScreenWizard(AutoScreenTypes.FORM)}
           iconColor="var(--spectrum-global-color-gray-600)"
@@ -136,7 +136,7 @@
         <div>
           <ListItem
             title="Row is created"
-            icon="TableRowAddBottom"
+            icon="rows-plus-bottom"
             hoverable
             on:click={() => createAutomation(TriggerStepID.ROW_SAVED)}
             iconColor="var(--spectrum-global-color-gray-600)"
@@ -145,7 +145,7 @@
         <div>
           <ListItem
             title="Row is updated"
-            icon="Refresh"
+            icon="arrow-clockwise"
             hoverable
             on:click={() => createAutomation(TriggerStepID.ROW_UPDATED)}
             iconColor="var(--spectrum-global-color-gray-600)"
@@ -154,7 +154,7 @@
         <div>
           <ListItem
             title="Row is deleted"
-            icon="TableRowRemoveCenter"
+            icon="trash-simple"
             hoverable
             on:click={() => createAutomation(TriggerStepID.ROW_DELETED)}
             iconColor="var(--spectrum-global-color-gray-600)"

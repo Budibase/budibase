@@ -7,6 +7,7 @@ import { appsStore } from "@/stores/portal/apps"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import { appStore } from "./app"
 import { processStringSync } from "@budibase/string-templates"
+import { selectedAppUrls } from "./appUrls"
 
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
@@ -82,16 +83,13 @@ class DeploymentStore extends DerivedBudiStore<
     }
   }
 
-  async publishApp(showNotification = true) {
+  async publishApp(opts?: {
+    automationIds?: string[]
+    workspaceAppIds?: string[]
+  }) {
     try {
       this.update(state => ({ ...state, isPublishing: true }))
-      await API.publishAppChanges(get(appStore).appId)
-      if (showNotification) {
-        notifications.send("App published successfully", {
-          type: "success",
-          icon: "GlobeCheck",
-        })
-      }
+      await API.publishAppChanges(get(appStore).appId, opts)
       await this.completePublish()
     } catch (error: any) {
       analytics.captureException(error)
@@ -119,7 +117,7 @@ class DeploymentStore extends DerivedBudiStore<
       await appsStore.load()
       notifications.send("App unpublished", {
         type: "success",
-        icon: "GlobeStrike",
+        icon: "globe",
       })
     } catch (err) {
       notifications.error("Error unpublishing app")
@@ -128,15 +126,13 @@ class DeploymentStore extends DerivedBudiStore<
 
   viewPublishedApp() {
     const app = get(appStore)
+    const { liveUrl } = get(selectedAppUrls)
     analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
       appId: app.appId,
       eventSource: EventSource.PORTAL,
     })
-    if (get(appStore).url) {
-      window.open(`/app${app.url}`)
-    } else {
-      window.open(`/${app.appId}`)
-    }
+
+    window.open(liveUrl)
   }
 }
 

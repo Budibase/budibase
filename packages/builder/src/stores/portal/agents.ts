@@ -1,29 +1,33 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
-import { AgentChat } from "@budibase/types"
+import {
+  AgentChat,
+  AgentToolSource,
+  AgentToolSourceWithTools,
+  CreateToolSourceRequest,
+} from "@budibase/types"
+import { get } from "svelte/store"
 
 interface AgentStore {
   chats: AgentChat[]
   currentChatId?: string
+  toolSources: AgentToolSourceWithTools[]
 }
 
 export class AgentsStore extends BudiStore<AgentStore> {
   constructor() {
     super({
       chats: [],
+      toolSources: [],
     })
-
-    this.removeChat = this.removeChat.bind(this)
-    this.fetchChats = this.fetchChats.bind(this)
-    this.setCurrentChatId = this.setCurrentChatId.bind(this)
-    this.init = this.init.bind(this)
   }
 
-  async init() {
+  init = async () => {
     await this.fetchChats()
+    await this.fetchToolSources()
   }
 
-  async fetchChats() {
+  fetchChats = async () => {
     const chats = await API.fetchChats()
     this.update(state => {
       state.chats = chats
@@ -32,18 +36,69 @@ export class AgentsStore extends BudiStore<AgentStore> {
     return chats
   }
 
-  async removeChat(chatId: string) {
+  removeChat = async (chatId: string) => {
     return await API.removeChat(chatId)
   }
 
-  setCurrentChatId(chatId: string) {
+  fetchToolSources = async () => {
+    const toolSources = await API.fetchToolSources()
+    this.update(state => {
+      state.toolSources = toolSources
+      return state
+    })
+    return toolSources
+  }
+
+  createToolSource = async (toolSource: CreateToolSourceRequest) => {
+    await API.createToolSource(toolSource)
+    const newToolSourceWithTools: AgentToolSourceWithTools = {
+      ...toolSource,
+      tools: [],
+    }
+    this.update(state => {
+      state.toolSources = [...state.toolSources, newToolSourceWithTools]
+      return state
+    })
+    return newToolSourceWithTools
+  }
+
+  updateToolSource = async (toolSource: AgentToolSource) => {
+    const updatedToolSource = await API.updateToolSource(toolSource)
+    this.update(state => {
+      const index = state.toolSources.findIndex(ts => ts._id === toolSource._id)
+      if (index !== -1) {
+        state.toolSources[index] = {
+          ...updatedToolSource,
+          tools: state.toolSources[index].tools,
+        }
+      }
+      return state
+    })
+    return updatedToolSource
+  }
+
+  deleteToolSource = async (toolSourceId: string) => {
+    await API.deleteToolSource(toolSourceId)
+    this.update(state => {
+      state.toolSources = state.toolSources.filter(
+        ts => ts._id !== toolSourceId
+      )
+      return state
+    })
+  }
+
+  getToolSource = (type: string) => {
+    return get(this.store).toolSources.find(ts => ts.type === type)
+  }
+
+  setCurrentChatId = (chatId: string) => {
     this.update(state => {
       state.currentChatId = chatId
       return state
     })
   }
 
-  clearCurrentChatId() {
+  clearCurrentChatId = () => {
     this.update(state => {
       state.currentChatId = undefined
       return state

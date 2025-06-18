@@ -5,7 +5,8 @@
     "../pro/src",
     "../types/src",
     "../shared-core/src",
-    "../string-templates/src"
+    "../string-templates/src",
+    "../../.env"
   ],
   "ext": "js,ts,json,svelte,hbs",
   "ignore": [
@@ -15,5 +16,5 @@
     "client/**/*",
     "builder/**/*"
   ],
-  "exec": "yarn build && node --no-node-snapshot ./dist/index.js"
+  "exec": "yarn build && node --enable-source-maps --no-node-snapshot ./dist/index.js"
 }

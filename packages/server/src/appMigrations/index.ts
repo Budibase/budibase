@@ -29,8 +29,8 @@ export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
   return latestMigrationId
 }
 
-function getTimestamp(versionId: string) {
-  return versionId?.split("_")[0] || ""
+function getMigrationIndex(versionId: string) {
+  return MIGRATIONS.findIndex(m => m.id === versionId)
 }
 
 export async function checkMissingMigrations(
@@ -46,12 +46,9 @@ export async function checkMissingMigrations(
   }
 
   const currentVersion = await getAppMigrationVersion(appId)
-  const queue = getAppMigrationQueue()
 
-  if (
-    latestMigration &&
-    getTimestamp(currentVersion) < getTimestamp(latestMigration)
-  ) {
+  if (getMigrationIndex(currentVersion) < getMigrationIndex(latestMigration)) {
+    const queue = getAppMigrationQueue()
     await queue.add(
       {
         appId,
@@ -65,4 +62,13 @@ export async function checkMissingMigrations(
   }
 
   return next()
+}
+
+export const isAppFullyMigrated = async (appId: string) => {
+  const latestMigration = getLatestEnabledMigrationId()
+  if (!latestMigration) {
+    return true
+  }
+  const latestMigrationApplied = await getAppMigrationVersion(appId)
+  return latestMigrationApplied >= latestMigration
 }

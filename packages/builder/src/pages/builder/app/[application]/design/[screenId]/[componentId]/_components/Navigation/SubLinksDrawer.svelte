@@ -73,7 +73,11 @@
           >
             {#each subLinks as subLink (subLink.id)}
               <div class="subLink" animate:flip={{ duration: flipDurationMs }}>
-                <Icon name="DragHandle" size="XL" />
+                <Icon
+                  name="dots-six-vertical"
+                  size="L"
+                  color="var(--spectrum-global-color-gray-600)"
+                />
                 <Input bind:value={subLink.text} placeholder="Text" />
                 <DrawerBindableCombobox
                   value={subLink.url}
@@ -84,7 +88,7 @@
                   appendBindingsAsOptions={false}
                 />
                 <Icon
-                  name="Close"
+                  name="x"
                   hoverable
                   size="S"
                   on:click={() => removeSubLink(subLink.id)}
@@ -94,7 +98,7 @@
           </div>
         {/if}
         <div>
-          <ActionButton quiet icon="Add" on:click={addSubLink}>
+          <ActionButton quiet icon="plus" on:click={addSubLink}>
             Add link
           </ActionButton>
         </div>

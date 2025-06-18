@@ -1,4 +1,4 @@
-import { context, db as dbCore, docIds, utils } from "@budibase/backend-core"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import {
   DatabaseQueryOpts,
   Datasource,
@@ -72,18 +72,6 @@ export function getTableParams(tableId?: Optional, otherProps = {}) {
  */
 export function generateTableID() {
   return dbCore.generateTableID()
-}
-
-/**
- * Given a row ID this will find the table ID within it (only works for internal tables).
- * @param rowId The ID of the row.
- * @returns The table ID.
- */
-export function getTableIDFromRowID(rowId: string) {
-  const components = rowId
-    .split(DocumentType.TABLE + SEPARATOR)[1]
-    .split(SEPARATOR)
-  return `${DocumentType.TABLE}${SEPARATOR}${components[0]}`
 }
 
 /**
@@ -317,20 +305,6 @@ export function generateViewID(tableId: string) {
   return `${
     VirtualDocumentType.VIEW
   }${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
-}
-
-export function extractViewInfoFromID(viewId: string) {
-  if (!docIds.isViewId(viewId)) {
-    throw new Error("Unable to extract table ID, is not a view ID")
-  }
-  const split = viewId.split(SEPARATOR)
-  split.shift()
-  viewId = split.join(SEPARATOR)
-  const regex = new RegExp(`^(?<tableId>.+)${SEPARATOR}([^${SEPARATOR}]+)$`)
-  const res = regex.exec(viewId)
-  return {
-    tableId: res!.groups!["tableId"],
-  }
 }
 
 export function isRelationshipColumn(
