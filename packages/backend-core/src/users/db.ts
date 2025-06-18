@@ -328,7 +328,7 @@ export class UserDB {
         await Promise.all(groupPromises)
 
         // finally returned the saved user from the db
-        return db.tryGet<User>(builtUser._id!)
+        return db.get<User>(builtUser._id!)
       } catch (err: any) {
         if (err.status === 409) {
           throw "User exists already"
@@ -529,7 +529,7 @@ export class UserDB {
 
   static async destroy(id: string) {
     const db = getGlobalDB()
-    const dbUser = await db.tryGet<User>(id)
+    const dbUser = await db.get<User>(id)
     if (!dbUser) {
       return
     }

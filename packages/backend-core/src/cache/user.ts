@@ -15,7 +15,7 @@ const EXPIRY_SECONDS = 3600
  */
 async function populateFromDB(userId: string, tenantId: string) {
   const db = tenancy.getTenantDB(tenantId)
-  const user = await db.tryGet<UserMetadata>(userId)
+  const user = await db.get<UserMetadata>(userId)
   if (!user) {
     return undefined
   }

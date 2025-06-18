@@ -27,7 +27,7 @@ export async function getUserDoc(
   emailOrId: string
 ): Promise<PlatformUser | undefined> {
   const db = getPlatformDB()
-  return db.tryGet(emailOrId)
+  return db.get(emailOrId)
 }
 
 export async function updateUserDoc(platformUser: PlatformUserById) {
@@ -75,7 +75,7 @@ function newUserSsoIdDoc(
  */
 async function addUserDoc(emailOrId: string, newDocFn: () => PlatformUser) {
   const db = getPlatformDB()
-  let user = await db.tryGet<PlatformUser>(emailOrId)
+  let user = await db.get<PlatformUser>(emailOrId)
   if (!user) {
     user = newDocFn()
     await db.put(user)

@@ -33,7 +33,7 @@ export async function getConfig<T extends Config>(
   type: ConfigType
 ): Promise<T | undefined> {
   const db = context.getGlobalDB()
-  return await db.tryGet<T>(generateConfigID(type))
+  return await db.get<T>(generateConfigID(type))
 }
 
 export async function save(

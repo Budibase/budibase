@@ -92,7 +92,7 @@ async function tryGet<T extends Document>(
   const cacheKey = makeCacheKey(db, id)
   let cacheItem: CacheItem<T> | null = await cache.get(cacheKey)
   if (!cacheItem) {
-    const doc = await db.tryGet<T>(id)
+    const doc = await db.get<T>(id)
     if (!doc) {
       return undefined
     }

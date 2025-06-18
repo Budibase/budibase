@@ -21,7 +21,7 @@ export async function getTenantIds(): Promise<string[]> {
 
 async function getTenants(): Promise<Tenants> {
   const db = getPlatformDB()
-  const tenants = await db.tryGet<Tenants>(TENANT_DOC)
+  const tenants = await db.get<Tenants>(TENANT_DOC)
   if (tenants) {
     return tenants
   }
@@ -53,7 +53,7 @@ async function createTenantsDoc(): Promise<Tenants> {
   } catch (e: any) {
     // 409 happens if the doc has been created elsewhere
     if (e.status === 409) {
-      const existing = await db.tryGet<Tenants>(TENANT_DOC)
+      const existing = await db.get<Tenants>(TENANT_DOC)
       if (!existing) {
         // Shouldn't really happen, but if it does we'll throw the error.
         throw e

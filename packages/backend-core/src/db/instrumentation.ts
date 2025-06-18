@@ -35,10 +35,10 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  tryGet<T extends Document>(id?: string | undefined): Promise<T | undefined> {
-    return tracer.trace("db.tryGet", async span => {
+  get<T extends Document>(id?: string | undefined): Promise<T | undefined> {
+    return tracer.trace("db.get", async span => {
       span.addTags({ db_name: this.name, doc_id: id })
-      const doc = await this.db.tryGet<T>(id)
+      const doc = await this.db.get<T>(id)
       span.addTags({ doc_found: doc !== undefined })
       return doc
     })

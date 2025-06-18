@@ -3,7 +3,7 @@ import { getGlobalDB } from "../../context"
 
 export async function createUserIndex() {
   const db = getGlobalDB()
-  let designDoc = await db.tryGet<DesignDocument>("_design/database")
+  let designDoc = await db.get<DesignDocument>("_design/database")
   if (!designDoc) {
     designDoc = { _id: "_design/database" }
   }

@@ -32,7 +32,7 @@ async function removeDeprecated(db: Database, viewName: ViewName) {
   if (!DeprecatedViews[viewName]) {
     return
   }
-  const designDoc = await db.tryGet<DesignDocument>(DESIGN_DB)
+  const designDoc = await db.get<DesignDocument>(DESIGN_DB)
   if (!designDoc) {
     return
   }
@@ -47,7 +47,7 @@ export async function createView(
   viewJs: string,
   viewName: string
 ): Promise<void> {
-  let designDoc = await db.tryGet<DesignDocument>(DESIGN_DB)
+  let designDoc = await db.get<DesignDocument>(DESIGN_DB)
   if (!designDoc) {
     designDoc = DesignDoc()
   }

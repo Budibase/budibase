@@ -89,7 +89,7 @@ export async function getById(
   opts?: GetOpts
 ): Promise<User | undefined> {
   const db = context.getGlobalDB()
-  let user = await db.tryGet<User>(id)
+  let user = await db.get<User>(id)
   if (!user) {
     return undefined
   }

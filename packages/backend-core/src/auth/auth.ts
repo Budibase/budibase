@@ -161,7 +161,7 @@ export async function updateUserOAuth(userId: string, oAuthConfig: any) {
 
   try {
     const db = getGlobalDB()
-    const dbUser = await db.tryGet<any>(userId)
+    const dbUser = await db.get<any>(userId)
     if (!dbUser) {
       return
     }

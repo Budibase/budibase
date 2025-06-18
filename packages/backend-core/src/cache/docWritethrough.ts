@@ -62,7 +62,7 @@ export class DocWritethroughProcessor {
       return
     }
     const db = dbUtils.getDB(dbName)
-    let doc = (await db.tryGet(docId)) || { _id: docId }
+    let doc = (await db.get(docId)) || { _id: docId }
     doc = { ...doc, ...data }
     await db.put(doc)
   }

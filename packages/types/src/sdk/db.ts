@@ -118,7 +118,7 @@ export interface Database {
 
   exists(): Promise<boolean>
   exists(docId: string): Promise<boolean>
-  tryGet<T extends Document>(id?: string): Promise<T | undefined>
+  get<T extends Document>(id?: string): Promise<T | undefined>
   getMultiple<T extends Document>(
     ids?: string[],
     opts?: { allowMissing?: boolean; excludeDocs?: boolean }

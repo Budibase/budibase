@@ -202,8 +202,8 @@ export class DatabaseImpl implements Database {
     }
   }
 
-  async tryGet<T extends Document>(id?: string): Promise<T | undefined> {
-    return await tracer.trace("DatabaseImpl.tryGet", async span => {
+  async get<T extends Document>(id?: string): Promise<T | undefined> {
+    return await tracer.trace("DatabaseImpl.get", async span => {
       if (!id) {
         throw new Error("Unable to get doc without a valid _id.")
       }
@@ -326,7 +326,7 @@ export class DatabaseImpl implements Database {
       }
       document.updatedAt = new Date().toISOString()
       if (opts?.force && document._id) {
-        const existing = await this.tryGet(document._id)
+        const existing = await this.get(document._id)
         if (existing) {
           document._rev = existing._rev
         }
@@ -464,7 +464,7 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     // delete the design document, then run the cleanup operation
-    const definition = await this.tryGet<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    const definition = await this.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
     if (!definition) {
       return { ok: true }
     }
