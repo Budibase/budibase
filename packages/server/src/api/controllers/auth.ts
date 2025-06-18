@@ -26,7 +26,11 @@ export async function fetchSelf(ctx: UserCtx<void, AppSelfResponse>) {
   }
 
   const appId = context.getAppId()
-  let user: ContextUser = await getFullUser(userId)
+  let user = await getFullUser(userId)
+  if (!user) {
+    ctx.throw(404, `Failed to fetch self, user with ID ${userId} not found.`)
+  }
+
   // add globalId of user
   user.globalId = dbCore.getGlobalIDFromUserMetadataID(userId)
   // this shouldn't be returned by the app self

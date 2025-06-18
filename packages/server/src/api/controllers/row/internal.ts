@@ -114,6 +114,9 @@ export async function destroy(ctx: UserCtx) {
 
   const { _id } = ctx.request.body
   let row = await db.get<Row>(_id)
+  if (!row) {
+    ctx.throw(404, `Failed to delete row ${_id}, row not found.`)
+  }
   let _rev = ctx.request.body._rev || row._rev
 
   if (row.tableId !== table._id) {

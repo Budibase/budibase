@@ -23,11 +23,14 @@ export async function lookupTenantId(userId: string) {
   return user.tenantId
 }
 
-export async function getUserDoc(
-  emailOrId: string
-): Promise<PlatformUser | undefined> {
+export async function getUserDoc(id: string) {
   const db = getPlatformDB()
-  return db.get(emailOrId)
+  return db.get<PlatformUser>(id)
+}
+
+export async function getUserDocByEmail(email: string) {
+  const db = getPlatformDB()
+  return await db.get<PlatformUserByEmail>(email)
 }
 
 export async function updateUserDoc(platformUser: PlatformUserById) {

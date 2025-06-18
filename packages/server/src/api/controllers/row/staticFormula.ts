@@ -60,17 +60,14 @@ export async function updateRelatedFormula(
       }
     }
     for (let tableId of table.relatedFormula) {
-      let relatedTable: Table
-      try {
-        // no rows to update, skip
-        if (!relatedRows[tableId] || relatedRows[tableId].length === 0) {
-          continue
-        }
-        relatedTable = await db.get(tableId)
-      } catch (err) {
-        // no error scenario, table doesn't seem to exist anymore, ignore
+      if (!relatedRows[tableId] || relatedRows[tableId].length === 0) {
+        continue
       }
-      for (let column of Object.values(relatedTable!.schema)) {
+      const relatedTable = await db.get<Table>(tableId)
+      if (!relatedTable) {
+        continue
+      }
+      for (let column of Object.values(relatedTable.schema)) {
         // needs updated in related rows
         if (
           column.type === FieldType.FORMULA &&
@@ -163,7 +160,7 @@ export async function finaliseRow(
   }
 
   await db.put(row)
-  const retrieved = await db.tryGet<Row>(row._id)
+  const retrieved = await db.get<Row>(row._id)
   if (!retrieved) {
     throw new Error(`Unable to retrieve row ${row._id} after saving.`)
   }

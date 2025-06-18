@@ -113,7 +113,9 @@ export class CouchDBIntegration implements IntegrationBase {
     const parsed: Document = this.parse(query)
     if (!parsed?._rev && parsed?._id) {
       const oldDoc = await this.get({ id: parsed._id })
-      parsed._rev = oldDoc._rev
+      if (oldDoc) {
+        parsed._rev = oldDoc._rev
+      }
     }
     return await this.client.put(parsed)
   }

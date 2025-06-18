@@ -84,7 +84,7 @@ async function put(
   return { ok: true, id: output._id, rev: output._rev }
 }
 
-async function tryGet<T extends Document>(
+async function get<T extends Document>(
   db: Database,
   id: string
 ): Promise<T | undefined> {
@@ -129,8 +129,8 @@ export class Writethrough {
     return put(this.db, doc, writeRateMs)
   }
 
-  async tryGet<T extends Document>(id: string) {
-    return tryGet<T>(this.db, id)
+  async get<T extends Document>(id: string) {
+    return get<T>(this.db, id)
   }
 
   async remove(docOrId: any, rev?: any) {

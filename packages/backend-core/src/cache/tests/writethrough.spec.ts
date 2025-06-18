@@ -119,7 +119,7 @@ describe("writethrough", () => {
     it("should be able to retrieve", async () => {
       await config.doInTenant(async () => {
         const response = await writethrough.get<ValueDoc>(docId)
-        expect(response.value).toBe(4)
+        expect(response!.value).toBe(4)
       })
     })
   })

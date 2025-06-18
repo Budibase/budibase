@@ -216,7 +216,7 @@ describe("docWritethrough", () => {
           expect.objectContaining(initialPatch)
         )
 
-        await db.remove(await db.get(documentId))
+        await db.remove((await db.get(documentId))!)
 
         await waitForQueueCompletion()
         const extraPatch = generatePatchObject(5)

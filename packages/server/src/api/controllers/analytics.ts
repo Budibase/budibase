@@ -26,8 +26,14 @@ export const ping = async (
     case PingSource.APP: {
       const db = context.getAppDB({ skip_setup: true })
       const appInfo = await db.get<App>(DocumentType.APP_METADATA)
-      let appId = context.getAppId()
+      if (!appInfo) {
+        ctx.throw(
+          404,
+          `App metadata not found for app ID ${context.getAppId()}.`
+        )
+      }
 
+      const appId = context.getAppId()
       if (isDevAppID(appId)) {
         await events.serve.servedAppPreview(appInfo, body.timezone)
       } else {

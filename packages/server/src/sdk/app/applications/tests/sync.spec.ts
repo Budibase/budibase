@@ -73,11 +73,11 @@ async function createGroupAndUser(email: string) {
     admin: { global: false },
   })
   group = await config.createGroup()
-  await config.addUserToGroup(group._id!, groupUser._id!)
+  await config.addUserToGroup(group, groupUser._id!)
 }
 
 async function removeUserFromGroup() {
-  await config.removeUserFromGroup(group._id!, groupUser._id!)
+  await config.removeUserFromGroup(group, groupUser._id!)
   return context.doInContext(config.appId!, async () => {
     await events.user.updated(groupUser)
   })

@@ -130,6 +130,9 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const db = context.getAppDB()
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
+  if (!screen) {
+    ctx.throw(404, `Failed to delete screen, screen with ID ${id} not found.`)
+  }
 
   if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
     const allScreens = await sdk.screens.fetch()

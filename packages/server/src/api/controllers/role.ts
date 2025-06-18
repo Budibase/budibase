@@ -204,11 +204,15 @@ export async function destroy(ctx: UserCtx<void, DeleteRoleResponse>) {
   let roleId = ctx.params.roleId as string
   if (roles.isBuiltin(roleId)) {
     ctx.throw(400, "Cannot delete builtin role.")
-  } else {
-    // make sure has the prefix (if it has it then it won't be added)
-    roleId = dbCore.generateRoleID(roleId)
   }
+
+  // make sure has the prefix (if it has it then it won't be added)
+  roleId = dbCore.generateRoleID(roleId)
+
   const role = await db.get<Role>(roleId)
+  if (!role) {
+    ctx.throw(404, `Couldn't delete role ${ctx.params.roleId}, role not found.`)
+  }
   // first check no users actively attached to role
   const users = (
     await db.allDocs<UserMetadata>(

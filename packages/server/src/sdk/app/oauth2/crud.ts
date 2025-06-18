@@ -60,7 +60,7 @@ export async function create(
 
 export async function get(id: string): Promise<OAuth2Config | undefined> {
   const db = context.getAppDB()
-  return await db.tryGet(id)
+  return await db.get(id)
 }
 
 export async function update(
@@ -102,7 +102,7 @@ export async function remove(configId: string, _rev: string): Promise<void> {
 
   await cleanCache(configId)
 
-  const usageLog = await db.tryGet(docIds.generateOAuth2LogID(configId))
+  const usageLog = await db.get(docIds.generateOAuth2LogID(configId))
   if (usageLog) {
     await db.remove(usageLog)
   }

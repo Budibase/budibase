@@ -12,7 +12,7 @@ export default function process(updateCb?: UpdateCallback) {
       let userIds: string[]
       if (isGroup) {
         const group = await proSdk.groups.get(docId)
-        userIds = group.users?.map(user => user._id) || []
+        userIds = group?.users?.map(user => user._id) || []
       } else {
         userIds = [docId]
       }

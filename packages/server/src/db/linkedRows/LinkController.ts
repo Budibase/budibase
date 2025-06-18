@@ -190,7 +190,7 @@ class LinkController {
 
         // if 1:N, ensure that this ID is not already attached to another record
         const linkedTable = await this._db.get<Table>(field.tableId)
-        const linkedSchema = linkedTable.schema[field.fieldName]
+        const linkedSchema = linkedTable?.schema[field.fieldName]
 
         // We need to map the global users to metadata in each app for relationships
         if (field.tableId === InternalTables.USER_METADATA) {
@@ -309,29 +309,25 @@ class LinkController {
    * @returns The table has now been updated.
    */
   async removeFieldFromTable(fieldName: string) {
-    let oldTable = this._oldTable
-    let field = oldTable?.schema[fieldName] as RelationshipFieldMetadata
+    let field = this._oldTable?.schema[fieldName] as
+      | RelationshipFieldMetadata
+      | undefined
     const linkDocs = await this.getTableLinkDocs()
     let toDelete = linkDocs.filter(linkDoc => {
       let correctFieldName =
-        linkDoc.doc1.tableId === oldTable?._id
+        linkDoc.doc1.tableId === this._oldTable?._id
           ? linkDoc.doc1.fieldName
           : linkDoc.doc2.fieldName
       return correctFieldName === fieldName
     })
     await this._db.bulkRemove(toDelete, { silenceErrors: true })
 
-    try {
-      // remove schema from other table, if it exists
+    // remove schema from other table, if it exists
+    if (field) {
       let linkedTable = await this._db.get<Table>(field.tableId)
-      if (field.fieldName) {
+      if (linkedTable) {
         delete linkedTable.schema[field.fieldName]
-      }
-      await this._db.put(linkedTable)
-    } catch (error: any) {
-      // ignore missing to ensure broken relationship columns can be deleted
-      if (error.statusCode !== 404) {
-        throw error
+        await this._db.put(linkedTable)
       }
     }
   }
@@ -381,20 +377,22 @@ class LinkController {
           linkedField.aiGenerated = field.aiGenerated
         }
 
-        // check the linked table to make sure we aren't overwriting an existing column
-        const existingSchema = linkedTable.schema[field.fieldName]
-        if (
-          existingSchema != null &&
-          !this.areLinkSchemasEqual(existingSchema, linkedField)
-        ) {
-          throw new Error("Cannot overwrite existing column.")
-        }
-        // create the link field in the other table
-        linkedTable.schema[field.fieldName] = linkedField
-        const response = await this._db.put(linkedTable)
-        // special case for when linking back to self, make sure rev updated
-        if (linkedTable._id === table._id) {
-          table._rev = response.rev
+        if (linkedTable) {
+          // check the linked table to make sure we aren't overwriting an existing column
+          const existingSchema = linkedTable.schema[field.fieldName]
+          if (
+            existingSchema != null &&
+            !this.areLinkSchemasEqual(existingSchema, linkedField)
+          ) {
+            throw new Error("Cannot overwrite existing column.")
+          }
+          // create the link field in the other table
+          linkedTable.schema[field.fieldName] = linkedField
+          const response = await this._db.put(linkedTable)
+          // special case for when linking back to self, make sure rev updated
+          if (linkedTable._id === table._id) {
+            table._rev = response.rev
+          }
         }
       }
     }
@@ -406,20 +404,7 @@ class LinkController {
    * any link docs that pertained to it.
    * @returns The table which has been saved, same response as with the tableSaved function.
    */
-  async tableUpdated() {
-    const oldTable = this._oldTable
-    // first start by checking if any link columns have been deleted
-    const newTable = await this.table()
-    for (let fieldName of Object.keys(oldTable?.schema || {})) {
-      const field = oldTable?.schema[fieldName] as FieldSchema
-      // this field has been removed from the table schema
-      if (field.type === FieldType.LINK && newTable.schema[fieldName] == null) {
-        await this.removeFieldFromTable(fieldName)
-      }
-    }
-    // now handle as if its a new save
-    return this.tableSaved()
-  }
+  async tableUpdated() {}
 
   /**
    * When a table is deleted this will carry out the necessary operations to make sure
@@ -436,8 +421,10 @@ class LinkController {
       try {
         if (field.type === FieldType.LINK && field.fieldName) {
           const linkedTable = await this._db.get<Table>(field.tableId)
-          delete linkedTable.schema[field.fieldName]
-          field.tableRev = (await this._db.put(linkedTable)).rev
+          if (linkedTable) {
+            delete linkedTable.schema[field.fieldName]
+            field.tableRev = (await this._db.put(linkedTable)).rev
+          }
         }
       } catch (err: any) {
         logging.logWarn(err?.message, err)

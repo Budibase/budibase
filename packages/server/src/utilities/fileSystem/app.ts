@@ -39,6 +39,11 @@ export const getComponentLibraryManifest = async (library: string) => {
   if (env.USE_LOCAL_COMPONENT_LIBS) {
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)
+    if (!app) {
+      throw new Error(
+        `No app metadata found for app ID ${appId} - cannot get component libraries`
+      )
+    }
 
     if (shouldServeLocally(app.version) || env.USE_LOCAL_COMPONENT_LIBS) {
       const paths = [

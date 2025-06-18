@@ -41,5 +41,5 @@ export async function getMetadata(ctx: UserCtx<void, FindMetadataResponse>) {
   const { type, entityId } = ctx.params
   const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
-  ctx.body = (await db.tryGet(id)) || {}
+  ctx.body = (await db.get(id)) || {}
 }

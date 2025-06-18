@@ -4,7 +4,6 @@ import {
   AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
-  User,
   VirtualDocumentType,
   DocumentType,
 } from "@budibase/types"
@@ -14,7 +13,6 @@ import {
   isViewId,
   automations as sharedAutomations,
 } from "@budibase/shared-core"
-import * as triggers from "../../../automations/triggers"
 import sdk from "../.."
 
 async function ensureUniqueAndThrow(
@@ -41,7 +39,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
-  let doc = await db.tryGet<TableRowActions>(rowActionsId)
+  let doc = await db.get<TableRowActions>(rowActionsId)
   if (!doc) {
     doc = { _id: rowActionsId, actions: {} }
   }
@@ -92,20 +90,13 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
 export async function get(tableId: string, rowActionId: string) {
   const actionsDoc = await getAllForTable(tableId)
-  const rowAction = actionsDoc?.actions[rowActionId]
-  if (!rowAction) {
-    throw new HTTPError(
-      `Row action '${rowActionId}' not found in '${tableId}'`,
-      400
-    )
-  }
-  return rowAction
+  return actionsDoc?.actions[rowActionId]
 }
 
 export async function getAllForTable(tableId: string) {
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
-  return await db.tryGet<TableRowActions>(rowActionsId)
+  return await db.get<TableRowActions>(rowActionsId)
 }
 
 export async function getAll() {
@@ -228,42 +219,12 @@ export async function remove(tableId: string, rowActionId: string) {
   return await updateDoc(tableId, rowActionId, async actionsDoc => {
     const { automationId } = actionsDoc.actions[rowActionId]
     const automation = await automations.get(automationId)
-    await automations.remove(automation._id, automation._rev)
-
-    delete actionsDoc.actions[rowActionId]
+    if (automation) {
+      await automations.remove(automation._id!, automation._rev!)
+      delete actionsDoc.actions[rowActionId]
+    }
     return actionsDoc
   })
-}
-
-export async function run(
-  tableId: any,
-  rowActionId: any,
-  rowId: string,
-  user: User
-) {
-  const table = await sdk.tables.getTable(tableId)
-  if (!table) {
-    throw new HTTPError("Table not found", 404)
-  }
-
-  const { automationId } = await get(tableId, rowActionId)
-  const automation = await sdk.automations.get(automationId)
-
-  const row = await sdk.rows.find(tableId, rowId)
-  await triggers.externalTrigger(
-    automation,
-    {
-      fields: {
-        id: row._id,
-        revision: row._rev,
-        row,
-        table,
-      },
-      user,
-      appId: context.getAppId(),
-    },
-    { getResponses: true }
-  )
 }
 
 export async function getNames({ actions }: TableRowActions) {

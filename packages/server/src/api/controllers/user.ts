@@ -53,11 +53,9 @@ export async function destroyMetadata(
   ctx: UserCtx<void, DeleteUserMetadataResponse>
 ) {
   const db = context.getAppDB()
-  try {
-    const dbUser = await sdk.users.get(ctx.params.id)
+  const dbUser = await sdk.users.get(ctx.params.id)
+  if (dbUser) {
     await db.remove(dbUser._id!, dbUser._rev)
-  } catch (err) {
-    // error just means the global user has no config in this app
   }
   ctx.body = {
     message: `User metadata ${ctx.params.id} deleted.`,
@@ -67,7 +65,11 @@ export async function destroyMetadata(
 export async function findMetadata(
   ctx: UserCtx<void, FindUserMetadataResponse>
 ) {
-  ctx.body = await getFullUser(ctx.params.id)
+  const user = await getFullUser(ctx.params.id)
+  if (!user) {
+    ctx.throw(404, `User with ID ${ctx.params.id} not found.`)
+  }
+  ctx.body = user
 }
 
 export async function setFlag(
@@ -80,12 +82,7 @@ export async function setFlag(
   }
   const flagDocId = generateUserFlagID(userId!)
   const db = context.getAppDB()
-  let doc: Flags
-  try {
-    doc = await db.get<Flags>(flagDocId)
-  } catch (err) {
-    doc = { _id: flagDocId }
-  }
+  const doc = (await db.get<Flags>(flagDocId)) || { _id: flagDocId }
   doc[flag] = value || true
   await db.put(doc)
   ctx.body = { message: "Flag set successfully" }
@@ -95,11 +92,6 @@ export async function getFlags(ctx: UserCtx<void, GetUserFlagsResponse>) {
   const userId = ctx.user?._id
   const docId = generateUserFlagID(userId!)
   const db = context.getAppDB()
-  let doc: Flags
-  try {
-    doc = await db.get<Flags>(docId)
-  } catch (err) {
-    doc = { _id: docId }
-  }
+  const doc = (await db.get<Flags>(docId)) || { _id: docId }
   ctx.body = doc
 }

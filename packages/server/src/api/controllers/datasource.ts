@@ -83,6 +83,13 @@ export async function buildSchemaFromSource(
     tablesFilter
   )
 
+  if (!datasource) {
+    ctx.throw(
+      400,
+      `Failed to build schema from source, datasource ${datasourceId} not found.`
+    )
+  }
+
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
     errors,
@@ -132,6 +139,13 @@ export async function update(
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
   const baseDatasource = await sdk.datasources.get(datasourceId)
+  if (!baseDatasource) {
+    ctx.throw(
+      404,
+      `Failed to update datasource, datasource ${datasourceId} not found.`
+    )
+  }
+
   await invalidateVariables(baseDatasource, ctx.request.body)
 
   const isBudibaseSource =
@@ -257,6 +271,13 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   const datasourceId = ctx.params.datasourceId
 
   const datasource = await sdk.datasources.get(datasourceId)
+  if (!datasource) {
+    ctx.throw(
+      404,
+      `Failed to delete datasource, datasource ${datasourceId} not found.`
+    )
+  }
+
   // Delete all queries for the datasource
 
   await sdk.rowActions.deleteAllForDatasource(datasourceId)
@@ -284,6 +305,9 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
 
 export async function find(ctx: UserCtx<void, FindDatasourcesResponse>) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
+  if (!datasource) {
+    ctx.throw(404, `Datasource with ID ${ctx.params.datasourceId} not found.`)
+  }
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
 
@@ -291,6 +315,13 @@ export async function getExternalSchema(
   ctx: UserCtx<void, FetchExternalSchemaResponse>
 ) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
+  if (!datasource) {
+    ctx.throw(
+      404,
+      `Failed to fetch external schema, datasource ${ctx.params.datasourceId} not found.`
+    )
+  }
+
   const enrichedDatasource =
     await sdk.datasources.getAndMergeDatasource(datasource)
   const connector = await sdk.datasources.getConnector(enrichedDatasource)

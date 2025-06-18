@@ -133,19 +133,21 @@ export async function fetchDeployments(
 export async function deploymentProgress(
   ctx: UserCtx<void, DeploymentProgressResponse>
 ) {
-  try {
-    const db = context.getAppDB()
-    const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
-    if (!deploymentDoc.history?.[ctx.params.deploymentId]) {
-      ctx.throw(404, "No deployment found")
-    }
-    ctx.body = deploymentDoc.history?.[ctx.params.deploymentId]
-  } catch (err) {
+  const db = context.getAppDB()
+  const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
+  if (!deploymentDoc) {
     ctx.throw(
-      500,
-      `Error fetching data for deployment ${ctx.params.deploymentId}`
+      404,
+      `Failed to check deployment progress, no deployments document found.`
     )
   }
+  if (!deploymentDoc.history?.[ctx.params.deploymentId]) {
+    ctx.throw(
+      404,
+      `Failed to check deployment progress, deployment with ID ${ctx.params.deploymentId} not found.`
+    )
+  }
+  ctx.body = deploymentDoc.history?.[ctx.params.deploymentId]
 }
 
 export const publishApp = async function (
@@ -198,14 +200,22 @@ export const publishApp = async function (
         filter: publishFilter,
       })
     )
+
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
     const appDoc = await devDb.get<App>(DocumentType.APP_METADATA)
-    try {
-      const prodAppDoc = await db.get<App>(DocumentType.APP_METADATA)
+    if (!appDoc) {
+      ctx.throw(
+        `Failed to publish app, no app with ID ${context.getAppId()} found.`,
+        404
+      )
+    }
+
+    const prodAppDoc = await db.get<App>(DocumentType.APP_METADATA)
+    if (prodAppDoc) {
       appDoc._rev = prodAppDoc._rev
-    } catch (err) {
+    } else {
       delete appDoc._rev
     }
 

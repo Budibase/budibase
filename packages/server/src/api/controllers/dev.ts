@@ -100,6 +100,7 @@ export async function revert(ctx: Ctx<void, RevertAppResponse>) {
     }
     const deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
     if (
+      !deploymentDoc ||
       !deploymentDoc.history ||
       Object.keys(deploymentDoc.history).length === 0
     ) {
@@ -122,6 +123,9 @@ export async function revert(ctx: Ctx<void, RevertAppResponse>) {
     // update appID in reverted app to be dev version again
     const db = context.getAppDB()
     const appDoc = await db.get<App>(DocumentType.APP_METADATA)
+    if (!appDoc) {
+      ctx.throw(404, `Failed to revert, app with ID ${appId} not found.`)
+    }
     appDoc.appId = appId
     appDoc.instance._id = appId
     await db.put(appDoc)

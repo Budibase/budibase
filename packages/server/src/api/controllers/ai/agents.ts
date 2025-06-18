@@ -332,15 +332,11 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const toolSourceId = ctx.params.toolSourceId
   const db = context.getAppDB()
 
-  try {
-    const toolSource = await db.get<AgentToolSource>(toolSourceId)
-    await db.remove(toolSource)
-    ctx.body = { deleted: true }
-    ctx.status = 200
-  } catch (error: any) {
-    if (error.status === 404) {
-      throw new HTTPError("Tool source not found", 404)
-    }
-    throw error
+  const toolSource = await db.get<AgentToolSource>(toolSourceId)
+  if (!toolSource) {
+    ctx.throw(404, `Could not find tool source with ID ${toolSourceId}`)
   }
+  await db.remove(toolSource)
+  ctx.body = { deleted: true }
+  ctx.status = 200
 }
