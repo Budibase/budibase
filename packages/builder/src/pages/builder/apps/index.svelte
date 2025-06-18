@@ -120,13 +120,16 @@
             <ActionMenu align="right">
               <div slot="control" class="avatar">
                 <UserAvatar size="M" user={$auth.user} showTooltip={false} />
-                <Icon size="L" name="ChevronDown" />
+                <Icon size="L" name="caret-down" />
               </div>
-              <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+              <MenuItem
+                icon="user-circle-gear"
+                on:click={() => userInfoModal.show()}
+              >
                 My profile
               </MenuItem>
               <MenuItem
-                icon="LockClosed"
+                icon="lock"
                 on:click={() => {
                   if (isOwner) {
                     window.location.href = `${$admin.accountPortalUrl}/portal/account`
@@ -138,14 +141,11 @@
                 Update password
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
-                <MenuItem
-                  icon="UserDeveloper"
-                  on:click={() => $goto("../portal")}
-                >
+                <MenuItem icon="user-gear" on:click={() => $goto("../portal")}>
                   Open developer mode
                 </MenuItem>
               {/if}
-              <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+              <MenuItem icon="sign-out" on:click={logout}>Log out</MenuItem>
             </ActionMenu>
           </div>
           <Layout noPadding gap="XS">
@@ -197,7 +197,7 @@
                         {/if}
                       </Body>
                     </div>
-                    <Icon name="ChevronRight" />
+                    <Icon name="caret-right" />
                   </a>
                 {/each}
               </Layout>

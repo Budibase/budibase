@@ -47,7 +47,7 @@
       class:noHeaderBorder
     >
       {#if showBackButton}
-        <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
+        <Icon name="arrow-left" hoverable on:click={onClickBackButton} />
       {/if}
       {#if icon}
         <Icon
@@ -66,7 +66,7 @@
       </div>
       {#if showAddButton}
         <div class="add-button" on:click={onClickAddButton}>
-          <Icon name="Add" />
+          <Icon name="plus" />
         </div>
       {/if}
       {#if showCloseButton}

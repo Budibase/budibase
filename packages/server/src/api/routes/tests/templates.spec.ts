@@ -48,7 +48,7 @@ function mockAgencyClientPortal() {
       app: {
         "Agency Client Portal": {
           background: "#20a3a8",
-          icon: "Project",
+          icon: "briefcase",
           category: "Portals",
           description:
             "Manage clients, streamline communications, and securely share files.",

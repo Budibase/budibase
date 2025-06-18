@@ -85,7 +85,7 @@ const createDndStore = () => {
         type,
         isNew: true,
         name: `New ${definition?.name || "component"}`,
-        icon: definition?.icon || "Selection",
+        icon: definition?.icon || "selection",
       },
       target,
       drop,

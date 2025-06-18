@@ -130,7 +130,7 @@
 
     <div class="container" on:click={downloadCsvFile}>
       <div class="inner">
-        <Icon name="Download" />
+        <Icon name="download" />
 
         <div style="margin-left: var(--spacing-m)">
           <Body size="XS">Passwords CSV</Body>

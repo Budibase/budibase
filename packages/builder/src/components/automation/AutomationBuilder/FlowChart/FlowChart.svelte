@@ -11,6 +11,7 @@
     notifications,
     Modal,
     Toggle,
+    Body,
     Button,
     ActionButton,
   } from "@budibase/bbui"
@@ -180,7 +181,9 @@
 <div class="automation-heading">
   <div class="actions-left">
     <div class="automation-name">
-      {automation.name}
+      <Body size="M">
+        {automation.name}
+      </Body>
     </div>
   </div>
 
@@ -220,7 +223,7 @@
     </div>
 
     <ActionButton
-      icon="Play"
+      icon="play"
       quiet
       disabled={!automation?.definition?.trigger}
       on:click={() => {
@@ -254,8 +257,8 @@
 
         <div class="zoom">
           <div class="group">
-            <ActionButton icon="Add" quiet on:click={draggable.zoomIn} />
-            <ActionButton icon="Remove" quiet on:click={draggable.zoomOut} />
+            <ActionButton icon="plus" quiet on:click={draggable.zoomIn} />
+            <ActionButton icon="minus" quiet on:click={draggable.zoomOut} />
           </div>
         </div>
 
@@ -479,6 +482,12 @@
     border-radius: 4px;
     display: flex;
     flex-direction: row;
+  }
+
+  .canvas-heading-left .group :global(.spectrum-Button),
+  .canvas-heading-left .group :global(.spectrum-ActionButton),
+  .canvas-heading-left .group :global(i) {
+    color: var(--spectrum-global-color-gray-900) !important;
   }
   .zoom .group :global(> *:not(:first-child)) {
     border-top-left-radius: 0;

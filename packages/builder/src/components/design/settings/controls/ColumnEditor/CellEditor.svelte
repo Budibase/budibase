@@ -24,7 +24,7 @@
   }
 </script>
 
-<Icon name="Settings" hoverable size="S" on:click={open} />
+<Icon name="gear" hoverable size="S" on:click={open} />
 <Drawer bind:this={drawer} title={column.name}>
   <svelte:fragment slot="description">
     "{column.name}" column settings

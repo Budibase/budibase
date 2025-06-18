@@ -107,7 +107,7 @@
 {#if isBranch}
   <div class="split-branch-btn">
     <ActionButton
-      icon="AddCircle"
+      icon="plus-circle"
       on:click={() => {
         automationStore.actions.branchAutomation(pathToCurrentNode, automation)
       }}

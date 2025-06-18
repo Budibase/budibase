@@ -176,7 +176,7 @@
       transition:fade|local={{ duration: 130 }}
       class:offset={!$displayColumn}
     >
-      <Icon name="Add" size="S" />
+      <Icon name="plus" size="S" />
     </div>
   {/if}
 </TempTooltip>
@@ -193,7 +193,7 @@
     <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
       <div class="row">
         <GutterCell expandable on:expand={addViaModal} rowHovered>
-          <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
+          <Icon name="plus" color="var(--spectrum-global-color-gray-500)" />
           {#if isAdding}
             <div in:fade={{ duration: 130 }} class="loading-overlay" />
           {/if}
