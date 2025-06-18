@@ -506,6 +506,7 @@ async function performAppCreate(
         await appMigrations.updateAppMigrationMetadata({
           appId,
           version: latestMigrationId,
+          skipHistory: true,
         })
       }
     }
