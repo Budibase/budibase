@@ -349,6 +349,16 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async find<T extends Document>(
+    params: Nano.MangoQuery
+  ): Promise<Nano.MangoResponse<T>> {
+    return this.performCall(db => {
+      return async () => {
+        return db.find(params)
+      }
+    })
+  }
+
   async allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
