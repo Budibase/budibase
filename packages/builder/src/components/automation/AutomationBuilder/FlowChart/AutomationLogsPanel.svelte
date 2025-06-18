@@ -19,6 +19,7 @@
   export let automation
   export let onClose = () => {}
   export let onSelectLog = () => {}
+  export let selectedLog = null
 
   const ERROR = "error",
     SUCCESS = "success",
@@ -173,7 +174,11 @@
               {#each runHistory as log, idx}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                <div class="log-item" on:click={() => onSelectLog(log)}>
+                <div
+                  class="log-item"
+                  class:selected={selectedLog && selectedLog._id === log._id}
+                  on:click={() => onSelectLog(log)}
+                >
                   <div class="log-content">
                     <div class="log-info">
                       <Body size="S" weight="600"
@@ -258,13 +263,12 @@
   .logs-list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    gap: var(--spacing-s) var(--spacing-s) 0 var(--spacing-s);
   }
 
   .logs-items {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
   }
 
   .no-logs {
@@ -274,18 +278,23 @@
 
   .log-item {
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    padding: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-m) var(--spacing-m) var(--spacing-m);
     cursor: pointer;
     transition: all 0.2s ease;
-  }
-
-  .log-item:last-child {
-    border-bottom: none;
   }
 
   .log-item:hover {
     background: var(--spectrum-global-color-gray-75);
     border-color: var(--spectrum-global-color-gray-400);
+  }
+
+  .log-item.selected {
+    background: var(--spectrum-global-color-gray-200);
+    border-left: 3px solid var(--spectrum-global-color-blue-600);
+  }
+
+  .log-item.selected:hover {
+    background: var(--spectrum-global-color-gray-300);
   }
 
   .log-content {
@@ -305,15 +314,10 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .log-info :global(.spectrum-Body:last-child) {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
   .pagination-wrapper {
     display: flex;
     justify-content: right;
     padding: var(--spacing-m) 0;
-    border-top: 1px solid var(--spectrum-global-color-gray-300);
     margin-top: var(--spacing-s);
   }
 </style>

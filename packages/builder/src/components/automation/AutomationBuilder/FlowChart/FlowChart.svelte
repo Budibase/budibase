@@ -154,21 +154,6 @@
 
   function handleSelectLog(log) {
     selectedLog = enrichLog($automationStore.blockDefinitions, log) ?? log
-    showLogDetails = true
-    showLogsPanel = false
-    selectedStepData = null // Clear selected step when switching logs
-    selectedLogStepId = null
-
-    // Auto-select trigger step when switching to log details
-    if (selectedLog?.trigger) {
-      handleStepSelect(selectedLog.trigger)
-    }
-  }
-
-  function handleBackToLogs() {
-    showLogDetails = false
-    showLogsPanel = true
-    selectedLog = null
     selectedStepData = null
     selectedLogStepId = null
   }
@@ -184,8 +169,11 @@
 
   function handleStepSelect(stepData) {
     selectedStepData = stepData
-    // Track the selected step ID for visual feedback
     selectedLogStepId = stepData?.stepId || stepData?.id
+    // Show step details when a step is selected
+    if (stepData && viewMode === ViewMode.LOGS) {
+      showLogDetails = true
+    }
   }
 </script>
 
@@ -342,15 +330,24 @@
     {automation}
     onClose={closeAllPanels}
     onSelectLog={handleSelectLog}
+    {selectedLog}
   />
 {/if}
 
-{#if showLogDetails && selectedLog}
+{#if showLogDetails && selectedLog && selectedStepData}
   <LogDetailsPanel
     log={selectedLog}
     selectedStep={selectedStepData}
-    onClose={closeAllPanels}
-    onBack={handleBackToLogs}
+    onClose={() => {
+      showLogDetails = false
+      selectedStepData = null
+      selectedLogStepId = null
+    }}
+    onBack={() => {
+      showLogDetails = false
+      selectedStepData = null
+      selectedLogStepId = null
+    }}
   />
 {/if}
 
