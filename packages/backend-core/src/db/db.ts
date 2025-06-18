@@ -1,5 +1,5 @@
 import { directCouchQuery, DatabaseImpl } from "./couch"
-import { CouchFindOptions, Database, DatabaseOpts } from "@budibase/types"
+import { Database, DatabaseOpts } from "@budibase/types"
 import { DDInstrumentedDatabase } from "./instrumentation"
 
 export function getDB(dbName: string, opts?: DatabaseOpts): Database {
@@ -26,9 +26,4 @@ export async function directCouchAllDbs(queryString?: string) {
     couchPath += `?${queryString}`
   }
   return await directCouchQuery(couchPath)
-}
-
-export async function directCouchFind(dbName: string, opts: CouchFindOptions) {
-  const json = await directCouchQuery(`${dbName}/_find`, "POST", opts)
-  return { rows: json.docs, bookmark: json.bookmark }
 }

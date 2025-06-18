@@ -11,6 +11,7 @@
   export let showActions: boolean = false
   export let indentLevel: number = 0
   export let text: string
+  export let subtext: string | undefined = undefined
   export let border: boolean = true
   export let selected: boolean = false
   export let opened: boolean = false
@@ -75,6 +76,7 @@
   class:selectedBy
   class:disabled
   class:nonSelectable
+  class:multiline={subtext}
   on:dragend
   on:dragstart
   on:dragover
@@ -124,8 +126,15 @@
         />
       </div>
     {/if}
-    <div class="text" title={showTooltip ? text : null}>
-      <span title={text}>{text}</span>
+    <div class="nav-item-body" title={showTooltip ? text : null}>
+      <div class="text">
+        <span title={text}>{text}</span>
+        {#if subtext}
+          <span class="subtext">
+            {subtext}
+          </span>
+        {/if}
+      </div>
       {#if selectedBy}
         <UserAvatars size="XS" users={selectedBy} />
       {/if}
@@ -157,6 +166,9 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .nav-item.multiline {
+    height: 52px;
   }
   .nav-item.nonSelectable {
     cursor: inherit;
@@ -216,6 +228,7 @@
     align-items: center;
     color: var(--spectrum-global-color-gray-600);
     order: 1;
+    margin-right: 2px;
   }
   .icon.right {
     order: 4;
@@ -262,7 +275,7 @@
     flex: 0 0 34px;
   }
 
-  .text {
+  .nav-item-body {
     font-weight: 600;
     font-size: 12px;
     flex: 1 1 auto;
@@ -274,14 +287,25 @@
     gap: 8px;
     overflow: hidden;
   }
-  .text span {
+  .nav-item-body span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .scrollable .text {
+  .scrollable .nav-item-body {
     flex: 0 1 auto;
     width: auto;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    overflow: hidden;
+  }
+  .subtext {
+    color: var(--spectrum-global-color-gray-700);
+    font-weight: normal;
   }
 
   .actions {

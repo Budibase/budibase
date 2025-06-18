@@ -66,7 +66,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
   }
 
   async load() {
-    const json = (await API.getApps()) as App[]
+    const json = await API.getApps()
     if (Array.isArray(json)) {
       // Merge apps into one sensible list
       let appMap: Record<string, StoreApp> = {}
