@@ -196,4 +196,70 @@ describe("migrationsProcessor", () => {
       expect(executionOrder).toEqual([])
     })
   })
+
+  describe("disabled migrations", () => {
+    it("should stop processing when encountering a disabled migration", async () => {
+      const executionOrder: number[] = []
+      const testMigrations: AppMigration[] = [
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            executionOrder.push(1)
+          },
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            executionOrder.push(2)
+          },
+          disabled: true,
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            executionOrder.push(3)
+          },
+        },
+      ]
+
+      const config = setup.getConfig()
+      const { appId } = await config.init()
+
+      await config.doInContext(appId, () =>
+        processMigrations(appId, testMigrations)
+      )
+
+      // Should only run the first migration, then stop at the disabled one
+      expect(executionOrder).toEqual([1])
+    })
+
+    it("should not run any migrations if the first pending migration is disabled", async () => {
+      const executionOrder: number[] = []
+      const testMigrations: AppMigration[] = [
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            executionOrder.push(1)
+          },
+          disabled: true,
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            executionOrder.push(2)
+          },
+        },
+      ]
+
+      const config = setup.getConfig()
+      const { appId } = await config.init()
+
+      await config.doInContext(appId, () =>
+        processMigrations(appId, testMigrations)
+      )
+
+      // Should not run any migrations
+      expect(executionOrder).toEqual([])
+    })
+  })
 })
