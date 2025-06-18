@@ -208,7 +208,7 @@ export class DatabaseImpl implements Database {
         throw new Error("Unable to get doc without a valid _id.")
       }
       try {
-        return this.performCall(db => () => db.get(id))
+        return await this.performCall(db => () => db.get(id))
       } catch (err: any) {
         span.addTags({
           error: true,

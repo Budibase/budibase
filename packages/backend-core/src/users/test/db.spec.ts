@@ -38,7 +38,7 @@ describe("UserDB", () => {
 
   describe("save", () => {
     describe("create", () => {
-      it.only("creating a new user will persist it", async () => {
+      it("creating a new user will persist it", async () => {
         const email = generator.email({})
         const user: User = structures.users.user({
           email,
