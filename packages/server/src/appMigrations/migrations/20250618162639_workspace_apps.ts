@@ -6,7 +6,10 @@ const migration = async () => {
   const screens = await sdk.screens.fetch()
 
   const application = await sdk.applications.metadata.get()
-  const allWorkspaceApps = await sdk.workspaceApps.fetch()
+  const allWorkspaceApps = await sdk.workspaceApps.fetch(
+    context.getAppDB(),
+    true
+  )
   let defaultWorkspaceApp = allWorkspaceApps.find(p => p.isDefault)
   if (!defaultWorkspaceApp) {
     const workspaceApp = await sdk.workspaceApps.create({

@@ -10,8 +10,14 @@ async function guardName(name: string, id?: string) {
   }
 }
 
-export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
-  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+export async function fetch(
+  db = context.getAppDB(),
+  skipFlagCheck = false
+): Promise<WorkspaceApp[]> {
+  if (
+    !skipFlagCheck &&
+    !(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))
+  ) {
     return []
   }
 
@@ -32,7 +38,9 @@ export async function get(id: string): Promise<WorkspaceApp | undefined> {
   return workspaceApp
 }
 
-export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
+export async function create(
+  workspaceApp: WithoutDocMetadata<WorkspaceApp>
+): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
   await guardName(workspaceApp.name)
