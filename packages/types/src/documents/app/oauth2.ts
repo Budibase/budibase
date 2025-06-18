@@ -16,4 +16,5 @@ export interface OAuth2Config extends Document {
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  scope?: string
 }
