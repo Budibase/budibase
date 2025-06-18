@@ -4,6 +4,7 @@ export const PROTECTED_INTERNAL_COLUMNS = [
   "type",
   "createdAt",
   "updatedAt",
+  "createdVersion",
   "tableId",
 ] as const
 
