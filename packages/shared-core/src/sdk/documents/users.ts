@@ -10,7 +10,10 @@ import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
 
 // checks if a user is specifically a builder, given an app ID
-export function isBuilder(user: User | ContextUser, appId?: string): boolean {
+export function isBuilder(
+  user: User | ContextUser | undefined,
+  appId?: string
+): boolean {
   if (!user) {
     return false
   }
@@ -33,7 +36,7 @@ export function canCreateApps(user: User | ContextUser): boolean {
 // alias for hasAdminPermission, currently do the same thing
 // in future whether someone has admin permissions and whether they are
 // an admin for a specific resource could be separated
-export function isAdmin(user: User | ContextUser): boolean {
+export function isAdmin(user: User | ContextUser | undefined): boolean {
   if (!user) {
     return false
   }

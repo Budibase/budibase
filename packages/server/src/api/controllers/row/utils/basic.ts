@@ -6,6 +6,7 @@ import {
   Table,
   JsonTypes,
   ViewV2,
+  EXTERNAL_ROW_REV,
 } from "@budibase/types"
 import {
   helpers,
@@ -137,7 +138,7 @@ export async function basicProcessing({
   if (!sqs && !isCalculationView) {
     thisRow._id = generateIdForRow(row, table, isLinked)
     thisRow.tableId = table._id
-    thisRow._rev = "rev"
+    thisRow._rev = EXTERNAL_ROW_REV
     columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)
   } else if (!isCalculationView) {
     columns = columns.concat(PROTECTED_EXTERNAL_COLUMNS)

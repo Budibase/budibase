@@ -2,6 +2,15 @@ import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
+import { getAppMigrationVersion } from "../../../appMigrations"
+import * as appMigrations from "../../../appMigrations/migrations"
+
+jest.mock<typeof appMigrations>("../../../appMigrations/migrations", () => ({
+  MIGRATIONS: [
+    { id: `202506011400_test`, func: jest.fn() },
+    { id: `202506021500_test`, func: jest.fn() },
+  ],
+}))
 
 interface App {
   background: string
@@ -39,7 +48,7 @@ function mockAgencyClientPortal() {
       app: {
         "Agency Client Portal": {
           background: "#20a3a8",
-          icon: "Project",
+          icon: "briefcase",
           category: "Portals",
           description:
             "Manage clients, streamline communications, and securely share files.",
@@ -67,7 +76,9 @@ describe("/templates", () => {
   beforeAll(async () => {
     await config.init()
   })
+
   beforeEach(() => {
+    jest.clearAllMocks()
     nock.cleanAll()
     mockAgencyClientPortal()
   })
@@ -110,6 +121,28 @@ describe("/templates", () => {
         })
 
         expect(rows).toHaveLength(3)
+      })
+    })
+
+    it("should run migrations when creating an app from a template", async () => {
+      const name = generator.guid().replaceAll("-", "")
+      const url = `/${name}`
+
+      const app = await config.api.application.create({
+        name,
+        url,
+        useTemplate: "true",
+        templateName: "Agency Client Portal",
+        templateKey: "app/agency-client-portal",
+      })
+
+      await config.withApp(app, async () => {
+        const migrationVersion = await getAppMigrationVersion(app.appId)
+
+        expect(migrationVersion).toBe("202506021500_test")
+
+        expect(appMigrations.MIGRATIONS[0].func).toHaveBeenCalledOnce()
+        expect(appMigrations.MIGRATIONS[1].func).toHaveBeenCalledOnce()
       })
     })
   })

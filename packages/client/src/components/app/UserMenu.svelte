@@ -58,16 +58,16 @@
             </div>
           </div>
         {/if}
-        <Icon size="L" name="ChevronDown" />
+        <Icon size="L" name="caret-down" />
       </div>
     </svelte:fragment>
 
-    <MenuItem icon="UserEdit" on:click={() => profileModal?.show()}>
+    <MenuItem icon="user-gear" on:click={() => profileModal?.show()}>
       My profile
     </MenuItem>
     {#if !isSSO}
       <MenuItem
-        icon="LockClosed"
+        icon="lock"
         on:click={() => {
           if (isOwner) {
             window.location.href = `${$environmentStore.accountPortalUrl}/portal/account`
@@ -80,11 +80,11 @@
       </MenuItem>
     {/if}
 
-    <MenuItem icon="Apps" on:click={goToPortal} disabled={embedded}>
+    <MenuItem icon="squares-four" on:click={goToPortal} disabled={embedded}>
       Go to portal
     </MenuItem>
     <MenuItem
-      icon="LogOut"
+      icon="sign-out"
       on:click={authStore.actions.logOut}
       disabled={embedded}
     >

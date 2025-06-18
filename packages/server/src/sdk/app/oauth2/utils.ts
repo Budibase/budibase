@@ -21,6 +21,7 @@ async function fetchToken(config: {
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  scope?: string
 }) {
   config = await processEnvironmentVariable(config)
 
@@ -35,6 +36,10 @@ async function fetchToken(config: {
     redirect: "follow",
   }
 
+  const bodyParams: Record<string, string> = {
+    grant_type: config.grantType,
+  }
+
   if (config.method === OAuth2CredentialsMethod.HEADER) {
     fetchConfig.headers = {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -44,12 +49,13 @@ async function fetchToken(config: {
       ).toString("base64")}`,
     }
   } else {
-    fetchConfig.body = new URLSearchParams({
-      grant_type: config.grantType,
-      client_id: config.clientId,
-      client_secret: config.clientSecret,
-    })
+    bodyParams["client_id"] = config.clientId
+    bodyParams["client_secret"] = config.clientSecret
   }
+  if (config.scope) {
+    bodyParams.scope = config.scope
+  }
+  fetchConfig.body = new URLSearchParams(bodyParams)
 
   const resp = await fetch(config.url, fetchConfig)
   return resp
@@ -99,6 +105,7 @@ export async function validateConfig(config: {
   clientSecret: string
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
+  scope?: string
 }): Promise<{ valid: boolean; message?: string }> {
   try {
     const resp = await fetchToken(config)

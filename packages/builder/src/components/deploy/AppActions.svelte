@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Button,
     ActionButton,
@@ -13,23 +13,42 @@
     isOnlyUser,
     appStore,
     deploymentStore,
+    workspaceAppStore,
+    automationStore,
   } from "@/stores/builder"
-  import { admin } from "@/stores/portal"
+  import { page } from "@roxi/routify"
+  import { admin, featureFlags } from "@/stores/portal"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
+  import PublishModal from "@/components/deploy/PublishModal.svelte"
 
-  let versionModal
+  type ShowUI = { show: () => void }
+
+  let versionModal: ShowUI
+  let publishModal: ShowUI
   let showNpsSurvey = false
-  let publishButton
-  let publishSuccessPopover
+  let publishButton: any
+  let publishSuccessPopover: ShowUI | undefined
+  let publishedAutomations: string[] = [],
+    publishedApps: string[] = []
 
+  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
   $: updateAvailable =
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
+  $: inAutomations = $page.path.includes("/automation/")
+  $: inDesign = $page.path.includes("/design/")
+  $: selectedWorkspaceAppId =
+    $workspaceAppStore.selectedWorkspaceApp?._id || undefined
+  $: selectedAutomationId = $automationStore.selectedAutomationId || undefined
 
   const publish = async () => {
-    await deploymentStore.publishApp(false)
-    publishSuccessPopover?.show()
+    if (workspaceAppsEnabled) {
+      publishModal.show()
+    } else {
+      await deploymentStore.publishApp()
+      publishSuccessPopover?.show()
+    }
   }
 </script>
 
@@ -51,7 +70,7 @@
       <div class="app-action" id="builder-app-users-button">
         <ActionButton
           quiet
-          icon="UserGroup"
+          icon="users"
           on:click={() => {
             builderStore.showBuilderSidePanel()
           }}
@@ -78,6 +97,21 @@
 {/if}
 
 <VersionModal hideIcon bind:this={versionModal} />
+{#if workspaceAppsEnabled}
+  <PublishModal
+    targetId={inDesign
+      ? selectedWorkspaceAppId
+      : inAutomations
+        ? selectedAutomationId
+        : undefined}
+    bind:this={publishModal}
+    on:success={evt => {
+      publishedAutomations = evt.detail.publishedAutomations
+      publishedApps = evt.detail.publishedApps
+      publishSuccessPopover?.show()
+    }}
+  />
+{/if}
 
 <Popover
   anchor={publishButton}
@@ -87,18 +121,28 @@
 >
   <div class="popover-content">
     <Icon
-      name="CheckmarkCircle"
+      name="check-circle"
       color="var(--spectrum-global-color-green-400)"
       size="L"
     />
     <Body size="S">
-      App published successfully
-      <br />
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div class="link" on:click={deploymentStore.viewPublishedApp}>
-        View app
-      </div>
+      {#if !workspaceAppsEnabled}
+        App published successfully
+        <br />
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="link" on:click={deploymentStore.viewPublishedApp}>
+          View app
+        </div>
+      {:else}
+        {#if publishedAutomations.length}
+          Automations published: {publishedAutomations.length}
+          <br />
+        {/if}
+        {#if publishedApps.length}
+          Apps published: {publishedApps.length}
+        {/if}
+      {/if}
     </Body>
   </div>
 </Popover>

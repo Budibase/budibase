@@ -306,12 +306,18 @@
             class:selected={action === selectedAction}
             on:click={selectAction(action)}
           >
-            <Icon name="DragHandle" size="XL" />
+            <Icon
+              name="dots-six-vertical"
+              size="L"
+              color="var(--spectrum-global-color-gray-600)"
+              hoverable="true"
+              hovercolor="var(--spectrum-global-color-gray-800)"
+            />
             <div class="action-header">
               {index + 1}.&nbsp;{toDisplay(action[EVENT_TYPE_KEY])}
             </div>
             <Icon
-              name="Close"
+              name="x"
               hoverable
               size="S"
               on:click={() => deleteAction(index)}
@@ -353,7 +359,7 @@
     background-color: var(--background);
     padding: var(--spacing-s) var(--spacing-m);
     border-radius: 4px;
-    border: var(--border-light);
+    border: 1px solid var(--spectrum-global-color-gray-300);
     transition:
       background-color 130ms ease-in-out,
       color 130ms ease-in-out,

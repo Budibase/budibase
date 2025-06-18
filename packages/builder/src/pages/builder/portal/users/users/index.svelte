@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Heading,
     Body,
@@ -20,6 +20,7 @@
     licensing,
     organisation,
     admin,
+    featureFlags,
   } from "@/stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
@@ -38,11 +39,42 @@
   import { API } from "@/api"
   import { OnboardingType } from "@/constants"
   import { sdk } from "@budibase/shared-core"
+  import type {
+    AccountMetadata,
+    BulkUserCreated,
+    InviteUsersResponse,
+    InviteWithCode,
+    User as UserDoc,
+    UserGroup,
+  } from "@budibase/types"
+  import { InternalTable } from "@budibase/types"
+  import type { UserInfo } from "@/types"
+
+  interface User extends UserDoc {
+    tenantOwnerEmail?: string
+  }
+
+  interface EnrichedUser extends Omit<User, "userGroups"> {
+    name: string
+    userGroups: UserGroup[]
+    apps: string[]
+    access: number
+  }
+
+  interface ParsedInvite {
+    _id: string
+    email: string
+    builder?: boolean
+    admin?: boolean
+    userGroups?: UserGroup[]
+    apps?: string[]
+  }
 
   const fetch = fetchData({
     API,
     datasource: {
       type: "user",
+      tableId: InternalTable.USER_METADATA,
     },
     options: {
       paginate: true,
@@ -50,29 +82,36 @@
     },
   })
 
+  interface UserData {
+    users: UserInfo[]
+    groups: any[]
+  }
+
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
-  let enrichedUsers = []
-  let tenantOwner
-  let createUserModal,
-    inviteConfirmationModal,
-    onboardingTypeModal,
-    passwordModal,
-    importUsersModal,
-    userLimitReachedModal
-  let searchEmail = undefined
-  let selectedRows = []
-  let selectedInvites = []
-  let bulkSaveResponse
-  let customRenderers = [
+  let enrichedUsers: EnrichedUser[] = []
+  let tenantOwner: AccountMetadata | null
+  let createUserModal: Modal,
+    inviteConfirmationModal: Modal,
+    onboardingTypeModal: Modal,
+    passwordModal: Modal,
+    importUsersModal: Modal,
+    userLimitReachedModal: Modal
+  let searchEmail: string | undefined = undefined
+  let selectedRows: User[] = []
+  let selectedInvites: EnrichedUser[] = []
+  let bulkSaveResponse: BulkUserCreated
+
+  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
+  $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },
-    { column: "apps", component: AppsTableRenderer },
+    { column: appsOrWorkspaces, component: AppsTableRenderer },
     { column: "role", component: RoleTableRenderer },
   ]
-  let userData = []
-  let invitesLoaded = false
-  let pendingInvites = []
-  let parsedInvites = []
+  let userData: UserData = { users: [], groups: [] }
+  let invitesLoaded: boolean = false
+  let pendingInvites: InviteWithCode[] = []
+  let parsedInvites: ParsedInvite[] = []
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !sdk.users.isAdmin($auth.user)
@@ -91,19 +130,24 @@
     ...($licensing.groupsEnabled && {
       userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
     }),
-    apps: {
+    [appsOrWorkspaces]: {
       sortable: false,
       width: "1fr",
     },
   }
   $: pendingSchema = getPendingSchema(schema)
-  $: userData = []
-  $: inviteUsersResponse = { successful: [], unsuccessful: [] }
-  $: setEnrichedUsers($fetch.rows, tenantOwner)
+  let inviteUsersResponse: InviteUsersResponse = {
+    successful: [],
+    unsuccessful: [],
+  }
+  $: setEnrichedUsers($fetch.rows as User[], tenantOwner)
 
-  const setEnrichedUsers = async (rows, owner) => {
-    enrichedUsers = rows?.map(user => {
-      let userGroups = []
+  const setEnrichedUsers = async (
+    rows: User[],
+    owner: AccountMetadata | null
+  ) => {
+    enrichedUsers = rows?.map<EnrichedUser>(user => {
+      const userGroups: UserGroup[] = []
       $groups.forEach(group => {
         if (group.users) {
           group.users?.forEach(y => {
@@ -118,7 +162,7 @@
       }
       const role = Constants.ExtendedBudibaseRoleOptions.find(
         x => x.value === users.getUserRole(user)
-      )
+      )!
       return {
         ...user,
         name: user.firstName ? user.firstName + " " + user.lastName : "",
@@ -133,7 +177,7 @@
       }
     })
   }
-  const getPendingSchema = tblSchema => {
+  const getPendingSchema = (tblSchema: any) => {
     if (!tblSchema) {
       return {}
     }
@@ -142,7 +186,7 @@
     return pendingSchema
   }
 
-  const invitesToSchema = invites => {
+  const invitesToSchema = (invites: InviteWithCode[]) => {
     return invites.map(invite => {
       const { admin, builder, userGroups, apps } = invite.info
 
@@ -158,7 +202,10 @@
   }
   $: parsedInvites = invitesToSchema(pendingInvites)
 
-  const updateFetch = email => {
+  const updateFetch = (email: string | undefined) => {
+    if (!email) {
+      return fetch.update({ query: {} })
+    }
     fetch.update({
       query: {
         string: {
@@ -169,7 +216,7 @@
   }
   const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 
-  const showOnboardingTypeModal = async addUsersData => {
+  const showOnboardingTypeModal = async (addUsersData: UserData) => {
     // no-op if users already exist
     userData = await removingDuplicities(addUsersData)
     if (!userData?.users?.length) {
@@ -201,9 +248,9 @@
     }
   }
 
-  const removingDuplicities = async userData => {
+  const removingDuplicities = async (userData: UserData): Promise<UserData> => {
     const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
-    const newUsers = []
+    const newUsers: UserInfo[] = []
 
     for (const user of userData?.users ?? []) {
       const { email } = user
@@ -222,10 +269,10 @@
     return { ...userData, users: newUsers }
   }
 
-  const createUsersFromCsv = async userCsvData => {
+  const createUsersFromCsv = async (userCsvData: any) => {
     const { userEmails, usersRole, userGroups: groups } = userCsvData
 
-    const users = []
+    const users: UserInfo[] = []
     for (const email of userEmails) {
       const newUser = {
         email: email,
@@ -245,7 +292,12 @@
 
   async function createUsers() {
     try {
-      bulkSaveResponse = await users.create(await removingDuplicities(userData))
+      bulkSaveResponse = (await users.create(
+        await removingDuplicities(userData)
+      )) || {
+        successful: [],
+        unsuccessful: [],
+      }
       notifications.success("Successfully created user")
       await groups.init()
       passwordModal.show()
@@ -256,7 +308,7 @@
     }
   }
 
-  async function chooseCreationType(onboardingType) {
+  async function chooseCreationType(onboardingType: string) {
     if (onboardingType === OnboardingType.EMAIL) {
       await createUserFlow()
     } else {
@@ -267,7 +319,7 @@
   const deleteUsers = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
-      if (ids.includes(get(auth).user._id)) {
+      if (ids.includes(get(auth).user?._id)) {
         notifications.error("You cannot delete yourself")
         return
       }
@@ -280,7 +332,7 @@
       if (ids.length > 0) {
         await users.bulkDelete(
           selectedRows.map(user => ({
-            userId: user._id,
+            userId: user._id!,
             email: user.email,
           }))
         )
@@ -289,7 +341,7 @@
       if (selectedInvites.length > 0) {
         await users.removeInvites(
           selectedInvites.map(invite => ({
-            code: invite._id,
+            code: invite._id!,
           }))
         )
         pendingInvites = await users.getInvites()
@@ -308,7 +360,7 @@
     }
   }
 
-  const generatePassword = length => {
+  const generatePassword = (length: number) => {
     const array = new Uint8Array(length)
     window.crypto.getRandomValues(array)
     return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
@@ -331,7 +383,7 @@
     }
     try {
       tenantOwner = await users.getAccountHolder()
-    } catch (err) {
+    } catch (err: any) {
       if (err.status !== 404) {
         notifications.error("Error fetching account holder")
       }
@@ -342,7 +394,9 @@
 <Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
-    <Body>Add users and control who gets access to your published apps</Body>
+    <Body
+      >Add users and control who gets access to your published {appsOrWorkspaces}</Body
+    >
   </Layout>
   <Divider />
   {#if $licensing.errUserLimit}

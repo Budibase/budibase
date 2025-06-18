@@ -4859,6 +4859,62 @@ if (descriptions.length) {
               }
             )
           })
+
+          it("should return 400 when searching for non-existent fields", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                one: { visible: true },
+                two: { visible: true },
+              },
+            })
+
+            await config.api.viewV2.search(
+              view.id,
+              {
+                query: {
+                  equal: {
+                    nonExistentField: "value",
+                  },
+                },
+              },
+              {
+                status: 400,
+                body: {
+                  message: expect.stringContaining("nonExistentField"),
+                },
+              }
+            )
+          })
+
+          it("should return 400 when searching for non-visible field", async () => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              schema: {
+                one: { visible: true },
+                two: { visible: false },
+              },
+            })
+
+            await config.api.viewV2.search(
+              view.id,
+              {
+                query: {
+                  equal: {
+                    two: "value",
+                  },
+                },
+              },
+              {
+                status: 400,
+                body: {
+                  message: expect.stringContaining("two"),
+                },
+              }
+            )
+          })
         })
 
         describe("permissions", () => {

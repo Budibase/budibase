@@ -17,7 +17,7 @@ import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { checkFilters, searchInputMapping } from "./search/utils"
 import tracer from "dd-trace"
-import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
+import { getQueryableFields, validateFilters } from "./queryUtils"
 import { enrichSearchContext } from "../../../api/controllers/row/utils"
 
 export { isValidFilter } from "../../../integrations/utils"
@@ -74,7 +74,7 @@ export async function search(
       ).filter(field => table.schema[field]?.visible !== false)
 
       const queryableFields = await getQueryableFields(table, visibleFields)
-      options.query = removeInvalidFilters(options.query, queryableFields)
+      validateFilters(options.query, queryableFields)
     } else {
       options.query = {}
     }

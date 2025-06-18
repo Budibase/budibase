@@ -43,7 +43,11 @@
 >
   {#if icon}
     <div class="icon">
-      <Icon name={icon} size="S" />
+      <Icon
+        name={icon}
+        size="S"
+        color="var(--spectrum-global-color-gray-700)"
+      />
     </div>
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>

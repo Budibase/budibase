@@ -70,7 +70,7 @@
 <DetailPopover title="Row actions" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="Engagement"
+      icon="cursor-click"
       selected={open || actionCount}
       quiet
       accentColor="#A24400"
@@ -106,7 +106,7 @@
     </List>
   {/if}
   <div>
-    <Button secondary icon="Engagement" on:click={showCreateModal}>
+    <Button secondary icon="cursor-click" on:click={showCreateModal}>
       Create row action
     </Button>
   </div>

@@ -17,7 +17,7 @@
           class:icon-small={size === "M" || size === "S"}
           on:focus
         >
-          <Icon name="InfoOutline" size="S" {disabled} hoverable />
+          <Icon name="info" size="S" {disabled} hoverable />
         </div>
       </AbsTooltip>
     </div>

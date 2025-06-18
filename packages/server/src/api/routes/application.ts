@@ -68,5 +68,7 @@ router
     authorized(permissions.BUILDER),
     controller.importToApp
   )
+  // Client only endpoints
+  .get("/api/client/applications", controller.fetchClientApps)
 
 export default router

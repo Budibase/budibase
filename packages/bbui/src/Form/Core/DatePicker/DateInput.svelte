@@ -36,13 +36,12 @@
     class:is-invalid={!!error}
   >
     {#if !!error}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-icon-18-Alert" />
-      </svg>
+      <div class="error-icon">
+        <Icon
+          name="warning"
+          color="var(--spectrum-semantic-negative-color-icon)"
+        />
+      </div>
     {/if}
     <input
       {disabled}
@@ -90,5 +89,11 @@
     border-right-width: 1px;
     border-top-right-radius: var(--spectrum-textfield-border-radius);
     border-bottom-right-radius: var(--spectrum-textfield-border-radius);
+  }
+  .error-icon {
+    position: absolute;
+    right: 8px;
+    bottom: calc(var(--spectrum-textfield-height) / 2);
+    transform: translateY(50%);
   }
 </style>

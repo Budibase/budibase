@@ -1,7 +1,8 @@
 import { IntegrationTypes } from "@/constants/backend"
 import { findHBSBlocks } from "@budibase/string-templates"
+import { Query, SourceName } from "@budibase/types"
 
-export function breakQueryString(qs) {
+export function breakQueryString(qs: string) {
   if (!qs) {
     return {}
   }
@@ -9,7 +10,7 @@ export function breakQueryString(qs) {
     qs = qs.split("?")[1]
   }
   const params = qs.split("&")
-  let paramObj = {}
+  let paramObj: Record<string, string> = {}
   for (let param of params) {
     const split = param.split("=")
     paramObj[split[0]] = decodeURIComponent(split.slice(1).join("="))
@@ -17,11 +18,11 @@ export function breakQueryString(qs) {
   return paramObj
 }
 
-function isEncoded(str) {
+function isEncoded(str: any) {
   return typeof str == "string" && decodeURIComponent(str) !== str
 }
 
-export function buildQueryString(obj) {
+export function buildQueryString(obj: Record<string, any>) {
   let str = ""
   if (obj) {
     for (let [key, value] of Object.entries(obj)) {
@@ -33,7 +34,7 @@ export function buildQueryString(obj) {
       }
       const bindings = findHBSBlocks(value)
       let count = 0
-      const bindingMarkers = {}
+      const bindingMarkers: Record<string, string> = {}
       bindings.forEach(binding => {
         const marker = `BINDING...${count++}`
         value = value.replace(binding, marker)
@@ -49,7 +50,7 @@ export function buildQueryString(obj) {
   return str
 }
 
-export function keyValueToQueryParameters(obj) {
+export function keyValueToQueryParameters(obj: Record<string, string>) {
   let array = []
   if (obj && typeof obj === "object") {
     for (let [key, value] of Object.entries(obj)) {
@@ -59,8 +60,10 @@ export function keyValueToQueryParameters(obj) {
   return array
 }
 
-export function queryParametersToKeyValue(array) {
-  let obj = {}
+export function queryParametersToKeyValue(
+  array: { name: string; default: string }[]
+) {
+  let obj: Record<string, string> = {}
   if (Array.isArray(array)) {
     for (let param of array) {
       obj[param.name] = param.default
@@ -69,7 +72,10 @@ export function queryParametersToKeyValue(array) {
   return obj
 }
 
-export function customQueryIconText(datasource, query) {
+export function customQueryIconText(
+  datasource: { source: SourceName },
+  query: Query
+) {
   if (datasource.source !== IntegrationTypes.REST) {
     return
   }
@@ -87,7 +93,10 @@ export function customQueryIconText(datasource, query) {
   }
 }
 
-export function customQueryIconColor(datasource, query) {
+export function customQueryIconColor(
+  datasource: { source: SourceName },
+  query: Query
+) {
   if (datasource.source !== IntegrationTypes.REST) {
     return
   }
@@ -106,7 +115,10 @@ export function customQueryIconColor(datasource, query) {
   }
 }
 
-export function customQueryText(datasource, query) {
+export function customQueryText(
+  datasource: { source: string },
+  query: { name: string }
+) {
   if (!query.name || datasource.source !== IntegrationTypes.REST) {
     return query.name
   }
@@ -136,18 +148,18 @@ export function customQueryText(datasource, query) {
   }
 }
 
-export function flipHeaderState(headersActivity) {
+export function flipHeaderState(headersActivity: Record<string, any>) {
   if (!headersActivity) {
     return {}
   }
-  const enabled = {}
+  const enabled: Record<string, boolean> = {}
   Object.entries(headersActivity).forEach(([key, value]) => {
     enabled[key] = !value
   })
   return enabled
 }
 
-export const parseToCsv = (headers, rows) => {
+export const parseToCsv = (headers: string[], rows: Record<string, any>[]) => {
   let csv = headers?.map(key => `"${key}"`)?.join(",") || ""
 
   for (let row of rows) {

@@ -9,7 +9,7 @@ export interface SyncAppResponse {
 export interface CreateAppRequest {
   name: string
   url?: string
-  useTemplate?: string
+  useTemplate?: string | boolean
   templateName?: string
   templateKey?: string
   fileToImport?: string
@@ -48,12 +48,18 @@ export interface AddAppSampleDataResponse {
   message: string
 }
 
-export type FetchAppsResponse = App[]
+export type FetchAppsResponse = (App & { defaultWorkspaceAppUrl: string })[]
 
-export interface PublishResponse {
-  _id: string
-  status: string
-  appUrl: string
+export interface PublishedAppData {
+  name: string
+  appId: string
+  url: string
+  prodId: string
+  updatedAt?: string
+}
+
+export interface FetchPublishedAppsResponse {
+  apps: PublishedAppData[]
 }
 
 export interface UpdateAppRequest extends Partial<App> {}

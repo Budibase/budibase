@@ -1,9 +1,11 @@
 import {
   App,
-  PublishResponse,
+  PublishAppRequest,
+  PublishAppResponse,
   type CreateAppRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
+  type FetchPublishedAppsResponse,
   DuplicateAppResponse,
   UpdateAppRequest,
   UpdateAppResponse,
@@ -36,11 +38,19 @@ export class ApplicationAPI extends TestAPI {
   publish = async (
     appId?: string,
     expectations?: Expectations
-  ): Promise<PublishResponse> => {
+  ): Promise<PublishAppResponse> => {
+    return this.filteredPublish(appId, undefined, expectations)
+  }
+
+  filteredPublish = async (
+    appId?: string,
+    body?: PublishAppRequest,
+    expectations?: Expectations
+  ): Promise<PublishAppResponse> => {
     if (!appId) {
       appId = this.config.getAppId()
     }
-    return await this._post<PublishResponse>(
+    return await this._post<PublishAppResponse>(
       `/api/applications/${appId}/publish`,
       {
         // While the publish endpoint does take an :appId parameter, it doesn't
@@ -48,6 +58,7 @@ export class ApplicationAPI extends TestAPI {
         headers: {
           [constants.Header.APP_ID]: appId,
         },
+        body,
         expectations,
       }
     )
@@ -167,5 +178,16 @@ export class ApplicationAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<void> => {
     await this._post(`/api/applications/${appId}/sample`, { expectations })
+  }
+
+  fetchClientApps = async (
+    expectations?: Expectations
+  ): Promise<FetchPublishedAppsResponse> => {
+    return await this._get<FetchPublishedAppsResponse>(
+      "/api/client/applications",
+      {
+        expectations,
+      }
+    )
   }
 }

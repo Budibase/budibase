@@ -110,7 +110,7 @@
       <Heading>Progressive web app</Heading>
       {#if !pwaEnabled}
         <Tags>
-          <Tag icon="LockClosed">Enterprise</Tag>
+          <Tag icon="lock" emphasized>Enterprise</Tag>
         </Tags>
       {/if}
     </div>
@@ -184,7 +184,7 @@
           <Label size="L">App icons</Label>
           <Icon
             size="XS"
-            name="Info"
+            name="info"
             tooltip="Please check our docs for details on a valid ZIP file"
           />
         </div>
