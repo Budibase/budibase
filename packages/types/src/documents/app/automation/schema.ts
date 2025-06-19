@@ -71,6 +71,10 @@ import {
   GenerateTextStepOutputs,
   ExtractFileDataStepOutputs,
   ExtractFileDataStepInputs,
+  ExtractTextDataStepInputs,
+  ExtractTextDataStepOutputs,
+  ScrapeWebsiteStepInputs,
+  ScrapeWebsiteStepOutputs,
   APIRequestStepInputs,
   APIRequestStepOutputs,
 } from "./StepInputsOutputs"
@@ -184,6 +188,14 @@ export type ActionImplementations<T extends Hosting> = {
     ExtractFileDataStepInputs,
     ExtractFileDataStepOutputs
   >
+  [AutomationActionStepId.EXTRACT_TEXT_DATA]: ActionImplementation<
+    ExtractTextDataStepInputs,
+    ExtractTextDataStepOutputs
+  >
+  [AutomationActionStepId.SCRAPE_WEBSITE]: ActionImplementation<
+    ScrapeWebsiteStepInputs,
+    ScrapeWebsiteStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -274,7 +286,11 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                             ? GenerateTextStepInputs
                                                             : T extends AutomationActionStepId.EXTRACT_FILE_DATA
                                                               ? ExtractFileDataStepInputs
-                                                              : never
+                                                              : T extends AutomationActionStepId.EXTRACT_TEXT_DATA
+                                                                ? ExtractTextDataStepInputs
+                                                                : T extends AutomationActionStepId.SCRAPE_WEBSITE
+                                                                  ? ScrapeWebsiteStepInputs
+                                                                  : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -333,7 +349,11 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                         ? GenerateTextStepOutputs
                                                         : T extends AutomationActionStepId.EXTRACT_FILE_DATA
                                                           ? ExtractFileDataStepOutputs
-                                                          : never
+                                                          : T extends AutomationActionStepId.EXTRACT_TEXT_DATA
+                                                            ? ExtractTextDataStepOutputs
+                                                            : T extends AutomationActionStepId.SCRAPE_WEBSITE
+                                                              ? ScrapeWebsiteStepOutputs
+                                                              : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -420,6 +440,12 @@ export type GenerateTextStep =
 export type ExtractFileDataStep =
   AutomationStepSchema<AutomationActionStepId.EXTRACT_FILE_DATA>
 
+export type ExtractTextDataStep =
+  AutomationStepSchema<AutomationActionStepId.EXTRACT_TEXT_DATA>
+
+export type ScrapeWebsiteStep =
+  AutomationStepSchema<AutomationActionStepId.SCRAPE_WEBSITE>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
   | CollectStep
@@ -452,6 +478,8 @@ export type AutomationStep =
   | SummariseStep
   | GenerateTextStep
   | ExtractFileDataStep
+  | ExtractTextDataStep
+  | ScrapeWebsiteStep
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger

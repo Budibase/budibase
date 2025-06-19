@@ -14,7 +14,7 @@ export const FeatureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_JS_GENERATION]: true,
   [FeatureFlag.AI_TABLE_GENERATION]: true,
-  [FeatureFlag.AI_AGENTS]: false,
+  [FeatureFlag.AI_AGENTS]: true,
   [FeatureFlag.WORKSPACE_APPS]: false,
 
   // Account-portal

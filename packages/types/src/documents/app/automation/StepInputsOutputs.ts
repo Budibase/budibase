@@ -247,6 +247,34 @@ export type ExtractFileDataStepOutputs =
       data?: Record<string, any>
       response?: string
     }
+
+export type ExtractTextDataStepInputs = {
+  text: string
+  schema: Record<string, any>
+}
+
+export type ExtractTextDataStepOutputs =
+  | {
+      success: true
+      data: Record<string, any>
+      response?: string
+    }
+  | {
+      success: false
+      data?: Record<string, any>
+      response?: string
+    }
+
+export type ScrapeWebsiteStepInputs = {
+  url: string
+}
+
+export type ScrapeWebsiteStepOutputs = BaseAutomationOutputs & {
+  content?: string
+  title?: string
+  description?: string
+}
+
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API

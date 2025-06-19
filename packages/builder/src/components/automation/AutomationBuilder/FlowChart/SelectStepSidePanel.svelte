@@ -135,6 +135,8 @@
           AutomationActionStepId.SUMMARISE,
           AutomationActionStepId.GENERATE_TEXT,
           AutomationActionStepId.EXTRACT_FILE_DATA,
+          AutomationActionStepId.EXTRACT_TEXT_DATA,
+          AutomationActionStepId.SCRAPE_WEBSITE,
         ].includes(k as AutomationActionStepId)
       ),
     },
