@@ -5,6 +5,7 @@
   import { fly } from "svelte/transition"
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
+  import Icon from "../../Icon/Icon.svelte"
 
   export let inputValue
   export let dropdownValue
@@ -150,13 +151,7 @@
           {fieldText}
         </div></span
       >
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Chevron100" />
-      </svg>
+      <Icon name="caret-down" size="S" />
     </button>
   </div>
   {#if open}
@@ -183,13 +178,14 @@
                 </span>
               {/if}
             </span>
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
+            <div class="check">
+              <Icon
+                name="check"
+                size="S"
+                weight="bold"
+                color="var(--spectrum-global-color-blue-500)"
+              />
+            </div>
           </li>
         {/each}
       </ul>
@@ -229,8 +225,10 @@
     display: block;
     margin-top: var(--spacing-s);
   }
-  .spectrum-Menu-checkmark {
-    align-self: center;
-    margin-top: 0;
+  .check {
+    display: none;
+  }
+  li.is-selected .check {
+    display: block;
   }
 </style>

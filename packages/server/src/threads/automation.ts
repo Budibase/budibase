@@ -1,4 +1,5 @@
 import { default as threadUtils } from "./utils"
+import { events } from "@budibase/backend-core"
 import { Job } from "bull"
 import { disableCronById } from "../automations/utils"
 import * as actions from "../automations/actions"
@@ -432,7 +433,11 @@ class Orchestrator {
           default: {
             addToContext(
               step,
-              await quotas.addAction(() => this.executeStep(ctx, step))
+              await quotas.addAction(async () => {
+                const response = await this.executeStep(ctx, step)
+                events.action.automationStepExecuted({ stepId: step.stepId })
+                return response
+              })
             )
             stepIndex++
             break

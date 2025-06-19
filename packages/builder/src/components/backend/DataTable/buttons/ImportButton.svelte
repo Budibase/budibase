@@ -48,7 +48,7 @@
 <DetailPopover title="Import data" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="DataUpload"
+      icon="upload-simple"
       quiet
       on:click={openPopover}
       {disabled}

@@ -63,7 +63,7 @@
 
 <DetailPopover bind:this={popover} {title} align={PopoverAlignment.Right}>
   <div slot="anchor" class:display-new={!authConfig}>
-    <ActionButton icon="LockClosed" quiet selected>
+    <ActionButton icon="lock" quiet selected>
       {#if !authConfig}
         Authentication
       {:else}
@@ -88,7 +88,7 @@
     </List>
   {/if}
   <div>
-    <Button secondary icon="Add" on:click={addBasicConfiguration}
+    <Button secondary icon="plus" on:click={addBasicConfiguration}
       >Add config</Button
     >
   </div>
@@ -111,7 +111,7 @@
     </List>
   {/if}
   <div>
-    <Button secondary icon="Add" on:click={addOAuth2Configuration}
+    <Button secondary icon="plus" on:click={addOAuth2Configuration}
       >Add OAuth2</Button
     >
   </div>

@@ -239,7 +239,7 @@
   class:mobile={!!mobile}
   data-id={screenId}
   data-name="Screen"
-  data-icon="WebPage"
+  data-icon="browser"
 >
   <div class="screen-wrapper layout-body">
     {#if typeClass !== "none"}
@@ -247,7 +247,7 @@
         class="interactive component {navigationId}"
         data-id={navigationId}
         data-name="Navigation"
-        data-icon="Visibility"
+        data-icon="eye"
       >
         <div
           class="nav-wrapper {navigationId}-dom"
@@ -265,7 +265,7 @@
                 <div class="burger">
                   <Icon
                     hoverable
-                    name="ShowMenu"
+                    name="dots-three-vertical"
                     on:click={() => (mobileOpen = !mobileOpen)}
                   />
                 </div>
@@ -322,19 +322,21 @@
             {/if}
             {#if !embedded}
               <div class="user left">
-                {#if logoPosition === "bottom"}
-                  <Logo
-                    {logoUrl}
-                    {logoLinkUrl}
-                    {openLogoLinkInNewTab}
-                    {hideLogo}
-                    {title}
-                    {linkable}
-                    {isInternal}
-                    {getSanitizedUrl}
-                  />
-                {/if}
                 <UserMenu />
+                {#if logoPosition === "bottom"}
+                  <div>
+                    <Logo
+                      {logoUrl}
+                      {logoLinkUrl}
+                      {openLogoLinkInNewTab}
+                      {hideLogo}
+                      {title}
+                      {linkable}
+                      {isInternal}
+                      {getSanitizedUrl}
+                    />
+                  </div>
+                {/if}
               </div>
             {/if}
           </div>
@@ -363,7 +365,7 @@
     <div class="side-panel-header">
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
+        name="sidebar"
         hoverable
         on:click={sidePanelStore.actions.close}
       />
@@ -435,11 +437,11 @@
     max-width: 100%;
     gap: var(--spacing-xs);
   }
-  .nav :global(.spectrum-Icon) {
+  .nav :global(.icon) {
     color: var(--navTextColor);
     opacity: 0.75;
   }
-  .nav :global(.spectrum-Icon:hover) {
+  .nav :global(.icon:hover) {
     color: var(--navTextColor);
     opacity: 1;
   }
@@ -606,7 +608,7 @@
   }
   .user.left {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: var(--spacing-m);
   }
   .mobile .user.left {
