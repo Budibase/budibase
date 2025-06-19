@@ -323,7 +323,7 @@ export class DatabaseImpl implements Database {
       if (!document.createdAt) {
         document.createdAt = new Date().toISOString()
       }
-      if (!document._rev) {
+      if (!document.createdVersion && !document._rev) {
         document.createdVersion = environment.VERSION
       }
       document.updatedAt = new Date().toISOString()
