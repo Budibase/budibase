@@ -1,7 +1,3 @@
-if (process.env.DD_APM_ENABLED) {
-  require("./ddApm")
-}
-
 import * as db from "./db"
 
 db.init()

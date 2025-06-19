@@ -59,8 +59,8 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
   }
   return nock(opts?.baseUrl || "https://api.azure.com")
     .post(new RegExp("/deployments/.*?/chat/completions"), body)
-    .reply((uri: string, body: nock.Body) => {
-      const req = body as ChatCompletionRequest
+    .reply(async request => {
+      const req = (await request.json()) as ChatCompletionRequest
       const messages = req.messages
       const prompt = messages[0].content
 

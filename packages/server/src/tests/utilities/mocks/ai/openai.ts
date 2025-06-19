@@ -50,7 +50,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
   opts?: MockLLMResponseOpts
 ) => {
-  let body: any = undefined
+  let body: nock.RequestBodyMatcher | undefined = undefined
 
   if (opts?.format) {
     body = _.matches({
@@ -59,8 +59,8 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
   }
   return nock(opts?.baseUrl || "https://api.openai.com")
     .post("/v1/chat/completions", body)
-    .reply((uri: string, body: nock.Body) => {
-      const req = body as ChatCompletionRequest
+    .reply(async request => {
+      const req = (await request.json()) as ChatCompletionRequest
       const messages = req.messages
 
       // Handle both simple string content and complex content arrays
@@ -149,8 +149,8 @@ export const mockOpenAIFileUpload = (
 
   return nock("https://api.openai.com")
     .post("/v1/files")
-    .reply((uri: string, body: any) => {
-      const filename = body.filename || "test-file.pdf"
+    .reply(async request => {
+      const filename = (await request.json()).filename || "test-file.pdf"
 
       const response: FileUploadResponse = {
         id: fileId,

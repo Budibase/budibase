@@ -499,7 +499,7 @@ describe("BudibaseAI", () => {
     })
   })
 
-  describe("POST /api/ai/tables", () => {
+  describe.only("POST /api/ai/tables", () => {
     let featureCleanup: () => void
     beforeAll(() => {
       featureCleanup = features.testutils.setFeatureFlags("*", {

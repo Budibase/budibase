@@ -1,3 +1,7 @@
+if (process.env.DD_APM_ENABLED) {
+  require("./ddApm")
+}
+
 import { bootstrap } from "global-agent"
 import { checkDevelopmentEnvironment } from "./utilities/fileSystem"
 
