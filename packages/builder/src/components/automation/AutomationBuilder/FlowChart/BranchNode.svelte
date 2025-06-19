@@ -62,7 +62,7 @@
   const getContextMenuItems = () => {
     return [
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
@@ -80,7 +80,7 @@
         },
       },
       {
-        icon: "ArrowLeft",
+        icon: "arrow-left",
         name: "Move left",
         keyBind: null,
         visible: true,
@@ -94,7 +94,7 @@
         },
       },
       {
-        icon: "ArrowRight",
+        icon: "arrow-right",
         name: "Move right",
         keyBind: null,
         visible: true,
@@ -208,16 +208,17 @@
         />
         <div class="actions">
           <Icon
-            name="Info"
+            name="info"
             tooltip="Branch sequencing checks each option in order and follows the first one that matches the rules."
           />
           <Icon
             on:click={e => {
               openContextMenu(e)
             }}
-            size="S"
+            size="M"
+            weight="bold"
             hoverable
-            name="MoreSmallList"
+            name="dots-three"
           />
         </div>
       </div>
@@ -291,11 +292,10 @@
     display: inline-block;
   }
   .block {
-    width: 360px;
-    font-size: 16px;
-    background-color: var(--background);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px 4px 4px 4px;
+    width: 320px;
+    background-color: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
     cursor: default;
   }
 

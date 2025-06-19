@@ -274,14 +274,20 @@
               <div class="item-body">
                 {#if !action.internal && getExternalAction(action.stepId)?.icon}
                   <img
-                    width={24}
-                    height={24}
+                    width={17.5}
+                    height={17.5}
                     src={getExternalAction(action.stepId)?.icon}
                     alt={getExternalAction(action.stepId)?.name}
                     class="external-icon"
                   />
                 {:else}
-                  <Icon name={action.icon} size="L" />
+                  <div class="icon-container">
+                    <Icon
+                      name={action.icon}
+                      size="M"
+                      color="rgb(142, 185, 252)"
+                    />
+                  </div>
                 {/if}
                 <Body size="S" weight="400">
                   {action.internal === false
@@ -292,11 +298,11 @@
                 {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
                   <div class="tag-color">
                     <Tags>
-                      <Tag icon="LockClosed">Premium</Tag>
+                      <Tag icon="lock" emphasized>Premium</Tag>
                     </Tags>
                   </div>
                 {:else if isDisabled}
-                  <Icon name="Help" tooltip={checkDisabled(idx).message} />
+                  <Icon name="question" tooltip={checkDisabled(idx).message} />
                 {:else if action.new}
                   <NewPill />
                 {/if}
@@ -319,10 +325,10 @@
             >
               <div class="item-body">
                 <div class="item-icon">
-                  <Icon name={action.icon} size="L" />
+                  <Icon name={action.icon} size="M" />
                 </div>
                 <div class="item-label">
-                  <Body size="M" weight="400">{action.name}</Body>
+                  <Body size="S" weight="400">{action.name}</Body>
                 </div>
               </div>
             </div>
@@ -361,8 +367,7 @@
     color: var(--spectrum-global-color-gray-700) !important;
   }
   .section-divider {
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    height: 1px;
+    border-top: 0.5px solid var(--spectrum-global-color-gray-200);
     background: var(--spectrum-global-color-gray-200);
     margin: 18px 0 10px 0;
     width: 100%;
@@ -370,27 +375,31 @@
   .item-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
   .item {
     border-radius: 8px;
-    padding: 0 12px;
+    padding: var(--spacing-s) var(--spacing-m);
     margin-bottom: 0px;
     transition:
       box-shadow 0.2s,
       background 0.2s;
-    border: 0.5px solid var(--spectrum-alias-border-color);
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
     background: var(--spectrum-alias-background-color-secondary);
     display: flex;
     align-items: center;
-    min-height: 40px;
-    height: 40px;
     box-sizing: border-box;
     cursor: pointer;
   }
+  .icon-container {
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    padding: 4px;
+    border-radius: 6px;
+  }
   .item:not(.disabled):hover,
   .selected {
-    background: var(--spectrum-alias-background-color-tertiary);
+    background: var(--spectrum-global-color-gray-200);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
   .item.disabled {
@@ -401,17 +410,20 @@
   .item-body {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
     width: 100%;
   }
   .item-icon,
   .external-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
+    width: 17.5px;
+    height: 17.5px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--spectrum-global-color-gray-100);
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    padding: 4px;
+    border-radius: 5px;
   }
   .item-label {
     font-size: 15px;
@@ -423,6 +435,6 @@
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .tag-color :global(.spectrum-Tags-item) {
-    background: var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-global-color-gray-300);
   }
 </style>

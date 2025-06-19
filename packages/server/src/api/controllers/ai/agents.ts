@@ -13,7 +13,7 @@ import {
   CreateToolSourceRequest,
   Message,
 } from "@budibase/types"
-import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base/ToolSourceRegistry"
+import { createToolSource as createToolSourceInstance } from "../../../ai/tools/base"
 
 function addDebugInformation(messages: Message[]) {
   const processedMessages = [...messages]
@@ -125,6 +125,126 @@ export async function agentChat(
   ctx.body = newChat
 }
 
+export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
+  const model = await ai.getLLMOrThrow()
+  const chat = ctx.request.body
+  const db = context.getAppDB()
+
+  // Set SSE headers and status
+  ctx.status = 200
+  ctx.set("Content-Type", "text/event-stream")
+  ctx.set("Cache-Control", "no-cache")
+  ctx.set("Connection", "keep-alive")
+  ctx.set("Access-Control-Allow-Origin", "*")
+  ctx.set("Access-Control-Allow-Headers", "Cache-Control")
+
+  // Disable buffering for better streaming
+  ctx.res.setHeader("X-Accel-Buffering", "no") // Nginx
+  ctx.res.setHeader("Transfer-Encoding", "chunked")
+
+  const toolSources = await db.allDocs<AgentToolSource>(
+    docIds.getDocParams(DocumentType.AGENT_TOOL_SOURCE, undefined, {
+      include_docs: true,
+    })
+  )
+
+  let prompt = new ai.LLMRequest()
+    .addSystemMessage(ai.agentSystemPrompt(ctx.user))
+    .addMessages(chat.messages)
+
+  let toolGuidelines = ""
+
+  for (const row of toolSources.rows) {
+    const toolSource = row.doc!
+    const toolSourceInstance = createToolSourceInstance(toolSource)
+
+    if (!toolSourceInstance) {
+      continue
+    }
+
+    const guidelines = toolSourceInstance.getGuidelines()
+    if (guidelines) {
+      toolGuidelines += `\n\nWhen using ${toolSourceInstance.getName()} tools, ensure you follow these guidelines:\n${guidelines}`
+    }
+
+    const toolsToAdd = toolSourceInstance.getEnabledTools()
+
+    if (toolsToAdd.length > 0) {
+      prompt = prompt.addTools(toolsToAdd)
+    }
+  }
+
+  // Append tool guidelines to the system prompt if any exist
+  if (toolGuidelines) {
+    prompt = prompt.addSystemMessage(toolGuidelines)
+  }
+
+  try {
+    let finalMessages: Message[] = []
+    let totalTokens = 0
+
+    for await (const chunk of model.chatStream(prompt)) {
+      // Send chunk to client
+      ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
+
+      if (chunk.type === "done") {
+        finalMessages = chunk.messages || []
+        totalTokens = chunk.tokensUsed || 0
+        break
+      } else if (chunk.type === "error") {
+        ctx.res.write(
+          `data: ${JSON.stringify({
+            type: "error",
+            content: chunk.content,
+          })}\n\n`
+        )
+        ctx.res.end()
+        return
+      }
+    }
+
+    // Save chat to database after streaming is complete
+    if (finalMessages.length > 0) {
+      if (!chat._id) {
+        chat._id = docIds.generateAgentChatID()
+      }
+
+      if (!chat.title || chat.title === "") {
+        const titlePrompt = new ai.LLMRequest()
+          .addSystemMessage(ai.agentHistoryTitleSystemPrompt())
+          .addMessages(finalMessages)
+        const { message } = await model.prompt(titlePrompt)
+        chat.title = message
+      }
+
+      const newChat: AgentChat = {
+        _id: chat._id,
+        _rev: chat._rev,
+        title: chat.title,
+        messages: addDebugInformation(finalMessages),
+      }
+
+      const { rev } = await db.put(newChat)
+
+      // Send final chat info
+      ctx.res.write(
+        `data: ${JSON.stringify({
+          type: "chat_saved",
+          chat: { ...newChat, _rev: rev },
+          tokensUsed: totalTokens,
+        })}\n\n`
+      )
+    }
+
+    ctx.res.end()
+  } catch (error: any) {
+    ctx.res.write(
+      `data: ${JSON.stringify({ type: "error", content: error.message })}\n\n`
+    )
+    ctx.res.end()
+  }
+}
+
 export async function remove(ctx: UserCtx<void, void>) {
   const db = context.getGlobalDB()
   const historyId = ctx.params.historyId
@@ -141,7 +261,14 @@ export async function fetchHistory(
       include_docs: true,
     })
   )
-  ctx.body = history.rows.map(row => row.doc!)
+  // Sort by creation time, newest first
+  ctx.body = history.rows
+    .map(row => row.doc!)
+    .sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return timeB - timeA // Newest first
+    })
 }
 
 export async function fetchToolSources(
@@ -206,7 +333,7 @@ export async function deleteToolSource(ctx: UserCtx<void, { deleted: true }>) {
   const db = context.getAppDB()
 
   try {
-    const toolSource = await db.get(toolSourceId)
+    const toolSource = await db.get<AgentToolSource>(toolSourceId)
     await db.remove(toolSource)
     ctx.body = { deleted: true }
     ctx.status = 200

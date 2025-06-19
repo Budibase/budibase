@@ -80,7 +80,7 @@
     if ((permission = permissionsObj[FieldPermissions.WRITABLE])) {
       const tooltip = requiredTooltips[FieldPermissions.WRITABLE] || "Writable"
       options.push({
-        icon: "Edit",
+        icon: "pencil",
         value: FieldPermissions.WRITABLE,
         tooltip,
         disabled: isRequired || permission.disabled,
@@ -92,7 +92,7 @@
         (requiredTooltips[FieldPermissions.READONLY] || "Read-only") +
         (permission.disabled ? " (premium feature)" : "")
       options.push({
-        icon: "Visibility",
+        icon: "eye",
         value: FieldPermissions.READONLY,
         tooltip,
         disabled: permission.disabled || isRequired,
@@ -102,7 +102,7 @@
     if ((permission = permissionsObj[FieldPermissions.HIDDEN])) {
       const tooltip = requiredTooltips[FieldPermissions.HIDDEN] || "Hidden"
       options.push({
-        icon: "VisibilityOff",
+        icon: "eye-slash",
         value: FieldPermissions.HIDDEN,
         disabled: permission.disabled || isRequired,
         tooltip,
@@ -193,7 +193,7 @@
                 relationshipPanelAnchor = e.currentTarget
               }}
               size="S"
-              icon="ChevronRight"
+              icon="caret-right"
               quiet
               selected={relationshipFieldName === column.name}
             />

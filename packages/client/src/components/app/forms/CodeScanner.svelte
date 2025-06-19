@@ -173,7 +173,7 @@
     </ActionButton>
   {:else}
     <ActionButton
-      icon="Camera"
+      icon="camera"
       on:click={() => {
         showReaderModal()
       }}
@@ -193,7 +193,7 @@
     >
       <div id="reader" class="container" bind:this={videoEle}>
         <div class="camera-placeholder">
-          <Icon size="XXL" name="Camera" />
+          <Icon size="XXL" name="camera" />
           {#if cameraEnabled === false}
             <div>Your camera is disabled.</div>
           {/if}

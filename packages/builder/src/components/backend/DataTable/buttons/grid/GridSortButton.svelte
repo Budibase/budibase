@@ -48,7 +48,7 @@
 <DetailPopover bind:this={popover} title="Sorting" width={300}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="SortOrderDown"
+      icon="sort-descending"
       quiet
       size="M"
       on:click={popover?.open}

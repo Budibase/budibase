@@ -30,6 +30,7 @@ import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
+import tracer from "dd-trace"
 
 export interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -572,11 +573,24 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
     sort?: SortJson
     paginate?: PaginationJson
   }) {
-    try {
+    return await tracer.trace("googlesheets.read", async span => {
+      span.addTags({
+        sheet: query.sheet,
+        filters: query.filters,
+        sort: query.sort,
+        paginate: query.paginate,
+      })
+
       await this.connect()
       const hasFilters = dataFilters.hasFilters(query.filters)
       const limit = query.paginate?.limit || 100
       let offset = query.paginate?.offset || 0
+
+      span.addTags({
+        hasFilters,
+        limit,
+        offset,
+      })
 
       let page = query.paginate?.page
       if (typeof page === "string") {
@@ -587,6 +601,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       }
 
       const sheet = this.client.sheetsByTitle[query.sheet]
+      span.addTags({ rowCount: sheet.rowCount })
+
       let rows: GoogleSpreadsheetRow[] = []
       if (query.paginate && !hasFilters) {
         rows = await sheet.getRows({
@@ -596,6 +612,8 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       } else {
         rows = await sheet.getRows()
       }
+
+      span.addTags({ totalRowsRead: rows.length })
 
       let response = rows.map(row =>
         this.buildRowObject(sheet.headerValues, row.toObject(), row.rowNumber)
@@ -621,11 +639,12 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
         )
       }
 
+      span.addTags({
+        totalRowsReturned: response.length,
+      })
+
       return response
-    } catch (err) {
-      console.error("Error reading from google sheets", err)
-      throw err
-    }
+    })
   }
 
   private async getRowByIndex(sheetTitle: string, rowIndex: number) {

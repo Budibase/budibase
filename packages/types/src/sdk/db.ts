@@ -8,7 +8,6 @@ import {
   ViewTemplateOpts,
 } from "../"
 import { Writable } from "stream"
-import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -57,17 +56,6 @@ export interface DesignDocument extends Document {
       analyzer?: string | IndexAnalyzer
     }
   }
-}
-
-export type CouchFindOptions = {
-  selector: PouchDB.Find.Selector
-  fields?: string[]
-  sort?: {
-    [key: string]: SortOption
-  }[]
-  limit?: number
-  skip?: number
-  bookmark?: string
 }
 
 export type DatabaseOpts = {
@@ -157,6 +145,9 @@ export interface Database {
   ): Promise<T[]>
   sqlPurgeDocument(docIds: string[] | string): Promise<void>
   sqlDiskCleanup(): Promise<void>
+  find<T extends Document>(
+    params: Nano.MangoQuery
+  ): Promise<Nano.MangoResponse<T>>
   allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>

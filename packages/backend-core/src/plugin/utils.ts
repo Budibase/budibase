@@ -57,6 +57,7 @@ function validateDatasource(schema: any) {
     .object({
       type: joi.string().allow(...Object.values(QueryType)),
       readable: joi.boolean(),
+      displayName: joi.string(),
       fields: joi.object().pattern(joi.string(), fieldValidator),
     })
     .required()

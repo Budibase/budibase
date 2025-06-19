@@ -7,7 +7,6 @@
     onDestroy,
     tick,
   } from "svelte"
-  import Logo from "assets/bb-emblem.svg?raw"
   import { Utils, memo } from "@budibase/frontend-core"
   import { selectedAutomation, automationStore } from "@/stores/builder"
 
@@ -154,8 +153,8 @@
   // Background pattern
   let bgDim = 24
 
-  // Scale prop for the icon
-  let dotDefault = 0.006
+  // Scale prop background dots
+  let dotDefault = 1
 
   let viewDragStart = { x: 0, y: 0 }
   let viewDragOffset = [0, 0]
@@ -203,8 +202,8 @@
     const { x, y } = pos
     const { w, h } = dims
     return `
-      --posX: ${x}px; --posY: ${y}px; 
-      --scale: ${scale}; 
+      --posX: ${x}px; --posY: ${y}px;
+      --scale: ${scale};
       --wrapH: ${h}px; --wrapW: ${w}px;
       `
   }
@@ -570,8 +569,7 @@
       patternUnits="userSpaceOnUse"
       patternTransform={`translate(${offsetX - 2}, ${offsetY - 2})`}
     >
-      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-      {@html Logo}
+      <ellipse rx="1" ry="1" cx="1" cy="1" />
     </pattern>
     <rect x="0" y="0" width="100%" height="100%" fill="url(#dot-pattern)" />
   </svg>
@@ -646,14 +644,13 @@
     left: 0;
     pointer-events: none;
     z-index: -1;
-    background-color: var(--spectrum-global-color-gray-50);
+    background-color: var(--spectrum-global-color-gray-75);
   }
 
-  .draggable-background :global(svg g path) {
-    fill: #91919a;
+  .draggable-background :global(ellipse) {
+    fill: var(--spectrum-global-color-gray-300);
   }
-
-  .draggable-background :global(svg g) {
+  .draggable-background :global(ellipse) {
     transform: scale(var(--dotSize));
   }
 </style>

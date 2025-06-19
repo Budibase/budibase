@@ -57,7 +57,7 @@
     ) {
       return {
         message: "Stopped",
-        icon: "Alert",
+        icon: "warning",
         type: FlowStatusType.WARN,
       }
     }
@@ -70,7 +70,7 @@
       if (outputs.success == false) {
         return {
           message: "Stopped",
-          icon: "Alert",
+          icon: "warning",
           type: FlowStatusType.WARN,
         }
       }
@@ -92,12 +92,13 @@
   {#if blockRef}
     {#if isTriggerBlock}
       <span class="block-type">
-        <ActionButton size="S" active={false} icon="Workflow">
+        <ActionButton size="S" active={false} icon="tree-structure">
           Trigger
         </ActionButton>
       </span>
     {:else if blockRef.looped}
-      <ActionButton size="S" active={false} icon="Reuse">Looping</ActionButton>
+      <ActionButton size="S" active={false} icon="recycle">Looping</ActionButton
+      >
     {:else}
       <span />
     {/if}
@@ -140,10 +141,7 @@
   .flow-item-status .block-type {
     pointer-events: none;
   }
-  .flow-item-status :global(.spectrum-ActionButton),
-  .flow-item-status :global(.spectrum-ActionButton .spectrum-Icon) {
-    color: var(--spectrum-alias-text-color-hover);
-  }
+
   .flow-success :global(.spectrum-ActionButton) {
     background-color: var(--spectrum-semantic-positive-color-status);
     border-color: var(--spectrum-semantic-positive-color-status);
@@ -156,7 +154,7 @@
     background-color: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-gray-300);
   }
-  .flow-warn :global(.spectrum-ActionButton .spectrum-Icon) {
+  .flow-warn :global(.spectrum-ActionButton i) {
     color: var(--spectrum-global-color-yellow-600);
   }
 </style>

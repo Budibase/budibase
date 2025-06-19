@@ -112,7 +112,7 @@
         on:click={() => dispatch("add-row-inline")}
       >
         <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
-          <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
+          <Icon name="plus" color="var(--spectrum-global-color-gray-500)" />
         </GutterCell>
         {#if $displayColumn}
           <GridCell
