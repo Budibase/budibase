@@ -53,7 +53,7 @@
       <Heading size="M">
         <div class="heading-content">
           <span class="back-chev" on:click={() => $goto("../")}>
-            <Icon name="ChevronLeft" size="XL" />
+            <Icon name="caret-left" size="XL" />
           </span>
           Forgot your password?
         </div>

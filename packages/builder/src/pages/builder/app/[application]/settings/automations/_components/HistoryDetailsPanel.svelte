@@ -27,7 +27,7 @@
   <Layout noPadding>
     <div class="controls">
       <StatusRenderer value={history.status} />
-      <Icon hoverable name="Close" on:click={close} />
+      <Icon hoverable name="x" on:click={close} />
     </div>
     <Layout noPadding gap="XS">
       <Heading>{history.automationName}</Heading>

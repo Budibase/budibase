@@ -269,9 +269,15 @@
                 on:click={() => addComponent(component.component)}
                 on:mouseenter={() => (selectedIndex = null)}
               >
-                <Icon name={component.icon} />
+                <div class="icon-container">
+                  <Icon
+                    size="M"
+                    color="rgb(142, 185, 252)"
+                    name={component.icon}
+                  />
+                </div>
                 <div class="component-name">
-                  <Body size="XS">{component.name}</Body>
+                  <Body size="S">{component.name}</Body>
                   {#if component.new}
                     <NewPill />
                   {/if}
@@ -307,25 +313,31 @@
     margin-top: var(--spacing-xs);
   }
   .component {
-    background: var(--spectrum-global-color-gray-200);
-    border-radius: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-alias-background-color-secondary);
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    border: 1px solid var(--spectrum-global-color-gray-200);
     transition:
       background 130ms ease-out,
       border-color 130ms ease-out;
     flex-direction: row;
     justify-content: flex-start;
-    padding: var(--spacing-s) var(--spacing-l);
-    gap: var(--spacing-m);
+    padding: var(--spacing-s) var(--spacing-m);
+    gap: var(--spacing-s);
     overflow: hidden;
+  }
+  .icon-container {
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    padding: 4px;
+    border-radius: 6px;
   }
   .component.selected {
     border-color: var(--spectrum-global-color-blue-400);
   }
   .component:hover {
-    background: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-200);
   }
   .component-name {
     display: flex;

@@ -1,10 +1,11 @@
 <script>
   import { createEventDispatcher } from "svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   let dispatch = createEventDispatcher()
 
   export let type = "info"
-  export let icon = "Info"
+  export let icon = "info"
   export let size = "S"
   export let extraButtonText
   export let extraButtonAction
@@ -22,13 +23,7 @@
 
 {#if show}
   <div class="spectrum-Toast spectrum-Toast--{type}">
-    <svg
-      class="spectrum-Icon spectrum-Icon--size{size} spectrum-Toast-typeIcon"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-{icon}" />
-    </svg>
+    <Icon name={icon} {size} />
     <div class="spectrum-Toast-body">
       <div class="spectrum-Toast-content row-content">
         <slot />
@@ -54,13 +49,7 @@
           on:click={clear}
         >
           <div class="spectrum-ClearButton-fill">
-            <svg
-              class="spectrum-ClearButton-icon spectrum-Icon spectrum-UIIcon-Cross100"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Cross100" />
-            </svg>
+            <Icon name="x" {size} />
           </div>
         </button>
       </div>

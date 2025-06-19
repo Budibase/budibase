@@ -282,15 +282,18 @@
         <div>
           <ActionMenu align="right">
             <span slot="control">
-              <Icon hoverable name="More" />
+              <Icon hoverable name="dots-three" />
             </span>
             {#if !isSSO}
-              <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
+              <MenuItem
+                on:click={resetPasswordModal.show}
+                icon="arrow-clockwise"
+              >
                 Force password reset
               </MenuItem>
             {/if}
             {#if !isTenantOwner}
-              <MenuItem on:click={deleteModal.show} icon="Delete">
+              <MenuItem on:click={deleteModal.show} icon="trash">
                 Delete
               </MenuItem>
             {/if}

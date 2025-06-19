@@ -238,10 +238,12 @@ export const addSampleData = async (
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
-  ctx.body = await sdk.applications.fetch(
+  const apps = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
   )
+
+  ctx.body = await sdk.applications.enrichWithDefaultWorkspaceAppUrl(apps)
 }
 export async function fetchClientApps(
   ctx: UserCtx<void, FetchPublishedAppsResponse>

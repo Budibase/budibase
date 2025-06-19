@@ -1,5 +1,6 @@
 <script lang="ts">
   import "@spectrum-css/accordion"
+  import Icon from "../Icon/Icon.svelte"
 
   export let itemName: string | undefined = undefined
   export let initialOpen: boolean = false
@@ -41,13 +42,7 @@
       >
         {header}
       </button>
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronRight100 spectrum-Accordion-itemIndicator"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Chevron100" />
-      </svg>
+      <Icon name="caret-right" size="S" />
     </h3>
     <div
       class="spectrum-Accordion-itemContent"

@@ -9,7 +9,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
   const result: RequiredKeys<WorkspaceApp> = {
     name: generator.guid(),
     url: `/${generator.guid().replace(/-/g, "")}`,
-    icon: "Monitoring",
+    icon: "monitor",
     iconColor: undefined,
 
     _id: undefined,

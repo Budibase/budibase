@@ -243,7 +243,7 @@
             bindingDrawer.show()
           }}
         >
-          <Icon size="S" name="FlashOn" />
+          <Icon size="S" weight="fill" name="lightning" />
         </div>
       {/if}
     </div>
@@ -304,18 +304,11 @@
       border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m));
   }
-  .binding-control .icon.binding {
-    color: var(--yellow);
-  }
 
   .binding-control .icon:hover {
     cursor: pointer;
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
     color: var(--spectrum-alias-text-color-hover);
-  }
-
-  .binding-control .icon.binding:hover {
-    color: var(--yellow);
   }
 </style>

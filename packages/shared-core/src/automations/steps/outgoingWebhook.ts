@@ -19,7 +19,7 @@ export const definition: AutomationStepDefinition = {
   deprecated: true,
   name: "Outgoing webhook",
   tagline: "Send a {{inputs.requestMethod}} request",
-  icon: "Send",
+  icon: "paper-plane-right",
   description: "Send a request of specified method to a URL",
   type: AutomationStepType.ACTION,
   internal: true,

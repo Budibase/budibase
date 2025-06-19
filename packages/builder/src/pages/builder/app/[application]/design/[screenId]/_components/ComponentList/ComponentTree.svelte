@@ -136,9 +136,9 @@
         selectedBy={$userSelectedResourceMap[component._id]}
       >
         <Icon
-          size="S"
+          size="M"
           hoverable
-          name="MoreSmallList"
+          name="dots-three"
           on:click={e => openContextMenu(e, component, opened)}
         />
       </NavItem>
