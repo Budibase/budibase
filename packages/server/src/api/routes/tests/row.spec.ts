@@ -213,6 +213,7 @@ if (descriptions.length) {
             type: "row",
             createdAt: timestamp,
             updatedAt: timestamp,
+            createdVersion: "0.0.0+jest",
           }
         : undefined
 
@@ -2850,10 +2851,8 @@ if (descriptions.length) {
               ...expectedRowData,
               _id: expect.any(String),
               _rev: expect.any(String),
-              type: "row",
               tableId: tableId,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
+              ...defaultRowFields,
             }
             expect(allRows).toEqual([expectedRow, expectedRow, expectedRow])
           })
@@ -2959,12 +2958,10 @@ if (descriptions.length) {
             _id: expect.any(String),
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
-            type: isInternal ? "row" : undefined,
             name: "foo",
             description: "bar",
             tableId,
-            createdAt: isInternal ? new Date().toISOString() : undefined,
-            updatedAt: isInternal ? new Date().toISOString() : undefined,
+            ...defaultRowFields,
           })
         })
 
@@ -2984,10 +2981,8 @@ if (descriptions.length) {
             _id: expect.any(String),
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
-            type: isInternal ? "row" : undefined,
             [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
-            createdAt: isInternal ? new Date().toISOString() : undefined,
-            updatedAt: isInternal ? new Date().toISOString() : undefined,
+            ...defaultRowFields,
           })
         })
 
@@ -3009,9 +3004,7 @@ if (descriptions.length) {
             _id: expect.any(String),
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
-            type: isInternal ? "row" : undefined,
-            createdAt: isInternal ? new Date().toISOString() : undefined,
-            updatedAt: isInternal ? new Date().toISOString() : undefined,
+            ...defaultRowFields,
           })
         })
 
@@ -3089,10 +3082,8 @@ if (descriptions.length) {
             _id: row._id,
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
-            type: isInternal ? "row" : undefined,
             [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
-            createdAt: isInternal ? new Date().toISOString() : undefined,
-            updatedAt: isInternal ? new Date().toISOString() : undefined,
+            ...defaultRowFields,
           })
         })
 
