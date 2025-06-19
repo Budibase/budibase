@@ -1,6 +1,5 @@
 <script>
   import { getContext } from "svelte"
-  import { Icon } from "@budibase/bbui"
   import "@spectrum-css/button/dist/index-vars.css"
 
   const { styleable, builderStore } = getContext("sdk")
@@ -66,7 +65,7 @@
     contenteditable={$component.editing && !icon}
   >
     {#if icon}
-      <Icon name={icon} {size} />
+      <i class="{icon} {size}" />
     {/if}
     {componentText}
   </button>
