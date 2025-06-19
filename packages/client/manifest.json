@@ -753,9 +753,9 @@
       }
     ]
   },
-  "separator": {
-    "name": "Separator",
-    "description": "This component is a separator",
+  "divider": {
+    "name": "Divider",
+    "description": "A basic divider",
     "icon": "line-segments",
     "illegalChildren": ["section"],
     "size": {
@@ -1044,8 +1044,9 @@
     ]
   },
   "text": {
-    "name": "Text",
-    "description": "This component is text",
+    "name": "Paragraph",
+    "deprecated": true,
+    "description": "A component for displaying paragraph text.",
     "icon": "text-t",
     "illegalChildren": ["section"],
     "editable": true,
@@ -1168,7 +1169,8 @@
   },
   "heading": {
     "name": "Headline",
-    "description": "This component is bold text",
+    "deprecated": true,
+    "description": "A component for displaying heading text",
     "icon": "text-b",
     "illegalChildren": ["section"],
     "editable": true,
@@ -1356,7 +1358,7 @@
   },
   "image": {
     "name": "Image",
-    "description": "This component is an image",
+    "description": "A basic component for displaying images",
     "icon": "image",
     "styles": ["size"],
     "size": {
@@ -1559,7 +1561,7 @@
   },
   "link": {
     "name": "Link",
-    "description": "This component is a link",
+    "description": "A basic link component for internal and external links",
     "icon": "link",
     "editable": true,
     "size": {
@@ -8311,7 +8313,7 @@
   "textv2": {
     "new": true,
     "name": "Text",
-    "description": "This component is text",
+    "description": "A component for displaying text",
     "icon": "text-t",
     "size": {
       "width": 400,
@@ -8406,7 +8408,7 @@
       "width": 800,
       "height": 1200
     },
-    "description": "This component to render PDFs from other Budibase components",
+    "description": "A component to render PDFs from other Budibase components",
     "settings": [
       {
         "type": "text",
