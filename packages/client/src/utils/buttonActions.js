@@ -515,7 +515,7 @@ const rowActionHandler = async action => {
 }
 
 const delayHandler = async action => {
-  return new Promise(resolve => setTimeout(resolve, 3000))
+  return new Promise(resolve => setTimeout(resolve, action.parameters.duration))
 }
 
 const handlerMap = {
