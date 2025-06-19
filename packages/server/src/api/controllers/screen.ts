@@ -46,13 +46,6 @@ export async function save(
 
   const isCreation = !screen._id
 
-  if (
-    !screen.workspaceAppId ||
-    !(await sdk.workspaceApps.get(screen.workspaceAppId))
-  ) {
-    ctx.throw("workspaceAppId is not valid")
-  }
-
   const savedScreen = isCreation
     ? await sdk.screens.create(screen)
     : await sdk.screens.update(screen)
