@@ -23,6 +23,7 @@ import { getGlobalDB } from "../context"
 import { creatorsInList } from "./utils"
 import { UserDB } from "./db"
 import { dataFilters } from "@budibase/shared-core"
+import { tracer } from "dd-trace"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -291,11 +292,13 @@ export async function paginatedUsers({
 }
 
 export async function getUserCount() {
-  const response = await queryGlobalViewRaw(ViewName.USER_BY_EMAIL, {
-    limit: 0, // to be as fast as possible - we just want the total rows count
-    include_docs: false,
+  return await tracer.trace("getUserCount", async () => {
+    const response = await queryGlobalViewRaw(ViewName.USER_BY_EMAIL, {
+      limit: 0, // to be as fast as possible - we just want the total rows count
+      include_docs: false,
+    })
+    return response.total_rows
   })
-  return response.total_rows
 }
 
 export async function getCreatorCount() {
