@@ -4,6 +4,7 @@ import { appStore, workspaceAppStore } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
 import { featureFlags } from "../portal"
+import { notifications } from "@budibase/bbui"
 
 export interface AppNavigationStore extends AppNavigation {}
 
@@ -53,12 +54,16 @@ export class NavigationStore extends DerivedBudiStore<
 
   async save(navigation: AppNavigation) {
     const $workspaceAppStore = get(workspaceAppStore)
+    if (!$workspaceAppStore.selectedWorkspaceApp) {
+      notifications.error("Non selected workspace app")
+      return
+    }
     workspaceAppStore.edit({
-      ...$workspaceAppStore.selectedWorkspaceApp!,
+      ...$workspaceAppStore.selectedWorkspaceApp,
       navigation,
     })
 
-    if ($workspaceAppStore.selectedWorkspaceApp?.isDefault) {
+    if ($workspaceAppStore.selectedWorkspaceApp.isDefault) {
       // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
       const appId = get(appStore).appId
       const app = await API.saveAppMetadata(appId, { navigation })
