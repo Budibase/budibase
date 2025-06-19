@@ -26,7 +26,7 @@ export async function sendEmail(
   let user: User | undefined = undefined
   if (userId) {
     const db = tenancy.getGlobalDB()
-    user = await db.tryGet<User>(userId)
+    user = await db.get<User>(userId)
     if (!user) {
       ctx.throw(404, "User not found.")
     }

@@ -63,7 +63,7 @@ export async function updateEntityMetadata(
 ) {
   const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
-  const metadata = updateFn((await db.tryGet(id)) || {})
+  const metadata = updateFn((await db.get(id)) || {})
   metadata._id = id
   const response = await db.put(metadata)
   return { ...metadata, _id: id, _rev: response.rev }
@@ -80,7 +80,7 @@ export async function saveEntityMetadata(
 export async function deleteEntityMetadata(type: string, entityId: string) {
   const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
-  const metadata = await db.tryGet(id)
+  const metadata = await db.get(id)
   if (!metadata) {
     return
   }

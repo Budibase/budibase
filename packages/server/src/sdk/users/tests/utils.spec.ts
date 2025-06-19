@@ -81,7 +81,10 @@ describe("syncGlobalUsers", () => {
 
   it("app users are added when group is assigned to app", async () => {
     await config.doInTenant(async () => {
-      const group = await proSdk.groups.save(structures.userGroups.userGroup())
+      const saveResp = await proSdk.groups.save(
+        structures.userGroups.userGroup()
+      )
+      const group = (await proSdk.groups.get(saveResp.id))!
       const user1 = await config.createUser({
         admin: { global: false },
         builder: { global: false },
@@ -90,13 +93,13 @@ describe("syncGlobalUsers", () => {
         admin: { global: false },
         builder: { global: false },
       })
-      await proSdk.groups.addUsers(group.id, [user1._id!, user2._id!])
+      await proSdk.groups.addUsers(group, [user1._id!, user2._id!])
 
       await config.doInContext(config.appId, async () => {
         await syncGlobalUsers()
         expect(await rawUserMetadata()).toHaveLength(1)
 
-        await proSdk.groups.updateGroupApps(group.id, {
+        await proSdk.groups.updateGroupApps(group, {
           appsToAdd: [
             { appId: config.prodAppId!, roleId: roles.BUILTIN_ROLE_IDS.BASIC },
           ],
@@ -122,7 +125,10 @@ describe("syncGlobalUsers", () => {
 
   it("app users are removed when app is removed from user group", async () => {
     await config.doInTenant(async () => {
-      const group = await proSdk.groups.save(structures.userGroups.userGroup())
+      const saveResponse = await proSdk.groups.save(
+        structures.userGroups.userGroup()
+      )
+      const group = (await proSdk.groups.get(saveResponse.id))!
       const user1 = await config.createUser({
         admin: { global: false },
         builder: { global: false },
@@ -131,18 +137,18 @@ describe("syncGlobalUsers", () => {
         admin: { global: false },
         builder: { global: false },
       })
-      await proSdk.groups.updateGroupApps(group.id, {
+      await proSdk.groups.updateGroupApps(group, {
         appsToAdd: [
           { appId: config.prodAppId!, roleId: roles.BUILTIN_ROLE_IDS.BASIC },
         ],
       })
-      await proSdk.groups.addUsers(group.id, [user1._id!, user2._id!])
+      await proSdk.groups.addUsers(group, [user1._id!, user2._id!])
 
       await config.doInContext(config.appId, async () => {
         await syncGlobalUsers()
         expect(await rawUserMetadata()).toHaveLength(3)
 
-        await proSdk.groups.updateGroupApps(group.id, {
+        await proSdk.groups.updateGroupApps(group, {
           appsToRemove: [{ appId: config.prodAppId! }],
         })
         await syncGlobalUsers()

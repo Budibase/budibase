@@ -6,6 +6,10 @@ const migration = async () => {
   const screens = await sdk.screens.fetch()
 
   const application = await sdk.applications.metadata.get()
+  if (!application) {
+    return
+  }
+
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
   let workspaceAppId = allWorkspaceApps.find(
     p => p.name === application.name
@@ -45,6 +49,7 @@ const migration = async () => {
 
   const designDoc = await db.get<DesignDocument>("_design/database")
   if (
+    designDoc &&
     designDoc.views?.[ViewName.ROUTING] &&
     // If there is no version, it is an old view
     designDoc.views[ViewName.ROUTING].version === undefined

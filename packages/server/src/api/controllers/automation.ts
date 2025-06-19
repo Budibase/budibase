@@ -95,13 +95,24 @@ export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
 }
 
 export async function find(ctx: UserCtx<void, FindAutomationResponse>) {
-  ctx.body = await sdk.automations.get(ctx.params.id)
+  const automation = await sdk.automations.get(ctx.params.id)
+  if (!automation) {
+    ctx.throw(404, `Automation with ID ${ctx.params.id} not found.`)
+  }
+  ctx.body = automation
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   const automationId = ctx.params.id
 
   const automation = await sdk.automations.get(ctx.params.id)
+  if (!automation) {
+    ctx.throw(
+      404,
+      `Failed to delete automation with id ${automationId}, automation not found.`
+    )
+  }
+
   if (coreSdk.automations.isRowAction(automation)) {
     ctx.throw("Row actions automations cannot be deleted", 422)
   }
@@ -123,6 +134,13 @@ export async function clearLogError(
   await context.doInAppContext(appId, async () => {
     const db = context.getProdAppDB()
     const metadata = await db.get<App>(DocumentType.APP_METADATA)
+    if (!metadata) {
+      ctx.throw(
+        404,
+        `Failed to clear automation logs for app ${appId}, app metadata not found.`
+      )
+    }
+
     if (!automationId) {
       delete metadata.automationErrors
     } else if (
@@ -169,6 +187,13 @@ export async function trigger(
 ) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
+
+  if (!automation) {
+    ctx.throw(
+      404,
+      `Failed to trigger automation with id ${ctx.params.id}, automation not found.`
+    )
+  }
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
   if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
@@ -229,7 +254,7 @@ export async function test(
   ctx: UserCtx<TestAutomationRequest, TestAutomationResponse>
 ) {
   const db = context.getAppDB()
-  const automation = await db.tryGet<Automation>(ctx.params.id)
+  const automation = await db.get<Automation>(ctx.params.id)
   if (!automation) {
     ctx.throw(404, `Automation ${ctx.params.id} not found`)
   }

@@ -29,7 +29,6 @@ import {
   LockType,
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
-  PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
@@ -113,9 +112,11 @@ export const addSsoSupport = async (
   const { email, ssoId } = ctx.request.body
   try {
     // Status is changed to 404 from getUserDoc if user is not found
-    const userByEmail = (await platform.users.getUserDoc(
-      email
-    )) as PlatformUserByEmail
+    const userByEmail = await platform.users.getUserDocByEmail(email)
+    if (!userByEmail) {
+      ctx.throw(404, `User with email ${email} not found.`)
+    }
+
     await platform.users.addSsoUser(
       ssoId,
       email,
@@ -124,6 +125,9 @@ export const addSsoSupport = async (
     )
     // Need to get the _rev of the user doc to update
     const userById = await platform.users.getUserDoc(userByEmail.userId)
+    if (!userById) {
+      ctx.throw(404, `User with ID ${userByEmail.userId} not found.`)
+    }
     await platform.users.updateUserDoc({
       ...userById,
       email,
@@ -330,7 +334,11 @@ export const fetch = async (ctx: UserCtx<void, FetchUsersResponse>) => {
 
 // called internally by app server user find
 export const find = async (ctx: UserCtx<void, FindUserResponse>) => {
-  ctx.body = await userSdk.db.getUser(ctx.params.id)
+  const user = await userSdk.db.getUser(ctx.params.id)
+  if (!user) {
+    ctx.throw(404, `User with ID "${ctx.params.id}" not found.`)
+  }
+  ctx.body = user
 }
 
 export const tenantUserLookup = async (

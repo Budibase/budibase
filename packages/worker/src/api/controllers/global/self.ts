@@ -58,12 +58,7 @@ export async function generateAPIKey(
 
   const db = tenancy.getGlobalDB()
   const id = dbCore.generateDevInfoID(userId)
-  let devInfo: DevInfo
-  try {
-    devInfo = await db.get<DevInfo>(id)
-  } catch (err) {
-    devInfo = { _id: id, userId }
-  }
+  const devInfo = (await db.get<DevInfo>(id)) || { _id: id, userId }
   devInfo.apiKey = apiKey
   await db.put(devInfo)
   ctx.body = cleanupDevInfo(devInfo)
@@ -111,6 +106,10 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
 
   // get the main body of the user
   const user = await userSdk.db.getUser(userId)
+  if (!user) {
+    ctx.throw(404, `User with ID ${userId} not found.`)
+  }
+
   const enrichedUser = await groups.enrichUserRolesFromGroups(user)
 
   // add the attributes that are session based to the current user
@@ -202,6 +201,10 @@ export async function updateSelf(
   const update = ctx.request.body
 
   let user = await userSdk.db.getUser(ctx.user._id!)
+  if (!user) {
+    ctx.throw(404, `User with ID ${ctx.user._id} not found.`)
+  }
+
   const updatedAppFavourites = await processUserAppFavourites(user, update)
 
   user = {

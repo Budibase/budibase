@@ -15,6 +15,13 @@ export async function fetchAppComponentDefinitions(
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)
 
+    if (!app) {
+      ctx.throw(
+        404,
+        `Could not fetch component definitions, app with ID ${context.getAppId()} not found.`
+      )
+    }
+
     let componentManifests = await Promise.all(
       app.componentLibraries.map(async (library: any) => {
         let manifest = await getComponentLibraryManifest(library)

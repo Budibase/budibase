@@ -5,22 +5,24 @@ import { ContextUserMetadata, UserCtx, UserMetadata } from "@budibase/types"
 
 export async function getFullUser(
   userId: string
-): Promise<ContextUserMetadata> {
+): Promise<ContextUserMetadata | undefined> {
   const global = await getGlobalUser(userId)
+  if (!global) {
+    return undefined
+  }
+
   let metadata: UserMetadata | undefined = undefined
 
   // always prefer the user metadata _id and _rev
   delete global._id
   delete global._rev
 
-  try {
-    // this will throw an error if the db doesn't exist, or there is no appId
-    const db = context.getAppDB()
-    metadata = await db.get<UserMetadata>(userId)
+  const db = context.getAppDB()
+  metadata = await db.get<UserMetadata>(userId)
+  if (metadata) {
     delete metadata.csrfToken
-  } catch (err) {
-    // it is fine if there is no user metadata yet
   }
+
   return {
     ...metadata,
     ...global,

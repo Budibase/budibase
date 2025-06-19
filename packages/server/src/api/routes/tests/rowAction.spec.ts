@@ -1009,7 +1009,7 @@ if (descriptions.length) {
         async function getRowActionsFromDb(tableId: string) {
           return await context.doInAppContext(config.getAppId(), async () => {
             const db = context.getAppDB()
-            const tableDoc = await db.tryGet<TableRowActions>(
+            const tableDoc = await db.get<TableRowActions>(
               generateRowActionsID(tableId)
             )
             return tableDoc

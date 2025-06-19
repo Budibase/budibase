@@ -56,10 +56,23 @@ export async function buildSchema(
   await context.doInAppContext(ctx.params.instance, async () => {
     const db = context.getAppDB()
     const webhook = await db.get<Webhook>(ctx.params.id)
+    if (!webhook) {
+      ctx.throw(
+        404,
+        `Could not build schema for webhook with id ${ctx.params.id}, webhook not found.`
+      )
+    }
+
     webhook.bodySchema = toJsonSchema(ctx.request.body)
     // update the automation outputs
     if (webhook.action.type === WebhookActionType.AUTOMATION) {
-      let automation = await db.get<Automation>(webhook.action.target)
+      const automation = await db.get<Automation>(webhook.action.target)
+      if (!automation) {
+        ctx.throw(
+          404,
+          `Could not build schema for webhook with id ${ctx.params.id}, automation with ID ${webhook.action.target} not found.`
+        )
+      }
       const autoOutputs = automation.definition.trigger.schema.outputs
       let properties = webhook.bodySchema?.properties
       // reset webhook outputs
@@ -96,7 +109,7 @@ export async function trigger(
   }
   await context.doInAppContext(prodAppId, async () => {
     const db = context.getAppDB()
-    const webhook = await db.tryGet<Webhook>(ctx.params.id)
+    const webhook = await db.get<Webhook>(ctx.params.id)
     if (!webhook) {
       return appNotDeployed()
     }
@@ -104,7 +117,7 @@ export async function trigger(
     if (webhook.bodySchema) {
       validate(ctx.request.body, webhook.bodySchema)
     }
-    const target = await db.tryGet<Automation>(webhook.action.target)
+    const target = await db.get<Automation>(webhook.action.target)
     if (!target) {
       return appNotDeployed()
     }

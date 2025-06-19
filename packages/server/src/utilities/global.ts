@@ -74,23 +74,33 @@ export async function processUser(
 export async function getCachedSelf(
   ctx: UserCtx,
   appId: string
-): Promise<ContextUser> {
+): Promise<ContextUser | undefined> {
   // this has to be tenant aware, can't depend on the context to find it out
   // running some middlewares before the tenancy causes context to break
   const user = await cache.user.getUser({
     userId: ctx.user!._id!,
   })
+  if (!user) {
+    return undefined
+  }
   return processUser(user, { appId })
 }
 
-export async function getRawGlobalUser(userId: string): Promise<User> {
+export async function getRawGlobalUser(
+  userId: string
+): Promise<User | undefined> {
   const db = tenancy.getGlobalDB()
   return db.get<User>(getGlobalIDFromUserMetadataID(userId))
 }
 
-export async function getGlobalUser(userId: string): Promise<ContextUser> {
+export async function getGlobalUser(
+  userId: string
+): Promise<ContextUser | undefined> {
   const appId = context.getAppId()
   let user = await getRawGlobalUser(userId)
+  if (!user) {
+    return undefined
+  }
   return processUser(user, { appId })
 }
 

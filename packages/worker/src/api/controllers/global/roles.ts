@@ -42,6 +42,10 @@ export async function find(ctx: Ctx<void, FindGlobalRoleResponse>) {
   await context.doInAppContext(dbCore.getDevAppID(appId), async () => {
     const db = context.getAppDB()
     const app = await db.get<App>(dbCore.DocumentType.APP_METADATA)
+    if (!app) {
+      ctx.throw(404, `App with ID ${appId} not found.`)
+    }
+
     ctx.body = {
       roles: await roles.getAllRoles(),
       name: app.name,

@@ -136,22 +136,25 @@ export async function getExternalTable(
   })
 }
 
-export async function getTable(tableId: string): Promise<Table> {
+export async function getTable(tableId: string): Promise<Table | undefined> {
   return await tracer.trace("getTable", async span => {
     const db = context.getAppDB()
     span.addTags({ tableId, db: db.name })
-    let output: Table
     if (tableId && isExternalTableID(tableId)) {
       let { datasourceId, tableName } = breakExternalTableId(tableId)
       span.addTags({ isExternal: true, datasourceId, tableName })
+
       const datasource = await datasources.get(datasourceId)
-      const table = await getExternalTable(datasourceId, tableName)
-      output = { ...table, sql: isSQL(datasource) }
+      if (!datasource) {
+        return undefined
+      }
       span.addTags({ isSQL: isSQL(datasource) })
+
+      const table = await getExternalTable(datasourceId, tableName)
+      return { ...table, sql: isSQL(datasource) }
     } else {
-      output = await db.get<Table>(tableId)
+      return await db.get<Table>(tableId)
     }
-    return await processTable(output)
   })
 }
 

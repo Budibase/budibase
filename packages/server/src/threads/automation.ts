@@ -256,7 +256,7 @@ class Orchestrator {
   async getMetadata(): Promise<AutomationMetadata> {
     const metadataId = generateAutomationMetadataID(this.automation._id!)
     const db = context.getAppDB()
-    const metadata = await db.tryGet<AutomationMetadata>(metadataId)
+    const metadata = await db.get<AutomationMetadata>(metadataId)
     return metadata || { _id: metadataId, errorCount: 0 }
   }
 

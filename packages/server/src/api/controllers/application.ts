@@ -27,6 +27,7 @@ import {
   env as envCore,
   events,
   features,
+  HTTPError,
   objectStore,
   roles,
   tenancy,
@@ -186,17 +187,24 @@ async function addSampleDataDocs() {
 async function addSampleDataScreen() {
   let workspaceAppId: string | undefined
 
+  const app = await sdk.applications.metadata.get()
+  if (!app) {
+    throw new HTTPError(
+      `Failed to add sample data screen to app ${context.getAppId()}, app metadata not found`,
+      500
+    )
+  }
+
   const workspaceAppEnabled = await features.isEnabled(
     FeatureFlag.WORKSPACE_APPS
   )
   if (workspaceAppEnabled) {
-    const appMetadata = await sdk.applications.metadata.get()
     const workspaceApp = await sdk.workspaceApps.create({
-      name: appMetadata.name,
+      name: app.name,
       url: "/",
       icon: "Monitoring",
       navigation: {
-        ...defaultAppNavigator(appMetadata.name),
+        ...defaultAppNavigator(app.name),
         links: [
           {
             text: "Inventory",
@@ -215,28 +223,25 @@ async function addSampleDataScreen() {
   const screen = createSampleDataTableScreen(workspaceAppId)
   await sdk.screens.create(screen)
 
-  {
-    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
-    const db = context.getAppDB()
-    let app = await sdk.applications.metadata.get()
-    if (!app.navigation) {
-      return
-    }
-    if (!app.navigation.links) {
-      app.navigation.links = []
-    }
-    app.navigation.links.push({
-      text: "Inventory",
-      url: "/inventory",
-      type: "link",
-      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-    })
-
-    await db.put(app)
-
-    // remove any cached metadata, so that it will be updated
-    await cache.app.invalidateAppMetadata(app.appId)
+  // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
+  if (!app.navigation) {
+    return
   }
+  if (!app.navigation.links) {
+    app.navigation.links = []
+  }
+  app.navigation.links.push({
+    text: "Inventory",
+    url: "/inventory",
+    type: "link",
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+  })
+
+  const db = context.getAppDB()
+  await db.put(app)
+
+  // remove any cached metadata, so that it will be updated
+  await cache.app.invalidateAppMetadata(app.appId)
 }
 
 export const addSampleData = async (
@@ -307,6 +312,10 @@ export async function fetchAppPackage(
 ) {
   const appId = context.getAppId()
   const application = await sdk.applications.metadata.get()
+  if (!application) {
+    ctx.throw(404, `App with id ${appId} not found`)
+  }
+
   const layouts = await getLayouts()
   let screens = await sdk.screens.fetch()
   const license = await licensing.cache.getCachedLicense()
@@ -444,7 +453,7 @@ async function performAppCreate(
       newApplication.creationVersion = envCore.VERSION
     }
 
-    const existing = await sdk.applications.metadata.tryGet()
+    const existing = await sdk.applications.metadata.get()
     // If we used a template or imported an app there will be an existing doc.
     // Fetch and migrate some metadata from the existing app.
     if (existing) {
@@ -488,15 +497,11 @@ async function performAppCreate(
 
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
-      try {
-        await addSampleDataDocs()
-        await addSampleDataScreen()
+      await addSampleDataDocs()
+      await addSampleDataScreen()
 
-        // Fetch the latest version of the app after these changes
-        newApplication = await sdk.applications.metadata.get()
-      } catch (err) {
-        ctx.throw(400, "App created, but failed to add sample data")
-      }
+      // Fetch the latest version of the app after these changes
+      newApplication = (await sdk.applications.metadata.get())!
     }
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
@@ -636,6 +641,9 @@ async function appPostCreate(ctx: UserCtx<CreateAppRequest, App>, app: App) {
   // If the user is a creator, we need to give them access to the new app
   if (sharedCoreSDK.users.hasCreatorPermissions(ctx.user)) {
     const user = await users.UserDB.getUser(ctx.user._id!)
+    if (!user) {
+      ctx.throw(404, `User with id ${ctx.user._id} not found`)
+    }
     await users.addAppBuilder(user, app.appId)
   }
 }
@@ -692,6 +700,10 @@ export async function updateClient(
   }
   // Get current app version
   const application = await sdk.applications.metadata.get()
+  if (!application) {
+    ctx.throw(404, `App with id ${ctx.params.appId} not found`)
+  }
+
   const currentVersion = application.version
 
   let manifest
@@ -726,6 +738,10 @@ export async function revertClient(
 
   // Check app can be reverted
   const application = await sdk.applications.metadata.get()
+  if (!application) {
+    ctx.throw(404, `App with id ${ctx.params.appId} not found`)
+  }
+
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
@@ -774,30 +790,34 @@ async function invalidateAppCache(appId: string) {
 }
 
 async function destroyApp(ctx: UserCtx) {
-  let appId = ctx.params.appId
-  appId = dbCore.getProdAppID(appId)
-  const devAppId = dbCore.getDevAppID(appId)
+  const prodAppId = dbCore.getProdAppID(ctx.params.appId)
+  const devAppId = dbCore.getDevAppID(ctx.params.appId)
 
   // check if we need to unpublish first
-  if (await dbCore.dbExists(appId)) {
+  if (await dbCore.dbExists(prodAppId)) {
     // app is deployed, run through unpublish flow
     await sdk.applications.syncApp(devAppId)
     await unpublishApp(ctx)
   }
 
   const db = dbCore.getDB(devAppId)
+
   // standard app deletion flow
   const app = await sdk.applications.metadata.get()
+  if (!app) {
+    ctx.throw(404, `App with id ${prodAppId} not found`)
+  }
+
   const result = await db.destroy()
   await quotas.removeApp()
   await events.app.deleted(app)
 
   if (!env.USE_LOCAL_COMPONENT_LIBS) {
-    await deleteAppFiles(appId)
+    await deleteAppFiles(prodAppId)
   }
 
-  await removeAppFromUserRoles(ctx, appId)
-  await invalidateAppCache(appId)
+  await removeAppFromUserRoles(ctx, prodAppId)
+  await invalidateAppCache(prodAppId)
   return result
 }
 
@@ -944,6 +964,13 @@ export async function updateAppPackage(
     const db = context.getAppDB()
     const application = await sdk.applications.metadata.get()
 
+    if (!application) {
+      throw new HTTPError(
+        `Failed to update app with ID ${appId}, app not found`,
+        404
+      )
+    }
+
     const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
@@ -975,6 +1002,13 @@ export async function updateAppPackage(
 async function migrateAppNavigation() {
   const db = context.getAppDB()
   const existing = await sdk.applications.metadata.get()
+  if (!existing) {
+    throw new HTTPError(
+      `Failed to migrate app navigation for app with ID ${context.getAppId()}, app metadata not found`,
+      404
+    )
+  }
+
   const layouts: Layout[] = await getLayouts()
   const screens: Screen[] = await sdk.screens.fetch()
 

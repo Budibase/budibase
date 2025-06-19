@@ -12,7 +12,7 @@ const KEYS_DOC = dbCore.StaticDatabases.GLOBAL.docs.apiKeys
 
 async function getBuilderMainDoc() {
   const db = tenancy.getGlobalDB()
-  const doc = await db.tryGet<ApiKeyDoc>(KEYS_DOC)
+  const doc = await db.get<ApiKeyDoc>(KEYS_DOC)
   if (!doc) {
     return {
       _id: KEYS_DOC,

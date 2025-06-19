@@ -86,6 +86,12 @@ export const resetUpdate = async (resetCode: string, password: string) => {
   const { userId } = await cache.passwordReset.getCode(resetCode)
 
   let user = await userSdk.db.getUser(userId)
+  if (!user) {
+    throw new HTTPError(
+      `Couldn't reset password for user with ID "${userId}", user not found`,
+      404
+    )
+  }
   user.password = password
   user = await userSdk.db.save(user)
 

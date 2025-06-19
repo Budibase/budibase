@@ -16,41 +16,46 @@ export async function run({
 }): Promise<TriggerAutomationStepOutputs> {
   const { automationId, ...fieldParams } = inputs.automation
 
-  if (await features.isTriggerAutomationRunEnabled()) {
-    if (!inputs.automation.automationId) {
-      return {
-        success: false,
-        status: AutomationStatus.ERROR,
-      }
-    } else {
-      const db = context.getAppDB()
-      let automation = await db.get<Automation>(inputs.automation.automationId)
-
-      let timeout = env.AUTOMATION_THREAD_TIMEOUT
-      if (inputs.timeout !== undefined) {
-        timeout = inputs.timeout * 1000
-      }
-
-      const response = await triggers.externalTrigger(
-        automation,
-        { fields: { ...fieldParams }, timeout },
-        { getResponses: true }
-      )
-
-      if (triggers.isAutomationResults(response)) {
-        return {
-          success: response.status === AutomationStatus.SUCCESS,
-          value: response.steps,
-          status: response.status,
-        }
-      } else {
-        throw new Error("Automation did not have a collect block")
-      }
-    }
-  } else {
+  if (!(await features.isTriggerAutomationRunEnabled())) {
     return {
       success: false,
       status: AutomationStatus.ERROR,
     }
+  }
+
+  if (!inputs.automation.automationId) {
+    return {
+      success: false,
+      status: AutomationStatus.ERROR,
+    }
+  }
+
+  const db = context.getAppDB()
+  let automation = await db.get<Automation>(inputs.automation.automationId)
+  if (!automation) {
+    throw new Error(
+      `Automation with ID ${inputs.automation.automationId} not found`
+    )
+  }
+
+  let timeout = env.AUTOMATION_THREAD_TIMEOUT
+  if (inputs.timeout !== undefined) {
+    timeout = inputs.timeout * 1000
+  }
+
+  const response = await triggers.externalTrigger(
+    automation,
+    { fields: { ...fieldParams }, timeout },
+    { getResponses: true }
+  )
+
+  if (!triggers.isAutomationResults(response)) {
+    throw new Error("Automation did not have a collect block")
+  }
+
+  return {
+    success: response.status === AutomationStatus.SUCCESS,
+    value: response.steps,
+    status: response.status,
   }
 }

@@ -89,11 +89,11 @@ describe("SQS migration", () => {
     const db = dbCore.getDB(config.appId!)
 
     // remove sqlite design doc to simulate it comes from an older installation
-    const doc = await db.get(SQLITE_DESIGN_DOC_ID)
+    const doc = (await db.get(SQLITE_DESIGN_DOC_ID))!
     await db.remove({ _id: doc._id, _rev: doc._rev })
 
     await processMigrations(config.appId!, MIGRATIONS)
-    const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    const designDoc = (await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID))!
     expect(designDoc.sql.tables).toBeDefined()
     const mainTableDef = designDoc.sql.tables[tableId]
     expect(mainTableDef).toBeDefined()
@@ -107,7 +107,7 @@ describe("SQS migration", () => {
     })
 
     const { tableId1, tableId2, rowId1, rowId2 } = oldLinkDocInfo()
-    const linkDoc = await db.get<LinkDocument>(oldLinkDocID())
+    const linkDoc = (await db.get<LinkDocument>(oldLinkDocID()))!
     expect(linkDoc.tableId).toEqual(generateJunctionTableID(tableId1, tableId2))
     // should have swapped the documents
     expect(linkDoc.doc1.tableId).toEqual(tableId2)

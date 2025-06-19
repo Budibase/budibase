@@ -96,6 +96,9 @@ export async function fetch() {
 export async function get(automationId: string) {
   const db = getDb()
   const result = await db.get<PersistedAutomation>(automationId)
+  if (!result) {
+    return undefined
+  }
   return trimUnexpectedObjectFields(result)
 }
 
@@ -139,6 +142,12 @@ export async function update(automation: Automation) {
   const db = getDb()
 
   const oldAutomation = await db.get<Automation>(automation._id)
+  if (!oldAutomation) {
+    throw new HTTPError(
+      `Failed to update automation with ID ${automation._id} - it does not exist`,
+      404
+    )
+  }
 
   guardInvalidUpdatesAndThrow(automation, oldAutomation)
 
@@ -179,6 +188,13 @@ export async function update(automation: Automation) {
 export async function remove(automationId: string, rev: string) {
   const db = getDb()
   const existing = await db.get<Automation>(automationId)
+  if (!existing) {
+    throw new HTTPError(
+      `Failed to delete automation with ID ${automationId} - it does not exist`,
+      404
+    )
+  }
+
   await checkForWebhooks({
     oldAuto: existing,
   })
@@ -226,18 +242,16 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
     (!isWebhookTrigger(newAuto) || triggerChanged) &&
     oldTrigger.webhookId
   ) {
-    try {
-      const db = getDb()
-      // need to get the webhook to get the rev
-      const webhook = await db.get<Webhook>(oldTrigger.webhookId)
-      // might be updating - reset the inputs to remove the URLs
-      if (newTrigger) {
-        delete newTrigger.webhookId
-        newTrigger.inputs = {}
-      }
+    const db = getDb()
+    // need to get the webhook to get the rev
+    // might be updating - reset the inputs to remove the URLs
+    if (newTrigger) {
+      delete newTrigger.webhookId
+      newTrigger.inputs = {}
+    }
+    const webhook = await db.get<Webhook>(oldTrigger.webhookId)
+    if (webhook) {
       await automations.webhook.destroy(webhook._id!, webhook._rev!)
-    } catch (err) {
-      // don't worry about not being able to delete, if it doesn't exist all good
     }
   }
   // need to create webhook

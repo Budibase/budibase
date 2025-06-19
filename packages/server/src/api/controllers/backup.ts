@@ -32,6 +32,8 @@ export async function exportAppDump(
   await context.doInAppContext(appId, async () => {
     const appDb = context.getAppDB()
     const app = await appDb.get<App>(DocumentType.APP_METADATA)
-    await events.app.exported(app)
+    if (app) {
+      await events.app.exported(app)
+    }
   })
 }

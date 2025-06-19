@@ -31,22 +31,12 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
   const cacheKey = getAppMigrationCacheKey(appId)
 
   let version: string | undefined = await cache.get(cacheKey)
-
-  // returned cached version if we found one
   if (version) {
     return version
   }
 
-  try {
-    const metadata = await getFromDB(appId)
-    version = metadata.version || ""
-  } catch (err: any) {
-    if (err.status !== 404) {
-      throw err
-    }
-
-    version = ""
-  }
+  const metadata = await getFromDB(appId)
+  version = metadata?.version || ""
 
   // only cache if we have a valid version
   if (version) {
@@ -64,22 +54,13 @@ export async function updateAppMigrationMetadata({
   version: string
 }): Promise<void> {
   const appDb = db.getDB(appId)
-  let appMigrationDoc: AppMigrationDoc
-
-  try {
-    appMigrationDoc = await getFromDB(appId)
-  } catch (err: any) {
-    if (err.status !== 404) {
-      throw err
-    }
-
+  let appMigrationDoc = await getFromDB(appId)
+  if (!appMigrationDoc) {
     appMigrationDoc = {
       _id: DesignDocuments.MIGRATIONS,
       version: "",
       history: {},
     }
-    await appDb.put(appMigrationDoc)
-    appMigrationDoc = await getFromDB(appId)
   }
 
   const updatedMigrationDoc: AppMigrationDoc = {
@@ -93,6 +74,5 @@ export async function updateAppMigrationMetadata({
   await appDb.put(updatedMigrationDoc)
 
   const cacheKey = getAppMigrationCacheKey(appId)
-
   await cache.destroy(cacheKey)
 }

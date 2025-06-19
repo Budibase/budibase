@@ -73,8 +73,8 @@ export class RestImporter {
     )
 
     // check for failed writes
-    response.forEach((query: any) => {
-      if (!query.ok) {
+    response.forEach(query => {
+      if (query.error) {
         errorQueries.push(queryIndex[query.id])
         delete queryIndex[query.id]
       }
@@ -85,10 +85,12 @@ export class RestImporter {
     // events
     const count = successQueries.length
     const importSource = this.source.getImportSource()
-    const datasource: Datasource = await db.get(datasourceId)
-    await events.query.imported(datasource, importSource, count)
-    for (let query of successQueries) {
-      await events.query.created(datasource, query)
+    const datasource = await db.get<Datasource>(datasourceId)
+    if (datasource) {
+      await events.query.imported(datasource, importSource, count)
+      for (let query of successQueries) {
+        await events.query.created(datasource, query)
+      }
     }
 
     return {

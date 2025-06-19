@@ -28,7 +28,7 @@ export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
 
 export async function get(id: string): Promise<WorkspaceApp | undefined> {
   const db = context.getAppDB()
-  const workspaceApp = await db.tryGet<WorkspaceApp>(id)
+  const workspaceApp = await db.get<WorkspaceApp>(id)
   return workspaceApp
 }
 

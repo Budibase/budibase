@@ -371,6 +371,12 @@ export const serveBuilderPreview = async function (
 ) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+  if (!appInfo) {
+    ctx.throw(
+      404,
+      `Failed to get app info, app with ID ${context.getAppId()} not found.`
+    )
+  }
 
   if (!env.isJest()) {
     let appId = context.getAppId()
@@ -502,8 +508,15 @@ export async function servePwaManifest(ctx: UserCtx<void, any>) {
     const db = context.getAppDB({ skip_setup: true })
     const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
+    if (!appInfo) {
+      ctx.throw(
+        404,
+        `Failed to get PWA manifest, app with ID ${appId} not found.`
+      )
+    }
+
     if (!appInfo.pwa) {
-      ctx.throw(404)
+      ctx.throw(404, `PWA manifest not configured for app with ID ${appId}.`)
     }
 
     const manifest: PWAManifest = {

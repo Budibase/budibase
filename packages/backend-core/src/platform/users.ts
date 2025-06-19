@@ -17,12 +17,20 @@ export async function lookupTenantId(userId: string) {
   }
 
   const user = await getUserDoc(userId)
+  if (!user) {
+    return undefined
+  }
   return user.tenantId
 }
 
-export async function getUserDoc(emailOrId: string): Promise<PlatformUser> {
+export async function getUserDoc(id: string) {
   const db = getPlatformDB()
-  return db.get(emailOrId)
+  return db.get<PlatformUser>(id)
+}
+
+export async function getUserDocByEmail(email: string) {
+  const db = getPlatformDB()
+  return await db.get<PlatformUserByEmail>(email)
 }
 
 export async function updateUserDoc(platformUser: PlatformUserById) {
@@ -70,18 +78,12 @@ function newUserSsoIdDoc(
  */
 async function addUserDoc(emailOrId: string, newDocFn: () => PlatformUser) {
   const db = getPlatformDB()
-  let user: PlatformUser
-
-  try {
-    await db.get(emailOrId)
-  } catch (e: any) {
-    if (e.status === 404) {
-      user = newDocFn()
-      await db.put(user)
-    } else {
-      throw e
-    }
+  let user = await db.get<PlatformUser>(emailOrId)
+  if (!user) {
+    user = newDocFn()
+    await db.put(user)
   }
+  return user
 }
 
 export async function addSsoUser(

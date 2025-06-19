@@ -48,7 +48,7 @@ const middleware = (async (ctx: UserCtx, next: Next) => {
     const globalUser = await getCachedSelf(ctx, requestAppId)
     appId = requestAppId
     // retrieving global user gets the right role
-    roleId = globalUser.roleId || roleId
+    roleId = globalUser?.roleId || roleId
 
     // Allow builders to specify their role via a header
     const isBuilder = users.isBuilder(globalUser, appId)

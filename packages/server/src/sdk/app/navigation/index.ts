@@ -1,4 +1,4 @@
-import { context, features } from "@budibase/backend-core"
+import { context, features, HTTPError } from "@budibase/backend-core"
 import sdk from "../.."
 import { App, AppNavigation, FeatureFlag } from "@budibase/types"
 
@@ -33,6 +33,12 @@ export async function addLink({
   if (shouldUpdateAppMetadata) {
     // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
     const appMetadata = await sdk.applications.metadata.get()
+    if (!appMetadata) {
+      throw new HTTPError(
+        `Failed to update app with ID ${context.getAppId()}, app metadata not found`,
+        404
+      )
+    }
     appMetadata.navigation ??= {
       navigation: "Top",
     }
@@ -82,6 +88,12 @@ export async function deleteLink(
   if (shouldUpdateAppMetadata) {
     // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
     const appMetadata = await sdk.applications.metadata.get()
+    if (!appMetadata) {
+      throw new HTTPError(
+        `Failed to update app with ID ${context.getAppId()}, app metadata not found`,
+        404
+      )
+    }
     const navigation = appMetadata.navigation
     if (!navigation || !navigation.links?.length) {
       return
@@ -111,6 +123,12 @@ export async function deleteLink(
 
 export async function update(navigation: AppNavigation) {
   const appMetadata = await sdk.applications.metadata.get()
+  if (!appMetadata) {
+    throw new HTTPError(
+      `Failed to update app with ID ${context.getAppId()}, app metadata not found`,
+      404
+    )
+  }
   appMetadata.navigation = navigation
 
   const db = context.getAppDB()

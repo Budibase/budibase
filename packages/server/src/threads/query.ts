@@ -228,6 +228,11 @@ class QueryRunner {
   ) {
     const db = context.getAppDB()
     const query = await db.get<Query>(queryId)
+    if (!query) {
+      throw new Error(
+        `Failed to execute query with ID: ${queryId}, query not found`
+      )
+    }
     const datasource = await sdk.datasources.get(query.datasourceId, {
       enriched: true,
     })

@@ -129,7 +129,11 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     // check if flag has previously been set, don't let it change
     // allow it to be explicitly set to false via API incase this is ever needed
     const existingQuery = await db.get<Query>(query._id)
-    if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
+    if (
+      existingQuery &&
+      existingQuery.nullDefaultSupport &&
+      query.nullDefaultSupport == null
+    ) {
       query.nullDefaultSupport = true
     }
     eventFn = () => events.query.updated(datasource, query)
@@ -363,6 +367,13 @@ async function execute(
   const db = context.getAppDB()
 
   const query = await db.get<Query>(ctx.params.queryId)
+  if (!query) {
+    ctx.throw(
+      404,
+      `Failed to execute query, query with ID ${ctx.params.queryId} not found.`
+    )
+  }
+
   const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
     query.datasourceId
   )
@@ -433,22 +444,21 @@ export async function executeV2AsAutomation(
   return execute(ctx, { rowsOnly: false, isAutomation: true })
 }
 
-const removeDynamicVariables = async (queryId: string) => {
+const removeDynamicVariables = async (query: Query) => {
   const db = context.getAppDB()
-  const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
   const dynamicVariables = datasource.config?.dynamicVariables as any[]
 
   if (dynamicVariables) {
     // delete dynamic variables from the datasource
     datasource.config!.dynamicVariables = dynamicVariables!.filter(
-      (dv: any) => dv.queryId !== queryId
+      (dv: any) => dv.queryId !== query._id
     )
     await db.put(datasource)
 
     // invalidate the deleted variables
     const variablesToDelete = dynamicVariables!.filter(
-      (dv: any) => dv.queryId === queryId
+      (dv: any) => dv.queryId === query._id
     )
     await invalidateCachedVariable(variablesToDelete)
   }
@@ -456,9 +466,15 @@ const removeDynamicVariables = async (queryId: string) => {
 
 export async function destroy(ctx: UserCtx<void, DeleteQueryResponse>) {
   const db = context.getAppDB()
-  const queryId = ctx.params.queryId as string
-  await removeDynamicVariables(queryId)
+  const queryId: string = ctx.params.queryId
   const query = await db.get<Query>(queryId)
+  if (!query) {
+    ctx.throw(
+      404,
+      `Failed to delete query, query with ID ${queryId} not found.`
+    )
+  }
+  await removeDynamicVariables(query)
   const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.body = { message: `Query deleted.` }

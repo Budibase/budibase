@@ -374,7 +374,7 @@ export async function getRole(
   const db = getAppDB()
   const roleList = []
   if (!isBuiltin(roleId)) {
-    const role = await db.tryGet<RoleDoc>(getDBRoleID(roleId))
+    const role = await db.get<RoleDoc>(getDBRoleID(roleId))
     if (role) {
       roleList.push(role)
     }
@@ -548,7 +548,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
 }
 
 async function shouldIncludePowerRole(db: Database) {
-  const app = await db.tryGet<App>(DocumentType.APP_METADATA)
+  const app = await db.get<App>(DocumentType.APP_METADATA)
   const creationVersion = app?.creationVersion
   if (!creationVersion || !semver.valid(creationVersion)) {
     // Old apps don't have creationVersion, so we should include it for backward compatibility

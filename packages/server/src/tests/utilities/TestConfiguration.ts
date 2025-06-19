@@ -68,6 +68,7 @@ import {
   Webhook,
   WithRequired,
   DevInfo,
+  UserGroup,
 } from "@budibase/types"
 
 import API from "./api"
@@ -320,12 +321,7 @@ export default class TestConfiguration {
     } = config
 
     const db = tenancy.getTenantDB(this.getTenantId())
-    let existing: Partial<User> = {}
-    try {
-      existing = await db.get<User>(_id)
-    } catch (err) {
-      // ignore
-    }
+    const existing: Partial<User> = (await db.get<User>(_id)) || {}
     const user: User = {
       _id,
       ...existing,
@@ -372,15 +368,15 @@ export default class TestConfiguration {
     })
   }
 
-  async addUserToGroup(groupId: string, userId: string) {
+  async addUserToGroup(group: UserGroup, userId: string) {
     return context.doInTenant(this.tenantId!, async () => {
-      await pro.sdk.groups.addUsers(groupId, [userId])
+      await pro.sdk.groups.addUsers(group, [userId])
     })
   }
 
-  async removeUserFromGroup(groupId: string, userId: string) {
+  async removeUserFromGroup(group: UserGroup, userId: string) {
     return context.doInTenant(this.tenantId!, async () => {
-      await pro.sdk.groups.removeUsers(groupId, [userId])
+      await pro.sdk.groups.removeUsers(group, [userId])
     })
   }
 
@@ -587,7 +583,7 @@ export default class TestConfiguration {
     }
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
-    const devInfo = await db.tryGet<DevInfo>(id)
+    const devInfo = await db.get<DevInfo>(id)
     if (devInfo && devInfo.apiKey) {
       return devInfo.apiKey
     }
@@ -632,7 +628,7 @@ export default class TestConfiguration {
 
     return context.doInAppContext(prodAppId, async () => {
       const db = context.getProdAppDB()
-      return await db.get<App>(dbCore.DocumentType.APP_METADATA)
+      return (await db.get<App>(dbCore.DocumentType.APP_METADATA))!
     })
   }
 

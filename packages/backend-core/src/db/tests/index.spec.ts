@@ -1,12 +1,7 @@
 import { doInTenant } from "../../context"
 import { structures } from "../../../tests"
 import { getDB } from "../db"
-
-interface Doc {
-  _id: string
-  createdAt?: string
-  updatedAt?: string
-}
+import { Document } from "@budibase/types"
 
 describe("db", () => {
   describe("getDB", () => {
@@ -20,11 +15,11 @@ describe("db", () => {
     it("uses the custom put function", async () => {
       await doInTenant("foo", async () => {
         const db = getDB(structures.db.id())
-        let doc: Doc = { _id: "test" }
+        let doc: Document | undefined = { _id: "test" }
         await db.put(doc)
         doc = await db.get(doc._id)
-        expect(doc.createdAt).toBe(new Date().toISOString())
-        expect(doc.updatedAt).toBe(new Date().toISOString())
+        expect(doc!.createdAt).toBe(new Date().toISOString())
+        expect(doc!.updatedAt).toBe(new Date().toISOString())
         await db.destroy()
       })
     })

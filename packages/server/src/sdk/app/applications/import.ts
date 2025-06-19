@@ -30,28 +30,26 @@ async function getNewAppMetadata(
   tempDb: Database,
   appDb: Database
 ): Promise<App> {
-  // static doc denoting app information
-  const docId = DocumentType.APP_METADATA
-  try {
-    const [tempMetadata, appMetadata] = await Promise.all([
-      tempDb.get<App>(docId),
-      appDb.get<App>(docId),
-    ])
-    return {
-      ...appMetadata,
-      automationErrors: undefined,
-      theme: tempMetadata.theme,
-      customTheme: tempMetadata.customTheme,
-      features: tempMetadata.features,
-      icon: tempMetadata.icon,
-      navigation: tempMetadata.navigation,
-      type: tempMetadata.type,
-      version: tempMetadata.version,
-    }
-  } catch (err: any) {
-    throw new Error(
-      `Unable to retrieve app metadata for import - ${err.message}`
-    )
+  const [tempMetadata, appMetadata] = await Promise.all([
+    tempDb.get<App>(DocumentType.APP_METADATA),
+    appDb.get<App>(DocumentType.APP_METADATA),
+  ])
+  if (!tempMetadata) {
+    throw new Error("Temporary app metadata not found")
+  }
+  if (!appMetadata) {
+    throw new Error("App metadata not found")
+  }
+  return {
+    ...appMetadata,
+    automationErrors: undefined,
+    theme: tempMetadata.theme,
+    customTheme: tempMetadata.customTheme,
+    features: tempMetadata.features,
+    icon: tempMetadata.icon,
+    navigation: tempMetadata.navigation,
+    type: tempMetadata.type,
+    version: tempMetadata.version,
   }
 }
 
