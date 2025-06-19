@@ -652,6 +652,7 @@ if (descriptions.length) {
             _id: expect.stringMatching(/^ta_.+/),
             createdAt: expect.stringMatching(ISO_REGEX_PATTERN),
             updatedAt: expect.stringMatching(ISO_REGEX_PATTERN),
+            createdVersion: "0.0.0+jest",
             views: {},
           }
           expect(response).toEqual(expectedResponse)
