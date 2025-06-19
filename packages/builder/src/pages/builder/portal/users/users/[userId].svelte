@@ -382,6 +382,7 @@
           schema={groupSchema}
           data={userGroups}
           allowEditRows={false}
+          allowEditColumns={false}
           customPlaceholder
           customRenderers={customGroupTableRenderers}
           on:click={e => $goto(`../groups/${e.detail._id}`)}
@@ -405,6 +406,7 @@
           data={availableApps}
           customPlaceholder
           allowEditRows={false}
+          allowEditColumns={false}
           customRenderers={customAppTableRenderers}
           on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
         >

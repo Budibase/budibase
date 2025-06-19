@@ -324,16 +324,18 @@
               <div class="user left">
                 <UserMenu />
                 {#if logoPosition === "bottom"}
-                  <Logo
-                    {logoUrl}
-                    {logoLinkUrl}
-                    {openLogoLinkInNewTab}
-                    {hideLogo}
-                    {title}
-                    {linkable}
-                    {isInternal}
-                    {getSanitizedUrl}
-                  />
+                  <div>
+                    <Logo
+                      {logoUrl}
+                      {logoLinkUrl}
+                      {openLogoLinkInNewTab}
+                      {hideLogo}
+                      {title}
+                      {linkable}
+                      {isInternal}
+                      {getSanitizedUrl}
+                    />
+                  </div>
                 {/if}
               </div>
             {/if}
