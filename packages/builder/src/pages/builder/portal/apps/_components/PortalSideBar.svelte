@@ -36,7 +36,7 @@
   </div>
   <div class="side-bar-nav">
     <NavItem
-      icon="WebPages"
+      icon="browser"
       text={`All ${appsOrWorkspaces}`}
       on:click={() => {
         onAgents = false
@@ -65,7 +65,7 @@
     </div>
     <div class="side-bar-nav">
       <NavItem
-        icon="Algorithm"
+        icon="flow-arrow"
         text="All chats"
         on:click={() => {
           openedApp = undefined
@@ -82,7 +82,7 @@
         {@const selected = $agentsStore.currentChatId === chat._id}
         <span class="side-bar-app-entry" class:actionsOpen={selected}>
           <NavItem
-            icon="Branch1"
+            icon="git-branch"
             text={chat.title}
             on:click={() => {
               onAgents = true
@@ -127,7 +127,7 @@
     gap: var(--spacing-l);
     padding: 0 var(--spacing-l);
   }
-  .side-bar-controls :global(.spectrum-Icon) {
+  .side-bar-controls :global(i) {
     color: var(--spectrum-global-color-gray-700);
   }
 

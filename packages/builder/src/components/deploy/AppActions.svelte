@@ -70,7 +70,7 @@
       <div class="app-action" id="builder-app-users-button">
         <ActionButton
           quiet
-          icon="UserGroup"
+          icon="users"
           on:click={() => {
             builderStore.showBuilderSidePanel()
           }}
@@ -121,7 +121,7 @@
 >
   <div class="popover-content">
     <Icon
-      name="CheckmarkCircle"
+      name="check-circle"
       color="var(--spectrum-global-color-green-400)"
       size="L"
     />

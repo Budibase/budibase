@@ -86,7 +86,7 @@
       _rev: workspaceApp?._rev,
       name: workspaceApp?.name ?? "",
       url: workspaceApp?.url ?? "",
-      icon: workspaceApp?.icon ?? "Monitoring",
+      icon: workspaceApp?.icon ?? "monitor",
       iconColor: workspaceApp?.iconColor,
       navigation: workspaceApp?.navigation ?? { navigation: "Top" },
       isDefault: workspaceApp?.isDefault ?? false,
