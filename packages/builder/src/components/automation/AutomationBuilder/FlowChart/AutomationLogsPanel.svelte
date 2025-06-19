@@ -12,12 +12,10 @@
   import { licensing, auth } from "@/stores/portal"
   import { createPaginationStore } from "@/helpers/pagination"
   import { onMount } from "svelte"
-  import { fly } from "svelte/transition"
   import dayjs from "dayjs"
   import StatusRenderer from "@/pages/builder/app/[application]/settings/automations/_components/StatusRenderer.svelte"
 
   export let automation
-  export let onClose = () => {}
   export let onSelectLog = () => {}
   export let selectedLog = null
 
@@ -115,14 +113,8 @@
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
-  <Panel
-    title="Logs"
-    showCloseButton
-    onClickCloseButton={onClose}
-    customWidth={400}
-    borderLeft
-  >
+<div class="container">
+  <Panel title="Logs" customWidth={400} borderLeft borderBottomHeader={false}>
     <div class="logs-panel-content">
       <div class="filters">
         <div class="filter-group">

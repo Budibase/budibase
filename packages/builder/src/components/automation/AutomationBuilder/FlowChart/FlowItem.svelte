@@ -17,7 +17,6 @@
   export let blockRef
   export let automation
   export let draggable = true
-  export let stepStatus = null
   export let logStepData = null
   export let viewMode = ViewMode.EDITOR
   export let selectedLogStepId = null
@@ -181,9 +180,6 @@
         {/if}
         <div
           class="block-core"
-          class:log-success={viewMode === ViewMode.LOGS &&
-            stepStatus === "success"}
-          class:log-error={viewMode === ViewMode.LOGS && stepStatus === "error"}
           on:click={async () => {
             if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
@@ -355,16 +351,6 @@
 
   .block-info {
     pointer-events: none;
-  }
-
-  .log-success .block-content {
-    border-color: var(--spectrum-global-color-green-600);
-    border-width: 2px;
-  }
-
-  .log-error .block-content {
-    border-color: var(--spectrum-global-color-red-600);
-    border-width: 2px;
   }
 
   .log-status-badge {

@@ -33,7 +33,6 @@
 
   // Log execution state
   $: logStepData = getLogStepData(logData, step)
-  $: stepStatus = getStepStatus(logStepData)
 
   function getLogStepData(logData, step) {
     if (!logData || viewMode !== ViewMode.LOGS) return null
@@ -46,17 +45,6 @@
     // For action steps, find by stepId match instead of position
     const logSteps = logData.steps || []
     return logSteps.find(logStep => logStep.stepId === step.stepId)
-  }
-
-  function getStepStatus(stepData) {
-    if (!stepData) return null
-
-    if (stepData.outputs?.success === false) {
-      return "error"
-    } else if (stepData.outputs?.success === true) {
-      return "success"
-    }
-    return "unknown"
   }
 
   // All bindings available to this point
@@ -205,7 +193,6 @@
       {automation}
       {bindings}
       draggable={step.type !== "TRIGGER"}
-      {stepStatus}
       {logStepData}
       {viewMode}
       {selectedLogStepId}

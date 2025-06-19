@@ -2,10 +2,8 @@
   import { Body, Icon, ActionButton, Divider } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
   import JSONViewer from "@/components/common/JSONViewer.svelte"
-  import { fly } from "svelte/transition"
   import dayjs from "dayjs"
   import StatusRenderer from "@/pages/builder/app/[application]/settings/automations/_components/StatusRenderer.svelte"
-  import { AutomationTriggerStepId } from "@budibase/types"
 
   export let log
   export let selectedStep = null
@@ -40,7 +38,7 @@
   }
 </script>
 
-<div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
+<div class="container">
   <Panel customWidth={400} borderLeft>
     <div slot="panel-title-content" class="log-header-container">
       <div class="log-header-left">

@@ -23,8 +23,6 @@
   import DraggableCanvas from "../DraggableCanvas.svelte"
   import { onMount } from "svelte"
   import { environment } from "@/stores/portal"
-  import AutomationLogsPanel from "./AutomationLogsPanel.svelte"
-  import LogDetailsPanel from "./LogDetailsPanel.svelte"
 
   export let automation
 
@@ -37,11 +35,6 @@
   let treeEle
   let draggable
 
-  let showLogsPanel = false
-  let showLogDetails = false
-  let selectedLog = null
-  let selectedStepData = null
-  let selectedLogStepId = null
   let viewMode = ViewMode.EDITOR
 
   $: $automationStore.showTestModal === true && testDataModal.show()
@@ -52,9 +45,10 @@
   // Parse the automation tree state
   $: refresh($memoAutomation)
 
-  $: blocks = getBlocks($memoAutomation, selectedLog).filter(
+  $: blocks = getBlocks($memoAutomation, $automationStore.selectedLog).filter(
     x => x.stepId !== ActionStepID.LOOP
   )
+
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const refresh = () => {
@@ -119,17 +113,15 @@
   })
 
   function toggleLogsPanel() {
-    showLogsPanel = !showLogsPanel
-    if (showLogsPanel) {
-      showLogDetails = false
-      selectedLog = null
-      selectedLogStepId = null
+    if ($automationStore.showLogsPanel) {
+      automationStore.actions.closeLogsPanel()
+      viewMode = ViewMode.EDITOR
+    } else {
+      automationStore.actions.openLogsPanel()
+      automationStore.actions.closeLogPanel()
       viewMode = ViewMode.LOGS
       // Clear editor selection when switching to logs mode
       automationStore.actions.selectNode(null)
-    } else {
-      viewMode = ViewMode.EDITOR
-      selectedLogStepId = null
     }
   }
 
@@ -153,27 +145,25 @@
     return enrichedLog
   }
 
-  function handleSelectLog(log) {
-    selectedLog = enrichLog($automationStore.blockDefinitions, log) ?? log
-    selectedStepData = null
-    selectedLogStepId = null
-  }
-
   function closeAllPanels() {
-    showLogsPanel = false
-    showLogDetails = false
-    selectedLog = null
-    selectedStepData = null
-    selectedLogStepId = null
+    automationStore.actions.closeLogsPanel()
+    automationStore.actions.closeLogPanel()
     viewMode = ViewMode.EDITOR
   }
 
   function handleStepSelect(stepData) {
-    selectedStepData = stepData
-    selectedLogStepId = stepData?.stepId || stepData?.id
-    // Show step details when a step is selected
-    if (stepData && viewMode === ViewMode.LOGS) {
-      showLogDetails = true
+    // Show step details when a step is selected in logs mode
+    if (
+      stepData &&
+      viewMode === ViewMode.LOGS &&
+      $automationStore.selectedLog
+    ) {
+      const enrichedLog =
+        enrichLog(
+          $automationStore.blockDefinitions,
+          $automationStore.selectedLog
+        ) ?? $automationStore.selectedLog
+      automationStore.actions.openLogPanel(enrichedLog, stepData)
     }
   }
 </script>
@@ -196,7 +186,6 @@
           selected={viewMode === ViewMode.EDITOR}
           on:click={() => {
             viewMode = ViewMode.EDITOR
-            selectedLogStepId = null
             closeAllPanels()
           }}
         >
@@ -206,13 +195,16 @@
           icon="list-checks"
           quiet
           selected={viewMode === ViewMode.LOGS ||
-            showLogsPanel ||
-            showLogDetails}
+            $automationStore.showLogsPanel ||
+            $automationStore.showLogDetailsPanel}
           on:click={() => {
             viewMode = ViewMode.LOGS
             // Clear editor selection when switching to logs mode
             automationStore.actions.selectNode(null)
-            if (!showLogsPanel && !showLogDetails) {
+            if (
+              !$automationStore.showLogsPanel &&
+              !$automationStore.showLogDetailsPanel
+            ) {
               toggleLogsPanel()
             }
           }}
@@ -296,9 +288,10 @@
               isLast={blocks?.length - 1 === idx}
               automation={$memoAutomation}
               blocks={blockRefs}
-              logData={selectedLog}
+              logData={$automationStore.selectedLog}
               {viewMode}
-              {selectedLogStepId}
+              selectedLogStepId={$automationStore.selectedLogStepData?.stepId ||
+                $automationStore.selectedLogStepData?.id}
               onStepSelect={handleStepSelect}
             />
           {/each}
@@ -328,32 +321,6 @@
 >
   <TestDataModal />
 </Modal>
-
-{#if showLogsPanel}
-  <AutomationLogsPanel
-    {automation}
-    onClose={closeAllPanels}
-    onSelectLog={handleSelectLog}
-    {selectedLog}
-  />
-{/if}
-
-{#if showLogDetails && selectedLog && selectedStepData}
-  <LogDetailsPanel
-    log={selectedLog}
-    selectedStep={selectedStepData}
-    onClose={() => {
-      showLogDetails = false
-      selectedStepData = null
-      selectedLogStepId = null
-    }}
-    onBack={() => {
-      showLogDetails = false
-      selectedStepData = null
-      selectedLogStepId = null
-    }}
-  />
-{/if}
 
 <style>
   .main-flow {

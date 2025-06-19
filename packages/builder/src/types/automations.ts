@@ -137,6 +137,9 @@ export interface AutomationState {
   selectedNodeId?: string
   selectedNodeMode?: DataMode
   actionPanelBlock?: BlockRef
+  selectedLog?: any
+  selectedLogStepData?: any
+  showLogsPanel?: boolean
 }
 
 export interface DerivedAutomationState extends AutomationState {
