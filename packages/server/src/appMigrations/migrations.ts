@@ -11,18 +11,18 @@ export const MIGRATIONS: AppMigration[] = [
   // Migrations will be executed sorted by id
   {
     id: "20240604153647_initial_sqs",
-    func: m20240604153647_initial_sqs
+    func: m20240604153647_initial_sqs,
   },
   {
     id: "20250514133719_workspace_apps",
-    func: m20250514133719_workspace_apps
+    func: m20250514133719_workspace_apps,
   },
   {
     id: "20250612150000_workspace_apps",
-    func: m20250612150000_workspace_apps
+    func: m20250612150000_workspace_apps,
   },
   {
     id: "20250619143902_add_updated_function_docs",
-    func: m20250619143902_add_updated_function_docs
+    func: m20250619143902_add_updated_function_docs,
   },
 ]
