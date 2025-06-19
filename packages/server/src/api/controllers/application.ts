@@ -29,6 +29,7 @@ import {
   features,
   objectStore,
   roles,
+  sql,
   tenancy,
   users,
   utils,
@@ -149,6 +150,8 @@ async function createInstance(appId: string, template: AppTemplate) {
     // https://docs.couchdb.org/en/master/ddocs/views/collation.html#collation-specification
     views: {},
   })
+
+  await db.put(sql.updateFunctionDoc())
 
   // NOTE: indexes need to be created before any tables/templates
   // add view for linked rows
