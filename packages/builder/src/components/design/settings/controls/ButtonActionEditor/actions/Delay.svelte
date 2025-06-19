@@ -17,7 +17,7 @@
 </script>
 
 <div class="root">
-  <Label>Delay (ms)</Label>
+  <Label>Duration (ms)</Label>
   <DrawerBindableInput
     title="Delay in milliseconds"
     {bindings}
@@ -26,3 +26,15 @@
     on:change={handleDurationChange}
   />
 </div>
+
+<style>
+  .root {
+    display: grid;
+    column-gap: var(--spacing-l);
+    row-gap: var(--spacing-s);
+    grid-template-columns: 60px 1fr;
+    align-items: center;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+</style>
