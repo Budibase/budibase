@@ -200,6 +200,7 @@ if (descriptions.length) {
             _rev: expect.any(String),
             createdAt: expect.any(String),
             updatedAt: expect.any(String),
+            createdVersion: "0.0.0+jest",
           })
         })
 
