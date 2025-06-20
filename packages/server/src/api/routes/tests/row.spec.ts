@@ -2851,8 +2851,11 @@ if (descriptions.length) {
               ...expectedRowData,
               _id: expect.any(String),
               _rev: expect.any(String),
+              type: "row",
               tableId: tableId,
-              ...defaultRowFields,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              createdVersion: "0.0.0+jest",
             }
             expect(allRows).toEqual([expectedRow, expectedRow, expectedRow])
           })
