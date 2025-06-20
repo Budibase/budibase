@@ -62,7 +62,15 @@
           const dataPointIndex = opts.dataPointIndex
           const row = dataProvider.rows[dataPointIndex]
 
-          handleSpokeClick(row)
+          console.log("Clicked!")
+          console.log(event)
+          console.log(chartContext)
+          console.log(opts)
+          console.log(row)
+          // Prevents clicking on the chart but not a specific point from triggering actions
+          if (dataPointIndex !== -1) {
+            handleSpokeClick(row)
+          }
         },
       },
     },
