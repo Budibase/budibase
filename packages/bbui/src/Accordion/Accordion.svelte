@@ -40,15 +40,15 @@
         style="--font-weight: {bold ? 'bold' : 'normal'}"
         on:click={() => (isOpen = !isOpen)}
       >
+        <Icon name={isOpen ? "caret-down" : "caret-right"} size="S" />
         {header}
       </button>
-      <Icon name="caret-right" size="S" />
     </h3>
     <div
       class="spectrum-Accordion-itemContent"
       role={itemName}
       style={noPadding
-        ? "padding-left: 20px; padding-bottom: 0;"
+        ? "padding-left: 0; padding-bottom: 0;"
         : "padding-left: 30px;"}
     >
       <slot />
@@ -57,9 +57,6 @@
 </div>
 
 <style>
-  .spectrum-Accordion {
-    margin-left: -20px;
-  }
   .spectrum-Accordion-item {
     border: none;
   }
@@ -70,6 +67,12 @@
     text-transform: none;
     font-weight: var(--font-weight);
     min-height: auto;
+    display: flex;
+    gap: var(--spacing-m);
+    padding-left: 0;
+  }
+  .spectrum-Accordion-itemHeader:hover {
+    background-color: transparent;
   }
   .spectrum-Accordion-itemHeaderS {
     font-size: 0.875rem;
