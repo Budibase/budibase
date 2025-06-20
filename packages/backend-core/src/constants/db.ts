@@ -82,4 +82,5 @@ export { DEFAULT_BB_DATASOURCE_ID } from "@budibase/shared-core"
 export const enum DesignDocuments {
   SQLITE = SQLITE_DESIGN_DOC_ID,
   MIGRATIONS = "_design/migrations",
+  UPDATE_FUNCTIONS = "_design/update_functions_doc",
 }

@@ -26,6 +26,7 @@ import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
 import { sqlLog } from "../../sql/utils"
+import environment from "../../environment"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -322,6 +323,9 @@ export class DatabaseImpl implements Database {
       if (!document.createdAt) {
         document.createdAt = new Date().toISOString()
       }
+      if (!document.createdVersion && !document._rev) {
+        document.createdVersion = environment.VERSION
+      }
       document.updatedAt = new Date().toISOString()
       if (opts?.force && document._id) {
         try {
@@ -344,7 +348,13 @@ export class DatabaseImpl implements Database {
     return this.performCallWithDBCreation(db => {
       return () =>
         db.bulk({
-          docs: documents.map(d => ({ createdAt: now, ...d, updatedAt: now })),
+          docs: documents.map(d => {
+            const doc: AnyDocument = { createdAt: now, ...d, updatedAt: now }
+            if (!doc._rev) {
+              doc.createdVersion = environment.VERSION
+            }
+            return doc
+          }),
         })
     })
   }

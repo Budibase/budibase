@@ -203,6 +203,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -219,6 +220,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -234,6 +236,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -255,6 +258,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -284,6 +288,7 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.type`,
         `${otherTable._id}.createdAt`,
         `${otherTable._id}.updatedAt`,
+        `${otherTable._id}.createdVersion`,
         `${otherTable._id}.tableId`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc1.fieldName`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc2.fieldName`,
@@ -292,6 +297,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -324,6 +330,7 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.type`,
         `${otherTable._id}.createdAt`,
         `${otherTable._id}.updatedAt`,
+        `${otherTable._id}.createdVersion`,
         `${otherTable._id}.tableId`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc1.fieldName`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc2.fieldName`,
@@ -333,6 +340,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -348,6 +356,7 @@ describe("buildInternalFieldList", () => {
         `${view.tableId}.type`,
         `${view.tableId}.createdAt`,
         `${view.tableId}.updatedAt`,
+        `${view.tableId}.createdVersion`,
         `${view.tableId}.tableId`,
       ])
     })
@@ -366,6 +375,7 @@ describe("buildInternalFieldList", () => {
         `${view.tableId}.type`,
         `${view.tableId}.createdAt`,
         `${view.tableId}.updatedAt`,
+        `${view.tableId}.createdVersion`,
         `${view.tableId}.tableId`,
       ])
     })
@@ -391,6 +401,7 @@ describe("buildInternalFieldList", () => {
         `${view.tableId}.type`,
         `${view.tableId}.createdAt`,
         `${view.tableId}.updatedAt`,
+        `${view.tableId}.createdVersion`,
         `${view.tableId}.tableId`,
       ])
     })
@@ -413,6 +424,7 @@ describe("buildInternalFieldList", () => {
         `${view.tableId}.type`,
         `${view.tableId}.createdAt`,
         `${view.tableId}.updatedAt`,
+        `${view.tableId}.createdVersion`,
         `${view.tableId}.tableId`,
       ])
     })
@@ -445,6 +457,7 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.type`,
         `${otherTable._id}.createdAt`,
         `${otherTable._id}.updatedAt`,
+        `${otherTable._id}.createdVersion`,
         `${otherTable._id}.tableId`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc1.fieldName`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc2.fieldName`,
@@ -453,6 +466,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -491,6 +505,7 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.type`,
         `${otherTable._id}.createdAt`,
         `${otherTable._id}.updatedAt`,
+        `${otherTable._id}.createdVersion`,
         `${otherTable._id}.tableId`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc1.fieldName`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc2.fieldName`,
@@ -499,6 +514,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -533,6 +549,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })
@@ -580,6 +597,7 @@ describe("buildInternalFieldList", () => {
         `${otherTable._id}.type`,
         `${otherTable._id}.createdAt`,
         `${otherTable._id}.updatedAt`,
+        `${otherTable._id}.createdVersion`,
         `${otherTable._id}.tableId`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc1.fieldName`,
         `${generateJunctionTableID(table._id, otherTable._id)}.doc2.fieldName`,
@@ -589,6 +607,7 @@ describe("buildInternalFieldList", () => {
         `${table._id}.type`,
         `${table._id}.createdAt`,
         `${table._id}.updatedAt`,
+        `${table._id}.createdVersion`,
         `${table._id}.tableId`,
       ])
     })

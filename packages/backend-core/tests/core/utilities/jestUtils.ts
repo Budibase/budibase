@@ -22,6 +22,7 @@ export const expectAnyInternalColsAttributes: {
   _rev: expect.anything(),
   createdAt: expect.anything(),
   updatedAt: expect.anything(),
+  createdVersion: expect.anything(),
 }
 
 export const expectAnyExternalColsAttributes: {
