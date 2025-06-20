@@ -2,6 +2,7 @@
 import FilterSelector from "./FilterSelector.svelte"
 import ExecuteScript from "./ExecuteScript.svelte"
 import ExecuteScriptV2 from "./ExecuteScriptV2.svelte"
+import ExecutePython from "./ExecutePython.svelte"
 import DateSelector from "./DateSelector.svelte"
 import SchemaSetup from "./SchemaSetup.svelte"
 import TableSelector from "./TableSelector.svelte"
@@ -17,6 +18,7 @@ import CodeEditorModal from "./CodeEditorModal.svelte"
 export {
   FilterSelector,
   ExecuteScriptV2,
+  ExecutePython,
   DateSelector,
   SchemaSetup,
   TableSelector,

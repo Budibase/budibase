@@ -41,6 +41,7 @@ export enum SchemaFieldTypes {
   LOOP_OPTION = "loop_option",
   CODE = "code",
   CODE_V2 = "code_v2",
+  PYTHON_CODE = "python_code",
   STRING = "string",
   QUERY_PARAMS = "query_params",
   QUERY_LIMIT = "query_limit",
@@ -154,6 +155,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
   [AutomationCustomIOType.QUERY_LIMIT]: SchemaFieldTypes.QUERY_LIMIT,
   [AutomationCustomIOType.QUERY_PARAMS]: SchemaFieldTypes.QUERY_PARAMS,
   [AutomationCustomIOType.CATEGORIES]: SchemaFieldTypes.CATEGORIES,
+  [AutomationCustomIOType.PYTHON_CODE]: SchemaFieldTypes.PYTHON_CODE,
   ["fields"]: SchemaFieldTypes.FIELDS,
 }
 

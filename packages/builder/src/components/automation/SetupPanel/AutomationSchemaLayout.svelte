@@ -14,6 +14,7 @@
     DateSelector,
     ExecuteScript,
     ExecuteScriptV2,
+    ExecutePython,
     FieldSelector,
     FileSelector,
     FilterSelector,
@@ -204,6 +205,10 @@
     },
     [SchemaFieldTypes.CODE]: {
       comp: ExecuteScript,
+      fullWidth: true,
+    },
+    [SchemaFieldTypes.PYTHON_CODE]: {
+      comp: ExecutePython,
       fullWidth: true,
     },
     [SchemaFieldTypes.STRING]: {

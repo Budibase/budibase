@@ -14,12 +14,17 @@ interface HTMLEditorMode {
   name: "text/html"
 }
 
-export type EditorMode = JSEditorMode | HBSEditorMode | HTMLEditorMode
+interface PythonEditorMode {
+  name: "python"
+}
+
+export type EditorMode = JSEditorMode | HBSEditorMode | HTMLEditorMode | PythonEditorMode
 
 type EditorModeMapBase =
   | (JSEditorMode & { key: "JS" })
   | (HBSEditorMode & { key: "Handlebars" })
   | (HTMLEditorMode & { key: "Text" })
+  | (PythonEditorMode & { key: "Python" })
 
 export type EditorModesMap = {
   [M in EditorModeMapBase as M["key"]]: Omit<M, "key">

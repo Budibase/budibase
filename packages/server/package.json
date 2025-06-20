@@ -115,6 +115,7 @@
     "pouchdb": "9.0.0",
     "pouchdb-all-dbs": "1.1.1",
     "pouchdb-find": "9.0.0",
+    "pyodide": "0.27.7",
     "redis": "4",
     "semver": "^7.5.4",
     "serialize-error": "^7.0.1",

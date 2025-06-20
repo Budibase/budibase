@@ -329,6 +329,7 @@
         complete.push(highlightWhitespace())
       }
     }
+    // Python only plugins
     // HBS only plugins
     else {
       complete.push(hbsMatchDecoPlugin)

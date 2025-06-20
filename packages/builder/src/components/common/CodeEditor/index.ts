@@ -20,6 +20,9 @@ export const EditorModes: EditorModesMap = {
   Text: {
     name: "text/html",
   },
+  Python: {
+    name: "python",
+  },
 }
 
 const buildHelperInfoNode = (helper: Helper) => {

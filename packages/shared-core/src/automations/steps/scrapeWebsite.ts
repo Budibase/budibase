@@ -37,7 +37,8 @@ export const definition: AutomationStepDefinition = {
         },
         description: {
           type: AutomationIOType.STRING,
-          description: "The meta description extracted from the website (if available).",
+          description:
+            "The meta description extracted from the website (if available).",
         },
         success: {
           type: AutomationIOType.BOOLEAN,

@@ -5,6 +5,7 @@ import * as updateRow from "./steps/updateRow"
 import * as deleteRow from "./steps/deleteRow"
 import * as executeScript from "./steps/executeScript"
 import * as executeScriptV2 from "./steps/executeScriptV2"
+import * as executePython from "./steps/executePython"
 import * as executeQuery from "./steps/executeQuery"
 import * as apiRequest from "./steps/apiRequest"
 import * as outgoingWebhook from "./steps/outgoingWebhook"
@@ -47,7 +48,7 @@ type ActionImplType = ActionImplementations<
   typeof env.SELF_HOSTED extends "true" ? Hosting.SELF : Hosting.CLOUD
 >
 
-const ACTION_IMPLS: ActionImplType = {
+const ACTION_IMPLS: Partial<ActionImplType> = {
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
   UPDATE_ROW: updateRow.run,
@@ -117,13 +118,17 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   n8n: automations.steps.n8n.definition,
 }
 
-// don't add the bash script/definitions unless in self host
+// don't add the bash/python script/definitions unless in self host
 // the fact this isn't included in any definitions means it cannot be
 // ran at all
 if (env.SELF_HOSTED) {
   // @ts-expect-error
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = automations.steps.bash.definition
+
+  ACTION_IMPLS["EXECUTE_PYTHON"] = executePython.run
+  BUILTIN_ACTION_DEFINITIONS["EXECUTE_PYTHON"] =
+    automations.steps.executePython.definition
 
   if (env.isTest()) {
     BUILTIN_ACTION_DEFINITIONS["OPENAI"] = automations.steps.openai.definition

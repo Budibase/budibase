@@ -22,6 +22,8 @@ import {
   ExecuteQueryStepOutputs,
   ExecuteScriptStepInputs,
   ExecuteScriptStepOutputs,
+  ExecutePythonStepInputs,
+  ExecutePythonStepOutputs,
   FilterStepInputs,
   FilterStepOutputs,
   QueryRowsStepInputs,
@@ -111,6 +113,10 @@ export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.EXECUTE_SCRIPT_V2]: ActionImplementation<
     ExecuteScriptStepInputs,
     ExecuteScriptStepOutputs
+  >
+  [AutomationActionStepId.EXECUTE_PYTHON]: ActionImplementation<
+    ExecutePythonStepInputs,
+    ExecutePythonStepOutputs
   >
   [AutomationActionStepId.FILTER]: ActionImplementation<
     FilterStepInputs,
@@ -202,6 +208,10 @@ export type ActionImplementations<T extends Hosting> = {
         BashStepInputs,
         BashStepOutputs
       >
+      [AutomationActionStepId.EXECUTE_PYTHON]: ActionImplementation<
+        ExecutePythonStepInputs,
+        ExecutePythonStepOutputs
+      >
     }
   : {})
 
@@ -242,55 +252,57 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                 ? ExecuteScriptStepInputs
                 : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
                   ? ExecuteScriptStepInputs
-                  : T extends AutomationActionStepId.FILTER
-                    ? FilterStepInputs
-                    : T extends AutomationActionStepId.QUERY_ROWS
-                      ? QueryRowsStepInputs
-                      : T extends AutomationActionStepId.SEND_EMAIL_SMTP
-                        ? SmtpEmailStepInputs
-                        : T extends AutomationActionStepId.SERVER_LOG
-                          ? ServerLogStepInputs
-                          : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
-                            ? TriggerAutomationStepInputs
-                            : T extends AutomationActionStepId.UPDATE_ROW
-                              ? UpdateRowStepInputs
-                              : T extends AutomationActionStepId.OUTGOING_WEBHOOK
-                                ? OutgoingWebhookStepInputs
-                                : T extends AutomationActionStepId.discord
-                                  ? DiscordStepInputs
-                                  : T extends AutomationActionStepId.slack
-                                    ? SlackStepInputs
-                                    : T extends AutomationActionStepId.zapier
-                                      ? ZapierStepInputs
-                                      : T extends AutomationActionStepId.integromat
-                                        ? MakeIntegrationInputs
-                                        : T extends AutomationActionStepId.n8n
-                                          ? n8nStepInputs
-                                          : T extends AutomationActionStepId.EXECUTE_BASH
-                                            ? BashStepInputs
-                                            : T extends AutomationActionStepId.OPENAI
-                                              ? OpenAIStepInputs
-                                              : T extends AutomationActionStepId.LOOP
-                                                ? LoopStepInputs
-                                                : T extends AutomationActionStepId.BRANCH
-                                                  ? BranchStepInputs
-                                                  : T extends AutomationActionStepId.CLASSIFY_CONTENT
-                                                    ? ClassifyContentStepInputs
-                                                    : T extends AutomationActionStepId.PROMPT_LLM
-                                                      ? PromptLLMStepInputs
-                                                      : T extends AutomationActionStepId.TRANSLATE
-                                                        ? TranslateStepInputs
-                                                        : T extends AutomationActionStepId.SUMMARISE
-                                                          ? SummariseStepInputs
-                                                          : T extends AutomationActionStepId.GENERATE_TEXT
-                                                            ? GenerateTextStepInputs
-                                                            : T extends AutomationActionStepId.EXTRACT_FILE_DATA
-                                                              ? ExtractFileDataStepInputs
-                                                              : T extends AutomationActionStepId.EXTRACT_TEXT_DATA
-                                                                ? ExtractTextDataStepInputs
-                                                                : T extends AutomationActionStepId.SCRAPE_WEBSITE
-                                                                  ? ScrapeWebsiteStepInputs
-                                                                  : never
+                  : T extends AutomationActionStepId.EXECUTE_PYTHON
+                    ? ExecutePythonStepInputs
+                    : T extends AutomationActionStepId.FILTER
+                      ? FilterStepInputs
+                      : T extends AutomationActionStepId.QUERY_ROWS
+                        ? QueryRowsStepInputs
+                        : T extends AutomationActionStepId.SEND_EMAIL_SMTP
+                          ? SmtpEmailStepInputs
+                          : T extends AutomationActionStepId.SERVER_LOG
+                            ? ServerLogStepInputs
+                            : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
+                              ? TriggerAutomationStepInputs
+                              : T extends AutomationActionStepId.UPDATE_ROW
+                                ? UpdateRowStepInputs
+                                : T extends AutomationActionStepId.OUTGOING_WEBHOOK
+                                  ? OutgoingWebhookStepInputs
+                                  : T extends AutomationActionStepId.discord
+                                    ? DiscordStepInputs
+                                    : T extends AutomationActionStepId.slack
+                                      ? SlackStepInputs
+                                      : T extends AutomationActionStepId.zapier
+                                        ? ZapierStepInputs
+                                        : T extends AutomationActionStepId.integromat
+                                          ? MakeIntegrationInputs
+                                          : T extends AutomationActionStepId.n8n
+                                            ? n8nStepInputs
+                                            : T extends AutomationActionStepId.EXECUTE_BASH
+                                              ? BashStepInputs
+                                              : T extends AutomationActionStepId.OPENAI
+                                                ? OpenAIStepInputs
+                                                : T extends AutomationActionStepId.LOOP
+                                                  ? LoopStepInputs
+                                                  : T extends AutomationActionStepId.BRANCH
+                                                    ? BranchStepInputs
+                                                    : T extends AutomationActionStepId.CLASSIFY_CONTENT
+                                                      ? ClassifyContentStepInputs
+                                                      : T extends AutomationActionStepId.PROMPT_LLM
+                                                        ? PromptLLMStepInputs
+                                                        : T extends AutomationActionStepId.TRANSLATE
+                                                          ? TranslateStepInputs
+                                                          : T extends AutomationActionStepId.SUMMARISE
+                                                            ? SummariseStepInputs
+                                                            : T extends AutomationActionStepId.GENERATE_TEXT
+                                                              ? GenerateTextStepInputs
+                                                              : T extends AutomationActionStepId.EXTRACT_FILE_DATA
+                                                                ? ExtractFileDataStepInputs
+                                                                : T extends AutomationActionStepId.EXTRACT_TEXT_DATA
+                                                                  ? ExtractTextDataStepInputs
+                                                                  : T extends AutomationActionStepId.SCRAPE_WEBSITE
+                                                                    ? ScrapeWebsiteStepInputs
+                                                                    : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -309,51 +321,53 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                 ? ExecuteScriptStepOutputs
                 : T extends AutomationActionStepId.EXECUTE_SCRIPT_V2
                   ? ExecuteScriptStepOutputs
-                  : T extends AutomationActionStepId.FILTER
-                    ? FilterStepOutputs
-                    : T extends AutomationActionStepId.QUERY_ROWS
-                      ? QueryRowsStepOutputs
-                      : T extends AutomationActionStepId.SEND_EMAIL_SMTP
-                        ? BaseAutomationOutputs
-                        : T extends AutomationActionStepId.SERVER_LOG
-                          ? ServerLogStepOutputs
-                          : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
-                            ? TriggerAutomationStepOutputs
-                            : T extends AutomationActionStepId.UPDATE_ROW
-                              ? UpdateRowStepOutputs
-                              : T extends AutomationActionStepId.OUTGOING_WEBHOOK
-                                ? ExternalAppStepOutputs
-                                : T extends AutomationActionStepId.discord
+                  : T extends AutomationActionStepId.EXECUTE_PYTHON
+                    ? ExecutePythonStepOutputs
+                    : T extends AutomationActionStepId.FILTER
+                      ? FilterStepOutputs
+                      : T extends AutomationActionStepId.QUERY_ROWS
+                        ? QueryRowsStepOutputs
+                        : T extends AutomationActionStepId.SEND_EMAIL_SMTP
+                          ? BaseAutomationOutputs
+                          : T extends AutomationActionStepId.SERVER_LOG
+                            ? ServerLogStepOutputs
+                            : T extends AutomationActionStepId.TRIGGER_AUTOMATION_RUN
+                              ? TriggerAutomationStepOutputs
+                              : T extends AutomationActionStepId.UPDATE_ROW
+                                ? UpdateRowStepOutputs
+                                : T extends AutomationActionStepId.OUTGOING_WEBHOOK
                                   ? ExternalAppStepOutputs
-                                  : T extends AutomationActionStepId.slack
+                                  : T extends AutomationActionStepId.discord
                                     ? ExternalAppStepOutputs
-                                    : T extends AutomationActionStepId.zapier
-                                      ? ZapierStepOutputs
-                                      : T extends AutomationActionStepId.integromat
-                                        ? ExternalAppStepOutputs
-                                        : T extends AutomationActionStepId.EXECUTE_BASH
-                                          ? BashStepOutputs
-                                          : T extends AutomationActionStepId.OPENAI
-                                            ? OpenAIStepOutputs
-                                            : T extends AutomationActionStepId.LOOP
-                                              ? BaseAutomationOutputs
-                                              : T extends AutomationActionStepId.CLASSIFY_CONTENT
-                                                ? ClassifyContentStepOutputs
-                                                : T extends AutomationActionStepId.PROMPT_LLM
-                                                  ? PromptLLMStepOutputs
-                                                  : T extends AutomationActionStepId.TRANSLATE
-                                                    ? TranslateStepOutputs
-                                                    : T extends AutomationActionStepId.SUMMARISE
-                                                      ? SummariseStepOutputs
-                                                      : T extends AutomationActionStepId.GENERATE_TEXT
-                                                        ? GenerateTextStepOutputs
-                                                        : T extends AutomationActionStepId.EXTRACT_FILE_DATA
-                                                          ? ExtractFileDataStepOutputs
-                                                          : T extends AutomationActionStepId.EXTRACT_TEXT_DATA
-                                                            ? ExtractTextDataStepOutputs
-                                                            : T extends AutomationActionStepId.SCRAPE_WEBSITE
-                                                              ? ScrapeWebsiteStepOutputs
-                                                              : never
+                                    : T extends AutomationActionStepId.slack
+                                      ? ExternalAppStepOutputs
+                                      : T extends AutomationActionStepId.zapier
+                                        ? ZapierStepOutputs
+                                        : T extends AutomationActionStepId.integromat
+                                          ? ExternalAppStepOutputs
+                                          : T extends AutomationActionStepId.EXECUTE_BASH
+                                            ? BashStepOutputs
+                                            : T extends AutomationActionStepId.OPENAI
+                                              ? OpenAIStepOutputs
+                                              : T extends AutomationActionStepId.LOOP
+                                                ? BaseAutomationOutputs
+                                                : T extends AutomationActionStepId.CLASSIFY_CONTENT
+                                                  ? ClassifyContentStepOutputs
+                                                  : T extends AutomationActionStepId.PROMPT_LLM
+                                                    ? PromptLLMStepOutputs
+                                                    : T extends AutomationActionStepId.TRANSLATE
+                                                      ? TranslateStepOutputs
+                                                      : T extends AutomationActionStepId.SUMMARISE
+                                                        ? SummariseStepOutputs
+                                                        : T extends AutomationActionStepId.GENERATE_TEXT
+                                                          ? GenerateTextStepOutputs
+                                                          : T extends AutomationActionStepId.EXTRACT_FILE_DATA
+                                                            ? ExtractFileDataStepOutputs
+                                                            : T extends AutomationActionStepId.EXTRACT_TEXT_DATA
+                                                              ? ExtractTextDataStepOutputs
+                                                              : T extends AutomationActionStepId.SCRAPE_WEBSITE
+                                                                ? ScrapeWebsiteStepOutputs
+                                                                : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -383,6 +397,9 @@ export type ExecuteScriptStep =
 
 export type ExecuteScriptV2Step =
   AutomationStepSchema<AutomationActionStepId.EXECUTE_SCRIPT_V2>
+
+export type ExecutePythonStep =
+  AutomationStepSchema<AutomationActionStepId.EXECUTE_PYTHON>
 
 export type FilterStep = AutomationStepSchema<AutomationActionStepId.FILTER>
 
@@ -456,6 +473,7 @@ export type AutomationStep =
   | APIRequestStep
   | ExecuteScriptStep
   | ExecuteScriptV2Step
+  | ExecutePythonStep
   | FilterStep
   | QueryRowsStep
   | SendEmailSmtpStep
