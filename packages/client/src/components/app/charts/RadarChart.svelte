@@ -42,6 +42,11 @@
     },
     dataLabels: {
       enabled: dataLabels,
+      style: {
+        fontSize: "14px",
+        fontFamily: "Helvetica, Arial, sans-serif",
+        fontWeight: "bold",
+      },
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
@@ -73,6 +78,7 @@
           }
         },
       },
+      foreColor: "#808080", // Numbers/Scale up the spoke
     },
   }
 
@@ -120,3 +126,10 @@
 </script>
 
 <ApexChart {options} />
+
+<style>
+  /*  data labels (at the end of each spoke) cannot be configured */
+  :global(.apexcharts-datalabel) {
+    fill: #ffffff !important;
+  }
+</style>
