@@ -1,7 +1,12 @@
 <script lang="ts">
-  import { screenStore, workspaceAppStore } from "@/stores/builder"
+  import {
+    componentStore,
+    contextMenuStore,
+    screenStore,
+    workspaceAppStore,
+  } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
+  import { FeatureFlag, type WorkspaceApp } from "@budibase/types"
   import { redirect } from "@roxi/routify"
   import { ActionButton, Button, Icon } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
@@ -13,7 +18,33 @@
     Published = "Published",
     Drafts = "Drafts",
   }
+
+  const ContextMenuItems = [
+    {
+      icon: "copy",
+      name: "Duplicate",
+      visible: true,
+      disabled: false,
+      callback: () => console.log("Duplicate"),
+    },
+    {
+      icon: "pause-circle",
+      name: "Unpublish",
+      visible: true,
+      disabled: false,
+      callback: () => console.log("Unpublish"),
+    },
+    {
+      icon: "trash",
+      name: "Delete",
+      visible: true,
+      disabled: false,
+      callback: () => console.log("Delete"),
+    },
+  ]
+
   let filter = AppFilter.AllApps
+  let selectedApp: WorkspaceApp | undefined = undefined
 
   $: {
     if (!$featureFlags[FeatureFlag.WORKSPACE_APPS]) {
@@ -23,6 +54,23 @@
         $redirect("./new")
       }
     }
+  }
+
+  const openContextMenu = (e: MouseEvent, workspaceApp: WorkspaceApp) => {
+    e.preventDefault()
+    e.stopPropagation()
+    selectedApp = workspaceApp
+    contextMenuStore.open(
+      "workspace-app",
+      ContextMenuItems,
+      {
+        x: e.clientX,
+        y: e.clientY,
+      },
+      () => {
+        selectedApp = undefined
+      }
+    )
   }
 </script>
 
@@ -59,7 +107,12 @@
       <span></span>
     </div>
     {#each $workspaceAppStore.workspaceApps as app, idx}
-      <a class="app" href={`./design/${app.screens[0]?._id}`}>
+      <a
+        class="app"
+        href={`./design/${app.screens[0]?._id}`}
+        on:contextmenu={e => openContextMenu(e, app)}
+        class:active={selectedApp === app}
+      >
         <div>{app.name}</div>
         <div>
           <PublishStatusBadge status={idx % 2 === 0 ? "published" : "draft"} />
@@ -67,7 +120,12 @@
         <span>Joe Johnston</span>
         <span>This week</span>
         <div class="actions">
-          <Icon name="More" size="S" hoverable />
+          <Icon
+            name="More"
+            size="M"
+            hoverable
+            on:click={e => openContextMenu(e, app)}
+          />
         </div>
       </a>
     {/each}
@@ -132,7 +190,8 @@
     color: var(--text-color);
     transition: background 130ms ease-out;
 
-    &:hover {
+    &:hover,
+    &.active {
       background: var(--spectrum-global-color-gray-200);
 
       & .actions {
