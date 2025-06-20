@@ -13,6 +13,7 @@
   export let legend
   export let palette
   export let c1, c2, c3, c4, c5
+  export let onClick
 
   $: labelType =
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
@@ -55,7 +56,20 @@
       zoom: {
         enabled: false,
       },
+      events: {
+        // Clicking a spoke
+        click: function (event, chartContext, opts) {
+          const dataPointIndex = opts.dataPointIndex
+          const row = dataProvider.rows[dataPointIndex]
+
+          handleSpokeClick(row)
+        },
+      },
     },
+  }
+
+  function handleSpokeClick(spoke) {
+    onClick?.({ spoke })
   }
 
   const getSeries = (dataProvider, valueColumns) => {

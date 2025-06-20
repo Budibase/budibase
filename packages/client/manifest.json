@@ -2530,6 +2530,17 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click spoke",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked spoke",
+            "key": "spoke"
+          }
+        ]
+      },
+      {
         "type": "text",
         "label": "Width",
         "key": "width"
