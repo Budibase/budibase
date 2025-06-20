@@ -1,6 +1,7 @@
 <script lang="ts">
   import "@spectrum-css/actionbutton/dist/index-vars.css"
   import Tooltip from "../Tooltip/Tooltip.svelte"
+  import Icon from "../Icon/Icon.svelte"
   import { fade } from "svelte/transition"
   import { hexToRGBA } from "../helpers"
 
@@ -47,14 +48,11 @@
   style={accentStyle}
 >
   {#if icon}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeS"
-      focusable="false"
-      aria-hidden="true"
-      aria-label={icon}
-    >
-      <use xlink:href="#spectrum-icon-18-{icon}" />
-    </svg>
+    <Icon
+      name={icon}
+      size="M"
+      color={`var(--spectrum-global-color-gray-${$$slots.default ? 600 : 700})`}
+    />
   {/if}
   {#if $$slots}
     <span class="spectrum-ActionButton-label"><slot /></span>
@@ -73,15 +71,19 @@
       background 130ms ease-out,
       border 130ms ease-out,
       color 130ms ease-out;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-s);
   }
   .fullWidth {
     width: 100%;
   }
   .active,
-  .active svg {
+  .active :global(i) {
     color: var(--spectrum-global-color-blue-600);
   }
-  :global([dir="ltr"] .spectrum-ActionButton .spectrum-Icon) {
+  :global([dir="ltr"] .spectrum-ActionButton i) {
     margin-left: 0;
     transition: color ease-out 130ms;
   }
@@ -100,11 +102,14 @@
     padding: 0;
     min-width: 0;
   }
-  .is-selected .spectrum-Icon {
+  .is-selected :global(i) {
     color: var(--spectrum-global-color-gray-900);
   }
-  .is-selected.disabled .spectrum-Icon {
+  .is-selected.disabled :global(i) {
     color: var(--spectrum-global-color-gray-500);
+  }
+  .spectrum-ActionButton-label {
+    font-weight: 550;
   }
   .tooltip {
     position: absolute;

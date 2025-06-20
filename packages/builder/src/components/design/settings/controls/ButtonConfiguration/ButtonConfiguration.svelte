@@ -1,5 +1,5 @@
 <script>
-  import DraggableList from "../DraggableList/DraggableList.svelte"
+  import DraggableList from "../DraggableList.svelte"
   import ButtonSetting from "./ButtonSetting.svelte"
   import { createEventDispatcher } from "svelte"
   import { Helpers, Menu, MenuItem, Popover } from "@budibase/bbui"

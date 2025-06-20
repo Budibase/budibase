@@ -17,7 +17,7 @@
   const getContextMenuItems = () => {
     return [
       {
-        icon: "Edit",
+        icon: "pencil",
         name: "Edit",
         keyBind: null,
         visible: true,
@@ -25,7 +25,7 @@
         callback: editModal.show,
       },
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
@@ -67,7 +67,7 @@
     />
   </div>
   {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
-    <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
+    <Icon on:click={openContextMenu} size="M" hoverable name="dots-three" />
   {/if}
 </NavItem>
 <UpdateDatasourceModal {datasource} bind:this={editModal} />

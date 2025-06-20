@@ -6,6 +6,7 @@
   import { cloneDeep, deepGet } from "../helpers"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
   import Checkbox from "../Form/Checkbox.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   /**
    /**
@@ -385,33 +386,33 @@
                   sortOrder === "Ascending"}
                 on:click={() => sortBy(schema[field])}
               >
-                <div class="title">{getDisplayName(schema[field])}</div>
-                {#if schema[field]?.autocolumn}
-                  <svg
-                    class="spectrum-Icon spectrum-Table-autoIcon"
-                    focusable="false"
-                  >
-                    <use xlink:href="#spectrum-icon-18-MagicWand" />
-                  </svg>
-                {/if}
-                {#if sortColumn === field}
-                  <svg
-                    class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                    focusable="false"
-                    aria-hidden="true"
-                  >
-                    <use xlink:href="#spectrum-css-icon-Arrow100" />
-                  </svg>
-                {/if}
-                {#if allowEditColumns && schema[field]?.editable !== false}
-                  <svg
-                    class="spectrum-Icon spectrum-Table-editIcon"
-                    focusable="false"
-                    on:click={e => editColumn(e, field)}
-                  >
-                    <use xlink:href="#spectrum-icon-18-Edit" />
-                  </svg>
-                {/if}
+                <div class="title" title={field}>
+                  {getDisplayName(schema[field])}
+                  {#if schema[field]?.autocolumn}
+                    <Icon
+                      name="magic-wand"
+                      size="S"
+                      color="var(--spectrum-global-color-gray-600)"
+                    />
+                  {/if}
+                  {#if sortColumn === field}
+                    <Icon
+                      name="caret-down"
+                      size="S"
+                      color="var(--spectrum-global-color-gray-700)"
+                    />
+                  {/if}
+                  {#if allowEditColumns && schema[field]?.editable !== false}
+                    <Icon
+                      name="pencil"
+                      size="S"
+                      hoverable
+                      color="var(--spectrum-global-color-gray-600)"
+                      hoverColor="var(--spectrum-global-color-gray-900)"
+                      on:click={e => editColumn(e, field)}
+                    />
+                  {/if}
+                </div>
               </div>
             {/each}
           </div>
@@ -479,12 +480,11 @@
               <slot name="placeholder" />
             {:else}
               <div class="placeholder-content">
-                <svg
-                  class="spectrum-Icon spectrum-Icon--sizeXXL"
-                  focusable="false"
-                >
-                  <use xlink:href="#spectrum-icon-18-Table" />
-                </svg>
+                <Icon
+                  name="table"
+                  size="XXL"
+                  color="var(--spectrum-global-color-gray-600)"
+                />
                 <div>{placeholderText}</div>
               </div>
             {/if}
@@ -592,25 +592,14 @@
   .spectrum-Table-headCell .title {
     overflow: visible;
     text-overflow: ellipsis;
+    display: flex;
+    gap: 4px;
   }
-  .spectrum-Table-headCell:hover .spectrum-Table-editIcon {
-    opacity: 1;
-    transition: opacity 0.2s ease;
-  }
-  .spectrum-Table-headCell .spectrum-Icon {
-    pointer-events: all;
+  .spectrum-Table-headCell :global(.icon) {
     margin-left: var(
       --spectrum-table-header-sort-icon-gap,
       var(--spectrum-global-dimension-size-125)
     );
-  }
-  .spectrum-Table-editIcon,
-  .spectrum-Table-autoIcon {
-    width: var(--spectrum-global-dimension-size-150);
-    height: var(--spectrum-global-dimension-size-150);
-  }
-  .spectrum-Table-editIcon {
-    opacity: 0;
   }
 
   /* Table rows */

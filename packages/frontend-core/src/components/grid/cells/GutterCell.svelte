@@ -79,14 +79,14 @@
     {#if rowSelected && $config.canDeleteRows}
       <div class="delete" on:click={bulkDelete}>
         <Icon
-          name="Delete"
+          name="trash"
           size="S"
           color="var(--spectrum-global-color-red-400)"
         />
       </div>
     {:else}
       <div class="expand" class:visible={$config.canExpandRows && expandable}>
-        <Icon size="S" name="Maximize" hoverable on:click={expand} />
+        <Icon size="S" name="arrows-out-simple" hoverable on:click={expand} />
       </div>
     {/if}
   </div>
@@ -131,7 +131,7 @@
   .delete:hover {
     cursor: pointer;
   }
-  .delete:hover :global(.spectrum-Icon) {
+  .delete:hover :global(.icon) {
     color: var(--spectrum-global-color-red-600) !important;
   }
 

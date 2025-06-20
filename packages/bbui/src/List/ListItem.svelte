@@ -44,7 +44,7 @@
   <div class="list-item__right">
     <slot name="right" />
     {#if showArrow}
-      <Icon name="ChevronRight" />
+      <Icon name="caret-right" />
     {/if}
   </div>
 </a>

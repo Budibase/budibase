@@ -118,7 +118,7 @@
                   style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
                   on:mousedown={() => (dragDisabled = false)}
                 >
-                  <Icon name="DragHandle" size="XL" />
+                  <Icon name="dots-six-vertical" size="L" />
                 </div>
                 <Select
                   bind:value={column.name}
@@ -131,7 +131,7 @@
                   <CellEditor bind:column />
                 {/if}
                 <Icon
-                  name="Close"
+                  name="x"
                   hoverable
                   size="S"
                   on:click={() => removeColumn(column.id)}
@@ -155,7 +155,7 @@
       {/if}
       <div class="column">
         <div class="buttons wide">
-          <Button secondary icon="Add" on:click={addColumn}>Add column</Button>
+          <Button secondary icon="plus" on:click={addColumn}>Add column</Button>
           <Button secondary quiet on:click={addAllColumns}>
             Add all columns
           </Button>
