@@ -75,6 +75,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 600 !important;
+    line-height: 20px;
+    letter-spacing: -0.02em;
+  }
+  .spectrum-Button--sizeM {
+    font-size: 14px;
   }
   .active {
     color: var(--spectrum-global-color-blue-600) !important;
@@ -97,5 +103,13 @@
   }
   .spectrum-Button--secondary.new-styles.is-disabled {
     color: var(--spectrum-global-color-gray-500);
+  }
+  .spectrum-Button--warning.new-styles {
+    background: var(--spectrum-global-color-red-400);
+    border-color: transparent;
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .spectrum-Button--warning.new-styles:hover {
+    background: var(--spectrum-global-color-red-500);
   }
 </style>

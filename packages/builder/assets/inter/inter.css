@@ -1,0 +1,17 @@
+@font-face {
+  font-family: "Inter";
+  src: url("/builder/fonts/inter/inter.woff2") format("woff2-variations");
+  font-weight: 100 900; /* Example: range from thin to extra bold */
+  font-stretch: 75% 125%; /* Example: range for width */
+  font-style: normal; /* Or define italic range */
+  font-display: swap; /* Or other display options */
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/builder/fonts/inter/inter.woff2") format("woff2-variations");
+  font-weight: 100 900; /* Example: range from thin to extra bold */
+  font-stretch: 75% 125%; /* Example: range for width */
+  font-style: italic; /* Or define italic range */
+  font-display: swap; /* Or other display options */
+}

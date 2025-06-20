@@ -50,18 +50,25 @@
         <Icon name="arrow-left" hoverable on:click={onClickBackButton} />
       {/if}
       {#if icon}
-        <Icon
-          name={icon}
-          tooltipType={TooltipType.Info}
-          tooltip={iconTooltip}
-          tooltipPosition={TooltipPosition.Top}
-        />
+        <div class="icon-container">
+          <Icon
+            name={icon}
+            tooltipType={TooltipType.Info}
+            tooltip={iconTooltip}
+            tooltipPosition={TooltipPosition.Top}
+            color="var(--spectrum-global-color-blue-700)"
+          />
+        </div>
       {/if}
       <div class:title={titleCSS}>
         {#if customTitleContent}
           <slot name="panel-title-content" />
         {:else}
-          <Body size="S">{title || ""}</Body>
+          <Body
+            size="S"
+            weight="500"
+            color="var(--spectrum-global-color-gray-900)">{title || ""}</Body
+          >
         {/if}
       </div>
       {#if showAddButton}
@@ -129,6 +136,12 @@
   }
   .header.borderBottom {
     border-bottom: var(--border-light);
+  }
+  .icon-container {
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    padding: 4px;
+    border-radius: 6px;
   }
   .title {
     flex: 1 1 auto;

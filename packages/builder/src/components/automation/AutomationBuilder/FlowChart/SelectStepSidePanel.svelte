@@ -285,7 +285,7 @@
                     <Icon
                       name={action.icon}
                       size="M"
-                      color="rgb(142, 185, 252)"
+                      color="var(--spectrum-global-color-blue-700)"
                     />
                   </div>
                 {/if}

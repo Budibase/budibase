@@ -111,7 +111,11 @@
       />
     {:else}
       <div class="icon-container">
-        <Icon name={block.icon} size="M" color="rgb(142, 185, 252)" />
+        <Icon
+          name={block.icon}
+          size="M"
+          color="var(--spectrum-global-color-blue-700)"
+        />
       </div>
     {/if}
     <div class="heading">
@@ -162,8 +166,10 @@
   }
 
   .input-text {
-    font-size: 16px;
+    font-size: var(--spectrum-global-dimension-font-size-150);
     font-family: var(--font-sans);
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-900);
     text-overflow: ellipsis;
     padding-left: 0px;
     border: 0px;
