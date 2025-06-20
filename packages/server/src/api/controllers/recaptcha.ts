@@ -1,11 +1,21 @@
-import { Ctx, VerifyRecaptchaRequest, VerifyRecaptchaResponse, CheckRecaptchaResponse } from "@budibase/types"
+import {
+  Ctx,
+  VerifyRecaptchaRequest,
+  VerifyRecaptchaResponse,
+  CheckRecaptchaResponse,
+} from "@budibase/types"
 import env from "../../environment"
 import { utils, Cookie } from "@budibase/backend-core"
-import { setRecaptchaVerified, isRecaptchaVerified } from "../../utilities/redis"
+import {
+  setRecaptchaVerified,
+  isRecaptchaVerified,
+} from "../../utilities/redis"
 
 type RecaptchaSessionCookie = { sessionId: string }
 
-export async function verify(ctx: Ctx<VerifyRecaptchaRequest, VerifyRecaptchaResponse>) {
+export async function verify(
+  ctx: Ctx<VerifyRecaptchaRequest, VerifyRecaptchaResponse>
+) {
   const { token } = ctx.request.body
 
   if (!token) {
@@ -19,16 +29,19 @@ export async function verify(ctx: Ctx<VerifyRecaptchaRequest, VerifyRecaptchaRes
     return
   }
 
-  const response = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      secret: env.RECAPTCHA_SECRET_KEY,
-      response: token,
-    }),
-  })
+  const response = await fetch(
+    "https://www.google.com/recaptcha/api/siteverify",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        secret: env.RECAPTCHA_SECRET_KEY,
+        response: token,
+      }),
+    }
+  )
 
   const { success } = await response.json()
   const verified = success === true
@@ -46,7 +59,10 @@ export async function verify(ctx: Ctx<VerifyRecaptchaRequest, VerifyRecaptchaRes
 }
 
 export async function check(ctx: Ctx<void, CheckRecaptchaResponse>) {
-  const cookie = utils.getCookie<RecaptchaSessionCookie>(ctx, Cookie.RecaptchaSession)
+  const cookie = utils.getCookie<RecaptchaSessionCookie>(
+    ctx,
+    Cookie.RecaptchaSession
+  )
   if (!cookie) {
     ctx.body = { verified: false }
     return

@@ -11,10 +11,10 @@
   onMount(() => {
     window.grecaptcha.render("recaptcha-container", {
       sitekey: recaptchaKey,
-      callback: (response) => {
+      callback: response => {
         token = response
-      }
-    });
+      },
+    })
   })
 
   async function handleSubmit(event) {

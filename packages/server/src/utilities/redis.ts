@@ -18,15 +18,14 @@ let socketSubClient: any
 // We init this as we want to keep the connection open all the time
 // reduces the performance hit
 export async function init() {
-  ;[devAppClient, debounceClient, flagClient, recaptchaClient, socketClient] = await Promise.all(
-    [
+  ;[devAppClient, debounceClient, flagClient, recaptchaClient, socketClient] =
+    await Promise.all([
       redis.Client.init(redis.utils.Databases.DEV_LOCKS),
       redis.Client.init(redis.utils.Databases.DEBOUNCE),
       redis.Client.init(redis.utils.Databases.FLAGS),
       redis.Client.init(redis.utils.Databases.RECAPTCHA_SESSION),
       redis.clients.getSocketClient(),
-    ]
-  )
+    ])
 
   // Duplicate the socket client for pub/sub
   if (!env.isTest()) {
