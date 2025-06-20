@@ -19,7 +19,7 @@
   } from "@budibase/bbui"
   import AppActions from "@/components/deploy/AppActions.svelte"
   import { API } from "@/api"
-  import { isActive, url, goto, layout, redirect } from "@roxi/routify"
+  import { isActive, url, layout, redirect, goto } from "@roxi/routify"
   import { capitalise } from "@/helpers"
   import { onMount, onDestroy } from "svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
@@ -54,21 +54,6 @@
       notifications.error(`Error initialising app: ${error?.message}`)
       $redirect("../../")
     }
-  }
-  // Handles navigation between frontend, backend, automation.
-  // This remembers your last place on each of the sections
-  // e.g. if one of your screens is selected on front end, then
-  // you browse to backend, when you click frontend, you will be
-  // brought back to the same screen.
-  const topItemNavigate = path => {
-    const activeTopNav = $layout.children.find(c => $isActive(c.path))
-    if (activeTopNav) {
-      builderStore.setPreviousTopNavPath(
-        activeTopNav.path,
-        window.location.pathname
-      )
-    }
-    $goto($builderStore.previousTopNavPath[path] || path)
   }
 
   onMount(async () => {
@@ -110,9 +95,9 @@
                 href={$url(path)}
                 quiet
                 selected={$isActive(path)}
-                on:click={() => topItemNavigate(path)}
                 title={capitalise(title)}
                 id={`builder-${title}-tab`}
+                on:click={() => $goto(path)}
               />
             {/if}
           {/each}
