@@ -1,41 +1,34 @@
+<script context="module" lang="ts">
+  interface Breadcrumb {
+    text: string
+    url?: string
+  }
+</script>
+
 <script lang="ts">
+  import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
   import {
-    Button,
-    ActionButton,
-    StatusLight,
-    Popover,
-    PopoverAlignment,
-    Body,
-    Icon,
-  } from "@budibase/bbui"
-  import {
-    builderStore,
-    isOnlyUser,
-    appStore,
     deploymentStore,
     workspaceAppStore,
     automationStore,
   } from "@/stores/builder"
-  import { page } from "@roxi/routify"
-  import { admin, featureFlags } from "@/stores/portal"
-  import VersionModal from "@/components/deploy/VersionModal.svelte"
+  import type { PopoverAPI } from "@budibase/bbui"
+  import { featureFlags } from "@/stores/portal"
   import PublishModal from "@/components/deploy/PublishModal.svelte"
+  import { page } from "@roxi/routify"
+
+  export let icon: string
+  export let breadcrumbs: Breadcrumb[]
 
   type ShowUI = { show: () => void }
 
-  let versionModal: ShowUI
+  let publishButton: HTMLElement | undefined
+  let publishSuccessPopover: PopoverAPI | undefined
   let publishModal: ShowUI
-  let showNpsSurvey = false
-  let publishButton: any
-  let publishSuccessPopover: ShowUI | undefined
-  let publishedAutomations: string[] = [],
-    publishedApps: string[] = []
+  let publishedAutomations: string[] = []
+  let publishedApps: string[] = []
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
-  $: updateAvailable =
-    $appStore.upgradableVersion &&
-    $appStore.version &&
-    $appStore.upgradableVersion !== $appStore.version
   $: inAutomations = $page.path.includes("/automation/")
   $: inDesign = $page.path.includes("/design/")
   $: selectedWorkspaceAppId =
@@ -52,51 +45,28 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="action-top-nav">
-  <div class="action-buttons">
-    {#if updateAvailable && $isOnlyUser && !$admin.isDev}
-      <div class="app-action-button version" on:click={versionModal.show}>
-        <div class="app-action">
-          <ActionButton quiet>
-            <StatusLight notice />
-            Update
-          </ActionButton>
-        </div>
-      </div>
-    {/if}
-    <div class="app-action-button users">
-      <div class="app-action" id="builder-app-users-button">
-        <ActionButton
-          quiet
-          icon="users"
-          on:click={() => {
-            builderStore.showBuilderSidePanel()
-          }}
-        >
-          Users
-        </ActionButton>
-      </div>
-    </div>
-    <div class="app-action-button publish">
-      <Button
-        cta
-        on:click={publish}
-        disabled={$deploymentStore.isPublishing}
-        bind:ref={publishButton}
-      >
-        Publish
-      </Button>
-    </div>
+<div class="top-bar">
+  {#if icon}
+    <Icon name={icon} size="L" weight="fill" />
+  {/if}
+  <div class="breadcrumbs">
+    {#each breadcrumbs as breadcrumb, idx}
+      <h1>{breadcrumb.text}</h1>
+      {#if idx < breadcrumbs.length - 1}
+        <h1 class="divider">/</h1>
+      {/if}
+    {/each}
   </div>
+  <Button
+    cta
+    on:click={publish}
+    disabled={$deploymentStore.isPublishing}
+    bind:ref={publishButton}
+  >
+    Publish
+  </Button>
 </div>
 
-{#if showNpsSurvey}
-  <div class="nps-survey" />
-{/if}
-
-<VersionModal hideIcon bind:this={versionModal} />
 {#if workspaceAppsEnabled}
   <PublishModal
     targetId={inDesign
@@ -121,7 +91,7 @@
 >
   <div class="popover-content">
     <Icon
-      name="check-circle"
+      name="CheckmarkCircle"
       color="var(--spectrum-global-color-green-400)"
       size="L"
     />
@@ -148,35 +118,34 @@
 </Popover>
 
 <style>
-  .action-buttons {
+  .top-bar {
+    height: 50px;
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: center;
-    height: 100%;
+    gap: 10px;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    padding: 0 10px 0 20px;
+    background: var(--background);
   }
-  .action-top-nav {
+  .breadcrumbs {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
     align-items: center;
-    height: 100%;
-    padding-right: var(--spacing-s);
+    gap: 6px;
   }
-  .app-action-button {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    padding-right: var(--spacing-m);
+  .breadcrumbs h1 {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-700);
   }
-  .app-action-button.version :global(.spectrum-ActionButton-label) {
-    display: flex;
-    gap: var(--spectrum-actionbutton-icon-gap);
+  .breadcrumbs h1:last-child {
+    color: var(--spectrum-global-color-gray-900);
   }
-  .app-action {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
+  .breadcrumbs h1.divider {
+    color: var(--spectrum-global-color-gray-400);
   }
   .popover-content {
     display: flex;
