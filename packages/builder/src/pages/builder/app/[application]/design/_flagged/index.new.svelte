@@ -1,59 +1,99 @@
 <script lang="ts">
   import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
   import { type WorkspaceApp } from "@budibase/types"
-  import { ActionButton, Button, Icon } from "@budibase/bbui"
+  import { ActionButton, Button, Icon, notifications } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
+  import { confirm } from "@/helpers"
 
-  enum AppFilter {
-    AllApps = "All apps",
+  enum Filter {
+    All = "All apps",
     Published = "Published",
     Drafts = "Drafts",
   }
 
-  const ContextMenuItems = [
-    {
-      icon: "copy",
-      name: "Duplicate",
-      visible: true,
-      disabled: false,
-      callback: () => console.log("Duplicate"),
-    },
-    {
-      icon: "pause-circle",
-      name: "Unpublish",
-      visible: true,
-      disabled: false,
-      callback: () => console.log("Unpublish"),
-    },
-    {
-      icon: "trash",
-      name: "Delete",
-      visible: true,
-      disabled: false,
-      callback: () => console.log("Delete"),
-    },
-  ]
+  let showHighlight = false
+  let filter = Filter.All
+  let selectedWorkspaceApp: WorkspaceApp | undefined = undefined
+  let workspaceAppModal: WorkspaceAppModal
 
-  let filter = AppFilter.AllApps
-  let selectedApp: WorkspaceApp | undefined = undefined
+  const onDelete = async (workspaceApp: WorkspaceApp) => {
+    await confirm({
+      title: "Confirm Deletion",
+      body: `Deleting "${workspaceApp.name}" cannot be undone. Are you sure?`,
+      okText: "Delete app",
+      warning: true,
+      onConfirm: async () => {
+        try {
+          await workspaceAppStore.delete(workspaceApp._id!, workspaceApp._rev!)
+          notifications.success(
+            `App '${workspaceApp.name}' deleted successfully`
+          )
+        } catch (e: any) {
+          let message = "Error deleting app"
+          if (e.message) {
+            message += ` - ${e.message}`
+          }
+          notifications.error(message)
+        }
+      },
+    })
+  }
+
+  const getContextMenuOptions = (workspaceApp: WorkspaceApp) => {
+    return [
+      {
+        icon: "pencil",
+        name: "Edit",
+        visible: true,
+        callback: () => workspaceAppModal.show(),
+      },
+      {
+        icon: "copy",
+        name: "Duplicate",
+        visible: true,
+        disabled: false,
+        callback: () => console.log("Duplicate"),
+      },
+      {
+        icon: "pause-circle",
+        name: "Unpublish",
+        visible: true,
+        disabled: false,
+        callback: () => console.log("Unpublish"),
+      },
+      {
+        icon: "trash",
+        name: "Delete",
+        visible: true,
+        callback: () => onDelete(workspaceApp),
+      },
+    ]
+  }
 
   const openContextMenu = (e: MouseEvent, workspaceApp: WorkspaceApp) => {
     e.preventDefault()
     e.stopPropagation()
-    selectedApp = workspaceApp
+    selectedWorkspaceApp = workspaceApp
+    showHighlight = true
     contextMenuStore.open(
       "workspace-app",
-      ContextMenuItems,
+      getContextMenuOptions(workspaceApp),
       {
         x: e.clientX,
         y: e.clientY,
       },
       () => {
-        selectedApp = undefined
+        showHighlight = false
       }
     )
+  }
+
+  const createApp = () => {
+    selectedWorkspaceApp = undefined
+    workspaceAppModal.show()
   }
 </script>
 
@@ -74,10 +114,10 @@
     <Icon name="WebPage"></Icon>
     <h3>Apps</h3>
     <Button icon="Light" secondary>Learn</Button>
-    <Button cta icon="WebPage">New app</Button>
+    <Button cta icon="WebPage" on:click={createApp}>New app</Button>
   </div>
   <div class="filter">
-    {#each Object.values(AppFilter) as option}
+    {#each Object.values(Filter) as option}
       <ActionButton
         quiet
         selected={option === filter}
@@ -98,7 +138,7 @@
       class="app"
       href={`./design/${app.screens[0]?._id}`}
       on:contextmenu={e => openContextMenu(e, app)}
-      class:active={selectedApp === app}
+      class:active={showHighlight && selectedWorkspaceApp === app}
     >
       <div>{app.name}</div>
       <div>
@@ -117,6 +157,12 @@
     </a>
   {/each}
 </div>
+
+<WorkspaceAppModal
+  bind:this={workspaceAppModal}
+  workspaceApp={selectedWorkspaceApp}
+  on:hide={() => (selectedWorkspaceApp = undefined)}
+/>
 
 <style>
   .apps-index {

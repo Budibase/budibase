@@ -1,16 +1,13 @@
 <script lang="ts">
   import NavHeader from "@/components/common/NavHeader.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"
-  import { contextMenuStore, sortedScreens } from "@/stores/builder"
+  import { sortedScreens } from "@/stores/builder"
   import { workspaceAppStore } from "@/stores/builder/workspaceApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
   import { FeatureFlag, type Screen } from "@budibase/types"
   import NewScreenModal from "../../../_components/NewScreen/index.svelte"
-  import WorkspaceAppModal from "../WorkspaceApp/WorkspaceAppModal.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
-
-  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
@@ -19,8 +16,6 @@
   let screensContainer: HTMLDivElement
   let scrolling = false
   let newScreenModal: NewScreenModal
-
-  let workspaceAppModal: WorkspaceAppModal
 
   $: allScreens = $featureFlags[FeatureFlag.WORKSPACE_APPS]
     ? $workspaceAppStore.selectedWorkspaceApp?.screens || []
@@ -46,39 +41,6 @@
   const handleScroll = (e: any) => {
     scrolling = e.target.scrollTop !== 0
   }
-
-  const onAdd = (e: Event) => {
-    if (!workspaceAppsEnabled) {
-      newScreenModal.open()
-      return
-    }
-
-    const items = [
-      {
-        name: "Add app",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: () => {
-          workspaceAppModal.show()
-        },
-        isNew: true,
-      },
-      {
-        name: "Add screen",
-        keyBind: null,
-        visible: true,
-        callback: () => newScreenModal.open(),
-      },
-    ]
-
-    const boundingBox = (e.currentTarget as HTMLElement).getBoundingClientRect()
-
-    contextMenuStore.open("newProject", items, {
-      x: boundingBox.x,
-      y: boundingBox.y + boundingBox.height,
-    })
-  }
 </script>
 
 <div class="screens" class:searching use:resizable>
@@ -88,7 +50,7 @@
       placeholder="Search for screens"
       bind:value={searchValue}
       bind:search={searching}
-      {onAdd}
+      onAdd={() => newScreenModal.open()}
     />
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
@@ -113,7 +75,6 @@
   />
 </div>
 
-<WorkspaceAppModal bind:this={workspaceAppModal} />
 <NewScreenModal bind:this={newScreenModal} />
 
 <style>

@@ -11,7 +11,13 @@
     urlParam: "screenId",
     stateKey: "selectedScreenId",
     validate: id => $screenStore.screens.some(screen => screen._id === id),
-    fallbackUrl: "../../design",
+    fallbackUrl: () => {
+      // Fall back to the first screen if one exists
+      if ($screenStore.screens.length) {
+        return `../${$screenStore.screens[0]._id}`
+      }
+      return "../../design"
+    },
     routify,
     update: screenStore.select,
     store: screenStore,

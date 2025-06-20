@@ -85,8 +85,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       ...state,
       workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
     }))
-
-    await screenStore.save({
+    return await screenStore.save({
       ...screenTemplating.blank({
         route: "/",
         screens: [],
