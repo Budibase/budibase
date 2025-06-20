@@ -29,6 +29,5 @@
     letter-spacing: -0.02em;
     font-weight: 600;
     line-height: 24px;
-    font-size: 20px;
   }
 </style>
