@@ -78,7 +78,7 @@
             <Icon
               name={trigger.icon}
               size="M"
-              color="var(--spectrum-global-color-blue-700)"
+              color="var(--spectrum-global-color-gray-900)"
             />
           </div>
           <Body size="S">{trigger.name}</Body>

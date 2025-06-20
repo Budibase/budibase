@@ -56,7 +56,8 @@
             tooltipType={TooltipType.Info}
             tooltip={iconTooltip}
             tooltipPosition={TooltipPosition.Top}
-            color="var(--spectrum-global-color-blue-700)"
+            color="var(--spectrum-global-color-static-gray-50)"
+            weight="bold"
           />
         </div>
       {/if}
@@ -138,10 +139,10 @@
     border-bottom: var(--border-light);
   }
   .icon-container {
-    background-color: rgba(75, 117, 255, 0.2);
-    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    background-color: #aa4321;
+    border: 0.5px solid #c96442;
     padding: 4px;
-    border-radius: 6px;
+    border-radius: 8px;
   }
   .title {
     flex: 1 1 auto;

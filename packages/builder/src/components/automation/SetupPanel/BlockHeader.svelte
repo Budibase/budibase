@@ -114,7 +114,7 @@
         <Icon
           name={block.icon}
           size="M"
-          color="var(--spectrum-global-color-blue-700)"
+          color="var(--spectrum-global-color-static-gray-50)"
         />
       </div>
     {/if}
@@ -148,6 +148,7 @@
           name="warning"
           tooltip={blockNameError}
           tooltipPosition={TooltipPosition.Left}
+          color="var(--spectrum-global-color-static-gray-50)"
         />
       </div>
     </div>
@@ -204,8 +205,8 @@
   }
 
   .icon-container {
-    background-color: rgba(75, 117, 255, 0.2);
-    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    background-color: #215f9e;
+    border: 0.5px solid #467db4;
     padding: 4px;
     border-radius: 8px;
   }

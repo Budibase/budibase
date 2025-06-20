@@ -85,6 +85,7 @@
   .active {
     color: var(--spectrum-global-color-blue-600) !important;
   }
+
   .spectrum-Button--primary.new-styles {
     background: var(--spectrum-global-color-gray-800);
     border-color: transparent;
