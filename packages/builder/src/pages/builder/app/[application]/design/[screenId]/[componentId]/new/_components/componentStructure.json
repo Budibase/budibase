@@ -89,7 +89,8 @@
       "candlestick",
       "pie",
       "donut",
-      "histogram"
+      "histogram",
+      "radar"
     ]
   }
 ]
