@@ -43,9 +43,7 @@
     dataLabels: {
       enabled: dataLabels,
       style: {
-        fontSize: "14px",
-        fontFamily: "Helvetica, Arial, sans-serif",
-        fontWeight: "bold",
+        colors: ["#ffffff"],
       },
     },
     chart: {
@@ -67,11 +65,6 @@
           const dataPointIndex = opts.dataPointIndex
           const row = dataProvider.rows[dataPointIndex]
 
-          console.log("Clicked!")
-          console.log(event)
-          console.log(chartContext)
-          console.log(opts)
-          console.log(row)
           // Prevents clicking on the chart but not a specific point from triggering actions
           if (dataPointIndex !== -1) {
             handleSpokeClick(row)
@@ -130,6 +123,6 @@
 <style>
   /*  data labels (at the end of each spoke) cannot be configured */
   :global(.apexcharts-datalabel) {
-    fill: #ffffff !important;
+    fill: #808080 !important;
   }
 </style>
