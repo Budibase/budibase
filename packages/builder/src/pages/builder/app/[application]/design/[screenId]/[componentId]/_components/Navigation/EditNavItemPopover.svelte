@@ -59,7 +59,7 @@
   }
 </script>
 
-<Icon name={navItem.type === "sublinks" ? "Dropdown" : "Link"} size="S" />
+<Icon name={navItem.type === "sublinks" ? "caret-down" : "link"} size="S" />
 
 <Popover
   bind:this={popover}

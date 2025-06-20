@@ -39,7 +39,11 @@ export async function processMigrations(
           )
 
           let index = 0
-          for (const { id, func } of pendingMigrations) {
+          for (const { id, func, disabled } of pendingMigrations) {
+            if (disabled) {
+              // If we find a disabled migration, we prevent running any other
+              return
+            }
             const expectedMigration =
               migrationIds[migrationIds.indexOf(currentVersion) + 1]
 

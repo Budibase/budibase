@@ -30,7 +30,7 @@
     display: flex;
     gap: var(--spacing-xs);
   }
-  div :global(.spectrum-Icon) {
+  div :global(i) {
     width: 14px;
   }
   div :global(.spectrum-ActionButton) {

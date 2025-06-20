@@ -1,18 +1,16 @@
 <script lang="ts">
-  import { Body, Tags, Tag, Icon, TooltipPosition } from "@budibase/bbui"
+  import { Icon, TooltipPosition } from "@budibase/bbui"
   import {
     type AutomationStep,
     type AutomationTrigger,
     type Automation,
     AutomationStepType,
-    isBranchStep,
     isActionStep,
   } from "@budibase/types"
   import {
     type ExternalAction,
     externalActions,
   } from "@/components/automation/AutomationBuilder/FlowChart/ExternalActions"
-  import { automationStore } from "@/stores/builder"
   import { createEventDispatcher } from "svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
@@ -29,7 +27,6 @@
   $: stepNames = automation?.definition.stepNames || {}
   $: blockHeading = getHeading(itemName, block) || ""
   $: blockNameError = getStepNameError(blockHeading)
-  $: isBranch = block && isBranchStep(block)
 
   const getHeading = (
     itemName?: string,
@@ -44,19 +41,9 @@
 
   $: isTrigger = block?.type === AutomationStepType.TRIGGER
   $: allSteps = automation?.definition.steps || []
-  $: blockDefinition = automationStore.actions.getBlockDefinition(block)
 
   // Put the type in the header if they change the name
   // Otherwise the info is obscured
-  $: blockTitle = isBranch
-    ? "Branch"
-    : `${
-        block &&
-        block?.id in stepNames &&
-        stepNames[block?.id] !== blockDefinition?.name
-          ? blockDefinition?.name
-          : "Step"
-      }`
 
   // Parse external actions
   $: if (block && isActionStep(block) && block?.stepId in externalActions) {
@@ -119,35 +106,15 @@
       <img
         alt={externalAction.name}
         src={externalAction.icon}
-        width="28px"
-        height="28px"
+        width="24px"
+        height="24px"
       />
     {:else}
-      <svg
-        width="28px"
-        height="28px"
-        class="spectrum-Icon"
-        style="color:var(--spectrum-global-color-gray-700);"
-        focusable="false"
-      >
-        <use xlink:href="#spectrum-icon-18-{block.icon}" />
-      </svg>
+      <div class="icon-container">
+        <Icon name={block.icon} size="M" color="rgb(142, 185, 252)" />
+      </div>
     {/if}
     <div class="heading">
-      {#if isTrigger}
-        <Body size="XS"><b>Trigger</b></Body>
-      {:else}
-        <Body size="XS">
-          <div class="step">
-            <b>{blockTitle}</b>
-            {#if blockDefinition?.deprecated}
-              <Tags>
-                <Tag invalid>Deprecated</Tag>
-              </Tags>
-            {/if}
-          </div>
-        </Body>
-      {/if}
       <input
         class="input-text"
         placeholder={`Enter step name`}
@@ -174,7 +141,7 @@
       <div class="error-icon">
         <Icon
           size="S"
-          name="Alert"
+          name="warning"
           tooltip={blockNameError}
           tooltipPosition={TooltipPosition.Left}
         />
@@ -184,11 +151,6 @@
 </div>
 
 <style>
-  .step {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
   input {
     color: var(--ink);
     background-color: transparent;
@@ -200,11 +162,12 @@
   }
 
   .input-text {
-    font-size: var(--spectrum-alias-font-size-default);
+    font-size: 16px;
     font-family: var(--font-sans);
     text-overflow: ellipsis;
     padding-left: 0px;
     border: 0px;
+    line-height: 0;
   }
 
   input:focus {
@@ -221,16 +184,23 @@
   .block-details {
     display: flex;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-m);
     flex: 1 1 0;
     min-width: 0;
   }
 
-  .error-icon :global(.spectrum-Icon) {
+  .error-icon :global(i) {
     fill: var(--spectrum-global-color-red-600);
   }
 
   .heading {
     flex: 1;
+  }
+
+  .icon-container {
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    padding: 4px;
+    border-radius: 8px;
   }
 </style>

@@ -92,9 +92,6 @@
   .spectrum-Button::after {
     display: none;
   }
-  .spectrum-Icon.hasText {
-    margin-right: var(--spectrum-button-primary-icon-gap);
-  }
   .active {
     color: var(--spectrum-global-color-blue-600);
   }

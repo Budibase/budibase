@@ -44,7 +44,7 @@
   style="left:{left}px"
   on:click={open}
 >
-  <Icon name="Add" />
+  <Icon name="plus" />
 </div>
 {#if isOpen}
   <GridPopover

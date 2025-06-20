@@ -105,7 +105,7 @@
         class="icon arrow"
         on:click={onIconClick}
       >
-        <Icon size="S" name="ChevronRight" />
+        <Icon size="XS" weight="bold" name="caret-right" />
       </div>
     {/if}
 
@@ -117,9 +117,9 @@
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
         <Icon
-          color={iconColor}
           size="S"
           name={icon}
+          color={iconColor}
           tooltip={iconTooltip}
           tooltipType={TooltipType.Info}
           tooltipPosition={TooltipPosition.Right}
@@ -159,7 +159,7 @@
     cursor: pointer;
     color: var(--grey-7);
     transition: background-color
-      var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
+      var(--spectrum-global-animation-duration-100, 50ms) ease-in-out;
     padding: 0 var(--spacing-l) 0;
     height: 32px;
     display: flex;
@@ -184,6 +184,9 @@
     background-color: var(--spectrum-global-color-gray-300) !important;
     --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
+  }
+  .nav-item.selected .icon {
+    color: var(--spectrum-global-color-gray-900) !important;
   }
   .nav-item.disabled span {
     color: var(--spectrum-global-color-gray-700);
@@ -239,7 +242,7 @@
     flex: 0 0 20px;
     pointer-events: all;
     order: 0;
-    transition: transform 100ms linear;
+    transition: transform 50ms linear;
   }
   .icon.arrow.absolute {
     position: absolute;

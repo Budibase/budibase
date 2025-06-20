@@ -62,7 +62,7 @@
       <Body size="M">
         <section>
           <div on:click={copyToClipboard} class="copy-icon">
-            <Icon name="Copy" size="M" />
+            <Icon name="copy" size="M" />
           </div>
           <TextArea
             height="45vh"

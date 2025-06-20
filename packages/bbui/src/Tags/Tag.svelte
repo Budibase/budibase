@@ -2,6 +2,7 @@
   import "@spectrum-css/tags/dist/index-vars.css"
   import Avatar from "../Avatar/Avatar.svelte"
   import ClearButton from "../ClearButton/ClearButton.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let icon: string = ""
   export let avatar: string = ""
@@ -22,14 +23,7 @@
     <Avatar url={avatar} />
   {/if}
   {#if icon}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeS"
-      focusable="false"
-      aria-hidden="true"
-      aria-label="Tag"
-    >
-      <use xlink:href="#spectrum-icon-24-{icon}" />
-    </svg>
+    <Icon name={icon} size="S" />
   {/if}
   <span class="spectrum-Tags-itemLabel"><slot /></span>
   {#if closable}
@@ -41,10 +35,14 @@
   .spectrum-Tags-item {
     margin-bottom: 0;
     margin-top: 0;
+    gap: 3px;
+    border-radius: 8px;
   }
 
   .is-emphasized {
-    border-color: var(--spectrum-global-color-blue-700);
-    color: var(--spectrum-global-color-blue-700);
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    border-radius: 6px;
+    padding: 1px 3px;
   }
 </style>

@@ -11,7 +11,7 @@ export const definition: AutomationTriggerDefinition = {
   type: AutomationStepType.TRIGGER,
   name: "Row Action",
   event: AutomationEventType.ROW_ACTION,
-  icon: "Workflow",
+  icon: "tree-structure",
   tagline:
     "Row action triggered in {{inputs.enriched.table.name}} by {{inputs.enriched.row._id}}",
   description: "row action workflow",

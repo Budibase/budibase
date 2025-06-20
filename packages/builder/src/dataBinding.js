@@ -127,7 +127,7 @@ export const getEnvironmentBindings = () => {
       runtimeBinding: `env.${makePropSafe(variable.name)}`,
       readableBinding: `env.${variable.name}`,
       category: "Environment",
-      icon: "Key",
+      icon: "key",
       display: { type: "string", name: variable.name },
     }
   })
@@ -151,7 +151,7 @@ export const toBindingsArray = (valueMap, prefix, category) => {
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
-      icon: "Brackets",
+      icon: "brackets-angle",
     }
     if (category) {
       config.category = category
@@ -542,10 +542,10 @@ const getComponentBindingCategory = (component, context, def) => {
   if (component._component.endsWith("formblock")) {
     if (context.type === "form") {
       category = `${component._instanceName} - Fields`
-      icon = "Form"
+      icon = "list"
     } else if (context.type === "schema") {
       category = `${component._instanceName} - Row`
-      icon = "Data"
+      icon = "database"
     }
   }
 
@@ -578,7 +578,7 @@ export const getUserBindings = () => {
       fieldSchema,
       providerId: "user",
       category: "Current User",
-      icon: "User",
+      icon: "user",
       display: {
         name: key,
       },
@@ -603,7 +603,7 @@ const getDeviceBindings = () => {
         runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
         readableBinding: `Device.Mobile`,
         category: "Device",
-        icon: "DevicePhone",
+        icon: "device-mobile",
         display: { type: "boolean", name: "mobile" },
       },
       {
@@ -611,7 +611,7 @@ const getDeviceBindings = () => {
         runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
         readableBinding: `Device.Tablet`,
         category: "Device",
-        icon: "DevicePhone",
+        icon: "device-mobile",
         display: { type: "boolean", name: "tablet" },
       },
       {
@@ -619,7 +619,7 @@ const getDeviceBindings = () => {
         runtimeBinding: `${safeDevice}.${makePropSafe("theme")}`,
         readableBinding: `App.Theme`,
         category: "Device",
-        icon: "DevicePhone",
+        icon: "device-mobile",
         display: { type: "string", name: "App Theme" },
       },
     ]
@@ -637,7 +637,7 @@ export const getSettingBindings = () => {
       runtimeBinding: `${safeSetting}.${makePropSafe("url")}`,
       readableBinding: `Settings.url`,
       category: "Settings",
-      icon: "Settings",
+      icon: "gear",
       display: { type: "string", name: "url" },
     },
     {
@@ -645,7 +645,7 @@ export const getSettingBindings = () => {
       runtimeBinding: `${safeSetting}.${makePropSafe("logo")}`,
       readableBinding: `Settings.logo`,
       category: "Settings",
-      icon: "Settings",
+      icon: "gear",
       display: { type: "string", name: "logo" },
     },
     {
@@ -653,7 +653,7 @@ export const getSettingBindings = () => {
       runtimeBinding: `${safeSetting}.${makePropSafe("company")}`,
       readableBinding: `Settings.company`,
       category: "Settings",
-      icon: "Settings",
+      icon: "gear",
       display: { type: "string", name: "company" },
     },
   ]
@@ -682,7 +682,7 @@ const getSelectedRowsBindings = asset => {
         )}`,
         readableBinding: `${table._instanceName}.Selected Row IDs (deprecated)`,
         category: "Selected Row IDs (deprecated)",
-        icon: "ViewRow",
+        icon: "rows",
         display: { name: table._instanceName },
       }))
     )
@@ -699,7 +699,7 @@ const getSelectedRowsBindings = asset => {
         )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected Row IDs (deprecated)`,
         category: "Selected Row IDs (deprecated)",
-        icon: "ViewRow",
+        icon: "rows",
         display: { name: block._instanceName },
       }))
     )
@@ -716,7 +716,7 @@ export const makeStateBinding = key => {
     runtimeBinding: `${makePropSafe("state")}.${makePropSafe(key)}`,
     readableBinding: `State.${key}`,
     category: "State",
-    icon: "AutomatedSegment",
+    icon: "funnel",
     display: { name: key },
   }
 }
@@ -750,7 +750,7 @@ const getUrlBindings = asset => {
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
     category: "URL",
-    icon: "RailTop",
+    icon: "align-top",
     display: { type: "string", name: param },
   }))
   const queryParamsBinding = {
@@ -758,7 +758,7 @@ const getUrlBindings = asset => {
     runtimeBinding: makePropSafe("query"),
     readableBinding: "Query params",
     category: "URL",
-    icon: "RailTop",
+    icon: "align-top",
     display: { type: "object", name: "Query params" },
   }
   return urlParamBindings.concat([queryParamsBinding])
@@ -774,7 +774,7 @@ const getRoleBindings = () => {
       runtimeBinding: `'${role._id}'`,
       readableBinding: `Role.${role.uiMetadata.displayName}`,
       category: "Role",
-      icon: "UserGroup",
+      icon: "users-three",
       display: { type: "string", name: role.uiMetadata.displayName },
     }
   })
@@ -851,7 +851,7 @@ export const getActionBindings = (actions, actionId) => {
           readableBinding: `Action ${idx + 1}.${contextValue.label}`,
           runtimeBinding: `actions.${idx}.${contextValue.value}`,
           category: "Actions",
-          icon: "JourneyAction",
+          icon: "path",
           display: {
             name: contextValue.label,
           },
@@ -875,7 +875,7 @@ const getEmbedBindings = () => {
       runtimeBinding: `${safeEmbed}`,
       readableBinding: `ParentWindow`,
       category: "Embed",
-      icon: "DistributeVertically",
+      icon: "code",
     },
   ]
   return bindings
