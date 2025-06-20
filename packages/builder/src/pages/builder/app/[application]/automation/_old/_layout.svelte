@@ -1,6 +1,6 @@
 <script>
-  import { params } from "@roxi/routify"
   import { Heading, Body, Layout, Button, Modal, Icon } from "@budibase/bbui"
+  import AutomationPanel from "@/components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { onDestroy } from "svelte"
@@ -13,15 +13,6 @@
   } from "@/stores/builder"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
   import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
-
-  if ($params.automation) {
-    const automation = $automationStore.automations.find(
-      m => m._id === $params.automation
-    )
-    if (automation) {
-      automationStore.actions.select(automation)
-    }
-  }
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -37,11 +28,15 @@
     routify,
   })
 
+  let modal
+  let webhookModal
+
   onDestroy(stopSyncing)
 </script>
 
 <!-- routify:options index=3 -->
 <div class="root">
+  <AutomationPanel {modal} {webhookModal} />
   <div class="content drawer-container">
     {#if $automationStore.automations?.length}
       <slot />
@@ -77,6 +72,13 @@
       onClose={() => automationStore.actions.closeActionPanel()}
     />
   {/if}
+
+  <Modal bind:this={modal}>
+    <CreateAutomationModal {webhookModal} />
+  </Modal>
+  <Modal bind:this={webhookModal}>
+    <CreateWebhookModal />
+  </Modal>
 </div>
 
 <style>
@@ -85,7 +87,7 @@
     height: 0;
     display: grid;
     grid-auto-flow: column dense;
-    grid-template-columns: minmax(510px, 1fr) fit-content(500px);
+    grid-template-columns: 260px minmax(510px, 1fr) fit-content(500px);
     overflow: hidden;
   }
   .content {

@@ -3,9 +3,10 @@
   export let linkTitle: string | undefined = undefined
   export let linkHref: string = "#"
   export let image: string
+  export let color: string
 </script>
 
-<div class="hero">
+<div class="hero" style="--color:{color};">
   <div class="text">
     <h1>{title}</h1>
     <p><slot /></p>
@@ -18,7 +19,7 @@
 
 <style>
   .hero {
-    background: #732b00;
+    background: var(--color);
     border-radius: 16px;
     padding: 25px 48px;
     display: grid;

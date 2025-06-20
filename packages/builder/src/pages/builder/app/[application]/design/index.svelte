@@ -1,6 +1,5 @@
 <script lang="ts">
   import {
-    componentStore,
     contextMenuStore,
     screenStore,
     workspaceAppStore,
@@ -77,7 +76,12 @@
 {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
   <div class="apps-index">
     <div class="hero-wrapper">
-      <HeroBanner title="Apps" linkTitle="App building 101" image={AppsHero}>
+      <HeroBanner
+        title="Apps"
+        linkTitle="App building 101"
+        image={AppsHero}
+        color="#732B00"
+      >
         Create powerful apps and workflows from any datasource and securely
         deploy professional-grade solutions, such as forms, portals and more,
         across your teams.
