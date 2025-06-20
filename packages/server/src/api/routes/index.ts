@@ -35,6 +35,7 @@ import aiRoutes from "./ai"
 import workspaceAppsRoutes from "./workspaceApp"
 import navigationRoutes from "./navigation"
 import resourceRoutes from "./resource"
+import recaptchaRoutes from "./recaptcha"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
@@ -78,6 +79,7 @@ export const mainRoutes: Router[] = [
   workspaceAppsRoutes,
   navigationRoutes,
   resourceRoutes,
+  recaptchaRoutes,
   // these need to be handled last as they still use /api/:tableId
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,

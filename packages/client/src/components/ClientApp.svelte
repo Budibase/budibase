@@ -54,6 +54,7 @@
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
   import EmbedProvider from "./context/EmbedProvider.svelte"
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
+  import RecaptchaV2 from "./RecaptchaV2.svelte"
   import { ActionTypes } from "@/constants"
 
   // Provide contexts
@@ -175,6 +176,10 @@
     {/each}
   {/if}
 </svelte:head>
+
+{#if $appStore.recaptchaKey}
+  <RecaptchaV2 />
+{/if}
 
 {#if dataLoaded}
   <div

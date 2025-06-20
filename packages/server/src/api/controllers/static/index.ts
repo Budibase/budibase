@@ -295,6 +295,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         appMigrating: !fullyMigrated,
+        recaptchaKey: env.RECAPTCHA_SITE_KEY,
         nonce,
       }
 
