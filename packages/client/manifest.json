@@ -2518,9 +2518,9 @@
         "required": true
       },
       {
-        "type": "field",
+        "type": "multifield",
         "label": "Data column",
-        "key": "valueColumn",
+        "key": "valueColumns",
         "dependsOn": "dataProvider",
         "explanation": {
           "typeSupport": {

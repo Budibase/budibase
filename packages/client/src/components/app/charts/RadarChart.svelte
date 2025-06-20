@@ -5,7 +5,7 @@
   export let title
   export let dataProvider
   export let labelColumn
-  export let valueColumn
+  export let valueColumns
   export let height
   export let width
   export let animate
@@ -18,7 +18,7 @@
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
       ? "datetime"
       : "category"
-  $: series = getSeries(dataProvider, valueColumn)
+  $: series = getSeries(dataProvider, valueColumns)
   $: labels = getLabels(dataProvider, labelColumn, labelType)
 
   $: options = {
@@ -58,23 +58,25 @@
     },
   }
 
-  const getSeries = (dataProvider, valueColumn) => {
+  const getSeries = (dataProvider, valueColumns) => {
     const rows = dataProvider.rows ?? []
 
-    return rows.map(row => {
-      const value = row?.[valueColumn]
+    return valueColumns.map(column => {
+      const data = rows.map(row => {
+        const value = row?.[column]
 
-      if (dataProvider?.schema?.[valueColumn]?.type === "datetime" && value) {
-        return Date.parse(value)
+        if (dataProvider?.schema?.[column]?.type === "datetime" && value) {
+          return Date.parse(value)
+        }
+
+        const numValue = parseFloat(value)
+        return isNaN(numValue) ? 0 : numValue
+      })
+
+      return {
+        name: column,
+        data,
       }
-
-      // This chart doesn't automatically parse strings into numbers
-      const numValue = parseFloat(value)
-      if (isNaN(numValue)) {
-        return 0
-      }
-
-      return numValue
     })
   }
 
@@ -84,7 +86,6 @@
     return rows.map(row => {
       const value = row?.[labelColumn]
 
-      // If a nullish or non-scalar type, replace it with an empty string
       if (!["string", "number", "boolean"].includes(typeof value)) {
         return ""
       } else if (labelType === "datetime") {
