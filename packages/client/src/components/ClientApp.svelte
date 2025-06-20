@@ -29,6 +29,7 @@
     modalStore,
     dataSourceStore,
     notificationStore,
+    recaptchaStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
@@ -177,10 +178,6 @@
   {/if}
 </svelte:head>
 
-{#if $appStore.recaptchaKey}
-  <RecaptchaV2 />
-{/if}
-
 {#if dataLoaded}
   <div
     id="spectrum-root"
@@ -192,6 +189,8 @@
   >
     {#if $environmentStore.maintenance.length > 0}
       <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
+    {:else if $appStore.recaptchaKey && !$recaptchaStore.verified}
+      <RecaptchaV2 />
     {:else}
       <EmbedProvider>
         <DeviceBindingsProvider>

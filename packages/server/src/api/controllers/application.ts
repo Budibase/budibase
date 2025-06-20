@@ -361,6 +361,7 @@ export async function fetchAppPackage(
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
+    recaptchaKey: env.RECAPTCHA_SITE_KEY,
   }
 }
 

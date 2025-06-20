@@ -4,3 +4,7 @@ export interface VerifyRecaptchaRequest {
 export interface VerifyRecaptchaResponse {
   verified: boolean
 }
+
+export interface CheckRecaptchaResponse {
+  verified: boolean
+}

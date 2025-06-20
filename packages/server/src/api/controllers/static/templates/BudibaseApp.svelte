@@ -127,13 +127,9 @@
       <p />
     {/if}
   </div>
-  {#if props.recaptchaKey}
-    <script
-      src={`https://www.google.com/recaptcha/api.js?render=${props.recaptchaKey}`}
-      async
-      defer
-    ></script>
-  {/if}
+  <script
+    src="https://www.google.com/recaptcha/api.js"
+  ></script>
   <script type="application/javascript" nonce={props.nonce}>
     window.INIT_TIME = Date.now()
   </script>

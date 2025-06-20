@@ -1,8 +1,9 @@
 import { BaseAPIClient } from "./types"
-import { VerifyRecaptchaRequest, VerifyRecaptchaResponse } from "@budibase/types"
+import { VerifyRecaptchaRequest, VerifyRecaptchaResponse, CheckRecaptchaResponse } from "@budibase/types"
 
 export interface RecaptchaEndpoints {
   verify: (token: string) => Promise<VerifyRecaptchaResponse>
+  check: () => Promise<CheckRecaptchaResponse>
 }
 
 export const buildRecaptchaEndpoints = (
@@ -14,6 +15,12 @@ export const buildRecaptchaEndpoints = (
       body: {
         token,
       }
+    })
+  },
+
+  check: async () => {
+    return await API.get<CheckRecaptchaResponse>({
+      url: "/api/recaptcha/check"
     })
   }
 })

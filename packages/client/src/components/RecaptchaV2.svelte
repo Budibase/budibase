@@ -1,16 +1,15 @@
 <script>
-  import { Button } from "@budibase/bbui"
+  import { Button, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "@/api"
   import { appStore } from "@/stores"
 
-  let widgetId
   let token = ""
 
   $: recaptchaKey = $appStore.recaptchaKey
 
   onMount(() => {
-    widgetId = window.grecaptcha.render('recaptcha-container', {
+    window.grecaptcha.render("recaptcha-container", {
       sitekey: recaptchaKey,
       callback: (response) => {
         token = response
@@ -23,12 +22,26 @@
     if (!token) {
       throw new Error("No token provided")
     }
-    await API.recaptcha.verify(token)
+    const { verified } = await API.recaptcha.verify(token)
+    if (verified) {
+      location.reload()
+    }
   }
 </script>
 
-<form on:submit|preventDefault={handleSubmit}>
-  <div id="recaptcha-container"></div>
-  <Button>Send</Button>
-  <button on:click={handleSubmit}>Send</button>
-</form>
+<div class="wrapper">
+  <Body>Human verification step required to continue.</Body>
+  <div id="recaptcha-container" />
+  <div>
+    <Button cta on:click={handleSubmit}>Send</Button>
+  </div>
+</div>
+
+<style>
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+    align-items: center;
+  }
+</style>
