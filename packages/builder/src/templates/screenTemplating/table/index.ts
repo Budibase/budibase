@@ -16,7 +16,7 @@ const createScreen = async ({
   type: string
   permissions: UIPermissions
   screens: Screen[]
-  workspaceAppId: string | undefined
+  workspaceAppId: string
 }) => {
   if (type === "inline") {
     return await inline({ tableOrView, permissions, screens, workspaceAppId })

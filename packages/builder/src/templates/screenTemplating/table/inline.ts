@@ -15,7 +15,7 @@ const inline = async ({
   tableOrView: SourceOption
   permissions: UIPermissions
   screens: ScreenDoc[]
-  workspaceAppId: string | undefined
+  workspaceAppId: string
 }) => {
   const heading = new Component("@budibase/standard-components/textv2")
     .instanceName("Table heading")

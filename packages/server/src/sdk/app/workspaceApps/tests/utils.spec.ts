@@ -16,9 +16,11 @@ describe("workspaceApps utils", () => {
     featureCleanup = features.testutils.setFeatureFlags("*", {
       WORKSPACE_APPS: true,
     })
-    workspaceApps = []
+    workspaceApps = (await config.api.workspaceApp.fetch()).workspaceApps
+    expect(workspaceApps).toHaveLength(1)
+    expect(workspaceApps.find(x => x.url === "/")).toBeDefined()
 
-    for (const url of ["/", "/app", "/app2"]) {
+    for (const url of ["/app", "/app2"]) {
       workspaceApps.push(
         (
           await config.api.workspaceApp.create(

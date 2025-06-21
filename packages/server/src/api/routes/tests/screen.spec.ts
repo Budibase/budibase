@@ -196,6 +196,14 @@ describe("/screens", () => {
 
   describe("destroy", () => {
     it("should be able to delete the screen", async () => {
+      const [{ _id: workspaceAppId }] = (await config.api.workspaceApp.fetch())
+        .workspaceApps
+
+      const screen = await config.api.screen.save({
+        ...basicScreen(),
+        workspaceAppId,
+      })
+
       const response = await config.api.screen.destroy(
         screen._id!,
         screen._rev!

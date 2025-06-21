@@ -1,6 +1,6 @@
-import { context, features } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import sdk from "../.."
-import { App, AppNavigation, FeatureFlag } from "@budibase/types"
+import { App, AppNavigation } from "@budibase/types"
 
 export async function addLink({
   label,
@@ -11,26 +11,23 @@ export async function addLink({
   label: string
   url: string
   roleId: string
-  workspaceAppId: string | undefined
+  workspaceAppId: string
 }) {
-  let shouldUpdateAppMetadata = true
-
-  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const workspaceApp = (await sdk.workspaceApps.get(workspaceAppId!))!
-    workspaceApp.navigation.links ??= []
-    workspaceApp.navigation.links.push({
-      text: label,
-      url,
-      roleId,
-      type: "link",
-    })
-
-    await sdk.workspaceApps.update(workspaceApp)
-
-    shouldUpdateAppMetadata = workspaceApp.isDefault
+  const workspaceApp = await sdk.workspaceApps.get(workspaceAppId)
+  if (!workspaceApp) {
+    throw new HTTPError("Workspace app should be defined", 500)
   }
+  workspaceApp.navigation.links ??= []
+  workspaceApp.navigation.links.push({
+    text: label,
+    url,
+    roleId,
+    type: "link",
+  })
 
-  if (shouldUpdateAppMetadata) {
+  await sdk.workspaceApps.update(workspaceApp)
+
+  if (workspaceApp.isDefault) {
     // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
     const appMetadata = await sdk.applications.metadata.get()
     appMetadata.navigation ??= {
@@ -49,37 +46,28 @@ export async function addLink({
   }
 }
 
-export async function deleteLink(
-  route: string,
-  workspaceAppId: string | undefined
-) {
-  let shouldUpdateAppMetadata = true
-  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const workspaceApp = (await sdk.workspaceApps.get(workspaceAppId!))!
+export async function deleteLink(route: string, workspaceAppId: string) {
+  const workspaceApp = (await sdk.workspaceApps.get(workspaceAppId!))!
+  workspaceApp.navigation.links ??= []
 
-    workspaceApp.navigation.links ??= []
+  // Filter out top level links pointing to these URLs
+  const updatedLinks = workspaceApp.navigation.links.filter(
+    link => link.url !== route
+  )
 
-    // Filter out top level links pointing to these URLs
-    const updatedLinks = workspaceApp.navigation.links.filter(
-      link => link.url !== route
-    )
+  // Filter out nested links pointing to these URLs
+  updatedLinks.forEach(link => {
+    if (link.type === "sublinks" && link.subLinks?.length) {
+      link.subLinks = link.subLinks.filter(subLink => subLink.url !== route)
+    }
+  })
 
-    // Filter out nested links pointing to these URLs
-    updatedLinks.forEach(link => {
-      if (link.type === "sublinks" && link.subLinks?.length) {
-        link.subLinks = link.subLinks.filter(subLink => subLink.url !== route)
-      }
-    })
+  await sdk.workspaceApps.update({
+    ...workspaceApp,
+    navigation: { ...workspaceApp.navigation, links: updatedLinks },
+  })
 
-    await sdk.workspaceApps.update({
-      ...workspaceApp,
-      navigation: { ...workspaceApp.navigation, links: updatedLinks },
-    })
-
-    shouldUpdateAppMetadata = workspaceApp.isDefault
-  }
-
-  if (shouldUpdateAppMetadata) {
+  if (workspaceApp.isDefault) {
     // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
     const appMetadata = await sdk.applications.metadata.get()
     const navigation = appMetadata.navigation

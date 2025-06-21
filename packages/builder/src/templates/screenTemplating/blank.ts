@@ -11,7 +11,7 @@ const blank = ({
 }: {
   route: string
   screens: ScreenDoc[]
-  workspaceAppId: string | undefined
+  workspaceAppId: string
 }) => {
   const validRoute = getValidRoute(screens, route, Roles.BASIC, workspaceAppId)
 

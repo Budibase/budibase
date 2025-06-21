@@ -64,7 +64,7 @@ const form = async ({
   type: any
   permissions: any
   screens: ScreenDoc[]
-  workspaceAppId: string | undefined
+  workspaceAppId: string
 }) => {
   const id = Helpers.uuid()
   const typeSpecificRoute = getTypeSpecificRoute(tableOrView, type)

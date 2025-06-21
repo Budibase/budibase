@@ -11,7 +11,7 @@ describe("migration integrity", () => {
 
     await config.doInContext(config.getAppId(), async () => {
       const db = context.getAppDB()
-      for (const migration of migrations.MIGRATIONS.filter(m => !m.disabled)) {
+      for (const migration of migrations.MIGRATIONS) {
         await migration.func()
         const docs = await db.allDocs({ include_docs: true })
 
