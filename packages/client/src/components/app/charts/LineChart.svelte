@@ -17,6 +17,7 @@
   export let yAxisUnits
   export let palette
   export let c1, c2, c3, c4, c5
+  export let onClick
 
   $: series = getSeries(dataProvider, valueColumns)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -64,6 +65,15 @@
       zoom: {
         enabled: false,
       },
+      events: {
+        // Clicking on a line
+        markerClick: function (event, chartContext, opts) {
+          const dataPointIndex = opts.dataPointIndex
+          const row = dataProvider.rows[dataPointIndex]
+
+          handleLineClick(row)
+        },
+      },
     },
     xaxis: {
       categories,
@@ -82,6 +92,10 @@
         text: yAxisLabel,
       },
     },
+  }
+
+  function handleLineClick(marker) {
+    onClick?.({ marker })
   }
 
   const getSeries = (dataProvider, valueColumns = []) => {
