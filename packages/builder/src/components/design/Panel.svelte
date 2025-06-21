@@ -130,6 +130,7 @@
   .header.borderBottom {
     border-bottom: var(--border-light);
   }
+
   .title {
     flex: 1 1 auto;
     width: 0;

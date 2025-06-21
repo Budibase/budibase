@@ -13,6 +13,8 @@
   } from "@/stores/builder"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
   import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
+  import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
+  import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -73,6 +75,31 @@
     />
   {/if}
 
+  {#if $automationStore.showLogsPanel && $selectedAutomation?.data}
+    <div class="logs-panel-container">
+      <div class="panels-wrapper">
+        <div class="logs-panel">
+          <AutomationLogsPanel
+            automation={$selectedAutomation.data}
+            onSelectLog={log =>
+              automationStore.actions.selectLogForDetails(log)}
+            selectedLog={$automationStore.selectedLog}
+          />
+        </div>
+
+        {#if $automationStore.showLogDetailsPanel && $automationStore.selectedLog}
+          <div class="log-details-panel">
+            <LogDetailsPanel
+              log={$automationStore.selectedLog}
+              selectedStep={$automationStore.selectedLogStepData}
+              onBack={() => automationStore.actions.closeLogPanel()}
+            />
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+
   <Modal bind:this={modal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -113,7 +140,6 @@
   .main {
     width: 300px;
   }
-
   .step-panel {
     border-left: var(--border-light);
     display: flex;
@@ -125,5 +151,49 @@
     grid-column: 3;
     width: 400px;
     max-width: 400px;
+  }
+
+  .logs-panel-container {
+    position: relative;
+    width: 400px;
+    max-width: 400px;
+    overflow: hidden;
+    height: 100%;
+    border-left: var(--border-light);
+  }
+
+  .panels-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .logs-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    background-color: var(--background);
+    overflow: auto;
+    transition: transform 0.2s ease;
+  }
+
+  .log-details-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    background-color: var(--background);
+    overflow: auto;
   }
 </style>

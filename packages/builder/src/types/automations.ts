@@ -23,6 +23,11 @@ export enum DataMode {
   ERRORS = "errors",
 }
 
+export enum ViewMode {
+  EDITOR = "editor",
+  LOGS = "logs",
+}
+
 export enum SchemaFieldTypes {
   LONGFORM = "longform",
   JSON = "json",
@@ -132,6 +137,9 @@ export interface AutomationState {
   selectedNodeId?: string
   selectedNodeMode?: DataMode
   actionPanelBlock?: BlockRef
+  selectedLog?: any
+  selectedLogStepData?: any
+  showLogsPanel?: boolean
 }
 
 export interface DerivedAutomationState extends AutomationState {
