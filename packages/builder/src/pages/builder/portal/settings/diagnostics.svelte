@@ -52,7 +52,6 @@
 {#if sdk.users.isAdmin($auth.user) && diagnosticInfo}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
-      <Heading size="M">Diagnostics</Heading>
       <Body>
         Please include this diagnostic information in support requests and
         github issues by clicking the button on the top right to copy to

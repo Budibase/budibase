@@ -71,57 +71,54 @@
   })
 </script>
 
-<Page narrow>
-  <Layout noPadding>
-    <Layout gap="XS" noPadding>
-      <Heading size="M">Plugins</Heading>
-      <Body>Add your own custom datasources and components</Body>
-    </Layout>
-    <Divider />
-
-    <div class="controls">
-      <div>
-        <Button on:click={modal.show} cta>Add plugin</Button>
-        <div class="secondaryButton">
-          <Button
-            on:click={() =>
-              window
-                ?.open("https://github.com/Budibase/plugins", "_blank")
-                ?.focus()}
-            secondary
-          >
-            GitHub repo
-          </Button>
-        </div>
-      </div>
-      {#if $plugins?.length}
-        <div class="filters">
-          <div class="select">
-            <Select
-              bind:value={filter}
-              placeholder={undefined}
-              options={filterOptions}
-              autoWidth
-            />
-          </div>
-          <Search bind:value={searchTerm} placeholder={searchPlaceholder} />
-        </div>
-      {/if}
-    </div>
-
-    {#if $plugins?.length}
-      <Table
-        {schema}
-        data={filteredPlugins}
-        allowEditColumns={false}
-        allowEditRows={false}
-        allowSelectRows={false}
-        allowClickRows={false}
-        {customRenderers}
-      />
-    {/if}
+<Layout noPadding gap="S">
+  <Layout gap="XS" noPadding>
+    <Body>Add your own custom datasources and components</Body>
   </Layout>
-</Page>
+  <Divider noMargin />
+
+  <div class="controls">
+    <div>
+      <Button on:click={modal.show} cta>Add plugin</Button>
+      <div class="secondaryButton">
+        <Button
+          on:click={() =>
+            window
+              ?.open("https://github.com/Budibase/plugins", "_blank")
+              ?.focus()}
+          secondary
+        >
+          GitHub repo
+        </Button>
+      </div>
+    </div>
+    {#if $plugins?.length}
+      <div class="filters">
+        <div class="select">
+          <Select
+            bind:value={filter}
+            placeholder={undefined}
+            options={filterOptions}
+            autoWidth
+          />
+        </div>
+        <Search bind:value={searchTerm} placeholder={searchPlaceholder} />
+      </div>
+    {/if}
+  </div>
+
+  {#if $plugins?.length}
+    <Table
+      {schema}
+      data={filteredPlugins}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+      allowClickRows={false}
+      {customRenderers}
+    />
+  {/if}
+</Layout>
 
 <Modal bind:this={modal}>
   <AddPluginModal />

@@ -163,19 +163,18 @@
   })
 </script>
 
-<Layout noPadding>
+<Layout gap="S" noPadding>
   <Layout gap="XS" noPadding>
-    <div class="title">
-      <Heading>Backups</Heading>
-      {#if !$licensing.backupsEnabled}
+    {#if !$licensing.backupsEnabled}
+      <div class="title">
         <Tags>
           <Tag icon="LockClosed">Premium</Tag>
         </Tags>
-      {/if}
-    </div>
+      </div>
+    {/if}
     <Body>Back up your apps and restore them to their previous state</Body>
   </Layout>
-  <Divider />
+  <Divider noMargin />
 
   {#if !$licensing.backupsEnabled}
     {#if !$auth.accountPortalAccess && $admin.cloud}

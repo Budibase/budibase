@@ -65,11 +65,13 @@
     }
   }
 
-  async function handlePWAZip(file: File) {
-    if (!file) {
+  async function handlePWAZip(e: CustomEvent) {
+    if (!e.detail) {
       notifications.error("No file selected")
       return
     }
+
+    const file: File = e.detail as File
 
     try {
       uploadingIcons = true
@@ -102,9 +104,17 @@
       notifications.error("Error saving PWA settings")
     }
   }
+
+  const handleThemeColorChange = (e: CustomEvent) => {
+    pwaConfig.theme_color = e.detail
+  }
+
+  const handleBackgroundColorChange = (e: CustomEvent) => {
+    pwaConfig.background_color = e.detail
+  }
 </script>
 
-<Layout noPadding>
+<Layout gap="S" noPadding>
   <Layout gap="XS" noPadding>
     <div class="title-section">
       <Heading>Progressive web app</Heading>
@@ -120,7 +130,7 @@
       visuals to create a branded, professional experience for their users.
     </Body>
   </Layout>
-  <Divider />
+  <Divider noMargin />
 
   <div class="form" class:disabled={!pwaEnabled}>
     <div class="fields">
@@ -165,7 +175,7 @@
           />
         </div>
       </div>
-      <Divider />
+      <Divider noMargin />
 
       <!-- Appearance Section -->
       <div class="section">
@@ -194,7 +204,7 @@
             handleFileTooLarge={() =>
               notifications.error("File too large. 20mb limit")}
             extensions={[".zip"]}
-            on:change={e => e.detail && handlePWAZip(e.detail)}
+            on:change={handlePWAZip}
             statusText={iconStatusText}
             disabled={!pwaEnabled || uploadingIcons}
           />
@@ -206,7 +216,7 @@
         <div>
           <ColorPicker
             value={pwaConfig.background_color}
-            on:change={e => (pwaConfig.background_color = e.detail)}
+            on:change={handleBackgroundColorChange}
           />
         </div>
       </div>
@@ -216,11 +226,11 @@
         <div>
           <ColorPicker
             value={pwaConfig.theme_color}
-            on:change={e => (pwaConfig.theme_color = e.detail)}
+            on:change={handleThemeColorChange}
           />
         </div>
       </div>
-      <Divider />
+      <Divider noMargin />
 
       <!-- Manifest Settings Section -->
       <div class="section">
@@ -282,7 +292,7 @@
   }
 
   .section {
-    margin-top: var(--spacing-xl);
+    margin-top: var(--spacing-l);
   }
 
   .title-section {

@@ -2,7 +2,6 @@
   import {
     AbsTooltip,
     Layout,
-    Heading,
     Body,
     Button,
     Divider,
@@ -12,7 +11,6 @@
   } from "@budibase/bbui"
   import { auth, admin } from "@/stores/portal"
 
-  export let title
   export let planType
   export let description
   export let enabled
@@ -21,19 +19,16 @@
   $: upgradeDisabled = !$auth.accountPortalAccess && $admin.cloud
 </script>
 
-<Layout noPadding>
+<Layout noPadding gap="L">
   <Layout gap="XS" noPadding>
-    <div class="title">
-      <Heading size="M">{title}</Heading>
-      {#if !enabled}
-        <Tags>
-          <Tag icon="LockClosed">{planType}</Tag>
-        </Tags>
-      {/if}
-    </div>
+    {#if !enabled}
+      <Tags>
+        <Tag icon="LockClosed">{planType}</Tag>
+      </Tags>
+    {/if}
     <Body>{description}</Body>
   </Layout>
-  <Divider size="S" />
+  <Divider noMargin />
 
   {#if enabled}
     <slot />
@@ -74,13 +69,6 @@
   .buttons {
     display: flex;
     gap: var(--spacing-l);
-  }
-  .title {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--spacing-m);
   }
   .icon {
     position: relative;

@@ -21,12 +21,12 @@
   $: embed = `<iframe width="800" height="600" frameborder="0" allow="clipboard-write;camera;geolocation;fullscreen" src="${appUrl}"></iframe>`
 </script>
 
-<Layout noPadding>
+<Layout gap="S" noPadding>
   <Layout gap="XS" noPadding>
-    <Heading>Embed</Heading>
+    <!-- <Heading>Embed</Heading> -->
     <Body>Embed your app into your other tools of choice</Body>
   </Layout>
-  <Divider />
+  <Divider noMargin />
   <div class="embed-body">
     <div class="embed-code">{embed}</div>
     {#if appDeployed}

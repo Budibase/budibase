@@ -48,6 +48,9 @@
   // Override
   $: params = $routing?.params
   $: userId = params.userId
+  $: if (params.userId && userId !== params.userId) {
+    userId = params.userId
+  }
 
   $: groupSchema = {
     name: {

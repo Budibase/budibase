@@ -91,14 +91,13 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <div class="title">
-      <Heading>App scripts</Heading>
-      {#if !enabled}
+    {#if !enabled}
+      <div class="title">
         <Tags>
           <Tag icon="LockClosed">Enterprise</Tag>
         </Tags>
-      {/if}
-    </div>
+      </div>
+    {/if}
     <div class="subtitle">
       <Body>
         Inject analytics, scripts or stylesheets into your app<br />
@@ -111,7 +110,7 @@
       {/if}
     </div>
   </Layout>
-  <Divider />
+  <Divider noMargin />
   {#if !enabled}
     {#if $admin.cloud && !$auth.accountPortalAccess}
       <Body>Contact your account holder to upgrade your plan.</Body>

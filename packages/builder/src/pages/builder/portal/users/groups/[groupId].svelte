@@ -30,7 +30,10 @@
 
   // Override
   $: params = $routing?.params
-  $: groupId = params.groupId
+  $: if (params.groupId && groupId !== params.groupId) {
+    // Will set, but not clear.
+    groupId = params.groupId
+  }
 
   const appSchema = {
     name: {
@@ -69,8 +72,9 @@
         : group?.roles?.[appsStore.getProdAppID(app.devId)],
     }))
 
+  // Need to ensure the redirect isn't retriggered
   $: {
-    if (loaded && !group?._id) {
+    if (loaded && !group?._id && groupId) {
       bb.settings("/people/groups")
     }
   }

@@ -3,10 +3,10 @@
 
   import { Heading, Pagination, Table, Search } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
-  import { goto } from "@roxi/routify"
   import { API } from "@/api"
   import { groups } from "@/stores/portal"
   import { setContext } from "svelte"
+  import { bb } from "@/stores/bb"
 
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
   import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
@@ -79,7 +79,9 @@
   allowEditRows={false}
   customPlaceholder
   customRenderers={customUserTableRenderers}
-  on:click={e => $goto(`../users/${e.detail._id}`)}
+  on:click={e => {
+    bb.settings(`/people/users/${e.detail._id}`)
+  }}
 >
   <div class="placeholder" slot="placeholder">
     <Heading size="S"
