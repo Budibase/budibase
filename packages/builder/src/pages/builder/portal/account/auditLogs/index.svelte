@@ -306,12 +306,18 @@
         on:change={e => (dateRange = e.detail)}
       />
     </div>
-    <div class="freeSearch">
-      <Search placeholder="Search" on:change={e => debounce(e.detail)} />
-    </div>
+    <div class="search-wrap">
+      <div class="freeSearch">
+        <Search placeholder="Search" on:change={e => debounce(e.detail)} />
+      </div>
 
-    <div class="">
-      <ActionButton size="M" icon="Download" on:click={() => downloadLogs()} />
+      <div class="">
+        <ActionButton
+          size="M"
+          icon="Download"
+          on:click={() => downloadLogs()}
+        />
+      </div>
     </div>
   </div>
   <Layout noPadding>
@@ -387,6 +393,15 @@
 {/if}
 
 <style>
+  .search-wrap {
+    display: flex;
+    gap: var(--spacing-s);
+    flex-basis: calc(33.33% - 10px);
+  }
+
+  .freeSearch {
+    flex: 1;
+  }
   .copy-icon {
     right: 16px;
     top: 80px;
@@ -498,10 +513,5 @@
   .date-picker :global(.spectrum-Form-item) {
     flex: 1 1 auto;
     width: 0;
-  }
-
-  .freeSearch {
-    flex-basis: 25%;
-    min-width: 100px;
   }
 </style>

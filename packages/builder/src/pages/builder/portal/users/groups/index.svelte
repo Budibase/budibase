@@ -1,7 +1,6 @@
 <script>
   import {
     Layout,
-    Heading,
     Body,
     Button,
     ButtonGroup,
@@ -22,6 +21,7 @@
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { goto } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
+  import { bb } from "@/stores/bb"
 
   const DefaultGroup = {
     name: "",
@@ -90,19 +90,18 @@
   })
 </script>
 
-<Layout noPadding gap="M">
-  <Layout gap="XS" noPadding>
-    <div class="title">
-      <Heading size="M">Groups</Heading>
-      {#if !$licensing.groupsEnabled}
+<Layout noPadding gap="S">
+  <Layout noPadding>
+    {#if !$licensing.groupsEnabled}
+      <div class="title">
         <Tags>
           <Tag icon="LockClosed">Enterpise</Tag>
         </Tags>
-      {/if}
-    </div>
+      </div>
+    {/if}
     <Body>Easily assign and manage your users' access with groups</Body>
   </Layout>
-  <Divider />
+  <Divider noMargin />
   {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
     <Body>Contact your account holder to upgrade your plan.</Body>
   {/if}
@@ -140,7 +139,9 @@
   </div>
   {#if $licensing.groupsEnabled}
     <Table
-      on:click={({ detail }) => $goto(`./${detail._id}`)}
+      on:click={({ detail }) => {
+        bb.settings(`/people/groups/${detail._id}`)
+      }}
       {schema}
       data={filteredGroups}
       allowEditColumns={false}
