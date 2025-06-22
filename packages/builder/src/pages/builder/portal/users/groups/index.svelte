@@ -25,7 +25,7 @@
 
   const DefaultGroup = {
     name: "",
-    icon: "UserGroup",
+    icon: "users",
     color: "var(--spectrum-global-color-blue-600)",
     users: [],
     roles: {},
@@ -95,7 +95,7 @@
     {#if !$licensing.groupsEnabled}
       <div class="title">
         <Tags>
-          <Tag icon="LockClosed">Enterpise</Tag>
+          <Tag icon="lock" emphasized>Enterpise</Tag>
         </Tags>
       </div>
     {/if}

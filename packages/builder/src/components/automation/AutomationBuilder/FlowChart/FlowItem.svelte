@@ -1,13 +1,12 @@
 <script>
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { ActionStepID } from "@/constants/backend/automations"
   import { AutomationStepType } from "@budibase/types"
   import FlowItemActions from "./FlowItemActions.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
-  import DragHandle from "@/components/design/settings/controls/DraggableList/drag-handle.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
   import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
@@ -162,7 +161,7 @@
             class:grabbing={dragging}
             on:mousedown={onHandleMouseDown}
           >
-            <DragHandle />
+            <Icon name="dots-six-vertical" weight="bold" />
           </div>
         {/if}
         <div
@@ -186,7 +185,7 @@
               <InfoDisplay
                 title={triggerInfo.title}
                 body="This trigger is tied to your '{triggerInfo.tableName}' table"
-                icon="InfoOutline"
+                icon="info"
               />
             </div>
           {/if}
@@ -243,9 +242,9 @@
     display: inline-block;
   }
   .block {
-    width: 360px;
+    width: 320px;
     font-size: 16px;
-    border-radius: 4px;
+    border-radius: 12px;
     cursor: default;
   }
   .block .wrap {
@@ -261,12 +260,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--grey-3);
-    padding: 6px;
-    color: var(--grey-6);
+    background-color: var(--grey-2);
+    padding: 6px 0;
+    color: var(--grey-4);
     cursor: grab;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
   }
   .block.draggable .wrap .handle.grabbing {
     cursor: grabbing;
@@ -278,9 +277,9 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-    background-color: var(--background);
-    border: 1px solid var(--grey-3);
-    border-radius: 4px;
+    background-color: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
   }
   .blockSection {
     padding: var(--spacing-xl);
@@ -322,7 +321,7 @@
     width: 100%;
     position: absolute;
     top: -35px;
-    left: 0px;
+    left: 0;
   }
   .block-core {
     cursor: pointer;

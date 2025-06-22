@@ -214,12 +214,12 @@
         <Heading size="M">Branding</Heading>
         {#if !isCloud && !brandingEnabled}
           <Tags>
-            <Tag icon="LockClosed">Premium</Tag>
+            <Tag icon="lock" emphasized>Premium</Tag>
           </Tags>
         {/if}
         {#if isCloud && !brandingEnabled}
           <Tags>
-            <Tag icon="LockClosed">Premium</Tag>
+            <Tag icon="lock" emphasized>Premium</Tag>
           </Tags>
         {/if}
       </div>

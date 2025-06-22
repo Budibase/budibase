@@ -49,11 +49,6 @@ import * as internal from "svelte/internal"
 window.svelte_internal = internal
 window.svelte = svelte
 
-// Initialise spectrum icons
-// eslint-disable-next-line local-rules/no-budibase-imports
-import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
-loadSpectrumIcons()
-
 // Extend global window scope
 declare global {
   interface Window {

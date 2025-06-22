@@ -170,7 +170,7 @@
         }
       }}
     >
-      <Icon disabled={isJS} size="S" name="Close" />
+      <Icon disabled={isJS} size="S" name="x" />
     </div>
   {:else}
     <slot />
@@ -182,7 +182,7 @@
         bindingDrawer.show()
       }}
     >
-      <Icon size="S" name="FlashOn" />
+      <Icon size="S" weight="fill" name="lightning" />
     </div>
   {/if}
 </div>

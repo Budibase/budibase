@@ -3,6 +3,7 @@
   import "@spectrum-css/actionbutton/dist/index-vars.css"
   import "@spectrum-css/stepper/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
+  import Icon from "../../Icon/Icon.svelte"
 
   export let value = null
   export let placeholder = null
@@ -126,26 +127,14 @@
       tabindex="-1"
       on:click={stepUp}
     >
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronUp75"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Chevron75" />
-      </svg>
+      <Icon name="caret-up" size="XS" />
     </button>
     <button
       class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-Stepper-stepDown"
       tabindex="-1"
       on:click={stepDown}
     >
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronDown75"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Chevron75" />
-      </svg>
+      <Icon name="caret-down" size="XS" />
     </button>
   </span>
 </div>

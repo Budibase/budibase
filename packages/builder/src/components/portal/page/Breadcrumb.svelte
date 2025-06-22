@@ -18,7 +18,7 @@
       {text}
     </span>
   {/if}
-  <Icon name="ChevronRight" />
+  <Icon name="caret-right" />
 </div>
 
 <style>
@@ -33,7 +33,7 @@
     font-weight: 600;
   }
   .crumb > span,
-  div :global(.spectrum-Icon),
+  div :global(i),
   a {
     color: inherit;
     transition: color 130ms ease-out;

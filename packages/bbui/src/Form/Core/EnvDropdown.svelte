@@ -4,6 +4,7 @@
   import clickOutside from "../../Actions/click_outside"
   import Divider from "../../Divider/Divider.svelte"
   import type { EnvDropdownType } from "../../types"
+  import Icon from "../../Icon/Icon.svelte"
 
   export let value: string | number | undefined = undefined
   export let placeholder: string | undefined = undefined
@@ -22,7 +23,6 @@
 
   let field: HTMLInputElement
   let focus = false
-  let iconFocused = false
   let open = false
 
   const STRIP_NAME_REGEX = /{{\s*env\.([^\s]+)\s*}}/g
@@ -68,7 +68,6 @@
       event.stopPropagation()
       open = false
       focus = false
-      iconFocused = false
       dispatch("closed")
     }
   }
@@ -76,7 +75,6 @@
   const handleVarSelect = (variable: string) => {
     open = false
     focus = false
-    iconFocused = false
     updateValue(`{{ env.${variable} }}`)
   }
 
@@ -92,7 +90,6 @@
   function openPopover() {
     open = true
     focus = true
-    iconFocused = true
   }
 </script>
 
@@ -104,27 +101,21 @@
     class:is-focused={focus}
     class="spectrum-Textfield"
   >
-    <svg
-      class:close-color={hbsValue.length}
-      class:focused={iconFocused}
-      class="hoverable icon-position spectrum-Icon spectrum-Icon--sizeS spectrum-Textfield-validationIcon"
-      focusable="false"
-      aria-hidden="true"
-      on:click={() => {
-        hbsValue.length ? removeVariable() : openPopover()
-      }}
-    >
-      <use
-        xlink:href={`#spectrum-icon-18-${!hbsValue.length ? "Key" : "Close"}`}
+    <div class="inline-icon">
+      <Icon
+        name={!hbsValue.length ? "key" : "x"}
+        hoverable
+        on:click={() => {
+          hbsValue.length ? removeVariable() : openPopover()
+        }}
       />
-    </svg>
-
+    </div>
     <input
       bind:this={field}
       disabled={!!hbsValue.length || disabled}
       {readonly}
       {id}
-      value={(hbsValue.length ? `{{ ${hbsValue[1]} }}` : value) ?? ""}
+      {value}
       placeholder={placeholder || ""}
       on:click
       on:blur
@@ -156,23 +147,16 @@
               <li
                 class="spectrum-Menu-item"
                 role="option"
-                aria-selected="true"
+                aria-selected="false"
                 tabindex="0"
                 on:click={() => handleVarSelect(variable.name)}
               >
-                <span class="spectrum-Menu-itemLabel">
+                <div class="spectrum-Menu-itemLabel">
                   <div class="primary-text">
                     {variable.name}
                     <span />
                   </div>
-                  <svg
-                    class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-                    focusable="false"
-                    aria-hidden="true"
-                  >
-                    <use xlink:href="#spectrum-css-icon-Checkmark100" />
-                  </svg>
-                </span>
+                </div>
               </li>
             {/each}
           </div>
@@ -185,24 +169,12 @@
       <Divider noMargin />
       {#if environmentVariablesEnabled}
         <div on:click={() => showModal()} class="add-variable">
-          <svg
-            class="spectrum-Icon spectrum-Icon--sizeS"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-icon-18-Add" />
-          </svg>
+          <Icon name="plus" size="S" />
           <div class="primary-text">Add Variable</div>
         </div>
       {:else}
         <div on:click={() => handleUpgradePanel()} class="add-variable">
-          <svg
-            class="spectrum-Icon spectrum-Icon--sizeS"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-icon-18-ArrowUp" />
-          </svg>
+          <Icon name="arrow-up" size="S" />
           <div class="primary-text">Upgrade plan</div>
         </div>
       {/if}
@@ -215,15 +187,10 @@
     width: 100%;
   }
 
-  .icon-position {
+  .inline-icon {
     position: absolute;
     top: 25%;
     right: 2%;
-  }
-
-  .hoverable:hover {
-    cursor: pointer;
-    color: var(--spectrum-global-color-blue-400);
   }
 
   .primary-text {
@@ -260,19 +227,7 @@
     cursor: pointer;
   }
 
-  .focused {
-    color: var(--spectrum-global-color-blue-400);
-  }
-
   .add-variable:hover {
     background: var(--grey-1);
-  }
-
-  .close-color {
-    color: var(--spectrum-global-color-gray-900) !important;
-  }
-
-  .close-color:hover {
-    color: var(--spectrum-global-color-blue-400) !important;
   }
 </style>

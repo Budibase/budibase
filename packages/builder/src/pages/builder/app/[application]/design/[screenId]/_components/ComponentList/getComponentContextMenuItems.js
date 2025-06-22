@@ -22,7 +22,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
 
   return [
     {
-      icon: "Delete",
+      icon: "trash",
       name: "Delete",
       keyBind: "!BackAndroid",
       visible: true,
@@ -30,7 +30,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("Delete"),
     },
     {
-      icon: "ChevronUp",
+      icon: "caret-up",
       name: "Move up",
       keyBind: "Ctrl+!ArrowUp",
       visible: true,
@@ -38,7 +38,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("ArrowUp", true),
     },
     {
-      icon: "ChevronDown",
+      icon: "caret-down",
       name: "Move down",
       keyBind: "Ctrl+!ArrowDown",
       visible: true,
@@ -46,7 +46,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("ArrowDown", true),
     },
     {
-      icon: "Duplicate",
+      icon: "copy",
       name: "Duplicate",
       keyBind: "Ctrl+D",
       visible: true,
@@ -54,7 +54,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("d", true),
     },
     {
-      icon: "Cut",
+      icon: "scissors",
       name: "Cut",
       keyBind: "Ctrl+X",
       visible: true,
@@ -62,7 +62,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("x", true),
     },
     {
-      icon: "Copy",
+      icon: "copy",
       name: "Copy",
       keyBind: "Ctrl+C",
       visible: true,
@@ -70,7 +70,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("c", true),
     },
     {
-      icon: "LayersSendToBack",
+      icon: "stack",
       name: "Paste",
       keyBind: "Ctrl+V",
       visible: true,
@@ -78,7 +78,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("v", true),
     },
     {
-      icon: "Export",
+      icon: "export",
       name: "Eject block",
       keyBind: "Ctrl+E",
       visible: isBlock && canEject,
@@ -86,7 +86,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("e", true),
     },
     {
-      icon: "TreeExpand",
+      icon: "caret-down",
       name: "Expand",
       keyBind: "!ArrowRight",
       visible: hasChildren,
@@ -94,7 +94,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("ArrowRight", false),
     },
     {
-      icon: "TreeExpandAll",
+      icon: "caret-double-down",
       name: "Expand All",
       keyBind: "Ctrl+!ArrowRight",
       visible: hasChildren,
@@ -102,7 +102,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("ArrowRight", true),
     },
     {
-      icon: "TreeCollapse",
+      icon: "caret-right",
       name: "Collapse",
       keyBind: "!ArrowLeft",
       visible: hasChildren,
@@ -110,7 +110,7 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("ArrowLeft", false),
     },
     {
-      icon: "TreeCollapseAll",
+      icon: "caret-double-right",
       name: "Collapse All",
       keyBind: "Ctrl+!ArrowLeft",
       visible: hasChildren,

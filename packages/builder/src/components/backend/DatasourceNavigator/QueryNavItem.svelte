@@ -25,7 +25,7 @@
   const getContextMenuItems = () => {
     return [
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
@@ -33,7 +33,7 @@
         callback: confirmDeleteModal.show,
       },
       {
-        icon: "Duplicate",
+        icon: "copy",
         name: "Duplicate",
         keyBind: null,
         visible: true,
@@ -62,7 +62,7 @@
 <NavItem
   on:contextmenu={openContextMenu}
   indentLevel={1}
-  icon="SQLQuery"
+  icon="database"
   iconText={customQueryIconText(datasource, query)}
   iconColor={customQueryIconColor(datasource, query)}
   text={customQueryText(datasource, query)}
@@ -72,7 +72,7 @@
   on:click={() => goto(`./query/${query._id}`)}
   selectedBy={$userSelectedResourceMap[query._id]}
 >
-  <Icon size="S" hoverable name="MoreSmallList" on:click={openContextMenu} />
+  <Icon size="M" hoverable name="dots-three" on:click={openContextMenu} />
 </NavItem>
 
 <DeleteDataConfirmModal source={query} bind:this={confirmDeleteModal} />

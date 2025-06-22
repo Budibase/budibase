@@ -77,6 +77,7 @@
   data={$fetchGroupUsers?.rows}
   loading={$fetchGroupUsers.loading}
   allowEditRows={false}
+  allowEditColumns={false}
   customPlaceholder
   customRenderers={customUserTableRenderers}
   on:click={e => {

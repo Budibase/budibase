@@ -290,15 +290,18 @@
         <div>
           <ActionMenu align="right">
             <span slot="control">
-              <Icon hoverable name="More" />
+              <Icon hoverable name="dots-three" />
             </span>
             {#if !isSSO}
-              <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
+              <MenuItem
+                on:click={resetPasswordModal.show}
+                icon="arrow-clockwise"
+              >
                 Force password reset
               </MenuItem>
             {/if}
             {#if !isTenantOwner}
-              <MenuItem on:click={deleteModal.show} icon="Delete">
+              <MenuItem on:click={deleteModal.show} icon="trash">
                 Delete
               </MenuItem>
             {/if}
@@ -387,6 +390,7 @@
           schema={groupSchema}
           data={userGroups}
           allowEditRows={false}
+          allowEditColumns={false}
           customPlaceholder
           customRenderers={customGroupTableRenderers}
           on:click={e => {
@@ -412,6 +416,7 @@
           data={availableApps}
           customPlaceholder
           allowEditRows={false}
+          allowEditColumns={false}
           customRenderers={customAppTableRenderers}
           on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
         >

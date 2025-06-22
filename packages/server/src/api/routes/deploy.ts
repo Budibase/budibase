@@ -12,6 +12,11 @@ router
     controller.fetchDeployments
   )
   .get(
+    "/api/deploy/status",
+    authorized(permissions.BUILDER),
+    controller.publishStatus
+  )
+  .get(
     "/api/deploy/:deploymentId",
     authorized(permissions.BUILDER),
     controller.deploymentProgress

@@ -6,10 +6,12 @@ import {
 import { generator } from "./generator"
 
 export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
-  const result: RequiredKeys<WorkspaceApp> = {
+  const result: RequiredKeys<
+    Omit<WorkspaceApp, "_id" | "_rev" | "_deleted" | "createdAt" | "updatedAt">
+  > = {
     name: generator.guid(),
     url: `/${generator.guid().replace(/-/g, "")}`,
-    icon: "Monitoring",
+    icon: "monitor",
     iconColor: undefined,
 
     _id: undefined,

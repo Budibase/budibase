@@ -94,7 +94,7 @@
     {#if !enabled}
       <div class="title">
         <Tags>
-          <Tag icon="LockClosed">Enterprise</Tag>
+          <Tag icon="lock" emphasized>Enterprise</Tag>
         </Tags>
       </div>
     {/if}

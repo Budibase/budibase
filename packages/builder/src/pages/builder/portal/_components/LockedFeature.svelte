@@ -21,11 +21,13 @@
 
 <Layout noPadding gap="L">
   <Layout gap="XS" noPadding>
-    {#if !enabled}
-      <Tags>
-        <Tag icon="LockClosed">{planType}</Tag>
-      </Tags>
-    {/if}
+    <div class="title">
+      {#if !enabled}
+        <Tags>
+          <Tag icon="lock">{planType}</Tag>
+        </Tags>
+      {/if}
+    </div>
     <Body>{description}</Body>
   </Layout>
   <Divider noMargin />
@@ -57,7 +59,7 @@
           position={"right"}
         >
           <div class="icon" on:focus>
-            <Icon name="InfoOutline" size="L" disabled hoverable />
+            <Icon name="info" size="L" disabled hoverable />
           </div>
         </AbsTooltip>
       {/if}

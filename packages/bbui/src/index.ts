@@ -1,5 +1,4 @@
 import "./bbui.css"
-import "@spectrum-css/icon/dist/index-vars.css"
 
 // Constants
 export * from "./constants"

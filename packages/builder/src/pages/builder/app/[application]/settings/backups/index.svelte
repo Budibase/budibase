@@ -168,7 +168,7 @@
     {#if !$licensing.backupsEnabled}
       <div class="title">
         <Tags>
-          <Tag icon="LockClosed">Premium</Tag>
+          <Tag icon="lock" emphasized>Premium</Tag>
         </Tags>
       </div>
     {/if}

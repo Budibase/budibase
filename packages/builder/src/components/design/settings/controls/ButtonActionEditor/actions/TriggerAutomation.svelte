@@ -79,7 +79,7 @@
       />
       {#if parameters.synchronous}
         <div class="synchronous-info">
-          <Icon size="XS" name="Info" />
+          <Icon size="XS" name="info" />
           <Body size="XS">This automation will run synchronously</Body>
         </div>
       {/if}

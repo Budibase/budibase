@@ -202,7 +202,10 @@
                 selected={$modal}
                 on:click={() => modal.set(!$modal)}
               >
-                <Icon name={$modal ? "Minimize" : "Maximize"} size="S" />
+                <Icon
+                  name={$modal ? "arrows-in-simple" : "arrows-out-simple"}
+                  size="S"
+                />
               </ActionButton>
             {/if}
           </div>

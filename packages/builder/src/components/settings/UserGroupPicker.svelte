@@ -67,7 +67,7 @@
             <div>
               <Icon
                 color="var(--spectrum-global-color-blue-600);"
-                name="Checkmark"
+                name="check"
               />
             </div>
           {/if}

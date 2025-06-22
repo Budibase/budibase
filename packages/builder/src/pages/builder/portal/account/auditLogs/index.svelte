@@ -314,7 +314,7 @@
       <div class="">
         <ActionButton
           size="M"
-          icon="Download"
+          icon="download"
           on:click={() => downloadLogs()}
         />
       </div>
@@ -366,7 +366,7 @@
         />
         <Icon
           hoverable
-          name="Close"
+          name="x"
           on:click={() => {
             sidePanelVisible = false
           }}
@@ -380,7 +380,7 @@
         on:click={() => copyToClipboard(JSON.stringify(selectedLog.metadata))}
         class="copy-icon"
       >
-        <Icon name="Copy" size="S" />
+        <Icon name="copy" size="S" />
       </div>
       <CoreTextArea
         disabled

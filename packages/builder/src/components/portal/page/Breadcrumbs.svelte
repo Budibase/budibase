@@ -11,7 +11,7 @@
     gap: var(--spacing-m);
   }
 
-  div :global(> *:last-child .spectrum-Icon) {
+  div :global(> *:last-child i) {
     display: none;
   }
   div :global(> *:last-child) {
