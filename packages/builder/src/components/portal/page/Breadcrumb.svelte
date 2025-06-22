@@ -2,13 +2,22 @@
   import { Icon } from "@budibase/bbui"
 
   export let url: string | undefined = undefined
-  export let text: string
+  export let text: string | undefined = undefined
+  export let onClick: Function | undefined = undefined
 </script>
 
-<div>
-  <a href={url}>
-    {text}
-  </a>
+<div class="crumb">
+  {#if typeof onClick !== "function"}
+    <a href={url}>
+      {text}
+    </a>
+  {:else}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <span on:click={e => onClick(e)}>
+      {text}
+    </span>
+  {/if}
   <Icon name="ChevronRight" />
 </div>
 
@@ -23,6 +32,7 @@
     font-size: 16px;
     font-weight: 600;
   }
+  .crumb > span,
   div :global(.spectrum-Icon),
   a {
     color: inherit;
@@ -31,7 +41,12 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+  .crumb > span:hover,
   a:hover {
     color: var(--spectrum-global-color-gray-900);
+  }
+
+  .crumb > span:hover {
+    cursor: pointer;
   }
 </style>
