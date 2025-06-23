@@ -122,7 +122,7 @@
           icon={flowStatus.icon}
           tooltip={flowStatus?.tooltip}
           on:click={async () => {
-            if (branch || !block) {
+            if (branch || !block || viewMode === ViewMode.LOGS) {
               return
             }
             await automationStore.actions.selectNode(
