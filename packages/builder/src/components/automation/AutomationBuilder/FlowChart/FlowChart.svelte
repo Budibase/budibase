@@ -23,6 +23,7 @@
   import DraggableCanvas from "../DraggableCanvas.svelte"
   import { onMount } from "svelte"
   import { environment } from "@/stores/portal"
+  import Count from "../../SetupPanel/Count.svelte"
 
   export let automation
 
@@ -34,7 +35,7 @@
   let blockRefs = {}
   let treeEle
   let draggable
-
+  let prodErrors
   let viewMode = ViewMode.EDITOR
 
   $: $automationStore.showTestModal === true && testDataModal.show()
@@ -107,6 +108,11 @@
     try {
       await automationStore.actions.initAppSelf()
       await environment.loadVariables()
+      const response = await automationStore.actions.getLogs({
+        automationId: automation._id,
+        status: "error",
+      })
+      prodErrors = response?.data?.length || 0
     } catch (error) {
       console.error(error)
     }
@@ -191,26 +197,32 @@
         >
           Editor
         </ActionButton>
-        <ActionButton
-          icon="list-checks"
-          quiet
-          selected={viewMode === ViewMode.LOGS ||
-            $automationStore.showLogsPanel ||
-            $automationStore.showLogDetailsPanel}
-          on:click={() => {
-            viewMode = ViewMode.LOGS
-            // Clear editor selection when switching to logs mode
-            automationStore.actions.selectNode(null)
-            if (
-              !$automationStore.showLogsPanel &&
-              !$automationStore.showLogDetailsPanel
-            ) {
-              toggleLogsPanel()
-            }
-          }}
+        <Count
+          count={prodErrors}
+          tooltip={"There are errors in production"}
+          hoverable={false}
         >
-          Logs
-        </ActionButton>
+          <ActionButton
+            icon="list-checks"
+            quiet
+            selected={viewMode === ViewMode.LOGS ||
+              $automationStore.showLogsPanel ||
+              $automationStore.showLogDetailsPanel}
+            on:click={() => {
+              viewMode = ViewMode.LOGS
+              // Clear editor selection when switching to logs mode
+              automationStore.actions.selectNode(null)
+              if (
+                !$automationStore.showLogsPanel &&
+                !$automationStore.showLogDetailsPanel
+              ) {
+                toggleLogsPanel()
+              }
+            }}
+          >
+            Logs
+          </ActionButton>
+        </Count>
       </div>
     </div>
 
