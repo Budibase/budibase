@@ -12,6 +12,7 @@
   export let width
   export let animate
   export let dataLabels
+  export let labelBackground
   export let curve
   export let legend
   export let yAxisUnits
@@ -55,6 +56,9 @@
     },
     dataLabels: {
       enabled: dataLabels,
+      background: {
+        enabled: labelBackground,
+      },
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
