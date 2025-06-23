@@ -14,6 +14,7 @@
   export let palette
   export let c1, c2, c3, c4, c5
   export let onClick
+  export let spokeLabels
 
   $: labelType =
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
@@ -72,6 +73,9 @@
         },
       },
       foreColor: "#808080", // Numbers/Scale up the spoke
+    },
+    yaxis: {
+      show: spokeLabels,
     },
   }
 

@@ -2623,6 +2623,12 @@
       },
       {
         "type": "boolean",
+        "label": "Spoke labels",
+        "key": "spokeLabels",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
         "label": "Animate",
         "key": "animate",
         "defaultValue": true
