@@ -36,8 +36,8 @@
     ["Day Passes"]: () => true,
     [Feature.AI_CUSTOM_CONFIGS]: () => true,
     Queries: () => true,
-    Users: license => {
-      return license.plan.model !== PlanModel.PER_USER
+    Creators: license => {
+      return license.plan.model === PlanModel.PER_USER
     },
   }
 
