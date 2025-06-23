@@ -44,8 +44,10 @@ export async function generateTables(
         aiGenerated: true,
       })
 
-      createdTables.push({ id: createdTable._id!, name: table.name })
+      createdTables.push({ id: createdTable._id!, name: createdTable.name })
       tableIds[table.name] = createdTable._id!
+      // Add to existing names for next iteration to avoid conflicts
+      existingTableNames.push(createdTable.name)
     }
 
     for (const table of tables) {

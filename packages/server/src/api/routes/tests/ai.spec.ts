@@ -516,37 +516,28 @@ describe("BudibaseAI", () => {
       nock.cleanAll()
     })
 
-    const mockAIGenerationStructure = (
-      generationStructure: ai.GenerationStructure
-    ) =>
-      mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: zodResponseFormat(ai.generationStructure, "key"),
-      })
-
-    const mockAIColumnGeneration = (
-      generationStructure: ai.GenerationStructure,
-      aiColumnGeneration: ai.AIColumnSchemas
-    ) =>
-      mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: zodResponseFormat(
-          ai.aiColumnSchemas(
-            ai.aiTableResponseToTableSchema(generationStructure)
-          ),
-          "key"
-        ),
-      })
-
-    const mockDataGeneration = (
-      dataGeneration: Record<string, Record<string, any>[]>
-    ) =>
-      mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: zodResponseFormat(ai.tableDataStructuredOutput([]), "key"),
-      })
-
-    const mockProcessAIColumn = (response: string) =>
-      mockChatGPTResponse(response)
-
     it("handles correct chat response", async () => {
+      nock("https://photourl.com").get("/any.png").reply(200).persist()
+      mockChatGPTResponse((prompt: string) => {
+        function getFirstMessage(req: ai.LLMRequest) {
+          return req.messages[0].content!.toString()
+        }
+
+        if (prompt.includes(getFirstMessage(ai.generateTables()))) {
+          return JSON.stringify(generationStructure)
+        }
+
+        if (prompt.includes(getFirstMessage(ai.generateAIColumns()))) {
+          return JSON.stringify(aiColumnGeneration)
+        }
+
+        if (prompt.includes(getFirstMessage(ai.generateData()))) {
+          return JSON.stringify(dataGeneration)
+        }
+
+        throw new Error("Unexpected prompt: " + prompt)
+      })
+
       const prompt = "Create me a table for managing IT tickets"
       const generationStructure: ai.GenerationStructure = {
         tables: [
@@ -587,7 +578,7 @@ describe("BudibaseAI", () => {
               {
                 name: "Assignee",
                 type: FieldType.LINK,
-                tableId: "Employees",
+                tableId: "Staff",
                 relationshipType: RelationshipType.MANY_TO_ONE,
                 reverseFieldName: "AssignedTickets",
                 relationshipId: "TicketUser",
@@ -612,7 +603,7 @@ describe("BudibaseAI", () => {
             ],
           },
           {
-            name: "Employees",
+            name: "Staff",
             primaryDisplay: "First Name",
             schema: [
               {
@@ -658,7 +649,6 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockAIGenerationStructure(generationStructure)
 
       const aiColumnGeneration: ai.AIColumnSchemas = {
         Tickets: [
@@ -676,7 +666,7 @@ describe("BudibaseAI", () => {
             language: "es",
           },
         ],
-        Employees: [
+        Staff: [
           {
             name: "Role Category",
             type: FieldType.AI,
@@ -686,9 +676,6 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockAIColumnGeneration(generationStructure, aiColumnGeneration)
-
-      nock("https://photourl.com").get("/any.png").reply(200).persist()
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Tickets: [
@@ -745,7 +732,7 @@ describe("BudibaseAI", () => {
             },
           },
         ],
-        Employees: [
+        Staff: [
           {
             "First Name": "Joshua",
             "Last Name": "Lee",
@@ -843,14 +830,11 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockDataGeneration(dataGeneration)
-
-      mockProcessAIColumn("Mock LLM Response")
 
       const { createdTables } = await config.api.ai.generateTables({ prompt })
       expect(createdTables).toEqual([
         { id: expect.stringMatching(/ta_\w+/), name: "Tickets" },
-        { id: expect.stringMatching(/ta_\w+/), name: "Employees" },
+        { id: expect.stringMatching(/ta_\w+/), name: "Staff" },
       ])
 
       const tables = [
@@ -942,7 +926,7 @@ describe("BudibaseAI", () => {
           aiGenerated: true,
         }),
         expect.objectContaining({
-          name: "Employees 2",
+          name: "Staff",
           schema: {
             "First Name": {
               constraints: {

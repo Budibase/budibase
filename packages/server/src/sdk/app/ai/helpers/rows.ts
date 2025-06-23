@@ -14,10 +14,31 @@ export async function generateRows(
     data: Record<string, { rowId: string[]; tableId: string }>
   }[] = []
 
+  // Get all actual tables and create a mapping from original names to actual table objects
+  const allTables = await sdk.tables.getAllInternalTables()
+  const tableIdToTable = Object.fromEntries(allTables.map(t => [t._id, t]))
+  
   const rowPromises = []
 
   for (const tableName of Object.keys(data)) {
-    const table = tables[tableName]
+    // Try to find the table by original name first
+    let table = tables[tableName]
+    
+    // If not found, the table might have been renamed, so find it by ID
+    if (!table) {
+      // Find the table ID from the tables mapping (which has original names)
+      const possibleTable = Object.values(tables).find(t => 
+        tableIdToTable[t._id]?.name.startsWith(tableName)
+      )
+      if (possibleTable) {
+        table = possibleTable
+      }
+    }
+    
+    if (!table) {
+      console.warn(`Table not found for data key: ${tableName}`)
+      continue
+    }
     const linksOverride: Record<string, null> = {}
     for (const field of Object.values(table.schema).filter(
       f => f.type === FieldType.LINK

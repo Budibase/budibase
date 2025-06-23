@@ -12,8 +12,7 @@ export const mockAnthropicResponse: MockLLMResponseFn = (
   return nock(opts?.baseUrl || "https://api.anthropic.com")
     .post("/v1/messages")
     .reply(async request => {
-      const req =
-        (await request.json()) as AnthropicClient.MessageCreateParamsNonStreaming
+      const req = (await request.json()) as AnthropicClient.MessageCreateParamsNonStreaming
       const prompt = req.messages[0].content
       if (typeof prompt !== "string") {
         throw new Error("Anthropic mock only supports string prompts")

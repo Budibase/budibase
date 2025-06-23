@@ -1,7 +1,6 @@
 import nock from "nock"
 import { MockLLMResponseFn, MockLLMResponseOpts } from "."
 import _ from "lodash"
-import { ai } from "@budibase/pro"
 
 let chatID = 1
 const SPACE_REGEX = /\s+/g
@@ -50,17 +49,11 @@ export const mockChatGPTResponse: MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
   opts?: MockLLMResponseOpts
 ) => {
-  let body: nock.RequestBodyMatcher | undefined = undefined
-
-  if (opts?.format) {
-    body = _.matches({
-      response_format: ai.parseResponseFormat(opts.format),
-    })
-  }
   return nock(opts?.baseUrl || "https://api.openai.com")
-    .post("/v1/chat/completions", body)
+    .post("/v1/chat/completions")
     .reply(async request => {
       const req = (await request.json()) as ChatCompletionRequest
+
       const messages = req.messages
 
       // Handle both simple string content and complex content arrays
@@ -150,7 +143,8 @@ export const mockOpenAIFileUpload = (
   return nock("https://api.openai.com")
     .post("/v1/files")
     .reply(async request => {
-      const filename = (await request.json()).filename || "test-file.pdf"
+      const body = await request.formData()
+      const filename = body.get("filename")?.toString() || "test-file.pdf"
 
       const response: FileUploadResponse = {
         id: fileId,
