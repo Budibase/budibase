@@ -8,3 +8,5 @@ export interface VerifyRecaptchaResponse {
 export interface CheckRecaptchaResponse {
   verified: boolean
 }
+
+export type RecaptchaSessionCookie = { sessionId: string }

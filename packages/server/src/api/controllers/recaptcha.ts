@@ -3,6 +3,7 @@ import {
   VerifyRecaptchaRequest,
   VerifyRecaptchaResponse,
   CheckRecaptchaResponse,
+  RecaptchaSessionCookie,
 } from "@budibase/types"
 import env from "../../environment"
 import { utils, Cookie } from "@budibase/backend-core"
@@ -10,8 +11,6 @@ import {
   setRecaptchaVerified,
   isRecaptchaVerified,
 } from "../../utilities/redis"
-
-type RecaptchaSessionCookie = { sessionId: string }
 
 export async function verify(
   ctx: Ctx<VerifyRecaptchaRequest, VerifyRecaptchaResponse>
