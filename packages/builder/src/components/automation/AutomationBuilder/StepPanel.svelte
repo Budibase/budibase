@@ -155,7 +155,7 @@
             }
             const duplicatedBlock = {
               ...$memoBlock,
-              id: crypto.randomUUID(),
+              id: generate(),
             }
 
             await automationStore.actions.addBlockToAutomation(
