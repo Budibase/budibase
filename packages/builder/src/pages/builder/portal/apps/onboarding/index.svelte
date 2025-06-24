@@ -6,7 +6,6 @@
   import { SplitPage } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
-  import type { CreateAppRequest } from "@budibase/types"
 
   let name: string = "My first app"
   let url: string = "my-first-app"
