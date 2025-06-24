@@ -33,9 +33,10 @@ export default [
     parameters: z.object({
       automationId: z.string().describe("The ID of the automation to trigger"),
       fields: z
-        .object({})
-        .optional()
-        .describe("Input fields/data to pass to the automation as JSON object"),
+        .string()
+        .describe(
+          "Input fields/data to pass to the app action automation trigger as JSON object. Ensure the schema for the automation is known before triggering it."
+        ),
       timeout: z.number().optional().describe("Timeout in seconds (optional)"),
     }),
     handler: async ({
@@ -44,12 +45,18 @@ export default [
       timeout,
     }: {
       automationId: string
-      fields?: Record<string, any>
+      fields: string
       timeout?: number
     }) => {
+      let parsedData
+      try {
+        parsedData = JSON.parse(fields)
+      } catch (error) {
+        return `Error: Invalid JSON in fields parameter: ${error}`
+      }
       const result = await sdk.automations.execution.trigger(
         automationId,
-        fields || {},
+        parsedData || {},
         timeout
       )
       const formatted = JSON.stringify(result, null, 2)

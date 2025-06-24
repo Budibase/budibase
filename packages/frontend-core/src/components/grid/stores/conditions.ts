@@ -73,15 +73,16 @@ export const initialise = (context: StoreContext) => {
     const $metadata = get(metadata)
     let metadataUpdates: Record<string, any> = {}
     for (let row of $rows) {
+      const meta = $metadata[row._id]
       const changed =
         // No _rev indicates a new row
         !row._rev ||
         // _rev changed since last evaluation
-        $metadata[row._id].version !== row._rev ||
+        (meta && meta.version !== row._rev) ||
         // this is an external row, we have no way to know if it has changed, so
         // we always re-evaluate
         row._rev === EXTERNAL_ROW_REV
-      if (!changed) {
+      if (!changed && meta) {
         continue
       }
 

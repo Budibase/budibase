@@ -1,5 +1,6 @@
 <script>
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
+  import { ViewMode } from "@/types/automations"
   import { Modal, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
@@ -16,7 +17,10 @@
   export let blockRef
   export let automation
   export let draggable = true
-
+  export let logStepData = null
+  export let viewMode = ViewMode.EDITOR
+  export let selectedLogStepId = null
+  export let onStepSelect = () => {}
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
   const contentPos = getContext("contentPos")
@@ -44,7 +48,11 @@
   }
 
   $: selectedNodeId = $automationStore.selectedNodeId
-  $: selected = block.id === selectedNodeId
+  $: selected =
+    viewMode === ViewMode.EDITOR
+      ? block.id === selectedNodeId
+      : viewMode === ViewMode.LOGS &&
+        (block.stepId === selectedLogStepId || block.id === selectedLogStepId)
   $: dragging = $view?.moveStep && $view?.moveStep?.id === block.id
 
   $: if (dragging && blockEle) {
@@ -153,7 +161,13 @@
         }}
       >
         <div class="block-float">
-          <FlowItemStatus {block} {automation} hideStatus={$view?.dragging} />
+          <FlowItemStatus
+            {block}
+            {automation}
+            hideStatus={$view?.dragging}
+            {logStepData}
+            {viewMode}
+          />
         </div>
         {#if draggable}
           <div
@@ -167,7 +181,11 @@
         <div
           class="block-core"
           on:click={async () => {
-            await automationStore.actions.selectNode(block.id)
+            if (viewMode === ViewMode.EDITOR) {
+              await automationStore.actions.selectNode(block.id)
+            } else if (viewMode === ViewMode.LOGS && logStepData) {
+              onStepSelect(logStepData)
+            }
           }}
         >
           <div class="blockSection block-info">
@@ -334,5 +352,40 @@
 
   .block-info {
     pointer-events: none;
+  }
+
+  .log-status-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .status-indicator {
+    font-weight: bold;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  .status-indicator.status-success {
+    background: var(--spectrum-global-color-green-600);
+  }
+
+  .status-indicator.status-error {
+    background: var(--spectrum-global-color-red-600);
+  }
+
+  .status-text {
+    font-weight: 600;
+    text-transform: uppercase;
   }
 </style>

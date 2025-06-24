@@ -138,12 +138,14 @@
   .header.borderBottom {
     border-bottom: var(--border-light);
   }
+
   .icon-container {
     background-color: #aa4321;
     border: 0.5px solid #c96442;
     padding: 4px;
     border-radius: 8px;
   }
+
   .title {
     flex: 1 1 auto;
     width: 0;

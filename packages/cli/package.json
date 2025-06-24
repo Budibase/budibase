@@ -22,7 +22,7 @@
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",
     "commander": "7.1.0",
-    "docker-compose": "0.24.0",
+    "docker-compose": "1.2.0",
     "dotenv": "16.0.1",
     "download": "8.0.0",
     "find-free-port": "^2.0.0",
