@@ -7,8 +7,6 @@
 
   export let isComponent
 
-  console.log("HeaderRow Is Component", isComponent)
-
   const { scrollableColumns, config, hasNonAutoColumn, datasource, loading } =
     getContext("grid")
 </script>
