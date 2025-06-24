@@ -11,10 +11,10 @@
   import { API } from "@/api"
   import { redirect } from "@roxi/routify"
   import { onMount, onDestroy } from "svelte"
-  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
-  import PreviewOverlay from "./_components/PreviewOverlay.svelte"
+  import BuilderSidePanel from "../_components/BuilderSidePanel.svelte"
+  import PreviewOverlay from "../_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
-  import SideNav from "./_components/SideNav/SideNav.svelte"
+  import SideNav from "../_components/SideNav/SideNav.svelte"
 
   export let application
 

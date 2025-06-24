@@ -22,9 +22,9 @@
   import { isActive, url, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "@/helpers"
   import { onMount, onDestroy } from "svelte"
-  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+  import BuilderSidePanel from "../_components/BuilderSidePanel.svelte"
   import { UserAvatars } from "@budibase/frontend-core"
-  import PreviewOverlay from "./_components/PreviewOverlay.svelte"
+  import PreviewOverlay from "../_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "@/components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import UpdateAppTopNav from "@/components/common/UpdateAppTopNav.svelte"
 

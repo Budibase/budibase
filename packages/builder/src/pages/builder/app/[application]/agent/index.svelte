@@ -12,7 +12,7 @@
     TextArea,
     Toggle,
   } from "@budibase/bbui"
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, featureFlags } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
   import type {
     AgentChat,
@@ -20,6 +20,7 @@
     CreateToolSourceRequest,
     UserMessage,
   } from "@budibase/types"
+  import { FeatureFlag } from "@budibase/types"
   import { onDestroy, onMount } from "svelte"
   import { type ComponentType } from "svelte"
   import Panel from "@/components/design/Panel.svelte"
@@ -447,7 +448,9 @@
 </script>
 
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Agent" }]} icon="cpu"></TopBar>
+  {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+    <TopBar breadcrumbs={[{ text: "Agent" }]} icon="cpu"></TopBar>
+  {/if}
   <div class="page">
     <Panel customWidth={260} borderRight noHeaderBorder>
       <NavHeader
