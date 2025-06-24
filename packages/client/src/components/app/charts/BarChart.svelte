@@ -12,6 +12,7 @@
   export let height
   export let width
   export let dataLabels
+  export let labelBackground
   export let animate
   export let legend
   export let stacked
@@ -49,6 +50,15 @@
     },
     dataLabels: {
       enabled: dataLabels,
+      background: {
+        enabled: labelBackground,
+        // foreColor: "#808080",
+        padding: 4,
+        borderRadius: 2,
+        borderWidth: 1,
+        // borderColor: "#fff",
+        opacity: 0.9,
+      },
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,

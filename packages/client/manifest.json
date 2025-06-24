@@ -1975,6 +1975,13 @@
       },
       {
         "type": "boolean",
+        "label": "Label backgrounds",
+        "key": "labelBackground",
+        "defaultValue": false,
+        "dependsOn": "dataLabels"
+      },
+      {
+        "type": "boolean",
         "label": "Animate",
         "key": "animate",
         "defaultValue": true
