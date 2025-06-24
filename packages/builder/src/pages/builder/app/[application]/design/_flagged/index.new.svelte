@@ -20,6 +20,7 @@
   let workspaceAppModal: WorkspaceAppModal
 
   const onDelete = async (workspaceApp: WorkspaceApp) => {
+    contextMenuStore.close()
     await confirm({
       title: "Confirm Deletion",
       body: `Deleting "${workspaceApp.name}" cannot be undone. Are you sure?`,
