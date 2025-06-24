@@ -5,6 +5,10 @@
   import HeaderCell from "../cells/HeaderCell.svelte"
   import { TempTooltip, TooltipType } from "@budibase/bbui"
 
+  export let isComponent
+
+  console.log("HeaderRow Is Component", isComponent)
+
   const { scrollableColumns, config, hasNonAutoColumn, datasource, loading } =
     getContext("grid")
 </script>
@@ -13,7 +17,7 @@
   <GridScrollWrapper scrollHorizontally>
     <div class="row">
       {#each $scrollableColumns as column, idx}
-        <HeaderCell {column} {idx}>
+        <HeaderCell {column} {idx} {isComponent}>
           <slot name="edit-column" />
         </HeaderCell>
       {/each}

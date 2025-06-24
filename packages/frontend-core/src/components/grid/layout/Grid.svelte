@@ -48,6 +48,8 @@
   export let darkMode = false
   export let isCloud = null
   export let aiEnabled = false
+  export let isComponent
+  console.log("isComponent? ", isComponent)
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -173,7 +175,7 @@
           </svelte:fragment>
         </StickyColumn>
         <div class="grid-data-content">
-          <HeaderRow>
+          <HeaderRow {isComponent}>
             <svelte:fragment slot="add-column">
               <slot name="add-column" />
             </svelte:fragment>

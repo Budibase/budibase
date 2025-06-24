@@ -12,6 +12,7 @@
 
   export let column
   export let idx
+  export let isComponent
 
   const {
     reorder,
@@ -405,7 +406,7 @@
           Move right
         </MenuItem>
         <MenuItem
-          disabled={column.primaryDisplay}
+          disabled={column.primaryDisplay || !isComponent}
           icon="eye-slash"
           on:click={hideColumn}
         >
