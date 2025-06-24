@@ -49,7 +49,6 @@
   export let isCloud = null
   export let aiEnabled = false
   export let isComponent
-  console.log("isComponent? ", isComponent)
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
