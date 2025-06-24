@@ -30,7 +30,8 @@ import {
   SessionCookie,
   SourceName,
   UserCtx,
-  DeleteQueryResponse, SSOProviderType,
+  DeleteQueryResponse,
+  SSOProviderType,
 } from "@budibase/types"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
@@ -166,7 +167,7 @@ function getAuthConfig(ctx: UserCtx) {
   const authCookie = utils.getCookie<SessionCookie>(ctx, constants.Cookie.Auth)
   return {
     configId: getOAuthConfigCookieId(ctx),
-    sessionId: authCookie ? authCookie.sessionId : undefined
+    sessionId: authCookie ? authCookie.sessionId : undefined,
   }
 }
 

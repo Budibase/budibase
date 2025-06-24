@@ -5,7 +5,8 @@ import {
   WorkerCallback,
   QueryEvent,
   QueryVariable,
-  QueryResponse, QueryEventCtx,
+  QueryResponse,
+  QueryEventCtx,
 } from "./definitions"
 import { IsolatedVM } from "../jsRunner/vm"
 import { iifeWrapper, processStringSync } from "@budibase/string-templates"
