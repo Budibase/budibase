@@ -113,7 +113,7 @@ export const addSsoSupport = async (
   try {
     const [userByEmail] = await users.getExistingPlatformUsers([email])
     if (!userByEmail) {
-      ctx.throw(400, "User not found")
+      ctx.throw(404, "Not Found")
     }
 
     await platform.users.addSsoUser(
