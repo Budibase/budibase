@@ -144,13 +144,13 @@
       >
         Delete
       </ActionButton>
-      {#if !isBranchStep($memoBlock)}
+      {#if $memoBlock && !isBranchStep($memoBlock)}
         <ActionButton
           quiet
           noPadding
           icon="copy"
           on:click={async () => {
-            if (!blockRef || !$memoBlock) {
+            if (!blockRef || !$memoBlock || isTrigger($memoBlock)) {
               return
             }
             const duplicatedBlock = {
