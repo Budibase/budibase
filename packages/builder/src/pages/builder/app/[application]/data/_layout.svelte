@@ -6,6 +6,8 @@
   import { datasources } from "@/stores/builder"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
+  import { featureFlags } from "@/stores/portal"
+  import { FeatureFlag } from "@budibase/types"
 
   let searchValue
 
@@ -21,7 +23,9 @@
 
 <!-- routify:options index=1 -->
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Data" }]} icon="plugs-connected"></TopBar>
+  {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+    <TopBar breadcrumbs={[{ text: "Data" }]} icon="plugs-connected"></TopBar>
+  {/if}
   <div class="data">
     {#if !$isActive("./new")}
       <Panel borderRight borderBottomHeader={false}>
