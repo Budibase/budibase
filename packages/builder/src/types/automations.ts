@@ -140,6 +140,7 @@ export interface AutomationState {
   selectedLog?: any
   selectedLogStepData?: any
   showLogsPanel?: boolean
+  showLogDetailsPanel?: boolean
 }
 
 export interface DerivedAutomationState extends AutomationState {
