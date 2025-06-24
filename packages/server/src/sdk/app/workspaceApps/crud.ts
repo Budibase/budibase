@@ -1,5 +1,5 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
+import { context, docIds, features, HTTPError } from "@budibase/backend-core"
+import { FeatureFlag, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 
 async function guardName(name: string, id?: string) {
@@ -10,8 +10,11 @@ async function guardName(name: string, id?: string) {
   }
 }
 
-export async function fetch(): Promise<WorkspaceApp[]> {
-  const db = context.getAppDB()
+export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
+  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+    return []
+  }
+
   const docs = await db.allDocs<WorkspaceApp>(
     docIds.getWorkspaceAppParams(null, { include_docs: true })
   )
@@ -46,15 +49,20 @@ export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
 }
 
 export async function update(
-  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt">
-) {
+  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt" | "isDefault">
+): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
   await guardName(workspaceApp.name, workspaceApp._id)
 
-  const response = await db.put(workspaceApp)
-  return {
+  const persisted = (await get(workspaceApp._id!))!
+  const docToUpdate = {
+    ...persisted,
     ...workspaceApp,
+  }
+  const response = await db.put(docToUpdate)
+  return {
+    ...docToUpdate,
     _id: response.id!,
     _rev: response.rev!,
   }

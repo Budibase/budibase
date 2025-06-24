@@ -19,11 +19,14 @@ import { PluginAPI } from "./plugin"
 import { WebhookAPI } from "./webhook"
 import { EnvironmentAPI } from "./environment"
 import { UserPublicAPI } from "./public/user"
+import { RowPublicAPI } from "./public/row"
 import { MiscAPI } from "./misc"
 import { OAuth2API } from "./oauth2"
 import { AssetsAPI } from "./assets"
 import { AIAPI } from "./ai"
 import { WorkspaceAppAPI } from "./workspaceApp"
+import { ResourceAPI } from "./resource"
+import { DeployAPI } from "./deploy"
 
 export default class API {
   ai: AIAPI
@@ -32,6 +35,7 @@ export default class API {
   automation: AutomationAPI
   backup: BackupAPI
   datasource: DatasourceAPI
+  deploy: DeployAPI
   environment: EnvironmentAPI
   legacyView: LegacyViewAPI
   misc: MiscAPI
@@ -50,9 +54,11 @@ export default class API {
   webhook: WebhookAPI
   assets: AssetsAPI
   workspaceApp: WorkspaceAppAPI
+  resource: ResourceAPI
 
   public: {
     user: UserPublicAPI
+    row: RowPublicAPI
   }
 
   constructor(config: TestConfiguration) {
@@ -62,6 +68,7 @@ export default class API {
     this.automation = new AutomationAPI(config)
     this.backup = new BackupAPI(config)
     this.datasource = new DatasourceAPI(config)
+    this.deploy = new DeployAPI(config)
     this.environment = new EnvironmentAPI(config)
     this.legacyView = new LegacyViewAPI(config)
     this.misc = new MiscAPI(config)
@@ -80,8 +87,10 @@ export default class API {
     this.webhook = new WebhookAPI(config)
     this.assets = new AssetsAPI(config)
     this.workspaceApp = new WorkspaceAppAPI(config)
+    this.resource = new ResourceAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
+      row: new RowPublicAPI(config),
     }
   }
 }

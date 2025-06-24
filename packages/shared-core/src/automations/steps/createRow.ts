@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Create Row",
   tagline: "Create a {{inputs.enriched.table.name}} row",
-  icon: "TableRowAddBottom",
+  icon: "rows-plus-bottom",
   description: "Add a row to your database",
   type: AutomationStepType.ACTION,
   internal: true,

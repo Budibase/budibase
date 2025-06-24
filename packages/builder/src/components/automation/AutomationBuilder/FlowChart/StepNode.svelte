@@ -1,6 +1,7 @@
 <script>
   import FlowItem from "./FlowItem.svelte"
   import BranchNode from "./BranchNode.svelte"
+  import { ViewMode } from "@/types/automations"
   import { AutomationActionStepId } from "@budibase/types"
   import { ActionButton, notifications } from "@budibase/bbui"
   import { automationStore } from "@/stores/builder"
@@ -14,6 +15,10 @@
   export let automation
   export let blocks
   export let isLast = false
+  export let logData = null
+  export let viewMode = ViewMode.EDITOR
+  export let selectedLogStepId = null
+  export let onStepSelect = () => {}
 
   const memoEnvVariables = memo($environment.variables)
   const view = getContext("draggableView")
@@ -25,6 +30,22 @@
   $: pathToCurrentNode = blockRef?.pathTo
   $: isBranch = step.stepId === AutomationActionStepId.BRANCH
   $: branches = step.inputs?.branches
+
+  // Log execution state
+  $: logStepData = getLogStepData(logData, step)
+
+  function getLogStepData(logData, step) {
+    if (!logData || viewMode !== ViewMode.LOGS) return null
+
+    // For trigger step
+    if (step.type === "TRIGGER") {
+      return logData.trigger
+    }
+
+    // For action steps, find by stepId match instead of position
+    const logSteps = logData.steps || []
+    return logSteps.find(logStep => logStep.stepId === step.stepId)
+  }
 
   // All bindings available to this point
   $: availableBindings = automationStore.actions.getPathBindings(
@@ -74,7 +95,7 @@
 {#if isBranch}
   <div class="split-branch-btn">
     <ActionButton
-      icon="AddCircle"
+      icon="plus-circle"
       on:click={() => {
         automationStore.actions.branchAutomation(pathToCurrentNode, automation)
       }}
@@ -152,6 +173,10 @@
               pathTo={pathToCurrentNode}
               {automation}
               {blocks}
+              {logData}
+              {viewMode}
+              {selectedLogStepId}
+              {onStepSelect}
             />
           {/each}
         </div>
@@ -168,6 +193,10 @@
       {automation}
       {bindings}
       draggable={step.type !== "TRIGGER"}
+      {logStepData}
+      {viewMode}
+      {selectedLogStepId}
+      {onStepSelect}
     />
   </div>
 {/if}

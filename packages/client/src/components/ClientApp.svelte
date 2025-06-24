@@ -3,7 +3,12 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import { Constants, CookieUtils } from "@budibase/frontend-core"
+  import {
+    Constants,
+    CookieUtils,
+    invalidationMessage,
+    popNumSessionsInvalidated,
+  } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
@@ -23,6 +28,7 @@
     sidePanelStore,
     modalStore,
     dataSourceStore,
+    notificationStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
@@ -109,6 +115,15 @@
     await initialise()
     await authStore.actions.fetchUser()
     dataLoaded = true
+
+    const invalidated = popNumSessionsInvalidated()
+    if (invalidated > 0) {
+      notificationStore.actions.info(
+        invalidationMessage(invalidated),
+        true,
+        5000
+      )
+    }
 
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()

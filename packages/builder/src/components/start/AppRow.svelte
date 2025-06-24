@@ -75,7 +75,11 @@
 >
   <div class="title">
     <div class="app-icon">
-      <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
+      <Icon
+        size="L"
+        name={app.icon?.name || "squares-four"}
+        color={app.icon?.color || "var(--spectrum-global-color-gray-700)"}
+      />
     </div>
     <div class="name">
       <Heading size="S">
@@ -98,7 +102,7 @@
   </div>
 
   <div class="title app-status" class:deployed={app.deployed}>
-    <Icon size="L" name={app.deployed ? "GlobeCheck" : "GlobeStrike"} />
+    <Icon size="L" name={app.deployed ? "globe-check" : "globe-slash"} />
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
@@ -115,7 +119,7 @@
             on:click={openContextMenu}
             size="S"
             hoverable
-            name="MoreSmallList"
+            name="dots-three-horizontal"
           />
         </div>
       {:else}
@@ -183,12 +187,11 @@
   }
 
   .title :global(.spectrum-Heading),
-  .title :global(.spectrum-Icon),
   .title :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .app-status:not(.deployed) :global(.spectrum-Icon),
+  .app-status:not(.deployed) :global(i),
   .app-status:not(.deployed) :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-600);
   }

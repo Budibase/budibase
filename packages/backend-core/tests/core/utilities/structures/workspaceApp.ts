@@ -6,10 +6,12 @@ import {
 import { generator } from "./generator"
 
 export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
-  const result: RequiredKeys<WorkspaceApp> = {
+  const result: RequiredKeys<
+    Omit<WorkspaceApp, "_id" | "_rev" | "_deleted" | "createdAt" | "updatedAt">
+  > = {
     name: generator.guid(),
-    urlPrefix: `/${generator.guid().replace(/-/g, "")}`,
-    icon: "Monitoring",
+    url: `/${generator.guid().replace(/-/g, "")}`,
+    icon: "monitor",
     iconColor: undefined,
 
     _id: undefined,
@@ -19,6 +21,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
     navigation: {
       navigation: "Top",
     },
+    isDefault: false,
 
     ...props,
   }
@@ -32,7 +35,7 @@ export function createRequest(
 
   const result: RequiredKeys<InsertWorkspaceAppRequest> = {
     name: workspace.name,
-    urlPrefix: workspace.urlPrefix,
+    url: workspace.url,
     icon: workspace.icon,
     iconColor: workspace.iconColor,
   }

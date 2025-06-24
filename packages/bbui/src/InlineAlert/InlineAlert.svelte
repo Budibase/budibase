@@ -20,25 +20,19 @@
     switch (alertType) {
       case "error":
       case "negative":
-        return "Alert"
+        return "warning"
       case "success":
-        return "CheckmarkCircle"
+        return "check-circle"
       case "help":
-        return "Help"
+        return "question"
       default:
-        return "Info"
+        return "info"
     }
   }
 </script>
 
 <div class="spectrum-InLineAlert spectrum-InLineAlert--{type}">
-  <svg
-    class="spectrum-Icon spectrum-Icon--sizeM spectrum-InLineAlert-icon"
-    focusable="false"
-    aria-hidden="true"
-  >
-    <use xlink:href="#spectrum-icon-18-{icon}" />
-  </svg>
+  <Icon name={icon} size="M" />
   <div class="spectrum-InLineAlert-header">{header}</div>
   <slot>
     {#each split as splitMsg}
@@ -61,7 +55,7 @@
         class="docs-link"
       >
         {linkText}
-        <Icon name="LinkOut" size="XS" />
+        <Icon name="arrow-square-out" size="XS" />
       </a>
     </div>
   {/if}

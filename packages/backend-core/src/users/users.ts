@@ -1,5 +1,4 @@
 import {
-  directCouchFind,
   DocumentType,
   generateAppUserID,
   getGlobalUserParams,
@@ -15,7 +14,6 @@ import {
 import {
   BulkDocsResponse,
   ContextUser,
-  CouchFindOptions,
   DatabaseQueryOpts,
   SearchUsersRequest,
   User,
@@ -189,7 +187,8 @@ export async function searchGlobalUsersByAppAccess(
     orQuery.push(roleCheck)
   }
 
-  let searchOptions: CouchFindOptions = {
+  const globalDb = context.getGlobalDB()
+  const resp = await globalDb.find<User>({
     selector: {
       $or: orQuery,
       _id: {
@@ -197,10 +196,8 @@ export async function searchGlobalUsersByAppAccess(
       },
     },
     limit: opts?.limit || 50,
-  }
-
-  const resp = await directCouchFind(context.getGlobalDBName(), searchOptions)
-  return resp.rows
+  })
+  return resp.docs
 }
 
 export function getGlobalUserByAppPage(appId: string, user: User) {

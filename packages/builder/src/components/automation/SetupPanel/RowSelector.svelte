@@ -6,9 +6,10 @@
     Icon,
     TooltipPosition,
     TooltipType,
+    ActionGroup,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { FieldType } from "@budibase/types"
+  import { AutoReason, FieldType } from "@budibase/types"
 
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import {
@@ -71,6 +72,10 @@
 
   $: initData(tableId, $memoStore?.meta?.fields, $memoStore?.row)
 
+  const isAutoincrement = field => {
+    return field.autocolumn && field.autoReason !== AutoReason.FOREIGN_KEY
+  }
+
   const initData = (tableId, metaFields, row) => {
     if (!tableId) {
       return
@@ -87,7 +92,7 @@
     schemaFields = Object.entries(table?.schema ?? {})
       .filter(entry => {
         const [, field] = entry
-        return field.type !== "formula" && !field.autocolumn
+        return field.type !== "formula" && !isAutoincrement(field)
       })
       .sort(([nameA], [nameB]) => {
         return nameA < nameB ? -1 : 1
@@ -252,7 +257,7 @@
 </script>
 
 {#each schemaFields || [] as [field, schema]}
-  {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
+  {#if !isAutoincrement(schema) && Object.hasOwn(editableFields, field)}
     <PropField
       label={field}
       fullWidth={fullWidth || isFullWidth(schema.type)}
@@ -312,52 +317,49 @@
 {/each}
 
 {#if table && schemaFields}
-  <div
-    class="add-fields-btn"
-    class:empty={Object.is(editableFields, {})}
-    bind:this={popoverAnchor}
-  >
+  <div class="add-fields-btn" class:empty={Object.is(editableFields, {})}>
     <PropField {componentWidth} {fullWidth}>
-      <div class="prop-control-wrap">
-        <ActionButton
-          on:click={() => {
-            customPopover.show()
-          }}
-          disabled={!schemaFields}
-        >
-          Edit fields
-        </ActionButton>
-        {#if schemaFields.length}
+      <div class="prop-control-wrap" bind:this={popoverAnchor}>
+        <ActionGroup>
           <ActionButton
             on:click={() => {
-              dispatch("change", {
-                meta: { fields: {} },
-                row: {},
-              })
+              customPopover.show()
             }}
+            disabled={!schemaFields}
           >
-            Clear
+            Edit fields
           </ActionButton>
-        {/if}
+          {#if schemaFields.length}
+            <ActionButton
+              on:click={() => {
+                dispatch("change", {
+                  meta: { fields: {} },
+                  row: {},
+                })
+              }}
+            >
+              Clear
+            </ActionButton>
+          {/if}
+        </ActionGroup>
       </div>
     </PropField>
   </div>
 {/if}
 
 <Popover
-  align="center"
+  align="left"
   bind:this={customPopover}
   anchor={editableFields ? popoverAnchor : null}
   useAnchorWidth
   maxHeight={300}
   resizable={false}
-  offset={10}
 >
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <ul class="spectrum-Menu" role="listbox">
     {#each schemaFields || [] as [field, schema]}
-      {#if !schema.autocolumn}
+      {#if !isAutoincrement(schema)}
         <li
           class="table_field spectrum-Menu-item"
           class:is-selected={Object.hasOwn(editableFields, field)}
@@ -382,13 +384,9 @@
             tooltipPosition={TooltipPosition.Left}
           />
           <div class="field_name spectrum-Menu-itemLabel">{field}</div>
-          <svg
-            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Checkmark100" />
-          </svg>
+          <div class="check">
+            <Icon name="check" />
+          </div>
         </li>
       {/if}
     {/each}
@@ -405,5 +403,12 @@
   /* Override for general json field override */
   .prop-control-wrap :global(.icon.json-slot-icon) {
     right: 1px !important;
+  }
+
+  .check {
+    display: none;
+  }
+  li.is-selected .check {
+    display: block;
   }
 </style>

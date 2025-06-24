@@ -32,7 +32,7 @@
   export let showClear: boolean | undefined = false
   export let filterConfig: FilterConfig[] | undefined = []
   export let targetComponent: any
-  export let size: string | undefined = "M"
+  export let size: "S" | "M" | "L" = "M"
   export let buttonText: string | undefined = "Apply"
 
   const memoFilters = memo({} as Record<string, SearchFilter>)
@@ -112,8 +112,10 @@
     : ActionTypes.RemoveDataProviderQueryExtension
 
   // Register extension actions
-  $: addExtension = componentId ? getAction(componentId, addAction) : null
-  $: removeExtension = componentId ? getAction(componentId, removeAction) : null
+  $: addExtension =
+    componentId && loaded ? getAction(componentId, addAction) : null
+  $: removeExtension =
+    componentId && loaded ? getAction(componentId, removeAction) : null
 
   // If the filters are updated, notify the target of the change
   $: hydrated && dataComponent && loaded && fire(filterExtension)
@@ -206,7 +208,6 @@
     if (persistFilters) {
       toLocalStorage()
     }
-
     addExtension?.($component.id, isGridblock ? extension : query)
   }
 
@@ -397,7 +398,7 @@
 
   onDestroy(() => {
     // Ensure the extension is cleared on destroy
-    removeExtension($component.id)
+    removeExtension?.($component.id)
   })
 </script>
 

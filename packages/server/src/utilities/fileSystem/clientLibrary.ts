@@ -175,7 +175,7 @@ export function shouldServeLocally(version: string) {
     return false
   }
 
-  if (version === "0.0.0") {
+  if (env.isDev()) {
     return true
   }
 

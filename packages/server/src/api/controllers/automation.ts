@@ -210,7 +210,6 @@ export async function trigger(
     })
     ctx.body = {
       message: `Automation ${automation._id} has been triggered.`,
-      automation,
     }
   }
 }

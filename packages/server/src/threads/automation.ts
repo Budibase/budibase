@@ -1,4 +1,5 @@
 import { default as threadUtils } from "./utils"
+import { events } from "@budibase/backend-core"
 import { Job } from "bull"
 import { disableCronById } from "../automations/utils"
 import * as actions from "../automations/actions"
@@ -30,7 +31,7 @@ import {
 } from "@budibase/types"
 import { AutomationContext } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
-import { context, logging, configs, utils } from "@budibase/backend-core"
+import { context, logging, configs } from "@budibase/backend-core"
 import {
   findHBSBlocks,
   processObject,
@@ -41,6 +42,7 @@ import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 import tracer from "dd-trace"
 import { isPlainObject } from "lodash"
+import { quotas } from "@budibase/pro"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
@@ -324,45 +326,36 @@ class Orchestrator {
         user: trigger.outputs.user,
         _error: false,
         _stepIndex: 1,
+        _stepResults: [],
       }
       await enrichBaseContext(ctx)
 
       const timeout =
         this.job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
 
+      let stepResults: AutomationStepResult[] = []
+
       try {
-        await helpers.withTimeout(timeout, async () => {
-          const [stepOutputs, executionTime] = await utils.time(() =>
-            this.executeSteps(ctx, data.automation.definition.steps)
-          )
-
-          result.steps.push(...stepOutputs)
-
-          if (this.stopped) {
-            result.status = AutomationStatus.STOPPED
-          } else if (this.hasErrored(ctx)) {
-            result.status = AutomationStatus.ERROR
-          }
-
-          console.info(
-            `Automation ID: ${
-              this.automation._id
-            } Execution time: ${executionTime.toMs()} milliseconds`,
-            {
-              _logKey: "automation",
-              executionTime,
-            }
-          )
-        })
-      } catch (e: any) {
-        if (e.errno === "ETIME") {
-          span?.addTags({ timedOut: true })
-          console.warn(`Automation execution timed out after ${timeout}ms`)
+        const outputs = await helpers.withTimeout(timeout, () =>
+          this.executeSteps(ctx, data.automation.definition.steps)
+        )
+        stepResults = outputs
+        if (this.stopped) {
+          result.status = AutomationStatus.STOPPED
+        } else if (this.hasErrored(ctx)) {
+          result.status = AutomationStatus.ERROR
+        }
+      } catch (err: any) {
+        if (err.errno === "ETIME") {
+          span.addTags({ timeout: true })
           result.status = AutomationStatus.TIMED_OUT
+          stepResults = ctx._stepResults
         } else {
-          throw e
+          throw err
         }
       }
+
+      result.steps.push(...stepResults)
 
       let errorCount = 0
       if (this.isProdApp() && this.isCron() && this.hasErrored(ctx)) {
@@ -406,6 +399,7 @@ class Orchestrator {
           ctx._error = true
         }
 
+        ctx._stepResults.push(result)
         results.push(result)
       }
 
@@ -417,7 +411,9 @@ class Orchestrator {
         const step = steps[stepIndex]
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
-            results.push(...(await this.executeBranchStep(ctx, step)))
+            const branchResults = await this.executeBranchStep(ctx, step)
+            ctx._stepResults.push(...branchResults)
+            results.push(...branchResults)
             stepIndex++
             break
           }
@@ -435,7 +431,14 @@ class Orchestrator {
             break
           }
           default: {
-            addToContext(step, await this.executeStep(ctx, step))
+            addToContext(
+              step,
+              await quotas.addAction(async () => {
+                const response = await this.executeStep(ctx, step)
+                events.action.automationStepExecuted({ stepId: step.stepId })
+                return response
+              })
+            )
             stepIndex++
             break
           }

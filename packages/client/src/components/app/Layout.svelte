@@ -5,6 +5,11 @@
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
+  import Logo from "./Logo.svelte"
+  import {
+    getActiveConditions,
+    reduceConditionActions,
+  } from "@/utils/conditions"
 
   const sdk = getContext("sdk")
   const {
@@ -51,6 +56,10 @@
     Small: "s",
     "Extra small": "xs",
   }
+
+  export let logoPosition = "top" // "top" or "bottom"
+  export let titleSize = "S"
+  export let titleColor // CSS color string, only affects title
 
   let mobileOpen = false
 
@@ -147,6 +156,21 @@
       })
   }
 
+  function evaluateNavItemConditions(conditions = []) {
+    if (!conditions?.length) return true
+
+    // Get only the active (matching) conditions
+    const activeConditions = getActiveConditions(conditions)
+    const { visible } = reduceConditionActions(activeConditions)
+
+    if (visible == null) {
+      // If any show condition exists, default to hidden unless one matches
+      const hasShow = conditions.some(cond => cond.action === "show")
+      return hasShow ? false : true
+    }
+    return visible
+  }
+
   const isInternal = url => {
     return url?.startsWith("/")
   }
@@ -215,7 +239,7 @@
   class:mobile={!!mobile}
   data-id={screenId}
   data-name="Screen"
-  data-icon="WebPage"
+  data-icon="browser"
 >
   <div class="screen-wrapper layout-body">
     {#if typeClass !== "none"}
@@ -223,7 +247,7 @@
         class="interactive component {navigationId}"
         data-id={navigationId}
         data-name="Navigation"
-        data-icon="Visibility"
+        data-icon="eye"
       >
         <div
           class="nav-wrapper {navigationId}-dom"
@@ -241,33 +265,28 @@
                 <div class="burger">
                   <Icon
                     hoverable
-                    name="ShowMenu"
+                    name="dots-three-vertical"
                     on:click={() => (mobileOpen = !mobileOpen)}
                   />
                 </div>
               {/if}
               <div class="logo">
-                {#if !hideLogo}
-                  {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
-                    <a
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                      use:linkable
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else if logoLinkUrl}
-                    <a
-                      target={openLogoLinkInNewTab ? "_blank" : "_self"}
-                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
-                    >
-                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                    </a>
-                  {:else}
-                    <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
-                  {/if}
+                {#if logoPosition === "top"}
+                  <Logo
+                    {logoUrl}
+                    {logoLinkUrl}
+                    {openLogoLinkInNewTab}
+                    {hideLogo}
+                    {title}
+                    {linkable}
+                    {isInternal}
+                    {getSanitizedUrl}
+                  />
                 {/if}
                 {#if !hideTitle && title}
-                  <Heading size="S" {textAlign}>{title}</Heading>
+                  <Heading size={titleSize} {textAlign} color={titleColor}
+                    >{title}</Heading
+                  >
                 {/if}
               </div>
               {#if !embedded}
@@ -284,23 +303,40 @@
             {#if enrichedNavItems.length}
               <div class="links" class:visible={mobileOpen}>
                 {#each enrichedNavItems as navItem}
-                  <NavItem
-                    type={navItem.type}
-                    text={navItem.text}
-                    url={navItem.url}
-                    subLinks={navItem.subLinks}
-                    internalLink={navItem.internalLink}
-                    on:clickLink={handleClickLink}
-                    leftNav={navigation === "Left"}
-                    {mobile}
-                    {navStateStore}
-                  />
+                  {#if evaluateNavItemConditions(navItem._conditions)}
+                    <NavItem
+                      type={navItem.type}
+                      text={navItem.text}
+                      url={navItem.url}
+                      subLinks={navItem.subLinks}
+                      internalLink={navItem.internalLink}
+                      customStyles={navItem._styles?.custom}
+                      on:clickLink={handleClickLink}
+                      leftNav={navigation === "Left"}
+                      {mobile}
+                      {navStateStore}
+                    />
+                  {/if}
                 {/each}
               </div>
             {/if}
             {#if !embedded}
               <div class="user left">
                 <UserMenu />
+                {#if logoPosition === "bottom"}
+                  <div>
+                    <Logo
+                      {logoUrl}
+                      {logoLinkUrl}
+                      {openLogoLinkInNewTab}
+                      {hideLogo}
+                      {title}
+                      {linkable}
+                      {isInternal}
+                      {getSanitizedUrl}
+                    />
+                  </div>
+                {/if}
               </div>
             {/if}
           </div>
@@ -329,7 +365,7 @@
     <div class="side-panel-header">
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
+        name="sidebar"
         hoverable
         on:click={sidePanelStore.actions.close}
       />
@@ -401,11 +437,11 @@
     max-width: 100%;
     gap: var(--spacing-xs);
   }
-  .nav :global(.spectrum-Icon) {
+  .nav :global(.icon) {
     color: var(--navTextColor);
     opacity: 0.75;
   }
-  .nav :global(.spectrum-Icon:hover) {
+  .nav :global(.icon:hover) {
     color: var(--navTextColor);
     opacity: 1;
   }
@@ -512,9 +548,6 @@
     gap: var(--spacing-m);
     flex: 1 1 auto;
   }
-  .logo img {
-    height: var(--logoHeight);
-  }
   .logo :global(h1) {
     font-weight: 600;
     flex: 1 1 auto;
@@ -572,6 +605,11 @@
     top: 0;
     left: 0;
     box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
+  }
+  .user.left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
   }
   .mobile .user.left {
     display: none;

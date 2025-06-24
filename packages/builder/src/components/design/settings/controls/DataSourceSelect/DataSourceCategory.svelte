@@ -1,6 +1,6 @@
 <script>
   import { datasources } from "@/stores/builder"
-  import { Divider, Heading } from "@budibase/bbui"
+  import { Divider, Heading, Icon } from "@budibase/bbui"
 
   export let dividerState
   export let heading
@@ -48,13 +48,9 @@
           ? `${data.datasourceName} - `
           : ""}{data.label}
       </span>
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Checkmark100" />
-      </svg>
+      <div class="check">
+        <Icon name="check" />
+      </div>
     </li>
   {/each}
 </ul>
@@ -63,11 +59,16 @@
   .title {
     padding: 0 var(--spacing-m) var(--spacing-s) var(--spacing-m);
   }
-
   ul {
     list-style: none;
-    padding-left: 0px;
-    margin: 0px;
+    padding-left: 0;
+    margin: 0;
     width: 100%;
+  }
+  .check {
+    display: none;
+  }
+  .is-selected .check {
+    display: block;
   }
 </style>

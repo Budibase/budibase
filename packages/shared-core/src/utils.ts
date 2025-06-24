@@ -43,38 +43,25 @@ export async function parallelForeach<T>(
   task: (item: T) => Promise<void>,
   maxConcurrency: number
 ): Promise<void> {
-  const promises: Promise<void>[] = []
+  const results: Promise<void>[] = []
   let index = 0
 
-  const processItem = async (item: T) => {
-    try {
+  const executeNext = async (): Promise<void> => {
+    while (index < items.length) {
+      const currentIndex = index++
+      const item = items[currentIndex]
+
       await task(item)
-    } finally {
-      processNext()
     }
   }
 
-  const processNext = () => {
-    if (index >= items.length) {
-      // No more items to process
-      return
-    }
-
-    const item = items[index]
-    index++
-
-    const promise = processItem(item)
-    promises.push(promise)
-
-    if (promises.length >= maxConcurrency) {
-      Promise.race(promises).then(processNext)
-    } else {
-      processNext()
-    }
+  // Start up to maxConcurrency workers
+  for (let i = 0; i < Math.min(maxConcurrency, items.length); i++) {
+    results.push(executeNext())
   }
-  processNext()
 
-  await Promise.all(promises)
+  // Wait for all workers to complete, this will throw if any task failed
+  await Promise.all(results)
 }
 
 export function filterValueToLabel() {
