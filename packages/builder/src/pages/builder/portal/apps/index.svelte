@@ -27,6 +27,7 @@
     enrichedApps,
     sortBy,
     templates,
+    featureFlags,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
