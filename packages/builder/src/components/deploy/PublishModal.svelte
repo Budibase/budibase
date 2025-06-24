@@ -31,7 +31,6 @@
   let selectedApps: Record<string, boolean> = {}
   let selectedAutomations: Record<string, boolean> = {}
   let usedResources: UsedResource[] = []
-  let appAccordion: any, automationAccordion: any
 
   const dispatcher = createEventDispatcher()
 
@@ -184,8 +183,6 @@
   }
 
   function selectAll() {
-    appAccordion.open()
-    automationAccordion.open()
     setAll(true)
   }
 
