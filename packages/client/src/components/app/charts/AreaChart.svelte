@@ -12,7 +12,6 @@
   export let width
   export let animate
   export let dataLabels
-  export let labelBackground
   export let curve
   export let legend
   export let yAxisUnits
