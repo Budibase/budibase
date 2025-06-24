@@ -43,9 +43,9 @@
     $workspaceDeploymentStore.workspaceApps
   )
   $: findTarget(targetId, apps, automations)
-  $: selectedAppNames = getSelectedNames(selectedApps, apps)
+  $: selectedAppNames = getSelectedNames(getSelectedIds(selectedApps), apps)
   $: selectedAutomationNames = getSelectedNames(
-    selectedAutomations,
+    getSelectedIds(selectedAutomations),
     automations
   )
   $: getUsedResources(
@@ -99,10 +99,9 @@
   }
 
   function getSelectedNames(
-    list: Record<string, boolean>,
+    selectedIds: string[],
     items: { _id?: string; name: string }[]
   ) {
-    const selectedIds = getSelectedIds(list)
     return items
       .filter(item => selectedIds.find(id => id === item._id))
       .map(item => item.name)
@@ -157,19 +156,18 @@
   }
 
   async function publish() {
-    const getIds = (list: Record<string, boolean>) =>
-      Object.entries(list)
-        .filter(([_, selected]) => selected)
-        .map(([id]) => id)
+    const preAutomations = automations, preApps = apps
+    const toPublishAutomations = getSelectedIds(selectedAutomations),
+      toPublishApps = getSelectedIds(selectedApps)
     await deploymentStore.publishApp({
-      automationIds: getIds(selectedAutomations),
-      workspaceAppIds: getIds(selectedApps),
+      automationIds: toPublishAutomations,
+      workspaceAppIds: toPublishApps,
     })
     const publishedAutomations = getSelectedNames(
-        selectedAutomations,
-        automations
+        toPublishAutomations,
+        preAutomations
       ),
-      publishedApps = getSelectedNames(selectedApps, apps)
+      publishedApps = getSelectedNames(toPublishApps, preApps)
     dispatcher("success", { publishedAutomations, publishedApps })
   }
 
