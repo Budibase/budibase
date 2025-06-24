@@ -184,9 +184,13 @@
   }
 
   function selectAll() {
-    appAccordion.open()
-    automationAccordion.open()
     setAll(true)
+    if (appAccordion) {
+      appAccordion.open()
+    }
+    if (automationAccordion) {
+      automationAccordion.open()
+    }
   }
 
   function clearAll() {
