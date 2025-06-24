@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Layout, Button, Modal } from "@budibase/bbui"
+  import { Heading, Body, Layout, Button, Modal, Icon } from "@budibase/bbui"
   import AutomationPanel from "@/components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
@@ -13,6 +13,8 @@
   } from "@/stores/builder"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
   import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
+  import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
+  import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -44,14 +46,11 @@
       <div class="centered">
         <div class="main">
           <Layout gap="S" justifyItems="center">
-            <svg
-              width="60px"
-              height="60px"
-              class="spectrum-Icon"
-              focusable="false"
-            >
-              <use xlink:href="#spectrum-icon-18-WorkflowAdd" />
-            </svg>
+            <Icon
+              name="tree-structure"
+              size="XXXL"
+              color="var(--spectrum-global-color-gray-700)"
+            />
             <Heading size="M">You have no automations</Heading>
             <Body size="M">Let's fix that. Call the bots!</Body>
             <Button on:click={() => modal.show()} size="M" cta>
@@ -74,6 +73,31 @@
       block={$automationStore.actionPanelBlock}
       onClose={() => automationStore.actions.closeActionPanel()}
     />
+  {/if}
+
+  {#if $automationStore.showLogsPanel && $selectedAutomation?.data}
+    <div class="logs-panel-container">
+      <div class="panels-wrapper">
+        <div class="logs-panel">
+          <AutomationLogsPanel
+            automation={$selectedAutomation.data}
+            onSelectLog={log =>
+              automationStore.actions.selectLogForDetails(log)}
+            selectedLog={$automationStore.selectedLog}
+          />
+        </div>
+
+        {#if $automationStore.showLogDetailsPanel && $automationStore.selectedLog}
+          <div class="log-details-panel">
+            <LogDetailsPanel
+              log={$automationStore.selectedLog}
+              selectedStep={$automationStore.selectedLogStepData}
+              onBack={() => automationStore.actions.closeLogPanel()}
+            />
+          </div>
+        {/if}
+      </div>
+    </div>
   {/if}
 
   <Modal bind:this={modal}>
@@ -116,7 +140,6 @@
   .main {
     width: 300px;
   }
-
   .step-panel {
     border-left: var(--border-light);
     display: flex;
@@ -128,5 +151,49 @@
     grid-column: 3;
     width: 400px;
     max-width: 400px;
+  }
+
+  .logs-panel-container {
+    position: relative;
+    width: 400px;
+    max-width: 400px;
+    overflow: hidden;
+    height: 100%;
+    border-left: var(--border-light);
+  }
+
+  .panels-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .logs-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    background-color: var(--background);
+    overflow: auto;
+    transition: transform 0.2s ease;
+  }
+
+  .log-details-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    background-color: var(--background);
+    overflow: auto;
   }
 </style>

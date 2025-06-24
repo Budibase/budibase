@@ -91,12 +91,12 @@ export const createNotificationStore = () => {
   return {
     subscribe,
     send,
-    info: (msg: string) => send(msg, { type: "info", icon: "Info" }),
+    info: (msg: string) => send(msg, { type: "info", icon: "info" }),
     error: (msg: string) =>
-      send(msg, { type: "error", icon: "Alert", autoDismiss: false }),
-    warning: (msg: string) => send(msg, { type: "warning", icon: "Alert" }),
+      send(msg, { type: "error", icon: "warning", autoDismiss: false }),
+    warning: (msg: string) => send(msg, { type: "warning", icon: "warning" }),
     success: (msg: string) =>
-      send(msg, { type: "success", icon: "CheckmarkCircle" }),
+      send(msg, { type: "success", icon: "check-circle" }),
     blockNotifications,
     dismiss: dismissNotification,
   }

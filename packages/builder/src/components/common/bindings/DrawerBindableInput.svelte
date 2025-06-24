@@ -87,7 +87,7 @@
           bindingDrawer.show()
         }}
       >
-        <Icon size="S" name="FlashOn" />
+        <Icon size="S" weight="fill" name="lightning" />
       </div>
     {/if}
   </svelte:component>

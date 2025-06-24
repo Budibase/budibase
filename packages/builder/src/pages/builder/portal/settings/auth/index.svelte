@@ -268,7 +268,7 @@
           >{$organisation.platformUrl}</Link
         >
         <div class="sso-link-icon">
-          <Icon size="XS" name="LinkOutLight" />
+          <Icon size="XS" name="arrow-square-out" />
         </div>
       </div>
     </Body>
@@ -282,7 +282,7 @@
         </div>
         {#if !$licensing.enforceableSSO}
           <Tags>
-            <Tag icon="LockClosed">Enterprise plan</Tag>
+            <Tag icon="lock">Enterprise plan</Tag>
           </Tags>
         {/if}
       </div>
@@ -330,7 +330,7 @@
                 class="copy"
                 on:click={() => copyToClipboard(field.placeholder)}
               >
-                <Icon size="S" name="Copy" />
+                <Icon size="S" name="copy" />
               </div>
             {/if}
           </div>

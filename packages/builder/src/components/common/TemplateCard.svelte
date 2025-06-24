@@ -1,10 +1,12 @@
-<script>
-  export let backgroundColour
-  export let imageSrc
-  export let name
-  export let icon
+<script lang="ts">
+  import { Icon } from "@budibase/bbui"
+
+  export let backgroundColour: string
+  export let imageSrc: string
+  export let name: string
+  export let icon: string
   export let description = ""
-  export let overlayEnabled = true
+  export let overlayEnabled: boolean = true
 
   let imageError = false
 
@@ -22,15 +24,7 @@
       class:error={imageError}
     />
     <div style={`display:${imageError ? "block" : "none"}`}>
-      <svg
-        width="26px"
-        height="26px"
-        class="spectrum-Icon"
-        style="color: white"
-        focusable="false"
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      <Icon name={icon} size="XL" color="white" />
     </div>
     <div class={overlayEnabled ? "template-thumbnail-action-overlay" : ""}>
       <slot />

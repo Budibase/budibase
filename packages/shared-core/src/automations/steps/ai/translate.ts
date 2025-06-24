@@ -8,7 +8,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Translate",
   tagline: "Translate text to a different language",
-  icon: "GlobeGrid",
+  icon: "globe",
   description: "Translate text to a different language.",
   type: AutomationStepType.ACTION,
   internal: true,

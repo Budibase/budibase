@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     sideBarCollapsed,
     enrichedApps,
@@ -9,10 +9,11 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
+  import { Helpers } from "@budibase/bbui"
 
-  let searchString
-  let onAgents = $page.path.endsWith("/agents")
-  let openedApp
+  let searchString: string
+  let onAgents: boolean = $page.path.endsWith("/agents")
+  let openedApp: string | undefined
 
   $: filteredApps = $enrichedApps.filter(app => {
     return (
@@ -20,21 +21,23 @@
       app.name.toLowerCase().includes(searchString.toLowerCase())
     )
   })
+
+  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 </script>
 
 <div class="side-bar" class:collapsed={$sideBarCollapsed}>
   <div class="side-bar-controls">
     <NavHeader
-      title="Apps"
-      placeholder="Search for apps"
+      title={Helpers.capitalise(appsOrWorkspaces)}
+      placeholder={`Search for ${appsOrWorkspaces}`}
       bind:value={searchString}
       onAdd={() => $goto("./create")}
     />
   </div>
   <div class="side-bar-nav">
     <NavItem
-      icon="WebPages"
-      text="All apps"
+      icon="browser"
+      text={`All ${appsOrWorkspaces}`}
       on:click={() => {
         onAgents = false
         $goto("./")
@@ -62,7 +65,7 @@
     </div>
     <div class="side-bar-nav">
       <NavItem
-        icon="Algorithm"
+        icon="flow-arrow"
         text="All chats"
         on:click={() => {
           openedApp = undefined
@@ -79,12 +82,12 @@
         {@const selected = $agentsStore.currentChatId === chat._id}
         <span class="side-bar-app-entry" class:actionsOpen={selected}>
           <NavItem
-            icon="Branch1"
+            icon="git-branch"
             text={chat.title}
             on:click={() => {
               onAgents = true
               openedApp = undefined
-              agentsStore.setCurrentChatId(chat._id)
+              agentsStore.setCurrentChatId(chat._id || "")
               $goto("./agents")
             }}
             {selected}
@@ -124,7 +127,7 @@
     gap: var(--spacing-l);
     padding: 0 var(--spacing-l);
   }
-  .side-bar-controls :global(.spectrum-Icon) {
+  .side-bar-controls :global(i) {
     color: var(--spectrum-global-color-gray-700);
   }
 

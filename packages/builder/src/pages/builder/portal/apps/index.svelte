@@ -119,7 +119,7 @@
       // Create form data to create app
       let data = new FormData()
       data.append("name", appName)
-      data.append("useTemplate", true)
+      data.append("useTemplate", "true")
       data.append("templateKey", template.key)
       data.append("isOnboarding", "false")
 
@@ -193,7 +193,7 @@
         dismissable
         action={() => goToAutomationError(appId)}
         type="error"
-        icon="Alert"
+        icon="warning"
         actionMessage={errorCount(automationErrors[appId]) > 1
           ? "View errors"
           : "View error"}
@@ -215,7 +215,11 @@
         <Layout noPadding gap="XS">
           <Heading size="L">{welcomeHeader}</Heading>
           <Body size="M">
-            Below you'll find the list of apps that you have access to
+            {#if $featureFlags.WORKSPACE_APPS}
+              Below you'll find the list of workspaces that you have access to
+            {:else}
+              Below you'll find the list of apps that you have access to
+            {/if}
           </Body>
         </Layout>
       </div>
@@ -231,7 +235,11 @@
                 cta
                 on:click={usersLimitLockAction || initiateAppCreation}
               >
-                Create new app
+                {#if $featureFlags.WORKSPACE_APPS}
+                  Create new workspace
+                {:else}
+                  Create new app
+                {/if}
               </Button>
 
               {#if $appsStore.apps?.length > 0}
@@ -401,7 +409,7 @@
       max-width: none;
     }
     /*  Hide download apps icon */
-    .app-actions :global(> .spectrum-Icon) {
+    .app-actions :global(> i) {
       display: none;
     }
     .app-actions > :global(*) {

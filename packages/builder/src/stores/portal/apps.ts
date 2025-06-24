@@ -4,24 +4,7 @@ import { API } from "@/api"
 import { auth } from "./auth"
 import { BudiStore } from "../BudiStore"
 import { App, UpdateAppRequest } from "@budibase/types"
-
-interface AppIdentifierMetadata {
-  devId?: string
-  devRev?: string
-  prodId?: string
-  prodRev?: string
-}
-
-interface AppUIMetadata {
-  deployed: boolean
-  lockedYou: boolean
-  lockedOther: boolean
-  favourite: boolean
-}
-
-interface StoreApp extends App, AppIdentifierMetadata {}
-
-interface EnrichedApp extends StoreApp, AppUIMetadata {}
+import { EnrichedApp, StoreApp } from "@/types"
 
 interface PortalAppsStore {
   apps: StoreApp[]
@@ -83,7 +66,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
   }
 
   async load() {
-    const json = (await API.getApps()) as App[]
+    const json = await API.getApps()
     if (Array.isArray(json)) {
       // Merge apps into one sensible list
       let appMap: Record<string, StoreApp> = {}

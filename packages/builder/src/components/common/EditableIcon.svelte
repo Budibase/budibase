@@ -3,7 +3,7 @@
   import { Icon, Modal } from "@budibase/bbui"
 
   export let name: string
-  export let size: "M" = "M"
+  export let size: "M" | "L" | "XL" = "M"
   export let color: string
   export let disabled: boolean = false
 
@@ -15,10 +15,14 @@
 <div class="editable-icon">
   {#if !disabled}
     <div class="hover" on:click={modal.show}>
-      <Icon name="Edit" {size} color="var(--spectrum-global-color-gray-600)" />
+      <Icon
+        name="pencil"
+        {size}
+        color="var(--spectrum-global-color-gray-600)"
+      />
     </div>
     <div class="normal">
-      <Icon name={name || "Apps"} {size} {color} />
+      <Icon name={name || "squares-four"} {size} {color} />
     </div>
   {:else}
     <Icon {name} {size} {color} />
@@ -26,7 +30,7 @@
 </div>
 
 <Modal bind:this={modal}>
-  <ChooseIconModal bind:name bind:color on:change />
+  <ChooseIconModal {name} {color} on:change />
 </Modal>
 
 <style>

@@ -54,7 +54,7 @@
     </div>
     {#if error}
       <div class="error-icon">
-        <Icon name="Alert" />
+        <Icon name="warning" />
       </div>
     {/if}
   </div>
@@ -122,7 +122,7 @@
   .error-icon {
     flex: 0 0 auto;
   }
-  .error-icon :global(.spectrum-Icon) {
+  .error-icon :global(i) {
     fill: var(--spectrum-global-color-red-400);
   }
 </style>

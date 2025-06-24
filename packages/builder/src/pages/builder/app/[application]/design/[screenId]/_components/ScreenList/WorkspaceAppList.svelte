@@ -46,14 +46,14 @@
 
     const items = [
       {
-        icon: "Add",
+        icon: "plus",
         name: "Add screen",
         keyBind: null,
         visible: true,
         callback: () => newScreenModal.open(workspaceApp._id!),
       },
       {
-        icon: "Edit",
+        icon: "pencil",
         name: "Edit",
         keyBind: null,
         visible: true,
@@ -62,7 +62,7 @@
         },
       },
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
@@ -96,7 +96,7 @@
         on:click={e => openContextMenu(e, workspaceApp)}
         size="S"
         hoverable
-        name="MoreSmallList"
+        name="dots-three"
       />
       <div slot="icon">
         <Icon
@@ -138,6 +138,10 @@
 
   .project-app-nav-item {
     margin-bottom: var(--spacing-xs);
+  }
+
+  .project-app-nav-item :global(.nav-item-content) {
+    width: 100%;
   }
 
   .project-app-nav-item :global(.nav-item-content .icon) {
