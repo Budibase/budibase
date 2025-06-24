@@ -156,7 +156,8 @@
   }
 
   async function publish() {
-    const preAutomations = automations, preApps = apps
+    const preAutomations = automations,
+      preApps = apps
     const toPublishAutomations = getSelectedIds(selectedAutomations),
       toPublishApps = getSelectedIds(selectedApps)
     await deploymentStore.publishApp({
