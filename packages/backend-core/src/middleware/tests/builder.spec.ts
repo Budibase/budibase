@@ -2,7 +2,7 @@ import adminOnly from "../adminOnly"
 import builderOnly from "../builderOnly"
 import builderOrAdmin from "../builderOrAdmin"
 import { structures } from "../../../tests"
-import { ContextUser, ServiceType } from "@budibase/types"
+import { User, ServiceType } from "@budibase/types"
 import { doInAppContext } from "../../context"
 import env from "../../environment"
 
@@ -15,7 +15,7 @@ const adminOnlyUser = structures.users.adminOnlyUser()
 const builderUser = structures.users.builderUser()
 const appBuilderUser = structures.users.appBuilderUser(appId)
 
-function buildUserCtx(user: ContextUser) {
+function buildUserCtx(user: User) {
   return {
     internal: false,
     user,

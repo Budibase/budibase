@@ -1,6 +1,14 @@
-import { Datasource, Row, Query } from "@budibase/types"
+import { Datasource, Row, Query, ContextUser, SSOUser } from "@budibase/types"
 
 export type WorkerCallback = (error: any, response?: any) => void
+
+export interface QueryEventCtx {
+  user?: Omit<ContextUser, "account" | "license"> | SSOUser
+  auth?: {
+    configId?: string
+    sessionId?: string
+  }
+}
 
 export interface QueryEvent
   extends Omit<
@@ -13,7 +21,7 @@ export interface QueryEvent
   queryId?: string
   environmentVariables?: Record<string, string>
   parameters: QueryEventParameters
-  ctx?: any
+  ctx?: QueryEventCtx
 }
 
 export type QueryEventParameters = Record<string, string | number | null>

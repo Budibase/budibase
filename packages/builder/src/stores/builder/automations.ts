@@ -2022,6 +2022,51 @@ const automationActions = (store: AutomationStore) => ({
       actionPanelBlock: undefined,
     }))
   },
+
+  openLogPanel: (log: any, stepData: any) => {
+    store.update(state => ({
+      ...state,
+      showLogDetailsPanel: true,
+      selectedLog: log,
+      selectedLogStepData: stepData,
+      selectedNodeId: undefined,
+      actionPanelBlock: undefined,
+    }))
+  },
+
+  closeLogPanel: () => {
+    store.update(state => ({
+      ...state,
+      showLogDetailsPanel: false,
+      selectedLog: undefined,
+      selectedLogStepData: undefined,
+    }))
+  },
+
+  openLogsPanel: () => {
+    store.update(state => ({
+      ...state,
+      showLogsPanel: true,
+      selectedNodeId: undefined,
+      actionPanelBlock: undefined,
+      showLogDetailsPanel: false,
+    }))
+  },
+
+  closeLogsPanel: () => {
+    store.update(state => ({
+      ...state,
+      showLogsPanel: false,
+    }))
+  },
+
+  selectLogForDetails: (log: any) => {
+    store.update(state => ({
+      ...state,
+      selectedLog: log,
+      showLogDetailsPanel: false,
+    }))
+  },
 })
 
 export interface AutomationContext {

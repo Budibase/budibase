@@ -110,6 +110,10 @@ const SQL_TYPE_MAP: Record<string, PrimitiveTypes> = {
   ...SQL_OPTIONS_TYPE_MAP,
 }
 
+const SQL_USER_DEFINED_TYPE_MAP: Record<string, PrimitiveTypes> = {
+  citext: FieldType.STRING,
+}
+
 export const isExternalTableID = sql.utils.isExternalTableID
 export const isExternalTable = sql.utils.isExternalTable
 export const buildExternalTableId = sql.utils.buildExternalTableId
@@ -134,8 +138,10 @@ export function generateColumnDefinition(config: {
   name: string
   presence: boolean
   options?: string[]
+  userDefinedType?: string
 }) {
-  let { externalType, autocolumn, name, presence, options } = config
+  let { externalType, autocolumn, name, presence, options, userDefinedType } =
+    config
   let foundType = FieldType.STRING
   const lowerCaseType = externalType.toLowerCase()
   let matchingTypes: { external: string; internal: PrimitiveTypes }[] = []
@@ -146,6 +152,8 @@ export function generateColumnDefinition(config: {
   // check for an enum column and handle that separately.
   if (lowerCaseType.startsWith("enum")) {
     matchingTypes.push({ external: "enum", internal: FieldType.OPTIONS })
+  } else if (userDefinedType && userDefinedType in SQL_USER_DEFINED_TYPE_MAP) {
+    foundType = SQL_USER_DEFINED_TYPE_MAP[userDefinedType]
   } else {
     for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
       if (lowerCaseType.includes(external)) {

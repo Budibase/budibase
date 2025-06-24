@@ -1,13 +1,13 @@
 import { Context, Request } from "koa"
 import {
-  User,
   Role,
   UserRoles,
   Account,
-  ConfigType,
   Row,
   Table,
   UserBindings,
+  User,
+  UserSSO,
 } from "../documents"
 import { FeatureFlag, License } from "../sdk"
 import { Files } from "formidable"
@@ -19,7 +19,7 @@ export enum LoginMethod {
   COOKIE = "cookie",
 }
 
-export interface ContextUser extends Omit<User, "roles"> {
+export interface ContextUser extends Omit<User & Partial<UserSSO>, "roles"> {
   globalId?: string
   license?: License
   userId?: string
@@ -29,7 +29,6 @@ export interface ContextUser extends Omit<User, "roles"> {
   csrfToken?: string
   featureFlags?: FeatureFlag[]
   accountPortalAccess?: boolean
-  providerType?: ConfigType
   account?: Account
 }
 

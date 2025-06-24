@@ -378,6 +378,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           presence: required && !hasDefault && !isGenerated,
           externalType: column.data_type,
           options: enumValues?.[column.udt_name],
+          userDefinedType: column.udt_name,
         })
       }
 
