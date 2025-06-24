@@ -210,6 +210,31 @@ if (mainDescriptions.length) {
           expect(row.price).toBe("400.00")
         })
       })
+
+      describe("citext field", () => {
+        const tableName = "citexttable"
+        let table: Table
+
+        beforeAll(async () => {
+          await client.raw(`
+        CREATE EXTENSION IF NOT EXISTS citext;
+        CREATE TABLE ${tableName} (
+          id serial PRIMARY KEY,
+          email citext
+        )   
+      `)
+          const response = await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+          table = response.datasource.entities![tableName]
+        })
+
+        it("should map citext column to internal type string", async () => {
+          expect(table).toBeDefined()
+          expect(table?.schema.email.type).toBe(FieldType.STRING)
+          expect(table?.schema.email.externalType).toBe("USER-DEFINED")
+        })
+      })
     }
   )
 
