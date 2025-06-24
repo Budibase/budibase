@@ -16,6 +16,8 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
+  import { featureFlags } from "@/stores/portal"
+  import { FeatureFlag } from "@budibase/types"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -39,7 +41,9 @@
 
 <!-- routify:options index=3 -->
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Automations" }]} icon="lightning-a"></TopBar>
+  {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+    <TopBar breadcrumbs={[{ text: "Automations" }]} icon="lightning-a"></TopBar>
+  {/if}
   <div class="root">
     <AutomationPanel {modal} {webhookModal} />
     <div class="content drawer-container">
