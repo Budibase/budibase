@@ -29,7 +29,7 @@
   $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 
   const handleAppCreation = () => {
-    if ($licensing?.usageMetrics?.apps >= 100) {
+    if ($licensing?.usageMetrics?.apps && $licensing.usageMetrics.apps >= 100) {
       appLimitModal.show()
     } else {
       appCreationStore.showCreateModal()

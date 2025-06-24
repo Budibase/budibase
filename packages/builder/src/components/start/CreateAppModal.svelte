@@ -143,7 +143,7 @@
         if ($values.encryptionPassword?.trim()) {
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
-      } else if (template) {
+      } else if (template && !template.fromFile) {
         data.append("useTemplate", "true")
         data.append("templateName", template.name)
         data.append("templateKey", template.key)

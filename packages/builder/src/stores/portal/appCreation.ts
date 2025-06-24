@@ -1,10 +1,5 @@
 import { writable } from "svelte/store"
-
-export interface AppTemplate {
-  key?: string
-  fromFile?: boolean
-  [key: string]: any
-}
+import type { AppTemplate } from "../../types/app"
 
 export interface AppCreationState {
   showCreateModal: boolean
