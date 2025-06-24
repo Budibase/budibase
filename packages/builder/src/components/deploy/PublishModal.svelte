@@ -12,8 +12,13 @@
     automationStore,
     deploymentStore,
     workspaceAppStore,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
-  import type { UsedResource, Automation } from "@budibase/types"
+  import type {
+    UsedResource,
+    Automation,
+    PublishStatusResource,
+  } from "@budibase/types"
   import { ResourceType, AutomationEventType } from "@budibase/types"
   import { API } from "@/api"
   import { createEventDispatcher } from "svelte"
@@ -30,9 +35,14 @@
 
   const dispatcher = createEventDispatcher()
 
-  $: automations = $automationStore.automations || []
-  $: filteredAutomations = removeRowActionAutomations(automations)
-  $: apps = $workspaceAppStore.workspaceApps || []
+  $: automations = filterUnpublished(
+    removeRowActionAutomations($automationStore.automations || []),
+    $workspaceDeploymentStore.automations
+  )
+  $: apps = filterUnpublished(
+    $workspaceAppStore.workspaceApps || [],
+    $workspaceDeploymentStore.workspaceApps
+  )
   $: target = findTarget(targetId, apps, automations)
   $: selectedAppNames = getSelectedNames(selectedApps, apps)
   $: selectedAutomationNames = getSelectedNames(
@@ -106,6 +116,20 @@
     )
   }
 
+  function filterUnpublished<T extends { _id?: string }>(
+    resources: T[],
+    state: Record<string, PublishStatusResource>
+  ): T[] {
+    const filtered: T[] = []
+    for (let resource of resources) {
+      const status = state[resource._id!]
+      if (!status || status.unpublishedChanges) {
+        filtered.push(resource)
+      }
+    }
+    return filtered
+  }
+
   function findTarget(
     targetId: string | undefined,
     apps: PossibleTarget[],
@@ -144,7 +168,7 @@
     })
     const publishedAutomations = getSelectedNames(
         selectedAutomations,
-        filteredAutomations
+        automations
       ),
       publishedApps = getSelectedNames(selectedApps, apps)
     dispatcher("success", { publishedAutomations, publishedApps })
@@ -154,7 +178,7 @@
     for (const app of apps) {
       selectedApps[app._id!] = state
     }
-    for (const automation of filteredAutomations) {
+    for (const automation of automations) {
       selectedAutomations[automation._id!] = state
     }
   }
@@ -173,78 +197,82 @@
 <Modal bind:this={publishModal}>
   <ModalContent title="Publish" confirmText="Publish" onConfirm={publish}>
     <Layout noPadding gap="XS">
-      <span>Select the apps or automations you'd like to publish.</span>
-      <div>
-        {#if apps.length}
+      {#if !apps.length && !automations.length}
+        <span>Nothing to publish.</span>
+      {:else}
+        <span>Select the apps or automations you'd like to publish.</span>
+        <div>
+          {#if apps.length}
+            <Accordion
+              header="Apps"
+              headerSize="M"
+              noPadding
+              initialOpen={target?.type === "app"}
+              bold={false}
+              bind:this={appAccordion}
+            >
+              {#each apps as app}
+                {#if app._id}
+                  <Checkbox
+                    text={`${app.name}`}
+                    bind:value={selectedApps[app._id]}
+                  />
+                {/if}
+              {/each}
+            </Accordion>
+          {/if}
+          {#if automations.length}
+            <Accordion
+              header="Automations"
+              headerSize="M"
+              noPadding
+              initialOpen={target?.type === "automation"}
+              bold={false}
+              bind:this={automationAccordion}
+            >
+              {#each automations as automation}
+                {#if automation._id}
+                  <Checkbox
+                    text={`${automation.name}`}
+                    bind:value={selectedAutomations[automation._id]}
+                  />
+                {/if}
+              {/each}
+            </Accordion>
+          {/if}
+          {#if apps.length || automations.length}
+            <div class="select-clear-buttons">
+              <ActionButton quiet noPadding active on:click={selectAll}
+                >Select all</ActionButton
+              >
+              <ActionButton quiet noPadding on:click={clearAll}
+                >Clear all</ActionButton
+              >
+            </div>
+          {/if}
           <Accordion
-            header="Apps"
-            headerSize="M"
+            header="Show everything that will be published"
             noPadding
-            initialOpen={target?.type === "app"}
             bold={false}
-            bind:this={appAccordion}
           >
-            {#each apps as app}
-              {#if app._id}
-                <Checkbox
-                  text={`${app.name}`}
-                  bind:value={selectedApps[app._id]}
-                />
-              {/if}
-            {/each}
+            {#if usedResources.length}
+              <Body size="XS"
+                >Resources: {usedResources
+                  .map(resource => resource.name)
+                  .join(", ")}</Body
+              >
+            {/if}
+            {#if selectedAppNames.length}
+              <Body size="XS">Apps: {selectedAppNames.join(", ")}</Body>
+            {/if}
+            {#if selectedAutomationNames.length}
+              <Body size="XS"
+                >Automations: {selectedAutomationNames.join(", ")}</Body
+              >
+            {/if}
           </Accordion>
-        {/if}
-        {#if filteredAutomations.length}
-          <Accordion
-            header="Automations"
-            headerSize="M"
-            noPadding
-            initialOpen={target?.type === "automation"}
-            bold={false}
-            bind:this={automationAccordion}
-          >
-            {#each filteredAutomations as automation}
-              {#if automation._id}
-                <Checkbox
-                  text={`${automation.name}`}
-                  bind:value={selectedAutomations[automation._id]}
-                />
-              {/if}
-            {/each}
-          </Accordion>
-        {/if}
-        {#if apps.length || automations.length}
-          <div class="select-clear-buttons">
-            <ActionButton quiet noPadding active on:click={selectAll}
-              >Select all</ActionButton
-            >
-            <ActionButton quiet noPadding on:click={clearAll}
-              >Clear all</ActionButton
-            >
-          </div>
-        {/if}
-        <Accordion
-          header="Show everything that will be published"
-          noPadding
-          bold={false}
-        >
-          {#if usedResources.length}
-            <Body size="XS"
-              >Resources: {usedResources
-                .map(resource => resource.name)
-                .join(", ")}</Body
-            >
-          {/if}
-          {#if selectedAppNames.length}
-            <Body size="XS">Apps: {selectedAppNames.join(", ")}</Body>
-          {/if}
-          {#if selectedAutomationNames.length}
-            <Body size="XS"
-              >Automations: {selectedAutomationNames.join(", ")}</Body
-            >
-          {/if}
-        </Accordion>
-      </div>
+        </div>
+      {/if}
     </Layout>
   </ModalContent>
 </Modal>
