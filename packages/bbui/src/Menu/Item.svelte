@@ -98,6 +98,6 @@
     color: var(--spectrum-global-color-gray-600);
   }
   .spectrum-Menu-itemLabel {
-      color: var(--spectrum-global-color-gray-900) !important;
+    color: var(--spectrum-global-color-gray-900) !important;
   }
 </style>
