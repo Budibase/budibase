@@ -12,7 +12,6 @@
   export let height
   export let width
   export let dataLabels
-  export let dropShadow
   export let animate
   export let legend
   export let stacked
@@ -51,7 +50,7 @@
     dataLabels: {
       enabled: dataLabels,
       dropShadow: {
-        enabled: dropShadow,
+        enabled: true,
       },
     },
     chart: {

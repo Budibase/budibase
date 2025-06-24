@@ -56,9 +56,6 @@
     },
     dataLabels: {
       enabled: dataLabels,
-      background: {
-        enabled: labelBackground,
-      },
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
