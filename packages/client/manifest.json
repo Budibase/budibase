@@ -1975,8 +1975,8 @@
       },
       {
         "type": "boolean",
-        "label": "Label backgrounds",
-        "key": "labelBackground",
+        "label": "Shadow",
+        "key": "dropShadow",
         "defaultValue": false,
         "dependsOn": "dataLabels"
       },
