@@ -1,12 +1,6 @@
 <script>
-  import {
-    automationStore,
-    automationHistoryStore,
-    selectedAutomation,
-  } from "@/stores/builder"
-  import { ViewMode } from "@/types/automations"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import TestDataModal from "./TestDataModal.svelte"
+  import { onMount } from "svelte"
+  import dayjs from "dayjs"
   import {
     notifications,
     Modal,
@@ -15,15 +9,22 @@
     Button,
     ActionButton,
   } from "@budibase/bbui"
-  import { ActionStepID } from "@/constants/backend/automations"
-  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
-  import StepNode from "./StepNode.svelte"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
-  import DraggableCanvas from "../DraggableCanvas.svelte"
-  import { onMount } from "svelte"
+  import {
+    automationStore,
+    automationHistoryStore,
+    selectedAutomation,
+  } from "@/stores/builder"
   import { environment } from "@/stores/portal"
+  import { ViewMode } from "@/types/automations"
+  import { ActionStepID } from "@/constants/backend/automations"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
+  import DraggableCanvas from "../DraggableCanvas.svelte"
   import Count from "../../SetupPanel/Count.svelte"
+  import TestDataModal from "./TestDataModal.svelte"
+  import StepNode from "./StepNode.svelte"
 
   export let automation
 
@@ -111,6 +112,7 @@
       const response = await automationStore.actions.getLogs({
         automationId: automation._id,
         status: "error",
+        startDate: dayjs().subtract(1, "day").toISOString(),
       })
       prodErrors = response?.data?.length || 0
     } catch (error) {
