@@ -1610,6 +1610,10 @@ const automationActions = (store: AutomationStore) => ({
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
+      state.showLogsPanel = false
+      state.showLogDetailsPanel = false
+      delete state.selectedLog
+      delete state.selectedLogStepData
       return state
     })
   },
