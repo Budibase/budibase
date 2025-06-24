@@ -4,16 +4,20 @@
     enrichedApps,
     agentsStore,
     featureFlags,
+    appCreationStore,
+    licensing,
   } from "@/stores/portal"
   import { params, goto, page } from "@roxi/routify"
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
+  import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
   import { Helpers } from "@budibase/bbui"
 
   let searchString: string
   let onAgents: boolean = $page.path.endsWith("/agents")
   let openedApp: string | undefined
+  let appLimitModal: AppLimitModal
 
   $: filteredApps = $enrichedApps.filter(app => {
     return (
@@ -23,6 +27,14 @@
   })
 
   $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
+
+  const handleAppCreation = () => {
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+    } else {
+      appCreationStore.showCreateModal()
+    }
+  }
 </script>
 
 <div class="side-bar" class:collapsed={$sideBarCollapsed}>
@@ -31,7 +43,7 @@
       title={Helpers.capitalise(appsOrWorkspaces)}
       placeholder={`Search for ${appsOrWorkspaces}`}
       bind:value={searchString}
-      onAdd={() => $goto("./create")}
+      onAdd={handleAppCreation}
     />
   </div>
   <div class="side-bar-nav">
@@ -60,7 +72,7 @@
         title="Chats"
         placeholder="Search for agent chats"
         bind:value={searchString}
-        onAdd={() => $goto("./create")}
+        onAdd={() => $goto("./agents")}
       />
     </div>
     <div class="side-bar-nav">
@@ -97,6 +109,8 @@
     </div>
   {/if}
 </div>
+
+<AppLimitModal bind:this={appLimitModal} />
 
 <style>
   .side-bar {

@@ -28,13 +28,13 @@
     sortBy,
     templates,
     featureFlags,
+    appCreationStore,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
   import TemplatesModal from "@/components/start/TemplatesModal.svelte"
 
-  let template
   let creationModal
   let appLimitModal
   let accountLockedModal
@@ -47,6 +47,17 @@
   $: filteredApps = filterApps($enrichedApps, searchTerm)
   $: automationErrors = getAutomationErrors(filteredApps || [])
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
+
+  $: if (
+    ($appCreationStore.showCreateModal || $appCreationStore.showImportModal) &&
+    creationModal
+  ) {
+    creationModal.show()
+  }
+
+  $: if ($appCreationStore.showTemplatesModal && templatesModal) {
+    templatesModal.show()
+  }
 
   const filterApps = (apps, searchTerm) => {
     return apps?.filter(app => {
@@ -96,18 +107,26 @@
     if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
     } else {
-      template = null
-      creationModal.show()
+      appCreationStore.showCreateModal()
     }
   }
 
   const initiateAppImport = () => {
-    template = { fromFile: true }
-    creationModal.show()
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+    } else {
+      appCreationStore.showImportModal()
+    }
   }
 
   const autoCreateApp = async () => {
     try {
+      const template = $appCreationStore.template
+      if (!template?.key) {
+        notifications.error("No template selected")
+        return
+      }
+
       // Auto name app if has same name
       const templateKey = template.key.split("/")[1]
 
@@ -146,16 +165,21 @@
   }
 
   const stopAppCreation = () => {
-    template = null
+    appCreationStore.hideCreateModal()
+    appCreationStore.hideImportModal()
+    appCreationStore.hideTemplatesModal()
+    appCreationStore.clearTemplate()
   }
 
   function createAppFromTemplateUrl(templateKey) {
     // validate the template key just to make sure
     const templateParts = templateKey.split("/")
     if (templateParts.length === 2 && templateParts[0] === "app") {
-      template = {
-        key: templateKey,
+      if ($licensing?.usageMetrics?.apps >= 100) {
+        appLimitModal.show()
+        return
       }
+      appCreationStore.setTemplate({ key: templateKey })
       autoCreateApp()
     } else {
       notifications.error("Your Template URL is invalid. Please try another.")
@@ -163,8 +187,12 @@
   }
 
   const handleTemplateSelect = selectedTemplate => {
-    template = selectedTemplate
-    templatesModal.hide()
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+      return
+    }
+    appCreationStore.setTemplate(selectedTemplate)
+    appCreationStore.hideTemplatesModal()
     autoCreateApp()
   }
 
@@ -322,7 +350,13 @@
   width="600px"
   on:hide={stopAppCreation}
 >
-  <CreateAppModal {template} />
+  <CreateAppModal
+    key={$appCreationStore.showImportModal
+      ? "import"
+      : $appCreationStore.showCreateModal
+        ? "create"
+        : "none"}
+  />
 </Modal>
 
 <Modal bind:this={templatesModal}>
