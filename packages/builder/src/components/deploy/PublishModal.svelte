@@ -156,7 +156,8 @@
   }
 
   async function publish() {
-    const preAutomations = automations, preApps = apps
+    const preAutomations = automations,
+      preApps = apps
     const toPublishAutomations = getSelectedIds(selectedAutomations),
       toPublishApps = getSelectedIds(selectedApps)
     await deploymentStore.publishApp({
@@ -290,7 +291,8 @@
     margin: 8px 0 0 0;
   }
   .accordion-footer {
-    padding: 16px 52px;
+    padding: 16px 42px 20px 42px;
     background-color: var(--spectrum-global-color-gray-200) !important;
+    width: 460px;
   }
 </style>

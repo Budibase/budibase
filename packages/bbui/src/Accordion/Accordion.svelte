@@ -80,9 +80,6 @@
   .spectrum-Accordion-itemHeaderL {
     font-size: 1.5rem;
   }
-  button {
-    padding: 0 !important;
-  }
   button:hover {
     background-color: transparent;
   }
