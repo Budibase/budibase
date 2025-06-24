@@ -12,8 +12,13 @@
     automationStore,
     deploymentStore,
     workspaceAppStore,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
-  import type { UsedResource, Automation } from "@budibase/types"
+  import type {
+    UsedResource,
+    Automation,
+    PublishStatusResource,
+  } from "@budibase/types"
   import { ResourceType, AutomationEventType } from "@budibase/types"
   import { API } from "@/api"
   import { createEventDispatcher } from "svelte"
@@ -30,10 +35,15 @@
 
   const dispatcher = createEventDispatcher()
 
-  $: automations = $automationStore.automations || []
-  $: filteredAutomations = removeRowActionAutomations(automations)
-  $: apps = $workspaceAppStore.workspaceApps || []
-  $: target = findTarget(targetId, apps, automations)
+  $: automations = filterUnpublished(
+    removeRowActionAutomations($automationStore.automations || []),
+    $workspaceDeploymentStore.automations
+  )
+  $: apps = filterUnpublished(
+    $workspaceAppStore.workspaceApps || [],
+    $workspaceDeploymentStore.workspaceApps
+  )
+  $: findTarget(targetId, apps, automations)
   $: selectedAppNames = getSelectedNames(selectedApps, apps)
   $: selectedAutomationNames = getSelectedNames(
     selectedAutomations,
@@ -106,6 +116,20 @@
     )
   }
 
+  function filterUnpublished<T extends { _id?: string }>(
+    resources: T[],
+    state: Record<string, PublishStatusResource>
+  ): T[] {
+    const filtered: T[] = []
+    for (let resource of resources) {
+      const status = state[resource._id!]
+      if (!status || status.unpublishedChanges) {
+        filtered.push(resource)
+      }
+    }
+    return filtered
+  }
+
   function findTarget(
     targetId: string | undefined,
     apps: PossibleTarget[],
@@ -144,7 +168,7 @@
     })
     const publishedAutomations = getSelectedNames(
         selectedAutomations,
-        filteredAutomations
+        automations
       ),
       publishedApps = getSelectedNames(selectedApps, apps)
     dispatcher("success", { publishedAutomations, publishedApps })
@@ -154,7 +178,7 @@
     for (const app of apps) {
       selectedApps[app._id!] = state
     }
-    for (const automation of filteredAutomations) {
+    for (const automation of automations) {
       selectedAutomations[automation._id!] = state
     }
   }
@@ -178,56 +202,60 @@
     onConfirm={publish}
   >
     <Layout noPadding gap="XS">
-      <Body size="M" color="var(--spectrum-global-color-gray-900)"
-        >Select the items you'd like to publish. Only apps and automations with
-        unpublished changes are listed below.</Body
-      >
-      {#if apps.length}
-        <div class="list-container">
-          <Body
-            size="M"
-            color="var(--spectrum-global-color-gray-900)"
-            weight="500"
-            >Apps:
-          </Body>
-          {#each apps as app}
-            {#if app._id}
-              <Checkbox
-                size="L"
-                text={`${app.name}`}
-                bind:value={selectedApps[app._id]}
-              />
-            {/if}
-          {/each}
-        </div>
-      {/if}
-      {#if filteredAutomations.length}
-        <div class="list-container">
-          <Body
-            size="M"
-            color="var(--spectrum-global-color-gray-900)"
-            weight="500">Automations:</Body
-          >
-          {#each filteredAutomations as automation}
-            {#if automation._id}
-              <Checkbox
-                size="L"
-                text={`${automation.name}`}
-                bind:value={selectedAutomations[automation._id]}
-              />
-            {/if}
-          {/each}
-        </div>
-      {/if}
-      {#if apps.length || automations.length}
-        <div class="select-clear-buttons">
-          <ActionButton noPadding quiet on:click={selectAll}
-            >Select all</ActionButton
-          >
-          <ActionButton noPadding quiet on:click={clearAll}
-            >Clear all</ActionButton
-          >
-        </div>
+      {#if !apps.length && !automations.length}
+        <span>Nothing to publish.</span>
+      {:else}
+        <Body size="M" color="var(--spectrum-global-color-gray-900)"
+          >Select the items you'd like to publish. Only apps and automations
+          with unpublished changes are listed below.</Body
+        >
+        {#if apps.length}
+          <div class="list-container">
+            <Body
+              size="M"
+              color="var(--spectrum-global-color-gray-900)"
+              weight="500"
+              >Apps:
+            </Body>
+            {#each apps as app}
+              {#if app._id}
+                <Checkbox
+                  size="L"
+                  text={`${app.name}`}
+                  bind:value={selectedApps[app._id]}
+                />
+              {/if}
+            {/each}
+          </div>
+        {/if}
+        {#if automations.length}
+          <div class="list-container">
+            <Body
+              size="M"
+              color="var(--spectrum-global-color-gray-900)"
+              weight="500">Automations:</Body
+            >
+            {#each automations as automation}
+              {#if automation._id}
+                <Checkbox
+                  size="L"
+                  text={`${automation.name}`}
+                  bind:value={selectedAutomations[automation._id]}
+                />
+              {/if}
+            {/each}
+          </div>
+        {/if}
+        {#if apps.length || automations.length}
+          <div class="select-clear-buttons">
+            <ActionButton noPadding quiet on:click={selectAll}
+              >Select all</ActionButton
+            >
+            <ActionButton noPadding quiet on:click={clearAll}
+              >Clear all</ActionButton
+            >
+          </div>
+        {/if}
       {/if}
     </Layout>
   </ModalContent>
