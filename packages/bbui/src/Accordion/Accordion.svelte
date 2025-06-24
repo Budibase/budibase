@@ -40,9 +40,9 @@
         style="--font-weight: {bold ? 'bold' : 'normal'}"
         on:click={() => (isOpen = !isOpen)}
       >
+        <Icon name="caret-right" size="S" />
         {header}
       </button>
-      <Icon name="caret-right" size="S" />
     </h3>
     <div
       class="spectrum-Accordion-itemContent"
@@ -70,15 +70,21 @@
     text-transform: none;
     font-weight: var(--font-weight);
     min-height: auto;
+    margin-bottom: 8px;
   }
   .spectrum-Accordion-itemHeaderS {
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
   .spectrum-Accordion-itemHeaderM {
     font-size: 1.2rem;
-    font-weight: 500;
   }
   .spectrum-Accordion-itemHeaderL {
     font-size: 1.5rem;
+  }
+  button {
+    padding: 0 !important;
+  }
+  button:hover {
+    background-color: transparent;
   }
 </style>

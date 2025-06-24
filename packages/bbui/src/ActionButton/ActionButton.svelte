@@ -114,6 +114,12 @@
     padding: 0;
     min-width: 0;
   }
+  .noPadding:hover {
+    padding: 0;
+    min-width: 0;
+    background-color: transparent;
+    border: 1px solid transparent;
+  }
   .is-selected :global(i) {
     color: var(--spectrum-global-color-gray-900);
   }
