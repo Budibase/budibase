@@ -157,6 +157,7 @@
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
         on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
+        allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
           <Heading size="S"

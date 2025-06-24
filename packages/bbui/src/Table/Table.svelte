@@ -592,6 +592,8 @@
   .spectrum-Table-headCell .title {
     overflow: visible;
     text-overflow: ellipsis;
+    display: flex;
+    gap: 4px;
   }
   .spectrum-Table-headCell :global(.icon) {
     margin-left: var(

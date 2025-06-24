@@ -25,7 +25,6 @@
     dropCursor,
     highlightActiveLine,
     highlightActiveLineGutter,
-    highlightWhitespace,
     placeholder as placeholderFn,
     MatchDecorator,
     ViewPlugin,
@@ -325,9 +324,6 @@
     if (mode.name === "javascript") {
       complete.push(snippetMatchDecoPlugin)
       complete.push(javascript())
-      if (!readonly) {
-        complete.push(highlightWhitespace())
-      }
     }
     // HBS only plugins
     else {
@@ -510,9 +506,6 @@
     width: 100%;
     background: var(--spectrum-global-color-gray-100) !important;
     z-index: -2;
-  }
-  .code-editor :global(.cm-highlightSpace:before) {
-    color: var(--spectrum-global-color-gray-500);
   }
 
   /* Code selection */

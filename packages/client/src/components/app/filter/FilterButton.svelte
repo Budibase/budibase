@@ -36,7 +36,7 @@
   let filterMeta: string | undefined
   let filterTitle: string | undefined
 
-  $: iconName = !filter ? "selection-plus" : "x-circle"
+  $: iconName = !filter ? "plus-circle" : "x-circle"
   $: fieldSchema = config ? schema?.[config?.field] : undefined
   $: filterOp = filter
     ? operators?.find(op => op.value === filter.operator)

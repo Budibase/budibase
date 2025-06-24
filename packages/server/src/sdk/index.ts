@@ -7,6 +7,7 @@ import { default as queries } from "./app/queries"
 import { default as rows } from "./app/rows"
 import { default as links } from "./app/links"
 import { default as users } from "./users"
+import { default as deployment } from "./app/deployment"
 import * as plugins from "./plugins"
 import * as views from "./app/views"
 import * as permissions from "./app/permissions"
@@ -40,6 +41,7 @@ const sdk = {
   workspaceApps,
   navigation,
   resources,
+  deployment,
 }
 
 // default export for TS
