@@ -248,6 +248,11 @@ export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
 export async function fetchClientApps(
   ctx: UserCtx<void, FetchPublishedAppsResponse>
 ) {
+  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+    // Don't use this if workspaceapps are not enabled
+    ctx.throw(404)
+  }
+
   const apps = await sdk.applications.fetch(AppStatus.DEPLOYED, ctx.user)
 
   const result: FetchPublishedAppsResponse["apps"] = []

@@ -263,220 +263,242 @@ describe("/applications", () => {
   })
 
   describe("fetchClientApps", () => {
-    it("should return apps with default workspace app when published", async () => {
-      const response = await config.api.application.fetchClientApps()
-      expect(response.apps).toHaveLength(1)
-      expect(response.apps[0]).toEqual(
-        expect.objectContaining({
-          prodId: config.getProdAppId(),
-          url: app.url,
+    describe("with WORKSPACE_APPS feature flag disabled", () => {
+      it("should return 404 when workspace apps feature is disabled", async () => {
+        await config.api.application.fetchClientApps({
+          status: 404,
         })
-      )
+      })
     })
 
-    it("should return multiple apps when published app with workspace apps exists", async () => {
-      await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Test Workspace App",
-          url: "/testapp",
+    describe("with WORKSPACE_APPS feature flag enabled", () => {
+      let featureCleanup: () => void
+
+      beforeAll(() => {
+        featureCleanup = features.testutils.setFeatureFlags("*", {
+          WORKSPACE_APPS: true,
         })
-      )
-      await config.publish()
+      })
 
-      const response = await config.api.application.fetchClientApps()
+      afterAll(() => {
+        featureCleanup()
+      })
 
-      expect(response.apps.length).toBe(2)
-
-      const testApp = response.apps.find(a => a.name === "Test Workspace App")
-      expect(testApp).toEqual(
-        expect.objectContaining({
-          prodId: config.getProdAppId(),
-          name: "Test Workspace App",
-          url: `${app.url}/testapp`,
-        })
-      )
-    })
-
-    it("should handle creating multiple workspace apps", async () => {
-      const { workspaceApp: workspaceApp1 } =
-        await config.api.workspaceApp.create(
-          structures.workspaceApps.createRequest({
-            name: "App One",
-            url: "/appone",
-          })
-        )
-
-      const { workspaceApp: workspaceApp2 } =
-        await config.api.workspaceApp.create(
-          structures.workspaceApps.createRequest({
-            name: "App Two",
-            url: "/apptwo",
-          })
-        )
-      const app = await config.publish()
-
-      const response = await config.api.application.fetchClientApps()
-
-      expect(response.apps.length).toBe(3)
-      expect(response.apps).toEqual(
-        expect.arrayContaining([
-          {
-            appId: expect.stringMatching(
-              new RegExp(`^${app.appId}_workspace_app_.+`)
-            ),
-            name: app.name,
-            prodId: app.appId,
-            updatedAt: app.updatedAt,
+      it("should return apps with default workspace app when published", async () => {
+        const response = await config.api.application.fetchClientApps()
+        expect(response.apps).toHaveLength(1)
+        expect(response.apps[0]).toEqual(
+          expect.objectContaining({
+            prodId: config.getProdAppId(),
             url: app.url,
-          },
-          {
-            appId: `${app.appId}_${workspaceApp1._id}`,
-            name: "App One",
-            prodId: config.getProdAppId(),
-            updatedAt: app.updatedAt,
-            url: `${app.url}/appone`,
-          },
-          {
-            appId: `${app.appId}_${workspaceApp2._id}`,
-            name: "App Two",
-            prodId: config.getProdAppId(),
-            updatedAt: app.updatedAt,
-            url: `${app.url}/apptwo`,
-          },
-        ])
-      )
-    })
-
-    it("should return apps from multiple published workspaces", async () => {
-      const { workspaceApp: app1Workspace1 } =
-        await config.api.workspaceApp.create(
-          structures.workspaceApps.createRequest({
-            name: "App One",
-            url: "/appone",
           })
         )
-      app = await config.publish()
+      })
 
-      const secondApp = await tk.withFreeze(new Date(), async () => {
+      it("should return multiple apps when published app with workspace apps exists", async () => {
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Test Workspace App",
+            url: "/testapp",
+          })
+        )
+        await config.publish()
+
+        const response = await config.api.application.fetchClientApps()
+
+        expect(response.apps.length).toBe(2)
+
+        const testApp = response.apps.find(a => a.name === "Test Workspace App")
+        expect(testApp).toEqual(
+          expect.objectContaining({
+            prodId: config.getProdAppId(),
+            name: "Test Workspace App",
+            url: `${app.url}/testapp`,
+          })
+        )
+      })
+
+      it("should handle creating multiple workspace apps", async () => {
+        const { workspaceApp: workspaceApp1 } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "App One",
+              url: "/appone",
+            })
+          )
+
+        const { workspaceApp: workspaceApp2 } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "App Two",
+              url: "/apptwo",
+            })
+          )
+        const app = await config.publish()
+
+        const response = await config.api.application.fetchClientApps()
+
+        expect(response.apps.length).toBe(3)
+        expect(response.apps).toEqual(
+          expect.arrayContaining([
+            {
+              appId: expect.stringMatching(
+                new RegExp(`^${app.appId}_workspace_app_.+`)
+              ),
+              name: app.name,
+              prodId: app.appId,
+              updatedAt: app.updatedAt,
+              url: app.url,
+            },
+            {
+              appId: `${app.appId}_${workspaceApp1._id}`,
+              name: "App One",
+              prodId: config.getProdAppId(),
+              updatedAt: app.updatedAt,
+              url: `${app.url}/appone`,
+            },
+            {
+              appId: `${app.appId}_${workspaceApp2._id}`,
+              name: "App Two",
+              prodId: config.getProdAppId(),
+              updatedAt: app.updatedAt,
+              url: `${app.url}/apptwo`,
+            },
+          ])
+        )
+      })
+
+      it("should return apps from multiple published workspaces", async () => {
+        const { workspaceApp: app1Workspace1 } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "App One",
+              url: "/appone",
+            })
+          )
+        app = await config.publish()
+
+        const secondApp = await tk.withFreeze(new Date(), async () => {
+          // Create second app
+          let secondApp = await config.api.application.create({
+            name: "Second App",
+          })
+
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "App Two",
+              url: "/apptwo",
+            })
+          )
+          await config.api.application.publish(secondApp.appId)
+          return secondApp
+        })
+
+        const response = await config.api.application.fetchClientApps()
+
+        expect(response.apps).toHaveLength(3)
+
+        expect(response.apps).toEqual(
+          expect.arrayContaining([
+            {
+              appId: expect.stringMatching(
+                new RegExp(`^${app.appId}_workspace_app_.+`)
+              ),
+              name: app.name,
+              prodId: app.appId,
+              updatedAt: app.updatedAt,
+              url: app.url,
+            },
+            {
+              appId: `${app.appId}_${app1Workspace1._id}`,
+              name: "App One",
+              prodId: config.getProdAppId(),
+              updatedAt: app.updatedAt,
+              url: `${app.url}/appone`,
+            },
+            {
+              appId: expect.stringMatching(
+                new RegExp(
+                  `^${db.getProdAppID(secondApp.appId)}_workspace_app_.+`
+                )
+              ),
+              name: secondApp.name,
+              prodId: db.getProdAppID(secondApp.appId),
+              updatedAt: secondApp.updatedAt,
+              url: secondApp.url,
+            },
+          ])
+        )
+      })
+
+      it("should not return unpublished apps", async () => {
+        const { workspaceApp: app1Workspace1 } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "App One",
+              url: "/appone",
+            })
+          )
+        app = await config.publish()
+
+        // Non published workspace
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Another app",
+            url: "/other",
+          })
+        )
+
         // Create second app
-        let secondApp = await config.api.application.create({
-          name: "Second App",
-        })
-
-        await config.api.workspaceApp.create(
-          structures.workspaceApps.createRequest({
-            name: "App Two",
-            url: "/apptwo",
+        const secondApp = await tk.withFreeze(new Date(), async () => {
+          const secondApp = await config.api.application.create({
+            name: "Second App",
           })
-        )
-        await config.api.application.publish(secondApp.appId)
-        return secondApp
-      })
-
-      const response = await config.api.application.fetchClientApps()
-
-      expect(response.apps).toHaveLength(3)
-
-      expect(response.apps).toEqual(
-        expect.arrayContaining([
-          {
-            appId: expect.stringMatching(
-              new RegExp(`^${app.appId}_workspace_app_.+`)
-            ),
-            name: app.name,
-            prodId: app.appId,
-            updatedAt: app.updatedAt,
-            url: app.url,
-          },
-          {
-            appId: `${app.appId}_${app1Workspace1._id}`,
-            name: "App One",
-            prodId: config.getProdAppId(),
-            updatedAt: app.updatedAt,
-            url: `${app.url}/appone`,
-          },
-          {
-            appId: expect.stringMatching(
-              new RegExp(
-                `^${db.getProdAppID(secondApp.appId)}_workspace_app_.+`
-              )
-            ),
-            name: secondApp.name,
-            prodId: db.getProdAppID(secondApp.appId),
-            updatedAt: secondApp.updatedAt,
-            url: secondApp.url,
-          },
-        ])
-      )
-    })
-
-    it("should not return unpublished apps", async () => {
-      const { workspaceApp: app1Workspace1 } =
-        await config.api.workspaceApp.create(
-          structures.workspaceApps.createRequest({
-            name: "App One",
-            url: "/appone",
-          })
-        )
-      app = await config.publish()
-
-      // Non published workspace
-      await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Another app",
-          url: "/other",
+          await config.api.application.publish(secondApp.appId)
+          return secondApp
         })
-      )
 
-      // Create second app
-      const secondApp = await tk.withFreeze(new Date(), async () => {
-        const secondApp = await config.api.application.create({
-          name: "Second App",
+        // Unpublished app
+        await config.api.application.create({
+          name: "Third App",
         })
-        await config.api.application.publish(secondApp.appId)
-        return secondApp
+
+        const response = await config.api.application.fetchClientApps()
+
+        expect(response.apps).toHaveLength(3)
+
+        expect(response.apps).toEqual(
+          expect.arrayContaining([
+            {
+              appId: expect.stringMatching(
+                new RegExp(`^${app.appId}_workspace_app_.+`)
+              ),
+              name: app.name,
+              prodId: app.appId,
+              updatedAt: app.updatedAt,
+              url: app.url,
+            },
+            {
+              appId: `${app.appId}_${app1Workspace1._id}`,
+              name: "App One",
+              prodId: config.getProdAppId(),
+              updatedAt: app.updatedAt,
+              url: `${app.url}/appone`,
+            },
+            {
+              appId: expect.stringMatching(
+                new RegExp(
+                  `^${db.getProdAppID(secondApp.appId)}_workspace_app_.+`
+                )
+              ),
+              name: secondApp.name,
+              prodId: db.getProdAppID(secondApp.appId),
+              updatedAt: secondApp.updatedAt,
+              url: secondApp.url,
+            },
+          ])
+        )
       })
-
-      // Unpublished app
-      await config.api.application.create({
-        name: "Third App",
-      })
-
-      const response = await config.api.application.fetchClientApps()
-
-      expect(response.apps).toHaveLength(3)
-
-      expect(response.apps).toEqual(
-        expect.arrayContaining([
-          {
-            appId: expect.stringMatching(
-              new RegExp(`^${app.appId}_workspace_app_.+`)
-            ),
-            name: app.name,
-            prodId: app.appId,
-            updatedAt: app.updatedAt,
-            url: app.url,
-          },
-          {
-            appId: `${app.appId}_${app1Workspace1._id}`,
-            name: "App One",
-            prodId: config.getProdAppId(),
-            updatedAt: app.updatedAt,
-            url: `${app.url}/appone`,
-          },
-          {
-            appId: expect.stringMatching(
-              new RegExp(
-                `^${db.getProdAppID(secondApp.appId)}_workspace_app_.+`
-              )
-            ),
-            name: secondApp.name,
-            prodId: db.getProdAppID(secondApp.appId),
-            updatedAt: secondApp.updatedAt,
-            url: secondApp.url,
-          },
-        ])
-      )
     })
   })
 
