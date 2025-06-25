@@ -6,7 +6,7 @@ import env from "../environment"
 import * as accounts from "../accounts"
 import { UserDB } from "../users"
 import { sdk } from "@budibase/shared-core"
-import { User, UserMetadata } from "@budibase/types"
+import { User, SSOUser, UserMetadata } from "@budibase/types"
 
 const EXPIRY_SECONDS = 3600
 
@@ -94,7 +94,7 @@ export async function getUser({
   }
   const client = await redis.getUserClient()
   // try cache
-  let user: User = await client.get(userId)
+  let user: User | SSOUser = await client.get(userId)
   if (!user) {
     user = await populateUser(userId, tenantId, email)
     await client.store(userId, user, EXPIRY_SECONDS)

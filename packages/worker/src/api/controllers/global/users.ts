@@ -29,7 +29,6 @@ import {
   LockType,
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
-  PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
@@ -112,10 +111,11 @@ export const addSsoSupport = async (
 ) => {
   const { email, ssoId } = ctx.request.body
   try {
-    // Status is changed to 404 from getUserDoc if user is not found
-    const userByEmail = (await platform.users.getUserDoc(
-      email
-    )) as PlatformUserByEmail
+    const [userByEmail] = await users.getExistingPlatformUsers([email])
+    if (!userByEmail) {
+      ctx.throw(404, "Not Found")
+    }
+
     await platform.users.addSsoUser(
       ssoId,
       email,
