@@ -12,8 +12,13 @@
     automationStore,
     deploymentStore,
     workspaceAppStore,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
-  import type { UsedResource, Automation } from "@budibase/types"
+  import type {
+    UsedResource,
+    Automation,
+    PublishStatusResource,
+  } from "@budibase/types"
   import { ResourceType, AutomationEventType } from "@budibase/types"
   import { API } from "@/api"
   import { createEventDispatcher } from "svelte"
@@ -30,13 +35,18 @@
 
   const dispatcher = createEventDispatcher()
 
-  $: automations = $automationStore.automations || []
-  $: filteredAutomations = removeRowActionAutomations(automations)
-  $: apps = $workspaceAppStore.workspaceApps || []
+  $: automations = filterUnpublished(
+    removeRowActionAutomations($automationStore.automations || []),
+    $workspaceDeploymentStore.automations
+  )
+  $: apps = filterUnpublished(
+    $workspaceAppStore.workspaceApps || [],
+    $workspaceDeploymentStore.workspaceApps
+  )
   $: target = findTarget(targetId, apps, automations)
-  $: selectedAppNames = getSelectedNames(selectedApps, apps)
+  $: selectedAppNames = getSelectedNames(getSelectedIds(selectedApps), apps)
   $: selectedAutomationNames = getSelectedNames(
-    selectedAutomations,
+    getSelectedIds(selectedAutomations),
     automations
   )
   $: getUsedResources(
@@ -90,10 +100,9 @@
   }
 
   function getSelectedNames(
-    list: Record<string, boolean>,
+    selectedIds: string[],
     items: { _id?: string; name: string }[]
   ) {
-    const selectedIds = getSelectedIds(list)
     return items
       .filter(item => selectedIds.find(id => id === item._id))
       .map(item => item.name)
@@ -104,6 +113,20 @@
       automation =>
         automation.definition.trigger.event !== AutomationEventType.ROW_ACTION
     )
+  }
+
+  function filterUnpublished<T extends { _id?: string }>(
+    resources: T[],
+    state: Record<string, PublishStatusResource>
+  ): T[] {
+    const filtered: T[] = []
+    for (let resource of resources) {
+      const status = state[resource._id!]
+      if (!status || status.unpublishedChanges) {
+        filtered.push(resource)
+      }
+    }
+    return filtered
   }
 
   function findTarget(
@@ -134,19 +157,19 @@
   }
 
   async function publish() {
-    const getIds = (list: Record<string, boolean>) =>
-      Object.entries(list)
-        .filter(([_, selected]) => selected)
-        .map(([id]) => id)
+    const preAutomations = automations,
+      preApps = apps
+    const toPublishAutomations = getSelectedIds(selectedAutomations),
+      toPublishApps = getSelectedIds(selectedApps)
     await deploymentStore.publishApp({
-      automationIds: getIds(selectedAutomations),
-      workspaceAppIds: getIds(selectedApps),
+      automationIds: toPublishAutomations,
+      workspaceAppIds: toPublishApps,
     })
     const publishedAutomations = getSelectedNames(
-        selectedAutomations,
-        filteredAutomations
+        toPublishAutomations,
+        preAutomations
       ),
-      publishedApps = getSelectedNames(selectedApps, apps)
+      publishedApps = getSelectedNames(toPublishApps, preApps)
     dispatcher("success", { publishedAutomations, publishedApps })
   }
 
@@ -154,15 +177,19 @@
     for (const app of apps) {
       selectedApps[app._id!] = state
     }
-    for (const automation of filteredAutomations) {
+    for (const automation of automations) {
       selectedAutomations[automation._id!] = state
     }
   }
 
   function selectAll() {
-    appAccordion.open()
-    automationAccordion.open()
     setAll(true)
+    if (appAccordion) {
+      appAccordion.open()
+    }
+    if (automationAccordion) {
+      automationAccordion.open()
+    }
   }
 
   function clearAll() {
@@ -173,78 +200,82 @@
 <Modal bind:this={publishModal}>
   <ModalContent title="Publish" confirmText="Publish" onConfirm={publish}>
     <Layout noPadding gap="XS">
-      <span>Select the apps or automations you'd like to publish.</span>
-      <div>
-        {#if apps.length}
+      {#if !apps.length && !automations.length}
+        <span>Nothing to publish.</span>
+      {:else}
+        <span>Select the apps or automations you'd like to publish.</span>
+        <div>
+          {#if apps.length}
+            <Accordion
+              header="Apps"
+              headerSize="M"
+              noPadding
+              initialOpen={target?.type === "app"}
+              bold={false}
+              bind:this={appAccordion}
+            >
+              {#each apps as app}
+                {#if app._id}
+                  <Checkbox
+                    text={`${app.name}`}
+                    bind:value={selectedApps[app._id]}
+                  />
+                {/if}
+              {/each}
+            </Accordion>
+          {/if}
+          {#if automations.length}
+            <Accordion
+              header="Automations"
+              headerSize="M"
+              noPadding
+              initialOpen={target?.type === "automation"}
+              bold={false}
+              bind:this={automationAccordion}
+            >
+              {#each automations as automation}
+                {#if automation._id}
+                  <Checkbox
+                    text={`${automation.name}`}
+                    bind:value={selectedAutomations[automation._id]}
+                  />
+                {/if}
+              {/each}
+            </Accordion>
+          {/if}
+          {#if apps.length || automations.length}
+            <div class="select-clear-buttons">
+              <ActionButton quiet noPadding active on:click={selectAll}
+                >Select all</ActionButton
+              >
+              <ActionButton quiet noPadding on:click={clearAll}
+                >Clear all</ActionButton
+              >
+            </div>
+          {/if}
           <Accordion
-            header="Apps"
-            headerSize="M"
+            header="Show everything that will be published"
             noPadding
-            initialOpen={target?.type === "app"}
             bold={false}
-            bind:this={appAccordion}
           >
-            {#each apps as app}
-              {#if app._id}
-                <Checkbox
-                  text={`${app.name}`}
-                  bind:value={selectedApps[app._id]}
-                />
-              {/if}
-            {/each}
+            {#if usedResources.length}
+              <Body size="XS"
+                >Resources: {usedResources
+                  .map(resource => resource.name)
+                  .join(", ")}</Body
+              >
+            {/if}
+            {#if selectedAppNames.length}
+              <Body size="XS">Apps: {selectedAppNames.join(", ")}</Body>
+            {/if}
+            {#if selectedAutomationNames.length}
+              <Body size="XS"
+                >Automations: {selectedAutomationNames.join(", ")}</Body
+              >
+            {/if}
           </Accordion>
-        {/if}
-        {#if filteredAutomations.length}
-          <Accordion
-            header="Automations"
-            headerSize="M"
-            noPadding
-            initialOpen={target?.type === "automation"}
-            bold={false}
-            bind:this={automationAccordion}
-          >
-            {#each filteredAutomations as automation}
-              {#if automation._id}
-                <Checkbox
-                  text={`${automation.name}`}
-                  bind:value={selectedAutomations[automation._id]}
-                />
-              {/if}
-            {/each}
-          </Accordion>
-        {/if}
-        {#if apps.length || automations.length}
-          <div class="select-clear-buttons">
-            <ActionButton quiet noPadding active on:click={selectAll}
-              >Select all</ActionButton
-            >
-            <ActionButton quiet noPadding on:click={clearAll}
-              >Clear all</ActionButton
-            >
-          </div>
-        {/if}
-        <Accordion
-          header="Show everything that will be published"
-          noPadding
-          bold={false}
-        >
-          {#if usedResources.length}
-            <Body size="XS"
-              >Resources: {usedResources
-                .map(resource => resource.name)
-                .join(", ")}</Body
-            >
-          {/if}
-          {#if selectedAppNames.length}
-            <Body size="XS">Apps: {selectedAppNames.join(", ")}</Body>
-          {/if}
-          {#if selectedAutomationNames.length}
-            <Body size="XS"
-              >Automations: {selectedAutomationNames.join(", ")}</Body
-            >
-          {/if}
-        </Accordion>
-      </div>
+        </div>
+      {/if}
     </Layout>
   </ModalContent>
 </Modal>

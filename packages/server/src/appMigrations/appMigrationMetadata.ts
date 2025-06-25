@@ -9,6 +9,7 @@ import { Database, Document } from "@budibase/types"
 
 export interface AppMigrationDoc extends Document {
   version: string
+  initialVersion: string
   history: Record<string, { runAt: string }>
 }
 
@@ -59,9 +60,11 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
 export async function updateAppMigrationMetadata({
   appId,
   version,
+  skipHistory,
 }: {
   appId: string
   version: string
+  skipHistory?: boolean
 }): Promise<void> {
   const appDb = db.getDB(appId)
   let appMigrationDoc: AppMigrationDoc
@@ -76,6 +79,7 @@ export async function updateAppMigrationMetadata({
     appMigrationDoc = {
       _id: DesignDocuments.MIGRATIONS,
       version: "",
+      initialVersion: version,
       history: {},
     }
     await appDb.put(appMigrationDoc)
@@ -84,11 +88,10 @@ export async function updateAppMigrationMetadata({
 
   const updatedMigrationDoc: AppMigrationDoc = {
     ...appMigrationDoc,
-    version: version || "",
-    history: {
-      ...appMigrationDoc.history,
-      [version]: { runAt: new Date().toISOString() },
-    },
+    version,
+  }
+  if (!skipHistory) {
+    updatedMigrationDoc.history[version] = { runAt: new Date().toISOString() }
   }
   await appDb.put(updatedMigrationDoc)
 
