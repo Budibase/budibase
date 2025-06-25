@@ -246,7 +246,7 @@ export const publishApp = async function (
         ...prodAppDoc?.resourcesPublishedAt,
         ...Object.fromEntries(
           fullMap.map(id => [id, new Date().toISOString()])
-        )
+        ),
       }
     }
     // remove automation errors if they exist
