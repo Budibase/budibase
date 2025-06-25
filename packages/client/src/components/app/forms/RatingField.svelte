@@ -100,10 +100,17 @@
       >
         <div
           class="icon-container"
-          class:outline={!isRated(hoverRating, i) &&
+          class:hover-preview={isRated(hoverRating, i) &&
             !isRated(fieldState?.value, i)}
         >
-          <Icon name={type} {size} color={ratingColour} />
+          <Icon
+            name={type}
+            {size}
+            color={ratingColour}
+            weight={isRated(hoverRating, i) || isRated(fieldState?.value, i)
+              ? "fill"
+              : "regular"}
+          />
         </div>
       </button>
     {/each}
@@ -135,7 +142,7 @@
     align-items: center;
     justify-content: center;
   }
-  .icon-container.outline :global(svg) {
+  .icon-container.hover-preview :global(i) {
     opacity: 0.2;
     filter: contrast(0.5);
   }
