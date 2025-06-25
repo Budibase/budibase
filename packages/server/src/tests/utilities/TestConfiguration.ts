@@ -35,7 +35,6 @@ import {
   automation as automationController,
   webhook as webhookController,
   query as queryController,
-  screen as screenController,
   layout as layoutController,
   view as viewController,
 } from "./controllers"
@@ -936,7 +935,7 @@ export default class TestConfiguration {
 
   async createScreen(config?: Screen) {
     config = config || basicScreen()
-    return this._req(screenController.save, config)
+    return this.api.screen.save(config)
   }
 
   // LAYOUT
