@@ -1,11 +1,14 @@
 <script lang="ts">
   import { gradient } from "@/actions"
   import { API } from "@/api"
+  import { AppStatus } from "@/constants"
   import {
     admin,
     appsStore,
     auth,
     clientAppsStore,
+    enrichedApps,
+    featureFlags,
     groups,
     licensing,
     organisation,
@@ -30,7 +33,7 @@
   } from "@budibase/frontend-core"
   import { helpers, sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import type { PublishedAppData } from "@budibase/types"
+  import type { PublishedAppData, User, UserGroup } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import Spaceman from "assets/bb-space-man.svg"
@@ -40,8 +43,43 @@
   let userInfoModal: Modal
   let changePasswordModal: Modal
 
-  $: userApps = $clientAppsStore.apps
+  $: userGroups = $groups.filter(group =>
+    group.users?.find(user => user._id === $auth.user?._id)
+  )
+  $: publishedApps = $enrichedApps.filter(
+    app => app.status === AppStatus.DEPLOYED
+  )
+  $: userApps = $featureFlags.WORKSPACE_APPS
+    ? $clientAppsStore.apps
+    : getUserApps(publishedApps, userGroups, $auth.user)
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
+
+  function getUserApps(
+    publishedApps: EnrichedApp[],
+    userGroups: UserGroup[],
+    user: User | undefined
+  ) {
+    if (sdk.users.isAdmin(user)) {
+      return publishedApps
+    }
+    return publishedApps.filter(app => {
+      if (sdk.users.isBuilder(user, app.prodId)) {
+        return true
+      }
+      if (!Object.keys(user?.roles || {}).length && user?.userGroups) {
+        return userGroups.find(group => {
+          return groups
+            .getGroupAppIds(group)
+            .map(role => appsStore.extractAppId(role))
+            .includes(app.appId)
+        })
+      } else {
+        return Object.keys($auth.user?.roles || {})
+          .map(x => appsStore.extractAppId(x))
+          .includes(app.appId)
+      }
+    })
+  }
 
   function getUrl(app: EnrichedApp | PublishedAppData) {
     if (app.url) {
