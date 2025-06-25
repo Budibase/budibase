@@ -28,6 +28,7 @@ import {
   WithRequired,
 } from "@budibase/types"
 import { featureFlag } from "@/helpers"
+import { appsStore } from "@/stores/portal"
 
 interface ScreenState {
   screens: Screen[]
@@ -273,7 +274,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     }
 
-    appStore.refresh()
+    await appStore.refreshAppNav()
 
     return savedScreen
   }
@@ -397,8 +398,8 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     await Promise.all(promises)
 
-    appStore.refresh()
-    workspaceAppStore.refresh()
+    await appStore.refreshAppNav()
+    await workspaceAppStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()
     this.update(state => {

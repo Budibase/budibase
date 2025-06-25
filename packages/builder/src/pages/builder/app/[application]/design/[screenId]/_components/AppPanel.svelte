@@ -96,6 +96,7 @@
     overflow: hidden;
     top: 0;
     left: 0;
+    z-index: -99;
   }
   .header {
     display: flex;
