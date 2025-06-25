@@ -10,9 +10,10 @@ export async function getMatchedWorkspaceApp(fromUrl: string) {
 
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
 
-  function isWorkspaceAppMatch({ url }: WorkspaceApp) {
+  function isWorkspaceAppMatch({ url, isDefault }: WorkspaceApp) {
     return (
-      fromUrl.replace(/\/$/, "") === `${baseAppUrl}${url.replace(/\/$/, "")}`
+      fromUrl.replace(/\/$/, "") === `${baseAppUrl}${url.replace(/\/$/, "")}` ||
+      (!fromUrl && isDefault) //
     )
   }
 
