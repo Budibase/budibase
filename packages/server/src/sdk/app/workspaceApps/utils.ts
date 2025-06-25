@@ -13,7 +13,7 @@ export async function getMatchedWorkspaceApp(fromUrl: string) {
   function isWorkspaceAppMatch({ url, isDefault }: WorkspaceApp) {
     return (
       fromUrl.replace(/\/$/, "") === `${baseAppUrl}${url.replace(/\/$/, "")}` ||
-      (!fromUrl && isDefault) //
+      (!fromUrl && isDefault) // Support getMatchedWorkspaceApp without url referrer
     )
   }
 
