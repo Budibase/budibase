@@ -9,6 +9,7 @@ import { Database, Document } from "@budibase/types"
 
 export interface AppMigrationDoc extends Document {
   version: string
+  initialVersion: string
   history: Record<string, { runAt: string }>
 }
 
@@ -78,6 +79,7 @@ export async function updateAppMigrationMetadata({
     appMigrationDoc = {
       _id: DesignDocuments.MIGRATIONS,
       version: "",
+      initialVersion: version,
       history: {},
     }
     await appDb.put(appMigrationDoc)
