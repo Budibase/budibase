@@ -99,6 +99,7 @@ export default class TestConfiguration {
   request?: supertest.SuperTest<supertest.Test>
   started: boolean
   appId?: string
+  defaultWorkspaceAppId?: string
   name?: string
   allApps: App[]
   app?: App
@@ -158,6 +159,15 @@ export default class TestConfiguration {
       )
     }
     return this.appId
+  }
+
+  getDefaultWorkspaceAppId() {
+    if (!this.defaultWorkspaceAppId) {
+      throw new Error(
+        "appId has not been initialised, call config.init() first"
+      )
+    }
+    return this.defaultWorkspaceAppId
   }
 
   getProdAppId() {
@@ -612,6 +622,10 @@ export default class TestConfiguration {
         })) as App
     )
     this.appId = this.app.appId
+
+    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+      .workspaceApps
+    this.defaultWorkspaceAppId = defaultWorkspaceApp._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
