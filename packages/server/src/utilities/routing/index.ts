@@ -1,6 +1,6 @@
 import { createRoutingView } from "../../db/views/staticViews"
 import { ViewName, getQueryIndex, UNICODE_MAX } from "../../db/utils"
-import { context, HTTPError } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { ScreenRoutesViewOutput } from "@budibase/types"
 import sdk from "../../sdk"
 
@@ -9,7 +9,7 @@ export async function getRoutingInfo(
 ): Promise<ScreenRoutesViewOutput[]> {
   const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
   if (!workspaceApp) {
-    throw new HTTPError("No workspace app match found", 500)
+    return []
   }
   const db = context.getAppDB()
   try {
