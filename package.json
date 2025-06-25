@@ -42,7 +42,7 @@
     "build:apps": "DISABLE_V8_COMPILE_CACHE=1 yarn build --scope @budibase/server --scope @budibase/worker",
     "build:cli": "yarn build --scope @budibase/cli",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
-    "check:types": "yarn check:dependencies && lerna run --concurrency 2 check:types",
+    "check:types": "yarn build && yarn check:dependencies && lerna run --concurrency 2 check:types",
     "check:dependencies": "lerna run --concurrency 2 check:dependencies",
     "build:sdk": "lerna run --stream build:sdk",
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
