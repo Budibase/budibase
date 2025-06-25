@@ -50,7 +50,6 @@
   $: blocks = getBlocks($memoAutomation, $automationStore.selectedLog).filter(
     x => x.stepId !== ActionStepID.LOOP
   )
-
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const refresh = () => {
@@ -69,20 +68,60 @@
       // Process steps in the order they appear in the log
       // Annoyingly triggers are in the log steps, so we need to filter them out
       if (selectedLog.steps) {
+        // First, identify all step IDs that are children of branch steps
+        const branchChildStepIds = new Set()
+
+        selectedLog.steps.forEach(logStep => {
+          if (logStep.stepId === "BRANCH" && logStep.outputs?.branchId) {
+            const executedBranchId = logStep.outputs.branchId
+            const branchChildren =
+              logStep.inputs.children?.[executedBranchId] || []
+            branchChildren.forEach(child => {
+              branchChildStepIds.add(child.id)
+            })
+          }
+        })
         selectedLog.steps
           .filter(
             logStep => logStep.stepId !== automation.definition.trigger?.stepId
           )
+          .filter(logStep => !branchChildStepIds.has(logStep.id))
           .forEach(logStep => {
             const currentStep = automation.definition.steps?.find(
               step => step.id === logStep.id
             )
 
             if (currentStep) {
-              blocks.push(currentStep)
+              // Special handling for BRANCH steps in logs mode
+              if (
+                currentStep.stepId === "BRANCH" &&
+                logStep.outputs?.branchId
+              ) {
+                const executedBranchId = logStep.outputs.branchId
+                const modifiedStep = {
+                  ...currentStep,
+                  inputs: {
+                    ...currentStep.inputs,
+                    children: {
+                      [executedBranchId]:
+                        currentStep.inputs.children?.[executedBranchId] || [],
+                    },
+                  },
+                }
+                blocks.push(modifiedStep)
+              } else {
+                blocks.push(currentStep)
+              }
             } else {
+              // Step doesn't exist in current definition, reconstruct from log
+              const stepDefinition =
+                $automationStore.blockDefinitions?.ACTION?.[logStep.stepId] ||
+                $automationStore.blockDefinitions?.TRIGGER?.[logStep.stepId]
+
               blocks.push({
                 ...logStep,
+                name: stepDefinition?.name,
+                icon: stepDefinition?.icon,
               })
             }
           })
@@ -149,7 +188,6 @@
         step.name = trigger ? trigger.name : action.name
       }
     }
-
     return enrichedLog
   }
 
@@ -304,8 +342,7 @@
               blocks={blockRefs}
               logData={$automationStore.selectedLog}
               {viewMode}
-              selectedLogStepId={$automationStore.selectedLogStepData?.stepId ||
-                $automationStore.selectedLogStepData?.id}
+              selectedLogStepId={$automationStore.selectedLogStepData?.id}
               onStepSelect={handleStepSelect}
             />
           {/each}

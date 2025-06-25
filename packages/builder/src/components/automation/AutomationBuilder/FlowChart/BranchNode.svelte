@@ -25,6 +25,7 @@
   import { createEventDispatcher, getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
+  import { ViewMode } from "@/types"
 
   const dispatch = createEventDispatcher()
 
@@ -34,6 +35,10 @@
   export let isLast
   export let bindings
   export let automation
+  export let executed = false
+  export let viewMode = null
+  export let logStepData = null
+  export let onStepSelect = () => {}
 
   const view = getContext("draggableView")
   const memoContext = memo({})
@@ -173,8 +178,23 @@
   <div
     class={`block branch-node hoverable`}
     class:selected={false}
+    class:executed
+    tabindex={viewMode === ViewMode.LOGS ? "0" : "-1"}
+    role={viewMode === ViewMode.LOGS ? "button" : null}
     on:mousedown={e => {
       e.stopPropagation()
+    }}
+    on:click={e => {
+      e.stopPropagation()
+      if (viewMode === ViewMode.LOGS && logStepData) {
+        onStepSelect(logStepData)
+      }
+    }}
+    on:keydown={e => {
+      if ((e.key === "Enter" || e.key === " ") && viewMode === ViewMode.LOGS && logStepData) {
+        e.preventDefault()
+        onStepSelect(logStepData)
+      }
     }}
   >
     <div class="block-float">
@@ -212,6 +232,7 @@
             tooltip="Branch sequencing checks each option in order and follows the first one that matches the rules."
           />
           <Icon
+            disabled={viewMode === ViewMode.LOGS}
             on:click={e => {
               openContextMenu(e)
             }}
@@ -228,7 +249,11 @@
     <div class="blockSection filter-button">
       <PropField label="Only run when:" fullWidth>
         <div style="width: 100%">
-          <Button secondary on:click={drawer.show}>
+          <Button
+            disabled={viewMode === ViewMode.LOGS}
+            secondary
+            on:click={drawer.show}
+          >
             {editableConditionUI?.groups?.length
               ? "Update condition"
               : "Add condition"}
@@ -341,5 +366,10 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-m);
+  }
+
+  .block.executed {
+    border-color: var(--spectrum-global-color-green-600);
+    border-width: 2px;
   }
 </style>
