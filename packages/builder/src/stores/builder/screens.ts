@@ -28,7 +28,6 @@ import {
   WithRequired,
 } from "@budibase/types"
 import { featureFlag } from "@/helpers"
-import { appsStore } from "@/stores/portal"
 
 interface ScreenState {
   screens: Screen[]
