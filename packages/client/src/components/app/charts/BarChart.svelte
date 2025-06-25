@@ -50,6 +50,9 @@
     },
     dataLabels: {
       enabled: dataLabels,
+      dropShadow: {
+        enabled: true,
+      },
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
