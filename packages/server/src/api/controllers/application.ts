@@ -184,35 +184,26 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  let workspaceAppId: string | undefined
+  const appMetadata = await sdk.applications.metadata.get()
+  const workspaceApp = await sdk.workspaceApps.create({
+    name: appMetadata.name,
+    url: "/",
+    icon: "Monitoring",
+    navigation: {
+      ...defaultAppNavigator(appMetadata.name),
+      links: [
+        {
+          text: "Inventory",
+          url: "/inventory",
+          type: "link",
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        },
+      ],
+    },
+    isDefault: true,
+  })
 
-  const workspaceAppEnabled = await features.isEnabled(
-    FeatureFlag.WORKSPACE_APPS
-  )
-  if (workspaceAppEnabled) {
-    const appMetadata = await sdk.applications.metadata.get()
-    const workspaceApp = await sdk.workspaceApps.create({
-      name: appMetadata.name,
-      url: "/",
-      icon: "Monitoring",
-      navigation: {
-        ...defaultAppNavigator(appMetadata.name),
-        links: [
-          {
-            text: "Inventory",
-            url: "/inventory",
-            type: "link",
-            roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-          },
-        ],
-      },
-      isDefault: true,
-    })
-
-    workspaceAppId = workspaceApp._id
-  }
-
-  const screen = createSampleDataTableScreen(workspaceAppId)
+  const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
 
   {
@@ -515,6 +506,7 @@ async function performAppCreate(
         await appMigrations.updateAppMigrationMetadata({
           appId,
           version: latestMigrationId,
+          skipHistory: true,
         })
       }
     }
