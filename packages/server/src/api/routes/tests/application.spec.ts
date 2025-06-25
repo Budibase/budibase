@@ -607,7 +607,7 @@ describe("/applications", () => {
               for (const route of routes) {
                 const screen = await config.api.screen.save({
                   ...basicScreen(route),
-                  workspaceAppId: workspaceApp._id,
+                  workspaceAppId: workspaceApp._id!,
                 })
                 screens.push(screen)
               }
@@ -838,20 +838,29 @@ describe("/applications", () => {
 
     it("should publish app with filtered resources, filtering by workspace app", async () => {
       // create two screens with different workspaceAppIds
+      const { workspaceApp: workspaceApp1 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest()
+        )
+      const { workspaceApp: workspaceApp2 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest()
+        )
+
       const publishedScreen = await config.api.screen.save({
         ...basicScreen("/published-screen"),
-        workspaceAppId: "workspace-app-1",
+        workspaceAppId: workspaceApp1._id,
         name: "published-screen",
       })
 
       const unpublishedScreen = await config.api.screen.save({
         ...basicScreen("/unpublished-screen"),
-        workspaceAppId: "workspace-app-2",
+        workspaceAppId: workspaceApp2._id,
         name: "unpublished-screen",
       })
 
       await config.api.application.filteredPublish(app.appId, {
-        workspaceAppIds: ["workspace-app-1"],
+        workspaceAppIds: [workspaceApp1._id],
       })
 
       await config.withProdApp(async () => {
