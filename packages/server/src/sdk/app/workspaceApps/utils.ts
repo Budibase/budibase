@@ -10,12 +10,13 @@ export async function getMatchedWorkspaceApp(fromUrl: string) {
 
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
 
-  function isWorkspaceAppMatch({ url }: WorkspaceApp) {
+  function isWorkspaceAppMatch({ url, isDefault }: WorkspaceApp) {
     return (
-      fromUrl.replace(/\/$/, "") === `${baseAppUrl}${url.replace(/\/$/, "")}`
+      fromUrl.replace(/\/$/, "") === `${baseAppUrl}${url.replace(/\/$/, "")}` ||
+      (!fromUrl && isDefault) // Support getMatchedWorkspaceApp without url referrer
     )
   }
 
-  const matchedWorkspaceApp = allWorkspaceApps.find(isWorkspaceAppMatch)
+  const matchedWorkspaceApp = allWorkspaceApps.filter(isWorkspaceAppMatch)
   return matchedWorkspaceApp
 }

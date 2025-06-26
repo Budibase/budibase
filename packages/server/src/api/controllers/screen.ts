@@ -44,16 +44,11 @@ export async function save(
   const db = context.getAppDB()
   const { navigationLinkLabel, ...screen } = ctx.request.body
 
-  const isCreation = !screen._id
-
-  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    if (
-      !screen.workspaceAppId ||
-      !(await sdk.workspaceApps.get(screen.workspaceAppId))
-    ) {
-      ctx.throw("workspaceAppId is not valid")
-    }
+  if (!(await sdk.workspaceApps.get(screen.workspaceAppId))) {
+    ctx.throw("Workspace app id not valid", 400)
   }
+
+  const isCreation = !screen._id
 
   const savedScreen = isCreation
     ? await sdk.screens.create(screen)
