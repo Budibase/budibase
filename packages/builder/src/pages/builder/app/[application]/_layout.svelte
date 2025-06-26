@@ -13,7 +13,7 @@
     Icon,
     Tabs,
     Tab,
-    Heading,
+    Body,
     notifications,
     TooltipPosition,
   } from "@budibase/bbui"
@@ -121,7 +121,13 @@
       <div class="topcenternav">
         <div class="app-name">
           <UpdateAppTopNav {application}>
-            <Heading noPadding size="XS">{$appStore.name}</Heading>
+            <Body
+              size="S"
+              weight="600"
+              color="var(--spectrum-global-color-gray-900)"
+            >
+              {$appStore.name}</Body
+            >
           </UpdateAppTopNav>
         </div>
       </div>

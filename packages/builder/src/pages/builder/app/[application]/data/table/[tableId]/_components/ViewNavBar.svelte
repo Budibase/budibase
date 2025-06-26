@@ -364,15 +364,21 @@
       background 130ms ease-out,
       color 130ms ease-out;
     color: var(--spectrum-global-color-gray-600);
+    font-weight: 500;
+    border: 0.5px solid transparent;
+    border-radius: 8px;
   }
   .nav-item.hidden {
     visibility: hidden;
   }
   .nav-item.active,
   .nav-item:hover {
-    background: var(--spectrum-global-color-gray-300);
-    cursor: pointer;
+    background: var(--spectrum-global-color-gray-200);
+    cursor: default;
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
     color: var(--spectrum-global-color-gray-900);
+    font-weight: 500;
   }
   .nav-item:not(.active) :global(.icon) {
     display: none;

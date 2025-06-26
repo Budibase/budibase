@@ -31,7 +31,6 @@
   let selectedApps: Record<string, boolean> = {}
   let selectedAutomations: Record<string, boolean> = {}
   let usedResources: UsedResource[] = []
-  let appAccordion: any, automationAccordion: any
 
   const dispatcher = createEventDispatcher()
 
@@ -43,7 +42,7 @@
     $workspaceAppStore.workspaceApps || [],
     $workspaceDeploymentStore.workspaceApps
   )
-  $: target = findTarget(targetId, apps, automations)
+  $: findTarget(targetId, apps, automations)
   $: selectedAppNames = getSelectedNames(getSelectedIds(selectedApps), apps)
   $: selectedAutomationNames = getSelectedNames(
     getSelectedIds(selectedAutomations),
@@ -184,12 +183,6 @@
 
   function selectAll() {
     setAll(true)
-    if (appAccordion) {
-      appAccordion.open()
-    }
-    if (automationAccordion) {
-      automationAccordion.open()
-    }
   }
 
   function clearAll() {
@@ -198,92 +191,108 @@
 </script>
 
 <Modal bind:this={publishModal}>
-  <ModalContent title="Publish" confirmText="Publish" onConfirm={publish}>
+  <ModalContent
+    size="M"
+    title="Publish"
+    confirmText="Publish"
+    onConfirm={publish}
+  >
     <Layout noPadding gap="XS">
       {#if !apps.length && !automations.length}
         <span>Nothing to publish.</span>
       {:else}
-        <span>Select the apps or automations you'd like to publish.</span>
-        <div>
-          {#if apps.length}
-            <Accordion
-              header="Apps"
-              headerSize="M"
-              noPadding
-              initialOpen={target?.type === "app"}
-              bold={false}
-              bind:this={appAccordion}
+        <Body size="M" color="var(--spectrum-global-color-gray-900)"
+          >Select the items you'd like to publish. Only apps and automations
+          with unpublished changes are listed below.</Body
+        >
+        {#if apps.length}
+          <div class="list-container">
+            <Body
+              size="M"
+              color="var(--spectrum-global-color-gray-900)"
+              weight="500"
+              >Apps:
+            </Body>
+            {#each apps as app}
+              {#if app._id}
+                <Checkbox
+                  size="L"
+                  text={`${app.name}`}
+                  bind:value={selectedApps[app._id]}
+                />
+              {/if}
+            {/each}
+          </div>
+        {/if}
+        {#if automations.length}
+          <div class="list-container">
+            <Body
+              size="M"
+              color="var(--spectrum-global-color-gray-900)"
+              weight="500">Automations:</Body
             >
-              {#each apps as app}
-                {#if app._id}
-                  <Checkbox
-                    text={`${app.name}`}
-                    bind:value={selectedApps[app._id]}
-                  />
-                {/if}
-              {/each}
-            </Accordion>
-          {/if}
-          {#if automations.length}
-            <Accordion
-              header="Automations"
-              headerSize="M"
-              noPadding
-              initialOpen={target?.type === "automation"}
-              bold={false}
-              bind:this={automationAccordion}
+            {#each automations as automation}
+              {#if automation._id}
+                <Checkbox
+                  size="L"
+                  text={`${automation.name}`}
+                  bind:value={selectedAutomations[automation._id]}
+                />
+              {/if}
+            {/each}
+          </div>
+        {/if}
+        {#if apps.length || automations.length}
+          <div class="select-clear-buttons">
+            <ActionButton noPadding quiet on:click={selectAll}
+              >Select all</ActionButton
             >
-              {#each automations as automation}
-                {#if automation._id}
-                  <Checkbox
-                    text={`${automation.name}`}
-                    bind:value={selectedAutomations[automation._id]}
-                  />
-                {/if}
-              {/each}
-            </Accordion>
-          {/if}
-          {#if apps.length || automations.length}
-            <div class="select-clear-buttons">
-              <ActionButton quiet noPadding active on:click={selectAll}
-                >Select all</ActionButton
-              >
-              <ActionButton quiet noPadding on:click={clearAll}
-                >Clear all</ActionButton
-              >
-            </div>
-          {/if}
-          <Accordion
-            header="Show everything that will be published"
-            noPadding
-            bold={false}
-          >
-            {#if usedResources.length}
-              <Body size="XS"
-                >Resources: {usedResources
-                  .map(resource => resource.name)
-                  .join(", ")}</Body
-              >
-            {/if}
-            {#if selectedAppNames.length}
-              <Body size="XS">Apps: {selectedAppNames.join(", ")}</Body>
-            {/if}
-            {#if selectedAutomationNames.length}
-              <Body size="XS"
-                >Automations: {selectedAutomationNames.join(", ")}</Body
-              >
-            {/if}
-          </Accordion>
-        </div>
+            <ActionButton noPadding quiet on:click={clearAll}
+              >Clear all</ActionButton
+            >
+          </div>
+        {/if}
       {/if}
     </Layout>
   </ModalContent>
+  <div class="accordion-footer">
+    <Accordion
+      header="Show everything that will be published"
+      noPadding
+      bold={false}
+      headerSize="S"
+    >
+      {#if usedResources.length}
+        <Body size="S"
+          >Resources: {usedResources
+            .map(resource => resource.name)
+            .join(", ")}</Body
+        >
+      {/if}
+      {#if selectedAppNames.length}
+        <Body size="S">Apps: {selectedAppNames.join(", ")}</Body>
+      {/if}
+      {#if selectedAutomationNames.length}
+        <Body size="S">Automations: {selectedAutomationNames.join(", ")}</Body>
+      {/if}
+    </Accordion>
+  </div>
 </Modal>
 
 <style>
   .select-clear-buttons {
     display: flex;
-    padding-top: var(--spacing-m);
-    gap: var(--spacing-l);
+    gap: var(--spacing-m);
+    margin-bottom: 12px;
+  }
+  .list-container {
+    display: flex;
+    flex-direction: column;
+    margin: 8px 0 0 0;
+  }
+  .accordion-footer {
+    padding: 16px 42px 20px 42px;
+    background-color: var(--spectrum-global-color-gray-200) !important;
+    width: 460px;
   }
 </style>

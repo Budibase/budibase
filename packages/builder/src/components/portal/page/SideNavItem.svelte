@@ -29,6 +29,7 @@
     color: var(--spectrum-global-color-gray-900);
     border-radius: 4px;
     transition: background 130ms ease-out;
+    font-weight: 500;
   }
   .active,
   .text:hover {

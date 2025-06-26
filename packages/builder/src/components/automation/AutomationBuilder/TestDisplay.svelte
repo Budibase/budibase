@@ -192,7 +192,7 @@
   .block {
     display: inline-block;
     height: fit-content;
-    font-size: 16px;
+    font-size: var(--spectrum-global-dimension-font-size-100) !important;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px 4px 4px 4px;

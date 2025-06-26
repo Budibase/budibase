@@ -152,7 +152,7 @@
       >
         <div class="subHeading" class:inline>
           <Body size="M">
-            Start from scratch or create screens from your data
+            Start from scratch or create screens from your data.
           </Body>
         </div>
         <div class="cards">
@@ -165,7 +165,11 @@
               <img alt="A blank screen" src={blank} />
             </div>
             <div class="text">
-              <Body size="M">Blank</Body>
+              <Body
+                size="M"
+                weight="500"
+                color="var(--spectrum-global-color-gray-900)">Blank</Body
+              >
               <Body size="S">Add an empty blank screen</Body>
             </div>
           </div>
@@ -179,7 +183,11 @@
               <img alt="A table of data" src={table} />
             </div>
             <div class="text">
-              <Body size="M">Table</Body>
+              <Body
+                size="M"
+                weight="500"
+                color="var(--spectrum-global-color-gray-900)">Table</Body
+              >
               <Body size="S">List rows in a table</Body>
             </div>
           </div>
@@ -193,7 +201,11 @@
               <img alt="A form containing data" src={form} />
             </div>
             <div class="text">
-              <Body size="M">Form</Body>
+              <Body
+                size="M"
+                weight="500"
+                color="var(--spectrum-global-color-gray-900)">Form</Body
+              >
               <Body size="S">Capture data from your users</Body>
             </div>
           </div>
@@ -210,7 +222,11 @@
               <img alt="A PDF document" src={pdf} width="185" />
             </div>
             <div class="text">
-              <Body size="M">
+              <Body
+                size="M"
+                weight="500"
+                color="var(--spectrum-global-color-gray-900)"
+              >
                 PDF
                 {#if !$licensing.pdfEnabled}
                   <Tags>
@@ -254,7 +270,7 @@
   }
 
   .image {
-    border-radius: 4px 4px 0 0;
+    border-radius: 8px 8px 0 0;
     width: 100%;
     max-height: 127px;
     overflow: hidden;
@@ -277,8 +293,8 @@
   }
 
   .text {
-    border: 1px solid var(--grey-4);
-    border-radius: 0 0 4px 4px;
+    border: 1px solid var(--grey-2);
+    border-radius: 0 0 8px 8px;
     padding: 12px 16px 12px 16px;
     display: flex;
     flex-direction: column;

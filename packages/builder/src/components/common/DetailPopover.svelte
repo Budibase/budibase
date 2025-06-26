@@ -69,7 +69,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
     padding: var(--spacing-l) var(--spacing-xl);
     gap: var(--spacing-s);
   }
@@ -80,6 +80,7 @@
     align-items: center;
     font-size: 16px;
     font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
   }
   .detail-popover__body {
     padding: var(--spacing-xl) var(--spacing-xl);

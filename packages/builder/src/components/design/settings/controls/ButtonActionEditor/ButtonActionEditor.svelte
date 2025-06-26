@@ -32,10 +32,19 @@
   $: actionText = `${actionCount || "No"} action${
     actionCount !== 1 ? "s" : ""
   } set`
+  $: active = getActive(value)
+
+  const getActive = rules => {
+    if (!rules?.length) {
+      return ""
+    } else {
+      return `active`
+    }
+  }
 </script>
 
 <div class="action-editor">
-  <ActionButton on:click={openDrawer}>{actionText}</ActionButton>
+  <ActionButton {active} on:click={openDrawer}>{actionText}</ActionButton>
 </div>
 
 <Drawer bind:this={drawer} {title} on:drawerHide on:drawerShow>

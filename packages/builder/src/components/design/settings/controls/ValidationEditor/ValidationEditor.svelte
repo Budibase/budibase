@@ -10,11 +10,21 @@
   const dispatch = createEventDispatcher()
   let drawer
 
+  $: active = getActive(value)
+
   $: text = getText(value)
 
   const save = () => {
     dispatch("change", value)
     drawer.hide()
+  }
+
+  const getActive = rules => {
+    if (!rules?.length) {
+      return ""
+    } else {
+      return `active`
+    }
   }
 
   const getText = rules => {
@@ -27,7 +37,7 @@
 </script>
 
 <div class="validation-editor">
-  <ActionButton on:click={drawer.show}>{text}</ActionButton>
+  <ActionButton {active} on:click={drawer.show}>{text}</ActionButton>
 </div>
 
 <Drawer bind:this={drawer} title="Validation Rules" on:drawerHide on:drawerShow>

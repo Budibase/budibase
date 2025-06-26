@@ -44,5 +44,6 @@
     border: 0.5px solid rgba(75, 117, 255, 0.2);
     border-radius: 6px;
     padding: 1px 3px;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

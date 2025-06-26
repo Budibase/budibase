@@ -142,7 +142,7 @@
   .screens {
     display: flex;
     flex-direction: column;
-    min-height: 320px;
+    min-height: 240px;
     max-height: calc(100% - 320px);
     position: relative;
     transition:

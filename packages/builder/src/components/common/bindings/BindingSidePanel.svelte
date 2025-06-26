@@ -559,8 +559,7 @@
   }
   li:hover {
     color: var(--spectrum-global-color-gray-900);
-    background-color: var(--spectrum-global-color-gray-50);
-    cursor: pointer;
+    background-color: var(--spectrum-global-color-gray-100);
   }
 
   .binding__label {

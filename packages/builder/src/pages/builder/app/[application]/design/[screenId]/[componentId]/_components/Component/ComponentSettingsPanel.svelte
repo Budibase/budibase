@@ -141,14 +141,15 @@
 <style>
   .settings-tabs {
     display: flex;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
     padding: 0 var(--spacing-l);
     padding-bottom: var(--spacing-l);
   }
   .input {
-    color: inherit;
+    color: var(--spectrum-global-color-gray-900);
     font-family: inherit;
     font-size: inherit;
+    font-weight: 500;
     background-color: transparent;
     border: none;
     flex: 1;

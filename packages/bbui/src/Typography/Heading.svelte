@@ -25,10 +25,9 @@
 
 <style>
   h1 {
-    font-family: var(--font-accent);
-  }
-
-  h1 {
     text-wrap: balance;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    line-height: 24px;
   }
 </style>

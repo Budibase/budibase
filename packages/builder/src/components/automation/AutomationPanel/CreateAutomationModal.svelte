@@ -75,7 +75,11 @@
           on:click={() => selectTrigger(trigger)}
         >
           <div class="icon-container">
-            <Icon name={trigger.icon} size="M" color="rgb(142, 185, 252)" />
+            <Icon
+              name={trigger.icon}
+              size="M"
+              color="var(--spectrum-global-color-static-gray-50)"
+            />
           </div>
           <Body size="S">{trigger.name}</Body>
         </div>
@@ -105,8 +109,8 @@
   }
 
   .icon-container {
-    background-color: rgba(75, 117, 255, 0.2);
-    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    background-color: #215f9e;
+    border: 0.5px solid #467db4;
     padding: 4px;
     border-radius: 8px;
   }

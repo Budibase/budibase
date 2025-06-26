@@ -21,6 +21,10 @@ const copyFonts = dest =>
         dest,
       },
       {
+        src: "./assets/inter",
+        dest,
+      },
+      {
         src: "../../node_modules/remixicon/fonts/*",
         dest,
       },

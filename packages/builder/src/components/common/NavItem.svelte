@@ -117,7 +117,7 @@
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
         <Icon
-          size="S"
+          size="M"
           name={icon}
           color={iconColor}
           tooltip={iconTooltip}
@@ -156,16 +156,17 @@
 
 <style>
   .nav-item {
-    cursor: pointer;
     color: var(--grey-7);
     transition: background-color
       var(--spectrum-global-animation-duration-100, 50ms) ease-in-out;
-    padding: 0 var(--spacing-l) 0;
+    padding: 0 var(--spacing-xl) 0;
+    margin: 0 8px;
     height: 32px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+    border: 0.5px solid transparent;
   }
   .nav-item.multiline {
     height: 52px;
@@ -177,15 +178,32 @@
     flex-direction: column;
   }
   .nav-item.highlighted {
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--spectrum-global-color-gray-300);
     --avatars-background: var(--spectrum-global-color-gray-200);
   }
+
+  .nav-item.highlighted:hover {
+    background-color: var(--spectrum-global-color-gray-400) !important;
+    color: var(--spectrum-global-color-gray-900);
+    border-radius: 0px !important;
+  }
   .nav-item.selected {
-    background-color: var(--spectrum-global-color-gray-300) !important;
+    background-color: var(--spectrum-global-color-gray-200) !important;
     --avatars-background: var(--spectrum-global-color-gray-300);
-    color: var(--ink);
+    color: var(--spectrum-global-color-gray-900);
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
+  }
+  :is(.nav-item.selected):has(+ :is(ul)) {
+    border-radius: 8px 8px 0 0 !important;
+  }
+  .nav-item.selected:hover {
+    border-radius: 8px !important;
   }
   .nav-item.selected .icon {
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
+  .nav-item.selected .nav-item-body {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .nav-item.disabled span {
@@ -195,6 +213,7 @@
   .hovering {
     background-color: var(--spectrum-global-color-gray-200);
     --avatars-background: var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
   }
   .nav-item:hover .actions,
   .hovering .actions,
@@ -210,7 +229,7 @@
     align-items: center;
     gap: var(--spacing-xs);
     position: relative;
-    padding-left: var(--spacing-l);
+    padding-left: var(--spacing-m);
     box-sizing: border-box;
   }
 
@@ -231,7 +250,6 @@
     align-items: center;
     color: var(--spectrum-global-color-gray-600);
     order: 1;
-    margin-right: 2px;
   }
   .icon.right {
     order: 4;
@@ -253,8 +271,8 @@
 
   .compact {
     position: absolute;
-    left: 6px;
-    padding: 8px;
+    left: 1px;
+    padding: 6px;
     margin-left: -8px;
   }
   .icon.arrow :global(svg) {
@@ -279,16 +297,17 @@
   }
 
   .nav-item-body {
-    font-weight: 600;
-    font-size: 12px;
+    font-weight: 500;
+    font-size: var(--spectrum-global-dimension-font-size-100);
     flex: 1 1 auto;
+    letter-spacing: -0.02em;
     color: var(--spectrum-global-color-gray-900);
     order: 2;
     width: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
     overflow: hidden;
+    pointer-events: none;
   }
   .nav-item-body span {
     white-space: nowrap;

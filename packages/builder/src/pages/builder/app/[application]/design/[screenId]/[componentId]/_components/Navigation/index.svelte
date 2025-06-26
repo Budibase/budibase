@@ -208,7 +208,7 @@
         />
         {#if !$nav.hideLogo}
           <PropertyControl
-            label="Logo image URL"
+            label="Image URL"
             control={DrawerBindableInput}
             value={$nav.logoUrl}
             onChange={url => update("logoUrl", url)}
@@ -218,7 +218,7 @@
             }}
           />
           <PropertyControl
-            label="Logo link URL"
+            label="Link URL"
             control={DrawerBindableCombobox}
             value={$nav.logoLinkUrl}
             onChange={url => update("logoLinkUrl", url)}
@@ -229,7 +229,7 @@
             }}
           />
           <PropertyControl
-            label="Logo height (px)"
+            label="Height (px)"
             control={Stepper}
             value={$nav.logoHeight}
             onChange={height => update("logoHeight", height)}

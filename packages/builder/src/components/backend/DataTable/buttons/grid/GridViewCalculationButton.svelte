@@ -201,7 +201,13 @@
 
 <DetailPopover bind:this={popover} title="Configure calculations" width={480}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="browser" quiet on:click={openPopover} selected={open}>
+    <ActionButton
+      icon="browser"
+      quiet
+      on:click={openPopover}
+      selected={open}
+      accentColor="#4b75ff"
+    >
       Configure calculations{count ? `: ${count}` : ""}
     </ActionButton>
   </svelte:fragment>

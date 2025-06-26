@@ -170,6 +170,10 @@
     border-bottom: 2px solid var(--spectrum-global-color-gray-200);
   }
 
+  .spectrum-Dialog-heading {
+    font-size: 24px;
+  }
+
   .no-grid .spectrum-Dialog-heading {
     margin-top: 12px;
     margin-left: 12px;

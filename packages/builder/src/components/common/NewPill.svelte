@@ -1,16 +1,16 @@
 <script lang="ts">
 </script>
 
-<div class="new">NEW</div>
+<div class="new">New</div>
 
 <style>
   .new {
-    font-size: 10px;
-    background: rgba(172, 175, 255, 0.2);
-    border: 0.5px solid rgba(172, 175, 255, 0.2);
+    font-size: 11px;
+    background: #433872;
+    border: 0.5px solid #5645a1;
     border-radius: 4px;
     padding: 1px 3px;
-    color: rgb(149, 153, 255);
+    color: var(--spectrum-global-color-static-gray-50);
     font-weight: 500;
   }
 </style>
