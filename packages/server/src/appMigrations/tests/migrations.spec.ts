@@ -55,7 +55,7 @@ describe("migrations", () => {
 
     migrations.MIGRATIONS.push({
       id: "20231211105812_new-test",
-      func: migrationLogic(6000),
+      func: migrationLogic(5000),
     })
 
     await config.api.application.get(appId, {
@@ -95,12 +95,9 @@ describe("migrations", () => {
       // Reset migrations array to known state
       migrations.MIGRATIONS.length = 0
       migrations.MIGRATIONS.push(
-        { id: "20231211101320_test", func: migrationLogic() },
-        { id: "20231211101330_test2", func: migrationLogic() },
-        {
-          id: "20231211101340_test3",
-          func: migrationLogic(6000),
-        }
+        { id: "20231211101320_test", func: migrationLogic(1000) },
+        { id: "20231211101330_test2", func: migrationLogic(1000) },
+        { id: "20231211101340_test3", func: migrationLogic(1000) }
       )
     })
 

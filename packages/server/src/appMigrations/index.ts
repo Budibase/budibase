@@ -4,6 +4,7 @@ import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
 import { UserCtx } from "@budibase/types"
 import { Header } from "@budibase/backend-core"
+import environment from "../environment"
 
 export * from "./appMigrationMetadata"
 
@@ -57,7 +58,7 @@ export async function checkMissingMigrations(
     )
 
     const { applied: migrationApplied } = await waitForMigration(appId, {
-      timeoutMs: 5000,
+      timeoutMs: environment.SYNC_MIGRATION_CHECKS_MS,
     })
     if (!migrationApplied) {
       ctx.response.set(Header.MIGRATING_APP, appId)
