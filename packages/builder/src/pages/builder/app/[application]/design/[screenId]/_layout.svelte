@@ -2,7 +2,11 @@
   import AppPanel from "./_components/AppPanel.svelte"
   import * as routify from "@roxi/routify"
   import { syncURLToState } from "@/helpers/urlStateSync"
-  import { screenStore, selectedScreen } from "@/stores/builder"
+  import {
+    screenStore,
+    selectedScreen,
+    workspaceAppStore,
+  } from "@/stores/builder"
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
@@ -34,7 +38,13 @@
 {#if $selectedScreen}
   <div class="design">
     {#if $featureFlags.WORKSPACE_APPS}
-      <TopBar breadcrumbs={[{ text: "Design" }]} icon="layout"></TopBar>
+      <TopBar
+        breadcrumbs={[
+          { text: "Design", url: "../" },
+          { text: $workspaceAppStore.selectedWorkspaceApp?.name },
+        ]}
+        icon="layout"
+      ></TopBar>
     {/if}
     <div class="content">
       <LeftPanel />

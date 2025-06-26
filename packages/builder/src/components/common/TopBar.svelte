@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   interface Breadcrumb {
-    text: string
+    text?: string
     url?: string
   }
 </script>
@@ -52,9 +52,11 @@
   {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
-      <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
-      {#if idx < breadcrumbs.length - 1}
-        <div class="divider">/</div>
+      {#if breadcrumb.text}
+        <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+        {#if idx < breadcrumbs.length - 1}
+          <div class="divider">/</div>
+        {/if}
       {/if}
     {/each}
   </div>
