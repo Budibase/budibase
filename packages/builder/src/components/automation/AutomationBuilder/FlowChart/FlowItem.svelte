@@ -211,7 +211,7 @@
     </div>
   </div>
 
-  {#if !lastStep}
+  {#if !lastStep || viewMode !== ViewMode.LOGS}
     <div class="separator" />
   {/if}
 

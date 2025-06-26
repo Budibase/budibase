@@ -56,76 +56,51 @@
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
   }
+
+  const processLogSteps = (automation, selectedLog) => {
+    let blocks = []
+    if (automation.definition.trigger) {
+      blocks.push(automation.definition.trigger)
+    }
+
+    // We want to filter out steps from the top level array that exist
+    // in the children of the branch. We want the branch children to be the
+    // source of truth.
+    const branchChildStepIds = new Set()
+    selectedLog.steps.forEach(logStep => {
+      if (logStep.stepId === "BRANCH" && logStep.outputs?.branchId) {
+        const executedBranchId = logStep.outputs.branchId
+        const branchChildren = logStep.inputs.children?.[executedBranchId] || []
+        branchChildren.forEach(child => {
+          branchChildStepIds.add(child.id)
+        })
+      }
+    })
+    selectedLog.steps
+      .filter(
+        logStep => logStep.stepId !== automation.definition.trigger?.stepId
+      )
+      .filter(logStep => !branchChildStepIds.has(logStep.id))
+      .forEach(logStep => {
+        // Step doesn't exist in current definition, reconstruct from log
+        const stepDefinition =
+          $automationStore.blockDefinitions?.ACTION?.[logStep.stepId] ||
+          $automationStore.blockDefinitions?.TRIGGER?.[logStep.stepId]
+
+        blocks.push({
+          ...logStep,
+          name: stepDefinition?.name,
+          icon: stepDefinition?.icon,
+        })
+      })
+    return blocks
+  }
   const getBlocks = (automation, selectedLog) => {
     let blocks = []
 
     // In logs mode, we need to show steps from the log data
     if (viewMode === ViewMode.LOGS && selectedLog) {
-      if (automation.definition.trigger) {
-        blocks.push(automation.definition.trigger)
-      }
-
-      // Process steps in the order they appear in the log
-      // Annoyingly triggers are in the log steps, so we need to filter them out
-      if (selectedLog.steps) {
-        // First, identify all step IDs that are children of branch steps
-        const branchChildStepIds = new Set()
-
-        selectedLog.steps.forEach(logStep => {
-          if (logStep.stepId === "BRANCH" && logStep.outputs?.branchId) {
-            const executedBranchId = logStep.outputs.branchId
-            const branchChildren =
-              logStep.inputs.children?.[executedBranchId] || []
-            branchChildren.forEach(child => {
-              branchChildStepIds.add(child.id)
-            })
-          }
-        })
-        selectedLog.steps
-          .filter(
-            logStep => logStep.stepId !== automation.definition.trigger?.stepId
-          )
-          .filter(logStep => !branchChildStepIds.has(logStep.id))
-          .forEach(logStep => {
-            const currentStep = automation.definition.steps?.find(
-              step => step.id === logStep.id
-            )
-
-            if (currentStep) {
-              // Special handling for BRANCH steps in logs mode
-              if (
-                currentStep.stepId === "BRANCH" &&
-                logStep.outputs?.branchId
-              ) {
-                const executedBranchId = logStep.outputs.branchId
-                const modifiedStep = {
-                  ...currentStep,
-                  inputs: {
-                    ...currentStep.inputs,
-                    children: {
-                      [executedBranchId]:
-                        currentStep.inputs.children?.[executedBranchId] || [],
-                    },
-                  },
-                }
-                blocks.push(modifiedStep)
-              } else {
-                blocks.push(currentStep)
-              }
-            } else {
-              // Step doesn't exist in current definition, reconstruct from log
-              const stepDefinition =
-                $automationStore.blockDefinitions?.ACTION?.[logStep.stepId] ||
-                $automationStore.blockDefinitions?.TRIGGER?.[logStep.stepId]
-
-              blocks.push({
-                ...logStep,
-                name: stepDefinition?.name,
-                icon: stepDefinition?.icon,
-              })
-            }
-          })
-      }
+      blocks = processLogSteps(automation, selectedLog)
     } else {
       // Normal editor mode - show current automation steps
       if (automation.definition.trigger) {

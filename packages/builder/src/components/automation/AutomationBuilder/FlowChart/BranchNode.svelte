@@ -20,12 +20,12 @@
     evaluationContext,
     contextMenuStore,
   } from "@/stores/builder"
+  import { ViewMode } from "@/types"
   import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
-  import { ViewMode } from "@/types"
 
   const dispatch = createEventDispatcher()
 
@@ -175,6 +175,7 @@
 
 <div class="flow-item branch">
   <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
     class={`block branch-node hoverable`}
     class:selected={false}

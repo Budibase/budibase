@@ -1,15 +1,5 @@
 <script>
-  import {
-    Body,
-    Icon,
-    ActionButton,
-    Divider,
-    StatusLight,
-    Badge,
-    Layout,
-    DetailSummary,
-    Detail,
-  } from "@budibase/bbui"
+  import { Body, Icon, ActionButton, Divider } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
   import JSONViewer from "@/components/common/JSONViewer.svelte"
   import dayjs from "dayjs"
