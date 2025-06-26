@@ -75,10 +75,11 @@ const waitForMigration = async (
 
   while (Date.now() - start < timeoutMs) {
     if (await isAppFullyMigrated(appId)) {
+      console.log(`Migration ran in ${Date.now() - start}ms`)
       return { applied: true }
     }
 
-    await new Promise(r => setTimeout(r, 50))
+    await new Promise(r => setTimeout(r, 10))
   }
 
   return { applied: false }
