@@ -3,7 +3,7 @@
   import NewLayout from "./_flagged/layout.new.svelte"
   import OldLayout from "./_flagged/layout.old.svelte"
 
-  export let application
+  export let application: string
 
   $: layout = $featureFlags.WORKSPACE_APPS ? NewLayout : OldLayout
 </script>
