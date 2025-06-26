@@ -77,6 +77,7 @@
   }
   .spectrum-Datepicker {
     width: 100%;
+    min-width: 0px;
     overflow: hidden;
   }
   .spectrum-Datepicker .spectrum-Textfield {
