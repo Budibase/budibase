@@ -19,6 +19,7 @@
   export let palette
   export let c1, c2, c3, c4, c5
   export let horizontal
+  export let onClick
 
   $: series = getSeries(dataProvider, valueColumns)
   $: categories = getCategories(dataProvider, labelColumn)
@@ -49,6 +50,9 @@
     },
     dataLabels: {
       enabled: dataLabels,
+      dropShadow: {
+        enabled: true,
+      },
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
@@ -63,6 +67,15 @@
       },
       zoom: {
         enabled: false,
+      },
+      events: {
+        // Clicking on a bar or group of bars
+        dataPointSelection: function (event, chartContext, opts) {
+          const barsIndex = opts.dataPointIndex
+          const row = dataProvider.rows[barsIndex]
+
+          handleBarClick(row)
+        },
       },
     },
     plotOptions: {
@@ -89,6 +102,10 @@
         text: yAxisLabel,
       },
     },
+  }
+
+  function handleBarClick(bar) {
+    onClick?.({ bar })
   }
 
   const getSeries = (dataProvider, valueColumns = []) => {
