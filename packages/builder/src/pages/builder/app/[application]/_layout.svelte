@@ -1,16 +1,13 @@
-<script>
+<script lang="ts">
   import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
   import NewLayout from "./_flagged/layout.new.svelte"
   import OldLayout from "./_flagged/layout.old.svelte"
+
+  export let application
+
+  $: layout = $featureFlags.WORKSPACE_APPS ? NewLayout : OldLayout
 </script>
 
-{#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
-  <NewLayout>
-    <slot />
-  </NewLayout>
-{:else}
-  <OldLayout>
-    <slot />
-  </OldLayout>
-{/if}
+<svelte:component this={layout} {application}>
+  <slot />
+</svelte:component>
