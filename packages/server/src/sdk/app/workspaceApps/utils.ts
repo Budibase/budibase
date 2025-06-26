@@ -8,11 +8,18 @@ export async function getMatchedWorkspaceApp(fromUrl: string) {
     ? `/app/${app.url}`.replace("//", "/")
     : `/${app.appId}`
 
+  const embedAppUrl = db.isProdAppID(app.appId)
+    ? `/embed/${app.url}`.replace("//", "/")
+    : null
+
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
 
   function isWorkspaceAppMatch({ url, isDefault }: WorkspaceApp) {
     return (
       fromUrl.replace(/\/$/, "") === `${baseAppUrl}${url.replace(/\/$/, "")}` ||
+      (embedAppUrl &&
+        fromUrl.replace(/\/$/, "") ===
+          `${embedAppUrl}${url.replace(/\/$/, "")}`) ||
       (!fromUrl && isDefault) // Support getMatchedWorkspaceApp without url referrer
     )
   }
