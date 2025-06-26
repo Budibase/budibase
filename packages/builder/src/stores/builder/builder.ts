@@ -6,6 +6,7 @@ import { BudiStore } from "../BudiStore.js"
 import { App } from "@budibase/types"
 
 interface BuilderState {
+  previousTopNavPath: Record<string, string>
   highlightedSetting: {
     key: string
     type: "info" | string
@@ -17,6 +18,7 @@ interface BuilderState {
 }
 
 export const INITIAL_BUILDER_STATE: BuilderState = {
+  previousTopNavPath: {},
   highlightedSetting: null,
   propertyFocus: null,
   builderSidePanel: false,
@@ -36,6 +38,7 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.propertyFocus = this.propertyFocus.bind(this)
     this.hideBuilderSidePanel = this.hideBuilderSidePanel.bind(this)
     this.showBuilderSidePanel = this.showBuilderSidePanel.bind(this)
+    this.setPreviousTopNavPath = this.setPreviousTopNavPath.bind(this)
     this.selectResource = this.selectResource.bind(this)
   }
 
@@ -85,6 +88,16 @@ export class BuilderStore extends BudiStore<BuilderState> {
     this.update(state => ({
       ...state,
       builderSidePanel: false,
+    }))
+  }
+
+  setPreviousTopNavPath(route: string, url: string) {
+    this.update(state => ({
+      ...state,
+      previousTopNavPath: {
+        ...(state.previousTopNavPath || {}),
+        [route]: url,
+      },
     }))
   }
 
