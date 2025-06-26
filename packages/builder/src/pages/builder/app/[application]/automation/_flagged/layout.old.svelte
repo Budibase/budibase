@@ -39,7 +39,6 @@
   onDestroy(stopSyncing)
 </script>
 
-<!-- routify:options index=3 -->
 <div class="wrapper">
   {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
     <TopBar breadcrumbs={[{ text: "Automations" }]} icon="lightning-a"></TopBar>

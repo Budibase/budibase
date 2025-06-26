@@ -6,6 +6,7 @@
   $: layout = $featureFlags.WORKSPACE_APPS ? NewLayout : OldLayout
 </script>
 
+<!-- routify:options index=3 -->
 <svelte:component this={layout}>
   <slot />
 </svelte:component>

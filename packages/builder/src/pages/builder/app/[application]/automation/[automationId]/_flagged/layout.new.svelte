@@ -32,7 +32,6 @@
   onDestroy(stopSyncing)
 </script>
 
-<!-- routify:options index=3 -->
 <div class="wrapper">
   {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
     <TopBar breadcrumbs={[{ text: "Automations" }]} icon="lightning-a"></TopBar>
@@ -93,7 +92,7 @@
     flex: 1 1 auto;
     display: grid;
     grid-auto-flow: column dense;
-    grid-template-columns: 260px minmax(510px, 1fr) fit-content(500px);
+    grid-template-columns: minmax(510px, 1fr) fit-content(500px);
     overflow: hidden;
   }
   .content {
