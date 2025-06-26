@@ -4,6 +4,7 @@ import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
 import { UserCtx } from "@budibase/types"
 import { Header } from "@budibase/backend-core"
+import environment from "../environment"
 
 export * from "./appMigrationMetadata"
 
@@ -45,9 +46,7 @@ export async function checkMissingMigrations(
     return next()
   }
 
-  const currentVersion = await getAppMigrationVersion(appId)
-
-  if (getMigrationIndex(currentVersion) < getMigrationIndex(latestMigration)) {
+  if (!(await isAppFullyMigrated(appId))) {
     const queue = getAppMigrationQueue()
     await queue.add(
       {
@@ -58,10 +57,33 @@ export async function checkMissingMigrations(
       }
     )
 
-    ctx.response.set(Header.MIGRATING_APP, appId)
+    const { applied: migrationApplied } = await waitForMigration(appId, {
+      timeoutMs: environment.SYNC_MIGRATION_CHECKS_MS,
+    })
+    if (!migrationApplied) {
+      ctx.response.set(Header.MIGRATING_APP, appId)
+    }
   }
 
   return next()
+}
+
+const waitForMigration = async (
+  appId: string,
+  { timeoutMs }: { timeoutMs: number }
+): Promise<{ applied: boolean }> => {
+  const start = Date.now()
+
+  while (Date.now() - start < timeoutMs) {
+    if (await isAppFullyMigrated(appId)) {
+      console.log(`Migration ran in ${Date.now() - start}ms`)
+      return { applied: true }
+    }
+
+    await new Promise(r => setTimeout(r, 10))
+  }
+
+  return { applied: false }
 }
 
 export const isAppFullyMigrated = async (appId: string) => {
@@ -70,5 +92,8 @@ export const isAppFullyMigrated = async (appId: string) => {
     return true
   }
   const latestMigrationApplied = await getAppMigrationVersion(appId)
-  return latestMigrationApplied >= latestMigration
+  return (
+    getMigrationIndex(latestMigrationApplied) >=
+    getMigrationIndex(latestMigration)
+  )
 }
