@@ -51,9 +51,10 @@ export async function update(
 ): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
-  await guardName(workspaceApp.name, workspaceApp._id)
-
   const persisted = (await get(workspaceApp._id!))!
+  if (workspaceApp.name !== persisted.name) {
+    await guardName(workspaceApp.name, workspaceApp._id)
+  }
   const docToUpdate = {
     ...persisted,
     ...workspaceApp,
