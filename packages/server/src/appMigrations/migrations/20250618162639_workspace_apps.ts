@@ -7,8 +7,8 @@ const migration = async () => {
 
   const application = await sdk.applications.metadata.get()
   const allWorkspaceApps = await sdk.workspaceApps.fetch(context.getAppDB())
-  let [defaultWorkspaceApp] = allWorkspaceApps
-  if (!defaultWorkspaceApp) {
+  let [existingWorkspaceApp] = allWorkspaceApps
+  if (!existingWorkspaceApp) {
     const workspaceApp = await sdk.workspaceApps.create({
       name: application.name,
       url: "/",
@@ -16,7 +16,7 @@ const migration = async () => {
       navigation: application.navigation!,
       isDefault: true,
     })
-    defaultWorkspaceApp = workspaceApp
+    existingWorkspaceApp = workspaceApp
   }
 
   const db = context.getAppDB()
@@ -24,7 +24,7 @@ const migration = async () => {
     .filter(s => !s.workspaceAppId)
     .map<Screen>(s => ({
       ...s,
-      workspaceAppId: defaultWorkspaceApp._id!,
+      workspaceAppId: existingWorkspaceApp._id!,
     }))
 
   // Fixing half migrated workspaces apps, due unexpected migrations ran on some apps
