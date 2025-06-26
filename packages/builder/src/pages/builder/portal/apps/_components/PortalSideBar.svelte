@@ -25,7 +25,6 @@
       app.name.toLowerCase().includes(searchString.toLowerCase())
     )
   })
-
   $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 
   const handleAppCreation = () => {
@@ -60,7 +59,7 @@
       <span
         class="side-bar-app-entry"
         class:favourite={app.favourite}
-        class:actionsOpen={openedApp == app.appId}
+        class:actionsOpen={openedApp === app.appId}
       >
         <AppNavItem {app} />
       </span>
