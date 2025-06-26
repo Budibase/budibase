@@ -1,12 +1,11 @@
-<script>
+<script lang="ts">
   import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
-  import OldIndex from "./_flagged/index.old.svelte"
   import NewIndex from "./_flagged/index.new.svelte"
+  import OldIndex from "./_flagged/index.old.svelte"
+
+  $: layout = $featureFlags.WORKSPACE_APPS ? NewIndex : OldIndex
 </script>
 
-{#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
-  <NewIndex />
-{:else}
-  <OldIndex />
-{/if}
+<svelte:component this={layout}>
+  <slot />
+</svelte:component>

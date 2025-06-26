@@ -23,14 +23,16 @@
   export let inline: boolean = false
   export let submitOnClick: boolean = false
 
-  let currentStepIndex: number
   let title: string
   let rootModal: Modal
   let createScreenModal: CreateScreenModal
   let selectedType: AutoScreenTypes | undefined
+  let currentStepIndex: number
 
-  $: workspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id
   $: hasScreens = $screenStore.screens?.length
+  $: workspaceAppId =
+    $workspaceAppStore.selectedWorkspaceApp?._id ||
+    $workspaceAppStore.workspaceApps[0]._id!
   $: title = hasScreens ? "Create new screen" : "Create your first screen"
 
   export const open = () => {

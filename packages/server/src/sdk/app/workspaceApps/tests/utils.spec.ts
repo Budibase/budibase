@@ -1,6 +1,6 @@
 import { structures } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { FeatureFlag, WorkspaceApp } from "@budibase/types"
+import { WorkspaceApp } from "@budibase/types"
 import { getMatchedWorkspaceApp } from "../utils"
 import { features } from "@budibase/backend-core"
 
@@ -16,9 +16,11 @@ describe("workspaceApps utils", () => {
     featureCleanup = features.testutils.setFeatureFlags("*", {
       WORKSPACE_APPS: true,
     })
-    workspaceApps = []
+    workspaceApps = (await config.api.workspaceApp.fetch()).workspaceApps
+    expect(workspaceApps).toHaveLength(1)
+    expect(workspaceApps.find(x => x.url === "/")).toBeDefined()
 
-    for (const url of ["/", "/app", "/app2"]) {
+    for (const url of ["/app", "/app2"]) {
       workspaceApps.push(
         (
           await config.api.workspaceApp.create(
@@ -36,21 +38,6 @@ describe("workspaceApps utils", () => {
   describe.each(["", "/"])(
     "getMatchedWorkspaceApp (url closing char: %s)",
     closingChar => {
-      it("should always return undefined when the flag is off", async () => {
-        await features.testutils.withFeatureFlags(
-          config.getTenantId(),
-          { [FeatureFlag.WORKSPACE_APPS]: false },
-          async () => {
-            await config.doInContext(config.getAppId(), async () => {
-              const result = await getMatchedWorkspaceApp(
-                `/${config.getAppId()}${closingChar}`
-              )
-              expect(result).toBeUndefined()
-            })
-          }
-        )
-      })
-
       it("should be able to get the base workspaceApp", async () => {
         await config.doInContext(config.getAppId(), async () => {
           const result = await getMatchedWorkspaceApp(

@@ -1,17 +1,11 @@
-<!-- routify:options index=3 -->
-<script>
+<script lang="ts">
   import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
-  import OldLayout from "./_flagged/layout.old.svelte"
   import NewLayout from "./_flagged/layout.new.svelte"
+  import OldLayout from "./_flagged/layout.old.svelte"
+
+  $: layout = $featureFlags.WORKSPACE_APPS ? NewLayout : OldLayout
 </script>
 
-{#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
-  <NewLayout>
-    <slot />
-  </NewLayout>
-{:else}
-  <OldLayout>
-    <slot />
-  </OldLayout>
-{/if}
+<svelte:component this={layout}>
+  <slot />
+</svelte:component>

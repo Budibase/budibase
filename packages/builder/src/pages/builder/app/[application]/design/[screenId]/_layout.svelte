@@ -1,16 +1,20 @@
-<script>
+<script lang="ts">
   import AppPanel from "./_components/AppPanel.svelte"
   import * as routify from "@roxi/routify"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { screenStore, selectedScreen } from "@/stores/builder"
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import { featureFlags } from "@/stores/portal"
+  import { FeatureFlag } from "@budibase/types"
 
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
     urlParam: "screenId",
     stateKey: "selectedScreenId",
-    validate: id => $screenStore.screens.some(screen => screen._id === id),
+    validate: (id: string) =>
+      $screenStore.screens.some(screen => screen._id === id),
     fallbackUrl: () => {
       // Fall back to the first screen if one exists
       if ($screenStore.screens.length) {
@@ -23,11 +27,16 @@
     store: screenStore,
   })
 
-  onDestroy(stopSyncing)
+  onDestroy(() => {
+    stopSyncing?.()
+  })
 </script>
 
 {#if $selectedScreen}
   <div class="design">
+    {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+      <TopBar breadcrumbs={[{ text: "Design" }]} icon="layout"></TopBar>
+    {/if}
     <div class="content">
       <LeftPanel />
       <AppPanel />
@@ -40,18 +49,16 @@
   .design {
     flex: 1 1 auto;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    height: 0;
   }
-
   .content {
-    width: 100vw;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
+    height: 0;
   }
 </style>
