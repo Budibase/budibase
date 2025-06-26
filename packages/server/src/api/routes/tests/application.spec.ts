@@ -954,6 +954,31 @@ describe("/applications", () => {
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
+
+    it("should remove MIGRATING_APP header if present during deletion", async () => {
+      const appMigrationsModule = await import(
+        "../../../appMigrations/migrations"
+      )
+
+      const migrationMock = jest.fn()
+      appMigrationsModule.MIGRATIONS.push({
+        id: "99999999999999_test_deletion",
+        func: migrationMock,
+      })
+
+      const prodAppId = app.appId.replace("_dev", "")
+      nock("http://localhost:10000")
+        .delete(`/api/global/roles/${prodAppId}`)
+        .reply(200, {})
+
+      expect(migrationMock).not.toHaveBeenCalled()
+      await config.api.application.delete(app.appId, {
+        headersNotPresent: [Header.MIGRATING_APP],
+      })
+
+      expect(migrationMock).toHaveBeenCalledTimes(1)
+      expect(events.app.deleted).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe("POST /api/applications/:appId/duplicate", () => {
