@@ -17,6 +17,6 @@ export async function getMatchedWorkspaceApp(fromUrl: string) {
     )
   }
 
-  const matchedWorkspaceApp = allWorkspaceApps.find(isWorkspaceAppMatch)
+  const matchedWorkspaceApp = allWorkspaceApps.filter(isWorkspaceAppMatch)
   return matchedWorkspaceApp
 }
