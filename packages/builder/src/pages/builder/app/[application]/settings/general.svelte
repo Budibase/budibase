@@ -37,12 +37,7 @@
   }
 </script>
 
-<Layout gap="S" noPadding>
-  <Layout gap="XS" noPadding>
-    <Heading>General settings</Heading>
-    <Body>Control app version, deployment and settings</Body>
-  </Layout>
-  <Divider noMargin />
+<Layout gap="M" noPadding>
   <Heading size="S">App info</Heading>
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
@@ -211,14 +206,6 @@
 />
 
 <style>
-  .link {
-    text-decoration: underline;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .link:hover {
-    cursor: pointer;
-    filter: brightness(110%);
-  }
   .row {
     display: flex;
     gap: var(--spacing-m);
