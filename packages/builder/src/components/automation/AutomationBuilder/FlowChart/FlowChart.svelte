@@ -16,7 +16,7 @@
     automationHistoryStore,
     selectedAutomation,
   } from "@/stores/builder"
-  import { environment } from "@/stores/portal"
+  import { environment, featureFlags } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -177,16 +177,18 @@
 </script>
 
 <div class="automation-heading">
-  <div class="actions-left">
-    <div class="automation-name">
-      <Body size="M">
-        {automation.name}
-      </Body>
+  {#if !$featureFlags.WORKSPACE_APPS}
+    <div class="actions-left">
+      <div class="automation-name">
+        <Body size="M">
+          {automation.name}
+        </Body>
+      </div>
     </div>
-  </div>
+  {/if}
 
-  <div class="actions-right">
-    <div class="view-mode-toggle">
+  <div class="actions-right" class:grow={$featureFlags.WORKSPACE_APPS}>
+    <div class="view-mode-toggle" class:grow={$featureFlags.WORKSPACE_APPS}>
       <div class="group">
         <ActionButton
           icon="Edit"
@@ -501,7 +503,13 @@
     gap: var(--spacing-xl);
     align-items: center;
   }
+  .actions-right.grow {
+    flex: 1 1 auto;
+  }
 
+  .view-mode-toggle.grow {
+    flex: 1 1 auto;
+  }
   .view-mode-toggle .group :global(.spectrum-ActionButton) {
     background: transparent !important;
     border: none !important;

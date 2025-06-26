@@ -15,7 +15,7 @@
   import type { PopoverAPI } from "@budibase/bbui"
   import { featureFlags } from "@/stores/portal"
   import PublishModal from "@/components/deploy/PublishModal.svelte"
-  import { page } from "@roxi/routify"
+  import { page, url } from "@roxi/routify"
 
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
@@ -52,9 +52,9 @@
   {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
-      <h1>{breadcrumb.text}</h1>
+      <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
       {#if idx < breadcrumbs.length - 1}
-        <h1 class="divider">/</h1>
+        <div class="divider">/</div>
       {/if}
     {/each}
   </div>
@@ -140,16 +140,11 @@
     align-items: center;
     gap: 6px;
   }
-  .breadcrumbs h1 {
+  .breadcrumbs a,
+  .breadcrumbs .divider {
     font-size: 18px;
     font-weight: 500;
-    color: var(--spectrum-global-color-gray-700);
-  }
-  .breadcrumbs h1:last-child {
     color: var(--spectrum-global-color-gray-900);
-  }
-  .breadcrumbs h1.divider {
-    color: var(--spectrum-global-color-gray-400);
   }
   .popover-content {
     display: flex;

@@ -12,8 +12,6 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
-  import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -33,9 +31,13 @@
 </script>
 
 <div class="wrapper">
-  {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
-    <TopBar breadcrumbs={[{ text: "Automations" }]} icon="lightning-a"></TopBar>
-  {/if}
+  <TopBar
+    breadcrumbs={[
+      { text: "Automations", url: "../" },
+      { text: $selectedAutomation.data.name },
+    ]}
+    icon="lightning-a"
+  />
   <div class="root">
     <div class="content drawer-container">
       <slot />
