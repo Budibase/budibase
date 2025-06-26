@@ -96,7 +96,7 @@
         />
         <SideNavLink
           icon="layout"
-          text="Design"
+          text="Apps"
           url={$url("./design")}
           {collapsed}
           on:click={keepCollapsed}
