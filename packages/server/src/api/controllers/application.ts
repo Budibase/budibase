@@ -325,7 +325,7 @@ export async function fetchAppPackage(
       ? new URL(ctx.headers.referer).pathname
       : ""
 
-    const matchedWorkspaceApp =
+    const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
     if (!matchedWorkspaceApp) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
