@@ -18,6 +18,7 @@
   import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { sdk } from "@budibase/shared-core"
+  import TopBar from "@/components/common/TopBar.svelte"
 
   enum Filter {
     All = "All automations",
@@ -143,14 +144,16 @@
       deterministic tasks for your agent.
     </HeroBanner>
   </div>
-  <div class="header">
-    <Icon name="WebPage"></Icon>
-    <h3>Automations</h3>
-    <Button icon="Light" secondary>Learn</Button>
+  <TopBar
+    icon="lightning-a"
+    breadcrumbs={[{ text: "Automations" }]}
+    showPublish={false}
+  >
+    <Button icon="lightbulb" secondary>Learn</Button>
     <Button cta icon="lightning-a" on:click={createModal.show}>
       New automation
     </Button>
-  </div>
+  </TopBar>
   <div class="filter">
     {#each Object.values(Filter) as option}
       <ActionButton
@@ -226,19 +229,6 @@
   }
   .hero-wrapper {
     margin: 12px 12px 0 12px;
-  }
-  .header {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 10px 10px 20px;
-    border-bottom: var(--border);
-  }
-  h3 {
-    font-weight: 510;
-    font-size: 18px;
-    margin: 0;
   }
   .filter {
     padding: 10px 12px;

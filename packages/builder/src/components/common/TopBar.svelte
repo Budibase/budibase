@@ -19,6 +19,7 @@
 
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
+  export let showPublish = true
 
   type ShowUI = { show: () => void }
 
@@ -57,14 +58,17 @@
       {/if}
     {/each}
   </div>
-  <Button
-    cta
-    on:click={publish}
-    disabled={$deploymentStore.isPublishing}
-    bind:ref={publishButton}
-  >
-    Publish
-  </Button>
+  <slot></slot>
+  {#if showPublish}
+    <Button
+      cta
+      on:click={publish}
+      disabled={$deploymentStore.isPublishing}
+      bind:ref={publishButton}
+    >
+      Publish
+    </Button>
+  {/if}
 </div>
 
 {#if workspaceAppsEnabled}

@@ -7,6 +7,7 @@
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import { confirm } from "@/helpers"
+  import TopBar from "@/components/common/TopBar.svelte"
 
   enum Filter {
     All = "All apps",
@@ -111,12 +112,11 @@
       teams.
     </HeroBanner>
   </div>
-  <div class="header">
-    <Icon name="WebPage"></Icon>
-    <h3>Apps</h3>
-    <Button icon="Light" secondary>Learn</Button>
-    <Button cta icon="WebPage" on:click={createApp}>New app</Button>
-  </div>
+
+  <TopBar icon="layout" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
+    <Button icon="lightbulb" secondary>Learn</Button>
+    <Button cta icon="layout" on:click={createApp}>New app</Button>
+  </TopBar>
   <div class="filter">
     {#each Object.values(Filter) as option}
       <ActionButton
@@ -173,19 +173,6 @@
   }
   .hero-wrapper {
     margin: 12px 12px 0 12px;
-  }
-  .header {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 10px 10px 20px;
-    border-bottom: var(--border);
-  }
-  h3 {
-    font-weight: 510;
-    font-size: 18px;
-    margin: 0;
   }
   .filter {
     padding: 10px 12px;
