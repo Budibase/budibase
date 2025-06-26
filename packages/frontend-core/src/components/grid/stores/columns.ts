@@ -75,7 +75,9 @@ export const deriveStores = (context: StoreContext): DerivedColumnStore => {
 
   // Derived list of columns which have not been explicitly hidden
   const visibleColumns = derived(columns, $columns => {
-    return $columns.filter(col => col.visible === true || col.visible === undefined)
+    return $columns.filter(
+      col => col.visible === true || col.visible === undefined
+    )
   })
 
   // Split visible columns into their discrete types
