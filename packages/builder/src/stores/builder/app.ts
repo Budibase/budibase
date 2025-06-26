@@ -31,7 +31,7 @@ interface TypeSupportPresets {
   [key: string]: any
 }
 
-interface AppMetaState {
+export interface AppMetaState {
   appId: string
   name: string
   url: string
