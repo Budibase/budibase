@@ -1,5 +1,15 @@
 <script>
-  import { Body, Icon, ActionButton, Divider } from "@budibase/bbui"
+  import {
+    Body,
+    Icon,
+    ActionButton,
+    Divider,
+    StatusLight,
+    Badge,
+    Layout,
+    DetailSummary,
+    Detail,
+  } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
   import JSONViewer from "@/components/common/JSONViewer.svelte"
   import dayjs from "dayjs"
@@ -9,7 +19,7 @@
   export let selectedStep = null
   export let onBack = () => {}
 
-  let selectedTab = isBranchStep ? "Branch Info" : "Data in"
+  $: selectedTab = isBranchStep ? "Branch Info" : "Data in"
 
   $: hasInputData =
     currentStepData?.inputs && Object.keys(currentStepData.inputs).length > 0
@@ -123,72 +133,39 @@
           {:else if selectedTab === "Branch Info"}
             {#if branchDetails}
               <div class="branch-info">
-                <div class="branch-summary">
-                  <Body size="S" weight="600">Branch Taken:</Body>
-                  <Body size="S">{branchDetails.executedBranchName}</Body>
-                </div>
-
-                <div class="branch-conditions">
-                  <Body size="S" weight="600">Why this branch was chosen:</Body>
-                  {#if branchDetails.executedBranch?.condition}
-                    <div class="condition-details">
-                      <JSONViewer
-                        value={branchDetails.executedBranch.condition}
-                      />
-                    </div>
-                  {/if}
-
-                  {#if branchDetails.executedBranch?.conditionUI}
-                    <div class="human-readable-condition">
-                      <Body size="S" weight="600">Condition Summary:</Body>
-                      <div class="condition-summary">
-                        {#if branchDetails.executedBranch.conditionUI.groups}
-                          {#each branchDetails.executedBranch.conditionUI.groups as group, groupIndex}
-                            <div class="condition-group">
-                              {#if groupIndex > 0}
-                                <span class="operator"
-                                  >{branchDetails.executedBranch.conditionUI
-                                    .logicalOperator === "all"
-                                    ? "AND"
-                                    : "OR"}</span
-                                >
-                              {/if}
-                              {#each group.filters as filter, filterIndex}
-                                {#if filterIndex > 0}
-                                  <span class="operator"
-                                    >{group.logicalOperator === "all"
-                                      ? "AND"
-                                      : "OR"}</span
-                                  >
-                                {/if}
-                                <div class="condition-item">
-                                  <code>{filter.field}</code>
-                                  <span class="operator-text"
-                                    >{filter.operator}</span
-                                  >
-                                  <code>{filter.value}</code>
-                                </div>
-                              {/each}
-                            </div>
-                          {/each}
-                        {/if}
-                      </div>
-                    </div>
-                  {/if}
-                </div>
-
-                {#if branchDetails.totalBranches > 1}
-                  <div class="other-branches">
-                    <Body size="S" weight="600">Other available branches:</Body>
-                    {#each branchDetails.allBranches as branch}
-                      {#if branch.id !== branchDetails.executedBranchId}
-                        <div class="branch-item">
-                          <Body size="S">{branch.name}</Body>
-                        </div>
-                      {/if}
-                    {/each}
+                <div class="condition-result">
+                  <Icon
+                    name="CheckmarkCircle"
+                    color="var(--spectrum-global-color-green-600)"
+                  />
+                  <div class="condition-text">
+                    <Body size="S"
+                      >This branch was taken because the condition evaluated to <strong
+                        >true</strong
+                      >.</Body
+                    >
+                    {#if branchDetails.executedBranch?.conditionUI?.groups}
+                      {#each branchDetails.executedBranch.conditionUI.groups as group}
+                        {#each group.filters as filter, filterIndex}
+                          {#if filterIndex === 0}
+                            <Body
+                              size="XS"
+                              color="var(--spectrum-global-color-gray-600)"
+                            >
+                              ({filter.field}
+                              {filter.operator}
+                              {filter.value}{#if group.filters.length > 1}
+                                and {group.filters.length - 1} other condition{group
+                                  .filters.length > 2
+                                  ? "s"
+                                  : ""}{/if})
+                            </Body>
+                          {/if}
+                        {/each}
+                      {/each}
+                    {/if}
                   </div>
-                {/if}
+                </div>
               </div>
             {:else}
               <div class="no-data-message">
@@ -359,92 +336,15 @@
     opacity: 0.8;
   }
 
-  .branch-info {
+  .condition-result {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-  }
-
-  .branch-summary {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-75);
-    border-radius: var(--border-radius-s);
-  }
-
-  .branch-conditions {
-    display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: var(--spacing-m);
   }
 
-  .condition-details {
-    margin-top: var(--spacing-s);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: var(--border-radius-s);
-    overflow: hidden;
-  }
-
-  .human-readable-condition {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .condition-summary {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-50);
-    border-radius: var(--border-radius-s);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-  }
-
-  .condition-group {
+  .condition-text {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
-  }
-
-  .condition-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    padding: var(--spacing-xs) var(--spacing-s);
-    background: white;
-    border-radius: var(--border-radius-s);
-    border: 1px solid var(--spectrum-global-color-gray-200);
-  }
-
-  .condition-item code {
-    background: var(--spectrum-global-color-gray-100);
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.85em;
-    color: var(--spectrum-global-color-gray-800);
-  }
-
-  .operator,
-  .operator-text {
-    font-weight: 600;
-    color: var(--spectrum-global-color-blue-600);
-    text-transform: uppercase;
-    font-size: 0.8em;
-  }
-
-  .other-branches {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .branch-item {
-    padding: var(--spacing-s);
-    background: var(--spectrum-global-color-gray-50);
-    border-radius: var(--border-radius-s);
-    border-left: 3px solid var(--spectrum-global-color-gray-400);
   }
 </style>
