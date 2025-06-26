@@ -179,20 +179,9 @@
     class={`block branch-node hoverable`}
     class:selected={false}
     class:executed
-    tabindex={viewMode === ViewMode.LOGS ? "0" : "-1"}
-    role={viewMode === ViewMode.LOGS ? "button" : null}
-    on:mousedown={e => {
-      e.stopPropagation()
-    }}
     on:click={e => {
       e.stopPropagation()
       if (viewMode === ViewMode.LOGS && logStepData) {
-        onStepSelect(logStepData)
-      }
-    }}
-    on:keydown={e => {
-      if ((e.key === "Enter" || e.key === " ") && viewMode === ViewMode.LOGS && logStepData) {
-        e.preventDefault()
         onStepSelect(logStepData)
       }
     }}
@@ -263,11 +252,13 @@
     </div>
   </div>
 
-  <div class="separator" />
+  {#if !isLast}
+    <div class="separator" />
+  {/if}
 
   {#if $view.dragging}
     <DragZone path={branchBlockRef.pathTo} />
-  {:else}
+  {:else if viewMode === ViewMode.EDITOR}
     <FlowItemActions block={branchBlockRef} />
   {/if}
 

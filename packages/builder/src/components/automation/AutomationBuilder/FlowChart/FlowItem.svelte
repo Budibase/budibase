@@ -210,8 +210,12 @@
       </div>
     </div>
   </div>
-  {#if !collectBlockExists || !lastStep}
+
+  {#if !lastStep}
     <div class="separator" />
+  {/if}
+
+  {#if !collectBlockExists}
     {#if $view.dragging}
       <DragZone path={blockRef?.pathTo} />
     {:else if viewMode === ViewMode.EDITOR}

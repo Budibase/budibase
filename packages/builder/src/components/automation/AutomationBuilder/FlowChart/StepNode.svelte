@@ -136,8 +136,9 @@
               isLast={rightMost}
               executed={isBranchExecuted}
               {viewMode}
-              logStepData={logStepData}
+              {logStepData}
               {onStepSelect}
+              isLastBranchStep={isLast && isBranch}
               on:change={async e => {
                 const updatedBranch = { ...branch, ...e.detail }
 
@@ -180,13 +181,17 @@
 
           <!-- Branch steps -->
           {#each step.inputs?.children[branch.id] || [] as bStep, sIdx}
+            {@const branchSteps = step.inputs?.children[branch.id] || []}
+            {@const isBranchStepLast = sIdx === branchSteps.length - 1}
             <!-- Recursive StepNode -->
             <div class:unexecuted={isBranchUnexecuted}>
               <svelte:self
                 step={bStep}
                 stepIdx={sIdx}
                 branchIdx={bIdx}
-                isLast={blockRef?.terminating || false}
+                isLast={viewMode === ViewMode.LOGS
+                  ? isBranchStepLast
+                  : blockRef?.terminating || false}
                 pathTo={pathToCurrentNode}
                 {automation}
                 {blocks}
