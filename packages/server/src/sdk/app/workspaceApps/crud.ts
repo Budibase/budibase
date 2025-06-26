@@ -56,8 +56,11 @@ export async function update(
     await guardName(workspaceApp.name, workspaceApp._id)
   }
   const docToUpdate = {
-    ...persisted,
     ...workspaceApp,
+    // Immutable properties
+    createdAt: persisted.createdAt,
+    updatedAt: persisted.updatedAt,
+    isDefault: persisted.isDefault,
   }
   const response = await db.put(docToUpdate)
   return {
