@@ -1,5 +1,6 @@
 <script lang="ts">
   import "@spectrum-css/checkbox/dist/index-vars.css"
+  import Icon from "../Icon/Icon.svelte"
 
   export let value: boolean
 </script>
@@ -15,20 +16,8 @@
     checked={!!value}
   />
   <span class="spectrum-Checkbox-box">
-    <svg
-      class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-css-icon-Checkmark100" />
-    </svg>
-    <svg
-      class="spectrum-Icon spectrum-UIIcon-Dash100 spectrum-Checkbox-partialCheckmark"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-css-icon-Dash100" />
-    </svg>
+    <Icon name="check" size="S" />
+    <Icon name="minus" size="S" />
   </span>
 </label>
 

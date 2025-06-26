@@ -5,6 +5,47 @@ const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_ARRAY = Joi.array().optional().allow(null)
 
 /**
+ * Helper function to create auth validation based on tool source type
+ */
+function getAuthValidation() {
+  return Joi.when("type", {
+    switch: [
+      {
+        is: "GITHUB",
+        then: Joi.object({
+          apiKey: Joi.string().required(),
+          baseUrl: OPTIONAL_STRING,
+          guidelines: OPTIONAL_STRING,
+        }).required(),
+      },
+      {
+        is: "CONFLUENCE",
+        then: Joi.object({
+          apiKey: Joi.string().required(),
+          email: Joi.string().email().required(),
+          baseUrl: OPTIONAL_STRING,
+          guidelines: OPTIONAL_STRING,
+        }).required(),
+      },
+      {
+        is: "BAMBOOHR",
+        then: Joi.object({
+          apiKey: Joi.string().required(),
+          subdomain: Joi.string().required(),
+          guidelines: OPTIONAL_STRING,
+        }).required(),
+      },
+      {
+        is: "BUDIBASE",
+        then: Joi.object({
+          guidelines: OPTIONAL_STRING,
+        }).optional(),
+      },
+    ],
+  })
+}
+
+/**
  * Validator for chat agent requests
  */
 export function chatAgentValidator() {
@@ -51,16 +92,9 @@ export function createToolSourceValidator() {
       type: Joi.string()
         .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
         .required(),
-      name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      auth: Joi.object({
-        apiKey: OPTIONAL_STRING,
-        email: OPTIONAL_STRING,
-        baseUrl: OPTIONAL_STRING,
-        subdomain: OPTIONAL_STRING,
-        guidelines: OPTIONAL_STRING,
-      }).optional(),
       disabledTools: OPTIONAL_ARRAY.items(Joi.string()),
+      auth: getAuthValidation(),
     }).unknown(true)
   )
 }
@@ -76,16 +110,9 @@ export function updateToolSourceValidator() {
       type: Joi.string()
         .valid("BUDIBASE", "GITHUB", "CONFLUENCE", "BAMBOOHR")
         .required(),
-      name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      auth: Joi.object({
-        apiKey: OPTIONAL_STRING,
-        email: OPTIONAL_STRING,
-        baseUrl: OPTIONAL_STRING,
-        subdomain: OPTIONAL_STRING,
-        guidelines: OPTIONAL_STRING,
-      }).optional(),
       disabledTools: OPTIONAL_ARRAY.items(Joi.string()),
+      auth: getAuthValidation(),
     }).unknown(true)
   )
 }

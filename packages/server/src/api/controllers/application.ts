@@ -21,6 +21,7 @@ import {
 import {
   cache,
   context,
+  db,
   db as dbCore,
   docIds,
   env as envCore,
@@ -69,6 +70,7 @@ import {
   UnpublishAppResponse,
   ErrorCode,
   FeatureFlag,
+  FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -182,35 +184,26 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  let workspaceAppId: string | undefined
+  const appMetadata = await sdk.applications.metadata.get()
+  const workspaceApp = await sdk.workspaceApps.create({
+    name: appMetadata.name,
+    url: "/",
+    icon: "Monitoring",
+    navigation: {
+      ...defaultAppNavigator(appMetadata.name),
+      links: [
+        {
+          text: "Inventory",
+          url: "/inventory",
+          type: "link",
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        },
+      ],
+    },
+    isDefault: true,
+  })
 
-  const workspaceAppEnabled = await features.isEnabled(
-    FeatureFlag.WORKSPACE_APPS
-  )
-  if (workspaceAppEnabled) {
-    const appMetadata = await sdk.applications.metadata.get()
-    const workspaceApp = await sdk.workspaceApps.create({
-      name: appMetadata.name,
-      urlPrefix: "/",
-      icon: "Monitoring",
-      navigation: {
-        ...defaultAppNavigator(appMetadata.name),
-        links: [
-          {
-            text: "Inventory",
-            url: "/inventory",
-            type: "link",
-            roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-          },
-        ],
-      },
-      isDefault: true,
-    })
-
-    workspaceAppId = workspaceApp._id
-  }
-
-  const screen = createSampleDataTableScreen(workspaceAppId)
+  const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
 
   {
@@ -245,10 +238,37 @@ export const addSampleData = async (
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
-  ctx.body = await sdk.applications.fetch(
+  const apps = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
   )
+
+  ctx.body = await sdk.applications.enrichWithDefaultWorkspaceAppUrl(apps)
+}
+export async function fetchClientApps(
+  ctx: UserCtx<void, FetchPublishedAppsResponse>
+) {
+  const apps = await sdk.applications.fetch(AppStatus.DEPLOYED, ctx.user)
+
+  const result: FetchPublishedAppsResponse["apps"] = []
+  for (const app of apps) {
+    const workspaceApps = await db.doWithDB(app.appId, db =>
+      sdk.workspaceApps.fetch(db)
+    )
+    for (const workspaceApp of workspaceApps) {
+      result.push({
+        // This is used as idempotency key for rendering in the frontend
+        appId: `${app.appId}_${workspaceApp._id}`,
+        // TODO: this can be removed when the flag is cleaned from packages/builder/src/pages/builder/apps/index.svelte
+        prodId: app.appId,
+        name: `${workspaceApp.name}`,
+        url: `${app.url}${workspaceApp.url || ""}`.replace(/\/$/, ""),
+        updatedAt: app.updatedAt,
+      })
+    }
+  }
+
+  ctx.body = { apps: result }
 }
 
 export async function fetchAppDefinition(
@@ -305,7 +325,7 @@ export async function fetchAppPackage(
       ? new URL(ctx.headers.referer).pathname
       : ""
 
-    const matchedWorkspaceApp =
+    const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
     if (!matchedWorkspaceApp) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
@@ -474,6 +494,7 @@ async function performAppCreate(
         await appMigrations.updateAppMigrationMetadata({
           appId,
           version: latestMigrationId,
+          skipHistory: true,
         })
       }
     }

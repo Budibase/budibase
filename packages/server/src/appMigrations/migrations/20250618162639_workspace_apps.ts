@@ -1,24 +1,22 @@
+import { context, ViewName } from "@budibase/backend-core"
 import { DesignDocument, Document, Screen } from "@budibase/types"
 import sdk from "../../sdk"
-import { context, ViewName } from "@budibase/backend-core"
 
 const migration = async () => {
   const screens = await sdk.screens.fetch()
 
   const application = await sdk.applications.metadata.get()
-  const allWorkspaceApps = await sdk.workspaceApps.fetch()
-  let workspaceAppId = allWorkspaceApps.find(
-    p => p.name === application.name
-  )?._id
-  if (!workspaceAppId) {
+  const allWorkspaceApps = await sdk.workspaceApps.fetch(context.getAppDB())
+  let [existingWorkspaceApp] = allWorkspaceApps
+  if (!existingWorkspaceApp) {
     const workspaceApp = await sdk.workspaceApps.create({
       name: application.name,
-      urlPrefix: "/",
+      url: "/",
       icon: "Monitoring",
       navigation: application.navigation!,
       isDefault: true,
     })
-    workspaceAppId = workspaceApp._id
+    existingWorkspaceApp = workspaceApp
   }
 
   const db = context.getAppDB()
@@ -26,8 +24,22 @@ const migration = async () => {
     .filter(s => !s.workspaceAppId)
     .map<Screen>(s => ({
       ...s,
-      workspaceAppId,
+      workspaceAppId: existingWorkspaceApp._id!,
     }))
+
+  // Fixing half migrated workspaces apps, due unexpected migrations ran on some apps
+  for (const workspaceApp of allWorkspaceApps) {
+    if (workspaceApp.url) {
+      continue
+    }
+
+    docsToUpdate.push({
+      ...workspaceApp,
+      // @ts-expect-error urlPrefix was deleted from the object
+      url: workspaceApp.urlPrefix || "/",
+      urlPrefix: undefined,
+    })
+  }
 
   const designDoc = await db.get<DesignDocument>("_design/database")
   if (

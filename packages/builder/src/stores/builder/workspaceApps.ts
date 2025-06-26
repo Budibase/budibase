@@ -1,9 +1,7 @@
 import { API } from "@/api"
-import { featureFlag } from "@/helpers"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import * as screenTemplating from "@/templates/screenTemplating"
 import {
-  FeatureFlag,
   InsertWorkspaceAppRequest,
   RequiredKeys,
   UIWorkspaceApp,
@@ -63,10 +61,6 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   }
 
   async fetch() {
-    if (!featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-      return
-    }
-
     const { workspaceApps } = await API.workspaceApp.fetch()
     this.update(state => ({
       ...state,
@@ -101,7 +95,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       _id: workspaceApp._id!,
       _rev: workspaceApp._rev!,
       name: workspaceApp.name,
-      urlPrefix: workspaceApp.urlPrefix,
+      url: workspaceApp.url,
       icon: workspaceApp.icon,
       iconColor: workspaceApp.iconColor,
       navigation: workspaceApp.navigation,

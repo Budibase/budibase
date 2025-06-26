@@ -6,6 +6,7 @@
     Icon,
     TooltipPosition,
     TooltipType,
+    ActionGroup,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { AutoReason, FieldType } from "@budibase/types"
@@ -316,46 +317,43 @@
 {/each}
 
 {#if table && schemaFields}
-  <div
-    class="add-fields-btn"
-    class:empty={Object.is(editableFields, {})}
-    bind:this={popoverAnchor}
-  >
+  <div class="add-fields-btn" class:empty={Object.is(editableFields, {})}>
     <PropField {componentWidth} {fullWidth}>
-      <div class="prop-control-wrap">
-        <ActionButton
-          on:click={() => {
-            customPopover.show()
-          }}
-          disabled={!schemaFields}
-        >
-          Edit fields
-        </ActionButton>
-        {#if schemaFields.length}
+      <div class="prop-control-wrap" bind:this={popoverAnchor}>
+        <ActionGroup>
           <ActionButton
             on:click={() => {
-              dispatch("change", {
-                meta: { fields: {} },
-                row: {},
-              })
+              customPopover.show()
             }}
+            disabled={!schemaFields}
           >
-            Clear
+            Edit fields
           </ActionButton>
-        {/if}
+          {#if schemaFields.length}
+            <ActionButton
+              on:click={() => {
+                dispatch("change", {
+                  meta: { fields: {} },
+                  row: {},
+                })
+              }}
+            >
+              Clear
+            </ActionButton>
+          {/if}
+        </ActionGroup>
       </div>
     </PropField>
   </div>
 {/if}
 
 <Popover
-  align="center"
+  align="left"
   bind:this={customPopover}
   anchor={editableFields ? popoverAnchor : null}
   useAnchorWidth
   maxHeight={300}
   resizable={false}
-  offset={10}
 >
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -386,13 +384,9 @@
             tooltipPosition={TooltipPosition.Left}
           />
           <div class="field_name spectrum-Menu-itemLabel">{field}</div>
-          <svg
-            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Checkmark100" />
-          </svg>
+          <div class="check">
+            <Icon name="check" />
+          </div>
         </li>
       {/if}
     {/each}
@@ -409,5 +403,12 @@
   /* Override for general json field override */
   .prop-control-wrap :global(.icon.json-slot-icon) {
     right: 1px !important;
+  }
+
+  .check {
+    display: none;
+  }
+  li.is-selected .check {
+    display: block;
   }
 </style>

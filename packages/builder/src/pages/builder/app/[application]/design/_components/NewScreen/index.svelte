@@ -34,7 +34,7 @@
   let modalSteps: CreationStep[] = []
   let currentStepIndex: number
 
-  let workspaceAppId: string | undefined = undefined
+  let workspaceAppId: string
   let rootModal: Modal
 
   export const open = (addToWorkspaceId?: string) => {
@@ -47,7 +47,7 @@
     } else {
       modalSteps = [CreationStep.SCREEN_TYPE_PICKER]
       workspaceAppId =
-        addToWorkspaceId || $workspaceAppStore.workspaceApps[0]?._id
+        addToWorkspaceId || $workspaceAppStore.workspaceApps[0]._id!
     }
 
     currentStepIndex = 0
@@ -151,7 +151,9 @@
         heading={inline ? title : ""}
       >
         <div class="subHeading" class:inline>
-          Start from scratch or create screens from your data
+          <Body size="M">
+            Start from scratch or create screens from your data
+          </Body>
         </div>
         <div class="cards">
           <div
@@ -164,7 +166,7 @@
             </div>
             <div class="text">
               <Body size="M">Blank</Body>
-              <Body size="XS">Add an empty blank screen</Body>
+              <Body size="S">Add an empty blank screen</Body>
             </div>
           </div>
 
@@ -178,7 +180,7 @@
             </div>
             <div class="text">
               <Body size="M">Table</Body>
-              <Body size="XS">List rows in a table</Body>
+              <Body size="S">List rows in a table</Body>
             </div>
           </div>
 
@@ -192,7 +194,7 @@
             </div>
             <div class="text">
               <Body size="M">Form</Body>
-              <Body size="XS">Capture data from your users</Body>
+              <Body size="S">Capture data from your users</Body>
             </div>
           </div>
 
@@ -212,11 +214,11 @@
                 PDF
                 {#if !$licensing.pdfEnabled}
                   <Tags>
-                    <Tag icon="LockClosed">Premium</Tag>
+                    <Tag icon="lock" emphasized>Premium</Tag>
                   </Tags>
                 {/if}
               </Body>
-              <Body size="XS">Create, edit and export your PDF</Body>
+              <Body size="S">Create, edit and export your PDF</Body>
             </div>
           </div>
         </div>
@@ -238,12 +240,11 @@
   .cards {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     gap: 24px;
   }
 
   .card {
-    max-width: 235px;
+    width: 265px;
     transition: filter 150ms;
   }
 

@@ -57,7 +57,7 @@
   <div class="subHeading">
     <Body>Get started with our Budibase DB</Body>
     <AbsTooltip text="Budibase DB is built with CouchDB">
-      <Icon name="Info" size="S" />
+      <Icon name="info" size="S" />
     </AbsTooltip>
   </div>
 

@@ -15,6 +15,7 @@ import {
   evaluationContext,
 } from "./automations"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
 import { deploymentStore } from "./deployment"
 import { contextMenuStore } from "./contextMenu"
 import { snippets } from "./snippets"
@@ -83,6 +84,7 @@ export {
   oauth2,
   workspaceAppStore,
   selectedAppUrls,
+  workspaceDeploymentStore,
 }
 
 export const reset = () => {
@@ -93,6 +95,7 @@ export const reset = () => {
   layoutStore.reset()
   navigationStore.reset()
   rowActions.reset()
+  workspaceDeploymentStore.reset()
 }
 
 const refreshBuilderData = async () => {
@@ -105,6 +108,7 @@ const refreshBuilderData = async () => {
     roles.fetch(),
     flags.fetch(),
     workspaceAppStore.fetch(),
+    workspaceDeploymentStore.fetch(),
   ])
 }
 

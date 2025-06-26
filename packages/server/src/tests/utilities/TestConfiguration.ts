@@ -35,7 +35,6 @@ import {
   automation as automationController,
   webhook as webhookController,
   query as queryController,
-  screen as screenController,
   layout as layoutController,
   view as viewController,
 } from "./controllers"
@@ -99,6 +98,7 @@ export default class TestConfiguration {
   request?: supertest.SuperTest<supertest.Test>
   started: boolean
   appId?: string
+  defaultWorkspaceAppId?: string
   name?: string
   allApps: App[]
   app?: App
@@ -158,6 +158,15 @@ export default class TestConfiguration {
       )
     }
     return this.appId
+  }
+
+  getDefaultWorkspaceAppId() {
+    if (!this.defaultWorkspaceAppId) {
+      throw new Error(
+        "appId has not been initialised, call config.init() first"
+      )
+    }
+    return this.defaultWorkspaceAppId
   }
 
   getProdAppId() {
@@ -416,6 +425,7 @@ export default class TestConfiguration {
           sessionId: this.sessionIdForUser(userId),
           tenantId: this.getTenantId(),
           email: user.email,
+          csrfToken: this.csrfToken,
         })
       }
       // have to fake this
@@ -611,6 +621,10 @@ export default class TestConfiguration {
         })) as App
     )
     this.appId = this.app.appId
+
+    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+      .workspaceApps
+    this.defaultWorkspaceAppId = defaultWorkspaceApp._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
@@ -921,7 +935,7 @@ export default class TestConfiguration {
 
   async createScreen(config?: Screen) {
     config = config || basicScreen()
-    return this._req(screenController.save, config)
+    return this.api.screen.save(config)
   }
 
   // LAYOUT

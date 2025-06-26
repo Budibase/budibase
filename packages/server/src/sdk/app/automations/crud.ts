@@ -99,9 +99,9 @@ export async function get(automationId: string) {
   return trimUnexpectedObjectFields(result)
 }
 
-export async function find(ids: string[]) {
+export async function find(ids: string[], opts?: { allowMissing?: boolean }) {
   const db = getDb()
-  const result = await db.getMultiple<PersistedAutomation>(ids)
+  const result = await db.getMultiple<PersistedAutomation>(ids, opts)
   return result.map(trimUnexpectedObjectFields)
 }
 
@@ -297,7 +297,7 @@ function guardInvalidUpdatesAndThrow(
 
 function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
   // This will ensure all the automation fields (and nothing else) is mapped to the result
-  const allRequired: RequiredKeys<Automation> = {
+  const allRequired: RequiredKeys<Omit<Automation, "_deleted">> = {
     _id: automation._id,
     _rev: automation._rev,
     definition: automation.definition,

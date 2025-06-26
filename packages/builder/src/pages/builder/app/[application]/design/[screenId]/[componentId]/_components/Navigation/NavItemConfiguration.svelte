@@ -1,6 +1,6 @@
 <script>
   import { navigationStore } from "@/stores/builder"
-  import DraggableList from "@/components/design/settings/controls/DraggableList/DraggableList.svelte"
+  import DraggableList from "@/components/design/settings/controls/DraggableList.svelte"
   import NavItem from "./NavItem.svelte"
   import { generate } from "shortid"
   import { getSequentialName } from "@/helpers/duplicate"

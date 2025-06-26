@@ -123,10 +123,10 @@
       <Heading>{group?.name}</Heading>
       <ActionMenu align="right">
         <span slot="control">
-          <Icon hoverable name="More" />
+          <Icon hoverable name="dots-three" />
         </span>
         <MenuItem
-          icon="Refresh"
+          icon="arrow-clockwise"
           on:click={() => editModal.show()}
           disabled={!isAdmin}
         >
@@ -134,7 +134,7 @@
         </MenuItem>
         <div title={isScimGroup && "Group synced from your AD"}>
           <MenuItem
-            icon="Delete"
+            icon="trash"
             on:click={() => deleteModal.show()}
             disabled={readonly}
           >
@@ -157,6 +157,7 @@
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
         on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
+        allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
           <Heading size="S"

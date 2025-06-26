@@ -19,7 +19,7 @@ function toWorkspaceAppResponse(
     _id: workspaceApp._id!,
     _rev: workspaceApp._rev!,
     name: workspaceApp.name,
-    urlPrefix: workspaceApp.urlPrefix,
+    url: workspaceApp.url,
     icon: workspaceApp.icon,
     iconColor: workspaceApp.iconColor,
     navigation: workspaceApp.navigation,
@@ -40,7 +40,7 @@ export async function create(
   const { body } = ctx.request
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
-    urlPrefix: body.urlPrefix,
+    url: body.url,
     icon: body.icon,
     iconColor: body.iconColor,
     navigation: defaultAppNavigator(body.name),
@@ -67,7 +67,7 @@ export async function edit(
     _id: body._id,
     _rev: body._rev,
     name: body.name,
-    urlPrefix: body.urlPrefix,
+    url: body.url,
     icon: body.icon,
     iconColor: body.iconColor,
     navigation: body.navigation,

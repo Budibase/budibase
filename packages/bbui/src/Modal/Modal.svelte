@@ -13,6 +13,9 @@
   export let autoFocus: boolean = true
   export let zIndex: number = 1001
 
+  // Ensure any popovers inside this modal are rendered inside this modal
+  setContext(Context.PopoverRoot, ".spectrum-Modal")
+
   const dispatch = createEventDispatcher<{
     show: void
     hide: void
@@ -108,42 +111,44 @@
     It still breaks the modal animation, but its better than soft bricking the
     screen.
   -->
-  <Portal target=".modal-container">
-    {#if visible}
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div
-        class="spectrum-Underlay is-open"
-        on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
-        style="z-index:{zIndex || 999}"
-      >
+  <div class="portal">
+    <Portal target=".modal-container">
+      {#if visible}
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
-          class="background"
-          in:fade={{ duration: 200 }}
-          out:fade|local={{ duration: 200 }}
-        />
-        <div
-          class="modal-wrapper"
+          class="spectrum-Underlay is-open"
           on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
+          style="z-index:{zIndex || 999}"
         >
           <div
-            class="modal-inner-wrapper"
+            class="background"
+            in:fade={{ duration: 200 }}
+            out:fade|local={{ duration: 200 }}
+          />
+          <div
+            class="modal-wrapper"
             on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
           >
-            <slot name="outside" />
             <div
-              use:focusModal
-              bind:this={modal}
-              class="spectrum-Modal is-open"
-              in:fly={{ y: 30, duration: 200 }}
-              out:fly|local={{ y: 30, duration: 200 }}
+              class="modal-inner-wrapper"
+              on:mousedown|self={() => cancel(ModalCancelFrom.OUTSIDE_CLICK)}
             >
-              <slot />
+              <slot name="outside" />
+              <div
+                use:focusModal
+                bind:this={modal}
+                class="spectrum-Modal is-open"
+                in:fly={{ y: 30, duration: 200 }}
+                out:fly|local={{ y: 30, duration: 200 }}
+              >
+                <slot />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    {/if}
-  </Portal>
+      {/if}
+    </Portal>
+  </div>
 {/if}
 
 <style>
@@ -200,5 +205,10 @@
   }
   :global(.spectrum--lightest .spectrum-Modal.inline) {
     border: var(--border-light);
+  }
+
+  .portal,
+  .portal :global(> div) {
+    display: contents;
   }
 </style>

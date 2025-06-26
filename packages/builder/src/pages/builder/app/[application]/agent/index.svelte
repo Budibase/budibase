@@ -5,21 +5,22 @@
     Heading,
     Icon,
     Input,
+    Layout,
     Modal,
     ModalContent,
     notifications,
-    Tab,
-    Tabs,
     TextArea,
     Toggle,
   } from "@budibase/bbui"
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, featureFlags } from "@/stores/portal"
   import Chatbox from "./Chatbox.svelte"
   import type {
     AgentChat,
+    AgentToolSourceWithTools,
     CreateToolSourceRequest,
     UserMessage,
   } from "@budibase/types"
+  import { FeatureFlag } from "@budibase/types"
   import { onDestroy, onMount } from "svelte"
   import { type ComponentType } from "svelte"
   import Panel from "@/components/design/Panel.svelte"
@@ -28,6 +29,7 @@
   import GithubLogo from "./logos/Github.svelte"
   import ConfluenceLogo from "./logos/Confluence.svelte"
   import BambooHRLogo from "./logos/BambooHR.svelte"
+  import TopBar from "@/components/common/TopBar.svelte"
 
   const Logos: Record<string, ComponentType> = {
     BUDIBASE: BudibaseLogo,
@@ -83,11 +85,16 @@
   let toolSourceToDelete: any = null
   let panelView: "tools" | "toolConfig" = "tools"
   let toolConfig: Record<string, string> = {}
+  let toolConfigChanged = false
 
   $: chatHistory = $agentsStore.chats || []
   $: toolSources = $agentsStore.toolSources || []
 
   import { tick } from "svelte"
+  import NavHeader from "@/components/common/NavHeader.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import NavItem from "@/components/common/NavItem.svelte"
+  import { contextMenuStore } from "@/stores/builder"
 
   $: if (chat.messages.length) {
     scrollToBottom()
@@ -128,28 +135,110 @@
     inputValue = ""
     loading = true
 
+    let streamingContent = ""
+    let isToolCall = false
+    let toolCallInfo: string = ""
+
     try {
-      // Send copy with new message to API
-      const response = await API.agentChat(updatedChat)
+      await API.agentChatStream(
+        updatedChat,
+        chunk => {
+          if (chunk.type === "content") {
+            // Accumulate streaming content
+            streamingContent += chunk.content || ""
 
-      // Update chat with response from API
-      chat = response
+            // Update chat with partial content
+            const updatedMessages = [...updatedChat.messages]
 
-      // Update the current chat ID in the store
-      if (response._id) {
-        agentsStore.setCurrentChatId(response._id)
-        // Refresh chat history to include the new/updated chat
-        await agentsStore.fetchChats()
-      }
+            // Find or create assistant message
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content =
+                streamingContent + (isToolCall ? toolCallInfo : "")
+            } else {
+              updatedMessages.push({
+                role: "assistant",
+                content: streamingContent + (isToolCall ? toolCallInfo : ""),
+              })
+            }
 
-      // Scroll to the response
-      await scrollToBottom()
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            // Auto-scroll as content streams
+            scrollToBottom()
+          } else if (chunk.type === "tool_call_start") {
+            isToolCall = true
+            toolCallInfo = `\n\n**🔧 Executing Tool:** ${chunk.toolCall?.name}\n**Parameters:**\n\`\`\`json\n${chunk.toolCall?.arguments}\n\`\`\`\n`
+
+            const updatedMessages = [...updatedChat.messages]
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content = streamingContent + toolCallInfo
+            } else {
+              updatedMessages.push({
+                role: "assistant",
+                content: streamingContent + toolCallInfo,
+              })
+            }
+
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            scrollToBottom()
+          } else if (chunk.type === "tool_call_result") {
+            const resultInfo = chunk.toolResult?.error
+              ? `\n**❌ Tool Error:** ${chunk.toolResult.error}`
+              : `\n**✅ Tool Result:** Complete`
+
+            toolCallInfo += resultInfo
+
+            const updatedMessages = [...updatedChat.messages]
+            const lastMessage = updatedMessages[updatedMessages.length - 1]
+            if (lastMessage?.role === "assistant") {
+              lastMessage.content = streamingContent + toolCallInfo
+            }
+
+            chat = {
+              ...chat,
+              messages: updatedMessages,
+            }
+
+            scrollToBottom()
+          } else if (chunk.type === "chat_saved") {
+            // Update complete response
+            if (chunk.chat) {
+              chat = chunk.chat
+
+              if (chunk.chat._id) {
+                agentsStore.setCurrentChatId(chunk.chat._id)
+                // Refresh chat history to include the new/updated chat
+                agentsStore.fetchChats()
+              }
+            }
+
+            loading = false
+            scrollToBottom()
+          } else if (chunk.type === "error") {
+            notifications.error(chunk.content || "An error occurred")
+            loading = false
+          }
+        },
+        error => {
+          console.error("Streaming error:", error)
+          notifications.error(error.message)
+          loading = false
+        }
+      )
     } catch (err: any) {
       console.error(err)
       notifications.error(err.message)
+      loading = false
     }
-
-    loading = false
 
     // Return focus to textarea after the response
     await tick()
@@ -236,24 +325,24 @@
 
       await agentsStore.fetchToolSources()
       toolConfigModal.hide()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      notifications.error(
-        selectedToolSource.existingToolSource
-          ? "Error updating tool source"
-          : "Error saving tool source"
-      )
+      const message = selectedToolSource.existingToolSource
+        ? "Error updating tool source"
+        : "Error saving tool source"
+      notifications.error(`${message}: ${err.message}`)
     }
   }
 
   const openToolsConfig = (toolSource: any) => {
-    selectedConfigToolSource = toolSource
+    selectedConfigToolSource = { ...toolSource }
     panelView = "toolConfig"
   }
 
   const backToToolsList = () => {
     panelView = "tools"
     selectedConfigToolSource = null
+    toolConfigChanged = false
   }
 
   const toggleTool = (toolName: string) => {
@@ -271,19 +360,60 @@
       // Disable the tool by adding to disabled list
       selectedConfigToolSource.disabledTools = [...currentDisabled, toolName]
     }
+    toolConfigChanged = true
   }
 
   const saveToolConfig = async () => {
     if (!selectedConfigToolSource) return
-
     try {
-      await agentsStore.updateToolSource(selectedConfigToolSource)
+      selectedConfigToolSource = await agentsStore.updateToolSource(
+        selectedConfigToolSource
+      )
       notifications.success("Tool configuration saved successfully.")
+      toolConfigChanged = false
     } catch (err) {
       console.error(err)
       notifications.error("Error saving tool configuration")
     }
   }
+
+  const getChatPreview = (chat: AgentChat): string => {
+    const messageCount = chat.messages.length
+    if (!messageCount) {
+      return "No messages"
+    }
+    const msg = chat.messages[messageCount - 1]?.content?.slice(0, 50)
+    return typeof msg === "string" ? msg : "No preview available"
+  }
+
+  const getContextMenuItems = (toolSource: AgentToolSourceWithTools) => {
+    return [
+      {
+        icon: "Edit",
+        name: "Edit",
+        keyBind: null,
+        visible: true,
+        disabled: false,
+        callback: () => editToolSource(toolSource),
+      },
+      {
+        icon: "Delete",
+        name: "Delete",
+        keyBind: null,
+        visible: true,
+        disabled: false,
+        callback: () => confirmDeleteToolSource(toolSource),
+      },
+    ]
+  }
+
+  const createToolMenuCallback =
+    (toolSource: AgentToolSourceWithTools) => (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const items = getContextMenuItems(toolSource)
+      contextMenuStore.open("agent-tool", items, { x: e.clientX, y: e.clientY })
+    }
 
   onMount(async () => {
     await agentsStore.init()
@@ -317,196 +447,170 @@
   })
 </script>
 
-<div class="page">
-  <div class="layout">
-    <div class="history-panel">
-      <Panel customWidth={300}>
-        <div class="chat-history">
-          <div class="history-header">
-            <Heading size="XS">Chat History</Heading>
-            <Button size="S" cta on:click={startNewChat}>New Chat</Button>
-          </div>
-          <div class="history-list">
-            {#each chatHistory as chatItem}
-              <button
-                class="history-item"
-                class:active={$agentsStore.currentChatId === chatItem._id}
-                on:click={() => selectChat(chatItem)}
-              >
-                <div class="chat-title">
-                  {chatItem.title || "Untitled Chat"}
-                </div>
-                <div class="chat-preview">
-                  {chatItem.messages.length > 0
-                    ? chatItem.messages[
-                        chatItem.messages.length - 1
-                      ]?.content?.slice(0, 50) + "..."
-                    : "No messages"}
-                </div>
-              </button>
-            {/each}
-            {#if chatHistory.length === 0}
-              <div class="empty-state">
-                <Body size="S"
-                  >No chat history yet. Start a new conversation!</Body
-                >
-              </div>
-            {/if}
-          </div>
-        </div>
-      </Panel>
-    </div>
+<div class="wrapper">
+  {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+    <TopBar breadcrumbs={[{ text: "Agent" }]} icon="cpu"></TopBar>
+  {/if}
+  <div class="page">
+    <Panel customWidth={260} borderRight noHeaderBorder>
+      <NavHeader
+        slot="panel-title-content"
+        title="Chats"
+        onAdd={startNewChat}
+        searchable={false}
+      />
 
-    <div class="chat-area" bind:this={chatAreaElement}>
-      <Chatbox bind:chat {loading} />
-      <div class="input-wrapper">
-        <textarea
-          bind:value={inputValue}
-          bind:this={textareaElement}
-          class="input spectrum-Textfield-input"
-          on:keydown={handleKeyDown}
-          placeholder="Ask anything"
-          disabled={loading}
+      {#each chatHistory as chatItem}
+        <NavItem
+          text={chatItem.title || "Untitled Chat"}
+          subtext={getChatPreview(chatItem)}
+          on:click={() => selectChat(chatItem)}
+          selected={$agentsStore.currentChatId === chatItem._id}
+          withActions={false}
         />
+      {/each}
+      {#if !chatHistory.length}
+        <div class="empty-state">
+          <Body size="S">
+            No chat history yet.<br />
+            Start a new conversation!
+          </Body>
+        </div>
+      {/if}
+    </Panel>
+
+    <div class="chat-wrapper">
+      <div class="chat-area" bind:this={chatAreaElement}>
+        <Chatbox bind:chat {loading} />
+        <div class="input-wrapper">
+          <textarea
+            bind:value={inputValue}
+            bind:this={textareaElement}
+            class="input spectrum-Textfield-input"
+            on:keydown={handleKeyDown}
+            placeholder="Ask anything"
+            disabled={loading}
+          />
+        </div>
       </div>
     </div>
 
-    <div class="panel-container">
-      <Panel customWidth={400}>
-        <div class="agent-panel">
-          <Tabs selected="Tools">
-            <Tab title="Tools">
-              <div class="tab-content">
-                {#if panelView === "tools"}
-                  <div class="agent-info">
-                    Add tools to give your agent knowledge and allow it to take
-                    action.
-                  </div>
-                  <div class="agent-actions-heading">
-                    <Heading size="XS">Tools and Knowledge</Heading>
-                    <Button
-                      size="S"
-                      cta
-                      on:click={() => toolSourceModal.show()}
-                    >
-                      Add Tools
-                    </Button>
-                  </div>
-
-                  {#if toolSources.length > 0}
-                    <div class="saved-tools-list">
-                      {#each toolSources as toolSource}
-                        <div class="saved-tool-item">
-                          <div class="tool-icon">
-                            <svelte:component
-                              this={Logos[toolSource.type]}
-                              height="26"
-                              width="26"
-                            />
-                          </div>
-                          <div class="tool-info">
-                            <div class="tool-name">
-                              {ToolSources.find(
-                                ts => ts.type === toolSource.type
-                              )?.name}
-                            </div>
-                          </div>
-                          <div class="tool-actions">
-                            <Icon
-                              size="S"
-                              hoverable
-                              name="Edit"
-                              on:click={() => editToolSource(toolSource)}
-                            />
-                            <Icon
-                              size="S"
-                              hoverable
-                              name="Delete"
-                              on:click={() =>
-                                confirmDeleteToolSource(toolSource)}
-                            />
-                            <div class="tool-source-detail">
-                              <Icon
-                                size="S"
-                                hoverable
-                                name="BackAndroid"
-                                on:click={() => openToolsConfig(toolSource)}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      {/each}
-                    </div>
-                  {:else}
-                    <div class="no-tools-message">
-                      <Body size="S"
-                        >No tools connected yet. Click "Add Tools" to get
-                        started!</Body
-                      >
-                    </div>
-                  {/if}
-                {:else if panelView === "toolConfig"}
-                  <div class="tool-config-header">
-                    <Icon
-                      name="BackAndroid"
-                      hoverable
-                      on:click={backToToolsList}
-                    />
-                    <Heading size="S"
-                      >{ToolSources.find(
-                        ts => selectedConfigToolSource.type === ts.type
-                      )?.name}</Heading
-                    >
-                    <Button size="S" cta on:click={saveToolConfig}>
-                      Save Configuration
-                    </Button>
-                  </div>
-
-                  {#if selectedConfigToolSource?.tools}
-                    <div class="tools-list">
-                      {#each selectedConfigToolSource.tools as tool}
-                        <div class="tool-toggle-item">
-                          <div class="tool-toggle-icon">
-                            {#if Logos[selectedConfigToolSource.type]}
-                              <svelte:component
-                                this={Logos[selectedConfigToolSource.type]}
-                                height="20"
-                                width="20"
-                              />
-                            {/if}
-                          </div>
-                          <div class="tool-toggle-info">
-                            <div class="tool-toggle-name">{tool.name}</div>
-                            <div class="tool-toggle-description">
-                              {tool.description}
-                            </div>
-                          </div>
-                          <Toggle
-                            value={!selectedConfigToolSource.disabledTools?.includes(
-                              tool.name
-                            )}
-                            on:change={() => toggleTool(tool.name)}
-                          />
-                        </div>
-                      {/each}
-                    </div>
-                  {:else}
-                    <div class="no-tools-message">
-                      <Body size="S">No tools available for this source.</Body>
-                    </div>
-                  {/if}
-                {/if}
-              </div>
-            </Tab>
-            <Tab title="Deploy">
-              <div class="tab-content">Deploy</div>
-            </Tab>
-          </Tabs>
+    <Panel customWidth={320} borderLeft noHeaderBorder={panelView === "tools"}>
+      <NavHeader
+        slot="panel-title-content"
+        title="Tools"
+        onAdd={toolSourceModal?.show}
+        searchable={false}
+        showAddIcon={panelView === "tools"}
+      >
+        {#if panelView === "tools"}
+          <Body size="S">Tools</Body>
+        {:else}
+          <div class="tool-config-header">
+            <Icon
+              name="BackAndroid"
+              size="XS"
+              hoverable
+              on:click={backToToolsList}
+            />
+            <svelte:component
+              this={Logos[selectedConfigToolSource.type]}
+              height="16"
+              width="16"
+            />
+            <Body size="S">
+              {ToolSources.find(ts => selectedConfigToolSource.type === ts.type)
+                ?.name}
+            </Body>
+          </div>
+        {/if}
+        <div slot="right" style="display:contents;">
+          {#if panelView === "toolConfig"}
+            <Button
+              cta
+              size="S"
+              on:click={saveToolConfig}
+              disabled={!toolConfigChanged}>Save</Button
+            >
+          {/if}
         </div>
-      </Panel>
-    </div>
+      </NavHeader>
+      {#if panelView === "tools"}
+        <Layout paddingX="L" paddingY="none" gap="S">
+          <InfoDisplay
+            body="Add tools to give your agent knowledge and allow it to take
+                action"
+          />
+          {#if toolSources.length > 0}
+            <div class="saved-tools-list">
+              {#each toolSources as toolSource}
+                {@const menuCallback = createToolMenuCallback(toolSource)}
+                <NavItem
+                  text={ToolSources.find(ts => ts.type === toolSource.type)
+                    ?.name || ""}
+                  on:click={() => openToolsConfig(toolSource)}
+                  on:contextmenu={menuCallback}
+                >
+                  <div class="tool-icon" slot="icon">
+                    <svelte:component
+                      this={Logos[toolSource.type]}
+                      height="16"
+                      width="16"
+                    />
+                  </div>
+                  <Icon
+                    on:click={menuCallback}
+                    hoverable
+                    name="MoreSmallList"
+                  />
+                  <Icon size="S" name="ChevronRight" slot="right" />
+                </NavItem>
+              {/each}
+            </div>
+          {:else}
+            <div class="empty-state">
+              <Body size="S">
+                No tools connected yet.
+                <br />
+                Click "Add Tools" to get started!
+              </Body>
+            </div>
+          {/if}
+        </Layout>
+      {:else if panelView === "toolConfig"}
+        <Layout paddingX="L" paddingY="L" gap="S">
+          {#if selectedConfigToolSource?.tools}
+            <div class="tools-list">
+              {#each selectedConfigToolSource.tools as tool}
+                <div class="tool-toggle-item">
+                  <div class="tool-toggle-info">
+                    <div class="tool-toggle-name">{tool.name}</div>
+                    <div class="tool-toggle-description">
+                      {tool.description}
+                    </div>
+                  </div>
+                  <div class="tool-toggle-switch">
+                    <Toggle
+                      value={!selectedConfigToolSource.disabledTools?.includes(
+                        tool.name
+                      )}
+                      on:change={() => toggleTool(tool.name)}
+                    />
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <div class="empty-state">
+              <Body size="S">No tools available for this source.</Body>
+            </div>
+          {/if}
+        </Layout>
+      {/if}
+    </Panel>
   </div>
 </div>
+
 <Modal bind:this={toolSourceModal}>
   <ModalContent
     title="Tools"
@@ -516,37 +620,38 @@
     showCloseIcon
     onCancel={() => toolSourceModal.hide()}
   >
-    <div class="vote-banner">
-      <Icon name="Hand" />
-      <span> Vote for which tools we add next </span>
-      <Button>Vote</Button>
-    </div>
     <section class="tool-source-tiles">
       {#each ToolSources as toolSource}
         <div class="tool-source-tile">
           <div class="tool-source-header">
-            <div class="tool-source-icon">
-              {#if Logos[toolSource.type]}
+            {#if Logos[toolSource.type]}
+              <div class="tool-source-icon">
                 <svelte:component
                   this={Logos[toolSource.type]}
-                  height="24"
-                  width="24"
+                  height="20"
+                  width="20"
                 />
-              {/if}
-            </div>
+              </div>
+            {/if}
             <Heading size="XS">{toolSource.name}</Heading>
           </div>
-          <Body size="S">
-            {toolSource.description}
-          </Body>
-          <Button
-            cta
-            size="S"
-            disabled={toolSources.some(ts => ts.type === toolSource.type)}
-            on:click={() => openToolConfig(toolSource)}
-          >
-            Connect
-          </Button>
+          <div class="tool-source-description">
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              {toolSource.description}
+            </Body>
+          </div>
+          {#if toolSources.some(ts => ts.type === toolSource.type)}
+            <div class="tile-connected">
+              <Icon size="S" name="CheckmarkCircle" />
+              Connected
+            </div>
+          {:else}
+            <div>
+              <Button cta size="S" on:click={() => openToolConfig(toolSource)}>
+                Connect
+              </Button>
+            </div>
+          {/if}
         </div>
       {/each}
     </section>
@@ -679,79 +784,42 @@
 </Modal>
 
 <style>
-  .page {
-    height: 0;
-    flex: 1 1 auto;
+  .wrapper {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    flex: 1 1 auto;
+  }
+
+  .page {
+    flex: 1 1 auto;
+    display: flex;
     position: relative;
-    overflow-y: scroll;
+    overflow-y: hidden;
     overflow-x: hidden;
-  }
-
-  .layout {
-    display: flex;
     flex-direction: row;
-    height: 100%;
+    height: 0;
     width: 100%;
+    align-items: stretch;
   }
 
-  .history-panel {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 300px;
+  .chat-wrapper {
+    flex: 1 1 auto;
     display: flex;
+    flex-direction: column;
   }
-
   .chat-area {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    margin-left: 300px;
-    max-width: calc(100% - 700px);
-  }
-
-  .panel-container {
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100%;
-    width: 400px;
-    display: flex;
-  }
-
-  .agent-panel {
-    padding: var(--spacing-xl);
-  }
-
-  .agent-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2e3851;
-    border-radius: var(--border-radius-m);
-    padding: var(--spacing-s);
-  }
-
-  .agent-actions-heading {
-    margin-top: var(--spacing-xl);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .tab-content {
-    padding: var(--spacing-xl);
+    height: 0;
   }
 
   .tool-source-tiles {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
   }
 
   .tool-source-tile {
@@ -759,18 +827,33 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    height: 100px;
-    border-radius: 5px;
+    justify-content: flex-start;
+    gap: var(--spacing-m);
+    height: 110px;
+    border-radius: 4px;
   }
 
   .tool-source-header {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
-    margin-bottom: var(--spacing-s);
+    gap: var(--spacing-m);
   }
-
+  .tool-source-description {
+    flex: 1 1 auto;
+  }
+  .tool-source-description :global(p) {
+    overflow: hidden;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+  }
+  .tile-connected {
+    color: var(--spectrum-global-color-green-400);
+    display: flex;
+    gap: 6px;
+    font-size: 12px;
+  }
   .tool-source-icon {
     display: flex;
     align-items: center;
@@ -783,7 +866,7 @@
     width: 600px;
     margin: 0 auto;
     background: var(--background-alt);
-    padding-bottom: 48px;
+    padding-bottom: 32px;
     display: flex;
     flex-direction: column;
   }
@@ -814,88 +897,23 @@
     gap: var(--spacing-l);
   }
 
-  .chat-history {
-    padding: var(--spacing-xl);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-l);
-    margin-top: var(--spacing-l);
-  }
-
-  .history-list {
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .history-item {
-    padding: var(--spacing-m);
-    border: 1px solid var(--spectrum-alias-border-color);
-    border-radius: 8px;
-    margin-bottom: var(--spacing-s);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-    background-color: var(--spectrum-alias-background-color-default);
-  }
-
-  .history-item:hover {
-    background-color: var(--spectrum-alias-background-color-hover);
-    border-color: var(--spectrum-alias-border-color-hover);
-  }
-
-  .history-item.active {
-    background-color: var(--spectrum-alias-background-color-selected);
-    border-color: var(--spectrum-alias-border-color-selected);
-  }
-
-  .chat-title {
-    font-weight: 600;
-    color: var(--spectrum-alias-text-color);
-    margin-bottom: var(--spacing-xs);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .chat-preview {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .empty-state {
     text-align: center;
     padding: var(--spacing-xl);
-    color: var(--spectrum-global-color-gray-600);
+  }
+  .empty-state :global(p) {
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .saved-tools-list {
-    margin-top: var(--spacing-m);
-  }
-
-  .saved-tool-item {
+    margin: 0 calc(-1 * var(--spacing-l));
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-m);
-    gap: var(--spacing-m);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
-    margin-bottom: var(--spacing-s);
-    background-color: var(--background);
+    flex-direction: column;
   }
-
-  .tool-info {
-    flex: 1;
+  .tool-icon {
+    display: grid;
+    place-items: center;
+    margin-right: 4px;
   }
 
   .tool-name {
@@ -904,27 +922,10 @@
     margin-bottom: var(--spacing-xs);
   }
 
-  .tool-actions {
-    display: flex;
-    gap: var(--spacing-s);
-  }
-
-  .tool-source-detail {
-    transform: rotate(180deg);
-  }
-
-  .no-tools-message {
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--spectrum-global-color-gray-600);
-    margin-top: var(--spacing-xl);
-  }
-
   .tool-config-header {
     display: flex;
     flex-direction: row;
     gap: var(--spacing-m);
-    margin-bottom: var(--spacing-xl);
     align-items: center;
   }
 
@@ -933,6 +934,7 @@
     flex-direction: column;
     gap: var(--spacing-m);
     margin-bottom: var(--spacing-xl);
+    overflow: hidden;
   }
 
   .tool-toggle-item {
@@ -941,43 +943,29 @@
     padding: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
-    background-color: var(--background);
+    background-color: var(--background-alt);
     gap: var(--spacing-m);
   }
-
-  .tool-toggle-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
   .tool-toggle-info {
-    flex: 1;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
   }
-
   .tool-toggle-name {
-    font-weight: 600;
     color: var(--spectrum-global-color-gray-900);
     margin-bottom: var(--spacing-xs);
+    font-family: var(--font-mono), monospace;
+    font-size: 11px;
+    word-break: break-all;
   }
-
   .tool-toggle-description {
     font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-700);
   }
-
-  .vote-banner {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-l);
-    background-color: #2e3851;
-    border-radius: var(--border-radius-m);
-    padding: var(--spacing-s);
-  }
-
-  .vote-banner:last-child {
-    margin-left: auto;
+  .tool-toggle-switch {
+    margin-right: -14px;
   }
 
   .delete-confirm-content {
@@ -993,11 +981,12 @@
     padding: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
-    background-color: var(--spectrum-alias-background-color-secondary);
+    background-color: var(--background-alt);
   }
 
   .tool-source-preview .tool-name {
     font-weight: 600;
     color: var(--spectrum-global-color-gray-900);
+    margin: 0;
   }
 </style>

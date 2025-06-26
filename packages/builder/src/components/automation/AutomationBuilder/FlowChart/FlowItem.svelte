@@ -1,13 +1,13 @@
 <script>
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
-  import { Modal } from "@budibase/bbui"
+  import { ViewMode } from "@/types/automations"
+  import { Modal, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { ActionStepID } from "@/constants/backend/automations"
   import { AutomationStepType } from "@budibase/types"
   import FlowItemActions from "./FlowItemActions.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
-  import DragHandle from "@/components/design/settings/controls/DraggableList/drag-handle.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
   import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
@@ -17,7 +17,10 @@
   export let blockRef
   export let automation
   export let draggable = true
-
+  export let logStepData = null
+  export let viewMode = ViewMode.EDITOR
+  export let selectedLogStepId = null
+  export let onStepSelect = () => {}
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
   const contentPos = getContext("contentPos")
@@ -45,7 +48,11 @@
   }
 
   $: selectedNodeId = $automationStore.selectedNodeId
-  $: selected = block.id === selectedNodeId
+  $: selected =
+    viewMode === ViewMode.EDITOR
+      ? block.id === selectedNodeId
+      : viewMode === ViewMode.LOGS &&
+        (block.stepId === selectedLogStepId || block.id === selectedLogStepId)
   $: dragging = $view?.moveStep && $view?.moveStep?.id === block.id
 
   $: if (dragging && blockEle) {
@@ -154,7 +161,13 @@
         }}
       >
         <div class="block-float">
-          <FlowItemStatus {block} {automation} hideStatus={$view?.dragging} />
+          <FlowItemStatus
+            {block}
+            {automation}
+            hideStatus={$view?.dragging}
+            {logStepData}
+            {viewMode}
+          />
         </div>
         {#if draggable}
           <div
@@ -162,13 +175,17 @@
             class:grabbing={dragging}
             on:mousedown={onHandleMouseDown}
           >
-            <DragHandle />
+            <Icon name="dots-six-vertical" weight="bold" />
           </div>
         {/if}
         <div
           class="block-core"
           on:click={async () => {
-            await automationStore.actions.selectNode(block.id)
+            if (viewMode === ViewMode.EDITOR) {
+              await automationStore.actions.selectNode(block.id)
+            } else if (viewMode === ViewMode.LOGS && logStepData) {
+              onStepSelect(logStepData)
+            }
           }}
         >
           <div class="blockSection block-info">
@@ -186,7 +203,7 @@
               <InfoDisplay
                 title={triggerInfo.title}
                 body="This trigger is tied to your '{triggerInfo.tableName}' table"
-                icon="InfoOutline"
+                icon="info"
               />
             </div>
           {/if}
@@ -243,9 +260,9 @@
     display: inline-block;
   }
   .block {
-    width: 360px;
+    width: 320px;
     font-size: 16px;
-    border-radius: 4px;
+    border-radius: 12px;
     cursor: default;
   }
   .block .wrap {
@@ -261,12 +278,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--grey-3);
-    padding: 6px;
-    color: var(--grey-6);
+    background-color: var(--grey-2);
+    padding: 6px 0;
+    color: var(--grey-4);
     cursor: grab;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
   }
   .block.draggable .wrap .handle.grabbing {
     cursor: grabbing;
@@ -278,9 +295,9 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-    background-color: var(--background);
-    border: 1px solid var(--grey-3);
-    border-radius: 4px;
+    background-color: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
   }
   .blockSection {
     padding: var(--spacing-xl);
@@ -322,7 +339,7 @@
     width: 100%;
     position: absolute;
     top: -35px;
-    left: 0px;
+    left: 0;
   }
   .block-core {
     cursor: pointer;
@@ -334,5 +351,40 @@
 
   .block-info {
     pointer-events: none;
+  }
+
+  .log-status-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .status-indicator {
+    font-weight: bold;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  .status-indicator.status-success {
+    background: var(--spectrum-global-color-green-600);
+  }
+
+  .status-indicator.status-error {
+    background: var(--spectrum-global-color-red-600);
+  }
+
+  .status-text {
+    font-weight: 600;
+    text-transform: uppercase;
   }
 </style>

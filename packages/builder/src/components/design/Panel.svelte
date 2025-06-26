@@ -39,39 +39,41 @@
   class:borderRight
   style={panelStyle}
 >
-  <div
-    class="header"
-    class:custom={customHeaderContent}
-    class:borderBottom={borderBottomHeader}
-    class:noHeaderBorder
-  >
-    {#if showBackButton}
-      <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
-    {/if}
-    {#if icon}
-      <Icon
-        name={icon}
-        tooltipType={TooltipType.Info}
-        tooltip={iconTooltip}
-        tooltipPosition={TooltipPosition.Top}
-      />
-    {/if}
-    <div class:title={titleCSS}>
-      {#if customTitleContent}
-        <slot name="panel-title-content" />
-      {:else}
-        <Body size="S">{title || ""}</Body>
+  {#if title || customTitleContent}
+    <div
+      class="header"
+      class:custom={customHeaderContent}
+      class:borderBottom={borderBottomHeader}
+      class:noHeaderBorder
+    >
+      {#if showBackButton}
+        <Icon name="arrow-left" hoverable on:click={onClickBackButton} />
+      {/if}
+      {#if icon}
+        <Icon
+          name={icon}
+          tooltipType={TooltipType.Info}
+          tooltip={iconTooltip}
+          tooltipPosition={TooltipPosition.Top}
+        />
+      {/if}
+      <div class:title={titleCSS}>
+        {#if customTitleContent}
+          <slot name="panel-title-content" />
+        {:else}
+          <Body size="S">{title || ""}</Body>
+        {/if}
+      </div>
+      {#if showAddButton}
+        <div class="add-button" on:click={onClickAddButton}>
+          <Icon name="plus" />
+        </div>
+      {/if}
+      {#if showCloseButton}
+        <Icon name={closeButtonIcon} hoverable on:click={onClickCloseButton} />
       {/if}
     </div>
-    {#if showAddButton}
-      <div class="add-button" on:click={onClickAddButton}>
-        <Icon name="Add" />
-      </div>
-    {/if}
-    {#if showCloseButton}
-      <Icon name={closeButtonIcon} hoverable on:click={onClickCloseButton} />
-    {/if}
-  </div>
+  {/if}
 
   {#if customHeaderContent}
     <span class="custom-content-wrap">
@@ -128,6 +130,7 @@
   .header.borderBottom {
     border-bottom: var(--border-light);
   }
+
   .title {
     flex: 1 1 auto;
     width: 0;

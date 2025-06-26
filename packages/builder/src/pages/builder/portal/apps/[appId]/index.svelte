@@ -33,13 +33,13 @@
   let appContextMenuModals: AppContextMenuModals
 
   const getIframeURL = (app: EnrichedApp) => {
-    loading = true
+    const workspaceUrl =
+      app.status === "published" ? `/app${app.url}` : `/${app.devId}`
 
-    if (app.status === "published") {
-      return `/app${app.url}`
-    }
-    return `/${app.devId}`
+    return `${workspaceUrl}${app.defaultWorkspaceAppUrl}`
   }
+
+  $: iframeUrl && (loading = true) // If the iframe changes, set loading to true
 
   let noScreens = false
 
@@ -93,7 +93,7 @@
     {#if $sideBarCollapsed}
       <div class="headerButton" on:click={() => sideBarCollapsed.set(false)}>
         <Icon
-          name={"Rail"}
+          name="sidebar"
           hoverable
           tooltip="Expand"
           tooltipPosition={TooltipPosition.Right}
@@ -104,7 +104,7 @@
     {:else}
       <div class="headerButton" on:click={() => sideBarCollapsed.set(true)}>
         <Icon
-          name={"RailRightOpen"}
+          name="sidebar-simple"
           hoverable
           tooltip="Collapse"
           tooltipType={TooltipType.Info}
@@ -128,7 +128,7 @@
     </div>
     <div class="headerButton" on:click={() => window.open(iframeUrl, "_blank")}>
       <Icon
-        name="LinkOut"
+        name="arrow-square-out"
         disabled={noScreens}
         hoverable
         tooltip="Open in new tab"
@@ -146,7 +146,7 @@
       on:click={openContextMenu}
       size="S"
       hoverable
-      name="MoreSmallList"
+      name="dots-three-horizontal"
     />
   </div>
   {#if noScreens}
