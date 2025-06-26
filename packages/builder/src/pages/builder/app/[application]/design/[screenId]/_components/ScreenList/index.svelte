@@ -5,7 +5,7 @@
   import { workspaceAppStore } from "@/stores/builder/workspaceApps"
   import { featureFlags } from "@/stores/portal"
   import { Layout } from "@budibase/bbui"
-  import { FeatureFlag, type Screen } from "@budibase/types"
+  import { type Screen } from "@budibase/types"
   import NewScreenModal from "../../../_components/NewScreen/index.svelte"
   import ScreenNavItem from "./ScreenNavItem.svelte"
 
@@ -17,7 +17,7 @@
   let scrolling = false
   let newScreenModal: NewScreenModal
 
-  $: allScreens = $featureFlags[FeatureFlag.WORKSPACE_APPS]
+  $: allScreens = $featureFlags.WORKSPACE_APPS
     ? $workspaceAppStore.selectedWorkspaceApp?.screens || []
     : $sortedScreens
   $: filteredScreens = getFilteredScreens(allScreens, searchValue)

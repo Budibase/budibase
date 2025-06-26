@@ -17,7 +17,6 @@
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
   import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
@@ -40,7 +39,7 @@
 </script>
 
 <div class="wrapper">
-  {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+  {#if $featureFlags.WORKSPACE_APPS}
     <TopBar breadcrumbs={[{ text: "Automations" }]} icon="lightning-a"></TopBar>
   {/if}
   <div class="root">

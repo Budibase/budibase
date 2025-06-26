@@ -7,7 +7,6 @@
   import LeftPanel from "./_components/LeftPanel.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
 
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
@@ -34,7 +33,7 @@
 
 {#if $selectedScreen}
   <div class="design">
-    {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+    {#if $featureFlags.WORKSPACE_APPS}
       <TopBar breadcrumbs={[{ text: "Design" }]} icon="layout"></TopBar>
     {/if}
     <div class="content">
