@@ -242,9 +242,12 @@ export const publishApp = async function (
     appDoc.instance._id = productionAppId
     if (automationIds?.length || workspaceAppIds?.length) {
       const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
-      appDoc.resourcesPublishedAt = Object.fromEntries(
-        fullMap.map(id => [id, new Date().toISOString()])
-      )
+      appDoc.resourcesPublishedAt = {
+        ...prodAppDoc?.resourcesPublishedAt,
+        ...Object.fromEntries(
+          fullMap.map(id => [id, new Date().toISOString()])
+        ),
+      }
     }
     // remove automation errors if they exist
     delete appDoc.automationErrors
