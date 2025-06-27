@@ -18,8 +18,8 @@ const MIGRATIONS: AppMigration[] = [
 const config = setup.getConfig()
 
 describe.each([
-  ["dev", config.getAppId],
-  ["prod", config.getProdAppId],
+  ["dev", () => config.getAppId()],
+  ["prod", () => config.getProdAppId()],
 ])("Workspace apps (%s)", (_, getAppId) => {
   beforeAll(async () => {
     await config.init()

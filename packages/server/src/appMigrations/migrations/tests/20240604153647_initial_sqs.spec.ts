@@ -67,8 +67,8 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
 }
 
 describe.each([
-  ["dev", config.getAppId],
-  ["prod", config.getProdAppId],
+  ["dev", () => config.getAppId()],
+  ["prod", () => config.getProdAppId()],
 ])("SQS migration (%s)", (_, getAppId) => {
   beforeAll(async () => {
     await config.init()
