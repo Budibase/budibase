@@ -23,80 +23,82 @@ export async function processMigrations(
     const isPublished = await db.dbExists(prodAppId)
     const appIdToMigrate = isPublished ? prodAppId : devAppId
 
-    // first step - setup full context - tenancy, app and guards
-    await context.doInAppMigrationContext(appIdToMigrate, async () => {
-      await locks.doWithLock(
-        {
-          name: LockName.APP_MIGRATION,
-          type: LockType.AUTO_EXTEND,
-          resource: prodAppId,
-        },
-        async () => {
-          console.log(
-            `Lock acquired starting app migration for "${appIdToMigrate}"`
-          )
+    await locks.doWithLock(
+      {
+        name: LockName.APP_MIGRATION,
+        type: LockType.AUTO_EXTEND,
+        resource: prodAppId,
+      },
+      async () => {
+        console.log(
+          `Lock acquired starting app migration for "${appIdToMigrate}"`
+        )
 
-          let currentVersion = await getAppMigrationVersion(appIdToMigrate)
+        let currentVersion = await getAppMigrationVersion(appIdToMigrate)
 
-          const currentIndexMigration = migrations.findIndex(
-            m => m.id === currentVersion
-          )
+        const currentIndexMigration = migrations.findIndex(
+          m => m.id === currentVersion
+        )
 
-          const pendingMigrations = migrations.slice(currentIndexMigration + 1)
+        const pendingMigrations = migrations.slice(currentIndexMigration + 1)
 
-          const migrationIds = migrations.map(m => m.id)
-          console.log(
-            `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
-          )
+        const migrationIds = migrations.map(m => m.id)
+        console.log(
+          `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
+        )
 
-          let index = 0
-          for (const { id, func, disabled } of pendingMigrations) {
-            if (disabled) {
-              // If we find a disabled migration, we prevent running any other
-              return
-            }
-            const expectedMigration =
-              migrationIds[migrationIds.indexOf(currentVersion) + 1]
+        let index = 0
+        for (const { id, func, disabled } of pendingMigrations) {
+          if (disabled) {
+            // If we find a disabled migration, we prevent running any other
+            return
+          }
+          const expectedMigration =
+            migrationIds[migrationIds.indexOf(currentVersion) + 1]
 
-            if (expectedMigration !== id) {
-              throw new Error(
-                `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
-              )
-            }
+          if (expectedMigration !== id) {
+            throw new Error(
+              `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
+            )
+          }
 
-            const counter = `(${++index}/${pendingMigrations.length})`
-            console.info(`Running migration ${id}... ${counter}`, {
-              migrationId: id,
-              appId: appIdToMigrate,
-            })
+          const counter = `(${++index}/${pendingMigrations.length})`
+          console.info(`Running migration ${id}... ${counter}`, {
+            migrationId: id,
+            appId: appIdToMigrate,
+          })
+
+          // setup full context - tenancy, app and guards
+          await context.doInAppMigrationContext(appIdToMigrate, async () => {
             await func()
             await updateAppMigrationMetadata({
               appId: appIdToMigrate,
               version: id,
             })
+          })
 
-            if (isPublished) {
-              await sdk.applications.syncApp(devAppId)
-              console.log(`App for dev syncronised for "${devAppId}"`)
+          if (isPublished) {
+            await sdk.applications.syncApp(devAppId)
+            console.log(`App for dev syncronised for "${devAppId}"`)
 
-              await context.doInAppMigrationContext(devAppId, async () => {
-                await func()
-                await updateAppMigrationMetadata({
-                  appId: devAppId,
-                  version: id,
-                })
+            // setup full context - tenancy, app and guards
+            await context.doInAppMigrationContext(devAppId, async () => {
+              await func()
+              await updateAppMigrationMetadata({
+                appId: devAppId,
+                version: id,
               })
+            })
 
-              console.log(`Migration ran for dev app "${devAppId}"`)
-            }
-
-            currentVersion = id
+            console.log(`Migration ran for dev app "${devAppId}"`)
           }
 
-          console.log(`App migration for "${appIdToMigrate}" processed`)
+          currentVersion = id
         }
-      )
-    })
+
+        console.log(`App migration for "${appIdToMigrate}" processed`)
+      }
+    )
   } catch (err) {
     logging.logAlert("Failed to run app migration", err)
     throw err
