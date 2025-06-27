@@ -71,7 +71,7 @@ describe("SQS migration", () => {
     await config.init()
     const table = await config.api.table.save(basicTable())
     tableId = table._id!
-    const db = dbCore.getDB(config.appId!)
+    const db = dbCore.getDB(config.getAppId())
     // old link document
     await db.put(oldLinkDocument())
   })
@@ -86,13 +86,13 @@ describe("SQS migration", () => {
   })
 
   it("test migration runs as expected against an older DB", async () => {
-    const db = dbCore.getDB(config.appId!)
+    const db = dbCore.getDB(config.getAppId())
 
     // remove sqlite design doc to simulate it comes from an older installation
     const doc = await db.get(SQLITE_DESIGN_DOC_ID)
     await db.remove({ _id: doc._id, _rev: doc._rev })
 
-    await processMigrations(config.appId!, MIGRATIONS)
+    await processMigrations(config.getAppId(), MIGRATIONS)
     const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
     expect(designDoc.sql.tables).toBeDefined()
     const mainTableDef = designDoc.sql.tables[tableId]
