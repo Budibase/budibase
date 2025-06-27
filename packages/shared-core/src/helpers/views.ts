@@ -6,7 +6,7 @@ import {
   ViewV2,
   ViewV2Type,
 } from "@budibase/types"
-import { pickBy } from "lodash"
+import { pickBy } from "lodash-es"
 
 export function isCalculationField(
   field: ViewFieldMetadata
@@ -30,19 +30,19 @@ export function hasCalculationFields(view: UnsavedViewV2) {
   return Object.values(view.schema || {}).some(isCalculationField)
 }
 
-export function calculationFields(view: UnsavedViewV2) {
-  return pickBy(view.schema || {}, isCalculationField)
+export function calculationFields(view: UnsavedViewV2): Record<string, ViewCalculationFieldMetadata> {
+  return pickBy(view.schema || {}, isCalculationField) as Record<string, ViewCalculationFieldMetadata>
 }
 
 export function isVisible(field: ViewFieldMetadata) {
   return field.visible !== false
 }
 
-export function basicFields(view: UnsavedViewV2, opts?: { visible?: boolean }) {
+export function basicFields(view: UnsavedViewV2, opts?: { visible?: boolean }): Record<string, BasicViewFieldMetadata> {
   const { visible = true } = opts || {}
   return pickBy(view.schema || {}, field => {
     return !isCalculationField(field) && (!visible || isVisible(field))
-  })
+  }) as Record<string, BasicViewFieldMetadata>
 }
 
 export function isV2(view: View | ViewV2): view is ViewV2 {

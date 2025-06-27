@@ -16,9 +16,12 @@
   },
   "dependencies": {
     "@budibase/types": "*",
-    "cron-validate": "1.4.5"
+    "cron-validate": "1.4.5",
+    "lodash-es": "^4.17.21"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "lodash": "^4.17.21",
     "rimraf": "3.0.2",
     "typescript": "5.7.2"
   },
