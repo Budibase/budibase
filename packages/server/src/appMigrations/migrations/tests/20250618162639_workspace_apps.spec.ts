@@ -17,53 +17,53 @@ const MIGRATIONS: AppMigration[] = [
 
 const config = setup.getConfig()
 
-describe.each([["dev", config.getAppId], "prod", config.getProdAppId])(
-  "Workspace apps (%s)",
-  (_, getAppId) => {
-    beforeAll(async () => {
-      await config.init()
-    })
+describe.each([
+  ["dev", config.getAppId],
+  ["prod", config.getProdAppId],
+])("Workspace apps (%s)", (_, getAppId) => {
+  beforeAll(async () => {
+    await config.init()
+  })
 
-    beforeEach(async () => {
-      tk.reset()
-      for (const appId of [config.getAppId(), config.getProdAppId()]) {
-        await config.doInContext(appId, async () => {
-          await updateAppMigrationMetadata({
-            appId,
-            version: "",
-          })
-
-          // remove workspace apps to simulate it comes from an older installation
-          const workspaceApps = await sdk.workspaceApps.fetch()
-          const db = context.getAppDB()
-          await db.bulkRemove(workspaceApps)
-          expect(await sdk.workspaceApps.fetch()).toBeEmpty()
+  beforeEach(async () => {
+    tk.reset()
+    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      await config.doInContext(appId, async () => {
+        await updateAppMigrationMetadata({
+          appId,
+          version: "",
         })
-      }
 
-      tk.freeze(structures.generator.date())
-    })
+        // remove workspace apps to simulate it comes from an older installation
+        const workspaceApps = await sdk.workspaceApps.fetch()
+        const db = context.getAppDB()
+        await db.bulkRemove(workspaceApps)
+        expect(await sdk.workspaceApps.fetch()).toBeEmpty()
+      })
+    }
 
-    it("migration will never create multiple workspace apps", async () => {
-      await config.doInContext(getAppId(), () =>
-        processMigrations(config.getAppId(), MIGRATIONS)
-      )
+    tk.freeze(structures.generator.date())
+  })
 
-      const devWorkspaceApps = await config.doInContext(
-        config.getAppId(),
-        sdk.workspaceApps.fetch
-      )
-      const prodWorkspaceApps = await config.doInContext(
-        config.getProdAppId(),
-        sdk.workspaceApps.fetch
-      )
+  it("migration will never create multiple workspace apps", async () => {
+    await config.doInContext(getAppId(), () =>
+      processMigrations(config.getAppId(), MIGRATIONS)
+    )
 
-      expect(devWorkspaceApps).toHaveLength(1)
-      expect(prodWorkspaceApps).toHaveLength(1)
+    const devWorkspaceApps = await config.doInContext(
+      config.getAppId(),
+      sdk.workspaceApps.fetch
+    )
+    const prodWorkspaceApps = await config.doInContext(
+      config.getProdAppId(),
+      sdk.workspaceApps.fetch
+    )
 
-      expect(devWorkspaceApps).toEqual(prodWorkspaceApps)
-      // Ensure this was created during the migration
-      expect(devWorkspaceApps[0].createdAt).toEqual(new Date().toISOString())
-    })
-  }
-)
+    expect(devWorkspaceApps).toHaveLength(1)
+    expect(prodWorkspaceApps).toHaveLength(1)
+
+    expect(devWorkspaceApps).toEqual(prodWorkspaceApps)
+    // Ensure this was created during the migration
+    expect(devWorkspaceApps[0].createdAt).toEqual(new Date().toISOString())
+  })
+})

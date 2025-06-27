@@ -66,62 +66,60 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
   }
 }
 
-describe.each([["dev", config.getAppId], "prod", config.getProdAppId])(
-  "SQS migration (%s)",
-  (_, getAppId) => {
-    beforeAll(async () => {
-      await config.init()
-      const table = await config.api.table.save(basicTable())
-      tableId = table._id!
-      const db = dbCore.getDB(config.getAppId())
-      // old link document
-      await db.put(oldLinkDocument())
-    })
+describe.each([
+  ["dev", config.getAppId],
+  ["prod", config.getProdAppId],
+])("SQS migration (%s)", (_, getAppId) => {
+  beforeAll(async () => {
+    await config.init()
+    const table = await config.api.table.save(basicTable())
+    tableId = table._id!
+    const db = dbCore.getDB(config.getAppId())
+    // old link document
+    await db.put(oldLinkDocument())
+  })
 
-    beforeEach(async () => {
-      for (const appId of [config.getAppId(), config.getProdAppId()]) {
-        await config.doInTenant(async () => {
-          await updateAppMigrationMetadata({
-            appId,
-            version: "",
-          })
+  beforeEach(async () => {
+    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      await config.doInTenant(async () => {
+        await updateAppMigrationMetadata({
+          appId,
+          version: "",
         })
-      }
+      })
+    }
+  })
+
+  it("test migration runs as expected against an older DB", async () => {
+    const db = dbCore.getDB(config.getAppId())
+
+    // remove sqlite design doc to simulate it comes from an older installation
+    const doc = await db.get(SQLITE_DESIGN_DOC_ID)
+    await db.remove({ _id: doc._id, _rev: doc._rev })
+
+    await config.doInContext(getAppId(), () =>
+      processMigrations(config.getAppId(), MIGRATIONS)
+    )
+    const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    expect(designDoc.sql.tables).toBeDefined()
+    const mainTableDef = designDoc.sql.tables[tableId]
+    expect(mainTableDef).toBeDefined()
+    expect(mainTableDef.fields[prefix("name")]).toEqual({
+      field: "name",
+      type: SQLiteType.TEXT,
+    })
+    expect(mainTableDef.fields[prefix("description")]).toEqual({
+      field: "description",
+      type: SQLiteType.TEXT,
     })
 
-    it("test migration runs as expected against an older DB", async () => {
-      const db = dbCore.getDB(config.getAppId())
-
-      // remove sqlite design doc to simulate it comes from an older installation
-      const doc = await db.get(SQLITE_DESIGN_DOC_ID)
-      await db.remove({ _id: doc._id, _rev: doc._rev })
-
-      await config.doInContext(getAppId(), () =>
-        processMigrations(config.getAppId(), MIGRATIONS)
-      )
-      const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-      expect(designDoc.sql.tables).toBeDefined()
-      const mainTableDef = designDoc.sql.tables[tableId]
-      expect(mainTableDef).toBeDefined()
-      expect(mainTableDef.fields[prefix("name")]).toEqual({
-        field: "name",
-        type: SQLiteType.TEXT,
-      })
-      expect(mainTableDef.fields[prefix("description")]).toEqual({
-        field: "description",
-        type: SQLiteType.TEXT,
-      })
-
-      const { tableId1, tableId2, rowId1, rowId2 } = oldLinkDocInfo()
-      const linkDoc = await db.get<LinkDocument>(oldLinkDocID())
-      expect(linkDoc.tableId).toEqual(
-        generateJunctionTableID(tableId1, tableId2)
-      )
-      // should have swapped the documents
-      expect(linkDoc.doc1.tableId).toEqual(tableId2)
-      expect(linkDoc.doc1.rowId).toEqual(rowId2)
-      expect(linkDoc.doc2.tableId).toEqual(tableId1)
-      expect(linkDoc.doc2.rowId).toEqual(rowId1)
-    })
-  }
-)
+    const { tableId1, tableId2, rowId1, rowId2 } = oldLinkDocInfo()
+    const linkDoc = await db.get<LinkDocument>(oldLinkDocID())
+    expect(linkDoc.tableId).toEqual(generateJunctionTableID(tableId1, tableId2))
+    // should have swapped the documents
+    expect(linkDoc.doc1.tableId).toEqual(tableId2)
+    expect(linkDoc.doc1.rowId).toEqual(rowId2)
+    expect(linkDoc.doc2.tableId).toEqual(tableId1)
+    expect(linkDoc.doc2.rowId).toEqual(rowId1)
+  })
+})
