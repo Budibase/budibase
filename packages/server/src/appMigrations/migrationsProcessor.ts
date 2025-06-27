@@ -1,4 +1,4 @@
-import { context, locks, logging } from "@budibase/backend-core"
+import { context, db, locks, logging } from "@budibase/backend-core"
 import { LockName, LockType } from "@budibase/types"
 
 import {
@@ -7,25 +7,35 @@ import {
 } from "./appMigrationMetadata"
 import { AppMigration } from "."
 import { MIGRATIONS } from "./migrations"
+import sdk from "../sdk"
 
 export async function processMigrations(
   appId: string,
   migrations: AppMigration[] = MIGRATIONS
 ) {
   console.log(`Processing app migration for "${appId}"`)
+
   try {
-    // first step - setup full context - tenancy, app and guards
-    await context.doInAppMigrationContext(appId, async () => {
-      console.log(`Acquiring app migration lock for "${appId}"`)
-      await locks.doWithLock(
-        {
-          name: LockName.APP_MIGRATION,
-          type: LockType.AUTO_EXTEND,
-          resource: appId,
-        },
-        async () => {
-          console.log(`Lock acquired starting app migration for "${appId}"`)
-          let currentVersion = await getAppMigrationVersion(appId)
+    console.log(`Acquiring app migration lock for "${appId}"`)
+    await locks.doWithLock(
+      {
+        name: LockName.APP_MIGRATION,
+        type: LockType.AUTO_EXTEND,
+        resource: appId,
+      },
+      async () => {
+        const devAppId = db.getDevAppID(appId)
+        const prodAppId = db.getProdAppID(appId)
+        const isPublished = await db.dbExists(prodAppId)
+        const appIdToMigrate = isPublished ? prodAppId : devAppId
+
+        // first step - setup full context - tenancy, app and guards
+        await context.doInAppMigrationContext(appIdToMigrate, async () => {
+          console.log(
+            `Lock acquired starting app migration for "${appIdToMigrate}"`
+          )
+
+          let currentVersion = await getAppMigrationVersion(appIdToMigrate)
 
           const currentIndexMigration = migrations.findIndex(
             m => m.id === currentVersion
@@ -35,7 +45,7 @@ export async function processMigrations(
 
           const migrationIds = migrations.map(m => m.id)
           console.log(
-            `App migrations to run for "${appId}" - ${migrationIds.join(",")}`
+            `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
           )
 
           let index = 0
@@ -56,19 +66,29 @@ export async function processMigrations(
             const counter = `(${++index}/${pendingMigrations.length})`
             console.info(`Running migration ${id}... ${counter}`, {
               migrationId: id,
-              appId,
+              appId: appIdToMigrate,
             })
             await func()
             await updateAppMigrationMetadata({
-              appId,
+              appId: appIdToMigrate,
               version: id,
             })
             currentVersion = id
           }
-        }
-      )
-    })
-    console.log(`App migration for "${appId}" processed`)
+
+          if (isPublished) {
+            await sdk.applications.syncApp(devAppId)
+            await updateAppMigrationMetadata({
+              appId: devAppId,
+              version: migrationIds[migrationIds.length - 1],
+            })
+            console.log(`App for dev syncronised for "${devAppId}"`)
+          }
+
+          console.log(`App migration for "${appIdToMigrate}" processed`)
+        })
+      }
+    )
   } catch (err) {
     logging.logAlert("Failed to run app migration", err)
     throw err
