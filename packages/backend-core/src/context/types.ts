@@ -13,7 +13,7 @@ export type ContextMap = {
   isScim?: boolean
   ip?: string
   automationId?: string
-  isMigrating?: string[]
+  isMigrating?: boolean
   vm?: VM
   cleanup?: (() => void | Promise<void>)[]
   snippets?: Snippet[]

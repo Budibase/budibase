@@ -117,7 +117,7 @@ function updateContext(updates: ContextMap): ContextMap {
 }
 
 async function newContext<T>(updates: ContextMap, task: () => T) {
-  guardMigration(updates.appId)
+  guardMigration()
 
   // see if there already is a context setup
   let context: ContextMap = updateContext(updates)
@@ -245,13 +245,9 @@ export async function doInIdentityContext<T>(
   return newContext(context, task)
 }
 
-function guardMigration(appId: string | undefined) {
-  if (!appId) {
-    return
-  }
-
+function guardMigration() {
   const context = Context.get()
-  if (context?.isMigrating?.includes(appId)) {
+  if (context?.isMigrating) {
     throw new Error(
       "The context cannot be changed, a migration is currently running"
     )
@@ -262,9 +258,8 @@ export async function doInAppMigrationContext<T>(
   appId: string,
   task: () => T
 ): Promise<T> {
-  const context = Context.get()
   return _doInAppContext(appId, task, {
-    isMigrating: [...(context?.isMigrating || []), appId],
+    isMigrating: true,
   })
 }
 
