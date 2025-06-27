@@ -23,6 +23,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   })
 
   beforeEach(async () => {
+    jest.clearAllMocks()
     await config.newTenant()
   })
 
@@ -47,6 +48,61 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         await config.doInContext(appId, () => getAppMigrationVersion(appId))
       ).toBe(testMigrations[2].id)
     }
+  })
+
+  it("syncs the dev app before applying each migration", async () => {
+    const executionOrder: string[] = []
+    let syncCallCount = 0
+
+    jest.spyOn(sdk.applications, "syncApp").mockImplementation(async () => {
+      syncCallCount++
+      executionOrder.push(`sync-${syncCallCount}`)
+      return undefined as any
+    })
+
+    const testMigrations: AppMigration[] = [
+      {
+        id: generateMigrationId(),
+        func: async () => {
+          const db = context.getAppDB()
+          executionOrder.push(`${db.name}-migration-1`)
+        },
+      },
+      {
+        id: generateMigrationId(),
+        func: async () => {
+          const db = context.getAppDB()
+          executionOrder.push(`${db.name}-migration-2`)
+        },
+      },
+      {
+        id: generateMigrationId(),
+        func: async () => {
+          const db = context.getAppDB()
+          executionOrder.push(`${db.name}-migration-3`)
+        },
+      },
+    ]
+
+    await runMigrations(testMigrations)
+
+    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      expect(
+        await config.doInContext(appId, () => getAppMigrationVersion(appId))
+      ).toBe(testMigrations[2].id)
+    }
+
+    expect(executionOrder).toEqual([
+      `${config.getProdAppId()}-migration-1`,
+      "sync-1",
+      `${config.getAppId()}-migration-1`,
+      `${config.getProdAppId()}-migration-2`,
+      "sync-2",
+      `${config.getAppId()}-migration-2`,
+      `${config.getProdAppId()}-migration-3`,
+      "sync-3",
+      `${config.getAppId()}-migration-3`,
+    ])
   })
 
   it("no context can be initialised within a migration", async () => {
