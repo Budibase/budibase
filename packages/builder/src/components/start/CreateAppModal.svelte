@@ -9,7 +9,13 @@
   } from "@budibase/bbui"
   import { initialise } from "@/stores/builder"
   import { API } from "@/api"
-  import { appsStore, admin, auth, featureFlags } from "@/stores/portal"
+  import {
+    appsStore,
+    admin,
+    auth,
+    featureFlags,
+    appCreationStore,
+  } from "@/stores/portal"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
@@ -18,8 +24,6 @@
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
   import type { AppTemplate } from "@/types"
-
-  export let template: AppTemplate | null
 
   let creating = false
   let defaultAppName: string
@@ -36,6 +40,8 @@
   const validation = createValidationStore()
   const encryptionValidation = createValidationStore()
   const isEncryptedRegex = /^.*\.enc.*\.tar\.gz$/gm
+
+  $: template = $appCreationStore.template
 
   $: {
     const { url } = $values
@@ -137,11 +143,13 @@
         if ($values.encryptionPassword?.trim()) {
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
-      } else if (template) {
+      } else if (template && !template.fromFile) {
         data.append("useTemplate", "true")
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
       }
+
+      data.append("isOnboarding", "false")
 
       // Create App
       const createdApp = await API.createApp(data)
