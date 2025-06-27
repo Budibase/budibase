@@ -77,12 +77,14 @@ describe("SQS migration", () => {
   })
 
   beforeEach(async () => {
-    await config.doInTenant(async () => {
-      await updateAppMigrationMetadata({
-        appId: config.getAppId(),
-        version: "",
+    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      await config.doInTenant(async () => {
+        await updateAppMigrationMetadata({
+          appId,
+          version: "",
+        })
       })
-    })
+    }
   })
 
   it("test migration runs as expected against an older DB", async () => {
