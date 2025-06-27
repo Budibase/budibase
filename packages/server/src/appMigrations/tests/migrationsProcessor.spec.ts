@@ -7,6 +7,8 @@ import {
 import { context } from "@budibase/backend-core"
 import { AppMigration } from ".."
 import { generator } from "@budibase/backend-core/tests"
+import sdk from "../../sdk"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
 
 function generateMigrationId() {
   return generator.guid()
@@ -262,4 +264,135 @@ describe("migrationsProcessor", () => {
       expect(executionOrder).toEqual([])
     })
   })
+
+  describe.each([true, false])(
+    "published app handling (from prod: %s)",
+    fromProd => {
+      let mockSyncApp: jest.SpyInstance
+
+      beforeEach(() => {
+        mockSyncApp = jest
+          .spyOn(sdk.applications, "syncApp")
+          .mockResolvedValue(undefined as any)
+      })
+
+      afterEach(() => {
+        mockSyncApp.mockRestore()
+      })
+
+      async function runMigrations(
+        config: TestConfiguration,
+        migrations: AppMigration[],
+        { devAppId, prodAppId }: { devAppId: string; prodAppId: string }
+      ) {
+        const fromAppId = fromProd ? prodAppId : devAppId
+        await config.doInContext(fromAppId, () =>
+          processMigrations(fromAppId, migrations)
+        )
+      }
+
+      it("should migrate production app when app is published", async () => {
+        const executionOrder: string[] = []
+        const testMigrations: AppMigration[] = [
+          {
+            id: generateMigrationId(),
+            func: async () => {
+              const db = context.getAppDB()
+              executionOrder.push(db.name)
+            },
+          },
+        ]
+
+        const config = setup.getConfig()
+        await config.init()
+
+        const devAppId = config.getAppId()
+        const prodAppId = config.getProdAppId()
+
+        await runMigrations(config, testMigrations, { devAppId, prodAppId })
+
+        expect(executionOrder).toHaveLength(1)
+        expect(executionOrder[0]).toBe(prodAppId)
+      })
+
+      it("should sync dev app after migrating published app", async () => {
+        const testMigrations: AppMigration[] = [
+          {
+            id: generateMigrationId(),
+            func: async () => {},
+          },
+        ]
+
+        const config = setup.getConfig()
+        await config.init()
+        mockSyncApp.mockClear()
+
+        const devAppId = config.getAppId()
+        const prodAppId = config.getProdAppId()
+
+        await runMigrations(config, testMigrations, { devAppId, prodAppId })
+
+        expect(mockSyncApp).toHaveBeenCalledTimes(1)
+        expect(mockSyncApp).toHaveBeenCalledWith(devAppId)
+      })
+
+      it("should update migration metadata for both prod and dev apps", async () => {
+        const testMigrations: AppMigration[] = [
+          {
+            id: generateMigrationId(),
+            func: async () => {},
+          },
+        ]
+
+        const config = setup.getConfig()
+        await config.init()
+
+        const devAppId = config.getAppId()
+        const prodAppId = config.getProdAppId()
+
+        for (const appId of [devAppId, prodAppId]) {
+          expect(
+            await config.doInContext(appId, () => getAppMigrationVersion(appId))
+          ).not.toBe(testMigrations[0].id)
+        }
+
+        await runMigrations(config, testMigrations, { devAppId, prodAppId })
+
+        for (const appId of [devAppId, prodAppId]) {
+          expect(
+            await config.doInContext(appId, () => getAppMigrationVersion(appId))
+          ).toBe(testMigrations[0].id)
+        }
+      })
+
+      !fromProd &&
+        it("should migrate dev app when app is not published", async () => {
+          const executionOrder: string[] = []
+          const testMigrations: AppMigration[] = [
+            {
+              id: generateMigrationId(),
+              func: async () => {
+                const db = context.getAppDB()
+                executionOrder.push(db.name)
+              },
+            },
+          ]
+
+          const config = setup.getConfig()
+          await config.init()
+          mockSyncApp.mockClear()
+          await config.unpublish()
+
+          const devAppId = config.getAppId()
+
+          await config.doInContext(devAppId, () =>
+            processMigrations(devAppId, testMigrations)
+          )
+
+          expect(executionOrder).toHaveLength(1)
+          expect(executionOrder[0]).toBe(devAppId)
+          expect(mockSyncApp).not.toHaveBeenCalled()
+        })
+    }
+  )
 })
