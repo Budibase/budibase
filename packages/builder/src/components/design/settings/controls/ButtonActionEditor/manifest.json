@@ -194,6 +194,11 @@
           "value": "copied"
         }
       ]
+    },
+    {
+      "name": "Delay",
+      "type": "logic",
+      "component": "Delay"
     }
   ]
 }
