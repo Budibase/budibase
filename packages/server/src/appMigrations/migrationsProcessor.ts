@@ -17,20 +17,21 @@ export async function processMigrations(
 
   try {
     console.log(`Acquiring app migration lock for "${appId}"`)
-    await locks.doWithLock(
-      {
-        name: LockName.APP_MIGRATION,
-        type: LockType.AUTO_EXTEND,
-        resource: appId,
-      },
-      async () => {
-        const devAppId = db.getDevAppID(appId)
-        const prodAppId = db.getProdAppID(appId)
-        const isPublished = await db.dbExists(prodAppId)
-        const appIdToMigrate = isPublished ? prodAppId : devAppId
 
-        // first step - setup full context - tenancy, app and guards
-        await context.doInAppMigrationContext(appIdToMigrate, async () => {
+    const devAppId = db.getDevAppID(appId)
+    const prodAppId = db.getProdAppID(appId)
+    const isPublished = await db.dbExists(prodAppId)
+    const appIdToMigrate = isPublished ? prodAppId : devAppId
+
+    // first step - setup full context - tenancy, app and guards
+    await context.doInAppMigrationContext(appIdToMigrate, async () => {
+      await locks.doWithLock(
+        {
+          name: LockName.APP_MIGRATION,
+          type: LockType.AUTO_EXTEND,
+          resource: prodAppId,
+        },
+        async () => {
           console.log(
             `Lock acquired starting app migration for "${appIdToMigrate}"`
           )
@@ -73,22 +74,29 @@ export async function processMigrations(
               appId: appIdToMigrate,
               version: id,
             })
+
+            if (isPublished) {
+              await sdk.applications.syncApp(devAppId)
+              console.log(`App for dev syncronised for "${devAppId}"`)
+
+              await context.doInAppMigrationContext(devAppId, async () => {
+                await func()
+                await updateAppMigrationMetadata({
+                  appId: devAppId,
+                  version: id,
+                })
+              })
+
+              console.log(`Migration ran for dev app "${devAppId}"`)
+            }
+
             currentVersion = id
           }
 
-          if (isPublished) {
-            await sdk.applications.syncApp(devAppId)
-            await updateAppMigrationMetadata({
-              appId: devAppId,
-              version: migrationIds[migrationIds.length - 1],
-            })
-            console.log(`App for dev syncronised for "${devAppId}"`)
-          }
-
           console.log(`App migration for "${appIdToMigrate}" processed`)
-        })
-      }
-    )
+        }
+      )
+    })
   } catch (err) {
     logging.logAlert("Failed to run app migration", err)
     throw err
