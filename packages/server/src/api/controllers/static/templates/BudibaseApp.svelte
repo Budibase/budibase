@@ -43,6 +43,10 @@
     href="/builder/fonts/source-sans-3/source-sans-3.css"
     rel="stylesheet"
   />
+  <link
+    href="/builder/fonts/phosphor-icons/phosphor-icons.css"
+    rel="stylesheet"
+  />
   <link href="/builder/fonts/remixicon.css" rel="stylesheet" />
 
   <style>
