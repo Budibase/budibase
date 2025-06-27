@@ -105,6 +105,45 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     ])
   })
 
+  it("runs all the migrations in doInAppMigrationContext", async () => {
+    let migrationCallPerApp: Record<string, number> = {}
+    const testMigrations: AppMigration[] = [
+      {
+        id: generateMigrationId(),
+        func: async () => {
+          expect(context.getCurrentContext()?.isMigrating).toBe(true)
+          migrationCallPerApp[context.getAppId()!] ??= 0
+          migrationCallPerApp[context.getAppId()!]++
+        },
+      },
+      {
+        id: generateMigrationId(),
+        func: async () => {
+          expect(context.getCurrentContext()?.isMigrating).toBe(true)
+          migrationCallPerApp[context.getAppId()!] ??= 0
+          migrationCallPerApp[context.getAppId()!]++
+        },
+      },
+      {
+        id: generateMigrationId(),
+        func: async () => {
+          expect(context.getCurrentContext()?.isMigrating).toBe(true)
+          migrationCallPerApp[context.getAppId()!] ??= 0
+          migrationCallPerApp[context.getAppId()!]++
+        },
+      },
+    ]
+
+    await runMigrations(testMigrations)
+
+    expect(Object.keys(migrationCallPerApp)).toEqual([
+      config.getProdAppId(),
+      config.getAppId(),
+    ])
+    expect(migrationCallPerApp[config.getAppId()]).toBe(3)
+    expect(migrationCallPerApp[config.getProdAppId()]).toBe(3)
+  })
+
   it("no context can be initialised within a migration", async () => {
     const testMigrations: AppMigration[] = [
       {
