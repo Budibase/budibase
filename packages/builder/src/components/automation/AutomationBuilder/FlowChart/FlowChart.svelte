@@ -357,7 +357,7 @@
     align-items: center;
     width: 100%;
     background: var(--background);
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-s);
+    padding: var(--spacing-m) var(--spacing-l);
     box-sizing: border-box;
     justify-content: space-between;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
