@@ -159,7 +159,7 @@ describe("context", () => {
 
         const expected: ContextMap = {
           appId,
-          isMigrating: true,
+          isMigrating: [appId],
         }
         expect(context).toEqual(expected)
       })
@@ -174,7 +174,7 @@ describe("context", () => {
 
         const expected: ContextMap = {
           appId,
-          isMigrating: true,
+          isMigrating: [appId],
           tenantId,
         }
         expect(context).toEqual(expected)
@@ -191,7 +191,7 @@ describe("context", () => {
 
         const expected: ContextMap = {
           appId,
-          isMigrating: true,
+          isMigrating: [appId],
         }
         expect(context).toEqual(expected)
       })
