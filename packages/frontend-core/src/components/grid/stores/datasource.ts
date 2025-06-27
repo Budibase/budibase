@@ -5,7 +5,7 @@ import {
   getDatasourceSchema,
 } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
-import { cloneDeep } from "lodash"
+import { Helpers } from "@budibase/bbui"
 import {
   SaveRowRequest,
   UIDatasource,
@@ -224,7 +224,7 @@ export const createActions = (context: StoreContext): ActionDatasourceStore => {
 
   // Updates the datasources primary display column
   const changePrimaryDisplay = async (column: string) => {
-    let newDefinition = cloneDeep(get(definition)!)
+    let newDefinition = Helpers.cloneDeep(get(definition)!)
 
     // Update primary display
     newDefinition.primaryDisplay = column

@@ -1,6 +1,5 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
-import { cloneDeep } from "lodash"
 import {
   SearchFilterGroup,
   UISearchFilter,
@@ -404,7 +403,7 @@ export function parseFilter(filter: UISearchFilter) {
     return filter
   }
 
-  const update = cloneDeep(filter)
+  const update = Helpers.cloneDeep(filter)
 
   if (update.groups) {
     update.groups = update.groups

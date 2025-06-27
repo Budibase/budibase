@@ -1,5 +1,4 @@
 import { writable, derived, get, Writable, Readable } from "svelte/store"
-import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 import {
@@ -13,6 +12,7 @@ import {
 } from "@budibase/types"
 import { APIClient } from "../api/types"
 import { DataFetchType } from "."
+import { Helpers } from "@budibase/bbui"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
@@ -440,7 +440,7 @@ export default abstract class BaseDataFetch<
     // mutating the real values in the config.
     this.options = {
       ...this.options,
-      ...cloneDeep(newOptions),
+      ...Helpers.cloneDeep(newOptions),
     }
     await this.getInitialData()
   }
