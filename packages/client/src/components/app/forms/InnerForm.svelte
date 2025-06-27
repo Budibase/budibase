@@ -449,6 +449,8 @@
   }
 
   const handleScrollToField = (props: { field: FieldInfo | string }) => {
+    console.log("InnerForm.svelte", props)
+    console.log("InnerForm.svelte")
     let field
     if (typeof props.field === "string") {
       field = get(getField(props.field))
@@ -461,6 +463,7 @@
       fieldElement.focus({ preventScroll: true })
     }
     const label = document.querySelector<HTMLElement>(`label[for="${fieldId}"]`)
+    console.log("LABEL", label)
     if (label) {
       label.style.scrollMargin = "100px"
       label.scrollIntoView({ behavior: "smooth", block: "nearest" })
