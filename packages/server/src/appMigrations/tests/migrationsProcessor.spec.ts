@@ -54,7 +54,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       {
         id: generateMigrationId(),
         func: async () => {
-          await context.doInAppMigrationContext("any", () => {})
+          await context.doInAppMigrationContext(config.getAppId(), () => {})
         },
       },
     ]
@@ -66,52 +66,64 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
   describe("array index-based migration processing", () => {
     it("should run migrations in correct order based on array position", async () => {
-      const executionOrder: number[] = []
+      const executionOrder: string[] = []
       const testMigrations: AppMigration[] = [
         {
           id: `migration_a`,
           func: async () => {
-            executionOrder.push(1)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 1`)
           },
         },
         {
           id: `migration_c`,
           func: async () => {
-            executionOrder.push(3)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 3`)
           },
         },
         {
           id: `migration_b`,
           func: async () => {
-            executionOrder.push(2)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 2`)
           },
         },
       ]
 
       await runMigrations(testMigrations)
 
-      expect(executionOrder).toEqual([1, 3, 2])
+      expect(executionOrder).toEqual([
+        `${config.getProdAppId()} - 1`,
+        `${config.getAppId()} - 1`,
+        `${config.getProdAppId()} - 3`,
+        `${config.getAppId()} - 3`,
+        `${config.getProdAppId()} - 2`,
+        `${config.getAppId()} - 2`,
+      ])
     })
 
     it("should skip migrations that come before current version in array", async () => {
-      const executionOrder: number[] = []
+      const executionOrder: string[] = []
       const testMigrations: AppMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {
-            executionOrder.push(1)
+            throw "This should not be call"
           },
         },
         {
           id: generateMigrationId(),
           func: async () => {
-            executionOrder.push(2)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 2`)
           },
         },
         {
           id: generateMigrationId(),
           func: async () => {
-            executionOrder.push(3)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 3`)
           },
         },
       ]
@@ -126,22 +138,29 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
       await runMigrations(testMigrations)
 
-      expect(executionOrder).toEqual([2, 3])
+      expect(executionOrder).toEqual([
+        `${config.getProdAppId()} - 2`,
+        `${config.getAppId()} - 2`,
+        `${config.getProdAppId()} - 3`,
+        `${config.getAppId()} - 3`,
+      ])
     })
 
     it("should handle when current version is not found in migrations array", async () => {
-      const executionOrder: number[] = []
+      const executionOrder: string[] = []
       const testMigrations: AppMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {
-            executionOrder.push(1)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 1`)
           },
         },
         {
           id: generateMigrationId(),
           func: async () => {
-            executionOrder.push(2)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 2`)
           },
         },
       ]
@@ -158,7 +177,12 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       await runMigrations(testMigrations)
 
       // Should run all migrations
-      expect(executionOrder).toEqual([1, 2])
+      expect(executionOrder).toEqual([
+        `${config.getProdAppId()} - 1`,
+        `${config.getAppId()} - 1`,
+        `${config.getProdAppId()} - 2`,
+        `${config.getAppId()} - 2`,
+      ])
     })
 
     it("should not run any migrations when current version is the last in array", async () => {
@@ -193,25 +217,28 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
   describe("disabled migrations", () => {
     it("should stop processing when encountering a disabled migration", async () => {
-      const executionOrder: number[] = []
+      const executionOrder: string[] = []
       const testMigrations: AppMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {
-            executionOrder.push(1)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 1`)
           },
         },
         {
           id: generateMigrationId(),
           func: async () => {
-            executionOrder.push(2)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 2`)
           },
           disabled: true,
         },
         {
           id: generateMigrationId(),
           func: async () => {
-            executionOrder.push(3)
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - 3`)
           },
         },
       ]
@@ -219,7 +246,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       await runMigrations(testMigrations)
 
       // Should only run the first migration, then stop at the disabled one
-      expect(executionOrder).toEqual([1])
+      expect(executionOrder).toEqual([
+        `${config.getProdAppId()} - 1`,
+        `${config.getAppId()} - 1`,
+      ])
     })
 
     it("should not run any migrations if the first pending migration is disabled", async () => {
@@ -264,38 +294,37 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       mockSyncApp.mockRestore()
     })
 
-    it("should migrate production app when app is published", async () => {
-      const executionOrder: string[] = []
+    it("should sync dev app after migrating published app", async () => {
       const testMigrations: AppMigration[] = [
         {
           id: generateMigrationId(),
           func: async () => {
-            const db = context.getAppDB()
-            executionOrder.push(db.name)
+            throw "This should not be call"
           },
         },
-      ]
-
-      await runMigrations(testMigrations)
-
-      expect(executionOrder).toHaveLength(1)
-      const prodAppId = config.getProdAppId()
-      expect(executionOrder[0]).toBe(prodAppId)
-    })
-
-    it("should sync dev app after migrating published app", async () => {
-      const testMigrations: AppMigration[] = [
+        {
+          id: generateMigrationId(),
+          func: async () => {},
+        },
         {
           id: generateMigrationId(),
           func: async () => {},
         },
       ]
 
+      for (const appId of [config.getAppId(), config.getProdAppId()]) {
+        await config.doInContext(appId, async () => {
+          await updateAppMigrationMetadata({
+            appId,
+            version: testMigrations[0].id,
+          })
+        })
+      }
       mockSyncApp.mockClear()
 
       await runMigrations(testMigrations)
 
-      expect(mockSyncApp).toHaveBeenCalledTimes(1)
+      expect(mockSyncApp).toHaveBeenCalledTimes(2)
       expect(mockSyncApp).toHaveBeenCalledWith(config.getAppId())
     })
 
