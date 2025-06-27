@@ -1,5 +1,5 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
+import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 
 async function guardName(name: string, id?: string) {
@@ -51,12 +51,24 @@ export async function update(
 ): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
-  await guardName(workspaceApp.name, workspaceApp._id)
-
   const persisted = (await get(workspaceApp._id!))!
-  const docToUpdate = {
-    ...persisted,
-    ...workspaceApp,
+  if (workspaceApp.name !== persisted.name) {
+    await guardName(workspaceApp.name, workspaceApp._id)
+  }
+  const docToUpdate: RequiredKeys<WorkspaceApp> = {
+    _id: workspaceApp._id,
+    _rev: workspaceApp._rev,
+    name: workspaceApp.name,
+    url: workspaceApp.url,
+    icon: workspaceApp.icon,
+    iconColor: workspaceApp.iconColor,
+    navigation: workspaceApp.navigation,
+
+    // Immutable properties
+    createdAt: persisted.createdAt,
+    updatedAt: persisted.updatedAt,
+    isDefault: persisted.isDefault,
+    _deleted: undefined,
   }
   const response = await db.put(docToUpdate)
   return {
