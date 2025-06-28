@@ -51,8 +51,7 @@
   $: selected =
     viewMode === ViewMode.EDITOR
       ? block.id === selectedNodeId
-      : viewMode === ViewMode.LOGS &&
-        (block.stepId === selectedLogStepId || block.id === selectedLogStepId)
+      : viewMode === ViewMode.LOGS && block.id === selectedLogStepId
   $: dragging = $view?.moveStep && $view?.moveStep?.id === block.id
 
   $: if (dragging && blockEle) {
@@ -211,16 +210,20 @@
       </div>
     </div>
   </div>
-  {#if !collectBlockExists || !lastStep}
+
+  {#if !lastStep || viewMode !== ViewMode.LOGS}
     <div class="separator" />
+  {/if}
+
+  {#if !collectBlockExists}
     {#if $view.dragging}
       <DragZone path={blockRef?.pathTo} />
-    {:else}
+    {:else if viewMode === ViewMode.EDITOR}
       <FlowItemActions
         {block}
         on:branch={() => {
           automationStore.actions.branchAutomation(
-            $selectedAutomation.blockRefs[block.id].pathTo,
+            $selectedAutomation.blockRefs[block.id]?.pathTo,
             automation
           )
         }}

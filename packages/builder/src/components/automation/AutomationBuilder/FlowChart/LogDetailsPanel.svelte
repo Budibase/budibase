@@ -9,14 +9,18 @@
   export let selectedStep = null
   export let onBack = () => {}
 
-  let selectedTab = "Data in"
+  $: selectedTab = isBranchStep ? "Branch Info" : "Data in"
 
   $: hasInputData =
     currentStepData?.inputs && Object.keys(currentStepData.inputs).length > 0
-  $: availableTabs = ["Data in", "Data out", "Issues"]
+  $: isBranchStep = selectedStep?.stepId === "BRANCH"
+  $: availableTabs = isBranchStep
+    ? ["Branch Info"]
+    : ["Data in", "Data out", "Issues"]
 
   $: logDate = log ? dayjs(log.createdAt).format("MMM DD, YYYY HH:mm:ss") : ""
   $: currentStepData = getCurrentStepData(selectedStep)
+  $: branchDetails = getBranchConditionDetails(selectedStep)
   function getCurrentStepData(step) {
     if (!step) return null
 
@@ -35,6 +39,26 @@
         type: "error",
       },
     ]
+  }
+
+  function getBranchConditionDetails(step) {
+    if (!step || step.stepId !== "BRANCH") return null
+
+    const executedBranchId = step.outputs?.branchId
+    const executedBranchName = step.outputs?.branchName
+    const branches = step.inputs?.branches || []
+
+    const executedBranch = branches.find(
+      branch => branch.id === executedBranchId
+    )
+
+    return {
+      executedBranchId,
+      executedBranchName,
+      executedBranch,
+      allBranches: branches,
+      totalBranches: branches.length,
+    }
   }
 </script>
 
@@ -96,6 +120,50 @@
             {/if}
           {:else if selectedTab === "Data out"}
             <JSONViewer value={currentStepData?.outputs} />
+          {:else if selectedTab === "Branch Info"}
+            {#if branchDetails}
+              <div class="branch-info">
+                <div class="condition-result">
+                  <Icon
+                    name="CheckmarkCircle"
+                    color="var(--spectrum-global-color-green-600)"
+                  />
+                  <div class="condition-text">
+                    <Body size="S"
+                      >This branch was taken because the condition evaluated to <strong
+                        >true</strong
+                      >.</Body
+                    >
+                    {#if branchDetails.executedBranch?.conditionUI?.groups}
+                      {#each branchDetails.executedBranch.conditionUI.groups as group}
+                        {#each group.filters as filter, filterIndex}
+                          {#if filterIndex === 0}
+                            <Body
+                              size="XS"
+                              color="var(--spectrum-global-color-gray-600)"
+                            >
+                              ({filter.field}
+                              {filter.operator}
+                              {filter.value}{#if group.filters.length > 1}
+                                and {group.filters.length - 1} other condition{group
+                                  .filters.length > 2
+                                  ? "s"
+                                  : ""}{/if})
+                            </Body>
+                          {/if}
+                        {/each}
+                      {/each}
+                    {/if}
+                  </div>
+                </div>
+              </div>
+            {:else}
+              <div class="no-data-message">
+                <Body size="S" textAlign="center"
+                  >No branch information available</Body
+                >
+              </div>
+            {/if}
           {:else if selectedTab === "Issues"}
             <div class="issues" class:empty={!currentStepData?.errors?.length}>
               {#if currentStepData?.errors?.length === 0}
@@ -256,5 +324,17 @@
     margin-left: var(--spacing-xs);
     font-size: 0.8em;
     opacity: 0.8;
+  }
+
+  .condition-result {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .condition-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
   }
 </style>
