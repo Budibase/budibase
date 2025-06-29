@@ -1,14 +1,15 @@
-<script>
+<script lang="ts">
   import { Body, Detail } from "@budibase/bbui"
+  import { GlobalTemplateBinding } from "@budibase/types"
 
-  export let bindings
-  export let onBindingClick = () => {}
+  export let bindings: GlobalTemplateBinding[] | undefined
+  export let onBindingClick = (_: GlobalTemplateBinding) => {}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="bindings">
-  {#each bindings as binding}
+  {#each bindings || [] as binding}
     <div class="binding" on:click={() => onBindingClick(binding)}>
       <Detail size="M">{binding.name}</Detail>
       <Body size="XS">{binding.description}</Body>
