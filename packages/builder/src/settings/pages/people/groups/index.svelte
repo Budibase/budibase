@@ -1,28 +1,23 @@
 <script>
   import {
     Layout,
-    Body,
     Button,
-    ButtonGroup,
     Modal,
-    Tag,
-    Tags,
     Table,
-    Divider,
     Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, licensing, admin } from "@/stores/portal"
+  import { groups, auth, licensing } from "@/stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
   import GroupAppsTableRenderer from "./_components/GroupAppsTableRenderer.svelte"
   import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
-  import { goto } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
   import { routeActions } from "@/settings/pages"
+  import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
 
   const DefaultGroup = {
     name: "",
@@ -62,7 +57,7 @@
   async function saveGroup(group) {
     try {
       group = await groups.save(group)
-      $goto(`./${group._id}`)
+      bb.settings(`/people/groups/${group._id}/`)
       notifications.success(`User group created successfully`)
     } catch (error) {
       if (error.status === 400) {
@@ -91,81 +86,47 @@
   })
 </script>
 
-<Layout noPadding gap="S">
-  {#if !$licensing.groupsEnabled}
-    <Layout noPadding>
-      <div class="title">
-        <Tags>
-          <Tag icon="lock" emphasized>Enterpise</Tag>
-        </Tags>
-      </div>
-    </Layout>
-    <Divider noMargin />
-  {/if}
-  {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
-    <Body>Contact your account holder to upgrade your plan.</Body>
-  {/if}
-
-  {#if $licensing.groupsEnabled}
-    <div use:routeActions class="controls">
-      <Search bind:value={searchString} placeholder="Search" />
-      {#if $licensing.groupsEnabled}
-        <!--Show the group create button-->
-        <Button
-          disabled={readonly}
-          size={"M"}
-          cta
-          on:click={showCreateGroupModal}
-        >
-          Add group
-        </Button>
-      {/if}
-    </div>
-  {/if}
-  <ButtonGroup>
+<LockedFeature
+  planType={"Enterprise"}
+  enabled={$licensing.groupsEnabled}
+  title={"Groups"}
+  description={"Easily assign and manage your users' access with groups"}
+  upgradeButtonClick={async () => {
+    licensing.goToUpgradePage()
+  }}
+>
+  <Layout noPadding gap="S">
     {#if $licensing.groupsEnabled}
-      <!--Show the group create button-->
-      <Button
-        disabled={readonly}
-        size={"M"}
-        cta
-        on:click={showCreateGroupModal}
-      >
-        Add group
-      </Button>
-    {:else}
-      <Button
-        primary
-        disabled={!$auth.accountPortalAccess && $admin.cloud}
-        on:click={licensing.goToUpgradePage()}
-      >
-        Upgrade
-      </Button>
-      <!--Show the view plans button-->
-      <Button
-        secondary
-        on:click={() => {
-          window.open("https://budibase.com/pricing/", "_blank")
-        }}
-      >
-        View Plans
-      </Button>
+      <div use:routeActions class="controls">
+        <Search bind:value={searchString} placeholder="Search" />
+        {#if $licensing.groupsEnabled}
+          <!--Show the group create button-->
+          <Button
+            disabled={readonly}
+            size={"M"}
+            cta
+            on:click={showCreateGroupModal}
+          >
+            Add group
+          </Button>
+        {/if}
+      </div>
     {/if}
-  </ButtonGroup>
 
-  {#if $licensing.groupsEnabled}
-    <Table
-      on:click={({ detail }) => {
-        bb.settings(`/people/groups/${detail._id}`)
-      }}
-      {schema}
-      data={filteredGroups}
-      allowEditColumns={false}
-      allowEditRows={false}
-      {customRenderers}
-    />
-  {/if}
-</Layout>
+    {#if $licensing.groupsEnabled}
+      <Table
+        on:click={({ detail }) => {
+          bb.settings(`/people/groups/${detail._id}`)
+        }}
+        {schema}
+        data={filteredGroups}
+        allowEditColumns={false}
+        allowEditRows={false}
+        {customRenderers}
+      />
+    {/if}
+  </Layout>
+</LockedFeature>
 
 <Modal bind:this={modal}>
   <CreateEditGroupModal bind:group {saveGroup} />
@@ -181,12 +142,5 @@
   }
   .controls :global(.spectrum-Search) {
     width: 200px;
-  }
-  .title {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--spacing-m);
   }
 </style>
