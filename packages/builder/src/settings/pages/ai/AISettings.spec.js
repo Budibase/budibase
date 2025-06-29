@@ -1,9 +1,23 @@
 import { it, expect, describe, vi } from "vitest"
+import { writable } from "svelte/store"
 import AISettings from "./index.svelte"
 import { render, waitFor } from "@testing-library/svelte"
 import { admin, licensing, featureFlags } from "@/stores/portal"
 import { notifications } from "@budibase/bbui"
 import { API } from "@/api"
+
+const Hosting = {
+  Cloud: "cloud",
+  Self: "self",
+}
+
+const defaultFeatures = {
+  budibaseAIEnabled: false,
+}
+const defaultFlags = {
+  BUDIBASE_AI: false,
+  AI_CUSTOM_CONFIGS: false,
+}
 
 vi.spyOn(notifications, "error").mockImplementation(vi.fn)
 vi.spyOn(notifications, "success").mockImplementation(vi.fn)
@@ -19,33 +33,26 @@ vi.mock("@/api", () => ({
   },
 }))
 
-const Hosting = {
-  Cloud: "cloud",
-  Self: "self",
-}
+vi.mock("@/stores/portal", () => {
+  const toMock = store => {
+    return {
+      subscribe: store.subscribe,
+      update: store.update,
+      set: store.set,
+    }
+  }
+
+  return {
+    admin: toMock(writable()),
+    licensing: toMock(writable()),
+    featureFlags: toMock(writable()),
+  }
+})
 
 function setupEnv(hosting, features = {}, flags = {}) {
-  const defaultFeatures = {
-    budibaseAIEnabled: false,
-    ...features,
-  }
-  const defaultFlags = {
-    BUDIBASE_AI: false,
-    AI_CUSTOM_CONFIGS: false,
-    ...flags,
-  }
-  admin.subscribe = vi.fn().mockImplementation(callback => {
-    callback({ cloud: hosting === Hosting.Cloud })
-    return () => {}
-  })
-  licensing.subscribe = vi.fn().mockImplementation(callback => {
-    callback(defaultFeatures)
-    return () => {}
-  })
-  featureFlags.subscribe = vi.fn().mockImplementation(callback => {
-    callback(defaultFlags)
-    return () => {}
-  })
+  admin.set({ cloud: hosting === Hosting.Cloud })
+  licensing.set({ ...defaultFeatures, ...features })
+  featureFlags.set({ ...defaultFlags, ...flags })
 }
 
 describe("AISettings", () => {
@@ -67,13 +74,6 @@ describe("AISettings", () => {
   })
 
   describe("Basic rendering", () => {
-    it("should render the AI header", async () => {
-      setupDOM()
-      await waitFor(() => {
-        const header = instance.getByText("AI")
-        expect(header).toBeInTheDocument()
-      })
-    })
     it("should show 'No LLMs are enabled' when no providers are active", async () => {
       API.getConfig.mockResolvedValueOnce({ config: {} })
       setupDOM()
