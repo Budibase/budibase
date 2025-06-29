@@ -10,7 +10,7 @@ import {
 import { BudiStore } from "../BudiStore"
 import Analytics from "../../analytics"
 
-interface AdminState extends GetEnvironmentResponse {
+export interface AdminState extends GetEnvironmentResponse {
   loaded: boolean
   checklist?: ConfigChecklistResponse
   status?: SystemStatusResponse

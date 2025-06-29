@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     AbsTooltip,
     Layout,
@@ -8,62 +8,75 @@
     Icon,
     Tags,
     Tag,
+    TooltipPosition,
+    Heading,
   } from "@budibase/bbui"
   import { auth, admin } from "@/stores/portal"
 
-  export let planType
-  export let description
-  export let enabled
-  export let upgradeButtonClick
+  export let planType: string | undefined = undefined
+  export let description: string | undefined = undefined
+  export let title: string | undefined = undefined
+  export let enabled: boolean = false
+  export let upgradeButtonClick: Function = () => {}
+  export let showContentWhenDisabled: boolean = false
 
   $: upgradeDisabled = !$auth.accountPortalAccess && $admin.cloud
 </script>
 
-<Layout noPadding gap="L">
-  <Layout gap="XS" noPadding>
-    <div class="title">
-      {#if !enabled}
+<Layout noPadding gap="S">
+  {#if !enabled}
+    <Layout gap="S" noPadding>
+      <div class="title">
+        {#if title}
+          <Heading>{title}</Heading>
+        {/if}
         <Tags>
-          <Tag icon="lock">{planType}</Tag>
+          <Tag icon="lock" emphasized>{planType}</Tag>
         </Tags>
-      {/if}
-    </div>
-    <Body>{description}</Body>
-  </Layout>
-  <Divider noMargin />
+      </div>
 
-  {#if enabled}
-    <slot />
-  {:else}
-    <div class="buttons">
-      <Button
-        primary={!upgradeDisabled}
-        secondary={upgradeDisabled}
-        disabled={upgradeDisabled}
-        on:click={async () => upgradeButtonClick()}
-      >
-        Upgrade
-      </Button>
-      <!--Show the view plans button-->
-      <Button
-        secondary
-        on:click={() => {
-          window.open("https://budibase.com/pricing/", "_blank")
-        }}
-      >
-        View Plans
-      </Button>
-      {#if upgradeDisabled}
-        <AbsTooltip
-          text={"Please contact the account holder to upgrade"}
-          position={"right"}
-        >
-          <div class="icon" on:focus>
-            <Icon name="info" size="L" disabled hoverable />
-          </div>
-        </AbsTooltip>
+      {#if description}
+        <Body>{description}</Body>
       {/if}
-    </div>
+
+      <div class="buttons">
+        <Button
+          primary={!upgradeDisabled}
+          secondary={upgradeDisabled}
+          disabled={upgradeDisabled}
+          on:click={async () => upgradeButtonClick()}
+        >
+          Upgrade
+        </Button>
+        <!--Show the view plans button-->
+        <Button
+          secondary
+          on:click={() => {
+            window.open("https://budibase.com/pricing/", "_blank")
+          }}
+        >
+          View Plans
+        </Button>
+        {#if upgradeDisabled}
+          <AbsTooltip
+            text={"Please contact the account holder to upgrade"}
+            position={TooltipPosition.Right}
+          >
+            <div class="icon" on:focus>
+              <Icon name="info" size="L" disabled hoverable />
+            </div>
+          </AbsTooltip>
+        {/if}
+      </div>
+
+      {#if showContentWhenDisabled}
+        <Divider noMargin />
+      {/if}
+    </Layout>
+  {/if}
+
+  {#if enabled || showContentWhenDisabled}
+    <slot />
   {/if}
 </Layout>
 
@@ -81,5 +94,10 @@
     display: flex;
     flex-direction: row;
     gap: var(--spacing-m);
+  }
+  .title {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
   }
 </style>

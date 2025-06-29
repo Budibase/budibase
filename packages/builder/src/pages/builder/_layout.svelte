@@ -1,5 +1,5 @@
 <script>
-  import { isActive, redirect, params, beforeUrlChange } from "@roxi/routify"
+  import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth, licensing, navigation } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { onMount } from "svelte"
@@ -19,6 +19,7 @@
   let loaded = false
   let commandPaletteModal
   let settingsModal
+  let settingsModalOpen = false
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -29,7 +30,7 @@
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
-  $: if (settingsModal && $bb.settings.open) {
+  $: if (settingsModal && $bb.settings.open && !settingsModalOpen) {
     settingsModal.show()
   }
 
