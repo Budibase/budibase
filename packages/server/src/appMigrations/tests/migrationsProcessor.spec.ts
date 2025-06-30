@@ -4,12 +4,13 @@ import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
 } from "../appMigrationMetadata"
-import { context } from "@budibase/backend-core"
+import { context, Header } from "@budibase/backend-core"
 import { AppMigration } from ".."
 import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../sdk"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { MIGRATIONS } from "../migrations"
+import { withEnv } from "../../environment"
 
 function generateMigrationId() {
   return generator.guid()
@@ -559,6 +560,35 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         `${config.getAppId()}-migration-2-attempt-1-error`,
         `${config.getProdAppId()}-migration-2-attempt-2-success`,
         `${config.getAppId()}-migration-2-attempt-2-success`,
+      ])
+    })
+  })
+
+  describe("via middleware", () => {
+    it("should properly handle syncApp context when triggered via API", async () => {
+      await expectMigrationVersion(MIGRATIONS[MIGRATIONS.length - 1].id)
+
+      const executionOrder: string[] = []
+      MIGRATIONS.push({
+        id: generateMigrationId(),
+        func: async () => {
+          const db = context.getAppDB()
+          executionOrder.push(`${db.name}-via-middleware`)
+        },
+      })
+
+      // Any random API call to trigger the middleware
+      await withEnv(
+        {
+          SYNC_MIGRATION_CHECKS_MS: 100,
+        },
+        () =>
+          config.api.user.fetch({ headersNotPresent: [Header.MIGRATING_APP] })
+      )
+
+      expect(executionOrder).toEqual([
+        `${config.getProdAppId()}-via-middleware`,
+        `${config.getAppId()}-via-middleware`,
       ])
     })
   })
