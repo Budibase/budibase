@@ -9,11 +9,26 @@ export async function run({
 }): Promise<ExternalAppStepOutputs> {
   const { url, body } = inputs
 
-  let payload = {}
+  let payload: any = {}
   try {
     if (body?.value) {
-      payload =
-        typeof body.value === "string" ? JSON.parse(body.value) : body.value
+      if (typeof body.value === "string") {
+        payload = JSON.parse(body.value)
+      } else {
+        payload = body.value
+      }
+
+      // Handle double-encoded strings in nested properties
+      Object.keys(payload).forEach(key => {
+        if (typeof payload[key] === "string") {
+          try {
+            const parsed = JSON.parse(payload[key])
+            payload[key] = parsed
+          } catch {
+            // If parsing fails, keep the original string value
+          }
+        }
+      })
     }
   } catch (err) {
     return {
