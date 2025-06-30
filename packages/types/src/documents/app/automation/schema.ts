@@ -73,6 +73,7 @@ import {
   ExtractFileDataStepInputs,
   APIRequestStepInputs,
   APIRequestStepOutputs,
+  BranchSearchFilters,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -420,7 +421,11 @@ export type GenerateTextStep =
 export type ExtractFileDataStep =
   AutomationStepSchema<AutomationActionStepId.EXTRACT_FILE_DATA>
 
-export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
+export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH> & {
+  conditionUI?: {
+    groups: BranchSearchFilters[]
+  }
+}
 export type AutomationStep =
   | CollectStep
   | CreateRowStep
