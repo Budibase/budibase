@@ -19,6 +19,10 @@
   import { environment } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
+  import {
+    getBlocks as getBlocksHelper,
+    enrichLog,
+  } from "./AutomationLogHelpers"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import DraggableCanvas from "../DraggableCanvas.svelte"
@@ -47,7 +51,7 @@
   // Parse the automation tree state
   $: refresh($memoAutomation)
 
-  $: blocks = getBlocks($memoAutomation, $automationStore.selectedLog).filter(
+  $: blocks = getBlocksHelper($memoAutomation, viewMode).filter(
     x => x.stepId !== ActionStepID.LOOP
   )
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
@@ -55,60 +59,6 @@
   const refresh = () => {
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
-  }
-
-  const processLogSteps = (automation, selectedLog) => {
-    let blocks = []
-    if (automation.definition.trigger) {
-      blocks.push(automation.definition.trigger)
-    }
-
-    // We want to filter out steps from the top level array that exist
-    // in the children of the branch. We want the branch children to be the
-    // source of truth.
-    const branchChildStepIds = new Set()
-    selectedLog.steps.forEach(logStep => {
-      if (logStep.stepId === "BRANCH" && logStep.outputs?.branchId) {
-        const executedBranchId = logStep.outputs.branchId
-        const branchChildren = logStep.inputs.children?.[executedBranchId] || []
-        branchChildren.forEach(child => {
-          branchChildStepIds.add(child.id)
-        })
-      }
-    })
-    selectedLog.steps
-      .filter(
-        logStep => logStep.stepId !== automation.definition.trigger?.stepId
-      )
-      .filter(logStep => !branchChildStepIds.has(logStep.id))
-      .forEach(logStep => {
-        // Step doesn't exist in current definition, reconstruct from log
-        const stepDefinition =
-          $automationStore.blockDefinitions?.ACTION?.[logStep.stepId] ||
-          $automationStore.blockDefinitions?.TRIGGER?.[logStep.stepId]
-
-        blocks.push({
-          ...logStep,
-          name: stepDefinition?.name,
-          icon: stepDefinition?.icon,
-        })
-      })
-    return blocks
-  }
-  const getBlocks = (automation, selectedLog) => {
-    let blocks = []
-
-    // In logs mode, we need to show steps from the log data
-    if (viewMode === ViewMode.LOGS && selectedLog) {
-      blocks = processLogSteps(automation, selectedLog)
-    } else {
-      // Normal editor mode - show current automation steps
-      if (automation.definition.trigger) {
-        blocks.push(automation.definition.trigger)
-      }
-      blocks = blocks.concat(automation.definition.steps || [])
-    }
-    return blocks
   }
 
   const deleteAutomation = async () => {
@@ -145,25 +95,6 @@
       // Clear editor selection when switching to logs mode
       automationStore.actions.selectNode(null)
     }
-  }
-
-  function enrichLog(definitions, log) {
-    if (!definitions || !log || !log.steps) {
-      return log
-    }
-
-    const enrichedLog = { ...log, steps: [...log.steps] }
-
-    for (let step of enrichedLog.steps) {
-      const trigger = definitions.TRIGGER[step.stepId]
-      const action = definitions.ACTION[step.stepId]
-
-      if (trigger || action) {
-        step.icon = trigger ? trigger.icon : action.icon
-        step.name = trigger ? trigger.name : action.name
-      }
-    }
-    return enrichedLog
   }
 
   function closeAllPanels() {

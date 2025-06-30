@@ -40,6 +40,9 @@
       ? logStepData.outputs.branchId
       : null
 
+  $: isBranchUnexecuted =
+    isBranch && viewMode === ViewMode.LOGS && !logStepData?.outputs?.branchId
+
   function getLogStepData(logData, step) {
     if (!logData || viewMode !== ViewMode.LOGS) return null
 
@@ -135,6 +138,7 @@
               branchIdx={bIdx}
               isLast={rightMost}
               executed={isBranchExecuted}
+              unexecuted={isBranchUnexecuted}
               {viewMode}
               {logStepData}
               {onStepSelect}
@@ -184,23 +188,21 @@
             {@const branchSteps = step.inputs?.children[branch.id] || []}
             {@const isBranchStepLast = sIdx === branchSteps.length - 1}
             <!-- Recursive StepNode -->
-            <div class:unexecuted={isBranchUnexecuted}>
-              <svelte:self
-                step={bStep}
-                stepIdx={sIdx}
-                branchIdx={bIdx}
-                isLast={viewMode === ViewMode.LOGS
-                  ? isBranchStepLast
-                  : blockRef?.terminating || false}
-                pathTo={pathToCurrentNode}
-                {automation}
-                {blocks}
-                {logData}
-                {viewMode}
-                {selectedLogStepId}
-                {onStepSelect}
-              />
-            </div>
+            <svelte:self
+              step={bStep}
+              stepIdx={sIdx}
+              branchIdx={bIdx}
+              isLast={viewMode === ViewMode.LOGS
+                ? isBranchStepLast
+                : blockRef?.terminating || false}
+              pathTo={pathToCurrentNode}
+              {automation}
+              {blocks}
+              {logData}
+              {viewMode}
+              {selectedLogStepId}
+              {onStepSelect}
+            />
           {/each}
         </div>
       </div>
@@ -220,6 +222,7 @@
       {viewMode}
       {selectedLogStepId}
       {onStepSelect}
+      unexecuted={isBranchUnexecuted}
     />
   </div>
 {/if}

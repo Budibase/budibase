@@ -20,6 +20,7 @@
   export let logStepData = null
   export let viewMode = ViewMode.EDITOR
   export let selectedLogStepId = null
+  export let unexecuted = false
   export let onStepSelect = () => {}
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
@@ -145,6 +146,7 @@
     class:dragging
     class:draggable
     class:selected
+    class:unexecuted
   >
     <div class="wrap">
       {#if $view.dragging && dragging}
@@ -240,6 +242,9 @@
 </Modal>
 
 <style>
+  .unexecuted {
+    opacity: 0.5;
+  }
   .delete-padding {
     padding-left: 30px;
   }

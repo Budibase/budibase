@@ -4,6 +4,11 @@
   import JSONViewer from "@/components/common/JSONViewer.svelte"
   import dayjs from "dayjs"
   import StatusRenderer from "@/pages/builder/app/[application]/settings/automations/_components/StatusRenderer.svelte"
+  import {
+    summariseBranch,
+    getCurrentStepData,
+    getBranchConditionDetails,
+  } from "./AutomationLogHelpers"
 
   export let log
   export let selectedStep = null
@@ -21,47 +26,21 @@
   $: logDate = log ? dayjs(log.createdAt).format("MMM DD, YYYY HH:mm:ss") : ""
   $: currentStepData = getCurrentStepData(selectedStep)
   $: branchDetails = getBranchConditionDetails(selectedStep)
-  function getCurrentStepData(step) {
-    if (!step) return null
 
-    return {
-      inputs: step.inputs || {},
-      outputs: step.outputs || {},
-      errors: getStepErrors(step),
+  let expandedBranches = new Set()
+
+  function toggleBranch(id) {
+    if (expandedBranches.has(id)) {
+      expandedBranches.delete(id)
+    } else {
+      expandedBranches.add(id)
     }
-  }
-  function getStepErrors(step) {
-    if (!step || step.outputs?.success !== false) return []
-
-    return [
-      {
-        message: step.outputs?.message || "Step failed",
-        type: "error",
-      },
-    ]
-  }
-
-  function getBranchConditionDetails(step) {
-    if (!step || step.stepId !== "BRANCH") return null
-
-    const executedBranchId = step.outputs?.branchId
-    const executedBranchName = step.outputs?.branchName
-    const branches = step.inputs?.branches || []
-
-    const executedBranch = branches.find(
-      branch => branch.id === executedBranchId
-    )
-
-    return {
-      executedBranchId,
-      executedBranchName,
-      executedBranch,
-      allBranches: branches,
-      totalBranches: branches.length,
-    }
+    expandedBranches = new Set(expandedBranches)
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="container">
   <Panel customWidth={400} borderLeft>
     <div slot="panel-title-content" class="log-header-container">
@@ -122,40 +101,26 @@
             <JSONViewer value={currentStepData?.outputs} />
           {:else if selectedTab === "Branch Info"}
             {#if branchDetails}
-              <div class="branch-info">
-                <div class="condition-result">
-                  <Icon
-                    name="CheckmarkCircle"
-                    color="var(--spectrum-global-color-green-600)"
-                  />
-                  <div class="condition-text">
-                    <Body size="S"
-                      >This branch was taken because the condition evaluated to <strong
-                        >true</strong
-                      >.</Body
-                    >
-                    {#if branchDetails.executedBranch?.conditionUI?.groups}
-                      {#each branchDetails.executedBranch.conditionUI.groups as group}
-                        {#each group.filters as filter, filterIndex}
-                          {#if filterIndex === 0}
-                            <Body
-                              size="XS"
-                              color="var(--spectrum-global-color-gray-600)"
-                            >
-                              ({filter.field}
-                              {filter.operator}
-                              {filter.value}{#if group.filters.length > 1}
-                                and {group.filters.length - 1} other condition{group
-                                  .filters.length > 2
-                                  ? "s"
-                                  : ""}{/if})
-                            </Body>
-                          {/if}
-                        {/each}
-                      {/each}
-                    {/if}
+              <div class="branch-list">
+                {#each branchDetails.allBranches as branch (branch.id)}
+                  <div
+                    class="branch-row {branch.id ===
+                    branchDetails.executedBranchId
+                      ? 'executed'
+                      : 'skipped'}"
+                    on:click={() => toggleBranch(branch.id)}
+                  >
+                    <div class="row-content">
+                      <Body size="S"><strong>{branch.name}</strong></Body>
+                      <Body
+                        size="XS"
+                        color="var(--spectrum-global-color-gray-600)"
+                      >
+                        {summariseBranch(branch)}
+                      </Body>
+                    </div>
                   </div>
-                </div>
+                {/each}
               </div>
             {:else}
               <div class="no-data-message">
@@ -326,15 +291,39 @@
     opacity: 0.8;
   }
 
-  .condition-result {
+  .branch-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .branch-row {
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+    padding: var(--spacing-s) 0;
+    transition: background-color 130ms ease-in-out;
+    border-bottom: var(--border-light);
   }
 
-  .condition-text {
+  .branch-row:hover {
+    background-color: var(--spectrum-global-color-gray-200);
+  }
+
+  .branch-row.executed {
+    border-left: 2px solid var(--spectrum-global-color-green-600);
+    padding-left: var(--spacing-m);
+  }
+
+  .branch-row.skipped {
+    opacity: 0.6;
+  }
+
+  .row-content {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-2xs);
   }
 </style>

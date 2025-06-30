@@ -36,6 +36,7 @@
   export let bindings
   export let automation
   export let executed = false
+  export let unexecuted = false
   export let viewMode = null
   export let logStepData = null
   export let onStepSelect = () => {}
@@ -180,6 +181,7 @@
     class={`block branch-node hoverable`}
     class:selected={false}
     class:executed
+    class:unexecuted
     on:click={e => {
       e.stopPropagation()
       if (viewMode === ViewMode.LOGS && logStepData) {
@@ -363,5 +365,9 @@
   .block.executed {
     border-color: var(--spectrum-global-color-green-600);
     border-width: 2px;
+  }
+
+  .block.unexecuted {
+    opacity: 0.7;
   }
 </style>
