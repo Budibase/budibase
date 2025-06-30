@@ -8,7 +8,7 @@
     summariseBranch,
     getCurrentStepData,
     getBranchConditionDetails,
-  } from "./AutomationLogHelpers"
+  } from "./AutomationStepHelpers"
 
   export let log
   export let selectedStep = null

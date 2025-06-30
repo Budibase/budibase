@@ -22,7 +22,7 @@
   import {
     getBlocks as getBlocksHelper,
     enrichLog,
-  } from "./AutomationLogHelpers"
+  } from "./AutomationStepHelpers"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import DraggableCanvas from "../DraggableCanvas.svelte"
