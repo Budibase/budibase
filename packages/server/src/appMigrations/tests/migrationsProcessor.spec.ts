@@ -580,7 +580,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       // Any random API call to trigger the middleware
       await withEnv(
         {
-          SYNC_MIGRATION_CHECKS_MS: 100,
+          SYNC_MIGRATION_CHECKS_MS: 1000,
         },
         () =>
           config.api.user.fetch({ headersNotPresent: [Header.MIGRATING_APP] })
