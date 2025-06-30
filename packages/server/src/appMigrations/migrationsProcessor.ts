@@ -72,13 +72,14 @@ export async function processMigrations(
           await context.doInAppMigrationContext(appIdToMigrate, () => func())
 
           if (isPublished) {
-            await sdk.applications.syncApp(devAppId)
-            console.log(`App for dev syncronised for "${devAppId}"`)
-
             // setup full context - tenancy, app and guards
-            await context.doInAppMigrationContext(devAppId, () => func())
+            await context.doInAppMigrationContext(devAppId, async () => {
+              await sdk.applications.syncApp(devAppId)
+              console.log(`App for dev syncronised for "${devAppId}"`)
 
-            console.log(`Migration ran for dev app "${devAppId}"`)
+              await func()
+              console.log(`Migration ran for dev app "${devAppId}"`)
+            })
           }
 
           // Only updates versions after the migration has run successfully, to allow retriability

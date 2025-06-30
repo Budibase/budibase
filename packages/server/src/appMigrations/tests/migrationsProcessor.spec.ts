@@ -583,7 +583,9 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           SYNC_MIGRATION_CHECKS_MS: 1000,
         },
         () =>
-          config.api.user.fetch({ headersNotPresent: [Header.MIGRATING_APP] })
+          config.withApp(fromProd ? config.getProdApp() : config.getApp(), () =>
+            config.api.user.fetch({ headersNotPresent: [Header.MIGRATING_APP] })
+          )
       )
 
       expect(executionOrder).toEqual([
