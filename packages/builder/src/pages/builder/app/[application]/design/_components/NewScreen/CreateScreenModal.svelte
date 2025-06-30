@@ -24,7 +24,7 @@
     ViewV2,
   } from "@budibase/types"
 
-  export let workspaceAppId: string | undefined
+  export let workspaceAppId: string
 
   let mode: string
 

@@ -14,6 +14,7 @@ import {
   AutomationTriggerStepId,
   AutomationCustomIOType,
   AutomationIOType,
+  AutomationLog,
 } from "@budibase/types"
 import { SvelteComponent } from "svelte"
 
@@ -21,6 +22,11 @@ export enum DataMode {
   INPUT = "data_in",
   OUTPUT = "data_out",
   ERRORS = "errors",
+}
+
+export enum ViewMode {
+  EDITOR = "editor",
+  LOGS = "logs",
 }
 
 export enum SchemaFieldTypes {
@@ -132,6 +138,10 @@ export interface AutomationState {
   selectedNodeId?: string
   selectedNodeMode?: DataMode
   actionPanelBlock?: BlockRef
+  selectedLog?: AutomationLog
+  selectedLogStepData?: any
+  showLogsPanel?: boolean
+  showLogDetailsPanel?: boolean
 }
 
 export interface DerivedAutomationState extends AutomationState {

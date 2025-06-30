@@ -310,7 +310,7 @@
       {:else}
         {#each issues as issue}
           <div class={`issue ${issue.type}`}>
-            <div class="icon"><Icon name="Alert" /></div>
+            <div class="icon"><Icon name="warning" /></div>
             <!-- For custom automations, the error message needs a default -->
             <div class="message">
               {issue.message || "There was an error"}

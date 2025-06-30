@@ -191,7 +191,7 @@
           </Button>
           <Icon
             hoverable
-            name="Close"
+            name="x"
             on:click={() => {
               setBannerLocalStorageKey()
               bannerStore.set(true)

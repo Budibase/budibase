@@ -1,5 +1,11 @@
 import Deployment from "./Deployment"
-import { context, db as dbCore, events, cache } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  cache,
+  features,
+} from "@budibase/backend-core"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import {
   clearMetadata,
@@ -8,7 +14,6 @@ import {
 } from "../../../automations/utils"
 import { backups } from "@budibase/pro"
 import {
-  App,
   AppBackupTrigger,
   DeploymentDoc,
   FetchDeploymentResponse,
@@ -18,6 +23,8 @@ import {
   DeploymentProgressResponse,
   Automation,
   PublishAppRequest,
+  PublishStatusResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -148,6 +155,19 @@ export async function deploymentProgress(
   }
 }
 
+export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
+  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+    return (ctx.body = { automations: {}, workspaceApps: {} })
+  }
+
+  const { automations, workspaceApps } = await sdk.deployment.status()
+
+  ctx.body = {
+    automations,
+    workspaceApps,
+  }
+}
+
 export const publishApp = async function (
   ctx: UserCtx<PublishAppRequest, PublishAppResponse>
 ) {
@@ -178,7 +198,7 @@ export const publishApp = async function (
         }
       )
     }
-    const config: any = {
+    const config = {
       source: devAppId,
       target: productionAppId,
     }
@@ -201,11 +221,18 @@ export const publishApp = async function (
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
-    const appDoc = await devDb.get<App>(DocumentType.APP_METADATA)
-    try {
-      const prodAppDoc = await db.get<App>(DocumentType.APP_METADATA)
+    const appDoc = await sdk.applications.metadata.tryGet({ production: false })
+    if (!appDoc) {
+      throw new Error(
+        "Unable to publish - cannot retrieve development app metadata"
+      )
+    }
+    const prodAppDoc = await sdk.applications.metadata.tryGet({
+      production: true,
+    })
+    if (prodAppDoc) {
       appDoc._rev = prodAppDoc._rev
-    } catch (err) {
+    } else {
       delete appDoc._rev
     }
 
@@ -213,6 +240,15 @@ export const publishApp = async function (
     deployment.appUrl = appDoc.url
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
+    if (automationIds?.length || workspaceAppIds?.length) {
+      const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
+      appDoc.resourcesPublishedAt = {
+        ...prodAppDoc?.resourcesPublishedAt,
+        ...Object.fromEntries(
+          fullMap.map(id => [id, new Date().toISOString()])
+        ),
+      }
+    }
     // remove automation errors if they exist
     delete appDoc.automationErrors
     await db.put(appDoc)

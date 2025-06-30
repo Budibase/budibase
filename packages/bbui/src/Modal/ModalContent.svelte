@@ -139,7 +139,7 @@
       <div class="close-icon">
         <Icon
           hoverable
-          name="Close"
+          name="x"
           on:click={() => cancel(ModalCancelFrom.CLOSE_BUTTON)}
         />
       </div>

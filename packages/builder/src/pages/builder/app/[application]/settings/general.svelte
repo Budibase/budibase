@@ -50,7 +50,7 @@
     <Heading size="S">Deployment</Heading>
     <div class="row top">
       <Icon
-        name="CheckmarkCircle"
+        name="check-circle"
         color="var(--spectrum-global-color-green-400)"
         size="L"
       />
@@ -68,8 +68,28 @@
       <Button warning on:click={unpublishModal?.show}>Unpublish</Button>
       <Button secondary on:click={revertModal?.show}>Revert changes</Button>
     </div>
+  {:else}
+    <div class="row">
+      <Icon
+        name="warning"
+        color="var(--spectrum-global-color-yellow-400)"
+        size="M"
+      />
+      <Body size="S">
+        Your app hasn't been published yet and isn't available to users
+      </Body>
+    </div>
+    <div class="row">
+      <Button
+        cta
+        disabled={$deploymentStore.isPublishing}
+        on:click={deploymentStore.publishApp}
+      >
+        Publish
+      </Button>
+    </div>
   {/if}
-  <Divider />
+  <Divider id="version" />
   <Layout gap="XS" noPadding>
     <Heading size="S">App version</Heading>
     {#if $admin.isDev}

@@ -44,7 +44,7 @@
       </div>
     {:else}
       <div class="embed-info">
-        <Icon size="S" name="Info" /> Embeds will only work with a published app
+        <Icon size="S" name="info" /> Embeds will only work with a published app
       </div>
     {/if}
   </div>

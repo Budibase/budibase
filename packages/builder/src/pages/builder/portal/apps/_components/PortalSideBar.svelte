@@ -1,10 +1,5 @@
 <script lang="ts">
-  import {
-    sideBarCollapsed,
-    enrichedApps,
-    agentsStore,
-    featureFlags,
-  } from "@/stores/portal"
+  import { sideBarCollapsed, enrichedApps, featureFlags } from "@/stores/portal"
   import { params, goto, page } from "@roxi/routify"
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
@@ -21,7 +16,6 @@
       app.name.toLowerCase().includes(searchString.toLowerCase())
     )
   })
-
   $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 </script>
 
@@ -36,7 +30,7 @@
   </div>
   <div class="side-bar-nav">
     <NavItem
-      icon="WebPages"
+      icon="browser"
       text={`All ${appsOrWorkspaces}`}
       on:click={() => {
         onAgents = false
@@ -48,54 +42,12 @@
       <span
         class="side-bar-app-entry"
         class:favourite={app.favourite}
-        class:actionsOpen={openedApp == app.appId}
+        class:actionsOpen={openedApp === app.appId}
       >
         <AppNavItem {app} />
       </span>
     {/each}
   </div>
-  {#if $featureFlags.AI_AGENTS}
-    <div class="side-bar-controls">
-      <NavHeader
-        title="Chats"
-        placeholder="Search for agent chats"
-        bind:value={searchString}
-        onAdd={() => $goto("./create")}
-      />
-    </div>
-    <div class="side-bar-nav">
-      <NavItem
-        icon="Algorithm"
-        text="All chats"
-        on:click={() => {
-          openedApp = undefined
-          onAgents = true
-          agentsStore.clearCurrentChatId()
-          $goto("./agents")
-        }}
-        selected={!$params.appId &&
-          !openedApp &&
-          !$agentsStore.currentChatId &&
-          onAgents}
-      />
-      {#each $agentsStore.chats as chat}
-        {@const selected = $agentsStore.currentChatId === chat._id}
-        <span class="side-bar-app-entry" class:actionsOpen={selected}>
-          <NavItem
-            icon="Branch1"
-            text={chat.title}
-            on:click={() => {
-              onAgents = true
-              openedApp = undefined
-              agentsStore.setCurrentChatId(chat._id || "")
-              $goto("./agents")
-            }}
-            {selected}
-          />
-        </span>
-      {/each}
-    </div>
-  {/if}
 </div>
 
 <style>
@@ -127,7 +79,7 @@
     gap: var(--spacing-l);
     padding: 0 var(--spacing-l);
   }
-  .side-bar-controls :global(.spectrum-Icon) {
+  .side-bar-controls :global(i) {
     color: var(--spectrum-global-color-gray-700);
   }
 

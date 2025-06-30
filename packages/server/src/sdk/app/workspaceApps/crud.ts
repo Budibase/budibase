@@ -1,5 +1,5 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
+import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 
 async function guardName(name: string, id?: string) {
@@ -10,8 +10,7 @@ async function guardName(name: string, id?: string) {
   }
 }
 
-export async function fetch(): Promise<WorkspaceApp[]> {
-  const db = context.getAppDB()
+export async function fetch(db = context.getAppDB()): Promise<WorkspaceApp[]> {
   const docs = await db.allDocs<WorkspaceApp>(
     docIds.getWorkspaceAppParams(null, { include_docs: true })
   )
@@ -29,7 +28,9 @@ export async function get(id: string): Promise<WorkspaceApp | undefined> {
   return workspaceApp
 }
 
-export async function create(workspaceApp: WithoutDocMetadata<WorkspaceApp>) {
+export async function create(
+  workspaceApp: WithoutDocMetadata<WorkspaceApp>
+): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
   await guardName(workspaceApp.name)
@@ -50,12 +51,24 @@ export async function update(
 ): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
-  await guardName(workspaceApp.name, workspaceApp._id)
-
   const persisted = (await get(workspaceApp._id!))!
-  const docToUpdate = {
-    ...persisted,
-    ...workspaceApp,
+  if (workspaceApp.name !== persisted.name) {
+    await guardName(workspaceApp.name, workspaceApp._id)
+  }
+  const docToUpdate: RequiredKeys<WorkspaceApp> = {
+    _id: workspaceApp._id,
+    _rev: workspaceApp._rev,
+    name: workspaceApp.name,
+    url: workspaceApp.url,
+    icon: workspaceApp.icon,
+    iconColor: workspaceApp.iconColor,
+    navigation: workspaceApp.navigation,
+
+    // Immutable properties
+    createdAt: persisted.createdAt,
+    updatedAt: persisted.updatedAt,
+    isDefault: persisted.isDefault,
+    _deleted: undefined,
   }
   const response = await db.put(docToUpdate)
   return {

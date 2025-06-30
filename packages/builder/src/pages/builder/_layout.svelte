@@ -2,12 +2,17 @@
   import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth, licensing, navigation } from "@/stores/portal"
   import { onMount } from "svelte"
-  import { CookieUtils, Constants } from "@budibase/frontend-core"
+  import {
+    CookieUtils,
+    Constants,
+    popNumSessionsInvalidated,
+    invalidationMessage,
+  } from "@budibase/frontend-core"
   import { API } from "@/api"
   import Branding from "./Branding.svelte"
   import ContextMenu from "@/components/ContextMenu.svelte"
   import CommandPalette from "@/components/commandPalette/CommandPalette.svelte"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, notifications } from "@budibase/bbui"
 
   let loaded = false
   let commandPaletteModal
@@ -97,6 +102,13 @@
       // being logged in
     }
     loaded = true
+
+    const invalidated = popNumSessionsInvalidated()
+    if (invalidated > 0) {
+      notifications.info(invalidationMessage(invalidated), {
+        duration: 5000,
+      })
+    }
 
     // lastly
     await analyticsPing()

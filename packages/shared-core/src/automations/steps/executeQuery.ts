@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "External Data Connector",
   tagline: "Execute Data Connector",
-  icon: "Data",
+  icon: "database",
   description: "Execute a query in an external data connector",
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.EXECUTE_QUERY,

@@ -304,6 +304,14 @@ export function getIP(): string | undefined {
   return context?.ip
 }
 
+export const getDevAppId = () => {
+  const appId = getAppId()
+  if (!appId) {
+    throw new Error("Could not get appId")
+  }
+  return conversions.getDevAppID(appId)
+}
+
 export const getProdAppId = () => {
   const appId = getAppId()
   if (!appId) {

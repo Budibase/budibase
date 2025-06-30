@@ -13,6 +13,7 @@
   export let legend
   export let palette
   export let c1, c2, c3, c4, c5
+  export let onClick
 
   $: labelType =
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
@@ -55,7 +56,35 @@
       zoom: {
         enabled: false,
       },
+      events: {
+        // Clicking on a slice of the pie
+        dataPointSelection: function (event, chartContext, opts) {
+          const segmentIndex = opts.dataPointIndex
+          const row = dataProvider.rows[segmentIndex]
+
+          // Percentage calculation:
+          // get value column from all rows
+          const rowValues = dataProvider.rows.map(row => {
+            return row[valueColumn]
+          })
+
+          // get total of all value columns
+          const initialValue = 0
+          const total = rowValues.reduce(
+            (accumulator, currentValue) => accumulator + currentValue,
+            initialValue
+          )
+
+          const percentage = ((row[valueColumn] / total) * 100).toFixed(1)
+
+          handleSegmentClick(row, segmentIndex + 1, percentage)
+        },
+      },
     },
+  }
+
+  function handleSegmentClick(segment, index, percentage) {
+    onClick?.({ segment, index, percentage })
   }
 
   const getSeries = (dataProvider, valueColumn) => {

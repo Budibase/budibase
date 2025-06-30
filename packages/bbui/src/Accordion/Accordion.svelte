@@ -1,5 +1,6 @@
 <script lang="ts">
   import "@spectrum-css/accordion"
+  import Icon from "../Icon/Icon.svelte"
 
   export let itemName: string | undefined = undefined
   export let initialOpen: boolean = false
@@ -39,21 +40,15 @@
         style="--font-weight: {bold ? 'bold' : 'normal'}"
         on:click={() => (isOpen = !isOpen)}
       >
+        <Icon name={isOpen ? "caret-down" : "caret-right"} size="S" />
         {header}
       </button>
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronRight100 spectrum-Accordion-itemIndicator"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-Chevron100" />
-      </svg>
     </h3>
     <div
       class="spectrum-Accordion-itemContent"
       role={itemName}
       style={noPadding
-        ? "padding-left: 20px; padding-bottom: 0;"
+        ? "padding-left: 0; padding-bottom: 0;"
         : "padding-left: 30px;"}
     >
       <slot />
@@ -62,9 +57,6 @@
 </div>
 
 <style>
-  .spectrum-Accordion {
-    margin-left: -20px;
-  }
   .spectrum-Accordion-item {
     border: none;
   }
@@ -75,6 +67,12 @@
     text-transform: none;
     font-weight: var(--font-weight);
     min-height: auto;
+    display: flex;
+    gap: var(--spacing-m);
+    padding-left: 0;
+  }
+  .spectrum-Accordion-itemHeader:hover {
+    background-color: transparent;
   }
   .spectrum-Accordion-itemHeaderS {
     font-size: 0.875rem;

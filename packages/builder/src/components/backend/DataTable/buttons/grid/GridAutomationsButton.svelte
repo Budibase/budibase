@@ -41,7 +41,7 @@
 <DetailPopover title="Automations" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="JourneyVoyager"
+      icon="lightning-a"
       selected={open || automationCount}
       quiet
       accentColor="#5610AD"
@@ -68,7 +68,7 @@
     </List>
   {/if}
   <div>
-    <Button secondary icon="JourneyVoyager" on:click={generateAutomation}>
+    <Button secondary icon="lightning-a" on:click={generateAutomation}>
       Generate automation
     </Button>
   </div>

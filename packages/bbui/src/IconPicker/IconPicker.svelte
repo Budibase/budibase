@@ -22,30 +22,30 @@
     {
       label: "Icons",
       icons: [
-        "Apps",
-        "Actions",
-        "ConversionFunnel",
-        "App",
-        "Briefcase",
-        "Money",
-        "ShoppingCart",
-        "Form",
-        "Help",
-        "Monitoring",
-        "Sandbox",
-        "Project",
-        "Organisations",
-        "Magnify",
-        "Launch",
-        "Car",
-        "Camera",
-        "Bug",
-        "Channel",
-        "Calculator",
-        "Calendar",
-        "GraphDonut",
-        "GraphBarHorizontal",
-        "Demographic",
+        "squares-four",
+        "cursor-click",
+        "funnel",
+        "squares-four",
+        "briefcase",
+        "coins",
+        "shopping-cart",
+        "note",
+        "question",
+        "activity",
+        "flask",
+        "briefcase",
+        "tree-structure",
+        "magnifying-glass-plus",
+        "rocket-launch",
+        "car",
+        "camera",
+        "bug",
+        "share-network",
+        "calculator",
+        "calendar",
+        "chart-donut",
+        "chart-bar-horizontal",
+        "users-three",
       ],
     },
   ]
@@ -72,7 +72,7 @@
       style={value ? `background: ${value};` : ""}
       class:placeholder={!value}
     >
-      <Icon name={value || "UserGroup"} />
+      <Icon name={value || "users-three"} />
     </div>
   </div>
   {#if open}

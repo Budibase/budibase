@@ -20,6 +20,7 @@
     evaluationContext,
     contextMenuStore,
   } from "@/stores/builder"
+  import { ViewMode } from "@/types"
   import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
@@ -34,6 +35,11 @@
   export let isLast
   export let bindings
   export let automation
+  export let executed = false
+  export let unexecuted = false
+  export let viewMode = null
+  export let logStepData = null
+  export let onStepSelect = () => {}
 
   const view = getContext("draggableView")
   const memoContext = memo({})
@@ -62,7 +68,7 @@
   const getContextMenuItems = () => {
     return [
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
@@ -80,7 +86,7 @@
         },
       },
       {
-        icon: "ArrowLeft",
+        icon: "arrow-left",
         name: "Move left",
         keyBind: null,
         visible: true,
@@ -94,7 +100,7 @@
         },
       },
       {
-        icon: "ArrowRight",
+        icon: "arrow-right",
         name: "Move right",
         keyBind: null,
         visible: true,
@@ -170,11 +176,17 @@
 
 <div class="flow-item branch">
   <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
     class={`block branch-node hoverable`}
     class:selected={false}
-    on:mousedown={e => {
+    class:executed
+    class:unexecuted
+    on:click={e => {
       e.stopPropagation()
+      if (viewMode === ViewMode.LOGS && logStepData) {
+        onStepSelect(logStepData)
+      }
     }}
   >
     <div class="block-float">
@@ -208,16 +220,18 @@
         />
         <div class="actions">
           <Icon
-            name="Info"
+            name="info"
             tooltip="Branch sequencing checks each option in order and follows the first one that matches the rules."
           />
           <Icon
+            disabled={viewMode === ViewMode.LOGS}
             on:click={e => {
               openContextMenu(e)
             }}
-            size="S"
+            size="M"
+            weight="bold"
             hoverable
-            name="MoreSmallList"
+            name="dots-three"
           />
         </div>
       </div>
@@ -227,7 +241,11 @@
     <div class="blockSection filter-button">
       <PropField label="Only run when:" fullWidth>
         <div style="width: 100%">
-          <Button secondary on:click={drawer.show}>
+          <Button
+            disabled={viewMode === ViewMode.LOGS}
+            secondary
+            on:click={drawer.show}
+          >
             {editableConditionUI?.groups?.length
               ? "Update condition"
               : "Add condition"}
@@ -237,11 +255,13 @@
     </div>
   </div>
 
-  <div class="separator" />
+  {#if !isLast}
+    <div class="separator" />
+  {/if}
 
   {#if $view.dragging}
     <DragZone path={branchBlockRef.pathTo} />
-  {:else}
+  {:else if viewMode === ViewMode.EDITOR}
     <FlowItemActions block={branchBlockRef} />
   {/if}
 
@@ -291,11 +311,10 @@
     display: inline-block;
   }
   .block {
-    width: 360px;
-    font-size: 16px;
-    background-color: var(--background);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px 4px 4px 4px;
+    width: 320px;
+    background-color: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
     cursor: default;
   }
 
@@ -341,5 +360,14 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-m);
+  }
+
+  .block.executed {
+    border-color: var(--spectrum-global-color-green-600);
+    border-width: 2px;
+  }
+
+  .block.unexecuted {
+    opacity: 0.7;
   }
 </style>
