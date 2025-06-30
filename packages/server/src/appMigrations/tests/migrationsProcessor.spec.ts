@@ -34,6 +34,14 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     )
   }
 
+  async function expectMigrationVersion(expectedVersion: string) {
+    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      expect(
+        await config.doInContext(appId, () => getAppMigrationVersion(appId))
+      ).toBe(expectedVersion)
+    }
+  }
+
   it("running migrations will update the latest applied migration", async () => {
     const testMigrations: AppMigration[] = [
       { id: generateMigrationId(), func: async () => {} },
@@ -475,5 +483,107 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         expect(executionOrder[0]).toBe(devAppId)
         expect(mockSyncApp).not.toHaveBeenCalled()
       })
+  })
+
+  describe("resilience and recovery", () => {
+    it("should not update migration version if migration function fails", async () => {
+      const testMigrations: AppMigration[] = [
+        {
+          id: generateMigrationId(),
+          func: jest
+            .fn()
+            .mockImplementationOnce(() => {})
+            .mockImplementationOnce(() => {
+              throw new Error("Migration failed")
+            }),
+        },
+      ]
+
+      const appId = fromProd ? config.getProdAppId() : config.getAppId()
+
+      // Get the initial migration version
+      const initialVersion = await config.doInContext(appId, () =>
+        getAppMigrationVersion(appId)
+      )
+
+      // Run migrations and expect failure
+      await expect(runMigrations(testMigrations)).rejects.toThrow(
+        "Migration failed"
+      )
+
+      // Verify that migration version wasn't updated to the failing migration
+      const currentVersion = await config.doInContext(appId, () =>
+        getAppMigrationVersion(appId)
+      )
+      expect(currentVersion).toBe(initialVersion)
+      expect(testMigrations[0].func).toHaveBeenCalledTimes(2)
+    })
+
+    it("should allow recovery by rerunning from failing point after error", async () => {
+      const executionOrder: string[] = []
+      const attemptCount: Record<string, number> = {}
+
+      const migration1Id = generateMigrationId()
+      const migration2Id = generateMigrationId()
+
+      const testMigrations: AppMigration[] = [
+        {
+          id: migration1Id,
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name}-migration-1`)
+          },
+        },
+        {
+          id: migration2Id,
+          func: async () => {
+            const db = context.getAppDB()
+            attemptCount[db.name] ??= 0
+            attemptCount[db.name]++
+            if (db.name === config.getAppId() && attemptCount[db.name] === 1) {
+              executionOrder.push(
+                `${db.name}-migration-2-attempt-${attemptCount[db.name]}-error`
+              )
+              // Fail on first attempt
+              throw new Error("Migration failed on first attempt")
+            }
+            executionOrder.push(
+              `${db.name}-migration-2-attempt-${attemptCount[db.name]}-success`
+            )
+            // Succeed on subsequent attempts
+          },
+        },
+      ]
+
+      // First run should fail on migration 2, but migration 1 should complete
+      await expect(runMigrations(testMigrations)).rejects.toThrow(
+        "Migration failed on first attempt"
+      )
+      await expectMigrationVersion(migration1Id)
+
+      // Second run should succeed (migration-2 will succeed this time)
+      await runMigrations(testMigrations)
+      await expectMigrationVersion(migration2Id)
+
+      // Verify that migration 1 ran only once per app and migration 2 ran twice
+      const migration1Runs = executionOrder.filter(e =>
+        e.includes("migration-1")
+      )
+      const migration2Runs = executionOrder.filter(e =>
+        e.includes("migration-2")
+      )
+
+      expect(migration1Runs).toEqual([
+        `${config.getProdAppId()}-migration-1`,
+        `${config.getAppId()}-migration-1`,
+      ])
+
+      expect(migration2Runs).toEqual([
+        `${config.getProdAppId()}-migration-2-attempt-1-success`,
+        `${config.getAppId()}-migration-2-attempt-1-error`,
+        `${config.getProdAppId()}-migration-2-attempt-2-success`,
+        `${config.getAppId()}-migration-2-attempt-2-success`,
+      ])
+    })
   })
 })
