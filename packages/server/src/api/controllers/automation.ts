@@ -35,11 +35,21 @@ import {
   TestAutomationRequest,
   TestAutomationResponse,
   Table,
+  ContextUser,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import env from "../../environment"
+import cloneDeep from "lodash/cloneDeep"
+
+function sanitiseUserStructure(user: ContextUser) {
+  const copiedUser = cloneDeep(user)
+  delete copiedUser.roles
+  delete copiedUser.account
+  delete copiedUser.license
+  return copiedUser
+}
 
 /*************************
  *                       *
@@ -177,7 +187,7 @@ export async function trigger(
         automation,
         {
           fields: ctx.request.body.fields,
-          user: sdk.users.getUserContextBindings(ctx.user),
+          user: sanitiseUserStructure(ctx.user),
           timeout:
             ctx.request.body.timeout * 1000 || env.AUTOMATION_THREAD_TIMEOUT,
         },
@@ -206,7 +216,7 @@ export async function trigger(
     await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
-      user: sdk.users.getUserContextBindings(ctx.user),
+      user: sanitiseUserStructure(ctx.user),
     })
     ctx.body = {
       message: `Automation ${automation._id} has been triggered.`,
@@ -249,7 +259,7 @@ export async function test(
     const occurredAt = new Date().getTime()
     await updateTestHistory(appId, automation, { ...body, occurredAt })
     const input = prepareTestInput(body)
-    const user = sdk.users.getUserContextBindings(ctx.user)
+    const user = input.user || sanitiseUserStructure(ctx.user)
     return await triggers.externalTrigger(
       automation,
       { ...{ ...input, ...(table ? { table } : {}) }, appId, user },

@@ -10,6 +10,7 @@ import {
   getEnvironmentBindings,
   migrateReferencesInObject,
   getUserBindings,
+  getAuthBindings,
   getSettingBindings,
   getSchemaForDatasourcePlus,
 } from "@/dataBinding"
@@ -543,7 +544,7 @@ const automationActions = (store: AutomationStore) => ({
    * @returns {Array<Object>} all available user bindings
    */
   buildUserBindings: () => {
-    return getUserBindings().map((binding: any) => {
+    const userBindings = getUserBindings().map((binding: any) => {
       return {
         ...binding,
         category: "User",
@@ -553,6 +554,18 @@ const automationActions = (store: AutomationStore) => ({
         },
       }
     })
+
+    const authBindings = getAuthBindings().map((binding: any) => {
+      return {
+        ...binding,
+        display: {
+          ...binding.display,
+          rank: 98,
+        },
+      }
+    })
+
+    return [...userBindings, ...authBindings]
   },
 
   /**
