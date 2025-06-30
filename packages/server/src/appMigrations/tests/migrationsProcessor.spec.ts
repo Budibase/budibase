@@ -9,6 +9,7 @@ import { AppMigration } from ".."
 import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../sdk"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import { MIGRATIONS } from "../migrations"
 
 function generateMigrationId() {
   return generator.guid()
@@ -51,11 +52,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
     await runMigrations(testMigrations)
 
-    for (const appId of [config.getAppId(), config.getProdAppId()]) {
-      expect(
-        await config.doInContext(appId, () => getAppMigrationVersion(appId))
-      ).toBe(testMigrations[2].id)
-    }
+    await expectMigrationVersion(testMigrations[2].id)
   })
 
   it("syncs the dev app before applying each migration", async () => {
@@ -94,11 +91,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
     await runMigrations(testMigrations)
 
-    for (const appId of [config.getAppId(), config.getProdAppId()]) {
-      expect(
-        await config.doInContext(appId, () => getAppMigrationVersion(appId))
-      ).toBe(testMigrations[2].id)
-    }
+    await expectMigrationVersion(testMigrations[2].id)
 
     expect(executionOrder).toEqual([
       `${config.getProdAppId()}-migration-1`,
@@ -439,22 +432,11 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      const devAppId = config.getAppId()
-      const prodAppId = config.getProdAppId()
-
-      for (const appId of [devAppId, prodAppId]) {
-        expect(
-          await config.doInContext(appId, () => getAppMigrationVersion(appId))
-        ).not.toBe(testMigrations[0].id)
-      }
+      await expectMigrationVersion(MIGRATIONS[MIGRATIONS.length - 1].id)
 
       await runMigrations(testMigrations)
 
-      for (const appId of [devAppId, prodAppId]) {
-        expect(
-          await config.doInContext(appId, () => getAppMigrationVersion(appId))
-        ).toBe(testMigrations[0].id)
-      }
+      await expectMigrationVersion(testMigrations[0].id)
     })
 
     !fromProd &&
@@ -499,12 +481,9 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      const appId = fromProd ? config.getProdAppId() : config.getAppId()
-
       // Get the initial migration version
-      const initialVersion = await config.doInContext(appId, () =>
-        getAppMigrationVersion(appId)
-      )
+      const initialVersion = MIGRATIONS[MIGRATIONS.length - 1].id
+      await expectMigrationVersion(initialVersion)
 
       // Run migrations and expect failure
       await expect(runMigrations(testMigrations)).rejects.toThrow(
@@ -512,10 +491,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       )
 
       // Verify that migration version wasn't updated to the failing migration
-      const currentVersion = await config.doInContext(appId, () =>
-        getAppMigrationVersion(appId)
-      )
-      expect(currentVersion).toBe(initialVersion)
+      await expectMigrationVersion(initialVersion)
       expect(testMigrations[0].func).toHaveBeenCalledTimes(2)
     })
 
