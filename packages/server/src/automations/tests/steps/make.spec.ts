@@ -72,4 +72,77 @@ describe("test the outgoing webhook action", () => {
     expect(result.steps[0].outputs.response).toEqual("Invalid payload JSON")
     expect(result.steps[0].outputs.success).toEqual(false)
   })
+
+  it("should handle JSON containing apostrophes when body.value is already parsed", async () => {
+    const payload = {
+      Name: "John's Name",
+      Email: "test@example.com",
+      tableid: "ta_users_us_faee445",
+    }
+
+    nock("http://www.example.com/")
+      .post("/", payload)
+      .reply(200, { success: true })
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
+        body: { value: payload },
+        url: "http://www.example.com",
+      })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.response.success).toEqual(true)
+    expect(result.steps[0].outputs.success).toEqual(true)
+  })
+
+  it("should handle JSON containing apostrophes when body.value is a string", async () => {
+    const payload = {
+      Name: "John's Name",
+      Email: "test@example.com",
+      tableid: "ta_users_us_faee445",
+    }
+
+    nock("http://www.example.com/")
+      .post("/", payload)
+      .reply(200, { success: true })
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
+        body: { value: JSON.stringify(payload) },
+        url: "http://www.example.com",
+      })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.response.success).toEqual(true)
+    expect(result.steps[0].outputs.success).toEqual(true)
+  })
+
+  it("should not double-parse JSON objects that are already parsed", async () => {
+    const alreadyParsedObject = {
+      fields: {
+        Rows: [{ Name: "John's Name", Email: "test@example.com" }],
+      },
+    }
+
+    let capturedRequestBody: any
+    nock("http://www.example.com/")
+      .post("/", body => {
+        capturedRequestBody = body
+        return true
+      })
+      .reply(200, { success: true })
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
+        body: { value: alreadyParsedObject },
+        url: "http://www.example.com",
+      })
+      .test({ fields: {} })
+
+    expect(capturedRequestBody.fields.Rows[0].Name).toEqual("John's Name")
+    expect(result.steps[0].outputs.success).toEqual(true)
+  })
 })

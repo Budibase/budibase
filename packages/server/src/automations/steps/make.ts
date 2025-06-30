@@ -11,7 +11,10 @@ export async function run({
 
   let payload = {}
   try {
-    payload = body?.value ? JSON.parse(body?.value) : {}
+    if (body?.value) {
+      payload =
+        typeof body.value === "string" ? JSON.parse(body.value) : body.value
+    }
   } catch (err) {
     return {
       httpStatus: 400,
