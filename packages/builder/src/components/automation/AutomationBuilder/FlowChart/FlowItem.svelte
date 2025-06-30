@@ -20,6 +20,7 @@
   export let logStepData = null
   export let viewMode = ViewMode.EDITOR
   export let selectedLogStepId = null
+  export let unexecuted = false
   export let onStepSelect = () => {}
   const view = getContext("draggableView")
   const pos = getContext("viewPos")
@@ -51,8 +52,7 @@
   $: selected =
     viewMode === ViewMode.EDITOR
       ? block.id === selectedNodeId
-      : viewMode === ViewMode.LOGS &&
-        (block.stepId === selectedLogStepId || block.id === selectedLogStepId)
+      : viewMode === ViewMode.LOGS && block.id === selectedLogStepId
   $: dragging = $view?.moveStep && $view?.moveStep?.id === block.id
 
   $: if (dragging && blockEle) {
@@ -146,6 +146,7 @@
     class:dragging
     class:draggable
     class:selected
+    class:unexecuted
   >
     <div class="wrap">
       {#if $view.dragging && dragging}
@@ -211,16 +212,20 @@
       </div>
     </div>
   </div>
-  {#if !collectBlockExists || !lastStep}
+
+  {#if !lastStep || viewMode !== ViewMode.LOGS}
     <div class="separator" />
+  {/if}
+
+  {#if !collectBlockExists}
     {#if $view.dragging}
       <DragZone path={blockRef?.pathTo} />
-    {:else}
+    {:else if viewMode === ViewMode.EDITOR}
       <FlowItemActions
         {block}
         on:branch={() => {
           automationStore.actions.branchAutomation(
-            $selectedAutomation.blockRefs[block.id].pathTo,
+            $selectedAutomation.blockRefs[block.id]?.pathTo,
             automation
           )
         }}
@@ -237,6 +242,9 @@
 </Modal>
 
 <style>
+  .unexecuted {
+    opacity: 0.5;
+  }
   .delete-padding {
     padding-left: 30px;
   }

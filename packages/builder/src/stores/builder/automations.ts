@@ -641,7 +641,7 @@ const automationActions = (store: AutomationStore) => ({
         const children = block.inputs?.children || {}
 
         branches.forEach((branch, bIdx) => {
-          children[branch.id].forEach(
+          children[branch.id]?.forEach(
             (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
               const ended = array.length - 1 === sIdx
               treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
