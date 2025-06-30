@@ -67,6 +67,8 @@ import {
   Webhook,
   WithRequired,
   DevInfo,
+  SSOUser,
+  SSOProviderType,
 } from "@budibase/types"
 
 import API from "./api"
@@ -357,9 +359,25 @@ export default class TestConfiguration {
     const resp = await db.put(user)
     await cache.user.invalidateUser(_id)
     return {
-      _rev: resp.rev,
       ...user,
+      _rev: resp.rev,
     }
+  }
+
+  async ssoUser(config: Partial<SSOUser> = {}): Promise<SSOUser> {
+    const db = tenancy.getTenantDB(this.getTenantId())
+    const user = await this.globalUser(config)
+    const ssoUser = user as SSOUser
+
+    ssoUser.providerType = config.providerType || SSOProviderType.GOOGLE
+    ssoUser.provider = config.provider || "Google"
+    ssoUser.oauth2 = config.oauth2
+
+    const { _rev } = await db.get<SSOUser>(ssoUser._id!)
+    const resp = await db.put(ssoUser)
+    ssoUser._rev = resp.rev
+    await cache.user.invalidateUser(ssoUser._id!)
+    return ssoUser
   }
 
   async createUser(user: Partial<User> = {}): Promise<User> {

@@ -259,7 +259,8 @@ export async function test(
     const occurredAt = new Date().getTime()
     await updateTestHistory(appId, automation, { ...body, occurredAt })
     const input = prepareTestInput(body)
-    const user = input.user || sanitiseUserStructure(ctx.user)
+    const user = sdk.users.getUserContextBindings(ctx.user)
+
     return await triggers.externalTrigger(
       automation,
       { ...{ ...input, ...(table ? { table } : {}) }, appId, user },

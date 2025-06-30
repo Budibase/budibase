@@ -256,7 +256,14 @@ class QueryRunner {
     ).execute()
   }
 
-  async refreshOAuth2(ctx: any) {
+  async refreshOAuth2(ctx: QueryEventCtx) {
+    if (!ctx.user) {
+      return
+    }
+    if (!ctx.auth) {
+      return
+    }
+
     const { oauth2, providerType, _id } = ctx.user
     const { configId } = ctx.auth
 
@@ -264,7 +271,7 @@ class QueryRunner {
       throw new Error("No refresh token found for authenticated user")
     }
 
-    const resp: any = await auth.refreshOAuthToken(
+    const resp = await auth.refreshOAuthToken(
       oauth2.refreshToken,
       providerType,
       configId
@@ -272,8 +279,8 @@ class QueryRunner {
 
     // Refresh session flow. Should be in same location as refreshOAuthToken
     // There are several other properties available in 'resp'
-    if (!resp.err) {
-      const globalUserId = getGlobalIDFromUserMetadataID(_id)
+    if (!("err" in resp)) {
+      const globalUserId = getGlobalIDFromUserMetadataID(_id!)
       await auth.updateUserOAuth(globalUserId, resp)
       if (!this.ctx) {
         this.ctx = {}

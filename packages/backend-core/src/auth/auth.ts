@@ -21,6 +21,7 @@ import {
   PlatformLogoutOpts,
   SessionCookie,
   SSOProviderType,
+  SSOUser,
 } from "@budibase/types"
 import * as events from "../events"
 import * as configs from "../configs"
@@ -116,13 +117,18 @@ async function refreshGoogleAccessToken(
   })
 }
 
-interface RefreshResponse {
-  err?: {
-    data?: string
-  }
-  accessToken?: string
-  refreshToken?: string
+type RefreshResponse = SuccessfulRefreshResponse | FailedRefreshResponse
+
+interface SuccessfulRefreshResponse {
+  accessToken: string
+  refreshToken: string
   params?: any
+}
+
+interface FailedRefreshResponse {
+  err: {
+    data: string
+  }
 }
 
 export async function refreshOAuthToken(
@@ -153,32 +159,27 @@ export async function refreshOAuthToken(
 
 // TODO: Refactor to use user save function instead to prevent the need for
 // manually saving and invalidating on callback
-export async function updateUserOAuth(userId: string, oAuthConfig: any) {
-  const details = {
-    accessToken: oAuthConfig.accessToken,
-    refreshToken: oAuthConfig.refreshToken,
+export async function updateUserOAuth(
+  userId: string,
+  oAuthConfig: { accessToken: string; refreshToken?: string }
+) {
+  const details = { ...oAuthConfig }
+
+  // Do not overwrite the refresh token if a valid one is not provided.
+  if (typeof details.refreshToken !== "string") {
+    delete details.refreshToken
   }
 
-  try {
-    const db = getGlobalDB()
-    const dbUser = await db.get<any>(userId)
-
-    //Do not overwrite the refresh token if a valid one is not provided.
-    if (typeof details.refreshToken !== "string") {
-      delete details.refreshToken
-    }
-
-    dbUser.oauth2 = {
-      ...dbUser.oauth2,
-      ...details,
-    }
-
-    await db.put(dbUser)
-
-    await invalidateUser(userId)
-  } catch (e) {
-    console.error("Could not update OAuth details for current user", e)
+  const db = getGlobalDB()
+  const dbUser = await db.tryGet<SSOUser>(userId)
+  if (!dbUser) {
+    console.error("Could not find user to update OAuth details", userId)
+    return
   }
+
+  dbUser.oauth2 = { ...dbUser.oauth2, ...details }
+  await db.put(dbUser)
+  await invalidateUser(userId)
 }
 
 /**
