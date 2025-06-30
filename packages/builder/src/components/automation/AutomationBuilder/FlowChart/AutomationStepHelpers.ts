@@ -1,29 +1,44 @@
+import { get } from "svelte/store"
 import { automationStore } from "@/stores/builder"
 import { ViewMode } from "@/types/automations"
 import {
   Automation,
+  AutomationActionStepId,
   AutomationLog,
   AutomationStep,
-  AutomationTrigger,
   AutomationStepResult,
+  AutomationTrigger,
   AutomationTriggerResult,
-  BranchStep,
-  BlockDefinitions,
   AutomationTriggerStepId,
-  AutomationActionStepId,
+  BlockDefinitions,
   Branch,
+  BranchStep,
 } from "@budibase/types"
-import { get } from "svelte/store"
 
 type AutomationLogStep = AutomationTriggerResult | AutomationStepResult
 type BranchChild = { id: string; [key: string]: any }
-
-// Type for reconstructed blocks from log data - hybrid of log results + step definitions
 type ReconstructedBlock = AutomationLogStep & {
   name: string
   icon: string
 }
 type AutomationBlock = AutomationStep | AutomationTrigger | ReconstructedBlock
+
+// Block processing and retrieval functions
+export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
+  const blockDefinitions = get(automationStore).blockDefinitions
+  const selectedLog = get(automationStore).selectedLog
+  let blocks: AutomationBlock[] = []
+
+  if (viewMode === ViewMode.LOGS && selectedLog) {
+    blocks = processLogSteps({ ...automation, blockDefinitions }, selectedLog)
+  } else {
+    if (automation.definition.trigger) {
+      blocks.push(automation.definition.trigger)
+    }
+    blocks = blocks.concat(automation.definition.steps || [])
+  }
+  return blocks
+}
 
 export const processLogSteps = (
   automation: Automation & { blockDefinitions: BlockDefinitions },
@@ -33,11 +48,32 @@ export const processLogSteps = (
   if (automation.definition.trigger) {
     blocks.push(automation.definition.trigger)
   }
-  // We want to filter out steps from the top level array that exist
-  // in the children of the branch. We want the branch children to be the
-  // source of truth.
+
+  const branchChildStepIds = getBranchChildStepIds(selectedLog.steps)
+
+  selectedLog.steps
+    .filter(
+      (logStep: AutomationLogStep) =>
+        logStep.stepId !== automation.definition.trigger?.stepId
+    )
+    .filter((logStep: AutomationLogStep) => !branchChildStepIds.has(logStep.id))
+    .forEach((logStep: AutomationLogStep) => {
+      const stepDefinition = getStepDefinition(
+        automation.blockDefinitions,
+        logStep.stepId
+      )
+      blocks.push({
+        ...logStep,
+        name: stepDefinition?.name || logStep.name || "",
+        icon: stepDefinition?.icon || logStep.icon || "",
+      })
+    })
+  return blocks
+}
+
+const getBranchChildStepIds = (steps: AutomationLogStep[]) => {
   const branchChildStepIds = new Set()
-  selectedLog.steps.forEach((logStep: AutomationLogStep) => {
+  steps.forEach((logStep: AutomationLogStep) => {
     if (
       logStep.stepId === AutomationActionStepId.BRANCH &&
       logStep.outputs?.branchId
@@ -49,49 +85,20 @@ export const processLogSteps = (
       })
     }
   })
-  selectedLog.steps
-    .filter(
-      (logStep: AutomationLogStep) =>
-        logStep.stepId !== automation.definition.trigger?.stepId
-    )
-    .filter((logStep: AutomationLogStep) => !branchChildStepIds.has(logStep.id))
-    .forEach((logStep: AutomationLogStep) => {
-      // Step doesn't exist in current definition, reconstruct from log
-      const stepDefinition =
-        automation.blockDefinitions?.ACTION?.[
-          logStep.stepId as AutomationActionStepId
-        ] ||
-        automation.blockDefinitions?.TRIGGER?.[
-          logStep.stepId as AutomationTriggerStepId
-        ]
-
-      blocks.push({
-        ...logStep,
-        name: stepDefinition?.name || logStep.name || "Unknown Step",
-        icon: stepDefinition?.icon || logStep.icon || "default",
-      })
-    })
-  return blocks
+  return branchChildStepIds
 }
 
-export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
-  const blockDefinitions = get(automationStore).blockDefinitions
-  const selectedLog = get(automationStore).selectedLog
-  let blocks: AutomationBlock[] = []
-
-  // In logs mode, we need to show steps from the log data
-  if (viewMode === ViewMode.LOGS && selectedLog) {
-    blocks = processLogSteps({ ...automation, blockDefinitions }, selectedLog)
-  } else {
-    // Normal editor mode - show current automation steps
-    if (automation.definition.trigger) {
-      blocks.push(automation.definition.trigger)
-    }
-    blocks = blocks.concat(automation.definition.steps || [])
-  }
-  return blocks
+const getStepDefinition = (
+  blockDefinitions: BlockDefinitions,
+  stepId: string
+) => {
+  return (
+    blockDefinitions?.ACTION?.[stepId as AutomationActionStepId] ||
+    blockDefinitions?.TRIGGER?.[stepId as AutomationTriggerStepId]
+  )
 }
 
+// Log enrichment functions
 export const enrichLog = (
   definitions: BlockDefinitions,
   log: AutomationLog
@@ -115,24 +122,7 @@ export const enrichLog = (
   return enrichedLog
 }
 
-export const summariseBranch = (branch: Branch) => {
-  const groups = branch?.conditionUI?.groups || []
-  if (groups.length === 0) return ""
-
-  const filters = groups[0]?.filters || []
-  if (filters.length === 0) return ""
-
-  const { field, operator, value } = filters[0]
-  let summary = `${field} ${operator} ${value}`
-
-  if (filters.length > 1) {
-    summary += ` and ${filters.length - 1} other condition${
-      filters.length - 1 > 1 ? "s" : ""
-    }`
-  }
-  return summary
-}
-
+// Step data extraction functions
 export const getCurrentStepData = (step: AutomationStepResult) => {
   if (!step) return null
 
@@ -152,6 +142,25 @@ export const getStepErrors = (step: AutomationStepResult) => {
       type: "error",
     },
   ]
+}
+
+// Branch-specific functions
+export const summariseBranch = (branch: Branch) => {
+  const groups = branch?.conditionUI?.groups || []
+  if (groups.length === 0) return ""
+
+  const filters = groups[0]?.filters || []
+  if (filters.length === 0) return ""
+
+  const { field, operator, value } = filters[0]
+  let summary = `${field} ${operator} ${value}`
+
+  if (filters.length > 1) {
+    summary += ` and ${filters.length - 1} other condition${
+      filters.length - 1 > 1 ? "s" : ""
+    }`
+  }
+  return summary
 }
 
 export const getBranchConditionDetails = (step: AutomationStepResult) => {
