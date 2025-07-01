@@ -29,7 +29,7 @@
         return
       }
       const element = entries[0].target
-      width = element.clientWidth
+      containerWidth = element.clientWidth
     })
 
     resizeObserver.observe(element)
