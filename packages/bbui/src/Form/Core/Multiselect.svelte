@@ -81,7 +81,8 @@
   const makeToggleOption = (map: Record<string, boolean>, value: string[]) => {
     return (optionValue: string) => {
       if (map[optionValue]) {
-        const filtered = value.filter(option => option !== optionValue)
+        // comparison needs to take into account different types, always compare them as strings
+        const filtered = value.filter(option => option.toString() !== optionValue.toString())
         dispatch("change", filtered)
       } else {
         dispatch("change", [...value, optionValue])
