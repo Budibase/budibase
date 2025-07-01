@@ -327,7 +327,7 @@
     width: var(--pswidth);
     background-color: rgba(92, 92, 92, 0.1);
     border: 1px dashed #5c5c5c;
-    border-radius: 4px;
+    border-radius: 12px;
     display: block;
   }
   .block-core {
