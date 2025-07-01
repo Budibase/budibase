@@ -5,7 +5,6 @@ import {
   ContextEmitter,
   ExecuteQueryStepInputs,
   ExecuteQueryStepOutputs,
-  AutomationContext,
 } from "@budibase/types"
 
 export async function run({
@@ -17,7 +16,7 @@ export async function run({
   inputs: ExecuteQueryStepInputs
   appId: string
   emitter: ContextEmitter
-  context?: AutomationContext
+  context: Record<string, any>
 }): Promise<ExecuteQueryStepOutputs> {
   if (inputs.query == null) {
     return {
@@ -37,7 +36,7 @@ export async function run({
     params: {
       queryId,
     },
-    user: context?.user,
+    user: context.user,
   })
 
   try {

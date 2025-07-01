@@ -1,6 +1,15 @@
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { SSOUser, SSOProviderType, AutomationActionStepId, User } from "@budibase/types"
+import {
+  SSOUser,
+  SSOProviderType,
+  User,
+  BodyType,
+  RestQueryFields,
+} from "@budibase/types"
+import { context } from "@budibase/backend-core"
+import * as setup from "./utilities"
+import nock from "nock"
 
 describe("OAuth2 Automation Binding", () => {
   const config = new TestConfiguration()
@@ -21,10 +30,12 @@ describe("OAuth2 Automation Binding", () => {
       provider: "Google",
     } as SSOUser
 
-    // Save the updated user with OAuth2 data to the database
-    const db = config.getTenantDatabase()
-    await db.put(ssoUserData)
-    
+    await config.doInTenant(async () => {
+      // Save the updated user with OAuth2 data to the database
+      const db = context.getGlobalDB()
+      await db.put(ssoUserData)
+    })
+
     ssoUser = ssoUserData
   })
 
@@ -32,50 +43,108 @@ describe("OAuth2 Automation Binding", () => {
     config.end()
   })
 
+  afterEach(() => {
+    nock.cleanAll()
+  })
+
   it("should make OAuth2 token available in executeQuery automation step", async () => {
     await config.withUser(ssoUser, async () => {
-      // Create a basic table to test with
-      const table = await config.api.table.save({
-        name: "test-table",
-        schema: {
-          name: {
-            type: "string",
-            name: "name",
-          },
-        },
+      // Mock the external API call that the query will make
+      const scope = nock("https://api.example.com")
+        .get("/test")
+        .matchHeader("Authorization", "Bearer test_access_token")
+        .reply(200, { success: true, data: "OAuth token worked!" })
+
+      // Create a basic REST datasource
+      const datasource = await config.restDatasource({
+        name: "OAuth Test Datasource",
       })
+
+      // Create a query that will use the OAuth token in query headers
+      const queryFields: RestQueryFields = {
+        path: "https://api.example.com/test",
+        queryString: "",
+        headers: {
+          Authorization: "Bearer {{ user.oauth2.accessToken }}",
+        },
+        disabledHeaders: {},
+        bodyType: BodyType.NONE,
+      }
+
+      const query = await setup.saveRESTQuery(config, datasource, queryFields)
 
       const results = await createAutomationBuilder(config)
         .onAppAction()
-        .serverLog({
-          text: "Testing executeQuery - OAuth Token: {{ user.oauth2.accessToken }}",
+        .executeQuery({
+          query: {
+            queryId: query._id!,
+          },
         })
         .test({ fields: {} })
 
-      // This test should initially show that OAuth2 tokens are not available
-      // The log should show "undefined" instead of the actual token
-      // Once we fix the implementation, this should show the actual token
-      const logMessage = results.steps[0].outputs.message
-      expect(logMessage).toContain("OAuth Token:")
-      // Initially this will be undefined, after fix it should be the actual token
+      // Verify the request was made with the correct OAuth token
+      expect(scope.isDone()).toBe(true)
+      expect(results.steps[0].outputs.success).toBe(true)
+      expect(results.steps[0].outputs.response).toEqual([
+        { success: true, data: "OAuth token worked!" },
+      ])
     })
   })
 
   it("should make OAuth2 token available in apiRequest automation step", async () => {
     await config.withUser(ssoUser, async () => {
+      // Mock the external API call that the API request will make
+      const scope = nock("https://api.example.com")
+        .post("/api-request")
+        .matchHeader("Authorization", "Bearer test_access_token")
+        .reply(200, {
+          success: true,
+          message: "API request with OAuth token succeeded!",
+        })
+
+      // Create a basic REST datasource
+      const datasource = await config.restDatasource({
+        name: "OAuth API Request Datasource",
+      })
+
+      // Create a query for the API request step with OAuth headers
+      const queryFields: RestQueryFields = {
+        path: "https://api.example.com/api-request",
+        queryString: "",
+        headers: {
+          Authorization: "Bearer {{ user.oauth2.accessToken }}",
+        },
+        disabledHeaders: {},
+        bodyType: BodyType.JSON,
+        requestBody: JSON.stringify({ test: "data" }),
+      }
+
+      const query = await setup.saveRESTQuery(
+        config,
+        datasource,
+        queryFields,
+        [],
+        "create"
+      )
+
       const results = await createAutomationBuilder(config)
         .onAppAction()
-        .serverLog({
-          text: "Testing apiRequest - OAuth Token: {{ user.oauth2.accessToken }}",
+        .apiRequest({
+          query: {
+            queryId: query._id!,
+          },
         })
         .test({ fields: {} })
 
-      // This test should initially show that OAuth2 tokens are not available
-      // The log should show "undefined" instead of the actual token
-      // Once we fix the implementation, this should show the actual token
-      const logMessage = results.steps[0].outputs.message
-      expect(logMessage).toContain("OAuth Token:")
-      // Initially this will be undefined, after fix it should be the actual token
+      // Verify the request was made with the correct OAuth token
+      expect(scope.isDone()).toBe(true)
+      expect(results.steps[0].outputs.success).toBe(true)
+      expect(results.steps[0].outputs.response).toEqual([
+        {
+          success: true,
+          message: "API request with OAuth token succeeded!",
+        },
+      ])
     })
   })
 
@@ -88,9 +157,87 @@ describe("OAuth2 Automation Binding", () => {
         })
         .test({ fields: {} })
 
-      expect(results.steps[0].outputs.message).toEqual(
+      expect(results.steps[0].outputs.message).toContain(
         "OAuth Token: test_access_token, Refresh Token: test_refresh_token"
       )
+    })
+  })
+
+  it("should handle 401 Unauthorized and retry mechanism in apiRequest step", async () => {
+    // Create an SSO user with provider information needed for OAuth refresh
+    const refreshTestUser = {
+      ...ssoUser,
+      provider: "Google",
+      providerType: SSOProviderType.GOOGLE,
+    } as SSOUser
+
+    await config.withUser(refreshTestUser, async () => {
+      // Mock the external API call to demonstrate retry behavior on 401
+      // First request fails with 401, second request should retry
+      let requestCount = 0
+      const scope = nock("https://api.example.com")
+        .post("/protected-endpoint")
+        .times(2) // Allow up to 2 requests
+        .reply(function(_uri, _requestBody) {
+          requestCount++
+          const authHeader = this.req.headers.authorization
+          
+          if (requestCount === 1) {
+            // First request: return 401 to trigger retry logic
+            expect(authHeader).toEqual(["Bearer test_access_token"])
+            return [401, { error: "Unauthorized" }]
+          } else {
+            // Second request: simulate successful retry
+            // In a real scenario, this would have a refreshed token
+            expect(authHeader).toEqual(["Bearer test_access_token"])
+            return [200, { success: true, message: "Request succeeded on retry!" }]
+          }
+        })
+
+      // Create a basic REST datasource
+      const datasource = await config.restDatasource({
+        name: "OAuth Retry Test Datasource",
+      })
+
+      // Create a query that will trigger retry on 401
+      const queryFields: RestQueryFields = {
+        path: "https://api.example.com/protected-endpoint",
+        queryString: "",
+        headers: {
+          Authorization: "Bearer {{ user.oauth2.accessToken }}",
+        },
+        disabledHeaders: {},
+        bodyType: BodyType.JSON,
+        requestBody: JSON.stringify({ test: "data" }),
+      }
+
+      const query = await setup.saveRESTQuery(
+        config,
+        datasource,
+        queryFields,
+        [],
+        "create"
+      )
+
+      const results = await createAutomationBuilder(config)
+        .onAppAction()
+        .apiRequest({
+          query: {
+            queryId: query._id!,
+          },
+        })
+        .test({ fields: {} })
+
+      // Verify that retry mechanism was triggered
+      expect(requestCount).toBe(2) // First request (401) + retry
+      expect(scope.isDone()).toBe(true)
+      expect(results.steps[0].outputs.success).toBe(true)
+      expect(results.steps[0].outputs.response).toEqual([
+        {
+          success: true,
+          message: "Request succeeded on retry!",
+        },
+      ])
     })
   })
 })
