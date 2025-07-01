@@ -186,7 +186,7 @@ export class DDInstrumentedDatabase implements Database {
   dump(
     stream: Writable,
     opts?: DatabaseDumpOpts | undefined
-  ): Promise<ReturnType<Database["dump"]>> {
+  ): ReturnType<Database["dump"]> {
     return tracer.trace("db.dump", span => {
       span.addTags({
         db_name: this.name,
@@ -201,9 +201,7 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  load(
-    ...args: Parameters<Database["load"]>
-  ): Promise<ReturnType<Database["load"]>> {
+  load(...args: Parameters<Database["load"]>): ReturnType<Database["load"]> {
     return tracer.trace("db.load", span => {
       span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.load(...args)
@@ -212,7 +210,7 @@ export class DDInstrumentedDatabase implements Database {
 
   createIndex(
     ...args: Parameters<Database["createIndex"]>
-  ): Promise<ReturnType<Database["createIndex"]>> {
+  ): ReturnType<Database["createIndex"]> {
     return tracer.trace("db.createIndex", span => {
       span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.createIndex(...args)
@@ -221,7 +219,7 @@ export class DDInstrumentedDatabase implements Database {
 
   deleteIndex(
     ...args: Parameters<Database["deleteIndex"]>
-  ): Promise<ReturnType<Database["deleteIndex"]>> {
+  ): ReturnType<Database["deleteIndex"]> {
     return tracer.trace("db.deleteIndex", span => {
       span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.deleteIndex(...args)
@@ -230,7 +228,7 @@ export class DDInstrumentedDatabase implements Database {
 
   getIndexes(
     ...args: Parameters<Database["getIndexes"]>
-  ): Promise<ReturnType<Database["getIndexes"]>> {
+  ): ReturnType<Database["getIndexes"]> {
     return tracer.trace("db.getIndexes", span => {
       span.addTags({ db_name: this.name, num_args: args.length })
       return this.db.getIndexes(...args)
