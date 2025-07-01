@@ -22,6 +22,7 @@ import {
   ViewV2Enriched,
   RowExportFormat,
   PermissionLevel,
+  JsonFieldSubType,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -931,44 +932,42 @@ if (descriptions.length) {
         beforeEach(async () => {
           testTable = await config.createTable({
             name: "TestTable",
+            type: "table",
             schema: {
               name: {
                 type: FieldType.STRING,
                 name: "name",
-                constraints: {
-                  type: "string",
-                },
               },
               description: {
                 type: FieldType.STRING,
                 name: "description",
-                constraints: {
-                  type: "string",
-                },
               },
             },
           })
+
           // Add some test data to ensure it's not duplicated
           await config.api.row.save(testTable._id!, {
             name: "Test Row 1",
             description: "This should not be duplicated",
           })
           await config.api.row.save(testTable._id!, {
-            name: "Test Row 2", 
+            name: "Test Row 2",
             description: "This should also not be duplicated",
           })
         })
 
         it("should duplicate a table without data", async () => {
-          const duplicatedTable = await config.api.table.duplicate(testTable._id!)
-          
+          const duplicatedTable = await config.api.table.duplicate(
+            testTable._id!
+          )
+
           // Should have a different ID and name
           expect(duplicatedTable._id).not.toEqual(testTable._id)
           expect(duplicatedTable.name).toBe("TestTable - Copy")
-          
+
           // Should have the same schema
           expect(duplicatedTable.schema).toEqual(testTable.schema)
-          
+
           // Should have the same source type and properties
           expect(duplicatedTable.sourceType).toEqual(testTable.sourceType)
           expect(duplicatedTable.type).toEqual(testTable.type)
@@ -982,6 +981,7 @@ if (descriptions.length) {
         it("should duplicate a table with complex column types", async () => {
           const complexTable = await config.createTable({
             name: "ComplexTable",
+            type: "table",
             schema: {
               name: {
                 type: FieldType.STRING,
@@ -1000,33 +1000,43 @@ if (descriptions.length) {
                 type: FieldType.ARRAY,
                 name: "multiSelect",
                 constraints: {
-                  type: "array",
+                  type: JsonFieldSubType.ARRAY,
                   inclusion: ["choice1", "choice2", "choice3"],
                 },
               },
               numberField: {
                 type: FieldType.NUMBER,
-                name: "numberField", 
+                name: "numberField",
                 constraints: { type: "number" },
               },
             },
           })
 
-          const duplicatedTable = await config.api.table.duplicate(complexTable._id!)
+          const duplicatedTable = await config.api.table.duplicate(
+            complexTable._id!
+          )
 
           expect(duplicatedTable.name).toBe("ComplexTable - Copy")
-          expect(duplicatedTable.schema.singleSelect).toEqual(complexTable.schema.singleSelect)
-          expect(duplicatedTable.schema.multiSelect).toEqual(complexTable.schema.multiSelect)
-          expect(duplicatedTable.schema.numberField).toEqual(complexTable.schema.numberField)
+          expect(duplicatedTable.schema.singleSelect).toEqual(
+            complexTable.schema.singleSelect
+          )
+          expect(duplicatedTable.schema.multiSelect).toEqual(
+            complexTable.schema.multiSelect
+          )
+          expect(duplicatedTable.schema.numberField).toEqual(
+            complexTable.schema.numberField
+          )
         })
 
         it("should not duplicate data rows", async () => {
-          const duplicatedTable = await config.api.table.duplicate(testTable._id!)
-          
+          const duplicatedTable = await config.api.table.duplicate(
+            testTable._id!
+          )
+
           // Check that the duplicated table has no rows
           const rows = await config.api.row.fetch(duplicatedTable._id!)
           expect(rows.length).toBe(0)
-          
+
           // Verify original table still has its data
           const originalRows = await config.api.row.fetch(testTable._id!)
           expect(originalRows.length).toBe(2)
@@ -1046,7 +1056,7 @@ if (descriptions.length) {
             const externalTable = await config.api.table.save(
               tableForDatasource(datasource, { name: "ExternalTable" })
             )
-            
+
             await config.api.table.duplicate(externalTable._id!, {
               status: 400,
               body: {
@@ -1055,6 +1065,53 @@ if (descriptions.length) {
             })
           })
         }
+
+        it("should generate unique names for multiple duplicates", async () => {
+          // Get the current state of tables to determine what naming pattern to expect
+          const initialTables = await config.api.table.fetch()
+          const initialTableNames = new Set(initialTables.map(t => t.name))
+
+          // Create three duplicates
+          const firstDuplicate = await config.api.table.duplicate(
+            testTable._id!
+          )
+          const secondDuplicate = await config.api.table.duplicate(
+            testTable._id!
+          )
+          const thirdDuplicate = await config.api.table.duplicate(
+            testTable._id!
+          )
+
+          // Verify that all duplicates have unique names
+          const allDuplicateNames = [
+            firstDuplicate.name,
+            secondDuplicate.name,
+            thirdDuplicate.name,
+          ]
+
+          // All names should be unique
+          expect(new Set(allDuplicateNames).size).toBe(3)
+
+          // All names should start with the original table name
+          allDuplicateNames.forEach(name => {
+            expect(name.startsWith("TestTable")).toBe(true)
+            expect(name).toContain(" - Copy")
+          })
+
+          // None of the duplicate names should conflict with existing names
+          allDuplicateNames.forEach(name => {
+            expect(initialTableNames.has(name)).toBe(false)
+          })
+
+          // Verify all tables exist
+          const finalTables = await config.api.table.fetch()
+          const finalTableNames = finalTables.map(t => t.name)
+
+          expect(finalTableNames).toContain("TestTable")
+          allDuplicateNames.forEach(name => {
+            expect(finalTableNames).toContain(name)
+          })
+        })
       })
 
       describe("migrate", () => {
