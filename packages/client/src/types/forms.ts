@@ -1,5 +1,5 @@
 import { Readable } from "svelte/store"
-import { FieldSchema, FieldType , UIFieldValidationRule } from "@budibase/types"
+import { FieldSchema, FieldType, UIFieldValidationRule } from "@budibase/types"
 
 export interface FormContext {
   formApi?: {

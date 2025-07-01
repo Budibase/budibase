@@ -4,7 +4,7 @@ export interface UIFieldValidationRule {
   id?: string
   type: FieldType
   constraint: FieldValidationRuleType
-  value?: string| number | string[]
+  value?: string | number | string[]
   valueType?: "Binding" | "Value"
   error?: string
 }

@@ -7,10 +7,7 @@
     type FieldSchema,
     FieldType,
   } from "@budibase/types"
-  import type {
-    FieldApi,
-    FieldState,
-  } from "@/types"
+  import type { FieldApi, FieldState } from "@/types"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
 

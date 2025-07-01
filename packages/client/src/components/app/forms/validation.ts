@@ -28,7 +28,10 @@ export const createValidatorFromConstraints = (
       schemaConstraints.presence === true
     ) {
       rules.push({
-        type: schemaConstraints.type == FieldType.ARRAY ? FieldType.ARRAY : FieldType.STRING,
+        type:
+          schemaConstraints.type == FieldType.ARRAY
+            ? FieldType.ARRAY
+            : FieldType.STRING,
         constraint: "required",
         error: "Required",
       })

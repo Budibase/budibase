@@ -6,12 +6,12 @@
   import { memo } from "@budibase/frontend-core"
   import Placeholder from "../Placeholder.svelte"
   import InnerForm from "./InnerForm.svelte"
-  import type { FieldSchema, FieldType, UIFieldValidationRule } from "@budibase/types"
   import type {
-    FieldApi,
-    FieldState,
-    FormField,
-  } from "@/types"
+    FieldSchema,
+    FieldType,
+    UIFieldValidationRule,
+  } from "@budibase/types"
+  import type { FieldApi, FieldState, FormField } from "@/types"
 
   interface FieldInfo {
     field: string
