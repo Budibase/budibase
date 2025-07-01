@@ -149,6 +149,8 @@ export function getUserContextBindings(user: ContextUser): UserBindings {
       accessToken: user.oauth2.accessToken,
       refreshToken: user.oauth2.refreshToken,
     }
+    bindings.provider = user.provider
+    bindings.providerType = user.providerType
   }
 
   return bindings

@@ -86,6 +86,8 @@ export interface UserBindings extends Document {
   globalId?: string
   userId?: string
   oauth2?: OAuth2
+  provider?: string
+  providerType?: SSOProviderType
 }
 
 export enum UserStatus {

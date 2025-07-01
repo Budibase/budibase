@@ -6,8 +6,10 @@ import {
   User,
   BodyType,
   RestQueryFields,
+  GoogleConfig,
+  ConfigType,
 } from "@budibase/types"
-import { context } from "@budibase/backend-core"
+import { configs, context } from "@budibase/backend-core"
 import * as setup from "./utilities"
 import nock from "nock"
 
@@ -34,6 +36,18 @@ describe("OAuth2 Automation Binding", () => {
       // Save the updated user with OAuth2 data to the database
       const db = context.getGlobalDB()
       await db.put(ssoUserData)
+
+      const googleConfig: GoogleConfig = {
+        type: ConfigType.GOOGLE,
+        config: {
+          clientID: "test_client_id",
+          clientSecret: "test_client_secret",
+          callbackURL: "http://callback.example.com",
+          activated: true,
+        },
+      }
+
+      await configs.save(googleConfig)
     })
 
     ssoUser = ssoUserData
@@ -164,42 +178,25 @@ describe("OAuth2 Automation Binding", () => {
   })
 
   it("should handle 401 Unauthorized and retry mechanism in apiRequest step", async () => {
-    // Create an SSO user with provider information needed for OAuth refresh
-    const refreshTestUser = {
-      ...ssoUser,
-      provider: "Google",
-      providerType: SSOProviderType.GOOGLE,
-    } as SSOUser
-
-    await config.withUser(refreshTestUser, async () => {
-      // Mock the external API call to demonstrate retry behavior on 401
-      // First request fails with 401, second request should retry
-      let requestCount = 0
-      const scope = nock("https://api.example.com")
+    await config.withUser(ssoUser, async () => {
+      nock("https://api.example.com")
         .post("/protected-endpoint")
-        .times(2) // Allow up to 2 requests
-        .reply(function(_uri, _requestBody) {
-          requestCount++
-          const authHeader = this.req.headers.authorization
-          
-          if (requestCount === 1) {
-            // First request: return 401 to trigger retry logic
-            expect(authHeader).toEqual(["Bearer test_access_token"])
-            return [401, { error: "Unauthorized" }]
-          } else {
-            // Second request: simulate successful retry
-            // In a real scenario, this would have a refreshed token
-            expect(authHeader).toEqual(["Bearer test_access_token"])
-            return [200, { success: true, message: "Request succeeded on retry!" }]
-          }
-        })
+        .matchHeader("Authorization", "Bearer test_access_token")
+        .reply(401, { error: "Unauthorized" })
 
-      // Create a basic REST datasource
+      nock("https://www.googleapis.com/").post("/oauth2/v4/token").reply(200, {
+        access_token: "test_access_token2",
+      })
+
+      nock("https://api.example.com")
+        .post("/protected-endpoint")
+        .matchHeader("Authorization", "Bearer test_access_token2")
+        .reply(200, { success: true, message: "Request succeeded on retry!" })
+
       const datasource = await config.restDatasource({
         name: "OAuth Retry Test Datasource",
       })
 
-      // Create a query that will trigger retry on 401
       const queryFields: RestQueryFields = {
         path: "https://api.example.com/protected-endpoint",
         queryString: "",
@@ -228,10 +225,6 @@ describe("OAuth2 Automation Binding", () => {
         })
         .test({ fields: {} })
 
-      // Verify that retry mechanism was triggered
-      expect(requestCount).toBe(2) // First request (401) + retry
-      expect(scope.isDone()).toBe(true)
-      expect(results.steps[0].outputs.success).toBe(true)
       expect(results.steps[0].outputs.response).toEqual([
         {
           success: true,
