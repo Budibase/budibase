@@ -85,6 +85,7 @@ export interface UserBindings extends Document {
   roleId?: string | null
   globalId?: string
   userId?: string
+  oauth2?: OAuth2
 }
 
 export enum UserStatus {
