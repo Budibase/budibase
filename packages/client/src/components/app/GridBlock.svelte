@@ -277,7 +277,6 @@
     isCloud={$environmentStore.cloud}
     aiEnabled={$featuresStore.aiEnabled}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
-    isComponent={!!data.embeddedData.componentId}
   />
 </div>
 
