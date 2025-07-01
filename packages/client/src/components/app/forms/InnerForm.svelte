@@ -186,7 +186,9 @@
     // convert any values supplied to strings
     if (Array.isArray(value) && type === FieldType.ARRAY && schema) {
       const options = schema?.constraints?.inclusion || []
-      const filtered = value.map(opt => String(opt)).filter(opt => options.includes(opt))
+      const filtered = value
+        .map(opt => String(opt))
+        .filter(opt => options.includes(opt))
       return filtered
     }
     return value
