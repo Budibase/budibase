@@ -7,10 +7,7 @@ import { create } from "./create"
  * @param userId - The user performing the duplication
  * @returns The new duplicated table
  */
-export async function duplicate(
-  table: Table,
-  userId?: string
-): Promise<Table> {
+export async function duplicate(table: Table, userId?: string): Promise<Table> {
   // Generate a unique name for the duplicated table
   const duplicatedName = `${table.name} - Copy`
 
@@ -22,7 +19,7 @@ export async function duplicate(
     sourceId: table.sourceId,
     schema: { ...table.schema },
     views: table.views ? { ...table.views } : {},
-    indexes: table.indexes ? [...table.indexes] : undefined,
+    indexes: table.indexes ? { ...table.indexes } : undefined,
     // Don't include any data/rows - this is intentionally empty
   }
 
