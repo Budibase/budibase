@@ -1,10 +1,6 @@
-import { FieldSchema, UIDatasourceType, Row, JSONValue } from "../../"
+import { TableSchema, UIDatasourceType, Row, JSONValue } from "../../"
 
-export type UIFieldDataProviderSchema = FieldSchema & {
-  optionColors?: Record<string, string>
-}
-
-export interface UIFieldDataProvider {
+export interface UIFieldDataProviderContext {
   rows: Row[]
   datasource: {
     label: string
@@ -12,7 +8,7 @@ export interface UIFieldDataProvider {
     resourceId?: string
     type: UIDatasourceType
   }
-  schema: Record<string, UIFieldDataProviderSchema>
+  schema?: TableSchema
   rowsLength: number
   pageNumber?: number
   id?: string

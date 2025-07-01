@@ -1,6 +1,6 @@
-import { Row } from "../../"
-
-export type UIFieldEventContext = { row: Row } | { value: any }
+export interface UIFieldEventContext {
+  value: any
+}
 
 export type UIFieldOnChange = (
   eventContext: UIFieldEventContext

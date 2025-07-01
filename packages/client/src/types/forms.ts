@@ -13,6 +13,7 @@ export interface FormContext {
       formStep: number
     ) => Readable<FormField>
   }
+  setStep: (step: number) => void
 }
 
 export interface FormField {

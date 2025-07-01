@@ -2,7 +2,7 @@
   import { CoreMultiselect, CoreCheckboxGroup } from "@budibase/bbui"
   import {
     type UIFieldValidationRule,
-    type UIFieldDataProvider,
+    type UIFieldDataProviderContext,
     type UIFieldOnChange,
     type FieldSchema,
     FieldType,
@@ -19,7 +19,7 @@
   export let validation: UIFieldValidationRule[] | undefined = undefined
   export let defaultValue: string | undefined = undefined
   export let optionsSource: string = "schema"
-  export let dataProvider: UIFieldDataProvider | undefined = undefined
+  export let dataProvider: UIFieldDataProviderContext | undefined = undefined
   export let labelColumn: string | undefined = undefined
   export let valueColumn: string | undefined = undefined
   export let customOptions
