@@ -183,7 +183,10 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  dump(stream: Writable, opts?: DatabaseDumpOpts | undefined): Promise<any> {
+  dump(
+    stream: Writable,
+    opts?: DatabaseDumpOpts | undefined
+  ): Promise<ReturnType<Database["dump"]>> {
     return tracer.trace("db.dump", span => {
       span.addTags({
         db_name: this.name,
