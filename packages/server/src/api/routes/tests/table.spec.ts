@@ -925,6 +925,138 @@ if (descriptions.length) {
         })
       })
 
+      describe("duplicate", () => {
+        let testTable: Table
+
+        beforeEach(async () => {
+          testTable = await config.createTable({
+            name: "TestTable",
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+                constraints: {
+                  type: "string",
+                },
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+                constraints: {
+                  type: "string",
+                },
+              },
+            },
+          })
+          // Add some test data to ensure it's not duplicated
+          await config.api.row.save(testTable._id!, {
+            name: "Test Row 1",
+            description: "This should not be duplicated",
+          })
+          await config.api.row.save(testTable._id!, {
+            name: "Test Row 2", 
+            description: "This should also not be duplicated",
+          })
+        })
+
+        it("should duplicate a table without data", async () => {
+          const duplicatedTable = await config.api.table.duplicate(testTable._id!)
+          
+          // Should have a different ID and name
+          expect(duplicatedTable._id).not.toEqual(testTable._id)
+          expect(duplicatedTable.name).toBe("TestTable - Copy")
+          
+          // Should have the same schema
+          expect(duplicatedTable.schema).toEqual(testTable.schema)
+          
+          // Should have the same source type and properties
+          expect(duplicatedTable.sourceType).toEqual(testTable.sourceType)
+          expect(duplicatedTable.type).toEqual(testTable.type)
+
+          // Verify the original table still exists
+          const originalTable = await config.api.table.get(testTable._id!)
+          expect(originalTable._id).toEqual(testTable._id)
+          expect(originalTable.name).toEqual(testTable.name)
+        })
+
+        it("should duplicate a table with complex column types", async () => {
+          const complexTable = await config.createTable({
+            name: "ComplexTable",
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+                constraints: { type: "string" },
+              },
+              singleSelect: {
+                type: FieldType.OPTIONS,
+                name: "singleSelect",
+                constraints: {
+                  type: "string",
+                  inclusion: ["option1", "option2", "option3"],
+                },
+              },
+              multiSelect: {
+                type: FieldType.ARRAY,
+                name: "multiSelect",
+                constraints: {
+                  type: "array",
+                  inclusion: ["choice1", "choice2", "choice3"],
+                },
+              },
+              numberField: {
+                type: FieldType.NUMBER,
+                name: "numberField", 
+                constraints: { type: "number" },
+              },
+            },
+          })
+
+          const duplicatedTable = await config.api.table.duplicate(complexTable._id!)
+
+          expect(duplicatedTable.name).toBe("ComplexTable - Copy")
+          expect(duplicatedTable.schema.singleSelect).toEqual(complexTable.schema.singleSelect)
+          expect(duplicatedTable.schema.multiSelect).toEqual(complexTable.schema.multiSelect)
+          expect(duplicatedTable.schema.numberField).toEqual(complexTable.schema.numberField)
+        })
+
+        it("should not duplicate data rows", async () => {
+          const duplicatedTable = await config.api.table.duplicate(testTable._id!)
+          
+          // Check that the duplicated table has no rows
+          const rows = await config.api.row.fetch(duplicatedTable._id!)
+          expect(rows.length).toBe(0)
+          
+          // Verify original table still has its data
+          const originalRows = await config.api.row.fetch(testTable._id!)
+          expect(originalRows.length).toBe(2)
+        })
+
+        it("should apply authorization to endpoint", async () => {
+          await checkBuilderEndpoint({
+            config,
+            method: "POST",
+            url: `/api/tables/${testTable._id}/duplicate`,
+          })
+        })
+
+        if (!isInternal) {
+          it("should not allow duplicating external tables", async () => {
+            // Create an external table for this test
+            const externalTable = await config.api.table.save(
+              tableForDatasource(datasource, { name: "ExternalTable" })
+            )
+            
+            await config.api.table.duplicate(externalTable._id!, {
+              status: 400,
+              body: {
+                message: "Cannot duplicate external tables",
+              },
+            })
+          })
+        }
+      })
+
       describe("migrate", () => {
         let users: User[]
         beforeAll(async () => {
