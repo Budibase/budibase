@@ -5,7 +5,7 @@ import { Document } from "../document"
  */
 export interface PlatformUserByEmail extends Document {
   /**
-   * @Deprecated - multi-tenancy means that there is a one email to many tenant ids relationship
+   * @deprecated - multi-tenancy means that there is a one email to many tenant ids relationship
    */
   tenantId: string
   userId: string
