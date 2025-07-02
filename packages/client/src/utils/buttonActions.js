@@ -344,7 +344,6 @@ const s3UploadHandler = async action => {
  * row selection store in combination with the tableComponentId parameter.
  */
 const exportDataHandler = async action => {
-  console.log(action.parameters)
   let {
     tableComponentId,
     rows,
@@ -356,9 +355,11 @@ const exportDataHandler = async action => {
   } = action.parameters
   let tableId
 
-  if (overrideExport) {
+  // Handle no rows selected
+  if (!rows?.length) {
+    notificationStore.actions.error("Please select at least one row")
+  } else if (overrideExport) {
     let cleanedRows = cleanExportRows(rows, type)
-    console.log(cleanedRows)
     download(
       new Blob([cleanedRows], { type: "text/plain" }),
       `${tableComponentId}.${type}`
@@ -378,10 +379,6 @@ const exportDataHandler = async action => {
       tableId = rows?.[0]?.tableId
     }
 
-    // Handle no rows selected
-    if (!rows?.length) {
-      notificationStore.actions.error("Please select at least one row")
-    }
     // Handle case where we're not using a DS+
     else if (!tableId) {
       notificationStore.actions.error(
