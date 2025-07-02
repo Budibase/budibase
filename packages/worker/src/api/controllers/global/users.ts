@@ -110,11 +110,10 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
 export const changeTenantOwnerEmail = async (
   ctx: Ctx<ChangeTenantOwnerEmailRequest, void>
 ) => {
-  const { newAccountEmail, originalEmail } = ctx.request.body
+  const { newAccountEmail, originalEmail, tenantIds } = ctx.request.body
   try {
-    const usersByEmail = await users.getExistingPlatformUsers([originalEmail])
-    for (const platformUser of usersByEmail) {
-      await tenancy.doInTenant(platformUser.tenantId, async () => {
+    for (const tenantId of tenantIds) {
+      await tenancy.doInTenant(tenantId, async () => {
         const tenantUser = await userSdk.db.getUserByEmail(originalEmail)
         if (!tenantUser) {
           return

@@ -64,6 +64,7 @@ function buildChangeTenantOwnerEmailValidation() {
     Joi.object({
       newAccountEmail: Joi.string().required(),
       originalEmail: Joi.string().required(),
+      tenantIds: Joi.array().items(Joi.string()).required(),
     }).required()
   )
 }

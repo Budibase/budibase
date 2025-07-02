@@ -171,4 +171,5 @@ export type LookupAccountHolderResponse = AccountMetadata | null
 export interface ChangeTenantOwnerEmailRequest {
   newAccountEmail: string
   originalEmail: string
+  tenantIds: string[]
 }
