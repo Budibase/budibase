@@ -24,6 +24,7 @@
     selectedAutomation,
     evaluationContext,
   } from "@/stores/builder"
+  import { getNewStepName } from "@/helpers/automations/nameHelpers"
   import BlockData from "../SetupPanel/BlockData.svelte"
   import BlockProperties from "../SetupPanel/BlockProperties.svelte"
   import BlockHeader from "../SetupPanel/BlockHeader.svelte"
@@ -157,6 +158,8 @@
               ...$memoBlock,
               id: generate(),
             }
+            const newName = getNewStepName($memoAutomation, duplicatedBlock)
+            duplicatedBlock.name = newName
 
             await automationStore.actions.addBlockToAutomation(
               duplicatedBlock,
