@@ -366,12 +366,10 @@ const exportDataHandler = async action => {
     )
   } else {
     // Handle legacy configs using the row selection store
-    if (!rows?.length) {
-      const selection = rowSelectionStore.actions.getSelection(tableComponentId)
-      if (selection?.selectedRows?.length) {
-        rows = selection.selectedRows
-        tableId = selection.tableId
-      }
+    const selection = rowSelectionStore.actions.getSelection(tableComponentId)
+    if (selection?.selectedRows?.length) {
+      rows = selection.selectedRows
+      tableId = selection.tableId
     }
 
     // Get table ID from first row if needed
