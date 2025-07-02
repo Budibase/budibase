@@ -27,7 +27,7 @@
   export const show = () => popover?.show()
   export const hide = () => popover?.hide()
 
-  async function createAutomation(type) {
+  async function createAutomation(type: TriggerStepID) {
     const triggerType = triggers[type]
     if (!triggerType) {
       console.error("Invalid trigger type", type)
@@ -40,7 +40,7 @@
       return
     }
 
-    const suffixMap = {
+    const suffixMap: Partial<Record<TriggerStepID, string>> = {
       [TriggerStepID.ROW_SAVED]: "created",
       [TriggerStepID.ROW_UPDATED]: "updated",
       [TriggerStepID.ROW_DELETED]: "deleted",
@@ -78,7 +78,7 @@
     }
   }
 
-  const startScreenWizard = autoScreenType => {
+  const startScreenWizard = (autoScreenType: AutoScreenTypes) => {
     popover.hide()
     let preSelected
     if ($datasource.type === "table") {
