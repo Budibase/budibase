@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { ActionButton, ListItem, notifications } from "@budibase/bbui"
   import { getContext } from "svelte"
   import {
@@ -17,8 +17,8 @@
 
   const { datasource } = getContext("grid")
 
-  let popover
-  let createScreenModal
+  let popover: DetailPopover
+  let createScreenModal: CreateScreenModal
 
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
