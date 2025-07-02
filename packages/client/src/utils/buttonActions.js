@@ -378,13 +378,11 @@ const exportDataHandler = async action => {
     }
 
     // Handle case where we're not using a DS+
-    else if (!tableId) {
+    if (!tableId) {
       notificationStore.actions.error(
         "You can only export data from table datasources"
       )
-    }
-    // Happy path when we have both rows and table ID
-    else {
+    } else {
       try {
         // Flatten rows if required
         if (typeof rows[0] !== "string") {
