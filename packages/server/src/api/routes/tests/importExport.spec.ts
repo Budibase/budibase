@@ -181,7 +181,7 @@ if (descriptions.length) {
           expect(importResult.message).toContain("Bulk rows created")
         })
 
-        it.only("should handle datetime fields with ignoreTimezones: true", async () => {
+        it("should handle datetime fields with ignoreTimezones: true", async () => {
           const table = await config.api.table.save(
             tableForDatasource(datasource, {
               schema: {
