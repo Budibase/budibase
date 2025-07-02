@@ -7,6 +7,7 @@ import {
   AddSSoUserResponse,
   BulkUserRequest,
   BulkUserResponse,
+  ChangeTenantOwnerEmailRequest,
   CheckInviteResponse,
   CountUserResponse,
   CreateAdminUserRequest,
@@ -29,7 +30,6 @@ import {
   LockType,
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
-  PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
@@ -107,15 +107,41 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
   }
 }
 
+export const changeTenantOwnerEmail = async (
+  ctx: Ctx<ChangeTenantOwnerEmailRequest, void>
+) => {
+  const { newAccountEmail, originalEmail, tenantIds } = ctx.request.body
+  try {
+    for (const tenantId of tenantIds) {
+      await tenancy.doInTenant(tenantId, async () => {
+        const tenantUser = await userSdk.db.getUserByEmail(originalEmail)
+        if (!tenantUser) {
+          return
+        }
+        tenantUser.email = newAccountEmail
+        await userSdk.db.save(tenantUser, {
+          currentUserId: tenantUser._id,
+          isAccountHolder: true,
+          allowChangingEmail: true,
+        })
+      })
+    }
+    ctx.status = 200
+  } catch (err: any) {
+    ctx.throw(err.status || 400, err)
+  }
+}
+
 export const addSsoSupport = async (
   ctx: Ctx<AddSSoUserRequest, AddSSoUserResponse>
 ) => {
   const { email, ssoId } = ctx.request.body
   try {
-    // Status is changed to 404 from getUserDoc if user is not found
-    const userByEmail = (await platform.users.getUserDoc(
-      email
-    )) as PlatformUserByEmail
+    const [userByEmail] = await users.getExistingPlatformUsers([email])
+    if (!userByEmail) {
+      ctx.throw(404, "Not Found")
+    }
+
     await platform.users.addSsoUser(
       ssoId,
       email,

@@ -19,6 +19,10 @@
   import { environment } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
+  import {
+    getBlocks as getBlocksHelper,
+    enrichLog,
+  } from "./AutomationStepHelpers"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import DraggableCanvas from "../DraggableCanvas.svelte"
@@ -47,54 +51,14 @@
   // Parse the automation tree state
   $: refresh($memoAutomation)
 
-  $: blocks = getBlocks($memoAutomation, $automationStore.selectedLog).filter(
+  $: blocks = getBlocksHelper($memoAutomation, viewMode).filter(
     x => x.stepId !== ActionStepID.LOOP
   )
-
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const refresh = () => {
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
-  }
-  const getBlocks = (automation, selectedLog) => {
-    let blocks = []
-
-    // In logs mode, we need to show steps from the log data
-    if (viewMode === ViewMode.LOGS && selectedLog) {
-      if (automation.definition.trigger) {
-        blocks.push(automation.definition.trigger)
-      }
-
-      // Process steps in the order they appear in the log
-      // Annoyingly triggers are in the log steps, so we need to filter them out
-      if (selectedLog.steps) {
-        selectedLog.steps
-          .filter(
-            logStep => logStep.stepId !== automation.definition.trigger?.stepId
-          )
-          .forEach(logStep => {
-            const currentStep = automation.definition.steps?.find(
-              step => step.id === logStep.id
-            )
-
-            if (currentStep) {
-              blocks.push(currentStep)
-            } else {
-              blocks.push({
-                ...logStep,
-              })
-            }
-          })
-      }
-    } else {
-      // Normal editor mode - show current automation steps
-      if (automation.definition.trigger) {
-        blocks.push(automation.definition.trigger)
-      }
-      blocks = blocks.concat(automation.definition.steps || [])
-    }
-    return blocks
   }
 
   const deleteAutomation = async () => {
@@ -131,26 +95,6 @@
       // Clear editor selection when switching to logs mode
       automationStore.actions.selectNode(null)
     }
-  }
-
-  function enrichLog(definitions, log) {
-    if (!definitions || !log || !log.steps) {
-      return log
-    }
-
-    const enrichedLog = { ...log, steps: [...log.steps] }
-
-    for (let step of enrichedLog.steps) {
-      const trigger = definitions.TRIGGER[step.stepId]
-      const action = definitions.ACTION[step.stepId]
-
-      if (trigger || action) {
-        step.icon = trigger ? trigger.icon : action.icon
-        step.name = trigger ? trigger.name : action.name
-      }
-    }
-
-    return enrichedLog
   }
 
   function closeAllPanels() {
@@ -304,8 +248,7 @@
               blocks={blockRefs}
               logData={$automationStore.selectedLog}
               {viewMode}
-              selectedLogStepId={$automationStore.selectedLogStepData?.stepId ||
-                $automationStore.selectedLogStepData?.id}
+              selectedLogStepId={$automationStore.selectedLogStepData?.id}
               onStepSelect={handleStepSelect}
             />
           {/each}

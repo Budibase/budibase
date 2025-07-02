@@ -9,6 +9,8 @@
   import { UserAvatar } from "@budibase/frontend-core"
   import { API } from "@/api"
 
+  export let align = "right"
+
   let themeModal
   let profileModal
   let updatePasswordModal
@@ -25,11 +27,18 @@
   }
 </script>
 
-<ActionMenu align="right">
-  <div slot="control" class="user-dropdown">
-    <UserAvatar size="M" user={$auth.user} showTooltip={false} />
-    <Icon size="L" name="caret-down" />
-  </div>
+<ActionMenu {align}>
+  <svelte:fragment slot="control" let:open>
+    {#if $$slots.default}
+      <slot {open} />
+    {:else}
+      <div class="user-dropdown">
+        <UserAvatar size="M" user={$auth.user} showTooltip={false} />
+        <Icon size="L" name="caret-down" />
+      </div>
+    {/if}
+  </svelte:fragment>
+
   <MenuItem icon="user-gear" on:click={() => profileModal.show()}>
     My profile
   </MenuItem>

@@ -34,7 +34,7 @@
   let modalSteps: CreationStep[] = []
   let currentStepIndex: number
 
-  let workspaceAppId: string | undefined = undefined
+  let workspaceAppId: string
   let rootModal: Modal
 
   export const open = (addToWorkspaceId?: string) => {
@@ -47,7 +47,7 @@
     } else {
       modalSteps = [CreationStep.SCREEN_TYPE_PICKER]
       workspaceAppId =
-        addToWorkspaceId || $workspaceAppStore.workspaceApps[0]?._id
+        addToWorkspaceId || $workspaceAppStore.workspaceApps[0]._id!
     }
 
     currentStepIndex = 0

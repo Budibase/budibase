@@ -21,6 +21,10 @@ const copyFonts = dest =>
         dest,
       },
       {
+        src: "./assets/phosphor-icons",
+        dest,
+      },
+      {
         src: "./assets/inter",
         dest,
       },

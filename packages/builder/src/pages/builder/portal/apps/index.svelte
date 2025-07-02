@@ -73,10 +73,10 @@
   }
 
   const goToAutomationError = appId => {
-    const params = new URLSearchParams({
-      open: "error",
-    })
-    $goto(`/builder/app/${appId}/settings/automations?${params.toString()}`)
+    const automationId = Object.keys(automationErrors[appId] || {})[0]
+    if (automationId) {
+      $goto(`/builder/app/${appId}/automation/${automationId}`)
+    }
   }
 
   const errorCount = errors => {

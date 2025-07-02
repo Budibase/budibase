@@ -1,11 +1,5 @@
 <script lang="ts">
   import { getPhosphorIcon } from "../helpers"
-  import "@phosphor-icons/web/thin"
-  import "@phosphor-icons/web/light"
-  import "@phosphor-icons/web/regular"
-  import "@phosphor-icons/web/bold"
-  import "@phosphor-icons/web/fill"
-  import "@phosphor-icons/web/duotone"
 
   export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" = "M"
   export let name: string = "plus"
