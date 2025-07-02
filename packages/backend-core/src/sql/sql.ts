@@ -431,9 +431,9 @@ class InternalBuilder {
         return new Date(date)
       } else if (schema.ignoreTimezones) {
         if (isValidISODateString(input)) {
-          return new Date(input.trim())
+          return new Date(input)
         } else if (isValidISODateStringWithoutTimezone(input)) {
-          return new Date(input.trim() + "Z")
+          return new Date(input + "Z")
         } else {
           return null
         }
