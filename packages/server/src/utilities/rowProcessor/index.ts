@@ -426,9 +426,12 @@ export async function coreOutputProcessing(
       for (const row of rows) {
         if (typeof row[property] === "string") {
           if (row[property].endsWith("Z")) {
-            row[property] = row[property].slice(0, -1)
+            row[property] = new Date(row[property])
+          } else {
+            row[property] = new Date(row[property] + "Z")
           }
-        } else if (row[property] instanceof Date) {
+        }
+        if (row[property] instanceof Date) {
           row[property] = row[property].toISOString().replace("Z", "")
         }
       }

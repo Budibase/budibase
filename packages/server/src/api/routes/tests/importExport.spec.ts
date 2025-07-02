@@ -131,6 +131,10 @@ if (descriptions.length) {
           })
 
           expect(importResult.message).toContain("Bulk rows created")
+
+          const { rows } = await config.api.row.search(table._id!, {})
+          expect(rows[0].number).toBe(42.5)
+          expect(rows[0].boolean).toBe(true)
         })
 
         it("should handle datetime fields with ignoreTimezones: false", async () => {
@@ -179,6 +183,9 @@ if (descriptions.length) {
           })
 
           expect(importResult.message).toContain("Bulk rows created")
+
+          const { rows } = await config.api.row.search(table._id!, {})
+          expect(testDate).toBe(rows[0].datetime)
         })
 
         it("should handle datetime fields with ignoreTimezones: true", async () => {
