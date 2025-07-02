@@ -18,6 +18,7 @@ import { API } from "@/api"
 import { ActionTypes, PeekMessages } from "@/constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
+import { cleanExportRows } from "@budibase/shared-core"
 
 // Default action handler, which extracts an action from context that was
 // provided by another component and executes it with all action parameters
@@ -343,50 +344,67 @@ const s3UploadHandler = async action => {
  * row selection store in combination with the tableComponentId parameter.
  */
 const exportDataHandler = async action => {
-  let { tableComponentId, rows, type, columns, delimiter, customHeaders } =
-    action.parameters
+  console.log(action.parameters)
+  let {
+    tableComponentId,
+    rows,
+    type,
+    columns,
+    delimiter,
+    customHeaders,
+    overrideExport,
+  } = action.parameters
   let tableId
 
-  // Handle legacy configs using the row selection store
-  if (!rows?.length) {
-    const selection = rowSelectionStore.actions.getSelection(tableComponentId)
-    if (selection?.selectedRows?.length) {
-      rows = selection.selectedRows
-      tableId = selection.tableId
-    }
-  }
-
-  // Get table ID from first row if needed
-  if (!tableId) {
-    tableId = rows?.[0]?.tableId
-  }
-
-  // Handle no rows selected
-  if (!rows?.length) {
-    notificationStore.actions.error("Please select at least one row")
-  }
-  // Handle case where we're not using a DS+
-  else if (!tableId) {
-    notificationStore.actions.error(
-      "You can only export data from table datasources"
+  if (overrideExport) {
+    let cleanedRows = cleanExportRows(rows, type)
+    console.log(cleanedRows)
+    download(
+      new Blob([cleanedRows], { type: "text/plain" }),
+      `${tableComponentId}.${type}`
     )
-  }
-  // Happy path when we have both rows and table ID
-  else {
-    try {
-      // Flatten rows if required
-      if (typeof rows[0] !== "string") {
-        rows = rows.map(row => row._id)
+  } else {
+    // Handle legacy configs using the row selection store
+    if (!rows?.length) {
+      const selection = rowSelectionStore.actions.getSelection(tableComponentId)
+      if (selection?.selectedRows?.length) {
+        rows = selection.selectedRows
+        tableId = selection.tableId
       }
-      const data = await API.exportRows(tableId, type, {
-        rows,
-        columns: columns?.map(column => column.name || column),
-        delimiter,
-        customHeaders,
-      })
-      download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
-    } catch (error) {
-      notificationStore.actions.error("There was an error exporting the data")
+    }
+
+    // Get table ID from first row if needed
+    if (!tableId) {
+      tableId = rows?.[0]?.tableId
+    }
+
+    // Handle no rows selected
+    if (!rows?.length) {
+      notificationStore.actions.error("Please select at least one row")
+    }
+    // Handle case where we're not using a DS+
+    else if (!tableId) {
+      notificationStore.actions.error(
+        "You can only export data from table datasources"
+      )
+    }
+    // Happy path when we have both rows and table ID
+    else {
+      try {
+        // Flatten rows if required
+        if (typeof rows[0] !== "string") {
+          rows = rows.map(row => row._id)
+        }
+        const data = await API.exportRows(tableId, type, {
+          rows,
+          columns: columns?.map(column => column.name || column),
+          delimiter,
+          customHeaders,
+        })
+        download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
+      } catch (error) {
+        notificationStore.actions.error("There was an error exporting the data")
+      }
     }
   }
 }
