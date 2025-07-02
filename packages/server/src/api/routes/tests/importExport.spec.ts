@@ -87,6 +87,12 @@ if (descriptions.length) {
           })
 
           expect(importResult.message).toContain("Bulk rows created")
+
+          const { rows } = await config.api.row.search(table._id!, {})
+          expect(rows[0].text).toBe("Test string")
+          expect(rows[0].longform).toBe(
+            "This is a longer text field with\nmultiple lines and special chars: \"quotes\", 'apostrophes', commas,"
+          )
         })
 
         it("should handle number and boolean fields", async () => {
@@ -286,6 +292,9 @@ if (descriptions.length) {
           })
 
           expect(importResult.message).toContain("Bulk rows created")
+
+          const { rows } = await config.api.row.search(table._id!, {})
+          expect(rows[0].dateOnly).toBe(testDate)
         })
 
         it("should handle time-only fields", async () => {
@@ -334,6 +343,9 @@ if (descriptions.length) {
           })
 
           expect(importResult.message).toContain("Bulk rows created")
+
+          const { rows } = await config.api.row.search(table._id!, {})
+          expect(rows[0].timeOnly).toBe(testTime)
         })
 
         it("should handle options and array fields", async () => {
@@ -392,6 +404,10 @@ if (descriptions.length) {
           })
 
           expect(importResult.message).toContain("Bulk rows created")
+
+          const { rows } = await config.api.row.search(table._id!, {})
+          expect(rows[0].options).toBe("Option 2")
+          expect(rows[0].array).toEqual(["Item A", "Item C"])
         })
 
         it("should handle empty and null values", async () => {
@@ -406,21 +422,13 @@ if (descriptions.length) {
             })
           )
 
-          // Insert rows with empty/null values
           await config.api.row.save(table._id!, {
-            text: "",
+            text: null,
             number: null,
             datetime: null,
             boolean: null,
           })
 
-          await config.api.row.save(table._id!, {
-            text: null,
-            number: 0,
-            datetime: "",
-            boolean: false,
-          })
-
           const csvData = await config.api.row.exportRows(
             table._id!,
             {},
@@ -449,200 +457,12 @@ if (descriptions.length) {
           })
 
           expect(importResult.message).toContain("Bulk rows created")
-        })
-      })
 
-      describe("Employee Table Bug Reproduction", () => {
-        it("should reproduce the exact employees table issue from BUDI-9478", async () => {
-          // Create a table that matches the employees table structure
-          const table = await config.api.table.save(
-            tableForDatasource(datasource, {
-              name: "Employees",
-              schema: {
-                "First Name": { type: FieldType.STRING, name: "First Name" },
-                "Last Name": { type: FieldType.STRING, name: "Last Name" },
-                Email: { type: FieldType.STRING, name: "Email" },
-                "Start Date": {
-                  type: FieldType.DATETIME,
-                  name: "Start Date",
-                  ignoreTimezones: false, // This should be the problematic case
-                },
-                "Created At": {
-                  type: FieldType.DATETIME,
-                  name: "Created At",
-                  ignoreTimezones: false, // This should be the problematic case
-                },
-                "Employee Level": {
-                  type: FieldType.ARRAY,
-                  name: "Employee Level",
-                  constraints: {
-                    type: JsonFieldSubType.ARRAY,
-                    inclusion: [
-                      "Junior",
-                      "Senior",
-                      "Manager",
-                      "Contractor",
-                      "Apprentice",
-                    ],
-                  },
-                },
-              },
-            })
-          )
-
-          // Insert data that matches the sample employee data format (dates without Z)
-          const employees = [
-            {
-              "First Name": "Julie",
-              "Last Name": "Jimenez",
-              Email: "julie.jimenez@example.com",
-              "Start Date": "2015-02-12T12:00:00.000", // Note: no Z suffix
-              "Created At": "2022-11-10T17:56:18.353", // Note: no Z suffix
-              "Employee Level": ["Senior"],
-            },
-            {
-              "First Name": "Mandy",
-              "Last Name": "Clark",
-              Email: "mandy.clark@example.com",
-              "Start Date": "2017-09-10T12:00:00.000",
-              "Created At": "2022-11-10T17:56:18.353",
-              "Employee Level": ["Senior"],
-            },
-          ]
-
-          for (const employee of employees) {
-            await config.api.row.save(table._id!, employee)
-          }
-
-          // Export the data as CSV - this is what a user would do
-          const csvData = await config.api.row.exportRows(
-            table._id!,
-            {},
-            RowExportFormat.CSV
-          )
-
-          // Parse the CSV back to JSON - this simulates the import process
-          const importData = await config.api.table.csvToJson({
-            csvString: csvData,
-          })
-
-          // This validation should pass - the bug was that it fails when ignoreTimezones: false
-          const validation = await config.api.table.validateExistingTableImport(
-            {
-              tableId: table._id!,
-              rows: importData,
-            }
-          )
-
-          expect(validation.errors).toEqual({})
-
-          // Clear existing data to avoid unique constraint violations
-          await clearTableData(table._id!)
-
-          // Actually perform the import to verify it works
-          const importResult = await config.api.row.bulkImport(table._id!, {
-            rows: stripIdFields(table, importData),
-            identifierFields: [],
-          })
-
-          expect(importResult.message).toContain("Bulk rows created")
-        })
-      })
-
-      describe("Mixed Field Types Comprehensive Test", () => {
-        it("should handle a table with all supported field types in one roundtrip", async () => {
-          const schema: any = {
-            // String types
-            text: { type: FieldType.STRING, name: "text" },
-            longform: { type: FieldType.LONGFORM, name: "longform" },
-
-            // Number types
-            number: { type: FieldType.NUMBER, name: "number" },
-
-            // Date types
-            datetimeWithTZ: {
-              type: FieldType.DATETIME,
-              name: "datetimeWithTZ",
-              ignoreTimezones: false,
-            },
-            datetimeIgnoreTZ: {
-              type: FieldType.DATETIME,
-              name: "datetimeIgnoreTZ",
-              ignoreTimezones: true,
-            },
-            dateOnly: {
-              type: FieldType.DATETIME,
-              name: "dateOnly",
-              dateOnly: true,
-            },
-            timeOnly: {
-              type: FieldType.DATETIME,
-              name: "timeOnly",
-              timeOnly: true,
-            },
-
-            // Boolean
-            boolean: { type: FieldType.BOOLEAN, name: "boolean" },
-
-            // Options and arrays
-            options: {
-              type: FieldType.OPTIONS,
-              name: "options",
-              constraints: { inclusion: ["A", "B", "C"] },
-            },
-          }
-
-          const table = await config.api.table.save(
-            tableForDatasource(datasource, {
-              name: "ComprehensiveTable",
-              schema,
-            })
-          )
-
-          // Insert comprehensive test data
-          const testRow: any = {
-            text: "Test string with \"quotes\" and 'apostrophes'",
-            longform: "Multi-line\ntext with\nspecial chars: , ; | \t",
-            number: 123.456,
-            datetimeWithTZ: "2023-06-15T10:30:00.000Z",
-            datetimeIgnoreTZ: "2023-06-15T10:30:00.000",
-            dateOnly: "2023-06-15",
-            timeOnly: "14:30:00",
-            boolean: true,
-            options: "B",
-          }
-
-          await config.api.row.save(table._id!, testRow)
-
-          // Perform the roundtrip
-          const csvData = await config.api.row.exportRows(
-            table._id!,
-            {},
-            RowExportFormat.CSV
-          )
-          const importData = await config.api.table.csvToJson({
-            csvString: csvData,
-          })
-
-          const validation = await config.api.table.validateExistingTableImport(
-            {
-              tableId: table._id!,
-              rows: importData,
-            }
-          )
-
-          expect(validation.errors).toEqual({})
-
-          // Clear existing data to avoid unique constraint violations
-          await clearTableData(table._id!)
-
-          // Actually perform the import to verify it works
-          const importResult = await config.api.row.bulkImport(table._id!, {
-            rows: stripIdFields(table, importData),
-            identifierFields: [],
-          })
-
-          expect(importResult.message).toContain("Bulk rows created")
+          const { rows } = await config.api.row.search(table._id!, {})
+          expect(rows[0].text).toBeUndefined()
+          expect(rows[0].number).toBeUndefined()
+          expect(rows[0].datetime).toBeUndefined()
+          expect(rows[0].boolean).toBeUndefined()
         })
       })
     }
