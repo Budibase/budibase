@@ -52,6 +52,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
 
     it("should handle number and boolean fields", async () => {
@@ -85,6 +93,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
 
     it("should handle datetime fields with ignoreTimezones: false", async () => {
@@ -121,6 +137,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
 
     it("should handle datetime fields with ignoreTimezones: true", async () => {
@@ -157,6 +181,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
 
     it("should handle date-only fields", async () => {
@@ -193,6 +225,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
 
     it("should handle time-only fields", async () => {
@@ -229,6 +269,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
 
     it("should handle options and array fields", async () => {
@@ -275,6 +323,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
 
     it("should handle JSON fields", async () => {
@@ -314,6 +370,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
 
     it("should handle empty and null values", async () => {
@@ -359,6 +423,14 @@ describe("CSV Export/Import Roundtrip", () => {
 
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
+
+      // Actually perform the import to verify it works
+      const importResult = await config.api.row.bulkImport(table._id!, {
+        rows: importData,
+        identifierFields: [],
+      })
+
+      expect(importResult.message).toContain("Bulk rows created")
     })
   })
 
@@ -446,13 +518,14 @@ describe("CSV Export/Import Roundtrip", () => {
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
 
-      // Additionally, verify that the actual import works
+      // Actually perform the import to verify it works
       const importResult = await config.api.row.bulkImport(table._id!, {
         rows: importData,
         identifierFields: [],
       })
 
       expect(importResult.message).toContain("Bulk rows created")
+
     })
   })
 
@@ -557,13 +630,14 @@ describe("CSV Export/Import Roundtrip", () => {
       expect(validation.allValid).toBe(true)
       expect(validation.errors).toEqual({})
 
-      // Verify the import actually works
+      // Actually perform the import to verify it works
       const importResult = await config.api.row.bulkImport(table._id!, {
         rows: importData,
         identifierFields: [],
       })
 
       expect(importResult.message).toContain("Bulk rows created")
+
     })
   })
 })
