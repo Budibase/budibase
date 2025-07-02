@@ -16,11 +16,12 @@
     type UISearchFilter,
     type RelationshipFieldMetadata,
     type Row,
+    type UIFieldValidationRule,
   } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
-  import type { FieldApi, FieldState, FieldValidation } from "@/types"
+  import type { FieldApi, FieldState } from "@/types"
   import { utils } from "@budibase/shared-core"
   import { createEventDispatcher } from "svelte"
 
@@ -29,7 +30,7 @@
   export let placeholder: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
-  export let validation: FieldValidation | undefined = undefined
+  export let validation: UIFieldValidationRule[] | undefined = undefined
   export let autocomplete: boolean = true
   export let defaultValue: ValueType | undefined = undefined
   export let onChange: (_props: { value: ValueType; label?: string }) => void
