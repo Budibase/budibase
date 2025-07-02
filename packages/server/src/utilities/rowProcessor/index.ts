@@ -425,9 +425,14 @@ export async function coreOutputProcessing(
     } else if (column.type === FieldType.DATETIME && column.ignoreTimezones) {
       for (const row of rows) {
         if (typeof row[property] === "string") {
-          row[property] = new Date(row[property])
-        }
-        if (row[property] instanceof Date) {
+          // For ignoreTimezones fields, preserve the string as-is if it's already in correct format
+          // Only convert to Date if it's not in the expected format
+          if (row[property].endsWith("Z")) {
+            // Remove Z suffix for ignoreTimezones fields
+            row[property] = row[property].slice(0, -1)
+          }
+          // Don't create Date object for ignoreTimezones fields to avoid timezone conversion
+        } else if (row[property] instanceof Date) {
           row[property] = row[property].toISOString().replace("Z", "")
         }
       }

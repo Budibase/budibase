@@ -5,6 +5,7 @@ import {
   FieldSchema,
   Row,
   Table,
+  DateFieldMetadata,
 } from "@budibase/types"
 import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db, HTTPError, sql } from "@budibase/backend-core"
@@ -38,6 +39,27 @@ export function isSchema(schema: any): schema is TableSchema {
 
 export function isRows(rows: any): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
+}
+
+function isValidDatetime(value: string, fieldSchema?: FieldSchema): boolean {
+  if (!fieldSchema || fieldSchema.type !== FieldType.DATETIME) {
+    return sql.utils.isValidISODateString(value)
+  }
+
+  const dateField = fieldSchema as DateFieldMetadata
+
+  // Handle time-only fields
+  if (dateField.timeOnly) {
+    return sql.utils.isValidTime(value)
+  }
+
+  // For fields with ignoreTimezones: true, we should accept dates without timezone suffix
+  if (dateField.ignoreTimezones) {
+    return sql.utils.isValidISODateStringWithoutTimezone(value)
+  }
+
+  // For regular datetime fields, require full ISO format with timezone
+  return sql.utils.isValidISODateString(value)
 }
 
 export function validate(
@@ -106,7 +128,7 @@ export function validate(
       } else if (
         // If provided must be a valid date
         columnType === FieldType.DATETIME &&
-        !sql.utils.isValidISODateString(columnData)
+        !isValidDatetime(columnData, schema[columnName])
       ) {
         results.schemaValidation[columnName] = false
       } else if (
@@ -177,10 +199,12 @@ export function parse(rows: Rows, table: Table): Rows {
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
       } else if (columnType === FieldType.DATETIME) {
         if (columnData && !columnSchema.timeOnly) {
-          if (!sql.utils.isValidISODateString(columnData)) {
+          if (!isValidDatetime(columnData, columnSchema)) {
             let message = `Invalid format for field "${columnName}": "${columnData}".`
             if (columnSchema.dateOnly) {
               message += ` Date-only fields must be in the format "YYYY-MM-DD".`
+            } else if (columnSchema.ignoreTimezones) {
+              message += ` Datetime fields with timezone ignored must be in the format "YYYY-MM-DDTHH:MM:SS".`
             } else {
               message += ` Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".`
             }
