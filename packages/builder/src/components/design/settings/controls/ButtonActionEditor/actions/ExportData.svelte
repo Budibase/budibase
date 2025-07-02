@@ -113,6 +113,7 @@
       value={parameters.columns}
       allowCellEditing={false}
       componentInstance={selectedTable}
+      disabled={parameters.overrideExport}
       on:change={e => {
         const columns = e.detail
         parameters.columns = columns
