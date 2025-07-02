@@ -75,7 +75,7 @@
     <div class="dropdown" class:left={renderLeftNav} class:expanded>
       <div class="text" on:click={onClickDropdown}>
         <span>{text}</span>
-        <Icon name={icon} />
+        <Icon name={icon} color="var(--navTextColor)" size="S" />
       </div>
       <div class="sublinks-wrapper">
         <div class="sublinks">
