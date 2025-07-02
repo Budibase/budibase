@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { ActionButton, ListItem, notifications } from "@budibase/bbui"
   import { getContext } from "svelte"
   import {
@@ -6,6 +6,7 @@
     tables,
     builderStore,
     viewsV2,
+    workspaceAppStore,
   } from "@/stores/builder"
   import { TriggerStepID } from "@/constants/backend/automations"
   import { goto } from "@roxi/routify"
@@ -14,19 +15,24 @@
   import { AutoScreenTypes } from "@/constants"
   import CreateScreenModal from "@/pages/builder/app/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
   import { getSequentialName } from "@/helpers/duplicate"
+  import { BlockDefinitionTypes } from "@budibase/types"
 
   const { datasource } = getContext("grid")
 
-  let popover
-  let createScreenModal
+  let popover: DetailPopover
+  let createScreenModal: CreateScreenModal
 
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
 
+  $: workspaceAppId = $workspaceAppStore.workspaceApps.find(
+    a => a.isDefault
+  )?._id!
+
   export const show = () => popover?.show()
   export const hide = () => popover?.hide()
 
-  async function createAutomation(type) {
+  async function createAutomation(type: TriggerStepID) {
     const triggerType = triggers[type]
     if (!triggerType) {
       console.error("Invalid trigger type", type)
@@ -39,7 +45,7 @@
       return
     }
 
-    const suffixMap = {
+    const suffixMap: Partial<Record<TriggerStepID, string>> = {
       [TriggerStepID.ROW_SAVED]: "created",
       [TriggerStepID.ROW_UPDATED]: "updated",
       [TriggerStepID.ROW_DELETED]: "deleted",
@@ -53,7 +59,7 @@
       }
     )
     const triggerBlock = automationStore.actions.constructBlock(
-      "TRIGGER",
+      BlockDefinitionTypes.TRIGGER,
       triggerType.stepId,
       triggerType
     )
@@ -77,7 +83,7 @@
     }
   }
 
-  const startScreenWizard = autoScreenType => {
+  const startScreenWizard = (autoScreenType: AutoScreenTypes) => {
     popover.hide()
     let preSelected
     if ($datasource.type === "table") {
@@ -165,7 +171,7 @@
   {/if}
 </DetailPopover>
 
-<CreateScreenModal bind:this={createScreenModal} />
+<CreateScreenModal bind:this={createScreenModal} {workspaceAppId} />
 
 <style>
   .center {
