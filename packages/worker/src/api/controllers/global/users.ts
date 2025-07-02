@@ -7,6 +7,7 @@ import {
   AddSSoUserResponse,
   BulkUserRequest,
   BulkUserResponse,
+  ChangeTenantOwnerEmailRequest,
   CheckInviteResponse,
   CountUserResponse,
   CreateAdminUserRequest,
@@ -101,6 +102,32 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
       _rev: user._rev!,
       email: user.email,
     }
+  } catch (err: any) {
+    ctx.throw(err.status || 400, err)
+  }
+}
+
+export const changeTenantOwnerEmail = async (
+  ctx: Ctx<ChangeTenantOwnerEmailRequest, void>
+) => {
+  const { newAccountEmail, originalEmail } = ctx.request.body
+  try {
+    const usersByEmail = await users.getExistingPlatformUsers([originalEmail])
+    for (const platformUser of usersByEmail) {
+      await tenancy.doInTenant(platformUser.tenantId, async () => {
+        const tenantUser = await userSdk.db.getUserByEmail(originalEmail)
+        if (!tenantUser) {
+          return
+        }
+        tenantUser.email = newAccountEmail
+        await userSdk.db.save(tenantUser, {
+          currentUserId: tenantUser._id,
+          isAccountHolder: true,
+          allowChangingEmail: true,
+        })
+      })
+    }
+    ctx.status = 200
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
