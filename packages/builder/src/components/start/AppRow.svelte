@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Button, Icon } from "@budibase/bbui"
+  import { Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"

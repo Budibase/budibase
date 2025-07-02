@@ -184,7 +184,6 @@
   onOk={deleteSource}
   onCancel={hideDeleteDialog}
   title={`Are you sure you want to delete this ${sourceType}?`}
-  showDivider="false"
 >
   <div class="content">
     {#if sourceType}
