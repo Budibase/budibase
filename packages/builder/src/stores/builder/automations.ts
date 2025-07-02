@@ -849,7 +849,7 @@ const automationActions = (store: AutomationStore) => ({
     name: string,
     block: AutomationStep | AutomationTrigger
   ) => {
-    const rowTriggers = [
+    const rowTriggers: string[] = [
       TriggerStepID.ROW_UPDATED,
       TriggerStepID.ROW_SAVED,
       TriggerStepID.ROW_DELETED,
