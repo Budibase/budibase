@@ -14,6 +14,7 @@
   import { AutoScreenTypes } from "@/constants"
   import CreateScreenModal from "@/pages/builder/app/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
   import { getSequentialName } from "@/helpers/duplicate"
+  import { BlockDefinitionTypes } from "@budibase/types"
 
   const { datasource } = getContext("grid")
 
@@ -53,7 +54,7 @@
       }
     )
     const triggerBlock = automationStore.actions.constructBlock(
-      "TRIGGER",
+      BlockDefinitionTypes.TRIGGER,
       triggerType.stepId,
       triggerType
     )
