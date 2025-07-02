@@ -26,6 +26,7 @@ import { AssetsAPI } from "./assets"
 import { AIAPI } from "./ai"
 import { WorkspaceAppAPI } from "./workspaceApp"
 import { ResourceAPI } from "./resource"
+import { DeployAPI } from "./deploy"
 
 export default class API {
   ai: AIAPI
@@ -34,6 +35,7 @@ export default class API {
   automation: AutomationAPI
   backup: BackupAPI
   datasource: DatasourceAPI
+  deploy: DeployAPI
   environment: EnvironmentAPI
   legacyView: LegacyViewAPI
   misc: MiscAPI
@@ -66,6 +68,7 @@ export default class API {
     this.automation = new AutomationAPI(config)
     this.backup = new BackupAPI(config)
     this.datasource = new DatasourceAPI(config)
+    this.deploy = new DeployAPI(config)
     this.environment = new EnvironmentAPI(config)
     this.legacyView = new LegacyViewAPI(config)
     this.misc = new MiscAPI(config)

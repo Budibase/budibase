@@ -538,6 +538,8 @@ export function basicUser(role: string) {
   }
 }
 
+export const TEST_WORKSPACEAPPID_PLACEHOLDER = "workspaceAppId"
+
 function createHomeScreen(
   config: {
     roleId: string
@@ -587,7 +589,7 @@ function createHomeScreen(
       roleId: config.roleId,
     },
     name: "home-screen",
-    workspaceAppId: "workspaceAppId",
+    workspaceAppId: TEST_WORKSPACEAPPID_PLACEHOLDER,
   }
 }
 

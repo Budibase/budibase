@@ -4,19 +4,19 @@
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
-  import type {
-    DataFetchDatasource,
-    FieldSchema,
+  import {
+    type DataFetchDatasource,
+    type FieldSchema,
+    type Table,
+    type TableSchema,
+    type UIFieldValidationRule,
     FieldType,
-    Table,
-    TableSchema,
-    UIFieldValidationRule,
   } from "@budibase/types"
 
   type FieldInfo<T = any> = {
     name: string
     step: number
-    type: `${FieldType}`
+    type: FieldType
     fieldState: {
       fieldId: string
       value: T
@@ -180,13 +180,16 @@
   const sanitiseValue = (
     value: any,
     schema: FieldSchema | undefined,
-    type: `${FieldType}`
+    type: FieldType
   ) => {
     // Check arrays - remove any values not present in the field schema and
     // convert any values supplied to strings
-    if (Array.isArray(value) && type === "array" && schema) {
+    if (Array.isArray(value) && type === FieldType.ARRAY && schema) {
       const options = schema?.constraints?.inclusion || []
-      return value.map(opt => String(opt)).filter(opt => options.includes(opt))
+      const filtered = value
+        .map(opt => String(opt))
+        .filter(opt => options.includes(opt))
+      return filtered
     }
     return value
   }

@@ -119,7 +119,7 @@
             on:click={openContextMenu}
             size="S"
             hoverable
-            name="dots-three-horizontal"
+            name="dots-three"
           />
         </div>
       {:else}

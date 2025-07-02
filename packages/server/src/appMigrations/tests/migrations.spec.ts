@@ -15,10 +15,14 @@ jest.mock<typeof migrations>("../migrations", () => ({
   MIGRATIONS: [
     {
       id: "20231211101320_test",
-      func: async () => {},
+      func: migrationLogic(),
     },
   ],
 }))
+
+function migrationLogic(executionMS = 0): () => Promise<void> {
+  return () => new Promise(r => setTimeout(r, executionMS))
+}
 
 describe("migrations", () => {
   it("new apps are created with the latest app migration version set", async () => {
@@ -51,7 +55,7 @@ describe("migrations", () => {
 
     migrations.MIGRATIONS.push({
       id: "20231211105812_new-test",
-      func: async () => {},
+      func: migrationLogic(5000),
     })
 
     await config.api.application.get(appId, {
@@ -69,15 +73,15 @@ describe("migrations", () => {
     const migrations: AppMigration[] = [
       {
         id: MIGRATION_ID1,
-        func: async () => {},
+        func: migrationLogic(),
       },
       {
         id: MIGRATION_ID2,
-        func: async () => {},
+        func: migrationLogic(),
       },
       {
         id: MIGRATION_ID3,
-        func: async () => {},
+        func: migrationLogic(),
       },
     ]
 
@@ -91,9 +95,9 @@ describe("migrations", () => {
       // Reset migrations array to known state
       migrations.MIGRATIONS.length = 0
       migrations.MIGRATIONS.push(
-        { id: "20231211101320_test", func: async () => {} },
-        { id: "20231211101330_test2", func: async () => {} },
-        { id: "20231211101340_test3", func: async () => {} }
+        { id: "20231211101320_test", func: migrationLogic(1000) },
+        { id: "20231211101330_test2", func: migrationLogic(1000) },
+        { id: "20231211101340_test3", func: migrationLogic(1000) }
       )
     })
 
@@ -168,5 +172,27 @@ describe("migrations", () => {
       expect(ctx.response.set).toHaveBeenCalledWith(Header.MIGRATING_APP, appId)
       expect(mockNext).toHaveBeenCalled()
     })
+  })
+
+  it("should handle rapid migration completion", async () => {
+    migrations.MIGRATIONS.length = 0
+    migrations.MIGRATIONS.push({
+      id: "20250626103320_test",
+      func: migrationLogic(),
+    })
+
+    const config = setup.getConfig()
+    await config.init()
+    const appId = config.getAppId()
+
+    const mockNext = jest.fn()
+    const ctx = { response: { set: jest.fn() } } as any
+
+    await config.doInContext(appId, () =>
+      checkMissingMigrations(ctx, mockNext, appId)
+    )
+
+    expect(ctx.response.set).not.toHaveBeenCalled()
+    expect(mockNext).toHaveBeenCalled()
   })
 })
