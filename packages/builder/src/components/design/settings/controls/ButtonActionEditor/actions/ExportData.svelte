@@ -1,5 +1,5 @@
 <script>
-  import { Label, Select, Body } from "@budibase/bbui"
+  import { Label, Select, Body, Checkbox } from "@budibase/bbui"
   import { onMount } from "svelte"
   import ColumnEditor from "../../ColumnEditor/ColumnEditor.svelte"
   import { findAllMatchingComponents } from "@/helpers/components"
@@ -123,6 +123,12 @@
           }
         }, {})
       }}
+    />
+    <span />
+    <span />
+    <Checkbox
+      text="Export whats visible on the screen"
+      bind:value={parameters.overrideExport}
     />
   </div>
 </div>
