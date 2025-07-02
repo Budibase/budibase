@@ -1,10 +1,6 @@
 import { Row } from "@budibase/types"
 
-export function cleanExportRows(
-  rows: Row[],
-  format: "csv" | "json",
-  customHeaders?: { [key: string]: string }
-): Row[] {
+export function cleanExportRows(rows: Row[], format: "csv" | "json"): string {
   let cleanRows = [...rows]
 
   if (format === "csv") {
@@ -12,8 +8,7 @@ export function cleanExportRows(
     const schemaKeys = Array.from(
       new Set(cleanRows.flatMap(row => Object.keys(row)))
     )
-
-    // Normalize each row to have all schema keys
+    // Normalise each row to have all schema keys
     cleanRows = cleanRows.map(row => {
       const normalizedRow: Row = {}
       for (const key of schemaKeys) {
@@ -21,21 +16,34 @@ export function cleanExportRows(
       }
       return normalizedRow
     })
-  } else if (format === "json" && customHeaders) {
-    // Rename keys using customHeaders map
-    cleanRows = cleanRows.map(row => renameKeys(customHeaders, row))
+    return rowsToCsv(cleanRows, schemaKeys)
+  } else if (format === "json") {
+    return JSON.stringify(cleanRows, null, 2) // no filtering, indented by 2 spaces
+  } else {
+    throw new Error(`Unsupported format: ${format}`)
   }
-
-  return cleanRows
 }
 
-function renameKeys(keysMap: { [key: string]: string }, row: any): any {
-  const renamedRow: any = { ...row }
-  for (const key in keysMap) {
-    if (key in row) {
-      renamedRow[keysMap[key]] = renamedRow[key]
-      delete renamedRow[key]
+function rowsToCsv(rows: Row[], headers: string[]): string {
+  const escape = (value: any) => {
+    let strValue: string
+
+    if (value === null || value === undefined) {
+      strValue = ""
+    } else if (typeof value === "object") {
+      // Properly serialize objects and arrays
+      strValue = JSON.stringify(value)
+    } else {
+      strValue = String(value)
     }
+
+    return `"${strValue.replace(/"/g, '""')}"`
   }
-  return renamedRow
+
+  const csvLines = [
+    headers.join(","),
+    ...rows.map(row => headers.map(h => escape(row[h])).join(",")),
+  ]
+
+  return csvLines.join("\n")
 }
