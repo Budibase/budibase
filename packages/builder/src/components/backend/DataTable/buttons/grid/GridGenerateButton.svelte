@@ -25,7 +25,9 @@
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
 
-  $: workspaceAppId = $workspaceAppStore.workspaceApps[0]?._id!
+  $: workspaceAppId = $workspaceAppStore.workspaceApps.find(
+    a => a.isDefault
+  )?._id!
 
   export const show = () => popover?.show()
   export const hide = () => popover?.hide()
