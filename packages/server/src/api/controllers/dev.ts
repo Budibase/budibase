@@ -89,13 +89,17 @@ export async function revert(ctx: Ctx<void, RevertAppResponse>) {
       userId: ctx.user?._id,
     })
 
-    if (result.success) {
-      ctx.body = result.result
-    } else {
-      ctx.body = { message: "aaaa" }
+    if (!result.success) {
+      ctx.throw(
+        500,
+        "Revert it's taking too long, please refresh or try again later."
+      )
     }
-  } catch (err) {
-    ctx.throw(400, `Unable to process revert. ${err}`)
+    ctx.body = {
+      status: "applied",
+    }
+  } catch (err: any) {
+    ctx.throw(500, `Unable to process revert. ${err.message}`)
   }
 }
 
