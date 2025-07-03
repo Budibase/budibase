@@ -187,16 +187,12 @@ class QueryRunner {
         !this.hasRefreshedOAuth
       ) {
         await this.refreshOAuth2(this.ctx)
-        // Attempt to refresh the access token from the provider
         this.hasRefreshedOAuth = true
-        // Clear cached variables and re-execute to pick up refreshed OAuth tokens
-        await threadUtils.invalidateCachedVariable(this.cachedVariables)
-        return this.execute()
       } else {
         this.hasRerun = true
-        await threadUtils.invalidateCachedVariable(this.cachedVariables)
-        return this.execute()
       }
+      await threadUtils.invalidateCachedVariable(this.cachedVariables)
+      return this.execute()
     }
 
     // needs to an array for next step
