@@ -56,9 +56,9 @@
 <style>
   .option {
     background-color: var(--background);
-    border: 1px solid var(--grey-4);
+    border: 1px solid var(--grey-2);
     padding: 16px;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;

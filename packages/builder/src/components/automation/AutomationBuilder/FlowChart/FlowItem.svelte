@@ -269,8 +269,9 @@
   }
   .block {
     width: 320px;
-    font-size: 16px;
+    font-size: var(--spectrum-global-dimension-font-size-150) !important;
     border-radius: 12px;
+    font-weight: 600;
     cursor: default;
   }
   .block .wrap {
@@ -286,7 +287,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--grey-2);
+    background-color: var(--grey-1);
     padding: 6px 0;
     color: var(--grey-4);
     cursor: grab;
@@ -303,7 +304,7 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-    background-color: var(--spectrum-global-color-gray-100);
+    background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
   }

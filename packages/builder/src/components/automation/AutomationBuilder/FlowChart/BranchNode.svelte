@@ -312,7 +312,7 @@
   }
   .block {
     width: 320px;
-    background-color: var(--spectrum-global-color-gray-100);
+    background-color: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
     cursor: default;
