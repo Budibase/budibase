@@ -2,7 +2,7 @@ import { Table, WithoutDocMetadata } from "@budibase/types"
 import { create } from "./create"
 import { getAllInternalTables } from "./getters"
 import { events } from "@budibase/backend-core"
-import { duplicateName } from "packages/shared-core/src/helpers"
+import { helpers } from "@budibase/shared-core"
 
 /**
  * Duplicates an internal table without its data
@@ -12,7 +12,7 @@ import { duplicateName } from "packages/shared-core/src/helpers"
  */
 export async function duplicate(table: Table, userId?: string): Promise<Table> {
   const existingTables = await getAllInternalTables()
-  const duplicatedName = duplicateName(
+  const duplicatedName = helpers.duplicateName(
     table.name,
     existingTables.map(t => t.name)
   )

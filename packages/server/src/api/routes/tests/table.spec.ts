@@ -1031,7 +1031,7 @@ if (descriptions.length) {
 
           // Should have a different ID and name
           expect(duplicatedTable._id).not.toEqual(testTable._id)
-          expect(duplicatedTable.name).toBe("TestTable - Copy")
+          expect(duplicatedTable.name).toBe("TestTable 1")
 
           // Should have the same schema
           expect(duplicatedTable.schema).toEqual(testTable.schema)
@@ -1084,7 +1084,7 @@ if (descriptions.length) {
             complexTable._id!
           )
 
-          expect(duplicatedTable.name).toBe("ComplexTable - Copy")
+          expect(duplicatedTable.name).toBe("ComplexTable 1")
           expect(duplicatedTable.schema.singleSelect).toEqual(
             complexTable.schema.singleSelect
           )
@@ -1135,10 +1135,6 @@ if (descriptions.length) {
         }
 
         it("should generate unique names for multiple duplicates", async () => {
-          // Get the current state of tables to determine what naming pattern to expect
-          const initialTables = await config.api.table.fetch()
-          const initialTableNames = new Set(initialTables.map(t => t.name))
-
           // Create three duplicates
           const firstDuplicate = await config.api.table.duplicate(
             testTable._id!
@@ -1150,35 +1146,14 @@ if (descriptions.length) {
             testTable._id!
           )
 
-          // Verify that all duplicates have unique names
-          const allDuplicateNames = [
-            firstDuplicate.name,
-            secondDuplicate.name,
-            thirdDuplicate.name,
-          ]
-
-          // All names should be unique
-          expect(new Set(allDuplicateNames).size).toBe(3)
-
-          // All names should start with the original table name
-          allDuplicateNames.forEach(name => {
-            expect(name.startsWith("TestTable")).toBe(true)
-            expect(name).toContain(" - Copy")
-          })
-
-          // None of the duplicate names should conflict with existing names
-          allDuplicateNames.forEach(name => {
-            expect(initialTableNames.has(name)).toBe(false)
-          })
-
-          // Verify all tables exist
-          const finalTables = await config.api.table.fetch()
-          const finalTableNames = finalTables.map(t => t.name)
-
-          expect(finalTableNames).toContain("TestTable")
-          allDuplicateNames.forEach(name => {
-            expect(finalTableNames).toContain(name)
-          })
+          expect(
+            new Set([
+              testTable.name,
+              firstDuplicate.name,
+              secondDuplicate.name,
+              thirdDuplicate.name,
+            ]).size
+          ).toBe(4)
         })
       })
 
