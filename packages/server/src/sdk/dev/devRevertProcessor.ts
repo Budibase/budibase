@@ -27,7 +27,9 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
     return await context.doInAppContext(data.appId, () => this.revertApp(data))
   }
 
-  async revertApp(data: DevRevertQueueData): Promise<{ message: string }> {
+  private async revertApp(
+    data: DevRevertQueueData
+  ): Promise<{ message: string }> {
     const { appId } = data
     const productionAppId = dbCore.getProdAppID(appId)
 
