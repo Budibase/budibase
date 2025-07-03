@@ -13,6 +13,7 @@
   export let anchor
   export let navItem
   export let bindings
+
   let actionOptions = [
     {
       label: "Hide component",
@@ -95,6 +96,18 @@
       control={DrawerBindableInput}
       value={navItem.text}
       onChange={update("text")}
+      {bindings}
+      props={{
+        updateOnChange: false,
+      }}
+      on:drawerShow={() => drawerCount++}
+      on:drawerHide={() => drawerCount--}
+    />
+    <PropertyControl
+      label="Icon"
+      control={DrawerBindableInput}
+      value={navItem.icon}
+      onChange={update("icon")}
       {bindings}
       props={{
         updateOnChange: false,
