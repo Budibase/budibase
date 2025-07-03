@@ -58,7 +58,7 @@
           on:click={e => openContextMenu(e, app)}
           size="S"
           hoverable
-          name="dots-three-horizontal"
+          name="dots-three"
         />
       {/if}
     </div>

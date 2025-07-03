@@ -131,6 +131,8 @@ const environment = {
   DISABLE_USER_SYNC: process.env.DISABLE_USER_SYNC,
   USE_LOCAL_COMPONENT_LIBS:
     process.env.USE_LOCAL_COMPONENT_LIBS || DEFAULTS.USE_LOCAL_COMPONENT_LIBS,
+  SYNC_MIGRATION_CHECKS_MS:
+    parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

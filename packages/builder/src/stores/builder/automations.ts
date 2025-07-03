@@ -628,7 +628,7 @@ const automationActions = (store: AutomationStore) => ({
         const children = block.inputs?.children || {}
 
         branches.forEach((branch, bIdx) => {
-          children[branch.id].forEach(
+          children[branch.id]?.forEach(
             (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
               const ended = array.length - 1 === sIdx
               treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
@@ -849,7 +849,7 @@ const automationActions = (store: AutomationStore) => ({
     name: string,
     block: AutomationStep | AutomationTrigger
   ) => {
-    const rowTriggers = [
+    const rowTriggers: string[] = [
       TriggerStepID.ROW_UPDATED,
       TriggerStepID.ROW_SAVED,
       TriggerStepID.ROW_DELETED,
@@ -1610,6 +1610,10 @@ const automationActions = (store: AutomationStore) => ({
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
+      state.showLogsPanel = false
+      state.showLogDetailsPanel = false
+      delete state.selectedLog
+      delete state.selectedLogStepData
       return state
     })
   },

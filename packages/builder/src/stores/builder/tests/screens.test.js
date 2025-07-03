@@ -32,6 +32,7 @@ vi.mock("@/stores/builder", async () => {
     update: mockAppStore.update,
     set: mockAppStore.set,
     refresh: vi.fn(),
+    refreshAppNav: vi.fn(),
   }
 
   const navigationStore = {
@@ -288,7 +289,7 @@ describe("Screens store", () => {
     // Saved the existing screen having modified it.
     await bb.screenStore.save(existingScreens[2].json())
 
-    expect(appStore.refresh).toHaveBeenCalledOnce()
+    expect(appStore.refreshAppNav).toHaveBeenCalledOnce()
     expect(saveSpy).toHaveBeenCalled()
 
     // On save, the screen is spliced back into the store with the saved content

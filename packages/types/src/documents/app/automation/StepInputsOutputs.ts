@@ -149,6 +149,15 @@ export type Branch = {
   id: any
   name: string
   condition: BranchSearchFilters
+  conditionUI?: {
+    groups?: {
+      filters?: {
+        field: string
+        operator: BasicOperator
+        value: any
+      }[]
+    }[]
+  }
 }
 
 export type BranchSearchFilters = Pick<

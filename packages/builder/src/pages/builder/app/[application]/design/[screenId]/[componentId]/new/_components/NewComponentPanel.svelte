@@ -272,12 +272,17 @@
                 <div class="icon-container">
                   <Icon
                     size="M"
-                    color="rgb(142, 185, 252)"
+                    color="var(--spectrum-global-color-static-gray-50)"
                     name={component.icon}
                   />
                 </div>
                 <div class="component-name">
-                  <Body size="S">{component.name}</Body>
+                  <Body
+                    size="S"
+                    weight="500"
+                    color="var(--spectrum-global-color-gray-900)"
+                    >{component.name}</Body
+                  >
                   {#if component.new}
                     <NewPill />
                   {/if}
@@ -324,14 +329,14 @@
     flex-direction: row;
     justify-content: flex-start;
     padding: var(--spacing-s) var(--spacing-m);
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
     overflow: hidden;
   }
   .icon-container {
-    background-color: rgba(75, 117, 255, 0.2);
-    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    background-color: #aa4321;
+    border: 0.5px solid #c96442;
     padding: 4px;
-    border-radius: 6px;
+    border-radius: 8px;
   }
   .component.selected {
     border-color: var(--spectrum-global-color-blue-400);

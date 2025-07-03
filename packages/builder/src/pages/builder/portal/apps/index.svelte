@@ -73,10 +73,10 @@
   }
 
   const goToAutomationError = appId => {
-    const params = new URLSearchParams({
-      open: "error",
-    })
-    $goto(`/builder/app/${appId}/settings/automations?${params.toString()}`)
+    const automationId = Object.keys(automationErrors[appId] || {})[0]
+    if (automationId) {
+      $goto(`/builder/app/${appId}/automation/${automationId}`)
+    }
   }
 
   const errorCount = errors => {
@@ -205,7 +205,7 @@
     <div class="title">
       <div class="welcome">
         <Layout noPadding gap="XS">
-          <Heading size="L">{welcomeHeader}</Heading>
+          <Heading size="M">{welcomeHeader}</Heading>
           <Body size="M">
             {#if $featureFlags.WORKSPACE_APPS}
               Below you'll find the list of workspaces that you have access to
@@ -358,7 +358,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-l);
   }
 
   .empty-wrapper {

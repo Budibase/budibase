@@ -33,13 +33,13 @@
   let appContextMenuModals: AppContextMenuModals
 
   const getIframeURL = (app: EnrichedApp) => {
-    loading = true
-
     const workspaceUrl =
       app.status === "published" ? `/app${app.url}` : `/${app.devId}`
 
     return `${workspaceUrl}${app.defaultWorkspaceAppUrl}`
   }
+
+  $: iframeUrl && (loading = true) // If the iframe changes, set loading to true
 
   let noScreens = false
 
@@ -146,7 +146,7 @@
       on:click={openContextMenu}
       size="S"
       hoverable
-      name="dots-three-horizontal"
+      name="dots-three"
     />
   </div>
   {#if noScreens}
