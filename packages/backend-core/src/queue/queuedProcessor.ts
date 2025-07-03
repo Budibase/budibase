@@ -34,10 +34,10 @@ export abstract class QueuedProcessor<T> {
       },
     })
 
-    this._queue.process(async job => {
+    this._queue.process(async (job, done) => {
       try {
         const result = await this.processFn(job.data)
-        return result
+        done(null, result)
       } catch (err: any) {
         logging.logAlert(`Failed to process job in ${this._queue.name}`, err)
         throw err

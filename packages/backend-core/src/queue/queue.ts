@@ -2,7 +2,13 @@ import env from "../environment"
 import { getRedisOptions } from "../redis/utils"
 import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
-import BullQueue, { Queue, QueueOptions, JobOptions, Job } from "bull"
+import BullQueue, {
+  Queue,
+  QueueOptions,
+  JobOptions,
+  Job,
+  DoneCallback,
+} from "bull"
 import { addListeners, StalledFn } from "./listeners"
 import { Duration } from "../utils"
 import * as timers from "../timers"
@@ -143,12 +149,12 @@ export class BudibaseQueue<T> {
 
   process(
     concurrency: number,
-    cb: (job: Job<T>) => Promise<void>
+    cb: (job: Job<T>, done: DoneCallback) => Promise<void>
   ): Promise<void>
-  process(cb: (job: Job<T>) => Promise<void>): Promise<void>
+  process(cb: (job: Job<T>, done: DoneCallback) => Promise<void>): Promise<void>
   process(...args: any[]) {
     let concurrency: number | undefined = undefined
-    let cb: (job: Job<T>) => Promise<void>
+    let cb: (job: Job<T>, done?: DoneCallback) => Promise<void>
     if (args.length === 2) {
       concurrency = args[0]
       cb = args[1]
@@ -156,7 +162,7 @@ export class BudibaseQueue<T> {
       cb = args[0]
     }
 
-    const wrappedCb = async (job: Job<T>) => {
+    const wrappedCb = async (job: Job<T>, done: DoneCallback) => {
       await tracer.trace("queue.process", async span => {
         // @ts-expect-error monkey patching the parent span id
         if (job.data._parentSpanContext) {
@@ -181,7 +187,7 @@ export class BudibaseQueue<T> {
           sizeof(job.data),
           this.metricTags()
         )
-        await this.withMetrics("queue.process", () => cb(job))
+        await this.withMetrics("queue.process", () => cb(job, done))
       })
     }
 

@@ -14,8 +14,8 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
   constructor() {
     super(queue.JobQueue.DEV_REVERT_PROCESSOR, {
       maxAttempts: 3,
-      removeOnFail: true,
-      removeOnComplete: true,
+      removeOnFail: false,
+      removeOnComplete: false,
       maxStalledCount: 3,
       waitForCompletionMs: 10000,
     })
