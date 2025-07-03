@@ -41,6 +41,8 @@ async function exportBackup(opts: BackupOpts) {
     const remote = new Remote(db)
     const local = new Local(join(TEMP_DIR, COUCH_DIR, db))
     await replication(remote, local)
+    await remote.close()
+    await local.close()
   }
   bar.stop()
   console.log("S3 Export")
@@ -85,6 +87,8 @@ async function importBackup(opts: BackupOpts) {
     const remote = new Remote(db)
     const local = new Local(join(TEMP_DIR, COUCH_DIR, db))
     await replication(local, remote)
+    await remote.close()
+    await local.close()
   }
   bar.stop()
   console.log("MinIO Import")
@@ -104,9 +108,9 @@ async function importBackup(opts: BackupOpts) {
 
 async function pickOne(opts: BackupOpts) {
   if (opts["import"]) {
-    return importBackup(opts)
+    return await importBackup(opts)
   } else if (opts["export"]) {
-    return exportBackup(opts)
+    return await exportBackup(opts)
   }
 }
 
