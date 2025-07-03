@@ -123,7 +123,7 @@
 <div class="automation-heading">
   <div class="actions-left">
     <div class="automation-name">
-      <Body size="M">
+      <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)">
         {automation.name}
       </Body>
     </div>
