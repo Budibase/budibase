@@ -2,7 +2,6 @@
   import { sdk } from "@budibase/shared-core"
   import { FieldType, type Row } from "@budibase/types"
   import RelationshipField from "./RelationshipField.svelte"
-  import { onMount } from "svelte"
   import { builderStore } from "@/stores/builder"
 
   export let defaultValue: string
