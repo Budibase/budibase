@@ -14,6 +14,7 @@ import {
   DatasourcePlusQueryResponse,
   SqlClient,
   EnrichedQueryJson,
+  SqlQueryBinding,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -146,6 +147,15 @@ const SCHEMA: Integration = {
   },
 }
 
+function processBindings(bindings: SqlQueryBinding): SqlQueryBinding {
+  return bindings.map(binding => {
+    if (binding instanceof Date) {
+      return binding.toISOString()
+    }
+    return binding
+  })
+}
+
 class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly client: Client
   private readonly config: PostgresConfig
@@ -240,6 +250,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       .split(",")
       .map(item => `"${item.trim()}"`)
     await this.client.query(`SET search_path TO ${search_path.join(",")};`)
+    await this.client.query(`SET TIME ZONE 'UTC';`)
     this.open = true
   }
 
@@ -275,7 +286,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       }
     }
     try {
-      const bindings = query.bindings || []
+      const bindings = processBindings(query.bindings || [])
       this.log(query.sql, bindings)
       return await client.query(query.sql, bindings)
     } catch (err: any) {
