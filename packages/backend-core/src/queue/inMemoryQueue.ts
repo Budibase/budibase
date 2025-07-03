@@ -94,7 +94,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         return
       }
 
-      let resp = func(message)
+      let resp = new Promise(r => func(message, r))
 
       async function retryFunc(fnc: any, attempt = 0) {
         try {
@@ -103,7 +103,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
           attempt++
           if (attempt < 3) {
             await helpers.wait(100 * attempt)
-            await retryFunc(func(message), attempt)
+            await retryFunc(new Promise(r => func(message, r)), attempt)
           } else {
             throw e
           }
@@ -186,7 +186,10 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     } else {
       pushMessage()
     }
-    return { id: jobId } as any
+    return {
+      id: jobId,
+      finished: () => this.whenCurrentJobsFinished(),
+    } as any
   }
 
   /**
