@@ -45,6 +45,10 @@ export abstract class QueuedProcessor<T> {
     })
   }
 
+  async close() {
+    await this._queue.close()
+  }
+
   abstract processFn: (data: T) => Promise<any>
 
   async execute(

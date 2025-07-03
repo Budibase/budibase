@@ -125,6 +125,7 @@ export class BudibaseQueue<T> {
       !isNaN(+process.env.BULL_TEST_REDIS_PORT)
     ) {
       queue = new BullQueue(this.jobQueue, {
+        ...queueConfig,
         redis: { host: "localhost", port: +process.env.BULL_TEST_REDIS_PORT },
       })
     } else {
