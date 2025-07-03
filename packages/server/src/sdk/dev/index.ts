@@ -1,7 +1,7 @@
-import { devRevertProcessor } from "./devRevertProcessor"
+import { devRevertProcessor, revertDevChanges } from "./devRevertProcessor"
 
 const init = async () => {
   devRevertProcessor()
 }
 
-export { devRevertProcessor, init }
+export { init, revertDevChanges }

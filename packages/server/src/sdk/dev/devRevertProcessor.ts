@@ -10,7 +10,7 @@ import env from "../../environment"
 
 let _devRevertProcessor: DevRevertProcessor | undefined
 
-export class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
+class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
   constructor() {
     super(queue.JobQueue.DEV_REVERT_PROCESSOR, {
       maxAttempts: 3,
@@ -24,7 +24,7 @@ export class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData
   processFn = async (
     data: DevRevertQueueData
   ): Promise<{ message: string }> => {
-    return await this.revertApp(data)
+    return await context.doInAppContext(data.appId, () => this.revertApp(data))
   }
 
   async revertApp(data: DevRevertQueueData): Promise<{ message: string }> {
@@ -83,4 +83,10 @@ export function devRevertProcessor(): DevRevertProcessor {
     _devRevertProcessor = new DevRevertProcessor()
   }
   return _devRevertProcessor
+}
+
+export async function revertDevChanges(data: DevRevertQueueData) {
+  const processor = devRevertProcessor()
+  const result = await processor.execute(data)
+  return result
 }
