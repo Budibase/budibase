@@ -92,7 +92,7 @@ export async function revert(ctx: Ctx<void, RevertAppResponse>) {
     if (result.success) {
       ctx.body = result.result
     } else {
-      ctx.throw(500, `App revert failed: ${result.error}`)
+      ctx.body = { message: "aaaa" }
     }
   } catch (err) {
     ctx.throw(400, `Unable to process revert. ${err}`)

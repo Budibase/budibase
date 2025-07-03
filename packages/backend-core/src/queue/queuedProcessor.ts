@@ -49,16 +49,21 @@ export abstract class QueuedProcessor<T> {
 
   async execute(
     data: T
-  ): Promise<{ success: boolean; result?: any; error?: string }> {
+  ): Promise<
+    { success: true; result: any } | { success: false; reason: "timeout" }
+  > {
     try {
       const job = await this._queue.add(data)
       const result = await helpers.withTimeout(this.waitForCompletionMs, () =>
         job.finished()
       )
-
       return { success: true, result }
     } catch (err: any) {
-      return { success: false, error: err.message }
+      if (err.errno !== "ETIME") {
+        throw err
+      }
+
+      return { success: false, reason: "timeout" }
     }
   }
 }
