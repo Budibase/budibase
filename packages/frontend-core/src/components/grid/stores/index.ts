@@ -75,6 +75,7 @@ export interface BaseStoreProps {
   canExpandRows?: boolean
   canSaveSchema?: boolean
   minHeight?: number
+  canHideColumns?: boolean
 }
 
 export interface BaseStore {

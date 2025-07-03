@@ -7,6 +7,7 @@
     Modal,
     DetailSummary,
   } from "@budibase/bbui"
+  import { generate } from "shortid"
   import {
     type Automation,
     type AutomationStep,
@@ -23,6 +24,7 @@
     selectedAutomation,
     evaluationContext,
   } from "@/stores/builder"
+  import { getNewStepName } from "@/helpers/automations/nameHelpers"
   import BlockData from "../SetupPanel/BlockData.svelte"
   import BlockProperties from "../SetupPanel/BlockProperties.svelte"
   import BlockHeader from "../SetupPanel/BlockHeader.svelte"
@@ -143,6 +145,31 @@
       >
         Delete
       </ActionButton>
+      {#if $memoBlock && !isBranchStep($memoBlock)}
+        <ActionButton
+          quiet
+          noPadding
+          icon="copy"
+          on:click={async () => {
+            if (!blockRef || !$memoBlock || isTrigger($memoBlock)) {
+              return
+            }
+            const duplicatedBlock = {
+              ...$memoBlock,
+              id: generate(),
+            }
+            const newName = getNewStepName($memoAutomation, duplicatedBlock)
+            duplicatedBlock.name = newName
+
+            await automationStore.actions.addBlockToAutomation(
+              duplicatedBlock,
+              blockRef.pathTo
+            )
+          }}
+        >
+          Duplicate
+        </ActionButton>
+      {/if}
     </div>
   {/if}
 </div>
