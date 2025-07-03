@@ -17,8 +17,9 @@
     type RelationshipFieldMetadata,
     type Row,
     type UIFieldValidationRule,
+    type DataFetchDatasource,
   } from "@budibase/types"
-  import { fetchData, Utils } from "@budibase/frontend-core"
+  import { fetchData, Utils, Constants } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import type { FieldApi, FieldState } from "@/types"
@@ -47,6 +48,9 @@
   export let multi: boolean | undefined = undefined
   export let tableId: string | undefined = undefined
   export let defaultRows: Row[] | undefined = []
+
+  // Limit datasourceType "user" to app users only
+  export let appUsersOnly: boolean | undefined = false
 
   const { API } = getContext("sdk")
 
@@ -92,7 +96,11 @@
 
   // Attempt to determine the primary display field to use
   $: tableDefinition = $fetch?.definition
-  $: primaryDisplayField = primaryDisplay || tableDefinition?.primaryDisplay
+  $: primaryDisplayField =
+    primaryDisplay ||
+    (tableDefinition && "primaryDisplay" in tableDefinition
+      ? tableDefinition.primaryDisplay
+      : undefined)
 
   // Build our options map
   $: rows = $fetch?.rows || []
@@ -139,14 +147,14 @@
     filter: UISearchFilter | undefined,
     linkedTableId?: string
   ) => {
-    const datasource =
+    const datasource: DataFetchDatasource =
       dsType === "table"
         ? {
             type: dsType,
             tableId: linkedTableId!,
           }
         : {
-            type: dsType,
+            type: appUsersOnly ? "table" : dsType,
             tableId: InternalTable.USER_METADATA,
           }
     return fetchData({
@@ -200,6 +208,14 @@
     optionsMap = optionsMap
   }
 
+  const parseId = (id: string) => {
+    // Normalise app table users to the global format.
+    if (datasourceType === "user" && appUsersOnly) {
+      return id.replace(`ro_${Constants.TableNames.USERS}_`, "")
+    }
+    return id
+  }
+
   // Parses a row-like structure into a properly shaped option
   const parseOption = (
     option: string | BasicRelatedRow | Row,
@@ -219,21 +235,21 @@
     // that
     if (Object.keys(option).length === 2 && "primaryDisplay" in option) {
       return {
-        _id: option._id,
+        _id: parseId(option._id),
         primaryDisplay: ensureString(option.primaryDisplay),
       }
     }
     // Otherwise use the primary display field specified
     if (primaryDisplay) {
       return {
-        _id: option._id,
+        _id: parseId(option._id),
         primaryDisplay: ensureString(
           option[primaryDisplay as keyof typeof option]
         ),
       }
     } else {
       return {
-        _id: option._id,
+        _id: parseId(option._id),
         primaryDisplay: option._id,
       }
     }
