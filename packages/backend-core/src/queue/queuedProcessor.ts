@@ -40,7 +40,7 @@ export abstract class QueuedProcessor<T> {
         done(null, result)
       } catch (err: any) {
         logging.logAlert(`Failed to process job in ${this._queue.name}`, err)
-        throw err
+        done(err)
       }
     })
   }
