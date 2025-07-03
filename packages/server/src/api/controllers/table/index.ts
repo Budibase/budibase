@@ -269,11 +269,10 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
   const table = await sdk.tables.getTable(tableId)
 
   if (isExternalTable(table)) {
-    throw new HTTPError("Cannot duplicate external tables", 400)
+    throw new HTTPError("Cannot duplicate external tables", 422)
   }
 
   const duplicatedTable = await sdk.tables.duplicate(table, ctx.user._id)
-  await events.table.created(duplicatedTable)
 
   ctx.message = `Table ${table.name} duplicated successfully.`
   ctx.body = duplicatedTable
