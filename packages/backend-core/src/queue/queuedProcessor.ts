@@ -52,8 +52,11 @@ export abstract class QueuedProcessor<T> {
   ): Promise<{ success: boolean; result?: any; error?: string }> {
     try {
       const job = await this._queue.add(data)
-      await helpers.withTimeout(this.waitForCompletionMs, () => job.finished())
-      return { success: true, result: job.returnvalue }
+      const result = await helpers.withTimeout(this.waitForCompletionMs, () =>
+        job.finished()
+      )
+
+      return { success: true, result }
     } catch (err: any) {
       return { success: false, error: err.message }
     }
