@@ -116,7 +116,7 @@ if (mainDescriptions.length) {
             rows: [
               { customer_name: "John", status: "pending" },
               { customer_name: "Jane", status: "processing" },
-              { customer_name: "Bob", status: "shipped" }
+              { customer_name: "Bob", status: "shipped" },
             ],
           })
 
