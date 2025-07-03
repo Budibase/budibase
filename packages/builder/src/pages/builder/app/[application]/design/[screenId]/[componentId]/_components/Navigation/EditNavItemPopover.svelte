@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Popover, RadioGroup } from "@budibase/bbui"
+  import { Icon, Popover, RadioGroup, PhosphorIconPicker } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
@@ -105,7 +105,7 @@
     />
     <PropertyControl
       label="Icon"
-      control={DrawerBindableInput}
+      control={PhosphorIconPicker}
       value={navItem.icon}
       onChange={update("icon")}
       {bindings}
@@ -186,7 +186,6 @@
     align-items: stretch;
     gap: 8px;
     padding: var(--spacing-xl);
-    max-height: 270px;
     overflow: scroll;
   }
   .settings :global(.property-group-container) {
