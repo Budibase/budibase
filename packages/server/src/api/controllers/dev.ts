@@ -99,7 +99,7 @@ export async function revert(ctx: Ctx<void, RevertAppResponse>) {
       status: "applied",
     }
   } catch (err: any) {
-    ctx.throw(500, `Unable to process revert. ${err.message}`)
+    ctx.throw(500, err.message)
   }
 }
 
