@@ -78,6 +78,12 @@ export class BadRequestError extends HTTPError {
   }
 }
 
+export class ForbiddenError extends HTTPError {
+  constructor(message: string) {
+    super(message, 403)
+  }
+}
+
 // LICENSING
 
 export class UsageLimitError extends HTTPError {
