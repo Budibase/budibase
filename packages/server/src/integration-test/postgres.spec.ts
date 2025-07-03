@@ -89,6 +89,50 @@ if (mainDescriptions.length) {
           expect(table).toBeDefined()
           expect(table?.schema["status"].type).toEqual(FieldType.OPTIONS)
         })
+
+        it("should be able to filter enum columns using string filter", async () => {
+          const tableName = `orders_${generator
+            .guid()
+            .replaceAll("-", "")
+            .substring(0, 6)}`
+
+          await client.schema.createTable(tableName, table => {
+            table.increments("order_id").primary()
+            table.string("customer_name").notNullable()
+            table.enum("status", ["pending", "processing", "shipped"], {
+              useNative: true,
+              enumName: `${tableName}_status`,
+            })
+          })
+
+          const response = await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+          const table = response.datasource.entities?.[tableName]
+          expect(table).toBeDefined()
+
+          // Insert test data
+          await config.api.row.bulkImport(table!._id!, {
+            rows: [
+              { customer_name: "John", status: "pending" },
+              { customer_name: "Jane", status: "processing" },
+              { customer_name: "Bob", status: "shipped" },
+            ],
+          })
+
+          // Test string filter on enum column
+          const { rows } = await config.api.row.search(table!._id!, {
+            query: {
+              string: {
+                status: "proc",
+              },
+            },
+          })
+
+          expect(rows).toHaveLength(1)
+          expect(rows[0].status).toBe("processing")
+          expect(rows[0].customer_name).toBe("Jane")
+        })
       })
 
       describe("check custom column types", () => {
