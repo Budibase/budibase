@@ -1,6 +1,7 @@
 import { BudibaseQueue } from "./queue"
 import * as logging from "../logging"
 import { JobQueue } from "./constants"
+import { helpers } from "@budibase/shared-core"
 
 export interface QueuedProcessorOptions {
   maxAttempts?: number
@@ -51,14 +52,8 @@ export abstract class QueuedProcessor<T> {
   ): Promise<{ success: boolean; result?: any; error?: string }> {
     try {
       const job = await this._queue.add(data)
-      const [result] = await Promise.race([
-        job.finished(),
-        new Promise(resolve => setTimeout(resolve, this.waitForCompletionMs)),
-      ])
-      if (!result.success) {
-        return { success: false, error: "Job timed out" }
-      }
-      return { success: true, result }
+      await helpers.withTimeout(this.waitForCompletionMs, () => job.finished())
+      return { success: true, result: job.returnvalue }
     } catch (err: any) {
       return { success: false, error: err.message }
     }
