@@ -92,6 +92,10 @@ export class BudibaseQueue<T> {
     this.queue = this.initQueue()
   }
 
+  get name() {
+    return this.queue.name
+  }
+
   private initQueue() {
     const redisOpts = getRedisOptions()
     const queueConfig: QueueOptions = {
