@@ -7,7 +7,10 @@ import { isRecaptchaVerified } from "../utilities/redis"
 const middleware = async (ctx: Ctx, next: Next) => {
   // TODO: need to check this per app
   if (env.RECAPTCHA_SITE_KEY) {
-    const cookie = utils.getCookie<RecaptchaSessionCookie>(ctx, Cookie.RecaptchaSession)
+    const cookie = utils.getCookie<RecaptchaSessionCookie>(
+      ctx,
+      Cookie.RecaptchaSession
+    )
     if (!cookie) {
       ctx.status = 403
       return

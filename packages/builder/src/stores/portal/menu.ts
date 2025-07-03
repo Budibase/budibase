@@ -80,7 +80,7 @@ export const menu: Readable<MenuItem[]> = derived(
       ]
 
       if ($licensing.recaptchaEnabled) {
-        settingsSubPages.push(        {
+        settingsSubPages.push({
           title: "Recaptcha",
           href: "/builder/portal/settings/recaptcha",
         })

@@ -26,12 +26,15 @@ import {
   GoogleInnerConfig,
   isAIConfig,
   isGoogleConfig,
-  isOIDCConfig, isRecaptchaConfig,
+  isOIDCConfig,
+  isRecaptchaConfig,
   isSettingsConfig,
   isSMTPConfig,
   OIDCConfigs,
   OIDCLogosConfig,
-  PASSWORD_REPLACEMENT, RecaptchaConfig, RecaptchaInnerConfig,
+  PASSWORD_REPLACEMENT,
+  RecaptchaConfig,
+  RecaptchaInnerConfig,
   SaveConfigRequest,
   SaveConfigResponse,
   SettingsBrandingConfig,
@@ -274,8 +277,11 @@ export async function processAIConfig(
   }
 }
 
-export async function processRecaptchaConfig(config: RecaptchaInnerConfig, existingConfig?: RecaptchaInnerConfig) {
-  if (!await pro.features.isRecaptchaEnabled()) {
+export async function processRecaptchaConfig(
+  config: RecaptchaInnerConfig,
+  existingConfig?: RecaptchaInnerConfig
+) {
+  if (!(await pro.features.isRecaptchaEnabled())) {
     throw new ForbiddenError("License does not allow use of recaptcha")
   }
   if (config.secretKey === PASSWORD_REPLACEMENT && !existingConfig) {

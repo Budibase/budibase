@@ -1,5 +1,14 @@
 <script lang="ts">
-  import { Body, Button, Divider, Heading, Input, Label, Layout, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Divider,
+    Heading,
+    Input,
+    Label,
+    Layout,
+    notifications,
+  } from "@budibase/bbui"
   import { auth } from "@/stores/portal"
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
@@ -17,7 +26,7 @@
     }
   }
 
-  const values = writable<{ siteKey?: string, secretKey?: string }>({
+  const values = writable<{ siteKey?: string; secretKey?: string }>({
     siteKey: "",
     secretKey: "",
   })
@@ -31,12 +40,14 @@
         config: {
           siteKey: config.siteKey!,
           secretKey: config.secretKey!,
-        }
+        },
       }
       await API.saveConfig(recaptchaConfig)
       notifications.success(`Recaptcha configuration updated`)
     } catch (err: any) {
-      notifications.error(err.message || "Failed to updated recaptcha configuration")
+      notifications.error(
+        err.message || "Failed to updated recaptcha configuration"
+      )
     } finally {
       loading = false
     }
@@ -44,7 +55,9 @@
 
   onMount(async () => {
     try {
-      const recaptchaConfig = (await API.getConfig(ConfigType.RECAPTCHA)) as RecaptchaConfig
+      const recaptchaConfig = (await API.getConfig(
+        ConfigType.RECAPTCHA
+      )) as RecaptchaConfig
       values.set({
         siteKey: recaptchaConfig.config.siteKey,
         secretKey: recaptchaConfig.config.secretKey,
