@@ -197,6 +197,10 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
+  .name {
+    font-size: var(--spectrum-global-dimension-font-size-100);
+    font-weight: 600;
+  }
   .description {
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;

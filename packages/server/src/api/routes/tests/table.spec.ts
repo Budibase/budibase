@@ -845,22 +845,90 @@ if (descriptions.length) {
         it("should be able to create a table with indexes", async () => {
           await context.doInAppContext(config.getAppId(), async () => {
             const db = context.getAppDB()
-            const indexCount = (await db.getIndexes()).total_rows
+            const initialIndexes = await db.getIndexes()
+            const initialIndexCount = initialIndexes.total_rows
+
             const table = basicTable()
             table.indexes = ["name"]
-            const res = await config.api.table.save(table)
-            expect(res._id).toBeDefined()
-            expect(res._rev).toBeDefined()
-            expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
-            // update index to see what happens
-            table.indexes = ["name", "description"]
-            await config.api.table.save({
-              ...table,
-              _id: res._id,
-              _rev: res._rev,
-            })
-            // shouldn't have created a new index
-            expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
+            const savedTable = await config.api.table.save(table)
+
+            expect(savedTable._id).toBeDefined()
+            expect(savedTable._rev).toBeDefined()
+            expect(savedTable.indexes).toEqual(["name"])
+
+            const indexesAfterCreate = await db.getIndexes()
+            expect(indexesAfterCreate.total_rows).toEqual(initialIndexCount + 1)
+
+            expect(indexesAfterCreate.indexes).toEqual([
+              {
+                ddoc: null,
+                def: {
+                  fields: [
+                    {
+                      _id: "asc",
+                    },
+                  ],
+                },
+                name: "_all_docs",
+                type: "special",
+              },
+              {
+                ddoc: "_design/search_ddoc",
+                def: {
+                  fields: [
+                    {
+                      name: "asc",
+                    },
+                  ],
+                },
+                name: `search:${savedTable._id}`,
+                partitioned: false,
+                type: "json",
+              },
+            ])
+
+            // Update table with multiple indexes
+            const updatedTable = {
+              ...savedTable,
+              indexes: ["name", "description"],
+            }
+            const resUpdated = await config.api.table.save(updatedTable)
+
+            expect(resUpdated.indexes).toEqual(["name", "description"])
+
+            // Should still have same number of indexes (recreated, not added)
+            const indexesAfterUpdate = await db.getIndexes()
+
+            expect(indexesAfterUpdate.indexes).toEqual([
+              {
+                ddoc: null,
+                def: {
+                  fields: [
+                    {
+                      _id: "asc",
+                    },
+                  ],
+                },
+                name: "_all_docs",
+                type: "special",
+              },
+              {
+                ddoc: "_design/search_ddoc",
+                def: {
+                  fields: [
+                    {
+                      name: "asc",
+                    },
+                    {
+                      description: "asc",
+                    },
+                  ],
+                },
+                name: `search:${savedTable._id}`,
+                partitioned: false,
+                type: "json",
+              },
+            ])
           })
         })
       })
