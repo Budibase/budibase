@@ -2,7 +2,7 @@ import { Row } from "@budibase/types"
 
 /**
  * Converts an array of rows to a CSV string.
- * - Uses the provided headers to determine column order
+ * - Uses the provided columns to determine column order
  * - Escapes values appropriately for CSV format
  */
 export function convertRowsToCsv(
