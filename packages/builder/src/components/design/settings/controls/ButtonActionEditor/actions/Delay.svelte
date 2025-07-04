@@ -5,6 +5,9 @@
   export let bindings = []
   export let parameters
 
+  // Default duration
+  parameters.duration = 3000
+
   const MAX_DURATION = 120000
 
   function handleDurationChange(event) {
