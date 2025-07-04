@@ -976,7 +976,7 @@ describe("/applications", () => {
         headersNotPresent: [Header.MIGRATING_APP],
       })
 
-      expect(migrationMock).toHaveBeenCalledTimes(1)
+      expect(migrationMock).toHaveBeenCalledTimes(2)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
     })
   })
