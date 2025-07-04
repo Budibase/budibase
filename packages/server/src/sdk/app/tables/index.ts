@@ -5,6 +5,7 @@ import * as updates from "./update"
 import * as utils from "./utils"
 import { migrate } from "./migration"
 import * as sqs from "./internal/sqs"
+import { duplicate } from "./duplicate"
 
 export default {
   populateExternalTableSchemas,
@@ -14,4 +15,5 @@ export default {
   ...utils,
   migrate,
   sqs,
+  duplicate,
 }

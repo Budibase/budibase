@@ -109,4 +109,16 @@ export class TableAPI extends TestAPI {
       expectations,
     })
   }
+
+  duplicate = async (
+    tableId: string,
+    expectations?: Expectations
+  ): Promise<SaveTableResponse> => {
+    return await this._post<SaveTableResponse>(
+      `/api/tables/${tableId}/duplicate`,
+      {
+        expectations,
+      }
+    )
+  }
 }

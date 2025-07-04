@@ -145,6 +145,13 @@ export class TableStore extends DerivedBudiStore<
     this.replaceTable(table._id, null)
   }
 
+  async duplicate(tableId: string) {
+    const duplicatedTable = await API.duplicateTable(tableId)
+    this.replaceTable(duplicatedTable._id, duplicatedTable)
+    this.select(duplicatedTable._id)
+    return duplicatedTable
+  }
+
   async saveField({
     originalName,
     field,

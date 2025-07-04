@@ -11,12 +11,22 @@
   import DeleteConfirmationModal from "../../modals/DeleteDataConfirmationModal.svelte"
   import { Icon } from "@budibase/bbui"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import { notifications } from "@budibase/bbui"
 
   export let table
   export let idx
 
   let editModal
   let deleteConfirmationModal
+
+  const duplicateTable = async () => {
+    try {
+      await tablesStore.duplicate(table._id)
+      notifications.success("Table duplicated successfully")
+    } catch (error) {
+      notifications.error(`Failed to duplicate table: ${error.message}`)
+    }
+  }
 
   const getContextMenuItems = () => {
     return [
@@ -27,6 +37,14 @@
         visible: table?.sourceType !== DB_TYPE_EXTERNAL,
         disabled: false,
         callback: editModal.show,
+      },
+      {
+        icon: "copy",
+        name: "Duplicate",
+        keyBind: null,
+        visible: table?.sourceType !== DB_TYPE_EXTERNAL,
+        disabled: false,
+        callback: duplicateTable,
       },
       {
         icon: "trash",
