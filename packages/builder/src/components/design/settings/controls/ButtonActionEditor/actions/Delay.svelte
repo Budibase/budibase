@@ -5,9 +5,6 @@
   export let bindings = []
   export let parameters
 
-  // Default duration
-  parameters.duration = 3000
-
   const MAX_DURATION = 120000
 
   function handleDurationChange(event) {
@@ -25,7 +22,7 @@
     title="Delay in milliseconds"
     {bindings}
     value={parameters.duration}
-    placeholder="3000"
+    placeholder="0"
     on:change={handleDurationChange}
   />
 </div>
