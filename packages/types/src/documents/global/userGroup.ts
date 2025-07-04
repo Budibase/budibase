@@ -32,6 +32,15 @@ export interface SearchGroupResponse {
   data: UserGroup[]
 }
 
+export interface UpdateGroupAppRequest {
+  add?: { appId: string; roleId: string }[]
+  remove?: { appId: string }[]
+}
+export interface UpdateGroupAppResponse {
+  id: string
+  rev: string
+}
+
 export interface SearchUserGroupResponse extends PaginationResponse {
   users: {
     _id: any

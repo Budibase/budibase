@@ -14,6 +14,7 @@ import {
   AutomationTriggerStepId,
   AutomationCustomIOType,
   AutomationIOType,
+  AutomationLog,
 } from "@budibase/types"
 import { SvelteComponent } from "svelte"
 
@@ -137,7 +138,7 @@ export interface AutomationState {
   selectedNodeId?: string
   selectedNodeMode?: DataMode
   actionPanelBlock?: BlockRef
-  selectedLog?: any
+  selectedLog?: AutomationLog
   selectedLogStepData?: any
   showLogsPanel?: boolean
   showLogDetailsPanel?: boolean

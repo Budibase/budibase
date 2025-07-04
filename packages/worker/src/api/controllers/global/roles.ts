@@ -16,25 +16,27 @@ import {
 
 export async function fetch(ctx: Ctx<void, FetchGlobalRolesResponse>) {
   const tenantId = ctx.user!.tenantId
-  // always use the dev apps as they'll be most up to date (true)
-  const apps = (await dbCore.getAllApps({ tenantId, all: true })) as App[]
-  const promises = []
-  for (let app of apps) {
-    // use dev app IDs
-    promises.push(roles.getAllRoles(app.appId))
-  }
-  const roleList = await Promise.all(promises)
-  const response: any = {}
-  for (let app of apps) {
-    const deployedAppId = dbCore.getProdAppID(app.appId)
-    response[deployedAppId] = {
-      roles: roleList.shift(),
-      name: app.name,
-      version: app.version,
-      url: app.url,
+  await context.doInTenant(tenantId, async () => {
+    // always use the dev apps as they'll be most up to date (true)
+    const apps = await dbCore.getAllApps({ all: true })
+    const promises = []
+    for (let app of apps) {
+      // use dev app IDs
+      promises.push(roles.getAllRoles(app.appId))
     }
-  }
-  ctx.body = response
+    const roleList = await Promise.all(promises)
+    const response: any = {}
+    for (let app of apps) {
+      const deployedAppId = dbCore.getProdAppID(app.appId)
+      response[deployedAppId] = {
+        roles: roleList.shift(),
+        name: app.name,
+        version: app.version,
+        url: app.url,
+      }
+    }
+    ctx.body = response
+  })
 }
 
 export async function find(ctx: Ctx<void, FindGlobalRoleResponse>) {
