@@ -10,7 +10,6 @@ export const CacheKey = {
   EVENTS: "events",
   BACKFILL_METADATA: "backfillMetadata",
   EVENTS_RATE_LIMIT: "eventsRateLimit",
-  RECAPTCHA_ENABLED: (appId: string) => `recaptchaEnabled_${appId}`,
   OAUTH2_TOKEN: (configId: string) => `oauth2Token_${configId}`,
 }
 
