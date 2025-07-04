@@ -5,17 +5,6 @@ import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
 import { db } from "@budibase/backend-core"
 
-jest.mock("@budibase/backend-core", () => {
-  const actual = jest.requireActual("@budibase/backend-core")
-  return {
-    ...actual,
-    db: {
-      ...actual.db,
-      Replication: actual.db.Replication,
-    },
-  }
-})
-
 describe("devRevertProcessor", () => {
   const config = new TestConfiguration()
 
@@ -71,15 +60,18 @@ describe("devRevertProcessor", () => {
     it("should recover from replication errors during rollback", async () => {
       await config.api.table.save(basicTable())
 
-      async function verifyDevApp(exists: boolean) {
-        expect(await db.dbExists(config.getAppId())).toBe(exists)
+      async function verifyDevAppExists() {
+        expect(await db.dbExists(config.getAppId())).toBe(true)
       }
 
-      const verifyDevAppExists = () => verifyDevApp(true)
+      let exceptionThrown = false
 
       const revertAppSpy = jest
         .spyOn(db.Replication.prototype, "replicate")
-        .mockRejectedValueOnce(new Error("Replication failed"))
+        .mockImplementationOnce(() => {
+          exceptionThrown = true
+          throw new Error("Replication failed")
+        })
 
       const processor = devRevertProcessor()
 
@@ -96,6 +88,7 @@ describe("devRevertProcessor", () => {
         result: { message: "Reverted changes successfully." },
       })
 
+      expect(exceptionThrown).toBe(true)
       expect(revertAppSpy).toHaveBeenCalledTimes(2)
       await verifyDevAppExists()
 
