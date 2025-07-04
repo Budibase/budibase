@@ -98,6 +98,10 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       }
 
       function execute() {
+        if (func.length === 1) {
+          // Simulating bull, if there is not a "done" callback, execution will resolve then the function is processed
+          return func(message)
+        }
         return new Promise((resolve, reject) => {
           const done: DoneCallback = (err?: Error | null, result?: any) => {
             if (err) {
