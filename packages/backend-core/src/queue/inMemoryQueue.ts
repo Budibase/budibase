@@ -57,6 +57,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     message: [TestQueueMessage<T>]
     completed: [Job<T>]
     removed: [TestQueueMessage<T>]
+    error: [Error]
   }>
   _runCount: number
   _addCount: number
@@ -139,6 +140,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
           this._messages.splice(indexToRemove, 1)
         } catch (e: any) {
           console.error(e)
+          this._emitter.emit("error", e)
         }
       }
       this._runCount++
@@ -205,7 +207,13 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     }
     return {
       id: jobId,
-      finished: () => this.whenCurrentJobsFinished(),
+      finished: () =>
+        new Promise((resolve, reject) => {
+          this._emitter.on("error", error => {
+            reject(error)
+          })
+          this.whenCurrentJobsFinished().then(resolve)
+        }),
     } as any
   }
 
