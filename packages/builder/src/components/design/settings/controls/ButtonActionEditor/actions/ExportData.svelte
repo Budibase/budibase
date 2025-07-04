@@ -113,7 +113,6 @@
       value={parameters.columns}
       allowCellEditing={false}
       componentInstance={selectedTable}
-      disabled={parameters.overrideExport}
       on:change={e => {
         const columns = e.detail
         parameters.columns = columns
@@ -125,12 +124,7 @@
         }, {})
       }}
     />
-    <span />
-    <span />
-    <Checkbox
-      text="Export whats visible on the screen"
-      bind:value={parameters.overrideExport}
-    />
+    {console.log(parameters.columns)}
   </div>
 </div>
 
