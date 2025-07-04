@@ -132,6 +132,7 @@ export async function startup(
     queuePromises.push(appMigrations.init())
   }
   queuePromises.push(initPro())
+  queuePromises.push(sdk.dev.init())
   if (app) {
     console.log("Initialising routes")
     // bring routes online as final step once everything ready

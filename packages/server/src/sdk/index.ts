@@ -19,6 +19,7 @@ import * as ai from "./app/ai"
 import * as workspaceApps from "./app/workspaceApps"
 import * as navigation from "./app/navigation"
 import * as resources from "./app/resources"
+import * as dev from "./dev"
 
 const sdk = {
   backups,
@@ -42,6 +43,7 @@ const sdk = {
   navigation,
   resources,
   deployment,
+  dev,
 }
 
 // default export for TS

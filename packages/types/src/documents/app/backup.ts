@@ -69,3 +69,8 @@ export interface AppBackupQueueData {
     createdBy?: string
   }
 }
+
+export interface DevRevertQueueData {
+  appId: string
+  userId?: string
+}
