@@ -10,7 +10,7 @@
 
   const getCount = (row: EnrichedUser | ParsedInvite) => {
     const appList = priviliged ? $appsStore.apps : row.apps
-    return (appList || []).length
+    return appList.length
   }
 </script>
 
