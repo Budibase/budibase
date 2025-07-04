@@ -451,6 +451,24 @@
     }
   }
 
+  const handleScrollToField = (props: { field: FieldInfo | string }) => {
+    let field
+    if (typeof props.field === "string") {
+      field = get(getField(props.field))
+    } else {
+      field = props.field
+    }
+    const fieldId = field.fieldState.fieldId
+    const fieldElement = document.getElementById(fieldId)
+    if (fieldElement) {
+      fieldElement.focus({ preventScroll: true })
+    }
+    const label = document.querySelector<HTMLElement>(`label[for="${fieldId}"]`)
+    if (label) {
+      label.style.scrollMargin = "100px"
+      label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    }
+  }
   // Action context to pass to children
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
