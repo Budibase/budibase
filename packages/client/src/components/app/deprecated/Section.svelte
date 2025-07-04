@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import Placeholder from "../Placeholder.svelte"
+  import { onMount } from "svelte"
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -16,8 +17,24 @@
     threeColumns: 3,
   }
 
+  let container
   let containerWidth
   $: columnsDependingOnSize = calculateColumns(containerWidth)
+
+  // Instead of svelte bind:clientWidth
+  // Svelte injects an iframe causing issues with CSP, this avoids it
+  const setupResizeObserver = element => {
+    const resizeObserver = new ResizeObserver(entries => {
+      if (!entries?.[0]) {
+        return
+      }
+      const element = entries[0].target
+      containerWidth = element.clientWidth
+    })
+
+    resizeObserver.observe(element)
+    return resizeObserver
+  }
 
   function calculateColumns(parentWidth) {
     const numberOfAllowedColumns = Math.floor(parentWidth / minSize) || 100
@@ -27,10 +44,17 @@
       return numberOfAllowedColumns
     }
   }
+
+  onMount(() => {
+    let resizeObserver = setupResizeObserver(container)
+    return () => {
+      resizeObserver.disconnect()
+    }
+  })
 </script>
 
 <div
-  bind:clientWidth={containerWidth}
+  bind:this={container}
   class="{type} columns-{columnsDependingOnSize}"
   use:styleable={$component.styles}
 >
