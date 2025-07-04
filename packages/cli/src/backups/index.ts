@@ -108,9 +108,9 @@ async function importBackup(opts: BackupOpts) {
 
 async function pickOne(opts: BackupOpts) {
   if (opts["import"]) {
-    return await importBackup(opts)
+    return importBackup(opts)
   } else if (opts["export"]) {
-    return await exportBackup(opts)
+    return exportBackup(opts)
   }
 }
 
