@@ -265,7 +265,8 @@
                 <div class="burger">
                   <Icon
                     hoverable
-                    name="dots-three-vertical"
+                    name="list"
+                    color="var(--navTextColor)"
                     on:click={() => (mobileOpen = !mobileOpen)}
                   />
                 </div>
@@ -284,9 +285,9 @@
                   />
                 {/if}
                 {#if !hideTitle && title}
-                  <Heading size={titleSize} {textAlign} color={titleColor}
-                    >{title}</Heading
-                  >
+                  <Heading size={titleSize} {textAlign} color={titleColor}>
+                    {title}
+                  </Heading>
                 {/if}
               </div>
               {#if !embedded}
@@ -309,6 +310,7 @@
                       text={navItem.text}
                       url={navItem.url}
                       subLinks={navItem.subLinks}
+                      icon={navItem.icon}
                       internalLink={navItem.internalLink}
                       customStyles={navItem._styles?.custom}
                       on:clickLink={handleClickLink}

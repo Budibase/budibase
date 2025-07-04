@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Popover, RadioGroup } from "@budibase/bbui"
+  import { Icon, Popover, RadioGroup, PhosphorIconPicker } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
@@ -13,6 +13,7 @@
   export let anchor
   export let navItem
   export let bindings
+
   let actionOptions = [
     {
       label: "Hide component",
@@ -102,6 +103,18 @@
       on:drawerShow={() => drawerCount++}
       on:drawerHide={() => drawerCount--}
     />
+    <PropertyControl
+      label="Icon"
+      control={PhosphorIconPicker}
+      value={navItem.icon}
+      onChange={update("icon")}
+      {bindings}
+      props={{
+        updateOnChange: false,
+      }}
+      on:drawerShow={() => drawerCount++}
+      on:drawerHide={() => drawerCount--}
+    />
     {#if navItem.type === "sublinks"}
       <PropertyControl
         label="Sub links"
@@ -173,7 +186,6 @@
     align-items: stretch;
     gap: 8px;
     padding: var(--spacing-xl);
-    max-height: 270px;
     overflow: scroll;
   }
   .settings :global(.property-group-container) {
