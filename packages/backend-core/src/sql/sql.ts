@@ -168,6 +168,13 @@ class InternalBuilder {
         field?.externalType?.includes("money")
       )
     },
+    POSTGRES_ENUM: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.POSTGRES &&
+        field?.externalType?.toLowerCase() === "user-defined" &&
+        field?.type === FieldType.OPTIONS
+      )
+    },
     MSSQL_DATES: (field: FieldSchema | undefined) => {
       return (
         this.client === SqlClient.MS_SQL &&
@@ -431,9 +438,9 @@ class InternalBuilder {
         return new Date(date)
       } else if (schema.ignoreTimezones) {
         if (isValidISODateString(input)) {
-          return new Date(input.trim())
+          return new Date(input)
         } else if (isValidISODateStringWithoutTimezone(input)) {
-          return new Date(input.trim() + "Z")
+          return new Date(input + "Z")
         } else {
           return null
         }
@@ -901,7 +908,14 @@ class InternalBuilder {
             `${value.toLowerCase()}%`,
           ])
         } else {
-          return q.whereILike(key, `${value}%`)
+          const schema = this.getFieldSchema(key)
+          if (this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema)) {
+            return q.whereRaw(`??::text ilike '${value}%'`, [
+              this.knex.raw(this.quote(schema!.name)),
+            ])
+          } else {
+            return q.whereILike(key, `${value}%`)
+          }
         }
       })
     }

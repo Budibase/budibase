@@ -48,6 +48,7 @@
   export let darkMode = false
   export let isCloud = null
   export let aiEnabled = false
+  export let canHideColumns = true
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -104,6 +105,7 @@
     darkMode,
     isCloud,
     aiEnabled,
+    canHideColumns,
   })
 
   // Derive min height and make available in context
@@ -216,7 +218,7 @@
     /* Variables */
     --accent-color: var(--primaryColor, var(--spectrum-global-color-blue-400));
     --grid-background: var(--spectrum-global-color-gray-50);
-    --grid-background-alt: var(--spectrum-global-color-gray-100);
+    --grid-background-alt: var(--background);
     --header-cell-background: var(
       --custom-header-cell-background,
       var(--spectrum-global-color-gray-100)
@@ -228,7 +230,7 @@
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
-    --cell-font-color: var(--spectrum-global-color-gray-800);
+    --cell-font-color: var(--spectrum-global-color-gray-900);
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -238,6 +240,7 @@
     overflow: hidden;
     background: var(--grid-background);
     min-height: var(--min-height);
+    font-weight: 500;
   }
   .grid,
   .grid :global(*) {

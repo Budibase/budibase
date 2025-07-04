@@ -19,7 +19,7 @@ export async function getFetchResponse(fetched: any) {
 // need to make sure all ctx structures have the
 // throw added to them, so that controllers don't
 // throw a ctx.throw undefined when error occurs
-// opts can contain, body, params and version
+// opts can contain, body, params, version, and user
 export function buildCtx(
   appId: string,
   emitter?: ContextEmitter | null,
@@ -27,7 +27,7 @@ export function buildCtx(
 ) {
   const ctx: any = {
     appId,
-    user: { appId },
+    user: opts.user || { appId },
     eventEmitter: emitter,
     throw: (code: string, error: any) => {
       throw error
