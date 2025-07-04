@@ -31,7 +31,12 @@ describe("DevRevertProcessor", () => {
     }
 
     await config.api.table.get(newDevTable._id!, { status: 200 })
-    await processor.execute(testData)
+    const result = await processor.execute(testData)
+
+    expect(result).toEqual({
+      success: true,
+      result: { message: "Reverted changes successfully." },
+    })
 
     await config.api.table.get(newDevTable._id!, { status: 404 })
   })

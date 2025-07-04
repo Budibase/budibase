@@ -55,9 +55,9 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   _queuedJobIds: Set<string>
   _emitter: NodeJS.EventEmitter<{
     message: [TestQueueMessage<T>]
-    completed: [Job<T>]
+    completed: [Job<T>, any]
     removed: [TestQueueMessage<T>]
-    error: [Error]
+    error: [Job<T>, Error]
   }>
   _runCount: number
   _addCount: number
@@ -116,7 +116,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
 
       async function retryFunc(fnc: any, attempt = 0) {
         try {
-          await fnc
+          return await fnc
         } catch (e: any) {
           attempt++
           if (attempt < maxAttempts) {
@@ -130,8 +130,8 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
 
       if (resp.then != null) {
         try {
-          await retryFunc(resp)
-          this._emitter.emit("completed", message as Job<T>)
+          const result = await retryFunc(resp)
+          this._emitter.emit("completed", message as Job<T>, result)
 
           const indexToRemove = this._messages.indexOf(message)
           if (indexToRemove === -1) {
@@ -140,7 +140,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
           this._messages.splice(indexToRemove, 1)
         } catch (e: any) {
           console.error(e)
-          this._emitter.emit("error", e)
+          this._emitter.emit("error", message as Job<T>, e)
         }
       }
       this._runCount++
@@ -183,9 +183,11 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       this._queuedJobIds.add(jobId)
     }
 
+    const messageId = newid()
+
     const pushMessage = () => {
       const message: TestQueueMessage = {
-        id: newid(),
+        id: messageId,
         timestamp: Date.now(),
         queue: this as unknown as Queue,
         data,
@@ -209,10 +211,19 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       id: jobId,
       finished: () =>
         new Promise((resolve, reject) => {
-          this._emitter.on("error", error => {
+          this._emitter.on("error", (job, error) => {
+            if (job.id !== messageId) {
+              return
+            }
             reject(error)
           })
-          this.whenCurrentJobsFinished().then(resolve)
+
+          this._emitter.on("completed", (job, result) => {
+            if (job.id !== messageId) {
+              return
+            }
+            resolve(result)
+          })
         }),
     } as any
   }
