@@ -142,7 +142,7 @@
       <section class="spectrum-Dialog-content">
         <div class="settings-nav">
           <div class="heading">Settings</div>
-          <Divider noMargin />
+          <Divider noMargin size={"S"} />
           <div class="groups">
             {#each groupEntries as [key, group], idx}
               {#if key !== "none"}
@@ -258,7 +258,7 @@
 
   .settings-nav {
     height: 100%;
-    background-color: var(--spectrum-global-color-gray-50);
+    background-color: var(--spectrum-global-color-gray-100);
     display: flex;
     flex-direction: column;
     border-top-left-radius: var(--spectrum-global-dimension-size-100);
@@ -270,6 +270,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    background-color: var(--spectrum-global-color-gray-200);
   }
 
   .settings-nav .heading {

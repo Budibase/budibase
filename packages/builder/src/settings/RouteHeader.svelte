@@ -13,7 +13,7 @@
     <div class="heading">
       {route?.section || ""}
     </div>
-    <Divider noMargin />
+    <Divider noMargin size={"S"} />
     <div class="page-heading">
       <div class="nav">
         {#each route?.nav as nav}
@@ -55,10 +55,13 @@
       </div>
     </Layout>
   {/if}
-  <Divider noMargin />
+  <Divider size={"S"} noMargin />
 </div>
 
 <style>
+  .route-header :global(hr) {
+    background-color: var(--spectrum-global-color-gray-100);
+  }
   .route-header {
     display: flex;
     flex-direction: column;
