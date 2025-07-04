@@ -344,61 +344,58 @@ const s3UploadHandler = async action => {
  * row selection store in combination with the tableComponentId parameter.
  */
 const exportDataHandler = async action => {
-  let {
-    tableComponentId,
-    rows,
-    type,
-    columns,
-    delimiter,
-    customHeaders,
-    overrideExport,
-  } = action.parameters
+  let { tableComponentId, rows, type, columns, delimiter, customHeaders } =
+    action.parameters
   let tableId
 
   // Handle no rows selected
   if (!rows?.length) {
     notificationStore.actions.error("Please select at least one row")
-  } else if (overrideExport) {
-    let cleanedRows = cleanExportRows(rows, type)
-    download(
-      new Blob([cleanedRows], { type: "text/plain" }),
-      `${tableComponentId}.${type}`
-    )
-  } else {
-    // Handle legacy configs using the row selection store
-    const selection = rowSelectionStore.actions.getSelection(tableComponentId)
-    if (selection?.selectedRows?.length) {
-      rows = selection.selectedRows
-      tableId = selection.tableId
-    }
+    return
+  }
 
-    // Get table ID from first row if needed
-    if (!tableId) {
-      tableId = rows?.[0]?.tableId
-    }
+  // Handle legacy configs using the row selection store
+  const selection = rowSelectionStore.actions.getSelection(tableComponentId)
+  if (selection?.selectedRows?.length) {
+    rows = selection.selectedRows
+    tableId = selection.tableId
+  }
 
-    // Handle case where we're not using a DS+
-    if (!tableId) {
-      notificationStore.actions.error(
-        "You can only export data from table datasources"
+  // Get table ID from first row if needed
+  if (!tableId) {
+    tableId = rows?.[0]?.tableId
+  }
+
+  // If still no tableId, fallback to raw rows export
+  if (!tableId) {
+    try {
+      const cleanedRows = cleanExportRows(rows, type)
+      download(
+        new Blob([cleanedRows], { type: "text/plain" }),
+        `${tableComponentId}.${type}`
       )
-    } else {
-      try {
-        // Flatten rows if required
-        if (typeof rows[0] !== "string") {
-          rows = rows.map(row => row._id)
-        }
-        const data = await API.exportRows(tableId, type, {
-          rows,
-          columns: columns?.map(column => column.name || column),
-          delimiter,
-          customHeaders,
-        })
-        download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
-      } catch (error) {
-        notificationStore.actions.error("There was an error exporting the data")
-      }
+    } catch (error) {
+      notificationStore.actions.error(
+        `Error exporting data: ${error.message || error}`
+      )
     }
+    return
+  }
+
+  try {
+    // Flatten rows if required
+    if (typeof rows[0] !== "string") {
+      rows = rows.map(row => row._id)
+    }
+    const data = await API.exportRows(tableId, type, {
+      rows,
+      columns: columns?.map(col => col.name || col),
+      delimiter,
+      customHeaders,
+    })
+    download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
+  } catch (error) {
+    notificationStore.actions.error("There was an error exporting the data")
   }
 }
 
