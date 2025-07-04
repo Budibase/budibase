@@ -177,14 +177,24 @@ export function parse(rows: Rows, table: Table): Rows {
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
       } else if (columnType === FieldType.DATETIME) {
         if (columnData && !columnSchema.timeOnly) {
-          if (!sql.utils.isValidISODateString(columnData)) {
-            let message = `Invalid format for field "${columnName}": "${columnData}".`
-            if (columnSchema.dateOnly) {
-              message += ` Date-only fields must be in the format "YYYY-MM-DD".`
-            } else {
-              message += ` Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".`
+          if (columnSchema.ignoreTimezones) {
+            if (!sql.utils.isValidISODateStringWithoutTimezone(columnData)) {
+              throw new HTTPError(
+                `Invalid format for field "${columnName}": "${columnData}". Datetime fields with ignoreTimezones must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SS".`,
+                400
+              )
             }
-            throw new HTTPError(message, 400)
+            parsedRow[columnName] = new Date(columnData.trim() + "Z")
+          } else {
+            if (!sql.utils.isValidISODateString(columnData)) {
+              let message = `Invalid format for field "${columnName}": "${columnData}".`
+              if (columnSchema.dateOnly) {
+                message += ` Date-only fields must be in the format "YYYY-MM-DD".`
+              } else {
+                message += ` Datetime fields must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SSZ".`
+              }
+              throw new HTTPError(message, 400)
+            }
           }
         }
         if (columnData && columnSchema.timeOnly) {

@@ -60,7 +60,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-800);
     transition: color 130ms ease-in-out;
   }
 
@@ -78,13 +78,15 @@
 
   .name {
     text-align: left;
-    font-size: var(--font-size-s);
-    font-weight: 600;
-    letter-spacing: 0.14px;
+    font-size: var(--spectrum-global-dimension-font-size-100);
+    color: var(--spectrum-global-color-gray-900);
+    letter-spacing: -0.02em;
+    font-weight: 500;
+    line-height: 20px;
+    font-size: 14px;
     flex: 1 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-transform: uppercase;
     white-space: nowrap;
     user-select: none;
   }
