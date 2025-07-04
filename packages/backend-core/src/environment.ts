@@ -202,6 +202,14 @@ const environment = {
   CLOUDFRONT_CDN: process.env.CLOUDFRONT_CDN,
   CLOUDFRONT_PRIVATE_KEY_64: process.env.CLOUDFRONT_PRIVATE_KEY_64,
   CLOUDFRONT_PUBLIC_KEY_ID: process.env.CLOUDFRONT_PUBLIC_KEY_ID,
+  /**
+   * When enabled, attachment URLs will be direct bucket URLs without signing (self-hosted only).
+   * This allows sharing attachment URLs externally without expiration.
+   * WARNING: Only enable this on self-hosted instances with public bucket access configured.
+   */
+  ATTACHMENT_URL_EXPIRY_DISABLED: selfHosted
+    ? process.env.ATTACHMENT_URL_EXPIRY_DISABLED
+    : false,
   BACKUPS_BUCKET_NAME:
     process.env.BACKUPS_BUCKET_NAME || DefaultBucketName.BACKUPS,
   APPS_BUCKET_NAME: process.env.APPS_BUCKET_NAME || DefaultBucketName.APPS,
@@ -264,6 +272,19 @@ const environment = {
     process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
   DISABLE_CONTENT_SECURITY_POLICY: process.env.DISABLE_CONTENT_SECURITY_POLICY,
   BSON_BUFFER_SIZE: parseIntSafe(process.env.BSON_BUFFER_SIZE),
+}
+
+// Configuration validation and warnings
+if (environment.ATTACHMENT_URL_EXPIRY_DISABLED) {
+  console.log(
+    "⚠️  WARNING: Attachment URLs are now DIRECT BUCKET URLs without signing."
+  )
+  console.log(
+    "   This requires your object storage bucket to be configured for public read access."
+  )
+  console.log(
+    "   Only enable this on self-hosted instances with proper bucket security configured."
+  )
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {

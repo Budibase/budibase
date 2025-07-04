@@ -1,5 +1,6 @@
 import * as app from "../app"
 import { testEnv } from "../../../../tests/extra"
+import env from "../../../environment"
 
 describe("app", () => {
   beforeEach(() => {
@@ -155,6 +156,83 @@ describe("app", () => {
             )
           ).toBe(true)
         })
+      })
+    })
+  })
+
+  describe("getAppFileUrl with direct URLs", () => {
+    function getAppFileUrl() {
+      return app.getAppFileUrl("app_123/attachments/image.jpeg")
+    }
+
+    beforeAll(() => {
+      testEnv.selfHosted()
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    describe("direct URL generation", () => {
+      it("should return direct MinIO URL when expiry disabled", async () => {
+        testEnv.withMinio()
+        env._set("ATTACHMENT_URL_EXPIRY_DISABLED", "1")
+
+        const url = await getAppFileUrl()
+        expect(url).toBe(
+          "http://minio.example.com/prod-budi-app-assets/app_123/attachments/image.jpeg"
+        )
+      })
+
+      it("should still return signed URLs when expiry not disabled", async () => {
+        testEnv.withMinio()
+        env._set("ATTACHMENT_URL_EXPIRY_DISABLED", undefined)
+
+        const url = await getAppFileUrl()
+        expect(url).toBe(
+          "/files/signed/prod-budi-app-assets/app_123/attachments/image.jpeg"
+        )
+      })
+    })
+  })
+
+  describe("getAppFileUrl with MinIO integration", () => {
+    const testFileName = "test-app-123/attachments/test-image.png"
+
+    beforeAll(() => {
+      testEnv.selfHosted()
+    })
+
+    afterEach(async () => {
+      jest.restoreAllMocks()
+    })
+
+    describe("non-expiring URL functionality", () => {
+      it("should generate non-expiring MinIO URL when expiry disabled", async () => {
+        testEnv.withMinio()
+        env._set("ATTACHMENT_URL_EXPIRY_DISABLED", "1")
+
+        const url = await app.getAppFileUrl(testFileName)
+        expect(url).toBe(
+          `http://minio.example.com/prod-budi-app-assets/${testFileName}`
+        )
+
+        // Verify the URL structure is correct
+        const urlObj = new URL(url)
+        expect(urlObj.hostname).toBe("minio.example.com")
+        expect(urlObj.pathname).toBe(`/prod-budi-app-assets/${testFileName}`)
+      })
+
+      it("should generate signed URL when expiry not disabled", async () => {
+        testEnv.withMinio()
+        env._set("ATTACHMENT_URL_EXPIRY_DISABLED", undefined)
+
+        // Get the signed URL
+        const url = await app.getAppFileUrl(testFileName)
+        expect(url).toBe(`/files/signed/prod-budi-app-assets/${testFileName}`)
+
+        // Verify it's a signed URL format
+        expect(url).toContain("/files/signed/")
       })
     })
   })

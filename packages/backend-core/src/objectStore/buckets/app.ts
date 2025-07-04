@@ -49,7 +49,27 @@ export async function getAppFileUrl(s3Key: string) {
   if (env.CLOUDFRONT_CDN) {
     return cloudfront.getPresignedUrl(s3Key)
   } else {
-    return await objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, s3Key)
+    if (env.ATTACHMENT_URL_EXPIRY_DISABLED) {
+      // Return direct bucket URL without signing
+      const sanitizedKey = objectStore.sanitizeKey(s3Key)
+      const bucketName = objectStore.sanitizeBucket(env.APPS_BUCKET_NAME)
+
+      if (env.MINIO_URL) {
+        // For MinIO/custom S3 endpoint, construct direct URL
+        return `${env.MINIO_URL}/${bucketName}/${sanitizedKey}`
+      } else {
+        // For AWS S3, construct direct URL
+        const region = env.AWS_REGION || "us-east-1"
+        return `https://${bucketName}.s3.${region}.amazonaws.com/${sanitizedKey}`
+      }
+    } else {
+      // Use signed URL with default TTL
+      return await objectStore.getPresignedUrl(
+        env.APPS_BUCKET_NAME,
+        s3Key,
+        3600
+      )
+    }
   }
 }
 
