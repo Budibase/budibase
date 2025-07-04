@@ -22,5 +22,12 @@
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>
-  <Checkbox {disabled} {text} {value} {size} {indeterminate} on:change={onChange} />
+  <Checkbox
+    {disabled}
+    {text}
+    {value}
+    {size}
+    {indeterminate}
+    on:change={onChange}
+  />
 </Field>

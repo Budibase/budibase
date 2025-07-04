@@ -68,7 +68,9 @@ export function hasAppBuilderPermissions(user?: UserBuilderInfo): boolean {
   return !isGlobalBuilder && appLength != null && appLength > 0
 }
 
-export function hasAppCreatorPermissions(user?: Partial<UserRoleInfo>): boolean {
+export function hasAppCreatorPermissions(
+  user?: Partial<UserRoleInfo>
+): boolean {
   if (!user) {
     return false
   }
