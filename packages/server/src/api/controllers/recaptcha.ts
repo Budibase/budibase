@@ -5,8 +5,7 @@ import {
   CheckRecaptchaResponse,
   RecaptchaSessionCookie,
 } from "@budibase/types"
-import env from "../../environment"
-import { utils, Cookie } from "@budibase/backend-core"
+import { utils, Cookie, configs } from "@budibase/backend-core"
 import {
   setRecaptchaVerified,
   isRecaptchaVerified,
@@ -21,11 +20,9 @@ export async function verify(
     throw new Error("Token not found")
   }
 
-  // keys not available, not supported
-  // TODO: get keys from app settings
-  if (!env.RECAPTCHA_SECRET_KEY) {
-    ctx.status = 501
-    return
+  const config = await configs.getRecaptchaConfig()
+  if (!config) {
+    throw new Error("No recaptcha config found")
   }
 
   const response = await fetch(
@@ -36,7 +33,7 @@ export async function verify(
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        secret: env.RECAPTCHA_SECRET_KEY,
+        secret: config.config.secretKey,
         response: token,
       }),
     }

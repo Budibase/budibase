@@ -11,6 +11,7 @@ import {
   events,
   objectStore,
   tenancy,
+  context,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
@@ -33,7 +34,6 @@ import {
   OIDCConfigs,
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
-  RecaptchaConfig,
   RecaptchaInnerConfig,
   SaveConfigRequest,
   SaveConfigResponse,
@@ -290,6 +290,8 @@ export async function processRecaptchaConfig(
   if (config.secretKey === PASSWORD_REPLACEMENT && existingConfig) {
     config.secretKey = existingConfig.secretKey
   }
+  const appId = context.getProdAppId()
+  await cache.bustCache(cache.CacheKey.RECAPTCHA_ENABLED(appId))
 }
 
 export async function save(

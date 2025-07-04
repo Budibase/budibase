@@ -32,6 +32,7 @@ import {
   tenancy,
   users,
   utils,
+  configs,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -292,10 +293,13 @@ export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
   const appId = context.getAppId()
-  const application = await sdk.applications.metadata.get()
-  const layouts = await getLayouts()
-  let screens = await sdk.screens.fetch()
-  const license = await licensing.cache.getCachedLicense()
+  let [application, layouts, screens, license, recaptchaConfig] = await Promise.all([
+    sdk.applications.metadata.get(),
+    getLayouts(),
+    sdk.screens.fetch(),
+    licensing.cache.getCachedLicense(),
+    configs.getRecaptchaConfig()
+  ])
 
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
@@ -347,7 +351,7 @@ export async function fetchAppPackage(
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
-    recaptchaKey: env.RECAPTCHA_SITE_KEY,
+    recaptchaKey: recaptchaConfig?.config.siteKey,
   }
 }
 

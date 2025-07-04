@@ -1,12 +1,11 @@
 import { Ctx, RecaptchaSessionCookie } from "@budibase/types"
-import { utils, Cookie } from "@budibase/backend-core"
+import { utils, Cookie, configs } from "@budibase/backend-core"
 import { Next } from "koa"
-import env from "../environment"
 import { isRecaptchaVerified } from "../utilities/redis"
 
 const middleware = async (ctx: Ctx, next: Next) => {
-  // TODO: need to check this per app
-  if (env.RECAPTCHA_SITE_KEY) {
+  const enabled = await configs.recaptchaEnabled()
+  if (enabled) {
     const cookie = utils.getCookie<RecaptchaSessionCookie>(
       ctx,
       Cookie.RecaptchaSession
