@@ -316,7 +316,6 @@
   /* Icon and colour alignment */
   .check {
     display: none;
-    margin-right: -8px;
     padding-left: 8px;
   }
   li.is-selected .check {
@@ -335,7 +334,7 @@
   }
   .popover-content.auto-width .spectrum-Menu-itemLabel {
     white-space: nowrap;
-    overflow: none;
+    overflow: hidden;
     text-overflow: ellipsis;
   }
   .popover-content:not(.auto-width) .spectrum-Menu-itemLabel {
