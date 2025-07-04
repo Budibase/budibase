@@ -5,42 +5,24 @@ export function cleanExportRows(
   format: "csv" | "json",
   columns?: { name: string }[]
 ): string {
-  let filteredRows: Row[] = rows
-  let schemaKeys: string[]
+  const schemaKeys = columns?.length
+    ? columns.map(c => c.name)
+    : Array.from(new Set(rows.flatMap(row => Object.keys(row))))
 
-  if (columns && columns.length > 0) {
-    // Build schema from provided column names
-    schemaKeys = columns.map(c => c.name)
-
-    // Filter rows to contain only keys in schema
-    filteredRows = rows.map(row => {
-      const filteredRow: Row = {}
-      for (const key of schemaKeys) {
-        filteredRow[key] = key in row ? row[key] : ""
-      }
-      return filteredRow
-    })
-  } else {
-    // Build unified schema from all keys across all rows
-    schemaKeys = Array.from(new Set(rows.flatMap(row => Object.keys(row))))
-
-    // Normalize rows to ensure all have the same keys
-    filteredRows = rows.map(row => {
-      const normalizedRow: Row = {}
-      for (const key of schemaKeys) {
-        normalizedRow[key] = key in row ? row[key] : ""
-      }
-      return normalizedRow
-    })
-  }
+  // Build filtered/normalized rows to match schema
+  const filteredRows = rows.map(row =>
+    schemaKeys.reduce((acc: Row, key) => {
+      acc[key] = key in row ? row[key] : ""
+      return acc
+    }, {})
+  )
 
   if (format === "csv") {
     return rowsToCsv(filteredRows, schemaKeys)
   } else if (format === "json") {
-    return JSON.stringify(filteredRows, null, 2) // indented by 2 spaces
-  } else {
-    throw new Error(`Unsupported format: ${format}`)
+    return JSON.stringify(filteredRows, null, 2)
   }
+  throw new Error(`Unsupported format: ${format}`)
 }
 /**
  * Escapes a value for CSV export.
@@ -49,22 +31,19 @@ export function cleanExportRows(
  * - Converts null/undefined to empty string
  * - Converts objects to JSON strings
  */
-function escapeCsvValue(value, delimiter = ",") {
+function escapeCsvValue(value: unknown, delimiter = ",") {
   if (value === null || value === undefined) return ""
 
   if (typeof value === "object") {
-    if ("primaryDisplay" in value)
-      return escapeCsvValue(value.primaryDisplay, delimiter)
-
-    return escapeCsvValue(JSON.stringify(value), delimiter)
+    // Always serialize the whole object as JSON if it's an object
+    value = JSON.stringify(value)
   }
 
   let str = String(value)
-
+  // Replace line breaks to keep value on one CSV line
   str = str.replace(/[\r\n]+/g, " ")
 
-  const needsQuotes =
-    str.includes(delimiter) || str.includes('"') || str.includes(",")
+  const needsQuotes = str.includes(delimiter) || str.includes('"')
   if (needsQuotes) {
     str = str.replace(/"/g, '""')
     return `"${str}"`
