@@ -94,8 +94,8 @@
     display: grid;
     place-items: center;
   }
-  .is-disabled .key {
-    color: var(--spectrum-global-color-gray-600);
+  .is-disabled span {
+    color: var(--spectrum-global-color-gray-600) !important;
   }
   .spectrum-Menu-itemLabel {
     color: var(--spectrum-global-color-gray-900) !important;
