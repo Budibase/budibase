@@ -1,14 +1,23 @@
 <script lang="ts">
-  import { sideBarCollapsed, enrichedApps, featureFlags } from "@/stores/portal"
+  import {
+    sideBarCollapsed,
+    enrichedApps,
+    agentsStore,
+    featureFlags,
+    appCreationStore,
+    licensing,
+  } from "@/stores/portal"
   import { params, goto, page } from "@roxi/routify"
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
+  import AppLimitModal from "@/components/portal/licensing/AppLimitModal.svelte"
   import { Helpers } from "@budibase/bbui"
 
   let searchString: string
   let onAgents: boolean = $page.path.endsWith("/agents")
   let openedApp: string | undefined
+  let appLimitModal: AppLimitModal
 
   $: filteredApps = $enrichedApps.filter(app => {
     return (
@@ -17,6 +26,14 @@
     )
   })
   $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
+
+  const handleAppCreation = () => {
+    if ($licensing?.usageMetrics?.apps && $licensing.usageMetrics.apps >= 100) {
+      appLimitModal.show()
+    } else {
+      appCreationStore.showCreateModal()
+    }
+  }
 </script>
 
 <div class="side-bar" class:collapsed={$sideBarCollapsed}>
@@ -25,7 +42,7 @@
       title={Helpers.capitalise(appsOrWorkspaces)}
       placeholder={`Search for ${appsOrWorkspaces}`}
       bind:value={searchString}
-      onAdd={() => $goto("./create")}
+      onAdd={handleAppCreation}
     />
   </div>
   <div class="side-bar-nav">
@@ -48,7 +65,51 @@
       </span>
     {/each}
   </div>
+  {#if $featureFlags.AI_AGENTS}
+    <div class="side-bar-controls">
+      <NavHeader
+        title="Chats"
+        placeholder="Search for agent chats"
+        bind:value={searchString}
+        onAdd={() => $goto("./agents")}
+      />
+    </div>
+    <div class="side-bar-nav">
+      <NavItem
+        icon="flow-arrow"
+        text="All chats"
+        on:click={() => {
+          openedApp = undefined
+          onAgents = true
+          agentsStore.clearCurrentChatId()
+          $goto("./agents")
+        }}
+        selected={!$params.appId &&
+          !openedApp &&
+          !$agentsStore.currentChatId &&
+          onAgents}
+      />
+      {#each $agentsStore.chats as chat}
+        {@const selected = $agentsStore.currentChatId === chat._id}
+        <span class="side-bar-app-entry" class:actionsOpen={selected}>
+          <NavItem
+            icon="git-branch"
+            text={chat.title}
+            on:click={() => {
+              onAgents = true
+              openedApp = undefined
+              agentsStore.setCurrentChatId(chat._id || "")
+              $goto("./agents")
+            }}
+            {selected}
+          />
+        </span>
+      {/each}
+    </div>
+  {/if}
 </div>
+
+<AppLimitModal bind:this={appLimitModal} />
 
 <style>
   .side-bar {
