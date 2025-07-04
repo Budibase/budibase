@@ -150,9 +150,11 @@ export class BudibaseQueue<T> {
 
   process(
     concurrency: number,
-    cb: (job: Job<T>, done: DoneCallback) => Promise<void>
+    cb: (job: Job<T>, done?: DoneCallback) => Promise<void>
   ): Promise<void>
-  process(cb: (job: Job<T>, done: DoneCallback) => Promise<void>): Promise<void>
+  process(
+    cb: (job: Job<T>, done?: DoneCallback) => Promise<void>
+  ): Promise<void>
   process(...args: any[]) {
     let concurrency: number | undefined = undefined
     let cb: (job: Job<T>, done?: DoneCallback) => Promise<void>
@@ -163,7 +165,7 @@ export class BudibaseQueue<T> {
       cb = args[0]
     }
 
-    const wrappedCb = async (job: Job<T>, done: DoneCallback) => {
+    const processCallback = async (job: Job<T>, done?: DoneCallback) => {
       await tracer.trace("queue.process", async span => {
         // @ts-expect-error monkey patching the parent span id
         if (job.data._parentSpanContext) {
@@ -188,8 +190,21 @@ export class BudibaseQueue<T> {
           sizeof(job.data),
           this.metricTags()
         )
-        await this.withMetrics("queue.process", () => cb(job, done))
+        await this.withMetrics("queue.process", () => {
+          if (done) {
+            return cb(job, done)
+          }
+          return cb(job)
+        })
       })
+    }
+
+    let wrappedCb
+    if (cb.length === 1) {
+      // If we pass a second parameter to the callback for queue.process, the call to done will be expected
+      wrappedCb = (job: Job<T>) => processCallback(job)
+    } else {
+      wrappedCb = processCallback
     }
 
     if (concurrency) {
