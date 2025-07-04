@@ -18,7 +18,7 @@ import { API } from "@/api"
 import { ActionTypes, PeekMessages } from "@/constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
-import { cleanExportRows } from "@budibase/shared-core"
+import { convertDataToExportFormat } from "@budibase/shared-core"
 
 // Default action handler, which extracts an action from context that was
 // provided by another component and executes it with all action parameters
@@ -369,7 +369,12 @@ const exportDataHandler = async action => {
   // If still no tableId, fallback to raw rows export
   if (!tableId) {
     try {
-      const cleanedRows = cleanExportRows(rows, type, columns, delimiter)
+      const cleanedRows = convertDataToExportFormat(
+        rows,
+        type,
+        columns,
+        delimiter
+      )
       download(
         new Blob([cleanedRows], { type: "text/plain" }),
         `${tableComponentId}.${type}`

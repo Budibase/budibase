@@ -1,6 +1,6 @@
 import { Row } from "@budibase/types"
 
-export function cleanExportRows(
+export function convertDataToExportFormat(
   rows: Row[],
   format: "csv" | "json",
   columns?: { name: string }[],
