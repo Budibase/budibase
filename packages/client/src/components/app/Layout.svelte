@@ -74,7 +74,6 @@
   setContext("layout", store)
 
   $: enrichedNavItems = enrichNavItems(links, $roleStore)
-  $: console.log(enrichedNavItems)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
   $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
