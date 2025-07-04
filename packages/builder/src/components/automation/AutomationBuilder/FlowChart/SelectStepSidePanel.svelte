@@ -285,11 +285,15 @@
                     <Icon
                       name={action.icon}
                       size="M"
-                      color="rgb(142, 185, 252)"
+                      color="var(--spectrum-global-color-static-gray-50)"
                     />
                   </div>
                 {/if}
-                <Body size="S" weight="400">
+                <Body
+                  size="S"
+                  weight="500"
+                  color="var(--spectrum-global-color-gray-900)"
+                >
                   {action.internal === false
                     ? action.stepTitle ||
                       idx.charAt(0).toUpperCase() + idx.slice(1)
@@ -328,7 +332,12 @@
                   <Icon name={action.icon} size="M" />
                 </div>
                 <div class="item-label">
-                  <Body size="S" weight="400">{action.name}</Body>
+                  <Body
+                    size="S"
+                    weight="500"
+                    color="var(--spectrum-global-color-gray-900)"
+                    >{action.name}</Body
+                  >
                 </div>
               </div>
             </div>
@@ -392,10 +401,10 @@
     cursor: pointer;
   }
   .icon-container {
-    background-color: rgba(75, 117, 255, 0.2);
-    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    background-color: #215f9e;
+    border: 0.5px solid #467db4;
     padding: 4px;
-    border-radius: 6px;
+    border-radius: 8px;
   }
   .item:not(.disabled):hover,
   .selected {
