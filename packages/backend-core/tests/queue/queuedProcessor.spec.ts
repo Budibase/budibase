@@ -91,7 +91,7 @@ describe("QueuedProcessor", () => {
       expect(processor.processFn).toHaveBeenCalledTimes(3)
     })
 
-    it.only("should handle mixed success and failure jobs", async () => {
+    it("should handle mixed success and failure jobs", async () => {
       processor.processFn
         .mockRejectedValueOnce(new Error("failed"))
         .mockResolvedValueOnce({ result: "success" })
