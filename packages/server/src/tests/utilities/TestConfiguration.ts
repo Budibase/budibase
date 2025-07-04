@@ -357,8 +357,8 @@ export default class TestConfiguration {
     const resp = await db.put(user)
     await cache.user.invalidateUser(_id)
     return {
-      _rev: resp.rev,
       ...user,
+      _rev: resp.rev,
     }
   }
 

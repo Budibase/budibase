@@ -27,10 +27,6 @@ router
   .get("/app/service-worker.js", controller.serveServiceWorker)
   .get("/app/:appUrl/:path*", controller.serveApp)
   .get("/:appId/:path*", controller.serveApp)
-  .post(
-    "/api/attachments/:datasourceId/url",
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
-    controller.getSignedUploadURL
-  )
+  .post("/api/attachments/:datasourceId/url", controller.getSignedUploadURL)
 
 export default router
