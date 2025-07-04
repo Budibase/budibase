@@ -5,8 +5,12 @@ import {
   events,
   queue,
 } from "@budibase/backend-core"
-import { App, DevRevertQueueData, DocumentType } from "@budibase/types"
-import env from "../../environment"
+import {
+  App,
+  DeploymentDoc,
+  DevRevertQueueData,
+  DocumentType,
+} from "@budibase/types"
 
 let _devRevertProcessor: DevRevertProcessor | undefined
 
@@ -21,7 +25,7 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
     })
   }
 
-  processFn = async (
+  protected processFn = async (
     data: DevRevertQueueData
   ): Promise<{ message: string }> => {
     return await context.doInAppContext(data.appId, () => this.revertApp(data))
@@ -40,7 +44,9 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
       if (!exists) {
         throw new Error("App must be deployed to be reverted.")
       }
-      const deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
+      const deploymentDoc = await db.get<DeploymentDoc>(
+        DocumentType.DEPLOYMENTS
+      )
       if (
         !deploymentDoc.history ||
         Object.keys(deploymentDoc.history).length === 0
@@ -57,10 +63,7 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
     })
 
     try {
-      if (env.COUCH_DB_URL) {
-        // in-memory db stalls on rollback
-        await replication.rollback()
-      }
+      await replication.rollback()
 
       // update appID in reverted app to be dev version again
       const db = context.getAppDB()
