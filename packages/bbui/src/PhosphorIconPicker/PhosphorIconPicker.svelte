@@ -27,7 +27,7 @@
     return PhosphorIcons.filter(icon => icon.includes(lower))
   }
 
-  const onChange = (value: string | undefined) => {
+  const onChange = (value?: string) => {
     dispatch("change", value)
     open = false
   }
