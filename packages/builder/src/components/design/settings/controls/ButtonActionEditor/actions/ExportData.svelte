@@ -1,5 +1,5 @@
 <script>
-  import { Label, Select, Body, Checkbox } from "@budibase/bbui"
+  import { Label, Select, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import ColumnEditor from "../../ColumnEditor/ColumnEditor.svelte"
   import { findAllMatchingComponents } from "@/helpers/components"
