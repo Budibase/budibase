@@ -6,7 +6,7 @@
   import { createEventDispatcher } from "svelte"
   import { PhosphorIcons } from "./icons"
   import TextField from "../Form/Core/TextField.svelte"
-  import { Body } from "@budibase/bbui"
+  import { ActionButton, Body } from "@budibase/bbui"
 
   export let value: string | undefined
   export let alignRight: boolean = false
@@ -16,7 +16,18 @@
 
   const dispatch = createEventDispatcher()
 
-  const onChange = (value: string) => {
+  $: icons = searchIcons(searchString)
+
+  const searchIcons = (searchString: string) => {
+    console.log(searchString)
+    if (!searchString) {
+      return PhosphorIcons
+    }
+    const lower = searchString.toLowerCase()
+    return PhosphorIcons.filter(icon => icon.includes(lower))
+  }
+
+  const onChange = (value: string | undefined) => {
     dispatch("change", value)
     open = false
   }
@@ -27,19 +38,27 @@
       open = false
     }
   }
+
+  const openPicker = () => {
+    searchString = ""
+    open = true
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="container">
-  <div class="preview" on:click={() => (open = true)}>
-    <div
-      class="fill"
-      style={value ? `background: ${value};` : ""}
-      class:placeholder={!value}
-    >
-      <Icon name={value || "users-three"} />
-    </div>
+  <div class="preview">
+    <ActionButton on:click={openPicker}>
+      {#if value}
+        <Icon name={value || "users-three"} />
+      {:else}
+        Choose icon
+      {/if}
+    </ActionButton>
+    {#if value}
+      <Icon name="x" size="S" hoverable on:click={() => onChange()} />
+    {/if}
   </div>
   {#if open}
     <div
@@ -50,25 +69,35 @@
     >
       <TextField
         quiet
-        bind:value={searchString}
+        value={searchString}
+        on:change={e => (searchString = e.detail)}
         autocomplete={false}
         placeholder="Search icons"
+        autofocus
       />
-      <div class="icons">
-        {#each PhosphorIcons.slice(0, 250) as icon}
-          <div
-            class="icon"
-            on:click={() => {
-              onChange(icon)
-            }}
-          >
-            <Icon name={icon} />
-          </div>
-        {/each}
-      </div>
-      <Body color="var(--spectrum-global-color-gray-600)" size="XS">
-        Enter a search string to find more icons
-      </Body>
+      {#if icons.length}
+        <div class="icons">
+          {#each icons.slice(0, 250) as icon}
+            <div
+              class="icon"
+              on:click={() => {
+                onChange(icon)
+              }}
+            >
+              <Icon name={icon} />
+            </div>
+          {/each}
+        </div>
+        {#if !searchString}
+          <Body color="var(--spectrum-global-color-gray-600)" size="XS">
+            Search to find more icons
+          </Body>
+        {/if}
+      {:else}
+        <Body color="var(--spectrum-global-color-gray-600)" size="XS">
+          No icons found
+        </Body>
+      {/if}
     </div>
   {/if}
 </div>
@@ -78,23 +107,8 @@
     position: relative;
   }
   .preview {
-    width: 32px;
-    height: 32px;
-    position: relative;
-    box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-400);
-    border-radius: 4px;
-  }
-  .preview:hover {
-    cursor: pointer;
-  }
-  .fill {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: grid;
-    place-items: center;
+    display: flex;
+    gap: 8px;
   }
   .spectrum-Popover {
     width: 220px;
