@@ -94,10 +94,10 @@
     display: grid;
     place-items: center;
   }
-  .is-disabled span {
-    color: var(--spectrum-global-color-gray-600) !important;
+  .is-disabled .spectrum-Menu-itemLabel {
+    color: var(--spectrum-global-color-gray-600);
   }
   .spectrum-Menu-itemLabel {
-    color: var(--spectrum-global-color-gray-900) !important;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>
