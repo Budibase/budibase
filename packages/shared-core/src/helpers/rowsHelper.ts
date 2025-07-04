@@ -3,7 +3,8 @@ import { Row } from "@budibase/types"
 export function cleanExportRows(
   rows: Row[],
   format: "csv" | "json",
-  columns?: { name: string }[]
+  columns?: { name: string }[],
+  delimiter = ","
 ): string {
   const schemaKeys = columns?.length
     ? columns.map(c => c.name)
@@ -18,7 +19,7 @@ export function cleanExportRows(
   )
 
   if (format === "csv") {
-    return rowsToCsv(filteredRows, schemaKeys)
+    return rowsToCsv(filteredRows, schemaKeys, delimiter)
   } else if (format === "json") {
     return JSON.stringify(filteredRows, null, 2)
   }
@@ -31,7 +32,7 @@ export function cleanExportRows(
  * - Converts null/undefined to empty string
  * - Converts objects to JSON strings
  */
-function escapeCsvValue(value: unknown, delimiter = ",") {
+function escapeCsvValue(value: unknown, delimiter = ","): string {
   if (value === null || value === undefined) return ""
 
   if (typeof value === "object") {
@@ -56,10 +57,10 @@ function escapeCsvValue(value: unknown, delimiter = ",") {
  * - Uses the provided headers to determine column order
  * - Escapes values appropriately for CSV format
  */
-function rowsToCsv(rows: Row[], headers: string[]): string {
-  const headerLine = headers.join(",")
+function rowsToCsv(rows: Row[], headers: string[], delimiter = ","): string {
+  const headerLine = headers.join(delimiter)
   const dataLines = rows.map(row =>
-    headers.map(h => escapeCsvValue(row[h])).join(",")
+    headers.map(h => escapeCsvValue(row[h], delimiter)).join(delimiter)
   )
 
   return [headerLine, ...dataLines].join("\n")

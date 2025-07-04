@@ -369,7 +369,7 @@ const exportDataHandler = async action => {
   // If still no tableId, fallback to raw rows export
   if (!tableId) {
     try {
-      const cleanedRows = cleanExportRows(rows, type, columns)
+      const cleanedRows = cleanExportRows(rows, type, columns, delimiter)
       download(
         new Blob([cleanedRows], { type: "text/plain" }),
         `${tableComponentId}.${type}`
