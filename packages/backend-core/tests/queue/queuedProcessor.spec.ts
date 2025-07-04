@@ -48,12 +48,16 @@ describe("QueuedProcessor", () => {
     })
 
     it("should return timeout when job times out", async () => {
-      const processor = new TestProcessor({ waitForCompletionMs: 10 })
+      const processor = new TestProcessor({ waitForCompletionMs: 1 })
       processor.processFn.mockResolvedValue(new Promise(() => {})) // Never resolves
 
-      const result = await processor.execute(testData)
+      try {
+        const result = await processor.execute(testData)
 
-      expect(result).toEqual({ success: false, reason: "timeout" })
+        expect(result).toEqual({ success: false, reason: "timeout" })
+      } finally {
+        await processor.close(true)
+      }
     })
 
     it("should throw job processing errors", async () => {

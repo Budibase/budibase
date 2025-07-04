@@ -234,8 +234,8 @@ export class BudibaseQueue<T> {
     return { queueName: this.jobQueue }
   }
 
-  close() {
-    return this.queue.close()
+  close(doNotWaitJobs?: boolean) {
+    return this.queue.close(doNotWaitJobs)
   }
 
   whenCurrentJobsFinished() {

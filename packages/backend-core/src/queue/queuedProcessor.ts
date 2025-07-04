@@ -45,8 +45,8 @@ export abstract class QueuedProcessor<T> {
     })
   }
 
-  async close() {
-    await this._queue.close()
+  async close(doNotWaitJobs?: boolean) {
+    await this._queue.close(doNotWaitJobs)
   }
 
   protected abstract processFn: (data: T) => Promise<any>
