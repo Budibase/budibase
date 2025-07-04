@@ -19,6 +19,11 @@
   $: canEditBaseUrl =
     config.provider &&
     ConfigMap[config.provider as keyof typeof ConfigMap].baseUrl === ""
+
+  $: placeholder =
+    config.provider === "AzureOpenAI"
+      ? "https://<name>.openai.azure.com/openai/deployments/<deployment>"
+      : "https://budibase.ai"
 </script>
 
 <ModalContent
@@ -42,19 +47,21 @@
     <Label size="M">Base URL</Label>
     <Input
       disabled={!canEditBaseUrl}
-      placeholder={"https://budibase.ai"}
+      {placeholder}
       bind:value={config.baseUrl}
     />
   </div>
 
-  <div class="form-row">
-    <Label size="M">Default Model</Label>
-    <Select
-      placeholder={config.provider ? "Choose an option" : "Select a provider"}
-      bind:value={config.defaultModel}
-      options={Models}
-    />
-  </div>
+  {#if config.provider !== "AzureOpenAI"}
+    <div class="form-row">
+      <Label size="M">Default Model</Label>
+      <Select
+        placeholder={config.provider ? "Choose an option" : "Select a provider"}
+        bind:value={config.defaultModel}
+        options={Models}
+      />
+    </div>
+  {/if}
 </ModalContent>
 
 <style>
