@@ -124,7 +124,6 @@
         }, {})
       }}
     />
-    {console.log(parameters.columns)}
   </div>
 </div>
 
