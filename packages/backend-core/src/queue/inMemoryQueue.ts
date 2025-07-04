@@ -106,11 +106,9 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
               resolve(result)
             }
           }
-          return func(message, done)
+          func(message, done)
         })
       }
-
-      const resp = execute()
 
       const maxAttempts = this._attempts
 
@@ -121,28 +119,27 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
           attempt++
           if (attempt < maxAttempts) {
             await helpers.wait(100 * attempt)
-            await retryFunc(execute(), attempt)
+            return await retryFunc(execute(), attempt)
           } else {
             throw e
           }
         }
       }
 
-      if (resp.then != null) {
-        try {
-          const result = await retryFunc(resp)
-          this._emitter.emit("completed", message as Job<T>, result)
+      try {
+        const result = await retryFunc(execute())
+        this._emitter.emit("completed", message as Job<T>, result)
 
-          const indexToRemove = this._messages.indexOf(message)
-          if (indexToRemove === -1) {
-            throw "Failed deleting a processed message"
-          }
-          this._messages.splice(indexToRemove, 1)
-        } catch (e: any) {
-          console.error(e)
-          this._emitter.emit("error", message as Job<T>, e)
+        const indexToRemove = this._messages.indexOf(message)
+        if (indexToRemove === -1) {
+          throw "Failed deleting a processed message"
         }
+        this._messages.splice(indexToRemove, 1)
+      } catch (e: any) {
+        console.error(e)
+        this._emitter.emit("error", message as Job<T>, e)
       }
+
       this._runCount++
       const jobId = message.opts?.jobId?.toString()
       if (jobId && message.opts?.removeOnComplete) {

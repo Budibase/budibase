@@ -4,7 +4,7 @@ import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
 
-describe("DevRevertProcessor", () => {
+describe("devRevertProcessor", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
