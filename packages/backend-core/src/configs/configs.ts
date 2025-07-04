@@ -274,11 +274,3 @@ export async function getRecaptchaConfig(): Promise<
 > {
   return getConfig<RecaptchaConfig>(ConfigType.RECAPTCHA)
 }
-
-export async function recaptchaEnabled(): Promise<boolean> {
-  const appId = context.getProdAppId()
-  return withCache(CacheKey.RECAPTCHA_ENABLED(appId), TTL.ONE_DAY, async () => {
-    const config = await getRecaptchaConfig()
-    return !!config?.config.siteKey
-  })
-}

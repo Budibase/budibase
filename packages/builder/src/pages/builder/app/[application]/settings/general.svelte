@@ -10,7 +10,12 @@
     notifications,
   } from "@budibase/bbui"
   import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
-  import { isOnlyUser, appStore, deploymentStore, recaptchaStore } from "@/stores/builder"
+  import {
+    isOnlyUser,
+    appStore,
+    deploymentStore,
+    recaptchaStore,
+  } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
   import { appsStore, admin, licensing } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
@@ -186,16 +191,22 @@
       {/if}
     </div>
     {#if !$licensing.recaptchaEnabled}
-      <Body size="S">Recaptcha support is included with enterprise licenses</Body>
+      <Body size="S"
+        >Recaptcha support is included with enterprise licenses</Body
+      >
     {:else if !$recaptchaStore.available}
-      <Body size="S">Please configure Recaptcha keys to enable this protection</Body>
+      <Body size="S"
+        >Please configure Recaptcha keys to enable this protection</Body
+      >
     {:else}
       <Body size="S">Enable recaptcha protection for all pages</Body>
     {/if}
   </Layout>
   <div>
     {#if $recaptchaStore.available}
-      <Button secondary on:click={updateRecaptcha}>{appRecaptchaEnabled ? "Disable" : "Enable"}</Button>
+      <Button secondary on:click={updateRecaptcha}
+        >{appRecaptchaEnabled ? "Disable" : "Enable"}</Button
+      >
     {/if}
   </div>
   <Divider />

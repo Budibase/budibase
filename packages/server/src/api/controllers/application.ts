@@ -293,13 +293,14 @@ export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
   const appId = context.getAppId()
-  let [application, layouts, screens, license, recaptchaConfig] = await Promise.all([
-    sdk.applications.metadata.get(),
-    getLayouts(),
-    sdk.screens.fetch(),
-    licensing.cache.getCachedLicense(),
-    configs.getRecaptchaConfig()
-  ])
+  let [application, layouts, screens, license, recaptchaConfig] =
+    await Promise.all([
+      sdk.applications.metadata.get(),
+      getLayouts(),
+      sdk.screens.fetch(),
+      licensing.cache.getCachedLicense(),
+      configs.getRecaptchaConfig(),
+    ])
 
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
