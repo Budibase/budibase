@@ -469,6 +469,7 @@
       label.scrollIntoView({ behavior: "smooth", block: "nearest" })
     }
   }
+
   // Action context to pass to children
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },

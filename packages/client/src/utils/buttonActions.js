@@ -520,20 +520,17 @@ const delayHandler = async action => {
 
 const scrollToFieldHandler = action => {
   const fieldLabel = action.parameters.field
-  console.log("fieldLabel", fieldLabel)
 
   // Try to find a label element whose text matches the field name
   const label = Array.from(document.querySelectorAll("label")).find(
     el => el.textContent.trim() === fieldLabel
   )
-  console.log("label", label)
 
   if (!label) return
 
   // If label has a 'for' attribute, use that to get the input
   let target = null
   const forId = label.getAttribute("for")
-  console.log("forId")
   if (forId) {
     target = document.getElementById(forId)
   } else {
@@ -546,24 +543,6 @@ const scrollToFieldHandler = action => {
   target.focus({ preventScroll: true })
   label.style.scrollMargin = "100px"
   label.scrollIntoView({ behavior: "smooth", block: "nearest" })
-  // const gotField = get(getField(field.parameters.id))
-  // console.log("GotField = ", gotField)
-
-  // if (typeof field === "string") {
-  //   field = get(getField(field))
-  //   console.log(field)
-  // }
-  // const fieldId = field.Id
-  // const fieldElement = document.getElementById(fieldId)
-  // if (fieldElement) {
-  //   fieldElement.focus({ preventScroll: true })
-  // }
-  // const label = document.querySelector < HTMLElement > `label[for="${fieldId}"]`
-  // console.log("LABEL", label)
-  // if (label) {
-  //   label.style.scrollMargin = "100px"
-  //   label.scrollIntoView({ behavior: "smooth", block: "nearest" })
-  // }
 }
 
 const handlerMap = {
