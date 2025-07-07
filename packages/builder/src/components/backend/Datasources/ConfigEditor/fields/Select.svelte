@@ -1,11 +1,12 @@
-<script lang="ts">
+<script>
   import { Label, Select } from "@budibase/bbui"
 
-  export let name: string
-  export let value: string | undefined
-  export let error: string | undefined
-  export let config: { options: string[] }
-  export let placeholder: string | undefined
+  export let type
+  export let name
+  export let value
+  export let error
+  export let config
+  export let placeholder
 </script>
 
 <div class="form-row">
@@ -14,6 +15,7 @@
     on:blur
     on:change
     options={config.options}
+    {type}
     value={value || undefined}
     {error}
     {placeholder}
