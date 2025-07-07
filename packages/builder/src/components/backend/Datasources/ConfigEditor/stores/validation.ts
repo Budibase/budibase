@@ -1,6 +1,7 @@
-import { string, number, object } from "yup"
+import { UIIntegration } from "@budibase/types"
+import { string, number, object, type AnySchema } from "yup"
 
-const propertyValidator = type => {
+const propertyValidator = (type: string) => {
   if (type === "number") {
     return number().nullable()
   }
@@ -16,8 +17,8 @@ const propertyValidator = type => {
   return string().nullable()
 }
 
-export const getValidatorFields = integration => {
-  const validatorFields = {}
+export const getValidatorFields = (integration: UIIntegration) => {
+  const validatorFields: Record<string, AnySchema> = {}
 
   Object.entries(integration?.datasource || {}).forEach(([key, properties]) => {
     if (properties.required) {
