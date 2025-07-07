@@ -1,15 +1,18 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from "svelte"
   import { Layout, Accordion } from "@budibase/bbui"
   import ConfigInput from "../ConfigInput.svelte"
 
-  export let value
-  export let name
-  export let config
+  export let value: any[]
+  export let name: string
+  export let config: { openByDefault: boolean } | undefined
 
-  let dispatch = createEventDispatcher()
+  let dispatch = createEventDispatcher<{ change: any }>()
 
-  const handleChange = (updatedFieldKey, updatedFieldValue) => {
+  const handleChange = (
+    updatedFieldKey: string,
+    updatedFieldValue: string | number
+  ) => {
     const updatedValue = value.map(field => {
       return {
         key: field.key,
