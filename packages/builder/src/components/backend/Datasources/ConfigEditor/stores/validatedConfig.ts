@@ -5,9 +5,27 @@ import { notifications } from "@budibase/bbui"
 import { object } from "yup"
 import { DatasourceFieldType, UIIntegration } from "@budibase/types"
 
+interface ValidatedConfigItem {
+  key: string
+  value: any
+  error: string | null
+  name: string
+  placeholder: string | undefined
+  type: DatasourceFieldType
+  hidden: string | undefined
+  config: any | undefined
+}
+
+interface ValidatedConfigStore {
+  validatedConfig: ValidatedConfigItem[]
+  config: Record<string, unknown>
+  errors: Record<string, string>
+  preventSubmit: boolean
+}
+
 export const createValidatedConfigStore = (
   integration: UIIntegration,
-  config: any
+  config: Record<string, any>
 ) => {
   const configStore = writable(config)
 
@@ -92,17 +110,12 @@ export const createValidatedConfigStore = (
 
   const combined = derived(
     [configStore, errorsStore, selectedValidatorsStore],
-    ([$configStore, $errorsStore, $selectedValidatorsStore]) => {
-      const validatedConfig: {
-        key: string
-        value: any
-        error: any
-        name: string
-        placeholder: string | undefined
-        type: DatasourceFieldType
-        hidden: string | undefined
-        config: any
-      }[] = []
+    ([
+      $configStore,
+      $errorsStore,
+      $selectedValidatorsStore,
+    ]): ValidatedConfigStore => {
+      const validatedConfig: ValidatedConfigItem[] = []
 
       const allowedRestKeys = ["rejectUnauthorized", "downloadImages"]
       Object.entries(integration.datasource || {}).forEach(
