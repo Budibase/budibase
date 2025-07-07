@@ -23,7 +23,6 @@ import {
   GlobalTemplateDefinition,
   UserCtx,
   Ctx,
-  Template,
   EmailTemplatePurpose,
 } from "@budibase/types"
 import { join } from "path"
