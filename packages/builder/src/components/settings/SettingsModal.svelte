@@ -200,6 +200,15 @@
 </div>
 
 <style>
+  .root-nav :global(.custom-icon .spectrum-Avatar) {
+    line-height: 0.8em;
+  }
+
+  .settings-nav :global(hr),
+  .setting-main :global(hr) {
+    background-color: var(--spectrum-global-color-gray-300);
+  }
+
   .groups > .root-nav:first-of-type :global(.nav-item) {
     padding-top: 4px;
     padding-bottom: 4px;

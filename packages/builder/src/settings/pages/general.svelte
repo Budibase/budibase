@@ -38,7 +38,7 @@
 </script>
 
 <Layout gap="M" noPadding>
-  <Heading size="S">App info</Heading>
+  <Heading size="XS">App info</Heading>
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
     <Divider noMargin />
@@ -86,7 +86,7 @@
   {/if}
   <Divider noMargin id="version" />
   <Layout gap="XS" noPadding>
-    <Heading size="S">App version</Heading>
+    <Heading size="XS">App version</Heading>
     {#if $admin.isDev}
       <Body size="S">
         You're running the latest client version from your file system, as
@@ -135,7 +135,7 @@
   </Layout>
   <Divider noMargin />
   <Layout noPadding gap="XS">
-    <Heading size="S">Export</Heading>
+    <Heading size="XS">Export</Heading>
     <Body size="S">
       Export your app for backup or to share it with someone else
     </Body>
@@ -154,14 +154,14 @@
   </div>
   <Divider noMargin />
   <Layout noPadding gap="XS">
-    <Heading size="S">Import</Heading>
+    <Heading size="XS">Import</Heading>
     <Body size="S">Import an app export bundle to update this app</Body>
   </Layout>
   <div class="row">
     <Button secondary on:click={importModal?.show}>Import app</Button>
   </div>
   <Divider noMargin />
-  <Heading size="S">Danger zone</Heading>
+  <Heading size="XS">Danger zone</Heading>
   <div class="row">
     <Button
       warning

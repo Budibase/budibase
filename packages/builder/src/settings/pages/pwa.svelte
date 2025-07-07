@@ -126,7 +126,7 @@
   <Layout gap="S" noPadding>
     {#if pwaEnabled}
       <Layout gap="XS" noPadding>
-        <Body>
+        <Body size="S">
           Transform your app into an installable, app-like experience with a
           Progressive Web App (PWA). Developers can configure app details and
           visuals to create a branded, professional experience for their users.
@@ -299,7 +299,9 @@
   }
 
   .section {
-    margin-top: var(--spacing-l);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
   }
 
   .actions {

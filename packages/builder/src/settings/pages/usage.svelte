@@ -189,9 +189,9 @@
     <div class="usage-heading">
       <div>
         <div class="usage-title">
-          <Detail size="M">YOUR CURRENT PLAN</Detail>
+          <Detail size="S">YOUR CURRENT PLAN</Detail>
         </div>
-        <Heading size="M">{getFormattedPlanName(license?.plan.type)}</Heading>
+        <Heading size="S">{getFormattedPlanName(license?.plan.type)}</Heading>
       </div>
       {#if showButton}
         <div>
@@ -201,7 +201,7 @@
     </div>
 
     {#if canManagePlan}
-      <Body>
+      <Body size="S">
         To upgrade your plan and usage limits visit your
         <Link size="L" on:click={goToAccountPortal}>account</Link>.
       </Body>
@@ -218,7 +218,7 @@
             </div>
           {/each}
           <Layout gap="XS" noPadding>
-            <Heading size="S">Monthly limits</Heading>
+            <Heading size="XS">Monthly limits</Heading>
             <div class="detail">
               <TooltipWrapper tooltip={new Date(quotaReset)}>
                 <Detail size="M">
@@ -271,5 +271,6 @@
       var(--spectrum-global-color-gray-700)
     );
     display: inline-block;
+    padding-bottom: var(--spacing-s);
   }
 </style>

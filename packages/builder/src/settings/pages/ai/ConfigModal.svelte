@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ModalContent, Label, Input, Select } from "@budibase/bbui"
+  import { ModalContent, Label, Input, Select, Heading } from "@budibase/bbui"
   import { ConfigMap, Models } from "./constants"
   import type { ProviderConfig } from "@budibase/types"
 
@@ -37,8 +37,10 @@
     : () => updateHandler(config)}
   disabled={!complete}
   size="M"
-  title={`Set up ${config.name}`}
 >
+  <div slot="header">
+    <Heading size="XS">{`Set up ${config.name}`}</Heading>
+  </div>
   <div class="form-row">
     <Label size="M">API Key</Label>
     <Input type="password" bind:value={config.apiKey} />

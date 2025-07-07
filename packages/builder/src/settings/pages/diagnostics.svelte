@@ -41,13 +41,13 @@
 {#if diagnosticInfo}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
-      <Body>
+      <Body size="S">
         Please include this diagnostic information in support requests and
         github issues by clicking the button on the top right to copy to
         clipboard.
       </Body>
       <Divider />
-      <Body size="M">
+      <Body size="S">
         <section>
           <div on:click={copyToClipboard} class="copy-icon">
             <Icon name="copy" size="M" />

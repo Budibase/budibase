@@ -15,6 +15,7 @@
   import { type Routing } from "@/types/routing"
   import { type Readable } from "svelte/store"
   import { type GlobalTemplateBinding, type Template } from "@budibase/types"
+  import { routeActions } from ".."
 
   export let template
 
@@ -88,8 +89,8 @@
 
 <Layout gap="S" noPadding>
   <Layout gap="XS" noPadding>
-    <Heading size="M">{name}</Heading>
-    <Body>
+    <Heading size="XS">{name}</Heading>
+    <Body size="S">
       {description}
       <br />
       Change the email template here. Add dynamic content by using the bindings menu
@@ -142,7 +143,7 @@
     </Tabs>
   </div>
 
-  <div>
+  <div use:routeActions>
     <Button cta on:click={saveTemplate}>Save</Button>
   </div>
 </Layout>

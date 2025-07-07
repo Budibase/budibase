@@ -253,7 +253,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <Layout noPadding gap="S">
   <Layout noPadding gap="XS">
-    <Heading size="S">Single Sign-On URL</Heading>
+    <Heading size="XS">Single Sign-On URL</Heading>
     <Body size="S">
       Use the following link to access your configured identity provider.
     </Body>
@@ -273,7 +273,7 @@
     <div class="provider-title">
       <div class="enforce-sso-heading-container">
         <div class="enforce-sso-title">
-          <Heading size="S">Enforce Single Sign-On</Heading>
+          <Heading size="XS">Enforce Single Sign-On</Heading>
         </div>
         {#if !$licensing.enforceableSSO}
           <Tags>
@@ -298,7 +298,7 @@
   {#if providers.oidc}
     <Divider noMargin />
     <Layout gap="XS" noPadding>
-      <Heading size="S">
+      <Heading size="XS">
         <div class="provider-title">
           <OidcLogo />
           <span>OpenID Connect</span>
@@ -367,7 +367,7 @@
 
     <Layout gap="XS" noPadding>
       <div class="provider-title">
-        <Heading size="S">Authentication scopes</Heading>
+        <Heading size="XS">Authentication scopes</Heading>
         <Button
           secondary
           size="S"

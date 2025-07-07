@@ -124,8 +124,8 @@
 {#if loaded}
   <Layout noPadding gap="L">
     <div class="header">
-      <GroupIcon {group} size="L" />
-      <Heading>{group?.name}</Heading>
+      <GroupIcon {group} size="M" />
+      <Heading size="S">{group?.name}</Heading>
       <ActionMenu align="right">
         <span slot="control">
           <Icon hoverable name="dots-three" />
@@ -154,7 +154,7 @@
     </Layout>
 
     <Layout noPadding gap="S">
-      <Heading size="S">{capitalise(appsOrWorkspaces)}</Heading>
+      <Heading size="XS">{capitalise(appsOrWorkspaces)}</Heading>
       <Table
         schema={appSchema}
         data={groupApps}

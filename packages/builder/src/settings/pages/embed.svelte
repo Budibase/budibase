@@ -22,7 +22,7 @@
 
 <Layout gap="S" noPadding>
   <Layout gap="XS" noPadding>
-    <Body>Embed your app into your other tools of choice</Body>
+    <Body size="S">Embed your app into your other tools of choice</Body>
   </Layout>
   <Divider noMargin />
   <div class="embed-body">

@@ -278,9 +278,9 @@
   <Layout gap="L" noPadding>
     <div class="title">
       <div class="user-info">
-        <UserAvatar size="XXL" {user} showTooltip={false} />
+        <UserAvatar size="M" {user} showTooltip={false} />
         <div class="subtitle">
-          <Heading size="M">{nameLabel}</Heading>
+          <Heading size="XS">{nameLabel}</Heading>
           {#if nameLabel !== user?.email}
             <Body size="S">{user?.email}</Body>
           {/if}
@@ -311,7 +311,7 @@
     </div>
     <Layout noPadding gap="S">
       <div class="details-title">
-        <Heading size="S">Details</Heading>
+        <Heading size="XS">Details</Heading>
         {#if user?.scimInfo?.isSync}
           <ActiveDirectoryInfo text="User synced from your AD" />
         {/if}
@@ -367,7 +367,7 @@
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
-          <Heading size="S">Groups</Heading>
+          <Heading size="XS">Groups</Heading>
           {#if internalGroups?.length && isAdmin}
             <div bind:this={popoverAnchor}>
               <Button on:click={popover.show()} secondary>Add to group</Button>
@@ -398,14 +398,14 @@
           }}
         >
           <div class="placeholder" slot="placeholder">
-            <Heading size="S">This user is not in any groups</Heading>
+            <Heading size="XS">This user is not in any groups</Heading>
           </div>
         </Table>
       </Layout>
     {/if}
 
     <Layout gap="S" noPadding>
-      <Heading size="S">{capitalise(appsOrWorkspaces)}</Heading>
+      <Heading size="XS">{capitalise(appsOrWorkspaces)}</Heading>
       {#if privileged}
         <Banner showCloseButton={false}>
           This user's role grants admin access to all {appsOrWorkspaces}
@@ -421,7 +421,7 @@
           on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
         >
           <div class="placeholder" slot="placeholder">
-            <Heading size="S">
+            <Heading size="XS">
               This user doesn't have access to any {appsOrWorkspaces}
             </Heading>
           </div>

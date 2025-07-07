@@ -18,8 +18,8 @@
 </script>
 
 <Layout noPadding>
-  <Heading>System logs</Heading>
-  <Body>Download your latest logs to share with the Budibase team</Body>
+  <Body size="S">Download your latest logs to share with the Budibase team</Body
+  >
   <div class="download-button">
     <Button cta on:click={download} disabled={loading}>
       <div class="button-content">

@@ -93,7 +93,7 @@
 
 <Layout gap="S" noPadding>
   <Layout gap="S" noPadding>
-    <Heading size="S">Profile</Heading>
+    <Heading size="XS">Profile</Heading>
     <Body size="S">
       Personalise the platform by adding your first name and last name.
     </Body>
@@ -137,7 +137,7 @@
   </Layout>
   <Divider noMargin />
   <Layout gap="S" noPadding>
-    <Heading size="S">Theme</Heading>
+    <Heading size="XS">Theme</Heading>
     <Body size="S">Update the Budibase portal theme</Body>
     <div class="form">
       <Select
@@ -150,7 +150,7 @@
   </Layout>
   <Divider noMargin />
   <Layout gap="S" noPadding>
-    <Heading size="S">API Key</Heading>
+    <Heading size="XS">API Key</Heading>
     <Body size="S">Your API key for accessing the Budibase public API:</Body>
     <div class="form">
       <Layout gap="S" noPadding>

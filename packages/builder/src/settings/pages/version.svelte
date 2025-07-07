@@ -57,12 +57,12 @@
   {#if loaded}
     <Layout noPadding gap="S">
       <Label size="L">Current version</Label>
-      <Heading size="S">
+      <Heading size="XS">
         {version || "-"}
       </Heading>
       <Divider noMargin />
       <Label size="L">Latest version</Label>
-      <Heading size="S">
+      <Heading size="XS">
         {githubVersion}
       </Heading>
       <Label size="L"
@@ -71,8 +71,8 @@
     </Layout>
     <Divider noMargin />
     <Layout noPadding gap="XS">
-      <Heading>Updating Budibase</Heading>
-      <Body
+      <Heading size="XS">Updating Budibase</Heading>
+      <Body size="S"
         >To update your self-host installation, follow the docs found <Link
           size="L"
           href="https://docs.budibase.com/docs/updating-budibase">here.</Link

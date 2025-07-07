@@ -14,6 +14,7 @@
   } from "@budibase/bbui"
   import { auth, organisation, licensing, admin } from "@/stores/portal"
   import LockedFeature from "@/pages/builder/portal/_components/LockedFeature.svelte"
+  import { routeActions } from "@/settings/pages"
 
   import { API } from "@/api"
   import { onMount } from "svelte"
@@ -299,7 +300,7 @@
 
       <Divider noMargin />
       <Layout gap="XS" noPadding>
-        <Heading size="S">Login page</Heading>
+        <Heading size="XS">Login page</Heading>
         <Body />
       </Layout>
       <div class="login">
@@ -343,10 +344,10 @@
           </div>
         </div>
       </div>
-      <Divider />
+      <Divider noMargin />
       <Layout gap="XS" noPadding>
-        <Heading size="S">Application previews</Heading>
-        <Body>Customise the meta tags on your app preview</Body>
+        <Heading size="XS">Application previews</Heading>
+        <Body size="S">Customise the meta tags on your app preview</Body>
       </Layout>
       <div class="app-previews">
         <div class="fields">
@@ -407,13 +408,15 @@
             Upgrade
           </Button>
         {/if}
-        <Button
-          on:click={saveConfig}
-          cta
-          disabled={saving || !updated || !$organisation.loaded}
-        >
-          Save
-        </Button>
+        <div use:routeActions class="controls">
+          <Button
+            on:click={saveConfig}
+            cta
+            disabled={saving || !updated || !$organisation.loaded}
+          >
+            Save
+          </Button>
+        </div>
       </div>
     </Layout>
   {/if}

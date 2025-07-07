@@ -60,7 +60,7 @@
 
 <style>
   .route-header :global(hr) {
-    background-color: var(--spectrum-global-color-gray-100);
+    background-color: var(--spectrum-global-color-gray-300);
   }
   .route-header {
     display: flex;

@@ -28,7 +28,7 @@
     <Layout gap="S" noPadding>
       <div class="title">
         {#if title}
-          <Heading>{title}</Heading>
+          <Heading size="XS">{title}</Heading>
         {/if}
         <Tags>
           <Tag icon="lock" emphasized>{planType}</Tag>
@@ -36,7 +36,7 @@
       </div>
 
       {#if description}
-        <Body>{description}</Body>
+        <Body size="S">{description}</Body>
       {/if}
 
       <div class="buttons">

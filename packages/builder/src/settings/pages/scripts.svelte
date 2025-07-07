@@ -100,7 +100,7 @@
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <div class="subtitle">
-        <Body>
+        <Body size="S">
           Inject analytics, scripts or stylesheets into your app<br />
           <Link
             href="https://docs.budibase.com/docs/app-scripts"

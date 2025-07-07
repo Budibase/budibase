@@ -171,7 +171,9 @@
 >
   <Layout gap="S" noPadding>
     <Layout gap="XS" noPadding>
-      <Body>Back up your apps and restore them to their previous state</Body>
+      <Body size="S">
+        Back up your apps and restore them to their previous state
+      </Body>
     </Layout>
     <Divider noMargin />
 

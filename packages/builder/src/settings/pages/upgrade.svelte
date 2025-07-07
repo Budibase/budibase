@@ -191,14 +191,14 @@
   />
   <Layout gap="S" noPadding>
     <Layout gap="XS" noPadding>
-      <Body size="M">
+      <Body size="S">
         {#if license.plan.type === "free"}
           Upgrade your Budibase installation to unlock additional features. To
           subscribe to a plan visit your
-          <Link size="L" href={upgradeUrl}>account</Link>.
+          <Link size="M" href={upgradeUrl}>account</Link>.
         {:else}
           To manage your plan visit your
-          <Link size="L" href={upgradeUrl}>account</Link>
+          <Link size="M" href={upgradeUrl}>account</Link>
         {/if}
       </Body>
     </Layout>

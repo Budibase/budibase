@@ -161,7 +161,7 @@
 {#if aiConfig}
   <Layout noPadding gap="S">
     <Layout gap="XS" noPadding>
-      <Body>
+      <Body size="S">
         Connect an LLM to enable AI features. You can only enable one LLM at a
         time.
       </Body>
