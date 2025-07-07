@@ -1,12 +1,15 @@
 import { Ctx, RecaptchaSessionCookie, App } from "@budibase/types"
 import { utils, Cookie, cache, context } from "@budibase/backend-core"
-import { Next } from "koa"
+import { Middleware, Next } from "koa"
 import { isRecaptchaVerified } from "../utilities/redis"
+import { isProdAppID } from "../db/utils"
 
-const middleware = async (ctx: Ctx, next: Next) => {
+const middleware = (async (ctx: Ctx, next: Next) => {
   const appId = context.getAppId()
-  if (!appId) {
-    throw new Error("Middleware must be used with app context")
+  // no app ID, requests are not targeting an app
+  // if not production app - this is in the builder, recaptcha isn't enabled
+  if (!appId || !isProdAppID(appId)) {
+    return next()
   }
   const app = await cache.app.getAppMetadata(appId)
   if ("state" in app && app.state === cache.app.AppState.INVALID) {
@@ -28,6 +31,6 @@ const middleware = async (ctx: Ctx, next: Next) => {
     }
   }
   return next()
-}
+}) as Middleware
 
 export default middleware
