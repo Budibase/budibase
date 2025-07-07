@@ -144,7 +144,6 @@ export const createValidatedConfigStore = (
         Object.keys(allValidators).length
 
       const hasErrors = Object.keys($errorsStore).length > 0
-      console.error($errorsStore)
 
       return {
         validatedConfig,
