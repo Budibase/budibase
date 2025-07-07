@@ -1,6 +1,7 @@
 import Router from "@koa/router"
 import * as tableController from "../controllers/table"
 import authorized from "../../middleware/authorized"
+import recaptcha from "../../middleware/recaptcha"
 import { paramResource, bodyResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { tableValidator } from "./utils/validators"
@@ -13,6 +14,7 @@ router
   .get("/api/tables", authorized(BUILDER), tableController.fetch)
   .get(
     "/api/tables/:tableId",
+    recaptcha,
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.READ, { schema: true }),
     tableController.find

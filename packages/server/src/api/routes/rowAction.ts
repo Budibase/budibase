@@ -3,6 +3,7 @@ import Joi from "joi"
 import { middleware, permissions } from "@budibase/backend-core"
 import * as rowActionController from "../controllers/rowAction"
 import authorized from "../../middleware/authorized"
+import recaptcha from "../../middleware/recaptcha"
 import { triggerRowActionAuthorised } from "../../middleware/triggerRowActionAuthorised"
 
 const { BUILDER } = permissions
@@ -69,6 +70,7 @@ router
   // Other endpoints
   .post(
     "/api/tables/:sourceId/actions/:actionId/trigger",
+    recaptcha,
     rowTriggerValidator(),
     triggerRowActionAuthorised("sourceId", "actionId"),
     rowActionController.run

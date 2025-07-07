@@ -2,6 +2,7 @@ import * as ai from "../controllers/ai"
 import Router from "@koa/router"
 import { auth } from "@budibase/backend-core"
 import { middleware } from "@budibase/pro"
+import recaptcha from "../../middleware/recaptcha"
 import {
   chatAgentValidator,
   createToolSourceValidator,
@@ -43,7 +44,7 @@ router.get("/api/agent/toolsource", auth.builderOrAdmin, ai.fetchToolSources)
 
 router.post("/api/ai/cron", auth.builderOrAdmin, ai.generateCronExpression)
 router.post("/api/ai/js", auth.builderOrAdmin, ai.generateJs)
-router.post("/api/ai/chat", middleware.licenseAuth, ai.chatCompletion)
-router.post("/api/ai/upload-file", middleware.licenseAuth, ai.uploadFile)
+router.post("/api/ai/chat", recaptcha, middleware.licenseAuth, ai.chatCompletion)
+router.post("/api/ai/upload-file", recaptcha, middleware.licenseAuth, ai.uploadFile)
 
 export default router

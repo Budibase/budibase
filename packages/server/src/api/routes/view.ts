@@ -2,6 +2,7 @@ import Router from "@koa/router"
 import * as viewController from "../controllers/view"
 import * as rowController from "../controllers/row"
 import authorized, { authorizedResource } from "../../middleware/authorized"
+import recaptcha from "../../middleware/recaptcha"
 import { paramResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 
@@ -15,6 +16,7 @@ router
   )
   .get(
     "/api/v2/views/:viewId",
+    recaptcha,
     authorizedResource(
       permissions.PermissionType.VIEW,
       permissions.PermissionLevel.READ,
@@ -46,6 +48,7 @@ router
   )
   .get(
     "/api/views/:viewName",
+    recaptcha,
     paramResource("viewName"),
     authorized(
       permissions.PermissionType.TABLE,

@@ -1,6 +1,7 @@
 import Router from "@koa/router"
 import * as datasourceController from "../controllers/datasource"
 import authorized from "../../middleware/authorized"
+import recaptcha from "../../middleware/recaptcha"
 import { permissions } from "@budibase/backend-core"
 import { datasourceValidator } from "./utils/validators"
 
@@ -24,6 +25,7 @@ router
   )
   .get(
     "/api/datasources/:datasourceId",
+    recaptcha,
     authorized(
       permissions.PermissionType.TABLE,
       permissions.PermissionLevel.READ
@@ -32,10 +34,7 @@ router
   )
   .put(
     "/api/datasources/:datasourceId",
-    authorized(
-      permissions.PermissionType.TABLE,
-      permissions.PermissionLevel.READ
-    ),
+    authorized(permissions.BUILDER),
     datasourceController.update
   )
   .post(

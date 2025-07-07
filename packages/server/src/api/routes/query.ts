@@ -1,6 +1,7 @@
 import Router from "@koa/router"
 import * as queryController from "../controllers/query"
 import authorized from "../../middleware/authorized"
+import recaptcha from "../../middleware/recaptcha"
 import { permissions } from "@budibase/backend-core"
 import {
   bodyResource,
@@ -35,6 +36,7 @@ router
   )
   .get(
     "/api/queries/:queryId",
+    recaptcha,
     paramResource("queryId"),
     authorized(PermissionType.QUERY, PermissionLevel.READ),
     queryController.find
@@ -42,6 +44,7 @@ router
   // DEPRECATED - use new query endpoint for future work
   .post(
     "/api/queries/:queryId",
+    recaptcha,
     paramResource("queryId"),
     authorized(PermissionType.QUERY, PermissionLevel.WRITE),
     queryController.executeV1
@@ -54,6 +57,7 @@ router
   )
   .post(
     "/api/v2/queries/:queryId",
+    recaptcha,
     paramResource("queryId"),
     authorized(PermissionType.QUERY, PermissionLevel.WRITE),
     queryController.executeV2

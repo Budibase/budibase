@@ -1,6 +1,7 @@
 import Router from "@koa/router"
 import * as rowController from "../controllers/row"
 import authorized, { authorizedResource } from "../../middleware/authorized"
+import recaptcha from "../../middleware/recaptcha"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
@@ -15,24 +16,28 @@ const router: Router = new Router()
 router
   .get(
     "/api/:sourceId/:rowId/enrich",
+    recaptcha,
     paramSubResource("sourceId", "rowId"),
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.fetchEnrichedRow
   )
   .get(
     "/api/:sourceId/rows",
+    recaptcha,
     paramResource("sourceId"),
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.fetch
   )
   .get(
     "/api/:sourceId/rows/:rowId",
+    recaptcha,
     paramSubResource("sourceId", "rowId"),
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.find
   )
   .post(
     "/api/:sourceId/search",
+    recaptcha,
     internalSearchValidator(),
     validateBody(searchRowRequestValidator),
     paramResource("sourceId"),
@@ -43,12 +48,14 @@ router
   // supported still
   .post(
     "/api/search/:sourceId/rows",
+    recaptcha,
     paramResource("sourceId"),
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
   .post(
     "/api/:sourceId/rows",
+    recaptcha,
     paramResource("sourceId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
@@ -56,6 +63,7 @@ router
   )
   .patch(
     "/api/:sourceId/rows",
+    recaptcha,
     paramResource("sourceId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
@@ -63,12 +71,14 @@ router
   )
   .post(
     "/api/:sourceId/rows/validate",
+    recaptcha,
     paramResource("sourceId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.validate
   )
   .delete(
     "/api/:sourceId/rows",
+    recaptcha,
     paramResource("sourceId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
@@ -76,12 +86,14 @@ router
   )
   .post(
     "/api/:sourceId/rows/exportRows",
+    recaptcha,
     paramResource("sourceId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.exportRows
   )
   .get(
     "/api/:sourceId/rows/:rowId/attachment/:columnName",
+    recaptcha,
     paramSubResource("sourceId", "rowId"),
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.downloadAttachment
@@ -89,6 +101,7 @@ router
 
 router.post(
   "/api/v2/views/:viewId/search",
+  recaptcha,
   internalSearchValidator(),
   validateBody(searchRowRequestValidator),
   authorizedResource(PermissionType.VIEW, PermissionLevel.READ, "viewId"),

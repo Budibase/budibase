@@ -1,6 +1,7 @@
 import Router from "@koa/router"
 import * as controller from "../controllers/automation"
 import authorized from "../../middleware/authorized"
+import recaptcha from "../../middleware/recaptcha"
 import { permissions } from "@budibase/backend-core"
 import { bodyResource, paramResource } from "../../middleware/resourceId"
 import {
@@ -65,6 +66,7 @@ router
   )
   .post(
     "/api/automations/:id/trigger",
+    recaptcha,
     paramResource("id"),
     authorized(
       permissions.PermissionType.AUTOMATION,
@@ -74,6 +76,7 @@ router
   )
   .post(
     "/api/automations/:id/test",
+    recaptcha,
     appInfoMiddleware({ appType: AppType.DEV }),
     paramResource("id"),
     authorized(
