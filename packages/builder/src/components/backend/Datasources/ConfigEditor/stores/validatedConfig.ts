@@ -111,33 +111,31 @@ export const createValidatedConfigStore = (
             return
           }
 
-          const getValue = () => {
-            if (properties.type === "fieldGroup") {
-              return Object.entries(properties.fields || {}).map(
-                ([fieldKey, fieldProperties]) => {
-                  return {
-                    key: fieldKey,
-                    name: capitalise(fieldProperties.display || fieldKey),
-                    type: fieldProperties.type,
-                    value: $configStore[fieldKey],
-                  }
-                }
-              )
+          if (properties.type === DatasourceFieldType.FIELD_GROUP) {
+            for (const [key, val] of Object.entries(properties.fields || {})) {
+              validatedConfig.push({
+                key,
+                value: $configStore[key],
+                error: $errorsStore[key],
+                name: capitalise(val.display || key),
+                placeholder: val.placeholder,
+                type: val.type,
+                hidden: properties.hidden,
+                config: (val as any).config,
+              })
             }
-
-            return $configStore[key]
+          } else {
+            validatedConfig.push({
+              key,
+              value: $configStore[key],
+              error: $errorsStore[key],
+              name: capitalise(properties.display || key),
+              placeholder: properties.placeholder,
+              type: properties.type,
+              hidden: properties.hidden,
+              config: (properties as any).config,
+            })
           }
-
-          validatedConfig.push({
-            key,
-            value: getValue(),
-            error: $errorsStore[key],
-            name: capitalise(properties.display || key),
-            placeholder: properties.placeholder,
-            type: properties.type,
-            hidden: properties.hidden,
-            config: (properties as any).config,
-          })
         }
       )
 
