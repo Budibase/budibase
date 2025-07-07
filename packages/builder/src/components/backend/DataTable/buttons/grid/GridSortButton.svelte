@@ -13,18 +13,34 @@
     .map(col => ({
       label: col.label || col.name,
       value: col.name,
+      type: col.schema?.type,
     }))
   $: orderOptions = getOrderOptions($sort.column, columnOptions)
 
   const getOrderOptions = (column, columnOptions) => {
     const type = columnOptions.find(col => col.value === column)?.type
+
+    // Define labels based on column type
+    let ascendingLabel, descendingLabel
+
+    if (type === "number") {
+      ascendingLabel = "Low to High"
+      descendingLabel = "High to Low"
+    } else if (type === "datetime") {
+      ascendingLabel = "Earliest to Latest"
+      descendingLabel = "Latest to Earliest"
+    } else {
+      ascendingLabel = "A-Z"
+      descendingLabel = "Z-A"
+    }
+
     return [
       {
-        label: type === "number" ? "Low-high" : "A-Z",
+        label: ascendingLabel,
         value: "ascending",
       },
       {
-        label: type === "number" ? "High-low" : "Z-A",
+        label: descendingLabel,
         value: "descending",
       },
     ]
