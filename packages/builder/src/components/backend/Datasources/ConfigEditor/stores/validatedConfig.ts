@@ -4,6 +4,7 @@ import { capitalise } from "@/helpers"
 import { notifications } from "@budibase/bbui"
 import { object } from "yup"
 import { DatasourceFieldType, UIIntegration } from "@budibase/types"
+import { processStringSync } from "@budibase/string-templates"
 
 export const createValidatedConfigStore = (
   integration: UIIntegration,
@@ -12,7 +13,7 @@ export const createValidatedConfigStore = (
   const configStore = writable(config)
 
   const allValidators = getValidatorFields(integration)
-  const selectedValidatorsStore = writable({})
+  const selectedValidatorsStore = writable<typeof allValidators>({})
   const errorsStore = writable<Record<string, string>>({})
 
   const validate = async () => {
@@ -78,7 +79,21 @@ export const createValidatedConfigStore = (
   }
 
   const markAllFieldsActive = () => {
-    selectedValidatorsStore.set(allValidators)
+    selectedValidatorsStore.update($validatorsStore => {
+      const fields = get(combined).validatedConfig
+      const config = get(configStore)
+      for (const field of fields) {
+        const { key } = field
+        if (field.hidden && eval(processStringSync(field.hidden, config))) {
+          delete $validatorsStore[key]
+          continue
+        }
+
+        $validatorsStore[key] = allValidators[key]
+      }
+      selectedValidatorsStore.set(allValidators)
+      return $validatorsStore
+    })
     validate()
   }
 
