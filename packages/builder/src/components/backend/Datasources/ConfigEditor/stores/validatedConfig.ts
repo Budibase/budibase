@@ -3,12 +3,17 @@ import { getValidatorFields } from "./validation"
 import { capitalise } from "@/helpers"
 import { notifications } from "@budibase/bbui"
 import { object } from "yup"
+import { DatasourceFieldType, UIIntegration } from "@budibase/types"
 
-export const createValidatedConfigStore = (integration, config) => {
+export const createValidatedConfigStore = (
+  integration: UIIntegration,
+  config: any
+) => {
   const configStore = writable(config)
+
   const allValidators = getValidatorFields(integration)
   const selectedValidatorsStore = writable({})
-  const errorsStore = writable({})
+  const errorsStore = writable<Record<string, string>>({})
 
   const validate = async () => {
     try {
@@ -19,12 +24,13 @@ export const createValidatedConfigStore = (integration, config) => {
       errorsStore.set({})
 
       return true
-    } catch (error) {
+    } catch (error: any) {
       // Yup error
       if (error.inner) {
-        const errors = {}
+        const errors: Record<string, string> = {}
 
-        error.inner.forEach(innerError => {
+        const inner: { path: string; message: string }[] = error.inner
+        inner.forEach(innerError => {
           errors[innerError.path] = capitalise(innerError.message)
         })
 
@@ -38,15 +44,18 @@ export const createValidatedConfigStore = (integration, config) => {
     }
   }
 
-  const updateFieldValue = (key, value) => {
+  const updateFieldValue = (key: string, value: any[]) => {
     configStore.update($configStore => {
       const newStore = { ...$configStore }
 
-      if (integration.datasource[key].type === "fieldGroup") {
+      if (integration.datasource?.[key].type === "fieldGroup") {
         value.forEach(field => {
           newStore[field.key] = field.value
         })
-        if (!integration.datasource[key].config?.nestedFields) {
+        if (
+          !("config" in integration.datasource[key]) ||
+          !integration.datasource[key].config?.nestedFields
+        ) {
           value.forEach(field => {
             newStore[field.key] = field.value
           })
@@ -73,7 +82,7 @@ export const createValidatedConfigStore = (integration, config) => {
     validate()
   }
 
-  const markFieldActive = key => {
+  const markFieldActive = (key: string) => {
     selectedValidatorsStore.update($validatorsStore => ({
       ...$validatorsStore,
       [key]: allValidators[key],
@@ -84,48 +93,60 @@ export const createValidatedConfigStore = (integration, config) => {
   const combined = derived(
     [configStore, errorsStore, selectedValidatorsStore],
     ([$configStore, $errorsStore, $selectedValidatorsStore]) => {
-      const validatedConfig = []
+      const validatedConfig: {
+        key: string
+        value: any
+        error: any
+        name: string
+        placeholder: string | undefined
+        type: DatasourceFieldType
+        hidden: string | undefined
+        config: any
+      }[] = []
 
       const allowedRestKeys = ["rejectUnauthorized", "downloadImages"]
-      Object.entries(integration.datasource).forEach(([key, properties]) => {
-        if (integration.name === "REST" && !allowedRestKeys.includes(key)) {
-          return
-        }
-
-        const getValue = () => {
-          if (properties.type === "fieldGroup") {
-            return Object.entries(properties.fields).map(
-              ([fieldKey, fieldProperties]) => {
-                return {
-                  key: fieldKey,
-                  name: capitalise(fieldProperties.display || fieldKey),
-                  type: fieldProperties.type,
-                  value: $configStore[fieldKey],
-                }
-              }
-            )
+      Object.entries(integration.datasource || {}).forEach(
+        ([key, properties]) => {
+          if (integration.name === "REST" && !allowedRestKeys.includes(key)) {
+            return
           }
 
-          return $configStore[key]
-        }
+          const getValue = () => {
+            if (properties.type === "fieldGroup") {
+              return Object.entries(properties.fields || {}).map(
+                ([fieldKey, fieldProperties]) => {
+                  return {
+                    key: fieldKey,
+                    name: capitalise(fieldProperties.display || fieldKey),
+                    type: fieldProperties.type,
+                    value: $configStore[fieldKey],
+                  }
+                }
+              )
+            }
 
-        validatedConfig.push({
-          key,
-          value: getValue(),
-          error: $errorsStore[key],
-          name: capitalise(properties.display || key),
-          placeholder: properties.placeholder,
-          type: properties.type,
-          hidden: properties.hidden,
-          config: properties.config,
-        })
-      })
+            return $configStore[key]
+          }
+
+          validatedConfig.push({
+            key,
+            value: getValue(),
+            error: $errorsStore[key],
+            name: capitalise(properties.display || key),
+            placeholder: properties.placeholder,
+            type: properties.type,
+            hidden: properties.hidden,
+            config: (properties as any).config,
+          })
+        }
+      )
 
       const allFieldsActive =
         Object.keys($selectedValidatorsStore).length ===
         Object.keys(allValidators).length
 
       const hasErrors = Object.keys($errorsStore).length > 0
+      console.error($errorsStore)
 
       return {
         validatedConfig,
