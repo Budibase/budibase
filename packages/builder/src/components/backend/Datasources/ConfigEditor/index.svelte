@@ -8,10 +8,13 @@
   import type { UIIntegration } from "@budibase/types"
 
   export let integration: UIIntegration
-  export let config: any
-  export let onSubmit = (_value: any) => {}
-  export let showNameField = false
-  export let nameFieldValue = ""
+  export let config: Record<string, any>
+  export let onSubmit: (_value: {
+    config: Record<string, any>
+    name: string
+  }) => Promise<void> | void = () => {}
+  export let showNameField: boolean = false
+  export let nameFieldValue: string = ""
 
   $: configStore = createValidatedConfigStore(integration, config)
   $: nameStore = createValidatedNameStore(nameFieldValue, showNameField)
