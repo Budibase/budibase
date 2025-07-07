@@ -1,14 +1,15 @@
-<script>
+<script lang="ts">
   import { keepOpen, Body, Layout, ModalContent } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import ConfigInput from "./ConfigInput.svelte"
   import { createValidatedConfigStore } from "./stores/validatedConfig"
   import { createValidatedNameStore } from "./stores/validatedName"
   import { get } from "svelte/store"
+  import type { UIIntegration } from "@budibase/types"
 
-  export let integration
-  export let config
-  export let onSubmit = () => {}
+  export let integration: UIIntegration
+  export let config: any
+  export let onSubmit = (_value: any) => {}
   export let showNameField = false
   export let nameFieldValue = ""
 
