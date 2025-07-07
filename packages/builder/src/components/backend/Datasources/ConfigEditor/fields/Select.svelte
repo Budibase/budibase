@@ -1,6 +1,7 @@
-<script lang="ts">
+<script>
   import { Label, Select } from "@budibase/bbui"
 
+  export let type
   export let name
   export let value
   export let error
@@ -14,6 +15,7 @@
     on:blur
     on:change
     options={config.options}
+    {type}
     value={value || undefined}
     {error}
     {placeholder}
