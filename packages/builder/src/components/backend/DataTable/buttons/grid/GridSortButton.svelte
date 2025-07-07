@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Select } from "@budibase/bbui"
+  import { FieldType, isNumeric } from "@budibase/types"
   import { canBeSortColumn } from "@budibase/frontend-core"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
 
@@ -23,12 +24,12 @@
     // Define labels based on column type
     let ascendingLabel, descendingLabel
 
-    if (type === "number") {
-      ascendingLabel = "Low to High"
-      descendingLabel = "High to Low"
-    } else if (type === "datetime") {
-      ascendingLabel = "Earliest to Latest"
-      descendingLabel = "Latest to Earliest"
+    if (isNumeric(type)) {
+      ascendingLabel = "Low to high"
+      descendingLabel = "High to low"
+    } else if (type === FieldType.DATETIME) {
+      ascendingLabel = "Oldest to newest"
+      descendingLabel = "Newest to oldest"
     } else {
       ascendingLabel = "A-Z"
       descendingLabel = "Z-A"
