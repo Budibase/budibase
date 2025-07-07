@@ -96,6 +96,8 @@
     overflow: hidden;
     top: 0;
     left: 0;
+    /* this container is just used for measurement, doesn't need to be seen */
+    visibility: hidden;
   }
   .header {
     display: flex;

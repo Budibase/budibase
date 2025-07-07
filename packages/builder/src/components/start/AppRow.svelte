@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Button, Icon } from "@budibase/bbui"
+  import { Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
@@ -82,9 +82,9 @@
       />
     </div>
     <div class="name">
-      <Heading size="S">
+      <Body size="M" weight="500">
         {app.name}
-      </Heading>
+      </Body>
     </div>
   </div>
 
@@ -119,7 +119,7 @@
             on:click={openContextMenu}
             size="S"
             hoverable
-            name="dots-three-horizontal"
+            name="dots-three"
           />
         </div>
       {:else}
@@ -138,10 +138,10 @@
 <style>
   .app-row {
     background: var(--background);
-    padding: 24px 32px;
+    padding: 8px 24px;
     border-radius: 8px;
     display: grid;
-    grid-template-columns: 35% 25% 15% auto;
+    grid-template-columns: 45% 20% 10% auto;
     align-items: center;
     gap: var(--spacing-m);
     transition: border 130ms ease-out;

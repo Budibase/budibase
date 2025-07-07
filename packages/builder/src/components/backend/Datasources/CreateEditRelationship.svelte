@@ -421,7 +421,7 @@
   {#if isManyToOne && fromId}
     <Select
       label={`Primary Key (${getTable(fromId).name})`}
-      options={Object.keys(getTable(fromId).schema)}
+      options={getTable(fromId).primary}
       bind:value={fromPrimary}
       bind:error={errors.fromPrimary}
       on:change={changed}

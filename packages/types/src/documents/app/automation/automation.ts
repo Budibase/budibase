@@ -208,6 +208,8 @@ export interface AutomationStepResultInputs {
 
 export interface AutomationStepResult {
   id: string
+  name?: string
+  icon?: string
   stepId: AutomationActionStepId
   inputs: AutomationStepResultInputs
   outputs: AutomationStepResultOutputs
@@ -218,6 +220,8 @@ export type AutomationTriggerResultOutputs = Record<string, any>
 
 export interface AutomationTriggerResult {
   id: string
+  name?: string
+  icon?: string
   stepId: AutomationTriggerStepId
   inputs?: AutomationTriggerResultInputs | null
   outputs: AutomationTriggerResultOutputs
