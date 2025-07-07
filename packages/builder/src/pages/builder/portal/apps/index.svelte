@@ -94,7 +94,7 @@
 
   const getBackupErrors = apps => {
     const backupErrors = {}
-    for (let app of apps) {
+    for (const app of apps) {
       if (app.backupErrors) {
         if (errorCount(app.backupErrors) > 0) {
           backupErrors[app.devId] = app.backupErrors
@@ -109,7 +109,7 @@
     if (backupId) {
       // For now, just navigate to the app's backup page or show details
       // Could be enhanced to show specific backup error details
-      $goto(`/builder/app/${appId}`)
+      $goto(`/builder/app/${appId}/settings/backups`)
     }
   }
 
@@ -245,7 +245,7 @@
         on:dismiss={async () => {
           const backupId = Object.keys(backupErrors[appId] || {})[0]
           if (backupId) {
-            await backups.clearBackupErrors(appId, backupId)
+            await backups.clearBackupErrors(appId)
             await appsStore.load()
           }
         }}
