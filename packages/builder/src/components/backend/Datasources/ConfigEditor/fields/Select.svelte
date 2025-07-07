@@ -1,11 +1,11 @@
 <script lang="ts">
   import { Label, Select } from "@budibase/bbui"
 
-  export let name
-  export let value
-  export let error
-  export let config
-  export let placeholder
+  export let name: string
+  export let value: string | undefined
+  export let error: string | undefined
+  export let config: { options: string[] }
+  export let placeholder: string | undefined
 </script>
 
 <div class="form-row">

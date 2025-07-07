@@ -1,12 +1,15 @@
 <script lang="ts">
+  import type { EnvDropdownType } from "@budibase/bbui"
   import { Label } from "@budibase/bbui"
   import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
 
-  export let type
-  export let name
-  export let value
-  export let error
-  export let placeholder
+  export let type: string
+  export let name: string
+  export let value: string
+  export let error: string | undefined
+  export let placeholder: string | undefined
+
+  $: inputType = type === "port" ? "text" : (type as EnvDropdownType)
 </script>
 
 <div class="form-row">
@@ -14,7 +17,7 @@
   <EnvVariableInput
     on:change
     on:blur
-    type={type === "port" ? "string" : type}
+    type={inputType}
     {value}
     {error}
     {placeholder}

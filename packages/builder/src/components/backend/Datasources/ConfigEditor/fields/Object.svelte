@@ -1,16 +1,16 @@
-<script>
+<script lang="ts">
   import { Label, Button } from "@budibase/bbui"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
 
-  export let name
-  export let value
+  export let name: string
+  export let value: Record<string, any>
 
-  let addButton
+  let addButton: any
 </script>
 
 <div class="form-row ssl">
   <Label>{name}</Label>
-  <Button secondary thin outline on:click={addButton.addEntry()}>Add</Button>
+  <Button secondary on:click={addButton.addEntry()}>Add</Button>
 </div>
 <KeyValueBuilder
   on:change

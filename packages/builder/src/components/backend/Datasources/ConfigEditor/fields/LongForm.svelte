@@ -1,10 +1,10 @@
 <script lang="ts">
   import { Label, TextArea } from "@budibase/bbui"
 
-  export let name
-  export let value
-  export let error
-  export let placeholder
+  export let name: string
+  export let value: string
+  export let error: string | undefined
+  export let placeholder: string | undefined
 </script>
 
 <div class="form-row">

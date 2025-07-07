@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Label, Toggle } from "@budibase/bbui"
 
-  export let value
-  export let name
+  export let value: boolean
+  export let name: string
 </script>
 
 <div class="form-row">

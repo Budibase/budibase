@@ -2,12 +2,25 @@
   import { createEventDispatcher } from "svelte"
   import { Layout, Accordion } from "@budibase/bbui"
   import ConfigInput from "../ConfigInput.svelte"
+  import type { DatasourceFieldType } from "@budibase/types"
 
-  export let value: any[]
+  interface FieldValue {
+    key: string
+    value: any
+    name: string
+    type: DatasourceFieldType
+    error?: string | null | undefined
+    config?: any
+    placeholder?: string
+  }
+
+  export let value: FieldValue[]
   export let name: string
-  export let config: { openByDefault: boolean } | undefined
+  export let config: { openByDefault?: boolean } | undefined
 
-  let dispatch = createEventDispatcher<{ change: any }>()
+  let dispatch = createEventDispatcher<{
+    change: { key: string; value: string }[]
+  }>()
 
   const handleChange = (
     updatedFieldKey: string,
@@ -33,6 +46,7 @@
     {#each value as field}
       <ConfigInput
         {...field}
+        error={field.error ?? null}
         on:change={e => handleChange(field.key, e.detail)}
       />
     {/each}
