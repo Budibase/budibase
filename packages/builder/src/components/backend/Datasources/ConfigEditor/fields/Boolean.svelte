@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Label, Toggle } from "@budibase/bbui"
 
   export let value
