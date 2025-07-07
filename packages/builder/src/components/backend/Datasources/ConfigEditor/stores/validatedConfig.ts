@@ -48,7 +48,7 @@ export const createValidatedConfigStore = (
     configStore.update($configStore => {
       const newStore = { ...$configStore }
 
-      if (integration.datasource?.[key].type === "fieldGroup") {
+      if (integration.datasource?.[key]?.type === "fieldGroup") {
         value.forEach(field => {
           newStore[field.key] = field.value
         })
