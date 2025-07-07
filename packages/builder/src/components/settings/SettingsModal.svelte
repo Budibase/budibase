@@ -200,6 +200,13 @@
 </div>
 
 <style>
+  .setting-main .setting-page {
+    padding-left: calc(var(--spacing-xl) * 2);
+  }
+  .setting-main .setting-page {
+    padding-right: calc(var(--spacing-xl) * 2);
+  }
+
   .root-nav :global(.custom-icon .spectrum-Avatar) {
     line-height: 0.8em;
   }
@@ -247,7 +254,7 @@
   }
 
   .spectrum-Dialog.spectrum-Dialog--extraLarge {
-    width: 1000px;
+    width: 1035px;
     min-height: 620px;
     height: 620px;
   }

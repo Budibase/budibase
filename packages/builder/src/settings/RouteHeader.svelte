@@ -10,7 +10,7 @@
 
 <div class="route-header">
   {#if route?.nav?.length}
-    <div class="heading">
+    <div class="section-header">
       {route?.section || ""}
     </div>
     <Divider noMargin size={"S"} />
@@ -59,6 +59,17 @@
 </div>
 
 <style>
+  .route-header .section-header,
+  .route-header .page-heading .nav,
+  .route-header :global(.container) {
+    padding-left: calc(var(--spacing-xl) * 2);
+  }
+  .route-header .section-header,
+  .route-header .page-heading .page-actions,
+  .route-header :global(.container) {
+    padding-right: calc(var(--spacing-xl) * 2);
+  }
+
   .route-header :global(hr) {
     background-color: var(--spectrum-global-color-gray-300);
   }
@@ -66,7 +77,7 @@
     display: flex;
     flex-direction: column;
   }
-  .heading {
+  .section-header {
     font-size: 16px;
     font-weight: 600;
     padding: var(--spacing-l);
@@ -92,7 +103,7 @@
     flex: 1;
   }
   .page-heading,
-  .heading {
+  .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -100,13 +111,13 @@
   .page-actions {
     padding-right: var(--spacing-l);
   }
-  .page-actions.no-padding {
+  .route-header .page-heading .page-actions.no-padding {
     padding-right: 0px;
   }
   .crumbs {
     flex: 1;
   }
-  .heading,
+  .section-header,
   .page-heading {
     min-height: 32px;
   }
