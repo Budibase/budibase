@@ -19,6 +19,7 @@ export interface GroupEndpoints {
   removeAppsFromGroup: (groupId: string, appArray: object[]) => Promise<void>
   addGroupAppBuilder: (groupId: string, appId: string) => Promise<void>
   removeGroupAppBuilder: (groupId: string, appId: string) => Promise<void>
+  bulkAddUsersFromCsv: (groupId: string, csvContent: string) => Promise<{ added: any[]; skipped: any[] }>
 }
 
 enum GroupResource {
@@ -185,6 +186,18 @@ export const buildGroupsEndpoints = (API: BaseAPIClient): GroupEndpoints => {
     removeGroupAppBuilder: async (groupId, appId) => {
       return await API.delete({
         url: `/api/global/groups/${groupId}/app/${appId}/builder`,
+      })
+    },
+
+    /**
+     * Bulk add users to group from CSV content
+     * @param groupId The group to update
+     * @param csvContent The CSV content with email addresses
+     */
+    bulkAddUsersFromCsv: async (groupId, csvContent) => {
+      return await API.post({
+        url: `/api/global/groups/${groupId}/users/bulk`,
+        body: { csvContent },
       })
     },
   }
