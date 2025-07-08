@@ -22,26 +22,31 @@ const propertyValidator = (type: string) => {
 }
 
 export const getValidatorFields = (integration: UIIntegration) => {
-  const validatorFields: Record<string, AnySchema> = {}
-
-  function handleFieldValidators(datasourceConfig: DatasourceConfig) {
+  function handleFieldValidators(
+    datasourceConfig: DatasourceConfig
+  ): Record<string, AnySchema> {
+    const result: Record<string, AnySchema> = {}
     Object.entries(datasourceConfig).forEach(([key, properties]) => {
       if (properties.type === DatasourceFieldType.FIELD_GROUP) {
-        handleFieldValidators(properties.fields || {})
+        result[key] = object(handleFieldValidators(properties.fields || {}))
         return
       }
 
       if (properties.required) {
-        validatorFields[key] = propertyValidator(properties.type).required()
+        result[key] = propertyValidator(properties.type)
+          .required()
+          .label(properties.display || key)
       } else {
-        validatorFields[key] = propertyValidator(properties.type).notRequired()
+        result[key] = propertyValidator(properties.type)
+          .notRequired()
+          .label(properties.display || key)
       }
     })
+
+    return result
   }
 
-  if (integration?.datasource) {
-    handleFieldValidators(integration.datasource)
-  }
+  const validatorFields = handleFieldValidators(integration.datasource || {})
 
   return validatorFields
 }

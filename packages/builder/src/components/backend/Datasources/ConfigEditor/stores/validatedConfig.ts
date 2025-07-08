@@ -36,8 +36,23 @@ export const createValidatedConfigStore = (
 
   const validate = async () => {
     try {
+      const $selectedValidatorsStore = get(selectedValidatorsStore)
+      const config = get(configStore)
+      const validatorsToApply = Object.entries($selectedValidatorsStore).reduce(
+        (result, [fieldKey, validator]) => {
+          const field = integration.datasource?.[fieldKey]
+          if (
+            !field?.hidden ||
+            !eval(processStringSync(field.hidden, config))
+          ) {
+            result[fieldKey] = validator
+          }
+          return result
+        },
+        {} as typeof allValidators
+      )
       await object()
-        .shape(get(selectedValidatorsStore))
+        .shape(validatorsToApply)
         .validate(get(configStore), { abortEarly: false })
 
       errorsStore.set({})
@@ -97,21 +112,7 @@ export const createValidatedConfigStore = (
   }
 
   const markAllFieldsActive = () => {
-    selectedValidatorsStore.update($validatorsStore => {
-      const fields = get(combined).validatedConfig
-      const config = get(configStore)
-      for (const field of fields) {
-        const { key } = field
-        if (field.hidden && eval(processStringSync(field.hidden, config))) {
-          delete $validatorsStore[key]
-          continue
-        }
-
-        $validatorsStore[key] = allValidators[key]
-      }
-      selectedValidatorsStore.set(allValidators)
-      return $validatorsStore
-    })
+    selectedValidatorsStore.set(allValidators)
     validate()
   }
 
@@ -139,31 +140,34 @@ export const createValidatedConfigStore = (
             return
           }
 
-          if (properties.type === DatasourceFieldType.FIELD_GROUP) {
-            for (const [key, val] of Object.entries(properties.fields || {})) {
-              validatedConfig.push({
-                key,
-                value: $configStore[key],
-                error: $errorsStore[key],
-                name: capitalise(val.display || key),
-                placeholder: val.placeholder,
-                type: val.type,
-                hidden: properties.hidden,
-                config: (val as any).config,
-              })
+          const getValue = () => {
+            if (properties.type === "fieldGroup") {
+              return Object.entries(properties.fields || {}).map(
+                ([fieldKey, fieldProperties]) => {
+                  return {
+                    key: fieldKey,
+                    value: $configStore[fieldKey],
+                    error: $errorsStore[`${key}.${fieldKey}`],
+                    name: capitalise(fieldProperties.display || fieldKey),
+                    type: fieldProperties.type,
+                  }
+                }
+              )
             }
-          } else {
-            validatedConfig.push({
-              key,
-              value: $configStore[key],
-              error: $errorsStore[key],
-              name: capitalise(properties.display || key),
-              placeholder: properties.placeholder,
-              type: properties.type,
-              hidden: properties.hidden,
-              config: (properties as any).config,
-            })
+
+            return $configStore[key]
           }
+
+          validatedConfig.push({
+            key,
+            value: getValue(),
+            error: $errorsStore[key],
+            name: capitalise(properties.display || key),
+            placeholder: properties.placeholder,
+            type: properties.type,
+            hidden: properties.hidden,
+            config: (properties as any).config,
+          })
         }
       )
 
