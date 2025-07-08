@@ -1,4 +1,8 @@
-import { Automation, AutomationTriggerStepId } from "@budibase/types"
+import {
+  Automation,
+  AutomationTriggerStepId,
+  AutomationActionStepId,
+} from "@budibase/types"
 
 export function isRowAction(automation: Automation) {
   return (
@@ -14,4 +18,37 @@ export function isWebhookAction(automation: Automation) {
 
 export function isAppAction(automation: Automation) {
   return automation.definition.trigger?.stepId === AutomationTriggerStepId.APP
+}
+
+function hasCollectBlockRecursive(steps: any[]): boolean {
+  if (!steps || !Array.isArray(steps)) {
+    return false
+  }
+
+  for (const step of steps) {
+    // Check if current step is a collect block
+    if (step.stepId === AutomationActionStepId.COLLECT) {
+      return true
+    }
+
+    // Check if current step is a branch with children
+    if (
+      step.stepId === AutomationActionStepId.BRANCH &&
+      step.inputs?.children
+    ) {
+      // Branch children is an object where keys are branch IDs and values are arrays of steps
+      for (const branchId in step.inputs.children) {
+        const branchSteps = step.inputs.children[branchId]
+        if (hasCollectBlockRecursive(branchSteps)) {
+          return true
+        }
+      }
+    }
+  }
+
+  return false
+}
+
+export function checkForCollectStep(automation: Automation): boolean {
+  return hasCollectBlockRecursive(automation.definition.steps)
 }
