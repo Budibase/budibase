@@ -454,4 +454,202 @@ describe("rest", () => {
 
     expect(mock.isDone()).toEqual(true)
   })
+
+  it("should work with static variables in query string", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        staticVariables: {
+          foo: "bar",
+        },
+      },
+    })
+
+    const mock = nock("http://www.example.com")
+      .get("/")
+      .query({ test: "bar" })
+      .reply(200, [{ result: "success" }])
+
+    const res = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        queryString: "test={{ foo }}",
+      },
+    })
+
+    expect(res.schema).toEqual({
+      result: { type: "string", name: "result" },
+    })
+    expect(res.rows).toEqual([{ result: "success" }])
+    expect(mock.isDone()).toEqual(true)
+  })
+
+  it("should work with static variables in headers", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        staticVariables: {
+          apiKey: "secret123",
+        },
+      },
+    })
+
+    const mock = nock("http://www.example.com")
+      .get("/")
+      .matchHeader("Authorization", "Bearer secret123")
+      .reply(200, [{ result: "authenticated" }])
+
+    const res = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        headers: {
+          Authorization: "Bearer {{ apiKey }}",
+        },
+      },
+    })
+
+    expect(res.schema).toEqual({
+      result: { type: "string", name: "result" },
+    })
+    expect(res.rows).toEqual([{ result: "authenticated" }])
+    expect(mock.isDone()).toEqual(true)
+  })
+
+  it("should work with static variables in request body", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        staticVariables: {
+          userId: "12345",
+        },
+      },
+    })
+
+    const mock = nock("http://www.example.com")
+      .post("/", { user: "12345" })
+      .reply(200, [{ result: "created" }])
+
+    const res = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "create",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        bodyType: BodyType.JSON,
+        requestBody: '{"user":"{{ userId }}"}',
+      },
+    })
+
+    expect(res.schema).toEqual({
+      result: { type: "string", name: "result" },
+    })
+    expect(res.rows).toEqual([{ result: "created" }])
+    expect(mock.isDone()).toEqual(true)
+  })
+
+  it("should handle static variables with empty values", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        staticVariables: {
+          emptyVar: "",
+        },
+      },
+    })
+
+    const mock = nock("http://www.example.com")
+      .get("/")
+      .query({ test: "" })
+      .reply(200, [{ result: "empty_handled" }])
+
+    const res = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        queryString: "test={{ emptyVar }}",
+      },
+    })
+
+    expect(res.schema).toEqual({
+      result: { type: "string", name: "result" },
+    })
+    expect(res.rows).toEqual([{ result: "empty_handled" }])
+    expect(mock.isDone()).toEqual(true)
+  })
+
+  it("should reproduce the bug where static variables return empty", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {
+        staticVariables: {
+          testVar: "actualValue",
+        },
+      },
+    })
+
+    // The bug: static variables might be returning empty instead of their actual values
+    const mockEmpty = nock("http://www.example.com")
+      .get("/")
+      .query({ test: "" })
+      .reply(200, [{ result: "bug_behavior" }])
+
+    // This is what we expect - static variables should resolve to their actual values
+    const mockCorrect = nock("http://www.example.com")
+      .get("/")
+      .query({ test: "actualValue" })
+      .reply(200, [{ result: "correct_behavior" }])
+
+    const res = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        queryString: "test={{ testVar }}",
+      },
+    })
+
+    // This should work - static variables should resolve to their values
+    expect(res.rows).toEqual([{ result: "correct_behavior" }])
+    expect(mockCorrect.isDone()).toEqual(true)
+    expect(mockEmpty.isDone()).toEqual(false)
+  })
 })
