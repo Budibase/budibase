@@ -1,4 +1,4 @@
-import { jsonFromCsvString } from "../csv"
+import { jsonFromCsvString } from "../"
 
 describe("csv", () => {
   describe("jsonFromCsvString", () => {
