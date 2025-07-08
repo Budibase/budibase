@@ -28,12 +28,10 @@ function hasCollectBlockRecursive(steps: AutomationStep[]): boolean {
   }
 
   for (const step of steps) {
-    // Check if current step is a collect block
     if (step.stepId === AutomationActionStepId.COLLECT) {
       return true
     }
 
-    // Check if current step is a branch with children
     if (isBranchStep(step) && step.inputs.children) {
       for (const child of Object.values(step.inputs.children)) {
         if (hasCollectBlockRecursive(child)) {
