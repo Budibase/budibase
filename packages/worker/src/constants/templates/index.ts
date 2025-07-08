@@ -20,12 +20,12 @@ export const EmailTemplates = {
   [EmailTemplatePurpose.CORE]: readStaticFile(join(__dirname, "core.hbs")),
 }
 
-const normaliseTemplateContent = (content: string) => {
+export const removeWhitespaceBetweenTags = (content: string) => {
   return content.replace(/>\s+</g, "><").replace(/\s+/g, " ").trim()
 }
 
 export async function loadTemplateConfig(pathTo: string) {
-  let templateConfig: any
+  let templateConfig: Record<string, string>
 
   try {
     console.log("Loading email templates:", pathTo)
@@ -42,7 +42,7 @@ export async function loadTemplateConfig(pathTo: string) {
     const { core, ...rest } = parsed.templates
     templateConfig = rest
   } catch (e: any) {
-    console.log("There was a problem parsing emails: ", e.message)
+    console.log("There was a problem parsing email templates: ", e.message)
     return
   }
 
@@ -55,8 +55,10 @@ export async function loadTemplateConfig(pathTo: string) {
           const config = templateConfig[template.purpose]
           if (config) {
             // Need to normalise the text spacing for comparison
-            const configContent = normaliseTemplateContent(config)
-            const templateContent = normaliseTemplateContent(template.contents)
+            const configContent = removeWhitespaceBetweenTags(config)
+            const templateContent = removeWhitespaceBetweenTags(
+              template.contents
+            )
 
             // If the template is exactly the same, ignore it.
             if (configContent === templateContent) return acc
@@ -79,7 +81,7 @@ export async function loadTemplateConfig(pathTo: string) {
       if (updates.length) {
         const updateList = updates.map(u => u.purpose)
         const db = tenancy.getGlobalDB()
-        await db.bulkDocs([...updates])
+        await db.bulkDocs(updates)
         console.log(`Email templates updated: ${updateList.join(",")}`)
       } else {
         console.log(`Email templates unchanged`)

@@ -110,7 +110,7 @@ function templatesToYaml(
   const doc = new yaml.Document()
 
   // Build the template object
-  const templatesObj: any = {}
+  const templatesObj: Record<string, yaml.Scalar> = {}
   templates.forEach(template => {
     const scalar = new yaml.Scalar(template.contents)
     scalar.type = "BLOCK_LITERAL"
