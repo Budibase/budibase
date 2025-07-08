@@ -123,10 +123,25 @@
 </script>
 
 <ApexChart {options} />
+<script>
+  options = {
+    chart: {
+      events: {
+        mounted: function(chartContext) {
+          const labels = document.querySelectorAll('.apexcharts-datalabel');
+          labels.forEach(label => label.setAttribute('data-custom', 'true'));
+        }
+      }
+    }
+  };
+</script>
 
 <style>
   /*  data labels (at the end of each spoke) cannot be configured */
   :global(.apexcharts-datalabel) {
-    fill: #808080 !important;
+    fill: #808080;
+  }
+  :global(.apexcharts-datalabel[data-custom="true"]) {
+    fill: #808080;
   }
 </style>
