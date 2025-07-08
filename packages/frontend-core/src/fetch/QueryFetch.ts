@@ -51,6 +51,18 @@ export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
       }
     }
 
+    // Add static variables from datasource configuration
+    if (definition?.datasourceId) {
+      try {
+        const fullDatasource = await this.API.getDatasource(definition.datasourceId)
+        if (fullDatasource?.config?.staticVariables) {
+          Object.assign(parameters, fullDatasource.config.staticVariables)
+        }
+      } catch (error) {
+        console.error("Failed to fetch datasource for static variables:", error)
+      }
+    }
+
     // Add pagination to query if supported
     const queryPayload: ExecuteQueryRequest = { parameters }
     if (paginate && supportsPagination) {

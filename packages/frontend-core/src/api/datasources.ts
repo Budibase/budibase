@@ -17,6 +17,7 @@ import { BaseAPIClient } from "./types"
 
 export interface DatasourceEndpoints {
   getDatasources: () => Promise<Datasource[]>
+  getDatasource: (id: string) => Promise<Datasource>
   buildDatasourceSchema: (
     datasourceId: string,
     tablesFilter?: string[]
@@ -51,6 +52,15 @@ export const buildDatasourceEndpoints = (
   getDatasources: async () => {
     return await API.get({
       url: "/api/datasources",
+    })
+  },
+
+  /**
+   * Gets a specific datasource by ID.
+   */
+  getDatasource: async (id: string) => {
+    return await API.get({
+      url: `/api/datasources/${id}`,
     })
   },
 

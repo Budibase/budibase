@@ -259,8 +259,20 @@ const queryExecutionHandler = async action => {
       notificationStore.actions.error("That query couldn't be found")
       return false
     }
+
+    // Merge static variables from datasource configuration
+    let parameters = { ...queryParams }
+    try {
+      const datasource = await API.getDatasource(query.datasourceId)
+      if (datasource?.config?.staticVariables) {
+        parameters = { ...datasource.config.staticVariables, ...parameters }
+      }
+    } catch (error) {
+      console.error("Failed to fetch datasource for static variables:", error)
+    }
+
     const result = await API.executeQuery(queryId, {
-      parameters: queryParams,
+      parameters,
     })
 
     // Trigger a notification and invalidate the datasource as long as this

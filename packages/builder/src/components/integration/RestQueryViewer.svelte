@@ -164,7 +164,9 @@
     const newQuery = cloneDeep(fromQuery)
     const queryString = restUtils.buildQueryString(urlQueries)
 
-    newQuery.parameters = restUtils.keyValueToQueryParameters(requestBindings)
+    // Merge static variables with request bindings
+    const allBindings = { ...staticVariables, ...requestBindings }
+    newQuery.parameters = restUtils.keyValueToQueryParameters(allBindings)
     newQuery.fields.requestBody =
       typeof newQuery.fields.requestBody === "object"
         ? readableToRuntimeMap(mergedBindings, newQuery.fields.requestBody)
