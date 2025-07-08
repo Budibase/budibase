@@ -133,12 +133,8 @@ export const createValidatedConfigStore = (
   }
 
   const combined = derived(
-    [configStore, errorsStore, selectedValidatorsStore],
-    ([
-      $configStore,
-      $errorsStore,
-      $selectedValidatorsStore,
-    ]): ValidatedConfigStore => {
+    [configStore, errorsStore],
+    ([$configStore, $errorsStore]): ValidatedConfigStore => {
       const validatedConfig: ValidatedConfigItem[] = []
 
       const config: Record<string, any> = {}
@@ -186,17 +182,13 @@ export const createValidatedConfigStore = (
         }
       )
 
-      const allFieldsActive =
-        Object.keys($selectedValidatorsStore).length ===
-        Object.keys(allValidators).length
-
       const hasErrors = Object.keys($errorsStore).length > 0
 
       return {
         validatedConfig,
         config,
         errors: $errorsStore,
-        preventSubmit: allFieldsActive && hasErrors,
+        preventSubmit: hasErrors,
       }
     }
   )
