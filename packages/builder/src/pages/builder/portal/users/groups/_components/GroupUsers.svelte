@@ -2,7 +2,14 @@
   import EditUserPicker from "./EditUserPicker.svelte"
   import BulkAddUsersModal from "./BulkAddUsersModal.svelte"
 
-  import { Button, Heading, Modal, Pagination, Table, Search } from "@budibase/bbui"
+  import {
+    Button,
+    Heading,
+    Modal,
+    Pagination,
+    Table,
+    Search,
+  } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { goto } from "@roxi/routify"
   import { API } from "@/api"
@@ -68,12 +75,11 @@
     <ActiveDirectoryInfo text="Users synced from your AD" />
   {:else if !readonly}
     <div class="controls-left">
-      <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
-      <Button 
-        secondary 
-        icon="upload" 
-        on:click={() => bulkAddModal.show()}
-      >
+      <EditUserPicker
+        {groupId}
+        onUsersUpdated={fetchGroupUsers.getInitialData}
+      />
+      <Button secondary icon="upload" on:click={() => bulkAddModal.show()}>
         Bulk Add via CSV
       </Button>
     </div>

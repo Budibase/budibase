@@ -379,13 +379,13 @@ describe("/api/global/groups", () => {
       ].join("\n")
 
       const result = await config.api.groups.bulkAddUsers(groupId, csvContent)
-      
+
       expect(result.body).toEqual({
         added: expect.arrayContaining([
           expect.objectContaining({ email: existingUsers[0].email }),
           expect.objectContaining({ email: existingUsers[1].email }),
         ]),
-        skipped: []
+        skipped: [],
       })
     })
 
@@ -397,22 +397,19 @@ describe("/api/global/groups", () => {
       ].join("\n")
 
       const result = await config.api.groups.bulkAddUsers(groupId, csvContent)
-      
+
       expect(result.body.added).toHaveLength(1)
       expect(result.body.added[0].email).toBe(existingUsers[2].email)
       expect(result.body.skipped).toEqual([
-        { email: "nonexistent@example.com", reason: "User not found" }
+        { email: "nonexistent@example.com", reason: "User not found" },
       ])
     })
 
     it("should handle CSV with different column names", async () => {
-      const csvContent = [
-        "Email Address",
-        existingUsers[3].email,
-      ].join("\n")
+      const csvContent = ["Email Address", existingUsers[3].email].join("\n")
 
       const result = await config.api.groups.bulkAddUsers(groupId, csvContent)
-      
+
       expect(result.body.added).toHaveLength(1)
       expect(result.body.added[0].email).toBe(existingUsers[3].email)
     })
@@ -424,7 +421,7 @@ describe("/api/global/groups", () => {
       ].join("\n")
 
       const result = await config.api.groups.bulkAddUsers(groupId, csvContent)
-      
+
       expect(result.body.added).toHaveLength(1)
       expect(result.body.added[0].email).toBe(existingUsers[4].email)
     })
@@ -436,21 +433,17 @@ describe("/api/global/groups", () => {
     })
 
     it("should return error for CSV without email column", async () => {
-      const csvContent = [
-        "name,department",
-        "John Doe,Engineering",
-      ].join("\n")
+      const csvContent = ["name,department", "John Doe,Engineering"].join("\n")
 
       await config.api.groups.bulkAddUsers(groupId, csvContent, { expect: 400 })
     })
 
     it("should return error for non-existent group", async () => {
-      const csvContent = [
-        "email",
-        existingUsers[0].email,
-      ].join("\n")
+      const csvContent = ["email", existingUsers[0].email].join("\n")
 
-      await config.api.groups.bulkAddUsers("invalid_group_id", csvContent, { expect: 404 })
+      await config.api.groups.bulkAddUsers("invalid_group_id", csvContent, {
+        expect: 404,
+      })
     })
   })
 })
