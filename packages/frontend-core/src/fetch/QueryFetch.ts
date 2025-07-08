@@ -54,7 +54,9 @@ export default class QueryFetch extends BaseDataFetch<QueryDatasource, Query> {
     // Add static variables from datasource configuration
     if (definition?.datasourceId) {
       try {
-        const fullDatasource = await this.API.getDatasource(definition.datasourceId)
+        const fullDatasource = await this.API.getDatasource(
+          definition.datasourceId
+        )
         if (fullDatasource?.config?.staticVariables) {
           Object.assign(parameters, fullDatasource.config.staticVariables)
         }
