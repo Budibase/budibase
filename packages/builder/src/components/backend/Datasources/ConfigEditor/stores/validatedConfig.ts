@@ -13,7 +13,6 @@ interface ValidatedConfigItem {
   name: string
   placeholder: string | undefined
   type: DatasourceFieldType
-  hidden: string | undefined
   config: any | undefined
 }
 
@@ -37,15 +36,11 @@ export const createValidatedConfigStore = (
   const validate = async () => {
     try {
       const $selectedValidatorsStore = get(selectedValidatorsStore)
-      const config = get(configStore)
-      const validatorsToApply = Object.entries($selectedValidatorsStore).reduce(
-        (result, [fieldKey, validator]) => {
-          const field = integration.datasource?.[fieldKey]
-          if (
-            !field?.hidden ||
-            !eval(processStringSync(field.hidden, config))
-          ) {
-            result[fieldKey] = validator
+      const { validatedConfig } = get(combined)
+      const validatorsToApply = validatedConfig.reduce(
+        (result, { key }) => {
+          if ($selectedValidatorsStore[key]) {
+            result[key] = $selectedValidatorsStore[key]
           }
           return result
         },
@@ -158,16 +153,20 @@ export const createValidatedConfigStore = (
             return $configStore[key]
           }
 
-          validatedConfig.push({
-            key,
-            value: getValue(),
-            error: $errorsStore[key],
-            name: capitalise(properties.display || key),
-            placeholder: properties.placeholder,
-            type: properties.type,
-            hidden: properties.hidden,
-            config: (properties as any).config,
-          })
+          if (
+            !properties.hidden ||
+            !eval(processStringSync(properties.hidden, $configStore))
+          ) {
+            validatedConfig.push({
+              key,
+              value: getValue(),
+              error: $errorsStore[key],
+              name: capitalise(properties.display || key),
+              placeholder: properties.placeholder,
+              type: properties.type,
+              config: (properties as any).config,
+            })
+          }
         }
       )
 

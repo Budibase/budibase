@@ -1,6 +1,5 @@
 <script lang="ts">
   import { keepOpen, Body, Layout, ModalContent } from "@budibase/bbui"
-  import { processStringSync } from "@budibase/string-templates"
   import ConfigInput from "./ConfigInput.svelte"
   import { createValidatedConfigStore } from "./stores/validatedConfig"
   import { createValidatedNameStore } from "./stores/validatedName"
@@ -61,18 +60,16 @@
     />
   {/if}
 
-  {#each $configStore.validatedConfig as { type, key, value, error, name, hidden, config, placeholder }}
-    {#if hidden === undefined || !eval(processStringSync(hidden, $configStore.config))}
-      <ConfigInput
-        {type}
-        {value}
-        {error}
-        {name}
-        {config}
-        {placeholder}
-        on:blur={() => configStore.markFieldActive(key)}
-        on:change={e => configStore.updateFieldValue(key, e.detail)}
-      />
-    {/if}
+  {#each $configStore.validatedConfig as { type, key, value, error, name, config, placeholder }}
+    <ConfigInput
+      {type}
+      {value}
+      {error}
+      {name}
+      {config}
+      {placeholder}
+      on:blur={() => configStore.markFieldActive(key)}
+      on:change={e => configStore.updateFieldValue(key, e.detail)}
+    />
   {/each}
 </ModalContent>
