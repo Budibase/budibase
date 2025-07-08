@@ -3,6 +3,7 @@
   import { automationStore } from "@/stores/builder"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
+  import { AutomationActionStepId } from "@budibase/types"
 
   export let parameters = {}
   export let bindings = []
@@ -32,8 +33,35 @@
         automation.definition.trigger.inputs.fields || {}
       ).map(([name, type]) => ({ name, type }))
 
-      let hasCollectBlock = automation.definition.steps.some(
-        step => step.stepId === ActionStepID.COLLECT
+      // Recursive function to check for collect blocks in steps and branch children
+      const hasCollectBlockRecursive = steps => {
+        if (!steps || !Array.isArray(steps)) {
+          return false
+        }
+
+        for (const step of steps) {
+          if (step.stepId === ActionStepID.COLLECT) {
+            return true
+          }
+
+          if (
+            step.stepId === AutomationActionStepId.BRANCH &&
+            step.inputs?.children
+          ) {
+            for (const branchId in step.inputs.children) {
+              const branchSteps = step.inputs.children[branchId]
+              if (hasCollectBlockRecursive(branchSteps)) {
+                return true
+              }
+            }
+          }
+        }
+
+        return false
+      }
+
+      let hasCollectBlock = hasCollectBlockRecursive(
+        automation.definition.steps
       )
 
       return {
