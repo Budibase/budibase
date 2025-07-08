@@ -151,12 +151,12 @@ export const createValidatedConfigStore = (
           }
 
           const getValue = () => {
-            if (properties.type === "fieldGroup") {
+            if (properties.type === DatasourceFieldType.FIELD_GROUP) {
               return Object.entries(properties.fields || {}).map(
                 ([fieldKey, fieldProperties]) => {
                   return {
                     key: fieldKey,
-                    value: $configStore[fieldKey],
+                    value: $configStore[key]?.[fieldKey],
                     error: $errorsStore[`${key}.${fieldKey}`],
                     name: capitalise(fieldProperties.display || fieldKey),
                     type: fieldProperties.type,
