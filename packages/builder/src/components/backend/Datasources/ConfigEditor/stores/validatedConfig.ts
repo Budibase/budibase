@@ -36,7 +36,7 @@ export const createValidatedConfigStore = (
   const validate = async () => {
     try {
       const $selectedValidatorsStore = get(selectedValidatorsStore)
-      const { validatedConfig } = get(combined)
+      const { validatedConfig, config } = get(combined)
 
       const validatorsToApply = validatedConfig.reduce(
         (result, { key, type }) => {
@@ -61,7 +61,7 @@ export const createValidatedConfigStore = (
       )
       await object()
         .shape(validatorsToApply)
-        .validate(get(configStore), { abortEarly: false })
+        .validate(config, { abortEarly: false })
 
       errorsStore.set({})
 
@@ -141,6 +141,8 @@ export const createValidatedConfigStore = (
     ]): ValidatedConfigStore => {
       const validatedConfig: ValidatedConfigItem[] = []
 
+      const config: Record<string, any> = {}
+
       const allowedRestKeys = ["rejectUnauthorized", "downloadImages"]
       Object.entries(integration.datasource || {}).forEach(
         ([key, properties]) => {
@@ -179,6 +181,7 @@ export const createValidatedConfigStore = (
               type: properties.type,
               config: (properties as any).config,
             })
+            config[key] = $configStore[key]
           }
         }
       )
@@ -191,7 +194,7 @@ export const createValidatedConfigStore = (
 
       return {
         validatedConfig,
-        config: $configStore,
+        config,
         errors: $errorsStore,
         preventSubmit: allFieldsActive && hasErrors,
       }
