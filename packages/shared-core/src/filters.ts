@@ -63,6 +63,7 @@ export const getValidOperatorsForType = (
     Op.Empty,
     Op.NotEmpty,
     Op.In,
+    Op.NotIn,
   ]
   const numOps = [
     Op.Equals,
@@ -72,6 +73,7 @@ export const getValidOperatorsForType = (
     Op.Empty,
     Op.NotEmpty,
     Op.In,
+    Op.NotIn,
   ]
   let ops: {
     value: string
@@ -128,6 +130,7 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotContains.value,
   OperatorOptions.ContainsAny.value,
   OperatorOptions.In.value,
+  OperatorOptions.NotIn.value,
 ] as (keyof SearchQueryFields)[]
 
 export function recurseLogicalOperators(
