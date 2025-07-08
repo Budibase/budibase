@@ -36,10 +36,8 @@ function hasCollectBlockRecursive(steps: any[]): boolean {
       step.stepId === AutomationActionStepId.BRANCH &&
       step.inputs?.children
     ) {
-      // Branch children is an object where keys are branch IDs and values are arrays of steps
-      for (const branchId in step.inputs.children) {
-        const branchSteps = step.inputs.children[branchId]
-        if (hasCollectBlockRecursive(branchSteps)) {
+      for (const { children } of Object.values(step.inputs.children)) {
+        if (hasCollectBlockRecursive(children)) {
           return true
         }
       }
