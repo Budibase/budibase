@@ -4,6 +4,7 @@ import * as deploymentController from "../controllers/deploy"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { applicationValidator } from "./utils/validators"
+import { skipMigrationRedirect } from "../../middleware/appMigrations"
 
 const router: Router = new Router()
 
@@ -56,6 +57,7 @@ router
   .delete(
     "/api/applications/:appId",
     authorized(permissions.BUILDER),
+    skipMigrationRedirect,
     controller.destroy
   )
   .post(

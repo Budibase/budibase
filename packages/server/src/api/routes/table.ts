@@ -59,5 +59,11 @@ router
     authorized(BUILDER),
     tableController.migrate
   )
+  .post(
+    "/api/tables/:tableId/duplicate",
+    paramResource("tableId"),
+    authorized(BUILDER),
+    tableController.duplicate
+  )
 
 export default router

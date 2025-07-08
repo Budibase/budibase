@@ -1864,6 +1864,17 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click bar",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked bar",
+            "key": "bar"
+          }
+        ]
+      },
+      {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
@@ -2037,6 +2048,17 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click marker",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked marker",
+            "key": "marker"
+          }
+        ]
+      },
+      {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
@@ -2203,6 +2225,17 @@
           }
         },
         "required": true
+      },
+      {
+        "type": "event",
+        "label": "On click marker",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked marker",
+            "key": "marker"
+          }
+        ]
       },
       {
         "type": "select",
@@ -2385,6 +2418,25 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click segment",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked segment",
+            "key": "segment"
+          },
+          {
+            "label": "Segment Index",
+            "key": "index"
+          },
+          {
+            "label": "Segment Percentage",
+            "key": "percentage"
+          }
+        ]
+      },
+      {
         "type": "text",
         "label": "Width",
         "key": "width"
@@ -2476,6 +2528,12 @@
         "label": "Legend",
         "key": "legend",
         "defaultValue": false
+      }
+    ],
+    "context": [
+      {
+        "type": "schema",
+        "scope": "local"
       }
     ]
   },
@@ -2692,6 +2750,25 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click segment",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked segment",
+            "key": "segment"
+          },
+          {
+            "label": "Segment Index",
+            "key": "index"
+          },
+          {
+            "label": "Segment Percentage",
+            "key": "percentage"
+          }
+        ]
+      },
+      {
         "type": "text",
         "label": "Width",
         "key": "width"
@@ -2872,6 +2949,17 @@
         "required": true
       },
       {
+        "type": "event",
+        "label": "On click candlestick",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked candlestick",
+            "key": "candlestick"
+          }
+        ]
+      },
+      {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
@@ -2961,6 +3049,25 @@
         "key": "bucketCount",
         "defaultValue": 10,
         "min": 2
+      },
+      {
+        "type": "event",
+        "label": "On click bucket",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Clicked bucket rows",
+            "key": "rowsInBucket"
+          },
+          {
+            "label": "Lower limit",
+            "key": "lowerLimit"
+          },
+          {
+            "label": "Upper limit",
+            "key": "upperLimit"
+          }
+        ]
       },
       {
         "type": "boolean",
@@ -3320,6 +3427,14 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3464,6 +3579,14 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3574,6 +3697,14 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3660,6 +3791,14 @@
             "key": "value"
           }
         ]
+      },
+      {
+        "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
       },
       {
         "type": "boolean",

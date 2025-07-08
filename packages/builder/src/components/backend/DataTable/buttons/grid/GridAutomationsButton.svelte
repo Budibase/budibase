@@ -44,7 +44,7 @@
       icon="lightning-a"
       selected={open || automationCount}
       quiet
-      accentColor="#5610AD"
+      accentColor="#4b75ff"
     >
       Automations{automationCount ? `: ${automationCount}` : ""}
     </ActionButton>

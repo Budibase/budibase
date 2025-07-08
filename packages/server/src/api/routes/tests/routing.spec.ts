@@ -61,6 +61,7 @@ describe("/routing", () => {
         }
       )
     })
+
     it("returns the correct routing for basic user", async () => {
       const res = await request
         .get(`/api/routing/client`)
