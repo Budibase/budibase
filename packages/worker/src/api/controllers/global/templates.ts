@@ -151,7 +151,10 @@ export async function exportTemplates(ctx: Ctx) {
       fs.writeFileSync(path, finalYaml)
       ctx.body = fs.createReadStream(path)
     } catch (err: any) {
-      console.log("Could not download email templates ", err.message)
+      ctx.throw(
+        err.status,
+        `Could not download email templates: ${err.message}`
+      )
     }
   }
 }

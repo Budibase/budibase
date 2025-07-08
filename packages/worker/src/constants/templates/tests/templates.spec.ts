@@ -5,8 +5,12 @@ import { join } from "path"
 
 describe("Loading yaml email templates", () => {
   const config = new TestConfiguration()
-
+  let consoleSpy: jest.SpyInstance
   let templates: Template[] = []
+
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {})
+  })
 
   beforeAll(async () => {
     addBaseTemplates(templates, "email")
@@ -21,7 +25,6 @@ describe("Loading yaml email templates", () => {
   })
 
   it("should ignore an invalid path", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {})
     const testPath = join(__dirname, `./email_templates_wrong_path.yaml`)
 
     await config.doInTenant(async () => {
@@ -41,7 +44,6 @@ describe("Loading yaml email templates", () => {
 
   it("should ignore empty contents", async () => {
     // Valid path but its empty.
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {})
     const testPath = join(__dirname, `./email_templates_empty.yaml`)
 
     await config.doInTenant(async () => {
@@ -57,7 +59,6 @@ describe("Loading yaml email templates", () => {
   })
 
   it("should detect and ignore invalid yaml content", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {})
     const testPath = join(__dirname, `./email_templates_invalid.yaml`)
 
     await config.doInTenant(async () => {
@@ -74,8 +75,6 @@ describe("Loading yaml email templates", () => {
   })
 
   it("should process valid yaml content", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {})
-
     // welcome and custom modified, invitation was excluded
     const testPath = join(__dirname, `./email_templates.yaml`)
 
@@ -128,8 +127,6 @@ describe("Loading yaml email templates", () => {
   })
 
   it("should only update template docs when the contents has changed", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {})
-
     // welcome and custom modified, invitation was excluded
     const testPath = join(__dirname, `./email_templates.yaml`)
 
