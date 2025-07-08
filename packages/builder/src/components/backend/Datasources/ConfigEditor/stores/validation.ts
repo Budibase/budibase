@@ -28,7 +28,14 @@ export const getValidatorFields = (integration: UIIntegration) => {
     const result: Record<string, AnySchema> = {}
     Object.entries(datasourceConfig).forEach(([key, properties]) => {
       if (properties.type === DatasourceFieldType.FIELD_GROUP) {
-        result[key] = object(handleFieldValidators(properties.fields || {}))
+        const fieldGroupValidator = handleFieldValidators(
+          properties.fields || {}
+        )
+        for (const [fieldKey, fieldValidator] of Object.entries(
+          fieldGroupValidator
+        )) {
+          result[`${key}.${fieldKey}`] = fieldValidator
+        }
         return
       }
 

@@ -43,4 +43,5 @@
   {placeholder}
   on:blur
   on:change
+  on:nestedFieldBlur
 />

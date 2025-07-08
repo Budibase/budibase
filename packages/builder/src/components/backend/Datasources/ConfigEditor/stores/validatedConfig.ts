@@ -37,9 +37,22 @@ export const createValidatedConfigStore = (
     try {
       const $selectedValidatorsStore = get(selectedValidatorsStore)
       const { validatedConfig } = get(combined)
+
       const validatorsToApply = validatedConfig.reduce(
-        (result, { key }) => {
-          if ($selectedValidatorsStore[key]) {
+        (result, { key, type }) => {
+          if (type === DatasourceFieldType.FIELD_GROUP) {
+            const groupFields = Object.entries($selectedValidatorsStore)
+              .filter(([fieldKey]) => fieldKey.startsWith(`${key}.`))
+              .reduce(
+                (acc, [validatorKey, validator]) => {
+                  acc[validatorKey.split(".")[1]] = validator
+
+                  return acc
+                },
+                {} as typeof $selectedValidatorsStore
+              )
+            result[key] = object(groupFields)
+          } else if ($selectedValidatorsStore[key]) {
             result[key] = $selectedValidatorsStore[key]
           }
           return result

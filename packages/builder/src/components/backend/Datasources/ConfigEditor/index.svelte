@@ -70,6 +70,8 @@
       {placeholder}
       on:blur={() => configStore.markFieldActive(key)}
       on:change={e => configStore.updateFieldValue(key, e.detail)}
+      on:nestedFieldBlur={e =>
+        configStore.markFieldActive(`${key}.${e.detail}`)}
     />
   {/each}
 </ModalContent>
