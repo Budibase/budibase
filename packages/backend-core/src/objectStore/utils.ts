@@ -5,6 +5,7 @@ import env from "../environment"
 import {
   LifecycleRule,
   PutBucketLifecycleConfigurationCommandInput,
+  PutBucketPolicyCommandInput,
 } from "@aws-sdk/client-s3"
 import * as objectStore from "./objectStore"
 import {
@@ -62,6 +63,27 @@ export const bucketTTLConfig = (
   return {
     Bucket: bucketName,
     LifecycleConfiguration: lifecycleConfiguration,
+  }
+}
+
+export const bucketPublicReadConfig = (
+  bucketName: string
+): PutBucketPolicyCommandInput => {
+  const policy = {
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Principal: "*",
+        Action: "s3:GetObject",
+        Resource: `arn:aws:s3:::${bucketName}/*/attachments/*`,
+      },
+    ],
+  }
+
+  return {
+    Bucket: bucketName,
+    Policy: JSON.stringify(policy),
   }
 }
 

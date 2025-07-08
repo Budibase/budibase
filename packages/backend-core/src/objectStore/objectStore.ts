@@ -18,7 +18,11 @@ import { promisify } from "util"
 import { join } from "path"
 import fs, { PathLike, ReadStream } from "fs"
 import env from "../environment"
-import { bucketTTLConfig, budibaseTempDir } from "./utils"
+import {
+  bucketTTLConfig,
+  budibaseTempDir,
+  bucketPublicReadConfig,
+} from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
@@ -29,6 +33,7 @@ const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
 const STATE = {
   bucketCreationPromises: {},
+  bucketPolicyApplied: {} as Record<string, boolean>,
 }
 export const SIGNED_FILE_PREFIX = "/files/signed"
 
@@ -130,6 +135,46 @@ export function ObjectStore(
 }
 
 /**
+ * Ensures bucket policy is applied for public read access on attachments
+ * when ATTACHMENT_URL_EXPIRY_DISABLED is enabled
+ */
+async function ensureBucketPolicyIfNeeded(
+  client: any,
+  bucketName: string
+): Promise<void> {
+  if (
+    !env.ATTACHMENT_URL_EXPIRY_DISABLED ||
+    bucketName !== env.APPS_BUCKET_NAME
+  ) {
+    return
+  }
+
+  if (STATE.bucketPolicyApplied[bucketName]) {
+    return
+  }
+  try {
+    try {
+      await client.getBucketPolicy({ Bucket: bucketName })
+      STATE.bucketPolicyApplied[bucketName] = true
+    } catch (err: any) {
+      if (
+        err.Code === "NoSuchBucketPolicy" ||
+        err.name === "NoSuchBucketPolicy"
+      ) {
+        const policyConfig = bucketPublicReadConfig(bucketName)
+        await client.putBucketPolicy(policyConfig)
+        STATE.bucketPolicyApplied[bucketName] = true
+        console.log(`Applied public read policy to bucket: ${bucketName}`)
+      } else {
+        throw err
+      }
+    }
+  } catch (policyErr: any) {
+    console.error("Failed to ensure bucket policy:", policyErr)
+  }
+}
+
+/**
  * Given an object store and a bucket name this will make sure the bucket exists,
  * if it does not exist then it will create it.
  */
@@ -160,6 +205,20 @@ export async function createBucketIfNotExists(
 
         await promises[bucketName]
         delete promises[bucketName]
+
+        // Apply public read policy if non-expiring attachment links are enabled
+        if (
+          env.ATTACHMENT_URL_EXPIRY_DISABLED &&
+          bucketName === env.APPS_BUCKET_NAME
+        ) {
+          try {
+            const policyConfig = bucketPublicReadConfig(bucketName)
+            await client.putBucketPolicy(policyConfig)
+          } catch (policyErr: any) {
+            console.error("Failed to apply bucket policy:", policyErr)
+          }
+        }
+
         return { created: true, exists: false }
       } else {
         throw new Error("Access denied to object store bucket." + err)

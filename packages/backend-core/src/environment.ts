@@ -202,11 +202,6 @@ const environment = {
   CLOUDFRONT_CDN: process.env.CLOUDFRONT_CDN,
   CLOUDFRONT_PRIVATE_KEY_64: process.env.CLOUDFRONT_PRIVATE_KEY_64,
   CLOUDFRONT_PUBLIC_KEY_ID: process.env.CLOUDFRONT_PUBLIC_KEY_ID,
-  /**
-   * When enabled, attachment URLs will be direct bucket URLs without signing (self-hosted only).
-   * This allows sharing attachment URLs externally without expiration.
-   * WARNING: Only enable this on self-hosted instances with public bucket access configured.
-   */
   ATTACHMENT_URL_EXPIRY_DISABLED: selfHosted
     ? process.env.ATTACHMENT_URL_EXPIRY_DISABLED
     : false,
