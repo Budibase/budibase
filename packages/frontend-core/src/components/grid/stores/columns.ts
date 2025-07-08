@@ -171,6 +171,7 @@ export const initialise = (context: StoreContext) => {
       primaryDisplay = candidatePD
     }
 
+    const anyVisibilitySet = Object.values($enrichedSchema).find((col: any) => col.visible != undefined)
     // Update columns, removing extraneous columns and adding missing ones
     columns.set(
       Object.keys($enrichedSchema)
@@ -182,7 +183,7 @@ export const initialise = (context: StoreContext) => {
             label: fieldSchema.displayName || field,
             schema: fieldSchema,
             width: fieldSchema.width || DefaultColumnWidth,
-            visible: fieldSchema.visible,
+            visible: fieldSchema.visible ?? !anyVisibilitySet,
             readonly: fieldSchema.readonly,
             order: fieldSchema.order,
             conditions: fieldSchema.conditions,
