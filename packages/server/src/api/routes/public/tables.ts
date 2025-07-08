@@ -1,5 +1,5 @@
 import controller from "../../controllers/public/tables"
-import Endpoint from "./utils/Endpoint"
+import Endpoint from "../../utils/Endpoint"
 import { tableValidator, nameValidator } from "../utils/validators"
 
 const read = [],

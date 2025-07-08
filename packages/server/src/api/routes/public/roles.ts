@@ -1,5 +1,5 @@
 import controller from "../../controllers/public/roles"
-import Endpoint from "./utils/Endpoint"
+import Endpoint from "../../utils/Endpoint"
 
 const write = []
 

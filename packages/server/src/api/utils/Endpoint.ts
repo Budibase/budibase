@@ -1,15 +1,30 @@
 import Router from "@koa/router"
+import { UserCtx, Ctx } from "@budibase/types"
+import { Next } from "koa"
 
-export type CtxFn = (ctx: any, next?: any) => void | Promise<any>
+export type Method = "post" | "put" | "patch" | "get" | "delete" | "head"
+
+export type UserCtxWithNextFn = (
+  ctx: UserCtx,
+  next: Next
+) => void | Promise<unknown>
+export type CtxWithNextFn = (ctx: Ctx, next: Next) => void | Promise<unknown>
+export type UserCtxWithoutNextFn = (ctx: UserCtx) => void | Promise<unknown>
+export type CtxWithoutNextFn = (ctx: Ctx) => void | Promise<unknown>
+export type CtxFn =
+  | UserCtxWithNextFn
+  | UserCtxWithoutNextFn
+  | CtxWithNextFn
+  | CtxWithoutNextFn
 
 class Endpoint {
-  method: string
+  method: Method
   url: string
   controller: CtxFn
   middlewares: CtxFn[]
   outputMiddlewares: CtxFn[]
 
-  constructor(method: string, url: string, controller: CtxFn) {
+  constructor(method: Method, url: string, controller: CtxFn) {
     this.method = method
     this.url = url
     this.controller = controller

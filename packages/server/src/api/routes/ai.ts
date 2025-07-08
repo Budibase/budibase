@@ -1,5 +1,4 @@
 import * as ai from "../controllers/ai"
-import Router from "@koa/router"
 import { auth } from "@budibase/backend-core"
 import { middleware } from "@budibase/pro"
 import {
@@ -7,43 +6,48 @@ import {
   createToolSourceValidator,
   updateToolSourceValidator,
 } from "./utils/validators/agent"
+import { EndpointGroup } from "../utils"
+import Router from "@koa/router"
+const builderAdminGroup = new EndpointGroup()
+const licensedGroup = new EndpointGroup()
+
+builderAdminGroup.addGroupMiddleware(auth.builderOrAdmin)
+licensedGroup.addGroupMiddleware(middleware.licenseAuth)
+
+builderAdminGroup
+  .post("/api/ai/tables", ai.generateTables)
+  .post("/api/agent/chat", chatAgentValidator(), ai.agentChat)
+  .post("/api/agent/chat", ai.agentChat)
+  .post("/api/agent/chat/stream", ai.agentChatStream)
+  .delete("/api/agent/history/:historyId", ai.remove)
+  .get("/api/agent/history", ai.fetchHistory)
+  .post(
+    "/api/agent/toolsource",
+    createToolSourceValidator(),
+    ai.createToolSource
+  )
+  .put(
+    "/api/agent/toolsource",
+
+    updateToolSourceValidator(),
+    ai.updateToolSource
+  )
+  .delete(
+    "/api/agent/toolsource/:toolSourceId",
+
+    ai.deleteToolSource
+  )
+  .get("/api/agent/toolsource", ai.fetchToolSources)
+
+  .post("/api/ai/cron", ai.generateCronExpression)
+  .post("/api/ai/js", ai.generateJs)
+
+licensedGroup
+  .post("/api/ai/chat", ai.chatCompletion)
+  .post("/api/ai/upload-file", ai.uploadFile)
 
 const router: Router = new Router()
-
-router.post("/api/ai/tables", auth.builderOrAdmin, ai.generateTables)
-
-router.post(
-  "/api/agent/chat",
-  auth.builderOrAdmin,
-  chatAgentValidator(),
-  ai.agentChat
-)
-router.post("/api/agent/chat", auth.builderOrAdmin, ai.agentChat)
-router.post("/api/agent/chat/stream", auth.builderOrAdmin, ai.agentChatStream)
-router.delete("/api/agent/history/:historyId", auth.builderOrAdmin, ai.remove)
-router.get("/api/agent/history", auth.builderOrAdmin, ai.fetchHistory)
-router.post(
-  "/api/agent/toolsource",
-  auth.builderOrAdmin,
-  createToolSourceValidator(),
-  ai.createToolSource
-)
-router.put(
-  "/api/agent/toolsource",
-  auth.builderOrAdmin,
-  updateToolSourceValidator(),
-  ai.updateToolSource
-)
-router.delete(
-  "/api/agent/toolsource/:toolSourceId",
-  auth.builderOrAdmin,
-  ai.deleteToolSource
-)
-router.get("/api/agent/toolsource", auth.builderOrAdmin, ai.fetchToolSources)
-
-router.post("/api/ai/cron", auth.builderOrAdmin, ai.generateCronExpression)
-router.post("/api/ai/js", auth.builderOrAdmin, ai.generateJs)
-router.post("/api/ai/chat", middleware.licenseAuth, ai.chatCompletion)
-router.post("/api/ai/upload-file", middleware.licenseAuth, ai.uploadFile)
+builderAdminGroup.apply(router)
+licensedGroup.apply(router)
 
 export default router
