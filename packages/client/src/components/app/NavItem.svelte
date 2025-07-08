@@ -8,6 +8,7 @@
   export let url
   export let text
   export let subLinks
+  export let icon
   export let internalLink
   export let customStyles
   export let leftNav = false
@@ -29,7 +30,7 @@
   $: containsActiveLink = (subLinks || []).some(x => isBuilderActive(x.url))
   $: expanded = !!$navStateStore[text] || containsActiveLink
   $: renderLeftNav = leftNav || mobile
-  $: icon = !renderLeftNav || expanded ? "caret-down" : "caret-right"
+  $: caret = !renderLeftNav || expanded ? "caret-down" : "caret-right"
 
   const onClickLink = () => {
     dispatch("clickLink")
@@ -48,34 +49,45 @@
 </script>
 
 {#if !type || type === "link"}
-  {#if internalLink}
-    <!--
-      It's stupid that we have to add class:active={false} here, but if we don't
-      then svelte will strip out the CSS selector and active links won't be
-      styled
-    -->
-    <a
-      href="#{url}"
-      on:click={onClickLink}
-      use:active={url}
-      class:builderActive
-      style={customStyles}
-    >
-      {text}
-    </a>
-  {:else}
-    <a href={url} on:click={onClickLink}>
-      {text}
-    </a>
-  {/if}
+  <div class="link">
+    {#if internalLink}
+      <!--
+        It's stupid that we have to add class:active={false} here, but if we don't
+        then svelte will strip out the CSS selector and active links won't be
+        styled
+      -->
+      <a
+        href="#{url}"
+        on:click={onClickLink}
+        use:active={url}
+        class:builderActive
+        style={customStyles}
+      >
+        {#if icon}
+          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {/if}
+        {text}
+      </a>
+    {:else}
+      <a href={url} on:click={onClickLink}>
+        {#if icon}
+          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {/if}
+        {text}
+      </a>
+    {/if}
+  </div>
 {:else}
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   {#key renderKey}
     <div class="dropdown" class:left={renderLeftNav} class:expanded>
       <div class="text" on:click={onClickDropdown}>
+        {#if icon}
+          <Icon name={icon} color="var(--navTextColor)" size="S" />
+        {/if}
         <span>{text}</span>
-        <Icon name={icon} />
+        <Icon name={caret} color="var(--navTextColor)" size="S" />
       </div>
       <div class="sublinks-wrapper">
         <div class="sublinks">
@@ -109,6 +121,11 @@
   .dropdown .text {
     padding: 4px 8px;
     border-radius: 4px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-s);
   }
   a,
   .text span {
@@ -137,13 +154,7 @@
   .dropdown {
     position: relative;
   }
-  .text {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
+
   .sublinks-wrapper {
     position: absolute;
     top: 100%;
