@@ -1,35 +1,36 @@
-<script>
+<script lang="ts">
   import {
     Body,
     Button,
-    File,
+    File as FileComponent,
     Heading,
     ModalContent,
     notifications,
     ProgressCircle,
   } from "@budibase/bbui"
   import { groups } from "@/stores/portal"
+  import { type BulkAddUsersToGroupResponse } from "@budibase/types"
 
   export let groupId
   export let onUsersAdded
 
-  let selectedFiles = []
+  let selectedFile: File | undefined = undefined
   let uploadLoading = false
-  let results = null
+  let results: BulkAddUsersToGroupResponse | undefined = undefined
 
-  const handleFilesSelected = event => {
-    selectedFiles = Array.from(event.detail || [])
-    results = null
+  const handleFilesSelected = (event: CustomEvent<File>) => {
+    selectedFile = event.detail || undefined
+    results = undefined
   }
 
   const processCSV = async () => {
-    if (!selectedFiles.length) {
+    if (!selectedFile) {
       notifications.error("Please select a CSV file")
       return
     }
 
-    const file = selectedFiles[0]
-    if (!file.name.toLowerCase().endsWith('.csv')) {
+    const file = selectedFile
+    if (!file.name.toLowerCase().endsWith(".csv")) {
       notifications.error("Please select a CSV file")
       return
     }
@@ -38,21 +39,23 @@
     try {
       // Read file content
       const text = await file.text()
-      
+
       // Call the API
       const result = await groups.bulkAddUsersFromCsv(groupId, text)
-      
+
       results = result
-      
+
       if (result.added.length > 0) {
-        notifications.success(`Successfully added ${result.added.length} users to the group`)
+        notifications.success(
+          `Successfully added ${result.added.length} users to the group`
+        )
         if (onUsersAdded) {
           onUsersAdded()
         }
       } else {
         notifications.info("No users were added to the group")
       }
-    } catch (error) {
+    } catch (error: any) {
       notifications.error(error?.message || "Failed to process CSV file")
     } finally {
       uploadLoading = false
@@ -60,8 +63,8 @@
   }
 
   const reset = () => {
-    selectedFiles = []
-    results = null
+    selectedFile = undefined
+    results = undefined
   }
 </script>
 
@@ -69,14 +72,15 @@
   title="Bulk Add Users via CSV"
   confirmText="Upload CSV"
   onConfirm={processCSV}
-  disabled={uploadLoading || !selectedFiles.length}
+  disabled={uploadLoading || !selectedFile}
   size="M"
   cancelText="Close"
 >
   <div slot="header">
     <Heading size="M">Bulk Add Users via CSV</Heading>
     <Body>
-      Upload a CSV file containing email addresses to add existing users to this group.
+      Upload a CSV file containing email addresses to add existing users to this
+      group.
     </Body>
   </div>
 
@@ -84,29 +88,22 @@
     {#if !results}
       <div class="upload-section">
         <Body>
-          Select a CSV file that contains an "email" column with user email addresses. 
-          Only existing users will be added to the group.
+          Select a CSV file that contains an "email" column with user email
+          addresses. Only existing users will be added to the group.
         </Body>
-        
-        <File
+
+        <FileComponent
           on:change={handleFilesSelected}
-          value={selectedFiles}
-          accept=".csv"
-          multiple={false}
-          placeholder="Choose CSV file"
+          title="Select CSV File"
+          extensions={["csv"]}
+          value={selectedFile}
           disabled={uploadLoading}
         />
-
-        {#if selectedFiles.length > 0}
-          <Body size="S" textAlign="center">
-            Selected: {selectedFiles[0].name}
-          </Body>
-        {/if}
       </div>
     {:else}
       <div class="results-section">
         <Heading size="S">Upload Results</Heading>
-        
+
         {#if results.added.length > 0}
           <div class="result-group">
             <Body weight="600">Added ({results.added.length} users):</Body>
@@ -120,7 +117,8 @@
 
         {#if results.skipped.length > 0}
           <div class="result-group">
-            <Body weight="600">Skipped ({results.skipped.length} entries):</Body>
+            <Body weight="600">Skipped ({results.skipped.length} entries):</Body
+            >
             <div class="result-list">
               {#each results.skipped as skipped}
                 <Body size="S">• {skipped.email} - {skipped.reason}</Body>
