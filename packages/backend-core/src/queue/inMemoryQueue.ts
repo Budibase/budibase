@@ -33,13 +33,13 @@ function jobToJobInformation(job: Job): JobInformation {
   }
 }
 
-export interface TestQueueMessage<T = any> extends Partial<Job<T>> {
-  id: string
-  timestamp: number
-  queue: Queue<T>
-  data: any
-  opts?: JobOptions
+export interface TestQueueMessage<T = any>
+  extends Pick<
+    Job<T>,
+    "id" | "timestamp" | "queue" | "data" | "opts" | "discard"
+  > {
   manualTrigger?: boolean
+  _isDiscarded?: boolean
 }
 
 /**
@@ -121,7 +121,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
           return await fnc
         } catch (e: any) {
           attempt++
-          if (attempt < maxAttempts) {
+          if (attempt < maxAttempts && !message._isDiscarded) {
             await helpers.wait(100 * attempt)
             return await retryFunc(execute(), attempt)
           } else {
@@ -193,6 +193,9 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         queue: this as unknown as Queue,
         data,
         opts,
+        discard: async () => {
+          message._isDiscarded = true
+        },
       }
       this._messages.push(message)
       if (this._messages.length > 1000) {

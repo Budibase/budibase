@@ -38,23 +38,17 @@ class DevRevertProcessor extends queue.QueuedProcessor<DevRevertQueueData> {
     const productionAppId = dbCore.getProdAppID(appId)
 
     // App must have been deployed first
-    try {
-      const db = context.getProdAppDB({ skip_setup: true })
-      const exists = await db.exists()
-      if (!exists) {
-        throw new Error("App must be deployed to be reverted.")
-      }
-      const deploymentDoc = await db.get<DeploymentDoc>(
-        DocumentType.DEPLOYMENTS
-      )
-      if (
-        !deploymentDoc.history ||
-        Object.keys(deploymentDoc.history).length === 0
-      ) {
-        throw new Error("No deployments for app")
-      }
-    } catch (err) {
-      throw new Error("App has not yet been deployed")
+    const db = context.getProdAppDB({ skip_setup: true })
+    const exists = await db.exists()
+    if (!exists) {
+      throw new queue.UnretriableError("App must be deployed to be reverted.")
+    }
+    const deploymentDoc = await db.get<DeploymentDoc>(DocumentType.DEPLOYMENTS)
+    if (
+      !deploymentDoc.history ||
+      Object.keys(deploymentDoc.history).length === 0
+    ) {
+      throw new queue.UnretriableError("No deployments for app")
     }
 
     const replication = new dbCore.Replication({

@@ -43,7 +43,7 @@ describe("devRevertProcessor", () => {
   })
 
   describe("unhappy paths", () => {
-    it("should throw error when app is not deployed", async () => {
+    it("should throw error when app is not deployed and not retry", async () => {
       await config.unpublish()
 
       const processor = devRevertProcessor()
@@ -52,9 +52,12 @@ describe("devRevertProcessor", () => {
         userId: generator.guid(),
       }
 
+      const processFnSpy = jest.spyOn(processor as any, "processFn")
+
       await expect(processor.execute(testData)).rejects.toThrow(
-        "App has not yet been deployed"
+        "App must be deployed to be reverted."
       )
+      expect(processFnSpy).toHaveBeenCalledTimes(1)
     })
 
     it("should recover from replication errors during rollback", async () => {
