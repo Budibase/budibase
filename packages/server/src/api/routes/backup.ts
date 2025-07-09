@@ -13,4 +13,10 @@ router.post(
   controller.exportAppDump
 )
 
+router.delete(
+  "/api/backups/logs",
+  authorized(permissions.BUILDER),
+  controller.clearBackupError
+)
+
 export default router
