@@ -3,6 +3,13 @@ import * as logging from "../logging"
 import { JobQueue } from "./constants"
 import { helpers } from "@budibase/shared-core"
 
+export class UnretriableError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "PermanentError"
+  }
+}
+
 export interface QueuedProcessorOptions {
   maxAttempts?: number
   removeOnFail?: boolean
@@ -39,6 +46,9 @@ export abstract class QueuedProcessor<T> {
         const result = await this.processFn(job.data)
         done?.(null, result)
       } catch (err: any) {
+        if (err instanceof UnretriableError) {
+          await job.discard()
+        }
         logging.logAlert(`Failed to process job in ${this._queue.name}`, err)
         done?.(err)
       }

@@ -1,4 +1,9 @@
-import { QueuedProcessor, JobQueue } from "../../src/queue"
+import {
+  QueuedProcessor,
+  JobQueue,
+  UnretriableError,
+  QueuedProcessorOptions,
+} from "../../src/queue"
 import { generator } from "../core/utilities"
 import { useRealQueues } from "../core/utilities/utils/queue"
 
@@ -10,7 +15,7 @@ interface TestData {
 class TestProcessor extends QueuedProcessor<TestData> {
   processFn = jest.fn()
 
-  constructor(options = {}) {
+  constructor(options: QueuedProcessorOptions = {}) {
     super(generator.guid() as JobQueue, options)
   }
 }
@@ -34,7 +39,11 @@ describe("QueuedProcessor", () => {
     const testData: TestData = { id: "test-id", value: "test-value" }
 
     beforeEach(() => {
-      processor = new TestProcessor({ waitForCompletionMs: 1000 })
+      processor = new TestProcessor({
+        waitForCompletionMs: 10000,
+        maxAttempts: 3,
+      })
+      jest.resetAllMocks()
     })
 
     it("should return success when job completes successfully", async () => {
@@ -67,6 +76,21 @@ describe("QueuedProcessor", () => {
       await expect(processor.execute(testData)).rejects.toThrow(
         "Job processing failed"
       )
+
+      expect(processor.processFn).toHaveBeenCalledTimes(3)
+    })
+
+    it("should handle UnretriableError by moving job to failed", async () => {
+      const unretriableError = new UnretriableError(
+        "This error cannot be retried"
+      )
+      processor.processFn.mockRejectedValue(unretriableError)
+
+      await expect(processor.execute(testData)).rejects.toThrow(
+        "This error cannot be retried"
+      )
+
+      expect(processor.processFn).toHaveBeenCalledTimes(1)
     })
   })
 
