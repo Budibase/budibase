@@ -70,22 +70,19 @@
 <DetailPopover title="Row actions" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="Engagement"
+      icon="cursor-click"
       selected={open || actionCount}
       quiet
-      accentColor="#A24400"
+      accentColor="#4b75ff"
     >
       Row actions{actionCount ? `: ${actionCount}` : ""}
     </ActionButton>
   </svelte:fragment>
   A row action is a user-triggered automation for a chosen row.
   {#if isView && rowActions.length}
-    <br />
     Use the toggle to enable/disable row actions for this view.
-    <br />
   {/if}
   {#if !tableRowActions.length}
-    <br />
     You haven't created any row actions.
   {:else}
     <List>
@@ -106,7 +103,7 @@
     </List>
   {/if}
   <div>
-    <Button secondary icon="Engagement" on:click={showCreateModal}>
+    <Button secondary icon="cursor-click" on:click={showCreateModal}>
       Create row action
     </Button>
   </div>

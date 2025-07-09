@@ -10,7 +10,7 @@ import {
 export const definition: AutomationTriggerDefinition = {
   name: "Webhook",
   event: AutomationEventType.WEBHOOK_TRIGGER,
-  icon: "Send",
+  icon: "paper-plane-right",
   tagline: "Webhook endpoint is hit",
   description: "Trigger an automation when a HTTP POST webhook is hit",
   stepId: AutomationTriggerStepId.WEBHOOK,

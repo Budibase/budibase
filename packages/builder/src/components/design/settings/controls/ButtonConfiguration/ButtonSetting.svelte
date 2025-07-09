@@ -52,7 +52,7 @@
   <div class="list-item-right">
     <Icon
       size="S"
-      name="Close"
+      name="x"
       hoverable
       on:click={e => {
         e.stopPropagation()

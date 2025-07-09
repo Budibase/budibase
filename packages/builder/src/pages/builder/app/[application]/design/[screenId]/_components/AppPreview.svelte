@@ -281,7 +281,7 @@
     class:active={isAddingComponent}
     on:click={toggleAddComponent}
   >
-    <Icon size="XL" name="Add">Component</Icon>
+    <Icon size="XL" name="plus">Component</Icon>
   </div>
 </div>
 <ConfirmDialog
@@ -383,7 +383,9 @@
     color: white;
     box-shadow: 1px 3px 8px 0 rgba(0, 0, 0, 0.3);
     cursor: pointer;
-    transition: transform ease-out 300ms, background ease-out 130ms;
+    transition:
+      transform ease-out 300ms,
+      background ease-out 130ms;
   }
   .add-component:hover {
     background: var(--spectrum-global-color-blue-600);

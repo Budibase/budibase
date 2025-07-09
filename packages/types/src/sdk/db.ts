@@ -8,7 +8,7 @@ import {
   ViewTemplateOpts,
 } from "../"
 import { Writable } from "stream"
-import type PouchDB from "pouchdb-find"
+import { ReadStream } from "fs"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -39,6 +39,7 @@ export type DBView = {
   reduce?: string
   meta?: ViewTemplateOpts
   groupBy?: string
+  version?: number
 }
 
 export interface DesignDocument extends Document {
@@ -56,17 +57,6 @@ export interface DesignDocument extends Document {
       analyzer?: string | IndexAnalyzer
     }
   }
-}
-
-export type CouchFindOptions = {
-  selector: PouchDB.Find.Selector
-  fields?: string[]
-  sort?: {
-    [key: string]: SortOption
-  }[]
-  limit?: number
-  skip?: number
-  bookmark?: string
 }
 
 export type DatabaseOpts = {
@@ -156,6 +146,9 @@ export interface Database {
   ): Promise<T[]>
   sqlPurgeDocument(docIds: string[] | string): Promise<void>
   sqlDiskCleanup(): Promise<void>
+  find<T extends Document>(
+    params: Nano.MangoQuery
+  ): Promise<Nano.MangoResponse<T>>
   allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>
@@ -168,10 +161,10 @@ export interface Database {
   // these are all PouchDB related functions that are rarely used - in future
   // should be replaced by better typed/non-pouch implemented methods
   dump(stream: Writable, opts?: DatabaseDumpOpts): Promise<any>
-  load(...args: any[]): Promise<any>
-  createIndex(...args: any[]): Promise<any>
-  deleteIndex(...args: any[]): Promise<any>
-  getIndexes(...args: any[]): Promise<any>
+  load(stream: ReadStream): Promise<any>
+  createIndex(opts: DatabaseCreateIndexOpts): Promise<any>
+  deleteIndex(opts: DatabaseDeleteIndexOpts): Promise<any>
+  getIndexes(): Promise<any>
 }
 
 export interface DBError extends Error {

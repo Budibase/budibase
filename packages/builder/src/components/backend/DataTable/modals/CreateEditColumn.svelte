@@ -28,7 +28,6 @@
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { datasources, tables } from "@/stores/builder"
-  import { licensing } from "@/stores/portal"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "@/constants"
   import {
     DB_TYPE_EXTERNAL,
@@ -137,8 +136,6 @@
   ]
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
-  $: aiEnabled =
-    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
   $: if (hasPrimaryDisplay && editableColumn.constraints) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
@@ -247,7 +244,7 @@
       runtimeBinding: `${makePropSafe("now")}`,
       readableBinding: `Date`,
       category: "Date",
-      icon: "Date",
+      icon: "calendar",
       display: {
         name: "Server date",
       },
@@ -559,10 +556,8 @@
         FIELDS.SIGNATURE_SINGLE,
         FIELDS.JSON,
         FIELDS.AUTO,
+        FIELDS.AI,
       ]
-      if (aiEnabled) {
-        fields.push(FIELDS.AI)
-      }
       return fields
     }
     if (isExternalTable && isSqlTable) {
@@ -749,7 +744,7 @@
           type={TooltipType.Info}
           text={"Rich text includes support for images, link"}
         >
-          <Icon size="XS" name="InfoOutline" />
+          <Icon size="XS" name="info" />
         </AbsTooltip>
       </div>
 
@@ -806,7 +801,7 @@
                 ? undefined
                 : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
             >
-              <Icon size="XS" name="InfoOutline" />
+              <Icon size="XS" name="info" />
             </AbsTooltip>
           </div>
           <Toggle
@@ -826,8 +821,9 @@
         <div class="input-length">
           <Input
             type="number"
-            bind:value={editableColumn.constraints.numericality
-              .greaterThanOrEqualTo}
+            bind:value={
+              editableColumn.constraints.numericality.greaterThanOrEqualTo
+            }
           />
         </div>
       {/if}
@@ -841,8 +837,9 @@
         <div class="input-length">
           <Input
             type="number"
-            bind:value={editableColumn.constraints.numericality
-              .lessThanOrEqualTo}
+            bind:value={
+              editableColumn.constraints.numericality.lessThanOrEqualTo
+            }
           />
         </div>
       {/if}

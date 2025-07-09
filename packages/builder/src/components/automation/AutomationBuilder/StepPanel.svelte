@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { ActionButton, Button, Divider, Icon, Modal } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Button,
+    Divider,
+    Icon,
+    Modal,
+    DetailSummary,
+  } from "@budibase/bbui"
+  import { generate } from "shortid"
   import {
     type Automation,
     type AutomationStep,
@@ -16,6 +24,7 @@
     selectedAutomation,
     evaluationContext,
   } from "@/stores/builder"
+  import { getNewStepName } from "@/helpers/automations/nameHelpers"
   import BlockData from "../SetupPanel/BlockData.svelte"
   import BlockProperties from "../SetupPanel/BlockProperties.svelte"
   import BlockHeader from "../SetupPanel/BlockHeader.svelte"
@@ -33,6 +42,7 @@
 
   let role: string | undefined
   let webhookModal: Modal | undefined
+  let configPanel: HTMLDivElement | undefined
 
   $: memoAutomation.set($selectedAutomation.data)
   $: memoContext.set($evaluationContext)
@@ -54,6 +64,15 @@
   $: isAppAction && fetchPermissions($memoAutomation?._id)
   $: isAppAction &&
     automationStore.actions.setPermissions(role, $memoAutomation)
+
+  // Reset the panel scroll when the target node is changed
+  $: resetScroll(selectedNodeId)
+
+  const resetScroll = (selectedNodeId: string | undefined) => {
+    if (configPanel && configPanel?.scrollTop > 0 && selectedNodeId) {
+      configPanel.scrollTop = 0
+    }
+  }
 
   const fetchPermissions = async (automationId?: string) => {
     if (!automationId) {
@@ -88,7 +107,7 @@
       }}
     />
     <Icon
-      name="Close"
+      name="x"
       hoverable
       on:click={() => {
         automationStore.actions.selectNode()
@@ -101,7 +120,7 @@
         <ActionButton
           quiet
           noPadding
-          icon="RotateCW"
+          icon="arrow-clockwise"
           on:click={async () => {
             if (loopBlock) {
               await automationStore.actions.removeLooping(blockRef)
@@ -116,7 +135,7 @@
       <ActionButton
         quiet
         noPadding
-        icon="DeleteOutline"
+        icon="trash"
         on:click={async () => {
           if (!blockRef) {
             return
@@ -126,20 +145,47 @@
       >
         Delete
       </ActionButton>
+      {#if $memoBlock && !isBranchStep($memoBlock)}
+        <ActionButton
+          quiet
+          noPadding
+          icon="copy"
+          on:click={async () => {
+            if (!blockRef || !$memoBlock || isTrigger($memoBlock)) {
+              return
+            }
+            const duplicatedBlock = {
+              ...$memoBlock,
+              id: generate(),
+            }
+            const newName = getNewStepName($memoAutomation, duplicatedBlock)
+            duplicatedBlock.name = newName
+
+            await automationStore.actions.addBlockToAutomation(
+              duplicatedBlock,
+              blockRef.pathTo
+            )
+          }}
+        >
+          Duplicate
+        </ActionButton>
+      {/if}
     </div>
   {/if}
 </div>
 <Divider noMargin />
 <div class="panel config" use:resizable>
-  <div class="content">
+  <div class="content" bind:this={configPanel}>
     {#if loopBlock}
-      <span class="loop">
-        <BlockProperties
-          block={loopBlock}
-          context={$memoContext}
-          automation={$memoAutomation}
-        />
-      </span>
+      <div class="loop">
+        <DetailSummary name="Loop details" padded={false} initiallyShow>
+          <BlockProperties
+            block={loopBlock}
+            context={$memoContext}
+            automation={$memoAutomation}
+          />
+        </DetailSummary>
+      </div>
       <Divider noMargin />
     {:else if isAppAction}
       <PropField label="Role" fullWidth>
@@ -210,7 +256,9 @@
     flex-direction: column;
     min-height: 200px;
     max-height: 550px;
-    transition: height 300ms ease-out, max-height 300ms ease-out;
+    transition:
+      height 300ms ease-out,
+      max-height 300ms ease-out;
     height: 400px;
     box-sizing: border-box;
   }
@@ -222,9 +270,13 @@
   }
   .config.panel .loop,
   .config.panel .content .props {
+    height: 100%;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
+  }
+  .config.panel :global(.spectrum-Divider) {
+    flex: 0 0 auto;
   }
   .data.panel {
     padding: 0px;
@@ -266,5 +318,8 @@
   .details {
     display: flex;
     gap: var(--spacing-l);
+  }
+  .config :global(.property-group-container) {
+    border: 0px;
   }
 </style>

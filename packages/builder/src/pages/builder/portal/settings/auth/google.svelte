@@ -33,8 +33,8 @@
   $: googleCallbackTooltip = $admin.cloud
     ? null
     : googleCallbackReadonly
-    ? "Visit the organisation page to update the platform URL"
-    : "Leave blank to use the default callback URL"
+      ? "Visit the organisation page to update the platform URL"
+      : "Leave blank to use the default callback URL"
   $: googleSheetsCallbackUrl = `${$organisation.platformUrl}/api/global/auth/datasource/google/callback`
 
   $: GoogleConfigFields = {
@@ -182,7 +182,7 @@
               class="copy"
               on:click={() => copyToClipboard(field.placeholder)}
             >
-              <Icon size="S" name="Copy" />
+              <Icon size="S" name="copy" />
             </div>
           {/if}
         </div>

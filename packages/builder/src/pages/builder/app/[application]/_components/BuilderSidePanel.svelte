@@ -14,7 +14,12 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore, roles, appPublished } from "@/stores/builder"
+  import {
+    builderStore,
+    appStore,
+    roles,
+    deploymentStore,
+  } from "@/stores/builder"
   import {
     groups,
     licensing,
@@ -321,10 +326,10 @@
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
-  /*  
+  /*
     Create pseudo users from the "users" attribute on app groups.
     These users will appear muted in the UI and show the ROLE
-    inherited from their parent group. The users allow assigning of user 
+    inherited from their parent group. The users allow assigning of user
     specific roles for the app.
   */
   const buildGroupUsers = (userGroups, filteredUsers) => {
@@ -524,7 +529,7 @@
       return `This user has been given ${role?.name} access from the ${user.group} group`
     }
     if (user.isAdminOrGlobalBuilder) {
-      return "Workspace admins can edit all apps"
+      return "Tenant admins can edit all workspaces"
     }
     return null
   }
@@ -570,7 +575,7 @@
       class="header"
     >
       {#if invitingFlow}
-        <Icon name="BackAndroid" />
+        <Icon name="arrow-left" />
       {/if}
       <Heading size="S">{invitingFlow ? "Invite new user" : "Users"}</Heading>
     </div>
@@ -580,7 +585,7 @@
       {/if}
       <Icon
         color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
+        name="arrow-line-right"
         hoverable
         on:click={() => {
           builderStore.hideBuilderSidePanel()
@@ -615,15 +620,15 @@
           userOnboardResponse = null
         }}
       >
-        <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
+        <Icon name={!filterByAppAccess || query ? "x" : "magnifying-glass"} />
       </span>
     </div>
 
     <div class="body">
-      {#if !$appPublished}
+      {#if !$deploymentStore.isPublished}
         <div class="alert">
           <InfoDisplay
-            icon="AlertCircleFilled"
+            icon="warning-circle"
             warning
             title="App unpublished"
             body="Users won't be able to access your app until you've published it"

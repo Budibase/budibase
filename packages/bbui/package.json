@@ -9,9 +9,7 @@
     ".": {
       "import": "./dist/bbui.mjs"
     },
-    "./package.json": "./package.json",
-    "./spectrum-icons-rollup.js": "./src/spectrum-icons-rollup.js",
-    "./spectrum-icons-vite.js": "./src/spectrum-icons-vite.js"
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "vite build",
@@ -45,7 +43,6 @@
     "@spectrum-css/dropzone": "3.0.2",
     "@spectrum-css/fieldgroup": "3.0.2",
     "@spectrum-css/fieldlabel": "3.0.1",
-    "@spectrum-css/icon": "3.0.1",
     "@spectrum-css/illustratedmessage": "3.0.2",
     "@spectrum-css/inlinealert": "2.0.1",
     "@spectrum-css/inputgroup": "3.0.2",
@@ -88,6 +85,16 @@
   "nx": {
     "targets": {
       "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "dev": {
         "dependsOn": [
           {
             "projects": [

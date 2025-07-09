@@ -32,11 +32,13 @@ import rowActionRoutes from "./rowAction"
 import oauth2Routes from "./oauth2"
 import featuresRoutes from "./features"
 import aiRoutes from "./ai"
+import workspaceAppsRoutes from "./workspaceApp"
+import navigationRoutes from "./navigation"
+import resourceRoutes from "./resource"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
 
-const proAiRoutes = pro.ai
 const appBackupRoutes = pro.appBackups
 const environmentVariableRoutes = pro.environmentVariables
 
@@ -71,9 +73,11 @@ export const mainRoutes: Router[] = [
   debugRoutes,
   environmentVariableRoutes,
   rowActionRoutes,
-  proAiRoutes,
   oauth2Routes,
   featuresRoutes,
+  workspaceAppsRoutes,
+  navigationRoutes,
+  resourceRoutes,
   // these need to be handled last as they still use /api/:tableId
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,

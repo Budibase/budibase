@@ -8,7 +8,7 @@
 </script>
 
 <ActionButton
-  icon="Calculator"
+  icon="calculator"
   quiet
   on:click={modal.show}
   active={view.field && view.calculation}

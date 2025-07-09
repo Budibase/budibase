@@ -6,21 +6,20 @@
   import { memo } from "@budibase/frontend-core"
   import Placeholder from "../Placeholder.svelte"
   import InnerForm from "./InnerForm.svelte"
-  import type { FieldSchema, FieldType } from "@budibase/types"
   import type {
-    FieldApi,
-    FieldState,
-    FieldValidation,
-    FormField,
-  } from "@/types"
+    FieldSchema,
+    FieldType,
+    UIFieldValidationRule,
+  } from "@budibase/types"
+  import type { FieldApi, FieldState, FormField } from "@/types"
 
   interface FieldInfo {
     field: string
     type: FieldType
-    defaultValue: string | undefined
+    defaultValue: string | string[] | undefined
     disabled: boolean
     readonly: boolean
-    validation?: FieldValidation
+    validation?: UIFieldValidationRule[]
     formStep: number
   }
 
@@ -29,11 +28,11 @@
   export let fieldState: FieldState | undefined
   export let fieldApi: FieldApi | undefined
   export let fieldSchema: FieldSchema | undefined
-  export let defaultValue: string | undefined = undefined
+  export let defaultValue: string | string[] | undefined = undefined
   export let type: FieldType
   export let disabled = false
   export let readonly = false
-  export let validation: FieldValidation | undefined
+  export let validation: UIFieldValidationRule[] | undefined
   export let span = 6
   export let helpText: string | undefined = undefined
 
@@ -170,12 +169,12 @@
           <slot />
           {#if fieldState.error}
             <div class="error">
-              <Icon name="Alert" />
+              <Icon name="warning" />
               <span>{fieldState.error}</span>
             </div>
           {:else if helpText}
             <div class="helpText">
-              <Icon name="HelpOutline" /> <span>{helpText}</span>
+              <Icon name="question" /> <span>{helpText}</span>
             </div>
           {/if}
         {/if}

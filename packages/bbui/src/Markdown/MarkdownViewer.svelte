@@ -8,7 +8,7 @@
 
   $: updateValue(ref, value)
 
-  const updateValue = (
+  const updateValue = async (
     ref: HTMLDivElement | undefined,
     markdown: string | undefined
   ) => {
@@ -19,7 +19,7 @@
       ref.innerHTML = ""
       return
     }
-    ref.innerHTML = marked.parse(markdown)
+    ref.innerHTML = marked.parse(markdown, { async: false })
   }
 </script>
 

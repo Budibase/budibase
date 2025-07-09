@@ -4,6 +4,7 @@
   export let name
   export let initiallyShow = false
   export let collapsible = true
+  export let padded = true
 
   let show = initiallyShow
 
@@ -19,10 +20,15 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="property-group-container">
   {#if name}
-    <div class="property-group-name" on:click={onHeaderClick}>
+    <div
+      class="property-group-name"
+      on:click={onHeaderClick}
+      class:padded
+      class:open={show || !collapsible}
+    >
       <div class="name">{name}</div>
       {#if collapsible}
-        <Icon size="S" name={show ? "Remove" : "Add"} />
+        <Icon size="S" name={show ? "minus" : "plus"} />
       {/if}
     </div>
   {/if}
@@ -30,6 +36,7 @@
     class="property-panel"
     class:show={show || !collapsible}
     class:no-title={!name}
+    class:padded
   >
     <slot />
   </div>
@@ -53,32 +60,46 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-m) var(--spacing-xl);
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-800);
     transition: color 130ms ease-in-out;
   }
+
+  .property-group-name.open {
+    padding-bottom: var(--spacing-m);
+  }
+
+  .property-group-name.padded {
+    padding: var(--spacing-m) var(--spacing-xl);
+  }
+
   .property-group-name:hover {
     color: var(--spectrum-global-color-gray-900);
   }
 
   .name {
     text-align: left;
-    font-size: var(--font-size-s);
-    font-weight: 600;
-    letter-spacing: 0.14px;
+    font-size: var(--spectrum-global-dimension-font-size-100);
+    color: var(--spectrum-global-color-gray-900);
+    letter-spacing: -0.02em;
+    font-weight: 500;
+    line-height: 20px;
+    font-size: 14px;
     flex: 1 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-transform: uppercase;
     white-space: nowrap;
     user-select: none;
   }
 
   .property-panel {
     display: none;
+  }
+
+  .property-panel.padded {
     padding: var(--spacing-s) var(--spacing-xl) var(--spacing-xl)
       var(--spacing-xl);
   }
+
   .property-panel.no-title {
     padding-top: var(--spacing-xl);
   }

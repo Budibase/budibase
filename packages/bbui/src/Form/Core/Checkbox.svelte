@@ -3,6 +3,7 @@
   import "@spectrum-css/fieldgroup/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
   import type { ChangeEventHandler } from "svelte/elements"
+  import { Icon } from "@budibase/bbui"
 
   export let value = false
   export let id: string | undefined = undefined
@@ -22,12 +23,11 @@
 
 <label
   class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
-  class:checked={value}
-  class:is-indeterminate={indeterminate}
+  class:checked={value || indeterminate}
   class:readonly
 >
   <input
-    checked={value}
+    checked={value || indeterminate}
     {disabled}
     on:change={onChange}
     type="checkbox"
@@ -35,20 +35,23 @@
     {id}
   />
   <span class="spectrum-Checkbox-box">
-    <svg
-      class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Checkbox-checkmark"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-css-icon-Checkmark100" />
-    </svg>
-    <svg
-      class="spectrum-Icon spectrum-UIIcon-Dash100 spectrum-Checkbox-partialCheckmark"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-css-icon-Dash100" />
-    </svg>
+    {#if indeterminate}
+      <span class="icon">
+        <Icon
+          name="minus"
+          weight="bold"
+          color="var(--spectrum-global-color-gray-50)"
+        />
+      </span>
+    {:else if value}
+      <span class="icon">
+        <Icon
+          name="check"
+          weight="bold"
+          color="var(--spectrum-global-color-gray-50)"
+        />
+      </span>
+    {/if}
   </span>
   {#if text}
     <span class="spectrum-Checkbox-label">{text}</span>
@@ -56,15 +59,21 @@
 </label>
 
 <style>
-  .spectrum-Checkbox--sizeL .spectrum-Checkbox-checkmark {
-    transform: scale(1.1);
-    left: 55%;
-    top: 55%;
+  .icon {
+    position: absolute;
+    margin: 0 !important;
   }
-  .spectrum-Checkbox--sizeXL .spectrum-Checkbox-checkmark {
-    transform: scale(1.2);
-    left: 60%;
-    top: 60%;
+  .spectrum-Checkbox--sizeS :global(i) {
+    font-size: 12px;
+  }
+  .spectrum-Checkbox--sizeM :global(i) {
+    font-size: 14px;
+  }
+  .spectrum-Checkbox--sizeL :global(i) {
+    font-size: 16px;
+  }
+  .spectrum-Checkbox--sizeXL :global(i) {
+    font-size: 18px;
   }
   .spectrum-Checkbox-input {
     opacity: 0;

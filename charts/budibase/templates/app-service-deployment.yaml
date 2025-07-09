@@ -30,6 +30,7 @@ spec:
 {{- toYaml .Values.services.apps.templateLabels | indent 8 -}}
 {{ end }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.services.apps.terminationGracePeriodSeconds }}
       containers:
       - env:
         - name: BUDIBASE_ENVIRONMENT
@@ -147,6 +148,8 @@ spec:
           value: {{ .Values.globals.platformUrl | quote }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
+        - name: INTERNAL_ACCOUNT_PORTAL_URL
+          value: {{ .Values.globals.internalAccountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
           value: {{ .Values.globals.accountPortalApiKey | quote }}
         - name: COOKIE_DOMAIN

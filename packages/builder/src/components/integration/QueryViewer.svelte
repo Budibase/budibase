@@ -173,7 +173,7 @@
       <div class="controls">
         <ConnectedQueryScreens sourceId={query._id} />
         <Button disabled={loading} on:click={runQuery} overBackground>
-          <Icon size="S" name="Play" />
+          <Icon size="S" name="play" />
           Run query</Button
         >
         <div class="tooltip" title="Run your query to enable saving">
@@ -195,7 +195,7 @@
               rows.length === 0}
             overBackground
           >
-            <Icon size="S" name="SaveFloppy" />
+            <Icon size="S" name="floppy-disk" />
             Save
           </Button>
         </div>
@@ -353,7 +353,9 @@
     padding: 8px 10px 8px 16px;
     display: flex;
     border-bottom: 2px solid transparent;
-    transition: border-bottom 130ms ease-out, background 130ms ease-out;
+    transition:
+      border-bottom 130ms ease-out,
+      background 130ms ease-out;
   }
 
   .header.scrolling {

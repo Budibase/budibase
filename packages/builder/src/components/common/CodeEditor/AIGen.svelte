@@ -10,8 +10,8 @@
   export let bindings: EnrichedBinding[] = []
   export let value: string | null = ""
   export let expandedOnly: boolean = false
-
   export let parentWidth: number | null = null
+
   const dispatch = createEventDispatcher<{
     update: { code: string }
     accept: void
@@ -26,11 +26,11 @@
 
   const thresholdExpansionWidth = 350
 
-  $: expanded =
+  $: shouldAlwaysBeExpanded =
     expandedOnly ||
     (parentWidth !== null && parentWidth > thresholdExpansionWidth)
-      ? true
-      : expanded
+
+  $: expanded = shouldAlwaysBeExpanded || expanded
 
   async function generateJs(prompt: string) {
     promptText = ""
@@ -78,25 +78,27 @@
       prompt: promptText,
     })
     dispatch("reject", { code: previousContents })
-    reset()
+    reset(false)
   }
 
-  function reset() {
+  function reset(clearPrompt: boolean = true) {
+    if (clearPrompt) {
+      promptText = ""
+      inputValue = ""
+    }
     suggestedCode = null
     previousContents = null
-    promptText = ""
     expanded = false
-    inputValue = ""
   }
 </script>
 
 <div class="ai-gen-container" class:expanded>
   {#if suggestedCode !== null}
     <div class="floating-actions">
-      <Button cta size="S" icon="CheckmarkCircle" on:click={acceptSuggestion}>
+      <Button cta size="S" icon="check-circle" on:click={acceptSuggestion}>
         Accept
       </Button>
-      <Button primary size="S" icon="Delete" on:click={rejectSuggestion}
+      <Button primary size="S" icon="trash" on:click={rejectSuggestion}
         >Reject</Button
       >
     </div>
@@ -108,7 +110,7 @@
     bind:expanded
     bind:value={inputValue}
     readonly={!!suggestedCode}
-    {expandedOnly}
+    expandedOnly={shouldAlwaysBeExpanded}
   />
 </div>
 

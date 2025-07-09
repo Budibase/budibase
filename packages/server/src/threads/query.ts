@@ -6,6 +6,7 @@ import {
   QueryEvent,
   QueryVariable,
   QueryResponse,
+  QueryEventCtx,
 } from "./definitions"
 import { IsolatedVM } from "../jsRunner/vm"
 import { iifeWrapper, processStringSync } from "@budibase/string-templates"
@@ -21,6 +22,7 @@ import {
   Row,
   QueryVerb,
   DatasourcePlus,
+  SSOUser,
 } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
@@ -35,7 +37,7 @@ class QueryRunner {
   pagination: any
   transformer: string | null
   cachedVariables: any[]
-  ctx: any
+  ctx?: QueryEventCtx
   queryResponse: any
   nullDefaultSupport: boolean
   noRecursiveQuery: boolean
@@ -180,17 +182,15 @@ class QueryRunner {
     // if the request fails we retry once, invalidating the cached value
     if (info && info.code >= 400 && !this.hasRerun) {
       if (
-        this.ctx.user?.provider &&
+        this.ctx?.user?.provider &&
         info.code === 401 &&
         !this.hasRefreshedOAuth
       ) {
         await this.refreshOAuth2(this.ctx)
-        // Attempt to refresh the access token from the provider
         this.hasRefreshedOAuth = true
       } else {
         this.hasRerun = true
       }
-
       await threadUtils.invalidateCachedVariable(this.cachedVariables)
       return this.execute()
     }
@@ -273,9 +273,12 @@ class QueryRunner {
     if (!resp.err) {
       const globalUserId = getGlobalIDFromUserMetadataID(_id)
       await auth.updateUserOAuth(globalUserId, resp)
-      this.ctx.user = await cache.user.getUser({
+      if (!this.ctx) {
+        this.ctx = {}
+      }
+      this.ctx.user = (await cache.user.getUser({
         userId: globalUserId,
-      })
+      })) as SSOUser
     } else {
       // In this event the user may have oAuth issues that
       // could require re-authenticating with their provider.

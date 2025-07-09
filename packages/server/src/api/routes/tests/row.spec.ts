@@ -82,7 +82,16 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "/rows ($dbName)",
-    ({ config, dsProvider, isInternal, isMSSQL, isOracle }) => {
+    ({
+      config,
+      dsProvider,
+      isInternal,
+      isMySQL,
+      isMariaDB,
+      isMSSQL,
+      isOracle,
+      isSql,
+    }) => {
       let table: Table
       let datasource: Datasource | undefined
       let client: Knex | undefined
@@ -918,7 +927,9 @@ if (descriptions.length) {
 
       describe("get", () => {
         it("reads an existing row successfully", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           const res = await config.api.row.get(table._id!, existing._id!)
 
@@ -930,7 +941,7 @@ if (descriptions.length) {
 
         it("returns 404 when row does not exist", async () => {
           const table = await config.api.table.save(defaultTable())
-          await config.api.row.save(table._id!, {})
+          await config.api.row.save(table._id!, { name: "foo" })
           await config.api.row.get(table._id!, "1234567", {
             status: 404,
           })
@@ -958,8 +969,8 @@ if (descriptions.length) {
         it("fetches all rows for given tableId", async () => {
           const table = await config.api.table.save(defaultTable())
           const rows = await Promise.all([
-            config.api.row.save(table._id!, {}),
-            config.api.row.save(table._id!, {}),
+            config.api.row.save(table._id!, { name: "foo" }),
+            config.api.row.save(table._id!, { name: "bar" }),
           ])
 
           const res = await config.api.row.fetch(table._id!)
@@ -975,7 +986,9 @@ if (descriptions.length) {
 
       describe("update", () => {
         it("updates an existing row successfully", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(0, async () => {
             const res = await config.api.row.save(table._id!, {
@@ -1143,6 +1156,40 @@ if (descriptions.length) {
             expect(row.related2).toBeUndefined()
           })
         })
+
+        isSql &&
+          describe("date", () => {
+            it("should be able to write back a date fetched directly from the DB", async () => {
+              const table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    date: {
+                      name: "date",
+                      type: FieldType.DATETIME,
+                      dateOnly: true,
+                    },
+                  },
+                })
+              )
+
+              const row = await config.api.row.save(table._id!, {
+                date: "2023-01-26",
+              })
+
+              const rawRows = await client!(table.name)
+                .select("*")
+                .where({ id: row.id })
+
+              await config.api.row.save(table._id!, {
+                ...row,
+                date: rawRows[0].date,
+              })
+
+              const fetchedRow = await config.api.row.get(table._id!, row._id!)
+
+              expect(fetchedRow.date).toEqual("2023-01-26")
+            })
+          })
       })
 
       describe("patch", () => {
@@ -1166,7 +1213,9 @@ if (descriptions.length) {
         })
 
         it("should update only the fields that are supplied", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(0, async () => {
             const row = await config.api.row.patch(table._id!, {
@@ -1183,6 +1232,22 @@ if (descriptions.length) {
 
             expect(savedRow.description).toEqual(existing.description)
             expect(savedRow.name).toEqual("Updated Name")
+          })
+        })
+
+        it("should not require the primary display", async () => {
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+            description: "bar",
+          })
+          await expectRowUsage(0, async () => {
+            const row = await config.api.row.patch(table._id!, {
+              _id: existing._id!,
+              _rev: existing._rev!,
+              tableId: table._id!,
+              description: "baz",
+            })
+            expect(row.description).toEqual("baz")
           })
         })
 
@@ -1213,7 +1278,9 @@ if (descriptions.length) {
         })
 
         it("should throw an error when given improper types", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(0, async () => {
             await config.api.row.patch(
@@ -1289,6 +1356,7 @@ if (descriptions.length) {
             description: "test",
           })
           const { _id } = await config.api.row.save(table._id!, {
+            name: "test",
             relationship: [{ _id: row._id }, { _id: row2._id }],
           })
           const relatedRow = await config.api.row.get(table._id!, _id!, {
@@ -1440,7 +1508,9 @@ if (descriptions.length) {
         })
 
         it("should be able to delete a row", async () => {
-          const createdRow = await config.api.row.save(table._id!, {})
+          const createdRow = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(isInternal ? -1 : 0, async () => {
             const res = await config.api.row.bulkDelete(table._id!, {
@@ -1451,7 +1521,9 @@ if (descriptions.length) {
         })
 
         it("should be able to delete a row with ID only", async () => {
-          const createdRow = await config.api.row.save(table._id!, {})
+          const createdRow = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
 
           await expectRowUsage(isInternal ? -1 : 0, async () => {
             const res = await config.api.row.bulkDelete(table._id!, {
@@ -1463,8 +1535,12 @@ if (descriptions.length) {
         })
 
         it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
-          const createdRow = await config.api.row.save(table._id!, {})
-          const createdRow2 = await config.api.row.save(table._id!, {})
+          const createdRow = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
+          const createdRow2 = await config.api.row.save(table._id!, {
+            name: "bar",
+          })
 
           const res = await config.api.row.bulkDelete(table._id!, {
             rows: [createdRow, createdRow2, { _id: "9999999" }],
@@ -1581,8 +1657,8 @@ if (descriptions.length) {
         })
 
         it("should be able to delete a bulk set of rows", async () => {
-          const row1 = await config.api.row.save(table._id!, {})
-          const row2 = await config.api.row.save(table._id!, {})
+          const row1 = await config.api.row.save(table._id!, { name: "foo" })
+          const row2 = await config.api.row.save(table._id!, { name: "bar" })
 
           await expectRowUsage(isInternal ? -2 : 0, async () => {
             const res = await config.api.row.bulkDelete(table._id!, {
@@ -1596,9 +1672,9 @@ if (descriptions.length) {
 
         it("should be able to delete a variety of row set types", async () => {
           const [row1, row2, row3] = await Promise.all([
-            config.api.row.save(table._id!, {}),
-            config.api.row.save(table._id!, {}),
-            config.api.row.save(table._id!, {}),
+            config.api.row.save(table._id!, { name: "foo" }),
+            config.api.row.save(table._id!, { name: "bar" }),
+            config.api.row.save(table._id!, { name: "baz" }),
           ])
 
           await expectRowUsage(isInternal ? -3 : 0, async () => {
@@ -1612,7 +1688,7 @@ if (descriptions.length) {
         })
 
         it("should accept a valid row object and delete the row", async () => {
-          const row1 = await config.api.row.save(table._id!, {})
+          const row1 = await config.api.row.save(table._id!, { name: "foo" })
 
           await expectRowUsage(isInternal ? -1 : 0, async () => {
             const res = await config.api.row.delete(
@@ -2322,6 +2398,95 @@ if (descriptions.length) {
             `${uuid.v4()}.png`
           )
         })
+
+        !isInternal &&
+          describe("external database attachment authorization", () => {
+            it("should allow non-creator users to update attachment fields", async () => {
+              // Create a table with attachment field
+              const attachmentTable = await config.api.table.save(
+                defaultTable({
+                  schema: {
+                    name: {
+                      type: FieldType.STRING,
+                      name: "name",
+                      constraints: { presence: true },
+                    },
+                    attachment: {
+                      type: FieldType.ATTACHMENT_SINGLE,
+                      name: "attachment",
+                      constraints: { presence: false },
+                    },
+                  },
+                })
+              )
+
+              // Create a row with initial attachment as a creator user
+              const initialAttachment = generateAttachment(newCsv())
+              const createdRow = await config.api.row.save(
+                attachmentTable._id!,
+                {
+                  name: "test row",
+                  attachment: initialAttachment,
+                }
+              )
+
+              // Switch to a non-creator user context (use admin role but not creator)
+              await config.loginAsRole(
+                "ADMIN", // Admin role but not creator
+                async () => {
+                  // Try to update the row with a new attachment
+                  const newAttachment = generateAttachment(newCsv())
+                  const updatedRowData = {
+                    ...createdRow,
+                    attachment: newAttachment,
+                  }
+
+                  // This should NOT fail with "Not Authorized" error
+                  const updatedRow = await config.api.row.save(
+                    attachmentTable._id!,
+                    updatedRowData
+                  )
+
+                  expect(updatedRow.attachment.key).toBe(newAttachment.key)
+                  expect(updatedRow.name).toBe("test row")
+                }
+              )
+            })
+
+            it("should allow non-creator users to upload attachments to tables", async () => {
+              const attachmentTable = await config.api.table.save(
+                defaultTable({
+                  schema: {
+                    name: {
+                      type: FieldType.STRING,
+                      name: "name",
+                      constraints: { presence: true },
+                    },
+                    attachment: {
+                      type: FieldType.ATTACHMENT_SINGLE,
+                      name: "attachment",
+                      constraints: { presence: false },
+                    },
+                  },
+                })
+              )
+
+              // Switch to a non-creator user context
+              await config.loginAsRole("ADMIN", async () => {
+                const response = await config.api.attachment.upload(
+                  attachmentTable._id!,
+                  "test.txt",
+                  Buffer.from("test content")
+                )
+
+                expect(response).toBeDefined()
+                expect(Array.isArray(response)).toBe(true)
+                expect(response.length).toBe(1)
+                expect(response[0]).toHaveProperty("key")
+                expect(response[0]).toHaveProperty("url")
+              })
+            })
+          })
       })
 
       describe("exportRows", () => {
@@ -2347,7 +2512,9 @@ if (descriptions.length) {
 
         !isInternal &&
           it("should allow exporting all columns", async () => {
-            const existing = await config.api.row.save(table._id!, {})
+            const existing = await config.api.row.save(table._id!, {
+              name: "foo",
+            })
             const res = await config.api.row.exportRows(table._id!, {
               rows: [existing._id!],
             })
@@ -2363,7 +2530,9 @@ if (descriptions.length) {
           })
 
         it("should allow exporting without filtering", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
           const res = await config.api.row.exportRows(table._id!)
           const results = JSON.parse(res)
           expect(results.length).toEqual(1)
@@ -2373,7 +2542,9 @@ if (descriptions.length) {
         })
 
         it("should allow exporting only certain columns", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
           const res = await config.api.row.exportRows(table._id!, {
             rows: [existing._id!],
             columns: ["_id"],
@@ -2388,7 +2559,9 @@ if (descriptions.length) {
         })
 
         it("should handle single quotes in row filtering", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
           const res = await config.api.row.exportRows(table._id!, {
             rows: [`['${existing._id!}']`],
           })
@@ -2399,7 +2572,9 @@ if (descriptions.length) {
         })
 
         it("should return an error if no table is found", async () => {
-          const existing = await config.api.row.save(table._id!, {})
+          const existing = await config.api.row.save(table._id!, {
+            name: "foo",
+          })
           await config.api.row.exportRows(
             "1234567",
             { rows: [existing._id!] },
@@ -2751,6 +2926,9 @@ if (descriptions.length) {
         let m2mData: Row[]
 
         beforeAll(async () => {
+          o2mTable = await config.api.table.save(defaultTable())
+          m2mTable = await config.api.table.save(defaultTable())
+
           const table = await config.api.table.save(
             defaultTable({ schema: relSchema() })
           )
@@ -3040,6 +3218,117 @@ if (descriptions.length) {
           })
         })
       })
+
+      isSql &&
+        describe("imported many-to-many", () => {
+          let table1: Table
+          let table2: Table
+          let joinTable: Table
+
+          beforeAll(async () => {
+            const table1Id = "table1_" + generator.guid()
+            const table2Id = "table2_" + generator.guid()
+
+            await client!.schema.createTable(table1Id, table => {
+              table.increments("table1_id_foo").primary()
+              table.string("name")
+            })
+
+            await client!.schema.createTable(table2Id, table => {
+              table.increments("table2_id_bar").primary()
+              table.string("name")
+            })
+
+            await client!.schema.createTable("table1_table2", table => {
+              table.increments("id").primary()
+
+              // For some reason MySQL and MariaDB use a different types for
+              // `.increments(...)` and `.integer(...)` fields, making it
+              // invalid to create a foreign key reference to them. We use
+              // `.specificType(...)` to ensure the types match.
+              if (isMariaDB || isMySQL) {
+                table
+                  .specificType("table1_id", "int(10) unsigned")
+                  .references("table1_id_foo")
+                  .inTable(table1Id)
+                table
+                  .specificType("table2_id", "int(10) unsigned")
+                  .references("table2_id_bar")
+                  .inTable(table2Id)
+              } else {
+                table
+                  .integer("table1_id")
+                  .references("table1_id_foo")
+                  .inTable(table1Id)
+                table
+                  .integer("table2_id")
+                  .references("table2_id_bar")
+                  .inTable(table2Id)
+              }
+              table.unique(["table1_id", "table2_id"])
+            })
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+
+            table1 = resp.datasource.entities![table1Id]!
+            table2 = resp.datasource.entities![table2Id]!
+            joinTable = resp.datasource.entities!["table1_table2"]!
+
+            table1.schema.relation = {
+              name: "relation",
+              type: FieldType.LINK,
+              tableId: table2._id!,
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              fieldName: "table2_id_bar",
+              through: joinTable._id!,
+              throughFrom: "table2_id",
+              throughTo: "table1_id",
+            }
+
+            await config.api.table.save(table1)
+          })
+
+          it("should allow creation of rows", async () => {
+            const row1 = await config.api.row.save(table2._id!, { name: "one" })
+            const row2 = await config.api.row.save(table2._id!, { name: "two" })
+
+            await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [row1],
+            })
+
+            await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [row2],
+            })
+
+            await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [row1, row2],
+            })
+          })
+
+          it("should allow updating of rows", async () => {
+            const table2_row1 = await config.api.row.save(table2._id!, {
+              name: "one",
+            })
+            const table2_row2 = await config.api.row.save(table2._id!, {
+              name: "two",
+            })
+
+            const row2 = await config.api.row.save(table1._id!, {
+              name: "foo",
+              relation: [table2_row2],
+            })
+
+            await config.api.row.save(table1._id!, {
+              ...row2,
+              relation: [table2_row1, table2_row2],
+            })
+          })
+        })
 
       // Upserting isn't yet supported in MSSQL or Oracle, see:
       //   https://github.com/knex/knex/pull/6050
@@ -3682,6 +3971,73 @@ if (descriptions.length) {
               "foo9",
             ])
           )
+        })
+      })
+
+      describe("datetime fields", () => {
+        it("should save and retrieve datetime fields", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00.000Z",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000Z")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000Z")
+        })
+
+        it("should save and retrieve datetime fields without timezone", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  ignoreTimezones: true,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000")
+        })
+
+        it("should be able to save a date with a timezone in an ignore timezone field", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  ignoreTimezones: true,
+                },
+              },
+            })
+          )
+
+          const row = await config.api.row.save(table._id!, {
+            date: "2023-01-01T00:00:00.000Z",
+          })
+          expect(row.date).toEqual("2023-01-01T00:00:00.000")
+
+          const fetchedRow = await config.api.row.get(table._id!, row._id!)
+          expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000")
         })
       })
 

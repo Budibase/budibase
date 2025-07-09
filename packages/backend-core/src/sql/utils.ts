@@ -14,7 +14,11 @@ import environment from "../environment"
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:.\d{3})?Z)?$/
+const ISO_DATE_REGEX =
+  /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}:\d{2}(?:.\d{3})?Z)?$/
+const ISO_DATE_REGEX_NO_TIMEZONE =
+  /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}:\d{2}(?:.\d{3})?)?$/
+const DATE_REGEX = /(\d{4}-\d{2}-\d{2})/
 const TIME_REGEX = /^(?:\d{2}:)?(?:\d{2}:)(?:\d{2})$/
 
 export function isExternalTableID(tableId: string) {
@@ -148,8 +152,21 @@ export function isValidISODateString(str: string) {
   return !isNaN(d.getTime())
 }
 
-export function isInvalidISODateString(str: string) {
-  return !isValidISODateString(str)
+export function isValidISODateStringWithoutTimezone(str: string) {
+  const trimmedValue = str.trim()
+  if (!ISO_DATE_REGEX_NO_TIMEZONE.test(trimmedValue)) {
+    return false
+  }
+  const d = new Date(trimmedValue)
+  return !isNaN(d.getTime())
+}
+
+export function extractDate(str: string) {
+  const match = str.match(DATE_REGEX)
+  if (!match) {
+    return undefined
+  }
+  return match[0]
 }
 
 export function isValidFilter(value: any) {

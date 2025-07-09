@@ -16,21 +16,22 @@ import {
   DocumentType,
   generateAppID,
   generateDevAppID,
-  generateScreenID,
   getLayoutParams,
-  getScreenParams,
 } from "../../db/utils"
 import {
   cache,
   context,
+  db,
   db as dbCore,
   docIds,
   env as envCore,
   events,
+  features,
   objectStore,
   roles,
   tenancy,
   users,
+  utils,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -65,11 +66,11 @@ import {
   DeleteAppResponse,
   ImportToUpdateAppRequest,
   ImportToUpdateAppResponse,
-  SetRevertableAppVersionRequest,
   AddAppSampleDataResponse,
   UnpublishAppResponse,
-  SetRevertableAppVersionResponse,
   ErrorCode,
+  FeatureFlag,
+  FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -77,6 +78,8 @@ import { builderSocket } from "../../websockets"
 import { DefaultAppTheme, sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
+import { defaultAppNavigator } from "../../constants/definitions"
+import { processMigrations } from "../../appMigrations/migrationsProcessor"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -84,17 +87,6 @@ async function getLayouts() {
   return (
     await db.allDocs<Layout>(
       getLayoutParams(null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(row => row.doc!)
-}
-
-async function getScreens() {
-  const db = context.getAppDB()
-  return (
-    await db.allDocs<Screen>(
-      getScreenParams(null, {
         include_docs: true,
       })
     )
@@ -192,32 +184,50 @@ async function addSampleDataDocs() {
 }
 
 async function addSampleDataScreen() {
-  const db = context.getAppDB()
-  let screen = createSampleDataTableScreen()
-  screen._id = generateScreenID()
-  await db.put(screen)
-}
-
-async function addSampleDataNavLinks() {
-  const db = context.getAppDB()
-  let app = await sdk.applications.metadata.get()
-  if (!app.navigation) {
-    return
-  }
-  if (!app.navigation.links) {
-    app.navigation.links = []
-  }
-  app.navigation.links.push({
-    text: "Inventory",
-    url: "/inventory",
-    type: "link",
-    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+  const appMetadata = await sdk.applications.metadata.get()
+  const workspaceApp = await sdk.workspaceApps.create({
+    name: appMetadata.name,
+    url: "/",
+    icon: "Monitoring",
+    navigation: {
+      ...defaultAppNavigator(appMetadata.name),
+      links: [
+        {
+          text: "Inventory",
+          url: "/inventory",
+          type: "link",
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        },
+      ],
+    },
+    isDefault: true,
   })
 
-  await db.put(app)
+  const screen = createSampleDataTableScreen(workspaceApp._id!)
+  await sdk.screens.create(screen)
 
-  // remove any cached metadata, so that it will be updated
-  await cache.app.invalidateAppMetadata(app.appId)
+  {
+    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
+    const db = context.getAppDB()
+    let app = await sdk.applications.metadata.get()
+    if (!app.navigation) {
+      return
+    }
+    if (!app.navigation.links) {
+      app.navigation.links = []
+    }
+    app.navigation.links.push({
+      text: "Inventory",
+      url: "/inventory",
+      type: "link",
+      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    })
+
+    await db.put(app)
+
+    // remove any cached metadata, so that it will be updated
+    await cache.app.invalidateAppMetadata(app.appId)
+  }
 }
 
 export const addSampleData = async (
@@ -228,10 +238,37 @@ export const addSampleData = async (
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAppsResponse>) {
-  ctx.body = await sdk.applications.fetch(
+  const apps = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
   )
+
+  ctx.body = await sdk.applications.enrichWithDefaultWorkspaceAppUrl(apps)
+}
+export async function fetchClientApps(
+  ctx: UserCtx<void, FetchPublishedAppsResponse>
+) {
+  const apps = await sdk.applications.fetch(AppStatus.DEPLOYED, ctx.user)
+
+  const result: FetchPublishedAppsResponse["apps"] = []
+  for (const app of apps) {
+    const workspaceApps = await db.doWithDB(app.appId, db =>
+      sdk.workspaceApps.fetch(db)
+    )
+    for (const workspaceApp of workspaceApps) {
+      result.push({
+        // This is used as idempotency key for rendering in the frontend
+        appId: `${app.appId}_${workspaceApp._id}`,
+        // TODO: this can be removed when the flag is cleaned from packages/builder/src/pages/builder/apps/index.svelte
+        prodId: app.appId,
+        name: `${workspaceApp.name}`,
+        url: `${app.url}${workspaceApp.url || ""}`.replace(/\/$/, ""),
+        updatedAt: app.updatedAt,
+      })
+    }
+  }
+
+  ctx.body = { apps: result }
 }
 
 export async function fetchAppDefinition(
@@ -241,7 +278,7 @@ export async function fetchAppDefinition(
   const userRoleId = getUserRoleId(ctx)
   const accessController = new roles.AccessController()
   const screens = await accessController.checkScreensAccess(
-    await getScreens(),
+    await sdk.screens.fetch(),
     userRoleId
   )
   ctx.body = {
@@ -257,7 +294,7 @@ export async function fetchAppPackage(
   const appId = context.getAppId()
   const application = await sdk.applications.metadata.get()
   const layouts = await getLayouts()
-  let screens = await getScreens()
+  let screens = await sdk.screens.fetch()
   const license = await licensing.cache.getCachedLicense()
 
   // Enrich plugin URLs
@@ -272,11 +309,30 @@ export async function fetchAppPackage(
     )
   }
 
-  // Only filter screens if the user is not a builder
-  if (!users.isBuilder(ctx.user, appId)) {
+  // Only filter screens if the user is not a builder call
+  const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
+  if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
+  }
+
+  if (
+    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    !isBuilder
+  ) {
+    const urlPath = ctx.headers.referer
+      ? new URL(ctx.headers.referer).pathname
+      : ""
+
+    const [matchedWorkspaceApp] =
+      await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+    if (!matchedWorkspaceApp) {
+      ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
+    }
+    screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
+
+    application.navigation = matchedWorkspaceApp.navigation
   }
 
   const clientLibPath = objectStore.clientLibraryUrl(
@@ -355,14 +411,7 @@ async function performAppCreate(
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       status: AppStatus.DEV,
-      navigation: {
-        navigation: "Top",
-        title: name,
-        navWidth: "Large",
-        navBackground: "var(--spectrum-global-color-static-blue-1200)",
-        navTextColor: "var(--spectrum-global-color-static-white)",
-        links: [],
-      },
+      navigation: defaultAppNavigator(name),
       theme: DefaultAppTheme,
       customTheme: {
         primaryColor: "var(--spectrum-global-color-blue-700)",
@@ -428,7 +477,6 @@ async function performAppCreate(
       try {
         await addSampleDataDocs()
         await addSampleDataScreen()
-        await addSampleDataNavLinks()
 
         // Fetch the latest version of the app after these changes
         newApplication = await sdk.applications.metadata.get()
@@ -439,11 +487,16 @@ async function performAppCreate(
 
     const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
     if (latestMigrationId) {
-      // Initialise the app migration version as the latest one
-      await appMigrations.updateAppMigrationMetadata({
-        appId,
-        version: latestMigrationId,
-      })
+      if (useTemplate) {
+        await processMigrations(appId)
+      } else if (!isImport) {
+        // Initialise the app migration version as the latest one
+        await appMigrations.updateAppMigrationMetadata({
+          appId,
+          version: latestMigrationId,
+          skipHistory: true,
+        })
+      }
     }
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
@@ -620,6 +673,10 @@ export async function update(
 export async function updateClient(
   ctx: UserCtx<void, UpdateAppClientResponse>
 ) {
+  // Don't allow updating in dev
+  if (env.isDev() && !env.isTest()) {
+    ctx.throw(400, "Updating or reverting apps is not supported in dev")
+  }
   // Get current app version
   const application = await sdk.applications.metadata.get()
   const currentVersion = application.version
@@ -649,6 +706,11 @@ export async function updateClient(
 export async function revertClient(
   ctx: UserCtx<void, RevertAppClientResponse>
 ) {
+  // Don't allow reverting in dev
+  if (env.isDev() && !env.isTest()) {
+    ctx.throw(400, "Updating or reverting apps is not supported in dev")
+  }
+
   // Check app can be reverted
   const application = await sdk.applications.metadata.get()
   if (!application.revertableVersion) {
@@ -897,25 +959,11 @@ export async function updateAppPackage(
   })
 }
 
-export async function setRevertableVersion(
-  ctx: UserCtx<SetRevertableAppVersionRequest, SetRevertableAppVersionResponse>
-) {
-  if (!env.isDev()) {
-    ctx.status = 403
-    return
-  }
-  const db = context.getAppDB()
-  const app = await sdk.applications.metadata.get()
-  app.revertableVersion = ctx.request.body.revertableVersion
-  await db.put(app)
-  ctx.body = { message: "Revertable version updated." }
-}
-
 async function migrateAppNavigation() {
   const db = context.getAppDB()
   const existing = await sdk.applications.metadata.get()
   const layouts: Layout[] = await getLayouts()
-  const screens: Screen[] = await getScreens()
+  const screens: Screen[] = await sdk.screens.fetch()
 
   // Migrate all screens, removing custom layouts
   for (let screen of screens) {

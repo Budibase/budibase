@@ -2,11 +2,11 @@
   import { Icon } from "@budibase/bbui"
   import Field from "./Field.svelte"
   import { FieldType } from "@budibase/types"
-  import type { FieldSchema } from "@budibase/types"
-  import type { FieldApi, FieldState, FieldValidation } from "@/types"
+  import type { FieldSchema, UIFieldValidationRule } from "@budibase/types"
+  import type { FieldApi, FieldState } from "@/types"
 
-  type Size = "XS" | "S" | "M" | "L" | "XL" | "Custom"
-  type IconType = "Star" | "Heart"
+  type Size = "XS" | "S" | "M" | "L" | "XL"
+  type IconType = "star" | "heart"
   type ColourVariant =
     | "Primary"
     | "Secondary"
@@ -22,11 +22,10 @@
   export let label: string
   export let numberOfStars: number = 5
   export let size: Size = "L"
-  export let customSize: number
-  export let type: IconType = "Star"
+  export let type: IconType = "star"
   export let variant: ColourVariant = "Primary"
 
-  export let validation: FieldValidation
+  export let validation: UIFieldValidationRule[] | undefined
   export let onChange: (_event: { value: number }) => void
 
   let hoverRating: number | null = null
@@ -48,7 +47,7 @@
       ? colour
       : colourVariants[variant] || "var(--primaryColor)"
 
-  const sizeSpacing: Record<Exclude<Size, "Custom">, number> = {
+  const sizeSpacing: Record<Size, number> = {
     XS: 0.25,
     S: 0.5,
     M: 1,
@@ -56,11 +55,7 @@
     XL: 2,
   }
 
-  $: spacing =
-    size === "Custom" && customSize
-      ? customSize * 0.1
-      : sizeSpacing[size as Exclude<Size, "Custom">] || sizeSpacing.M
-
+  $: spacing = sizeSpacing[size] || sizeSpacing.M
   $: enabled = !fieldState?.disabled && !fieldState?.readonly
 
   const handleClick = (value: number): void => {
@@ -105,14 +100,16 @@
       >
         <div
           class="icon-container"
-          class:outline={!isRated(hoverRating, i) &&
+          class:hover-preview={isRated(hoverRating, i) &&
             !isRated(fieldState?.value, i)}
         >
           <Icon
             name={type}
             {size}
             color={ratingColour}
-            customSize={size === "Custom" ? customSize : undefined}
+            weight={isRated(hoverRating, i) || isRated(fieldState?.value, i)
+              ? "fill"
+              : "regular"}
           />
         </div>
       </button>
@@ -145,7 +142,7 @@
     align-items: center;
     justify-content: center;
   }
-  .icon-container.outline :global(svg) {
+  .icon-container.hover-preview :global(i) {
     opacity: 0.2;
     filter: contrast(0.5);
   }

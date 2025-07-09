@@ -29,6 +29,7 @@ import { ActionTypes } from "./constants"
 import {
   fetchDatasourceSchema,
   fetchDatasourceDefinition,
+  getRelationshipSchemaAdditions,
 } from "./utils/schema"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
@@ -71,6 +72,7 @@ export default {
   getAction,
   fetchDatasourceSchema,
   fetchDatasourceDefinition,
+  getRelationshipSchemaAdditions,
   fetchData,
   QueryUtils,
   ContextScopes: Constants.ContextScopes,

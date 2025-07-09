@@ -42,13 +42,15 @@
   const goToPortal = () => {
     window.location.href = isBuilder ? "/builder/portal/apps" : "/builder/apps"
   }
+
+  $: user = $authStore as User
 </script>
 
 {#if $authStore}
   <ActionMenu align={compact ? "right" : "left"}>
     <svelte:fragment slot="control">
       <div class="container">
-        <UserAvatar user={$authStore} size="M" showTooltip={false} />
+        <UserAvatar {user} size="M" showTooltip={false} />
         {#if !compact}
           <div class="text">
             <div class="name">
@@ -56,16 +58,16 @@
             </div>
           </div>
         {/if}
-        <Icon size="L" name="ChevronDown" />
+        <Icon size="S" name="caret-down" color="var(--navTextColor)" />
       </div>
     </svelte:fragment>
 
-    <MenuItem icon="UserEdit" on:click={() => profileModal?.show()}>
+    <MenuItem icon="user-gear" on:click={() => profileModal?.show()}>
       My profile
     </MenuItem>
     {#if !isSSO}
       <MenuItem
-        icon="LockClosed"
+        icon="lock"
         on:click={() => {
           if (isOwner) {
             window.location.href = `${$environmentStore.accountPortalUrl}/portal/account`
@@ -78,11 +80,11 @@
       </MenuItem>
     {/if}
 
-    <MenuItem icon="Apps" on:click={goToPortal} disabled={embedded}>
+    <MenuItem icon="squares-four" on:click={goToPortal} disabled={embedded}>
       Go to portal
     </MenuItem>
     <MenuItem
-      icon="LogOut"
+      icon="sign-out"
       on:click={authStore.actions.logOut}
       disabled={embedded}
     >

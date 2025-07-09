@@ -1,14 +1,9 @@
+import { MenuItem } from "@/types"
 import { writable } from "svelte/store"
 
 interface Position {
   x: number
   y: number
-}
-
-interface MenuItem {
-  label: string
-  icon?: string
-  action: () => void
 }
 
 interface ContextMenuState {

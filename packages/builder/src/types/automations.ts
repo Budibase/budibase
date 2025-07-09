@@ -14,6 +14,7 @@ import {
   AutomationTriggerStepId,
   AutomationCustomIOType,
   AutomationIOType,
+  AutomationLog,
 } from "@budibase/types"
 import { SvelteComponent } from "svelte"
 
@@ -23,7 +24,13 @@ export enum DataMode {
   ERRORS = "errors",
 }
 
+export enum ViewMode {
+  EDITOR = "editor",
+  LOGS = "logs",
+}
+
 export enum SchemaFieldTypes {
+  LONGFORM = "longform",
   JSON = "json",
   ENUM = "enum",
   BOOL = "boolean",
@@ -43,6 +50,7 @@ export enum SchemaFieldTypes {
   STRING = "string",
   QUERY_PARAMS = "query_params",
   QUERY_LIMIT = "query_limit",
+  CATEGORIES = "categories",
 }
 
 export type KeyValuePair = {
@@ -129,6 +137,11 @@ export interface AutomationState {
   appSelf?: AppSelfResponse
   selectedNodeId?: string
   selectedNodeMode?: DataMode
+  actionPanelBlock?: BlockRef
+  selectedLog?: AutomationLog
+  selectedLogStepData?: any
+  showLogsPanel?: boolean
+  showLogDetailsPanel?: boolean
 }
 
 export interface DerivedAutomationState extends AutomationState {
@@ -150,6 +163,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
   [AutomationCustomIOType.WEBHOOK_URL]: SchemaFieldTypes.WEBHOOK_URL,
   [AutomationCustomIOType.QUERY_LIMIT]: SchemaFieldTypes.QUERY_LIMIT,
   [AutomationCustomIOType.QUERY_PARAMS]: SchemaFieldTypes.QUERY_PARAMS,
+  [AutomationCustomIOType.CATEGORIES]: SchemaFieldTypes.CATEGORIES,
   ["fields"]: SchemaFieldTypes.FIELDS,
 }
 
@@ -159,6 +173,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
 export const typeToSchema: Partial<Record<AutomationIOType, SchemaFieldTypes>> =
   {
     [AutomationIOType.BOOLEAN]: SchemaFieldTypes.BOOL,
+    [AutomationIOType.LONGFORM]: SchemaFieldTypes.LONGFORM,
     [AutomationIOType.DATE]: SchemaFieldTypes.DATE,
     [AutomationIOType.JSON]: SchemaFieldTypes.JSON,
     [AutomationIOType.ATTACHMENT]: SchemaFieldTypes.FILE,

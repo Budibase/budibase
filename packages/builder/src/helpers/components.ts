@@ -15,7 +15,10 @@ const { ContextScopes } = Constants
 /**
  * Recursively searches for a specific component ID
  */
-export const findComponent = (rootComponent: Component, id: string) => {
+export const findComponent = (
+  rootComponent: Component | undefined,
+  id: string
+) => {
   return searchComponentTree(rootComponent, comp => comp._id === id)
 }
 
@@ -138,7 +141,7 @@ export const findClosestMatchingComponent = (
  * components until a match is found
  */
 const searchComponentTree = (
-  rootComponent: Component,
+  rootComponent: Component | undefined,
   matchComponent: (component: Component) => boolean
 ): Component | null => {
   if (!rootComponent || !matchComponent) {

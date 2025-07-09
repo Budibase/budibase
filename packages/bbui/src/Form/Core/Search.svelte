@@ -1,6 +1,7 @@
 <script lang="ts">
   import "@spectrum-css/search/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
+  import Icon from "../../Icon/Icon.svelte"
 
   export let value: any = null
   export let placeholder: string | undefined = undefined
@@ -47,13 +48,9 @@
     class:is-focused={focus}
     class:is-disabled={disabled}
   >
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-icon"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-Magnify" />
-    </svg>
+    <div class="search-icon">
+      <Icon name="magnifying-glass" size="S" />
+    </div>
     <input
       {disabled}
       {id}
@@ -78,13 +75,7 @@
     type="reset"
     class="spectrum-ClearButton spectrum-Search-clearButton"
   >
-    <svg
-      class="spectrum-Icon spectrum-UIIcon-Cross75"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-css-icon-Cross75" />
-    </svg>
+    <Icon name="x" size="S" />
   </button>
 </div>
 
@@ -94,6 +85,7 @@
     width: 100%;
   }
   .spectrum-Search-input {
+    padding-left: 35px;
     padding-right: 24px;
   }
   .is-disabled {
@@ -101,5 +93,10 @@
   }
   .spectrum-Search-clearButton {
     position: absolute;
+  }
+  .search-icon {
+    position: absolute;
+    top: 9px;
+    left: var(--spectrum-textfield-error-icon-margin-left);
   }
 </style>

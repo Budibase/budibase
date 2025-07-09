@@ -5,6 +5,7 @@ import {
   EmptyFilterOption,
   UIRow,
   UICondition,
+  EXTERNAL_ROW_REV,
 } from "@budibase/types"
 import { Store as StoreContext } from "."
 
@@ -72,9 +73,20 @@ export const initialise = (context: StoreContext) => {
     const $metadata = get(metadata)
     let metadataUpdates: Record<string, any> = {}
     for (let row of $rows) {
-      if (!row._rev || $metadata[row._id]?.version !== row._rev) {
-        metadataUpdates[row._id] = evaluateConditions(row, $conditions)
+      const meta = $metadata[row._id]
+      const changed =
+        // No _rev indicates a new row
+        !row._rev ||
+        // _rev changed since last evaluation
+        (meta && meta.version !== row._rev) ||
+        // this is an external row, we have no way to know if it has changed, so
+        // we always re-evaluate
+        row._rev === EXTERNAL_ROW_REV
+      if (!changed && meta) {
+        continue
       }
+
+      $metadata[row._id] = evaluateConditions(row, $conditions)
     }
     if (Object.keys(metadataUpdates).length) {
       metadata.update(state => ({

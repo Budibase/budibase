@@ -9,13 +9,13 @@ export const getColumnIcon = column => {
     return column.schema.icon
   }
   if (column.calculationType) {
-    return "Calculator"
+    return "calculator"
   }
   if (column.schema.autocolumn) {
-    return "Shapes"
+    return "shapes"
   }
   if (helpers.schema.isDeprecatedSingleUserColumn(column.schema)) {
-    return "User"
+    return "user"
   }
   const { type, subtype } = column.schema
   const result =
@@ -23,7 +23,7 @@ export const getColumnIcon = column => {
       ? TypeIconMap[type][subtype]
       : TypeIconMap[type]
 
-  return result || "Text"
+  return result || "article"
 }
 
 export const addNestedJSONSchemaFields = schema => {

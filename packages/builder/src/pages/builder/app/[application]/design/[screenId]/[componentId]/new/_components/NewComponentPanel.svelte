@@ -12,6 +12,7 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import { findComponentPath } from "@/helpers/components"
+  import NewPill from "@/components/common/NewPill.svelte"
 
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
@@ -268,11 +269,22 @@
                 on:click={() => addComponent(component.component)}
                 on:mouseenter={() => (selectedIndex = null)}
               >
-                <Icon name={component.icon} />
+                <div class="icon-container">
+                  <Icon
+                    size="M"
+                    color="var(--spectrum-global-color-static-gray-50)"
+                    name={component.icon}
+                  />
+                </div>
                 <div class="component-name">
-                  <Body size="XS">{component.name}</Body>
+                  <Body
+                    size="S"
+                    weight="500"
+                    color="var(--spectrum-global-color-gray-900)"
+                    >{component.name}</Body
+                  >
                   {#if component.new}
-                    <div class="new">NEW</div>
+                    <NewPill />
                   {/if}
                 </div>
               </div>
@@ -306,39 +318,37 @@
     margin-top: var(--spacing-xs);
   }
   .component {
-    background: var(--spectrum-global-color-gray-200);
-    border-radius: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-alias-background-color-secondary);
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    transition: background 130ms ease-out, border-color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
     flex-direction: row;
     justify-content: flex-start;
-    padding: var(--spacing-s) var(--spacing-l);
+    padding: var(--spacing-s) var(--spacing-m);
     gap: var(--spacing-m);
     overflow: hidden;
+  }
+  .icon-container {
+    background-color: #aa4321;
+    border: 0.5px solid #c96442;
+    padding: 4px;
+    border-radius: 8px;
   }
   .component.selected {
     border-color: var(--spectrum-global-color-blue-400);
   }
   .component:hover {
-    background: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-200);
   }
   .component-name {
     display: flex;
     flex: 1;
     align-items: center;
     gap: 4px;
-  }
-  .new {
-    font-size: 8px;
-    color: white;
-    background: var(--bb-indigo);
-    border-radius: 2px;
-    padding: 1px 3px;
-    font-weight: bold;
-    margin-left: auto;
-    flex-shrink: 0;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;

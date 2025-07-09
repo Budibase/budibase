@@ -22,6 +22,7 @@
   export let componentDefinition
   export let iconTooltip
   export let componentTitle
+  export let onSave = null
 
   let tempValue
   let drawer
@@ -46,7 +47,11 @@
   const save = async () => {
     try {
       const value = readableToRuntimeBinding(bindings, tempValue)
-      await componentStore.updateCustomStyle(value)
+      if (onSave) {
+        await onSave(value)
+      } else {
+        await componentStore.updateCustomStyle(value)
+      }
     } catch (error) {
       notifications.error("Error updating custom style")
     }
@@ -63,7 +68,7 @@
   </div>
 </DetailSummary>
 {#key componentInstance?._id}
-  <Drawer bind:this={drawer} title="Custom CSS">
+  <Drawer bind:this={drawer} title="Custom CSS" on:drawerHide on:drawerShow>
     <svelte:fragment slot="description">
       <div class="header">
         Your CSS will overwrite styles for:
@@ -104,7 +109,9 @@
   .highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-left: 4px solid var(--spectrum-semantic-informative-color-background);
-    transition: background 130ms ease-out, border-color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
     margin: -4px calc(-1 * var(--spacing-xl));
     padding: 4px var(--spacing-xl) 4px calc(var(--spacing-xl) - 4px);
   }

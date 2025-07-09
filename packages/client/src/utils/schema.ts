@@ -10,7 +10,7 @@ import { FieldType, TableSchema } from "@budibase/types"
  * @returns
  */
 const getDatasourceFetchInstance = <
-  TDatasource extends { type: DataFetchType }
+  TDatasource extends { type: DataFetchType },
 >(
   datasource: TDatasource
 ) => {
@@ -31,7 +31,7 @@ const getDatasourceFetchInstance = <
  * @param options options for enriching the schema
  */
 export const fetchDatasourceSchema = async <
-  TDatasource extends { type: DataFetchType }
+  TDatasource extends { type: DataFetchType },
 >(
   datasource: TDatasource,
   options = { enrichRelationships: false, formSchema: false }
@@ -88,7 +88,7 @@ export const fetchDatasourceSchema = async <
  * @param datasource the datasource to fetch the schema for
  */
 export const fetchDatasourceDefinition = async <
-  TDatasource extends { type: DataFetchType }
+  TDatasource extends { type: DataFetchType },
 >(
   datasource: TDatasource
 ) => {
@@ -121,6 +121,7 @@ export const getRelationshipSchemaAdditions = async (
         relationshipAdditions[`${fieldKey}.${linkKey}`] = {
           type: linkSchema[linkKey].type,
           externalType: linkSchema[linkKey].externalType,
+          constraints: linkSchema[linkKey].constraints,
         }
       })
     }

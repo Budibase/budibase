@@ -59,6 +59,16 @@ function buildInviteAcceptValidation() {
   }).required().unknown(true))
 }
 
+function buildChangeTenantOwnerEmailValidation() {
+  return auth.joiValidator.body(
+    Joi.object({
+      newAccountEmail: Joi.string().required(),
+      originalEmail: Joi.string().required(),
+      tenantIds: Joi.array().items(Joi.string()).required(),
+    }).required()
+  )
+}
+
 router
   .post(
     "/api/global/users",
@@ -140,5 +150,11 @@ router
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
   .get("/api/global/users/:id", auth.builderOrAdmin, controller.find)
+  .put(
+    "/api/global/users/tenant/owner",
+    cloudRestricted,
+    buildChangeTenantOwnerEmailValidation(),
+    controller.changeTenantOwnerEmail
+  )
 
 export default router

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount, onDestroy } from "svelte"
   import { params, goto } from "@roxi/routify"
   import {
@@ -8,7 +8,7 @@
     enrichedApps,
   } from "@/stores/portal"
   import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
-  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems.js"
+  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import {
     Link,
@@ -23,27 +23,28 @@
   import ErrorSVG from "./ErrorSVG.svelte"
   import { ClientAppSkeleton } from "@budibase/frontend-core"
   import { contextMenuStore } from "@/stores/builder"
+  import type { EnrichedApp } from "@/types"
 
-  $: app = $enrichedApps.find(app => app.appId === $params.appId)
+  $: app = $enrichedApps.find(app => app.appId === $params.appId)!
   $: iframeUrl = getIframeURL(app)
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
   let loading = true
-  let appContextMenuModals
+  let appContextMenuModals: AppContextMenuModals
 
-  const getIframeURL = app => {
-    loading = true
+  const getIframeURL = (app: EnrichedApp) => {
+    const workspaceUrl =
+      app.status === "published" ? `/app${app.url}` : `/${app.devId}`
 
-    if (app.status === "published") {
-      return `/app${app.url}`
-    }
-    return `/${app.devId}`
+    return `${workspaceUrl}${app.defaultWorkspaceAppUrl}`
   }
+
+  $: iframeUrl && (loading = true) // If the iframe changes, set loading to true
 
   let noScreens = false
 
   // Normally fetched in builder/src/pages/builder/app/[application]/_layout.svelte
-  const fetchScreens = async appId => {
+  const fetchScreens = async (appId: string | undefined) => {
     if (!appId) return
 
     const pkg = await API.fetchAppPackage(appId)
@@ -52,7 +53,7 @@
 
   $: fetchScreens(app?.devId)
 
-  const receiveMessage = async message => {
+  const receiveMessage = async (message: MessageEvent) => {
     if (message.data.type === "docLoaded") {
       loading = false
     }
@@ -66,7 +67,7 @@
     window.removeEventListener("message", receiveMessage)
   })
 
-  const openContextMenu = e => {
+  const openContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -92,7 +93,7 @@
     {#if $sideBarCollapsed}
       <div class="headerButton" on:click={() => sideBarCollapsed.set(false)}>
         <Icon
-          name={"Rail"}
+          name="sidebar"
           hoverable
           tooltip="Expand"
           tooltipPosition={TooltipPosition.Right}
@@ -103,7 +104,7 @@
     {:else}
       <div class="headerButton" on:click={() => sideBarCollapsed.set(true)}>
         <Icon
-          name={"RailRightOpen"}
+          name="sidebar-simple"
           hoverable
           tooltip="Collapse"
           tooltipType={TooltipType.Info}
@@ -127,7 +128,7 @@
     </div>
     <div class="headerButton" on:click={() => window.open(iframeUrl, "_blank")}>
       <Icon
-        name="LinkOut"
+        name="arrow-square-out"
         disabled={noScreens}
         hoverable
         tooltip="Open in new tab"
@@ -140,12 +141,12 @@
     <Icon
       color={`${app.appId}-view` === $contextMenuStore.id
         ? "var(--hover-color)"
-        : null}
+        : undefined}
       on:contextmenu={openContextMenu}
       on:click={openContextMenu}
       size="S"
       hoverable
-      name="MoreSmallList"
+      name="dots-three"
     />
   </div>
   {#if noScreens}
@@ -167,7 +168,7 @@
         <ClientAppSkeleton
           noAnimation
           hideDevTools={app?.status === "published"}
-          sideNav={app?.navigation.navigation === "Left"}
+          sideNav={app?.navigation?.navigation === "Left"}
           hideFooter={$licensing.brandingEnabled}
         />
       </div>

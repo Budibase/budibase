@@ -5,6 +5,14 @@ import {
   updateReferencesInObject,
 } from "@/dataBinding"
 
+vi.mock("@/stores/builder", async () => {
+  const workspaceAppStore = {}
+
+  return {
+    workspaceAppStore,
+  }
+})
+
 describe("Builder dataBinding", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -14,7 +22,7 @@ describe("Builder dataBinding", () => {
     const bindableProperties = [
       {
         category: "Current User",
-        icon: "User",
+        icon: "user",
         providerId: "user",
         readableBinding: "Current User.firstName",
         runtimeBinding: "[user].[firstName]",
@@ -22,7 +30,7 @@ describe("Builder dataBinding", () => {
       },
       {
         category: "Bindings",
-        icon: "Brackets",
+        icon: "brackets-angle",
         readableBinding: "Binding.count",
         runtimeBinding: "count",
         type: "context",
@@ -59,7 +67,7 @@ describe("Builder dataBinding", () => {
     const bindableProperties = [
       {
         category: "Current User",
-        icon: "User",
+        icon: "user",
         providerId: "user",
         readableBinding: "Current User.firstName",
         runtimeBinding: "[user].[firstName]",
@@ -67,28 +75,28 @@ describe("Builder dataBinding", () => {
       },
       {
         category: "Bindings",
-        icon: "Brackets",
+        icon: "brackets-angle",
         readableBinding: "Binding.count",
         runtimeBinding: "count",
         type: "context",
       },
       {
         category: "Bindings",
-        icon: "Brackets",
+        icon: "brackets-angle",
         readableBinding: "location",
         runtimeBinding: "[location]",
         type: "context",
       },
       {
         category: "Bindings",
-        icon: "Brackets",
+        icon: "brackets-angle",
         readableBinding: "foo.[bar]",
         runtimeBinding: "[foo].[qwe]",
         type: "context",
       },
       {
         category: "Bindings",
-        icon: "Brackets",
+        icon: "brackets-angle",
         readableBinding: "foo.baz",
         runtimeBinding: "[foo].[baz]",
         type: "context",

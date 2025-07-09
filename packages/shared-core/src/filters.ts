@@ -103,6 +103,8 @@ export const getValidOperatorsForType = (
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === FieldType.BB_REFERENCE) {
     ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
+  } else if (type === FieldType.BARCODEQR) {
+    ops = stringOps
   }
 
   // Only allow equal/not equal for _id in SQL tables
@@ -323,7 +325,13 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
         if (!value) {
           return
         }
-        value = new Date(value).toISOString()
+        if (typeof value === "string") {
+          value = new Date(value).toISOString()
+        } else if (isRangeSearchOperator(operator)) {
+          query[operator] ??= {}
+          query[operator][field] = value
+          return query
+        }
       }
       break
     case FieldType.NUMBER:
@@ -349,7 +357,6 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
       }
       break
   }
-
   if (isRangeSearchOperator(operator)) {
     const key = externalType as keyof typeof SqlNumberTypeRangeMap
     const limits = SqlNumberTypeRangeMap[key] || {
@@ -637,7 +644,6 @@ export function runQuery<T extends Record<string, any>>(
       if (docValue == null || docValue === "") {
         return false
       }
-
       if (isPlainObject(testValue.low) && isEmpty(testValue.low)) {
         testValue.low = undefined
       }

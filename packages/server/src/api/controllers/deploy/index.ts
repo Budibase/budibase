@@ -1,5 +1,11 @@
 import Deployment from "./Deployment"
-import { context, db as dbCore, events, cache } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  cache,
+  features,
+} from "@budibase/backend-core"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import {
   clearMetadata,
@@ -8,7 +14,6 @@ import {
 } from "../../../automations/utils"
 import { backups } from "@budibase/pro"
 import {
-  App,
   AppBackupTrigger,
   DeploymentDoc,
   FetchDeploymentResponse,
@@ -16,9 +21,14 @@ import {
   UserCtx,
   DeploymentStatus,
   DeploymentProgressResponse,
+  Automation,
+  PublishAppRequest,
+  PublishStatusResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
+import { buildPublishFilter } from "./filters"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -76,17 +86,24 @@ async function initDeployedApp(prodAppId: any) {
   const db = context.getProdAppDB()
   console.log("Reading automation docs")
   const automations = (
-    await db.allDocs(
+    await db.allDocs<Automation>(
       getAutomationParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc!)
   await clearMetadata()
   const { count } = await disableAllCrons(prodAppId)
   const promises = []
   for (let automation of automations) {
-    promises.push(enableCronTrigger(prodAppId, automation))
+    promises.push(
+      enableCronTrigger(prodAppId, automation).catch(err => {
+        throw new Error(
+          `Failed to enable CRON trigger for automation "${automation.name}": ${err.message}`,
+          { cause: err }
+        )
+      })
+    )
   }
   const results = await Promise.all(promises)
   const enabledCount = results
@@ -138,17 +155,30 @@ export async function deploymentProgress(
   }
 }
 
-export const publishApp = async function (
-  ctx: UserCtx<void, PublishAppResponse>
-) {
-  let deployment = new Deployment()
-  console.log("Deployment object created")
-  deployment.setStatus(DeploymentStatus.PENDING)
-  console.log("Deployment object set to pending")
-  deployment = await storeDeploymentHistory(deployment)
-  console.log("Stored deployment history")
+export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
+  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
+    return (ctx.body = { automations: {}, workspaceApps: {} })
+  }
 
-  console.log("Deploying app...")
+  const { automations, workspaceApps } = await sdk.deployment.status()
+
+  ctx.body = {
+    automations,
+    workspaceApps,
+  }
+}
+
+export const publishApp = async function (
+  ctx: UserCtx<PublishAppRequest, PublishAppResponse>
+) {
+  let automationIds: string[] | undefined, workspaceAppIds: string[] | undefined
+  if (ctx.request.body) {
+    automationIds = ctx.request.body.automationIds
+    workspaceAppIds = ctx.request.body.workspaceAppIds
+  }
+  let deployment = new Deployment()
+  deployment.setStatus(DeploymentStatus.PENDING)
+  deployment = await storeDeploymentHistory(deployment)
 
   let app
   let replication
@@ -168,25 +198,41 @@ export const publishApp = async function (
         }
       )
     }
-    const config: any = {
+    const config = {
       source: devAppId,
       target: productionAppId,
     }
     replication = new dbCore.Replication(config)
     const devDb = context.getDevAppDB()
-    console.log("Compacting development DB")
+    const publishFilter =
+      automationIds || workspaceAppIds
+        ? await buildPublishFilter({
+            automationIds,
+            workspaceAppIds,
+          })
+        : undefined
     await devDb.compact()
-    console.log("Replication object created")
-    await replication.replicate(replication.appReplicateOpts())
-    console.log("replication complete.. replacing app meta doc")
+    await replication.replicate(
+      replication.appReplicateOpts({
+        // filters automations, screen and workspace documents based on supplied filters
+        filter: publishFilter,
+      })
+    )
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
-    const appDoc = await devDb.get<App>(DocumentType.APP_METADATA)
-    try {
-      const prodAppDoc = await db.get<App>(DocumentType.APP_METADATA)
+    const appDoc = await sdk.applications.metadata.tryGet({ production: false })
+    if (!appDoc) {
+      throw new Error(
+        "Unable to publish - cannot retrieve development app metadata"
+      )
+    }
+    const prodAppDoc = await sdk.applications.metadata.tryGet({
+      production: true,
+    })
+    if (prodAppDoc) {
       appDoc._rev = prodAppDoc._rev
-    } catch (err) {
+    } else {
       delete appDoc._rev
     }
 
@@ -194,23 +240,28 @@ export const publishApp = async function (
     deployment.appUrl = appDoc.url
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
+    if (automationIds?.length || workspaceAppIds?.length) {
+      const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
+      appDoc.resourcesPublishedAt = {
+        ...prodAppDoc?.resourcesPublishedAt,
+        ...Object.fromEntries(
+          fullMap.map(id => [id, new Date().toISOString()])
+        ),
+      }
+    }
     // remove automation errors if they exist
     delete appDoc.automationErrors
     await db.put(appDoc)
     await cache.app.invalidateAppMetadata(productionAppId)
-    console.log("New app doc written successfully.")
     await initDeployedApp(productionAppId)
-    console.log("Deployed app initialised, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
     app = appDoc
   } catch (err: any) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
     await storeDeploymentHistory(deployment)
-    throw {
-      ...err,
-      message: `Deployment Failed: ${err.message}`,
-    }
+
+    throw new Error(`Deployment Failed: ${err.message}`, { cause: err })
   } finally {
     if (replication) {
       await replication.close()

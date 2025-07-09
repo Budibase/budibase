@@ -30,6 +30,7 @@ spec:
 {{- toYaml .Values.services.worker.templateLabels | indent 8 -}}
 {{ end }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.services.worker.terminationGracePeriodSeconds }}
       containers:
       - env:
         - name: BUDIBASE_ENVIRONMENT
@@ -141,6 +142,8 @@ spec:
           value: {{ .Values.globals.posthogToken }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
+        - name: INTERNAL_ACCOUNT_PORTAL_URL
+          value: {{ .Values.globals.internalAccountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
           value: {{ .Values.globals.accountPortalApiKey | quote }}
         - name: PLATFORM_URL

@@ -10,6 +10,7 @@
     Search,
     Page,
     Table,
+    ButtonGroup,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { plugins, admin } from "@/stores/portal"
@@ -80,20 +81,18 @@
     <Divider />
 
     <div class="controls">
-      <div>
+      <ButtonGroup>
         <Button on:click={modal.show} cta>Add plugin</Button>
-        <div class="secondaryButton">
-          <Button
-            on:click={() =>
-              window
-                ?.open("https://github.com/Budibase/plugins", "_blank")
-                ?.focus()}
-            secondary
-          >
-            GitHub repo
-          </Button>
-        </div>
-      </div>
+        <Button
+          on:click={() =>
+            window
+              ?.open("https://github.com/Budibase/plugins", "_blank")
+              ?.focus()}
+          secondary
+        >
+          GitHub repo
+        </Button>
+      </ButtonGroup>
       {#if $plugins?.length}
         <div class="filters">
           <div class="select">
@@ -150,10 +149,5 @@
     .controls :global(.spectrum-Search) {
       width: auto;
     }
-  }
-
-  .secondaryButton {
-    display: inline-block;
-    margin-left: 6px;
   }
 </style>

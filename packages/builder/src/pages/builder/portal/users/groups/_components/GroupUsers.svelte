@@ -80,6 +80,7 @@
   customPlaceholder
   customRenderers={customUserTableRenderers}
   on:click={e => $goto(`../users/${e.detail._id}`)}
+  allowEditColumns={false}
 >
   <div class="placeholder" slot="placeholder">
     <Heading size="S"

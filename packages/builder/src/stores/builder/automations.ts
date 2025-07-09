@@ -628,7 +628,7 @@ const automationActions = (store: AutomationStore) => ({
         const children = block.inputs?.children || {}
 
         branches.forEach((branch, bIdx) => {
-          children[branch.id].forEach(
+          children[branch.id]?.forEach(
             (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
               const ended = array.length - 1 === sIdx
               treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
@@ -775,8 +775,8 @@ const automationActions = (store: AutomationStore) => ({
       const icon = isTrigger(pathBlock)
         ? pathBlock.icon
         : isLoopBlock
-        ? "Reuse"
-        : pathBlock.icon
+          ? "Reuse"
+          : pathBlock.icon
 
       if (blockIdx === 0 && isTrigger(pathBlock)) {
         if (isRowUpdateTrigger(pathBlock) || isRowSaveTrigger(pathBlock)) {
@@ -849,7 +849,7 @@ const automationActions = (store: AutomationStore) => ({
     name: string,
     block: AutomationStep | AutomationTrigger
   ) => {
-    const rowTriggers = [
+    const rowTriggers: string[] = [
       TriggerStepID.ROW_UPDATED,
       TriggerStepID.ROW_SAVED,
       TriggerStepID.ROW_DELETED,
@@ -1610,6 +1610,10 @@ const automationActions = (store: AutomationStore) => ({
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
+      state.showLogsPanel = false
+      state.showLogDetailsPanel = false
+      delete state.selectedLog
+      delete state.selectedLogStepData
       return state
     })
   },
@@ -2007,6 +2011,65 @@ const automationActions = (store: AutomationStore) => ({
         selectedNodeMode: mode ?? DataMode.INPUT,
       }
     })
+  },
+
+  openActionPanel: (block: BlockRef) => {
+    store.update(state => ({
+      ...state,
+      actionPanelBlock: block,
+      selectedNodeId: undefined,
+    }))
+  },
+  closeActionPanel: () => {
+    store.update(state => ({
+      ...state,
+      actionPanelBlock: undefined,
+    }))
+  },
+
+  openLogPanel: (log: any, stepData: any) => {
+    store.update(state => ({
+      ...state,
+      showLogDetailsPanel: true,
+      selectedLog: log,
+      selectedLogStepData: stepData,
+      selectedNodeId: undefined,
+      actionPanelBlock: undefined,
+    }))
+  },
+
+  closeLogPanel: () => {
+    store.update(state => ({
+      ...state,
+      showLogDetailsPanel: false,
+      selectedLog: undefined,
+      selectedLogStepData: undefined,
+    }))
+  },
+
+  openLogsPanel: () => {
+    store.update(state => ({
+      ...state,
+      showLogsPanel: true,
+      selectedNodeId: undefined,
+      actionPanelBlock: undefined,
+      showLogDetailsPanel: false,
+    }))
+  },
+
+  closeLogsPanel: () => {
+    store.update(state => ({
+      ...state,
+      showLogsPanel: false,
+    }))
+  },
+
+  selectLogForDetails: (log: any) => {
+    store.update(state => ({
+      ...state,
+      selectedLog: log,
+      showLogDetailsPanel: false,
+    }))
   },
 })
 

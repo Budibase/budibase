@@ -10,6 +10,7 @@
   import Icon from "../Icon/Icon.svelte"
   import Context from "../context"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
+  import { ModalCancelFrom } from "../constants"
 
   export let title: string | undefined = undefined
   export let size: "S" | "M" | "L" | "XL" = "S"
@@ -30,10 +31,7 @@
   export let secondaryButtonWarning: boolean = false
   export let custom: boolean = false
 
-  const { hide, cancel } = getContext(Context.Modal) as {
-    hide: () => void
-    cancel: () => void
-  }
+  const { hide, cancel } = getContext(Context.Modal)
 
   let loading: boolean = false
 
@@ -59,7 +57,7 @@
   async function close(): Promise<void> {
     loading = true
     if (!onCancel || (await onCancel()) !== keepOpen) {
-      cancel()
+      cancel(ModalCancelFrom.CANCEL_BUTTON)
     }
     loading = false
   }
@@ -139,7 +137,11 @@
     {/if}
     {#if showCloseIcon}
       <div class="close-icon">
-        <Icon hoverable name="Close" on:click={cancel} />
+        <Icon
+          hoverable
+          name="x"
+          on:click={() => cancel(ModalCancelFrom.CLOSE_BUTTON)}
+        />
       </div>
     {/if}
   </div>
@@ -166,6 +168,10 @@
   .no-grid .spectrum-Dialog-content {
     border-top: 2px solid var(--spectrum-global-color-gray-200);
     border-bottom: 2px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .spectrum-Dialog-heading {
+    font-size: 24px;
   }
 
   .no-grid .spectrum-Dialog-heading {

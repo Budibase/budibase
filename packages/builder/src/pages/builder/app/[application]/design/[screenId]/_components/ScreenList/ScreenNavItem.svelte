@@ -1,7 +1,6 @@
-<script>
+<script lang="ts">
   import { Modal, Helpers, notifications, Icon } from "@budibase/bbui"
   import {
-    navigationStore,
     screenStore,
     userSelectedResourceMap,
     contextMenuStore,
@@ -14,13 +13,15 @@
   import { makeComponentUnique } from "@/helpers/components"
   import { capitalise } from "@/helpers"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import type { Screen } from "@budibase/types"
 
   export let screen
+  export let deletionAllowed: boolean
 
-  let confirmDeleteDialog
-  let screenDetailsModal
+  let confirmDeleteDialog: ConfirmDialog
+  let screenDetailsModal: Modal
 
-  const createDuplicateScreen = async ({ route }) => {
+  const createDuplicateScreen = async ({ route }: { route: string }) => {
     // Create a dupe and ensure it is unique
     let duplicateScreen = Helpers.cloneDeep(screen)
     delete duplicateScreen._id
@@ -32,15 +33,12 @@
     duplicateScreen.routing.homeScreen = false
 
     try {
-      // Create the screen
-      await screenStore.save(duplicateScreen)
+      const linkLabel = capitalise(duplicateScreen.routing.route.split("/")[1])
 
-      // Add new screen to navigation
-      await navigationStore.saveLink(
-        duplicateScreen.routing.route,
-        capitalise(duplicateScreen.routing.route.split("/")[1]),
-        duplicateScreen.routing.roleId
-      )
+      await screenStore.save({
+        ...duplicateScreen,
+        navigationLinkLabel: linkLabel,
+      })
     } catch (error) {
       notifications.error("Error duplicating screen")
     }
@@ -57,7 +55,7 @@
 
   $: noPaste = !$componentStore.componentToPaste
 
-  const pasteComponent = mode => {
+  const pasteComponent = (mode: "inside") => {
     try {
       componentStore.paste(screen.props, mode, screen)
     } catch (error) {
@@ -65,13 +63,13 @@
     }
   }
 
-  const openContextMenu = (e, screen) => {
+  const openContextMenu = (e: MouseEvent, screen: Screen) => {
     e.preventDefault()
     e.stopPropagation()
 
     const items = [
       {
-        icon: "ShowOneLayer",
+        icon: "stack",
         name: "Paste inside",
         keyBind: null,
         visible: true,
@@ -79,7 +77,7 @@
         callback: () => pasteComponent("inside"),
       },
       {
-        icon: "Duplicate",
+        icon: "copy",
         name: "Duplicate",
         keyBind: null,
         visible: true,
@@ -87,23 +85,24 @@
         callback: screenDetailsModal.show,
       },
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
-        disabled: false,
+        disabled: !deletionAllowed,
         callback: confirmDeleteDialog.show,
+        tooltip: deletionAllowed ? "" : "At least one screen is required",
       },
     ]
 
-    contextMenuStore.open(screen._id, items, { x: e.clientX, y: e.clientY })
+    contextMenuStore.open(screen._id!, items, { x: e.clientX, y: e.clientY })
   }
 </script>
 
 <NavItem
   on:contextmenu={e => openContextMenu(e, screen)}
   scrollable
-  icon={screen.routing.homeScreen ? "Home" : null}
+  icon={screen.routing.homeScreen ? "house" : null}
   indentLevel={0}
   selected={$screenStore.selectedScreenId === screen._id}
   hovering={screen._id === $contextMenuStore.id}
@@ -115,11 +114,11 @@
 >
   <Icon
     on:click={e => openContextMenu(e, screen)}
-    size="S"
+    size="M"
     hoverable
-    name="MoreSmallList"
+    name="dots-three"
   />
-  <div slot="icon" class="icon">
+  <div slot="right" class="icon">
     <RoleIndicator roleId={screen.routing.roleId} />
   </div>
 </NavItem>

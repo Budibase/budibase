@@ -1,39 +1,54 @@
-<script>
+<script lang="ts">
   import ScreenDetailsModal from "@/components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import TypeModal from "./TypeModal.svelte"
   import tableTypes from "./tableTypes"
   import formTypes from "./formTypes"
-  import { Modal, notifications } from "@budibase/bbui"
+  import { Modal, ModalCancelFrom, notifications } from "@budibase/bbui"
   import {
     screenStore,
-    navigationStore,
     permissions as permissionsStore,
-    builderStore,
     datasources,
     appStore,
   } from "@/stores/builder"
-  import { auth } from "@/stores/portal"
   import { goto } from "@roxi/routify"
-  import { TOUR_KEYS } from "@/components/portal/onboarding/tours.js"
   import * as screenTemplating from "@/templates/screenTemplating"
   import { Roles } from "@/constants/backend"
   import { AutoScreenTypes } from "@/constants"
+  import type { SourceOption } from "./utils"
   import { makeTableOption, makeViewOption } from "./utils"
+  import type {
+    SaveScreenRequest,
+    Screen,
+    Table,
+    ViewV2,
+  } from "@budibase/types"
 
-  let mode
+  export let workspaceAppId: string
 
-  let screenDetailsModal
-  let datasourceModal
-  let formTypeModal
-  let tableTypeModal
-  let selectedTablesAndViews = []
-  let permissions = {}
+  let mode: string
+
+  let screenDetailsModal: Modal
+  let datasourceModal: Modal
+  let formTypeModal: Modal
+  let tableTypeModal: Modal
+  let selectedTablesAndViews: SourceOption[] = []
+  let permissions: Record<
+    string,
+    {
+      loading: boolean
+      read: string
+      write: string
+    }
+  > = {}
   let hasPreselectedDatasource = false
 
   $: screens = $screenStore.screens
 
-  export const show = (newMode, preselectedDatasource) => {
+  export const show = (
+    newMode: string,
+    preselectedDatasource: Table | ViewV2 | null = null
+  ) => {
     mode = newMode
     selectedTablesAndViews = []
     permissions = {}
@@ -60,37 +75,36 @@
     }
   }
 
-  const createScreen = async screenTemplate => {
+  const createScreen = async (
+    screenTemplate: SaveScreenRequest
+  ): Promise<Screen> => {
     try {
-      return await screenStore.save(screenTemplate)
+      return await screenStore.save({
+        ...screenTemplate,
+        workspaceAppId: workspaceAppId!, // TODO
+      })
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
+      throw error
     }
   }
 
-  const createScreens = async screenTemplates => {
-    const newScreens = []
+  const createScreens = async (
+    screenTemplates: { data: Screen; navigationLinkLabel: string | null }[]
+  ) => {
+    const newScreens: Screen[] = []
 
     for (let screenTemplate of screenTemplates) {
-      await addNavigationLink(
-        screenTemplate.data,
-        screenTemplate.navigationLinkLabel
+      newScreens.push(
+        await createScreen({
+          ...screenTemplate.data,
+          navigationLinkLabel: screenTemplate.navigationLinkLabel ?? undefined,
+        })
       )
-      newScreens.push(await createScreen(screenTemplate.data))
     }
 
     return newScreens
-  }
-
-  const addNavigationLink = async (screen, linkLabel) => {
-    if (linkLabel == null) return
-
-    await navigationStore.saveLink(
-      screen.routing.route,
-      linkLabel,
-      screen.routing.roleId
-    )
   }
 
   const onSelectDatasources = async () => {
@@ -101,16 +115,16 @@
     }
   }
 
-  const createBasicScreen = async ({ route }) => {
+  const createBasicScreen = async ({ route }: { route: string }) => {
     const screenTemplates =
       mode === AutoScreenTypes.BLANK
-        ? screenTemplating.blank({ route, screens })
-        : screenTemplating.pdf({ route, screens })
+        ? screenTemplating.blank({ route, screens, workspaceAppId })
+        : screenTemplating.pdf({ route, screens, workspaceAppId })
     const newScreens = await createScreens(screenTemplates)
     loadNewScreen(newScreens[0])
   }
 
-  const createTableScreen = async type => {
+  const createTableScreen = async (type: string) => {
     const screenTemplates = (
       await Promise.all(
         selectedTablesAndViews.map(tableOrView =>
@@ -119,6 +133,7 @@
             tableOrView,
             type,
             permissions: permissions[tableOrView.id],
+            workspaceAppId,
           })
         )
       )
@@ -127,7 +142,7 @@
     loadNewScreen(newScreens[0])
   }
 
-  const createFormScreen = async type => {
+  const createFormScreen = async (type: string | null) => {
     const screenTemplates = (
       await Promise.all(
         selectedTablesAndViews.map(tableOrView =>
@@ -136,31 +151,19 @@
             tableOrView,
             type,
             permissions: permissions[tableOrView.id],
+            workspaceAppId,
           })
         )
       )
     ).flat()
     const newScreens = await createScreens(screenTemplates)
-
-    if (type === "update" || type === "create") {
-      const associatedTour =
-        type === "update"
-          ? TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE
-          : TOUR_KEYS.BUILDER_FORM_CREATE
-
-      const tourRequired = !$auth?.user?.tours?.[associatedTour]
-      if (tourRequired) {
-        builderStore.setTour(associatedTour)
-      }
-    }
-
     loadNewScreen(newScreens[0])
   }
 
-  const loadNewScreen = screen => {
-    if (screen?.props?._children.length) {
+  const loadNewScreen = (screen: Screen) => {
+    if (screen.props?._children?.length) {
       // Focus on the main component for the screen type
-      const mainComponent = screen?.props?._children?.[0]._id
+      const mainComponent = screen.props?._children?.[0]._id
       $goto(
         `/builder/app/${$appStore.appId}/design/${screen._id}/${mainComponent}`
       )
@@ -168,10 +171,10 @@
       $goto(`/builder/app/${$appStore.appId}/design/${screen._id}`)
     }
 
-    screenStore.select(screen._id)
+    screenStore.select(screen._id!)
   }
 
-  const fetchPermission = resourceId => {
+  const fetchPermission = (resourceId: string) => {
     permissions[resourceId] = {
       loading: true,
       read: Roles.BASIC,
@@ -202,12 +205,16 @@
       })
   }
 
-  const deletePermission = resourceId => {
+  const deletePermission = (resourceId: string) => {
     delete permissions[resourceId]
     permissions = permissions
   }
 
-  const handleTableOrViewToggle = ({ detail: tableOrView }) => {
+  const handleTableOrViewToggle = ({
+    detail: tableOrView,
+  }: {
+    detail: SourceOption
+  }) => {
     const alreadySelected = selectedTablesAndViews.some(
       selected => selected.id === tableOrView.id
     )
@@ -224,7 +231,7 @@
   }
 </script>
 
-<Modal bind:this={datasourceModal} autoFocus={false}>
+<Modal bind:this={datasourceModal} autoFocus={false} on:cancel>
   <DatasourceModal
     {selectedTablesAndViews}
     onConfirm={onSelectDatasources}
@@ -232,32 +239,48 @@
   />
 </Modal>
 
-<Modal bind:this={tableTypeModal}>
+<Modal
+  bind:this={tableTypeModal}
+  on:cancel={e => {
+    if (
+      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
+        e.detail
+      )
+    ) {
+      tableTypeModal.hide()
+      datasourceModal.show()
+    }
+  }}
+>
   <TypeModal
     title="Choose how you want to manage rows"
     types={tableTypes}
     onConfirm={createTableScreen}
-    onCancel={() => {
-      tableTypeModal.hide()
-      datasourceModal.show()
-    }}
     showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>
 
-<Modal bind:this={screenDetailsModal}>
+<Modal bind:this={screenDetailsModal} on:cancel>
   <ScreenDetailsModal onConfirm={createBasicScreen} />
 </Modal>
 
-<Modal bind:this={formTypeModal}>
+<Modal
+  bind:this={formTypeModal}
+  on:cancel={e => {
+    if (
+      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
+        e.detail
+      )
+    ) {
+      formTypeModal.hide()
+      datasourceModal.show()
+    }
+  }}
+>
   <TypeModal
     title="Select form type"
     types={formTypes}
     onConfirm={createFormScreen}
-    onCancel={() => {
-      formTypeModal.hide()
-      datasourceModal.show()
-    }}
     showCancelButton={!hasPreselectedDatasource}
   />
 </Modal>

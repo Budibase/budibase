@@ -25,7 +25,6 @@
     dropCursor,
     highlightActiveLine,
     highlightActiveLineGutter,
-    highlightWhitespace,
     placeholder as placeholderFn,
     MatchDecorator,
     ViewPlugin,
@@ -81,19 +80,12 @@
   let mounted = false
   let isEditorInitialised = false
   let queuedRefresh = false
-  let editorWidth: number | null = null
   let isAIGeneratedContent = false
 
   // Theming!
   let currentTheme = $themeStore?.theme
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
-
-  const updateEditorWidth = () => {
-    if (editorEle) {
-      editorWidth = editorEle.offsetWidth
-    }
-  }
 
   $: aiGenEnabled =
     $featureFlags.AI_JS_GENERATION && mode.name === "javascript" && !readonly
@@ -145,7 +137,11 @@
       (editor.state.doc.toString() !== value || queuedRefresh)
     ) {
       editor.dispatch({
-        changes: { from: 0, to: editor.state.doc.length, insert: value },
+        changes: {
+          from: 0,
+          to: editor.state.doc.length,
+          insert: String(value),
+        },
       })
       queuedRefresh = false
     }
@@ -332,9 +328,6 @@
     if (mode.name === "javascript") {
       complete.push(snippetMatchDecoPlugin)
       complete.push(javascript())
-      if (!readonly) {
-        complete.push(highlightWhitespace())
-      }
     }
     // HBS only plugins
     else {
@@ -423,6 +416,7 @@
     })
     isAIGeneratedContent = true
     dispatch("change", code)
+    dispatch("ai_suggestion")
   }
 
   onMount(() => {
@@ -431,16 +425,6 @@
     editorEle.addEventListener("wheel", e => {
       e.stopPropagation()
     })
-
-    // Need to get the width of the drawer to pass to the prompt component
-    updateEditorWidth()
-    const resizeObserver = new ResizeObserver(() => {
-      updateEditorWidth()
-    })
-    resizeObserver.observe(editorEle)
-    return () => {
-      resizeObserver.disconnect()
-    }
   })
 
   onDestroy(() => {
@@ -469,7 +453,6 @@
   <AIGen
     {bindings}
     {value}
-    parentWidth={editorWidth}
     on:update={handleAICodeUpdate}
     on:accept={() => {
       dispatch("change", editor.state.doc.toString())
@@ -527,9 +510,6 @@
     width: 100%;
     background: var(--spectrum-global-color-gray-100) !important;
     z-index: -2;
-  }
-  .code-editor :global(.cm-highlightSpace:before) {
-    color: var(--spectrum-global-color-gray-500);
   }
 
   /* Code selection */

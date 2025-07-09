@@ -42,7 +42,7 @@ class TriggerBuilder {
 
   protected trigger<
     TStep extends AutomationTriggerStepId,
-    TInput = AutomationTriggerInputs<TStep>
+    TInput = AutomationTriggerInputs<TStep>,
   >(stepId: TStep) {
     return (inputs: TInput) => {
       const definition: AutomationTriggerDefinition =
@@ -84,7 +84,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
         id,
         stepId,
         name: opts?.stepName || schema.name,
-      })
+      } as AutomationStep)
       if (opts?.stepName) {
         this.stepNames[id] = opts.stepName
       }
@@ -97,6 +97,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   deleteRow = this.step(AutomationActionStepId.DELETE_ROW)
   sendSmtpEmail = this.step(AutomationActionStepId.SEND_EMAIL_SMTP)
   executeQuery = this.step(AutomationActionStepId.EXECUTE_QUERY)
+  apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
   loop = this.step(AutomationActionStepId.LOOP)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)
@@ -115,6 +116,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   make = this.step(AutomationActionStepId.integromat)
   discord = this.step(AutomationActionStepId.discord)
   delay = this.step(AutomationActionStepId.DELAY)
+  extractFileData = this.step(AutomationActionStepId.EXTRACT_FILE_DATA)
 
   protected addBranchStep(branchConfig: BranchConfig): void {
     const inputs: BranchStepInputs = {
@@ -145,7 +147,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
 }
 
 class StepBuilder<
-  TStep extends AutomationTriggerStepId
+  TStep extends AutomationTriggerStepId,
 > extends BranchStepBuilder<TStep> {
   private readonly config: TestConfiguration
   private readonly _trigger: AutomationTrigger
@@ -181,7 +183,9 @@ class StepBuilder<
     return new AutomationRunner<TStep>(this.config, automation)
   }
 
-  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
+  async test(
+    triggerOutput: AutomationTriggerOutputs<TStep> & TestAutomationRequest
+  ) {
     const runner = await this.save()
     return await runner.test(triggerOutput)
   }
@@ -203,11 +207,12 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
     this.automation = automation
   }
 
-  async test(triggerOutput: AutomationTriggerOutputs<TStep>) {
+  async test(
+    triggerOutput: AutomationTriggerOutputs<TStep> & TestAutomationRequest
+  ) {
     const response = await this.config.api.automation.test(
       this.automation._id!,
-      // TODO: figure out why this cast is needed.
-      triggerOutput as TestAutomationRequest
+      triggerOutput
     )
 
     if (isDidNotTriggerResponse(response)) {

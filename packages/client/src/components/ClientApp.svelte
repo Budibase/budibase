@@ -3,7 +3,12 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import { Constants, CookieUtils } from "@budibase/frontend-core"
+  import {
+    Constants,
+    CookieUtils,
+    invalidationMessage,
+    popNumSessionsInvalidated,
+  } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
@@ -22,6 +27,8 @@
     environmentStore,
     sidePanelStore,
     modalStore,
+    dataSourceStore,
+    notificationStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
@@ -47,11 +54,18 @@
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
   import EmbedProvider from "./context/EmbedProvider.svelte"
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
+  import { ActionTypes } from "@/constants"
 
   // Provide contexts
+  const context = createContextStore()
   setContext("sdk", SDK)
   setContext("component", writable({ id: null, ancestors: [] }))
-  setContext("context", createContextStore())
+  setContext("context", context)
+
+  // Seed context with an action to refresh all datasources
+  context.actions.provideAction("all", ActionTypes.RefreshDatasource, () => {
+    dataSourceStore.actions.refreshAll()
+  })
 
   let dataLoaded = false
   let permissionError = false
@@ -101,6 +115,15 @@
     await initialise()
     await authStore.actions.fetchUser()
     dataLoaded = true
+
+    const invalidated = popNumSessionsInvalidated()
+    if (invalidated > 0) {
+      notificationStore.actions.info(
+        invalidationMessage(invalidated),
+        true,
+        5000
+      )
+    }
 
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()

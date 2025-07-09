@@ -1,60 +1,49 @@
-<script>
+<script lang="ts">
   import {
-    ModalContent,
-    Icon,
     ColorPicker,
+    Icon,
     Label,
-    notifications,
+    ModalContent,
+    Helpers,
   } from "@budibase/bbui"
-  import { appsStore } from "@/stores/portal"
   import { createEventDispatcher } from "svelte"
 
-  export let app
-  export let name
-  export let color
-  export let autoSave = false
+  export let name: string
+  export let color: string
 
   const dispatch = createEventDispatcher()
-
-  let iconsList = [
-    "Apps",
-    "Actions",
-    "ConversionFunnel",
-    "App",
-    "Briefcase",
-    "Money",
-    "ShoppingCart",
-    "Form",
-    "Help",
-    "Monitoring",
-    "Sandbox",
-    "Project",
-    "Organisations",
-    "Magnify",
-    "Launch",
-    "Car",
-    "Camera",
-    "Bug",
-    "Channel",
-    "Calculator",
-    "Calendar",
-    "GraphDonut",
-    "GraphBarHorizontal",
-    "Demographic",
+  const iconsList = [
+    "dots-nine",
+    "pencil-ruler",
+    "funnel-simple",
+    "app-store-logo",
+    "briefcase",
+    "money",
+    "shopping-cart",
+    "list",
+    "question",
+    "monitor",
+    "columns",
+    "folder",
+    "city",
+    "magnifying-glass",
+    "rocket-launch",
+    "car",
+    "camera",
+    "bug",
+    "snowflake",
+    "calculator",
+    "calendar-dots",
+    "chart-donut",
+    "chart-bar-horizontal",
+    "users-three",
   ]
 
+  $: phosphorIcon = Helpers.getPhosphorIcon(name)
+
   const save = async () => {
-    if (!autoSave) {
-      dispatch("change", { color, name })
-      return
-    }
-    try {
-      await appsStore.save(app.instance._id, {
-        icon: { name, color },
-      })
-    } catch (error) {
-      notifications.error("Error updating app")
-    }
+    dispatch("change", { color, name })
+    return
   }
 </script>
 
@@ -69,10 +58,15 @@
       {#each iconsList as item}
         <div
           class="icon-item"
-          class:selected={item === name}
+          class:selected={item === phosphorIcon}
           on:click={() => (name = item)}
         >
-          <Icon name={item} />
+          <Icon
+            name={item}
+            size="L"
+            hoverable
+            hoverColor={"var(--spectrum-global-color-blue-600)"}
+          />
         </div>
       {/each}
     </div>
