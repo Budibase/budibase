@@ -215,19 +215,26 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       id: jobId,
       finished: () =>
         new Promise((resolve, reject) => {
-          this._emitter.on("error", (job, error) => {
+          const errorHandler = (job: Job<T>, error: Error) => {
             if (job.id !== messageId) {
               return
             }
+            this._emitter.off("error", errorHandler)
+            this._emitter.off("completed", completedHandler)
             reject(error)
-          })
+          }
 
-          this._emitter.on("completed", (job, result) => {
+          const completedHandler = (job: Job<T>, result: any) => {
             if (job.id !== messageId) {
               return
             }
+            this._emitter.off("error", errorHandler)
+            this._emitter.off("completed", completedHandler)
             resolve(result)
-          })
+          }
+
+          this._emitter.on("error", errorHandler)
+          this._emitter.on("completed", completedHandler)
         }),
     } as any
   }
