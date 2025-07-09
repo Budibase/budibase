@@ -1,4 +1,8 @@
-import { UIIntegration } from "@budibase/types"
+import {
+  DatasourceConfig,
+  DatasourceFieldType,
+  UIIntegration,
+} from "@budibase/types"
 import { string, number, object, type AnySchema } from "yup"
 
 const propertyValidator = (type: string) => {
@@ -18,15 +22,38 @@ const propertyValidator = (type: string) => {
 }
 
 export const getValidatorFields = (integration: UIIntegration) => {
-  const validatorFields: Record<string, AnySchema> = {}
+  function handleFieldValidators(
+    datasourceConfig: DatasourceConfig
+  ): Record<string, AnySchema> {
+    const result: Record<string, AnySchema> = {}
+    Object.entries(datasourceConfig).forEach(([key, properties]) => {
+      if (properties.type === DatasourceFieldType.FIELD_GROUP) {
+        const fieldGroupValidator = handleFieldValidators(
+          properties.fields || {}
+        )
+        for (const [fieldKey, fieldValidator] of Object.entries(
+          fieldGroupValidator
+        )) {
+          result[`${key}.${fieldKey}`] = fieldValidator
+        }
+        return
+      }
 
-  Object.entries(integration?.datasource || {}).forEach(([key, properties]) => {
-    if (properties.required) {
-      validatorFields[key] = propertyValidator(properties.type).required()
-    } else {
-      validatorFields[key] = propertyValidator(properties.type).notRequired()
-    }
-  })
+      if (properties.required) {
+        result[key] = propertyValidator(properties.type)
+          .required()
+          .label(properties.display || key)
+      } else {
+        result[key] = propertyValidator(properties.type)
+          .notRequired()
+          .label(properties.display || key)
+      }
+    })
+
+    return result
+  }
+
+  const validatorFields = handleFieldValidators(integration.datasource || {})
 
   return validatorFields
 }
