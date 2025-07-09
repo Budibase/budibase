@@ -137,7 +137,11 @@
       (editor.state.doc.toString() !== value || queuedRefresh)
     ) {
       editor.dispatch({
-        changes: { from: 0, to: editor.state.doc.length, insert: value },
+        changes: {
+          from: 0,
+          to: editor.state.doc.length,
+          insert: String(value),
+        },
       })
       queuedRefresh = false
     }

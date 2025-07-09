@@ -63,6 +63,7 @@ export interface AppNavigationLink {
   roleId?: string
   type: "link" | "sublinks"
   subLinks?: AppNavigationLink[]
+  icon?: string
 }
 
 export interface AppCustomTheme {
