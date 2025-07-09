@@ -94,9 +94,6 @@ export const createValidatedConfigStore = (
         integration.datasource?.[key]?.type === DatasourceFieldType.FIELD_GROUP
       ) {
         const arrayValue = value as any[]
-        arrayValue.forEach(field => {
-          newStore[field.key] = field.value
-        })
         if (
           !("config" in integration.datasource[key]) ||
           !integration.datasource[key].config?.nestedFields
@@ -185,6 +182,8 @@ export const createValidatedConfigStore = (
           }
         }
       )
+
+      console.error({ config })
 
       const hasErrors = Object.keys($errorsStore).length > 0
 
