@@ -95,10 +95,8 @@
   const getBackupErrors = apps => {
     const backupErrors = {}
     for (const app of apps) {
-      if (app.backupErrors) {
-        if (errorCount(app.backupErrors) > 0) {
-          backupErrors[app.devId] = app.backupErrors
-        }
+      if (app.backupErrors && errorCount(app.backupErrors) > 0) {
+        backupErrors[app.devId] = app.backupErrors
       }
     }
     return backupErrors

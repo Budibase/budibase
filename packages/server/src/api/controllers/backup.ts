@@ -1,5 +1,5 @@
 import sdk from "../../sdk"
-import { events, context, db, cache } from "@budibase/backend-core"
+import { events, context, db } from "@budibase/backend-core"
 import { DocumentType } from "../../db/utils"
 import {
   App,
@@ -44,15 +44,8 @@ export async function clearBackupError(
 ) {
   const { backupId, appId } = ctx.request.body
   await context.doInAppContext(appId, async () => {
-    const database = context.getProdAppDB()
-    const metadata = await database.get<App>(DocumentType.APP_METADATA)
-    if (!backupId) {
-      delete metadata.backupErrors
-    } else if (metadata.backupErrors && metadata.backupErrors[backupId]) {
-      delete metadata.backupErrors[backupId]
-    }
-    await database.put(metadata)
-    await cache.app.invalidateAppMetadata(metadata.appId, metadata)
-    ctx.body = { message: `Backup errors cleared.` }
+    await sdk.backups.clearErrors(backupId)
   })
+
+  ctx.body = { message: `Backup errors cleared.` }
 }
