@@ -2,7 +2,13 @@ import env from "../environment"
 import { getRedisOptions } from "../redis/utils"
 import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
-import BullQueue, { Queue, QueueOptions, JobOptions, Job } from "bull"
+import BullQueue, {
+  Queue,
+  QueueOptions,
+  JobOptions,
+  Job,
+  DoneCallback,
+} from "bull"
 import { addListeners, StalledFn } from "./listeners"
 import { Duration } from "../utils"
 import * as timers from "../timers"
@@ -92,6 +98,10 @@ export class BudibaseQueue<T> {
     this.queue = this.initQueue()
   }
 
+  get name() {
+    return this.queue.name
+  }
+
   private initQueue() {
     const redisOpts = getRedisOptions()
     const queueConfig: QueueOptions = {
@@ -115,6 +125,7 @@ export class BudibaseQueue<T> {
       !isNaN(+process.env.BULL_TEST_REDIS_PORT)
     ) {
       queue = new BullQueue(this.jobQueue, {
+        ...queueConfig,
         redis: { host: "localhost", port: +process.env.BULL_TEST_REDIS_PORT },
       })
     } else {
@@ -139,12 +150,14 @@ export class BudibaseQueue<T> {
 
   process(
     concurrency: number,
-    cb: (job: Job<T>) => Promise<void>
+    cb: (job: Job<T>, done?: DoneCallback) => Promise<void>
   ): Promise<void>
-  process(cb: (job: Job<T>) => Promise<void>): Promise<void>
+  process(
+    cb: (job: Job<T>, done?: DoneCallback) => Promise<void>
+  ): Promise<void>
   process(...args: any[]) {
     let concurrency: number | undefined = undefined
-    let cb: (job: Job<T>) => Promise<void>
+    let cb: (job: Job<T>, done?: DoneCallback) => Promise<void>
     if (args.length === 2) {
       concurrency = args[0]
       cb = args[1]
@@ -152,7 +165,7 @@ export class BudibaseQueue<T> {
       cb = args[0]
     }
 
-    const wrappedCb = async (job: Job<T>) => {
+    const processCallback = async (job: Job<T>, done?: DoneCallback) => {
       await tracer.trace("queue.process", async span => {
         // @ts-expect-error monkey patching the parent span id
         if (job.data._parentSpanContext) {
@@ -177,8 +190,21 @@ export class BudibaseQueue<T> {
           sizeof(job.data),
           this.metricTags()
         )
-        await this.withMetrics("queue.process", () => cb(job))
+        await this.withMetrics("queue.process", () => {
+          if (done) {
+            return cb(job, done)
+          }
+          return cb(job)
+        })
       })
+    }
+
+    let wrappedCb
+    if (cb.length === 1) {
+      // If we pass a second parameter to the callback for queue.process, the call to done will be expected
+      wrappedCb = (job: Job<T>) => processCallback(job)
+    } else {
+      wrappedCb = processCallback
     }
 
     if (concurrency) {
@@ -223,8 +249,8 @@ export class BudibaseQueue<T> {
     return { queueName: this.jobQueue }
   }
 
-  close() {
-    return this.queue.close()
+  close(doNotWaitJobs?: boolean) {
+    return this.queue.close(doNotWaitJobs)
   }
 
   whenCurrentJobsFinished() {
