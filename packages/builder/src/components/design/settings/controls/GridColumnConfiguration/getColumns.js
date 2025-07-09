@@ -31,7 +31,7 @@ export const removeInvalidAddMissing = (
 
   // If the user already has fields selected, any appended missing fields should be disabled by default
   if (validColumns.length) {
-    missingColumns = missingColumns.map(field => ({ ...field, active: true }))
+    missingColumns = missingColumns.map(field => ({ ...field, active: false }))
   }
 
   const combinedColumns = [...validColumns, ...missingColumns]
@@ -66,7 +66,7 @@ const toGridFormat = draggableListColumns => {
   return draggableListColumns.map(entry => ({
     label: entry.label,
     field: entry.field,
-    active: entry.active ?? true,
+    active: entry.active,
     width: entry.width,
     conditions: entry.conditions,
     format: entry.format,
@@ -80,7 +80,7 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
       {
         _id: column.field,
         _instanceName: column.field,
-        active: column.active ?? true,
+        active: column.active,
         field: column.field,
         label: column.label,
         columnType: column.columnType || schema[column.field].type,
