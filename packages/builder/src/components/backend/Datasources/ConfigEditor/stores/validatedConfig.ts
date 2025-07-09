@@ -1,6 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import { getValidatorFields } from "./validation"
-import { capitalise } from "@/helpers"
+import { capitalise } from "@/helpers/helpers"
 import { notifications } from "@budibase/bbui"
 import { object } from "yup"
 import { DatasourceFieldType, UIIntegration } from "@budibase/types"
@@ -86,23 +86,26 @@ export const createValidatedConfigStore = (
     }
   }
 
-  const updateFieldValue = (key: string, value: any[]) => {
+  const updateFieldValue = async (key: string, value: any) => {
     configStore.update($configStore => {
       const newStore = { ...$configStore }
 
-      if (integration.datasource?.[key]?.type === "fieldGroup") {
-        value.forEach(field => {
+      if (
+        integration.datasource?.[key]?.type === DatasourceFieldType.FIELD_GROUP
+      ) {
+        const arrayValue = value as any[]
+        arrayValue.forEach(field => {
           newStore[field.key] = field.value
         })
         if (
           !("config" in integration.datasource[key]) ||
           !integration.datasource[key].config?.nestedFields
         ) {
-          value.forEach(field => {
+          arrayValue.forEach(field => {
             newStore[field.key] = field.value
           })
         } else {
-          newStore[key] = value.reduce(
+          newStore[key] = arrayValue.reduce(
             (p, field) => ({
               ...p,
               [field.key]: field.value,
@@ -116,20 +119,21 @@ export const createValidatedConfigStore = (
 
       return newStore
     })
-    validate()
+
+    await markFieldActive(key)
   }
 
-  const markAllFieldsActive = () => {
+  const markAllFieldsActive = async () => {
     selectedValidatorsStore.set(allValidators)
-    validate()
+    await validate()
   }
 
-  const markFieldActive = (key: string) => {
+  const markFieldActive = async (key: string) => {
     selectedValidatorsStore.update($validatorsStore => ({
       ...$validatorsStore,
       [key]: allValidators[key],
     }))
-    validate()
+    await validate()
   }
 
   const combined = derived(
