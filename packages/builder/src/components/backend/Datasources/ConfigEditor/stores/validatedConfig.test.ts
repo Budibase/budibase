@@ -266,4 +266,63 @@ describe("validatedConfig store", () => {
       })
     })
   })
+
+  describe("markAllFieldsActive", () => {
+    it("marks all fields as active", async () => {
+      const store = createValidatedConfigStore(mockIntegration, {
+        authType: "Azure Active Directory",
+      })
+
+      await store.markAllFieldsActive()
+
+      const storeValue = get(store)
+      expect(storeValue.errors).toEqual({
+        server: "Server is a required field",
+        "adConfig.clientId": "Client ID is a required field",
+        "adConfig.clientSecret": "Client Secret is a required field",
+        "adConfig.tenantId": "Tenant ID is a required field",
+      })
+    })
+
+    it("marks all fields as active, respecting hidden nested fields", async () => {
+      const store = createValidatedConfigStore(mockIntegration, {
+        authType: "",
+      })
+
+      await store.markAllFieldsActive()
+
+      const storeValue = get(store)
+      expect(storeValue.errors).toEqual({
+        server: "Server is a required field",
+      })
+    })
+  })
+
+  describe("preventSubmit logic", () => {
+    it("does not prevent submit by default", () => {
+      const store = createValidatedConfigStore(mockIntegration, {})
+      const storeValue = get(store)
+
+      expect(storeValue.preventSubmit).toBe(false)
+    })
+
+    it("prevents submit when there are errors", async () => {
+      const store = createValidatedConfigStore(mockIntegration, mockConfig)
+
+      await store.updateFieldValue("server", "")
+
+      const storeValue = get(store)
+      expect(storeValue.preventSubmit).toBe(true)
+    })
+
+    it("does not prevent submit when there are errors are fixed", async () => {
+      const store = createValidatedConfigStore(mockIntegration, mockConfig)
+
+      await store.updateFieldValue("server", "")
+      expect(get(store).preventSubmit).toBe(true)
+
+      await store.updateFieldValue("server", "any")
+      expect(get(store).preventSubmit).toBe(false)
+    })
+  })
 })
