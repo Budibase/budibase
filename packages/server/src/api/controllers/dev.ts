@@ -83,23 +83,19 @@ export async function clearLock(ctx: Ctx<void, ClearDevLockResponse>) {
 export async function revert(ctx: Ctx<void, RevertAppResponse>) {
   const { appId } = ctx.params
 
-  try {
-    const result = await sdk.dev.revertDevChanges({
-      appId,
-      userId: ctx.user?._id,
-    })
+  const result = await sdk.dev.revertDevChanges({
+    appId,
+    userId: ctx.user?._id,
+  })
 
-    if (!result.success) {
-      ctx.throw(
-        500,
-        "Revert it's taking too long, please refresh or try again later."
-      )
-    }
-    ctx.body = {
-      status: "applied",
-    }
-  } catch (err: any) {
-    ctx.throw(500, err.message)
+  if (!result.success) {
+    ctx.throw(
+      500,
+      "Revert it's taking too long, please refresh or try again later."
+    )
+  }
+  ctx.body = {
+    status: "applied",
   }
 }
 
