@@ -89,7 +89,7 @@ export function cancelableTimeout(
 ): [Promise<unknown>, () => void] {
   let timeoutId: NodeJS.Timeout
   return [
-    new Promise((resolve, reject) => {
+    new Promise((_resolve, reject) => {
       timeoutId = setTimeout(() => {
         reject({
           status: 301,
