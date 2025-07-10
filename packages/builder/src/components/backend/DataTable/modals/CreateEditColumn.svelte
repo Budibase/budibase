@@ -693,6 +693,18 @@
   onMount(() => {
     mounted = true
   })
+
+  const disallowedFirstFields = [
+    FIELDS.LINK.type,
+    FIELDS.USER.type,
+    FIELDS.USERS.type,
+    FIELDS.ATTACHMENT_SINGLE.type,
+    FIELDS.ATTACHMENTS.type,
+    FIELDS.SIGNATURE_SINGLE.type,
+  ]
+
+  // Helper: checks if its the first column being added
+  $: isFirstColumn = Object.keys(table?.schema || {}).length === 0
 </script>
 
 <Layout noPadding gap="S">
@@ -716,6 +728,10 @@
     getOptionValue={field => field.fieldId}
     getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
+      // Disable certain fields if they are the first column
+      if (isFirstColumn && disallowedFirstFields.includes(option.type)) {
+        return false
+      }
       if (option.type === FieldType.AUTO) {
         return availableAutoColumnKeys?.length > 0
       }
