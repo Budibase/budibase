@@ -6,6 +6,9 @@ import {
   Ctx,
   ExportAppDumpRequest,
   ExportAppDumpResponse,
+  UserCtx,
+  ClearBackupErrorRequest,
+  ClearBackupErrorResponse,
 } from "@budibase/types"
 
 export async function exportAppDump(
@@ -34,4 +37,15 @@ export async function exportAppDump(
     const app = await appDb.get<App>(DocumentType.APP_METADATA)
     await events.app.exported(app)
   })
+}
+
+export async function clearBackupError(
+  ctx: UserCtx<ClearBackupErrorRequest, ClearBackupErrorResponse>
+) {
+  const { backupId, appId } = ctx.request.body
+  await context.doInAppContext(appId, async () => {
+    await sdk.backups.clearErrors(backupId)
+  })
+
+  ctx.body = { message: `Backup errors cleared.` }
 }

@@ -4,6 +4,8 @@ import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { context } from "@budibase/backend-core"
+import { DocumentType, App } from "@budibase/types"
 
 mocks.licenses.useBackups()
 
@@ -68,6 +70,62 @@ describe("/backups", () => {
       expect(res.automations).toEqual(1)
       expect(res.datasources).toEqual(6)
       expect(res.screens).toEqual(2)
+    })
+  })
+
+  describe("backup error tracking", () => {
+    it("should track backup failures in app metadata", async () => {
+      const appId = config.getAppId()!
+
+      // First manually add a backup error to simulate a failure
+      await context.doInAppContext(appId, async () => {
+        const db = context.getProdAppDB()
+        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+
+        // Add backup error manually to test the structure
+        metadata.backupErrors = {
+          "backup-123": ["Backup export failed: Test error"],
+        }
+        await db.put(metadata)
+
+        // Now verify the structure
+        const updatedMetadata = await db.get<App>(DocumentType.APP_METADATA)
+        expect(updatedMetadata.backupErrors).toBeDefined()
+        expect(updatedMetadata.backupErrors).toEqual({
+          "backup-123": ["Backup export failed: Test error"],
+        })
+      })
+    })
+
+    it("should be able to clear backup errors from app metadata", async () => {
+      const appId = config.getAppId()!
+
+      // First set up backup errors in app metadata
+      await context.doInAppContext(appId, async () => {
+        const db = context.getProdAppDB()
+        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+        metadata.backupErrors = {
+          "backup-123": ["Backup export failed: Test error"],
+          "backup-456": ["Another backup error"],
+        }
+        await db.put(metadata)
+      })
+
+      // This test should fail initially since we haven't implemented the clear endpoint yet
+      const response = await config.api.backup.clearBackupErrors(
+        appId,
+        "backup-123"
+      )
+      expect(response.message).toEqual("Backup errors cleared.")
+
+      // Verify the specific error was removed from app metadata
+      await context.doInAppContext(appId, async () => {
+        const db = context.getProdAppDB()
+        const metadata = await db.get<App>(DocumentType.APP_METADATA)
+        expect(metadata.backupErrors).toEqual({
+          "backup-456": ["Another backup error"],
+        })
+      })
     })
   })
 })

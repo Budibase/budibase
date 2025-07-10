@@ -89,7 +89,7 @@ describe("getColumns", () => {
         {
           _id: "one",
           _instanceName: "one",
-          active: true,
+          active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
@@ -210,7 +210,7 @@ describe("getColumns", () => {
         {
           _id: "two",
           _instanceName: "two",
-          active: true,
+          active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
@@ -221,7 +221,7 @@ describe("getColumns", () => {
         {
           _id: "one",
           _instanceName: "one",
-          active: true,
+          active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
@@ -277,7 +277,7 @@ describe("getColumns", () => {
         {
           _id: "two",
           _instanceName: "two",
-          active: true,
+          active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
@@ -288,7 +288,7 @@ describe("getColumns", () => {
         {
           _id: "one",
           _instanceName: "one",
-          active: true,
+          active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "one",

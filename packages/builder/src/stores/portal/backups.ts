@@ -33,6 +33,10 @@ export class BackupStore extends BudiStore<BackupState> {
   async createManualBackup(appId: string) {
     return API.createManualBackup(appId)
   }
+
+  async clearBackupErrors(appId: string, backupId?: string) {
+    return API.clearBackupErrors(appId, backupId)
+  }
 }
 
 export const backups = new BackupStore()

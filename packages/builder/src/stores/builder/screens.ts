@@ -94,10 +94,16 @@ export class ScreenStore extends BudiStore<ScreenState> {
    */
   syncAppScreens(pkg: FetchAppPackageResponse) {
     const screens = [...pkg.screens]
-    this.update(state => ({
-      ...state,
-      screens,
-    }))
+    this.update(state => {
+      const { selectedScreenId } = state
+      if (selectedScreenId && !screens.some(s => s._id === selectedScreenId)) {
+        delete state.selectedScreenId
+      }
+      return {
+        ...state,
+        screens,
+      }
+    })
   }
 
   /**

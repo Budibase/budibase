@@ -1,6 +1,9 @@
 import { TemplateMetadata, TemplateType } from "../../../../constants"
 import { TestConfiguration } from "../../../../tests"
-import { EmailTemplatePurpose } from "@budibase/types"
+import { EmailTemplatePurpose, Template } from "@budibase/types"
+import { addBaseTemplates } from "../../../../constants/templates"
+import { tenancy } from "@budibase/backend-core"
+import yaml from "yaml"
 
 // TODO
 
@@ -99,6 +102,93 @@ describe("/api/global/template", () => {
       expect(
         res.body.find((t: any) => t.purpose === EmailTemplatePurpose.WELCOME)
       ).toBeDefined()
+    })
+  })
+
+  describe("POST /api/global/template/:type/export - emails", () => {
+    let templates: Template[] = []
+
+    beforeAll(async () => {
+      addBaseTemplates(templates, "email")
+
+      // Core is not an updatable template and should never be included
+      templates = templates.filter(t => t.purpose !== EmailTemplatePurpose.CORE)
+
+      await config.beforeAll()
+
+      const templateResp = await config.api.templates.getTemplate()
+      const templateDocs = templateResp.body.filter((t: Template) => t._id)
+
+      // Purge all docs from the previous test blocks
+      await config.doInTenant(async () => {
+        const db = tenancy.getGlobalDB()
+        await db.bulkRemove(templateDocs)
+      })
+    })
+
+    it("should export all default email templates as yaml", async () => {
+      const resp = await config.api.templates.exportTemplates()
+
+      expect(resp.type).toBe("text/yaml")
+
+      const doc = yaml.parse(resp.text)
+
+      // Confirm the export file name
+      const disposition = resp.header["content-disposition"]
+      expect(disposition).toContain("bb_default_email_templates")
+
+      // All templates type should be present and match the hbs contents.
+      const processedTemplates = templates.filter(t => {
+        const yamlTemplateContents = doc.templates[t.purpose]
+        return t.contents === yamlTemplateContents
+      })
+
+      expect(processedTemplates.length).toBe(templates.length)
+    })
+
+    it("should export user edited email templates", async () => {
+      const customContent = "<div>hello</div>"
+
+      // Alter one of the templates. This creates 1 couch doc, for the custom type
+      // All the rest will still contain content from the static hbs files
+      await config.api.templates.saveTemplate({
+        purpose: EmailTemplatePurpose.CUSTOM,
+        contents: customContent,
+        type: "email",
+      })
+
+      const resp = await config.api.templates.exportTemplates({
+        data: {
+          type: "custom",
+        },
+      })
+
+      expect(resp.type).toBe("text/yaml")
+
+      const doc = yaml.parse(resp.text)
+
+      const disposition = resp.header["content-disposition"]
+      expect(disposition).toContain("bb_email_templates.yaml")
+
+      // All templates should be present and match both the static and custom contents
+      const processedTemplates = templates.filter(t => {
+        const yamlTemplateContents = doc.templates[t.purpose]
+        // Check the custom contents has been updated
+        if (t.purpose === EmailTemplatePurpose.CUSTOM) {
+          return yamlTemplateContents === customContent
+        }
+        return t.contents === yamlTemplateContents
+      })
+
+      expect(processedTemplates.length).toBe(templates.length)
+    })
+
+    it("should ignore non-email requests", async () => {
+      // Only email templates are supported.
+      await config.api.templates.exportTemplates(
+        { type: "something" },
+        { status: 404 }
+      )
     })
   })
 })

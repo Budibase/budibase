@@ -255,9 +255,7 @@
     </div>
   </div>
 
-  {#if !isLast}
-    <div class="separator" />
-  {/if}
+  <div class="separator" />
 
   {#if $view.dragging}
     <DragZone path={branchBlockRef.pathTo} />

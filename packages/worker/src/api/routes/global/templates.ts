@@ -33,6 +33,7 @@ router
   .get("/api/global/template/:type", controller.fetchByType)
   .get("/api/global/template/:ownerId", controller.fetchByOwner)
   .get("/api/global/template/:id", controller.find)
+  .post("/api/global/template/:type/export", controller.exportTemplates)
   .delete("/api/global/template/:id/:rev", adminOnly, controller.destroy)
 
 export default router

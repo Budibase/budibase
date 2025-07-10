@@ -50,4 +50,15 @@ export class BackupAPI extends TestAPI {
       { expectations }
     )
   }
+
+  clearBackupErrors = async (
+    appId: string,
+    backupId?: string,
+    expectations?: Expectations
+  ) => {
+    return await this._delete<{ message: string }>(`/api/backups/logs`, {
+      body: { appId, backupId },
+      expectations,
+    })
+  }
 }

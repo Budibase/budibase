@@ -20,7 +20,7 @@
       notifications.info("Changes reverted successfully")
       onComplete()
     } catch (error) {
-      notifications.error(`Error reverting changes: ${error}`)
+      notifications.error(`Error reverting changes: ${error.message}`)
     }
   }
 

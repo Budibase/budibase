@@ -2,7 +2,8 @@
   import { Select, Label, Input, Checkbox, Icon, Body } from "@budibase/bbui"
   import { automationStore } from "@/stores/builder"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
-  import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
+  import { TriggerStepID } from "@/constants/backend/automations"
+  import { sdk as coreSdk } from "@budibase/shared-core"
 
   export let parameters = {}
   export let bindings = []
@@ -32,9 +33,7 @@
         automation.definition.trigger.inputs.fields || {}
       ).map(([name, type]) => ({ name, type }))
 
-      let hasCollectBlock = automation.definition.steps.some(
-        step => step.stepId === ActionStepID.COLLECT
-      )
+      let hasCollectBlock = coreSdk.automations.checkForCollectStep(automation)
 
       return {
         name: automation.name,

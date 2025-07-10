@@ -5,4 +5,5 @@ export enum JobQueue {
   SYSTEM_EVENT_QUEUE = "systemEventQueue",
   APP_MIGRATION = "appMigration",
   DOC_WRITETHROUGH_QUEUE = "docWritethroughQueue",
+  DEV_REVERT_PROCESSOR = "devRevertProcessorQueue",
 }
