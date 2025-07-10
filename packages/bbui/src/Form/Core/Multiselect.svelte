@@ -45,10 +45,12 @@
       if (!map) {
         return ""
       }
-      const vals = value.map(v => {
-        const str = typeof v === "string" ? v : v.toString()
-        return map[str] || v
-      }).join(", ")
+      const vals = value
+        .map(v => {
+          const str = typeof v === "string" ? v : v.toString()
+          return map[str] || v
+        })
+        .join(", ")
       return `(${value.length}) ${vals}`
     } else {
       return placeholder || "Choose some options"
@@ -83,7 +85,10 @@
     return map
   }
 
-  const makeToggleOption = (map: Record<string, boolean>, value: Primitive[]) => {
+  const makeToggleOption = (
+    map: Record<string, boolean>,
+    value: Primitive[]
+  ) => {
     return (optionValue: string) => {
       if (map[optionValue]) {
         // comparison needs to take into account different types, always compare them as strings
