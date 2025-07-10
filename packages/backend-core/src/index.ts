@@ -33,6 +33,8 @@ export * from "./utils/Duration"
 export * as docIds from "./docIds"
 export * as security from "./security"
 export * as sql from "./sql"
+export * as csv from "./csv"
+
 // Add context to tenancy for backwards compatibility
 // only do this for external usages to prevent internal
 // circular dependencies

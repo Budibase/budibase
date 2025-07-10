@@ -1,4 +1,4 @@
-import { jsonFromCsvString } from "../csv"
+import { jsonFromCsvString } from "../"
 
 describe("csv", () => {
   describe("jsonFromCsvString", () => {
@@ -14,7 +14,7 @@ describe("csv", () => {
       result.forEach(r => expect(Object.keys(r)).toEqual(["id", "title"]))
     })
 
-    test("empty values are casted as undefined", async () => {
+    test("empty values are coerced to null", async () => {
       const csvString =
         '"id","optional","title"\n1,,"aaa"\n2,"value","bbb"\n3,,"ccc"'
 

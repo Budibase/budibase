@@ -91,6 +91,12 @@ class GroupStore extends BudiStore<UserGroup[]> {
   async removeGroupAppBuilder(groupId: string, appId: string) {
     return await API.removeGroupAppBuilder(groupId, appId)
   }
+
+  async bulkAddUsersFromCsv(groupId: string, csvContent: string) {
+    const result = await API.bulkAddUsersFromCsv(groupId, csvContent)
+    await this.refreshGroup(groupId)
+    return result
+  }
 }
 
 export const groups = new GroupStore()

@@ -47,3 +47,12 @@ export interface SearchUserGroupResponse extends PaginationResponse {
     email: any
   }[]
 }
+
+export interface BulkAddUsersToGroupRequest {
+  csvContent: string
+}
+
+export interface BulkAddUsersToGroupResponse {
+  added: Array<{ _id: string; email: string }>
+  skipped: Array<{ email: string; reason: string }>
+}
