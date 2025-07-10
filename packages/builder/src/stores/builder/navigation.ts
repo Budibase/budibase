@@ -59,7 +59,9 @@ export class NavigationStore extends DerivedBudiStore<
       return
     }
 
-    await API.navigation.updateNavigation(selectedWorkspaceApp._id!, navigation)
+    await API.navigation.updateNavigation(selectedWorkspaceApp._id!, {
+      navigation,
+    })
     this.syncAppNavigation(navigation)
   }
 
