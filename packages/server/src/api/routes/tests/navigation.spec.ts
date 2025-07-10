@@ -3,7 +3,6 @@ import * as setup from "./utilities"
 import { AppNavigation, WithRequired, WorkspaceApp } from "@budibase/types"
 
 describe("/navigation", () => {
-  let request = setup.getRequest()
   let config = setup.getConfig()
   let workspaceApp: WithRequired<WorkspaceApp, "_id">
 
@@ -37,11 +36,9 @@ describe("/navigation", () => {
 
   describe("PUT /api/navigation/:workspaceAppId", () => {
     it("should update navigation for workspace app", async () => {
-      await request
-        .put(`/api/navigation/${workspaceApp._id}`)
-        .send({ navigation: sampleNavigation })
-        .set(config.defaultHeaders())
-        .expect(204)
+      await config.api.navigation.update(workspaceApp._id, {
+        navigation: sampleNavigation,
+      })
 
       const updatedApp = await config.api.workspaceApp.find(workspaceApp._id)
       expect(updatedApp).toBeDefined()
@@ -49,22 +46,20 @@ describe("/navigation", () => {
     })
 
     it("should update both workspace app and default app navigation for default workspaceApps", async () => {
-      await request
-        .put(`/api/navigation/${workspaceApp._id}`)
-        .send({ navigation: sampleNavigation })
-        .set(config.defaultHeaders())
-        .expect(204)
+      await config.api.navigation.update(workspaceApp._id, {
+        navigation: sampleNavigation,
+      })
 
       const appMetadata = await config.api.application.get(config.getAppId())
       expect(appMetadata.navigation).toEqual(sampleNavigation)
     })
 
     it("should return 400 for invalid workspace app id", async () => {
-      await request
-        .put("/api/navigation/invalid_id")
-        .send({ navigation: sampleNavigation })
-        .set(config.defaultHeaders())
-        .expect(400)
+      await config.api.navigation.update(
+        "invalid_id",
+        { navigation: sampleNavigation },
+        { status: 400 }
+      )
     })
 
     it("should not app navigation app navigation when updating not default workspaces", async () => {
@@ -74,11 +69,9 @@ describe("/navigation", () => {
         })
       expect(otherWorkspaceApp.isDefault).toBe(false)
 
-      await request
-        .put(`/api/navigation/${otherWorkspaceApp._id}`)
-        .send({ navigation: sampleNavigation })
-        .set(config.defaultHeaders())
-        .expect(204)
+      await config.api.navigation.update(otherWorkspaceApp._id, {
+        navigation: sampleNavigation,
+      })
 
       const updatedWorkspaceApp = await config.api.workspaceApp.find(
         otherWorkspaceApp._id
@@ -92,11 +85,9 @@ describe("/navigation", () => {
     it("should handle empty navigation links", async () => {
       const emptyNavigation: AppNavigation = { navigation: "Left", links: [] }
 
-      await request
-        .put(`/api/navigation/${workspaceApp._id}`)
-        .send({ navigation: emptyNavigation })
-        .set(config.defaultHeaders())
-        .expect(204)
+      await config.api.navigation.update(workspaceApp._id, {
+        navigation: emptyNavigation,
+      })
 
       const updatedApp = await config.api.workspaceApp.find(workspaceApp._id)
       expect(updatedApp).toBeDefined()
