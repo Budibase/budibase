@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { notifications, Layout, Body, Table } from "@budibase/bbui"
+  import {
+    notifications,
+    Layout,
+    Body,
+    Table,
+    ButtonGroup,
+    Button,
+  } from "@budibase/bbui"
   import { email } from "@/stores/portal"
   import {
     type FindConfigResponse,
@@ -8,6 +15,7 @@
   import { onMount } from "svelte"
   import { bb } from "@/stores/bb"
   import { fetchSmtp } from "./utils"
+  import { downloadFile } from "@budibase/frontend-core"
 
   const templateSchema = {
     name: {
@@ -21,6 +29,7 @@
   }
 
   $: emailInfo = getEmailInfo($email.definitions)
+  $: hasCustom = ($email.templates || []).find(template => template._id)
 
   let smtpConfig: FindConfigResponse | null
   let loading = false
@@ -53,6 +62,41 @@
         with user onboarding.
       </Body>
     </Layout>
+    <div>
+      <ButtonGroup>
+        <Button
+          quiet
+          on:click={async () => {
+            const downloaded = await downloadFile(
+              "/api/global/template/email/export"
+            )
+            if (!downloaded) {
+              notifications.error("Could not download email templates")
+            }
+          }}
+        >
+          Export default
+        </Button>
+        {#if !!hasCustom}
+          <Button
+            secondary
+            on:click={async () => {
+              const downloaded = await downloadFile(
+                "/api/global/template/email/export",
+                {
+                  type: "custom",
+                }
+              )
+              if (!downloaded) {
+                notifications.error("Could not download email templates")
+              }
+            }}
+          >
+            Export
+          </Button>
+        {/if}
+      </ButtonGroup>
+    </div>
     <Table
       data={emailInfo}
       schema={templateSchema}
