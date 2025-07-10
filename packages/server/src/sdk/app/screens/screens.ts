@@ -20,9 +20,11 @@ export async function fetch(
     const allWorkspaces = await sdk.workspaceApps.fetch()
     const defaultWorkspaceApp =
       allWorkspaces.find(a => a.isDefault) || allWorkspaces[0]
-    screensWithMissingWorkspaceApp.forEach(a => {
-      a.workspaceAppId = defaultWorkspaceApp._id!
-    })
+    if (defaultWorkspaceApp) {
+      screensWithMissingWorkspaceApp.forEach(a => {
+        a.workspaceAppId = defaultWorkspaceApp._id!
+      })
+    }
   }
 
   return screens
