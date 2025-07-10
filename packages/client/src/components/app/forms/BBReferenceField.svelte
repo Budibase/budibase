@@ -2,7 +2,6 @@
   import { sdk } from "@budibase/shared-core"
   import { FieldType, type Row } from "@budibase/types"
   import RelationshipField from "./RelationshipField.svelte"
-  import { builderStore } from "@/stores/builder"
 
   export let defaultValue: string
   export let type = FieldType.BB_REFERENCE
@@ -28,21 +27,15 @@
 
   // This cannot be typed, as svelte does not provide typed inheritance
   $: allProps = $$props as any
-
-  // Default to false
-  $: ({ appUsersOnly = false } = $$props as any)
 </script>
 
-<!-- Trigger a re-render when changing the appUsersOnly but only in the builder -->
-{#key $builderStore.inBuilder ? `active-${appUsersOnly}` : "inactive"}
-  <RelationshipField
-    {...allProps}
-    {type}
-    datasourceType={"user"}
-    primaryDisplay={"email"}
-    defaultValue={updatedDefaultValue}
-    {defaultRows}
-    {multi}
-    on:rows
-  />
-{/key}
+<RelationshipField
+  {...allProps}
+  {type}
+  datasourceType={"user"}
+  primaryDisplay={"email"}
+  defaultValue={updatedDefaultValue}
+  {defaultRows}
+  {multi}
+  on:rows
+/>

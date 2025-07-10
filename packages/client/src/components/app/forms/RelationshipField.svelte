@@ -71,7 +71,7 @@
   let loadingMissingOptions: boolean = false
 
   // Reset the available options when our base filter changes
-  $: filter, (optionsMap = {})
+  $: filter, appUsersOnly, (optionsMap = {})
   // Determine if we can select multiple rows or not
   $: multiselect =
     multi ??
@@ -91,7 +91,8 @@
     writable,
     datasourceType,
     migratedFilter,
-    linkedTableId
+    linkedTableId,
+    appUsersOnly
   )
 
   // Attempt to determine the primary display field to use
@@ -145,7 +146,8 @@
     writable: boolean,
     dsType: typeof datasourceType,
     filter: UISearchFilter | undefined,
-    linkedTableId?: string
+    linkedTableId?: string,
+    appUsersOnly?: boolean
   ) => {
     const datasource: DataFetchDatasource =
       dsType === "table"
