@@ -134,6 +134,7 @@
       $licensing.budibaseAIEnabled}
     {buttons}
     buttonsCollapsed
+    canHideColumns={false}
     on:updatedatasource={handleGridTableUpdate}
   >
     <!-- Controls -->

@@ -294,6 +294,23 @@ describe("/api/global/groups", () => {
     })
   })
 
+  describe("role filtering", () => {
+    it("should filter out roles for non-existent apps when enriching group", async () => {
+      const fakeAppId = "app_fake"
+      const group = structures.groups.UserGroup()
+
+      const { body: savedGroup } = await config.api.groups.saveGroup(group)
+      await config.api.groups.updateGroupApps(savedGroup._id, {
+        add: [{ appId: fakeAppId, roleId: "BASIC" }],
+      })
+      const { body: retrievedGroup } = await config.api.groups.find(
+        savedGroup._id
+      )
+
+      expect(Object.keys(retrievedGroup.roles)).not.toContain(fakeAppId)
+    })
+  })
+
   describe("with global builder role", () => {
     let builder: User
     let group: UserGroup

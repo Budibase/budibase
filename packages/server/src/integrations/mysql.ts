@@ -171,6 +171,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       ...config,
       typeCast: defaultTypeCasting,
       multipleStatements: true,
+      timezone: "Z",
     }
   }
 

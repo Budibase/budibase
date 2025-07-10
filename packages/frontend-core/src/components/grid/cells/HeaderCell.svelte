@@ -405,7 +405,7 @@
           Move right
         </MenuItem>
         <MenuItem
-          disabled={column.primaryDisplay}
+          disabled={column.primaryDisplay || !$config.canHideColumns}
           icon="eye-slash"
           on:click={hideColumn}
         >
@@ -448,8 +448,12 @@
   }
 
   /* Search icon */
+  .column-icon {
+    width: 18px;
+  }
   .search-icon {
     display: none;
+    width: 18px;
   }
   .header-cell.searchable:not(.open):hover .search-icon,
   .header-cell.searchable.searching .search-icon {

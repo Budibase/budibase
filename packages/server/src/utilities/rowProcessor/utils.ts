@@ -201,7 +201,7 @@ export function processDates<T extends Row | Row[]>(
   for (let row of rows) {
     for (let col of datesWithTZ) {
       if (row[col] && typeof row[col] === "string" && !row[col].endsWith("Z")) {
-        row[col] = new Date(row[col]).toISOString()
+        row[col] = new Date(row[col] + "Z").toISOString()
       }
     }
   }
