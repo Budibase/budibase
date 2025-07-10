@@ -3,6 +3,7 @@ import * as datasourceController from "../controllers/datasource"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { datasourceValidator } from "./utils/validators"
+import { EndpointGroup } from "../utils"
 
 const router: Router = new Router()
 

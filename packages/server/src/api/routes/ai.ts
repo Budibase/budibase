@@ -46,8 +46,6 @@ licensedGroup
   .post("/api/ai/chat", ai.chatCompletion)
   .post("/api/ai/upload-file", ai.uploadFile)
 
-const router: Router = new Router()
-builderAdminGroup.apply(router)
-licensedGroup.apply(router)
+const router: Router = builderAdminGroup.apply(licensedGroup.apply())
 
 export default router

@@ -5,72 +5,46 @@ import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { applicationValidator } from "./utils/validators"
 import { skipMigrationRedirect } from "../../middleware/appMigrations"
+import { EndpointGroup } from "../utils"
 
-const router: Router = new Router()
+const builderGroup = new EndpointGroup()
+const creatorGroup = new EndpointGroup()
+const clientGroup = new EndpointGroup()
 
-router
-  .post(
-    "/api/applications/:appId/sync",
-    authorized(permissions.BUILDER),
-    controller.sync
-  )
-  .post(
-    "/api/applications",
-    authorized(permissions.CREATOR),
-    applicationValidator(),
-    controller.create
-  )
-  .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
-  .get("/api/applications", controller.fetch)
-  .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)
+builderGroup.addGroupMiddleware(authorized(permissions.BUILDER))
+creatorGroup.addGroupMiddleware(authorized(permissions.CREATOR))
+
+builderGroup
+  .post("/api/applications/:appId/sync", controller.sync)
   .put(
     "/api/applications/:appId",
-    authorized(permissions.BUILDER),
     applicationValidator({ isCreate: false }),
     controller.update
   )
-  .post(
-    "/api/applications/:appId/client/update",
-    authorized(permissions.BUILDER),
-    controller.updateClient
-  )
-  .post(
-    "/api/applications/:appId/client/revert",
-    authorized(permissions.BUILDER),
-    controller.revertClient
-  )
-  .post(
-    "/api/applications/:appId/sample",
-    authorized(permissions.BUILDER),
-    controller.addSampleData
-  )
-  .post(
-    "/api/applications/:appId/publish",
-    authorized(permissions.BUILDER),
-    deploymentController.publishApp
-  )
-  .post(
-    "/api/applications/:appId/unpublish",
-    authorized(permissions.BUILDER),
-    controller.unpublish
-  )
-  .delete(
-    "/api/applications/:appId",
-    authorized(permissions.BUILDER),
-    skipMigrationRedirect,
-    controller.destroy
-  )
-  .post(
-    "/api/applications/:appId/duplicate",
-    authorized(permissions.BUILDER),
-    controller.duplicateApp
-  )
-  .post(
-    "/api/applications/:appId/import",
-    authorized(permissions.BUILDER),
-    controller.importToApp
-  )
-  // Client only endpoints
+  .post("/api/applications/:appId/client/update", controller.updateClient)
+  .post("/api/applications/:appId/client/revert", controller.revertClient)
+  .post("/api/applications/:appId/sample", controller.addSampleData)
+  .post("/api/applications/:appId/publish", deploymentController.publishApp)
+  .post("/api/applications/:appId/unpublish", controller.unpublish)
+  .delete("/api/applications/:appId", skipMigrationRedirect, controller.destroy)
+  .post("/api/applications/:appId/duplicate", controller.duplicateApp)
+  .post("/api/applications/:appId/import", controller.importToApp)
+
+creatorGroup.post(
+  "/api/applications",
+  applicationValidator(),
+  controller.create
+)
+
+// Client only endpoints
+clientGroup
   .get("/api/client/applications", controller.fetchClientApps)
+  .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
+  .get("/api/applications", controller.fetch)
+  .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)
+
+const router: Router = builderGroup.apply(
+  creatorGroup.apply(clientGroup.apply())
+)
 
 export default router

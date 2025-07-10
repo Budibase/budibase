@@ -61,9 +61,12 @@ export default class EndpointGroup {
     return this.addEndpoint("head", url, fns[0], ...fns)
   }
 
-  apply(router: Router) {
+  apply(router?: Router): Router {
     if (this.applied) {
       throw new Error("Already applied to router")
+    }
+    if (!router) {
+      router = new Router()
     }
     this.applied = true
     for (const endpoint of this.endpoints) {
@@ -73,5 +76,6 @@ export default class EndpointGroup {
       )
       endpoint.apply(router)
     }
+    return router
   }
 }

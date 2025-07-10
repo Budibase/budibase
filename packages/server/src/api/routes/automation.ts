@@ -8,79 +8,45 @@ import {
   AppType,
 } from "../../middleware/appInfo"
 import { automationValidator } from "./utils/validators"
+import { EndpointGroup } from "../utils"
 
-const router: Router = new Router()
+const builderGroup = new EndpointGroup()
+const authorizedGroup = new EndpointGroup()
 
-router
-  .get(
-    "/api/automations/trigger/list",
-    authorized(permissions.BUILDER),
-    controller.getTriggerList
+builderGroup.addGroupMiddleware(authorized(permissions.BUILDER))
+authorizedGroup.addGroupMiddleware(
+  authorized(
+    permissions.PermissionType.AUTOMATION,
+    permissions.PermissionLevel.EXECUTE
   )
-  .get(
-    "/api/automations/action/list",
-    authorized(permissions.BUILDER),
-    controller.getActionList
-  )
-  .get(
-    "/api/automations/definitions/list",
-    authorized(permissions.BUILDER),
-    controller.getDefinitionList
-  )
-  .get("/api/automations", authorized(permissions.BUILDER), controller.fetch)
-  .get(
-    "/api/automations/:id",
-    paramResource("id"),
-    authorized(permissions.BUILDER),
-    controller.find
-  )
+)
+
+builderGroup
+  .get("/api/automations/trigger/list", controller.getTriggerList)
+  .get("/api/automations/action/list", controller.getActionList)
+  .get("/api/automations/definitions/list", controller.getDefinitionList)
+  .get("/api/automations", controller.fetch)
+  .get("/api/automations/:id", paramResource("id"), controller.find)
   .put(
     "/api/automations",
     bodyResource("_id"),
-    authorized(permissions.BUILDER),
     automationValidator(false),
     controller.update
   )
-  .post(
-    "/api/automations",
-    authorized(permissions.BUILDER),
-    automationValidator(false),
-    controller.create
-  )
-  .post(
-    "/api/automations/logs/search",
-    authorized(permissions.BUILDER),
-    controller.logSearch
-  )
-  .delete(
-    "/api/automations/logs",
-    authorized(permissions.BUILDER),
-    controller.clearLogError
-  )
-  .delete(
-    "/api/automations/:id/:rev",
-    paramResource("id"),
-    authorized(permissions.BUILDER),
-    controller.destroy
-  )
-  .post(
-    "/api/automations/:id/trigger",
-    paramResource("id"),
-    authorized(
-      permissions.PermissionType.AUTOMATION,
-      permissions.PermissionLevel.EXECUTE
-    ),
-    controller.trigger
-  )
+  .post("/api/automations", automationValidator(false), controller.create)
+  .post("/api/automations/logs/search", controller.logSearch)
+  .delete("/api/automations/logs", controller.clearLogError)
+  .delete("/api/automations/:id/:rev", paramResource("id"), controller.destroy)
+
+authorizedGroup
+  .post("/api/automations/:id/trigger", paramResource("id"), controller.trigger)
   .post(
     "/api/automations/:id/test",
     appInfoMiddleware({ appType: AppType.DEV }),
     paramResource("id"),
-    authorized(
-      permissions.PermissionType.AUTOMATION,
-      permissions.PermissionLevel.EXECUTE
-    ),
     controller.test
   )
+
+const router: Router = builderGroup.apply(authorizedGroup.apply())
 
 export default router
