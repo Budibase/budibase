@@ -429,10 +429,10 @@ export async function coreOutputProcessing(
     } else if (column.type === FieldType.DATETIME && column.ignoreTimezones) {
       for (const row of rows) {
         if (typeof row[property] === "string") {
-          if (row[property].endsWith("Z")) {
-            row[property] = new Date(row[property])
-          } else {
-            row[property] = new Date(row[property] + "Z")
+          const dateStr = row[property]
+          row[property] = new Date(dateStr + "Z")
+          if (isNaN(row[property].getTime())) {
+            row[property] = new Date(dateStr)
           }
         }
         if (row[property] instanceof Date) {
