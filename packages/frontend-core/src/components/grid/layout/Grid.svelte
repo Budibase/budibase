@@ -218,7 +218,7 @@
     /* Variables */
     --accent-color: var(--primaryColor, var(--spectrum-global-color-blue-400));
     --grid-background: var(--spectrum-global-color-gray-50);
-    --grid-background-alt: var(--background);
+    --grid-background-alt: var(--spectrum-global-color-gray-100);
     --header-cell-background: var(
       --custom-header-cell-background,
       var(--spectrum-global-color-gray-100)
@@ -230,7 +230,7 @@
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
-    --cell-font-color: var(--spectrum-global-color-gray-900);
+    --cell-font-color: var(--spectrum-global-color-gray-800);
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;

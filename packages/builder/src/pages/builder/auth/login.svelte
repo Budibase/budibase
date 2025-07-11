@@ -75,7 +75,7 @@
         {#if loaded}
           <img alt="logo" src={$organisation.logoUrl || Logo} />
         {/if}
-        <Heading size="M">
+        <Heading size="M" textAlign="center">
           {$organisation.loginHeading || "Log in to Budibase"}
         </Heading>
       </Layout>
