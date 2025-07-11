@@ -8,6 +8,7 @@
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
+  import { bb } from "@/stores/bb"
 
   setContext(Context.PopoverRoot, ".nav > .popover-container")
 
@@ -132,9 +133,11 @@
         <SideNavLink
           icon="gear"
           text="Settings"
-          url={$url("./settings")}
           {collapsed}
-          on:click={keepCollapsed}
+          on:click={() => {
+            bb.settings()
+            keepCollapsed()
+          }}
         />
         <SideNavUserSettings {collapsed} />
       </div>
