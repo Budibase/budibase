@@ -39,3 +39,5 @@ export interface UpdateWorkspaceAppResponse {
 export interface FetchWorkspaceAppResponse {
   workspaceApps: WorkspaceAppResponse[]
 }
+
+export interface FindWorkspaceAppResponse extends WorkspaceAppResponse {}

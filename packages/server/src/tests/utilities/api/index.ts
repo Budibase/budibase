@@ -27,6 +27,7 @@ import { AIAPI } from "./ai"
 import { WorkspaceAppAPI } from "./workspaceApp"
 import { ResourceAPI } from "./resource"
 import { DeployAPI } from "./deploy"
+import { NavigationAPI } from "./navigation"
 
 export default class API {
   ai: AIAPI
@@ -55,6 +56,7 @@ export default class API {
   assets: AssetsAPI
   workspaceApp: WorkspaceAppAPI
   resource: ResourceAPI
+  navigation: NavigationAPI
 
   public: {
     user: UserPublicAPI
@@ -88,6 +90,7 @@ export default class API {
     this.assets = new AssetsAPI(config)
     this.workspaceApp = new WorkspaceAppAPI(config)
     this.resource = new ResourceAPI(config)
+    this.navigation = new NavigationAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),
