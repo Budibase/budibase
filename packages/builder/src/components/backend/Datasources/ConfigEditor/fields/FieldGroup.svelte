@@ -19,6 +19,10 @@
 
     dispatch("change", updatedValue)
   }
+
+  const onBlur = fieldKey => {
+    dispatch("nestedFieldBlur", fieldKey)
+  }
 </script>
 
 <Accordion
@@ -31,6 +35,7 @@
       <ConfigInput
         {...field}
         on:change={e => handleChange(field.key, e.detail)}
+        on:blur={() => onBlur(field.key)}
       />
     {/each}
   </Layout>

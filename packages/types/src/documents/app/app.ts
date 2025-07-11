@@ -22,6 +22,7 @@ export interface App extends Document {
   // @deprecated  use workspace app navigation instead
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
+  backupErrors?: AppMetadataErrors
   icon?: AppIcon
   features?: AppFeatures
   automations?: AutomationSettings

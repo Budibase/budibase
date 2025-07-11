@@ -5,23 +5,16 @@
   import FieldGroupField from "./fields/FieldGroup.svelte"
   import StringField from "./fields/String.svelte"
   import SelectField from "./fields/Select.svelte"
+  import type { DatasourceFieldType } from "@budibase/types"
 
-  type InputType =
-    | "string"
-    | "boolean"
-    | "object"
-    | "longForm"
-    | "fieldGroup"
-    | "select"
-
-  export let type: InputType
+  export let type: `${DatasourceFieldType}`
   export let value: any
   export let error: string | null
   export let name: string
   export let config: any = undefined
   export let placeholder: string | undefined = undefined
 
-  const selectComponent = (type: InputType) => {
+  const selectComponent = (type: `${DatasourceFieldType}`) => {
     if (type === "object") {
       return ObjectField
     } else if (type === "boolean") {
@@ -50,4 +43,5 @@
   {placeholder}
   on:blur
   on:change
+  on:nestedFieldBlur
 />
