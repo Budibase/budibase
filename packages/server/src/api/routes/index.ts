@@ -47,7 +47,9 @@ export { default as assetRoutes } from "./assets"
 const appBackupRoutes = pro.appBackups
 const environmentVariableRoutes = pro.environmentVariables
 const appEndpoints = allRoutes().flatMap(group => group.endpointList())
-// sort endpoints with a URL parameter after the static endpoints
+// sort endpoints with a URL parameters after the static endpoints -
+// for example, endpoints /api/queries/:queryId and /api/queries/accessible
+// can overlap, if the parameter comes before the accessible it'll be unreachable
 appEndpoints.sort((a, b) => {
   const aHasColon = a.url.includes(":")
   const bHasColon = b.url.includes(":")
