@@ -32,6 +32,7 @@ function workspaceAppValidator(
 
 builderGroup
   .get("/api/workspaceApp", controller.fetch)
+  .get("/api/workspaceApp/:id", controller.find)
   .post(
     "/api/workspaceApp",
     workspaceAppValidator(insertSchema),
