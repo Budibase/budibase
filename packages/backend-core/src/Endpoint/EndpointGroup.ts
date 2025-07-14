@@ -10,13 +10,21 @@ export default class EndpointGroup {
   middlewares: CtxFn[] = []
   outputMiddlewares: CtxFn[] = []
   applied = false
+  // if locked, can't add anymore middlewares
+  private locked: boolean = false
 
   addGroupMiddleware(middleware: CtxFn) {
+    if (this.locked) {
+      throw new Error("Group locked, no more middleware can be added.")
+    }
     this.middlewares.push(middleware)
     return this
   }
 
   addGroupMiddlewareOutput(middleware: CtxFn) {
+    if (this.locked) {
+      throw new Error("Group locked, no more middleware can be added.")
+    }
     this.outputMiddlewares.push(middleware)
     return this
   }
@@ -35,6 +43,10 @@ export default class EndpointGroup {
     }
     this.endpoints.push(endpoint)
     return this
+  }
+
+  lockMiddleware() {
+    this.locked = true
   }
 
   post(url: string, ...fns: ArrayOneOrMore<CtxFn>) {

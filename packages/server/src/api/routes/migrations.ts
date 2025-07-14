@@ -1,8 +1,7 @@
-import Router from "@koa/router"
 import * as migrationsController from "../controllers/migrations"
+import { publicGroup } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router.get("/api/migrations/status", migrationsController.getMigrationStatus)
-
-export default router
+publicGroup.get(
+  "/api/migrations/status",
+  migrationsController.getMigrationStatus
+)
