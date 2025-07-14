@@ -1,22 +1,11 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/backup"
-import authorized from "../../middleware/authorized"
-import { permissions } from "@budibase/backend-core"
 import ensureTenantAppOwnership from "../../middleware/ensureTenantAppOwnership"
+import { builderGroup } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router.post(
-  "/api/backups/export",
-  authorized(permissions.BUILDER),
-  ensureTenantAppOwnership,
-  controller.exportAppDump
-)
-
-router.delete(
-  "/api/backups/logs",
-  authorized(permissions.BUILDER),
-  controller.clearBackupError
-)
-
-export default router
+builderGroup
+  .post(
+    "/api/backups/export",
+    ensureTenantAppOwnership,
+    controller.exportAppDump
+  )
+  .delete("/api/backups/logs", controller.clearBackupError)

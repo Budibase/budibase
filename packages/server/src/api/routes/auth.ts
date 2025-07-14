@@ -1,8 +1,4 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/auth"
+import { publicGroup } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router.get("/api/self", controller.fetchSelf)
-
-export default router
+publicGroup.get("/api/self", controller.fetchSelf)

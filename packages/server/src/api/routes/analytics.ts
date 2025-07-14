@@ -1,12 +1,5 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/analytics"
-import { EndpointGroup } from "../utils"
+import { publicGroup } from "./endpointGroups"
 
-const group = new EndpointGroup()
-
-group.get("/api/bbtel", controller.isEnabled)
-group.post("/api/bbtel/ping", controller.ping)
-
-const router: Router = group.apply()
-
-export default router
+publicGroup.get("/api/bbtel", controller.isEnabled)
+publicGroup.post("/api/bbtel/ping", controller.ping)

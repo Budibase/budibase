@@ -1,4 +1,3 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/automation"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
@@ -8,12 +7,10 @@ import {
   AppType,
 } from "../../middleware/appInfo"
 import { automationValidator } from "./utils/validators"
-import { EndpointGroup } from "../utils"
-
-const builderGroup = new EndpointGroup()
-const authorizedGroup = new EndpointGroup()
+import { builderGroup, customEndpointGroups } from "./endpointGroups"
 
 builderGroup.addGroupMiddleware(authorized(permissions.BUILDER))
+const authorizedGroup = customEndpointGroups.group()
 authorizedGroup.addGroupMiddleware(
   authorized(
     permissions.PermissionType.AUTOMATION,
@@ -46,7 +43,3 @@ authorizedGroup
     paramResource("id"),
     controller.test
   )
-
-const router: Router = builderGroup.apply(authorizedGroup.apply())
-
-export default router

@@ -1,18 +1,10 @@
 import * as ai from "../controllers/ai"
-import { auth } from "@budibase/backend-core"
-import { middleware } from "@budibase/pro"
 import {
   chatAgentValidator,
   createToolSourceValidator,
   updateToolSourceValidator,
 } from "./utils/validators/agent"
-import { EndpointGroup } from "../utils"
-import Router from "@koa/router"
-const builderAdminGroup = new EndpointGroup()
-const licensedGroup = new EndpointGroup()
-
-builderAdminGroup.addGroupMiddleware(auth.builderOrAdmin)
-licensedGroup.addGroupMiddleware(middleware.licenseAuth)
+import { builderAdminGroup, licensedGroup } from "./endpointGroups"
 
 builderAdminGroup
   .post("/api/ai/tables", ai.generateTables)
@@ -45,7 +37,3 @@ builderAdminGroup
 licensedGroup
   .post("/api/ai/chat", ai.chatCompletion)
   .post("/api/ai/upload-file", ai.uploadFile)
-
-const router: Router = builderAdminGroup.apply(licensedGroup.apply())
-
-export default router
