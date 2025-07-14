@@ -29,11 +29,7 @@ export default class EndpointGroup {
     return this
   }
 
-  private addEndpoint(
-    method: Method,
-    url: string,
-    ...fns: ArrayOneOrMore<CtxFn>
-  ) {
+  private addEndpoint(method: Method, url: string, ...fns: CtxFn[]) {
     let controller = fns.pop()!
     const endpoint = new Endpoint(method, url, controller)
     if (fns.length !== 0) {
@@ -50,27 +46,27 @@ export default class EndpointGroup {
   }
 
   post(url: string, ...fns: ArrayOneOrMore<CtxFn>) {
-    return this.addEndpoint("post", url, fns[0], ...fns)
+    return this.addEndpoint("post", url, ...fns)
   }
 
   patch(url: string, ...fns: ArrayOneOrMore<CtxFn>) {
-    return this.addEndpoint("patch", url, fns[0], ...fns)
+    return this.addEndpoint("patch", url, ...fns)
   }
 
   put(url: string, ...fns: ArrayOneOrMore<CtxFn>) {
-    return this.addEndpoint("put", url, fns[0], ...fns)
+    return this.addEndpoint("put", url, ...fns)
   }
 
   get(url: string, ...fns: ArrayOneOrMore<CtxFn>) {
-    return this.addEndpoint("get", url, fns[0], ...fns)
+    return this.addEndpoint("get", url, ...fns)
   }
 
   delete(url: string, ...fns: ArrayOneOrMore<CtxFn>) {
-    return this.addEndpoint("delete", url, fns[0], ...fns)
+    return this.addEndpoint("delete", url, ...fns)
   }
 
   head(url: string, ...fns: ArrayOneOrMore<CtxFn>) {
-    return this.addEndpoint("head", url, fns[0], ...fns)
+    return this.addEndpoint("head", url, ...fns)
   }
 
   apply(router?: Router): Router {
