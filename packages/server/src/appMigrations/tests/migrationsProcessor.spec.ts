@@ -472,18 +472,28 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       })
 
       it("should sync only dev app", async () => {
+        const executionOrder: string[] = []
         const testMigrations: AppMigration[] = [
           {
             id: generateMigrationId(),
-            func: jest.fn(),
+            func: async () => {
+              const db = context.getAppDB()
+              executionOrder.push(`migration 1 - ${db.name}`)
+            },
           },
           {
             id: generateMigrationId(),
-            func: jest.fn(),
+            func: async () => {
+              const db = context.getAppDB()
+              executionOrder.push(`migration 2 - ${db.name}`)
+            },
           },
           {
             id: generateMigrationId(),
-            func: jest.fn(),
+            func: async () => {
+              const db = context.getAppDB()
+              executionOrder.push(`migration 3 - ${db.name}`)
+            },
           },
         ]
 
@@ -499,9 +509,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
         await runMigrations(testMigrations)
 
-        expect(testMigrations[0].func).not.toHaveBeenCalled()
-        expect(testMigrations[1].func).toHaveBeenCalledTimes(1)
-        expect(testMigrations[2].func).toHaveBeenCalledTimes(1)
+        expect(executionOrder).toEqual([
+          `migration 2 - ${config.getAppId()}`,
+          `migration 3 - ${config.getAppId()}`,
+        ])
         expect(mockSyncApp).not.toHaveBeenCalled()
       })
     })
