@@ -32,13 +32,21 @@ class Endpoint {
     this.outputMiddlewares = []
   }
 
-  addMiddleware(middleware: CtxFn) {
-    this.middlewares.push(middleware)
+  addMiddleware(middleware: CtxFn, opts?: { start?: boolean }) {
+    if (opts?.start) {
+      this.middlewares.unshift(middleware)
+    } else {
+      this.middlewares.push(middleware)
+    }
     return this
   }
 
-  addOutputMiddleware(middleware: CtxFn) {
-    this.outputMiddlewares.push(middleware)
+  addOutputMiddleware(middleware: CtxFn, opts?: { start?: boolean }) {
+    if (opts?.start) {
+      this.outputMiddlewares.unshift(middleware)
+    } else {
+      this.outputMiddlewares.push(middleware)
+    }
     return this
   }
 

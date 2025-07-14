@@ -78,7 +78,9 @@ export default class EndpointGroup {
     }
     this.applied = true
     for (const endpoint of this.endpoints) {
-      this.middlewares.forEach(middleware => endpoint.addMiddleware(middleware))
+      this.middlewares.forEach(middleware =>
+        endpoint.addMiddleware(middleware, { start: true })
+      )
       this.outputMiddlewares.forEach(middleware =>
         endpoint.addOutputMiddleware(middleware)
       )
