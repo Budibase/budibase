@@ -4,7 +4,10 @@ import {
   createToolSourceValidator,
   updateToolSourceValidator,
 } from "./utils/validators/agent"
-import { builderAdminGroup, licensedGroup } from "./endpointGroups"
+import { middleware } from "@budibase/pro"
+import { builderAdminGroup, customEndpointGroups } from "./endpointGroups"
+
+export const licensedGroup = customEndpointGroups.group(middleware.licenseAuth)
 
 builderAdminGroup
   .post("/api/ai/tables", ai.generateTables)
