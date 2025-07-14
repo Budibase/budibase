@@ -10,12 +10,14 @@ import { customEndpointGroups, publicGroup } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readGroup = customEndpointGroups.group(
-  authorized(PermissionType.TABLE, PermissionLevel.READ)
-)
-const writeGroup = customEndpointGroups.group(
-  authorized(PermissionType.TABLE, PermissionLevel.WRITE)
-)
+const readGroup = customEndpointGroups.group({
+  middleware: authorized(PermissionType.TABLE, PermissionLevel.READ),
+  start: false,
+})
+const writeGroup = customEndpointGroups.group({
+  middleware: authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+  start: false,
+})
 
 readGroup
   .get(

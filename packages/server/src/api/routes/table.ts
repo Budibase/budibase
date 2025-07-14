@@ -7,9 +7,12 @@ import { builderGroup, customEndpointGroups } from "./endpointGroups"
 
 const { PermissionLevel, PermissionType } = permissions
 
-const group = customEndpointGroups.group(
-  authorized(PermissionType.TABLE, PermissionLevel.READ, { schema: true })
-)
+const group = customEndpointGroups.group({
+  middleware: authorized(PermissionType.TABLE, PermissionLevel.READ, {
+    schema: true,
+  }),
+  start: false,
+})
 
 group.get(
   "/api/tables/:tableId",

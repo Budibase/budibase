@@ -9,12 +9,13 @@ import {
 import { automationValidator } from "./utils/validators"
 import { builderGroup, customEndpointGroups } from "./endpointGroups"
 
-const authorizedGroup = customEndpointGroups.group(
-  authorized(
+const authorizedGroup = customEndpointGroups.group({
+  middleware: authorized(
     permissions.PermissionType.AUTOMATION,
     permissions.PermissionLevel.EXECUTE
-  )
-)
+  ),
+  start: false,
+})
 
 builderGroup
   .get("/api/automations/trigger/list", controller.getTriggerList)

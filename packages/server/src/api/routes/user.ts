@@ -5,12 +5,14 @@ import { customEndpointGroups } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readGroup = customEndpointGroups.group(
-  authorized(PermissionType.USER, PermissionLevel.READ)
-)
-const writeGroup = customEndpointGroups.group(
-  authorized(PermissionType.USER, PermissionLevel.WRITE)
-)
+const readGroup = customEndpointGroups.group({
+  middleware: authorized(PermissionType.USER, PermissionLevel.READ),
+  start: false,
+})
+const writeGroup = customEndpointGroups.group({
+  middleware: authorized(PermissionType.USER, PermissionLevel.WRITE),
+  start: false,
+})
 
 readGroup
   .get("/api/users/metadata", controller.fetchMetadata)

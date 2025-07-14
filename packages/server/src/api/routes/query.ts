@@ -14,14 +14,14 @@ import { builderGroup, customEndpointGroups } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readGroup = customEndpointGroups.group()
-const writeGroup = customEndpointGroups.group()
-readGroup.addGroupMiddleware(
-  authorized(PermissionType.QUERY, PermissionLevel.READ)
-)
-writeGroup.addGroupMiddleware(
-  authorized(PermissionType.QUERY, PermissionLevel.WRITE)
-)
+const readGroup = customEndpointGroups.group({
+  middleware: authorized(PermissionType.QUERY, PermissionLevel.READ),
+  start: false,
+})
+const writeGroup = customEndpointGroups.group({
+  middleware: authorized(PermissionType.QUERY, PermissionLevel.WRITE),
+  start: false,
+})
 
 builderGroup
   .get("/api/queries", queryController.fetch)
