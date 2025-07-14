@@ -379,16 +379,16 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   })
 
   describe("published app handling", () => {
-    let mockSyncApp: jest.SpyInstance
+    let spySyncApp: jest.SpyInstance
 
     beforeEach(() => {
-      mockSyncApp = jest
+      spySyncApp = jest
         .spyOn(sdk.applications, "syncApp")
         .mockResolvedValue(undefined as any)
     })
 
     afterEach(() => {
-      mockSyncApp.mockRestore()
+      spySyncApp.mockRestore()
     })
 
     it("should sync dev app after migrating published app", async () => {
@@ -417,12 +417,12 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           })
         })
       }
-      mockSyncApp.mockClear()
+      spySyncApp.mockClear()
 
       await runMigrations(testMigrations)
 
-      expect(mockSyncApp).toHaveBeenCalledTimes(2)
-      expect(mockSyncApp).toHaveBeenCalledWith(config.getAppId())
+      expect(spySyncApp).toHaveBeenCalledTimes(2)
+      expect(spySyncApp).toHaveBeenCalledWith(config.getAppId())
     })
 
     it("should update migration metadata for both prod and dev apps", async () => {
@@ -453,7 +453,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           },
         ]
 
-        mockSyncApp.mockClear()
+        spySyncApp.mockClear()
         await config.unpublish()
 
         const devAppId = config.getAppId()
@@ -464,9 +464,59 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
         expect(executionOrder).toHaveLength(1)
         expect(executionOrder[0]).toBe(devAppId)
-        expect(mockSyncApp).not.toHaveBeenCalled()
+        expect(spySyncApp).not.toHaveBeenCalled()
       })
   })
+
+  !fromProd &&
+    describe("non-published app handling", () => {
+      let mockSyncApp: jest.SpyInstance
+
+      beforeEach(async () => {
+        mockSyncApp = jest
+          .spyOn(sdk.applications, "syncApp")
+          .mockResolvedValue(undefined as any)
+        await config.unpublish()
+      })
+
+      afterEach(() => {
+        mockSyncApp.mockRestore()
+      })
+
+      it("should sync only dev app", async () => {
+        const testMigrations: AppMigration[] = [
+          {
+            id: generateMigrationId(),
+            func: jest.fn(),
+          },
+          {
+            id: generateMigrationId(),
+            func: jest.fn(),
+          },
+          {
+            id: generateMigrationId(),
+            func: jest.fn(),
+          },
+        ]
+
+        const appId = config.getAppId()
+        await config.doInContext(appId, async () => {
+          await updateAppMigrationMetadata({
+            appId,
+            version: testMigrations[0].id,
+          })
+        })
+
+        mockSyncApp.mockClear()
+
+        await runMigrations(testMigrations)
+
+        expect(testMigrations[0].func).not.toHaveBeenCalled()
+        expect(testMigrations[1].func).toHaveBeenCalledTimes(1)
+        expect(testMigrations[2].func).toHaveBeenCalledTimes(1)
+        expect(mockSyncApp).not.toHaveBeenCalled()
+      })
+    })
 
   describe("resilience and recovery", () => {
     it("should not update migration version if migration function fails", async () => {
