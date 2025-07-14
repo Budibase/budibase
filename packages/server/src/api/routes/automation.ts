@@ -14,7 +14,7 @@ const authorizedGroup = customEndpointGroups.group({
     permissions.PermissionType.AUTOMATION,
     permissions.PermissionLevel.EXECUTE
   ),
-  start: false,
+  first: false,
 })
 
 builderGroup

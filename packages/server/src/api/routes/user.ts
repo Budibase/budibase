@@ -7,11 +7,11 @@ const { PermissionType, PermissionLevel } = permissions
 
 const readGroup = customEndpointGroups.group({
   middleware: authorized(PermissionType.USER, PermissionLevel.READ),
-  start: false,
+  first: false,
 })
 const writeGroup = customEndpointGroups.group({
   middleware: authorized(PermissionType.USER, PermissionLevel.WRITE),
-  start: false,
+  first: false,
 })
 
 readGroup

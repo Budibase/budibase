@@ -3,13 +3,13 @@ import { EndpointGroup, CtxFn } from "@budibase/backend-core"
 class CustomEndpointGroups {
   private groups: EndpointGroup[] = []
 
-  group(...middlewares: (CtxFn | { middleware: CtxFn; start: boolean })[]) {
+  group(...middlewares: (CtxFn | { middleware: CtxFn; first: boolean })[]) {
     const group = new EndpointGroup()
     if (middlewares.length) {
       middlewares.forEach(middleware => {
-        if ("start" in middleware) {
+        if ("first" in middleware) {
           group.addGroupMiddleware(middleware.middleware, {
-            start: middleware.start,
+            first: middleware.first,
           })
         } else {
           group.addGroupMiddleware(middleware)

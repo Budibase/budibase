@@ -7,31 +7,31 @@ type ArrayOneOrMore<T> = {
 
 export default class EndpointGroup {
   endpoints: Endpoint[] = []
-  middlewares: { fn: CtxFn; start: boolean }[] = []
-  outputMiddlewares: { fn: CtxFn; start: boolean }[] = []
+  middlewares: { fn: CtxFn; first: boolean }[] = []
+  outputMiddlewares: { fn: CtxFn; first: boolean }[] = []
   applied = false
   // if locked, can't add anymore middlewares
   private locked = false
 
   addGroupMiddleware(
     middleware: CtxFn,
-    opts: { start: boolean } = { start: true }
+    opts: { first: boolean } = { first: true }
   ) {
     if (this.locked) {
       throw new Error("Group locked, no more middleware can be added.")
     }
-    this.middlewares.push({ fn: middleware, start: opts.start })
+    this.middlewares.push({ fn: middleware, first: opts.first })
     return this
   }
 
   addGroupMiddlewareOutput(
     middleware: CtxFn,
-    opts: { start: boolean } = { start: false }
+    opts: { first: boolean } = { first: false }
   ) {
     if (this.locked) {
       throw new Error("Group locked, no more middleware can be added.")
     }
-    this.outputMiddlewares.push({ fn: middleware, start: opts.start })
+    this.outputMiddlewares.push({ fn: middleware, first: opts.first })
     return this
   }
 
@@ -92,11 +92,11 @@ export default class EndpointGroup {
     }
     this.applied = true
     for (const endpoint of this.endpoints) {
-      this.middlewares.forEach(({ fn, start }) =>
-        endpoint.addMiddleware(fn, { start: start })
+      this.middlewares.forEach(({ fn, first }) =>
+        endpoint.addMiddleware(fn, { first })
       )
-      this.outputMiddlewares.forEach(({ fn, start }) =>
-        endpoint.addOutputMiddleware(fn, { start: start })
+      this.outputMiddlewares.forEach(({ fn, first }) =>
+        endpoint.addOutputMiddleware(fn, { first })
       )
     }
     return this.endpoints

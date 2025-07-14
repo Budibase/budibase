@@ -11,7 +11,7 @@ const group = customEndpointGroups.group({
   middleware: authorized(PermissionType.TABLE, PermissionLevel.READ, {
     schema: true,
   }),
-  start: false,
+  first: false,
 })
 
 group.get(

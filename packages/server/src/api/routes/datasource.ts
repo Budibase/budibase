@@ -9,7 +9,7 @@ const authorizedGroup = customEndpointGroups.group({
     permissions.PermissionType.TABLE,
     permissions.PermissionLevel.READ
   ),
-  start: false,
+  first: false,
 })
 
 builderGroup
