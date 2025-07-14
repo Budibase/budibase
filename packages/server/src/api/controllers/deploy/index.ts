@@ -29,7 +29,7 @@ import {
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { buildPublishFilter } from "./filters"
-import { doInMigrationLock, isAppFullyMigrated } from "../../../appMigrations"
+import { doInMigrationLock } from "../../../appMigrations"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -182,13 +182,6 @@ export const publishApp = async function (
   deployment = await storeDeploymentHistory(deployment)
 
   const appId = context.getAppId()!
-
-  if (!(await isAppFullyMigrated(appId))) {
-    ctx.throw(
-      422,
-      "Cannot perform operation while migrations are in progress. Please wait for migrations to complete."
-    )
-  }
 
   // Wrap the entire publish operation in migration lock to prevent race conditions
   const result = await doInMigrationLock(appId, async () => {
