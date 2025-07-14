@@ -25,8 +25,8 @@
       return ""
     }
     let style = ""
-    style += `--accent-bg-color:${hexToRGBA(color, 0.15)};`
-    style += `--accent-border-color:${hexToRGBA(color, 0.35)};`
+    style += `--accent-bg-color:${hexToRGBA(color, 0.2)};`
+    style += `--accent-border-color:${hexToRGBA(color, 0.2)};`
     return style
   }
 </script>
@@ -75,32 +75,50 @@
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-s);
+    border-radius: 8px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .fullWidth {
     width: 100%;
   }
   .active,
   .active :global(i) {
-    color: var(--spectrum-global-color-blue-600);
+    background-color: rgba(75, 117, 255, 0.1);
+    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .active:hover {
+    background-color: rgba(75, 117, 255, 0.2);
+    border: 0.5px solid rgba(75, 117, 255, 0.3);
   }
   :global([dir="ltr"] .spectrum-ActionButton i) {
     margin-left: 0;
     transition: color ease-out 130ms;
   }
   .is-selected:not(.spectrum-ActionButton--quiet) {
-    background: var(--spectrum-global-color-gray-300);
-    border-color: var(--spectrum-global-color-gray-500);
+    border-color: var(--spectrum-global-color-gray-300);
   }
   .spectrum-ActionButton--quiet {
     padding: 0 8px;
+    border: 1px dashed transparent;
+  }
+  .spectrum-ActionButton--quiet:hover {
+    background-color: var(--spectrum-global-color-gray-200);
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .spectrum-ActionButton--quiet.is-selected {
     color: var(--spectrum-global-color-gray-900);
-    background: var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .noPadding {
     padding: 0;
     min-width: 0;
+  }
+  .noPadding:hover {
+    padding: 0;
+    min-width: 0;
+    background-color: transparent;
+    border: 1px solid transparent;
   }
   .is-selected :global(i) {
     color: var(--spectrum-global-color-gray-900);
@@ -109,7 +127,7 @@
     color: var(--spectrum-global-color-gray-500);
   }
   .spectrum-ActionButton-label {
-    font-weight: 550;
+    font-weight: 600;
   }
   .tooltip {
     position: absolute;

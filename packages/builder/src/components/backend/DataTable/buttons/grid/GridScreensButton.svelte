@@ -39,7 +39,7 @@
   bind:this={popover}
   screens={screenUsage}
   icon="browser"
-  accentColor="#364800"
+  accentColor="#4b75ff"
   showCount
 >
   <svelte:fragment slot="footer">

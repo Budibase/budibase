@@ -299,14 +299,20 @@
     padding: 16px;
     background-color: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--grey-4);
-    border-radius: var(--border-radius-s);
+    border-radius: var(--border-radius-m);
   }
 
   .section-title {
     margin-bottom: var(--spacing-m);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .disabled-title {
-    margin-top: var(--spacing-xl);
+    font-weight: 600;
+    font-size: 16px;
+    margin-top: 32px;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

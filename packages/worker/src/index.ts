@@ -21,6 +21,7 @@ import {
   features,
 } from "@budibase/backend-core"
 import RedisStore from "koa-redis"
+import { loadTemplateConfig } from "./constants/templates"
 
 db.init()
 import koaBody from "koa-body"
@@ -131,6 +132,11 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   await initPro()
   await redis.clients.init()
   features.init()
+
+  if (env.EMAIL_TEMPLATE_PATH) {
+    await loadTemplateConfig(env.EMAIL_TEMPLATE_PATH)
+  }
+
   cache.docWritethrough.init()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues

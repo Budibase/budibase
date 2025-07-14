@@ -1,10 +1,12 @@
 import { FieldType } from "../../documents"
 
 export interface UIFieldValidationRule {
-  type: `${FieldType}`
+  id?: string
+  type: FieldType
   constraint: FieldValidationRuleType
   value?: string | number | string[]
-  error: string
+  valueType?: "Binding" | "Value"
+  error?: string
 }
 
 export type FieldValidationRuleType =

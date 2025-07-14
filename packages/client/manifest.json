@@ -3264,6 +3264,14 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3408,6 +3416,14 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3518,6 +3534,14 @@
       },
       {
         "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3604,6 +3628,14 @@
             "key": "value"
           }
         ]
+      },
+      {
+        "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
       },
       {
         "type": "boolean",

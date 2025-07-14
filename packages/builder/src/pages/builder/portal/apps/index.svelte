@@ -27,6 +27,7 @@
     enrichedApps,
     sortBy,
     featureFlags,
+    backups,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
@@ -39,10 +40,12 @@
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
+  let backupErrors
 
   $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
   $: filteredApps = filterApps($enrichedApps, searchTerm)
   $: automationErrors = getAutomationErrors(filteredApps || [])
+  $: backupErrors = getBackupErrors(filteredApps || [])
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   const filterApps = (apps, searchTerm) => {
@@ -73,10 +76,10 @@
   }
 
   const goToAutomationError = appId => {
-    const params = new URLSearchParams({
-      open: "error",
-    })
-    $goto(`/builder/app/${appId}/settings/automations?${params.toString()}`)
+    const automationId = Object.keys(automationErrors[appId] || {})[0]
+    if (automationId) {
+      $goto(`/builder/app/${appId}/automation/${automationId}`)
+    }
   }
 
   const errorCount = errors => {
@@ -87,6 +90,31 @@
     const app = $enrichedApps.find(app => app.devId === appId)
     const errors = automationErrors[appId]
     return `${app.name} - Automation error (${errorCount(errors)})`
+  }
+
+  const getBackupErrors = apps => {
+    const backupErrors = {}
+    for (const app of apps) {
+      if (app.backupErrors && errorCount(app.backupErrors) > 0) {
+        backupErrors[app.devId] = app.backupErrors
+      }
+    }
+    return backupErrors
+  }
+
+  const goToBackupError = appId => {
+    const backupId = Object.keys(backupErrors[appId] || {})[0]
+    if (backupId) {
+      // For now, just navigate to the app's backup page or show details
+      // Could be enhanced to show specific backup error details
+      $goto(`/builder/app/${appId}/settings/backups`)
+    }
+  }
+
+  const backupErrorMessage = appId => {
+    const app = $enrichedApps.find(app => app.devId === appId)
+    const errors = backupErrors[appId]
+    return `${app.name} - Backup error (${errorCount(errors)})`
   }
 
   const initiateAppCreation = async () => {
@@ -202,10 +230,30 @@
         message={automationErrorMessage(appId)}
       />
     {/each}
+    {#each Object.keys(backupErrors || {}) as appId}
+      <Notification
+        wide
+        dismissable
+        action={() => goToBackupError(appId)}
+        type="error"
+        icon="warning"
+        actionMessage={errorCount(backupErrors[appId]) > 1
+          ? "View errors"
+          : "View error"}
+        on:dismiss={async () => {
+          const backupId = Object.keys(backupErrors[appId] || {})[0]
+          if (backupId) {
+            await backups.clearBackupErrors(appId)
+            await appsStore.load()
+          }
+        }}
+        message={backupErrorMessage(appId)}
+      />
+    {/each}
     <div class="title">
       <div class="welcome">
         <Layout noPadding gap="XS">
-          <Heading size="L">{welcomeHeader}</Heading>
+          <Heading size="M">{welcomeHeader}</Heading>
           <Body size="M">
             {#if $featureFlags.WORKSPACE_APPS}
               Below you'll find the list of workspaces that you have access to
@@ -358,7 +406,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-l);
   }
 
   .empty-wrapper {
