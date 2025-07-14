@@ -382,13 +382,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     let spySyncApp: jest.SpyInstance
 
     beforeEach(() => {
-      spySyncApp = jest
-        .spyOn(sdk.applications, "syncApp")
-        .mockResolvedValue(undefined as any)
-    })
-
-    afterEach(() => {
-      spySyncApp.mockRestore()
+      spySyncApp = jest.spyOn(sdk.applications, "syncApp")
     })
 
     it("should sync dev app after migrating published app", async () => {
@@ -473,14 +467,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       let mockSyncApp: jest.SpyInstance
 
       beforeEach(async () => {
-        mockSyncApp = jest
-          .spyOn(sdk.applications, "syncApp")
-          .mockResolvedValue(undefined as any)
+        mockSyncApp = jest.spyOn(sdk.applications, "syncApp")
         await config.unpublish()
-      })
-
-      afterEach(() => {
-        mockSyncApp.mockRestore()
       })
 
       it("should sync only dev app", async () => {
