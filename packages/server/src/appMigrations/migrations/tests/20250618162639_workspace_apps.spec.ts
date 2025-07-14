@@ -1,6 +1,5 @@
 import tk from "timekeeper"
 import * as setup from "../../../api/routes/tests/utilities"
-import { context } from "@budibase/backend-core"
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20250618162639_workspace_apps"
 import { AppMigration, updateAppMigrationMetadata } from "../.."
@@ -36,8 +35,9 @@ describe.each([
 
         // remove workspace apps to simulate it comes from an older installation
         const workspaceApps = await sdk.workspaceApps.fetch()
-        const db = context.getAppDB()
-        await db.bulkRemove(workspaceApps)
+        for (const workspace of workspaceApps) {
+          await sdk.workspaceApps.remove(workspace._id!, workspace._rev!)
+        }
         expect(await sdk.workspaceApps.fetch()).toBeEmpty()
       })
     }
