@@ -11,7 +11,7 @@ export default class EndpointGroup {
   outputMiddlewares: CtxFn[] = []
   applied = false
   // if locked, can't add anymore middlewares
-  private locked: boolean = false
+  private locked = false
 
   addGroupMiddleware(middleware: CtxFn) {
     if (this.locked) {
