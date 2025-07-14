@@ -2,6 +2,8 @@ import Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
 import { allRoutes } from "./endpointGroups"
 
+// just need to import routes, they'll include themselves in the
+// various groups they need to be included in
 import "./auth"
 import "./layout"
 import "./screen"
