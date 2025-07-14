@@ -70,11 +70,19 @@ export default class EndpointGroup {
   }
 
   apply(router?: Router): Router {
-    if (this.applied) {
-      throw new Error("Already applied to router")
-    }
+    const endpoints = this.endpointList()
     if (!router) {
       router = new Router()
+    }
+    for (const endpoint of endpoints) {
+      endpoint.apply(router)
+    }
+    return router
+  }
+
+  endpointList(): Endpoint[] {
+    if (this.applied) {
+      throw new Error("Already applied to router")
     }
     this.applied = true
     for (const endpoint of this.endpoints) {
@@ -84,8 +92,7 @@ export default class EndpointGroup {
       this.outputMiddlewares.forEach(middleware =>
         endpoint.addOutputMiddleware(middleware)
       )
-      endpoint.apply(router)
     }
-    return router
+    return this.endpoints
   }
 }

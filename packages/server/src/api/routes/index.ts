@@ -46,10 +46,24 @@ export { default as assetRoutes } from "./assets"
 
 const appBackupRoutes = pro.appBackups
 const environmentVariableRoutes = pro.environmentVariables
-const appRoutes = allRoutes().map(group => group.apply())
+const appEndpoints = allRoutes().flatMap(group => group.endpointList())
+// sort endpoints with a URL parameter after the static endpoints
+appEndpoints.sort((a, b) => {
+  const aHasColon = a.url.includes(":")
+  const bHasColon = b.url.includes(":")
+
+  if (aHasColon && !bHasColon) return 1
+  if (!aHasColon && bHasColon) return -1
+  return a.url.localeCompare(b.url)
+})
+
+const appRoutes = new Router()
+for (let endpoint of appEndpoints) {
+  endpoint.apply(appRoutes)
+}
 
 export const mainRoutes: Router[] = [
-  ...appRoutes,
+  appRoutes,
   appBackupRoutes,
   environmentVariableRoutes,
 ]
