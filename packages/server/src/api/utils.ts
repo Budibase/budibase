@@ -1,6 +1,6 @@
-import env from "../../environment"
-import { devClientLibPath } from "../../utilities/fileSystem"
-import { budibaseTempDir } from "../../utilities/budibaseDir"
+import env from "../environment"
+import { devClientLibPath } from "../utilities/fileSystem"
+import { budibaseTempDir } from "../utilities/budibaseDir"
 import Router from "@koa/router"
 
 export function addFileManagement(router: Router) {

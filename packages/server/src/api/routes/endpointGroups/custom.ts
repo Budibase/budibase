@@ -1,4 +1,4 @@
-import { EndpointGroup } from "../../utils"
+import { EndpointGroup } from "@budibase/backend-core"
 
 class CustomEndpointGroups {
   private groups: EndpointGroup[] = []

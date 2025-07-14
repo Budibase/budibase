@@ -1,18 +1,18 @@
 import authorized from "../../../middleware/authorized"
 import { auth, permissions } from "@budibase/backend-core"
+import { customEndpointGroups } from "./custom"
 import { middleware } from "@budibase/pro"
-import { EndpointGroup } from "../../utils"
 
-export const builderGroup = new EndpointGroup()
+export const builderGroup = customEndpointGroups.group()
 builderGroup.addGroupMiddleware(authorized(permissions.BUILDER))
 
-export const creatorGroup = new EndpointGroup()
+export const creatorGroup = customEndpointGroups.group()
 creatorGroup.addGroupMiddleware(authorized(permissions.CREATOR))
 
-export const builderAdminGroup = new EndpointGroup()
+export const builderAdminGroup = customEndpointGroups.group()
 builderAdminGroup.addGroupMiddleware(auth.builderOrAdmin)
 
-export const licensedGroup = new EndpointGroup()
+export const licensedGroup = customEndpointGroups.group()
 licensedGroup.addGroupMiddleware(middleware.licenseAuth)
 
-export const publicGroup = new EndpointGroup()
+export const publicGroup = customEndpointGroups.group()

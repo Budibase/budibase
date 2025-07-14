@@ -9,7 +9,6 @@ import {
 import { automationValidator } from "./utils/validators"
 import { builderGroup, customEndpointGroups } from "./endpointGroups"
 
-builderGroup.addGroupMiddleware(authorized(permissions.BUILDER))
 const authorizedGroup = customEndpointGroups.group()
 authorizedGroup.addGroupMiddleware(
   authorized(
