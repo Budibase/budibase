@@ -62,7 +62,7 @@ describe("/navigation", () => {
       )
     })
 
-    it("should not app navigation app navigation when updating not default workspaces", async () => {
+    it("should not update app navigation app navigation when updating not default workspaces", async () => {
       const { workspaceApp: otherWorkspaceApp } =
         await config.api.workspaceApp.create({
           ...structures.workspaceApps.createRequest(),
