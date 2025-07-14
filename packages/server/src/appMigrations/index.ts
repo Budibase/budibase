@@ -7,6 +7,7 @@ import { db, Header } from "@budibase/backend-core"
 import environment from "../environment"
 
 export * from "./appMigrationMetadata"
+export * from "./migrationLock"
 
 export type AppMigration = {
   id: string
