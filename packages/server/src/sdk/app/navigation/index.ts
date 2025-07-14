@@ -97,10 +97,21 @@ export async function deleteLink(route: string, workspaceAppId: string) {
   }
 }
 
-export async function update(navigation: AppNavigation) {
-  const appMetadata = await sdk.applications.metadata.get()
-  appMetadata.navigation = navigation
+export async function update(
+  workspaceAppId: string,
+  navigation: AppNavigation
+) {
+  const workspaceApp = await sdk.workspaceApps.get(workspaceAppId)
+  if (!workspaceApp) {
+    throw new HTTPError("Workspace app not found", 400)
+  }
+  await sdk.workspaceApps.update({ ...workspaceApp, navigation })
 
-  const db = context.getAppDB()
-  await db.put(appMetadata)
+  if (workspaceApp.isDefault) {
+    const appMetadata = await sdk.applications.metadata.get()
+    appMetadata.navigation = navigation
+
+    const db = context.getAppDB()
+    await db.put(appMetadata)
+  }
 }
