@@ -1,10 +1,15 @@
-import { EndpointGroup } from "@budibase/backend-core"
+import { EndpointGroup, CtxFn } from "@budibase/backend-core"
 
 class CustomEndpointGroups {
   private groups: EndpointGroup[] = []
 
-  group() {
+  group(...middlewares: CtxFn[]) {
     const group = new EndpointGroup()
+    if (middlewares.length) {
+      middlewares.forEach(middleware => {
+        group.addGroupMiddleware(middleware)
+      })
+    }
     this.groups.push(group)
     return group
   }

@@ -3,6 +3,10 @@ import { auth, permissions } from "@budibase/backend-core"
 import { customEndpointGroups } from "./custom"
 import { middleware } from "@budibase/pro"
 
+export const globalBuilderGroup = customEndpointGroups.group()
+globalBuilderGroup.addGroupMiddleware(authorized(permissions.GLOBAL_BUILDER))
+globalBuilderGroup.lockMiddleware()
+
 export const builderGroup = customEndpointGroups.group()
 builderGroup.addGroupMiddleware(authorized(permissions.BUILDER))
 builderGroup.lockMiddleware()

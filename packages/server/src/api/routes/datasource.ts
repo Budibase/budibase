@@ -4,8 +4,7 @@ import { permissions } from "@budibase/backend-core"
 import { datasourceValidator } from "./utils/validators"
 import { builderGroup, customEndpointGroups } from "./endpointGroups"
 
-const authorizedGroup = customEndpointGroups.group()
-authorizedGroup.addGroupMiddleware(
+const authorizedGroup = customEndpointGroups.group(
   authorized(permissions.PermissionType.TABLE, permissions.PermissionLevel.READ)
 )
 

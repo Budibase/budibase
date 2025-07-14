@@ -9,8 +9,7 @@ import {
 import { automationValidator } from "./utils/validators"
 import { builderGroup, customEndpointGroups } from "./endpointGroups"
 
-const authorizedGroup = customEndpointGroups.group()
-authorizedGroup.addGroupMiddleware(
+const authorizedGroup = customEndpointGroups.group(
   authorized(
     permissions.PermissionType.AUTOMATION,
     permissions.PermissionLevel.EXECUTE

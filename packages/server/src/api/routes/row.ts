@@ -1,4 +1,3 @@
-import Router from "@koa/router"
 import * as rowController from "../controllers/row"
 import authorized, { authorizedResource } from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
@@ -7,28 +6,27 @@ import { internalSearchValidator } from "./utils/validators"
 import trimViewRowInfo from "../../middleware/trimViewRowInfo"
 import { validateBody } from "../../middleware/zod-validator"
 import { searchRowRequestValidator } from "@budibase/types"
+import { customEndpointGroups, publicGroup } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const router: Router = new Router()
+const readGroup = customEndpointGroups.group(
+  authorized(PermissionType.TABLE, PermissionLevel.READ)
+)
+const writeGroup = customEndpointGroups.group(
+  authorized(PermissionType.TABLE, PermissionLevel.WRITE)
+)
 
-router
+readGroup
   .get(
     "/api/:sourceId/:rowId/enrich",
     paramSubResource("sourceId", "rowId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.fetchEnrichedRow
   )
-  .get(
-    "/api/:sourceId/rows",
-    paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
-    rowController.fetch
-  )
+  .get("/api/:sourceId/rows", paramResource("sourceId"), rowController.fetch)
   .get(
     "/api/:sourceId/rows/:rowId",
     paramSubResource("sourceId", "rowId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.find
   )
   .post(
@@ -36,7 +34,6 @@ router
     internalSearchValidator(),
     validateBody(searchRowRequestValidator),
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
   // DEPRECATED - this is an old API, but for backwards compat it needs to be
@@ -44,55 +41,48 @@ router
   .post(
     "/api/search/:sourceId/rows",
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
+  .get(
+    "/api/:sourceId/rows/:rowId/attachment/:columnName",
+    paramSubResource("sourceId", "rowId"),
+    rowController.downloadAttachment
+  )
+
+writeGroup
   .post(
     "/api/:sourceId/rows",
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
     rowController.save
   )
   .patch(
     "/api/:sourceId/rows",
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
     rowController.patch
   )
   .post(
     "/api/:sourceId/rows/validate",
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.validate
   )
   .delete(
     "/api/:sourceId/rows",
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
     rowController.destroy
   )
   .post(
     "/api/:sourceId/rows/exportRows",
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.exportRows
   )
-  .get(
-    "/api/:sourceId/rows/:rowId/attachment/:columnName",
-    paramSubResource("sourceId", "rowId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
-    rowController.downloadAttachment
-  )
 
-router.post(
+publicGroup.post(
   "/api/v2/views/:viewId/search",
   internalSearchValidator(),
   validateBody(searchRowRequestValidator),
   authorizedResource(PermissionType.VIEW, PermissionLevel.READ, "viewId"),
   rowController.views.searchView
 )
-
-export default router

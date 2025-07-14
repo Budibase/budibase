@@ -1,47 +1,23 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/user"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
+import { customEndpointGroups } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const router: Router = new Router()
+const readGroup = customEndpointGroups.group(
+  authorized(PermissionType.USER, PermissionLevel.READ)
+)
+const writeGroup = customEndpointGroups.group(
+  authorized(PermissionType.USER, PermissionLevel.WRITE)
+)
 
-router
-  .get(
-    "/api/users/metadata",
-    authorized(PermissionType.USER, PermissionLevel.READ),
-    controller.fetchMetadata
-  )
-  .get(
-    "/api/users/metadata/:id",
-    authorized(PermissionType.USER, PermissionLevel.READ),
-    controller.findMetadata
-  )
-  .put(
-    "/api/users/metadata",
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.updateMetadata
-  )
-  .post(
-    "/api/users/metadata/self",
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.updateSelfMetadata
-  )
-  .delete(
-    "/api/users/metadata/:id",
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.destroyMetadata
-  )
-  .post(
-    "/api/users/flags",
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.setFlag
-  )
-  .get(
-    "/api/users/flags",
-    authorized(PermissionType.USER, PermissionLevel.READ),
-    controller.getFlags
-  )
-
-export default router
+readGroup
+  .get("/api/users/metadata", controller.fetchMetadata)
+  .get("/api/users/metadata/:id", controller.findMetadata)
+  .get("/api/users/flags", controller.getFlags)
+writeGroup
+  .put("/api/users/metadata", controller.updateMetadata)
+  .post("/api/users/metadata/self", controller.updateSelfMetadata)
+  .delete("/api/users/metadata/:id", controller.destroyMetadata)
+  .post("/api/users/flags", controller.setFlag)
