@@ -524,8 +524,13 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
           id: generateMigrationId(),
           func: jest
             .fn()
-            .mockImplementationOnce(() => {})
             .mockImplementationOnce(() => {
+              const db = context.getAppDB()
+              expect(db.name).toBe(config.getProdAppId())
+            })
+            .mockImplementationOnce(() => {
+              const db = context.getAppDB()
+              expect(db.name).toBe(config.getAppId())
               throw new Error("Migration failed")
             }),
         },
@@ -543,6 +548,39 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       // Verify that migration version wasn't updated to the failing migration
       await expectMigrationVersion(initialVersion)
       expect(testMigrations[0].func).toHaveBeenCalledTimes(2)
+    })
+
+    it("should recover if migration function runs on prod but fails in dev", async () => {
+      const testMigrations: AppMigration[] = [
+        {
+          id: generateMigrationId(),
+          func: jest
+            .fn()
+            .mockImplementationOnce(() => {
+              const db = context.getAppDB()
+              expect(db.name).toBe(config.getProdAppId())
+            })
+            .mockImplementationOnce(() => {
+              const db = context.getAppDB()
+              expect(db.name).toBe(config.getAppId())
+              throw new Error("Migration failed")
+            }),
+        },
+      ]
+
+      // Get the initial migration version
+      const initialVersion = MIGRATIONS[MIGRATIONS.length - 1].id
+      await expectMigrationVersion(initialVersion)
+
+      // Run migrations and expect failure
+      await expect(runMigrations(testMigrations)).rejects.toThrow(
+        "Migration failed"
+      )
+
+      await runMigrations(testMigrations)
+
+      await expectMigrationVersion(testMigrations[0].id)
+      expect(testMigrations[0].func).toHaveBeenCalledTimes(4)
     })
 
     it("should allow recovery by rerunning from failing point after error", async () => {
