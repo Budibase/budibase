@@ -1,28 +1,9 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/screen"
-import authorized from "../../middleware/authorized"
-import { permissions } from "@budibase/backend-core"
 import { screenValidator } from "./utils/validators"
+import { builderRoutes } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router
-  .get("/api/screens", authorized(permissions.BUILDER), controller.fetch)
-  .post(
-    "/api/screens",
-    authorized(permissions.BUILDER),
-    screenValidator(),
-    controller.save
-  )
-  .delete(
-    "/api/screens/:screenId/:screenRev",
-    authorized(permissions.BUILDER),
-    controller.destroy
-  )
-  .post(
-    "/api/screens/usage/:sourceId",
-    authorized(permissions.BUILDER),
-    controller.usage
-  )
-
-export default router
+builderRoutes
+  .get("/api/screens", controller.fetch)
+  .post("/api/screens", screenValidator(), controller.save)
+  .delete("/api/screens/:screenId/:screenRev", controller.destroy)
+  .post("/api/screens/usage/:sourceId", controller.usage)
