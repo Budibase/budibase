@@ -1,9 +1,7 @@
 import Endpoint, { CtxFn, Method } from "./Endpoint"
 import Router from "@koa/router"
 
-type ArrayOneOrMore<T> = {
-  0: T
-} & Array<T>
+type ArrayOneOrMore<T> = [T, ...T[]]
 
 export default class EndpointGroup {
   endpoints: Endpoint[] = []
