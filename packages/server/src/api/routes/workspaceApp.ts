@@ -39,6 +39,11 @@ router.get(
   authorized(PermissionType.BUILDER),
   controller.fetch
 )
+router.get(
+  "/api/workspaceApp/:id",
+  authorized(PermissionType.BUILDER),
+  controller.find
+)
 router.post(
   "/api/workspaceApp",
   authorized(PermissionType.BUILDER),
