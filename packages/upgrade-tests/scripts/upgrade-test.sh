@@ -116,37 +116,38 @@ cleanup() {
 
 wait_for_budibase() {
     print_info "Waiting for Budibase to be healthy..."
-    local max_attempts=60
+    local max_attempts=90  # 90 * 2s = 180s timeout
     local attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
-        if check_health; then
+        # Use Docker's built-in health check status
+        local health_status=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "")
+        
+        if [ "$health_status" = "healthy" ]; then
             print_info "Budibase is healthy!"
             return 0
         fi
         
+        # Check if container is still running
+        local container_status=$(docker inspect --format='{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "")
+        if [ "$container_status" != "running" ]; then
+            print_error "Container stopped unexpectedly with status: $container_status"
+            print_error "Container logs:"
+            docker logs --tail 100 "$CONTAINER_NAME"
+            exit 1
+        fi
+        
         attempt=$((attempt + 1))
         if [ $((attempt % 10)) -eq 0 ]; then
-            print_info "Still waiting... ($attempt/$max_attempts)"
+            print_info "Still waiting... ($attempt/$max_attempts) - Health: $health_status"
         fi
         sleep 2
     done
     
     print_error "Budibase failed to become healthy after $max_attempts attempts"
     print_error "Container logs:"
-    docker logs --tail 50 "$CONTAINER_NAME"
+    docker logs --tail 100 "$CONTAINER_NAME"
     exit 1
-}
-
-check_health() {
-    local port
-    port=$(docker port "$CONTAINER_NAME" 80 2>/dev/null | cut -d: -f2 || echo "")
-    
-    if [ -z "$port" ]; then
-        return 1
-    fi
-    
-    curl -sf "http://localhost:$port/api/system/status" >/dev/null 2>&1
 }
 
 # --- App Import Functions ---
@@ -332,6 +333,13 @@ cmd_full_upgrade() {
     # Clean up any existing containers
     cleanup
     
+    # Clean up any previous upgrade context
+    local context_file="$SCRIPT_DIR/../.upgrade-context.json"
+    if [ -f "$context_file" ]; then
+        print_info "Removing previous upgrade context file..."
+        rm -f "$context_file"
+    fi
+    
     # Create volume
     print_info "Creating Docker volume..."
     docker volume create "$VOLUME_NAME"
@@ -399,7 +407,8 @@ cmd_full_upgrade() {
     if [ "$TO_VERSION" = "current" ]; then
         print_info "Building current version..."
         cd "$PROJECT_ROOT"
-        docker build -f hosting/single/Dockerfile -t budibase:current .
+        docker build -f hosting/single/Dockerfile -t budibase:current \
+            --build-arg BUDIBASE_VERSION="0.0.0+local" --build-arg TARGETBUILD=single .
         cd - >/dev/null
         
         docker run -d \

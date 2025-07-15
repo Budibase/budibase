@@ -22,7 +22,6 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@budibase/types": "*",
-    "axios": "^1.6.2",
     "form-data": "^4.0.0",
     "semver": "^7.5.4",
     "uuid": "^9.0.1"

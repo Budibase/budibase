@@ -1,4 +1,3 @@
-import { AxiosError } from "axios"
 import { DockerLogEntry, parseStructuredLogs } from "./dockerLogs"
 
 export interface BudibaseErrorDetails {
@@ -23,14 +22,13 @@ export class BudibaseError extends Error {
     this.details = details
   }
 
-  static async fromAxiosError(error: AxiosError): Promise<BudibaseError> {
-    const config = error.config!
-    const response = error.response
-
-    const correlationId = config.headers?.["x-budibase-correlation-id"]
-    if (!correlationId) {
-      throw new Error("Correlation ID is required for BudibaseError")
-    }
+  static async fromFetchResponse(
+    response: Response,
+    responseBody: any,
+    requestInfo: { method: string; url: string; correlationId: string },
+    customMessage?: string
+  ): Promise<BudibaseError> {
+    const { method, url, correlationId } = requestInfo
 
     let parsedLogs: DockerLogEntry[] | undefined
 
@@ -43,17 +41,16 @@ export class BudibaseError extends Error {
 
     const details: BudibaseErrorDetails = {
       correlationId,
-      method: config.method?.toUpperCase() || "UNKNOWN",
-      url: config.url || "unknown",
-      statusCode: response?.status || 0,
-      statusText: response?.statusText || "Unknown Error",
-      responseBody: response?.data || null,
-      requestHeaders: config.headers || {},
-      requestData: config.data,
+      method: method.toUpperCase(),
+      url,
+      statusCode: response.status,
+      statusText: response.statusText || "Unknown Error",
+      responseBody,
+      requestHeaders: {}, // Note: fetch doesn't expose request headers easily
       parsedLogs,
     }
 
-    const message = BudibaseError.formatErrorMessage(details)
+    const message = customMessage || BudibaseError.formatErrorMessage(details)
     return new BudibaseError(message, details)
   }
 

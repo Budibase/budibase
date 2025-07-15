@@ -16,8 +16,11 @@ class UpgradeContextImpl implements UpgradeContext {
     this.save()
   }
 
-  get<T extends JSONValue = JSONValue>(key: string): T | undefined {
-    return this.data[key] as T | undefined
+  get<T extends JSONValue = JSONValue>(key: string): T {
+    if (!Object.prototype.hasOwnProperty.call(this.data, key)) {
+      throw new Error(`Key "${key}" not found in upgrade context`)
+    }
+    return this.data[key] as T
   }
 
   clear(): void {

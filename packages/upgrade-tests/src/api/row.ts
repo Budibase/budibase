@@ -6,7 +6,7 @@ export class RowAPI {
 
   async fetch(tableId: string, limit = 1000): Promise<Row[]> {
     const response = await this.client.get(`/api/${tableId}/rows`, {
-      params: { limit }
+      query: { limit: limit.toString() }
     })
     return response.data
   }

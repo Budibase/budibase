@@ -1,4 +1,3 @@
-import axios, { Axios, AxiosRequestConfig, AxiosResponse } from "axios"
 import { ApplicationAPI } from "./application"
 import { TableAPI } from "./table"
 import { RowAPI } from "./row"
@@ -13,7 +12,15 @@ export interface AuthCredentials {
   password: string
 }
 
-export class BudibaseClient extends Axios {
+export interface ClientConfig {
+  baseURL: string
+  headers?: Record<string, string>
+  timeout?: number
+}
+
+export class BudibaseClient {
+  private config: ClientConfig
+
   application: ApplicationAPI
   table: TableAPI
   row: RowAPI
@@ -21,7 +28,7 @@ export class BudibaseClient extends Axios {
   query: QueryAPI
   view: ViewAPI
 
-  constructor(config?: AxiosRequestConfig) {
+  constructor(config?: ClientConfig) {
     // Set up default config if not provided
     if (!config) {
       const url = process.env.BUDIBASE_URL
@@ -47,25 +54,10 @@ export class BudibaseClient extends Axios {
           "x-budibase-app-id": appId,
           "Content-Type": "application/json",
         },
-        // Add default axios transformations for JSON parsing
-        transformResponse: [
-          (data: any) => {
-            // Attempt to parse JSON responses
-            if (typeof data === 'string') {
-              try {
-                return JSON.parse(data)
-              } catch (e) {
-                return data
-              }
-            }
-            return data
-          }
-        ],
       }
     }
 
-    // Call parent constructor
-    super(config)
+    this.config = config
 
     // Initialize API classes with this client
     this.application = new ApplicationAPI(this)
@@ -76,24 +68,170 @@ export class BudibaseClient extends Axios {
     this.view = new ViewAPI(this)
   }
 
-  // Override the request method to add our custom error handling
-  async request<T = any, R = AxiosResponse<T>, D = any>(
-    config: AxiosRequestConfig<D>
-  ): Promise<R> {
-    const correlationId = uuidv4()
-    if (!config.headers) {
-      config.headers = {}
+  private async request<T = any>(
+    method: string,
+    path: string,
+    options?: {
+      body?: any
+      headers?: Record<string, string>
+      query?: Record<string, string>
     }
-    config.headers["x-budibase-correlation-id"] = correlationId
+  ): Promise<{ data: T; headers: Headers; status: number }> {
+    const correlationId = uuidv4()
+
+    // Build URL with query parameters
+    let url = `${this.config.baseURL}${path}`
+    if (options?.query) {
+      const params = new URLSearchParams(options.query)
+      url += `?${params.toString()}`
+    }
+
+    // Prepare headers
+    const headers: Record<string, string> = {
+      ...this.config.headers,
+      ...options?.headers,
+      "x-budibase-correlation-id": correlationId,
+    }
+
+    // Prepare request options
+    const fetchOptions: RequestInit = {
+      method,
+      headers,
+      signal: AbortSignal.timeout(this.config.timeout || 30000),
+    }
+
+    // Add body if present
+    if (options?.body) {
+      if (options.body instanceof FormData) {
+        fetchOptions.body = options.body
+        // Remove Content-Type to let fetch set it with boundary
+        delete headers["Content-Type"]
+      } else {
+        fetchOptions.body = JSON.stringify(options.body)
+      }
+    }
 
     try {
-      return await super.request<T, R, D>(config)
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw await BudibaseError.fromAxiosError(error)
+      const response = await fetch(url, fetchOptions)
+      const contentType = response.headers.get("content-type") || ""
+
+      // Read response body
+      const text = await response.text()
+      let data: any = text
+
+      // Parse JSON if content type indicates it
+      if (contentType.includes("application/json") && text) {
+        try {
+          data = JSON.parse(text)
+        } catch (e) {
+          // If parsing fails, keep as text
+        }
       }
-      throw error
+
+      // Check for error responses
+      if (!response.ok) {
+        const error = await BudibaseError.fromFetchResponse(response, data, {
+          method,
+          url,
+          correlationId,
+        })
+        throw error
+      }
+
+      // Check if we got HTML when we shouldn't
+      if (
+        contentType.includes("text/html") &&
+        !headers.Accept?.includes("text/html")
+      ) {
+        const error = await BudibaseError.fromFetchResponse(
+          response,
+          data,
+          { method, url, correlationId },
+          "Received HTML error page instead of expected response"
+        )
+        throw error
+      }
+
+      return {
+        data,
+        headers: response.headers,
+        status: response.status,
+      }
+    } catch (error: any) {
+      // Handle timeout
+      if (error.name === "AbortError") {
+        throw new BudibaseError(
+          `Request timeout after ${this.config.timeout}ms`,
+          {
+            correlationId,
+            method,
+            url,
+            statusCode: 0,
+            statusText: "Timeout",
+            responseBody: null,
+            requestHeaders: headers,
+          }
+        )
+      }
+
+      // Re-throw if already a BudibaseError
+      if (error instanceof BudibaseError) {
+        throw error
+      }
+
+      // Wrap other errors
+      throw new BudibaseError(`Request failed: ${error.message}`, {
+        correlationId,
+        method,
+        url,
+        statusCode: 0,
+        statusText: error.message,
+        responseBody: null,
+        requestHeaders: headers,
+      })
     }
+  }
+
+  // HTTP method helpers
+  async get<T = any>(
+    path: string,
+    options?: {
+      headers?: Record<string, string>
+      query?: Record<string, string>
+    }
+  ) {
+    return this.request<T>("GET", path, options)
+  }
+
+  async post<T = any>(
+    path: string,
+    body?: any,
+    options?: { headers?: Record<string, string> }
+  ) {
+    return this.request<T>("POST", path, { body, ...options })
+  }
+
+  async put<T = any>(
+    path: string,
+    body?: any,
+    options?: { headers?: Record<string, string> }
+  ) {
+    return this.request<T>("PUT", path, { body, ...options })
+  }
+
+  async delete<T = any>(
+    path: string,
+    options?: { headers?: Record<string, string> }
+  ) {
+    return this.request<T>("DELETE", path, options)
+  }
+
+  async patch<T = any>(
+    path: string,
+    body?: any,
+    options?: { headers?: Record<string, string> }
+  ) {
+    return this.request<T>("PATCH", path, { body, ...options })
   }
 
   static async authenticated(
@@ -108,15 +246,6 @@ export class BudibaseClient extends Axios {
     if (!appId) {
       throw new Error("TEST_APP_ID environment variable is required")
     }
-
-    // Create a base client for authentication
-    const baseClient = axios.create({
-      baseURL: url,
-      timeout: 30000,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
 
     // Use provided credentials or BB_ADMIN environment variables
     let creds: AuthCredentials
@@ -141,23 +270,35 @@ export class BudibaseClient extends Axios {
     }
 
     try {
+      // Create a temporary client for authentication
+      const tempClient = new BudibaseClient({
+        baseURL: url,
+        timeout: 30000,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
       // Authenticate and get token
-      // When MULTI_TENANCY=0, tenant ID is "default"
-      const response = await baseClient.post("/api/global/auth/default/login", {
+      const response = await tempClient.post("/api/global/auth/default/login", {
         username: creds.email,
         password: creds.password,
       })
 
       // Try to get token from response header first (older versions)
-      let token = response.headers['x-budibase-token'] || response.headers['token']
-      
+      let token =
+        response.headers.get("x-budibase-token") ||
+        response.headers.get("token")
+
       // If not in headers, check response body
       if (!token) {
         token = response.data.token
       }
-      
+
       if (!token) {
-        throw new Error("No token received from authentication (checked headers and body)")
+        throw new Error(
+          "No token received from authentication (checked headers and body)"
+        )
       }
 
       // Create authenticated client with token
@@ -170,23 +311,9 @@ export class BudibaseClient extends Axios {
           "x-budibase-app-id": appId,
           "Content-Type": "application/json",
         },
-        // Add default axios transformations for JSON parsing
-        transformResponse: [
-          (data: any) => {
-            // Attempt to parse JSON responses
-            if (typeof data === 'string') {
-              try {
-                return JSON.parse(data)
-              } catch (e) {
-                return data
-              }
-            }
-            return data
-          }
-        ],
       })
     } catch (error: any) {
-      console.error("Authentication failed:", error.response?.data || error.message)
+      console.error("Authentication failed:", error.message)
       throw error
     }
   }

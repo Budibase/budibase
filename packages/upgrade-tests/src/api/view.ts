@@ -8,7 +8,7 @@ export class ViewAPI {
     this.tableAPI = new TableAPI(client)
   }
 
-  async fetch(tableId: string): Promise<any[]> {
+  async fetch(tableId: string) {
     const table = await this.tableAPI.get(tableId)
     return Object.values(table.views || {})
   }
