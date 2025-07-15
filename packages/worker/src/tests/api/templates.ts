@@ -22,4 +22,16 @@ export class TemplatesAPI extends TestAPI {
       .set(opts?.headers ? opts.headers : this.config.defaultHeaders())
       .expect(opts?.status ? opts.status : 200)
   }
+
+  exportTemplates = (
+    req?: { type?: string; data?: any },
+    opts?: TestAPIOpts
+  ) => {
+    const { type = "email", data } = req || {}
+    return this.request
+      .post(`/api/global/template/${type}/export`)
+      .send(data)
+      .set(opts?.headers ? opts.headers : this.config.defaultHeaders())
+      .expect(opts?.status ? opts.status : 200)
+  }
 }

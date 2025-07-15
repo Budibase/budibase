@@ -416,7 +416,11 @@ export async function coreOutputProcessing(
     } else if (column.type === FieldType.DATETIME && column.dateOnly) {
       for (const row of rows) {
         if (typeof row[property] === "string") {
-          row[property] = new Date(row[property])
+          const dateStr = row[property]
+          row[property] = new Date(dateStr + "Z")
+          if (isNaN(row[property].getTime())) {
+            row[property] = new Date(dateStr)
+          }
         }
         if (row[property] instanceof Date) {
           row[property] = row[property].toISOString().slice(0, 10)
@@ -425,7 +429,11 @@ export async function coreOutputProcessing(
     } else if (column.type === FieldType.DATETIME && column.ignoreTimezones) {
       for (const row of rows) {
         if (typeof row[property] === "string") {
-          row[property] = new Date(row[property])
+          const dateStr = row[property]
+          row[property] = new Date(dateStr + "Z")
+          if (isNaN(row[property].getTime())) {
+            row[property] = new Date(dateStr)
+          }
         }
         if (row[property] instanceof Date) {
           row[property] = row[property].toISOString().replace("Z", "")

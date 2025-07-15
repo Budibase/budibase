@@ -41,7 +41,7 @@
     "bcrypt": "5.1.0",
     "bcryptjs": "2.4.3",
     "bull": "4.10.1",
-    "dd-trace": "5.47.0",
+    "dd-trace": "5.56.0",
     "dotenv": "8.6.0",
     "email-validator": "^2.0.4",
     "global-agent": "3.0.0",
@@ -68,7 +68,8 @@
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
     "server-destroy": "1.0.1",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@jest/types": "^29.6.3",

@@ -30,7 +30,6 @@
     "@adobe/spectrum-css-workflow-icons": "1.2.1",
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
-    "@phosphor-icons/web": "^2.1.2",
     "@spectrum-css/accordion": "3.0.24",
     "@spectrum-css/actionbutton": "1.0.1",
     "@spectrum-css/actiongroup": "1.0.1",
