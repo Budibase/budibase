@@ -147,7 +147,7 @@
             {#each groupEntries as [key, group], idx}
               {#if key !== "none"}
                 <div class="group-title">
-                  {key.toUpperCase()}
+                  {key}
                 </div>
               {/if}
               {#each group || [] as route}
@@ -158,7 +158,7 @@
                   <NavItem
                     icon={typeof route?.icon === "string" ? route?.icon : null}
                     iconColor={route.color ||
-                      "var(--spectrum-global-color-gray-900)"}
+                      "var(--spectrum-global-color-gray-800)"}
                     text={route.section || ""}
                     on:click={() => navItemClick(route)}
                     selected={route.section === matchedRoute?.entry?.section}
@@ -228,6 +228,7 @@
 
   .root-nav :global(.nav-item-body) {
     color: var(--routeColour);
+    font-size: 14px;
   }
 
   .group-divider {
@@ -236,7 +237,7 @@
 
   .group-title {
     padding: var(--spacing-s) calc(var(--spacing-l) + 4px);
-    font-size: 0.8em;
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .setting-page {
@@ -254,9 +255,9 @@
   }
 
   .spectrum-Dialog.spectrum-Dialog--extraLarge {
-    width: 1035px;
-    min-height: 620px;
-    height: 620px;
+    width: 1150px;
+    min-height: 720px;
+    height: 720px;
   }
 
   .spectrum-Dialog-content {

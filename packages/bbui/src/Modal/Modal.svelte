@@ -1,3 +1,12 @@
+<script lang="ts" context="module">
+  export interface ModalAPI {
+    show: () => void
+    hide: () => void
+    toggle: () => void
+    cancel: (_: ModalCancelFrom) => void
+  }
+</script>
+
 <script lang="ts">
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
@@ -168,7 +177,6 @@
     left: 0;
     height: 100vh;
     width: 100vw;
-    opacity: 0.65;
     pointer-events: none;
   }
 
