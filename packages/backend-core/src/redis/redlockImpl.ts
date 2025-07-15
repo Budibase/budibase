@@ -113,6 +113,10 @@ export async function doWithLock<T>(
 export async function doWithLock<T>(
   opts: LockOptions,
   task: () => Promise<T>
+): Promise<RedlockExecution<T> | SuccessfulRedlockExecution<T>>
+export async function doWithLock<T>(
+  opts: LockOptions,
+  task: () => Promise<T>
 ): Promise<RedlockExecution<T>> {
   const redlock = await getClient(opts.type, opts.customOptions)
   let lock: Redlock.Lock | undefined
