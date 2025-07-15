@@ -1,5 +1,5 @@
 import { middleware } from "@budibase/backend-core"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
 import * as controller from "../controllers/workspaceApp"
 import Joi from "joi"
@@ -30,7 +30,7 @@ function workspaceAppValidator(
   return middleware.joiValidator.body(schema, { allowUnknown: false })
 }
 
-builderGroup
+builderRoutes
   .get("/api/workspaceApp", controller.fetch)
   .get("/api/workspaceApp/:id", controller.find)
   .post(

@@ -7,9 +7,9 @@ import {
   AppType,
 } from "../../middleware/appInfo"
 import { automationValidator } from "./utils/validators"
-import { builderGroup, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, customEndpointGroups } from "./endpointGroups"
 
-const authorizedGroup = customEndpointGroups.group({
+const authorizedRoutes = customEndpointGroups.group({
   middleware: authorized(
     permissions.PermissionType.AUTOMATION,
     permissions.PermissionLevel.EXECUTE
@@ -17,7 +17,7 @@ const authorizedGroup = customEndpointGroups.group({
   first: false,
 })
 
-builderGroup
+builderRoutes
   .get("/api/automations/trigger/list", controller.getTriggerList)
   .get("/api/automations/action/list", controller.getActionList)
   .get("/api/automations/definitions/list", controller.getDefinitionList)
@@ -34,7 +34,7 @@ builderGroup
   .delete("/api/automations/logs", controller.clearLogError)
   .delete("/api/automations/:id/:rev", paramResource("id"), controller.destroy)
 
-authorizedGroup
+authorizedRoutes
   .post("/api/automations/:id/trigger", paramResource("id"), controller.trigger)
   .post(
     "/api/automations/:id/test",

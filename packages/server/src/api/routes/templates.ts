@@ -1,6 +1,6 @@
 import * as controller from "../controllers/templates"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup
+builderRoutes
   .get("/api/templates", controller.fetch)
   .get("/api/templates/:type/:name", controller.downloadTemplate)

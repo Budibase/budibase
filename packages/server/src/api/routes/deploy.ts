@@ -1,7 +1,7 @@
 import * as controller from "../controllers/deploy"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup
+builderRoutes
   .get("/api/deployments", controller.fetchDeployments)
   .get("/api/deploy/status", controller.publishStatus)
   .get("/api/deploy/:deploymentId", controller.deploymentProgress)

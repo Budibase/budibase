@@ -1,4 +1,4 @@
 import * as controller from "../controllers/debug"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup.get("/api/debug/diagnostics", controller.systemDebugInfo)
+builderRoutes.get("/api/debug/diagnostics", controller.systemDebugInfo)

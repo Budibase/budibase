@@ -1,6 +1,6 @@
 import * as controller from "../controllers/layout"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup
+builderRoutes
   .post("/api/layouts", controller.save)
   .delete("/api/layouts/:layoutId/:layoutRev", controller.destroy)

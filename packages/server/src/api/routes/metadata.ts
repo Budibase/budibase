@@ -7,12 +7,12 @@ import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { customEndpointGroups } from "./endpointGroups"
 
-const group = customEndpointGroups.group(
+const routes = customEndpointGroups.group(
   authorized(permissions.BUILDER),
   appInfoMiddleware({ appType: AppType.DEV })
 )
 
-group
+routes
   .post("/api/metadata/:type/:entityId", controller.saveMetadata)
   .delete("/api/metadata/:type/:entityId", controller.deleteMetadata)
   .get("/api/metadata/type", controller.getTypes)

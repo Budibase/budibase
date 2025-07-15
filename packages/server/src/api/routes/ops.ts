@@ -1,6 +1,6 @@
 import * as controller from "../controllers/ops"
 import { middleware } from "@budibase/backend-core"
-import { publicGroup } from "./endpointGroups"
+import { publicRoutes } from "./endpointGroups"
 import Joi from "joi"
 
 export function logsValidator() {
@@ -20,7 +20,7 @@ export function errorValidator() {
   )
 }
 
-publicGroup
+publicRoutes
   .post("/api/ops/log", logsValidator(), controller.log)
   .post("/api/ops/error", errorValidator(), controller.error)
   .post("/api/ops/alert", errorValidator(), controller.alert)

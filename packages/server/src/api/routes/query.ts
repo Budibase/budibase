@@ -10,20 +10,20 @@ import {
   generateQueryValidation,
   generateQueryPreviewValidation,
 } from "../controllers/query/validation"
-import { builderGroup, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, customEndpointGroups } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readGroup = customEndpointGroups.group({
+const readRoutes = customEndpointGroups.group({
   middleware: authorized(PermissionType.QUERY, PermissionLevel.READ),
   first: false,
 })
-const writeGroup = customEndpointGroups.group({
+const writeRoutes = customEndpointGroups.group({
   middleware: authorized(PermissionType.QUERY, PermissionLevel.WRITE),
   first: false,
 })
 
-builderGroup
+builderRoutes
   .get("/api/queries", queryController.fetch)
   .post(
     "/api/queries",
@@ -44,7 +44,7 @@ builderGroup
     queryController.destroy
   )
 
-writeGroup
+writeRoutes
   // DEPRECATED - use new query endpoint for future work
   .post(
     "/api/queries/:queryId",
@@ -57,7 +57,7 @@ writeGroup
     queryController.executeV2
   )
 
-readGroup.get(
+readRoutes.get(
   "/api/queries/:queryId",
   paramResource("queryId"),
   queryController.find

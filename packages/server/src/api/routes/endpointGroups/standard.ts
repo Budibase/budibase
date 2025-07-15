@@ -2,23 +2,25 @@ import authorized from "../../../middleware/authorized"
 import { auth, permissions } from "@budibase/backend-core"
 import { customEndpointGroups } from "./custom"
 
-export const globalBuilderGroup = customEndpointGroups.group(
+export const globalBuilderRoutes = customEndpointGroups.group(
   authorized(permissions.GLOBAL_BUILDER)
 )
-globalBuilderGroup.lockMiddleware()
+globalBuilderRoutes.lockMiddleware()
 
-export const builderGroup = customEndpointGroups.group(
+export const builderRoutes = customEndpointGroups.group(
   authorized(permissions.BUILDER)
 )
-builderGroup.lockMiddleware()
+builderRoutes.lockMiddleware()
 
-export const creatorGroup = customEndpointGroups.group(
+export const creatorRoutes = customEndpointGroups.group(
   authorized(permissions.CREATOR)
 )
-creatorGroup.lockMiddleware()
+creatorRoutes.lockMiddleware()
 
-export const builderAdminGroup = customEndpointGroups.group(auth.builderOrAdmin)
-builderAdminGroup.lockMiddleware()
+export const builderAdminRoutes = customEndpointGroups.group(
+  auth.builderOrAdmin
+)
+builderAdminRoutes.lockMiddleware()
 
-export const publicGroup = customEndpointGroups.group()
-publicGroup.lockMiddleware()
+export const publicRoutes = customEndpointGroups.group()
+publicRoutes.lockMiddleware()

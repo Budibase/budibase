@@ -1,4 +1,4 @@
 import * as controller from "../controllers/auth"
-import { publicGroup } from "./endpointGroups"
+import { publicRoutes } from "./endpointGroups"
 
-publicGroup.get("/api/self", controller.fetchSelf)
+publicRoutes.get("/api/self", controller.fetchSelf)

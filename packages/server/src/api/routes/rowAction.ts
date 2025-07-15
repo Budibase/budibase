@@ -2,7 +2,7 @@ import Joi from "joi"
 import { middleware } from "@budibase/backend-core"
 import * as rowActionController from "../controllers/rowAction"
 import { triggerRowActionAuthorised } from "../../middleware/triggerRowActionAuthorised"
-import { builderGroup, publicGroup } from "./endpointGroups"
+import { builderRoutes, publicRoutes } from "./endpointGroups"
 
 function rowActionValidator() {
   return middleware.joiValidator.body(
@@ -23,7 +23,7 @@ function rowTriggerValidator() {
 }
 
 // CRUD endpoints
-builderGroup
+builderRoutes
   .get("/api/tables/:tableId/actions", rowActionController.find)
   .post(
     "/api/tables/:tableId/actions",
@@ -49,7 +49,7 @@ builderGroup
   )
 
 // Other endpoints
-publicGroup.post(
+publicRoutes.post(
   "/api/tables/:sourceId/actions/:actionId/trigger",
   rowTriggerValidator(),
   triggerRowActionAuthorised("sourceId", "actionId"),

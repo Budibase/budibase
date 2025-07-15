@@ -3,9 +3,9 @@ import * as rowController from "../controllers/row"
 import authorized, { authorizedResource } from "../../middleware/authorized"
 import { paramResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
-import { builderGroup, publicGroup } from "./endpointGroups"
+import { builderRoutes, publicRoutes } from "./endpointGroups"
 
-publicGroup
+publicRoutes
   .get(
     "/api/v2/views/:viewId",
     authorizedResource(
@@ -25,7 +25,7 @@ publicGroup
     rowController.fetchLegacyView
   )
 
-builderGroup
+builderRoutes
   .get("/api/v2/views", viewController.v2.fetch)
   .post("/api/v2/views", viewController.v2.create)
   .put(`/api/v2/views/:viewId`, viewController.v2.update)

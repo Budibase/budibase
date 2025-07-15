@@ -2,9 +2,9 @@ import * as datasourceController from "../controllers/datasource"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { datasourceValidator } from "./utils/validators"
-import { builderGroup, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, customEndpointGroups } from "./endpointGroups"
 
-const authorizedGroup = customEndpointGroups.group({
+const authorizedRoutes = customEndpointGroups.group({
   middleware: authorized(
     permissions.PermissionType.TABLE,
     permissions.PermissionLevel.READ
@@ -12,7 +12,7 @@ const authorizedGroup = customEndpointGroups.group({
   first: false,
 })
 
-builderGroup
+builderRoutes
   .get("/api/datasources", datasourceController.fetch)
   .post("/api/datasources/verify", datasourceController.verify)
   .post("/api/datasources/info", datasourceController.information)
@@ -27,6 +27,6 @@ builderGroup
     datasourceController.getExternalSchema
   )
 
-authorizedGroup
+authorizedRoutes
   .get("/api/datasources/:datasourceId", datasourceController.find)
   .put("/api/datasources/:datasourceId", datasourceController.update)

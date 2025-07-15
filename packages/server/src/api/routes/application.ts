@@ -2,9 +2,9 @@ import * as controller from "../controllers/application"
 import * as deploymentController from "../controllers/deploy"
 import { applicationValidator } from "./utils/validators"
 import { skipMigrationRedirect } from "../../middleware/appMigrations"
-import { builderGroup, creatorGroup, publicGroup } from "./endpointGroups"
+import { builderRoutes, creatorRoutes, publicRoutes } from "./endpointGroups"
 
-builderGroup
+builderRoutes
   .post("/api/applications/:appId/sync", controller.sync)
   .put(
     "/api/applications/:appId",
@@ -20,14 +20,14 @@ builderGroup
   .post("/api/applications/:appId/duplicate", controller.duplicateApp)
   .post("/api/applications/:appId/import", controller.importToApp)
 
-creatorGroup.post(
+creatorRoutes.post(
   "/api/applications",
   applicationValidator(),
   controller.create
 )
 
 // Client only endpoints
-publicGroup
+publicRoutes
   .get("/api/client/applications", controller.fetchClientApps)
   .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
   .get("/api/applications", controller.fetch)

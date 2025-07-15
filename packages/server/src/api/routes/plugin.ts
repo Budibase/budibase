@@ -1,7 +1,7 @@
 import * as controller from "../controllers/plugin"
-import { globalBuilderGroup } from "./endpointGroups"
+import { globalBuilderRoutes } from "./endpointGroups"
 
-globalBuilderGroup
+globalBuilderRoutes
   .post("/api/plugin/upload", controller.upload)
   .post("/api/plugin", controller.create)
   .get("/api/plugin", controller.fetch)

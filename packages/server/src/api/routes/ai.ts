@@ -5,11 +5,11 @@ import {
   updateToolSourceValidator,
 } from "./utils/validators/agent"
 import { middleware } from "@budibase/pro"
-import { builderAdminGroup, customEndpointGroups } from "./endpointGroups"
+import { builderAdminRoutes, customEndpointGroups } from "./endpointGroups"
 
-export const licensedGroup = customEndpointGroups.group(middleware.licenseAuth)
+export const licensedRoutes = customEndpointGroups.group(middleware.licenseAuth)
 
-builderAdminGroup
+builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
   .post("/api/agent/chat", chatAgentValidator(), ai.agentChat)
   .post("/api/agent/chat", ai.agentChat)
@@ -37,6 +37,6 @@ builderAdminGroup
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 
-licensedGroup
+licensedRoutes
   .post("/api/ai/chat", ai.chatCompletion)
   .post("/api/ai/upload-file", ai.uploadFile)

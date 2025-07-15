@@ -1,8 +1,8 @@
 import * as controller from "../controllers/permission"
 import { permissionValidator } from "./utils/validators"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup
+builderRoutes
   .get("/api/permission/builtin", controller.fetchBuiltin)
   .get("/api/permission/levels", controller.fetchLevels)
   .get("/api/permission", controller.fetch)

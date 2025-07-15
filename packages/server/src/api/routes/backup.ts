@@ -1,8 +1,8 @@
 import * as controller from "../controllers/backup"
 import ensureTenantAppOwnership from "../../middleware/ensureTenantAppOwnership"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup
+builderRoutes
   .post(
     "/api/backups/export",
     ensureTenantAppOwnership,

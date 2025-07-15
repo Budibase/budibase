@@ -1,6 +1,6 @@
 import * as controller from "../controllers/apikeys"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup
+builderRoutes
   .get("/api/keys", controller.fetch)
   .put("/api/keys/:key", controller.update)

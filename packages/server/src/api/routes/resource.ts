@@ -1,4 +1,4 @@
 import * as controller from "../controllers/resource"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup.post("/api/resources/usage", controller.searchForResourceUsage)
+builderRoutes.post("/api/resources/usage", controller.searchForResourceUsage)

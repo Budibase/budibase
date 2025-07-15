@@ -1,7 +1,7 @@
 import * as migrationsController from "../controllers/migrations"
-import { publicGroup } from "./endpointGroups"
+import { publicRoutes } from "./endpointGroups"
 
-publicGroup.get(
+publicRoutes.get(
   "/api/migrations/status",
   migrationsController.getMigrationStatus
 )

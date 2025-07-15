@@ -1,5 +1,5 @@
 import * as controller from "../controllers/navigation"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
 // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
-builderGroup.put("/api/navigation/:workspaceAppId", controller.update)
+builderRoutes.put("/api/navigation/:workspaceAppId", controller.update)

@@ -6,20 +6,20 @@ import { internalSearchValidator } from "./utils/validators"
 import trimViewRowInfo from "../../middleware/trimViewRowInfo"
 import { validateBody } from "../../middleware/zod-validator"
 import { searchRowRequestValidator } from "@budibase/types"
-import { customEndpointGroups, publicGroup } from "./endpointGroups"
+import { customEndpointGroups, publicRoutes } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readGroup = customEndpointGroups.group({
+const readRoutes = customEndpointGroups.group({
   middleware: authorized(PermissionType.TABLE, PermissionLevel.READ),
   first: false,
 })
-const writeGroup = customEndpointGroups.group({
+const writeRoutes = customEndpointGroups.group({
   middleware: authorized(PermissionType.TABLE, PermissionLevel.WRITE),
   first: false,
 })
 
-readGroup
+readRoutes
   .get(
     "/api/:sourceId/:rowId/enrich",
     paramSubResource("sourceId", "rowId"),
@@ -51,7 +51,7 @@ readGroup
     rowController.downloadAttachment
   )
 
-writeGroup
+writeRoutes
   .post(
     "/api/:sourceId/rows",
     paramResource("sourceId"),
@@ -81,7 +81,7 @@ writeGroup
     rowController.exportRows
   )
 
-publicGroup.post(
+publicRoutes.post(
   "/api/v2/views/:viewId/search",
   internalSearchValidator(),
   validateBody(searchRowRequestValidator),

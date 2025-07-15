@@ -1,8 +1,8 @@
 import * as controller from "../controllers/screen"
 import { screenValidator } from "./utils/validators"
-import { builderGroup } from "./endpointGroups"
+import { builderRoutes } from "./endpointGroups"
 
-builderGroup
+builderRoutes
   .get("/api/screens", controller.fetch)
   .post("/api/screens", screenValidator(), controller.save)
   .delete("/api/screens/:screenId/:screenRev", controller.destroy)

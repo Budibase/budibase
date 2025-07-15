@@ -3,24 +3,24 @@ import authorized from "../../middleware/authorized"
 import { paramResource, bodyResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { tableValidator } from "./utils/validators"
-import { builderGroup, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, customEndpointGroups } from "./endpointGroups"
 
 const { PermissionLevel, PermissionType } = permissions
 
-const group = customEndpointGroups.group({
+const routes = customEndpointGroups.group({
   middleware: authorized(PermissionType.TABLE, PermissionLevel.READ, {
     schema: true,
   }),
   first: false,
 })
 
-group.get(
+routes.get(
   "/api/tables/:tableId",
   paramResource("tableId"),
   tableController.find
 )
 
-builderGroup
+builderRoutes
   .get("/api/tables", tableController.fetch)
   .post(
     "/api/tables",
