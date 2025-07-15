@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Select } from "@budibase/bbui"
+  import { FieldType, isNumeric } from "@budibase/types"
   import { canBeSortColumn } from "@budibase/frontend-core"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
 
@@ -13,18 +14,34 @@
     .map(col => ({
       label: col.label || col.name,
       value: col.name,
+      type: col.schema?.type,
     }))
   $: orderOptions = getOrderOptions($sort.column, columnOptions)
 
   const getOrderOptions = (column, columnOptions) => {
     const type = columnOptions.find(col => col.value === column)?.type
+
+    // Define labels based on column type
+    let ascendingLabel, descendingLabel
+
+    if (isNumeric(type)) {
+      ascendingLabel = "Low to high"
+      descendingLabel = "High to low"
+    } else if (type === FieldType.DATETIME) {
+      ascendingLabel = "Oldest to newest"
+      descendingLabel = "Newest to oldest"
+    } else {
+      ascendingLabel = "A-Z"
+      descendingLabel = "Z-A"
+    }
+
     return [
       {
-        label: type === "number" ? "Low-high" : "A-Z",
+        label: ascendingLabel,
         value: "ascending",
       },
       {
-        label: type === "number" ? "High-low" : "Z-A",
+        label: descendingLabel,
         value: "descending",
       },
     ]

@@ -1,9 +1,5 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/recaptcha"
+import { publicRoutes } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router.post("/api/recaptcha/verify", controller.verify)
-router.get("/api/recaptcha/check", controller.check)
-
-export default router
+publicRoutes.post("/api/recaptcha/verify", controller.verify)
+publicRoutes.get("/api/recaptcha/check", controller.check)

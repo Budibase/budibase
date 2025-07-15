@@ -1,111 +1,97 @@
-import Router from "@koa/router"
 import * as rowController from "../controllers/row"
 import authorized, { authorizedResource } from "../../middleware/authorized"
-import recaptcha from "../../middleware/recaptcha"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
 import trimViewRowInfo from "../../middleware/trimViewRowInfo"
+import recaptcha from "../../middleware/recaptcha"
 import { validateBody } from "../../middleware/zod-validator"
 import { searchRowRequestValidator } from "@budibase/types"
+import { customEndpointGroups, publicRoutes } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const router: Router = new Router()
+const readRoutes = customEndpointGroups.group(
+  {
+    middleware: authorized(PermissionType.TABLE, PermissionLevel.READ),
+    first: false,
+  },
+  recaptcha
+)
+const writeRoutes = customEndpointGroups.group(
+  {
+    middleware: authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+    first: false,
+  },
+  recaptcha
+)
 
-router
+readRoutes
   .get(
     "/api/:sourceId/:rowId/enrich",
-    recaptcha,
     paramSubResource("sourceId", "rowId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.fetchEnrichedRow
   )
-  .get(
-    "/api/:sourceId/rows",
-    recaptcha,
-    paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
-    rowController.fetch
-  )
+  .get("/api/:sourceId/rows", paramResource("sourceId"), rowController.fetch)
   .get(
     "/api/:sourceId/rows/:rowId",
-    recaptcha,
     paramSubResource("sourceId", "rowId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.find
   )
   .post(
     "/api/:sourceId/search",
-    recaptcha,
     internalSearchValidator(),
     validateBody(searchRowRequestValidator),
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
   // DEPRECATED - this is an old API, but for backwards compat it needs to be
   // supported still
   .post(
     "/api/search/:sourceId/rows",
-    recaptcha,
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
+  .get(
+    "/api/:sourceId/rows/:rowId/attachment/:columnName",
+    paramSubResource("sourceId", "rowId"),
+    rowController.downloadAttachment
+  )
+
+writeRoutes
   .post(
     "/api/:sourceId/rows",
-    recaptcha,
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
     rowController.save
   )
   .patch(
     "/api/:sourceId/rows",
-    recaptcha,
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
     rowController.patch
   )
   .post(
     "/api/:sourceId/rows/validate",
-    recaptcha,
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.validate
   )
   .delete(
     "/api/:sourceId/rows",
-    recaptcha,
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     trimViewRowInfo,
     rowController.destroy
   )
   .post(
     "/api/:sourceId/rows/exportRows",
-    recaptcha,
     paramResource("sourceId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.exportRows
   )
-  .get(
-    "/api/:sourceId/rows/:rowId/attachment/:columnName",
-    recaptcha,
-    paramSubResource("sourceId", "rowId"),
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
-    rowController.downloadAttachment
-  )
 
-router.post(
+publicRoutes.post(
   "/api/v2/views/:viewId/search",
-  recaptcha,
   internalSearchValidator(),
   validateBody(searchRowRequestValidator),
   authorizedResource(PermissionType.VIEW, PermissionLevel.READ, "viewId"),
   rowController.views.searchView
 )
-
-export default router

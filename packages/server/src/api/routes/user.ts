@@ -1,55 +1,32 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/user"
 import authorized from "../../middleware/authorized"
-import recaptcha from "../../middleware/recaptcha"
 import { permissions } from "@budibase/backend-core"
+import recaptcha from "../../middleware/recaptcha"
+import { customEndpointGroups } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const router: Router = new Router()
+const readRoutes = customEndpointGroups.group(
+  {
+    middleware: authorized(PermissionType.USER, PermissionLevel.READ),
+    first: false,
+  },
+  recaptcha
+)
+const writeRoutes = customEndpointGroups.group(
+  {
+    middleware: authorized(PermissionType.USER, PermissionLevel.WRITE),
+    first: false,
+  },
+  recaptcha
+)
 
-router
-  .get(
-    "/api/users/metadata",
-    recaptcha,
-    authorized(PermissionType.USER, PermissionLevel.READ),
-    controller.fetchMetadata
-  )
-  .get(
-    "/api/users/metadata/:id",
-    recaptcha,
-    authorized(PermissionType.USER, PermissionLevel.READ),
-    controller.findMetadata
-  )
-  .put(
-    "/api/users/metadata",
-    recaptcha,
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.updateMetadata
-  )
-  .post(
-    "/api/users/metadata/self",
-    recaptcha,
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.updateSelfMetadata
-  )
-  .delete(
-    "/api/users/metadata/:id",
-    recaptcha,
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.destroyMetadata
-  )
-  .post(
-    "/api/users/flags",
-    recaptcha,
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.setFlag
-  )
-  .get(
-    "/api/users/flags",
-    recaptcha,
-    authorized(PermissionType.USER, PermissionLevel.READ),
-    controller.getFlags
-  )
-
-export default router
+readRoutes
+  .get("/api/users/metadata", controller.fetchMetadata)
+  .get("/api/users/metadata/:id", controller.findMetadata)
+  .get("/api/users/flags", controller.getFlags)
+writeRoutes
+  .put("/api/users/metadata", controller.updateMetadata)
+  .post("/api/users/metadata/self", controller.updateSelfMetadata)
+  .delete("/api/users/metadata/:id", controller.destroyMetadata)
+  .post("/api/users/flags", controller.setFlag)
