@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "allowArbitraryExtensions": true,
+    "isolatedModules": false,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "rootDir": "."
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/tests",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.spec.js"
+  ]
+}

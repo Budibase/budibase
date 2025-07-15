@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.upgrade-context.json
+*.log
+.DS_Store
+.env
+# Build artifacts
+*.d.ts
+*.js
+*.js.map
+# Except for the script files
+!scripts/*.js
+!scripts/*.sh
