@@ -195,10 +195,10 @@
         {#if license.plan.type === "free"}
           Upgrade your Budibase installation to unlock additional features. To
           subscribe to a plan visit your
-          <Link size="M" href={upgradeUrl}>account</Link>.
+          <Link href={upgradeUrl}>account</Link>.
         {:else}
           To manage your plan visit your
-          <Link size="M" href={upgradeUrl}>account</Link>
+          <Link href={upgradeUrl}>account</Link>
         {/if}
       </Body>
     </Layout>
@@ -272,23 +272,20 @@
         >
         <div>
           <Body size="S"
-            >If you purchase or update your plan on the account</Body
-          >
-          <Body size="S"
-            >portal, click the refresh button to sync those changes</Body
+            >If you purchase or update your plan on the account portal, click
+            the refresh button to sync those changes.</Body
           >
         </div>
-        <Body size="XS">
-          {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
-            time:
-              new Date().getTime() - new Date(license.refreshedAt).getTime(),
-          })}
-        </Body>
       </Layout>
+      <div class="refresh-button">
+        <Button primary on:click={refresh}>Refresh</Button>
+      </div>
+      <Body size="XS">
+        {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+          time: new Date().getTime() - new Date(license.refreshedAt).getTime(),
+        })}
+      </Body>
     </Layout>
-    <div>
-      <Button secondary on:click={refresh}>Refresh</Button>
-    </div>
   </Layout>
 {/if}
 
@@ -305,5 +302,8 @@
   }
   .identifier-input {
     width: 300px;
+  }
+  .refresh-button {
+    margin: 12px 0;
   }
 </style>

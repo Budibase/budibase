@@ -67,7 +67,6 @@
   section {
     position: relative;
   }
-
   .copy-icon {
     z-index: 1;
     position: absolute;

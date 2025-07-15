@@ -87,11 +87,13 @@
     cursor: pointer;
     align-items: center;
     gap: var(--spacing-s);
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-600);
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 14px;
   }
   .nav-tab:hover {
     color: var(--spectrum-global-color-gray-900);
+    cursor: default;
   }
   .match {
     color: var(--spectrum-global-color-gray-900);
