@@ -1,5 +1,6 @@
 import {
   FetchWorkspaceAppResponse,
+  FindWorkspaceAppResponse,
   InsertWorkspaceAppRequest,
   InsertWorkspaceAppResponse,
 } from "@budibase/types"
@@ -26,5 +27,17 @@ export class WorkspaceAppAPI extends TestAPI {
         ...expectations,
       },
     })
+  }
+
+  find = async (id: string, expectations?: Expectations) => {
+    return await this._get<FindWorkspaceAppResponse>(
+      `/api/workspaceApp/${id}`,
+      {
+        expectations: {
+          status: 200,
+          ...expectations,
+        },
+      }
+    )
   }
 }
