@@ -80,7 +80,7 @@
         onUsersUpdated={fetchGroupUsers.getInitialData}
       />
       <Button secondary icon="upload" on:click={() => bulkAddModal.show()}>
-        Bulk Add via CSV
+        Bulk assign
       </Button>
     </div>
   {/if}
