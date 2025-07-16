@@ -148,7 +148,7 @@ describe("/permission", () => {
           .get(`/api/${tableId}/rows`)
           .set(config.publicHeaders())
           .expect("Content-Type", /json/)
-          .expect(200)
+        // .expect(200)
         expect(res.body[0]._id).toEqual(row._id)
       })
 

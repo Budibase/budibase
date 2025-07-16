@@ -1,6 +1,7 @@
 import {
   Ctx,
   FetchWorkspaceAppResponse,
+  FindWorkspaceAppResponse,
   InsertWorkspaceAppRequest,
   InsertWorkspaceAppResponse,
   UpdateWorkspaceAppRequest,
@@ -32,6 +33,18 @@ export async function fetch(ctx: Ctx<void, FetchWorkspaceAppResponse>) {
   ctx.body = {
     workspaceApps: workspaceApps.map(toWorkspaceAppResponse),
   }
+}
+
+export async function find(
+  ctx: Ctx<void, FindWorkspaceAppResponse, { id: string }>
+) {
+  const { id } = ctx.params
+  const workspaceApp = await sdk.workspaceApps.get(id)
+  if (!workspaceApp) {
+    ctx.throw(404)
+  }
+
+  ctx.body = toWorkspaceAppResponse(workspaceApp)
 }
 
 export async function create(
