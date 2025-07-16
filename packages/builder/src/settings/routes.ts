@@ -146,25 +146,22 @@ export const orgRoutes = (
     },
     {
       section: "Self host",
-      access: () => !cloud,
+      access: () => !cloud && isAdmin,
       path: "self",
       icon: "computer-tower",
       routes: [
         {
           path: "version",
-          access: () => isAdmin,
           comp: Pages.lazy("version"),
           title: "Version",
         },
         {
           path: "diagnostics",
-          access: () => isAdmin,
           comp: Pages.lazy("diagnostics"),
           title: "Diagnostics",
         },
         {
           path: "systemLogs",
-          access: () => isAdmin,
           comp: Pages.lazy("system_logs"),
           title: "System logs",
         },

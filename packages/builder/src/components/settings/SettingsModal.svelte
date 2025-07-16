@@ -54,10 +54,13 @@
   // Reset scroll when path changes
   $: resetScroll(matchedRoute?.entry?.path)
 
+  // Pull out the default route
+  $: defaultRoute = $flattenedRoutes.find(r => r.path === "/people/users")
+
   // Default path when none is set
   $: if (!matchedRoute && flattenedRoutes && open) {
     tick().then(() => {
-      bb.settings("/people/users")
+      bb.settings(defaultRoute?.path || "/profile")
     })
   }
 
@@ -133,7 +136,7 @@
 <div class="settings-wrap">
   <Modal bind:this={modal} on:hide>
     <div
-      class="spectrum-Dialog spectrum-Dialog--extraLarge"
+      class="settings-dialog spectrum-Dialog spectrum-Dialog--extraLarge"
       style="position: relative;"
       role="dialog"
       tabindex="-1"
@@ -202,8 +205,6 @@
 <style>
   .setting-main .setting-page {
     padding-left: calc(var(--spacing-xl) * 2);
-  }
-  .setting-main .setting-page {
     padding-right: calc(var(--spacing-xl) * 2);
   }
 

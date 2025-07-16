@@ -24,7 +24,7 @@
   import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
   import { bb } from "@/stores/bb"
 
-  const values = writable<UpdateSelfRequest>()
+  const values = writable<UpdateSelfRequest>({})
   let updating = false
   let apiKey: string | undefined = undefined
   let updatePasswordModal: Modal
@@ -45,7 +45,7 @@
   $: altered = isAltered($values)
 
   const isAltered = (vals: UpdateSelfRequest) => {
-    return vals.firstName !== first || vals.lastName !== last
+    return vals && (vals.firstName !== first || vals.lastName !== last)
   }
 
   const updateInfo = async () => {

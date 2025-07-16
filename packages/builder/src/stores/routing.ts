@@ -22,8 +22,8 @@ export const permittedRoutes = derived(
     }
     const routes = [
       ...globalRoutes(user),
-      ...orgRoutes(user, $admin),
       ...appRoutes($appStore),
+      ...orgRoutes(user, $admin),
     ]
     return filterRoutes(routes)
   }

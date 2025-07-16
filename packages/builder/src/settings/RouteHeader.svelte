@@ -123,4 +123,7 @@
   .page-heading {
     min-height: 32px;
   }
+  .page-heading .crumbs :global(.crumb) {
+    color: var(--spectrum-global-color-gray-800);
+  }
 </style>
