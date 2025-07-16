@@ -78,19 +78,17 @@
 
     <div class="nav_body">
       <div class="links">
-        {#if $featureFlags.AI_AGENTS}
-          <SideNavLink
-            icon="cpu"
-            text="Agent"
-            url={$url("./agent")}
-            {collapsed}
-            on:click={keepCollapsed}
-          />
-        {/if}
         <SideNavLink
-          icon="plugs-connected"
+          icon="hard-drives"
           text="Data"
           url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="lightning-a"
+          text="Automations"
+          url={$url("./automation")}
           {collapsed}
           on:click={keepCollapsed}
         />
@@ -101,10 +99,19 @@
           {collapsed}
           on:click={keepCollapsed}
         />
+        {#if $featureFlags.AI_AGENTS}
+          <SideNavLink
+            icon="cpu"
+            text="Agent"
+            url={$url("./agent")}
+            {collapsed}
+            on:click={keepCollapsed}
+          />
+        {/if}
         <SideNavLink
-          icon="lightning-a"
-          text="Automations"
-          url={$url("./automation")}
+          icon="gear"
+          text="Settings"
+          url={$url("./settings")}
           {collapsed}
           on:click={keepCollapsed}
         />
@@ -128,13 +135,6 @@
             keepCollapsed()
           }}
           {collapsed}
-        />
-        <SideNavLink
-          icon="gear"
-          text="Settings"
-          url={$url("./settings")}
-          {collapsed}
-          on:click={keepCollapsed}
         />
         <SideNavUserSettings {collapsed} />
       </div>
