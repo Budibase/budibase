@@ -2,7 +2,6 @@
   import {
     Body,
     Button,
-    File as FileComponent,
     Heading,
     ModalContent,
     notifications,
@@ -14,22 +13,29 @@
   export let groupId
   export let onUsersAdded
 
-  let selectedFile: File | undefined = undefined
+  let files: File[] = []
   let uploadLoading = false
   let results: BulkAddUsersToGroupResponse | undefined = undefined
 
-  const handleFilesSelected = (event: CustomEvent<File>) => {
-    selectedFile = event.detail || undefined
+  const handleFile = (evt: Event) => {
+    const target = evt.target as HTMLInputElement
+    const fileArray = Array.from(target.files || [])
+
+    if (fileArray.length === 0) {
+      return
+    }
+
+    files = fileArray
     results = undefined
   }
 
   const processCSV = async () => {
-    if (!selectedFile) {
+    if (!files[0]) {
       notifications.error("Please select a CSV file")
       return
     }
 
-    const file = selectedFile
+    const file = files[0]
     if (!file.name.toLowerCase().endsWith(".csv")) {
       notifications.error("Please select a CSV file")
       return
@@ -37,10 +43,8 @@
 
     uploadLoading = true
     try {
-      // Read file content
       const text = await file.text()
 
-      // Call the API
       const result = await groups.bulkAddUsersFromCsv(groupId, text)
 
       results = result
@@ -63,95 +67,124 @@
   }
 
   const reset = () => {
-    selectedFile = undefined
+    files = []
     results = undefined
   }
 </script>
 
 <ModalContent
-  title="Bulk Add Users via CSV"
-  confirmText="Upload CSV"
-  onConfirm={processCSV}
-  disabled={uploadLoading || !selectedFile}
   size="M"
-  cancelText="Close"
+  title="Bulk assign users"
+  confirmText="Upload CSV"
+  cancelText="Cancel"
+  showCloseIcon={false}
+  onConfirm={processCSV}
+  disabled={uploadLoading || !files[0]}
 >
-  <div slot="header">
-    <Heading size="M">Bulk Add Users via CSV</Heading>
-    <Body>
-      Upload a CSV file containing email addresses to add existing users to this
-      group.
-    </Body>
-  </div>
+  <Body size="S"
+    >Upload a CSV file containing email addresses to add existing users to this
+    group</Body
+  >
 
-  <div class="content">
-    {#if !results}
-      <div class="upload-section">
-        <Body>
-          Select a CSV file that contains an "email" column with user email
-          addresses. Only existing users will be added to the group.
-        </Body>
+  {#if !results}
+    <div class="dropzone">
+      <input
+        id="file-upload"
+        accept=".csv"
+        type="file"
+        on:change={handleFile}
+      />
+      <label for="file-upload" class:uploaded={files[0]}>
+        {#if files[0]}{files[0].name}{:else}Upload{/if}
+      </label>
+    </div>
+  {:else}
+    <div class="results-section">
+      <Heading size="S">Upload Results</Heading>
 
-        <FileComponent
-          on:change={handleFilesSelected}
-          title="Select CSV File"
-          extensions={["csv"]}
-          value={selectedFile}
-          disabled={uploadLoading}
-        />
-      </div>
-    {:else}
-      <div class="results-section">
-        <Heading size="S">Upload Results</Heading>
-
-        {#if results.added.length > 0}
-          <div class="result-group">
-            <Body weight="600">Added ({results.added.length} users):</Body>
-            <div class="result-list">
-              {#each results.added as user}
-                <Body size="S">• {user.email}</Body>
-              {/each}
-            </div>
+      {#if results.added.length > 0}
+        <div class="result-group">
+          <Body weight="600">Added ({results.added.length} users):</Body>
+          <div class="result-list">
+            {#each results.added as user}
+              <Body size="S">• {user.email}</Body>
+            {/each}
           </div>
-        {/if}
+        </div>
+      {/if}
 
-        {#if results.skipped.length > 0}
-          <div class="result-group">
-            <Body weight="600">Skipped ({results.skipped.length} entries):</Body
-            >
-            <div class="result-list">
-              {#each results.skipped as skipped}
-                <Body size="S">• {skipped.email} - {skipped.reason}</Body>
-              {/each}
-            </div>
+      {#if results.skipped.length > 0}
+        <div class="result-group">
+          <Body weight="600">Skipped ({results.skipped.length} entries):</Body>
+          <div class="result-list">
+            {#each results.skipped as skipped}
+              <Body size="S">• {skipped.email} - {skipped.reason}</Body>
+            {/each}
           </div>
-        {/if}
+        </div>
+      {/if}
 
-        <Button secondary on:click={reset}>Upload Another File</Button>
-      </div>
-    {/if}
+      <Button secondary on:click={reset}>Upload Another File</Button>
+    </div>
+  {/if}
 
-    {#if uploadLoading}
-      <div class="loading">
-        <ProgressCircle />
-        <Body>Processing CSV file...</Body>
-      </div>
-    {/if}
-  </div>
+  {#if uploadLoading}
+    <div class="loading">
+      <ProgressCircle />
+      <Body>Processing CSV file...</Body>
+    </div>
+  {/if}
 </ModalContent>
 
 <style>
-  .content {
+  .dropzone {
+    text-align: center;
     display: flex;
+    align-items: center;
     flex-direction: column;
-    gap: var(--spacing-l);
-    min-height: 200px;
+    border-radius: 10px;
+    transition: all 0.3s;
   }
 
-  .upload-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
+  .uploaded {
+    color: var(--blue);
+  }
+
+  label {
+    font-weight: 600;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: var(--border-radius-s);
+    color: var(--ink);
+    padding: var(--spacing-m) var(--spacing-l);
+    display: inline-flex;
+    text-rendering: optimizeLegibility;
+    min-width: auto;
+    outline: none;
+    font-feature-settings:
+      "case" 1,
+      "rlig" 1,
+      "calt" 0;
+    -webkit-box-align: center;
+    user-select: none;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: var(--spectrum-global-color-gray-200);
+    font-size: 12px;
+    line-height: normal;
+    border: var(--border-transparent);
+    transition: background-color 130ms ease-out;
+  }
+
+  label:hover {
+    background: var(--spectrum-global-color-gray-300);
+    cursor: pointer;
+  }
+
+  input[type="file"] {
+    display: none;
   }
 
   .results-section {
