@@ -6,6 +6,7 @@
     Icon,
     Modal,
     DetailSummary,
+    notifications,
   } from "@budibase/bbui"
   import { generate } from "shortid"
   import {
@@ -160,10 +161,25 @@
             const newName = getNewStepName($memoAutomation, duplicatedBlock)
             duplicatedBlock.name = newName
 
-            await automationStore.addBlockToAutomation(
+            if (!$memoAutomation) {
+              console.error("Cannot ")
+              return
+            }
+
+            const updated = await automationStore.addBlockToAutomation(
+              $memoAutomation,
               duplicatedBlock,
               blockRef.pathTo
             )
+
+            if (updated) {
+              try {
+                await automationStore.save(updated)
+              } catch (e) {
+                notifications.error("Error adding automation block")
+                console.error("Automation adding block ", e)
+              }
+            }
           }}
         >
           Duplicate

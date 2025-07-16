@@ -1308,10 +1308,10 @@ describe("Automation store", () => {
     }))
 
     // Build a log step
-    const logBlock = dispenseBlock(bb, "SERVER_LOG")
+    const logBlock = dispenseBlock(bb, AutomationActionStepId.SERVER_LOG)
 
     // Build a js step
-    const jsBlock = dispenseBlock(bb, "EXECUTE_SCRIPT_V2")
+    const jsBlock = dispenseBlock(bb, AutomationActionStepId.EXECUTE_SCRIPT_V2)
 
     // Add the blocks
     auto1.definition.steps.push(logBlock)
@@ -1348,10 +1348,10 @@ describe("Automation store", () => {
     }))
 
     // Build a log step
-    const logBlock = dispenseBlock(bb, "SERVER_LOG")
+    const logBlock = dispenseBlock(bb, AutomationActionStepId.SERVER_LOG)
 
     // Build a js step
-    const jsBlock = dispenseBlock(bb, "EXECUTE_SCRIPT_V2")
+    const jsBlock = dispenseBlock(bb, AutomationActionStepId.EXECUTE_SCRIPT_V2)
 
     // Add the blocks
     auto1.definition.steps.push(logBlock)
@@ -1379,10 +1379,10 @@ describe("Automation store", () => {
     loadDefintions(bb)
 
     // Build a log step
-    const logBlock = dispenseBlock(bb, "SERVER_LOG")
+    const logBlock = dispenseBlock(bb, AutomationActionStepId.SERVER_LOG)
 
     // Build a js step
-    const jsBlock = dispenseBlock(bb, "EXECUTE_SCRIPT_V2")
+    const jsBlock = dispenseBlock(bb, AutomationActionStepId.EXECUTE_SCRIPT_V2)
 
     // Add the blocks
     auto1.definition.steps.push(logBlock)
@@ -1442,10 +1442,10 @@ describe("Automation store", () => {
     loadDefintions(bb)
 
     // Build a log step
-    const logBlock = dispenseBlock(bb, "SERVER_LOG")
+    const logBlock = dispenseBlock(bb, AutomationActionStepId.SERVER_LOG)
 
     // Build a js step
-    const jsBlock = dispenseBlock(bb, "EXECUTE_SCRIPT_V2")
+    const jsBlock = dispenseBlock(bb, AutomationActionStepId.EXECUTE_SCRIPT_V2)
 
     // Add the blocks
     auto1.definition.steps.push(logBlock)
@@ -1466,7 +1466,7 @@ describe("Automation store", () => {
 
     // Insert a new log block under the JS block in branch b0
     const jsBlockRef = bb.selected.blockRefs[jsBlock.id]
-    const logBlockB0 = dispenseBlock(bb, "SERVER_LOG")
+    const logBlockB0 = dispenseBlock(bb, AutomationActionStepId.SERVER_LOG)
     const updated = bb.automationStore.addBlockToAutomation(
       branched1,
       logBlockB0,

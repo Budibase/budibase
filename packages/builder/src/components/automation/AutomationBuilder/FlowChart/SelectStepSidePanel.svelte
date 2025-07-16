@@ -207,10 +207,20 @@
         action.stepId,
         action
       )
-      await automationStore.addBlockToAutomation(
+      const updated = await automationStore.addBlockToAutomation(
+        $selectedAutomation.data!!,
         newBlock,
         blockRef ? blockRef.pathTo : block.pathTo
       )
+
+      if (updated) {
+        try {
+          await automationStore.save(updated)
+        } catch (e) {
+          notifications.error("Error adding automation block")
+          console.error("Automation adding block ", e)
+        }
+      }
 
       // Determine presence of the block before focusing
       const createdBlock = $selectedAutomation.blockRefs[newBlock.id]
