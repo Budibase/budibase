@@ -79,7 +79,7 @@
         {groupId}
         onUsersUpdated={fetchGroupUsers.getInitialData}
       />
-      <Button secondary icon="upload" on:click={() => bulkAddModal.show()}>
+      <Button secondary on:click={() => bulkAddModal.show()}>
         Bulk assign
       </Button>
     </div>
