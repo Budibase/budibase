@@ -38,12 +38,12 @@
 <ScreensPopover
   bind:this={popover}
   screens={screenUsage}
-  icon="WebPage"
-  accentColor="#364800"
+  icon="browser"
+  accentColor="#4b75ff"
   showCount
 >
   <svelte:fragment slot="footer">
-    <Button secondary icon="WebPage" on:click={generateScreen}>
+    <Button secondary icon="browser" on:click={generateScreen}>
       Generate app screen
     </Button>
   </svelte:fragment>

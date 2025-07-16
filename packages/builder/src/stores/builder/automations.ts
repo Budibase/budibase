@@ -174,6 +174,92 @@ export class AutomationStore extends BudiStore<AutomationState> {
   selected: SelectedAutomationStore
   evaluation: Readable<AutomationContext>
 
+  constructor() {
+    super(initialAutomationState)
+    this.history = createHistoryStore({
+      getDoc: this.getDefinition.bind(this),
+      selectDoc: this.select.bind(this),
+    })
+
+    this.selected = new SelectedAutomationStore(this)
+
+    // Then wrap save and delete with history
+    const originalSave = this.save.bind(this)
+    const originalDelete = this.delete.bind(this)
+    this.save = this.history.wrapSaveDoc(originalSave)
+    this.delete = this.history.wrapDeleteDoc(originalDelete)
+
+    this.addBlockToAutomation = this.addBlockToAutomation.bind(this)
+    this.addLooping = this.addLooping.bind(this)
+    this.branchAutomation = this.branchAutomation.bind(this)
+    this.branchLeft = this.branchLeft.bind(this)
+    this.branchRight = this.branchRight.bind(this)
+    this.buildEnvironmentBindings = this.buildEnvironmentBindings.bind(this)
+    this.buildSettingBindings = this.buildSettingBindings.bind(this)
+    this.buildUserBindings = this.buildUserBindings.bind(this)
+    this.clearLogErrors = this.clearLogErrors.bind(this)
+    this.constructBlock = this.constructBlock.bind(this)
+    this.create = this.create.bind(this)
+    this.deleteAutomationBlock = this.deleteAutomationBlock.bind(this)
+    this.deleteAutomationName = this.deleteAutomationName.bind(this)
+    this.deleteBlock = this.deleteBlock.bind(this)
+    this.deleteBranch = this.deleteBranch.bind(this)
+    this.determineCategoryName = this.determineCategoryName.bind(this)
+    this.determineReadableBinding = this.determineReadableBinding.bind(this)
+    this.determineRuntimeBinding = this.determineRuntimeBinding.bind(this)
+    this.duplicate = this.duplicate.bind(this)
+    this.fetch = this.fetch.bind(this)
+    this.generateBranchBlock = this.generateBranchBlock.bind(this)
+    this.generateContext = this.generateContext.bind(this)
+    this.generateDefaultConditions = this.generateDefaultConditions.bind(this)
+    this.getAvailableBindings = this.getAvailableBindings.bind(this)
+    this.getBlockByRef = this.getBlockByRef.bind(this)
+    this.getBlockDefinition = this.getBlockDefinition.bind(this)
+    this.getDefinition = this.getDefinition.bind(this)
+    this.getInputData = this.getInputData.bind(this)
+    this.getLogs = this.getLogs.bind(this)
+    this.getPathBindings = this.getPathBindings.bind(this)
+    this.getPathSteps = this.getPathSteps.bind(this)
+    this.getPermissions = this.getPermissions.bind(this)
+    this.getUpdatedDefinition = this.getUpdatedDefinition.bind(this)
+    this.initAppSelf = this.initAppSelf.bind(this)
+    this.isRowStep = this.isRowStep.bind(this)
+    this.isRowTrigger = this.isRowTrigger.bind(this)
+    this.moveBlock = this.moveBlock.bind(this)
+    this.onAppTriggerUpdate = this.onAppTriggerUpdate.bind(this)
+    this.onRowTriggerUpdate = this.onRowTriggerUpdate.bind(this)
+    this.processBlockInputs = this.processBlockInputs.bind(this)
+    this.processBlockResults = this.processBlockResults.bind(this)
+    this.processDefintions = this.processDefintions.bind(this)
+    this.registerBlock = this.registerBlock.bind(this)
+    this.removeLooping = this.removeLooping.bind(this)
+    this.replace = this.replace.bind(this)
+    this.requestUpdate = this.requestUpdate.bind(this)
+    this.saveAutomationName = this.saveAutomationName.bind(this)
+    this.select = this.select.bind(this)
+    this.selectNode = this.selectNode.bind(this)
+    this.setDefaultEnumValues = this.setDefaultEnumValues.bind(this)
+    this.setPermissions = this.setPermissions.bind(this)
+    this.shiftBranch = this.shiftBranch.bind(this)
+    this.test = this.test.bind(this)
+    this.toggleDisabled = this.toggleDisabled.bind(this)
+    this.traverse = this.traverse.bind(this)
+    this.updateBlockInputs = this.updateBlockInputs.bind(this)
+    this.updateBlockTitle = this.updateBlockTitle.bind(this)
+    this.updateStep = this.updateStep.bind(this)
+    this.pathAction = this.pathAction.bind(this)
+    this.loopBlock = this.loopBlock.bind(this)
+    this.openActionPanel = this.openActionPanel.bind(this)
+    this.closeActionPanel = this.closeActionPanel.bind(this)
+    this.openLogPanel = this.openLogPanel.bind(this)
+    this.closeLogPanel = this.closeLogPanel.bind(this)
+    this.openLogsPanel = this.openLogsPanel.bind(this)
+    this.closeLogsPanel = this.closeLogsPanel.bind(this)
+    this.selectLogForDetails = this.selectLogForDetails.bind(this)
+
+    this.evaluation = this.generateContext()
+  }
+
   /**
    * Take the automation definitions and group them
    * by type
@@ -691,7 +777,7 @@ export class AutomationStore extends BudiStore<AutomationState> {
         const children = block.inputs?.children || {}
 
         branches.forEach((branch, bIdx) => {
-          children[branch.id].forEach(
+          children[branch.id]?.forEach(
             (bBlock: AutomationStep, sIdx: number, array: AutomationStep[]) => {
               const ended = array.length - 1 === sIdx
               treeTraverse(bBlock, pathToCurrentNode, sIdx, bIdx, ended)
@@ -827,8 +913,8 @@ export class AutomationStore extends BudiStore<AutomationState> {
       const icon = isTrigger(pathBlock)
         ? pathBlock.icon
         : isLoopBlock
-        ? "Reuse"
-        : pathBlock.icon
+          ? "Reuse"
+          : pathBlock.icon
 
       if (blockIdx === 0 && isTrigger(pathBlock)) {
         if (isRowUpdateTrigger(pathBlock) || isRowSaveTrigger(pathBlock)) {
@@ -901,7 +987,7 @@ export class AutomationStore extends BudiStore<AutomationState> {
     name: string,
     block: AutomationStep | AutomationTrigger
   ) {
-    const rowTriggers = [
+    const rowTriggers: string[] = [
       TriggerStepID.ROW_UPDATED,
       TriggerStepID.ROW_SAVED,
       TriggerStepID.ROW_DELETED,
@@ -1557,6 +1643,10 @@ export class AutomationStore extends BudiStore<AutomationState> {
       delete state.testResults
       state.showTestModal = false
       delete state.selectedNodeId
+      state.showLogsPanel = false
+      state.showLogDetailsPanel = false
+      delete state.selectedLog
+      delete state.selectedLogStepData
       return state
     })
   }
@@ -2088,85 +2178,73 @@ export class AutomationStore extends BudiStore<AutomationState> {
     })
   }
 
-  constructor() {
-    super(initialAutomationState)
-    // this.actions = automationActions(this)
-    this.history = createHistoryStore({
-      getDoc: this.getDefinition.bind(this),
-      selectDoc: this.select.bind(this),
-    })
-
-    this.selected = new SelectedAutomationStore(this)
-
-    // Then wrap save and delete with history
-    const originalSave = this.save.bind(this)
-    const originalDelete = this.delete.bind(this)
-    this.save = this.history.wrapSaveDoc(originalSave)
-    this.delete = this.history.wrapDeleteDoc(originalDelete)
-
-    this.addBlockToAutomation = this.addBlockToAutomation.bind(this)
-    this.addLooping = this.addLooping.bind(this)
-    this.branchAutomation = this.branchAutomation.bind(this)
-    this.branchLeft = this.branchLeft.bind(this)
-    this.branchRight = this.branchRight.bind(this)
-    this.buildEnvironmentBindings = this.buildEnvironmentBindings.bind(this)
-    this.buildSettingBindings = this.buildSettingBindings.bind(this)
-    this.buildUserBindings = this.buildUserBindings.bind(this)
-    this.clearLogErrors = this.clearLogErrors.bind(this)
-    this.constructBlock = this.constructBlock.bind(this)
-    this.create = this.create.bind(this)
-    this.deleteAutomationBlock = this.deleteAutomationBlock.bind(this)
-    this.deleteAutomationName = this.deleteAutomationName.bind(this)
-    this.deleteBlock = this.deleteBlock.bind(this)
-    this.deleteBranch = this.deleteBranch.bind(this)
-    this.determineCategoryName = this.determineCategoryName.bind(this)
-    this.determineReadableBinding = this.determineReadableBinding.bind(this)
-    this.determineRuntimeBinding = this.determineRuntimeBinding.bind(this)
-    this.duplicate = this.duplicate.bind(this)
-    this.fetch = this.fetch.bind(this)
-    this.generateBranchBlock = this.generateBranchBlock.bind(this)
-    this.generateContext = this.generateContext.bind(this)
-    this.generateDefaultConditions = this.generateDefaultConditions.bind(this)
-    this.getAvailableBindings = this.getAvailableBindings.bind(this)
-    this.getBlockByRef = this.getBlockByRef.bind(this)
-    this.getBlockDefinition = this.getBlockDefinition.bind(this)
-    this.getDefinition = this.getDefinition.bind(this)
-    this.getInputData = this.getInputData.bind(this)
-    this.getLogs = this.getLogs.bind(this)
-    this.getPathBindings = this.getPathBindings.bind(this)
-    this.getPathSteps = this.getPathSteps.bind(this)
-    this.getPermissions = this.getPermissions.bind(this)
-    this.getUpdatedDefinition = this.getUpdatedDefinition.bind(this)
-    this.initAppSelf = this.initAppSelf.bind(this)
-    this.isRowStep = this.isRowStep.bind(this)
-    this.isRowTrigger = this.isRowTrigger.bind(this)
-    this.moveBlock = this.moveBlock.bind(this)
-    this.onAppTriggerUpdate = this.onAppTriggerUpdate.bind(this)
-    this.onRowTriggerUpdate = this.onRowTriggerUpdate.bind(this)
-    this.processBlockInputs = this.processBlockInputs.bind(this)
-    this.processBlockResults = this.processBlockResults.bind(this)
-    this.processDefintions = this.processDefintions.bind(this)
-    this.registerBlock = this.registerBlock.bind(this)
-    this.removeLooping = this.removeLooping.bind(this)
-    this.replace = this.replace.bind(this)
-    this.requestUpdate = this.requestUpdate.bind(this)
-    this.saveAutomationName = this.saveAutomationName.bind(this)
-    this.select = this.select.bind(this)
-    this.selectNode = this.selectNode.bind(this)
-    this.setDefaultEnumValues = this.setDefaultEnumValues.bind(this)
-    this.setPermissions = this.setPermissions.bind(this)
-    this.shiftBranch = this.shiftBranch.bind(this)
-    this.test = this.test.bind(this)
-    this.toggleDisabled = this.toggleDisabled.bind(this)
-    this.traverse = this.traverse.bind(this)
-    this.updateBlockInputs = this.updateBlockInputs.bind(this)
-    this.updateBlockTitle = this.updateBlockTitle.bind(this)
-    this.updateStep = this.updateStep.bind(this)
-    this.pathAction = this.pathAction.bind(this)
-    this.loopBlock = this.loopBlock.bind(this)
-
-    this.evaluation = this.generateContext()
+  openActionPanel(block: BlockRef) {
+    this.update(state => ({
+      ...state,
+      actionPanelBlock: block,
+      selectedNodeId: undefined,
+    }))
   }
+
+  closeActionPanel() {
+    this.update(state => ({
+      ...state,
+      actionPanelBlock: undefined,
+    }))
+  }
+
+  openLogPanel(log: any, stepData: any) {
+    this.update(state => ({
+      ...state,
+      showLogDetailsPanel: true,
+      selectedLog: log,
+      selectedLogStepData: stepData,
+      selectedNodeId: undefined,
+      actionPanelBlock: undefined,
+    }))
+  }
+
+  closeLogPanel() {
+    this.update(state => ({
+      ...state,
+      showLogDetailsPanel: false,
+      selectedLog: undefined,
+      selectedLogStepData: undefined,
+    }))
+  }
+
+  openLogsPanel() {
+    this.update(state => ({
+      ...state,
+      showLogsPanel: true,
+      selectedNodeId: undefined,
+      actionPanelBlock: undefined,
+      showLogDetailsPanel: false,
+    }))
+  }
+
+  closeLogsPanel() {
+    this.update(state => ({
+      ...state,
+      showLogsPanel: false,
+    }))
+  }
+
+  selectLogForDetails(log: any) {
+    this.update(state => ({
+      ...state,
+      selectedLog: log,
+      showLogDetailsPanel: false,
+    }))
+  }
+}
+
+export interface AutomationContext {
+  user: AppSelfResponse | null
+  trigger?: AutomationTriggerResultOutputs
+  steps: Record<string, AutomationStep>
+  env?: Record<string, any>
+  settings: Record<string, any>
 }
 
 export const automationStore = new AutomationStore()

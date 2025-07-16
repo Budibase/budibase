@@ -6,6 +6,14 @@ import { BuilderSocketEvent } from "@budibase/shared-core"
 
 vi.mock("../websocket.js")
 
+vi.mock("@/stores/builder", async () => {
+  const workspaceAppStore = {}
+
+  return {
+    workspaceAppStore,
+  }
+})
+
 describe("Builder store", () => {
   beforeEach(ctx => {
     vi.clearAllMocks()
@@ -208,27 +216,5 @@ describe("Builder store", () => {
     expect(ctx.test.store.previousTopNavPath).toStrictEqual({
       [dataRoute]: updatedURL,
     })
-  })
-
-  it("Register a builder tour node", ctx => {
-    const fakeNode = { name: "node" }
-    ctx.test.builderStore.registerTourNode("sampleKey", fakeNode)
-
-    const registeredNodes = ctx.test.store.tourNodes
-
-    expect(registeredNodes).not.toBeNull()
-    expect(Object.keys(registeredNodes).length).toBe(1)
-    expect(registeredNodes["sampleKey"]).toStrictEqual(fakeNode)
-  })
-
-  it("Clear a destroyed tour node", ctx => {
-    const fakeNode = { name: "node" }
-    ctx.test.builderStore.registerTourNode("sampleKey", fakeNode)
-
-    expect(ctx.test.store.tourNodes).not.toBeNull()
-    expect(Object.keys(ctx.test.store.tourNodes).length).toBe(1)
-
-    ctx.test.builderStore.destroyTourNode("sampleKey")
-    expect(ctx.test.store.tourNodes).toStrictEqual({})
   })
 })

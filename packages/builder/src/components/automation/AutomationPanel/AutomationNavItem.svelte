@@ -40,7 +40,7 @@
 
   const getContextMenuItems = () => {
     const pause = {
-      icon: automation.disabled ? "CheckmarkCircle" : "Cancel",
+      icon: automation.disabled ? "check-circle" : "pause",
       name: automation.disabled ? "Activate" : "Pause",
       keyBind: null,
       visible: true,
@@ -50,7 +50,7 @@
       },
     }
     const del = {
-      icon: "Delete",
+      icon: "trash",
       name: "Delete",
       keyBind: null,
       visible: true,
@@ -60,7 +60,7 @@
     if (!isRowAction) {
       return [
         {
-          icon: "Edit",
+          icon: "pencil",
           name: "Edit",
           keyBind: null,
           visible: true,
@@ -68,7 +68,7 @@
           callback: updateAutomationDialog.show,
         },
         {
-          icon: "Duplicate",
+          icon: "copy",
           name: "Duplicate",
           keyBind: null,
           visible: true,
@@ -83,7 +83,7 @@
     } else {
       return [
         {
-          icon: "Edit",
+          icon: "pencil",
           name: "Edit",
           keyBind: null,
           visible: true,
@@ -107,8 +107,8 @@
   on:contextmenu={openContextMenu}
   {icon}
   iconColor={automation.disabled
-    ? "var(--spectrum-global-color-gray-600)"
-    : "var(--spectrum-global-color-gray-900)"}
+    ? "var(--spectrum-global-color-gray-500)"
+    : "var(--spectrum-global-color-gray-600)"}
   text={automation.name}
   selected={automation._id === $selectedAutomation?.data?._id}
   hovering={automation._id === $contextMenuStore.id}
@@ -116,7 +116,7 @@
   selectedBy={$userSelectedResourceMap[automation._id]}
   disabled={automation.disabled}
 >
-  <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
+  <Icon on:click={openContextMenu} size="S" hoverable name="dots-three" />
 </NavItem>
 
 <ConfirmDialog

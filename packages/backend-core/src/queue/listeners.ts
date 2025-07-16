@@ -89,6 +89,7 @@ enum QueueEventType {
   SYSTEM_EVENT = "system-event",
   APP_MIGRATION = "app-migration",
   DOC_WRITETHROUGH = "doc-writethrough",
+  DEV_REVERT_EVENT = "dev-revert-event",
 }
 
 const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
@@ -98,6 +99,7 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.SYSTEM_EVENT_QUEUE]: QueueEventType.SYSTEM_EVENT,
   [JobQueue.APP_MIGRATION]: QueueEventType.APP_MIGRATION,
   [JobQueue.DOC_WRITETHROUGH_QUEUE]: QueueEventType.DOC_WRITETHROUGH,
+  [JobQueue.DEV_REVERT_PROCESSOR]: QueueEventType.DEV_REVERT_EVENT,
 }
 
 function logging(queue: Queue, jobQueue: JobQueue) {

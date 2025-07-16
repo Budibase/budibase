@@ -14,7 +14,9 @@ export enum AutomationIOType {
   ARRAY = "array",
   JSON = "json",
   DATE = "date",
+  DATETIME = "datetime",
   ATTACHMENT = "attachment",
+  LONGFORM = "longform",
 }
 
 export enum AutomationCustomIOType {
@@ -37,6 +39,7 @@ export enum AutomationCustomIOType {
   AUTOMATION_FIELDS = "automationFields",
   MULTI_ATTACHMENTS = "multi_attachments",
   TRIGGER_FILTER = "trigger_filter",
+  CATEGORIES = "categories",
 }
 
 export enum AutomationTriggerStepId {
@@ -68,12 +71,19 @@ export enum AutomationActionStepId {
   SERVER_LOG = "SERVER_LOG",
   DELAY = "DELAY",
   FILTER = "FILTER",
+  API_REQUEST = "API_REQUEST",
   QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
   COLLECT = "COLLECT",
   OPENAI = "OPENAI",
   TRIGGER_AUTOMATION_RUN = "TRIGGER_AUTOMATION_RUN",
   BRANCH = "BRANCH",
+  CLASSIFY_CONTENT = "CLASSIFY_CONTENT",
+  PROMPT_LLM = "PROMPT_LLM",
+  TRANSLATE = "TRANSLATE",
+  SUMMARISE = "SUMMARISE",
+  GENERATE_TEXT = "GENERATE_TEXT",
+  EXTRACT_FILE_DATA = "EXTRACT_FILE_DATA",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -145,7 +155,7 @@ export interface BaseIOStructure {
   customType?: AutomationCustomIOType
   title?: string
   description?: string
-  dependsOn?: string
+  dependsOn?: string | { field: string; value: string | string[] }
   enum?: string[]
   pretty?: string[]
   properties?: AutomationIOProps
@@ -179,10 +189,12 @@ export enum AutomationStatus {
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
   NO_CONDITION_MET = "No branch condition met",
+  TIMED_OUT = "timed_out",
 }
 
 export enum AutomationStoppedReason {
   TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
+  TIMED_OUT = "Automation timed out.",
 }
 
 export interface AutomationStepResultOutputs {
@@ -196,6 +208,8 @@ export interface AutomationStepResultInputs {
 
 export interface AutomationStepResult {
   id: string
+  name?: string
+  icon?: string
   stepId: AutomationActionStepId
   inputs: AutomationStepResultInputs
   outputs: AutomationStepResultOutputs
@@ -206,6 +220,8 @@ export type AutomationTriggerResultOutputs = Record<string, any>
 
 export interface AutomationTriggerResult {
   id: string
+  name?: string
+  icon?: string
   stepId: AutomationTriggerStepId
   inputs?: AutomationTriggerResultInputs | null
   outputs: AutomationTriggerResultOutputs
@@ -213,7 +229,7 @@ export interface AutomationTriggerResult {
 
 export interface AutomationResults {
   automationId?: string
-  status?: AutomationStatus
+  status: AutomationStatus
   trigger: AutomationTriggerResult
   steps: [AutomationTriggerResult, ...AutomationStepResult[]]
 }
@@ -292,3 +308,45 @@ export enum LoopStepType {
   ARRAY = "Array",
   STRING = "String",
 }
+
+export enum ContentType {
+  EMAIL = "email",
+  DOCUMENT = "document",
+  BLOG_POST = "blog_post",
+  CHAT_MESSAGE = "chat_message",
+  LETTER = "letter",
+  PROPOSAL = "proposal",
+  OTHER = "other",
+}
+
+export const PrettyContentTypes = {
+  [ContentType.EMAIL]: "Email",
+  [ContentType.DOCUMENT]: "Document",
+  [ContentType.BLOG_POST]: "Blog post",
+  [ContentType.CHAT_MESSAGE]: "Chat message",
+  [ContentType.LETTER]: "Letter",
+  [ContentType.PROPOSAL]: "Proposal",
+  [ContentType.OTHER]: "Other",
+}
+
+export enum DocumentSourceType {
+  URL = "URL",
+  ATTACHMENT = "Attachment",
+}
+
+export enum SupportedFileType {
+  PDF = "pdf",
+  JPG = "jpg",
+  PNG = "png",
+  JPEG = "jpeg",
+}
+
+export const ImageContentTypes = [
+  "png",
+  "jpg",
+  "jpeg",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/jpeg",
+]

@@ -54,7 +54,7 @@
     </div>
     {#if error}
       <div class="error-icon">
-        <Icon name="Alert" />
+        <Icon name="warning" />
       </div>
     {/if}
   </div>
@@ -69,7 +69,9 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     box-sizing: border-box;
-    transition: border-color 130ms ease-out, background 130ms ease-out,
+    transition:
+      border-color 130ms ease-out,
+      background 130ms ease-out,
       background 130ms ease-out;
     color: var(--spectrum-global-color-gray-800);
     --padding: 16px;
@@ -120,7 +122,7 @@
   .error-icon {
     flex: 0 0 auto;
   }
-  .error-icon :global(.spectrum-Icon) {
+  .error-icon :global(i) {
     fill: var(--spectrum-global-color-red-400);
   }
 </style>

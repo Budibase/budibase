@@ -154,7 +154,7 @@
               contextAccess={setting.contextAccess}
               props={{
                 // Generic settings
-                placeholder: setting.placeholder || null,
+                placeholder: setting.placeholder || false,
                 license: setting.license,
 
                 // Select settings

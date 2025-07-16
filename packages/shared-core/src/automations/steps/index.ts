@@ -26,6 +26,13 @@ import * as slack from "./slack"
 import * as triggerAutomationRun from "./triggerAutomationRun"
 import * as updateRow from "./updateRow"
 import * as zapier from "./zapier"
+import * as apiRequest from "./apiRequest"
+import * as classifyText from "./ai/classify"
+import * as promptLLM from "./ai/promptLLM"
+import * as translate from "./ai/translate"
+import * as summarise from "./ai/summarise"
+import * as generate from "./ai/generate"
+import * as extract from "./ai/extract"
 
 export {
   bash,
@@ -51,6 +58,13 @@ export {
   triggerAutomationRun,
   updateRow,
   zapier,
+  apiRequest,
+  classifyText,
+  promptLLM,
+  translate,
+  summarise,
+  generate,
+  extract,
 }
 
 export const definitions: Record<
@@ -80,4 +94,11 @@ export const definitions: Record<
   zapier: zapier.definition,
   integromat: make.definition,
   n8n: n8n.definition,
+  API_REQUEST: apiRequest.definition,
+  CLASSIFY_CONTENT: classifyText.definition,
+  PROMPT_LLM: promptLLM.definition,
+  TRANSLATE: translate.definition,
+  SUMMARISE: summarise.definition,
+  GENERATE_TEXT: generate.definition,
+  EXTRACT_FILE_DATA: extract.definition,
 }

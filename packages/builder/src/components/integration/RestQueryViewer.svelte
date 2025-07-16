@@ -108,7 +108,7 @@
 
   $: builtQuery = buildQuery(query, runtimeUrlQueries, requestBindings)
   $: originalQuery = mounted
-    ? originalQuery ?? cloneDeep(builtQuery)
+    ? (originalQuery ?? cloneDeep(builtQuery))
     : undefined
   $: isModified = JSON.stringify(originalQuery) !== JSON.stringify(builtQuery)
 
@@ -706,7 +706,7 @@
             {#if response}
               <Tab title="JSON">
                 <div>
-                  <JSONPreview height="300" data={response.rows[0]} />
+                  <JSONPreview height={300} data={response.rows[0]} />
                 </div>
               </Tab>
             {/if}
@@ -726,7 +726,7 @@
             {/if}
             {#if response}
               <Tab title="Raw">
-                <TextArea disabled value={response.extra?.raw} height="300" />
+                <TextArea disabled value={response.extra?.raw} height={300} />
               </Tab>
               <Tab title="Headers">
                 <KeyValueBuilder

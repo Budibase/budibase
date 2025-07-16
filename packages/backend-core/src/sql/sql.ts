@@ -1,11 +1,12 @@
 import { Knex, knex } from "knex"
 import * as dbCore from "../db"
 import {
+  extractDate,
   getNativeSql,
   isExternalTable,
-  isInvalidISODateString,
   isValidFilter,
   isValidISODateString,
+  isValidISODateStringWithoutTimezone,
   isValidTime,
   sqlLog,
   validateManyToMany,
@@ -165,6 +166,13 @@ class InternalBuilder {
       return (
         this.client === SqlClient.POSTGRES &&
         field?.externalType?.includes("money")
+      )
+    },
+    POSTGRES_ENUM: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.POSTGRES &&
+        field?.externalType?.toLowerCase() === "user-defined" &&
+        field?.type === FieldType.OPTIONS
       )
     },
     MSSQL_DATES: (field: FieldSchema | undefined) => {
@@ -422,12 +430,25 @@ class InternalBuilder {
         if (!isValidTime(input)) {
           return null
         }
-      } else {
-        if (isInvalidISODateString(input)) {
+      } else if (schema.dateOnly) {
+        const date = extractDate(input)
+        if (!date) {
           return null
         }
+        return new Date(date)
+      } else if (schema.ignoreTimezones) {
+        if (isValidISODateString(input)) {
+          return new Date(input)
+        } else if (isValidISODateStringWithoutTimezone(input)) {
+          return new Date(input + "Z")
+        } else {
+          return null
+        }
+      } else {
         if (isValidISODateString(input)) {
           return new Date(input.trim())
+        } else {
+          return null
         }
       }
     }
@@ -887,7 +908,14 @@ class InternalBuilder {
             `${value.toLowerCase()}%`,
           ])
         } else {
-          return q.whereILike(key, `${value}%`)
+          const schema = this.getFieldSchema(key)
+          if (this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema)) {
+            return q.whereRaw(`??::text ilike '${value}%'`, [
+              this.knex.raw(this.quote(schema!.name)),
+            ])
+          } else {
+            return q.whereILike(key, `${value}%`)
+          }
         }
       })
     }
@@ -1230,6 +1258,9 @@ class InternalBuilder {
     // to make sure result is deterministic
     const hasAggregations = (resource?.aggregations?.length ?? 0) > 0
     if (!hasAggregations && (!sort || sort[primaryKey[0]] === undefined)) {
+      if (primaryKey[0] === undefined) {
+        throw new Error(`Primary key not found for table ${this.table.name}`)
+      }
       query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query

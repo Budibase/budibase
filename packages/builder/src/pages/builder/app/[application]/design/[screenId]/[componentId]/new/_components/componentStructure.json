@@ -27,6 +27,7 @@
       "pdftable",
       "spreadsheet",
       "dynamicfilter",
+      "filter",
       "daterangepicker"
     ]
   },
@@ -46,12 +47,13 @@
       "icon",
       "embed",
       "backgroundimage",
-      "embeddedmap"
+      "embeddedmap",
+      "codegenerator"
     ]
   },
   {
     "name": "Form",
-    "icon": "Form",
+    "icon": "list",
     "children": [
       "form",
       "formstep",

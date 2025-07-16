@@ -114,7 +114,7 @@
         class:invalid={!option.valid}
       >
         <div class="drag-handle">
-          <Icon name="DragHandle" size="L" />
+          <Icon name="dots-six-vertical" size="L" />
         </div>
         <div
           id="color-{option.id}"
@@ -152,7 +152,7 @@
           on:input={e => handleNameChange(option.id, e.target.value)}
         />
         <Icon
-          name="Close"
+          name="x"
           hoverable
           size="S"
           on:click={() => removeInput(option.id)}
@@ -161,7 +161,7 @@
     {/each}
   </div>
   <div on:click={addNewInput} class="add-option">
-    <Icon name="Add" />
+    <Icon name="plus" />
     <div>Add option</div>
   </div>
 </div>
@@ -181,7 +181,9 @@
 
   /* Options row */
   .option {
-    transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
+    transition:
+      background-color 130ms ease-in-out,
+      color 130ms ease-in-out,
       border-color 130ms ease-in-out;
     display: flex;
     flex-direction: row;

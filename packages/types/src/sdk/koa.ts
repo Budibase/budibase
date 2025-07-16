@@ -1,13 +1,13 @@
 import { Context, Request } from "koa"
 import {
-  User,
   Role,
   UserRoles,
   Account,
-  ConfigType,
   Row,
   Table,
   UserBindings,
+  User,
+  UserSSO,
 } from "../documents"
 import { FeatureFlag, License } from "../sdk"
 import { Files } from "formidable"
@@ -19,7 +19,7 @@ export enum LoginMethod {
   COOKIE = "cookie",
 }
 
-export interface ContextUser extends Omit<User, "roles"> {
+export interface ContextUser extends Omit<User & Partial<UserSSO>, "roles"> {
   globalId?: string
   license?: License
   userId?: string
@@ -29,7 +29,6 @@ export interface ContextUser extends Omit<User, "roles"> {
   csrfToken?: string
   featureFlags?: FeatureFlag[]
   accountPortalAccess?: boolean
-  providerType?: ConfigType
   account?: Account
 }
 
@@ -44,7 +43,12 @@ export interface BBRequest<RequestBody> extends Request {
 /**
  * Basic context with no user.
  */
-export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
+export interface Ctx<
+  RequestBody = any,
+  ResponseBody = any,
+  Params extends Record<string, any> = any,
+> extends Context {
+  params: Params
   request: BBRequest<RequestBody>
   body: ResponseBody
   userAgent: UserAgentContext["userAgent"]
@@ -54,8 +58,11 @@ export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
 /**
  * Authenticated context.
  */
-export interface UserCtx<RequestBody = any, ResponseBody = any>
-  extends Ctx<RequestBody, ResponseBody> {
+export interface UserCtx<
+  RequestBody = any,
+  ResponseBody = any,
+  Params extends Record<string, any> = any,
+> extends Ctx<RequestBody, ResponseBody, Params> {
   user: ContextUser
   state: { nonce?: string }
   roleId?: string

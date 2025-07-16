@@ -20,7 +20,7 @@
       notifications.info("Changes reverted successfully")
       onComplete()
     } catch (error) {
-      notifications.error(`Error reverting changes: ${error}`)
+      notifications.error(`Error reverting changes: ${error.message}`)
     }
   }
 
@@ -35,7 +35,7 @@
 
 <Modal bind:this={revertModal}>
   <ModalContent
-    title="Revert Changes"
+    title="Revert changes"
     confirmText="Revert"
     onConfirm={revert}
     disabled={appName !== $appStore.name}

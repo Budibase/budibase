@@ -7,6 +7,7 @@ import {
   AddSSoUserResponse,
   BulkUserRequest,
   BulkUserResponse,
+  ChangeTenantOwnerEmailRequest,
   CheckInviteResponse,
   CountUserResponse,
   CreateAdminUserRequest,
@@ -29,10 +30,10 @@ import {
   LockType,
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
-  PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
+  StrippedUser,
   UnsavedUser,
   UpdateInviteRequest,
   UpdateInviteResponse,
@@ -66,6 +67,15 @@ const generatePassword = (length: number) => {
     .slice(0, length)
 }
 
+const stripUsers = (users: (User | StrippedUser)[]): StrippedUser[] => {
+  return users.map(user => ({
+    _id: user._id,
+    email: user.email,
+    tenantId: user.tenantId,
+    userId: user.userId,
+  }))
+}
+
 export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user?._id
@@ -97,15 +107,41 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
   }
 }
 
+export const changeTenantOwnerEmail = async (
+  ctx: Ctx<ChangeTenantOwnerEmailRequest, void>
+) => {
+  const { newAccountEmail, originalEmail, tenantIds } = ctx.request.body
+  try {
+    for (const tenantId of tenantIds) {
+      await tenancy.doInTenant(tenantId, async () => {
+        const tenantUser = await userSdk.db.getUserByEmail(originalEmail)
+        if (!tenantUser) {
+          return
+        }
+        tenantUser.email = newAccountEmail
+        await userSdk.db.save(tenantUser, {
+          currentUserId: tenantUser._id,
+          isAccountHolder: true,
+          allowChangingEmail: true,
+        })
+      })
+    }
+    ctx.status = 200
+  } catch (err: any) {
+    ctx.throw(err.status || 400, err)
+  }
+}
+
 export const addSsoSupport = async (
   ctx: Ctx<AddSSoUserRequest, AddSSoUserResponse>
 ) => {
   const { email, ssoId } = ctx.request.body
   try {
-    // Status is changed to 404 from getUserDoc if user is not found
-    const userByEmail = (await platform.users.getUserDoc(
-      email
-    )) as PlatformUserByEmail
+    const [userByEmail] = await users.getExistingPlatformUsers([email])
+    if (!userByEmail) {
+      ctx.throw(404, "Not Found")
+    }
+
     await platform.users.addSsoUser(
       ssoId,
       email,
@@ -249,18 +285,8 @@ export const destroy = async (ctx: UserCtx<void, DeleteUserResponse>) => {
   }
 }
 
-export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
-  const body = ctx.request.body
-  const users = await userSdk.db.getUsersByAppAccess({
-    appId: body.appId,
-    limit: body.limit,
-  })
-
-  ctx.body = { data: users }
-}
-
 export const search = async (
-  ctx: Ctx<SearchUsersRequest, SearchUsersResponse>
+  ctx: UserCtx<SearchUsersRequest, SearchUsersResponse>
 ) => {
   const body = ctx.request.body
 
@@ -287,8 +313,13 @@ export const search = async (
     }
   }
 
+  let response: SearchUsersResponse = { data: [] }
+
   if (body.paginate === false) {
-    await getAppUsers(ctx)
+    response.data = await userSdk.db.getUsersByAppAccess({
+      appId: body.appId,
+      limit: body.limit,
+    })
   } else {
     const paginated = await userSdk.core.paginatedUsers(body)
     // user hashed password shouldn't ever be returned
@@ -297,8 +328,18 @@ export const search = async (
         delete user.password
       }
     }
-    ctx.body = paginated
+    response = {
+      data: paginated.data,
+      hasNextPage: paginated.hasNextPage,
+      nextPage: paginated.nextPage,
+    }
   }
+
+  if (!users.hasBuilderPermissions(ctx.user)) {
+    response.data = stripUsers(response.data)
+  }
+
+  ctx.body = response
 }
 
 // called internally by app server user fetch

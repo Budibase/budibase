@@ -144,7 +144,7 @@
   {#if fieldIcon}
     {#if !useOptionIconImage}
       <span class="option-extra icon">
-        <Icon size="S" name={fieldIcon} />
+        <Icon size="M" name={fieldIcon} />
       </span>
     {:else}
       <span class="option-extra icon field-icon">
@@ -164,13 +164,7 @@
   >
     {fieldText}
   </span>
-  <svg
-    class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
-    focusable="false"
-    aria-hidden="true"
-  >
-    <use xlink:href="#spectrum-css-icon-Chevron100" />
-  </svg>
+  <Icon name="caret-down" size="S" />
 </button>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -210,13 +204,14 @@
           on:click={() => onSelectOption(null)}
         >
           <span class="spectrum-Menu-itemLabel">{placeholderOption}</span>
-          <svg
-            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Checkmark100" />
-          </svg>
+          <div class="check">
+            <Icon
+              name="check"
+              size="S"
+              weight="bold"
+              color="var(--spectrum-global-color-blue-500)"
+            />
+          </div>
         </li>
       {/if}
       {#if filteredOptions.length}
@@ -242,7 +237,11 @@
                     height="15"
                   />
                 {:else}
-                  <Icon size="S" name={getOptionIcon(option, idx)} />
+                  <Icon
+                    size="M"
+                    color="var(--spectrum-global-color-gray-600)"
+                    name={getOptionIcon(option, idx)}
+                  />
                 {/if}
               </span>
             {/if}
@@ -262,17 +261,18 @@
             {#if option.tag}
               <span class="option-tag">
                 <Tags>
-                  <Tag icon="LockClosed">{option.tag}</Tag>
+                  <Tag icon="lock">{option.tag}</Tag>
                 </Tags>
               </span>
             {/if}
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
+            <div class="check">
+              <Icon
+                name="check"
+                size="S"
+                weight="bold"
+                color="var(--spectrum-global-color-blue-500)"
+              />
+            </div>
           </li>
         {/each}
       {/if}
@@ -314,9 +314,12 @@
   }
 
   /* Icon and colour alignment */
-  .spectrum-Menu-checkmark {
-    align-self: center;
-    margin-top: 0;
+  .check {
+    display: none;
+    padding-left: 8px;
+  }
+  li.is-selected .check {
+    display: block;
   }
   .option-extra {
     padding-right: 8px;
@@ -331,7 +334,7 @@
   }
   .popover-content.auto-width .spectrum-Menu-itemLabel {
     white-space: nowrap;
-    overflow: none;
+    overflow: hidden;
     text-overflow: ellipsis;
   }
   .popover-content:not(.auto-width) .spectrum-Menu-itemLabel {
@@ -380,7 +383,7 @@
   .option-tag {
     margin: 0 var(--spacing-m) 0 var(--spacing-m);
   }
-  .option-tag :global(.spectrum-Tags-item > .spectrum-Icon) {
+  .option-tag :global(.spectrum-Tags-item > i) {
     margin-top: 2px;
   }
 

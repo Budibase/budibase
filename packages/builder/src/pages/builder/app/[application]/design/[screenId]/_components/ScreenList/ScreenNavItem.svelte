@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Modal, Helpers, notifications, Icon } from "@budibase/bbui"
   import {
-    navigationStore,
     screenStore,
     userSelectedResourceMap,
     contextMenuStore,
@@ -17,6 +16,7 @@
   import type { Screen } from "@budibase/types"
 
   export let screen
+  export let deletionAllowed: boolean
 
   let confirmDeleteDialog: ConfirmDialog
   let screenDetailsModal: Modal
@@ -33,15 +33,12 @@
     duplicateScreen.routing.homeScreen = false
 
     try {
-      // Create the screen
-      await screenStore.save(duplicateScreen)
+      const linkLabel = capitalise(duplicateScreen.routing.route.split("/")[1])
 
-      // Add new screen to navigation
-      await navigationStore.saveLink(
-        duplicateScreen.routing.route,
-        capitalise(duplicateScreen.routing.route.split("/")[1]),
-        duplicateScreen.routing.roleId
-      )
+      await screenStore.save({
+        ...duplicateScreen,
+        navigationLinkLabel: linkLabel,
+      })
     } catch (error) {
       notifications.error("Error duplicating screen")
     }
@@ -72,7 +69,7 @@
 
     const items = [
       {
-        icon: "ShowOneLayer",
+        icon: "stack",
         name: "Paste inside",
         keyBind: null,
         visible: true,
@@ -80,7 +77,7 @@
         callback: () => pasteComponent("inside"),
       },
       {
-        icon: "Duplicate",
+        icon: "copy",
         name: "Duplicate",
         keyBind: null,
         visible: true,
@@ -88,12 +85,13 @@
         callback: screenDetailsModal.show,
       },
       {
-        icon: "Delete",
+        icon: "trash",
         name: "Delete",
         keyBind: null,
         visible: true,
-        disabled: false,
+        disabled: !deletionAllowed,
         callback: confirmDeleteDialog.show,
+        tooltip: deletionAllowed ? "" : "At least one screen is required",
       },
     ]
 
@@ -104,7 +102,7 @@
 <NavItem
   on:contextmenu={e => openContextMenu(e, screen)}
   scrollable
-  icon={screen.routing.homeScreen ? "Home" : null}
+  icon={screen.routing.homeScreen ? "house" : null}
   indentLevel={0}
   selected={$screenStore.selectedScreenId === screen._id}
   hovering={screen._id === $contextMenuStore.id}
@@ -116,11 +114,11 @@
 >
   <Icon
     on:click={e => openContextMenu(e, screen)}
-    size="S"
+    size="M"
     hoverable
-    name="MoreSmallList"
+    name="dots-three"
   />
-  <div slot="icon" class="icon">
+  <div slot="right" class="icon">
     <RoleIndicator roleId={screen.routing.roleId} />
   </div>
 </NavItem>

@@ -311,7 +311,7 @@
     </div>
 
     <div class="">
-      <ActionButton size="M" icon="Download" on:click={() => downloadLogs()} />
+      <ActionButton size="M" icon="download" on:click={() => downloadLogs()} />
     </div>
   </div>
   <Layout noPadding>
@@ -360,7 +360,7 @@
         />
         <Icon
           hoverable
-          name="Close"
+          name="x"
           on:click={() => {
             sidePanelVisible = false
           }}
@@ -374,7 +374,7 @@
         on:click={() => copyToClipboard(JSON.stringify(selectedLog.metadata))}
         class="copy-icon"
       >
-        <Icon name="Copy" size="S" />
+        <Icon name="copy" size="S" />
       </div>
       <CoreTextArea
         disabled
@@ -402,8 +402,8 @@
     width: 31px;
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color
-        var(--spectrum-global-animation-duration-100, 130ms),
+    transition:
+      background-color var(--spectrum-global-animation-duration-100, 130ms),
       box-shadow var(--spectrum-global-animation-duration-100, 130ms),
       border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);

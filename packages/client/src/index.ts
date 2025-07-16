@@ -49,16 +49,11 @@ import * as internal from "svelte/internal"
 window.svelte_internal = internal
 window.svelte = svelte
 
-// Initialise spectrum icons
-// eslint-disable-next-line local-rules/no-budibase-imports
-import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-vite.js"
-loadSpectrumIcons()
-
 // Extend global window scope
 declare global {
   interface Window {
     // Data from builder
-    "##BUDIBASE_APP_ID##"?: string
+    "##BUDIBASE_APP_ID##": string
     "##BUDIBASE_IN_BUILDER##"?: true
     "##BUDIBASE_PREVIEW_SCREEN##"?: Screen
     "##BUDIBASE_SELECTED_COMPONENT_ID##"?: string
@@ -86,6 +81,7 @@ declare global {
     loadBudibase: typeof loadBudibase
     svelte: typeof svelte
     svelte_internal: typeof internal
+    INIT_TIME: number
   }
 }
 
@@ -96,7 +92,10 @@ export interface SDK {
   ActionTypes: typeof ActionTypes
   fetchDatasourceSchema: any
   fetchDatasourceDefinition: (datasource: DataFetchDatasource) => Promise<Table>
+  getRelationshipSchemaAdditions: (schema: Record<string, any>) => Promise<any>
+  enrichButtonActions: any
   generateGoldenSample: any
+  createContextStore: any
   builderStore: typeof builderStore
   authStore: typeof authStore
   notificationStore: typeof notificationStore
@@ -106,7 +105,7 @@ export interface SDK {
   BlockComponent: typeof BlockComponent
 }
 
-let app: ClientApp
+let app: ClientApp | UpdatingApp
 
 const loadBudibase = async () => {
   // Update builder store with any builder flags
@@ -136,9 +135,11 @@ const loadBudibase = async () => {
   )
 
   if (window.MIGRATING_APP) {
-    new UpdatingApp({
-      target: window.document.body,
-    })
+    if (!app) {
+      app = new UpdatingApp({
+        target: window.document.body,
+      })
+    }
     return
   }
 

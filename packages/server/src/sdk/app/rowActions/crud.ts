@@ -6,10 +6,14 @@ import {
   TableRowActions,
   User,
   VirtualDocumentType,
+  DocumentType,
 } from "@budibase/types"
 import { generateRowActionsID } from "../../../db/utils"
 import automations from "../automations"
-import { automations as sharedAutomations } from "@budibase/shared-core"
+import {
+  isViewId,
+  automations as sharedAutomations,
+} from "@budibase/shared-core"
 import * as triggers from "../../../automations/triggers"
 import sdk from "../.."
 
@@ -87,7 +91,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
 }
 
 export async function get(tableId: string, rowActionId: string) {
-  const actionsDoc = await getAll(tableId)
+  const actionsDoc = await getAllForTable(tableId)
   const rowAction = actionsDoc?.actions[rowActionId]
   if (!rowAction) {
     throw new HTTPError(
@@ -98,16 +102,27 @@ export async function get(tableId: string, rowActionId: string) {
   return rowAction
 }
 
-export async function getAll(tableId: string) {
+export async function getAllForTable(tableId: string) {
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
   return await db.tryGet<TableRowActions>(rowActionsId)
 }
 
+export async function getAll() {
+  const db = context.getAppDB()
+  return (
+    await db.allDocs<TableRowActions>(
+      docIds.getDocParams(DocumentType.ROW_ACTIONS, undefined, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc!)
+}
+
 export async function deleteAll(tableId: string) {
   const db = context.getAppDB()
 
-  const doc = await getAll(tableId)
+  const doc = await getAllForTable(tableId)
   if (!doc) {
     return
   }
@@ -136,7 +151,7 @@ async function updateDoc(
     tableRowActions: TableRowActions
   ) => TableRowActions | Promise<TableRowActions>
 ) {
-  const actionsDoc = await getAll(tableId)
+  const actionsDoc = await getAllForTable(tableId)
   const rowAction = actionsDoc?.actions[rowActionId]
   if (!rowAction) {
     throw new HTTPError(
@@ -158,7 +173,7 @@ async function updateDoc(
 
 async function guardView(tableId: string, viewId: string) {
   let view
-  if (docIds.isViewId(viewId)) {
+  if (isViewId(viewId)) {
     view = await sdk.views.get(viewId)
   }
   if (!view || view.tableId !== tableId) {

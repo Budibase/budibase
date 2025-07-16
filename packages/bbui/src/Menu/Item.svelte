@@ -43,7 +43,11 @@
 >
   {#if icon}
     <div class="icon">
-      <Icon name={icon} size="S" />
+      <Icon
+        name={icon}
+        size="S"
+        color="var(--spectrum-global-color-gray-700)"
+      />
     </div>
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
@@ -90,7 +94,10 @@
     display: grid;
     place-items: center;
   }
-  .is-disabled .key {
+  .is-disabled .spectrum-Menu-itemLabel {
     color: var(--spectrum-global-color-gray-600);
+  }
+  .spectrum-Menu-itemLabel {
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

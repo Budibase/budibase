@@ -92,7 +92,7 @@ export default class AuditLogsProcessor implements EventProcessor {
     // no-op
   }
 
-  shutdown(): void {
-    AuditLogsProcessor.auditLogQueue?.close()
+  async shutdown(): Promise<void> {
+    await AuditLogsProcessor.auditLogQueue?.close()
   }
 }

@@ -13,7 +13,7 @@
   export let value: any = ""
   export let bindings: any[] = []
   export let title: string | undefined = undefined
-  export let placeholder: string | undefined = undefined
+  export let placeholder: string | false | undefined = undefined
   export let label: string | undefined = undefined
   export let disabled: boolean = false
   export let allowHBS: boolean = true
@@ -23,7 +23,7 @@
   export let key: string | null = null
   export let disableBindings: boolean = false
   export let forceModal: boolean = false
-  export let context = null
+  export let context: any | undefined = undefined
   export let autocomplete: boolean | undefined = undefined
   export let multiline: boolean = false
 
@@ -75,7 +75,7 @@
     on:change={event => onChange(event.detail)}
     on:blur={onBlur}
     on:scrollable={e => (scrollable = e.detail)}
-    {placeholder}
+    placeholder={placeholder || undefined}
     {updateOnChange}
     {autocomplete}
   >
@@ -87,7 +87,7 @@
           bindingDrawer.show()
         }}
       >
-        <Icon size="S" name="FlashOn" />
+        <Icon size="S" weight="fill" name="lightning" />
       </div>
     {/if}
   </svelte:component>
@@ -96,7 +96,7 @@
   on:drawerHide={onDrawerHide}
   on:drawerShow
   bind:this={bindingDrawer}
-  title={title ?? placeholder ?? "Bindings"}
+  title={title || placeholder || "Bindings"}
   {forceModal}
 >
   <Button cta slot="buttons" on:click={saveBinding}>Save</Button>

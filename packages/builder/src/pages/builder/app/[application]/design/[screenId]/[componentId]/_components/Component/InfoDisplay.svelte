@@ -1,9 +1,9 @@
 <script>
   import { Icon } from "@budibase/bbui"
 
-  export let title
-  export let body
-  export let icon = "HelpOutline"
+  export let title = undefined
+  export let body = undefined
+  export let icon = "question"
   export let quiet = false
   export let warning = false
   export let error = false

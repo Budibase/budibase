@@ -7,7 +7,7 @@
 
 <div class="scim-banner">
   <IconAvatar
-    icon="Sync"
+    icon="arrows-clockwise"
     size={iconSize}
     background={"var(--spectrum-global-color-gray-500)"}
     tooltip="Synced from your AD"

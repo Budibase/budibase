@@ -119,11 +119,17 @@ export const TYPE_TRANSFORM_MAP: any = {
       } else if (typeof date === "string" && sql.utils.isValidTime(date)) {
         return date
       } else {
-        const parsed = new Date(date)
+        // Date strings can come in without timezone info. In this case we want
+        // to make sure we're parsing them in as UTC because the rest of the
+        // system expects UTC dates.
+        let parsed = new Date(`${date}Z`)
         if (isNaN(parsed.getTime())) {
-          throw new Error(`Invalid date value: "${date}"`)
+          parsed = new Date(date)
+          if (isNaN(parsed.getTime())) {
+            throw new Error(`Invalid date value: "${date}"`)
+          }
         }
-        return date
+        return parsed.toISOString()
       }
     },
   },

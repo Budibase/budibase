@@ -17,14 +17,6 @@
   import { ActionButton, notifications } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
   import { builderStore } from "@/stores/builder"
-  import TourWrap from "@/components/portal/onboarding/TourWrap.svelte"
-  import { TOUR_STEP_KEYS } from "@/components/portal/onboarding/tours.js"
-
-  const {
-    BUILDER_FORM_CREATE_STEPS,
-    BUILDER_FORM_VIEW_UPDATE_STEPS,
-    BUILDER_FORM_ROW_ID,
-  } = TOUR_STEP_KEYS
 
   const onUpdateName = async value => {
     try {
@@ -111,21 +103,13 @@
         </div>
       </span>
       {#if section === "settings"}
-        <TourWrap
-          stepKeys={[
-            BUILDER_FORM_CREATE_STEPS,
-            BUILDER_FORM_VIEW_UPDATE_STEPS,
-            BUILDER_FORM_ROW_ID,
-          ]}
-        >
-          <ComponentSettingsSection
-            {componentInstance}
-            {componentDefinition}
-            {bindings}
-            {componentBindings}
-            {isScreen}
-          />
-        </TourWrap>
+        <ComponentSettingsSection
+          {componentInstance}
+          {componentDefinition}
+          {bindings}
+          {componentBindings}
+          {isScreen}
+        />
       {/if}
       {#if section === "styles"}
         <DesignSection
@@ -157,14 +141,15 @@
 <style>
   .settings-tabs {
     display: flex;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
     padding: 0 var(--spacing-l);
     padding-bottom: var(--spacing-l);
   }
   .input {
-    color: inherit;
+    color: var(--spectrum-global-color-gray-900);
     font-family: inherit;
     font-size: inherit;
+    font-weight: 500;
     background-color: transparent;
     border: none;
     flex: 1;
@@ -176,7 +161,10 @@
     right: 6px;
     border: 1px solid transparent;
     border-radius: 3px;
-    transition: 150ms background-color, 150ms border-color, 150ms color;
+    transition:
+      150ms background-color,
+      150ms border-color,
+      150ms color;
   }
 
   .input:hover,

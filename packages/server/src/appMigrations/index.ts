@@ -4,6 +4,7 @@ import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
 import { UserCtx } from "@budibase/types"
 import { Header } from "@budibase/backend-core"
+import environment from "../environment"
 
 export * from "./appMigrationMetadata"
 
@@ -29,8 +30,8 @@ export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
   return latestMigrationId
 }
 
-function getTimestamp(versionId: string) {
-  return versionId?.split("_")[0] || ""
+function getMigrationIndex(versionId: string) {
+  return MIGRATIONS.findIndex(m => m.id === versionId)
 }
 
 export async function checkMissingMigrations(
@@ -45,13 +46,8 @@ export async function checkMissingMigrations(
     return next()
   }
 
-  const currentVersion = await getAppMigrationVersion(appId)
-  const queue = getAppMigrationQueue()
-
-  if (
-    latestMigration &&
-    getTimestamp(currentVersion) < getTimestamp(latestMigration)
-  ) {
+  if (!(await isAppFullyMigrated(appId))) {
+    const queue = getAppMigrationQueue()
     await queue.add(
       {
         appId,
@@ -61,8 +57,43 @@ export async function checkMissingMigrations(
       }
     )
 
-    ctx.response.set(Header.MIGRATING_APP, appId)
+    const { applied: migrationApplied } = await waitForMigration(appId, {
+      timeoutMs: environment.SYNC_MIGRATION_CHECKS_MS,
+    })
+    if (!migrationApplied) {
+      ctx.response.set(Header.MIGRATING_APP, appId)
+    }
   }
 
   return next()
+}
+
+const waitForMigration = async (
+  appId: string,
+  { timeoutMs }: { timeoutMs: number }
+): Promise<{ applied: boolean }> => {
+  const start = Date.now()
+
+  while (Date.now() - start < timeoutMs) {
+    if (await isAppFullyMigrated(appId)) {
+      console.log(`Migration ran in ${Date.now() - start}ms`)
+      return { applied: true }
+    }
+
+    await new Promise(r => setTimeout(r, 10))
+  }
+
+  return { applied: false }
+}
+
+export const isAppFullyMigrated = async (appId: string) => {
+  const latestMigration = getLatestEnabledMigrationId()
+  if (!latestMigration) {
+    return true
+  }
+  const latestMigrationApplied = await getAppMigrationVersion(appId)
+  return (
+    getMigrationIndex(latestMigrationApplied) >=
+    getMigrationIndex(latestMigration)
+  )
 }

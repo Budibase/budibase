@@ -4,14 +4,34 @@ import { setEnv } from "../../../environment"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events, utils, context } from "@budibase/backend-core"
+import {
+  events,
+  utils,
+  context,
+  roles,
+  features,
+  Header,
+  db,
+} from "@budibase/backend-core"
 import env from "../../../environment"
-import { type App, BuiltinPermissionID } from "@budibase/types"
+import {
+  type App,
+  BuiltinPermissionID,
+  Screen,
+  WorkspaceApp,
+} from "@budibase/types"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
 import nock from "nock"
 import path from "path"
+import {
+  basicScreen,
+  customScreen,
+  basicTable,
+  basicQuery,
+} from "../../../tests/utilities/structures"
+import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -26,12 +46,13 @@ describe("/applications", () => {
     await config.init()
   })
 
+  async function createNewApp() {
+    app = await config.newTenant()
+    await config.publish()
+  }
+
   beforeEach(async () => {
-    app = await config.api.application.create({ name: utils.newid() })
-    const deployment = await config.api.application.publish(app.appId)
-    if (deployment.status !== "SUCCESS") {
-      throw new Error("Failed to publish app")
-    }
+    await createNewApp()
     jest.clearAllMocks()
     nock.cleanAll()
   })
@@ -241,6 +262,224 @@ describe("/applications", () => {
     })
   })
 
+  describe("fetchClientApps", () => {
+    it("should return apps with default workspace app when published", async () => {
+      const response = await config.api.application.fetchClientApps()
+      expect(response.apps).toHaveLength(1)
+      expect(response.apps[0]).toEqual(
+        expect.objectContaining({
+          prodId: config.getProdAppId(),
+          url: app.url,
+        })
+      )
+    })
+
+    it("should return multiple apps when published app with workspace apps exists", async () => {
+      await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Test Workspace App",
+          url: "/testapp",
+        })
+      )
+      await config.publish()
+
+      const response = await config.api.application.fetchClientApps()
+
+      expect(response.apps.length).toBe(2)
+
+      const testApp = response.apps.find(a => a.name === "Test Workspace App")
+      expect(testApp).toEqual(
+        expect.objectContaining({
+          prodId: config.getProdAppId(),
+          name: "Test Workspace App",
+          url: `${app.url}/testapp`,
+        })
+      )
+    })
+
+    it("should handle creating multiple workspace apps", async () => {
+      const { workspaceApp: workspaceApp1 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "App One",
+            url: "/appone",
+          })
+        )
+
+      const { workspaceApp: workspaceApp2 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "App Two",
+            url: "/apptwo",
+          })
+        )
+      const app = await config.publish()
+
+      const response = await config.api.application.fetchClientApps()
+
+      expect(response.apps.length).toBe(3)
+      expect(response.apps).toEqual(
+        expect.arrayContaining([
+          {
+            appId: expect.stringMatching(
+              new RegExp(`^${app.appId}_workspace_app_.+`)
+            ),
+            name: app.name,
+            prodId: app.appId,
+            updatedAt: app.updatedAt,
+            url: app.url,
+          },
+          {
+            appId: `${app.appId}_${workspaceApp1._id}`,
+            name: "App One",
+            prodId: config.getProdAppId(),
+            updatedAt: app.updatedAt,
+            url: `${app.url}/appone`,
+          },
+          {
+            appId: `${app.appId}_${workspaceApp2._id}`,
+            name: "App Two",
+            prodId: config.getProdAppId(),
+            updatedAt: app.updatedAt,
+            url: `${app.url}/apptwo`,
+          },
+        ])
+      )
+    })
+
+    it("should return apps from multiple published workspaces", async () => {
+      const { workspaceApp: app1Workspace1 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "App One",
+            url: "/appone",
+          })
+        )
+      app = await config.publish()
+
+      const secondApp = await tk.withFreeze(new Date(), async () => {
+        // Create second app
+        let secondApp = await config.api.application.create({
+          name: "Second App",
+        })
+
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "App Two",
+            url: "/apptwo",
+          })
+        )
+        await config.api.application.publish(secondApp.appId)
+        return secondApp
+      })
+
+      const response = await config.api.application.fetchClientApps()
+
+      expect(response.apps).toHaveLength(3)
+
+      expect(response.apps).toEqual(
+        expect.arrayContaining([
+          {
+            appId: expect.stringMatching(
+              new RegExp(`^${app.appId}_workspace_app_.+`)
+            ),
+            name: app.name,
+            prodId: app.appId,
+            updatedAt: app.updatedAt,
+            url: app.url,
+          },
+          {
+            appId: `${app.appId}_${app1Workspace1._id}`,
+            name: "App One",
+            prodId: config.getProdAppId(),
+            updatedAt: app.updatedAt,
+            url: `${app.url}/appone`,
+          },
+          {
+            appId: expect.stringMatching(
+              new RegExp(
+                `^${db.getProdAppID(secondApp.appId)}_workspace_app_.+`
+              )
+            ),
+            name: secondApp.name,
+            prodId: db.getProdAppID(secondApp.appId),
+            updatedAt: secondApp.updatedAt,
+            url: secondApp.url,
+          },
+        ])
+      )
+    })
+
+    it("should not return unpublished apps", async () => {
+      const { workspaceApp: app1Workspace1 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "App One",
+            url: "/appone",
+          })
+        )
+      app = await config.publish()
+
+      // Non published workspace
+      await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Another app",
+          url: "/other",
+        })
+      )
+
+      // Create second app
+      const secondApp = await tk.withFreeze(new Date(), async () => {
+        const secondApp = await config.api.application.create({
+          name: "Second App",
+        })
+        await config.api.application.publish(secondApp.appId)
+        return secondApp
+      })
+
+      // Unpublished app
+      await config.api.application.create({
+        name: "Third App",
+      })
+
+      const response = await config.api.application.fetchClientApps()
+
+      expect(response.apps).toHaveLength(3)
+
+      expect(response.apps).toEqual(
+        expect.arrayContaining([
+          {
+            appId: expect.stringMatching(
+              new RegExp(`^${app.appId}_workspace_app_.+`)
+            ),
+            name: app.name,
+            prodId: app.appId,
+            updatedAt: app.updatedAt,
+            url: app.url,
+          },
+          {
+            appId: `${app.appId}_${app1Workspace1._id}`,
+            name: "App One",
+            prodId: config.getProdAppId(),
+            updatedAt: app.updatedAt,
+            url: `${app.url}/appone`,
+          },
+          {
+            appId: expect.stringMatching(
+              new RegExp(
+                `^${db.getProdAppID(secondApp.appId)}_workspace_app_.+`
+              )
+            ),
+            name: secondApp.name,
+            prodId: db.getProdAppID(secondApp.appId),
+            updatedAt: secondApp.updatedAt,
+            url: secondApp.url,
+          },
+        ])
+      )
+    })
+  })
+
   describe("fetchAppDefinition", () => {
     it("should be able to get an apps definition", async () => {
       const res = await config.api.application.getDefinition(app.appId)
@@ -253,6 +492,245 @@ describe("/applications", () => {
       const res = await config.api.application.getAppPackage(app.appId)
       expect(res.application).toBeDefined()
       expect(res.application.appId).toEqual(config.getAppId())
+    })
+
+    it("should retrieve all the screens for builder calls", async () => {
+      await config.api.screen.save(basicScreen())
+      await config.api.screen.save(basicScreen())
+      await config.api.screen.save(basicScreen())
+
+      const res = await config.api.application.getAppPackage(app.appId)
+
+      expect(res.screens).toHaveLength(4) // Default one + 3 created
+    })
+
+    it("should retrieve all the screens for public calls", async () => {
+      const [_screen1, screen2, _screen3] = await Promise.all([
+        config.api.screen.save(basicScreen()),
+        config.api.screen.save(
+          customScreen({ roleId: roles.BUILTIN_ROLE_IDS.PUBLIC, route: "/" })
+        ),
+        config.api.screen.save(basicScreen()),
+      ])
+
+      await config.publish()
+      const res = await config.api.application.getAppPackage(app.appId, {
+        publicUser: true,
+      })
+
+      expect(res.screens).toHaveLength(1)
+      expect(res.screens).toContainEqual(
+        expect.objectContaining({ _id: screen2._id })
+      )
+    })
+
+    describe("workspace apps", () => {
+      describe("on", () => {
+        let featureCleanup: () => void
+        beforeAll(() => {
+          featureCleanup = features.testutils.setFeatureFlags("*", {
+            WORKSPACE_APPS: true,
+          })
+        })
+
+        afterAll(() => {
+          featureCleanup()
+        })
+
+        it("should retrieve all the screens for builder calls", async () => {
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest()
+          )
+
+          const res = await config.api.application.getAppPackage(app.appId)
+
+          expect(res.screens).toHaveLength(1)
+        })
+
+        describe("should retrieve only the screens for a given workspace app", () => {
+          let workspaceAppInfo: {
+            workspaceApp: WorkspaceApp
+            screens: Screen[]
+          }[]
+
+          beforeEach(async () => {
+            const appPackage = await config.api.application.getAppPackage(
+              app.appId
+            )
+            const [defaultWorkspaceApp] = (
+              await config.api.workspaceApp.fetch()
+            ).workspaceApps
+
+            const { workspaceApp: workspaceApp1 } =
+              await config.api.workspaceApp.create(
+                structures.workspaceApps.createRequest({
+                  url: "/app1",
+                })
+              )
+            const { workspaceApp: workspaceApp2 } =
+              await config.api.workspaceApp.create(
+                structures.workspaceApps.createRequest({
+                  url: "/app2",
+                })
+              )
+
+            workspaceAppInfo = []
+
+            async function createScreens(
+              workspaceApp: WorkspaceApp,
+              routes: string[]
+            ) {
+              const screens = []
+
+              for (const route of routes) {
+                const screen = await config.api.screen.save({
+                  ...basicScreen(route),
+                  workspaceAppId: workspaceApp._id!,
+                })
+                screens.push(screen)
+              }
+
+              workspaceAppInfo.push({
+                workspaceApp,
+                screens,
+              })
+            }
+
+            await createScreens(defaultWorkspaceApp, ["/page-1"])
+            await createScreens(workspaceApp1, ["/", "/page-1", "/page-2"])
+            await createScreens(workspaceApp2, ["/", "/page-1"])
+
+            workspaceAppInfo[0].screens.unshift(...appPackage.screens)
+          })
+
+          it.each(["", "/"])(
+            "should retrieve only the screens for a the workspace all with empty prefix",
+            async closingChar => {
+              await config.withHeaders(
+                {
+                  referer: `http://localhost:10000/${config.appId}${closingChar}`,
+                },
+                async () => {
+                  const res = await config.api.application.getAppPackage(
+                    app.appId,
+                    {
+                      headers: {
+                        [Header.TYPE]: "client",
+                      },
+                    }
+                  )
+
+                  expect(res.screens).toHaveLength(2)
+                  expect(res.screens).toEqual(
+                    expect.arrayContaining(
+                      workspaceAppInfo[0].screens.map(s =>
+                        expect.objectContaining({ _id: s._id })
+                      )
+                    )
+                  )
+                }
+              )
+            }
+          )
+
+          it.each(["", "/"])(
+            "should retrieve only the screens for a the workspace from the base url of it",
+            async closingChar => {
+              const { url } = workspaceAppInfo[1].workspaceApp
+              await config.withHeaders(
+                {
+                  referer: `http://localhost:10000/${config.appId}${url}${closingChar}`,
+                },
+                async () => {
+                  const res = await config.api.application.getAppPackage(
+                    app.appId,
+                    {
+                      headers: {
+                        [Header.TYPE]: "client",
+                      },
+                    }
+                  )
+
+                  expect(res.screens).toHaveLength(3)
+                  expect(res.screens).toEqual(
+                    expect.arrayContaining(
+                      workspaceAppInfo[1].screens.map(s =>
+                        expect.objectContaining({ _id: s._id })
+                      )
+                    )
+                  )
+                }
+              )
+            }
+          )
+
+          it("should retrieve only the screens for a the workspace from a page url", async () => {
+            const { url } = workspaceAppInfo[1].workspaceApp
+            await config.withHeaders(
+              {
+                referer: `http://localhost:10000/${config.appId}${url}#page-1`,
+              },
+              async () => {
+                const res = await config.api.application.getAppPackage(
+                  app.appId,
+                  {
+                    headers: {
+                      [Header.TYPE]: "client",
+                    },
+                  }
+                )
+
+                expect(res.screens).toHaveLength(3)
+                expect(res.screens).toEqual(
+                  expect.arrayContaining(
+                    workspaceAppInfo[1].screens.map(s =>
+                      expect.objectContaining({ _id: s._id })
+                    )
+                  )
+                )
+              }
+            )
+          })
+
+          it("should retrieve only the screens for a the workspace for prod app", async () => {
+            await config.publish()
+            await config.withProdApp(() =>
+              config.withHeaders(
+                {
+                  referer: `http://localhost:10000/app${config.prodApp?.url}`,
+                },
+                async () => {
+                  const res = await config.api.application.getAppPackage(
+                    app.appId,
+                    {
+                      headers: {
+                        [Header.TYPE]: "client",
+                      },
+                    }
+                  )
+
+                  expect(res.screens).toHaveLength(2)
+                  expect(res.screens).toEqual(
+                    expect.arrayContaining(
+                      workspaceAppInfo[0].screens.map(s =>
+                        expect.objectContaining({ _id: s._id })
+                      )
+                    )
+                  )
+                }
+              )
+            )
+          })
+        })
+      })
+
+      describe("off", () => {
+        it("should retrieve all the screens", async () => {
+          const res = await config.api.application.getAppPackage(app.appId)
+
+          expect(res.screens).toHaveLength(1)
+        })
+      })
     })
   })
 
@@ -275,6 +753,107 @@ describe("/applications", () => {
     it("should publish app with prod app ID", async () => {
       await config.api.application.publish(app.appId.replace("_dev", ""))
       expect(events.app.published).toHaveBeenCalledTimes(1)
+    })
+
+    it("should publish app with filtered resources, filtering by automation", async () => {
+      // create data resources
+      const table = await config.createTable(basicTable())
+      // all internal resources are published if any used
+      const tableUnused = await config.createTable(basicTable())
+      const datasource = await config.createDatasource()
+      const query = await config.createQuery(basicQuery(datasource._id!))
+
+      // automation to publish
+      const { automation } = await createAutomationBuilder(config)
+        .onRowSaved({ tableId: table._id! })
+        .executeQuery({ query: { queryId: query._id! } })
+        .save()
+
+      const rowAction = await config.api.rowAction.save(table._id!, {
+        name: "test",
+      })
+
+      // create some assets that won't be published
+      const unpublishedDatasource = await config.createDatasource()
+      const { automation: unpublishedAutomation } =
+        await createAutomationBuilder(config)
+          .onRowSaved({ tableId: table._id! })
+          .save()
+
+      await config.api.application.filteredPublish(app.appId, {
+        automationIds: [automation._id!],
+      })
+
+      await config.withProdApp(async () => {
+        const { automations } = await config.api.automation.fetch()
+        expect(
+          automations.find(auto => auto._id === automation._id!)
+        ).toBeDefined()
+        expect(
+          automations.find(auto => auto._id === unpublishedAutomation._id!)
+        ).toBeUndefined()
+        // row action automations should be published if row action published
+        expect(
+          automations.find(auto => auto._id === rowAction.automationId)
+        ).toBeDefined()
+
+        const datasources = await config.api.datasource.fetch()
+        expect(datasources.find(ds => ds._id === datasource._id!)).toBeDefined()
+        expect(
+          datasources.find(ds => ds._id === unpublishedDatasource._id!)
+        ).toBeUndefined()
+
+        const tables = await config.api.table.fetch()
+        expect(tables.find(tbl => tbl._id === table._id)).toBeDefined()
+        expect(tables.find(tbl => tbl._id === tableUnused._id)).toBeDefined()
+
+        const { actions } = await config.api.rowAction.find(table._id!)
+        expect(
+          Object.values(actions).find(action => action.id === rowAction.id)
+        ).toBeDefined()
+      })
+    })
+
+    it("should publish app with filtered resources, filtering by workspace app", async () => {
+      // create two screens with different workspaceAppIds
+      const { workspaceApp: workspaceApp1 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest()
+        )
+      const { workspaceApp: workspaceApp2 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest()
+        )
+
+      const publishedScreen = await config.api.screen.save({
+        ...basicScreen("/published-screen"),
+        workspaceAppId: workspaceApp1._id,
+        name: "published-screen",
+      })
+
+      const unpublishedScreen = await config.api.screen.save({
+        ...basicScreen("/unpublished-screen"),
+        workspaceAppId: workspaceApp2._id,
+        name: "unpublished-screen",
+      })
+
+      await config.api.application.filteredPublish(app.appId, {
+        workspaceAppIds: [workspaceApp1._id],
+      })
+
+      await config.withProdApp(async () => {
+        const screens = await config.api.screen.list()
+
+        // published screen should be included
+        expect(
+          screens.find(screen => screen._id === publishedScreen._id)
+        ).toBeDefined()
+
+        // unpublished screen should not be included
+        expect(
+          screens.find(screen => screen._id === unpublishedScreen._id)
+        ).toBeUndefined()
+      })
     })
   })
 
@@ -374,6 +953,31 @@ describe("/applications", () => {
       await config.api.application.delete(prodAppId)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
+    })
+
+    it("should remove MIGRATING_APP header if present during deletion", async () => {
+      const appMigrationsModule = await import(
+        "../../../appMigrations/migrations"
+      )
+
+      const migrationMock = jest.fn()
+      appMigrationsModule.MIGRATIONS.push({
+        id: "99999999999999_test_deletion",
+        func: migrationMock,
+      })
+
+      const prodAppId = app.appId.replace("_dev", "")
+      nock("http://localhost:10000")
+        .delete(`/api/global/roles/${prodAppId}`)
+        .reply(200, {})
+
+      expect(migrationMock).not.toHaveBeenCalled()
+      await config.api.application.delete(app.appId, {
+        headersNotPresent: [Header.MIGRATING_APP],
+      })
+
+      expect(migrationMock).toHaveBeenCalledTimes(1)
+      expect(events.app.deleted).toHaveBeenCalledTimes(1)
     })
   })
 

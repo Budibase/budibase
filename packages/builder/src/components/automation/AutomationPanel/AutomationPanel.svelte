@@ -49,7 +49,13 @@
       }
       // Otherwise group by trigger
       if (!category) {
-        category = auto.definition?.trigger?.name || "No Trigger"
+        let triggerName = auto.definition?.trigger?.name || "No Trigger"
+        // The definition was changed from "App Action" to "User action" in the definition
+        // so we need to normalize it to User action for consistent grouping
+        if (triggerName === "App Action") {
+          triggerName = "User action"
+        }
+        category = triggerName
       } else {
         dataTrigger = true
       }

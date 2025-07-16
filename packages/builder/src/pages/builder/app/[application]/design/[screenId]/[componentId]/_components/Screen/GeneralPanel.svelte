@@ -14,7 +14,6 @@
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import ButtonActionEditor from "@/components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "@/dataBinding"
-  import BarButtonList from "@/components/design/settings/controls/BarButtonList.svelte"
   import URLVariableTestInput from "@/components/design/settings/controls/URLVariableTestInput.svelte"
   import { DrawerBindableInput } from "@/components/common/bindings"
 
@@ -59,15 +58,16 @@
             key: "props.layout",
             label: "Layout",
             defaultValue: "flex",
-            control: BarButtonList,
+            control: Select,
             props: {
+              placeholder: false,
               options: [
                 {
-                  barIcon: "ModernGridView",
+                  label: "Flex",
                   value: "flex",
                 },
                 {
-                  barIcon: "ViewGrid",
+                  label: "Grid",
                   value: "grid",
                 },
               ],
@@ -96,7 +96,8 @@
         },
         validate: route => {
           const existingRoute = screen.routing.route
-          if (route !== existingRoute && routeTaken(route)) {
+          const workspaceAppId = screen.workspaceAppId
+          if (route !== existingRoute && routeTaken(route, workspaceAppId)) {
             return "That URL is already in use for this role"
           }
           return null
@@ -108,7 +109,8 @@
         control: RoleSelect,
         validate: role => {
           const existingRole = screen.routing.roleId
-          if (role !== existingRole && roleTaken(role)) {
+          const workspaceAppId = screen.workspaceAppId
+          if (role !== existingRole && roleTaken(role, workspaceAppId)) {
             return "That role is already in use for this URL"
           }
           return null
@@ -130,19 +132,21 @@
     ]
   }
 
-  const routeTaken = url => {
+  const routeTaken = (url, workspaceAppId) => {
     const roleId = get(selectedScreen).routing.roleId || "BASIC"
     return get(screenStore).screens.some(
       screen =>
+        workspaceAppId === screen.workspaceAppId &&
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === roleId
     )
   }
 
-  const roleTaken = roleId => {
+  const roleTaken = (roleId, workspaceAppId) => {
     const url = get(selectedScreen).routing.route
     return get(screenStore).screens.some(
       screen =>
+        workspaceAppId === screen.workspaceAppId &&
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === roleId
     )

@@ -72,7 +72,7 @@
       return { key, config }
     }
 
-    const details = ProviderDetails[provider] // Update to use the provider parameter
+    const details = ProviderDetails[provider]
     if (!details) {
       throw new Error(`Provider ${key} not found`)
     }
@@ -159,74 +159,76 @@
   })
 </script>
 
-<Layout noPadding>
-  <Layout gap="XS" noPadding>
-    <div class="header">
-      <Heading size="M">AI</Heading>
-    </div>
-    <Body>
-      Connect an LLM to enable AI features. You can only enable one LLM at a
-      time.
-    </Body>
-  </Layout>
-  <Divider />
+{#if aiConfig}
+  <Layout noPadding>
+    <Layout gap="XS" noPadding>
+      <div class="header">
+        <Heading size="M">AI</Heading>
+      </div>
+      <Body>
+        Connect an LLM to enable AI features. You can only enable one LLM at a
+        time.
+      </Body>
+    </Layout>
+    <Divider />
 
-  {#if !activeProvider && !$bannerStore}
-    <div class="banner">
-      <div class="banner-content">
-        <div class="banner-icon">
-          <img src={BBAI} alt="BB AI" width="24" height="24" />
+    {#if !activeProvider && !$bannerStore}
+      <div class="banner">
+        <div class="banner-content">
+          <div class="banner-icon">
+            <img src={BBAI} alt="BB AI" width="24" height="24" />
+          </div>
+          <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
         </div>
-        <div>Try BB AI for free. 50,000 tokens included. No CC required.</div>
-      </div>
-      <div class="banner-buttons">
-        <Button
-          primary
-          cta
-          size="S"
-          on:click={() => handleEnable("BudibaseAI")}
-        >
-          Enable BB AI
-        </Button>
-        <Icon
-          hoverable
-          name="Close"
-          on:click={() => {
-            setBannerLocalStorageKey()
-            bannerStore.set(true)
-          }}
-        />
-      </div>
-    </div>
-  {/if}
-
-  <div class="section">
-    <div class="section-title">Enabled</div>
-    {#if activeProvider}
-      <AIConfigTile
-        config={getProviderConfig(activeProvider).config}
-        editHandler={() => handleEnable(activeProvider)}
-        disableHandler={() => disableProvider(activeProvider)}
-      />
-    {:else}
-      <div class="no-enabled">
-        <Body size="S">No LLMs are enabled</Body>
-      </div>
-    {/if}
-    {#if disabledProviders.length > 0}
-      <div class="section-title disabled-title">Disabled</div>
-      <div class="ai-list">
-        {#each disabledProviders as { provider, config } (provider)}
-          <AIConfigTile
-            {config}
-            editHandler={() => handleEnable(provider)}
-            disableHandler={() => disableProvider(provider)}
+        <div class="banner-buttons">
+          <Button
+            primary
+            cta
+            size="S"
+            on:click={() => handleEnable("BudibaseAI")}
+          >
+            Enable BB AI
+          </Button>
+          <Icon
+            hoverable
+            name="x"
+            on:click={() => {
+              setBannerLocalStorageKey()
+              bannerStore.set(true)
+            }}
           />
-        {/each}
+        </div>
       </div>
     {/if}
-  </div>
-</Layout>
+
+    <div class="section">
+      <div class="section-title">Enabled</div>
+      {#if activeProvider}
+        <AIConfigTile
+          config={getProviderConfig(activeProvider).config}
+          editHandler={() => handleEnable(activeProvider)}
+          disableHandler={() => disableProvider(activeProvider)}
+        />
+      {:else}
+        <div class="no-enabled">
+          <Body size="S">No LLMs are enabled</Body>
+        </div>
+      {/if}
+      {#if disabledProviders.length > 0}
+        <div class="section-title disabled-title">Disabled</div>
+        <div class="ai-list">
+          {#each disabledProviders as { provider, config } (provider)}
+            <AIConfigTile
+              {config}
+              editHandler={() => handleEnable(provider)}
+              disableHandler={() => disableProvider(provider)}
+            />
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </Layout>
+{/if}
 
 <Modal bind:this={portalModal}>
   <PortalModal
@@ -259,7 +261,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #2e3851;
+    background-color: var(--bb-indigo);
+    color: var(--background);
     border-radius: var(--border-radius-m);
     padding: var(--spacing-s);
   }
@@ -274,9 +277,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: var(--background);
     border-radius: var(--border-radius-s);
     width: 32px;
     height: 32px;
+    padding: 4px;
   }
 
   .banner-buttons {
@@ -295,16 +300,22 @@
 
   .no-enabled {
     padding: 16px;
-    background-color: var(--spectrum-global-color-gray-75);
+    background-color: var(--grey-1);
     border: 1px solid var(--grey-4);
-    border-radius: var(--border-radius-s);
+    border-radius: var(--border-radius-m);
   }
 
   .section-title {
     margin-bottom: var(--spacing-m);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ink);
   }
 
   .disabled-title {
-    margin-top: var(--spacing-xl);
+    font-weight: 600;
+    font-size: 16px;
+    margin-top: 32px;
+    color: var(--ink);
   }
 </style>

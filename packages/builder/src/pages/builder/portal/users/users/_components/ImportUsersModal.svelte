@@ -100,7 +100,7 @@
 
   {#if exceed}
     <div class="user-notification">
-      <Icon name="Info" />
+      <Icon name="info" />
       {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
       users. Upgrade your plan to add more users
     </div>
@@ -150,7 +150,10 @@
     text-rendering: optimizeLegibility;
     min-width: auto;
     outline: none;
-    font-feature-settings: "case" 1, "rlig" 1, "calt" 0;
+    font-feature-settings:
+      "case" 1,
+      "rlig" 1,
+      "calt" 0;
     -webkit-box-align: center;
     user-select: none;
     flex-shrink: 0;

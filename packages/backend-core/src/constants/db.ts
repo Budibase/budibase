@@ -21,7 +21,7 @@ export enum ViewName {
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
   LINK = "by_link",
-  ROUTING = "screen_routes",
+  ROUTING = "screen_routes_2",
   AUTOMATION_LOGS = "automation_logs",
   ACCOUNT_BY_EMAIL = "account_by_email",
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase_2",
@@ -78,3 +78,8 @@ export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
 export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
 export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
 export { DEFAULT_BB_DATASOURCE_ID } from "@budibase/shared-core"
+
+export const enum DesignDocuments {
+  SQLITE = SQLITE_DESIGN_DOC_ID,
+  MIGRATIONS = "_design/migrations",
+}

@@ -13,7 +13,6 @@
   export let value: string = ""
   export const submit = onPromptSubmit
 
-  $: expanded = expandedOnly || expanded
   const dispatch = createEventDispatcher()
 
   let promptInput: HTMLInputElement
@@ -22,6 +21,7 @@
   let switchOnAIModal: Modal
   let addCreditsModal: Modal
 
+  $: expanded = expandedOnly || expanded
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
   $: aiEnabled = $auth?.user?.llm
@@ -92,9 +92,12 @@
       class="ai-icon"
       class:loading={promptLoading}
       class:disabled={expanded && disabled}
+      class:no-toggle={expandedOnly}
       on:click={e => {
-        e.stopPropagation()
-        toggleExpand()
+        if (!expandedOnly) {
+          e.stopPropagation()
+          toggleExpand()
+        }
       }}
     />
     {#if expanded}
@@ -193,9 +196,12 @@
     border-radius: 30px;
     padding: 1px;
     background: var(--spectrum-alias-border-color);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -216,9 +222,12 @@
       transparent 35%,
       transparent 110%
     );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     mask-composite: exclude;
     pointer-events: none;
     animation: border-flow 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
@@ -288,6 +297,10 @@
     cursor: var(--ai-icon-cursor, pointer);
     position: relative;
     z-index: 2;
+  }
+
+  .ai-icon.no-toggle {
+    cursor: default;
   }
 
   .ai-gen-text {

@@ -170,7 +170,7 @@
         }
       }}
     >
-      <Icon disabled={isJS} size="S" name="Close" />
+      <Icon disabled={isJS} size="S" name="x" />
     </div>
   {:else}
     <slot />
@@ -182,7 +182,7 @@
         bindingDrawer.show()
       }}
     >
-      <Icon size="S" name="FlashOn" />
+      <Icon size="S" weight="fill" name="lightning" />
     </div>
   {/if}
 </div>
@@ -213,7 +213,7 @@
   }
 
   .slot-icon {
-    right: 31px !important;
+    right: 34px !important;
     border-right: 1px solid var(--spectrum-alias-border-color);
     border-top-right-radius: 0px !important;
     border-bottom-right-radius: 0px !important;
@@ -245,11 +245,11 @@
     flex-direction: row;
     box-sizing: border-box;
     border-left: 1px solid var(--spectrum-alias-border-color);
-    width: 31px;
+    width: 34px;
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color
-        var(--spectrum-global-animation-duration-100, 130ms),
+    transition:
+      background-color var(--spectrum-global-animation-duration-100, 130ms),
       box-shadow var(--spectrum-global-animation-duration-100, 130ms),
       border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);

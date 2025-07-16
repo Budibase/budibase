@@ -1,12 +1,14 @@
-<script>
-  import { sideBarCollapsed, enrichedApps } from "@/stores/portal"
-  import { params, goto } from "@roxi/routify"
+<script lang="ts">
+  import { sideBarCollapsed, enrichedApps, featureFlags } from "@/stores/portal"
+  import { params, goto, page } from "@roxi/routify"
   import NavItem from "@/components/common/NavItem.svelte"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import AppNavItem from "./AppNavItem.svelte"
+  import { Helpers } from "@budibase/bbui"
 
-  let searchString
-  let opened
+  let searchString: string
+  let onAgents: boolean = $page.path.endsWith("/agents")
+  let openedApp: string | undefined
 
   $: filteredApps = $enrichedApps.filter(app => {
     return (
@@ -14,29 +16,33 @@
       app.name.toLowerCase().includes(searchString.toLowerCase())
     )
   })
+  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
 </script>
 
 <div class="side-bar" class:collapsed={$sideBarCollapsed}>
   <div class="side-bar-controls">
     <NavHeader
-      title="Apps"
-      placeholder="Search for apps"
+      title={Helpers.capitalise(appsOrWorkspaces)}
+      placeholder={`Search for ${appsOrWorkspaces}`}
       bind:value={searchString}
       onAdd={() => $goto("./create")}
     />
   </div>
   <div class="side-bar-nav">
     <NavItem
-      icon="WebPages"
-      text="All apps"
-      on:click={() => $goto("./")}
-      selected={!$params.appId}
+      icon="browser"
+      text={`All ${appsOrWorkspaces}`}
+      on:click={() => {
+        onAgents = false
+        $goto("./")
+      }}
+      selected={!$params.appId && !onAgents}
     />
     {#each filteredApps as app}
       <span
         class="side-bar-app-entry"
         class:favourite={app.favourite}
-        class:actionsOpen={opened == app.appId}
+        class:actionsOpen={openedApp === app.appId}
       >
         <AppNavItem {app} />
       </span>
@@ -73,12 +79,12 @@
     gap: var(--spacing-l);
     padding: 0 var(--spacing-l);
   }
-  .side-bar-controls :global(.spectrum-Icon) {
+  .side-bar-controls :global(i) {
     color: var(--spectrum-global-color-gray-700);
   }
 
   .side-bar-nav {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     overflow: auto;
     overflow-x: hidden;
   }

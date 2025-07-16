@@ -360,7 +360,7 @@ export async function coreOutputProcessing(
           continue
         }
         const process = async (attachment: RowAttachment) => {
-          if (!attachment.url && attachment.key) {
+          if (attachment.key) {
             attachment.url = await objectStore.getAppFileUrl(attachment.key)
           }
           return attachment
@@ -416,10 +416,36 @@ export async function coreOutputProcessing(
     } else if (column.type === FieldType.DATETIME && column.dateOnly) {
       for (const row of rows) {
         if (typeof row[property] === "string") {
-          row[property] = new Date(row[property])
+          const dateStr = row[property]
+          row[property] = new Date(dateStr + "Z")
+          if (isNaN(row[property].getTime())) {
+            row[property] = new Date(dateStr)
+          }
         }
         if (row[property] instanceof Date) {
           row[property] = row[property].toISOString().slice(0, 10)
+        }
+      }
+    } else if (column.type === FieldType.DATETIME && column.ignoreTimezones) {
+      for (const row of rows) {
+        if (typeof row[property] === "string") {
+          const dateStr = row[property]
+          row[property] = new Date(dateStr + "Z")
+          if (isNaN(row[property].getTime())) {
+            row[property] = new Date(dateStr)
+          }
+        }
+        if (row[property] instanceof Date) {
+          row[property] = row[property].toISOString().replace("Z", "")
+        }
+      }
+    } else if (column.type === FieldType.DATETIME) {
+      for (const row of rows) {
+        if (typeof row[property] === "string") {
+          row[property] = new Date(row[property])
+        }
+        if (row[property] instanceof Date) {
+          row[property] = row[property].toISOString()
         }
       }
     } else if (column.type === FieldType.LINK) {

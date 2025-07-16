@@ -1,9 +1,16 @@
-import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  docIds,
+  HTTPError,
+  utils,
+} from "@budibase/backend-core"
 import {
   DocumentType,
   OAuth2Config,
   PASSWORD_REPLACEMENT,
   SEPARATOR,
+  WithoutDocMetadata,
   WithRequired,
 } from "@budibase/types"
 
@@ -34,7 +41,7 @@ export async function fetch(): Promise<CreatedOAuthConfig[]> {
 }
 
 export async function create(
-  config: Omit<OAuth2Config, "_id" | "_rev" | "createdAt" | "updatedAt">
+  config: WithoutDocMetadata<OAuth2Config>
 ): Promise<CreatedOAuthConfig> {
   const db = context.getAppDB()
 
@@ -76,6 +83,9 @@ export async function update(
   }
 
   const result = await db.put(toUpdate)
+
+  await cleanCache(config._id)
+
   return { ...toUpdate, _rev: result.rev }
 }
 
@@ -90,8 +100,15 @@ export async function remove(configId: string, _rev: string): Promise<void> {
     throw e
   }
 
+  await cleanCache(configId)
+
   const usageLog = await db.tryGet(docIds.generateOAuth2LogID(configId))
   if (usageLog) {
     await db.remove(usageLog)
   }
+}
+
+async function cleanCache(configId: string) {
+  const cacheKey = cache.CacheKey.OAUTH2_TOKEN(configId)
+  await cache.destroy(cacheKey)
 }

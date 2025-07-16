@@ -73,8 +73,8 @@
   let evaluating = false
 
   const SidePanelIcons: Record<SidePanel, string> = {
-    Bindings: "FlashOn",
-    Evaluation: "Play",
+    Bindings: "lightning",
+    Evaluation: "play",
   }
 
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -151,7 +151,7 @@
   }
 
   const debouncedEval = Utils.debounce(
-    (expression: string | null, context: any, snippets: Snippet[]) => {
+    (expression: string | null, context: any, snippets: Snippet[] | null) => {
       try {
         expressionError = undefined
         const output = processStringWithLogsSync(
@@ -352,39 +352,35 @@
       {/if}
       <div class="editor">
         {#if mode === BindingMode.Text}
-          {#key completions}
-            <CodeEditor
-              value={hbsValue || ""}
-              on:change={onChangeHBSValue}
-              bind:getCaretPosition
-              bind:insertAtPos
-              {completions}
-              {bindings}
-              {validations}
-              autofocus={autofocusEditor}
-              placeholder={placeholder ||
-                "Add bindings by typing {{ or use the menu on the right"}
-              jsBindingWrapping={false}
-            />
-          {/key}
+          <CodeEditor
+            value={hbsValue || ""}
+            on:change={onChangeHBSValue}
+            bind:getCaretPosition
+            bind:insertAtPos
+            {completions}
+            {bindings}
+            {validations}
+            autofocus={autofocusEditor}
+            placeholder={placeholder ||
+              "Add bindings by typing {{ or use the menu on the right"}
+            jsBindingWrapping={false}
+          />
         {:else if mode === BindingMode.JavaScript}
-          {#key completions}
-            <CodeEditor
-              value={jsValue ? decodeJSBinding(jsValue) : ""}
-              on:change={onChangeJSValue}
-              on:ai_suggestion={() => (sidePanel = "Evaluation")}
-              {completions}
-              {bindings}
-              {validations}
-              mode={EditorModes.JS}
-              bind:getCaretPosition
-              bind:insertAtPos
-              autofocus={autofocusEditor}
-              placeholder={placeholder ||
-                "Add bindings by typing $ or use the menu on the right"}
-              jsBindingWrapping={completions.length > 0}
-            />
-          {/key}
+          <CodeEditor
+            value={jsValue ? decodeJSBinding(jsValue) : ""}
+            on:change={onChangeJSValue}
+            on:ai_suggestion={() => (sidePanel = "Evaluation")}
+            {completions}
+            {bindings}
+            {validations}
+            mode={EditorModes.JS}
+            bind:getCaretPosition
+            bind:insertAtPos
+            autofocus={autofocusEditor}
+            placeholder={placeholder ||
+              "Add bindings by typing $ or use the menu on the right"}
+            jsBindingWrapping={completions.length > 0}
+          />
         {/if}
         {#if targetMode}
           <div class="mode-overlay">

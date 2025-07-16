@@ -1,6 +1,6 @@
 import PouchDB from "pouchdb"
 import { getPouchDB, closePouchDB } from "./couch"
-import { DocumentType } from "@budibase/types"
+import { DocumentType, Document } from "@budibase/types"
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
@@ -63,10 +63,14 @@ class Replication {
 
     return {
       ...opts,
-      filter: (doc: any, params: any) => {
+      filter: (doc: Document, params: any) => {
         // don't sync design documents
         if (toDev && doc._id?.startsWith("_design")) {
           return false
+        }
+        // always replicate deleted documents
+        if (doc._deleted) {
+          return true
         }
         if (doc._id?.startsWith(DocumentType.AUTOMATION_LOG)) {
           return false

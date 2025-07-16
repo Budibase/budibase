@@ -10,11 +10,11 @@ import {
 export const definition: AutomationTriggerDefinition = {
   type: AutomationStepType.TRIGGER,
   name: "Row Action",
-  event: AutomationEventType.ROW_ACTION, // TODO
-  icon: "Workflow", // TODO
+  event: AutomationEventType.ROW_ACTION,
+  icon: "tree-structure",
   tagline:
     "Row action triggered in {{inputs.enriched.table.name}} by {{inputs.enriched.row._id}}",
-  description: "TODO description", // TODO
+  description: "row action workflow",
   stepId: AutomationTriggerStepId.ROW_ACTION,
   inputs: {},
   schema: {

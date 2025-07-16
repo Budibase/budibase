@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from "svelte"
+  import { getContext, onDestroy } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, QueryUtils } from "@budibase/frontend-core"
   import type {
@@ -100,6 +100,7 @@
     },
     limit,
     primaryDisplay: ($fetch.definition as any)?.primaryDisplay,
+    loaded: $fetch.loaded,
   }
 
   const createFetch = (datasource: ProviderDatasource) => {
@@ -174,6 +175,10 @@
       interval = setInterval(fetch.refresh, Math.max(10000, autoRefresh * 1000))
     }
   }
+
+  onDestroy(() => {
+    clearInterval(interval) // Clears auto-refresh when navigating away
+  })
 </script>
 
 <div use:styleable={$component.styles} class="container">

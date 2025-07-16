@@ -1,4 +1,3 @@
-import Router from "@koa/router"
 import * as queryController from "../controllers/query"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
@@ -11,52 +10,55 @@ import {
   generateQueryValidation,
   generateQueryPreviewValidation,
 } from "../controllers/query/validation"
+import { builderRoutes, customEndpointGroups } from "./endpointGroups"
 
-const { BUILDER, PermissionType, PermissionLevel } = permissions
+const { PermissionType, PermissionLevel } = permissions
 
-const router: Router = new Router()
+const readRoutes = customEndpointGroups.group({
+  middleware: authorized(PermissionType.QUERY, PermissionLevel.READ),
+  first: false,
+})
+const writeRoutes = customEndpointGroups.group({
+  middleware: authorized(PermissionType.QUERY, PermissionLevel.WRITE),
+  first: false,
+})
 
-router
-  .get("/api/queries", authorized(BUILDER), queryController.fetch)
+builderRoutes
+  .get("/api/queries", queryController.fetch)
   .post(
     "/api/queries",
     bodySubResource("datasourceId", "_id"),
-    authorized(BUILDER),
     generateQueryValidation(),
     queryController.save
   )
-  .post("/api/queries/import", authorized(BUILDER), queryController.import)
+  .post("/api/queries/import", queryController.import)
   .post(
     "/api/queries/preview",
     bodyResource("datasourceId"),
-    authorized(BUILDER),
     generateQueryPreviewValidation(),
     queryController.preview
-  )
-  .get(
-    "/api/queries/:queryId",
-    paramResource("queryId"),
-    authorized(PermissionType.QUERY, PermissionLevel.READ),
-    queryController.find
-  )
-  // DEPRECATED - use new query endpoint for future work
-  .post(
-    "/api/queries/:queryId",
-    paramResource("queryId"),
-    authorized(PermissionType.QUERY, PermissionLevel.WRITE),
-    queryController.executeV1
   )
   .delete(
     "/api/queries/:queryId/:revId",
     paramResource("queryId"),
-    authorized(BUILDER),
     queryController.destroy
+  )
+
+writeRoutes
+  // DEPRECATED - use new query endpoint for future work
+  .post(
+    "/api/queries/:queryId",
+    paramResource("queryId"),
+    queryController.executeV1
   )
   .post(
     "/api/v2/queries/:queryId",
     paramResource("queryId"),
-    authorized(PermissionType.QUERY, PermissionLevel.WRITE),
     queryController.executeV2
   )
 
-export default router
+readRoutes.get(
+  "/api/queries/:queryId",
+  paramResource("queryId"),
+  queryController.find
+)

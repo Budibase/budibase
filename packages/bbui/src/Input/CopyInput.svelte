@@ -24,7 +24,7 @@
 <div>
   <Input readonly {value} {label} />
   <div class="icon" on:click={() => copyToClipboard(value)}>
-    <Icon size="S" name="Copy" />
+    <Icon size="S" name="copy" />
   </div>
 </div>
 
@@ -48,8 +48,8 @@
     width: 31px;
     color: var(--spectrum-alias-text-color);
     background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color
-        var(--spectrum-global-animation-duration-100, 130ms),
+    transition:
+      background-color var(--spectrum-global-animation-duration-100, 130ms),
       box-shadow var(--spectrum-global-animation-duration-100, 130ms),
       border-color var(--spectrum-global-animation-duration-100, 130ms);
     height: calc(var(--spectrum-alias-item-height-m) - 2px);

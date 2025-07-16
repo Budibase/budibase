@@ -1,4 +1,5 @@
 import { layoutStore } from "./layouts"
+import { workspaceAppStore } from "./workspaceApps"
 import { appStore } from "./app"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
@@ -14,7 +15,8 @@ import {
   evaluationContext,
 } from "./automations"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users"
-import { deploymentStore } from "./deployments"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
+import { deploymentStore } from "./deployment"
 import { contextMenuStore } from "./contextMenu"
 import { snippets } from "./snippets"
 import {
@@ -36,10 +38,10 @@ import { queries } from "./queries"
 import { flags } from "./flags"
 import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
-import { appPublished } from "./published"
 import { oauth2 } from "./oauth2"
 
 import { FetchAppPackageResponse } from "@budibase/types"
+import { selectedAppUrls } from "./appUrls"
 
 export {
   componentTreeNodesStore,
@@ -75,12 +77,14 @@ export {
   hoverStore,
   snippets,
   rowActions,
-  appPublished,
   evaluationContext,
   screenComponentsList,
   screenComponentErrors,
   screenComponentErrorList,
   oauth2,
+  workspaceAppStore,
+  selectedAppUrls,
+  workspaceDeploymentStore,
 }
 
 export const reset = () => {
@@ -91,6 +95,7 @@ export const reset = () => {
   layoutStore.reset()
   navigationStore.reset()
   rowActions.reset()
+  workspaceDeploymentStore.reset()
 }
 
 const refreshBuilderData = async () => {
@@ -102,6 +107,8 @@ const refreshBuilderData = async () => {
     tables.init(),
     roles.fetch(),
     flags.fetch(),
+    workspaceAppStore.fetch(),
+    workspaceDeploymentStore.fetch(),
   ])
 }
 

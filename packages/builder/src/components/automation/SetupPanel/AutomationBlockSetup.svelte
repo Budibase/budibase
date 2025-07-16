@@ -436,7 +436,7 @@
             type: InfoDisplay,
             props: {
               warning: true,
-              icon: "AlertCircleFilled",
+              icon: "warning-circle",
               body: `Be careful when testing this automation because your data may be modified or deleted.`,
             },
           },

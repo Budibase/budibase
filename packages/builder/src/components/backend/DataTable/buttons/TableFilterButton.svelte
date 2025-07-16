@@ -33,7 +33,7 @@
       runtimeBinding: `${makePropSafe("now")}`,
       readableBinding: `Date`,
       category: "Date",
-      icon: "Date",
+      icon: "calendar",
       display: {
         name: "Server date",
       },
@@ -50,12 +50,12 @@
 <DetailPopover bind:this={popover} title="Configure filters" width={800}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
-      icon="Filter"
+      icon="funnel"
       quiet
       {disabled}
       on:click={openPopover}
       selected={open || filterCount > 0}
-      accentColor="#004EA6"
+      accentColor="#4b75ff"
     >
       {filterCount ? `Filter: ${filterCount}` : "Filter"}
     </ActionButton>

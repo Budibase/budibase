@@ -40,10 +40,7 @@ import {
   ToggleBetaFeatureResponse,
   UserCtx,
 } from "@budibase/types"
-import {
-  getAppMigrationVersion,
-  getLatestEnabledMigrationId,
-} from "../../../appMigrations"
+import { isAppFullyMigrated } from "../../../appMigrations"
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
@@ -215,22 +212,6 @@ export async function processPWAZip(ctx: UserCtx) {
   }
 }
 
-const requiresMigration = async (ctx: Ctx) => {
-  const appId = context.getAppId()
-  if (!appId) {
-    ctx.throw("AppId could not be found")
-  }
-
-  const latestMigration = getLatestEnabledMigrationId()
-  if (!latestMigration) {
-    return false
-  }
-
-  const latestMigrationApplied = await getAppMigrationVersion(appId)
-
-  return latestMigrationApplied !== latestMigration
-}
-
 const getAppScriptHTML = (
   app: App,
   location: "Head" | "Body",
@@ -251,14 +232,14 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     ctx.redirect("/builder/bblogo.png")
     return
   }
-  // no app ID found, cannot serve - return message instead
-  if (!context.getAppId()) {
+  // No app ID found, cannot serve - return message instead
+  const appId = context.getAppId()
+  if (!appId) {
     ctx.body = "No content found - requires app ID"
     return
   }
 
-  const needMigrations = await requiresMigration(ctx)
-
+  const fullyMigrated = await isAppFullyMigrated(appId)
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
 
@@ -275,8 +256,6 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   try {
     db = context.getAppDB({ skip_setup: true })
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
-
-    let appId = context.getAppId()
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = appInfo.navigation.navigation === "Left"
     const hideFooter =
@@ -315,7 +294,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding.faviconUrl !== ""
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
-        appMigrating: needMigrations,
+        appMigrating: !fullyMigrated,
         nonce,
       }
 
