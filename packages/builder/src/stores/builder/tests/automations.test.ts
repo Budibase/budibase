@@ -31,6 +31,7 @@ import {
   RowActionTriggerInputs,
   BlockPath,
   LoopStep,
+  AutomationStatus,
 } from "@budibase/types"
 import { Helpers } from "@budibase/bbui"
 import { AutomationState, DerivedAutomationState } from "@/types/automations"
@@ -131,7 +132,8 @@ const loadDefintions = (bb: BBContext) => {
  */
 const generateBaseResults = (
   auto: Automation,
-  outputs: Record<string, any> = {}
+  outputs: Record<string, any> = {},
+  status = AutomationStatus.SUCCESS
 ): AutomationResults => {
   const triggerResults = {
     id: auto.definition.trigger.id,
@@ -161,6 +163,7 @@ const generateBaseResults = (
   return {
     trigger: triggerResults,
     steps: [triggerResults],
+    status,
   }
 }
 
