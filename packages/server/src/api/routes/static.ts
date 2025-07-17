@@ -29,6 +29,10 @@ router
   .get("/app/service-worker.js", controller.serveServiceWorker)
   .get("/app/:appUrl/:path*", controller.serveApp)
   .get("/:appId/:path*", controller.serveApp)
-  .post("/api/attachments/:datasourceId/url", recaptcha, controller.getSignedUploadURL)
+  .post(
+    "/api/attachments/:datasourceId/url",
+    recaptcha,
+    controller.getSignedUploadURL
+  )
 
 export default router

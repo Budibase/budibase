@@ -21,12 +21,12 @@ const middleware = (async (ctx: Ctx, next: Next) => {
       Cookie.RecaptchaSession
     )
     if (!cookie) {
-      ctx.status = 403
+      ctx.status = 498
       return
     }
     const verified = await isRecaptchaVerified(cookie.sessionId)
     if (!verified) {
-      ctx.status = 403
+      ctx.status = 498
       return
     }
   }

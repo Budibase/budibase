@@ -16,9 +16,16 @@ const createRecaptchaStore = () => {
     })
   }
 
+  const unverified = () => {
+    store.update(state => {
+      state.verified = false
+      return state
+    })
+  }
+
   return {
     subscribe: store.subscribe,
-    actions: { checkVerified },
+    actions: { checkVerified, unverified },
   }
 }
 
