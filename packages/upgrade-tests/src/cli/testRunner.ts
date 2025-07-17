@@ -33,22 +33,22 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
   if (options.testAppId) {
     env.TEST_APP_ID = options.testAppId
   }
-  
+
   if (options.testApp) {
     env.TEST_APP = options.testApp
   }
-  
+
   if (options.oldVersion) {
     env.OLD_VERSION = options.oldVersion
   }
-  
+
   if (options.currentVersion) {
     env.CURRENT_VERSION = options.currentVersion
   }
 
   console.log(bold(`\n${blue("►")} Running ${options.phase} tests...\n`))
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const testProcess = spawn("yarn", ["test"], {
       cwd: path.join(__dirname, "../.."),
       env,
@@ -56,7 +56,7 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
       shell: true,
     })
 
-    testProcess.on("close", (code) => {
+    testProcess.on("close", code => {
       if (code === 0) {
         console.log(green(`\n✓ ${options.phase} tests completed successfully!`))
         resolve(true)
@@ -66,10 +66,9 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
       }
     })
 
-    testProcess.on("error", (error) => {
+    testProcess.on("error", error => {
       console.error(red(`\n✗ Error running tests: ${error.message}`))
       resolve(false)
     })
   })
 }
-

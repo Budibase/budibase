@@ -8,14 +8,14 @@ export class QueryAPI {
     const endpoint = appId
       ? `/api/applications/${appId}/queries`
       : `/api/queries`
-    
+
     const response = await this.client.get(endpoint)
     return response.data
   }
 
   async execute(queryId: string, parameters?: any): Promise<any> {
     const response = await this.client.post(`/api/queries/${queryId}`, {
-      parameters: parameters || {}
+      parameters: parameters || {},
     })
     return response.data
   }

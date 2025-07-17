@@ -11,9 +11,7 @@ export interface DockerLogEntry {
   [key: string]: any // Allow additional fields
 }
 
-export async function getDockerLogs(
-  requestId?: string
-): Promise<string[]> {
+export async function getDockerLogs(requestId?: string): Promise<string[]> {
   const containerName = getContainerName()
   try {
     // It can take a moment for logs to be available through `docker logs`

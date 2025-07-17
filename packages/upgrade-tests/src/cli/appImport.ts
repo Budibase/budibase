@@ -1,6 +1,6 @@
 import * as fs from "fs"
 import * as path from "path"
-import { yellow, blue, green, bold, gray } from "chalk"
+import { yellow, blue, green } from "chalk"
 import ora from "ora"
 import { BudibaseClient } from "../api/BudibaseClient"
 
@@ -13,7 +13,7 @@ function getFixturesDir(): string {
 
 export async function getAvailableApps(): Promise<string[]> {
   const fixturesDir = getFixturesDir()
-  
+
   if (!fs.existsSync(fixturesDir)) {
     console.error(yellow(`Fixtures directory not found: ${fixturesDir}`))
     return []
@@ -28,7 +28,7 @@ export async function getAvailableApps(): Promise<string[]> {
 
 export function getAppPath(appName: string): string | null {
   const fixturesDir = getFixturesDir()
-  
+
   // Check if it's a direct file path
   if (fs.existsSync(appName)) {
     return appName
@@ -59,12 +59,12 @@ export async function importApp(
   verbose = false
 ): Promise<ImportAppResult> {
   const appPath = getAppPath(appNameOrPath)
-  
+
   if (!appPath) {
     const available = await getAvailableApps()
     throw new Error(
       `App not found: ${appNameOrPath}\n` +
-      `Available apps:\n${available.map(app => `  - ${app}`).join("\n")}`
+        `Available apps:\n${available.map(app => `  - ${app}`).join("\n")}`
     )
   }
 
@@ -74,7 +74,7 @@ export async function importApp(
   try {
     // Use the withInternalAPIKey BudibaseClient that doesn't require user auth
     const client = await BudibaseClient.withInternalAPIKey()
-    
+
     if (verbose) {
       spinner.text = `Uploading ${blue(appName)} (${getFileSize(appPath)})`
     }
@@ -83,7 +83,7 @@ export async function importApp(
     const appId = await client.application.import(appPath, appName)
 
     spinner.succeed(`App imported successfully: ${green(appId)}`)
-    
+
     return { appId, name: appName }
   } catch (error) {
     spinner.fail(`Failed to import app: ${appName}`)
@@ -98,4 +98,3 @@ function getFileSize(filePath: string): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024))
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
 }
-

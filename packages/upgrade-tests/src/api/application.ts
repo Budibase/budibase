@@ -18,22 +18,22 @@ export class ApplicationAPI {
   async import(filePath: string, name?: string): Promise<string> {
     // Read the file as a buffer
     const fileBuffer = fs.readFileSync(filePath)
-    const filename = filePath.split('/').pop() || 'imported-app.tar.gz'
-    
+    const filename = filePath.split("/").pop() || "imported-app.tar.gz"
+
     // Create native FormData
     const form = new FormData()
-    
+
     // Create a Blob from the buffer with the correct type
-    const blob = new Blob([fileBuffer], { type: 'application/gzip' })
-    
+    const blob = new Blob([fileBuffer], { type: "application/gzip" })
+
     // Append the file
     form.append("fileToImport", blob, filename)
-    
+
     // If no name provided, extract from filename
     if (!name) {
-      name = filename.replace('.tar.gz', '').replace(/-/g, ' ')
+      name = filename.replace(".tar.gz", "").replace(/-/g, " ")
     }
-    
+
     form.append("name", name)
     form.append("useTemplate", "true")
 

@@ -106,7 +106,6 @@ export class BudibaseClient {
       Object.assign(headers, options.headers)
     }
 
-    // Prepare request options
     const fetchOptions: RequestInit = {
       method,
       headers,

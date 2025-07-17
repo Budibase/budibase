@@ -34,7 +34,10 @@ export async function containerExists(containerName: string): Promise<boolean> {
   }
 }
 
-export async function stopContainer(containerName: string, silent = false): Promise<void> {
+export async function stopContainer(
+  containerName: string,
+  silent = false
+): Promise<void> {
   if (!silent) {
     const spinner = ora(`Stopping container ${blue(containerName)}`).start()
     try {
@@ -52,7 +55,10 @@ export async function stopContainer(containerName: string, silent = false): Prom
   }
 }
 
-export async function removeContainer(containerName: string, silent = false): Promise<void> {
+export async function removeContainer(
+  containerName: string,
+  silent = false
+): Promise<void> {
   if (!silent) {
     const spinner = ora(`Removing container ${blue(containerName)}`).start()
     try {
@@ -70,7 +76,10 @@ export async function removeContainer(containerName: string, silent = false): Pr
   }
 }
 
-export async function removeVolume(volumeName: string, silent = false): Promise<void> {
+export async function removeVolume(
+  volumeName: string,
+  silent = false
+): Promise<void> {
   if (!silent) {
     const spinner = ora(`Removing volume ${blue(volumeName)}`).start()
     try {
@@ -94,9 +103,7 @@ export async function createVolume(volumeName: string): Promise<void> {
   spinner.succeed(`Volume ${blue(volumeName)} created`)
 }
 
-export async function getContainerPort(
-  containerName: string
-): Promise<number> {
+export async function getContainerPort(containerName: string): Promise<number> {
   const { stdout } = await execAsync(`docker port ${containerName} 80`)
   const port = stdout.split(":")[1]
   return parseInt(port, 10)
@@ -170,13 +177,13 @@ export async function runContainer(
   // Use spawn for better control over the command
   return new Promise((resolve, reject) => {
     const dockerProcess = spawn("docker", args)
-    
+
     let stderr = ""
-    dockerProcess.stderr.on("data", (data) => {
+    dockerProcess.stderr.on("data", data => {
       stderr += data.toString()
     })
 
-    dockerProcess.on("close", (code) => {
+    dockerProcess.on("close", code => {
       if (code === 0) {
         resolve()
       } else {
@@ -190,7 +197,7 @@ export async function runContainer(
 
 export async function buildCurrentVersion(projectRoot: string): Promise<void> {
   const spinner = ora("Building current version from source").start()
-  
+
   const args = [
     "build",
     "-f",
@@ -211,21 +218,25 @@ export async function buildCurrentVersion(projectRoot: string): Promise<void> {
     })
 
     let stderr = ""
-    buildProcess.stderr.on("data", (data) => {
+    buildProcess.stderr.on("data", data => {
       stderr += data.toString()
     })
 
-    buildProcess.on("close", (code) => {
+    buildProcess.on("close", code => {
       if (code === 0) {
         spinner.succeed("Built current version successfully")
         resolve()
       } else {
         spinner.fail("Failed to build current version")
-        reject(new Error(`Command failed with exit code ${code}: docker ${args.join(" ")}\n${stderr}`))
+        reject(
+          new Error(
+            `Command failed with exit code ${code}: docker ${args.join(" ")}\n${stderr}`
+          )
+        )
       }
     })
 
-    buildProcess.on("error", (error) => {
+    buildProcess.on("error", error => {
       spinner.fail("Failed to build current version")
       reject(error)
     })

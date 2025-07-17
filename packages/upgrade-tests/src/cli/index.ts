@@ -83,7 +83,10 @@ program
   .option("--app <path|name>", "Path to app export or fixture name to import")
   .option("--test-app <name>", "Test only a specific app")
   .option("--no-cleanup", "Don't clean up containers after test")
-  .option("--no-build", "Skip building current version (assumes image already exists)")
+  .option(
+    "--no-build",
+    "Skip building current version (assumes image already exists)"
+  )
   .option("--verbose", "Show detailed output")
   .action(async options => {
     const config = generateDockerConfig()
@@ -167,7 +170,9 @@ program
       let image = `budibase/budibase:${options.to}`
       if (options.to === "current") {
         if (!options.build) {
-          console.log(gray("Skipping build, using existing budibase:current image"))
+          console.log(
+            gray("Skipping build, using existing budibase:current image")
+          )
         } else {
           await buildCurrentVersion(getProjectRoot())
         }
@@ -285,9 +290,7 @@ program
     console.log(bold("\n🧪 Running Post-Upgrade Tests Only"))
 
     if (!process.env.TEST_APP_ID) {
-      console.error(
-        red("❌ TEST_APP_ID environment variable is required")
-      )
+      console.error(red("❌ TEST_APP_ID environment variable is required"))
       console.log(gray("\nEither:"))
       console.log(gray("  1. Run the full upgrade test"))
       console.log(gray("  2. Set TEST_APP_ID manually"))
