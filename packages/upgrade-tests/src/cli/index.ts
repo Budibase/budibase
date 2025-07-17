@@ -95,13 +95,13 @@ program
     console.log(bold("\n🚀 Starting Full Upgrade Test"))
     console.log(gray(`Upgrading from ${options.from} to ${options.to}`))
     console.log(gray(`Container: ${config.containerName}`))
-    
+
     // Set up signal handlers for cleanup
     let cleanupInProgress = false
     const handleSignal = async (signal: string) => {
       if (cleanupInProgress) return
       cleanupInProgress = true
-      
+
       console.log(red(`\n\n❌ Received ${signal}, cleaning up...`))
       if (options.cleanup !== false) {
         try {
@@ -112,7 +112,7 @@ program
       }
       process.exit(1)
     }
-    
+
     process.on("SIGINT", () => handleSignal("SIGINT"))
     process.on("SIGTERM", () => handleSignal("SIGTERM"))
 
@@ -245,14 +245,14 @@ program
 
       // Success!
       console.log(bold(green("\n✨ Upgrade Test Completed Successfully!")))
-      
+
       // Clean up on success
       if (options.cleanup !== false) {
         await cleanup(config)
       }
     } catch (error) {
       console.error(red("\n❌ Upgrade test failed:"), error)
-      
+
       // Clean up on error before exiting
       if (options.cleanup !== false) {
         try {
@@ -261,7 +261,7 @@ program
           console.error(red("❌ Cleanup failed:"), cleanupError)
         }
       }
-      
+
       process.exit(1)
     }
   })
