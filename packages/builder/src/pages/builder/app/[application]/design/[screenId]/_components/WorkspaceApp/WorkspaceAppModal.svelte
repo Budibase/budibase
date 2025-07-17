@@ -1,10 +1,10 @@
 <script lang="ts">
-  import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { workspaceAppStore } from "@/stores/builder"
   import {
     Input,
     keepOpen,
     Label,
+    Body,
     Modal,
     ModalContent,
     notifications,
@@ -149,7 +149,12 @@
 </script>
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
-  <ModalContent {title} {onConfirm}>
+  <ModalContent {title} {onConfirm} size="M">
+    <Body>
+      Use underscores "_" to seperate words within your app name. Do not use
+      hyphens "-" or spaces.</Body
+    >
+
     <Input
       label="App Name"
       on:enterkey={onEnterKey}
@@ -160,6 +165,7 @@
       bind:value={data.name}
       error={validationState.errors.name}
     />
+
     <Input
       label="Base url"
       on:enterkey={onEnterKey}
@@ -169,9 +175,7 @@
       }}
       bind:value={data.url}
       error={validationState.errors.url}
+      disabled
     />
-
-    <Label size="L">Icon</Label>
-    <EditableIcon bind:name={data.icon} bind:color={iconColor} />
   </ModalContent>
 </Modal>

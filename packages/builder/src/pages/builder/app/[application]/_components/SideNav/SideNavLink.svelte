@@ -16,7 +16,7 @@
     {#if $$slots.icon}
       <slot name="icon" />
     {:else}
-      <Icon name={icon} size="M" weight="fill" />
+      <Icon name={icon} size="L" weight="fill" />
     {/if}
   </div>
   <div class="link_text">{text}</div>
@@ -55,8 +55,8 @@
     place-items: center;
   }
   .link_text {
-    font-size: 14px;
-    font-weight: 475;
+    font-size: 15px;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

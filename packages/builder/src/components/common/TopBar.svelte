@@ -48,7 +48,9 @@
 
 <div class="top-bar">
   {#if icon}
-    <Icon name={icon} size="L" weight="fill" />
+    <div class="icon-container">
+      <Icon name={icon} size="L" weight="fill" />
+    </div>
   {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
@@ -160,5 +162,11 @@
   .link:hover {
     cursor: pointer;
     filter: brightness(110%);
+  }
+  .icon-container {
+    padding: 3px;
+    border-radius: 6px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-200);
   }
 </style>

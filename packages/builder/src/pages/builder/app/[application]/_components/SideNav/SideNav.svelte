@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Context, Icon, StatusLight } from "@budibase/bbui"
+  import { Context, Icon, StatusLight, Body, Link } from "@budibase/bbui"
   import { createLocalStorageStore } from "@budibase/frontend-core"
   import { url } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
@@ -79,13 +79,6 @@
     <div class="nav_body">
       <div class="links">
         <SideNavLink
-          icon="hard-drives"
-          text="Data"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
           icon="lightning-a"
           text="Automations"
           url={$url("./automation")}
@@ -96,6 +89,13 @@
           icon="layout"
           text="Apps"
           url={$url("./design")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="hard-drives"
+          text="Data"
+          url={$url("./data")}
           {collapsed}
           on:click={keepCollapsed}
         />
@@ -115,6 +115,31 @@
           {collapsed}
           on:click={keepCollapsed}
         />
+        <div class="favourite-wrapper">
+          <div class="favourite-title">
+            <Body color="var(--spectrum-global-color-gray-700)" size="XS"
+              >FAVOURITES</Body
+            >
+          </div>
+          <div class="favourite-empty-state">
+            <div>
+              <Icon name="star" size="L" color="#6A9BCC" weight="fill" />
+            </div>
+            <Body
+              color="var(--spectrum-global-color-gray-700)"
+              size="XS"
+              textAlign="center"
+              >You have no favorites yet! Favourite an automation, app, table or
+              API for quicker access.</Body
+            >
+            <Link
+              href="https://docs.budibase.com"
+              target="_blank"
+              secondary
+              quiet>Learn how</Link
+            >
+          </div>
+        </div>
       </div>
       <div class="links">
         {#if updateAvailable && $isOnlyUser && !$admin.isDev}
@@ -138,8 +163,8 @@
         />
         <SideNavUserSettings {collapsed} />
       </div>
+      <div class="popover-container"></div>
     </div>
-    <div class="popover-container"></div>
   </div>
 </div>
 
@@ -179,6 +204,7 @@
     transition: width 130ms ease-out;
     overflow: hidden;
     padding-bottom: var(--nav-padding);
+    container-type: inline-size;
   }
   .nav:not(.pinned).focused {
     width: var(--nav-width);
@@ -188,7 +214,6 @@
     flex: 0 0 var(--nav-width);
     width: var(--nav-width);
   }
-
   /* Header */
   .nav_header {
     display: flex;
@@ -211,7 +236,6 @@
   }
   .nav_header img {
     width: var(--nav-logo-width);
-    filter: grayscale(100%) brightness(1.5);
   }
   .nav_title {
     width: 0;
@@ -225,7 +249,7 @@
     color: var(--spectrum-global-color-gray-800);
   }
   .nav_title h1 {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -243,7 +267,7 @@
     justify-content: space-between;
     flex: 1 1 auto;
     padding: var(--nav-padding) 0;
-    gap: 2px;
+    gap: 3px;
   }
 
   /* Popover container */
@@ -257,6 +281,43 @@
     flex-direction: column;
     align-items: stretch;
     padding: 0 calc(var(--nav-padding) / 2);
-    gap: 2px;
+    gap: 4px;
+  }
+
+  /*  favourite section */
+  .favourite-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    height: 30px;
+    padding: 0 calc(var(--nav-padding) / 2);
+    color: var(--spectrum-global-color-gray-800);
+    margin-top: 20px;
+  }
+  .favourite-title {
+    margin-bottom: 8px;
+  }
+  .favourite-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px dashed var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
+    padding: 12px;
+    gap: 8px;
+    transition: all 130ms ease-out;
+  }
+
+  @container (max-width: 239px) {
+    .favourite-wrapper {
+      display: none;
+      transition: all 130ms ease-in-out;
+    }
+    .favourite-title {
+      display: all 130ms ease-in-out;
+    }
+    .favourite-empty-state {
+      display: all 130ms ease-in-out;
+    }
   }
 </style>

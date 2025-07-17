@@ -104,12 +104,12 @@
     <HeroBanner
       title="Apps"
       linkTitle="App building 101"
+      linkHref="docs.budibase.com"
       image={AppsHero}
       color="#732B00"
     >
-      Create powerful apps and workflows from any datasource and securely deploy
-      professional-grade solutions, such as forms, portals and more, across your
-      teams.
+      Build powerful forms and apps that connect to your data and automations,
+      and power your workflows.
     </HeroBanner>
   </div>
 
