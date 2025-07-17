@@ -72,7 +72,7 @@
       return { key, config }
     }
 
-    const details = ProviderDetails[provider] // Update to use the provider parameter
+    const details = ProviderDetails[provider]
     if (!details) {
       throw new Error(`Provider ${key} not found`)
     }
@@ -261,7 +261,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #2e3851;
+    background-color: var(--bb-indigo);
+    color: var(--background);
     border-radius: var(--border-radius-m);
     padding: var(--spacing-s);
   }
@@ -276,9 +277,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: var(--background);
     border-radius: var(--border-radius-s);
     width: 32px;
     height: 32px;
+    padding: 4px;
   }
 
   .banner-buttons {
@@ -297,7 +300,7 @@
 
   .no-enabled {
     padding: 16px;
-    background-color: var(--spectrum-global-color-gray-75);
+    background-color: var(--grey-1);
     border: 1px solid var(--grey-4);
     border-radius: var(--border-radius-m);
   }
@@ -306,13 +309,13 @@
     margin-bottom: var(--spacing-m);
     font-weight: 600;
     font-size: 16px;
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--ink);
   }
 
   .disabled-title {
     font-weight: 600;
     font-size: 16px;
     margin-top: 32px;
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--ink);
   }
 </style>
