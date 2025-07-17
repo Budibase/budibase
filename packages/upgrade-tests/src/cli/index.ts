@@ -83,6 +83,7 @@ program
   .option("--app <path|name>", "Path to app export or fixture name to import")
   .option("--test-app <name>", "Test only a specific app")
   .option("--no-cleanup", "Don't clean up containers after test")
+  .option("--no-build", "Skip building current version (assumes image already exists)")
   .option("--verbose", "Show detailed output")
   .action(async options => {
     const config = generateDockerConfig()
@@ -165,7 +166,11 @@ program
 
       let image = `budibase/budibase:${options.to}`
       if (options.to === "current") {
-        await buildCurrentVersion(getProjectRoot())
+        if (!options.build) {
+          console.log(gray("Skipping build, using existing budibase:current image"))
+        } else {
+          await buildCurrentVersion(getProjectRoot())
+        }
         image = "budibase:current"
       }
 
