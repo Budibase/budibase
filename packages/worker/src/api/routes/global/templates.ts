@@ -4,7 +4,7 @@ import { auth as authCore } from "@budibase/backend-core"
 import { loggedInRoutes, adminRoutes } from "../endpointGroups"
 import Joi from "joi"
 
-const { adminOnly, joiValidator } = authCore
+const { joiValidator } = authCore
 
 function buildTemplateSaveValidation() {
   // prettier-ignore
