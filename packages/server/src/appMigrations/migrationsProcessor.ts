@@ -54,14 +54,6 @@ export async function processMigrations(
           // If we find a disabled migration, we prevent running any other
           return
         }
-        const expectedMigration =
-          migrationIds[migrationIds.indexOf(currentVersion) + 1]
-
-        if (expectedMigration !== id) {
-          throw new Error(
-            `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
-          )
-        }
 
         const counter = `(${++index}/${pendingMigrations.length})`
         console.info(`Running migration ${id}... ${counter}`, {
