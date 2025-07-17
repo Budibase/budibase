@@ -291,6 +291,36 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       ])
     })
 
+    it("should apply all future migrations when current version is not present in the migration list", async () => {
+      const executionOrder: string[] = []
+      const [migration1, migration2, migration3, migration4] = Array.from({
+        length: 4,
+      }).map((_, i) => ({
+        id: generateNextMigrationId(),
+        func: async () => {
+          const db = context.getAppDB()
+          executionOrder.push(`${db.name} - ${i + 1}`)
+        },
+      }))
+
+      const appId = config.getProdAppId()
+      await config.doInContext(appId, () =>
+        updateAppMigrationMetadata({
+          appId,
+          version: migration2.id,
+        })
+      )
+
+      await runMigrations([migration1, migration3, migration4])
+
+      expect(executionOrder).toEqual([
+        `${config.getProdAppId()} - 3`,
+        `${config.getAppId()} - 3`,
+        `${config.getProdAppId()} - 4`,
+        `${config.getAppId()} - 4`,
+      ])
+    })
+
     it("should not run any migrations when current version is the last in array", async () => {
       const executionOrder: number[] = []
       const testMigrations: AppMigration[] = [
