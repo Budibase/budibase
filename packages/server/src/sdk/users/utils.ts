@@ -55,6 +55,7 @@ export function combineMetadataAndUser(
     return {
       ...found,
       ...newDoc,
+      createdAt: found?.createdAt ?? (new Date().toISOString() as any),
       updatedAt: new Date().toISOString(),
     }
   }
