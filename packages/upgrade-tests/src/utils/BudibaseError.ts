@@ -57,17 +57,13 @@ export class BudibaseError extends Error {
 
     if (details.requestData) {
       lines.push(``, `Request:`)
-      lines.push(
-        `  ${JSON.stringify(details.requestData, null, 2).split("\n").join("\n  ")}`
-      )
+      lines.push(JSON.stringify(details.requestData, null, 2))
     }
 
     lines.push(``, `Response:`)
 
     if (details.responseBody) {
-      lines.push(
-        JSON.stringify(details.responseBody, null, 2).split("\n").join("\n  ")
-      )
+      lines.push(JSON.stringify(details.responseBody, null, 2))
     } else {
       lines.push("  No response body")
     }

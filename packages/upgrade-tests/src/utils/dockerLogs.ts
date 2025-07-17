@@ -4,6 +4,14 @@ import { red, yellow, cyan, gray, blue, green } from "chalk"
 
 const execAsync = promisify(exec)
 
+export interface LogEntryError {
+  type: string
+  message: string
+  stack: string
+  code?: string
+  status: number
+}
+
 export interface LogEntry {
   timestamp: string
   service: string
@@ -14,12 +22,15 @@ export interface LogEntry {
   url: string
   status: number
   responseTime: number
-  stack?: string
+  error?: LogEntryError
 }
 
 function extractJSON(line: string): Record<string, any> | null {
-  const match = line.match(/(\{.+\})/)
-  return match ? JSON.parse(match[1]) : null
+  try {
+    return JSON.parse(line)
+  } catch (e) {
+    return null
+  }
 }
 
 export async function getLogsForRequest(
@@ -59,6 +70,37 @@ export async function getLogsForRequest(
     //   responseTime: 1,
     //   msg: "request completed",
     // }
+    //
+    // Example error log message:
+    //
+    // {
+    //   level: "ERROR",
+    //   timestamp: "2025-07-17T16:31:02.628Z",
+    //   service: "@budibase/server",
+    //   err: {
+    //     type: "_HTTPError",
+    //     message: "Oh no",
+    //     stack:
+    //       "Error: Oh no\n    at fetch29 (/app/dist/index.js:191608:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async middleware3 (/app/dist/index.js:171453:20)\n    at async contentSecurityPolicy (/app/dist/index.js:143284:7)\n    at async /node_modules/koa-compress/lib/index.js:38:5\n    at async /app/dist/index.js:143302:9\n    at async doInFeatureFlagOverrideContext (/app/dist/index.js:36955:10)\n    at async featureFlagCookie_default (/app/dist/index.js:143301:7)\n    at async errorHandling (/app/dist/index.js:143088:5)\n    at async /node_modules/koa-mount/index.js:52:26\n    at async userAgent (/node_modules/koa-useragent/dist/index.js:12:5)\n    at async ip_default (/app/dist/index.js:143368:16)",
+    //     code: "http",
+    //     status: 500,
+    //   },
+    //   pid: 328,
+    //   tenantId: "default",
+    //   correlationId: "3d5a4f13-3602-4325-902e-55178b4e5de4",
+    //   msg: "Got 400 response code",
+    // }
+    let error: LogEntryError | undefined
+    if (json.err) {
+      error = {
+        type: json.err.type,
+        message: json.err.message,
+        stack: json.err.stack,
+        code: json.err.code,
+        status: json.err.status,
+      }
+    }
+
     const entry: LogEntry = {
       timestamp: json.timestamp,
       message: json.msg,
@@ -69,7 +111,7 @@ export async function getLogsForRequest(
       responseTime: json.responseTime,
       correlationId: json.req?.correlationId,
       service: json.service,
-      stack: json.stack,
+      error,
     }
 
     logs.push(entry)
@@ -111,6 +153,7 @@ export function formatLogEntry(entry: LogEntry, indent = ""): string {
     "timestamp",
     "level",
     "correlationId",
+    "error",
   ])
 
   // Process all entry fields
@@ -170,11 +213,25 @@ export function formatLogEntry(entry: LogEntry, indent = ""): string {
     formatted += ` ${gray("(")}${contextFields.join(gray(", "))}${gray(")")}`
   }
 
-  // Check for stack trace
-  if (entry.stack) {
-    formatted += "\n" + formatStackTrace(entry.stack, indent + "         ")
+  // Check for error details
+  if (entry.error) {
+    formatted += "\n" + formatError(entry.error, indent + "     ")
   }
 
+  return formatted
+}
+
+export function formatError(error: LogEntryError, indent = ""): string {
+  let formatted = `${indent}${red("Error:")} ${error.message}`
+  if (error.code) {
+    formatted += ` ${gray(`(${error.code})`)}`
+  }
+  if (error.status) {
+    formatted += ` ${gray(`[${error.status}]`)}`
+  }
+  if (error.stack) {
+    formatted += `\n${formatStackTrace(error.stack, indent + "  ")}`
+  }
   return formatted
 }
 
@@ -193,22 +250,42 @@ export function formatStackTrace(stack: string, indent = ""): string {
     }
 
     // Format stack frames
-    // Match patterns like "at Function.name (file:line:col)" or "at file:line:col"
+    // Match patterns like:
+    // "at Function.name (file:line:col)"
+    // "at async Function.name (file:line:col)"
+    // "at file:line:col"
+    // "at async file:line:col"
+    // "at process.processTicksAndRejections (node:internal/...)"
     const frameMatch = trimmed.match(
-      /^at\s+(?:(.+?)\s+\()?(.+?):(\d+):(\d+)\)?$/
+      /^at\s+(?:async\s+)?(?:(.+?)\s+\()?(.+?):(\d+):(\d+)\)?$/
     )
     if (frameMatch) {
       const [, functionName, file, line, col] = frameMatch
       const fileName = file.split("/").pop() || file
+      
+      // Check if this is a node internal
+      const isNodeInternal = file.startsWith("node:")
 
       if (functionName) {
-        formatted.push(
-          `${indent}  ${gray("at")} ${functionName} ${yellow(`(${fileName}:${line}:${col})`)}`
-        )
+        if (isNodeInternal) {
+          formatted.push(
+            `${indent}  ${gray("at")} ${gray(functionName)} ${gray(`(${file}:${line}:${col})`)}`
+          )
+        } else {
+          formatted.push(
+            `${indent}  ${gray("at")} ${functionName} ${yellow(`(${fileName}:${line}:${col})`)}`
+          )
+        }
       } else {
-        formatted.push(
-          `${indent}  ${gray("at")} ${yellow(`${fileName}:${line}:${col}`)}`
-        )
+        if (isNodeInternal) {
+          formatted.push(
+            `${indent}  ${gray("at")} ${gray(`${file}:${line}:${col}`)}`
+          )
+        } else {
+          formatted.push(
+            `${indent}  ${gray("at")} ${yellow(`${fileName}:${line}:${col}`)}`
+          )
+        }
       }
     } else {
       // Fallback for other formats
