@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { Command } from "commander"
 import { bold, blue, gray, green, red } from "chalk"
 import * as fs from "fs"
@@ -15,7 +13,7 @@ import {
   waitForHealthy,
   buildCurrentVersion,
 } from "./docker"
-import { importApp, listAvailableApps } from "./appImport"
+import { importApp } from "./appImport"
 import { runTests } from "./testRunner"
 
 const program = new Command()
@@ -310,34 +308,6 @@ program
       console.error(red("\n❌ Post-upgrade tests failed:"), error)
       process.exit(1)
     }
-  })
-
-// Import app command
-program
-  .command("import <app>")
-  .description("Import an app into running Budibase")
-  .option("--verbose", "Show detailed output")
-  .action(async (app, options) => {
-    try {
-      console.log(bold("\n📱 Importing App"))
-      const { appId, name } = await importApp(app, options.verbose)
-
-      console.log(green(`\n✓ App imported successfully!`))
-      console.log(gray(`  Name: ${name}`))
-      console.log(gray(`  ID: ${appId}`))
-      console.log(gray(`\nSet TEST_APP_ID=${appId} to test this app`))
-    } catch (error) {
-      console.error(red("\n❌ Failed to import app:"), error)
-      process.exit(1)
-    }
-  })
-
-// List apps command
-program
-  .command("list-apps")
-  .description("List available apps to import")
-  .action(async () => {
-    await listAvailableApps()
   })
 
 // Parse arguments

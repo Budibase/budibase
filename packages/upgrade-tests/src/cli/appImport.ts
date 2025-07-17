@@ -99,18 +99,3 @@ function getFileSize(filePath: string): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
 }
 
-export async function listAvailableApps(): Promise<void> {
-  const apps = await getAvailableApps()
-  
-  if (apps.length === 0) {
-    console.log(yellow("No apps found in fixtures directory"))
-    return
-  }
-
-  console.log(bold("\nAvailable apps:"))
-  for (const app of apps) {
-    const appPath = getAppPath(app)!
-    const size = getFileSize(appPath)
-    console.log(`  ${blue("•")} ${app} ${gray(`(${size})`)}`)
-  }
-}

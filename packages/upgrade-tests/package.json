@@ -15,11 +15,8 @@
     "test:upgrade": "node dist/src/cli/index.js full",
     "test:pre": "node dist/src/cli/index.js pre",
     "test:post": "node dist/src/cli/index.js post",
-    "test:import": "node dist/src/cli/index.js import",
-    "list:apps": "node dist/src/cli/index.js list-apps",
     "cli": "node dist/src/cli/index.js",
     "build": "tsc -p tsconfig.build.json",
-    "build:cli": "tsc -p tsconfig.build.json && chmod +x dist/src/cli/index.js",
     "check:types": "tsc -p tsconfig.json --noEmit"
   },
   "author": "Budibase",
