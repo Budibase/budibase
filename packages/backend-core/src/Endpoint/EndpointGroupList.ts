@@ -1,4 +1,4 @@
-import { EndpointGroup, CtxFn } from "@budibase/backend-core"
+import { EndpointGroup, CtxFn } from "./"
 
 export default class EndpointGroupList {
   private groups: EndpointGroup[] = []
