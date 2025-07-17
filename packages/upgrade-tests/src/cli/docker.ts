@@ -198,14 +198,27 @@ export async function runContainer(
 }
 
 export async function buildCurrentVersion(projectRoot: string): Promise<void> {
-  const spinner = ora("Building current version from source").start()
-
   // Verify the directory exists
   const dockerfilePath = path.join(projectRoot, "hosting/single/Dockerfile")
   if (!fs.existsSync(dockerfilePath)) {
-    spinner.fail(`Dockerfile not found at ${dockerfilePath}`)
-    throw new Error(`Invalid project root: ${projectRoot}`)
+    throw new Error(`Invalid project root: ${projectRoot} - Dockerfile not found at ${dockerfilePath}`)
   }
+
+  // First, build the project
+  const buildSpinner = ora("Building project with yarn").start()
+  
+  try {
+    await execAsync("yarn build --ignore @budibase/upgrade-tests", {
+      cwd: projectRoot,
+    })
+    buildSpinner.succeed("Project built successfully")
+  } catch (error) {
+    buildSpinner.fail("Failed to build project")
+    throw error
+  }
+
+  // Then build the Docker image
+  const dockerSpinner = ora("Building Docker image").start()
 
   const args = [
     "build",
@@ -233,10 +246,10 @@ export async function buildCurrentVersion(projectRoot: string): Promise<void> {
 
     buildProcess.on("close", code => {
       if (code === 0) {
-        spinner.succeed("Built current version successfully")
+        dockerSpinner.succeed("Docker image built successfully")
         resolve()
       } else {
-        spinner.fail("Failed to build current version")
+        dockerSpinner.fail("Failed to build Docker image")
         reject(
           new Error(
             `Command failed with exit code ${code}: docker ${args.join(" ")}\n${stderr}`
@@ -246,7 +259,7 @@ export async function buildCurrentVersion(projectRoot: string): Promise<void> {
     })
 
     buildProcess.on("error", error => {
-      spinner.fail("Failed to build current version")
+      dockerSpinner.fail("Failed to build Docker image")
       reject(error)
     })
   })
