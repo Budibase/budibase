@@ -1,9 +1,9 @@
 import * as fs from "fs"
 import * as path from "path"
 import * as crypto from "crypto"
-import { JSONValue } from "../types"
 import { isPreUpgradePhase, isPostUpgradePhase } from "./testHelpers"
 import { expect, it as jestIt } from "@jest/globals"
+import { JSONValue } from "@budibase/types"
 
 function isPromise<T>(value: any): value is Promise<T> {
   return value && typeof value.then === "function"

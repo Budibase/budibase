@@ -5,12 +5,12 @@ export class TableAPI {
   constructor(private client: BudibaseClient) {}
 
   async fetch(): Promise<Table[]> {
-    const response = await this.client.get("/api/tables")
-    return response.data
+    const { data } = await this.client.get<Table[]>("/api/tables/fdafsa")
+    return data
   }
 
   async get(tableId: string): Promise<Table> {
-    const response = await this.client.get(`/api/tables/${tableId}`)
-    return response.data
+    const { data } = await this.client.get<Table>(`/api/tables/${tableId}`)
+    return data
   }
 }

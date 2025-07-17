@@ -1,4 +1,4 @@
-import { DockerLogEntry, parseStructuredLogs } from "./dockerLogs"
+import { getLogsForRequest, LogEntry } from "./dockerLogs"
 
 export interface BudibaseErrorDetails {
   correlationId: string
@@ -9,8 +9,7 @@ export interface BudibaseErrorDetails {
   responseBody: any
   requestHeaders: Record<string, any>
   requestData?: any
-  serverLogs?: string[]
-  parsedLogs?: DockerLogEntry[]
+  logs?: LogEntry[]
 }
 
 export class BudibaseError extends Error {
@@ -30,10 +29,10 @@ export class BudibaseError extends Error {
   ): Promise<BudibaseError> {
     const { method, url, correlationId } = requestInfo
 
-    let parsedLogs: DockerLogEntry[] | undefined
+    let logs: LogEntry[] | undefined
 
     try {
-      parsedLogs = await parseStructuredLogs(correlationId)
+      logs = await getLogsForRequest(correlationId)
     } catch (e) {
       // Ignore errors fetching logs
       console.warn("Failed to fetch Docker logs:", e)
@@ -47,7 +46,7 @@ export class BudibaseError extends Error {
       statusText: response.statusText || "Unknown Error",
       responseBody,
       requestHeaders: {}, // Note: fetch doesn't expose request headers easily
-      parsedLogs,
+      logs: logs,
     }
 
     const message = customMessage || BudibaseError.formatErrorMessage(details)
@@ -143,19 +142,14 @@ export class BudibaseError extends Error {
       lines.push(`  <no response body>`)
     }
 
-    if (details.parsedLogs && details.parsedLogs.length > 0) {
+    if (details.logs && details.logs.length > 0) {
       lines.push(``, `Server Logs (Correlation ID: ${details.correlationId}):`)
 
       // Import the formatter
       const { formatLogEntry } = require("./dockerLogs")
 
-      details.parsedLogs.forEach(log => {
+      details.logs.forEach(log => {
         lines.push(formatLogEntry(log, "  "))
-      })
-    } else if (details.serverLogs && details.serverLogs.length > 0) {
-      lines.push(``, `Server Logs (Correlation ID: ${details.correlationId}):`)
-      details.serverLogs.forEach(log => {
-        lines.push(`  ${log}`)
       })
     }
 

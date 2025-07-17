@@ -6,13 +6,15 @@ export class ApplicationAPI {
   constructor(private client: BudibaseClient) {}
 
   async fetch(): Promise<App[]> {
-    const response = await this.client.get("/api/applications?status=all")
-    return response.data
+    const { data } = await this.client.get<App[]>(
+      "/api/applications?status=all"
+    )
+    return data
   }
 
   async get(appId: string): Promise<App> {
-    const response = await this.client.get(`/api/applications/${appId}`)
-    return response.data
+    const { data } = await this.client.get<App>(`/api/applications/${appId}`)
+    return data
   }
 
   async import(filePath: string, name?: string): Promise<string> {
@@ -38,8 +40,7 @@ export class ApplicationAPI {
     form.append("useTemplate", "true")
 
     // Send the form - native FormData will set the correct headers automatically
-    const response = await this.client.post("/api/applications", form)
-
-    return response.data.appId || response.data._id
+    const { data } = await this.client.post<App>("/api/applications", form)
+    return data.appId || data._id!
   }
 }

@@ -1,15 +1,10 @@
-import { TableAPI } from "./table"
 import type { BudibaseClient } from "./BudibaseClient"
 
 export class ViewAPI {
-  private tableAPI: TableAPI
-
-  constructor(private client: BudibaseClient) {
-    this.tableAPI = new TableAPI(client)
-  }
+  constructor(private client: BudibaseClient) {}
 
   async fetch(tableId: string) {
-    const table = await this.tableAPI.get(tableId)
+    const table = await this.client.table.get(tableId)
     return Object.values(table.views || {})
   }
 }

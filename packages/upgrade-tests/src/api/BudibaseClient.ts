@@ -2,10 +2,10 @@ import { ApplicationAPI } from "./application"
 import { TableAPI } from "./table"
 import { RowAPI } from "./row"
 import { AutomationAPI } from "./automation"
-import { QueryAPI } from "./query"
 import { ViewAPI } from "./view"
 import { BudibaseError } from "../utils/BudibaseError"
 import { v4 as uuidv4 } from "uuid"
+import { JSONValue } from "@budibase/types"
 
 export interface AuthCredentials {
   email: string
@@ -15,7 +15,12 @@ export interface AuthCredentials {
 export interface ClientConfig {
   baseURL: string
   headers?: Record<string, string>
-  timeout?: number
+}
+
+export interface RequestOptions {
+  body?: any
+  headers?: Record<string, string>
+  query?: Record<string, string>
 }
 
 export class BudibaseClient {
@@ -25,11 +30,9 @@ export class BudibaseClient {
   table: TableAPI
   row: RowAPI
   automation: AutomationAPI
-  query: QueryAPI
   view: ViewAPI
 
   constructor(config?: ClientConfig) {
-    // Set up default config if not provided
     if (!config) {
       const url = process.env.BUDIBASE_URL
       if (!url) {
@@ -48,7 +51,6 @@ export class BudibaseClient {
 
       config = {
         baseURL: url,
-        timeout: 30000,
         headers: {
           "x-budibase-api-key": apiKey,
           "x-budibase-app-id": appId,
@@ -59,16 +61,14 @@ export class BudibaseClient {
 
     this.config = config
 
-    // Initialize API classes with this client
     this.application = new ApplicationAPI(this)
     this.table = new TableAPI(this)
     this.row = new RowAPI(this)
     this.automation = new AutomationAPI(this)
-    this.query = new QueryAPI(this)
     this.view = new ViewAPI(this)
   }
 
-  private async request<T = any>(
+  private async request<T>(
     method: string,
     path: string,
     options?: {
@@ -109,10 +109,9 @@ export class BudibaseClient {
     const fetchOptions: RequestInit = {
       method,
       headers,
-      signal: AbortSignal.timeout(this.config.timeout || 30000),
+      signal: AbortSignal.timeout(30000),
     }
 
-    // Add body if present
     if (options?.body) {
       if (isFormData) {
         fetchOptions.body = options.body as FormData
@@ -121,124 +120,80 @@ export class BudibaseClient {
       }
     }
 
-    try {
-      const response = await fetch(url, fetchOptions)
-      const contentType = response.headers.get("content-type") || ""
+    const response = await fetch(url, fetchOptions)
+    const contentType = response.headers.get("content-type") || ""
 
-      // Read response body
-      const text = await response.text()
-      let data: any = text
+    // Read response body
+    let data: JSONValue = await response.text()
 
-      // Parse JSON if content type indicates it
-      if (contentType.includes("application/json") && text) {
-        try {
-          data = JSON.parse(text)
-        } catch (e) {
-          // If parsing fails, keep as text
-        }
+    // Parse JSON if content type indicates it
+    if (contentType.includes("application/json") && data) {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        // If parsing fails, keep as text
       }
+    }
 
-      // Check for error responses
-      if (!response.ok) {
-        const error = await BudibaseError.fromFetchResponse(response, data, {
-          method,
-          url,
-          correlationId,
-        })
-        throw error
-      }
-
-      // Check if we got HTML when we shouldn't
-      if (
-        contentType.includes("text/html") &&
-        !headers.Accept?.includes("text/html")
-      ) {
-        const error = await BudibaseError.fromFetchResponse(
-          response,
-          data,
-          { method, url, correlationId },
-          "Received HTML error page instead of expected response"
-        )
-        throw error
-      }
-
-      return {
-        data,
-        headers: response.headers,
-        status: response.status,
-      }
-    } catch (error: any) {
-      // Handle timeout
-      if (error.name === "AbortError") {
-        throw new BudibaseError(
-          `Request timeout after ${this.config.timeout}ms`,
-          {
-            correlationId,
-            method,
-            url,
-            statusCode: 0,
-            statusText: "Timeout",
-            responseBody: null,
-            requestHeaders: headers,
-          }
-        )
-      }
-
-      // Re-throw if already a BudibaseError
-      if (error instanceof BudibaseError) {
-        throw error
-      }
-
-      // Wrap other errors
-      throw new BudibaseError(`Request failed: ${error.message}`, {
-        correlationId,
+    // Check for error responses
+    if (!response.ok) {
+      throw await BudibaseError.fromFetchResponse(response, data, {
         method,
         url,
-        statusCode: 0,
-        statusText: error.message,
-        responseBody: null,
-        requestHeaders: headers,
+        correlationId,
       })
+    }
+
+    // Check if we got HTML when we shouldn't
+    if (
+      contentType.includes("text/html") &&
+      !headers.Accept?.includes("text/html")
+    ) {
+      throw await BudibaseError.fromFetchResponse(
+        response,
+        data,
+        { method, url, correlationId },
+        "Received HTML error page instead of expected response"
+      )
+    }
+
+    return {
+      data: data as T,
+      headers: response.headers,
+      status: response.status,
     }
   }
 
-  // HTTP method helpers
-  async get<T = any>(
-    path: string,
-    options?: {
-      headers?: Record<string, string>
-      query?: Record<string, string>
-    }
-  ) {
+  async get<T>(path: string, options?: Omit<RequestOptions, "body">) {
     return this.request<T>("GET", path, options)
   }
 
-  async post<T = any>(
+  async post<T, R = any>(
     path: string,
-    body?: any,
+    body?: R,
     options?: { headers?: Record<string, string> }
   ) {
     return this.request<T>("POST", path, { body, ...options })
   }
 
-  async put<T = any>(
+  async put<T>(
     path: string,
-    body?: any,
+    body?: JSONValue,
     options?: { headers?: Record<string, string> }
   ) {
     return this.request<T>("PUT", path, { body, ...options })
   }
 
-  async delete<T = any>(
+  async delete<T>(
     path: string,
     options?: { headers?: Record<string, string> }
   ) {
     return this.request<T>("DELETE", path, options)
   }
 
-  async patch<T = any>(
+  async patch<T>(
     path: string,
-    body?: any,
+    body?: JSONValue,
     options?: { headers?: Record<string, string> }
   ) {
     return this.request<T>("PATCH", path, { body, ...options })
@@ -255,12 +210,8 @@ export class BudibaseClient {
       throw new Error("INTERNAL_API_KEY environment variable is required")
     }
 
-    // Create client with just the internal API key
-    // This is used for operations that don't require user authentication
-    // like importing apps
     return new BudibaseClient({
       baseURL: url,
-      timeout: parseInt(process.env.BUDIBASE_TIMEOUT || "60000"),
       headers: {
         "x-budibase-api-key": apiKey,
         "Content-Type": "application/json",
@@ -303,52 +254,36 @@ export class BudibaseClient {
       creds = { email, password }
     }
 
-    try {
-      // Create a temporary client for authentication
-      const tempClient = new BudibaseClient({
-        baseURL: url,
-        timeout: 30000,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+    const client = new BudibaseClient({
+      baseURL: url,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
-      // Authenticate and get token
-      const response = await tempClient.post("/api/global/auth/default/login", {
-        username: creds.email,
-        password: creds.password,
-      })
+    const response = await client.post("/api/global/auth/default/login", {
+      username: creds.email,
+      password: creds.password,
+    })
 
-      // Try to get token from response header first (older versions)
-      let token =
-        response.headers.get("x-budibase-token") ||
-        response.headers.get("token")
+    let token =
+      response.headers.get("x-budibase-token") || response.headers.get("token")
 
-      // If not in headers, check response body
-      if (!token) {
-        token = response.data.token
-      }
-
-      if (!token) {
-        throw new Error(
-          "No token received from authentication (checked headers and body)"
-        )
-      }
-
-      // Create authenticated client with token
-      // Note: In older versions, token must be passed as x-budibase-token header
-      return new BudibaseClient({
-        baseURL: url,
-        timeout: 30000,
-        headers: {
-          "x-budibase-token": token,
-          "x-budibase-app-id": appId,
-          "Content-Type": "application/json",
-        },
-      })
-    } catch (error: any) {
-      console.error("Authentication failed:", error.message)
-      throw error
+    if (!token) {
+      throw new Error(
+        "No token received from authentication (checked headers and body)"
+      )
     }
+
+    // Create authenticated client with token
+    // Note: In older versions, token must be passed as x-budibase-token header
+    return new BudibaseClient({
+      baseURL: url,
+      headers: {
+        "x-budibase-token": token,
+        "x-budibase-app-id": appId,
+        "Content-Type": "application/json",
+      },
+    })
   }
 }
