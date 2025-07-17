@@ -7,8 +7,8 @@ import * as appMigrations from "../../../appMigrations/migrations"
 
 jest.mock<typeof appMigrations>("../../../appMigrations/migrations", () => ({
   MIGRATIONS: [
-    { id: `202506011400_test`, func: jest.fn() },
-    { id: `202506021500_test`, func: jest.fn() },
+    { id: `20250601140000_test`, func: jest.fn() },
+    { id: `20250602150000_test2`, func: jest.fn() },
   ],
 }))
 
@@ -139,7 +139,7 @@ describe("/templates", () => {
       await config.withApp(app, async () => {
         const migrationVersion = await getAppMigrationVersion(app.appId)
 
-        expect(migrationVersion).toBe("202506021500_test")
+        expect(migrationVersion).toBe("20250602150000_test2")
 
         expect(appMigrations.MIGRATIONS[0].func).toHaveBeenCalledOnce()
         expect(appMigrations.MIGRATIONS[1].func).toHaveBeenCalledOnce()
