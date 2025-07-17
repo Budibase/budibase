@@ -3,7 +3,7 @@ import { promisify } from "util"
 import * as crypto from "crypto"
 import * as path from "path"
 import * as fs from "fs"
-import { blue, red } from "chalk"
+import { blue, red, gray, yellow } from "chalk"
 import ora from "ora"
 
 const execAsync = promisify(exec)
@@ -204,7 +204,7 @@ export async function buildCurrentVersion(projectRoot: string): Promise<void> {
     throw new Error(`Invalid project root: ${projectRoot} - Dockerfile not found at ${dockerfilePath}`)
   }
 
-  // First, build the project
+  // Build the project
   const buildSpinner = ora("Building project with yarn").start()
   
   try {
@@ -215,6 +215,15 @@ export async function buildCurrentVersion(projectRoot: string): Promise<void> {
   } catch (error) {
     buildSpinner.fail("Failed to build project")
     throw error
+  }
+  
+  // Verify the dist files exist and get their timestamps
+  const serverDistPath = path.join(projectRoot, "packages/server/dist/index.js")
+  if (fs.existsSync(serverDistPath)) {
+    const stats = fs.statSync(serverDistPath)
+    console.log(gray(`Server dist last modified: ${stats.mtime.toISOString()}`))
+  } else {
+    console.warn(yellow("Warning: packages/server/dist/index.js not found!"))
   }
 
   // Then build the Docker image
