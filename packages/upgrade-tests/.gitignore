@@ -1,7 +1,7 @@
 node_modules/
 dist/
 coverage/
-.upgrade-context.json
+.upgrade-context*
 *.log
 .DS_Store
 .env

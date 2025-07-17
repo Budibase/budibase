@@ -1,9 +1,5 @@
-import {
-  BudibaseClient,
-  preUpgrade,
-  postUpgrade,
-  upgradeContext,
-} from "../index"
+import { BudibaseClient } from "../index"
+import { it } from "../utils/upgradeTest"
 
 describe("Table Schema Upgrade Tests", () => {
   let client: BudibaseClient
@@ -12,13 +8,19 @@ describe("Table Schema Upgrade Tests", () => {
     client = await BudibaseClient.authenticated()
   })
 
-  preUpgrade(() => {
-    it("should capture table count", async () => {
+  it("should preserve table count", {
+    pre: async () => {
       const tables = await client.table.fetch()
-      upgradeContext.set("tableCount", tables.length)
-    })
+      return { tableCount: tables.length }
+    },
+    post: async ({ tableCount }) => {
+      const tables = await client.table.fetch()
+      expect(tables.length).toBe(tableCount)
+    },
+  })
 
-    it("should capture view count", async () => {
+  it("should preserve view counts", {
+    pre: async () => {
       const tables = await client.table.fetch()
       const viewCounts: Record<string, number> = {}
 
@@ -27,10 +29,20 @@ describe("Table Schema Upgrade Tests", () => {
         viewCounts[table._id!] = views.length
       }
 
-      upgradeContext.set("viewCounts", viewCounts)
-    })
+      return { viewCounts }
+    },
+    post: async ({ viewCounts }) => {
+      const tables = await client.table.fetch()
 
-    it("should capture row count", async () => {
+      for (const table of tables) {
+        const views = await client.view.fetch(table._id!)
+        expect(views.length).toBe(viewCounts[table._id!])
+      }
+    },
+  })
+
+  it("should preserve row counts", {
+    pre: async () => {
       const tables = await client.table.fetch()
       const rowCounts: Record<string, number> = {}
 
@@ -39,37 +51,15 @@ describe("Table Schema Upgrade Tests", () => {
         rowCounts[table._id!] = rows.length
       }
 
-      upgradeContext.set("rowCounts", rowCounts)
-    })
-  })
-
-  postUpgrade(() => {
-    it("should preserve table count", async () => {
-      const oldCount = upgradeContext.get<number>("tableCount")
-      const tables = await client.table.fetch()
-      expect(tables.length).toBe(oldCount)
-    })
-
-    it("should preserve view counts", async () => {
-      const oldViewCounts =
-        upgradeContext.get<Record<string, number>>("viewCounts")
-      const tables = await client.table.fetch()
-
-      for (const table of tables) {
-        const views = await client.view.fetch(table._id!)
-        expect(views.length).toBe(oldViewCounts[table._id!])
-      }
-    })
-
-    it("should preserve row counts", async () => {
-      const oldRowCounts =
-        upgradeContext.get<Record<string, number>>("rowCounts")
+      return { rowCounts }
+    },
+    post: async ({ rowCounts }) => {
       const tables = await client.table.fetch()
 
       for (const table of tables) {
         const rows = await client.row.fetch(table._id!)
-        expect(rows.length).toBe(oldRowCounts[table._id!])
+        expect(rows.length).toBe(rowCounts[table._id!])
       }
-    })
+    },
   })
 })

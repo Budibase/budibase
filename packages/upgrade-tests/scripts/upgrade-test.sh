@@ -333,12 +333,16 @@ cmd_full_upgrade() {
     # Clean up any existing containers
     cleanup
     
-    # Clean up any previous upgrade context
+    # Clean up any previous upgrade context files
     local context_file="$SCRIPT_DIR/../.upgrade-context.json"
     if [ -f "$context_file" ]; then
-        print_info "Removing previous upgrade context file..."
+        print_info "Removing previous global upgrade context file..."
         rm -f "$context_file"
     fi
+    
+    # Clean up any per-test context files
+    print_info "Removing any per-test context files..."
+    find "$SCRIPT_DIR/.." -name ".upgrade-context-*.json" -type f -delete 2>/dev/null || true
     
     # Create volume
     print_info "Creating Docker volume..."

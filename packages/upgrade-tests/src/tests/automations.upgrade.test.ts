@@ -1,9 +1,5 @@
-import {
-  BudibaseClient,
-  preUpgrade,
-  postUpgrade,
-  upgradeContext,
-} from "../index"
+import { BudibaseClient } from "../index"
+import { it } from "../utils/upgradeTest"
 
 describe("Automation Upgrade Tests", () => {
   let client: BudibaseClient
@@ -12,18 +8,14 @@ describe("Automation Upgrade Tests", () => {
     client = await BudibaseClient.authenticated()
   })
 
-  preUpgrade(() => {
-    it("should capture automation count", async () => {
+  it("should preserve automation counts", {
+    pre: async () => {
       const automations = await client.automation.fetch()
-      upgradeContext.set("automationCount", automations.length)
-    })
-  })
-
-  postUpgrade(() => {
-    it("should preserve automation counts", async () => {
-      const oldCount = upgradeContext.get<number>("automationCount")
+      return { automationCount: automations.length }
+    },
+    post: async ({ automationCount }) => {
       const currentAutomations = await client.automation.fetch()
-      expect(currentAutomations.length).toBe(oldCount)
-    })
+      expect(currentAutomations.length).toBe(automationCount)
+    },
   })
 })
