@@ -1,5 +1,4 @@
 import { EndpointGroup, CtxFn } from "@budibase/backend-core"
-import { allRoutes } from "@budibase/server/src/api/routes/endpointGroups"
 
 export default class EndpointGroupList {
   private groups: EndpointGroup[] = []
