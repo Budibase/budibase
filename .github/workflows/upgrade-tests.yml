@@ -20,6 +20,8 @@ on:
 
 env:
   INTERNAL_API_KEY: budibase
+  BB_ADMIN_USER_EMAIL: admin@example.com
+  BB_ADMIN_USER_PASSWORD: admin123!
 
 # Cancel in-progress runs when a new run is triggered
 concurrency:
@@ -100,175 +102,20 @@ jobs:
           node-version: 22.x
           cache: yarn
       
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
       - name: Install dependencies
-        run: |
-          cd packages/upgrade-tests
-          yarn install --frozen-lockfile
+        run: yarn --frozen-lockfile
 
       - name: Build upgrade tests
         run: |
           cd packages/upgrade-tests
           yarn build
 
-      # CouchDB and MinIO are included in the budibase/budibase image
-
-      - name: Start old Budibase version
-        id: start-old
-        run: |
-          # Start container with dynamic port mapping
-          docker run -d \
-            --name budibase \
-            -P \
-            -e INTERNAL_API_KEY=${{ env.INTERNAL_API_KEY }} \
-            -e MULTI_TENANCY=0 \
-            -e SELF_HOSTED=1 \
-            -e REDIS_PASSWORD="budibase" \
-            -e BB_ADMIN_USER_EMAIL="admin@example.com" \
-            -e BB_ADMIN_USER_PASSWORD="admin123!" \
-            -v budibase_data:/data \
-            budibase/budibase:${{ matrix.version }}
-          
-          # Get the dynamically assigned port
-          PORT=$(docker port budibase 80 | cut -d: -f2)
-          echo "port=$PORT" >> $GITHUB_OUTPUT
-          echo "Budibase started on port $PORT"
-
-      - name: Wait for old version to be ready
-        run: |
-          echo "Waiting for Budibase to be healthy..."
-          timeout 180s bash -c 'until docker ps --filter "name=budibase" --filter "health=healthy" --format "table {{.Names}}\t{{.Status}}" | grep -q healthy; do
-            echo "Waiting for container to be healthy..."
-            docker ps --filter "name=budibase" --format "table {{.Names}}\t{{.Status}}"
-            sleep 5
-          done'
-          echo "Budibase is healthy!"
-
-      - name: Import test app
-        id: import-app
+      - name: Run upgrade test
         env:
-          BUDIBASE_URL: http://localhost:${{ steps.start-old.outputs.port }}
-          TEST_APP: ${{ matrix.app }}
+          BUDIBASE_TIMEOUT: 180000  # 3 minutes timeout for app imports
         run: |
           cd packages/upgrade-tests
-          # Import the specific test app for this matrix job
-          APP_ID=$(node -e "
-            const { BudibaseClient } = require('./dist/src/api/BudibaseClient');
-            const { getAppPath } = require('./dist/src/utils/appHelpers');
-            const client = new BudibaseClient();
-            const appName = process.env.TEST_APP;
-            (async () => {
-              const appPath = getAppPath(appName);
-              console.error('Importing app: ' + appName);
-              const appId = await client.application.import(appPath, appName.replace(/-/g, ' '));
-              
-              if (appId) {
-                console.error('App imported with ID: ' + appId);
-                // Output just the app ID to stdout for capture
-                console.log(appId);
-              } else {
-                console.error('Failed to import app - no ID returned');
-                process.exit(1);
-              }
-            })().catch(error => {
-              console.error('Import failed:', error.message || error);
-              process.exit(1);
-            });
-          ")
-          echo "app_id=$APP_ID" >> $GITHUB_OUTPUT
-          echo "Captured app ID: $APP_ID"
-
-      - name: Run pre-upgrade tests
-        env:
-          TEST_PHASE: pre-upgrade
-          OLD_VERSION: ${{ matrix.version }}
-          BUDIBASE_URL: http://localhost:${{ steps.start-old.outputs.port }}
-          TEST_APP: ${{ matrix.app }}
-          TEST_APP_ID: ${{ steps.import-app.outputs.app_id }}
-          BUDIBASE_CONTAINER_NAME: budibase
-        run: |
-          cd packages/upgrade-tests
-          yarn test
-
-      - name: Stop old version
-        run: |
-          docker stop budibase
-          docker rm budibase
-
-      - name: Build current version
-        run: |
-          docker buildx build \
-            --cache-from type=local,src=/tmp/.buildx-cache \
-            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
-            --load \
-            -f hosting/single/Dockerfile \
-            -t budibase:current \
-            .
-          
-          # Move cache to avoid growing cache size indefinitely
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Start current version
-        id: start-current
-        run: |
-          # Start container with dynamic port mapping
-          docker run -d \
-            --name budibase \
-            -P \
-            -e INTERNAL_API_KEY=${{ env.INTERNAL_API_KEY }} \
-            -e MULTI_TENANCY=0 \
-            -e SELF_HOSTED=1 \
-            -e REDIS_PASSWORD="budibase" \
-            -e BB_ADMIN_USER_EMAIL="admin@example.com" \
-            -e BB_ADMIN_USER_PASSWORD="admin123!" \
-            -v budibase_data:/data \
-            budibase:current
-          
-          # Get the dynamically assigned port
-          PORT=$(docker port budibase 80 | cut -d: -f2)
-          echo "port=$PORT" >> $GITHUB_OUTPUT
-          echo "Upgraded Budibase started on port $PORT"
-
-      - name: Wait for current version to be ready
-        run: |
-          echo "Waiting for upgraded Budibase to be healthy..."
-          timeout 180s bash -c 'until docker ps --filter "name=budibase" --filter "health=healthy" --format "table {{.Names}}\t{{.Status}}" | grep -q healthy; do
-            echo "Waiting for container to be healthy..."
-            docker ps --filter "name=budibase" --format "table {{.Names}}\t{{.Status}}"
-            sleep 5
-          done'
-          echo "Upgraded Budibase is healthy!"
-
-      - name: Run post-upgrade tests
-        env:
-          TEST_PHASE: post-upgrade
-          OLD_VERSION: ${{ matrix.version }}
-          CURRENT_VERSION: current
-          BUDIBASE_URL: http://localhost:${{ steps.start-current.outputs.port }}
-          TEST_APP: ${{ matrix.app }}
-          TEST_APP_ID: ${{ steps.import-app.outputs.app_id }}
-          BUDIBASE_CONTAINER_NAME: budibase
-        run: |
-          cd packages/upgrade-tests
-          yarn test
-
-      - name: Cleanup
-        if: always()
-        run: |
-          docker stop budibase || true
-          docker rm budibase || true
-          docker volume rm budibase_data || true
+          yarn test:upgrade full --from ${{ matrix.version }} --app ${{ matrix.app }}
 
   test-no-apps:
     needs: get-test-config
@@ -283,7 +130,7 @@ jobs:
 
   report:
     needs: [get-test-config, test-upgrade, test-no-apps]
-    if: always() && !cancelled()
+    if: always() && ! cancelled()
     runs-on: ubuntu-latest
     steps:
       - name: Generate test summary
