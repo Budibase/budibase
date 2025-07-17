@@ -31,8 +31,16 @@ export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
   return latestMigrationId
 }
 
-function getMigrationIndex(versionId: string) {
-  return MIGRATIONS.findIndex(m => m.id === versionId)
+export function getTimestamp(versionId: string): number {
+  const timestampStr = new RegExp(/(?<timestamp>\d{14})_.+/).exec(versionId)
+    ?.groups?.["timestamp"]
+
+  if (!timestampStr) {
+    throw new Error("Migration id not valid")
+  }
+
+  const timestamp = parseInt(timestampStr ?? "0", 10)
+  return timestamp
 }
 
 export async function checkMissingMigrations(
@@ -95,8 +103,9 @@ export const isAppFullyMigrated = async (appId: string) => {
     return true
   }
   const latestMigrationApplied = await getAppMigrationVersion(appId)
-  return (
-    getMigrationIndex(latestMigrationApplied) >=
-    getMigrationIndex(latestMigration)
-  )
+  if (!latestMigrationApplied) {
+    return false
+  }
+
+  return getTimestamp(latestMigrationApplied) >= getTimestamp(latestMigration)
 }

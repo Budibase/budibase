@@ -4,7 +4,7 @@ import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
-import { AppMigration, doInMigrationLock } from "."
+import { AppMigration, doInMigrationLock, getTimestamp } from "."
 import { MIGRATIONS } from "./migrations"
 import sdk from "../sdk"
 
@@ -25,13 +25,14 @@ export async function processMigrations(
 
       let currentVersion = await getAppMigrationVersion(appIdToMigrate)
 
-      const currentIndexMigration = migrations.findIndex(
-        m => m.id === currentVersion
+      migrations = migrations.sort(
+        (a, b) => getTimestamp(a.id) - getTimestamp(b.id)
       )
 
-      const pendingMigrations = migrations.slice(currentIndexMigration + 1)
+      const pendingMigrations = migrations.filter(
+        m => getTimestamp(m.id) > getTimestamp(currentVersion)
+      )
 
-      const migrationIds = migrations.map(m => m.id)
       console.log(
         `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
       )
