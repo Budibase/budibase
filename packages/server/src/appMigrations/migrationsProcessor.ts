@@ -28,6 +28,7 @@ export async function processMigrations(
       migrations = migrations.sort(
         (a, b) => getTimestamp(a.id) - getTimestamp(b.id)
       )
+      const migrationIds = migrations.map(m => m.id)
 
       const pendingMigrations = migrations.filter(
         m => getTimestamp(m.id) > getTimestamp(currentVersion)

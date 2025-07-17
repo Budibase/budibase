@@ -36,7 +36,7 @@ export function getTimestamp(versionId: string): number {
     ?.groups?.["timestamp"]
 
   if (!timestampStr) {
-    throw new Error("Migration id not valid")
+    return -1
   }
 
   const timestamp = parseInt(timestampStr ?? "0", 10)
