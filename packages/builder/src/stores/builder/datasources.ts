@@ -1,6 +1,5 @@
 import { derived, get, Writable } from "svelte/store"
 import {
-  IntegrationTypes,
   DEFAULT_BB_DATASOURCE_ID,
   BUDIBASE_INTERNAL_DB_ID,
 } from "@/constants/backend"
@@ -190,7 +189,7 @@ export class DatasourceStore extends DerivedBudiStore<
       source: integration.name as SourceName,
       config,
       name: `${integration.friendlyName}${nameModifier}`,
-      plus: integration.plus && integration.name !== IntegrationTypes.REST,
+      plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
     }
 
