@@ -53,7 +53,10 @@ jobs:
       - name: Build Docker image
         run: |
           echo "🔨 Building current version Docker image..."
-          docker build -t budibase:current -f hosting/single/Dockerfile .
+          # Get the current version from lerna.json
+          VERSION=$(cat lerna.json | jq -r '.version')
+          echo "Building version: $VERSION"
+          docker build -t budibase:current --build-arg BUDIBASE_VERSION=$VERSION -f hosting/single/Dockerfile .
           echo "✅ Docker image built successfully"
 
       - name: Save Docker image
