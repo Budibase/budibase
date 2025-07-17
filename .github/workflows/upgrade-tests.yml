@@ -64,8 +64,8 @@ jobs:
           # Using Docker Hub API to get tags
           RESPONSE=$(curl -s "https://hub.docker.com/v2/repositories/budibase/budibase/tags?page_size=100")
           
-          # Extract version tags (excluding latest, develop, etc)
-          VERSIONS=$(echo "$RESPONSE" | jq -r '
+          # Extract version tags (excluding latest, develop, etc) and format as JSON array
+          VERSIONS=$(echo "$RESPONSE" | jq -c '
             .results 
             | map(select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) 
             | map(.name) 
@@ -78,8 +78,8 @@ jobs:
             | map(.version | join("."))
           ')
 
-          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
-          echo "Testing versions: $VERSIONS"
+          echo "versions=${VERSIONS}" >> $GITHUB_OUTPUT
+          echo "Testing versions: ${VERSIONS}"
 
   test-upgrade:
     needs: get-test-config
