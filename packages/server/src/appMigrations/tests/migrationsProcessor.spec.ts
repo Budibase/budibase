@@ -179,8 +179,8 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     )
   })
 
-  describe.skip("timestamp migration processing", () => {
-    it("should run migrations in correct order based on array position", async () => {
+  describe("timestamp migration processing", () => {
+    it("should run migrations in correct order based on timestamp", async () => {
       const executionOrder: string[] = []
       const [migration1, migration2, migration3] = Array.from({
         length: 3,
@@ -202,10 +202,10 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
       expect(executionOrder).toEqual([
         `${config.getProdAppId()} - 1`,
         `${config.getAppId()} - 1`,
-        `${config.getProdAppId()} - 3`,
-        `${config.getAppId()} - 3`,
         `${config.getProdAppId()} - 2`,
         `${config.getAppId()} - 2`,
+        `${config.getProdAppId()} - 3`,
+        `${config.getAppId()} - 3`,
       ])
     })
 

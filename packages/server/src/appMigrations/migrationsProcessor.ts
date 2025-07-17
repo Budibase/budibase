@@ -30,6 +30,16 @@ export async function processMigrations(
       )
       const migrationIds = migrations.map(m => m.id)
 
+      if (!migrationIds.includes(currentVersion) && currentVersion) {
+        const currentTimestamp = getTimestamp(currentVersion)
+        // Find the latest migration with timestamp <= current version timestamp
+        const previousMigration = migrations
+          .filter(m => getTimestamp(m.id) <= currentTimestamp)
+          .pop()
+
+        currentVersion = previousMigration?.id || ""
+      }
+
       const pendingMigrations = migrations.filter(
         m => getTimestamp(m.id) > getTimestamp(currentVersion)
       )
