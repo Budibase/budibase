@@ -37,5 +37,19 @@
     "jest": "29.7.0",
     "ts-jest": "29.1.1",
     "typescript": "5.7.2"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }

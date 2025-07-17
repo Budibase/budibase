@@ -115,6 +115,8 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     result.push(await sdk.tables.enrichViewSchemas(table))
   }
   ctx.body = result
+
+  throw new HTTPError("what the fuck", 500) // TODO: remove this
 }
 
 export async function find(ctx: UserCtx<void, FindTableResponse>) {
