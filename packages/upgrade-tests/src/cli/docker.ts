@@ -216,15 +216,6 @@ export async function buildCurrentVersion(projectRoot: string): Promise<void> {
     buildSpinner.fail("Failed to build project")
     throw error
   }
-  
-  // Verify the dist files exist and get their timestamps
-  const serverDistPath = path.join(projectRoot, "packages/server/dist/index.js")
-  if (fs.existsSync(serverDistPath)) {
-    const stats = fs.statSync(serverDistPath)
-    console.log(gray(`Server dist last modified: ${stats.mtime.toISOString()}`))
-  } else {
-    console.warn(yellow("Warning: packages/server/dist/index.js not found!"))
-  }
 
   // Then build the Docker image
   const dockerSpinner = ora("Building Docker image").start()
