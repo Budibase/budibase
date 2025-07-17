@@ -32,7 +32,7 @@ export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
 }
 
 export function getTimestamp(versionId: string): number {
-  const timestampStr = new RegExp(/(?<timestamp>\d{14})_.+/).exec(versionId)
+  const timestampStr = new RegExp(/^(?<timestamp>\d{14})_.+$/).exec(versionId)
     ?.groups?.["timestamp"]
 
   if (!timestampStr) {
