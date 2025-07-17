@@ -250,7 +250,7 @@ if (descriptions.length) {
         })
 
         it.each(disallowedFirstFieldTypes)(
-          "should not allow disallowed first field to be created",
+          "should not allow first field of type '%s' to be created",
           async fieldType => {
             const columnName = "firstCol"
             await config.api.table.save(
