@@ -196,8 +196,12 @@
       },
       "build": {
         "inputs": [
+          "{projectRoot}/src/**/*",
           "{projectRoot}/builder",
-          "{projectRoot}/client"
+          "{projectRoot}/client",
+          "{projectRoot}/scripts/**/*",
+          "{projectRoot}/package.json",
+          "{projectRoot}/tsconfig*.json"
         ],
         "outputs": [
           "{projectRoot}/builder",
