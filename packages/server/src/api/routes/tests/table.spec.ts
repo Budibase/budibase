@@ -32,11 +32,16 @@ import { generator } from "@budibase/backend-core/tests"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
+import { canBeDisplayColumn } from "@budibase/shared-core"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 const descriptions = datasourceDescribe({ plus: true })
+const disallowedFirstFieldTypes = Object.values(FieldType).filter(type => {
+  if (typeof type !== "string") return false
+  return !canBeDisplayColumn(type)
+})
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -239,6 +244,29 @@ if (descriptions.length) {
             }
           )
         })
+
+        it.each(disallowedFirstFieldTypes)(
+          "should not allow disallowed first field to be created",
+          async fieldType => {
+            const columnName = "firstCol"
+            await config.api.table.save(
+              tableForDatasource(datasource, {
+                schema: {
+                  [columnName]: {
+                    name: columnName,
+                    type: fieldType,
+                  },
+                },
+              }),
+              {
+                status: 400,
+                body: {
+                  message: `Column "${columnName}" cannot be the first column in a table.`,
+                },
+              }
+            )
+          }
+        )
       })
 
       describe("permissions", () => {
