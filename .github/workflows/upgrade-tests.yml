@@ -184,7 +184,10 @@ jobs:
 
       - name: Build upgrade tests
         run: |
-          cd packages/upgrade-tests
+          # Build types package first as upgrade-tests depends on it
+          cd packages/types
+          yarn build
+          cd ../upgrade-tests
           yarn build
 
       - name: Download Docker image
