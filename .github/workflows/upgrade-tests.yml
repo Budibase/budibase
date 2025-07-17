@@ -50,25 +50,21 @@ jobs:
       - name: Build packages
         run: yarn build --ignore @budibase/upgrade-tests
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build Docker image
-        run: |
-          echo "🔨 Building current version Docker image..."
-          # Use the CI version that matches our code
-          VERSION="0.0.0+local"
-          echo "Building version: $VERSION"
-          docker build -t budibase:current --build-arg BUDIBASE_VERSION=$VERSION --build-arg TARGETBUILD=single -f hosting/single/Dockerfile .
-          echo "✅ Docker image built successfully"
-
-      - name: Save Docker image
-        run: |
-          docker save budibase:current -o budibase-current.tar
-
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v4
+        uses: docker/build-push-action@v5
         with:
-          name: budibase-current-image
-          path: budibase-current.tar
-          retention-days: 1
+          context: .
+          file: hosting/single/Dockerfile
+          tags: budibase:current
+          build-args: |
+            BUDIBASE_VERSION=0.0.0+local
+            TARGETBUILD=single
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   get-test-config:
     runs-on: ubuntu-latest
@@ -190,15 +186,20 @@ jobs:
           cd ../upgrade-tests
           yarn build
 
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: budibase-current-image
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Load Docker image
-        run: |
-          docker load -i budibase-current.tar
-          echo "✅ Docker image loaded successfully"
+      - name: Build Docker image from cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: hosting/single/Dockerfile
+          tags: budibase:current
+          build-args: |
+            BUDIBASE_VERSION=0.0.0+local
+            TARGETBUILD=single
+          load: true
+          cache-from: type=gha
 
       - name: Run upgrade test
         env:
