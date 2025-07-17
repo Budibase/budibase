@@ -114,10 +114,10 @@ jobs:
       - name: Test
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
             yarn test -- --scope=@budibase/builder --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --no-prefix -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --no-prefix -- --verbose --reporters=default --reporters=github-actions
             yarn test -- --scope=@budibase/builder --no-prefix
           fi
 

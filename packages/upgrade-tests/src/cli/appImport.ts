@@ -1,6 +1,6 @@
 import * as fs from "fs"
 import * as path from "path"
-import chalk from "chalk"
+import { yellow, blue, green, bold, gray } from "chalk"
 import ora from "ora"
 import { BudibaseClient } from "../api/BudibaseClient"
 
@@ -15,7 +15,7 @@ export async function getAvailableApps(): Promise<string[]> {
   const fixturesDir = getFixturesDir()
   
   if (!fs.existsSync(fixturesDir)) {
-    console.error(chalk.yellow(`Fixtures directory not found: ${fixturesDir}`))
+    console.error(yellow(`Fixtures directory not found: ${fixturesDir}`))
     return []
   }
 
@@ -69,20 +69,20 @@ export async function importApp(
   }
 
   const appName = path.basename(appPath, ".tar.gz").replace(/-/g, " ")
-  const spinner = ora(`Importing app: ${chalk.blue(appName)}`).start()
+  const spinner = ora(`Importing app: ${blue(appName)}`).start()
 
   try {
     // Use the withInternalAPIKey BudibaseClient that doesn't require user auth
     const client = await BudibaseClient.withInternalAPIKey()
     
     if (verbose) {
-      spinner.text = `Uploading ${chalk.blue(appName)} (${getFileSize(appPath)})`
+      spinner.text = `Uploading ${blue(appName)} (${getFileSize(appPath)})`
     }
 
     // Import the app using the client
     const appId = await client.application.import(appPath, appName)
 
-    spinner.succeed(`App imported successfully: ${chalk.green(appId)}`)
+    spinner.succeed(`App imported successfully: ${green(appId)}`)
     
     return { appId, name: appName }
   } catch (error) {
@@ -103,14 +103,14 @@ export async function listAvailableApps(): Promise<void> {
   const apps = await getAvailableApps()
   
   if (apps.length === 0) {
-    console.log(chalk.yellow("No apps found in fixtures directory"))
+    console.log(yellow("No apps found in fixtures directory"))
     return
   }
 
-  console.log(chalk.bold("\nAvailable apps:"))
+  console.log(bold("\nAvailable apps:"))
   for (const app of apps) {
     const appPath = getAppPath(app)!
     const size = getFileSize(appPath)
-    console.log(`  ${chalk.blue("•")} ${app} ${chalk.gray(`(${size})`)}`)
+    console.log(`  ${blue("•")} ${app} ${gray(`(${size})`)}`)
   }
 }

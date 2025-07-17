@@ -1,7 +1,7 @@
 import { exec, spawn } from "child_process"
 import { promisify } from "util"
 import * as crypto from "crypto"
-import chalk from "chalk"
+import { blue, red } from "chalk"
 import ora from "ora"
 
 const execAsync = promisify(exec)
@@ -36,12 +36,12 @@ export async function containerExists(containerName: string): Promise<boolean> {
 
 export async function stopContainer(containerName: string, silent = false): Promise<void> {
   if (!silent) {
-    const spinner = ora(`Stopping container ${chalk.blue(containerName)}`).start()
+    const spinner = ora(`Stopping container ${blue(containerName)}`).start()
     try {
       await execAsync(`docker stop ${containerName}`)
-      spinner.succeed(`Container ${chalk.blue(containerName)} stopped`)
+      spinner.succeed(`Container ${blue(containerName)} stopped`)
     } catch (error) {
-      spinner.warn(`Container ${chalk.blue(containerName)} was not running`)
+      spinner.warn(`Container ${blue(containerName)} was not running`)
     }
   } else {
     try {
@@ -54,12 +54,12 @@ export async function stopContainer(containerName: string, silent = false): Prom
 
 export async function removeContainer(containerName: string, silent = false): Promise<void> {
   if (!silent) {
-    const spinner = ora(`Removing container ${chalk.blue(containerName)}`).start()
+    const spinner = ora(`Removing container ${blue(containerName)}`).start()
     try {
       await execAsync(`docker rm ${containerName}`)
-      spinner.succeed(`Container ${chalk.blue(containerName)} removed`)
+      spinner.succeed(`Container ${blue(containerName)} removed`)
     } catch (error) {
-      spinner.warn(`Container ${chalk.blue(containerName)} did not exist`)
+      spinner.warn(`Container ${blue(containerName)} did not exist`)
     }
   } else {
     try {
@@ -72,12 +72,12 @@ export async function removeContainer(containerName: string, silent = false): Pr
 
 export async function removeVolume(volumeName: string, silent = false): Promise<void> {
   if (!silent) {
-    const spinner = ora(`Removing volume ${chalk.blue(volumeName)}`).start()
+    const spinner = ora(`Removing volume ${blue(volumeName)}`).start()
     try {
       await execAsync(`docker volume rm ${volumeName}`)
-      spinner.succeed(`Volume ${chalk.blue(volumeName)} removed`)
+      spinner.succeed(`Volume ${blue(volumeName)} removed`)
     } catch (error) {
-      spinner.warn(`Volume ${chalk.blue(volumeName)} did not exist`)
+      spinner.warn(`Volume ${blue(volumeName)} did not exist`)
     }
   } else {
     try {
@@ -89,9 +89,9 @@ export async function removeVolume(volumeName: string, silent = false): Promise<
 }
 
 export async function createVolume(volumeName: string): Promise<void> {
-  const spinner = ora(`Creating volume ${chalk.blue(volumeName)}`).start()
+  const spinner = ora(`Creating volume ${blue(volumeName)}`).start()
   await execAsync(`docker volume create ${volumeName}`)
-  spinner.succeed(`Volume ${chalk.blue(volumeName)} created`)
+  spinner.succeed(`Volume ${blue(volumeName)} created`)
 }
 
 export async function getContainerPort(
@@ -251,7 +251,7 @@ export async function waitForHealthy(
     if (status !== "running") {
       spinner.fail(`Container stopped unexpectedly with status: ${status}`)
       const logs = await getContainerLogs(containerName)
-      console.error(chalk.red("\nContainer logs:"))
+      console.error(red("\nContainer logs:"))
       console.error(logs)
       throw new Error("Container failed to start")
     }

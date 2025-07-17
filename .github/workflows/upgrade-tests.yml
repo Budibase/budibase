@@ -2,10 +2,20 @@ name: Upgrade Tests
 
 on:
   pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "README.md"
-      - ".github/workflows/!(upgrade-tests.yml)"
+    paths:
+      # Server-side packages that affect upgrade compatibility
+      - "packages/worker/**"
+      - "packages/server/**"
+      - "packages/backend-core/**"
+      - "packages/shared-core/**"
+      # The upgrade tests themselves
+      - "packages/upgrade-tests/**"
+      # Docker and hosting changes that affect the build
+      - "hosting/**"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      # This workflow file
+      - ".github/workflows/upgrade-tests.yml"
   workflow_dispatch:
 
 env:

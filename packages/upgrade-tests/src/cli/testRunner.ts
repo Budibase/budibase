@@ -1,5 +1,5 @@
 import { spawn } from "child_process"
-import chalk from "chalk"
+import { bold, blue, green, red } from "chalk"
 import * as path from "path"
 
 export type TestPhase = "pre-upgrade" | "post-upgrade"
@@ -46,7 +46,7 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
     env.CURRENT_VERSION = options.currentVersion
   }
 
-  console.log(chalk.bold(`\n${chalk.blue("►")} Running ${options.phase} tests...\n`))
+  console.log(bold(`\n${blue("►")} Running ${options.phase} tests...\n`))
 
   return new Promise((resolve) => {
     const testProcess = spawn("yarn", ["test"], {
@@ -58,16 +58,16 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
 
     testProcess.on("close", (code) => {
       if (code === 0) {
-        console.log(chalk.green(`\n✓ ${options.phase} tests completed successfully!`))
+        console.log(green(`\n✓ ${options.phase} tests completed successfully!`))
         resolve(true)
       } else {
-        console.error(chalk.red(`\n✗ ${options.phase} tests failed`))
+        console.error(red(`\n✗ ${options.phase} tests failed`))
         resolve(false)
       }
     })
 
     testProcess.on("error", (error) => {
-      console.error(chalk.red(`\n✗ Error running tests: ${error.message}`))
+      console.error(red(`\n✗ Error running tests: ${error.message}`))
       resolve(false)
     })
   })

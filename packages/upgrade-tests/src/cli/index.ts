@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander"
-import chalk from "chalk"
+import { bold, blue, gray, green, red } from "chalk"
 import * as fs from "fs"
 import * as path from "path"
 import {
@@ -22,8 +22,7 @@ const program = new Command()
 
 // Helper to get project root
 function getProjectRoot(): string {
-  // From dist/src/cli we need to go up to the monorepo root
-  return path.join(__dirname, "../../../../..")
+  return path.join(__dirname, "../../../..")
 }
 
 // Clean up function
@@ -32,7 +31,7 @@ async function cleanup(
   showDetails = true
 ) {
   if (showDetails) {
-    console.log(chalk.bold("\n🧹 Cleaning up..."))
+    console.log(bold("\n🧹 Cleaning up..."))
     await stopContainer(config.containerName)
     await removeContainer(config.containerName)
     await removeVolume(config.volumeName)
@@ -68,7 +67,7 @@ function cleanupContextFiles(silent = false) {
   }
 
   if (!silent && contextFiles.length > 0) {
-    console.log(chalk.gray(`Cleaned up ${contextFiles.length} context files`))
+    console.log(gray(`Cleaned up ${contextFiles.length} context files`))
   }
 }
 
@@ -89,9 +88,9 @@ program
   .option("--verbose", "Show detailed output")
   .action(async options => {
     const config = generateDockerConfig()
-    console.log(chalk.bold("\n🚀 Starting Full Upgrade Test"))
-    console.log(chalk.gray(`Upgrading from ${options.from} to ${options.to}`))
-    console.log(chalk.gray(`Container: ${config.containerName}`))
+    console.log(bold("\n🚀 Starting Full Upgrade Test"))
+    console.log(gray(`Upgrading from ${options.from} to ${options.to}`))
+    console.log(gray(`Container: ${config.containerName}`))
 
     try {
       // Clean up any existing containers silently
@@ -102,7 +101,7 @@ program
       await createVolume(config.volumeName)
 
       // Start old version
-      console.log(chalk.bold(`\n📦 Starting Budibase ${options.from}`))
+      console.log(bold(`\n📦 Starting Budibase ${options.from}`))
       await runContainer({
         containerName: config.containerName,
         volumeName: config.volumeName,
@@ -123,7 +122,7 @@ program
       await waitForHealthy(config.containerName)
 
       // Wait for admin user
-      console.log(chalk.gray("Waiting for admin user to be created..."))
+      console.log(gray("Waiting for admin user to be created..."))
       await new Promise(resolve => setTimeout(resolve, 10000))
 
       // Set environment for BudibaseClient
@@ -135,11 +134,11 @@ program
 
       // Import app
       const appToImport = options.app || "car-rental"
-      console.log(chalk.bold(`\n📱 Importing app: ${appToImport}`))
+      console.log(bold(`\n📱 Importing app: ${appToImport}`))
       const { appId } = await importApp(appToImport, options.verbose)
 
       // Run pre-upgrade tests
-      console.log(chalk.bold("\n🧪 Pre-Upgrade Tests"))
+      console.log(bold("\n🧪 Pre-Upgrade Tests"))
       const preSuccess = await runTests({
         phase: "pre-upgrade",
         verbose: options.verbose,
@@ -159,12 +158,12 @@ program
       }
 
       // Stop old version
-      console.log(chalk.bold("\n🔄 Upgrading Budibase..."))
+      console.log(bold("\n🔄 Upgrading Budibase..."))
       await stopContainer(config.containerName)
       await removeContainer(config.containerName)
 
       // Start new version
-      console.log(chalk.bold(`\n📦 Starting Budibase ${options.to}`))
+      console.log(bold(`\n📦 Starting Budibase ${options.to}`))
 
       let image = `budibase/budibase:${options.to}`
       if (options.to === "current") {
@@ -195,7 +194,7 @@ program
       process.env.BUDIBASE_URL = newBudibaseUrl
 
       // Run post-upgrade tests
-      console.log(chalk.bold("\n🧪 Post-Upgrade Tests"))
+      console.log(bold("\n🧪 Post-Upgrade Tests"))
       const postSuccess = await runTests({
         phase: "post-upgrade",
         verbose: options.verbose,
@@ -215,9 +214,9 @@ program
       }
 
       // Success!
-      console.log(chalk.green.bold("\n✨ Upgrade Test Completed Successfully!"))
+      console.log(bold(green("\n✨ Upgrade Test Completed Successfully!")))
     } catch (error) {
-      console.error(chalk.red("\n❌ Upgrade test failed:"), error)
+      console.error(red("\n❌ Upgrade test failed:"), error)
       process.exit(1)
     } finally {
       if (options.cleanup !== false) {
@@ -234,7 +233,7 @@ program
   .option("--app <path|name>", "Path to app export or fixture name to import")
   .option("--verbose", "Show detailed output")
   .action(async options => {
-    console.log(chalk.bold("\n🧪 Running Pre-Upgrade Tests Only"))
+    console.log(bold("\n🧪 Running Pre-Upgrade Tests Only"))
 
     try {
       // Set default URL if not already set
@@ -244,11 +243,11 @@ program
 
       // Import app if specified
       if (options.app) {
-        console.log(chalk.bold(`\n📱 Importing app: ${options.app}`))
+        console.log(bold(`\n📱 Importing app: ${options.app}`))
         const { appId } = await importApp(options.app, options.verbose)
         process.env.TEST_APP_ID = appId
       } else {
-        console.log(chalk.bold(`\n📱 Importing default app: car-rental`))
+        console.log(bold(`\n📱 Importing default app: car-rental`))
         const { appId } = await importApp("car-rental", options.verbose)
         process.env.TEST_APP_ID = appId
       }
@@ -269,7 +268,7 @@ program
         process.exit(1)
       }
     } catch (error) {
-      console.error(chalk.red("\n❌ Pre-upgrade tests failed:"), error)
+      console.error(red("\n❌ Pre-upgrade tests failed:"), error)
       process.exit(1)
     }
   })
@@ -280,15 +279,15 @@ program
   .description("Run only post-upgrade tests")
   .option("--verbose", "Show detailed output")
   .action(async options => {
-    console.log(chalk.bold("\n🧪 Running Post-Upgrade Tests Only"))
+    console.log(bold("\n🧪 Running Post-Upgrade Tests Only"))
 
     if (!process.env.TEST_APP_ID) {
       console.error(
-        chalk.red("❌ TEST_APP_ID environment variable is required")
+        red("❌ TEST_APP_ID environment variable is required")
       )
-      console.log(chalk.gray("\nEither:"))
-      console.log(chalk.gray("  1. Run the full upgrade test"))
-      console.log(chalk.gray("  2. Set TEST_APP_ID manually"))
+      console.log(gray("\nEither:"))
+      console.log(gray("  1. Run the full upgrade test"))
+      console.log(gray("  2. Set TEST_APP_ID manually"))
       process.exit(1)
     }
 
@@ -308,7 +307,7 @@ program
         process.exit(1)
       }
     } catch (error) {
-      console.error(chalk.red("\n❌ Post-upgrade tests failed:"), error)
+      console.error(red("\n❌ Post-upgrade tests failed:"), error)
       process.exit(1)
     }
   })
@@ -320,15 +319,15 @@ program
   .option("--verbose", "Show detailed output")
   .action(async (app, options) => {
     try {
-      console.log(chalk.bold("\n📱 Importing App"))
+      console.log(bold("\n📱 Importing App"))
       const { appId, name } = await importApp(app, options.verbose)
 
-      console.log(chalk.green(`\n✓ App imported successfully!`))
-      console.log(chalk.gray(`  Name: ${name}`))
-      console.log(chalk.gray(`  ID: ${appId}`))
-      console.log(chalk.gray(`\nSet TEST_APP_ID=${appId} to test this app`))
+      console.log(green(`\n✓ App imported successfully!`))
+      console.log(gray(`  Name: ${name}`))
+      console.log(gray(`  ID: ${appId}`))
+      console.log(gray(`\nSet TEST_APP_ID=${appId} to test this app`))
     } catch (error) {
-      console.error(chalk.red("\n❌ Failed to import app:"), error)
+      console.error(red("\n❌ Failed to import app:"), error)
       process.exit(1)
     }
   })
