@@ -73,7 +73,7 @@ async function guardTable(table: Table, isCreate: boolean) {
 
   // Filter out protected/internal columns
   const userSchemaKeys = Object.keys(table.schema || {}).filter(
-    key => !PROTECTED_INTERNAL_COLUMNS.includes(key)
+    key => !PROTECTED_INTERNAL_COLUMNS.includes(key as any)
   )
 
   if (userSchemaKeys.length === 1) {
