@@ -1,5 +1,5 @@
 import { Command } from "commander"
-import { bold, blue, gray, green, red } from "chalk"
+import { bold, gray, green, red } from "chalk"
 import * as fs from "fs"
 import * as path from "path"
 import {

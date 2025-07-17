@@ -70,7 +70,7 @@ jobs:
             | map(select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) 
             | map(.name) 
             | map(split(".") | {major: .[0] | tonumber, minor: .[1] | tonumber, patch: .[2] | tonumber, version: .}) 
-            | group_by(.major + "." + (.minor | tostring)) 
+            | group_by("\(.major).\(.minor)") 
             | map(max_by(.patch)) 
             | sort_by(.major, .minor) 
             | reverse 
