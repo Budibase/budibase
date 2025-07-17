@@ -86,6 +86,13 @@
           on:click={keepCollapsed}
         />
         <SideNavLink
+          icon="hard-drives"
+          text="Data"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
           icon="layout"
           text="Apps"
           url={$url("./design")}
@@ -153,8 +160,8 @@
           </SideNavLink>
         {/if}
         <SideNavLink
-          icon="users"
-          text="Users"
+          icon="user-plus"
+          text="Invite users"
           on:click={() => {
             builderStore.showBuilderSidePanel()
             keepCollapsed()
