@@ -1,6 +1,8 @@
 import { exec, spawn } from "child_process"
 import { promisify } from "util"
 import * as crypto from "crypto"
+import * as path from "path"
+import * as fs from "fs"
 import { blue, red } from "chalk"
 import ora from "ora"
 
@@ -197,6 +199,13 @@ export async function runContainer(
 
 export async function buildCurrentVersion(projectRoot: string): Promise<void> {
   const spinner = ora("Building current version from source").start()
+
+  // Verify the directory exists
+  const dockerfilePath = path.join(projectRoot, "hosting/single/Dockerfile")
+  if (!fs.existsSync(dockerfilePath)) {
+    spinner.fail(`Dockerfile not found at ${dockerfilePath}`)
+    throw new Error(`Invalid project root: ${projectRoot}`)
+  }
 
   const args = [
     "build",

@@ -20,7 +20,9 @@ const program = new Command()
 
 // Helper to get project root
 function getProjectRoot(): string {
-  return path.join(__dirname, "../../../..")
+  // When running from dist/src/cli, we need to go up 5 levels to reach project root
+  // dist/src/cli -> dist/src -> dist -> upgrade-tests -> packages -> project root
+  return path.join(__dirname, "../../../../..")
 }
 
 // Clean up function

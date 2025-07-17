@@ -91,32 +91,33 @@ async function guardTable(table: Table, isCreate: boolean) {
 
 // covers both internal and external
 export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
-  const internal = await sdk.tables.getAllInternalTables()
-
-  const datasources = await sdk.datasources.getExternalDatasources()
-
-  const external: Table[] = []
-  for (const datasource of datasources) {
-    let entities = datasource.entities
-    if (entities) {
-      for (const entity of Object.values(entities)) {
-        external.push({
-          ...(await processTable(entity)),
-          sourceType: TableSourceType.EXTERNAL,
-          sourceId: datasource._id!,
-          sql: isSQL(datasource),
-        })
-      }
-    }
-  }
-
-  const result: FetchTablesResponse = []
-  for (const table of [...internal, ...external]) {
-    result.push(await sdk.tables.enrichViewSchemas(table))
-  }
-  ctx.body = result
-}
-
+  throw new Error("oh noes")
+//   const internal = await sdk.tables.getAllInternalTables()
+// 
+//   const datasources = await sdk.datasources.getExternalDatasources()
+// 
+//   const external: Table[] = []
+//   for (const datasource of datasources) {
+//     let entities = datasource.entities
+//     if (entities) {
+//       for (const entity of Object.values(entities)) {
+//         external.push({
+//           ...(await processTable(entity)),
+//           sourceType: TableSourceType.EXTERNAL,
+//           sourceId: datasource._id!,
+//           sql: isSQL(datasource),
+//         })
+//       }
+//     }
+//   }
+// 
+//   const result: FetchTablesResponse = []
+//   for (const table of [...internal, ...external]) {
+//     result.push(await sdk.tables.enrichViewSchemas(table))
+//   }
+//   ctx.body = result
+// }
+// 
 export async function find(ctx: UserCtx<void, FindTableResponse>) {
   const tableId = ctx.params.tableId
   const table = await sdk.tables.getTable(tableId)

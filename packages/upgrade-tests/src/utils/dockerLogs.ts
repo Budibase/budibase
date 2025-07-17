@@ -1,6 +1,6 @@
 import { exec } from "child_process"
 import { promisify } from "util"
-import { red, yellow, cyan, gray, blue, green, dim } from "chalk"
+import { red, yellow, cyan, gray, blue, green } from "chalk"
 
 const execAsync = promisify(exec)
 
@@ -80,7 +80,7 @@ export async function getLogsForRequest(
 
 export function formatLogEntry(entry: LogEntry, indent = ""): string {
   const level = entry.level?.toUpperCase() || "INFO"
-  
+
   // Format level with color
   let levelFormatted: string
   switch (level) {
@@ -104,14 +104,26 @@ export function formatLogEntry(entry: LogEntry, indent = ""): string {
 
   // Build context from all fields except msg and stack
   const contextFields: string[] = []
-  const excludedKeys = new Set(["msg", "message", "stack", "timestamp", "level"])
-  
+  const excludedKeys = new Set([
+    "msg",
+    "message",
+    "stack",
+    "timestamp",
+    "level",
+    "correlationId",
+  ])
+
   // Process all entry fields
   Object.entries(entry).forEach(([key, value]) => {
-    if (!excludedKeys.has(key) && value !== undefined && value !== null && value !== "") {
+    if (
+      !excludedKeys.has(key) &&
+      value !== undefined &&
+      value !== null &&
+      value !== ""
+    ) {
       // Format based on the key type
       let formattedValue: string
-      
+
       switch (key) {
         case "status":
           // Color status codes
@@ -129,31 +141,27 @@ export function formatLogEntry(entry: LogEntry, indent = ""): string {
             formattedValue = value.toString()
           }
           break
-        
+
         case "method":
           formattedValue = blue(value.toString())
           break
-          
+
         case "url":
           formattedValue = blue(value.toString())
           break
-          
+
         case "responseTime":
           formattedValue = `${value}ms`
           break
-          
-        case "correlationId":
-          formattedValue = dim(value.toString())
-          break
-          
+
         case "service":
           formattedValue = cyan(value.toString())
           break
-          
+
         default:
           formattedValue = value.toString()
       }
-      
+
       contextFields.push(`${gray(key)}=${formattedValue}`)
     }
   })
