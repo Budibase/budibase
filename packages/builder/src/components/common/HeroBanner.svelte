@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Icon } from "@budibase/bbui"
   export let title: string
   export let linkTitle: string | undefined = undefined
   export let linkHref: string = "#"
@@ -11,7 +12,17 @@
     <h1>{title}</h1>
     <p><slot /></p>
     {#if linkTitle}
-      <a href={linkHref}>{linkTitle}</a>
+      <a href={linkHref} target="_blank">
+        <button type="button">
+          <Icon
+            name="book-open-text"
+            size="L"
+            weight="bold"
+            color="var(--spectrum-global-color-gray-900)"
+          ></Icon>
+          {linkTitle}
+        </button>
+      </a>
     {/if}
   </div>
   <img src={image} alt="hero" />
@@ -20,10 +31,10 @@
 <style>
   .hero {
     background: var(--color);
-    border-radius: 16px;
-    padding: 25px 48px;
-    display: grid;
-    grid-template-columns: 1fr auto;
+    border-radius: 20px;
+    padding: 0px 0px 0px 48px;
+    display: flex;
+    justify-content: space-between;
     gap: 16px;
     align-items: center;
   }
@@ -33,24 +44,49 @@
     gap: 32px;
     max-width: 520px;
     min-width: 260px;
+    margin-right: 48px;
   }
   h1 {
-    font-size: 48px;
+    font-size: 28px;
+    line-height: 1.1;
     margin: 0;
-    font-weight: 500;
+    font-weight: 600;
     color: white;
+    font-family: Inter;
   }
   p {
     margin: 0;
     font-size: 16px;
     color: var(--spectrum-global-color-gray-800);
+    line-height: 1.35;
+    font-family: Inter;
   }
   a {
     font-size: 16px;
     color: white;
+    font-family: Inter;
   }
   img {
-    max-width: 520px;
-    max-height: 300px;
+    border-radius: 0 20px 20px 0;
+    max-height: 400px;
+    min-height: 240px;
+    background-position: cover;
+  }
+  button {
+    background-color: rgba(250, 250, 250, 0.1);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 16px;
+    color: white;
+    font-weight: 500;
+    font-family: Inter;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    transition: 100ms background-color ease-in;
+  }
+  button:hover {
+    background-color: rgba(250, 250, 250, 0.2);
   }
 </style>

@@ -10,7 +10,7 @@
     notifications,
   } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
-  import AppsHero from "assets/apps-hero.png"
+  import AppsHero from "assets/automation-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import { url } from "@roxi/routify"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
@@ -135,13 +135,15 @@
 <div class="automations-index">
   <div class="hero-wrapper">
     <HeroBanner
-      title="Automations"
-      linkTitle="Learn: Automations 101"
+      title="Transform workflows at scale with Budibase Automations and AI"
+      linkTitle="Automations explained"
+      linkHref="https://docs.budibase.com/docs/automation-steps"
       image={AppsHero}
-      color="#213B57"
+      color="#1C3F62"
     >
-      Use automations to automate manual processes, add logic to apps, and build
-      deterministic tasks for your agent.
+      Automate more processes for your employees and customers with our visual
+      automation builder. Use automations to transform workflows with AI,
+      automate manual tasks, and add logic to apps.
     </HeroBanner>
   </div>
   <TopBar
@@ -229,6 +231,10 @@
   }
   .hero-wrapper {
     margin: 12px 12px 0 12px;
+    border-radius: 22px;
+    border: 1px dashed var(--spectrum-global-color-gray-300);
+    padding: 4px;
+    background-color: var(--spectrum-global-color-gray-200);
   }
   .filter {
     padding: 10px 12px;

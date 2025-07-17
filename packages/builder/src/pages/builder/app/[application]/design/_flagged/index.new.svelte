@@ -3,7 +3,7 @@
   import { type WorkspaceApp } from "@budibase/types"
   import { ActionButton, Button, Icon, notifications } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
-  import AppsHero from "assets/apps-hero.png"
+  import AppsHero from "assets/apps-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import { confirm } from "@/helpers"
@@ -102,14 +102,15 @@
 <div class="apps-index">
   <div class="hero-wrapper">
     <HeroBanner
-      title="Apps"
+      title="Build modern apps and forms to power your workflows"
       linkTitle="App building 101"
-      linkHref="docs.budibase.com"
+      linkHref="https://docs.budibase.com/docs/quickstart"
       image={AppsHero}
       color="#732B00"
     >
-      Build powerful forms and apps that connect to your data and automations,
-      and power your workflows.
+      Transform internal workflows with modern apps and forms. Connect SQL, REST
+      APIs, or your Budibase automations, and create beautiful interfaces with
+      pre-built components in minutes.
     </HeroBanner>
   </div>
 
@@ -173,6 +174,10 @@
   }
   .hero-wrapper {
     margin: 12px 12px 0 12px;
+    border-radius: 22px;
+    border: 1px dashed var(--spectrum-global-color-gray-300);
+    padding: 4px;
+    background-color: var(--spectrum-global-color-gray-200);
   }
   .filter {
     padding: 10px 12px;
