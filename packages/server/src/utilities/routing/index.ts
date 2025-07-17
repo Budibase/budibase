@@ -23,6 +23,25 @@ export async function getRoutingInfo(
         }
       )
       result.push(...allRouting.rows.map(row => row.value))
+
+      // Handling a bug where some screens have missing workspaceAppId (in this case, they are part of the default workspace app)
+      if (workspaceApp.isDefault) {
+        const screensWithMissingWorkspaceAppRouting =
+          await db.query<ScreenRoutesViewOutput>(
+            getQueryIndex(ViewName.ROUTING),
+            {
+              startkey: [null, ""],
+              endkey: [null, UNICODE_MAX],
+            }
+          )
+
+        const mappedRoutes = new Set(result.map(r => r._id!))
+        result.push(
+          ...screensWithMissingWorkspaceAppRouting.rows
+            .filter(s => !mappedRoutes.has(s.id))
+            .map(row => row.value)
+        )
+      }
     }
     return result
   } catch (err: any) {

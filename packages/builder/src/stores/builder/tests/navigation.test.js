@@ -10,7 +10,9 @@ import { appStore } from "@/stores/builder"
 vi.mock("@/api", () => {
   return {
     API: {
-      saveAppMetadata: vi.fn(),
+      navigation: {
+        updateNavigation: vi.fn(),
+      },
     },
   }
 })
@@ -25,6 +27,7 @@ vi.mock("@/stores/builder", async () => {
 
   const mockWorkspaceAppStore = writable({
     selectedWorkspaceApp: {
+      _id: "mockWorkspaceAppId",
       isDefault: true,
       navigation: null,
     },
@@ -272,17 +275,15 @@ describe("Navigation store", () => {
       ],
     }
 
-    const saveSpy = vi.spyOn(API, "saveAppMetadata").mockImplementation(() => {
-      return {
-        navigation: update,
-      }
-    })
+    const saveSpy = vi.spyOn(API.navigation, "updateNavigation")
 
     expect(ctx.test.store.links.length).toBe(2)
 
     await ctx.test.navigationStore.save(update)
 
-    expect(saveSpy).toHaveBeenCalledWith("testing_123", { navigation: update })
+    expect(saveSpy).toHaveBeenCalledWith("mockWorkspaceAppId", {
+      navigation: update,
+    })
 
     expect(ctx.test.store.links.length).toBe(3)
 
