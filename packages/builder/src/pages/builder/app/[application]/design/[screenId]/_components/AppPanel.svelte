@@ -12,7 +12,7 @@
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Link } from "@budibase/bbui"
+  import { ActionButton, Divider, Link, Icon } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
@@ -40,7 +40,13 @@
   <div class="header">
     <div class="header-left">
       {#if $featureFlags.WORKSPACE_APPS && isWorkspacePublished}
-        <Link href={liveUrl} target="_blank">{liveUrl}</Link>
+        <Icon
+          name="globe-simple"
+          size="M"
+          weight="regular"
+          color="var(--spectrum-global-color-gray-600)"
+        ></Icon>
+        <Link quiet secondary href={liveUrl} target="_blank">{liveUrl}</Link>
       {/if}
     </div>
     <div class="header-right">
@@ -108,6 +114,7 @@
     display: flex;
     padding-left: var(--spacing-s);
     align-items: center;
+    gap: 6px;
   }
 
   .header-right {
