@@ -1,14 +1,4 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/resource"
-import authorized from "../../middleware/authorized"
-import { permissions } from "@budibase/backend-core"
+import { builderRoutes } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router.post(
-  "/api/resources/usage",
-  authorized(permissions.BUILDER),
-  controller.searchForResourceUsage
-)
-
-export default router
+builderRoutes.post("/api/resources/usage", controller.searchForResourceUsage)
