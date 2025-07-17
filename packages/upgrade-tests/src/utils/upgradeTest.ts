@@ -36,6 +36,7 @@ function loadContext(): JSONValue {
 }
 
 export interface UpgradeTestOptions<T extends JSONValue> {
+  app?: string
   pre?: () => T | Promise<T>
   post?: (context: T) => void | Promise<void>
 }
@@ -44,7 +45,14 @@ export function it<T extends JSONValue>(
   testName: string,
   options: UpgradeTestOptions<T>
 ): void {
-  const { pre, post } = options
+  const { app, pre, post } = options
+
+  // Check if we should skip based on app filter
+  const currentApp = process.env.TEST_APP
+  if (app && currentApp && currentApp !== app) {
+    jestIt.skip(testName, () => {})
+    return
+  }
 
   if (isPreUpgradePhase() && pre) {
     jestIt(testName, async () => {
@@ -71,7 +79,14 @@ it.only = function <T extends JSONValue>(
   testName: string,
   options: UpgradeTestOptions<T>
 ): void {
-  const { pre, post } = options
+  const { app, pre, post } = options
+
+  // Check if we should skip based on app filter
+  const currentApp = process.env.TEST_APP
+  if (app && currentApp && currentApp !== app) {
+    jestIt.skip(testName, () => {})
+    return
+  }
 
   if (isPreUpgradePhase() && pre) {
     jestIt.only(testName, async () => {

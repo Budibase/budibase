@@ -1,6 +1,4 @@
 export * from "./api/BudibaseClient"
 export * from "./types"
 export * from "./utils/testHelpers"
-export * from "./utils/version"
-export * from "./utils/appHelpers"
 export { it as upgradeTest } from "./utils/upgradeTest"

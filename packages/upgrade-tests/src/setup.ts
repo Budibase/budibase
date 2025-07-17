@@ -1,4 +1,3 @@
-import "./utils/jestMatchers"
 import { cleanupTestContexts } from "./utils/upgradeTest"
 
 // Set longer timeout for upgrade tests
