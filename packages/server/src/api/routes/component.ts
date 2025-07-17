@@ -1,14 +1,7 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/component"
-import authorized from "../../middleware/authorized"
-import { permissions } from "@budibase/backend-core"
+import { builderRoutes } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router.get(
+builderRoutes.get(
   "/api/:appId/components/definitions",
-  authorized(permissions.BUILDER),
   controller.fetchAppComponentDefinitions
 )
-
-export default router

@@ -1,14 +1,5 @@
-import { permissions } from "@budibase/backend-core"
-import Router from "@koa/router"
-import authorized from "../../middleware/authorized"
 import * as controller from "../controllers/navigation"
+import { builderRoutes } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router.put(
-  "/api/navigation/:workspaceAppId",
-  authorized(permissions.BUILDER),
-  controller.update
-)
-
-export default router
+// TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
+builderRoutes.put("/api/navigation/:workspaceAppId", controller.update)
