@@ -44,6 +44,8 @@ export function combineMetadataAndUser(
   // copy rev over for the purposes of equality check
   if (found) {
     newDoc._rev = found._rev
+    newDoc.createdAt = found.createdAt
+    newDoc.updatedAt = found.updatedAt
   }
   // clear fields that shouldn't be in metadata
   delete newDoc.password
@@ -53,6 +55,7 @@ export function combineMetadataAndUser(
     return {
       ...found,
       ...newDoc,
+      updatedAt: new Date().toISOString(),
     }
   }
   return null
