@@ -694,16 +694,12 @@
     mounted = true
   })
 
-  const disallowedFirstFields = [
-    FIELDS.LINK.type,
-    FIELDS.USER.type,
-    FIELDS.USERS.type,
-    FIELDS.ATTACHMENT_SINGLE.type,
-    FIELDS.ATTACHMENTS.type,
-    FIELDS.SIGNATURE_SINGLE.type,
-  ]
+  // Dynamically get all disallowed types for display columns
+  $: disallowedFirstFields = orderedAllowedTypes
+    .map(f => f.type)
+    .filter(type => !canHaveDefaultColumn(type))
 
-  // Helper: checks if its the first column being added
+  // Helper: checks if it's the first column being added
   $: isFirstColumn = Object.keys(table?.schema || {}).length === 0
 </script>
 
