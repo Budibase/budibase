@@ -51,7 +51,9 @@ export async function getLogsForRequest(
       continue
     }
 
-    if (json?.req?.correlationId !== requestId) {
+    // Check for correlationId in both req object and root level
+    const correlationId = json?.req?.correlationId || json?.correlationId
+    if (correlationId !== requestId) {
       continue
     }
 
@@ -109,7 +111,7 @@ export async function getLogsForRequest(
       url: json.req?.url,
       status: json.res?.status,
       responseTime: json.responseTime,
-      correlationId: json.req?.correlationId,
+      correlationId: correlationId,
       service: json.service,
       error,
     }
@@ -215,7 +217,7 @@ export function formatLogEntry(entry: LogEntry, indent = ""): string {
 
   // Check for error details
   if (entry.error) {
-    formatted += "\n" + formatError(entry.error, indent + "     ")
+    formatted += "\n" + formatError(entry.error, indent + "   ")
   }
 
   return formatted
@@ -262,7 +264,7 @@ export function formatStackTrace(stack: string, indent = ""): string {
     if (frameMatch) {
       const [, functionName, file, line, col] = frameMatch
       const fileName = file.split("/").pop() || file
-      
+
       // Check if this is a node internal
       const isNodeInternal = file.startsWith("node:")
 
