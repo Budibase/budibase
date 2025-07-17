@@ -51,7 +51,9 @@ export async function getLogsForRequest(
       continue
     }
 
-    // Check for correlationId in both req object and root level
+    // Check for correlationId in both req object and root level. This is
+    // necessary because it shows up in different places depending on whether
+    // the log is from a request or an error.
     const correlationId = json?.req?.correlationId || json?.correlationId
     if (correlationId !== requestId) {
       continue
@@ -111,7 +113,7 @@ export async function getLogsForRequest(
       url: json.req?.url,
       status: json.res?.status,
       responseTime: json.responseTime,
-      correlationId: correlationId,
+      correlationId,
       service: json.service,
       error,
     }
