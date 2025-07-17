@@ -3,26 +3,32 @@
   "version": "0.0.0",
   "description": "Budibase upgrade testing framework",
   "main": "src/index.ts",
+  "bin": {
+    "budibase-upgrade-test": "./dist/src/cli/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
     "test": "jest --runInBand",
-    "test:upgrade": "./scripts/upgrade-test.sh full",
-    "test:pre": "./scripts/upgrade-test.sh pre",
-    "test:post": "./scripts/upgrade-test.sh post",
-    "test:import": "./scripts/upgrade-test.sh import",
-    "list:versions": "./scripts/upgrade-test.sh list-versions",
-    "help": "./scripts/upgrade-test.sh help",
+    "test:upgrade": "node dist/src/cli/index.js full",
+    "test:pre": "node dist/src/cli/index.js pre",
+    "test:post": "node dist/src/cli/index.js post",
+    "test:import": "node dist/src/cli/index.js import",
+    "list:apps": "node dist/src/cli/index.js list-apps",
+    "cli": "node dist/src/cli/index.js",
     "build": "tsc -p tsconfig.build.json",
+    "build:cli": "tsc -p tsconfig.build.json && chmod +x dist/src/cli/index.js",
     "check:types": "tsc -p tsconfig.json --noEmit"
   },
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
     "@budibase/types": "*",
-    "form-data": "^4.0.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "ora": "^5.4.1",
     "semver": "^7.5.4",
     "uuid": "^9.0.1"
   },

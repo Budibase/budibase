@@ -1,4 +1,3 @@
-import FormData from "form-data"
 import * as fs from "fs"
 import { App } from "@budibase/types"
 import type { BudibaseClient } from "./BudibaseClient"
@@ -17,30 +16,29 @@ export class ApplicationAPI {
   }
 
   async import(filePath: string, name?: string): Promise<string> {
+    // Read the file as a buffer
+    const fileBuffer = fs.readFileSync(filePath)
+    const filename = filePath.split('/').pop() || 'imported-app.tar.gz'
+    
+    // Create native FormData
     const form = new FormData()
     
-    // Set content type explicitly for tar.gz files
-    const fileStream = fs.createReadStream(filePath)
-    const options = {
-      filename: filePath.split('/').pop(),
-      contentType: 'application/gzip'
-    }
-    form.append("fileToImport", fileStream, options)
+    // Create a Blob from the buffer with the correct type
+    const blob = new Blob([fileBuffer], { type: 'application/gzip' })
+    
+    // Append the file
+    form.append("fileToImport", blob, filename)
     
     // If no name provided, extract from filename
     if (!name) {
-      const filename = filePath.split('/').pop() || 'imported-app'
       name = filename.replace('.tar.gz', '').replace(/-/g, ' ')
     }
     
     form.append("name", name)
     form.append("useTemplate", "true")
 
-    const response = await this.client.post("/api/applications", form, {
-      headers: {
-        ...form.getHeaders(),
-      },
-    })
+    // Send the form - native FormData will set the correct headers automatically
+    const response = await this.client.post("/api/applications", form)
 
     return response.data.appId || response.data._id
   }

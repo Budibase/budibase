@@ -89,8 +89,21 @@ export class BudibaseClient {
     // Prepare headers
     const headers: Record<string, string> = {
       ...this.config.headers,
-      ...options?.headers,
       "x-budibase-correlation-id": correlationId,
+    }
+
+    // Check if body is FormData before setting up fetch options
+    let isFormData = false
+    if (options?.body && options.body instanceof FormData) {
+      isFormData = true
+      // Remove Content-Type to let fetch set it automatically with boundary
+      delete headers["Content-Type"]
+      delete headers["content-type"]
+    }
+
+    // Merge options headers after FormData check
+    if (options?.headers) {
+      Object.assign(headers, options.headers)
     }
 
     // Prepare request options
@@ -102,10 +115,8 @@ export class BudibaseClient {
 
     // Add body if present
     if (options?.body) {
-      if (options.body instanceof FormData) {
-        fetchOptions.body = options.body
-        // Remove Content-Type to let fetch set it with boundary
-        delete headers["Content-Type"]
+      if (isFormData) {
+        fetchOptions.body = options.body as FormData
       } else {
         fetchOptions.body = JSON.stringify(options.body)
       }
@@ -232,6 +243,30 @@ export class BudibaseClient {
     options?: { headers?: Record<string, string> }
   ) {
     return this.request<T>("PATCH", path, { body, ...options })
+  }
+
+  static async withInternalAPIKey(): Promise<BudibaseClient> {
+    const url = process.env.BUDIBASE_URL
+    if (!url) {
+      throw new Error("BUDIBASE_URL environment variable is required")
+    }
+
+    const apiKey = process.env.INTERNAL_API_KEY
+    if (!apiKey) {
+      throw new Error("INTERNAL_API_KEY environment variable is required")
+    }
+
+    // Create client with just the internal API key
+    // This is used for operations that don't require user authentication
+    // like importing apps
+    return new BudibaseClient({
+      baseURL: url,
+      timeout: parseInt(process.env.BUDIBASE_TIMEOUT || "60000"),
+      headers: {
+        "x-budibase-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+    })
   }
 
   static async authenticated(
