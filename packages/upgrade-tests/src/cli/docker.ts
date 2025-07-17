@@ -266,7 +266,7 @@ export async function waitForHealthy(
 
   spinner.fail("Budibase failed to become healthy")
   const logs = await getContainerLogs(containerName)
-  console.error(chalk.red("\nContainer logs:"))
+  console.error(red("\nContainer logs:"))
   console.error(logs)
   throw new Error("Container failed to become healthy")
 }
