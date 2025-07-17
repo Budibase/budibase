@@ -6,12 +6,21 @@
   export let icon: string | undefined = undefined
   export let url: string | undefined = undefined
   export let collapsed = false
+  export let target: string | undefined = undefined
   export let forceActive: boolean | undefined = undefined
 
   $: active = forceActive ?? (url ? $isActive(url) : false)
 </script>
 
-<a class="link" class:active href={url} on:click class:collapsed tabindex="0">
+<a
+  class="link"
+  class:active
+  href={url}
+  {target}
+  on:click
+  class:collapsed
+  tabindex="0"
+>
   <div class="link_icon">
     {#if $$slots.icon}
       <slot name="icon" />

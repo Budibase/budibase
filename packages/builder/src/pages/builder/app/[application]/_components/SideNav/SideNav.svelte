@@ -86,13 +86,6 @@
           on:click={keepCollapsed}
         />
         <SideNavLink
-          icon="hard-drives"
-          text="Data"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
           icon="layout"
           text="Apps"
           url={$url("./design")}
@@ -161,9 +154,19 @@
         {/if}
         <SideNavLink
           icon="user-plus"
-          text="Invite users"
+          text="Invite member"
           on:click={() => {
             builderStore.showBuilderSidePanel()
+            keepCollapsed()
+          }}
+          {collapsed}
+        />
+        <SideNavLink
+          icon="book"
+          text="Documentation"
+          url="https://docs.budibase.com"
+          target="_blank"
+          on:click={() => {
             keepCollapsed()
           }}
           {collapsed}
