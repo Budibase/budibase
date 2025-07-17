@@ -3,7 +3,7 @@ import { promisify } from "util"
 import * as crypto from "crypto"
 import * as path from "path"
 import * as fs from "fs"
-import { blue, red, gray, yellow } from "chalk"
+import { blue, red } from "chalk"
 import ora from "ora"
 
 const execAsync = promisify(exec)
@@ -201,12 +201,14 @@ export async function buildCurrentVersion(projectRoot: string): Promise<void> {
   // Verify the directory exists
   const dockerfilePath = path.join(projectRoot, "hosting/single/Dockerfile")
   if (!fs.existsSync(dockerfilePath)) {
-    throw new Error(`Invalid project root: ${projectRoot} - Dockerfile not found at ${dockerfilePath}`)
+    throw new Error(
+      `Invalid project root: ${projectRoot} - Dockerfile not found at ${dockerfilePath}`
+    )
   }
 
   // Build the project
   const buildSpinner = ora("Building project with yarn").start()
-  
+
   try {
     await execAsync("yarn build --ignore @budibase/upgrade-tests", {
       cwd: projectRoot,
