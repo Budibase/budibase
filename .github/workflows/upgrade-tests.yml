@@ -37,6 +37,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+        
+      - name: Build packages
+        run: yarn build
 
       - name: Build Docker image
         run: |
