@@ -2,7 +2,6 @@
   import { Label, Select, Body } from "@budibase/bbui"
   import { findAllMatchingComponents } from "@/helpers/components"
   import { selectedScreen } from "@/stores/builder"
-  import { InlineAlert } from "@budibase/bbui"
 
   export let parameters
 
@@ -19,7 +18,13 @@
     label: block._instanceName,
     value: `${block._id}-table`,
   }))
-  $: componentOptions = tables.concat(tableBlocks)
+  $: gridBlocks = findAllMatchingComponents($selectedScreen?.props, component =>
+    component._component.endsWith("gridblock")
+  ).map(block => ({
+    label: block._instanceName,
+    value: block._id,
+  }))
+  $: componentOptions = tables.concat(tableBlocks).concat(gridBlocks)
 </script>
 
 <div class="root">
@@ -28,12 +33,6 @@
     <Label small>Table</Label>
     <Select bind:value={parameters.componentId} options={componentOptions} />
   </div>
-  <InlineAlert
-    header="Legacy action"
-    message="This action is only compatible with the (deprecated) Table Block. Please see the documentation for further info."
-    link="https://docs.budibase.com/docs/data-actions#clear-row-selection"
-    linkText="Budibase Documentation"
-  />
 </div>
 
 <style>
