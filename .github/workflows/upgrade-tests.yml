@@ -22,7 +22,7 @@ env:
   INTERNAL_API_KEY: budibase
   BB_ADMIN_USER_EMAIL: admin@example.com
   BB_ADMIN_USER_PASSWORD: admin123!
-  VERSION_COUNT: 5  # Number of versions to test
+  VERSION_COUNT: 5 # Number of versions to test
 
 # Cancel in-progress runs when a new run is triggered
 concurrency:
@@ -37,16 +37,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: yarn
-          
+
       - name: Install dependencies
         run: yarn --frozen-lockfile
-        
+
       - name: Build packages
         run: yarn build --ignore @budibase/upgrade-tests
 
@@ -56,7 +56,7 @@ jobs:
           # Use the CI version that matches our code
           VERSION="0.0.0+local"
           echo "Building version: $VERSION"
-          docker build -t budibase:current --build-arg BUDIBASE_VERSION=$VERSION -f hosting/single/Dockerfile .
+          docker build -t budibase:current --build-arg BUDIBASE_VERSION=$VERSION --build-arg TARGETBUILD=single -f hosting/single/Dockerfile .
           echo "✅ Docker image built successfully"
 
       - name: Save Docker image
@@ -81,35 +81,35 @@ jobs:
         with:
           sparse-checkout: |
             packages/upgrade-tests/src/fixtures
-      
+
       - name: Get available test apps
         id: apps
         run: |
           # Find all .tar.gz files in fixtures and extract app names
           cd packages/upgrade-tests/src/fixtures
-          
+
           # Get list of apps and format as JSON array
           if ls *.tar.gz >/dev/null 2>&1; then
             APPS=$(ls *.tar.gz | sed 's/\.tar\.gz$//' | jq -R . | jq -s -c .)
           else
             APPS='["no-apps"]'
           fi
-          
+
           echo "apps=${APPS}" >> $GITHUB_OUTPUT
           echo "Found test apps: ${APPS}"
-      
+
       - name: Get versions to test
         id: versions
         run: |
           # Fetch versions from Docker Hub across multiple pages if needed
           VERSION_COUNT=${VERSION_COUNT:-5}
           echo "Fetching last $VERSION_COUNT minor versions from Docker Hub"
-          
+
           # Collect all version tags across pages
           ALL_TAGS="[]"
           PAGE=1
           MAX_PAGES=5  # Limit pages to avoid infinite loops
-          
+
           while [ $PAGE -le $MAX_PAGES ]; do
             echo "Fetching page $PAGE..."
             RESPONSE=$(curl -s "https://hub.docker.com/v2/repositories/budibase/budibase/tags?page_size=100&page=$PAGE")
@@ -142,7 +142,7 @@ jobs:
             
             PAGE=$((PAGE + 1))
           done
-          
+
           # Process all collected tags to get the latest patch for each minor version
           VERSIONS=$(echo "$ALL_TAGS" | jq -c "
             map(split(\".\") | {major: .[0] | tonumber, minor: .[1] | tonumber, patch: .[2] | tonumber, version: .}) 
@@ -178,7 +178,7 @@ jobs:
         with:
           node-version: 22.x
           cache: yarn
-      
+
       - name: Install dependencies
         run: yarn --frozen-lockfile
 
@@ -202,7 +202,7 @@ jobs:
 
       - name: Run upgrade test
         env:
-          BUDIBASE_TIMEOUT: 180000  # 3 minutes timeout for app imports
+          BUDIBASE_TIMEOUT: 180000 # 3 minutes timeout for app imports
         run: |
           cd packages/upgrade-tests
           yarn test:upgrade full --from ${{ matrix.version }} --app ${{ matrix.app }} --no-build
