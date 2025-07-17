@@ -53,7 +53,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Build and export Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -62,9 +62,16 @@ jobs:
           build-args: |
             BUDIBASE_VERSION=0.0.0+local
             TARGETBUILD=single
-          load: true
+          outputs: type=docker,dest=/tmp/budibase-current.tar
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: budibase-current-image
+          path: /tmp/budibase-current.tar
+          retention-days: 1
 
   get-test-config:
     runs-on: ubuntu-latest
@@ -186,20 +193,16 @@ jobs:
           cd ../upgrade-tests
           yarn build
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image from cache
-        uses: docker/build-push-action@v5
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
         with:
-          context: .
-          file: hosting/single/Dockerfile
-          tags: budibase:current
-          build-args: |
-            BUDIBASE_VERSION=0.0.0+local
-            TARGETBUILD=single
-          load: true
-          cache-from: type=gha
+          name: budibase-current-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: |
+          docker load -i /tmp/budibase-current.tar
+          echo "✅ Docker image loaded successfully"
 
       - name: Run upgrade test
         env:
