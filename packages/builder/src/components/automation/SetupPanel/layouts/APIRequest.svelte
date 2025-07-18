@@ -46,7 +46,7 @@
   $: restBindings = [...(bindings || []), ...authBindings]
 
   // The step input properties
-  $: inputData = automationStore.actions.getInputData(block)
+  $: inputData = automationStore.getInputData(block)
   $: fieldKey = "query"
   $: {
     value = getInputValue(inputData, fieldKey)
@@ -114,7 +114,7 @@
 
   const defaultChange = (update: FormUpdate, block?: AutomationStep) => {
     if (block) {
-      automationStore.actions.requestUpdate(update, block)
+      automationStore.requestUpdate(update, block)
     }
   }
 </script>

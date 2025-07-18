@@ -6,6 +6,7 @@
     Icon,
     Modal,
     DetailSummary,
+    notifications,
   } from "@budibase/bbui"
   import { generate } from "shortid"
   import {
@@ -50,7 +51,7 @@
   $: selectedNodeId = $automationStore.selectedNodeId
   $: blockRefs = $selectedAutomation.blockRefs
   $: blockRef = selectedNodeId ? blockRefs[selectedNodeId] : undefined
-  $: block = automationStore.actions.getBlockByRef($memoAutomation, blockRef)
+  $: block = automationStore.getBlockByRef($memoAutomation, blockRef)
 
   $: memoBlock.set(block)
 
@@ -62,8 +63,7 @@
 
   $: isAppAction = block?.stepId === AutomationTriggerStepId.APP
   $: isAppAction && fetchPermissions($memoAutomation?._id)
-  $: isAppAction &&
-    automationStore.actions.setPermissions(role, $memoAutomation)
+  $: isAppAction && automationStore.setPermissions(role, $memoAutomation)
 
   // Reset the panel scroll when the target node is changed
   $: resetScroll(selectedNodeId)
@@ -78,7 +78,7 @@
     if (!automationId) {
       return
     }
-    role = await automationStore.actions.getPermissions(automationId)
+    role = await automationStore.getPermissions(automationId)
   }
 
   const loadPathSteps = (
@@ -86,7 +86,7 @@
     automation: Automation | undefined
   ) => {
     return blockRef && automation
-      ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
+      ? automationStore.getPathSteps(blockRef.pathTo, automation)
       : []
   }
 </script>
@@ -102,7 +102,7 @@
       block={$memoBlock}
       on:update={e => {
         if ($memoBlock && !isTrigger($memoBlock)) {
-          automationStore.actions.updateBlockTitle($memoBlock, e.detail)
+          automationStore.updateBlockTitle($memoBlock, e.detail)
         }
       }}
     />
@@ -110,7 +110,7 @@
       name="x"
       hoverable
       on:click={() => {
-        automationStore.actions.selectNode()
+        automationStore.selectNode()
       }}
     />
   </div>
@@ -123,9 +123,9 @@
           icon="arrow-clockwise"
           on:click={async () => {
             if (loopBlock) {
-              await automationStore.actions.removeLooping(blockRef)
+              await automationStore.removeLooping(blockRef)
             } else {
-              await automationStore.actions.addLooping(blockRef)
+              await automationStore.addLooping(blockRef)
             }
           }}
         >
@@ -140,7 +140,7 @@
           if (!blockRef) {
             return
           }
-          await automationStore.actions.deleteAutomationBlock(blockRef.pathTo)
+          await automationStore.deleteAutomationBlock(blockRef.pathTo)
         }}
       >
         Delete
@@ -161,10 +161,25 @@
             const newName = getNewStepName($memoAutomation, duplicatedBlock)
             duplicatedBlock.name = newName
 
-            await automationStore.actions.addBlockToAutomation(
+            if (!$memoAutomation) {
+              console.error("Cannot ")
+              return
+            }
+
+            const updated = await automationStore.addBlockToAutomation(
+              $memoAutomation,
               duplicatedBlock,
               blockRef.pathTo
             )
+
+            if (updated) {
+              try {
+                await automationStore.save(updated)
+              } catch (e) {
+                notifications.error("Error adding automation block")
+                console.error("Automation adding block ", e)
+              }
+            }
           }}
         >
           Duplicate

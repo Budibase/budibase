@@ -28,7 +28,7 @@
     name="plus-circle"
     weight="fill"
     on:click={() => {
-      automationStore.actions.openActionPanel(block)
+      automationStore.openActionPanel(block)
     }}
     tooltipType={TooltipType.Info}
     tooltipPosition={TooltipPosition.Right}

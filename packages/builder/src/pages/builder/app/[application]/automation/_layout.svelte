@@ -29,7 +29,7 @@
     validate: id => $automationStore.automations.some(x => x._id === id),
     fallbackUrl: "./index",
     store: automationStore,
-    update: automationStore.actions.select,
+    update: automationStore.select,
     routify,
   })
 
@@ -78,7 +78,7 @@
     {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
       <SelectStepSidePanel
         block={$automationStore.actionPanelBlock}
-        onClose={() => automationStore.actions.closeActionPanel()}
+        onClose={() => automationStore.closeActionPanel()}
       />
     {/if}
 
@@ -88,8 +88,7 @@
           <div class="logs-panel">
             <AutomationLogsPanel
               automation={$selectedAutomation.data}
-              onSelectLog={log =>
-                automationStore.actions.selectLogForDetails(log)}
+              onSelectLog={log => automationStore.selectLogForDetails(log)}
               selectedLog={$automationStore.selectedLog}
             />
           </div>
@@ -99,7 +98,7 @@
               <LogDetailsPanel
                 log={$automationStore.selectedLog}
                 selectedStep={$automationStore.selectedLogStepData}
-                onBack={() => automationStore.actions.closeLogPanel()}
+                onBack={() => automationStore.closeLogPanel()}
               />
             </div>
           {/if}

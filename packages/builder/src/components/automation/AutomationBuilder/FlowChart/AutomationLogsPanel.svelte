@@ -92,7 +92,7 @@
       startDate = dayjs().subtract(length, units)
     }
     try {
-      const response = await automationStore.actions.getLogs({
+      const response = await automationStore.getLogs({
         automationId,
         status,
         page,

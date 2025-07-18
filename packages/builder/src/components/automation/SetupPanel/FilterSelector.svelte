@@ -29,7 +29,7 @@
 
   let drawer: Drawer
 
-  $: inputData = automationStore.actions.getInputData(block)
+  $: inputData = automationStore.getInputData(block)
 
   $: schemaProperties = Object.entries(block?.schema?.inputs?.properties || {})
   $: filters = lookForFilters(schemaProperties)
