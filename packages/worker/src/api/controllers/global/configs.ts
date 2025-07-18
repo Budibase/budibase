@@ -2,6 +2,8 @@ import * as email from "../../../utilities/email"
 import env from "../../../environment"
 import * as auth from "./auth"
 import {
+  BadRequestError,
+  ForbiddenError,
   cache,
   configs,
   db as dbCore,
@@ -9,7 +11,6 @@ import {
   events,
   objectStore,
   tenancy,
-  BadRequestError,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
@@ -26,11 +27,13 @@ import {
   isAIConfig,
   isGoogleConfig,
   isOIDCConfig,
+  isRecaptchaConfig,
   isSettingsConfig,
   isSMTPConfig,
   OIDCConfigs,
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
+  RecaptchaInnerConfig,
   SaveConfigRequest,
   SaveConfigResponse,
   SettingsBrandingConfig,
@@ -273,6 +276,21 @@ export async function processAIConfig(
   }
 }
 
+export async function processRecaptchaConfig(
+  config: RecaptchaInnerConfig,
+  existingConfig?: RecaptchaInnerConfig
+) {
+  if (!(await pro.features.isRecaptchaEnabled())) {
+    throw new ForbiddenError("License does not allow use of recaptcha")
+  }
+  if (config.secretKey === PASSWORD_REPLACEMENT && !existingConfig) {
+    throw new BadRequestError("No secret key provided")
+  }
+  if (config.secretKey === PASSWORD_REPLACEMENT && existingConfig) {
+    config.secretKey = existingConfig.secretKey
+  }
+}
+
 export async function save(
   ctx: UserCtx<SaveConfigRequest, SaveConfigResponse>
 ) {
@@ -305,6 +323,9 @@ export async function save(
         if (existingConfig) {
           await processAIConfig(config, existingConfig.config)
         }
+        break
+      case ConfigType.RECAPTCHA:
+        await processRecaptchaConfig(config, existingConfig?.config)
         break
     }
   } catch (err: any) {
@@ -430,6 +451,8 @@ function stripSecrets(config: Config) {
     for (const c of config.config.configs) {
       c.clientSecret = PASSWORD_REPLACEMENT
     }
+  } else if (isRecaptchaConfig(config)) {
+    config.config.secretKey = PASSWORD_REPLACEMENT
   }
 }
 

@@ -1,18 +1,25 @@
 import * as controller from "../controllers/user"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
+import recaptcha from "../../middleware/recaptcha"
 import { customEndpointGroups } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readRoutes = customEndpointGroups.group({
-  middleware: authorized(PermissionType.USER, PermissionLevel.READ),
-  first: false,
-})
-const writeRoutes = customEndpointGroups.group({
-  middleware: authorized(PermissionType.USER, PermissionLevel.WRITE),
-  first: false,
-})
+const readRoutes = customEndpointGroups.group(
+  {
+    middleware: authorized(PermissionType.USER, PermissionLevel.READ),
+    first: false,
+  },
+  recaptcha
+)
+const writeRoutes = customEndpointGroups.group(
+  {
+    middleware: authorized(PermissionType.USER, PermissionLevel.WRITE),
+    first: false,
+  },
+  recaptcha
+)
 
 readRoutes
   .get("/api/users/metadata", controller.fetchMetadata)

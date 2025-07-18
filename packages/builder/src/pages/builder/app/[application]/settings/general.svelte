@@ -7,11 +7,17 @@
     Button,
     Modal,
     Icon,
+    notifications,
   } from "@budibase/bbui"
   import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
-  import { isOnlyUser, appStore, deploymentStore } from "@/stores/builder"
+  import {
+    isOnlyUser,
+    appStore,
+    deploymentStore,
+    recaptchaStore,
+  } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import { appsStore, admin } from "@/stores/portal"
+  import { appsStore, admin, licensing } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -30,10 +36,21 @@
   $: selectedApp = filteredApps.length ? filteredApps[0] : {}
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
+  $: appRecaptchaEnabled = $recaptchaStore.enabled
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
     exportModal.show()
+  }
+
+  const updateRecaptcha = async () => {
+    try {
+      const newState = !appRecaptchaEnabled
+      await recaptchaStore.setState(newState)
+      notifications.success(`Recaptcha ${newState ? "enabled" : "disabled"}`)
+    } catch (err) {
+      notifications.error(`Failed to set recaptcha state: ${err.message}`)
+    }
   }
 </script>
 
@@ -164,6 +181,33 @@
   </Layout>
   <div class="row">
     <Button secondary on:click={importModal?.show}>Import app</Button>
+  </div>
+  <Divider />
+  <Layout noPadding gap="XS">
+    <div class="row">
+      <Heading size="S">Recaptcha</Heading>
+      {#if !$licensing.recaptchaEnabled}
+        <Icon name="lock" />
+      {/if}
+    </div>
+    {#if !$licensing.recaptchaEnabled}
+      <Body size="S"
+        >Recaptcha support is included with enterprise licenses</Body
+      >
+    {:else if !$recaptchaStore.available}
+      <Body size="S"
+        >Please configure Recaptcha keys to enable this protection</Body
+      >
+    {:else}
+      <Body size="S">Enable recaptcha protection for all pages</Body>
+    {/if}
+  </Layout>
+  <div>
+    {#if $licensing.recaptchaEnabled && $recaptchaStore.available}
+      <Button secondary on:click={updateRecaptcha}
+        >{appRecaptchaEnabled ? "Disable" : "Enable"}</Button
+      >
+    {/if}
   </div>
   <Divider />
   <Heading size="S">Danger zone</Heading>

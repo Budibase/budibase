@@ -132,6 +132,7 @@
       <p />
     {/if}
   </div>
+  <script src="https://www.google.com/recaptcha/api.js"></script>
   <script type="application/javascript" nonce={props.nonce}>
     window.INIT_TIME = Date.now()
   </script>

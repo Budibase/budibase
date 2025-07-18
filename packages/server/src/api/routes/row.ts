@@ -4,20 +4,27 @@ import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
 import trimViewRowInfo from "../../middleware/trimViewRowInfo"
+import recaptcha from "../../middleware/recaptcha"
 import { validateBody } from "../../middleware/zod-validator"
 import { searchRowRequestValidator } from "@budibase/types"
 import { customEndpointGroups, publicRoutes } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readRoutes = customEndpointGroups.group({
-  middleware: authorized(PermissionType.TABLE, PermissionLevel.READ),
-  first: false,
-})
-const writeRoutes = customEndpointGroups.group({
-  middleware: authorized(PermissionType.TABLE, PermissionLevel.WRITE),
-  first: false,
-})
+const readRoutes = customEndpointGroups.group(
+  {
+    middleware: authorized(PermissionType.TABLE, PermissionLevel.READ),
+    first: false,
+  },
+  recaptcha
+)
+const writeRoutes = customEndpointGroups.group(
+  {
+    middleware: authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+    first: false,
+  },
+  recaptcha
+)
 
 readRoutes
   .get(

@@ -1,6 +1,7 @@
 import { derived, Readable } from "svelte/store"
 import { admin } from "./admin"
 import { auth } from "./auth"
+import { licensing } from "./licensing"
 import { sdk } from "@budibase/shared-core"
 import { featureFlags } from "./featureFlags"
 
@@ -11,8 +12,8 @@ interface MenuItem {
 }
 
 export const menu: Readable<MenuItem[]> = derived(
-  [admin, auth, featureFlags],
-  ([$admin, $auth, $featureFlags]) => {
+  [admin, auth, featureFlags, licensing],
+  ([$admin, $auth, $featureFlags, $licensing]) => {
     const user = $auth?.user
     const isAdmin = user != null && sdk.users.isAdmin(user)
     const isGlobalBuilder = user != null && sdk.users.isGlobalBuilder(user)
@@ -77,6 +78,13 @@ export const menu: Readable<MenuItem[]> = derived(
           href: "/builder/portal/settings/ai",
         },
       ]
+
+      if ($licensing.recaptchaEnabled) {
+        settingsSubPages.push({
+          title: "Recaptcha",
+          href: "/builder/portal/settings/recaptcha",
+        })
+      }
 
       if (!cloud) {
         settingsSubPages.push({

@@ -29,6 +29,7 @@
     modalStore,
     dataSourceStore,
     notificationStore,
+    recaptchaStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
@@ -54,6 +55,7 @@
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
   import EmbedProvider from "./context/EmbedProvider.svelte"
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
+  import RecaptchaV2 from "./RecaptchaV2.svelte"
   import { ActionTypes } from "@/constants"
 
   // Provide contexts
@@ -187,6 +189,8 @@
   >
     {#if $environmentStore.maintenance.length > 0}
       <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
+    {:else if $featuresStore.recaptchaEnabled && $appStore.recaptchaKey && !$recaptchaStore.verified && !$builderStore.inBuilder}
+      <RecaptchaV2 />
     {:else}
       <EmbedProvider>
         <DeviceBindingsProvider>

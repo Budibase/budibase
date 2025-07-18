@@ -14,6 +14,7 @@ const CSP_DIRECTIVES = {
     "https://widget.intercom.io",
     "https://d2l5prqdbvm3op.cloudfront.net",
     "https://us-assets.i.posthog.com",
+    "https://www.google.com/recaptcha/api.js",
   ],
   "style-src": [
     "'self'",
