@@ -8,14 +8,12 @@ import {
   BBReferenceFieldSubType,
   Datasource,
   FieldType,
-  INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
   RelationshipType,
   Row,
   SaveTableRequest,
   Table,
   TableSchema,
-  TableSourceType,
   User,
   ValidateTableImportResponse,
   ViewCalculation,
@@ -25,6 +23,7 @@ import {
   JsonFieldSubType,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { createSchemaEntry } from "./utilities/schemaUtils"
 import * as setup from "./utilities"
 import * as uuid from "uuid"
 
@@ -32,11 +31,16 @@ import { generator } from "@budibase/backend-core/tests"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
+import { canBeDisplayColumn } from "@budibase/shared-core"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 const descriptions = datasourceDescribe({ plus: true })
+const disallowedFirstFieldTypes = Object.values(FieldType).filter(type => {
+  if (typeof type !== "string") return false
+  return !canBeDisplayColumn(type)
+})
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -225,6 +229,10 @@ if (descriptions.length) {
             tableForDatasource(datasource, {
               primaryDisplay: columnName,
               schema: {
+                name: {
+                  type: FieldType.STRING,
+                  name: "name",
+                },
                 [columnName]: {
                   name: columnName,
                   type: FieldType.BOOLEAN,
@@ -239,6 +247,27 @@ if (descriptions.length) {
             }
           )
         })
+
+        it.each(disallowedFirstFieldTypes)(
+          "should not allow first field of type '%s' to be created",
+          async fieldType => {
+            const columnName = "firstCol"
+
+            const schema = {
+              [columnName]: createSchemaEntry(columnName, fieldType),
+            }
+
+            await config.api.table.save(
+              tableForDatasource(datasource, { schema }),
+              {
+                status: 400,
+                body: {
+                  message: `Column "${columnName}" cannot be the first column in a table.`,
+                },
+              }
+            )
+          }
+        )
       })
 
       describe("permissions", () => {
@@ -686,6 +715,10 @@ if (descriptions.length) {
             primaryDisplay: columnName,
             schema: {
               ...table.schema,
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
               [columnName]: {
                 name: columnName,
                 type: FieldType.BOOLEAN,
@@ -1169,25 +1202,23 @@ if (descriptions.length) {
         })
 
         it("should successfully migrate a one-to-many user relationship to a user column", async () => {
-          const table = await config.api.table.save({
-            name: "table",
-            type: "table",
-            sourceId: INTERNAL_TABLE_SOURCE_ID,
-            sourceType: TableSourceType.INTERNAL,
-            schema: {
-              "user relationship": {
-                type: FieldType.LINK,
-                fieldName: "test",
-                name: "user relationship",
-                constraints: {
-                  type: "array",
-                  presence: false,
+          const table = await config.api.table.save(
+            basicTable(undefined, {
+              schema: {
+                "user relationship": {
+                  type: FieldType.LINK,
+                  fieldName: "test",
+                  name: "user relationship",
+                  constraints: {
+                    type: "array",
+                    presence: false,
+                  },
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  tableId: InternalTable.USER_METADATA,
                 },
-                relationshipType: RelationshipType.ONE_TO_MANY,
-                tableId: InternalTable.USER_METADATA,
               },
-            },
-          })
+            })
+          )
 
           const rows = await Promise.all(
             users.map(u =>
@@ -1227,25 +1258,23 @@ if (descriptions.length) {
           // We found a bug just after releasing this feature where if the row was created from the
           // users table, not the table linking to it, the migration would succeed but lose the data.
           // This happened because the order of the documents in the link was reversed.
-          const table = await config.api.table.save({
-            name: "table",
-            type: "table",
-            sourceId: INTERNAL_TABLE_SOURCE_ID,
-            sourceType: TableSourceType.INTERNAL,
-            schema: {
-              "user relationship": {
-                type: FieldType.LINK,
-                fieldName: "test",
-                name: "user relationship",
-                constraints: {
-                  type: "array",
-                  presence: false,
+          const table = await config.api.table.save(
+            basicTable(undefined, {
+              schema: {
+                "user relationship": {
+                  type: FieldType.LINK,
+                  fieldName: "test",
+                  name: "user relationship",
+                  constraints: {
+                    type: "array",
+                    presence: false,
+                  },
+                  relationshipType: RelationshipType.MANY_TO_ONE,
+                  tableId: InternalTable.USER_METADATA,
                 },
-                relationshipType: RelationshipType.MANY_TO_ONE,
-                tableId: InternalTable.USER_METADATA,
               },
-            },
-          })
+            })
+          )
 
           let testRow = await config.api.row.save(table._id!, {})
 
@@ -1287,25 +1316,23 @@ if (descriptions.length) {
         })
 
         it("should successfully migrate a many-to-many user relationship to a users column", async () => {
-          const table = await config.api.table.save({
-            name: "table",
-            type: "table",
-            sourceId: INTERNAL_TABLE_SOURCE_ID,
-            sourceType: TableSourceType.INTERNAL,
-            schema: {
-              "user relationship": {
-                type: FieldType.LINK,
-                fieldName: "test",
-                name: "user relationship",
-                constraints: {
-                  type: "array",
-                  presence: false,
+          const table = await config.api.table.save(
+            basicTable(undefined, {
+              schema: {
+                "user relationship": {
+                  type: FieldType.LINK,
+                  fieldName: "test",
+                  name: "user relationship",
+                  constraints: {
+                    type: "array",
+                    presence: false,
+                  },
+                  relationshipType: RelationshipType.MANY_TO_MANY,
+                  tableId: InternalTable.USER_METADATA,
                 },
-                relationshipType: RelationshipType.MANY_TO_MANY,
-                tableId: InternalTable.USER_METADATA,
               },
-            },
-          })
+            })
+          )
 
           const row1 = await config.api.row.save(table._id!, {
             "user relationship": [users[0], users[1]],
@@ -1345,25 +1372,23 @@ if (descriptions.length) {
         })
 
         it("should successfully migrate a many-to-one user relationship to a users column", async () => {
-          const table = await config.api.table.save({
-            name: "table",
-            type: "table",
-            sourceId: INTERNAL_TABLE_SOURCE_ID,
-            sourceType: TableSourceType.INTERNAL,
-            schema: {
-              "user relationship": {
-                type: FieldType.LINK,
-                fieldName: "test",
-                name: "user relationship",
-                constraints: {
-                  type: "array",
-                  presence: false,
+          const table = await config.api.table.save(
+            basicTable(undefined, {
+              schema: {
+                "user relationship": {
+                  type: FieldType.LINK,
+                  fieldName: "test",
+                  name: "user relationship",
+                  constraints: {
+                    type: "array",
+                    presence: false,
+                  },
+                  relationshipType: RelationshipType.MANY_TO_ONE,
+                  tableId: InternalTable.USER_METADATA,
                 },
-                relationshipType: RelationshipType.MANY_TO_ONE,
-                tableId: InternalTable.USER_METADATA,
               },
-            },
-          })
+            })
+          )
 
           const row1 = await config.api.row.save(table._id!, {
             "user relationship": [users[0], users[1]],
