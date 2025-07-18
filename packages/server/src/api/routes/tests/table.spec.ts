@@ -23,6 +23,7 @@ import {
   JsonFieldSubType,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { createSchemaEntry } from "./utilities/schemaUtils"
 import * as setup from "./utilities"
 import * as uuid from "uuid"
 
@@ -251,16 +252,13 @@ if (descriptions.length) {
           "should not allow first field of type '%s' to be created",
           async fieldType => {
             const columnName = "firstCol"
+
+            const schema = {
+              [columnName]: createSchemaEntry(columnName, fieldType),
+            }
+
             await config.api.table.save(
-              tableForDatasource(datasource, {
-                schema: {
-                  [columnName]: {
-                    name: columnName,
-                    type: fieldType,
-                    constraints: {},
-                  },
-                },
-              }),
+              tableForDatasource(datasource, { schema }),
               {
                 status: 400,
                 body: {
