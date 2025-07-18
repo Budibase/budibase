@@ -103,6 +103,18 @@ function getLockName(opts: LockOptions) {
 export const AUTO_EXTEND_POLLING_MS = Duration.fromSeconds(10).toMs()
 
 export async function doWithLock<T>(
+  opts: LockOptions & { type: LockType.TRY_ONCE },
+  task: () => Promise<T>
+): Promise<RedlockExecution<T>>
+export async function doWithLock<T>(
+  opts: LockOptions & { type: Exclude<LockType, LockType.TRY_ONCE> },
+  task: () => Promise<T>
+): Promise<SuccessfulRedlockExecution<T>>
+export async function doWithLock<T>(
+  opts: LockOptions,
+  task: () => Promise<T>
+): Promise<RedlockExecution<T> | SuccessfulRedlockExecution<T>>
+export async function doWithLock<T>(
   opts: LockOptions,
   task: () => Promise<T>
 ): Promise<RedlockExecution<T>> {
