@@ -494,12 +494,20 @@ export default class TestConfiguration {
     }
     const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
-    const cookie: (string | string[])[] = [
+    let cookie: (string | string[])[] = [
       `${constants.Cookie.Auth}=${authToken}`,
     ]
-    if (this.temporaryHeaders?.["Cookie"]) {
-      cookie.push(this.temporaryHeaders["Cookie"])
-      delete this.temporaryHeaders["Cookie"]
+    const tempHeaderCookie = this.temporaryHeaders?.["Cookie"]
+    const hasAuth = Array.isArray(tempHeaderCookie)
+      ? tempHeaderCookie.find(cookie => cookie.includes(constants.Cookie.Auth))
+      : typeof tempHeaderCookie === "string"
+        ? tempHeaderCookie.includes(constants.Cookie.Auth)
+        : false
+    if (tempHeaderCookie && hasAuth) {
+      cookie = [tempHeaderCookie]
+    } else if (tempHeaderCookie) {
+      cookie.push(tempHeaderCookie)
+      delete this.temporaryHeaders?.["Cookie"]
     }
     const headers: any = {
       Accept: "application/json",
