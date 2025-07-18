@@ -26,6 +26,7 @@
   export let maximum: number | undefined = undefined
   export let compact: boolean = false
   export let helpText: string | undefined = undefined
+  export let extensions: string = "*"
 
   const dispatch = createEventDispatcher<{ change: UIFile[] | File[] }>()
   const onChange = (e: CustomEvent<UIFile[] | File[]>) => {
@@ -39,6 +40,7 @@
     {disabled}
     {value}
     {fileSizeLimit}
+    {extensions}
     {processFiles}
     {deleteAttachments}
     {handleFileTooLarge}
