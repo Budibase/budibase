@@ -12,16 +12,14 @@
     <h1>{title}</h1>
     <p><slot /></p>
     {#if linkTitle}
-      <a href={linkHref} target="_blank">
-        <button type="button">
-          <Icon
-            name="book-open-text"
-            size="L"
-            weight="bold"
-            color="var(--spectrum-global-color-gray-900)"
-          ></Icon>
-          {linkTitle}
-        </button>
+      <a href={linkHref} class="button" target="_blank">
+        <Icon
+          name="book-open-text"
+          size="L"
+          weight="bold"
+          color="var(--spectrum-global-color-gray-900)"
+        ></Icon>
+        {linkTitle}
       </a>
     {/if}
   </div>
@@ -72,7 +70,7 @@
     min-height: 240px;
     background-position: cover;
   }
-  button {
+  .button {
     background-color: rgba(250, 250, 250, 0.1);
     border: none;
     padding: 8px 14px;
@@ -81,12 +79,13 @@
     color: white;
     font-weight: 500;
     font-family: Inter;
-    display: flex;
+    display: inline-flex;
+    width: fit-content;
     gap: 6px;
     align-items: center;
     transition: 100ms background-color ease-in;
   }
-  button:hover {
+  .button:hover {
     background-color: rgba(250, 250, 250, 0.2);
   }
 </style>
