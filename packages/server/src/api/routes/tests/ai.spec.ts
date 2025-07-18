@@ -857,6 +857,7 @@ describe("BudibaseAI", () => {
         await config.api.table.get(createdTables[0].id),
         await config.api.table.get(createdTables[1].id),
       ]
+
       expect(tables).toEqual([
         expect.objectContaining({
           name: "Tickets",
@@ -942,7 +943,7 @@ describe("BudibaseAI", () => {
           aiGenerated: true,
         }),
         expect.objectContaining({
-          name: "Employees 2",
+          name: "Employees",
           schema: {
             "First Name": {
               constraints: {
