@@ -1,44 +1,33 @@
 import Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
-import userRoutes from "./global/users"
-import configRoutes from "./global/configs"
-import templateRoutes from "./global/templates"
-import emailRoutes from "./global/email"
-import authRoutes from "./global/auth"
-import roleRoutes from "./global/roles"
-import eventRoutes from "./global/events"
-import environmentRoutes from "./system/environment"
-import tenantsRoutes from "./system/tenants"
-import statusRoutes from "./system/status"
-import selfRoutes from "./global/self"
-import licenseRoutes from "./global/license"
-import accountRoutes from "./system/accounts"
-import restoreRoutes from "./system/restore"
-import systemLogRoutes from "./system/logs"
+import { endpointGroupList } from "./endpointGroups"
 
-import env from "../../environment"
+// import to register the routes with the endpoint groups
+import "./global/auth"
+import "./global/users"
+import "./global/configs"
+import "./global/templates"
+import "./global/email"
+import "./global/roles"
+import "./global/events"
+import "./system/environment"
+import "./system/tenants"
+import "./system/status"
+import "./global/self"
+import "./global/license"
+import "./system/accounts"
+import "./system/restore"
+import "./system/logs"
+
+const endpointGroupsRouter = new Router()
+for (let endpoint of endpointGroupList.listAllEndpoints()) {
+  endpoint.apply(endpointGroupsRouter)
+}
 
 export const routes: Router[] = [
-  configRoutes,
-  userRoutes,
+  endpointGroupsRouter,
   pro.users,
-  authRoutes,
-  templateRoutes,
-  tenantsRoutes,
-  emailRoutes,
-  roleRoutes,
-  environmentRoutes,
-  statusRoutes,
-  selfRoutes,
-  licenseRoutes,
   pro.groups,
   pro.auditLogs,
-  accountRoutes,
-  restoreRoutes,
-  eventRoutes,
   pro.scim,
 ]
-
-if (env.SELF_HOSTED) {
-  routes.push(systemLogRoutes)
-}

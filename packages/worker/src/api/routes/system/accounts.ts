@@ -1,19 +1,6 @@
-import Router from "@koa/router"
 import * as controller from "../../controllers/system/accounts"
-import { middleware } from "@budibase/backend-core"
+import { internalRoutes } from "../endpointGroups"
 
-const router: Router = new Router()
-
-router
-  .put(
-    "/api/system/accounts/:accountId/metadata",
-    middleware.internalApi,
-    controller.save
-  )
-  .delete(
-    "/api/system/accounts/:accountId/metadata",
-    middleware.internalApi,
-    controller.destroy
-  )
-
-export default router
+internalRoutes
+  .put("/api/system/accounts/:accountId/metadata", controller.save)
+  .delete("/api/system/accounts/:accountId/metadata", controller.destroy)

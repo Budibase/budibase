@@ -1,10 +1,8 @@
-import Router from "@koa/router"
 import * as controller from "../../controllers/global/configs"
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
 import { ConfigType } from "@budibase/types"
-
-const router: Router = new Router()
+import { adminRoutes, loggedInRoutes } from "../endpointGroups"
 
 function smtpValidation() {
   // prettier-ignore
@@ -121,23 +119,17 @@ function buildConfigGetValidation() {
   }).required().unknown(true))
 }
 
-router
-  .post(
-    "/api/global/configs",
-    auth.adminOnly,
-    buildConfigSaveValidation(),
-    controller.save
-  )
-  .delete("/api/global/configs/:id/:rev", auth.adminOnly, controller.destroy)
-  .get("/api/global/configs/checklist", controller.configChecklist)
-  .get("/api/global/configs/public", controller.publicSettings)
-  .get("/api/global/configs/public/oidc", controller.publicOidc)
-  .get("/api/global/configs/:type", buildConfigGetValidation(), controller.find)
+adminRoutes
+  .post("/api/global/configs", buildConfigSaveValidation(), controller.save)
+  .delete("/api/global/configs/:id/:rev", controller.destroy)
   .post(
     "/api/global/configs/upload/:type/:name",
-    auth.adminOnly,
     buildUploadValidation(),
     controller.upload
   )
 
-export default router
+loggedInRoutes
+  .get("/api/global/configs/checklist", controller.configChecklist)
+  .get("/api/global/configs/public", controller.publicSettings)
+  .get("/api/global/configs/public/oidc", controller.publicOidc)
+  .get("/api/global/configs/:type", buildConfigGetValidation(), controller.find)

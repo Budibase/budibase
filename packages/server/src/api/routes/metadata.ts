@@ -5,9 +5,9 @@ import {
 } from "../../middleware/appInfo"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
-import { customEndpointGroups } from "./endpointGroups"
+import { endpointGroupList } from "./endpointGroups"
 
-const routes = customEndpointGroups.group(
+const routes = endpointGroupList.group(
   authorized(permissions.BUILDER),
   appInfoMiddleware({ appType: AppType.DEV })
 )

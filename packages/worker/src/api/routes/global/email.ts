@@ -1,10 +1,8 @@
-import Router from "@koa/router"
 import * as controller from "../../controllers/global/email"
 import { auth } from "@budibase/backend-core"
 import { EmailTemplatePurpose } from "@budibase/types"
 import Joi from "joi"
-
-const router: Router = new Router()
+import { adminRoutes } from "../endpointGroups"
 
 function buildEmailSendValidation() {
   // prettier-ignore
@@ -26,11 +24,8 @@ function buildEmailSendValidation() {
   }).required().unknown(true))
 }
 
-router.post(
+adminRoutes.post(
   "/api/global/email/send",
   buildEmailSendValidation(),
-  auth.adminOnly,
   controller.sendEmail
 )
-
-export default router
