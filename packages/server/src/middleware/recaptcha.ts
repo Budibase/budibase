@@ -1,5 +1,6 @@
 import { Ctx, RecaptchaSessionCookie, App } from "@budibase/types"
 import { utils, Cookie, cache, context } from "@budibase/backend-core"
+import { features } from "@budibase/pro"
 import { Middleware, Next } from "koa"
 import { isRecaptchaVerified } from "../utilities/redis"
 import { isProdAppID } from "../db/utils"
@@ -9,6 +10,9 @@ const middleware = (async (ctx: Ctx, next: Next) => {
   // no app ID, requests are not targeting an app
   // if not production app - this is in the builder, recaptcha isn't enabled
   if (!appId || !isProdAppID(appId)) {
+    return next()
+  }
+  if (!(await features.isRecaptchaEnabled())) {
     return next()
   }
   const app = await cache.app.getAppMetadata(appId)

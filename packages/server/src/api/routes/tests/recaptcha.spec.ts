@@ -57,6 +57,7 @@ describe("/recaptcha", () => {
 
   beforeEach(async () => {
     mocks.licenses.useCloudFree()
+    mocks.licenses.useRecaptcha()
     app = await config.newTenant()
   })
 

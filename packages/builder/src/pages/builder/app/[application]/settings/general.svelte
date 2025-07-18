@@ -203,7 +203,7 @@
     {/if}
   </Layout>
   <div>
-    {#if $recaptchaStore.available}
+    {#if $licensing.recaptchaEnabled && $recaptchaStore.available}
       <Button secondary on:click={updateRecaptcha}
         >{appRecaptchaEnabled ? "Disable" : "Enable"}</Button
       >
