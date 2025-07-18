@@ -20,6 +20,7 @@
   import { admin, featureFlags } from "@/stores/portal"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
   import PublishModal from "@/components/deploy/PublishModal.svelte"
+  import { bb } from "@/stores/bb"
 
   type ShowUI = { show: () => void }
 
@@ -56,6 +57,17 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="action-top-nav">
   <div class="action-buttons">
+    {#if !$featureFlags.WORKSPACE_APPS}
+      <ActionButton
+        quiet
+        icon="sliders"
+        on:click={() => {
+          bb.settings()
+        }}
+      >
+        Settings
+      </ActionButton>
+    {/if}
     {#if updateAvailable && $isOnlyUser && !$admin.isDev}
       <div class="app-action-button version" on:click={versionModal.show}>
         <div class="app-action">

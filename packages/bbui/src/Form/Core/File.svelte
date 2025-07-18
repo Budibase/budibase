@@ -42,7 +42,7 @@
   }
 
   function clearFile() {
-    dispatch("change", undefined)
+    if (!disabled) dispatch("change", undefined)
   }
 </script>
 
@@ -59,7 +59,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="field">
   {#if statusText}
-    <div class="file-view status">
+    <div class="file-view status" class:disabled>
       <div class="filename">{statusText}</div>
       {#if !disabled || (allowClear === true && disabled)}
         <div class="delete-button" on:click={clearFile}>
@@ -68,7 +68,7 @@
       {/if}
     </div>
   {:else if value}
-    <div class="file-view">
+    <div class="file-view" class:disabled>
       {#if previewUrl}
         <img class="preview" alt="" src={previewUrl} />
       {/if}
@@ -84,7 +84,7 @@
       {/if}
       {#if !disabled || (allowClear === true && disabled)}
         <div class="delete-button" on:click={clearFile}>
-          <Icon name="x" size="XS" />
+          <Icon name="x" size="XS" {disabled} />
         </div>
       {/if}
     </div>
@@ -106,6 +106,9 @@
     border: 1px solid var(--spectrum-alias-border-color);
     border-radius: var(--spectrum-global-dimension-size-50);
     padding: 0px var(--spectrum-alias-item-padding-m);
+  }
+  .file-view.disabled {
+    color: var(--spectrum-alias-text-color-disabled);
   }
   .file-view.status {
     background-color: var(--spectrum-global-color-gray-100);

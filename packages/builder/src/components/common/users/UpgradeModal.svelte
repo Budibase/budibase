@@ -8,7 +8,7 @@
 <ModalContent
   onConfirm={() =>
     isOwner
-      ? $licensing.goToUpgradePage()
+      ? licensing.goToUpgradePage()
       : window.open("https://budibase.com/pricing/", "_blank")}
   confirmText={isOwner ? "Upgrade" : "View plans"}
   title="Upgrade to add more users"
