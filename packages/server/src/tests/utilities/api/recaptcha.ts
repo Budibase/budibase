@@ -1,9 +1,5 @@
-import {
-  VerifyRecaptchaRequest,
-  VerifyRecaptchaResponse,
-  CheckRecaptchaResponse,
-} from "@budibase/types"
-import { Expectations, TestAPI } from "./base"
+import { VerifyRecaptchaRequest } from "@budibase/types"
+import { Expectations, RequestOpts, TestAPI } from "./base"
 import { Response } from "supertest"
 
 export class RecaptchaAPI extends TestAPI {
@@ -18,10 +14,17 @@ export class RecaptchaAPI extends TestAPI {
   }
 
   check = async (
+    cookie?: string,
     expectations?: Expectations
   ): Promise<Response> => {
-    return await this._requestRaw("get", "/api/recaptcha/check", {
+    const opts: RequestOpts = {
       expectations,
-    })
+    }
+    if (cookie) {
+      opts.headers = {
+        cookie,
+      }
+    }
+    return await this._requestRaw("get", "/api/recaptcha/check", opts)
   }
 }

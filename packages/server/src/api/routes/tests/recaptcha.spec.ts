@@ -1,15 +1,46 @@
 import * as setup from "./utilities"
 import nock from "nock"
-import { configs } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { App, RecaptchaConfig, ConfigType } from "@budibase/types"
+import { basicTable } from "../../../tests/utilities/structures"
 
+// need to mock the config, this is setup in the worker service
+// we don't have a nice way to do this properly, it will always be mock
 const mockConfig: RecaptchaConfig = {
   type: ConfigType.RECAPTCHA,
   config: {
     secretKey: "test-secret-key",
     siteKey: "test-site-key",
   },
+}
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    configs: {
+      ...actual.configs,
+      getRecaptchaConfig: () => mockConfig,
+    },
+  }
+})
+
+function recaptchaSucceed() {
+  return nock("https://www.google.com")
+    .post("/recaptcha/api/siteverify")
+    .reply(200, { success: true })
+}
+
+function recaptchaFailed() {
+  return nock("https://www.google.com")
+    .post("/recaptcha/api/siteverify")
+    .reply(200, { success: false })
+}
+
+function recaptchaError() {
+  return nock("https://www.google.com")
+    .post("/recaptcha/api/siteverify")
+    .reply(500, "Internal Server Error")
 }
 
 describe("/recaptcha", () => {
@@ -36,50 +67,29 @@ describe("/recaptcha", () => {
 
   describe("POST /api/recaptcha/verify", () => {
     it("should return error when no token provided", async () => {
-      jest.spyOn(configs, "getRecaptchaConfig").mockResolvedValue(mockConfig)
-
-      const res = await config.api.recaptcha.verify({})
-      expect(res.status).toBe(400)
-    })
-
-    it("should return error when no recaptcha config found", async () => {
-      jest.spyOn(configs, "getRecaptchaConfig").mockResolvedValue(undefined)
-
-      const res = await config.api.recaptcha.verify({ token: "test-token" })
-      expect(res.status).toBe(400)
+      await config.api.recaptcha.verify({}, { status: 400 })
     })
 
     it("should verify recaptcha successfully", async () => {
-      jest.spyOn(configs, "getRecaptchaConfig").mockResolvedValue(mockConfig)
-
-      nock("https://www.google.com")
-        .post("/recaptcha/api/siteverify")
-        .reply(200, { success: true })
+      const scope = recaptchaSucceed()
 
       const res = await config.api.recaptcha.verify({ token: "valid-token" })
       expect(res.status).toBe(200)
       expect(res.body.verified).toBe(true)
+
+      // Check if the nock interceptor was called
+      expect(scope.isDone()).toBe(true)
     })
 
     it("should handle invalid recaptcha token", async () => {
-      jest.spyOn(configs, "getRecaptchaConfig").mockResolvedValue(mockConfig)
-
-      nock("https://www.google.com")
-        .post("/recaptcha/api/siteverify")
-        .reply(200, { success: false })
-
+      recaptchaFailed()
       const res = await config.api.recaptcha.verify({ token: "invalid-token" })
       expect(res.status).toBe(200)
       expect(res.body.verified).toBe(false)
     })
 
     it("should handle google API error", async () => {
-      jest.spyOn(configs, "getRecaptchaConfig").mockResolvedValue(mockConfig)
-
-      nock("https://www.google.com")
-        .post("/recaptcha/api/siteverify")
-        .reply(500, "Internal Server Error")
-
+      recaptchaError()
       const res = await config.api.recaptcha.verify({ token: "test-token" })
       expect(res.status).toBe(500)
     })
@@ -93,71 +103,87 @@ describe("/recaptcha", () => {
     })
 
     it("should return true when valid cookie present", async () => {
-      jest.spyOn(configs, "getRecaptchaConfig").mockResolvedValue(mockConfig)
-
-      nock("https://www.google.com")
-        .post("/recaptcha/api/siteverify")
-        .reply(200, { success: true })
-
-      const verifyRes = await config.api.recaptcha.verify({ token: "valid-token" })
+      recaptchaSucceed()
+      const verifyRes = await config.api.recaptcha.verify({
+        token: "valid-token",
+      })
       expect(verifyRes.status).toBe(200)
 
-      const checkRes = await config.api.recaptcha.check()
+      // Extract cookie from verify response
+      const cookie = verifyRes.headers["set-cookie"]
+      expect(cookie).toBeDefined()
+
+      // Pass cookie to check request
+      const checkRes = await config.api.recaptcha.check(cookie)
       expect(checkRes.status).toBe(200)
       expect(checkRes.body.verified).toBe(true)
     })
   })
 
   describe("recaptcha middleware", () => {
-    it("should return 498 when recaptcha enabled but no cookie present", async () => {
-      app.recaptchaEnabled = true
-      await config.api.application.update(app.appId, app)
+    let tableId: string
 
-      const res = await config.api.row.search(config.table?._id!, {}, { status: 498 })
-      expect(res).toEqual(undefined)
+    beforeEach(async () => {
+      const table = await config.api.table.save(basicTable())
+      tableId = table._id!
+    })
+
+    async function setRecaptchaEnabled(value: boolean) {
+      app.recaptchaEnabled = value
+      await config.api.application.update(app.appId, app)
+      await config.api.application.publish(app.appId)
+    }
+
+    it("should return 498 when recaptcha enabled but no cookie present", async () => {
+      await setRecaptchaEnabled(true)
+      await config.withProdApp(async () => {
+        await config.api.table.get(tableId, {
+          status: 498,
+        })
+      })
     })
 
     it("should allow request when recaptcha disabled", async () => {
-      app.recaptchaEnabled = false
-      await config.api.application.update(app.appId, app)
-
-      const res = await config.api.row.search(config.table?._id!, {})
-      expect(res).toBeDefined()
+      await setRecaptchaEnabled(false)
+      await config.withProdApp(async () => {
+        await config.api.table.get(tableId, {
+          status: 200,
+        })
+      })
     })
 
     it("should allow request when recaptcha enabled and valid cookie present", async () => {
-      jest.spyOn(configs, "getRecaptchaConfig").mockResolvedValue(mockConfig)
-
-      nock("https://www.google.com")
-        .post("/recaptcha/api/siteverify")
-        .reply(200, { success: true })
-
-      const verifyRes = await config.api.recaptcha.verify({ token: "valid-token" })
+      await setRecaptchaEnabled(true)
+      recaptchaSucceed()
+      const verifyRes = await config.api.recaptcha.verify({
+        token: "valid-token",
+      })
       expect(verifyRes.status).toBe(200)
+      const cookie = verifyRes.headers["set-cookie"]
 
-      app.recaptchaEnabled = true
-      await config.api.application.update(app.appId, app)
-
-      const res = await config.api.row.search(config.table?._id!, {})
-      expect(res).toBeDefined()
+      await config.withProdApp(async () => {
+        await config.withHeaders({ Cookie: cookie }, async () => {
+          await config.api.table.get(tableId, {
+            status: 200,
+          })
+        })
+      })
     })
 
     it("should return 498 when recaptcha enabled but invalid cookie", async () => {
-      jest.spyOn(configs, "getRecaptchaConfig").mockResolvedValue(mockConfig)
-
-      nock("https://www.google.com")
-        .post("/recaptcha/api/siteverify")
-        .reply(200, { success: false })
-
-      const verifyRes = await config.api.recaptcha.verify({ token: "invalid-token" })
+      await setRecaptchaEnabled(true)
+      recaptchaFailed()
+      const verifyRes = await config.api.recaptcha.verify({
+        token: "invalid-token",
+      })
       expect(verifyRes.status).toBe(200)
       expect(verifyRes.body.verified).toBe(false)
 
-      app.recaptchaEnabled = true
-      await config.api.application.update(app.appId, app)
-
-      const res = await config.api.row.search(config.table?._id!, {}, { status: 498 })
-      expect(res).toEqual(undefined)
+      await config.withProdApp(async () => {
+        await config.api.table.get(tableId, {
+          status: 498,
+        })
+      })
     })
   })
 })

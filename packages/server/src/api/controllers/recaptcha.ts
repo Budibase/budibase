@@ -10,6 +10,7 @@ import {
   setRecaptchaVerified,
   isRecaptchaVerified,
 } from "../../utilities/redis"
+import fetch from "node-fetch"
 
 export async function verify(
   ctx: Ctx<VerifyRecaptchaRequest, VerifyRecaptchaResponse>
