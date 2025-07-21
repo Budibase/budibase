@@ -7,7 +7,7 @@ type BuilderFn = (user: UserCtx["user"], appId?: string) => boolean
 export default async (ctx: UserCtx, next: any) => {
   const appId = getAppId()
 
-  let builderFn: BuilderFn | undefined = undefined
+  let builderFn: BuilderFn | undefined
   if (env.isWorker() || !appId) {
     builderFn = hasBuilderPermissions
   } else if (env.isApps()) {
