@@ -1,6 +1,7 @@
 import { context } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
+import { getTimestamp } from ".."
 
 describe("migration integrity", () => {
   // These test is checking that each migration is "idempotent".
@@ -21,5 +22,22 @@ describe("migration integrity", () => {
         expect(docs).toEqual(latestDocs)
       }
     })
+  })
+
+  it("all migrations should have a valid id with timestamps", () => {
+    for (const migration of migrations.MIGRATIONS) {
+      const timestamp = getTimestamp(migration.id)
+      expect(timestamp).toBeGreaterThan(1)
+    }
+  })
+
+  it("all migration timestamps must be stored in order", () => {
+    const [firstMigration, ...otherMigrations] = migrations.MIGRATIONS
+    let previous = getTimestamp(firstMigration.id)
+    for (const migration of otherMigrations) {
+      const current = getTimestamp(migration.id)
+      expect(previous).toBeLessThan(current)
+      previous = current
+    }
   })
 })

@@ -4,7 +4,7 @@ import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
-import { AppMigration, doInMigrationLock } from "."
+import { AppMigration, doInMigrationLock, getTimestamp } from "."
 import { MIGRATIONS } from "./migrations"
 import sdk from "../sdk"
 
@@ -25,13 +25,25 @@ export async function processMigrations(
 
       let currentVersion = await getAppMigrationVersion(appIdToMigrate)
 
-      const currentIndexMigration = migrations.findIndex(
-        m => m.id === currentVersion
+      migrations = migrations.sort(
+        (a, b) => getTimestamp(a.id) - getTimestamp(b.id)
+      )
+      const migrationIds = migrations.map(m => m.id)
+
+      if (!migrationIds.includes(currentVersion) && currentVersion) {
+        const currentTimestamp = getTimestamp(currentVersion)
+        // Find the latest migration with timestamp <= current version timestamp
+        const previousMigration = migrations
+          .filter(m => getTimestamp(m.id) <= currentTimestamp)
+          .pop()
+
+        currentVersion = previousMigration?.id || ""
+      }
+
+      const pendingMigrations = migrations.filter(
+        m => getTimestamp(m.id) > getTimestamp(currentVersion)
       )
 
-      const pendingMigrations = migrations.slice(currentIndexMigration + 1)
-
-      const migrationIds = migrations.map(m => m.id)
       console.log(
         `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
       )
@@ -41,14 +53,6 @@ export async function processMigrations(
         if (disabled) {
           // If we find a disabled migration, we prevent running any other
           return
-        }
-        const expectedMigration =
-          migrationIds[migrationIds.indexOf(currentVersion) + 1]
-
-        if (expectedMigration !== id) {
-          throw new Error(
-            `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
-          )
         }
 
         const counter = `(${++index}/${pendingMigrations.length})`

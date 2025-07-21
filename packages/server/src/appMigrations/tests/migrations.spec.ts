@@ -90,7 +90,7 @@ describe("migrations", () => {
     expect(getLatestEnabledMigrationId(migrations)).toBe(MIGRATION_ID1)
   })
 
-  describe("index-based migration comparison", () => {
+  describe("version processing", () => {
     beforeEach(() => {
       // Reset migrations array to known state
       migrations.MIGRATIONS.length = 0
@@ -172,6 +172,90 @@ describe("migrations", () => {
       expect(ctx.response.set).toHaveBeenCalledWith(Header.MIGRATING_APP, appId)
       expect(mockNext).toHaveBeenCalled()
     })
+
+    it("should handle when current version is not found in migrations array", async () => {
+      // This test verifies that when the current migration version is not found
+      // in the migrations array, the system handles it gracefully
+      const config = setup.getConfig()
+      await config.init()
+      const appId = config.getAppId()
+
+      // Set app to non-existent migration version
+      await config.doInContext(appId, async () => {
+        await updateAppMigrationMetadata({
+          appId,
+          version: "20231211101325_test",
+        })
+      })
+
+      const mockNext = jest.fn()
+      const ctx = { response: { set: jest.fn() } } as any
+
+      await config.doInContext(appId, () =>
+        checkMissingMigrations(ctx, mockNext, appId)
+      )
+
+      expect(ctx.response.set).toHaveBeenCalledWith(Header.MIGRATING_APP, appId)
+      expect(mockNext).toHaveBeenCalled()
+    })
+
+    it("should handle corrupted migration version gracefully", async () => {
+      // This test verifies that when the migration version is corrupted or invalid,
+      // the system triggers a migration properly
+      const config = setup.getConfig()
+      await config.init()
+      const appId = config.getAppId()
+
+      // Set app to corrupted migration version
+      await config.doInContext(appId, async () => {
+        await updateAppMigrationMetadata({
+          appId,
+          version: "corrupted_invalid_migration_123",
+        })
+      })
+
+      const mockNext = jest.fn()
+      const ctx = { response: { set: jest.fn() } } as any
+
+      await config.doInContext(appId, () =>
+        checkMissingMigrations(ctx, mockNext, appId)
+      )
+
+      expect(ctx.response.set).toHaveBeenCalledWith(Header.MIGRATING_APP, appId)
+      expect(mockNext).toHaveBeenCalled()
+    })
+
+    it.each([undefined, null, ""])(
+      "should handle empty migration version",
+      async value => {
+        // This test verifies that when no migration version is set,
+        // the system handles it properly
+        const config = setup.getConfig()
+        await config.init()
+        const appId = config.getAppId()
+
+        // Set app to empty migration version
+        await config.doInContext(appId, async () => {
+          await updateAppMigrationMetadata({
+            appId,
+            version: value as any,
+          })
+        })
+
+        const mockNext = jest.fn()
+        const ctx = { response: { set: jest.fn() } } as any
+
+        await config.doInContext(appId, () =>
+          checkMissingMigrations(ctx, mockNext, appId)
+        )
+
+        expect(ctx.response.set).toHaveBeenCalledWith(
+          Header.MIGRATING_APP,
+          appId
+        )
+        expect(mockNext).toHaveBeenCalled()
+      }
+    )
   })
 
   it("should handle rapid migration completion", async () => {
