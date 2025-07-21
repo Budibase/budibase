@@ -70,21 +70,6 @@ function checkDefaultFields(table: Table) {
 async function guardTable(table: Table, isCreate: boolean) {
   checkDefaultFields(table)
 
-  // Filter out protected/internal columns
-  const userSchemaKeys = Object.keys(table.schema || {}).filter(
-    key => !PROTECTED_INTERNAL_COLUMNS.includes(key as any)
-  )
-
-  if (userSchemaKeys.length === 1) {
-    const firstField = table.schema[userSchemaKeys[0]]
-    if (!canBeDisplayColumn(firstField.type)) {
-      throw new HTTPError(
-        `Column "${firstField.name}" cannot be the first column in a table.`,
-        400
-      )
-    }
-  }
-
   if (
     table.primaryDisplay &&
     !canBeDisplayColumn(table.schema[table.primaryDisplay]?.type)
