@@ -196,10 +196,10 @@
       },
       "build": {
         "inputs": [
-          "{projectRoot}/src/**/*",
+          "{projectRoot}/src",
           "{projectRoot}/builder",
           "{projectRoot}/client",
-          "{projectRoot}/scripts/**/*",
+          "{projectRoot}/scripts",
           "{projectRoot}/package.json",
           "{projectRoot}/tsconfig*.json"
         ],

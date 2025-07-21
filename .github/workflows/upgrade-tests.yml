@@ -16,6 +16,9 @@ on:
       - "docker-compose.yml"
       # This workflow file
       - ".github/workflows/upgrade-tests.yml"
+      # Root package changes
+      - "package.json"
+      - "yarn.lock"
   workflow_dispatch:
 
 env:

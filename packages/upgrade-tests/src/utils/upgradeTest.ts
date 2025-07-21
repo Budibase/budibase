@@ -71,7 +71,9 @@ export function it<T extends JSONValue>(
       }
     })
   } else {
-    jestIt.skip(testName, () => {})
+    throw new Error(
+      `Invalid test phase for ${testName}. Expected pre or post upgrade phase.`
+    )
   }
 }
 
