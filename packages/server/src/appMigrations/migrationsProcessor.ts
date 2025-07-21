@@ -18,7 +18,7 @@ export async function processMigrations(
     await doInMigrationLock(appId, async () => {
       const devAppId = db.getDevAppID(appId)
       const prodAppId = db.getProdAppID(appId)
-      const isPublished = await db.dbExists(prodAppId)
+      const isPublished = await sdk.applications.isAppPublished(prodAppId)
       const appIdToMigrate = isPublished ? prodAppId : devAppId
 
       console.log(`Starting app migration for "${appIdToMigrate}"`)
