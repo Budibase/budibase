@@ -119,15 +119,16 @@ it.skip = function <T extends JSONValue>(
 }
 
 export function cleanupTestContexts(): void {
+  const tmpDir = "/tmp"
   const contextFiles = fs
-    .readdirSync(process.cwd())
+    .readdirSync(tmpDir)
     .filter(
-      file => file.startsWith(".upgrade-context-") && file.endsWith(".json")
+      file => file.startsWith("upgrade-context-") && file.endsWith(".json")
     )
 
   contextFiles.forEach(file => {
     try {
-      fs.unlinkSync(path.join(process.cwd(), file))
+      fs.unlinkSync(path.join(tmpDir, file))
     } catch (error) {
       console.error(`Failed to clean up context file ${file}:`, error)
     }
