@@ -38,6 +38,7 @@ export default [
         ...globals.jest,
         ...globals.node,
         GeolocationPositionError: true,
+        RequestInit: true,
       },
 
       parser: babelParser,
