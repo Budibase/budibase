@@ -22,12 +22,14 @@ import {
   BranchSearchFilters,
   BranchStep,
   LoopStep,
+  LoopV2StepInputs,
   ContextEmitter,
   AutomationTriggerResult,
   AutomationResults,
   AutomationStepResult,
   isLogicalFilter,
   Branch,
+  LoopV2Step,
 } from "@budibase/types"
 import { AutomationContext } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -48,7 +50,7 @@ threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
-function matchesLoopFailureCondition(step: LoopStep, currentItem: any) {
+function matchesLoopFailureCondition(step: LoopV2Step, currentItem: any) {
   const { failure } = step.inputs
   if (!failure) {
     return false
@@ -64,7 +66,7 @@ function matchesLoopFailureCondition(step: LoopStep, currentItem: any) {
 // Returns an array of the things to loop over for a given LoopStep.  This
 // function handles the various ways that a LoopStep can be configured, parsing
 // the input and returning an array of items to loop over.
-function getLoopIterable(step: LoopStep): any[] {
+function getLoopIterable(step: LoopV2Step): any[] {
   let input = step.inputs.binding
 
   if (Array.isArray(input)) {
@@ -84,7 +86,7 @@ function getLoopIterable(step: LoopStep): any[] {
   return Array.isArray(input) ? input : [input]
 }
 
-function getLoopMaxIterations(loopStep: LoopStep): number {
+function getLoopMaxIterations(loopStep: LoopV2Step): number {
   const loopMaxIterations =
     typeof loopStep.inputs.iterations === "string"
       ? parseInt(loopStep.inputs.iterations)
@@ -417,17 +419,9 @@ class Orchestrator {
             stepIndex++
             break
           }
-          case AutomationActionStepId.LOOP: {
-            const stepToLoop = steps[stepIndex + 1]
-            addToContext(
-              stepToLoop,
-              await this.executeLoopStep(ctx, step, stepToLoop)
-            )
-            // We increment by 2 here because the way loops work is that the
-            // step immediately following the loop step is what gets looped.
-            // So when we're done looping, to advance correctly we need to
-            // skip the step that was looped.
-            stepIndex += 2
+          case AutomationActionStepId.LOOP_V2: {
+            addToContext(step, await this.executeLoopV2Step(ctx, step))
+            stepIndex++
             break
           }
           default: {
@@ -449,16 +443,19 @@ class Orchestrator {
     })
   }
 
-  private async executeLoopStep(
+  private async executeLoopV2Step(
     ctx: AutomationContext,
-    step: LoopStep,
-    stepToLoop: AutomationStep
+    step: LoopV2Step
   ): Promise<AutomationStepResult> {
-    return await tracer.trace("executeLoopStep", async span => {
-      await processObject(step.inputs, ctx)
+    return await tracer.trace("executeLoopV2Step", async span => {
+      // Clone the children to avoid processObject modifying them
+      let children = cloneDeep(step.inputs.children) || []
+
+      const inputs = step.inputs as LoopV2StepInputs
+      await processObject(inputs, ctx)
 
       const maxIterations = getLoopMaxIterations(step)
-      const items: Record<string, any>[] = []
+
       let iterations = 0
       let iterable: any[] = []
       try {
@@ -468,9 +465,14 @@ class Orchestrator {
           status: AutomationStepStatus.INCORRECT_TYPE,
           iterations,
         })
-        return stepFailure(stepToLoop, {
+        return stepFailure(step, {
           status: AutomationStepStatus.INCORRECT_TYPE,
         })
+      }
+
+      const allResults: Record<string, AutomationStepResult[]> = {}
+      for (const { id } of children) {
+        allResults[id] = []
       }
 
       for (; iterations < iterable.length; iterations++) {
@@ -481,10 +483,9 @@ class Orchestrator {
             status: AutomationStepStatus.MAX_ITERATIONS,
             iterations,
           })
-          return stepFailure(stepToLoop, {
+          return stepFailure(step, {
             status: AutomationStepStatus.MAX_ITERATIONS,
-            iterations,
-            items,
+            success: false,
           })
         }
 
@@ -493,19 +494,24 @@ class Orchestrator {
             status: AutomationStepStatus.FAILURE_CONDITION,
             iterations,
           })
-          return stepFailure(stepToLoop, {
+          return stepFailure(step, {
             status: AutomationStepStatus.FAILURE_CONDITION,
-            iterations,
-            items,
+            success: false,
           })
         }
 
         ctx.loop = { currentItem }
         try {
-          const result = await this.executeStep(ctx, stepToLoop)
-          items.push(result.outputs)
-          if (result.outputs.success === false) {
-            return stepFailure(stepToLoop, { iterations, items })
+          const iterationResults = await this.executeSteps(ctx, children)
+          for (const result of iterationResults) {
+            allResults[result.id].push(result)
+          }
+
+          const hasFailures = iterationResults.some(
+            result => result.outputs.success === false
+          )
+          if (hasFailures) {
+            return stepFailure(step, { success: false })
           }
         } finally {
           ctx.loop = undefined
@@ -514,7 +520,7 @@ class Orchestrator {
 
       const status =
         iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
-      return stepSuccess(stepToLoop, { status, iterations, items })
+      return stepSuccess(step, { status, items: allResults })
     })
   }
 

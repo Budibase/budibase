@@ -14,6 +14,8 @@ import {
   AutomationTriggerStepId,
   BranchStepInputs,
   isDidNotTriggerResponse,
+  LoopStepType,
+  LoopV2StepInputs,
   SearchFilters,
   TestAutomationRequest,
   TriggerAutomationRequest,
@@ -31,6 +33,12 @@ type BranchConfig = {
     steps: StepBuilderFunction
     condition: SearchFilters
   }
+}
+
+type LoopConfig = {
+  option: LoopStepType
+  binding: any
+  steps: StepBuilderFunction
 }
 
 class TriggerBuilder {
@@ -118,6 +126,25 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   delay = this.step(AutomationActionStepId.DELAY)
   extractFileData = this.step(AutomationActionStepId.EXTRACT_FILE_DATA)
 
+  protected addLoopStep(loopConfig: LoopConfig): void {
+    const inputs: LoopV2StepInputs = {
+      option: loopConfig.option,
+      binding: loopConfig.binding,
+      children: [],
+    }
+
+    const builder = new BranchStepBuilder<TStep>()
+    loopConfig.steps(builder)
+    inputs.children = builder.steps
+    let id = uuidv4()
+    this.steps.push({
+      ...automations.steps.loopV2.definition,
+      id,
+      stepId: AutomationActionStepId.LOOP_V2,
+      inputs,
+    })
+  }
+
   protected addBranchStep(branchConfig: BranchConfig): void {
     const inputs: BranchStepInputs = {
       branches: [],
@@ -142,6 +169,11 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
 
   branch(branchConfig: BranchConfig): this {
     this.addBranchStep(branchConfig)
+    return this
+  }
+
+  loopV2(loopConfig: LoopConfig): this {
+    this.addLoopStep(loopConfig)
     return this
   }
 }

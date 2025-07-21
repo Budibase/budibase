@@ -84,6 +84,7 @@ export enum AutomationActionStepId {
   SUMMARISE = "SUMMARISE",
   GENERATE_TEXT = "GENERATE_TEXT",
   EXTRACT_FILE_DATA = "EXTRACT_FILE_DATA",
+  LOOP_V2 = "LOOP_V2",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
