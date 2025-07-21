@@ -1,5 +1,3 @@
-import { cleanupTestContexts } from "./utils/upgradeTest"
-
 // Set longer timeout for upgrade tests
 jest.setTimeout(60000)
 
@@ -9,12 +7,4 @@ process.on("unhandledRejection", (error: any) => {
     console.error("Unhandled Budibase Error:", error.message)
     console.error("Details:", JSON.stringify(error.details, null, 2))
   }
-})
-
-beforeAll(() => {
-  cleanupTestContexts()
-})
-
-afterAll(() => {
-  cleanupTestContexts()
 })

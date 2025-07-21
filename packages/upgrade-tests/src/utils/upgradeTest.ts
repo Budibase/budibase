@@ -117,20 +117,3 @@ it.skip = function <T extends JSONValue>(
 ): void {
   jestIt.skip(testName, () => {})
 }
-
-export function cleanupTestContexts(): void {
-  const tmpDir = "/tmp"
-  const contextFiles = fs
-    .readdirSync(tmpDir)
-    .filter(
-      file => file.startsWith("upgrade-context-") && file.endsWith(".json")
-    )
-
-  contextFiles.forEach(file => {
-    try {
-      fs.unlinkSync(path.join(tmpDir, file))
-    } catch (error) {
-      console.error(`Failed to clean up context file ${file}:`, error)
-    }
-  })
-}

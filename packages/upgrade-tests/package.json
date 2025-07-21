@@ -12,10 +12,10 @@
   },
   "scripts": {
     "test": "jest --runInBand",
-    "test:upgrade": "node dist/src/cli/index.js full",
-    "test:pre": "node dist/src/cli/index.js pre",
-    "test:post": "node dist/src/cli/index.js post",
-    "cli": "node dist/src/cli/index.js",
+    "test:upgrade": "yarn build && node dist/src/cli/index.js full",
+    "test:pre": "yarn build && node dist/src/cli/index.js pre",
+    "test:post": "yarn build && node dist/src/cli/index.js post",
+    "cli": "yarn build && node dist/src/cli/index.js",
     "build": "tsc -p tsconfig.build.json",
     "check:types": "tsc -p tsconfig.json --noEmit"
   },
