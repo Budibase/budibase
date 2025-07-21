@@ -17,10 +17,13 @@ export class ApplicationAPI {
     return data
   }
 
-  async import(filePath: string, name?: string): Promise<string> {
+  async import(filePath: string, name: string): Promise<string> {
     // Read the file as a buffer
     const fileBuffer = fs.readFileSync(filePath)
-    const filename = filePath.split("/").pop() || "imported-app.tar.gz"
+    const filename = filePath.split("/").pop()
+    if (!filename) {
+      throw new Error(`Could not determine filename from path: ${filePath}`)
+    }
 
     // Create native FormData
     const form = new FormData()
@@ -30,12 +33,6 @@ export class ApplicationAPI {
 
     // Append the file
     form.append("fileToImport", blob, filename)
-
-    // If no name provided, extract from filename
-    if (!name) {
-      name = filename.replace(".tar.gz", "").replace(/-/g, " ")
-    }
-
     form.append("name", name)
     form.append("useTemplate", "true")
 
