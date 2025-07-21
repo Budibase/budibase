@@ -1,5 +1,4 @@
 import * as fs from "fs"
-import * as path from "path"
 import * as crypto from "crypto"
 import { isPreUpgradePhase, isPostUpgradePhase } from "./testHelpers"
 import { expect, it as jestIt } from "@jest/globals"
