@@ -16,6 +16,27 @@ import {
 import { importApp, getAvailableApps } from "./appImport"
 import { runTests } from "./testRunner"
 
+// Type definitions for command options
+interface FullCommandOptions {
+  from: string
+  to: string
+  app?: string
+  testApp?: string
+  cleanup?: boolean
+  build?: boolean
+  verbose?: boolean
+}
+
+interface PreCommandOptions {
+  from?: string
+  app?: string
+  verbose?: boolean
+}
+
+interface PostCommandOptions {
+  verbose?: boolean
+}
+
 const program = new Command()
 
 // Helper to get project root
@@ -90,7 +111,7 @@ program
     "Skip building current version (assumes image already exists)"
   )
   .option("--verbose", "Show detailed output")
-  .action(async options => {
+  .action(async (options: FullCommandOptions) => {
     const config = generateDockerConfig()
     console.log(bold("\n🚀 Starting Full Upgrade Test"))
     console.log(gray(`Upgrading from ${options.from} to ${options.to}`))
@@ -312,7 +333,7 @@ program
   .option("--from <version>", "The Budibase version")
   .option("--app <path|name>", "Path to app export or fixture name to import")
   .option("--verbose", "Show detailed output")
-  .action(async options => {
+  .action(async (options: PreCommandOptions) => {
     console.log(bold("\n🧪 Running Pre-Upgrade Tests Only"))
 
     try {
@@ -358,7 +379,7 @@ program
   .command("post")
   .description("Run only post-upgrade tests")
   .option("--verbose", "Show detailed output")
-  .action(async options => {
+  .action(async (options: PostCommandOptions) => {
     console.log(bold("\n🧪 Running Post-Upgrade Tests Only"))
 
     if (!process.env.TEST_APP_ID) {
