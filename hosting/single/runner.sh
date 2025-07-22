@@ -11,7 +11,7 @@ export DEPLOYMENT_ENVIRONMENT="${DEPLOYMENT_ENVIRONMENT:-docker}"
 
 # only set MINIO_URL if neither MINIO_URL nor USE_S3 is set
 if [[ -z "${MINIO_URL}" && -z "${USE_S3}" ]]; then
-  export MINIO_URL="http://127.0.0.1:9000"
+    export MINIO_URL="http://127.0.0.1:9000"
 fi
 
 export NODE_ENV="${NODE_ENV:-production}"
@@ -26,7 +26,7 @@ export SERVER_TOP_LEVEL_PATH="${SERVER_TOP_LEVEL_PATH:-/app}"
 
 # set DATA_DIR and ensure the directory exists
 if [[ ${TARGETBUILD} == "aas" ]]; then
-    export DATA_DIR="/home"
+    export DATA_DIR="/appdata"
 else
     export DATA_DIR="${DATA_DIR:-/data}"
 fi
@@ -43,7 +43,7 @@ fi
 
 # source environment variables from a .env file if it exists in DATA_DIR
 if [[ -f "${DATA_DIR}/.env" ]]; then
-    set -a  # Automatically export all variables loaded from .env
+    set -a # Automatically export all variables loaded from .env
     source "${DATA_DIR}/.env"
     set +a
 fi
