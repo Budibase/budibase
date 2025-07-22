@@ -39,14 +39,13 @@ interface PostCommandOptions {
 
 const program = new Command()
 
-// Helper to get project root
 function getProjectRoot(): string {
-  // When running from dist/src/cli, we need to go up 5 levels to reach project root
-  // dist/src/cli -> dist/src -> dist -> upgrade-tests -> packages -> project root
+  // When running from dist/src/cli, we need to go up 5 levels to reach project
+  // root dist/src/cli -> dist/src -> dist -> upgrade-tests -> packages ->
+  // project root
   return path.join(__dirname, "../../../../..")
 }
 
-// Clean up function
 async function cleanup(
   config: ReturnType<typeof generateDockerConfig>,
   showDetails = true
@@ -64,15 +63,7 @@ async function cleanup(
   }
 }
 
-// Clean up context files
 function cleanupContextFiles(silent = false) {
-  // Clean old global context file
-  const globalContext = path.join(__dirname, "../..", ".upgrade-context.json")
-  if (fs.existsSync(globalContext)) {
-    fs.unlinkSync(globalContext)
-  }
-
-  // Clean per-test context files
   const contextFiles = fs
     .readdirSync("/tmp")
     .filter(
@@ -97,7 +88,6 @@ program
   .description("Test Budibase upgrades with ease")
   .version("1.0.0")
 
-// Full upgrade test command
 program
   .command("full")
   .description("Run full upgrade test from specified version to current")
