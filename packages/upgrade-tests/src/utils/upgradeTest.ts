@@ -122,3 +122,42 @@ it.skip = function <T extends JSONValue>(
 ): void {
   jestIt.skip(testName, () => {})
 }
+
+export function shouldNotChange(
+  testName: string,
+  f: () => Promise<JSONValue>
+): void {
+  it(testName, {
+    pre: async () => {
+      const value = await f()
+      return { initialValue: value }
+    },
+    post: async ({ initialValue }) => {
+      const currentValue = await f()
+      expect(currentValue).toEqual(initialValue)
+    },
+  })
+}
+
+shouldNotChange.only = function (
+  testName: string,
+  f: () => Promise<JSONValue>
+): void {
+  it.only(testName, {
+    pre: async () => {
+      const value = await f()
+      return { initialValue: value }
+    },
+    post: async ({ initialValue }) => {
+      const currentValue = await f()
+      expect(currentValue).toEqual(initialValue)
+    },
+  })
+}
+
+shouldNotChange.skip = function (
+  testName: string,
+  _f: () => Promise<JSONValue>
+): void {
+  jestIt.skip(testName, () => {})
+}

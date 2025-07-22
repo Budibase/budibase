@@ -6,6 +6,7 @@ import { ViewAPI } from "./view"
 import { BudibaseError } from "../utils/BudibaseError"
 import { v4 as uuidv4 } from "uuid"
 import { JSONValue } from "@budibase/types"
+import { ScreenAPI } from "./screen"
 
 export interface AuthCredentials {
   email: string
@@ -27,9 +28,10 @@ export class BudibaseClient {
   private config: ClientConfig
 
   application: ApplicationAPI
-  table: TableAPI
-  row: RowAPI
   automation: AutomationAPI
+  row: RowAPI
+  screen: ScreenAPI
+  table: TableAPI
   view: ViewAPI
 
   constructor(config?: ClientConfig) {
@@ -62,9 +64,10 @@ export class BudibaseClient {
     this.config = config
 
     this.application = new ApplicationAPI(this)
-    this.table = new TableAPI(this)
-    this.row = new RowAPI(this)
     this.automation = new AutomationAPI(this)
+    this.row = new RowAPI(this)
+    this.screen = new ScreenAPI(this)
+    this.table = new TableAPI(this)
     this.view = new ViewAPI(this)
   }
 
