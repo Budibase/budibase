@@ -4,11 +4,28 @@ import {
   SaveTableRequest,
   Table,
 } from "@budibase/types"
-import { SWITCHABLE_TYPES } from "@budibase/shared-core"
+import {
+  SWITCHABLE_TYPES,
+  canBeDisplayColumn,
+  isAllowedDisplayField,
+} from "@budibase/shared-core"
 import { get, derived, Writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "@/api"
 import { DerivedBudiStore } from "@/stores/BudiStore"
+
+function pickFallbackDisplayField(
+  draft: SaveTableRequest,
+  excludeA?: string,
+  excludeB?: string
+): string | undefined {
+  const candidates = Object.keys(draft.schema).filter(n => {
+    if (n === excludeA || n === excludeB) return false
+    const f = draft.schema[n]
+    return f && isAllowedDisplayField(n, f.type)
+  })
+  return candidates[0]
+}
 
 interface BuilderTableStore {
   list: Table[]
@@ -174,14 +191,19 @@ export class TableStore extends DerivedBudiStore<
     }
 
     // Optionally set display column
+    const isEligible = canBeDisplayColumn(field.type)
+    const wasPrimary = draft.primaryDisplay === originalName
+
     if (hasPrimaryDisplay) {
       draft.primaryDisplay = field.name
-    } else if (draft.primaryDisplay === originalName) {
-      const fields = Object.keys(draft.schema)
-      // pick another display column randomly if unselecting
-      draft.primaryDisplay = fields.filter(
-        name => name !== originalName || name !== field.name
-      )[0]
+    } else if (!draft.primaryDisplay && isEligible) {
+      // No display yet > use new eligible field
+      draft.primaryDisplay = field.name
+    } else if (wasPrimary) {
+      // Current primary is being renamed or removed
+      draft.primaryDisplay = isEligible
+        ? field.name // keep pointing to the renamed field if valid
+        : pickFallbackDisplayField(draft, originalName) // find another fallback
     }
     draft.schema = {
       ...draft.schema,
