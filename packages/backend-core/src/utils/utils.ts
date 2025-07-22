@@ -21,12 +21,6 @@ const BUILDER_PREFIX = "/builder"
 const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/app/`
 const PUBLIC_API_PREFIX = "/api/public/v"
 
-function confirmAppId(possibleAppId: string | undefined) {
-  return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
-    ? possibleAppId
-    : undefined
-}
-
 export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
@@ -82,7 +76,23 @@ export function isPublicApiRequest(ctx: Ctx): boolean {
 export async function getAppIdFromCtx(ctx: Ctx) {
   // look in headers
   const options = [ctx.request.headers[Header.APP_ID]]
-  let appId
+
+  let appId: string | undefined
+
+  function confirmAppId(possibleAppId: string | undefined) {
+    if (!possibleAppId) {
+      return
+    }
+
+    if (!possibleAppId.startsWith(APP_PREFIX)) {
+      return undefined
+    }
+    if (appId && appId !== possibleAppId) {
+      ctx.throw(403)
+    }
+    return possibleAppId
+  }
+
   for (let option of options) {
     appId = confirmAppId(option as string)
     if (appId) {
@@ -91,18 +101,18 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   }
 
   // look in body
-  if (!appId && ctx.request.body && ctx.request.body.appId) {
+  if (ctx.request.body && ctx.request.body.appId) {
     appId = confirmAppId(ctx.request.body.appId)
   }
 
   // look in the path
   const pathId = parseAppIdFromUrlPath(ctx.path)
-  if (!appId && pathId) {
+  if (pathId) {
     appId = confirmAppId(pathId)
   }
 
   // look in queryParams
-  if (!appId && ctx.query?.appId) {
+  if (ctx.query?.appId) {
     appId = confirmAppId(ctx.query?.appId as string)
   }
 
@@ -112,7 +122,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   const isBuilderPreview = ctx.path.startsWith(BUILDER_PREVIEW_PATH)
   const isViewingProdApp =
     ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
-  if (!appId && isViewingProdApp) {
+  if (isViewingProdApp) {
     appId = confirmAppId(await resolveAppUrl(ctx))
   }
 
@@ -120,7 +130,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   // make sure this is performed after prod app url resolution, in case the
   // referer header is present from a builder redirect
   const referer = ctx.request.headers.referer
-  if (!appId && referer?.includes(BUILDER_APP_PREFIX)) {
+  if (referer?.includes(BUILDER_APP_PREFIX)) {
     const refererId = parseAppIdFromUrlPath(ctx.request.headers.referer)
     appId = confirmAppId(refererId)
   }
