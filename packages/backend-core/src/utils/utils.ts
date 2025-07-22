@@ -88,7 +88,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
       return undefined
     }
     if (appId && appId !== possibleAppId) {
-      ctx.throw(403)
+      ctx.throw("App id conflict", 403)
     }
     return possibleAppId
   }
