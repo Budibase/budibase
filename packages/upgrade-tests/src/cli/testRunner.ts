@@ -10,6 +10,7 @@ export interface TestRunnerOptions {
   testAppId?: string
   testAppName?: string
   testApp?: string
+  extraArgs?: string[]
   budibaseUrl: string
   internalApiKey: string
   adminEmail: string
@@ -20,7 +21,7 @@ export interface TestRunnerOptions {
 }
 
 export async function runTests(options: TestRunnerOptions): Promise<boolean> {
-  // Set up environment variables
+  // Set up environment variables - preserve NODE_OPTIONS and other env vars
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     TEST_PHASE: options.phase,
@@ -29,6 +30,11 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
     BB_ADMIN_USER_EMAIL: options.adminEmail,
     BB_ADMIN_USER_PASSWORD: options.adminPassword,
     BUDIBASE_CONTAINER_NAME: options.containerName,
+  }
+
+  // Ensure NODE_OPTIONS is preserved for debugging
+  if (process.env.NODE_OPTIONS) {
+    env.NODE_OPTIONS = process.env.NODE_OPTIONS
   }
 
   if (options.testAppId) {
@@ -53,8 +59,16 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
 
   console.log(bold(`\n${blue("►")} Running ${options.phase} tests...\n`))
 
+  // Build the test command with any extra arguments
+  const testCommand = ["test"]
+  const extraArgs = Array.isArray(options.extraArgs) ? options.extraArgs : []
+  if (extraArgs.length > 0) {
+    console.log(bold(`   Extra args: ${extraArgs.join(" ")}\n`))
+    testCommand.push(...extraArgs)
+  }
+
   return new Promise(resolve => {
-    const testProcess = spawn("yarn", ["test"], {
+    const testProcess = spawn("yarn", testCommand, {
       cwd: path.join(__dirname, "../.."),
       env,
       stdio: "inherit",
