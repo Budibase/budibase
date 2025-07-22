@@ -80,29 +80,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.versions.outputs.versions }}
-      apps: ${{ steps.apps.outputs.apps }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           sparse-checkout: |
             packages/upgrade-tests/src/fixtures
-
-      - name: Get available test apps
-        id: apps
-        run: |
-          # Find all .tar.gz files in fixtures and extract app names
-          cd packages/upgrade-tests/src/fixtures
-
-          # Get list of apps and format as JSON array
-          if ls *.tar.gz >/dev/null 2>&1; then
-            APPS=$(ls *.tar.gz | sed 's/\.tar\.gz$//' | jq -R . | jq -s -c .)
-          else
-            APPS='["no-apps"]'
-          fi
-
-          echo "apps=${APPS}" >> $GITHUB_OUTPUT
-          echo "Found test apps: ${APPS}"
 
       - name: Get versions to test
         id: versions
@@ -165,14 +148,12 @@ jobs:
 
   test-upgrade:
     needs: [build-current-version, get-test-config]
-    if: needs.get-test-config.outputs.apps != '["no-apps"]'
     strategy:
       fail-fast: false
       matrix:
         version: ${{ fromJson(needs.get-test-config.outputs.versions) }}
-        app: ${{ fromJson(needs.get-test-config.outputs.apps) }}
     runs-on: ubuntu-latest
-    name: ${{ matrix.version }} → current, ${{ matrix.app }}
+    name: ${{ matrix.version }} → current
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -212,15 +193,4 @@ jobs:
           BUDIBASE_TIMEOUT: 180000 # 3 minutes timeout for app imports
         run: |
           cd packages/upgrade-tests
-          yarn test:upgrade full --from ${{ matrix.version }} --app ${{ matrix.app }} --no-build
-
-  test-no-apps:
-    needs: get-test-config
-    if: needs.get-test-config.outputs.apps == '["no-apps"]'
-    runs-on: ubuntu-latest
-    steps:
-      - name: No test apps found
-        run: |
-          echo "⚠️ No test apps found in fixtures directory"
-          echo "Please add .tar.gz app exports to packages/upgrade-tests/src/fixtures/"
-          exit 1
+          yarn test:upgrade full --from ${{ matrix.version }} --no-build
