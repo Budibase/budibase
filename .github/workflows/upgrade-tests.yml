@@ -193,4 +193,4 @@ jobs:
           BUDIBASE_TIMEOUT: 180000 # 3 minutes timeout for app imports
         run: |
           cd packages/upgrade-tests
-          yarn test:upgrade full --from ${{ matrix.version }} --no-build
+          yarn test:upgrade --from ${{ matrix.version }} --no-build
