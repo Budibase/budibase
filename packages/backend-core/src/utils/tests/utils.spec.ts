@@ -130,7 +130,7 @@ describe("utils", () => {
       }
 
       await expect(utils.getAppIdFromCtx(ctx)).rejects.toThrow()
-      expect(ctx.throw).toBeCalledTimes(1)
+      expect(ctx.throw).toHaveBeenCalledTimes(1)
       expect(ctx.throw).toHaveBeenCalledWith("App id conflict", 403)
     })
 
@@ -146,7 +146,7 @@ describe("utils", () => {
       ctx.path = `/apps/${appId2}`
 
       await expect(utils.getAppIdFromCtx(ctx)).rejects.toThrow()
-      expect(ctx.throw).toBeCalledTimes(1)
+      expect(ctx.throw).toHaveBeenCalledTimes(1)
       expect(ctx.throw).toHaveBeenCalledWith("App id conflict", 403)
     })
 
