@@ -881,9 +881,11 @@ describe("/applications", () => {
       const updatedApp = await tk.withFreeze(
         "2021-02-01",
         async () =>
-          await config.api.application.update(app.appId, {
-            name: "UPDATED_NAME",
-          })
+          await config.withApp(app, () =>
+            config.api.application.update(app.appId, {
+              name: "UPDATED_NAME",
+            })
+          )
       )
       expect(updatedApp._rev).toBeDefined()
       expect(updatedApp.updatedAt).toEqual("2021-02-01T00:00:00.000Z")
