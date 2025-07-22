@@ -8,6 +8,7 @@ export interface TestRunnerOptions {
   phase: TestPhase
   verbose?: boolean
   testAppId?: string
+  testAppName?: string
   testApp?: string
   budibaseUrl: string
   internalApiKey: string
@@ -32,6 +33,10 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
 
   if (options.testAppId) {
     env.TEST_APP_ID = options.testAppId
+  }
+
+  if (options.testAppName) {
+    env.TEST_APP_NAME = options.testAppName
   }
 
   if (options.testApp) {

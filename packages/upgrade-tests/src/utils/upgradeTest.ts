@@ -16,7 +16,10 @@ function contextFileName(): string {
   if (!state.testPath) {
     throw new Error("Test path is not set in Jest state")
   }
-  const testName = `${state.testPath}/${state.currentTestName}`
+
+  // Include app name in the hash to prevent collisions between apps
+  const appName = process.env.TEST_APP_NAME || "default"
+  const testName = `${state.testPath}/${state.currentTestName}/${appName}`
   const name = crypto.createHash("md5").update(testName).digest("hex")
   return `/tmp/upgrade-context-${name}.json`
 }
