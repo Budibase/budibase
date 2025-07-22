@@ -1,4 +1,4 @@
-import { getAllApps } from "../db"
+import { getAllApps, getDevAppID } from "../db"
 import { Header, MAX_VALID_DATE, DocumentType, SEPARATOR } from "../constants"
 import env from "../environment"
 import * as tenancy from "../tenancy"
@@ -87,7 +87,9 @@ export async function getAppIdFromCtx(ctx: Ctx) {
     if (!possibleAppId.startsWith(APP_PREFIX)) {
       return appId
     }
-    if (appId && appId !== possibleAppId) {
+
+    if (appId && getDevAppID(appId) !== getDevAppID(possibleAppId)) {
+      // TODO: check dev/prod conflicts
       ctx.throw("App id conflict", 403)
     }
     return possibleAppId
