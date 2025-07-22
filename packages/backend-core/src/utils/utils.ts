@@ -81,11 +81,11 @@ export async function getAppIdFromCtx(ctx: Ctx) {
 
   function confirmAppId(possibleAppId: string | undefined) {
     if (!possibleAppId) {
-      return
+      return appId
     }
 
     if (!possibleAppId.startsWith(APP_PREFIX)) {
-      return undefined
+      return appId
     }
     if (appId && appId !== possibleAppId) {
       ctx.throw("App id conflict", 403)
