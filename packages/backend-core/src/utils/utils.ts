@@ -92,7 +92,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
       // TODO: check dev/prod conflicts
       ctx.throw("App id conflict", 403)
     }
-    return possibleAppId
+    return appId ?? possibleAppId
   }
 
   for (let option of options) {
