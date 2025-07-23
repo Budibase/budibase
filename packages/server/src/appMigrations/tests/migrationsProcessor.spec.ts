@@ -225,13 +225,14 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         },
       ]
 
-      const prodAppId = config.getProdAppId()
-      await config.doInContext(prodAppId, async () => {
-        await updateAppMigrationMetadata({
-          appId: prodAppId,
-          version: testMigrations[0].id,
+      for (const appId of [config.getAppId(), config.getProdAppId()]) {
+        await config.doInContext(appId, async () => {
+          await updateAppMigrationMetadata({
+            appId,
+            version: testMigrations[0].id,
+          })
         })
-      })
+      }
 
       await runMigrations(testMigrations)
 
