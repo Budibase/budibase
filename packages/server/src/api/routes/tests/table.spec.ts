@@ -231,10 +231,6 @@ if (descriptions.length) {
             tableForDatasource(datasource, {
               primaryDisplay: columnName,
               schema: {
-                name: {
-                  type: FieldType.STRING,
-                  name: "name",
-                },
                 [columnName]: {
                   name: columnName,
                   type: FieldType.BOOLEAN,
@@ -719,10 +715,6 @@ if (descriptions.length) {
             primaryDisplay: columnName,
             schema: {
               ...table.schema,
-              name: {
-                type: FieldType.STRING,
-                name: "name",
-              },
               [columnName]: {
                 name: columnName,
                 type: FieldType.BOOLEAN,
