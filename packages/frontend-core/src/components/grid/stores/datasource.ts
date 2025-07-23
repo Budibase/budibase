@@ -5,7 +5,7 @@ import {
   getDatasourceSchema,
 } from "../../../fetch"
 import { enrichSchemaWithRelColumns, memo } from "../../../utils"
-import { cloneDeep } from "lodash"
+import cloneDeep from "lodash/cloneDeep"
 import {
   SaveRowRequest,
   UIDatasource,
