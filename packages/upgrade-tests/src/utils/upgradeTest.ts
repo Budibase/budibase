@@ -251,7 +251,7 @@ function getFromVersion(): string {
 export function upgradeSpansVersion(version: string): boolean {
   const from = getFromVersion()
   const to = getToVersion()
-  return semver.cmp(from, ">=", version) && semver.cmp(version, "<=", to)
+  return semver.gte(from, version) && semver.lte(version, to)
 }
 
 function commitForTag(tag: string): string {
