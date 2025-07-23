@@ -10,7 +10,9 @@ export class DatasourceAPI {
   }
 
   async get(datasourceId: string): Promise<Datasource> {
-    const { data } = await this.client.get<Datasource>(`/api/datasources/${datasourceId}`)
+    const { data } = await this.client.get<Datasource>(
+      `/api/datasources/${datasourceId}`
+    )
     return data
   }
 }

@@ -15,6 +15,9 @@ describe("webhooks", () => {
 
   shouldNotChange("names", async () => {
     const webhooks = await client.webhook.fetch()
-    return webhooks.map(webhook => webhook.name || "").filter(name => name).sort()
+    return webhooks
+      .map(webhook => webhook.name || "")
+      .filter(name => name)
+      .sort()
   })
 })

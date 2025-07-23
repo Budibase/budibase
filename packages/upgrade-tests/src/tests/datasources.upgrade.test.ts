@@ -15,6 +15,9 @@ describe("datasources", () => {
 
   shouldNotChange("names", async () => {
     const datasources = await client.datasource.fetch()
-    return datasources.map(ds => ds.name || "").filter(name => name).sort()
+    return datasources
+      .map(ds => ds.name || "")
+      .filter(name => name)
+      .sort()
   })
 })

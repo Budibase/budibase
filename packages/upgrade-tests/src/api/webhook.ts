@@ -10,7 +10,9 @@ export class WebhookAPI {
   }
 
   async get(webhookId: string): Promise<Webhook> {
-    const { data } = await this.client.get<Webhook>(`/api/webhooks/${webhookId}`)
+    const { data } = await this.client.get<Webhook>(
+      `/api/webhooks/${webhookId}`
+    )
     return data
   }
 }

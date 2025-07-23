@@ -15,6 +15,9 @@ describe("plugins", () => {
 
   shouldNotChange("names", async () => {
     const plugins = await client.plugin.fetch()
-    return plugins.map(plugin => plugin.name || "").filter(name => name).sort()
+    return plugins
+      .map(plugin => plugin.name || "")
+      .filter(name => name)
+      .sort()
   })
 })
