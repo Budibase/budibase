@@ -16,11 +16,11 @@ import { DerivedBudiStore } from "@/stores/BudiStore"
 
 function pickFallbackDisplayField(
   draft: SaveTableRequest,
-  ...exclude: string[],
+  ...exclude: string[]
 ): string | undefined {
   for (const [name, field] of Object.entries(draft.schema)) {
     if (exclude.includes(name)) {
-        continue
+      continue
     }
     if (isAllowedDisplayField(name, field.type)) {
       return name
@@ -194,14 +194,11 @@ export class TableStore extends DerivedBudiStore<
 
     // Optionally set display column
     const isEligible = canBeDisplayColumn(field.type)
-    const wasPrimary = draft.primaryDisplay === originalName
 
-    if (hasPrimaryDisplay) {
-      draft.primaryDisplay = field.name
-    } else if (!draft.primaryDisplay && isEligible) {
+    if (!draft.primaryDisplay && isEligible) {
       // No display yet > use new eligible field
       draft.primaryDisplay = field.name
-    } else if (wasPrimary) {
+    } else if (hasPrimaryDisplay) {
       // Current primary is being renamed or removed
       draft.primaryDisplay = isEligible
         ? field.name // keep pointing to the renamed field if valid
