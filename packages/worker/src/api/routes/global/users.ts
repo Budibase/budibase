@@ -117,7 +117,6 @@ builderOrAdminRoutes
   )
   .post("/api/global/users/invite/update/:code", controller.updateInvite)
   .get("/api/global/users/invites", controller.getUserInvites)
-  // global endpoint but needs to come at end (blocks other endpoints otherwise)
   .get("/api/global/users/:id", controller.find)
 
 loggedInRoutes
