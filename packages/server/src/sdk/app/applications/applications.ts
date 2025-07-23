@@ -35,8 +35,8 @@ export async function fetch(status: AppStatus, user: ContextUser) {
   apps = filterAppList(enrichedUser, apps)
 
   const appIds = apps
-    .filter((app: any) => app.status === "development")
-    .map((app: any) => app.appId)
+    .filter(app => app.status === "development")
+    .map(app => app.appId)
 
   // get the locks for all the dev apps
   if (dev || all) {
