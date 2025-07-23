@@ -2,6 +2,7 @@ import { context, docIds, events } from "@budibase/backend-core"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
+  canBeDisplayColumn,
 } from "@budibase/shared-core"
 import {
   AutoFieldSubType,
@@ -33,7 +34,6 @@ import { generator } from "@budibase/backend-core/tests"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
-import { canBeDisplayColumn } from "@budibase/shared-core"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
