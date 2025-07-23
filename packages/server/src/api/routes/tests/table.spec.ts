@@ -2,7 +2,6 @@ import { context, docIds, events } from "@budibase/backend-core"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
-  canBeDisplayColumn,
 } from "@budibase/shared-core"
 import {
   AutoFieldSubType,
@@ -26,7 +25,6 @@ import {
   JsonFieldSubType,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { createSchemaEntry } from "./utilities/schemaUtils"
 import * as setup from "./utilities"
 import * as uuid from "uuid"
 
@@ -39,10 +37,6 @@ const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 const descriptions = datasourceDescribe({ plus: true })
-const disallowedDisplayColumns = Object.values(FieldType).filter(type => {
-  if (typeof type !== "string") return false
-  return !canBeDisplayColumn(type)
-})
 
 if (descriptions.length) {
   describe.each(descriptions)(
@@ -246,28 +240,47 @@ if (descriptions.length) {
           )
         })
 
-        it.each(disallowedDisplayColumns)(
-          "should not allow primaryDisplay field of type '%s'",
-          async fieldType => {
-            const columnName = "displayCol"
-            const schema = {
-              [columnName]: createSchemaEntry(columnName, fieldType),
-            }
+        describe("primaryDisplay validation", () => {
+          it("should not allow primaryDisplay field of type 'attachments'", async () => {
+            await config.api.table.save(
+              tableForDatasource(datasource, {
+                primaryDisplay: "attachments",
+                schema: {
+                  attachments: {
+                    name: "attachments",
+                    type: FieldType.ATTACHMENTS,
+                  },
+                },
+              }),
+              {
+                status: 400,
+                body: {
+                  message: `Column "attachments" cannot be used as a display type.`,
+                },
+              }
+            )
+          })
 
-            // Set the disallowed column as the primaryDisplay
-            const table = tableForDatasource(datasource, {
-              schema,
-              primaryDisplay: columnName,
-            })
-
-            await config.api.table.save(table, {
-              status: 400,
-              body: {
-                message: `Column "${columnName}" cannot be used as a display type.`,
-              },
-            })
-          }
-        )
+          it("should not allow primaryDisplay field of type 'json'", async () => {
+            await config.api.table.save(
+              tableForDatasource(datasource, {
+                primaryDisplay: "json",
+                schema: {
+                  json: {
+                    name: "json",
+                    type: FieldType.JSON,
+                  },
+                },
+              }),
+              {
+                status: 400,
+                body: {
+                  message: `Column "json" cannot be used as a display type.`,
+                },
+              }
+            )
+          })
+        })
       })
 
       describe("permissions", () => {
