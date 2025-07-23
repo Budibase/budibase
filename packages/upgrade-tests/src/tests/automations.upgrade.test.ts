@@ -1,4 +1,4 @@
-import { JSONValue } from "@budibase/types"
+import { AutomationStep } from "@budibase/types"
 import { BudibaseClient } from "../index"
 import { shouldNotChange } from "../utils/upgradeTest"
 
@@ -21,12 +21,9 @@ describe("automations", () => {
 
   shouldNotChange("steps", async () => {
     const automations = await client.automation.fetch()
-    const steps: { [id: string]: JSONValue[] } = {}
+    const steps: { [id: string]: AutomationStep[] } = {}
     for (const automation of automations) {
-      steps[automation._id!] = automation.definition.steps.map(step => [
-        step.id,
-        step.type,
-      ])
+      steps[automation._id!] = automation.definition.steps
     }
     return steps
   })
