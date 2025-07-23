@@ -1,6 +1,6 @@
 export interface EnrichedBinding {
-  value: string
-  valueHTML: string
+  value?: string
+  valueHTML?: string
   runtimeBinding: string
   readableBinding: string
   type?: null | string

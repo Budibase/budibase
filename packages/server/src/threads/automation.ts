@@ -324,6 +324,7 @@ class Orchestrator {
         stepsByName: {},
         stepsById: {},
         user: trigger.outputs.user,
+        state: {},
         _error: false,
         _stepIndex: 1,
         _stepResults: [],
@@ -369,6 +370,11 @@ class Orchestrator {
         await this.logResult(result)
       }
 
+      // Return any content pushed to state.
+      if (Object.keys(ctx?.state || {}).length > 0) {
+        result.state = ctx.state
+      }
+
       return result
     })
   }
@@ -385,6 +391,12 @@ class Orchestrator {
         step: AutomationStep,
         result: AutomationStepResult
       ) {
+        // Put State block data into the state
+        if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
+          ctx.state ??= {}
+          ctx.state[result.inputs.name] = result.outputs.value
+        }
+
         ctx.steps[step.id] = result.outputs
         ctx.steps[step.name || step.id] = result.outputs
 
@@ -573,7 +585,10 @@ class Orchestrator {
       }
 
       let inputs = cloneDeep(step.inputs)
-      if (step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2) {
+      if (
+        step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
+        step.stepId !== AutomationActionStepId.EXTRACT_STATE
+      ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the
         // function that runs it. So we skip this next bit for that step.

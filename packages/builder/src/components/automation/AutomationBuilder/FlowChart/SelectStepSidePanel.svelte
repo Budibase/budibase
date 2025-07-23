@@ -114,6 +114,7 @@
           AutomationActionStepId.EXECUTE_BASH,
           AutomationActionStepId.EXECUTE_SCRIPT_V2,
           AutomationActionStepId.SERVER_LOG,
+          AutomationActionStepId.EXTRACT_STATE,
         ].includes(k as AutomationActionStepId)
       ),
     },
