@@ -39,7 +39,7 @@ const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 const descriptions = datasourceDescribe({ plus: true })
-const disallowedFirstFieldTypes = Object.values(FieldType).filter(type => {
+const disallowedDisplayColumns = Object.values(FieldType).filter(type => {
   if (typeof type !== "string") return false
   return !canBeDisplayColumn(type)
 })
@@ -250,24 +250,26 @@ if (descriptions.length) {
           )
         })
 
-        it.each(disallowedFirstFieldTypes)(
-          "should not allow first field of type '%s' to be created",
+        it.each(disallowedDisplayColumns)(
+          "should not allow primaryDisplay field of type '%s'",
           async fieldType => {
-            const columnName = "firstCol"
-
+            const columnName = "displayCol"
             const schema = {
               [columnName]: createSchemaEntry(columnName, fieldType),
             }
 
-            await config.api.table.save(
-              tableForDatasource(datasource, { schema }),
-              {
-                status: 400,
-                body: {
-                  message: `Column "${columnName}" cannot be the first column in a table.`,
-                },
-              }
-            )
+            // Set the disallowed column as the primaryDisplay
+            const table = tableForDatasource(datasource, {
+              schema,
+              primaryDisplay: columnName,
+            })
+
+            await config.api.table.save(table, {
+              status: 400,
+              body: {
+                message: `Column "${columnName}" cannot be used as a display type.`,
+              },
+            })
           }
         )
       })
