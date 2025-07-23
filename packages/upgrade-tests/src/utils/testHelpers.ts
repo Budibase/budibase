@@ -25,7 +25,7 @@ export function isPostUpgradePhase(): boolean {
 export function getOldVersion(): string {
   const version = process.env.FROM_VERSION
   if (!version) {
-    throw new Error("OLD_VERSION environment variable not set")
+    throw new Error("FROM_VERSION environment variable not set")
   }
   return version
 }
