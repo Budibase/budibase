@@ -23,6 +23,7 @@
     PROTECTED_INTERNAL_COLUMNS,
     SWITCHABLE_TYPES,
     ValidColumnNameRegex,
+    isAllowedDisplayField,
   } from "@budibase/shared-core"
   import { makePropSafe } from "@budibase/string-templates"
   import { createEventDispatcher, getContext, onMount } from "svelte"
@@ -694,11 +695,6 @@
     mounted = true
   })
 
-  // Dynamically get all disallowed types for display columns
-  $: disallowedFirstFields = orderedAllowedTypes
-    .map(f => f.type)
-    .filter(type => !canHaveDefaultColumn(type))
-
   // Helper: checks if it's the first column being added
   $: isFirstColumn = Object.keys(table?.schema || {}).length === 0
 </script>
@@ -725,7 +721,7 @@
     getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
       // Disable certain fields if they are the first column
-      if (isFirstColumn && disallowedFirstFields.includes(option.type)) {
+      if (isFirstColumn && !isAllowedDisplayField(option.name, option.type)) {
         return false
       }
       if (option.type === FieldType.AUTO) {
