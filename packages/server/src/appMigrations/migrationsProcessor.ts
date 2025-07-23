@@ -7,6 +7,7 @@ import {
 import { AppMigration, doInMigrationLock } from "."
 import { MIGRATIONS } from "./migrations"
 import sdk from "../sdk"
+import tracer from "dd-trace"
 
 async function getPendingMigrationsForApp(
   appId: string,
@@ -43,17 +44,28 @@ async function runMigrationForApp({
   migrationFunc: () => Promise<void>
   appId: string
 }): Promise<void> {
-  await context.doInAppMigrationContext(appId, async () => {
-    console.log(`Running migration "${migrationId}" for app "${appId}"`)
-    await migrationFunc()
-    console.log(`Migration "${migrationId}" ran for app "${appId}"`)
+  await tracer.trace("runMigrationForApp", async span => {
+    span.addTags({
+      appId,
+      migrationId,
+    })
+    await context.doInAppMigrationContext(appId, async () => {
+      console.log(`Running migration "${migrationId}" for app "${appId}"`)
+      await migrationFunc()
+      console.log(`Migration "${migrationId}" ran for app "${appId}"`)
+    })
   })
 }
 
 async function syncDevApp(devAppId: string): Promise<void> {
-  await context.doInAppMigrationContext(devAppId, async () => {
-    await sdk.applications.syncApp(devAppId)
-    console.log(`App synchronized for dev "${devAppId}"`)
+  await tracer.trace("runMigrationForApp", async span => {
+    span.addTags({
+      appId: devAppId,
+    })
+    await context.doInAppMigrationContext(devAppId, async () => {
+      await sdk.applications.syncApp(devAppId)
+      console.log(`App synchronized for dev "${devAppId}"`)
+    })
   })
 }
 
@@ -75,98 +87,107 @@ export async function processMigrations(
 ) {
   console.log(`Processing app migration for "${appId}"`)
 
-  try {
-    await context.doInAppContext(appId, () =>
-      doInMigrationLock(appId, async () => {
-        const devAppId = db.getDevAppID(appId)
-        const prodAppId = db.getProdAppID(appId)
-        const isPublished = await sdk.applications.isAppPublished(prodAppId)
-        const appIdToMigrate = isPublished ? prodAppId : devAppId
+  await tracer.trace("runMigrationForApp", async span => {
+    span.addTags({ appId })
+    try {
+      await context.doInAppContext(appId, () =>
+        doInMigrationLock(appId, async () => {
+          const devAppId = db.getDevAppID(appId)
+          const prodAppId = db.getProdAppID(appId)
+          const isPublished = await sdk.applications.isAppPublished(prodAppId)
+          const appIdToMigrate = isPublished ? prodAppId : devAppId
 
-        console.log(`Starting app migration for "${appIdToMigrate}"`)
+          console.log(`Starting app migration for "${appIdToMigrate}"`)
 
-        const pendingMigrationsPerApp = {
-          [devAppId]: await getPendingMigrationsForApp(devAppId, migrations),
-          [prodAppId]: isPublished
-            ? await getPendingMigrationsForApp(prodAppId, migrations)
-            : [],
-        }
+          const pendingMigrationsPerApp = {
+            [devAppId]: await getPendingMigrationsForApp(devAppId, migrations),
+            [prodAppId]: isPublished
+              ? await getPendingMigrationsForApp(prodAppId, migrations)
+              : [],
+          }
 
-        function needsToRun(migrationId: string, targetAppId: string): boolean {
-          return pendingMigrationsPerApp[targetAppId].some(
-            m => m.id === migrationId
-          )
-        }
-
-        const allPendingMigrationIds = getAllPendingMigrationIds(
-          pendingMigrationsPerApp
-        )
-        const pendingMigrations = getUniquePendingMigrations(
-          migrations,
-          allPendingMigrationIds
-        )
-
-        console.log(
-          `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
-        )
-
-        let migrationIndex = 0
-        for (const {
-          id: migrationId,
-          func: migrationFunc,
-          disabled,
-        } of pendingMigrations) {
-          if (disabled) {
-            // If we find a disabled migration, we prevent running any other
-            console.log(
-              `Migration ${migrationId} is disabled, stopping migration process`
+          function needsToRun(
+            migrationId: string,
+            targetAppId: string
+          ): boolean {
+            return pendingMigrationsPerApp[targetAppId].some(
+              m => m.id === migrationId
             )
-            return
           }
 
-          const progressCounter = `(${++migrationIndex}/${pendingMigrations.length})`
-          console.info(
-            `Running migration ${migrationId}... ${progressCounter}`,
-            {
-              migrationId,
-              appId: appIdToMigrate,
-            }
+          const allPendingMigrationIds = getAllPendingMigrationIds(
+            pendingMigrationsPerApp
+          )
+          const pendingMigrations = getUniquePendingMigrations(
+            migrations,
+            allPendingMigrationIds
           )
 
-          const runForAppToMigrate = needsToRun(migrationId, appIdToMigrate)
-          const runForDevApp = isPublished && needsToRun(migrationId, devAppId)
+          span.addTags({ migrationsToRun: pendingMigrations.length })
 
-          if (runForAppToMigrate) {
-            await runMigrationForApp({
-              migrationId,
-              migrationFunc,
-              appId: appIdToMigrate,
-            })
+          console.log(
+            `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
+          )
+
+          let migrationIndex = 0
+          for (const {
+            id: migrationId,
+            func: migrationFunc,
+            disabled,
+          } of pendingMigrations) {
+            if (disabled) {
+              // If we find a disabled migration, we prevent running any other
+              console.log(
+                `Migration ${migrationId} is disabled, stopping migration process`
+              )
+              return
+            }
+
+            const progressCounter = `(${++migrationIndex}/${pendingMigrations.length})`
+            console.info(
+              `Running migration ${migrationId}... ${progressCounter}`,
+              {
+                migrationId,
+                appId: appIdToMigrate,
+              }
+            )
+
+            const runForAppToMigrate = needsToRun(migrationId, appIdToMigrate)
+            const runForDevApp =
+              isPublished && needsToRun(migrationId, devAppId)
+
+            if (runForAppToMigrate) {
+              await runMigrationForApp({
+                migrationId,
+                migrationFunc,
+                appId: appIdToMigrate,
+              })
+            }
+
+            if (runForDevApp) {
+              await syncDevApp(devAppId)
+              await runMigrationForApp({
+                migrationId,
+                migrationFunc,
+                appId: devAppId,
+              })
+            }
+
+            if (runForAppToMigrate) {
+              await updateMigrationVersion(appIdToMigrate, migrationId)
+            }
+
+            if (runForDevApp) {
+              await updateMigrationVersion(devAppId, migrationId)
+            }
           }
 
-          if (runForDevApp) {
-            await syncDevApp(devAppId)
-            await runMigrationForApp({
-              migrationId,
-              migrationFunc,
-              appId: devAppId,
-            })
-          }
-
-          if (runForAppToMigrate) {
-            await updateMigrationVersion(appIdToMigrate, migrationId)
-          }
-
-          if (runForDevApp) {
-            await updateMigrationVersion(devAppId, migrationId)
-          }
-        }
-
-        console.log(`App migration for "${appIdToMigrate}" processed`)
-      })
-    )
-  } catch (err) {
-    logging.logAlert("Failed to run app migration", err)
-    throw err
-  }
+          console.log(`App migration for "${appIdToMigrate}" processed`)
+        })
+      )
+    } catch (err) {
+      logging.logAlert("Failed to run app migration", err)
+      throw err
+    }
+  })
 }
