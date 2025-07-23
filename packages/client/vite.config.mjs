@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => {
         fileName: () => "budibase-client.js",
       },
       minify: isProduction,
+      rollupOptions: {
+        external: ["zod", "postcss"],
+      },
     },
     plugins: [
       svelte({
