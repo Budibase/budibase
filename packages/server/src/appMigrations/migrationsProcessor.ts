@@ -23,15 +23,31 @@ export async function processMigrations(
 
         console.log(`Starting app migration for "${appIdToMigrate}"`)
 
-        let currentVersion = await getAppMigrationVersion(appIdToMigrate)
+        async function getPendingMigrations(appId: string) {
+          const currentVersion = await getAppMigrationVersion(appId)
+          const currentIndex = migrations.findIndex(
+            m => m.id === currentVersion
+          )
+          return migrations.slice(currentIndex + 1)
+        }
 
-        const currentIndexMigration = migrations.findIndex(
-          m => m.id === currentVersion
+        // We might have dev and prod migration out of sync, as before they worked independently
+        const pendingMigrationsPerApp = {
+          [devAppId]: await getPendingMigrations(devAppId),
+          [prodAppId]: isPublished ? await getPendingMigrations(prodAppId) : [],
+        }
+
+        function needsToRun(migrationId: string, appId: string) {
+          return pendingMigrationsPerApp[appId].some(m => m.id === migrationId)
+        }
+
+        const pendingMigrations = migrations.filter(m =>
+          Object.values(pendingMigrationsPerApp)
+            .flatMap(m => m)
+            .map(m => m.id)
+            .includes(m.id)
         )
 
-        const pendingMigrations = migrations.slice(currentIndexMigration + 1)
-
-        const migrationIds = migrations.map(m => m.id)
         console.log(
           `App migrations to run for "${appIdToMigrate}" - ${pendingMigrations.map(m => m.id).join(",")}`
         )
@@ -42,14 +58,6 @@ export async function processMigrations(
             // If we find a disabled migration, we prevent running any other
             return
           }
-          const expectedMigration =
-            migrationIds[migrationIds.indexOf(currentVersion) + 1]
-
-          if (expectedMigration !== id) {
-            throw new Error(
-              `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
-            )
-          }
 
           const counter = `(${++index}/${pendingMigrations.length})`
           console.info(`Running migration ${id}... ${counter}`, {
@@ -57,10 +65,12 @@ export async function processMigrations(
             appId: appIdToMigrate,
           })
 
-          // setup full context - tenancy, app and guards
-          await context.doInAppMigrationContext(appIdToMigrate, () => func())
+          if (needsToRun(id, appIdToMigrate)) {
+            // setup full context - tenancy, app and guards
+            await context.doInAppMigrationContext(appIdToMigrate, () => func())
+          }
 
-          if (isPublished) {
+          if (isPublished && needsToRun(id, devAppId)) {
             // setup full context - tenancy, app and guards
             await context.doInAppMigrationContext(devAppId, async () => {
               await sdk.applications.syncApp(devAppId)
@@ -71,15 +81,17 @@ export async function processMigrations(
             })
           }
 
-          // Only updates versions after the migration has run successfully, to allow retriability
-          await context.doInAppMigrationContext(appIdToMigrate, () =>
-            updateAppMigrationMetadata({
-              appId: appIdToMigrate,
-              version: id,
-            })
-          )
+          if (needsToRun(id, appIdToMigrate)) {
+            // Only updates versions after the migration has run successfully, to allow retriability
+            await context.doInAppMigrationContext(appIdToMigrate, () =>
+              updateAppMigrationMetadata({
+                appId: appIdToMigrate,
+                version: id,
+              })
+            )
+          }
 
-          if (isPublished) {
+          if (isPublished && needsToRun(id, devAppId)) {
             await context.doInAppMigrationContext(devAppId, () =>
               updateAppMigrationMetadata({
                 appId: devAppId,
@@ -87,8 +99,6 @@ export async function processMigrations(
               })
             )
           }
-
-          currentVersion = id
         }
 
         console.log(`App migration for "${appIdToMigrate}" processed`)
