@@ -1,4 +1,3 @@
-import { setEnv } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { environmentVariables } from "@budibase/pro"
 import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
@@ -6,16 +5,6 @@ import { encodeJSBinding } from "@budibase/string-templates"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { AutomationStatus } from "@budibase/types"
 import { v4 as uuidv4 } from "uuid"
-import { steps } from "packages/shared-core/src/automations"
-
-/**
- *
- * Overkill?
- * Text,
- * js, Snippets
- *
- * confirm all behaviours
- */
 
 describe("Extract state Automations", () => {
   const config = new TestConfiguration()
