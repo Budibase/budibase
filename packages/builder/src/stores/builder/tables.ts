@@ -202,7 +202,9 @@ export class TableStore extends DerivedBudiStore<
       // Current primary is being renamed or removed
       draft.primaryDisplay = isEligible
         ? field.name // keep pointing to the renamed field if valid
-        : pickFallbackDisplayField(draft, originalName) // find another fallback
+        : originalName
+          ? pickFallbackDisplayField(draft, originalName)
+          : pickFallbackDisplayField(draft) // find another fallback
     }
     draft.schema = {
       ...draft.schema,
