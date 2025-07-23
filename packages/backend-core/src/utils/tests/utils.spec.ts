@@ -115,6 +115,87 @@ describe("utils", () => {
       const actual = await utils.getAppIdFromCtx(ctx)
       expect(actual).toBe(undefined)
     })
+
+    it("throws 403 when header and body have different valid app IDs", async () => {
+      const ctx = structures.koa.newContext()
+
+      const appId1 = db.generateAppID()
+      const appId2 = db.generateAppID()
+
+      ctx.request.headers = {
+        [Header.APP_ID]: appId1,
+      }
+      ctx.request.body = {
+        appId: appId2,
+      }
+
+      await expect(utils.getAppIdFromCtx(ctx)).rejects.toThrow()
+      expect(ctx.throw).toHaveBeenCalledTimes(1)
+      expect(ctx.throw).toHaveBeenCalledWith("App id conflict", 403)
+    })
+
+    it("throws 403 when header and path have different valid app IDs", async () => {
+      const ctx = structures.koa.newContext()
+
+      const appId1 = db.generateAppID()
+      const appId2 = db.generateAppID()
+
+      ctx.request.headers = {
+        [Header.APP_ID]: appId1,
+      }
+      ctx.path = `/apps/${appId2}`
+
+      await expect(utils.getAppIdFromCtx(ctx)).rejects.toThrow()
+      expect(ctx.throw).toHaveBeenCalledTimes(1)
+      expect(ctx.throw).toHaveBeenCalledWith("App id conflict", 403)
+    })
+
+    it("returns same app ID when found across multiple sources consistently", async () => {
+      const ctx = structures.koa.newContext()
+      const expected = db.generateAppID()
+
+      ctx.request.headers = {
+        [Header.APP_ID]: expected,
+      }
+      ctx.request.body = {
+        appId: expected,
+      }
+      ctx.query = { appId: expected }
+
+      const actual = await utils.getAppIdFromCtx(ctx)
+      expect(actual).toBe(expected)
+    })
+
+    it("ignores invalid app IDs that don't start with app prefix", async () => {
+      const ctx = structures.koa.newContext()
+      const validAppId = db.generateAppID()
+      const invalidAppId = "invalid_app_id"
+
+      ctx.request.headers = {
+        [Header.APP_ID]: invalidAppId,
+      }
+      ctx.request.body = {
+        appId: validAppId,
+      }
+
+      const actual = await utils.getAppIdFromCtx(ctx)
+      expect(actual).toBe(validAppId)
+    })
+
+    it("returns undefined when no valid app ID is found in any source", async () => {
+      const ctx = structures.koa.newContext()
+
+      ctx.request.headers = {
+        [Header.APP_ID]: "invalid_id",
+      }
+      ctx.request.body = {
+        appId: "also_invalid",
+      }
+      ctx.query = { appId: "still_invalid" }
+
+      const actual = await utils.getAppIdFromCtx(ctx)
+      expect(actual).toBe(undefined)
+    })
   })
 
   describe("isServingBuilder", () => {
