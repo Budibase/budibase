@@ -5,10 +5,16 @@ import { encodeJSBinding } from "@budibase/string-templates"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { AutomationStatus } from "@budibase/types"
 import { v4 as uuidv4 } from "uuid"
+import { setEnv } from "@budibase/backend-core"
 
 describe("Extract state Automations", () => {
   const config = new TestConfiguration()
+  let envCleanup: () => void
+
   beforeAll(async () => {
+    envCleanup = setEnv({
+      ENCRYPTION_KEY: "some-key",
+    })
     await config.init()
 
     config.app = await config.api.application.update(config.getAppId(), {
@@ -37,6 +43,7 @@ describe("Extract state Automations", () => {
   })
 
   afterAll(() => {
+    envCleanup()
     config.end()
   })
 
