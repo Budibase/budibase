@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.build.json",
+  "ts-node": {
+    "require": ["tsconfig-paths/register"],
+    "swc": true
+  },
+  "include": ["src/**/*", "scripts"],
+  "exclude": ["node_modules", "dist"]
+}
