@@ -84,6 +84,7 @@ export async function edit(
     icon: body.icon,
     iconColor: body.iconColor,
     navigation: body.navigation,
+    disabled: body.disabled,
   }
 
   const workspaceApp = await sdk.workspaceApps.update(toUpdate)

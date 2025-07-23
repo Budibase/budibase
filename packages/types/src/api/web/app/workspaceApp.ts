@@ -30,6 +30,7 @@ export interface UpdateWorkspaceAppRequest {
   icon: string
   iconColor?: string
   navigation: AppNavigation
+  disabled?: boolean
 }
 
 export interface UpdateWorkspaceAppResponse {

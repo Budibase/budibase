@@ -12,13 +12,14 @@
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Link } from "@budibase/bbui"
+  import { ActionButton, Divider, Link, Toggle } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
-  $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id
+  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
+  $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
 
   $: isWorkspacePublished =
     selectedWorkspaceAppId &&
@@ -39,8 +40,17 @@
   <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
-      {#if $featureFlags.WORKSPACE_APPS && isWorkspacePublished}
-        <Link href={liveUrl} target="_blank">{liveUrl}</Link>
+      {#if $featureFlags.WORKSPACE_APPS}
+        {#if selectedWorkspaceAppId}
+          <Toggle
+            text={selectedWorkspaceApp?.disabled ? "Disabled" : "Active"}
+            on:change={() => workspaceAppStore.toggleDisabled(selectedWorkspaceAppId, !selectedWorkspaceApp?.disabled)}
+            value={!selectedWorkspaceApp?.disabled}
+          />
+        {/if}
+        {#if isWorkspacePublished}
+          <Link href={liveUrl} target="_blank">{liveUrl}</Link>
+        {/if}
       {/if}
     </div>
     <div class="header-right">
