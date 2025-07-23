@@ -16,15 +16,17 @@ import { DerivedBudiStore } from "@/stores/BudiStore"
 
 function pickFallbackDisplayField(
   draft: SaveTableRequest,
-  excludeA?: string,
-  excludeB?: string
+  ...exclude: string[],
 ): string | undefined {
-  const candidates = Object.keys(draft.schema).filter(n => {
-    if (n === excludeA || n === excludeB) return false
-    const f = draft.schema[n]
-    return f && isAllowedDisplayField(n, f.type)
-  })
-  return candidates[0]
+  for (const [name, field] of Object.entries(draft.schema)) {
+    if (exclude.includes(name)) {
+        continue
+    }
+    if (isAllowedDisplayField(name, field.type)) {
+      return name
+    }
+  }
+  return undefined
 }
 
 interface BuilderTableStore {
