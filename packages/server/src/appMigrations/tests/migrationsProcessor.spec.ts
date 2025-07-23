@@ -111,12 +111,12 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
     let migrationCallPerApp: Record<string, number> = {}
     const testMigrations: AppMigration[] = [
       {
-        id: generateMigrationId(),
-        func: async () => {
-          expect(context.getCurrentContext()?.isMigrating).toBe(true)
-          migrationCallPerApp[context.getAppId()!] ??= 0
-          migrationCallPerApp[context.getAppId()!]++
-        },
+      id: generateMigrationId(),
+      func: async () => {
+        expect(context.getCurrentContext()?.isMigrating).toBe(true)
+        migrationCallPerApp[context.getAppId()!] ??= 0
+        migrationCallPerApp[context.getAppId()!]++
+      },
       },
       {
         id: generateMigrationId(),
@@ -649,6 +649,180 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
         `${config.getProdAppId()}-migration-2-attempt-2-success`,
         `${config.getAppId()}-migration-2-attempt-2-success`,
       ])
+    })
+  })
+
+  describe("out-of-sync migration handling", () => {
+    it("should handle dev migration version ahead of prod", async () => {
+      const executionOrder: string[] = []
+      const testMigrations: AppMigration[] = [
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-1`)
+          },
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-2`)
+          },
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-3`)
+          },
+        },
+      ]
+
+      const prodAppId = config.getProdAppId()
+      const devAppId = config.getAppId()
+
+      await config.doInContext(prodAppId, async () => {
+        await updateAppMigrationMetadata({
+          appId: prodAppId,
+          version: testMigrations[0].id,
+        })
+      })
+
+      await config.doInContext(devAppId, async () => {
+        await updateAppMigrationMetadata({
+          appId: devAppId,
+          version: testMigrations[1].id,
+        })
+      })
+
+      await runMigrations(testMigrations)
+
+      expect(executionOrder).toEqual([
+        `${prodAppId} - migration-2`,
+        `${prodAppId} - migration-3`,
+        `${devAppId} - migration-3`,
+      ])
+
+      // Both apps should end up on the latest migration
+      for (const appId of [devAppId, prodAppId]) {
+        expect(
+          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+        ).toBe(testMigrations[2].id)
+      }
+    })
+
+    it("should handle prod migration version ahead of dev", async () => {
+      const executionOrder: string[] = []
+      const testMigrations: AppMigration[] = [
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-1`)
+          },
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-2`)
+          },
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-3`)
+          },
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-4`)
+          },
+        },
+      ]
+
+      const prodAppId = config.getProdAppId()
+      const devAppId = config.getAppId()
+
+      await config.doInContext(prodAppId, async () => {
+        await updateAppMigrationMetadata({
+          appId: devAppId,
+          version: testMigrations[0].id,
+        })
+      })
+
+      await config.doInContext(devAppId, async () => {
+        await updateAppMigrationMetadata({
+          appId: prodAppId,
+          version: testMigrations[2].id,
+        })
+      })
+
+      await runMigrations(testMigrations)
+
+      expect(executionOrder).toEqual([
+        `${devAppId} - migration-2`,
+        `${devAppId} - migration-3`,
+        `${prodAppId} - migration-4`,
+        `${devAppId} - migration-4`,
+      ])
+
+      // Both apps should end up on the latest migration
+      for (const appId of [devAppId, prodAppId]) {
+        expect(
+          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+        ).toBe(testMigrations[testMigrations.length - 1].id)
+      }
+    })
+
+    it("should only run migrations needed by each app individually", async () => {
+      const executionOrder: string[] = []
+      const testMigrations: AppMigration[] = [
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-1`)
+          },
+        },
+        {
+          id: generateMigrationId(),
+          func: async () => {
+            const db = context.getAppDB()
+            executionOrder.push(`${db.name} - migration-2`)
+          },
+        },
+      ]
+
+      const prodAppId = config.getProdAppId()
+      const devAppId = config.getAppId()
+
+      // Set dev app to already be on the latest migration, prod app needs both
+      await config.doInContext(devAppId, async () => {
+        await updateAppMigrationMetadata({
+          appId: devAppId,
+          version: testMigrations[1].id,
+        })
+      })
+
+      await runMigrations(testMigrations)
+
+      // Only prod should run migrations since dev is already up-to-date
+      expect(executionOrder).toEqual([
+        `${prodAppId} - migration-1`,
+        `${prodAppId} - migration-2`,
+      ])
+
+      // Both apps should be on the latest migration
+      for (const appId of [devAppId, prodAppId]) {
+        expect(
+          await config.doInContext(appId, () => getAppMigrationVersion(appId))
+        ).toBe(testMigrations[1].id)
+      }
     })
   })
 
