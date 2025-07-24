@@ -1,8 +1,4 @@
-import Router from "@koa/router"
 import * as controller from "../../controllers/global/events"
+import { loggedInRoutes } from "../endpointGroups"
 
-const router: Router = new Router()
-
-router.post("/api/global/event/publish", controller.publish)
-
-export default router
+loggedInRoutes.post("/api/global/event/publish", controller.publish)
