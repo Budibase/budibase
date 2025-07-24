@@ -47,8 +47,8 @@ describe("migration integrity", () => {
         await processMigrations(appId, migrationsToApply)
         expect(await getAppMigrationVersion(appId)).toBe(latestMigration)
 
-        const devDocs = await getDocs(devDb)
-        const prodDocs = await getDocs(prodDb)
+        const afterMigrationDevDocs = await getDocs(devDb)
+        const afterMigrationProdDocs = await getDocs(prodDb)
 
         await setCurrentVersion(currentVersion)
         expect(await getAppMigrationVersion(appId)).not.toBe(latestMigration)
@@ -56,11 +56,11 @@ describe("migration integrity", () => {
         await processMigrations(appId, migrationsToApply)
         expect(await getAppMigrationVersion(appId)).toBe(latestMigration)
 
-        const latestDevDocs = await getDocs(devDb)
-        const latestProdDocs = await getDocs(prodDb)
+        const afterRerunDevDocs = await getDocs(devDb)
+        const afterRerunProdDocs = await getDocs(prodDb)
 
-        expect(latestDevDocs).toEqual(devDocs)
-        expect(latestProdDocs).toEqual(prodDocs)
+        expect(afterRerunDevDocs).toEqual(afterMigrationDevDocs)
+        expect(afterRerunProdDocs).toEqual(afterMigrationProdDocs)
       }
     })
   })
