@@ -22,6 +22,7 @@
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
   const actionTypes = getAvailableActions()
+  const zoneType = generate()
 
   export let key
   export let actions
@@ -156,7 +157,8 @@
   }
 
   function handleDndConsider(e) {
-    actions = e.detail.items
+    // Filter out any invalid actions that might have been created
+    actions = e.detail.items.filter(item => item && item.id)
 
     // set the initial index of the action being dragged
     if (e.detail.info.trigger === "draggedEntered") {
@@ -166,7 +168,8 @@
     }
   }
   function handleDndFinalize(e) {
-    actions = e.detail.items
+    // Filter out any invalid actions that might have been created
+    actions = e.detail.items.filter(item => item && item.id)
 
     // Update action binding references
     updateReferencesInObject({
@@ -295,6 +298,8 @@
           items: actions,
           flipDurationMs,
           dropTargetStyle: { outline: "none" },
+          type: zoneType,
+          dropFromOthersDisabled: true,
         }}
         on:consider={handleDndConsider}
         on:finalize={handleDndFinalize}

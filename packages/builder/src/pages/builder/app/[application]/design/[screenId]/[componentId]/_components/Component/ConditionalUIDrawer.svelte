@@ -23,6 +23,7 @@
   export let actionOptions = null
 
   const flipDurationMs = 150
+  const zoneType = generate()
   const defaultActionOptions = [
     {
       label: "Hide component",
@@ -120,7 +121,8 @@
   }
 
   const updateConditions = e => {
-    conditions = e.detail.items
+    // Filter out any invalid conditions that might have been created
+    conditions = e.detail.items.filter(item => item && item.id)
   }
 
   const getOperatorOptions = condition => {
@@ -175,6 +177,8 @@
             flipDurationMs,
             dropTargetStyle: { outline: "none" },
             dragDisabled,
+            type: zoneType,
+            dropFromOthersDisabled: true,
           }}
           on:finalize={handleFinalize}
           on:consider={updateConditions}
