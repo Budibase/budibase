@@ -114,6 +114,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       state.workspaceApps[index] = {
         ...updatedWorkspaceApp.workspaceApp,
       }
+      console.log(updatedWorkspaceApp.workspaceApp)
       return state
     })
   }

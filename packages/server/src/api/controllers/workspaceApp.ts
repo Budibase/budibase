@@ -25,6 +25,7 @@ function toWorkspaceAppResponse(
     iconColor: workspaceApp.iconColor,
     navigation: workspaceApp.navigation,
     isDefault: workspaceApp.isDefault,
+    disabled: workspaceApp.disabled,
   }
 }
 

@@ -22,6 +22,7 @@ const updateSchema = Joi.object({
   _rev: Joi.string().required(),
   ...baseSchema,
   navigation: Joi.object().required(),
+  disabled: Joi.boolean().optional(),
 })
 
 function workspaceAppValidator(
