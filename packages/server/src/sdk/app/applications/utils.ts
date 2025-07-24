@@ -1,3 +1,5 @@
+import { db } from "@budibase/backend-core"
+
 const URL_REGEX_SLASH = /\/|\\/g
 
 export function getAppUrl(opts?: { name?: string; url?: string }) {
@@ -14,4 +16,13 @@ export function getAppUrl(opts?: { name?: string; url?: string }) {
     url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
   }
   return url as string
+}
+
+export async function isAppPublished(prodAppId: string): Promise<boolean> {
+  if (db.isDevAppID(prodAppId)) {
+    prodAppId = db.getProdAppID(prodAppId)
+  }
+
+  const existingApps = await db.getAppsByIDs([prodAppId])
+  return !!existingApps.length
 }
