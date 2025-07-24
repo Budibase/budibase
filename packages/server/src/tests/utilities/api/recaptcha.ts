@@ -1,22 +1,29 @@
-import { VerifyRecaptchaRequest } from "@budibase/types"
+import {
+  VerifyRecaptchaRequest,
+  VerifyRecaptchaResponse,
+  CheckRecaptchaResponse,
+} from "@budibase/types"
 import { Expectations, RequestOpts, TestAPI } from "./base"
-import { Response } from "supertest"
 
 export class RecaptchaAPI extends TestAPI {
   verify = async (
     request: Partial<VerifyRecaptchaRequest>,
     expectations?: Expectations
-  ): Promise<Response> => {
-    return await this._requestRaw("post", "/api/recaptcha/verify", {
+  ): Promise<{
+    body: VerifyRecaptchaResponse
+    headers: Record<string, string>
+  }> => {
+    const res = await this._requestRaw("post", "/api/recaptcha/verify", {
       body: request,
       expectations,
     })
+    return { body: res.body, headers: res.headers }
   }
 
   check = async (
     cookie?: string,
     expectations?: Expectations
-  ): Promise<Response> => {
+  ): Promise<CheckRecaptchaResponse> => {
     const opts: RequestOpts = {
       expectations,
     }
@@ -25,6 +32,6 @@ export class RecaptchaAPI extends TestAPI {
         cookie,
       }
     }
-    return await this._requestRaw("get", "/api/recaptcha/check", opts)
+    return await this._get("/api/recaptcha/check", opts)
   }
 }

@@ -74,8 +74,10 @@ describe("/recaptcha", () => {
     it("should verify recaptcha successfully", async () => {
       const scope = recaptchaSucceed()
 
-      const res = await config.api.recaptcha.verify({ token: "valid-token" })
-      expect(res.status).toBe(200)
+      const res = await config.api.recaptcha.verify(
+        { token: "valid-token" },
+        { status: 200 }
+      )
       expect(res.body.verified).toBe(true)
 
       // Check if the nock interceptor was called
@@ -84,40 +86,44 @@ describe("/recaptcha", () => {
 
     it("should handle invalid recaptcha token", async () => {
       recaptchaFailed()
-      const res = await config.api.recaptcha.verify({ token: "invalid-token" })
-      expect(res.status).toBe(200)
+      const res = await config.api.recaptcha.verify(
+        { token: "invalid-token" },
+        { status: 200 }
+      )
       expect(res.body.verified).toBe(false)
     })
 
     it("should handle google API error", async () => {
       recaptchaError()
-      const res = await config.api.recaptcha.verify({ token: "test-token" })
-      expect(res.status).toBe(500)
+      await config.api.recaptcha.verify(
+        { token: "test-token" },
+        { status: 500 }
+      )
     })
   })
 
   describe("GET /api/recaptcha/check", () => {
     it("should return false when no cookie present", async () => {
-      const res = await config.api.recaptcha.check()
-      expect(res.status).toBe(200)
-      expect(res.body.verified).toBe(false)
+      const res = await config.api.recaptcha.check("", { status: 200 })
+      expect(res.verified).toBe(false)
     })
 
     it("should return true when valid cookie present", async () => {
       recaptchaSucceed()
-      const verifyRes = await config.api.recaptcha.verify({
-        token: "valid-token",
-      })
-      expect(verifyRes.status).toBe(200)
+      const verifyRes = await config.api.recaptcha.verify(
+        {
+          token: "valid-token",
+        },
+        { status: 200 }
+      )
 
       // Extract cookie from verify response
       const cookie = verifyRes.headers["set-cookie"]
       expect(cookie).toBeDefined()
 
       // Pass cookie to check request
-      const checkRes = await config.api.recaptcha.check(cookie)
-      expect(checkRes.status).toBe(200)
-      expect(checkRes.body.verified).toBe(true)
+      const checkRes = await config.api.recaptcha.check(cookie, { status: 200 })
+      expect(checkRes.verified).toBe(true)
     })
   })
 
@@ -156,10 +162,12 @@ describe("/recaptcha", () => {
     it("should allow request when recaptcha enabled and valid cookie present", async () => {
       await setRecaptchaEnabled(true)
       recaptchaSucceed()
-      const verifyRes = await config.api.recaptcha.verify({
-        token: "valid-token",
-      })
-      expect(verifyRes.status).toBe(200)
+      const verifyRes = await config.api.recaptcha.verify(
+        {
+          token: "valid-token",
+        },
+        { status: 200 }
+      )
       const cookie = verifyRes.headers["set-cookie"]
 
       await config.withProdApp(async () => {
@@ -174,10 +182,12 @@ describe("/recaptcha", () => {
     it("should return 498 when recaptcha enabled but invalid cookie", async () => {
       await setRecaptchaEnabled(true)
       recaptchaFailed()
-      const verifyRes = await config.api.recaptcha.verify({
-        token: "invalid-token",
-      })
-      expect(verifyRes.status).toBe(200)
+      const verifyRes = await config.api.recaptcha.verify(
+        {
+          token: "invalid-token",
+        },
+        { status: 200 }
+      )
       expect(verifyRes.body.verified).toBe(false)
 
       await config.withProdApp(async () => {

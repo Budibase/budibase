@@ -498,11 +498,14 @@ export default class TestConfiguration {
       `${constants.Cookie.Auth}=${authToken}`,
     ]
     const tempHeaderCookie = this.temporaryHeaders?.["Cookie"]
-    const hasAuth = Array.isArray(tempHeaderCookie)
-      ? tempHeaderCookie.find(cookie => cookie.includes(constants.Cookie.Auth))
-      : typeof tempHeaderCookie === "string"
-        ? tempHeaderCookie.includes(constants.Cookie.Auth)
-        : false
+    let hasAuth = false
+    if (Array.isArray(tempHeaderCookie)) {
+      hasAuth = !!tempHeaderCookie.find(cookie =>
+        cookie.includes(constants.Cookie.Auth)
+      )
+    } else if (typeof tempHeaderCookie === "string") {
+      hasAuth = tempHeaderCookie.includes(constants.Cookie.Auth)
+    }
     if (tempHeaderCookie && hasAuth) {
       cookie = [tempHeaderCookie]
     } else if (tempHeaderCookie) {

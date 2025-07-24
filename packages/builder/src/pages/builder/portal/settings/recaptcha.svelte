@@ -31,15 +31,21 @@
     secretKey: "",
   })
 
+  $: configComplete = $values.siteKey && $values.secretKey
+
   async function saveConfig() {
+    const config = get(values)
+    // shouldn't error under normal conditions
+    if (!config.siteKey || !config.secretKey) {
+      throw new Error("Recaptcha config not completed")
+    }
     try {
       loading = true
-      const config = get(values)
       let recaptchaConfig: RecaptchaConfig = {
         type: ConfigType.RECAPTCHA,
         config: {
-          siteKey: config.siteKey!,
-          secretKey: config.secretKey!,
+          siteKey: config.siteKey,
+          secretKey: config.secretKey,
         },
       }
       await API.saveConfig(recaptchaConfig)
@@ -85,7 +91,11 @@
     </div>
   </div>
   <div>
-    <Button disabled={loading} on:click={() => saveConfig()} cta>Save</Button>
+    <Button
+      disabled={loading || !configComplete}
+      on:click={() => saveConfig()}
+      cta>Save</Button
+    >
   </div>
 </Layout>
 
