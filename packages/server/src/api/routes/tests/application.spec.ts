@@ -1,5 +1,5 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
-import { setEnv } from "../../../environment"
+import { setEnv, withEnv } from "../../../environment"
 
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -881,9 +881,11 @@ describe("/applications", () => {
       const updatedApp = await tk.withFreeze(
         "2021-02-01",
         async () =>
-          await config.api.application.update(app.appId, {
-            name: "UPDATED_NAME",
-          })
+          await config.withApp(app, () =>
+            config.api.application.update(app.appId, {
+              name: "UPDATED_NAME",
+            })
+          )
       )
       expect(updatedApp._rev).toBeDefined()
       expect(updatedApp.updatedAt).toEqual("2021-02-01T00:00:00.000Z")
@@ -972,9 +974,15 @@ describe("/applications", () => {
         .reply(200, {})
 
       expect(migrationMock).not.toHaveBeenCalled()
-      await config.api.application.delete(app.appId, {
-        headersNotPresent: [Header.MIGRATING_APP],
-      })
+      await withEnv(
+        {
+          SYNC_MIGRATION_CHECKS_MS: 1000,
+        },
+        () =>
+          config.api.application.delete(app.appId, {
+            headersNotPresent: [Header.MIGRATING_APP],
+          })
+      )
 
       expect(migrationMock).toHaveBeenCalledTimes(2)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
