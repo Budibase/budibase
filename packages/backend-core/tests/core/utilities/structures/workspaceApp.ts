@@ -22,7 +22,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
       navigation: "Top",
     },
     isDefault: false,
-
+    disabled: false,
     ...props,
   }
   return result
