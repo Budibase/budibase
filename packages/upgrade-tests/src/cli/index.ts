@@ -1,5 +1,5 @@
-import { Command } from "commander"
-import { bold, gray, green, red } from "chalk"
+import { program } from "@commander-js/extra-typings"
+import { bold, gray, green, red, blue } from "chalk"
 import * as fs from "fs"
 import * as path from "path"
 import {
@@ -13,19 +13,16 @@ import {
   waitForHealthy,
   buildCurrentVersion,
 } from "./docker"
-import { importApp } from "./appImport"
+import { importApp, getAvailableApps } from "./appImport"
 import { runTests } from "./testRunner"
 
-const program = new Command()
-
-// Helper to get project root
 function getProjectRoot(): string {
-  // When running from dist/src/cli, we need to go up 5 levels to reach project root
-  // dist/src/cli -> dist/src -> dist -> upgrade-tests -> packages -> project root
+  // When running from dist/src/cli, we need to go up 5 levels to reach project
+  // root dist/src/cli -> dist/src -> dist -> upgrade-tests -> packages ->
+  // project root
   return path.join(__dirname, "../../../../..")
 }
 
-// Clean up function
 async function cleanup(
   config: ReturnType<typeof generateDockerConfig>,
   showDetails = true
@@ -43,15 +40,7 @@ async function cleanup(
   }
 }
 
-// Clean up context files
 function cleanupContextFiles(silent = false) {
-  // Clean old global context file
-  const globalContext = path.join(__dirname, "../..", ".upgrade-context.json")
-  if (fs.existsSync(globalContext)) {
-    fs.unlinkSync(globalContext)
-  }
-
-  // Clean per-test context files
   const contextFiles = fs
     .readdirSync("/tmp")
     .filter(
@@ -76,7 +65,6 @@ program
   .description("Test Budibase upgrades with ease")
   .version("1.0.0")
 
-// Full upgrade test command
 program
   .command("full")
   .description("Run full upgrade test from specified version to current")
@@ -90,11 +78,17 @@ program
     "Skip building current version (assumes image already exists)"
   )
   .option("--verbose", "Show detailed output")
-  .action(async options => {
+  .allowExcessArguments()
+  .allowUnknownOption()
+  .action(async (options, { args }) => {
     const config = generateDockerConfig()
     console.log(bold("\n🚀 Starting Full Upgrade Test"))
     console.log(gray(`Upgrading from ${options.from} to ${options.to}`))
     console.log(gray(`Container: ${config.containerName}`))
+
+    if (args.length > 0) {
+      console.log(gray(`Extra Jest args: ${args.join(" ")}`))
+    }
 
     // Set up signal handlers for cleanup
     let cleanupInProgress = false
@@ -156,29 +150,58 @@ program
       process.env.BB_ADMIN_USER_PASSWORD = config.adminPassword
       process.env.BUDIBASE_CONTAINER_NAME = config.containerName
 
-      // Import app
-      const appToImport = options.app || "car-rental"
-      console.log(bold(`\n📱 Importing app: ${appToImport}`))
-      const { appId } = await importApp(appToImport, options.verbose)
+      // Import app(s)
+      const appMappings: Array<{ name: string; id: string }> = []
 
-      // Run pre-upgrade tests
+      if (options.app) {
+        // Single app mode
+        console.log(bold(`\n📱 Importing app: ${options.app}`))
+        const { appId, name } = await importApp(options.app, options.verbose)
+        appMappings.push({ name, id: appId })
+      } else {
+        // Multiple app mode - import all available apps
+        const availableApps = await getAvailableApps()
+        console.log(
+          bold(`\n📱 Importing ${availableApps.length} apps from fixtures`)
+        )
+
+        for (const appName of availableApps) {
+          console.log(gray(`  • Importing ${appName}...`))
+          const { appId, name } = await importApp(appName, options.verbose)
+          appMappings.push({ name, id: appId })
+        }
+      }
+
+      // Run pre-upgrade tests for each app
       console.log(bold("\n🧪 Pre-Upgrade Tests"))
-      const preSuccess = await runTests({
-        phase: "pre-upgrade",
-        verbose: options.verbose,
-        testAppId: appId,
-        testApp: options.testApp,
-        budibaseUrl,
-        internalApiKey: config.internalApiKey,
-        adminEmail: config.adminEmail,
-        adminPassword: config.adminPassword,
-        containerName: config.containerName,
-        oldVersion: options.from,
-        currentVersion: options.to,
-      })
+      let allPreTestsPassed = true
 
-      if (!preSuccess) {
-        throw new Error("Pre-upgrade tests failed")
+      for (const app of appMappings) {
+        console.log(bold(blue(`\n  Testing app: ${app.name}`)))
+        const preSuccess = await runTests({
+          phase: "pre-upgrade",
+          verbose: options.verbose,
+          testAppId: app.id,
+          testAppName: app.name,
+          testApp: options.testApp,
+          extraArgs: args,
+          budibaseUrl,
+          internalApiKey: config.internalApiKey,
+          adminEmail: config.adminEmail,
+          adminPassword: config.adminPassword,
+          containerName: config.containerName,
+          fromVersion: options.from,
+          toVersion: options.to,
+        })
+
+        if (!preSuccess) {
+          console.error(red(`  ✗ Pre-upgrade tests failed for ${app.name}`))
+          allPreTestsPassed = false
+        }
+      }
+
+      if (!allPreTestsPassed) {
+        throw new Error("Pre-upgrade tests failed for one or more apps")
       }
 
       // Stop old version
@@ -223,24 +246,36 @@ program
       // Update environment for new URL
       process.env.BUDIBASE_URL = newBudibaseUrl
 
-      // Run post-upgrade tests
+      // Run post-upgrade tests for each app
       console.log(bold("\n🧪 Post-Upgrade Tests"))
-      const postSuccess = await runTests({
-        phase: "post-upgrade",
-        verbose: options.verbose,
-        testAppId: appId,
-        testApp: options.testApp,
-        budibaseUrl: newBudibaseUrl,
-        internalApiKey: config.internalApiKey,
-        adminEmail: config.adminEmail,
-        adminPassword: config.adminPassword,
-        containerName: config.containerName,
-        oldVersion: options.from,
-        currentVersion: options.to,
-      })
+      let allPostTestsPassed = true
 
-      if (!postSuccess) {
-        throw new Error("Post-upgrade tests failed")
+      for (const app of appMappings) {
+        console.log(bold(blue(`\n  Testing app: ${app.name}`)))
+        const postSuccess = await runTests({
+          phase: "post-upgrade",
+          verbose: options.verbose,
+          testAppId: app.id,
+          testAppName: app.name,
+          testApp: options.testApp,
+          extraArgs: args,
+          budibaseUrl: newBudibaseUrl,
+          internalApiKey: config.internalApiKey,
+          adminEmail: config.adminEmail,
+          adminPassword: config.adminPassword,
+          containerName: config.containerName,
+          fromVersion: options.from,
+          toVersion: options.to,
+        })
+
+        if (!postSuccess) {
+          console.error(red(`  ✗ Post-upgrade tests failed for ${app.name}`))
+          allPostTestsPassed = false
+        }
+      }
+
+      if (!allPostTestsPassed) {
+        throw new Error("Post-upgrade tests failed for one or more apps")
       }
 
       // Success!
@@ -273,7 +308,9 @@ program
   .option("--from <version>", "The Budibase version")
   .option("--app <path|name>", "Path to app export or fixture name to import")
   .option("--verbose", "Show detailed output")
-  .action(async options => {
+  .allowExcessArguments()
+  .allowUnknownOption()
+  .action(async (options, { args }) => {
     console.log(bold("\n🧪 Running Pre-Upgrade Tests Only"))
 
     try {
@@ -297,12 +334,13 @@ program
       const success = await runTests({
         phase: "pre-upgrade",
         verbose: options.verbose,
+        extraArgs: args,
         budibaseUrl: process.env.BUDIBASE_URL!,
         internalApiKey: process.env.INTERNAL_API_KEY || "budibase",
         adminEmail: process.env.BB_ADMIN_USER_EMAIL || "admin@example.com",
         adminPassword: process.env.BB_ADMIN_USER_PASSWORD || "admin123!",
         containerName: process.env.BUDIBASE_CONTAINER_NAME || "local",
-        oldVersion: options.from,
+        fromVersion: options.from,
       })
 
       if (!success) {
@@ -319,7 +357,9 @@ program
   .command("post")
   .description("Run only post-upgrade tests")
   .option("--verbose", "Show detailed output")
-  .action(async options => {
+  .allowExcessArguments()
+  .allowUnknownOption()
+  .action(async (options, { args }) => {
     console.log(bold("\n🧪 Running Post-Upgrade Tests Only"))
 
     if (!process.env.TEST_APP_ID) {
@@ -334,6 +374,7 @@ program
       const success = await runTests({
         phase: "post-upgrade",
         verbose: options.verbose,
+        extraArgs: args,
         testAppId: process.env.TEST_APP_ID,
         budibaseUrl: process.env.BUDIBASE_URL || "http://localhost:10000",
         internalApiKey: process.env.INTERNAL_API_KEY || "budibase",
