@@ -1,16 +1,7 @@
-import Router from "@koa/router"
 import * as controller from "../../controllers/global/roles"
-import { auth } from "@budibase/backend-core"
+import { builderOrAdminRoutes } from "../endpointGroups"
 
-const router: Router = new Router()
-
-router
-  .get("/api/global/roles", auth.builderOrAdmin, controller.fetch)
-  .get("/api/global/roles/:appId", auth.builderOrAdmin, controller.find)
-  .delete(
-    "/api/global/roles/:appId",
-    auth.builderOrAdmin,
-    controller.removeAppRole
-  )
-
-export default router
+builderOrAdminRoutes
+  .get("/api/global/roles", controller.fetch)
+  .get("/api/global/roles/:appId", controller.find)
+  .delete("/api/global/roles/:appId", controller.removeAppRole)

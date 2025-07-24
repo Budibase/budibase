@@ -1,8 +1,4 @@
 import * as controller from "../../controllers/system/restore"
-import Router from "@koa/router"
+import { loggedInRoutes } from "../endpointGroups"
 
-const router: Router = new Router()
-
-router.post("/api/system/restored", controller.systemRestored)
-
-export default router
+loggedInRoutes.post("/api/system/restored", controller.systemRestored)
