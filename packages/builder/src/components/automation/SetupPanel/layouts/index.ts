@@ -63,7 +63,7 @@ export const getCustomStepLayout = (
   // Use the test data for test mode otherwise resolve trigger/step inputs by block
   const fieldData = isTest
     ? get(selectedAutomation)?.data?.testData
-    : automationStore.actions.getInputData(block)
+    : automationStore.getInputData(block)
 
   const coreDivider = {
     comp: Divider,
@@ -93,7 +93,7 @@ export const getCustomStepLayout = (
         onChange: (e: CustomEvent<FormUpdate>) => {
           const update = { [rowIdentifier]: e.detail }
           if (block) {
-            automationStore.actions.requestUpdate(update, block)
+            automationStore.requestUpdate(update, block)
           }
         },
         props: () => {
@@ -130,7 +130,7 @@ export const getCustomStepLayout = (
           if (block) {
             const metaUpdate = e.detail?.meta as Record<string, unknown>
 
-            automationStore.actions.requestUpdate(
+            automationStore.requestUpdate(
               {
                 row: e.detail.row,
                 meta: {
@@ -153,7 +153,7 @@ export const getCustomStepLayout = (
         title: "Table",
         onChange: (e: CustomEvent) => {
           const rowKey = get(stepState)[block.id]?.rowType || "row"
-          automationStore.actions.requestUpdate(
+          automationStore.requestUpdate(
             {
               _tableId: e.detail,
               meta: {},
@@ -176,7 +176,7 @@ export const getCustomStepLayout = (
   }
 
   // STEP
-  if (automationStore.actions.isRowStep(block)) {
+  if (automationStore.isRowStep(block)) {
     const layout: SchemaConfigProps[] = [
       ...getTableSelector(),
       ...getIdConfig("rowId"),
@@ -184,7 +184,7 @@ export const getCustomStepLayout = (
       ...getRowSelector(),
     ]
     return layout
-  } else if (automationStore.actions.isRowTrigger(block) && isTest) {
+  } else if (automationStore.isRowTrigger(block) && isTest) {
     // TRIGGER/TEST - Will be used to replace the test modal
     const schema = block.schema.outputs.properties
 
@@ -205,7 +205,7 @@ export const getCustomStepLayout = (
           onChange: (e: CustomEvent<FormUpdate>) => {
             const update = { ["revision"]: e.detail }
             if (block) {
-              automationStore.actions.requestUpdate(update, block)
+              automationStore.requestUpdate(update, block)
             }
           },
           props: () => ({
@@ -301,7 +301,7 @@ export const getCustomStepLayout = (
               },
             }
             if (block) {
-              automationStore.actions.requestUpdate(update, block)
+              automationStore.requestUpdate(update, block)
             }
           },
         },

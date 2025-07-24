@@ -57,17 +57,14 @@
   }
 
   // All bindings available to this point
-  $: availableBindings = automationStore.actions.getPathBindings(
-    step.id,
-    automation
-  )
+  $: availableBindings = automationStore.getPathBindings(step.id, automation)
 
   // Fetch the env bindings
   $: environmentBindings =
-    automationStore.actions.buildEnvironmentBindings($memoEnvVariables)
+    automationStore.buildEnvironmentBindings($memoEnvVariables)
 
-  $: userBindings = automationStore.actions.buildUserBindings()
-  $: settingBindings = automationStore.actions.buildSettingBindings()
+  $: userBindings = automationStore.buildUserBindings()
+  $: settingBindings = automationStore.buildSettingBindings()
 
   // Combine all bindings for the step
   $: bindings = [
@@ -106,8 +103,17 @@
     <ActionButton
       disabled={viewMode === ViewMode.LOGS}
       icon="plus-circle"
-      on:click={() => {
-        automationStore.actions.branchAutomation(pathToCurrentNode, automation)
+      on:click={async () => {
+        const branched = automationStore.branchAutomation(
+          pathToCurrentNode,
+          automation
+        )
+        try {
+          await automationStore.save(branched)
+        } catch (e) {
+          notifications.error("Error adding branch to automation")
+          console.error("Error adding automation branch", e)
+        }
       }}
     >
       Add branch
@@ -161,20 +167,20 @@
                     if (!Object.keys(branch.condition).length) {
                       branchArray[i] = {
                         ...branch,
-                        ...automationStore.actions.generateDefaultConditions(),
+                        ...automationStore.generateDefaultConditions(),
                       }
                     }
                   }
                 )
 
-                const updated = automationStore.actions.updateStep(
+                const updated = automationStore.updateStep(
                   blockRef?.pathTo,
                   automation,
                   branchStepUpdate
                 )
 
                 try {
-                  await automationStore.actions.save(updated)
+                  await automationStore.save(updated)
                 } catch (e) {
                   notifications.error("Error saving branch update")
                   console.error("Error saving automation branch", e)

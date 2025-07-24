@@ -1,7 +1,7 @@
 <script>
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
+  import { Modal, notifications, Icon } from "@budibase/bbui"
   import { ViewMode } from "@/types/automations"
-  import { Modal, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import { ActionStepID } from "@/constants/backend/automations"
@@ -86,7 +86,7 @@
 
   const loadSteps = blockRef => {
     return blockRef
-      ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
+      ? automationStore.getPathSteps(blockRef.pathTo, automation)
       : []
   }
 
@@ -183,7 +183,7 @@
           class="block-core"
           on:click={async () => {
             if (viewMode === ViewMode.EDITOR) {
-              await automationStore.actions.selectNode(block.id)
+              await automationStore.selectNode(block.id)
             } else if (viewMode === ViewMode.LOGS && logStepData) {
               onStepSelect(logStepData)
             }
@@ -194,8 +194,7 @@
               disabled
               {automation}
               {block}
-              on:update={e =>
-                automationStore.actions.updateBlockTitle(block, e.detail)}
+              on:update={e => automationStore.updateBlockTitle(block, e.detail)}
             />
           </div>
 
@@ -223,11 +222,17 @@
     {:else if viewMode === ViewMode.EDITOR}
       <FlowItemActions
         {block}
-        on:branch={() => {
-          automationStore.actions.branchAutomation(
-            $selectedAutomation.blockRefs[block.id]?.pathTo,
+        on:branch={async () => {
+          const updated = automationStore.branchAutomation(
+            $selectedAutomation.blockRefs[block.id].pathTo,
             automation
           )
+          try {
+            await automationStore.save(updated)
+          } catch (e) {
+            notifications.error("Error adding branch to automation")
+            console.error("Error adding automation branch", e)
+          }
         }}
       />
     {/if}

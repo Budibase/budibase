@@ -357,11 +357,7 @@
     const dropZone = $view.dropzones[$view.droptarget]
     const destPath = dropZone?.path
 
-    automationStore.actions.moveBlock(
-      sourcePath,
-      destPath,
-      $selectedAutomation.data
-    )
+    automationStore.moveBlock(sourcePath, destPath, $selectedAutomation.data)
   }
 
   // Reset state on mouse up

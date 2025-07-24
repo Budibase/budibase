@@ -4,10 +4,10 @@ import {
 } from "../../api"
 
 export interface BlockPath {
-  stepIdx: number
-  branchIdx: number
-  branchStepId: string
-  id: string
+  stepIdx?: number
+  branchIdx?: number
+  branchStepId?: string
+  id?: string
 }
 
 export interface BlockRef {

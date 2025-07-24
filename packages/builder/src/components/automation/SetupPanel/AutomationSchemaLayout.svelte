@@ -83,7 +83,7 @@
       onChange: (e: CustomEvent<FormUpdate>) => {
         const update = e.detail
         if (block) {
-          automationStore.actions.requestUpdate(update, block)
+          automationStore.requestUpdate(update, block)
         }
       },
     },
@@ -159,7 +159,7 @@
       onChange: (e: CustomEvent<FormUpdate>) => {
         const update = e.detail
         if (block) {
-          automationStore.actions.requestUpdate(update, block)
+          automationStore.requestUpdate(update, block)
         }
       },
       fullWidth: true,
@@ -250,7 +250,7 @@
   $: isTrigger = block?.type === AutomationStepType.TRIGGER
 
   // The step input properties
-  $: inputData = automationStore.actions.getInputData(block)
+  $: inputData = automationStore.getInputData(block)
 
   // Automation definition properties
   $: schemaProperties = Object.entries(block?.schema?.inputs?.properties || {})
@@ -289,7 +289,7 @@
     block?: AutomationTrigger | AutomationStep
   ) => {
     if (block) {
-      automationStore.actions.requestUpdate(update, block)
+      automationStore.requestUpdate(update, block)
     }
   }
 

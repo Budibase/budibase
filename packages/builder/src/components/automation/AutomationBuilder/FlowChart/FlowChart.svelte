@@ -63,7 +63,7 @@
 
   const deleteAutomation = async () => {
     try {
-      await automationStore.actions.delete(automation)
+      await automationStore.delete(automation)
     } catch (error) {
       notifications.error("Error deleting automation")
     }
@@ -71,9 +71,9 @@
 
   onMount(async () => {
     try {
-      await automationStore.actions.initAppSelf()
+      await automationStore.initAppSelf()
       await environment.loadVariables()
-      const response = await automationStore.actions.getLogs({
+      const response = await automationStore.getLogs({
         automationId: automation._id,
         status: "error",
         startDate: dayjs().subtract(1, "day").toISOString(),
@@ -86,20 +86,20 @@
 
   function toggleLogsPanel() {
     if ($automationStore.showLogsPanel) {
-      automationStore.actions.closeLogsPanel()
+      automationStore.closeLogsPanel()
       viewMode = ViewMode.EDITOR
     } else {
-      automationStore.actions.openLogsPanel()
-      automationStore.actions.closeLogPanel()
+      automationStore.openLogsPanel()
+      automationStore.closeLogPanel()
       viewMode = ViewMode.LOGS
       // Clear editor selection when switching to logs mode
-      automationStore.actions.selectNode(null)
+      automationStore.selectNode(null)
     }
   }
 
   function closeAllPanels() {
-    automationStore.actions.closeLogsPanel()
-    automationStore.actions.closeLogPanel()
+    automationStore.closeLogsPanel()
+    automationStore.closeLogPanel()
     viewMode = ViewMode.EDITOR
   }
 
@@ -115,7 +115,7 @@
           $automationStore.blockDefinitions,
           $automationStore.selectedLog
         ) ?? $automationStore.selectedLog
-      automationStore.actions.openLogPanel(enrichedLog, stepData)
+      automationStore.openLogPanel(enrichedLog, stepData)
     }
   }
 </script>
@@ -157,7 +157,7 @@
             on:click={() => {
               viewMode = ViewMode.LOGS
               // Clear editor selection when switching to logs mode
-              automationStore.actions.selectNode(null)
+              automationStore.selectNode(null)
               if (
                 !$automationStore.showLogsPanel &&
                 !$automationStore.showLogDetailsPanel
@@ -187,7 +187,7 @@
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Paused" : "Activated"}
-          on:change={automationStore.actions.toggleDisabled(
+          on:change={automationStore.toggleDisabled(
             automation._id,
             automation.disabled
           )}

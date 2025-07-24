@@ -38,7 +38,7 @@
   $: blockResult =
     viewMode === ViewMode.LOGS && logStepData
       ? logStepData
-      : automationStore.actions.processBlockResults(testResults, block)
+      : automationStore.processBlockResults(testResults, block)
   $: flowStatus = getFlowStatus(blockResult)
 
   const getFlowStatus = (
@@ -125,7 +125,7 @@
             if (branch || !block || viewMode === ViewMode.LOGS) {
               return
             }
-            await automationStore.actions.selectNode(
+            automationStore.selectNode(
               block?.id,
               flowStatus.type == FlowStatusType.SUCCESS
                 ? DataMode.OUTPUT
