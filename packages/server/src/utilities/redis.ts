@@ -5,7 +5,10 @@ import env from "../environment"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
-const RECAPTCHA_SESSION_SECONDS = 1800
+const RECAPTCHA_SESSION_SECONDS =
+  typeof env.RECAPTCHA_SESSION_SECONDS === "string"
+    ? parseInt(env.RECAPTCHA_SESSION_SECONDS)
+    : env.RECAPTCHA_SESSION_SECONDS
 let devAppClient: RedisClient,
   debounceClient: RedisClient,
   flagClient: RedisClient,

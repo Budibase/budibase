@@ -5,7 +5,7 @@ import {
   CheckRecaptchaResponse,
   RecaptchaSessionCookie,
 } from "@budibase/types"
-import { utils, Cookie, configs } from "@budibase/backend-core"
+import { utils, Cookie, configs, UnexpectedError } from "@budibase/backend-core"
 import {
   setRecaptchaVerified,
   isRecaptchaVerified,
@@ -18,7 +18,7 @@ export async function verify(
   const { token } = ctx.request.body
 
   if (!token) {
-    throw new Error("Token not found")
+    throw new Error("Recaptcha token not found")
   }
 
   const config = await configs.getRecaptchaConfig()
@@ -26,32 +26,38 @@ export async function verify(
     throw new Error("No recaptcha config found")
   }
 
-  const response = await fetch(
-    "https://www.google.com/recaptcha/api/siteverify",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        secret: config.config.secretKey,
-        response: token,
-      }),
-    }
-  )
+  try {
+    const response = await fetch(
+      "https://www.google.com/recaptcha/api/siteverify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          secret: config.config.secretKey,
+          response: token,
+        }),
+      }
+    )
 
-  const { success } = await response.json()
-  const verified = success === true
-  if (verified) {
-    const sessionId = await setRecaptchaVerified()
-    const session: RecaptchaSessionCookie = {
-      sessionId,
+    const { success } = await response.json()
+    const verified = success === true
+    if (verified) {
+      const sessionId = await setRecaptchaVerified()
+      const session: RecaptchaSessionCookie = {
+        sessionId,
+      }
+      utils.setCookie(ctx, session, Cookie.RecaptchaSession)
     }
-    utils.setCookie(ctx, session, Cookie.RecaptchaSession)
-  }
 
-  ctx.body = {
-    verified,
+    ctx.body = {
+      verified,
+    }
+  } catch (error: any) {
+    throw new UnexpectedError(
+      `Failed to verify recaptcha token - ${error.message}`
+    )
   }
 }
 

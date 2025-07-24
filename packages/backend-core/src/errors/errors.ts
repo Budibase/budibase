@@ -66,6 +66,12 @@ export class HTTPError extends BudibaseError {
   }
 }
 
+export class UnexpectedError extends HTTPError {
+  constructor(message: string) {
+    super(message, 500)
+  }
+}
+
 export class NotFoundError extends HTTPError {
   constructor(message: string) {
     super(message, 404)
