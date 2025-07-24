@@ -18,6 +18,9 @@ describe("configs", () => {
       if (type === ConfigType.AI && upgradeSpansCommit("191bf3a")) {
         config.type = ConfigType.AI
       }
+      if (type === ConfigType.RECAPTCHA && upgradeSpansCommit("deb3556")) {
+        config.type = ConfigType.RECAPTCHA
+      }
       return config
     }
   )
