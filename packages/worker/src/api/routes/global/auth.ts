@@ -1,9 +1,7 @@
-import Router from "@koa/router"
 import * as authController from "../../controllers/global/auth"
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
-
-const router: Router = new Router()
+import { loggedInRoutes } from "../endpointGroups"
 
 function buildAuthValidation() {
   // prettier-ignore
@@ -28,7 +26,7 @@ function buildResetUpdateValidation() {
   }).required().unknown(false))
 }
 
-router
+loggedInRoutes
   // PASSWORD
   .post(
     "/api/global/auth/:tenantId/login",
@@ -87,5 +85,3 @@ router
   // OIDC - SINGLE TENANT - DEPRECATED
   .get("/api/global/auth/oidc/callback", authController.oidcCallback)
   .get("/api/admin/auth/oidc/callback", authController.oidcCallback)
-
-export default router

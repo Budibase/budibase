@@ -5,9 +5,9 @@ import {
   updateToolSourceValidator,
 } from "./utils/validators/agent"
 import { middleware } from "@budibase/pro"
-import { builderAdminRoutes, customEndpointGroups } from "./endpointGroups"
+import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
-export const licensedRoutes = customEndpointGroups.group(middleware.licenseAuth)
+export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
