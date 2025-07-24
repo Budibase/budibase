@@ -8,9 +8,9 @@ import {
 } from "../../middleware/appInfo"
 import recaptcha from "../../middleware/recaptcha"
 import { automationValidator } from "./utils/validators"
-import { builderRoutes, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
-const authorizedRoutes = customEndpointGroups.group(
+const authorizedRoutes = endpointGroupList.group(
   {
     middleware: authorized(
       permissions.PermissionType.AUTOMATION,

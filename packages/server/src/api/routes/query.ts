@@ -11,18 +11,18 @@ import {
   generateQueryValidation,
   generateQueryPreviewValidation,
 } from "../controllers/query/validation"
-import { builderRoutes, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readRoutes = customEndpointGroups.group(
+const readRoutes = endpointGroupList.group(
   {
     middleware: authorized(PermissionType.QUERY, PermissionLevel.READ),
     first: false,
   },
   recaptcha
 )
-const writeRoutes = customEndpointGroups.group(
+const writeRoutes = endpointGroupList.group(
   {
     middleware: authorized(PermissionType.QUERY, PermissionLevel.WRITE),
     first: false,

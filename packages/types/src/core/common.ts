@@ -3,5 +3,5 @@ export type JSONValue =
   | number
   | boolean
   | null
-  | { [key: string]: JSONValue }
   | JSONValue[]
+  | { [key: string]: JSONValue }

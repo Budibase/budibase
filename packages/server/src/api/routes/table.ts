@@ -4,11 +4,11 @@ import { paramResource, bodyResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { tableValidator } from "./utils/validators"
 import recaptcha from "../../middleware/recaptcha"
-import { builderRoutes, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
 const { PermissionLevel, PermissionType } = permissions
 
-const routes = customEndpointGroups.group(
+const routes = endpointGroupList.group(
   {
     middleware: authorized(PermissionType.TABLE, PermissionLevel.READ, {
       schema: true,

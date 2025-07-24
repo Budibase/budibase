@@ -6,6 +6,14 @@ import { ViewAPI } from "./view"
 import { BudibaseError } from "../utils/BudibaseError"
 import { v4 as uuidv4 } from "uuid"
 import { JSONValue } from "@budibase/types"
+import { ScreenAPI } from "./screen"
+import { DatasourceAPI } from "./datasource"
+import { QueryAPI } from "./query"
+import { UserAPI } from "./user"
+import { ConfigAPI } from "./config"
+import { RoleAPI } from "./role"
+import { WebhookAPI } from "./webhook"
+import { PluginAPI } from "./plugin"
 
 export interface AuthCredentials {
   email: string
@@ -24,13 +32,21 @@ export interface RequestOptions {
 }
 
 export class BudibaseClient {
-  private config: ClientConfig
+  private _config: ClientConfig
 
   application: ApplicationAPI
-  table: TableAPI
-  row: RowAPI
   automation: AutomationAPI
+  config: ConfigAPI
+  datasource: DatasourceAPI
+  plugin: PluginAPI
+  query: QueryAPI
+  role: RoleAPI
+  row: RowAPI
+  screen: ScreenAPI
+  table: TableAPI
+  user: UserAPI
   view: ViewAPI
+  webhook: WebhookAPI
 
   constructor(config?: ClientConfig) {
     if (!config) {
@@ -59,13 +75,21 @@ export class BudibaseClient {
       }
     }
 
-    this.config = config
+    this._config = config
 
     this.application = new ApplicationAPI(this)
-    this.table = new TableAPI(this)
-    this.row = new RowAPI(this)
     this.automation = new AutomationAPI(this)
+    this.config = new ConfigAPI(this)
+    this.datasource = new DatasourceAPI(this)
+    this.plugin = new PluginAPI(this)
+    this.query = new QueryAPI(this)
+    this.role = new RoleAPI(this)
+    this.row = new RowAPI(this)
+    this.screen = new ScreenAPI(this)
+    this.table = new TableAPI(this)
+    this.user = new UserAPI(this)
     this.view = new ViewAPI(this)
+    this.webhook = new WebhookAPI(this)
   }
 
   private async request<T>(
@@ -80,7 +104,7 @@ export class BudibaseClient {
     const correlationId = uuidv4()
 
     // Build URL with query parameters
-    let url = `${this.config.baseURL}${path}`
+    let url = `${this._config.baseURL}${path}`
     if (options?.query) {
       const params = new URLSearchParams(options.query)
       url += `?${params.toString()}`
@@ -88,7 +112,7 @@ export class BudibaseClient {
 
     // Prepare headers
     const headers: Record<string, string> = {
-      ...this.config.headers,
+      ...this._config.headers,
       "x-budibase-correlation-id": correlationId,
     }
 

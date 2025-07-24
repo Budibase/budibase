@@ -3,9 +3,9 @@ import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { datasourceValidator } from "./utils/validators"
 import recaptcha from "../../middleware/recaptcha"
-import { builderRoutes, customEndpointGroups } from "./endpointGroups"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
-const authorizedRoutes = customEndpointGroups.group(
+const authorizedRoutes = endpointGroupList.group(
   {
     middleware: authorized(
       permissions.PermissionType.TABLE,

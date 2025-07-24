@@ -7,18 +7,18 @@ import trimViewRowInfo from "../../middleware/trimViewRowInfo"
 import recaptcha from "../../middleware/recaptcha"
 import { validateBody } from "../../middleware/zod-validator"
 import { searchRowRequestValidator } from "@budibase/types"
-import { customEndpointGroups, publicRoutes } from "./endpointGroups"
+import { endpointGroupList, publicRoutes } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readRoutes = customEndpointGroups.group(
+const readRoutes = endpointGroupList.group(
   {
     middleware: authorized(PermissionType.TABLE, PermissionLevel.READ),
     first: false,
   },
   recaptcha
 )
-const writeRoutes = customEndpointGroups.group(
+const writeRoutes = endpointGroupList.group(
   {
     middleware: authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     first: false,
