@@ -1,21 +1,30 @@
+import { AutomationStep } from "@budibase/types"
 import { BudibaseClient } from "../index"
-import { it } from "../utils/upgradeTest"
+import { shouldNotChange } from "../utils/upgradeTest"
 
-describe("Automation Upgrade Tests", () => {
+describe("automations", () => {
   let client: BudibaseClient
 
   beforeAll(async () => {
     client = await BudibaseClient.authenticated()
   })
 
-  it("should preserve automation counts", {
-    pre: async () => {
-      const automations = await client.automation.fetch()
-      return { automationCount: automations.length }
-    },
-    post: async ({ automationCount }) => {
-      const currentAutomations = await client.automation.fetch()
-      expect(currentAutomations.length).toBe(automationCount)
-    },
+  shouldNotChange("IDs", async () => {
+    const automations = await client.automation.fetch()
+    return automations.map(automation => automation._id!).sort()
+  })
+
+  shouldNotChange("names", async () => {
+    const automations = await client.automation.fetch()
+    return automations.map(automation => automation.name).sort()
+  })
+
+  shouldNotChange("steps", async () => {
+    const automations = await client.automation.fetch()
+    const steps: { [id: string]: AutomationStep[] } = {}
+    for (const automation of automations) {
+      steps[automation._id!] = automation.definition.steps
+    }
+    return steps
   })
 })

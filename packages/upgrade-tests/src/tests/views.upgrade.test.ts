@@ -1,15 +1,19 @@
 import { BudibaseClient } from "../index"
 import { shouldNotChange } from "../utils/upgradeTest"
 
-describe("tables", () => {
+describe("views", () => {
   let client: BudibaseClient
 
   beforeAll(async () => {
     client = await BudibaseClient.authenticated()
   })
 
-  shouldNotChange("IDs", async () => {
+  shouldNotChange("names", async () => {
     const tables = await client.table.fetch()
-    return tables.map(table => table._id!).sort()
+    return tables
+      .map(table => table.views || {})
+      .flatMap(view => Object.values(view))
+      .map(view => view.name || "unknown")
+      .sort()
   })
 })
