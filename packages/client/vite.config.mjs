@@ -80,6 +80,13 @@ export default defineConfig(({ mode }) => {
             "../../node_modules/leaflet/dist/leaflet.js"
           ),
         },
+        {
+          find: "html2canvas",
+          replacement: path.resolve(
+            __dirname,
+            "../../node_modules/html2canvas/dist/html2canvas.min.js"
+          ),
+        },
       ],
     },
   }
