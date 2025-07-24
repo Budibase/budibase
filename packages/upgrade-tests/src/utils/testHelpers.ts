@@ -23,14 +23,14 @@ export function isPostUpgradePhase(): boolean {
 }
 
 export function getOldVersion(): string {
-  const version = process.env.OLD_VERSION
+  const version = process.env.FROM_VERSION
   if (!version) {
-    throw new Error("OLD_VERSION environment variable not set")
+    throw new Error("FROM_VERSION environment variable not set")
   }
   return version
 }
 
 export function getCurrentVersion(): string {
-  const version = process.env.CURRENT_VERSION || "current"
+  const version = process.env.TO_VERSION || "current"
   return version
 }

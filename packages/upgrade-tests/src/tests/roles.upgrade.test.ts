@@ -1,7 +1,7 @@
 import { BudibaseClient } from "../index"
 import { shouldNotChange } from "../utils/upgradeTest"
 
-describe("tables", () => {
+describe("roles", () => {
   let client: BudibaseClient
 
   beforeAll(async () => {
@@ -9,7 +9,12 @@ describe("tables", () => {
   })
 
   shouldNotChange("IDs", async () => {
-    const tables = await client.table.fetch()
-    return tables.map(table => table._id!).sort()
+    const roles = await client.role.fetch()
+    return roles.map(role => role._id!).sort()
+  })
+
+  shouldNotChange("names", async () => {
+    const roles = await client.role.fetch()
+    return roles.map(role => role.name).sort()
   })
 })
