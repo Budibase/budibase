@@ -157,8 +157,7 @@
   }
 
   function handleDndConsider(e) {
-    // Filter out any invalid actions that might have been created
-    actions = e.detail.items.filter(item => item && item.id)
+    actions = e.detail.items
 
     // set the initial index of the action being dragged
     if (e.detail.info.trigger === "draggedEntered") {
@@ -168,8 +167,7 @@
     }
   }
   function handleDndFinalize(e) {
-    // Filter out any invalid actions that might have been created
-    actions = e.detail.items.filter(item => item && item.id)
+    actions = e.detail.items
 
     // Update action binding references
     updateReferencesInObject({

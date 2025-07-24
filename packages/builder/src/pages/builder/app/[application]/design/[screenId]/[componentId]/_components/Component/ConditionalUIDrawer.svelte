@@ -121,8 +121,7 @@
   }
 
   const updateConditions = e => {
-    // Filter out any invalid conditions that might have been created
-    conditions = e.detail.items.filter(item => item && item.id)
+    conditions = e.detail.items
   }
 
   const getOperatorOptions = condition => {
