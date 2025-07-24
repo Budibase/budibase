@@ -11,6 +11,7 @@
   export let fixed: boolean = false
   export let color: string | undefined = undefined
   export let noWrap: boolean = false
+  export let pointerEvents: boolean = false
 
   let wrapper: HTMLElement | undefined
   let hovered = false
@@ -105,6 +106,7 @@
 <style>
   .abs-tooltip {
     display: contents;
+    pointer-events: all;
   }
   .spectrum-Tooltip.noWrap .spectrum-Tooltip-label {
     width: max-content;
