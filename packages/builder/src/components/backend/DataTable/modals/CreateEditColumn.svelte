@@ -719,6 +719,10 @@
     getOptionLabel={field => field.name}
     getOptionValue={field => field.fieldId}
     getOptionIcon={field => field.icon}
+    tooltipMessage={option =>
+      isFirstColumn && !isAllowedDisplayField(option.name, option.type)
+        ? "Cannot create this column until a primary display field has been created."
+        : ""}
     isOptionEnabled={option => {
       // Disable certain fields if they are the first column
       if (isFirstColumn && !isAllowedDisplayField(option.name, option.type)) {
