@@ -9,6 +9,8 @@
   import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
   import {
     deploymentStore,
+    automationStore,
+    workspaceAppStore,
   } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
   import { featureFlags } from "@/stores/portal"
@@ -73,12 +75,12 @@
           View app
         </div>
       {:else}
-        {#if publishedAutomations.length}
-          Automations published: {publishedAutomations.length}
+        {#if $automationStore.automations.length}
+          Automations published: {$automationStore.automations.length}
           <br />
         {/if}
-        {#if publishedApps.length}
-          Apps published: {publishedApps.length}
+        {#if $workspaceAppStore.workspaceApps.length}
+          Apps published: {$workspaceAppStore.workspaceApps.length}
         {/if}
       {/if}
     </Body>

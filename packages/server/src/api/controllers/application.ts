@@ -256,6 +256,10 @@ export async function fetchClientApps(
       sdk.workspaceApps.fetch(db)
     )
     for (const workspaceApp of workspaceApps) {
+      // don't return disabled workspace apps
+      if (workspaceApp.disabled) {
+        continue
+      }
       result.push({
         // This is used as idempotency key for rendering in the frontend
         appId: `${app.appId}_${workspaceApp._id}`,
