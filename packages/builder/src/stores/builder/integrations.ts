@@ -1,10 +1,10 @@
 import { get, writable, type Writable } from "svelte/store"
 import { API } from "@/api"
-import { Datasource, Integration } from "@budibase/types"
+import { Datasource, Integration, SourceName } from "@budibase/types"
 import { integrationForDatasource } from "@/stores/selectors"
 import { datasources } from "./datasources"
 
-type IntegrationsState = Record<string, Integration>
+type IntegrationsState = Partial<Record<SourceName, Integration>>
 
 const INITIAL_STATE: IntegrationsState = {}
 
@@ -18,7 +18,7 @@ const createIntegrationsStore = () => {
     const integrations = Object.entries(response).reduce(
       (acc, [key, value]) => {
         if (value) {
-          acc[key] = value
+          acc[key as SourceName] = value
         }
         return acc
       },

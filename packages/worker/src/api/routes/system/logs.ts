@@ -1,9 +1,7 @@
-import Router from "@koa/router"
-import { middleware } from "@budibase/backend-core"
 import * as controller from "../../controllers/system/logs"
+import { adminRoutes } from "../endpointGroups"
+import env from "../../../environment"
 
-const router: Router = new Router()
-
-router.get("/api/system/logs", middleware.adminOnly, controller.getLogs)
-
-export default router
+if (env.SELF_HOSTED) {
+  adminRoutes.get("/api/system/logs", controller.getLogs)
+}
