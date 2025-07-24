@@ -1,5 +1,5 @@
 import { writable, derived, get, Writable, Readable } from "svelte/store"
-import { cloneDeep } from "lodash/fp"
+import cloneDeep from "lodash/fp/cloneDeep"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 import {
