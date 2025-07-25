@@ -7,11 +7,18 @@ export interface PublishAppRequest {
 
 export interface PublishAppResponse extends DeploymentDoc {}
 
+export enum PublishResourceState {
+  PUBLISHED = "published",
+  UNPUBLISHED = "unpublished",
+  DISABLED = "disabled",
+}
+
 export type PublishStatusResource = {
   published: boolean
   name: string
   publishedAt?: string
   unpublishedChanges?: boolean
+  state: PublishResourceState
 }
 
 export interface PublishStatusResponse {

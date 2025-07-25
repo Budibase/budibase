@@ -28,6 +28,7 @@ import { WorkspaceAppAPI } from "./workspaceApp"
 import { ResourceAPI } from "./resource"
 import { DeployAPI } from "./deploy"
 import { NavigationAPI } from "./navigation"
+import { RoutingAPI } from "./routing"
 
 export default class API {
   ai: AIAPI
@@ -57,6 +58,7 @@ export default class API {
   workspaceApp: WorkspaceAppAPI
   resource: ResourceAPI
   navigation: NavigationAPI
+  routing: RoutingAPI
 
   public: {
     user: UserPublicAPI
@@ -91,6 +93,7 @@ export default class API {
     this.workspaceApp = new WorkspaceAppAPI(config)
     this.resource = new ResourceAPI(config)
     this.navigation = new NavigationAPI(config)
+    this.routing = new RoutingAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),

@@ -5,6 +5,7 @@ import {
   events,
   cache,
   features,
+  errors,
 } from "@budibase/backend-core"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import {
@@ -28,7 +29,6 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
-import { buildPublishFilter } from "./filters"
 import { doInMigrationLock } from "../../../appMigrations"
 
 // the max time we can wait for an invalidation to complete before considering it failed
@@ -172,10 +172,10 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
 export const publishApp = async function (
   ctx: UserCtx<PublishAppRequest, PublishAppResponse>
 ) {
-  let automationIds: string[] | undefined, workspaceAppIds: string[] | undefined
-  if (ctx.request.body) {
-    automationIds = ctx.request.body.automationIds
-    workspaceAppIds = ctx.request.body.workspaceAppIds
+  if (ctx.request.body?.automationIds || ctx.request.body?.workspaceAppIds) {
+    throw new errors.NotImplementedError(
+      "Publishing resources by ID not currently supported"
+    )
   }
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
@@ -208,20 +208,8 @@ export const publishApp = async function (
       }
       replication = new dbCore.Replication(config)
       const devDb = context.getDevAppDB()
-      const publishFilter =
-        automationIds || workspaceAppIds
-          ? await buildPublishFilter({
-              automationIds,
-              workspaceAppIds,
-            })
-          : undefined
       await devDb.compact()
-      await replication.replicate(
-        replication.appReplicateOpts({
-          // filters automations, screen and workspace documents based on supplied filters
-          filter: publishFilter,
-        })
-      )
+      await replication.replicate(replication.appReplicateOpts({}))
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
       const db = context.getProdAppDB()
@@ -246,14 +234,19 @@ export const publishApp = async function (
       deployment.appUrl = appDoc.url
       appDoc.appId = productionAppId
       appDoc.instance._id = productionAppId
-      if (automationIds?.length || workspaceAppIds?.length) {
-        const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
-        appDoc.resourcesPublishedAt = {
-          ...prodAppDoc?.resourcesPublishedAt,
-          ...Object.fromEntries(
-            fullMap.map(id => [id, new Date().toISOString()])
-          ),
-        }
+      const [automations, workspaceApps] = await Promise.all([
+        sdk.automations.fetch(),
+        sdk.workspaceApps.fetch(),
+      ])
+      const automationIds = automations.map(auto => auto._id!)
+      const workspaceAppIds = workspaceApps.map(app => app._id!)
+      const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
+      // if resource publishing, need to restrict this list
+      appDoc.resourcesPublishedAt = {
+        ...prodAppDoc?.resourcesPublishedAt,
+        ...Object.fromEntries(
+          fullMap.map(id => [id, new Date().toISOString()])
+        ),
       }
       // remove automation errors if they exist
       delete appDoc.automationErrors

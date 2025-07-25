@@ -10,6 +10,7 @@
   export let disabled: boolean | undefined = false
   export let error: string | undefined = undefined
   export let helpText: string | undefined = undefined
+  export let noPadding: boolean = false
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<boolean>) => {
@@ -22,6 +23,7 @@
   <Switch
     {disabled}
     {text}
+    {noPadding}
     value={value ?? undefined}
     on:change={onChange}
     on:click

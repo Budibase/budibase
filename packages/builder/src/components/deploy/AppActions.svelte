@@ -13,18 +13,13 @@
     isOnlyUser,
     appStore,
     deploymentStore,
-    workspaceAppStore,
-    automationStore,
   } from "@/stores/builder"
-  import { page } from "@roxi/routify"
   import { admin, featureFlags } from "@/stores/portal"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import PublishModal from "@/components/deploy/PublishModal.svelte"
 
   type ShowUI = { show: () => void }
 
   let versionModal: ShowUI
-  let publishModal: ShowUI
   let showNpsSurvey = false
   let publishButton: any
   let publishSuccessPopover: ShowUI | undefined
@@ -36,19 +31,10 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-  $: inAutomations = $page.path.includes("/automation/")
-  $: inDesign = $page.path.includes("/design/")
-  $: selectedWorkspaceAppId =
-    $workspaceAppStore.selectedWorkspaceApp?._id || undefined
-  $: selectedAutomationId = $automationStore.selectedAutomationId || undefined
 
   const publish = async () => {
-    if (workspaceAppsEnabled) {
-      publishModal.show()
-    } else {
-      await deploymentStore.publishApp()
-      publishSuccessPopover?.show()
-    }
+    await deploymentStore.publishApp()
+    publishSuccessPopover?.show()
   }
 </script>
 
@@ -97,21 +83,6 @@
 {/if}
 
 <VersionModal hideIcon bind:this={versionModal} />
-{#if workspaceAppsEnabled}
-  <PublishModal
-    targetId={inDesign
-      ? selectedWorkspaceAppId
-      : inAutomations
-        ? selectedAutomationId
-        : undefined}
-    bind:this={publishModal}
-    on:success={evt => {
-      publishedAutomations = evt.detail.publishedAutomations
-      publishedApps = evt.detail.publishedApps
-      publishSuccessPopover?.show()
-    }}
-  />
-{/if}
 
 <Popover
   anchor={publishButton}

@@ -25,6 +25,7 @@ function toWorkspaceAppResponse(
     iconColor: workspaceApp.iconColor,
     navigation: workspaceApp.navigation,
     isDefault: workspaceApp.isDefault,
+    disabled: workspaceApp.disabled,
   }
 }
 
@@ -56,6 +57,7 @@ export async function create(
     url: body.url,
     icon: body.icon,
     iconColor: body.iconColor,
+    disabled: body.disabled,
     navigation: defaultAppNavigator(body.name),
     isDefault: false,
   }
@@ -84,6 +86,7 @@ export async function edit(
     icon: body.icon,
     iconColor: body.iconColor,
     navigation: body.navigation,
+    disabled: body.disabled,
   }
 
   const workspaceApp = await sdk.workspaceApps.update(toUpdate)

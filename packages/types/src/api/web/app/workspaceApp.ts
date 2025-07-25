@@ -9,6 +9,7 @@ export interface WorkspaceAppResponse {
   iconColor?: string
   navigation: AppNavigation
   isDefault: boolean
+  disabled?: boolean
 }
 
 export interface InsertWorkspaceAppRequest {
@@ -16,6 +17,7 @@ export interface InsertWorkspaceAppRequest {
   url: string
   icon: string
   iconColor?: string
+  disabled?: boolean
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -30,6 +32,7 @@ export interface UpdateWorkspaceAppRequest {
   icon: string
   iconColor?: string
   navigation: AppNavigation
+  disabled?: boolean
 }
 
 export interface UpdateWorkspaceAppResponse {

@@ -6,8 +6,8 @@ export interface WorkspaceApp extends Document {
   url: string
   icon: string
   iconColor?: string
-
   navigation: AppNavigation
   // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
   isDefault: boolean
+  disabled?: boolean
 }

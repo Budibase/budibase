@@ -22,7 +22,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
       navigation: "Top",
     },
     isDefault: false,
-
+    disabled: false,
     ...props,
   }
   return result
@@ -38,6 +38,7 @@ export function createRequest(
     url: workspace.url,
     icon: workspace.icon,
     iconColor: workspace.iconColor,
+    disabled: workspace.disabled,
   }
   return result
 }

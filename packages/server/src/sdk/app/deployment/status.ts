@@ -1,12 +1,26 @@
 import { context } from "@budibase/backend-core"
 import {
+  App,
   Automation,
-  WorkspaceApp,
+  PublishResourceState,
   PublishStatusResource,
   Screen,
-  App,
+  WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+
+function getPublishedState(
+  resource: { disabled?: boolean },
+  lastPublishedAt?: string
+): PublishResourceState {
+  if (resource.disabled) {
+    return PublishResourceState.DISABLED
+  } else if (lastPublishedAt) {
+    return PublishResourceState.PUBLISHED
+  } else {
+    return PublishResourceState.UNPUBLISHED
+  }
+}
 
 export async function status() {
   const prodDb = context.getProdAppDB()
@@ -68,6 +82,7 @@ export async function status() {
       publishedAt: resourcePublishedAt,
       unpublishedChanges:
         !resourcePublishedAt || automation.updatedAt! > resourcePublishedAt,
+      state: getPublishedState(automation, resourcePublishedAt),
     }
   }
 
@@ -87,6 +102,7 @@ export async function status() {
         !!workspaceScreens.find(
           screen => screen.updatedAt! > resourcePublishedAt
         ),
+      state: getPublishedState(workspaceApp, resourcePublishedAt),
     }
   }
 

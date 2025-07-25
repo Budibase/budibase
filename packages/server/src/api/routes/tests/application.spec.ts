@@ -755,7 +755,7 @@ describe("/applications", () => {
       expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
-    it("should publish app with filtered resources, filtering by automation", async () => {
+    it.skip("should publish app with filtered resources, filtering by automation", async () => {
       // create data resources
       const table = await config.createTable(basicTable())
       // all internal resources are published if any used

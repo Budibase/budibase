@@ -63,6 +63,7 @@ export async function update(
     icon: workspaceApp.icon,
     iconColor: workspaceApp.iconColor,
     navigation: workspaceApp.navigation,
+    disabled: workspaceApp.disabled,
 
     // Immutable properties
     createdAt: persisted.createdAt,
