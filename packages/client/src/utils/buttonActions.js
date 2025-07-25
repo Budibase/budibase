@@ -527,6 +527,37 @@ const rowActionHandler = async action => {
   })
 }
 
+const delayHandler = async action => {
+  return new Promise(resolve => setTimeout(resolve, action.parameters.duration))
+}
+
+const scrollToFieldHandler = action => {
+  const fieldLabel = action.parameters.field
+
+  // Try to find a label element whose text matches the field name
+  const label = Array.from(document.querySelectorAll("label")).find(
+    el => el.textContent.trim() === fieldLabel
+  )
+
+  if (!label) return
+
+  // If label has a 'for' attribute, use that to get the input
+  let target = null
+  const forId = label.getAttribute("for")
+  if (forId) {
+    target = document.getElementById(forId)
+  } else {
+    // Fallback: look for an input nested inside the label
+    target = label.querySelector("input, textarea, select")
+  }
+
+  if (!target) return
+
+  target.focus({ preventScroll: true })
+  label.style.scrollMargin = "100px"
+  label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+}
+
 const handlerMap = {
   ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
@@ -550,6 +581,8 @@ const handlerMap = {
   ["Download File"]: downloadFileHandler,
   ["Row Action"]: rowActionHandler,
   ["Copy To Clipboard"]: copyToClipboardHandler,
+  ["Delay"]: delayHandler,
+  ["Scroll To Field"]: scrollToFieldHandler,
 }
 
 const confirmTextMap = {
