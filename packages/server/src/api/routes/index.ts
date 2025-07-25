@@ -39,6 +39,7 @@ import "./ai"
 import "./workspaceApp"
 import "./navigation"
 import "./resource"
+import "./recaptcha"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"

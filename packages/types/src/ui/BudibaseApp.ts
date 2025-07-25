@@ -16,4 +16,5 @@ export interface BudibaseAppProps {
   nonce?: string
   headAppScripts?: string
   bodyAppScripts?: string
+  recaptchaKey?: string
 }

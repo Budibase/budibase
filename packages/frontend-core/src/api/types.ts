@@ -39,6 +39,7 @@ import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
 import { DeploymentEndpoints } from "./deploy"
+import { RecaptchaEndpoints } from "./recaptcha"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -149,4 +150,5 @@ export type APIClient = BaseAPIClient &
     navigation: NavigationEndpoints
     workspaceApp: WorkspaceAppEndpoints
     deployment: DeploymentEndpoints
+    recaptcha: RecaptchaEndpoints
   }

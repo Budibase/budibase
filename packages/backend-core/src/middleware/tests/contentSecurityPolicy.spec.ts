@@ -40,7 +40,7 @@ describe("contentSecurityPolicy middleware", () => {
     expect(ctx.set).toHaveBeenCalledWith(
       "Content-Security-Policy",
       expect.stringContaining(
-        `script-src 'self' 'unsafe-eval' https://*.budibase.net https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io https://d2l5prqdbvm3op.cloudfront.net https://us-assets.i.posthog.com 'nonce-${mockNonce}'`
+        `script-src 'self' 'unsafe-eval' https://*.budibase.net https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io https://d2l5prqdbvm3op.cloudfront.net https://us-assets.i.posthog.com https://www.google.com/recaptcha/api.js 'nonce-mocked/nonce'`
       )
     )
     expect(next).toHaveBeenCalled()
