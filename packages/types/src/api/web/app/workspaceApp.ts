@@ -17,6 +17,7 @@ export interface InsertWorkspaceAppRequest {
   url: string
   icon: string
   iconColor?: string
+  disabled?: boolean
 }
 
 export interface InsertWorkspaceAppResponse {

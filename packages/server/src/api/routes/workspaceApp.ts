@@ -11,6 +11,7 @@ const baseSchema = {
     .regex(/^\/\w*$/),
   icon: Joi.string().required(),
   iconColor: Joi.string().optional(),
+  disabled: Joi.boolean().optional(),
 }
 
 const insertSchema = Joi.object({
@@ -22,7 +23,6 @@ const updateSchema = Joi.object({
   _rev: Joi.string().required(),
   ...baseSchema,
   navigation: Joi.object().required(),
-  disabled: Joi.boolean().optional(),
 })
 
 function workspaceAppValidator(

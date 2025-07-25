@@ -164,7 +164,7 @@ class StepBuilder<
     return this
   }
 
-  build(): Automation {
+  build(opts?: { disabled?: boolean }): Automation {
     const name = this._name || `Test Automation ${uuidv4()}`
     return {
       name,
@@ -173,13 +173,16 @@ class StepBuilder<
         trigger: this._trigger,
         stepNames: this.stepNames,
       },
+      disabled: opts?.disabled || undefined,
       type: "automation",
       appId: this.config.getAppId(),
     }
   }
 
-  async save() {
-    const { automation } = await this.config.api.automation.post(this.build())
+  async save(opts?: { disabled?: boolean }) {
+    const { automation } = await this.config.api.automation.post(
+      this.build(opts)
+    )
     return new AutomationRunner<TStep>(this.config, automation)
   }
 

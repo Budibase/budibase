@@ -57,6 +57,7 @@ export async function create(
     url: body.url,
     icon: body.icon,
     iconColor: body.iconColor,
+    disabled: body.disabled,
     navigation: defaultAppNavigator(body.name),
     isDefault: false,
   }

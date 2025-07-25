@@ -38,6 +38,7 @@ export function createRequest(
     url: workspace.url,
     icon: workspace.icon,
     iconColor: workspace.iconColor,
+    disabled: workspace.disabled,
   }
   return result
 }
