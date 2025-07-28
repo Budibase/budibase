@@ -1,4 +1,4 @@
-import authorized from "../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../middleware/authorized"
 import { BaseSocket, EmitOptions } from "./websocket"
 import { permissions, events, context } from "@budibase/backend-core"
 import http from "http"

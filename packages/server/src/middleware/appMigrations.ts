@@ -4,7 +4,7 @@ import type { Middleware, Next } from "koa"
 import { checkMissingMigrations } from "../appMigrations"
 import env from "../environment"
 
-const middleware = (async (ctx: UserCtx, next: Next) => {
+export const appMigrations = (async (ctx: UserCtx, next: Next) => {
   const { appId } = ctx
 
   // migrations can be disabled via environment variable if you
@@ -19,8 +19,6 @@ const middleware = (async (ctx: UserCtx, next: Next) => {
 
   return checkMissingMigrations(ctx, next, appId)
 }) as Middleware
-
-export default middleware
 
 export async function skipMigrationRedirect(ctx: UserCtx, next: Next) {
   const result = await next()

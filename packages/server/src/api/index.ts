@@ -5,15 +5,14 @@ import {
   env as envCore,
   env as coreEnv,
 } from "@budibase/backend-core"
-import currentApp from "../middleware/currentapp"
-import cleanup from "../middleware/cleanup"
+import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
+import { cleanupMiddleware as cleanup } from "../middleware/cleanup"
 import zlib from "zlib"
-import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
+import { mainRoutes, staticRoutes, publicRoutes, assetRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
 import { apiEnabled, automationsEnabled } from "../features"
-import migrations from "../middleware/appMigrations"
+import { appMigrations as migrations } from "../middleware/appMigrations"
 import { automationQueue } from "../automations"
-import assetRouter from "./routes/assets"
 import { getState } from "../startup"
 
 export { shutdown } from "./routes/public"
@@ -57,8 +56,8 @@ if (apiEnabled()) {
     .redirect("/", "/builder")
 
   // send assets before middleware
-  router.use(assetRouter.routes())
-  router.use(assetRouter.allowedMethods())
+  router.use(assetRoutes.routes())
+  router.use(assetRoutes.allowedMethods())
 
   router
     .use(

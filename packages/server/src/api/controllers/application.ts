@@ -821,9 +821,11 @@ export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
     return ctx.throw(400, "App has not been published.")
   }
 
-  await preDestroyApp(ctx)
-  await unpublishApp(ctx)
-  await postDestroyApp(ctx)
+  await appMigrations.doInMigrationLock(prodAppId, async () => {
+    await preDestroyApp(ctx)
+    await unpublishApp(ctx)
+    await postDestroyApp(ctx)
+  })
   builderSocket?.emitAppUnpublish(ctx)
   ctx.body = { message: "App unpublished." }
 }

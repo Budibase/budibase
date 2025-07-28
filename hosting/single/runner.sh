@@ -88,18 +88,8 @@ mkdir -p ${DATA_DIR}/redis
 mkdir -p ${DATA_DIR}/couch
 chown -R couchdb:couchdb ${DATA_DIR}/couch
 
-REDIS_CONFIG="/etc/redis/redis.conf"
-sed -i "s#DATA_DIR#${DATA_DIR}#g" "${REDIS_CONFIG}"
-
-if [[ -n "${USE_DEFAULT_REDIS_CONFIG}" ]]; then
-    REDIS_CONFIG=""
-fi
-
-if [[ -n "${REDIS_PASSWORD}" ]]; then
-    redis-server "${REDIS_CONFIG}" --requirepass $REDIS_PASSWORD >/dev/stdout 2>&1 &
-else
-    redis-server "${REDIS_CONFIG}" >/dev/stdout 2>&1 &
-fi
+echo "Starting Redis runner..."
+./redis-runner.sh &
 
 echo "Starting callback CouchDB runner..."
 ./bbcouch-runner.sh &
