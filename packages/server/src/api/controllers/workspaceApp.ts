@@ -21,8 +21,6 @@ function toWorkspaceAppResponse(
     _rev: workspaceApp._rev!,
     name: workspaceApp.name,
     url: workspaceApp.url,
-    icon: workspaceApp.icon,
-    iconColor: workspaceApp.iconColor,
     navigation: workspaceApp.navigation,
     isDefault: workspaceApp.isDefault,
   }
@@ -54,8 +52,6 @@ export async function create(
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
-    icon: body.icon,
-    iconColor: body.iconColor,
     navigation: defaultAppNavigator(body.name),
     isDefault: false,
   }
@@ -81,8 +77,6 @@ export async function edit(
     _rev: body._rev,
     name: body.name,
     url: body.url,
-    icon: body.icon,
-    iconColor: body.iconColor,
     navigation: body.navigation,
   }
 

@@ -96,8 +96,6 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       _rev: workspaceApp._rev!,
       name: workspaceApp.name,
       url: workspaceApp.url,
-      icon: workspaceApp.icon,
-      iconColor: workspaceApp.iconColor,
       navigation: workspaceApp.navigation,
     }
 
