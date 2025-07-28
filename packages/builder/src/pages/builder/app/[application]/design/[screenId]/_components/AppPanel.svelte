@@ -71,13 +71,15 @@
             </div>
           {/if}
           {#if isWorkspacePublished}
-            <Icon
-              name="globe-simple"
-              size="M"
-              weight="regular"
-              color="var(--spectrum-global-color-gray-600)"
-            ></Icon>
-            <Link quiet href={liveUrl} target="_blank">{liveUrl}</Link>
+            <div class="workspace-url">
+              <Icon
+                name="globe-simple"
+                size="M"
+                weight="regular"
+                color="var(--spectrum-global-color-gray-600)"
+              ></Icon>
+              <Link quiet href={liveUrl} target="_blank">{liveUrl}</Link>
+            </div>
           {/if}
         </div>
       {/if}
@@ -154,13 +156,18 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-    padding-top: 2px;
   }
 
   .workspace-info {
     display: flex;
     align-items: center;
     gap: var(--spacing-xl);
+  }
+
+  .workspace-url {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
   }
 
   .header-right {
