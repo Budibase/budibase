@@ -5,8 +5,6 @@ export interface WorkspaceAppResponse {
   _rev: string
   name: string
   url: string
-  icon: string
-  iconColor?: string
   navigation: AppNavigation
   isDefault: boolean
   disabled?: boolean
@@ -15,8 +13,6 @@ export interface WorkspaceAppResponse {
 export interface InsertWorkspaceAppRequest {
   name: string
   url: string
-  icon: string
-  iconColor?: string
   disabled?: boolean
 }
 
@@ -29,8 +25,6 @@ export interface UpdateWorkspaceAppRequest {
   _rev: string
   name: string
   url: string
-  icon: string
-  iconColor?: string
   navigation: AppNavigation
   disabled?: boolean
 }

@@ -9,8 +9,6 @@ const baseSchema = {
   url: Joi.string()
     .required()
     .regex(/^\/\w*$/),
-  icon: Joi.string().required(),
-  iconColor: Joi.string().optional(),
   disabled: Joi.boolean().optional(),
 }
 
