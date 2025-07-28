@@ -25,6 +25,7 @@ import { ReadableStream } from "stream/web"
 import { NodeJsClient } from "@smithy/types"
 import tracer from "dd-trace"
 import { pipeline } from "stream/promises"
+import { utils } from "@budibase/shared-core"
 
 // use this as a temporary store of buckets that are being created
 const STATE = {
@@ -440,26 +441,30 @@ export async function retrieveDirectory(bucketName: string, path: string) {
     await fsp.mkdir(writePath, { recursive: true })
 
     let numObjects = 0
-    for await (const object of listAllObjects(bucketName, path)) {
-      numObjects++
-      await tracer.trace("retrieveDirectory.object", async span => {
-        const filename = object.Key!
-        span.addTags({ filename })
-        const stream = await getReadStream(bucketName, filename)
-        const possiblePath = filename.split("/")
-        const dirs = possiblePath.slice(0, possiblePath.length - 1)
-        const possibleDir = join(writePath, ...dirs)
-        if (possiblePath.length > 1 && !fs.existsSync(possibleDir)) {
-          await fsp.mkdir(possibleDir, { recursive: true })
-        }
-        await pipeline(
-          stream,
-          fs.createWriteStream(join(writePath, ...possiblePath), {
-            mode: 0o644,
-          })
-        )
-      })
-    }
+    await utils.parallelForeach(
+      listAllObjects(bucketName, path),
+      async object => {
+        numObjects++
+        await tracer.trace("retrieveDirectory.object", async span => {
+          const filename = object.Key!
+          span.addTags({ filename })
+          const stream = await getReadStream(bucketName, filename)
+          const possiblePath = filename.split("/")
+          const dirs = possiblePath.slice(0, possiblePath.length - 1)
+          const possibleDir = join(writePath, ...dirs)
+          if (possiblePath.length > 1 && !fs.existsSync(possibleDir)) {
+            await fsp.mkdir(possibleDir, { recursive: true })
+          }
+          await pipeline(
+            stream,
+            fs.createWriteStream(join(writePath, ...possiblePath), {
+              mode: 0o644,
+            })
+          )
+        })
+      },
+      3 /* max concurrency */
+    )
 
     span.addTags({ numObjects })
     return writePath
