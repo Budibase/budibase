@@ -1,5 +1,5 @@
-import authorized from "../middleware/authorized"
-import currentApp from "../middleware/currentapp"
+import { authorizedMiddleware as authorized } from "../middleware/authorized"
+import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
 import { BaseSocket } from "./websocket"
 import { auth, permissions, context } from "@budibase/backend-core"
 import http from "http"

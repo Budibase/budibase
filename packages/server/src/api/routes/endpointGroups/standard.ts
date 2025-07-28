@@ -1,4 +1,4 @@
-import authorized from "../../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../../middleware/authorized"
 import { auth, EndpointGroupList, permissions } from "@budibase/backend-core"
 
 export const endpointGroupList = new EndpointGroupList()
