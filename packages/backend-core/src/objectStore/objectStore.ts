@@ -14,7 +14,6 @@ import stream, { Readable } from "stream"
 import fetch from "node-fetch"
 import tar from "tar-fs"
 import zlib from "zlib"
-import { promisify } from "util"
 import { join } from "path"
 import fs, { PathLike, ReadStream } from "fs"
 import env from "../environment"
@@ -25,8 +24,8 @@ import fsp from "fs/promises"
 import { ReadableStream } from "stream/web"
 import { NodeJsClient } from "@smithy/types"
 import tracer from "dd-trace"
+import { pipeline } from "stream/promises"
 
-const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
 const STATE = {
   bucketCreationPromises: {},
@@ -424,13 +423,7 @@ export async function retrieveToTmp(bucketName: string, filepath: string) {
     span.addTags({ outputPath })
     if (data instanceof stream.Readable) {
       span.addTags({ stream: true })
-      const writeStream = fs.createWriteStream(outputPath)
-      data.pipe(writeStream)
-      await new Promise<void>((resolve, reject) => {
-        writeStream.on("finish", () => resolve())
-        data.on("error", reject)
-        writeStream.on("error", reject)
-      })
+      await pipeline(data, fs.createWriteStream(outputPath))
     } else {
       span.addTags({ stream: false })
       fs.writeFileSync(outputPath, data)
@@ -458,19 +451,10 @@ export async function retrieveDirectory(bucketName: string, path: string) {
       if (possiblePath.length > 1 && !fs.existsSync(possibleDir)) {
         await fsp.mkdir(possibleDir, { recursive: true })
       }
-      const writeStream = fs.createWriteStream(
-        join(writePath, ...possiblePath),
-        {
-          mode: 0o644,
-        }
+      await pipeline(
+        stream,
+        fs.createWriteStream(join(writePath, ...possiblePath), { mode: 0o644 })
       )
-
-      stream.pipe(writeStream)
-      await new Promise<void>((resolve, reject) => {
-        writeStream.on("finish", () => resolve())
-        stream.on("error", reject)
-        writeStream.on("error", reject)
-      })
     }
 
     span.addTags({ numObjects })
@@ -580,7 +564,7 @@ export async function downloadTarballDirect(
     throw new Error(`unexpected response ${response.statusText}`)
   }
 
-  await streamPipeline(response.body, zlib.createUnzip(), tar.extract(path))
+  await pipeline(response.body, zlib.createUnzip(), tar.extract(path))
 }
 
 export async function downloadTarball(
@@ -596,7 +580,7 @@ export async function downloadTarball(
   }
 
   const tmpPath = join(budibaseTempDir(), path)
-  await streamPipeline(response.body, zlib.createUnzip(), tar.extract(tmpPath))
+  await pipeline(response.body, zlib.createUnzip(), tar.extract(tmpPath))
   if (!env.isTest() && env.SELF_HOSTED) {
     await uploadDirectory(bucketName, tmpPath, path)
   }
