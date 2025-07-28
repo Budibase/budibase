@@ -169,7 +169,6 @@
   <div class="table-header">
     <span>Name</span>
     <span>Status</span>
-    <span>Created by</span>
     <span>Last published</span>
     <span></span>
   </div>
@@ -184,7 +183,6 @@
       <div>
         <PublishStatusBadge status={idx % 2 === 0 ? "published" : "draft"} />
       </div>
-      <span>Joe Johnston</span>
       <span>This week</span>
       <div class="actions">
         <Icon
