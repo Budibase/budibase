@@ -318,25 +318,34 @@ export async function retrieve(
   bucketName: string,
   filepath: string
 ): Promise<string | stream.Readable> {
-  const objectStore = ObjectStore()
-  const params = {
-    Bucket: sanitizeBucket(bucketName),
-    Key: sanitizeKey(filepath),
-  }
-  const response = await objectStore.getObject(params)
-  if (!response.Body) {
-    throw new Error("Unable to retrieve object")
-  }
-  if (STRING_CONTENT_TYPES.includes(response.ContentType)) {
-    return response.Body.transformToString()
-  } else {
-    // this typecast is required - for some reason the AWS SDK V3 defines its own "ReadableStream"
-    // found in the @aws-sdk/types package which is meant to be the Node type, but due to the SDK
-    // supporting both the browser and Nodejs it is a polyfill which causes a type clash with Node.
-    const readableStream =
-      response.Body.transformToWebStream() as ReadableStream
-    return stream.Readable.fromWeb(readableStream)
-  }
+  return await tracer.trace("retrieve", async span => {
+    span.addTags({ bucketName, filepath })
+    const objectStore = ObjectStore()
+    const params = {
+      Bucket: sanitizeBucket(bucketName),
+      Key: sanitizeKey(filepath),
+    }
+    const response = await objectStore.getObject(params)
+    if (!response.Body) {
+      throw new Error("Unable to retrieve object")
+    }
+    span.addTags({
+      contentLength: response.ContentLength,
+      contentType: response.ContentType,
+    })
+    if (STRING_CONTENT_TYPES.includes(response.ContentType)) {
+      span.addTags({ string: true })
+      return response.Body.transformToString()
+    } else {
+      span.addTags({ string: false })
+      // this typecast is required - for some reason the AWS SDK V3 defines its own "ReadableStream"
+      // found in the @aws-sdk/types package which is meant to be the Node type, but due to the SDK
+      // supporting both the browser and Nodejs it is a polyfill which causes a type clash with Node.
+      const readableStream =
+        response.Body.transformToWebStream() as ReadableStream
+      return stream.Readable.fromWeb(readableStream)
+    }
+  })
 }
 
 export async function* listAllObjects(
