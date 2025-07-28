@@ -19,6 +19,7 @@ import { join } from "path"
 import env from "../../../environment"
 import { v4 as uuid } from "uuid"
 import tar from "tar"
+import { tracer } from "dd-trace"
 
 const MemoryStream = require("memorystream")
 
@@ -64,8 +65,8 @@ export async function exportDB(
     batch_size: 1000,
     batch_limit: 5,
     style: "main_only",
-  }
-  return dbCore.doWithDB(dbName, async (db: any) => {
+  } as const
+  return dbCore.doWithDB(dbName, async db => {
     // Write the dump to file if required
     if (opts?.exportPath) {
       const path = opts?.exportPath
@@ -106,76 +107,87 @@ function defineFilter(excludeRows?: boolean) {
  * @returns either a string or a stream of the backup
  */
 export async function exportApp(appId: string, config?: ExportOpts) {
-  const prodAppId = dbCore.getProdAppID(appId)
-  const appPath = `${prodAppId}/`
-  // export bucket contents
-  let tmpPath = createTempFolder(uuid())
-  if (!env.isTest()) {
-    // write just the static files
-    if (config?.excludeRows) {
-      for (let path of STATIC_APP_FILES) {
-        const contents = await objectStore.retrieve(
+  return await tracer.trace("exportApp", async span => {
+    span.addTags({
+      "config.excludeRows": config?.excludeRows,
+      "config.tar": config?.tar,
+      "config.encryptPassword": !!config?.encryptPassword,
+      "config.exportPath": config?.exportPath,
+      "config.filter": !!config?.filter,
+    })
+
+    const prodAppId = dbCore.getProdAppID(appId)
+    const appPath = `${prodAppId}/`
+    let tmpPath = createTempFolder(uuid())
+    span.addTags({ prodAppId, tmpPath })
+
+    if (!env.isTest()) {
+      // write just the static files
+      if (config?.excludeRows) {
+        for (const path of STATIC_APP_FILES) {
+          const contents = await objectStore.retrieve(
+            ObjectStoreBuckets.APPS,
+            join(appPath, path)
+          )
+          await fsp.writeFile(join(tmpPath, path), contents)
+        }
+      }
+      // get all the files
+      else {
+        tmpPath = await objectStore.retrieveDirectory(
           ObjectStoreBuckets.APPS,
-          join(appPath, path)
+          appPath
         )
-        await fsp.writeFile(join(tmpPath, path), contents)
       }
     }
-    // get all the files
+
+    const downloadedPath = join(tmpPath, appPath)
+    if (fs.existsSync(downloadedPath)) {
+      const allFiles = await fsp.readdir(downloadedPath)
+      for (let file of allFiles) {
+        const path = join(downloadedPath, file)
+        // move out of app directory, simplify structure
+        await fsp.rename(path, join(downloadedPath, "..", file))
+      }
+      // remove the old app directory created by object export
+      await fsp.rmdir(downloadedPath)
+    }
+    // enforce an export of app DB to the tmp path
+    const dbPath = join(tmpPath, DB_EXPORT_FILE)
+    await exportDB(appId, {
+      filter: defineFilter(config?.excludeRows),
+      exportPath: dbPath,
+    })
+
+    if (config?.encryptPassword) {
+      for (let file of await fsp.readdir(tmpPath)) {
+        const path = join(tmpPath, file)
+
+        // skip the attachments - too big to encrypt
+        if (file !== ATTACHMENT_DIRECTORY) {
+          await encryption.encryptFile(
+            { dir: tmpPath, filename: file },
+            config.encryptPassword
+          )
+          await fsp.rm(path)
+        }
+      }
+    }
+
+    // if tar requested, return where the tarball is
+    if (config?.tar) {
+      // now the tmpPath contains both the DB export and attachments, tar this
+      const tarPath = await tarFilesToTmp(tmpPath, await fsp.readdir(tmpPath))
+      // cleanup the tmp export files as tarball returned
+      await fsp.rm(tmpPath, { recursive: true, force: true })
+
+      return tarPath
+    }
+    // tar not requested, turn the directory where export is
     else {
-      tmpPath = await objectStore.retrieveDirectory(
-        ObjectStoreBuckets.APPS,
-        appPath
-      )
+      return tmpPath
     }
-  }
-
-  const downloadedPath = join(tmpPath, appPath)
-  if (fs.existsSync(downloadedPath)) {
-    const allFiles = await fsp.readdir(downloadedPath)
-    for (let file of allFiles) {
-      const path = join(downloadedPath, file)
-      // move out of app directory, simplify structure
-      await fsp.rename(path, join(downloadedPath, "..", file))
-    }
-    // remove the old app directory created by object export
-    await fsp.rmdir(downloadedPath)
-  }
-  // enforce an export of app DB to the tmp path
-  const dbPath = join(tmpPath, DB_EXPORT_FILE)
-  await exportDB(appId, {
-    filter: defineFilter(config?.excludeRows),
-    exportPath: dbPath,
   })
-
-  if (config?.encryptPassword) {
-    for (let file of await fsp.readdir(tmpPath)) {
-      const path = join(tmpPath, file)
-
-      // skip the attachments - too big to encrypt
-      if (file !== ATTACHMENT_DIRECTORY) {
-        await encryption.encryptFile(
-          { dir: tmpPath, filename: file },
-          config.encryptPassword
-        )
-        await fsp.rm(path)
-      }
-    }
-  }
-
-  // if tar requested, return where the tarball is
-  if (config?.tar) {
-    // now the tmpPath contains both the DB export and attachments, tar this
-    const tarPath = await tarFilesToTmp(tmpPath, await fsp.readdir(tmpPath))
-    // cleanup the tmp export files as tarball returned
-    await fsp.rm(tmpPath, { recursive: true, force: true })
-
-    return tarPath
-  }
-  // tar not requested, turn the directory where export is
-  else {
-    return tmpPath
-  }
 }
 
 /**
