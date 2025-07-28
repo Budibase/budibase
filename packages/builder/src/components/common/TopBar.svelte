@@ -20,8 +20,6 @@
 
   let publishButton: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
-  let publishedAutomations: string[] = []
-  let publishedApps: string[] = []
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
