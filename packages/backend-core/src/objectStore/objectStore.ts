@@ -424,7 +424,13 @@ export async function retrieveToTmp(bucketName: string, filepath: string) {
     span.addTags({ outputPath })
     if (data instanceof stream.Readable) {
       span.addTags({ stream: true })
-      data.pipe(fs.createWriteStream(outputPath))
+      const writeStream = fs.createWriteStream(outputPath)
+      data.pipe(writeStream)
+      await new Promise<void>((resolve, reject) => {
+        writeStream.on("finish", () => resolve())
+        data.on("error", reject)
+        writeStream.on("error", reject)
+      })
     } else {
       span.addTags({ stream: false })
       fs.writeFileSync(outputPath, data)
