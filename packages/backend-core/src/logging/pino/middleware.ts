@@ -43,6 +43,4 @@ function getMiddleware() {
   }
 }
 
-const pinoMiddleware = getMiddleware()
-
-export default pinoMiddleware
+export const pinoMiddleware = getMiddleware()
