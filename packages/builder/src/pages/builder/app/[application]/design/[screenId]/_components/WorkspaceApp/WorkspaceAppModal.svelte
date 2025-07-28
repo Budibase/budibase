@@ -57,8 +57,6 @@
             message: "This url is already taken.",
           }
         ),
-      icon: z.string(),
-      iconColor: z.string().optional(),
     }) satisfies ZodType<Omit<WorkspaceApp, "navigation" | "isDefault">>
 
     const validationResult = validator.safeParse(workspaceApp)
