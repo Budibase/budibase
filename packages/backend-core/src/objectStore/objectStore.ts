@@ -438,7 +438,7 @@ export async function retrieveDirectory(bucketName: string, path: string) {
     span.addTags({ bucketName, path })
 
     let writePath = join(budibaseTempDir(), v4())
-    await fsp.mkdir(writePath)
+    await fsp.mkdir(writePath, { recursive: true })
 
     let numObjects = 0
     for await (const object of listAllObjects(bucketName, path)) {
