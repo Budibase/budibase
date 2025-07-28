@@ -93,5 +93,17 @@ describe("/api/global/self", () => {
       expect(dbUser.closedBanners!["banner-2"]).toBeDefined()
       expect(Object.keys(dbUser.closedBanners!)).toHaveLength(2)
     })
+
+    it("should return closed banners in getSelf response", async () => {
+      const user = await config.createUser()
+      await config.createSession(user)
+
+      await config.api.self.closeBanner(user, "banner-1")
+      await config.api.self.closeBanner(user, "banner-2")
+
+      const response = await config.api.self.getSelf(user)
+      expect(response.body.closedBanners).toBeDefined()
+      expect(response.body.closedBanners).toEqual(["banner-1", "banner-2"])
+    })
   })
 })

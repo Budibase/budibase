@@ -138,6 +138,7 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
     ...sessionAttributes,
     flags,
     llm: sanitisedLLMConfig,
+    closedBanners: Object.keys(user.closedBanners || {}),
   }
 }
 
