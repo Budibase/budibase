@@ -98,13 +98,6 @@
         hoverable
         name="dots-three"
       />
-      <div slot="icon">
-        <Icon
-          name={workspaceApp.icon}
-          size="XS"
-          color={workspaceApp.iconColor}
-        />
-      </div>
     </NavItem>
   </div>
   <div class="screens">

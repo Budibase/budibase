@@ -1,10 +1,8 @@
 <script lang="ts">
-  import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { workspaceAppStore } from "@/stores/builder"
   import {
     Input,
     keepOpen,
-    Label,
     Modal,
     ModalContent,
     notifications,
@@ -19,7 +17,6 @@
   export const show = () => modal.show()
 
   let data: WorkspaceApp
-  let iconColor: string
 
   $: isNew = !workspaceApp
 
@@ -86,19 +83,15 @@
       _rev: workspaceApp?._rev,
       name: workspaceApp?.name ?? "",
       url: workspaceApp?.url ?? "",
-      icon: workspaceApp?.icon ?? "monitor",
-      iconColor: workspaceApp?.iconColor,
       navigation: workspaceApp?.navigation ?? { navigation: "Top" },
       isDefault: workspaceApp?.isDefault ?? false,
     }
     validationState = { errors: {}, touched: {} }
-    iconColor = workspaceApp?.iconColor ?? ""
   }
 
   async function onConfirm() {
     const validationResult = validateWorkspaceApp({
       ...data,
-      iconColor: iconColor || undefined,
     })
     if (validationResult.error) {
       return keepOpen
@@ -169,8 +162,5 @@
       bind:value={data.url}
       error={validationState.errors.url}
     />
-
-    <Label size="L">Icon</Label>
-    <EditableIcon bind:name={data.icon} bind:color={iconColor} />
   </ModalContent>
 </Modal>
