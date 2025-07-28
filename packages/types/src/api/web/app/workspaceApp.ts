@@ -5,8 +5,6 @@ export interface WorkspaceAppResponse {
   _rev: string
   name: string
   url: string
-  icon: string
-  iconColor?: string
   navigation: AppNavigation
   isDefault: boolean
   createdAt: string
@@ -16,8 +14,6 @@ export interface WorkspaceAppResponse {
 export interface InsertWorkspaceAppRequest {
   name: string
   url: string
-  icon: string
-  iconColor?: string
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -29,8 +25,6 @@ export interface UpdateWorkspaceAppRequest {
   _rev: string
   name: string
   url: string
-  icon: string
-  iconColor?: string
   navigation: AppNavigation
 }
 

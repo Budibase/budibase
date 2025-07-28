@@ -3,7 +3,6 @@
   import {
     Input,
     keepOpen,
-    Label,
     Body,
     Modal,
     ModalContent,
@@ -20,7 +19,6 @@
   export const show = () => modal.show()
 
   let data: WorkspaceApp
-  let iconColor: string
 
   $: isNew = !workspaceApp
 
@@ -61,8 +59,6 @@
             message: "This url is already taken.",
           }
         ),
-      icon: z.string(),
-      iconColor: z.string().optional(),
     }) satisfies ZodType<Omit<WorkspaceApp, "navigation" | "isDefault">>
 
     const validationResult = validator.safeParse(workspaceApp)
@@ -87,19 +83,15 @@
       _rev: workspaceApp?._rev,
       name: workspaceApp?.name ?? "",
       url: workspaceApp?.url ?? "",
-      icon: workspaceApp?.icon ?? "monitor",
-      iconColor: workspaceApp?.iconColor,
       navigation: workspaceApp?.navigation ?? { navigation: "Top" },
       isDefault: workspaceApp?.isDefault ?? false,
     }
     validationState = { errors: {}, touched: {} }
-    iconColor = workspaceApp?.iconColor ?? ""
   }
 
   async function onConfirm() {
     const validationResult = validateWorkspaceApp({
       ...data,
-      iconColor: iconColor || undefined,
     })
     if (validationResult.error) {
       return keepOpen
