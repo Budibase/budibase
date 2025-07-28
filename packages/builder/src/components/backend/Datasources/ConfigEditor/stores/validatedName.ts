@@ -2,10 +2,10 @@ import { derived, get, writable } from "svelte/store"
 import { capitalise } from "@/helpers"
 import { string } from "yup"
 
-export const createValidatedNameStore = (name, isVisible) => {
+export const createValidatedNameStore = (name: string, isVisible: boolean) => {
   const nameStore = writable(name)
   const isActiveStore = writable(false)
-  const errorStore = writable(null)
+  const errorStore = writable<string | null>(null)
 
   const validate = async () => {
     if (!isVisible || !get(isActiveStore)) {
@@ -18,14 +18,14 @@ export const createValidatedNameStore = (name, isVisible) => {
       errorStore.set(null)
 
       return true
-    } catch (error) {
+    } catch (error: any) {
       errorStore.set(capitalise(error.message))
 
       return false
     }
   }
 
-  const updateValue = value => {
+  const updateValue = (value: string) => {
     nameStore.set(value)
     validate()
   }

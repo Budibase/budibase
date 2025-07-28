@@ -13,6 +13,7 @@ import {
   Database,
   ContextUserMetadata,
   UserBindings,
+  isSSOUser,
 } from "@budibase/types"
 
 export function combineMetadataAndUser(
@@ -43,6 +44,8 @@ export function combineMetadataAndUser(
   // copy rev over for the purposes of equality check
   if (found) {
     newDoc._rev = found._rev
+    newDoc.createdAt = found.createdAt
+    newDoc.updatedAt = found.updatedAt
   }
   // clear fields that shouldn't be in metadata
   delete newDoc.password
@@ -52,6 +55,8 @@ export function combineMetadataAndUser(
     return {
       ...found,
       ...newDoc,
+      createdAt: found?.createdAt ?? (new Date().toISOString() as any),
+      updatedAt: new Date().toISOString(),
     }
   }
   return null
@@ -130,27 +135,27 @@ export function getUserContextBindings(user: ContextUser): UserBindings {
   if (!user) {
     return {}
   }
-  // Current user context for bindable search
-  const {
-    _id,
-    _rev,
-    firstName,
-    lastName,
-    email,
-    status,
-    roleId,
-    globalId,
-    userId,
-  } = user
-  return {
-    _id,
-    _rev,
-    firstName,
-    lastName,
-    email,
-    status,
-    roleId,
-    globalId,
-    userId,
+
+  const bindings: UserBindings = {
+    _id: user._id,
+    _rev: user._rev,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    status: user.status,
+    roleId: user.roleId,
+    globalId: user.globalId,
+    userId: user.userId,
   }
+
+  if (isSSOUser(user) && user.oauth2) {
+    bindings.oauth2 = {
+      accessToken: user.oauth2.accessToken,
+      refreshToken: user.oauth2.refreshToken,
+    }
+    bindings.provider = user.provider
+    bindings.providerType = user.providerType
+  }
+
+  return bindings
 }

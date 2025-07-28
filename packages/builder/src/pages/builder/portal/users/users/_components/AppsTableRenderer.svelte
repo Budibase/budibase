@@ -1,24 +1,16 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
   import { appsStore } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
+  import { type EnrichedUser, type ParsedInvite } from "@/types"
 
-  export let value
-  export let row
+  export let row: EnrichedUser | ParsedInvite
   $: priviliged = sdk.users.isAdminOrBuilder(row)
   $: count = getCount(row)
 
-  const getCount = () => {
-    if (priviliged) {
-      return $appsStore.apps.length
-    } else {
-      return sdk.users.hasAppBuilderPermissions(row)
-        ? row?.builder?.apps?.length +
-            Object.keys(row.roles || {}).filter(appId => {
-              row?.builder?.apps?.includes(appId)
-            }).length
-        : value?.length || 0
-    }
+  const getCount = (row: EnrichedUser | ParsedInvite) => {
+    const appList = priviliged ? $appsStore.apps : row.apps
+    return appList?.length || 0
   }
 </script>
 

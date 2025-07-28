@@ -7,7 +7,6 @@ import {
   appStore,
   componentStore,
   layoutStore,
-  navigationStore,
   previewStore,
   selectedComponent,
   workspaceAppStore,
@@ -19,7 +18,6 @@ import {
   Component,
   ComponentDefinition,
   DeleteScreenResponse,
-  FeatureFlag,
   FetchAppPackageResponse,
   SaveScreenRequest,
   SaveScreenResponse,
@@ -27,7 +25,6 @@ import {
   ScreenVariant,
   WithRequired,
 } from "@budibase/types"
-import { featureFlag } from "@/helpers"
 
 interface ScreenState {
   screens: Screen[]
@@ -94,10 +91,16 @@ export class ScreenStore extends BudiStore<ScreenState> {
    */
   syncAppScreens(pkg: FetchAppPackageResponse) {
     const screens = [...pkg.screens]
-    this.update(state => ({
-      ...state,
-      screens,
-    }))
+    this.update(state => {
+      const { selectedScreenId } = state
+      if (selectedScreenId && !screens.some(s => s._id === selectedScreenId)) {
+        delete state.selectedScreenId
+      }
+      return {
+        ...state,
+        screens,
+      }
+    })
   }
 
   /**
@@ -261,17 +264,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
       return state
     })
-
-    if (
-      !featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS) &&
-      navigationLinkLabel
-    ) {
-      await navigationStore.addLink({
-        url: screen.routing.route,
-        title: navigationLinkLabel,
-        roleId: screen.routing.roleId,
-      })
-    }
 
     await appStore.refreshAppNav()
 

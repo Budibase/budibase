@@ -10,7 +10,7 @@ import {
   isExternalTableID,
   isSQL,
 } from "../../../integrations/utils"
-import { events, HTTPError } from "@budibase/backend-core"
+import { csv, events, HTTPError } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
@@ -33,7 +33,6 @@ import {
   DeleteTableResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep } from "lodash"
 import {
@@ -197,7 +196,7 @@ export async function csvToJson(
 ) {
   const { csvString } = ctx.request.body
 
-  const result = await jsonFromCsvString(csvString)
+  const result = await csv.jsonFromCsvString(csvString)
 
   ctx.body = result
 }
@@ -262,4 +261,21 @@ export async function migrate(
   }
 
   ctx.body = { message: `Column ${oldColumn} migrated.` }
+}
+
+export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
+  const tableId = ctx.params.tableId as string
+  const table = await sdk.tables.getTable(tableId)
+
+  if (isExternalTable(table)) {
+    throw new HTTPError("Cannot duplicate external tables", 422)
+  }
+
+  const duplicatedTable = await sdk.tables.duplicate(table, ctx.user._id)
+
+  ctx.message = `Table ${table.name} duplicated successfully.`
+  ctx.body = duplicatedTable
+
+  const processedTable = await processTable(duplicatedTable)
+  builderSocket?.emitTableUpdate(ctx, cloneDeep(processedTable))
 }

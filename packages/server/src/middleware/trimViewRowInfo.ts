@@ -4,7 +4,10 @@ import sdk from "../sdk"
 import { Next } from "koa"
 import { getSourceId } from "../api/controllers/row/utils"
 
-export default async (ctx: Ctx<Row, Row>, next: Next) => {
+export async function trimViewRowInfoMiddleware(
+  ctx: Ctx<Row, Row>,
+  next: Next
+) {
   const { body } = ctx.request
   const viewId = getSourceId(ctx).viewId ?? body._viewId
 

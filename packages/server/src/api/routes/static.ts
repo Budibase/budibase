@@ -1,6 +1,6 @@
 import Router from "@koa/router"
 import * as controller from "../controllers/static"
-import authorized from "../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { addFileManagement } from "../utils"
 import { paramResource } from "../../middleware/resourceId"
@@ -27,10 +27,6 @@ router
   .get("/app/service-worker.js", controller.serveServiceWorker)
   .get("/app/:appUrl/:path*", controller.serveApp)
   .get("/:appId/:path*", controller.serveApp)
-  .post(
-    "/api/attachments/:datasourceId/url",
-    authorized(PermissionType.TABLE, PermissionLevel.READ),
-    controller.getSignedUploadURL
-  )
+  .post("/api/attachments/:datasourceId/url", controller.getSignedUploadURL)
 
 export default router

@@ -111,7 +111,11 @@
       />
     {:else}
       <div class="icon-container">
-        <Icon name={block.icon} size="M" color="rgb(142, 185, 252)" />
+        <Icon
+          name={block.icon}
+          size="M"
+          color="var(--spectrum-global-color-static-gray-50)"
+        />
       </div>
     {/if}
     <div class="heading">
@@ -144,6 +148,7 @@
           name="warning"
           tooltip={blockNameError}
           tooltipPosition={TooltipPosition.Left}
+          color="var(--spectrum-global-color-static-gray-50)"
         />
       </div>
     </div>
@@ -162,8 +167,10 @@
   }
 
   .input-text {
-    font-size: 16px;
+    font-size: var(--spectrum-global-dimension-font-size-150);
     font-family: var(--font-sans);
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-900);
     text-overflow: ellipsis;
     padding-left: 0px;
     border: 0px;
@@ -198,8 +205,8 @@
   }
 
   .icon-container {
-    background-color: rgba(75, 117, 255, 0.2);
-    border: 0.5px solid rgba(75, 117, 255, 0.2);
+    background-color: #215f9e;
+    border: 0.5px solid #467db4;
     padding: 4px;
     border-radius: 8px;
   }

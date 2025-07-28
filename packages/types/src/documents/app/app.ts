@@ -19,9 +19,10 @@ export interface App extends Document {
   revertableVersion?: string
   lockedBy?: User
   sessions?: SocketSession[]
-  // @deprecated  use workspace app navigation instead
+  /** @deprecated use workspace app navigation instead */
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
+  backupErrors?: AppMetadataErrors
   icon?: AppIcon
   features?: AppFeatures
   automations?: AutomationSettings
@@ -62,6 +63,7 @@ export interface AppNavigationLink {
   roleId?: string
   type: "link" | "sublinks"
   subLinks?: AppNavigationLink[]
+  icon?: string
 }
 
 export interface AppCustomTheme {

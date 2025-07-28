@@ -26,7 +26,6 @@ import {
   docIds,
   env as envCore,
   events,
-  features,
   objectStore,
   roles,
   tenancy,
@@ -69,7 +68,6 @@ import {
   AddAppSampleDataResponse,
   UnpublishAppResponse,
   ErrorCode,
-  FeatureFlag,
   FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
@@ -188,7 +186,6 @@ async function addSampleDataScreen() {
   const workspaceApp = await sdk.workspaceApps.create({
     name: appMetadata.name,
     url: "/",
-    icon: "Monitoring",
     navigation: {
       ...defaultAppNavigator(appMetadata.name),
       links: [
@@ -205,29 +202,6 @@ async function addSampleDataScreen() {
 
   const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
-
-  {
-    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
-    const db = context.getAppDB()
-    let app = await sdk.applications.metadata.get()
-    if (!app.navigation) {
-      return
-    }
-    if (!app.navigation.links) {
-      app.navigation.links = []
-    }
-    app.navigation.links.push({
-      text: "Inventory",
-      url: "/inventory",
-      type: "link",
-      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-    })
-
-    await db.put(app)
-
-    // remove any cached metadata, so that it will be updated
-    await cache.app.invalidateAppMetadata(app.appId)
-  }
 }
 
 export const addSampleData = async (
@@ -317,10 +291,7 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  if (
-    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
-    !isBuilder
-  ) {
+  if (!isBuilder) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : ""
@@ -821,9 +792,11 @@ export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
     return ctx.throw(400, "App has not been published.")
   }
 
-  await preDestroyApp(ctx)
-  await unpublishApp(ctx)
-  await postDestroyApp(ctx)
+  await appMigrations.doInMigrationLock(prodAppId, async () => {
+    await preDestroyApp(ctx)
+    await unpublishApp(ctx)
+    await postDestroyApp(ctx)
+  })
   builderSocket?.emitAppUnpublish(ctx)
   ctx.body = { message: "App unpublished." }
 }

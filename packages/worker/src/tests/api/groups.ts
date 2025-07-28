@@ -1,4 +1,4 @@
-import { UserGroup } from "@budibase/types"
+import { UserGroup, UpdateGroupAppRequest } from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class GroupsAPI extends TestAPI {
@@ -53,6 +53,19 @@ export class GroupsAPI extends TestAPI {
       .expect(expect)
   }
 
+  updateGroupApps = (
+    groupId: string,
+    body: UpdateGroupAppRequest,
+    { expect } = { expect: 200 }
+  ) => {
+    return this.request
+      .post(`/api/global/groups/${groupId}/apps`)
+      .send(body)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expect)
+  }
+
   fetch = ({ expect } = { expect: 200 }) => {
     return this.request
       .get(`/api/global/groups`)
@@ -64,6 +77,19 @@ export class GroupsAPI extends TestAPI {
   find = (id: string, { expect } = { expect: 200 }) => {
     return this.request
       .get(`/api/global/groups/${id}`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expect)
+  }
+
+  bulkAddUsers = (
+    id: string,
+    csvContent: string,
+    { expect } = { expect: 200 }
+  ) => {
+    return this.request
+      .post(`/api/global/groups/${id}/users/bulk`)
+      .send({ csvContent })
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(expect)
