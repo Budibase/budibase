@@ -188,7 +188,6 @@ async function addSampleDataScreen() {
   const workspaceApp = await sdk.workspaceApps.create({
     name: appMetadata.name,
     url: "/",
-    icon: "Monitoring",
     navigation: {
       ...defaultAppNavigator(appMetadata.name),
       links: [
