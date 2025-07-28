@@ -9,7 +9,7 @@ export interface GenerateAPIKeyResponse extends DevInfo {}
 
 export interface FetchAPIKeyResponse extends DevInfo {}
 
-export interface GetGlobalSelfResponse extends User {
+export interface GetGlobalSelfResponse extends Omit<User, "closedBanners"> {
   flags?: FeatureFlags
   llm?: Omit<LLMProviderConfig, "apiKey">
   account?: Account
@@ -17,4 +17,5 @@ export interface GetGlobalSelfResponse extends User {
   budibaseAccess: boolean
   accountPortalAccess: boolean
   csrfToken: string
+  closedBanners: string[]
 }
