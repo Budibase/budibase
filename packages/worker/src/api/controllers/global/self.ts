@@ -226,3 +226,17 @@ export async function updateSelf(
     _rev: user._rev!,
   }
 }
+
+export async function saveClosedBanner(
+  ctx: UserCtx<void, void, { bannerKey: string }>
+) {
+  const user = await userSdk.db.getUser(ctx.user._id!)
+  user.closedBanners ??= {}
+  user.closedBanners[ctx.params.bannerKey] = {
+    closedAt: new Date().toISOString(),
+  }
+
+  await userSdk.db.save(user, { requirePassword: false })
+
+  ctx.status = 204
+}
