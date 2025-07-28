@@ -1,5 +1,5 @@
 import { UserCtx } from "@budibase/types"
-import ensureTenantAppOwnership from "../ensureTenantAppOwnership"
+import { ensureTenantAppOwnership } from "../ensureTenantAppOwnership"
 import { context, Header, HTTPError } from "@budibase/backend-core"
 
 function ctx(opts?: { appId: string }) {

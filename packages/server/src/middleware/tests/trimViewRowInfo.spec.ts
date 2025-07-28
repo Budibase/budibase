@@ -8,7 +8,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import * as utils from "../../db/utils"
-import trimViewRowInfoMiddleware from "../trimViewRowInfo"
+import { trimViewRowInfo } from "../trimViewRowInfo"
 
 jest.mock("../../sdk", () => ({
   views: {
@@ -32,7 +32,7 @@ const mockGetTable = sdk.tables.getTable as jest.MockedFunction<
 class TestConfiguration {
   next: Next
   throw: jest.Mock<(status: number, message: string) => never>
-  middleware: typeof trimViewRowInfoMiddleware
+  middleware: typeof trimViewRowInfo
   params: Record<string, any>
   request?: Pick<BBRequest<Row>, "body">
 
@@ -41,7 +41,7 @@ class TestConfiguration {
     this.throw = jest.fn()
     this.params = {}
 
-    this.middleware = trimViewRowInfoMiddleware
+    this.middleware = trimViewRowInfo
   }
 
   executeMiddleware(viewId: string, ctxRequestBody: Row) {
