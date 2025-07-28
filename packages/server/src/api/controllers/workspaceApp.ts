@@ -25,6 +25,8 @@ function toWorkspaceAppResponse(
     iconColor: workspaceApp.iconColor,
     navigation: workspaceApp.navigation,
     isDefault: workspaceApp.isDefault,
+    createdAt: workspaceApp.createdAt as string,
+    updatedAt: workspaceApp.updatedAt!,
   }
 }
 

@@ -9,6 +9,8 @@ export interface WorkspaceAppResponse {
   iconColor?: string
   navigation: AppNavigation
   isDefault: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface InsertWorkspaceAppRequest {

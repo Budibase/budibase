@@ -6,7 +6,7 @@
   import AppsHero from "assets/apps-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
-  import { confirm } from "@/helpers"
+  import { capitalise, confirm, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
 
   enum Filter {
@@ -131,7 +131,7 @@
   <div class="table-header">
     <span>Name</span>
     <span>Status</span>
-    <span>Last published</span>
+    <span>Last updated</span>
     <span></span>
   </div>
   {#each $workspaceAppStore.workspaceApps as app, idx}
@@ -145,7 +145,9 @@
       <div>
         <PublishStatusBadge status={idx % 2 === 0 ? "published" : "draft"} />
       </div>
-      <span>This week</span>
+      <span>
+        {capitalise(durationFromNow(app.updatedAt || ""))}
+      </span>
       <div class="actions">
         <Icon
           name="More"
