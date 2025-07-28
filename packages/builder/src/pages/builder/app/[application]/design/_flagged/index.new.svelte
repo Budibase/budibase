@@ -1,6 +1,13 @@
 <script lang="ts">
-  import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
-  import { type WorkspaceApp } from "@budibase/types"
+  import {
+    contextMenuStore,
+    workspaceAppStore,
+    workspaceDeploymentStore,
+  } from "@/stores/builder"
+  import {
+    type PublishStatusResource,
+    type WorkspaceApp,
+  } from "@budibase/types"
   import { ActionButton, Button, Icon, notifications } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero-x1.png"
@@ -97,6 +104,13 @@
     selectedWorkspaceApp = undefined
     workspaceAppModal.show()
   }
+
+  const findDeployment = (
+    deployments: Record<string, PublishStatusResource>,
+    app: WorkspaceApp
+  ): PublishStatusResource => {
+    return deployments[app._id!]
+  }
 </script>
 
 <div class="apps-index">
@@ -134,7 +148,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each $workspaceAppStore.workspaceApps as app, idx}
+  {#each $workspaceAppStore.workspaceApps as app}
     <a
       class="app"
       href={`./design/${app.screens[0]?._id}`}
@@ -143,7 +157,10 @@
     >
       <div>{app.name}</div>
       <div>
-        <PublishStatusBadge status={idx % 2 === 0 ? "published" : "draft"} />
+        <PublishStatusBadge
+          status={findDeployment($workspaceDeploymentStore.workspaceApps, app)
+            .state}
+        />
       </div>
       <span>
         {capitalise(durationFromNow(app.updatedAt || ""))}
