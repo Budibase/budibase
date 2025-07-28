@@ -12,13 +12,21 @@
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Link, Icon } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Divider,
+    Link,
+    Toggle,
+    Label,
+    Icon,
+  } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
-  $: selectedWorkspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id
+  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
+  $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
 
   $: isWorkspacePublished =
     selectedWorkspaceAppId &&
@@ -39,14 +47,39 @@
   <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
-      {#if $featureFlags.WORKSPACE_APPS && isWorkspacePublished}
-        <Icon
-          name="globe-simple"
-          size="M"
-          weight="regular"
-          color="var(--spectrum-global-color-gray-600)"
-        ></Icon>
-        <Link quiet secondary href={liveUrl} target="_blank">{liveUrl}</Link>
+      {#if $featureFlags.WORKSPACE_APPS}
+        <div class="workspace-info">
+          {#if selectedWorkspaceAppId}
+            <div class="workspace-info-toggle">
+              <Toggle
+                noPadding
+                on:change={() =>
+                  workspaceAppStore.toggleDisabled(
+                    selectedWorkspaceAppId,
+                    !selectedWorkspaceApp?.disabled
+                  )}
+                value={!selectedWorkspaceApp?.disabled}
+              />
+              <Label
+                >{selectedWorkspaceApp?.disabled
+                  ? "Disabled"
+                  : "Enabled"}</Label
+              >
+            </div>
+            <div class="divider-container">
+              <Divider size="S" vertical />
+            </div>
+          {/if}
+          {#if isWorkspacePublished}
+            <Icon
+              name="globe-simple"
+              size="M"
+              weight="regular"
+              color="var(--spectrum-global-color-gray-600)"
+            ></Icon>
+            <Link quiet href={liveUrl} target="_blank">{liveUrl}</Link>
+          {/if}
+        </div>
       {/if}
     </div>
     <div class="header-right">
@@ -115,6 +148,19 @@
     padding-left: var(--spacing-s);
     align-items: center;
     gap: 6px;
+  }
+
+  .workspace-info-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding-top: 2px;
+  }
+
+  .workspace-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
   }
 
   .header-right {

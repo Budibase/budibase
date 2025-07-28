@@ -8,7 +8,7 @@ import {
   UpdateWorkspaceAppRequest,
   WorkspaceApp,
 } from "@budibase/types"
-import { derived, Readable } from "svelte/store"
+import { derived, Readable, get } from "svelte/store"
 import { appStore } from "./app"
 import { screenStore, selectedScreen, sortedScreens } from "./screens"
 
@@ -96,6 +96,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       name: workspaceApp.name,
       url: workspaceApp.url,
       navigation: workspaceApp.navigation,
+      disabled: workspaceApp.disabled,
     }
 
     const updatedWorkspaceApp = await API.workspaceApp.update(safeWorkspaceApp)
@@ -125,6 +126,20 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     })
 
     appStore.refresh()
+  }
+
+  async toggleDisabled(workspaceAppId: string, state: boolean) {
+    const workspaceApp = get(this.store).workspaceApps.find(
+      app => app._id === workspaceAppId
+    )
+    if (!workspaceApp) {
+      throw new Error(`Workspace app not found ${workspaceAppId}`)
+    }
+    workspaceApp.disabled = state
+    await this.edit({
+      ...workspaceApp,
+      disabled: state,
+    })
   }
 }
 

@@ -9,11 +9,13 @@ export interface WorkspaceAppResponse {
   isDefault: boolean
   createdAt: string
   updatedAt: string
+  disabled?: boolean
 }
 
 export interface InsertWorkspaceAppRequest {
   name: string
   url: string
+  disabled?: boolean
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -26,6 +28,7 @@ export interface UpdateWorkspaceAppRequest {
   name: string
   url: string
   navigation: AppNavigation
+  disabled?: boolean
 }
 
 export interface UpdateWorkspaceAppResponse {

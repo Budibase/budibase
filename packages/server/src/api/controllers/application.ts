@@ -230,6 +230,10 @@ export async function fetchClientApps(
       sdk.workspaceApps.fetch(db)
     )
     for (const workspaceApp of workspaceApps) {
+      // don't return disabled workspace apps
+      if (workspaceApp.disabled) {
+        continue
+      }
       result.push({
         // This is used as idempotency key for rendering in the frontend
         appId: `${app.appId}_${workspaceApp._id}`,
@@ -298,7 +302,8 @@ export async function fetchAppPackage(
 
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
-    if (!matchedWorkspaceApp) {
+    // disabled workspace apps should appear to not exist
+    if (!matchedWorkspaceApp || matchedWorkspaceApp.disabled) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
