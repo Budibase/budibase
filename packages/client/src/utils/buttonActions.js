@@ -518,31 +518,51 @@ const delayHandler = async action => {
   return new Promise(resolve => setTimeout(resolve, action.parameters.duration))
 }
 
-const scrollToFieldHandler = action => {
-  const fieldLabel = action.parameters.field
+export const scrollToFieldHandler = action => {
+  const labelText =
+    typeof action === "string"
+      ? action
+      : typeof action?.parameters?.field === "string"
+        ? action.parameters.field
+        : null
 
-  // Try to find a label element whose text matches the field name
-  const label = Array.from(document.querySelectorAll("label")).find(
-    el => el.textContent.trim() === fieldLabel
-  )
+  const fieldId =
+    typeof action?.field === "object" ? action.field.fieldState?.fieldId : null
 
-  if (!label) return
+  let targetId = fieldId
+  let label = null
 
-  // If label has a 'for' attribute, use that to get the input
-  let target = null
-  const forId = label.getAttribute("for")
-  if (forId) {
-    target = document.getElementById(forId)
-  } else {
-    // Fallback: look for an input nested inside the label
-    target = label.querySelector("input, textarea, select")
+  if (!targetId && labelText) {
+    label = Array.from(document.querySelectorAll("label")).find(
+      el => el.textContent.trim() === labelText
+    )
+
+    if (label) {
+      const forAttr = label.getAttribute("for")
+      if (forAttr) {
+        targetId = forAttr
+      } else {
+        const nestedInput = label.querySelector("input, textarea, select")
+        targetId = nestedInput?.id || null
+      }
+    }
   }
 
-  if (!target) return
+  if (!targetId) return
 
-  target.focus({ preventScroll: true })
-  label.style.scrollMargin = "100px"
-  label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  const input = document.getElementById(targetId)
+  if (input) {
+    input.focus({ preventScroll: true })
+  }
+
+  if (!label) {
+    label = document.querySelector(`label[for="${targetId}"]`)
+  }
+
+  if (label) {
+    label.style.scrollMargin = "100px"
+    label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }
 }
 
 const handlerMap = {

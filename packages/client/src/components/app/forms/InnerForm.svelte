@@ -4,6 +4,7 @@
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
+  import { scrollToFieldHandler } from "../../../utils/buttonActions"
   import {
     type DataFetchDatasource,
     type FieldSchema,
@@ -452,21 +453,10 @@
   }
 
   const handleScrollToField = (props: { field: FieldInfo | string }) => {
-    let field
     if (typeof props.field === "string") {
-      field = get(getField(props.field))
+      scrollToFieldHandler(props.field)
     } else {
-      field = props.field
-    }
-    const fieldId = field.fieldState.fieldId
-    const fieldElement = document.getElementById(fieldId)
-    if (fieldElement) {
-      fieldElement.focus({ preventScroll: true })
-    }
-    const label = document.querySelector<HTMLElement>(`label[for="${fieldId}"]`)
-    if (label) {
-      label.style.scrollMargin = "100px"
-      label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+      scrollToFieldHandler({ field: props.field })
     }
   }
 
