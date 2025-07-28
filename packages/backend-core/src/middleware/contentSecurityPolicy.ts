@@ -132,4 +132,3 @@ export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   ctx.set("Content-Security-Policy", cspHeader)
   await next()
 }) as Middleware
-

@@ -1,6 +1,9 @@
 import * as viewController from "../controllers/view"
 import * as rowController from "../controllers/row"
-import { authorizedMiddleware as authorized, authorizedResource } from "../../middleware/authorized"
+import {
+  authorizedMiddleware as authorized,
+  authorizedResource,
+} from "../../middleware/authorized"
 import { paramResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { builderRoutes, publicRoutes } from "./endpointGroups"

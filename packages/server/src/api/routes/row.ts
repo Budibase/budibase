@@ -1,5 +1,8 @@
 import * as rowController from "../controllers/row"
-import { authorizedMiddleware as authorized, authorizedResource } from "../../middleware/authorized"
+import {
+  authorizedMiddleware as authorized,
+  authorizedResource,
+} from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
