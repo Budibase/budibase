@@ -1,5 +1,5 @@
 import * as controller from "../controllers/backup"
-import ensureTenantAppOwnership from "../../middleware/ensureTenantAppOwnership"
+import { ensureTenantAppOwnership } from "../../middleware/ensureTenantAppOwnership"
 import { builderRoutes } from "./endpointGroups"
 
 builderRoutes

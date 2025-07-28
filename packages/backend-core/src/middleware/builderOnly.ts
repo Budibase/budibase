@@ -4,7 +4,7 @@ import { getAppId } from "../context"
 import env from "../environment"
 
 type BuilderFn = (user: UserCtx["user"], appId?: string) => boolean
-export default async (ctx: UserCtx, next: any) => {
+export async function builderOnly(ctx: UserCtx, next: any) {
   const appId = getAppId()
 
   let builderFn: BuilderFn | undefined

@@ -177,7 +177,7 @@ const authorized =
     return csrf(ctx, next)
   }
 
-export default (
+export const authorizedMiddleware = (
   permType: PermissionType,
   permLevel?: PermissionLevel,
   opts = { schema: false }

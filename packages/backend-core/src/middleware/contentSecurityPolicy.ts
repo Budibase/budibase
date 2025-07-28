@@ -91,7 +91,7 @@ const CSP_DIRECTIVES = {
 
 const CSPDomainRegex = /^[A-Za-z0-9-*:/.]+$/
 
-const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
+export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   const nonce = crypto.randomBytes(16).toString("base64")
   ctx.state.nonce = nonce
   let directives = { ...CSP_DIRECTIVES }
@@ -133,4 +133,3 @@ const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   await next()
 }) as Middleware
 
-export default contentSecurityPolicy

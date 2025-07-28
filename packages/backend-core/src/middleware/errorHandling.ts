@@ -44,4 +44,3 @@ export async function errorHandling(ctx: any, next: any) {
   }
 }
 
-export default errorHandling
