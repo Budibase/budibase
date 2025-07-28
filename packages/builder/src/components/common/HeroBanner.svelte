@@ -5,9 +5,17 @@
   export let linkHref: string = "#"
   export let image: string
   export let color: string
+  export let onClose: (() => void) | undefined = undefined
 </script>
 
 <div class="hero" style="--color:{color};">
+  {#if onClose}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div class="close-button" on:click={onClose}>
+      <Icon name="x" size="S" />
+    </div>
+  {/if}
   <div class="text">
     <h1>{title}</h1>
     <p><slot /></p>
@@ -35,6 +43,7 @@
     justify-content: space-between;
     gap: 16px;
     align-items: center;
+    position: relative;
   }
   .text {
     display: flex;
@@ -87,5 +96,18 @@
   }
   .button:hover {
     background-color: rgba(250, 250, 250, 0.2);
+  }
+  .close-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(255, 255, 255);
+    opacity: 0.5;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+  }
+  .close-button:hover {
+    opacity: 0.75;
   }
 </style>

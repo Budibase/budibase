@@ -8,6 +8,7 @@
   import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import { capitalise, confirm, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
+  import { slide } from "svelte/transition"
 
   enum Filter {
     All = "All apps",
@@ -19,6 +20,8 @@
   let filter = Filter.All
   let selectedWorkspaceApp: WorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
+
+  let showBanner = true
 
   const onDelete = async (workspaceApp: WorkspaceApp) => {
     contextMenuStore.close()
@@ -97,22 +100,29 @@
     selectedWorkspaceApp = undefined
     workspaceAppModal.show()
   }
+
+  const closeBanner = () => {
+    showBanner = false
+  }
 </script>
 
 <div class="apps-index">
-  <div class="hero-wrapper">
-    <HeroBanner
-      title="Build modern apps and forms to power your workflows"
-      linkTitle="App building 101"
-      linkHref="https://docs.budibase.com/docs/quickstart"
-      image={AppsHero}
-      color="#732B00"
-    >
-      Transform internal workflows with modern apps and forms. Connect SQL, REST
-      APIs, or your Budibase automations, and create beautiful interfaces with
-      pre-built components in minutes.
-    </HeroBanner>
-  </div>
+  {#if showBanner}
+    <div class="hero-wrapper" transition:slide={{ duration: 300 }}>
+      <HeroBanner
+        title="Build modern apps and forms to power your workflows"
+        linkTitle="App building 101"
+        linkHref="https://docs.budibase.com/docs/quickstart"
+        image={AppsHero}
+        color="#732B00"
+        onClose={closeBanner}
+      >
+        Transform internal workflows with modern apps and forms. Connect SQL,
+        REST APIs, or your Budibase automations, and create beautiful interfaces
+        with pre-built components in minutes.
+      </HeroBanner>
+    </div>
+  {/if}
 
   <TopBar icon="layout" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
     <Button icon="lightbulb" secondary>Learn</Button>
