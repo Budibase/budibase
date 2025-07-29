@@ -15,6 +15,9 @@ export async function getRoutingInfo(
   try {
     const result: ScreenRoutesViewOutput[] = []
     for (const workspaceApp of workspaceApps) {
+      if (workspaceApp.disabled) {
+        continue
+      }
       const allRouting = await db.query<ScreenRoutesViewOutput>(
         getQueryIndex(ViewName.ROUTING),
         {

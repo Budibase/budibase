@@ -186,7 +186,7 @@
     {#if !isRowAction}
       <div class="toggle-active setting-spacing">
         <Toggle
-          text={automation.disabled ? "Paused" : "Activated"}
+          text={automation.disabled ? "Disabled" : "Enabled"}
           on:change={automationStore.actions.toggleDisabled(
             automation._id,
             automation.disabled
