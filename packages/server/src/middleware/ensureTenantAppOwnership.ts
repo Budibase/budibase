@@ -1,7 +1,10 @@
 import { tenancy, utils, context } from "@budibase/backend-core"
 import { UserCtx } from "@budibase/types"
 
-async function ensureTenantAppOwnership(ctx: UserCtx, next: any) {
+export async function ensureTenantAppOwnershipMiddleware(
+  ctx: UserCtx,
+  next: any
+) {
   const appId = await utils.getAppIdFromCtx(ctx)
   if (!appId) {
     ctx.throw(400, "appId must be provided")
@@ -15,5 +18,3 @@ async function ensureTenantAppOwnership(ctx: UserCtx, next: any) {
   }
   await next()
 }
-
-export default ensureTenantAppOwnership

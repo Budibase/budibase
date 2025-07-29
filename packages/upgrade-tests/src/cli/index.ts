@@ -190,8 +190,8 @@ program
           adminEmail: config.adminEmail,
           adminPassword: config.adminPassword,
           containerName: config.containerName,
-          oldVersion: options.from,
-          currentVersion: options.to,
+          fromVersion: options.from,
+          toVersion: options.to,
         })
 
         if (!preSuccess) {
@@ -264,8 +264,8 @@ program
           adminEmail: config.adminEmail,
           adminPassword: config.adminPassword,
           containerName: config.containerName,
-          oldVersion: options.from,
-          currentVersion: options.to,
+          fromVersion: options.from,
+          toVersion: options.to,
         })
 
         if (!postSuccess) {
@@ -340,7 +340,7 @@ program
         adminEmail: process.env.BB_ADMIN_USER_EMAIL || "admin@example.com",
         adminPassword: process.env.BB_ADMIN_USER_PASSWORD || "admin123!",
         containerName: process.env.BUDIBASE_CONTAINER_NAME || "local",
-        oldVersion: options.from,
+        fromVersion: options.from,
       })
 
       if (!success) {
