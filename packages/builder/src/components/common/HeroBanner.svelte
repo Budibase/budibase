@@ -1,40 +1,60 @@
 <script lang="ts">
+  import type { BannerType } from "@/constants/banners"
+  import { bannerStore } from "@/stores/portal"
   import { Icon } from "@budibase/bbui"
+  import { slide } from "svelte/transition"
+
   export let title: string
   export let linkTitle: string | undefined = undefined
   export let linkHref: string = "#"
   export let image: string
   export let color: string
-  export let onClose: (() => void) | undefined = undefined
+  export let key: BannerType
+
+  const closeBanner = () => {
+    bannerStore.closeBanner(key)
+  }
+
+  $: displayBanner = bannerStore.shouldDisplayBanner(key)
 </script>
 
-<div class="hero" style="--color:{color};">
-  {#if onClose}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="close-button" on:click={onClose}>
-      <Icon name="x" size="S" />
+{#if $displayBanner}
+  <div class="hero-wrapper" transition:slide={{ duration: 300 }}>
+    <div class="hero" style="--color:{color};">
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div class="close-button" on:click={closeBanner}>
+        <Icon name="x" size="S" />
+      </div>
+
+      <div class="text">
+        <h1>{title}</h1>
+        <p><slot /></p>
+        {#if linkTitle}
+          <a href={linkHref} class="button" target="_blank">
+            <Icon
+              name="book-open-text"
+              size="L"
+              weight="bold"
+              color="var(--spectrum-global-color-gray-900)"
+            ></Icon>
+            {linkTitle}
+          </a>
+        {/if}
+      </div>
+      <img src={image} alt="hero" />
     </div>
-  {/if}
-  <div class="text">
-    <h1>{title}</h1>
-    <p><slot /></p>
-    {#if linkTitle}
-      <a href={linkHref} class="button" target="_blank">
-        <Icon
-          name="book-open-text"
-          size="L"
-          weight="bold"
-          color="var(--spectrum-global-color-gray-900)"
-        ></Icon>
-        {linkTitle}
-      </a>
-    {/if}
   </div>
-  <img src={image} alt="hero" />
-</div>
+{/if}
 
 <style>
+  .hero-wrapper {
+    margin: 12px 12px 0 12px;
+    border-radius: 22px;
+    border: 1px dashed var(--spectrum-global-color-gray-300);
+    padding: 4px;
+    background-color: var(--spectrum-global-color-gray-200);
+  }
   .hero {
     background: var(--color);
     border-radius: 20px;

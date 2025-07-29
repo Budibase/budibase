@@ -8,8 +8,6 @@
   import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import { capitalise, confirm, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { slide } from "svelte/transition"
-  import { bannerStore } from "@/stores/portal"
   import { BannerType } from "@/constants/banners"
 
   enum Filter {
@@ -100,31 +98,21 @@
     selectedWorkspaceApp = undefined
     workspaceAppModal.show()
   }
-
-  const closeBanner = () => {
-    bannerStore.closeBanner(BannerType.APPS)
-  }
-
-  $: displayBanner = bannerStore.shouldDisplayBanner(BannerType.APPS)
 </script>
 
 <div class="apps-index">
-  {#if $displayBanner}
-    <div class="hero-wrapper" transition:slide={{ duration: 300 }}>
-      <HeroBanner
-        title="Build modern apps and forms to power your workflows"
-        linkTitle="App building 101"
-        linkHref="https://docs.budibase.com/docs/quickstart"
-        image={AppsHero}
-        color="#732B00"
-        onClose={closeBanner}
-      >
-        Transform internal workflows with modern apps and forms. Connect SQL,
-        REST APIs, or your Budibase automations, and create beautiful interfaces
-        with pre-built components in minutes.
-      </HeroBanner>
-    </div>
-  {/if}
+  <HeroBanner
+    key={BannerType.APPS}
+    title="Build modern apps and forms to power your workflows"
+    linkTitle="App building 101"
+    linkHref="https://docs.budibase.com/docs/quickstart"
+    image={AppsHero}
+    color="#732B00"
+  >
+    Transform internal workflows with modern apps and forms. Connect SQL, REST
+    APIs, or your Budibase automations, and create beautiful interfaces with
+    pre-built components in minutes.
+  </HeroBanner>
 
   <TopBar icon="layout" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
     <Button icon="lightbulb" secondary>Learn</Button>
@@ -183,13 +171,6 @@
     background: var(--background);
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
-  }
-  .hero-wrapper {
-    margin: 12px 12px 0 12px;
-    border-radius: 22px;
-    border: 1px dashed var(--spectrum-global-color-gray-300);
-    padding: 4px;
-    background-color: var(--spectrum-global-color-gray-200);
   }
   .filter {
     padding: 10px 12px;
