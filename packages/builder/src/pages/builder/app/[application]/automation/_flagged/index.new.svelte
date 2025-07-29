@@ -226,6 +226,7 @@
     background: var(--background);
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
+    overflow: auto;
   }
   .hero-wrapper {
     margin: 12px 12px 0 12px;
