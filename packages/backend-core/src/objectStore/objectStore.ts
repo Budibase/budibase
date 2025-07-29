@@ -463,7 +463,7 @@ export async function retrieveDirectory(bucketName: string, path: string) {
           )
         })
       },
-      3 /* max concurrency */
+      5 /* max concurrency */
     )
 
     span.addTags({ numObjects })
