@@ -4,7 +4,12 @@ import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { licensing, organisation, environment } from "@/stores/portal"
-import { tables, appStore, permissions } from "@/stores/builder"
+import {
+  tables,
+  appStore,
+  permissions,
+  workspaceDeploymentStore,
+} from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 import {
   getEnvironmentBindings,
@@ -1569,6 +1574,8 @@ const automationActions = (store: AutomationStore) => ({
           automation.disabled ? "disabled" : "enabled"
         } successfully`
       )
+
+      await workspaceDeploymentStore.fetch()
     } catch (error) {
       notifications.error(
         `Error ${automation?.disabled ? "disabling" : "enabling"} automation`
