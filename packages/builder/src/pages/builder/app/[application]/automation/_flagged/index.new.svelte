@@ -165,6 +165,14 @@
 
       return a.status === filter
     })
+
+  function getTriggerFriendlyName(automation: Automation) {
+    const definition =
+      $automationStore.blockDefinitions.CREATABLE_TRIGGER[
+        automation.definition.trigger.stepId
+      ]
+    return definition?.name
+  }
 </script>
 
 <div class="automations-index">
@@ -204,6 +212,7 @@
 
   <div class="table-header">
     <span>Name</span>
+    <span>Trigger</span>
     <span>Status</span>
     <span>Last updated</span>
     <span></span>
@@ -216,6 +225,7 @@
       class:active={showHighlight && selectedAutomation === automation}
     >
       <div>{automation.name}</div>
+      <div>{getTriggerFriendlyName(automation)}</div>
       <div>
         <PublishStatusBadge status={automation.status} />
       </div>
