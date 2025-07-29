@@ -60,11 +60,13 @@ describe("/api/deploy", () => {
         published: false,
         name: automation.name,
         unpublishedChanges: true,
+        state: "unpublished",
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
         published: false,
         name: workspaceApp.name,
         unpublishedChanges: true,
+        state: "unpublished",
       })
     })
 
@@ -88,14 +90,18 @@ describe("/api/deploy", () => {
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[automation._id!]).toEqual({
+        publishedAt: expect.any(String),
         published: true,
         name: automation.name,
-        unpublishedChanges: true,
+        unpublishedChanges: false,
+        state: "published",
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
+        publishedAt: expect.any(String),
         published: true,
         name: workspaceApp.name,
-        unpublishedChanges: true,
+        unpublishedChanges: false,
+        state: "published",
       })
     })
 
@@ -110,12 +116,6 @@ describe("/api/deploy", () => {
         .serverLog({ text: "Published automation" })
         .save()
 
-      const { automation: unpublishedAutomation } =
-        await createAutomationBuilder(config)
-          .onRowSaved({ tableId: table._id! })
-          .serverLog({ text: "Unpublished automation" })
-          .save()
-
       const { workspaceApp: publishedWorkspaceApp } =
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
@@ -123,6 +123,14 @@ describe("/api/deploy", () => {
             url: "/publishedapp",
           })
         )
+
+      await config.api.application.publish(config.app!.appId)
+
+      const { automation: unpublishedAutomation } =
+        await createAutomationBuilder(config)
+          .onRowSaved({ tableId: table._id! })
+          .serverLog({ text: "Unpublished automation" })
+          .save()
 
       const { workspaceApp: unpublishedWorkspaceApp } =
         await config.api.workspaceApp.create(
@@ -132,11 +140,6 @@ describe("/api/deploy", () => {
           })
         )
 
-      await config.api.application.filteredPublish(config.app!.appId, {
-        automationIds: [publishedAutomation._id!],
-        workspaceAppIds: [publishedWorkspaceApp._id!],
-      })
-
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[publishedAutomation._id!]).toEqual({
@@ -144,52 +147,62 @@ describe("/api/deploy", () => {
         name: publishedAutomation.name,
         publishedAt: expect.any(String),
         unpublishedChanges: false,
+        state: "published",
       })
       expect(res.workspaceApps[publishedWorkspaceApp._id!]).toEqual({
         published: true,
         name: publishedWorkspaceApp.name,
         publishedAt: expect.any(String),
         unpublishedChanges: false,
+        state: "published",
       })
 
       expect(res.automations[unpublishedAutomation._id!]).toEqual({
         published: false,
         name: unpublishedAutomation.name,
         unpublishedChanges: true,
+        state: "unpublished",
       })
       expect(res.workspaceApps[unpublishedWorkspaceApp._id!]).toEqual({
         published: false,
         name: unpublishedWorkspaceApp.name,
         unpublishedChanges: true,
+        state: "unpublished",
       })
     })
 
-    it("handles app with no production database", async () => {
+    it("handles app with disabled automation/workspace app", async () => {
       const table = await config.api.table.save(basicTable())
 
       const { automation } = await createAutomationBuilder(config)
         .onRowSaved({ tableId: table._id! })
         .serverLog({ text: "Test automation" })
-        .save()
+        .save({ disabled: true })
 
       const { workspaceApp } = await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Test Workspace App",
           url: "/testapp",
+          disabled: true,
         })
       )
 
+      await config.api.application.publish(config.app!.appId)
       const res = await config.api.deploy.publishStatus()
 
       expect(res.automations[automation._id!]).toEqual({
-        published: false,
+        published: true,
+        publishedAt: expect.any(String),
         name: automation.name,
-        unpublishedChanges: true,
+        unpublishedChanges: false,
+        state: "disabled",
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
-        published: false,
+        published: true,
+        publishedAt: expect.any(String),
         name: workspaceApp.name,
-        unpublishedChanges: true,
+        unpublishedChanges: false,
+        state: "disabled",
       })
     })
 

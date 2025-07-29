@@ -22,6 +22,7 @@
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
   const actionTypes = getAvailableActions()
+  const zoneType = generate()
 
   export let key
   export let actions
@@ -295,6 +296,8 @@
           items: actions,
           flipDurationMs,
           dropTargetStyle: { outline: "none" },
+          type: zoneType,
+          dropFromOthersDisabled: true,
         }}
         on:consider={handleDndConsider}
         on:finalize={handleDndFinalize}
