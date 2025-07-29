@@ -1,11 +1,16 @@
 <script lang="ts">
-  export let status: "published" | "draft"
+  import { PublishResourceState } from "@budibase/types"
+
+  export let status: PublishResourceState
 </script>
 
 <div
   class="status"
-  class:published={status === "published"}
-  class:draft={status === "draft"}
+  class:published={status === PublishResourceState.PUBLISHED}
+  class:draft={[
+    PublishResourceState.UNPUBLISHED,
+    PublishResourceState.DISABLED,
+  ].includes(status)}
 >
   {status}
 </div>

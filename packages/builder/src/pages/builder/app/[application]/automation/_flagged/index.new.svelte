@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { contextMenuStore, automationStore } from "@/stores/builder"
+  import {
+    contextMenuStore,
+    automationStore,
+    workspaceDeploymentStore,
+  } from "@/stores/builder"
+  import { PublishResourceState } from "@budibase/types"
   import { type Automation } from "@budibase/types"
   import {
     ActionButton,
@@ -22,21 +27,35 @@
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
 
-  /* eslint-disable no-unused-vars */
-  enum Filter {
-    All = "All automations",
-    Published = "Published",
-    Drafts = "Drafts",
-  }
-  /* eslint-enable no-unused-vars */
-
   let showHighlight = true
   let createModal: ModalAPI
   let updateModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
   let webhookModal: ModalAPI
-  let filter = Filter.All
+  let filter: PublishResourceState | undefined
   let selectedAutomation: Automation | undefined = undefined
+
+  const filters: {
+    label: string
+    filterValue: PublishResourceState | undefined
+  }[] = [
+    {
+      label: "All automations",
+      filterValue: undefined,
+    },
+    {
+      label: "Published",
+      filterValue: PublishResourceState.PUBLISHED,
+    },
+    {
+      label: "Disabled",
+      filterValue: PublishResourceState.DISABLED,
+    },
+    {
+      label: "Drafts",
+      filterValue: PublishResourceState.UNPUBLISHED,
+    },
+  ]
 
   async function deleteAutomation() {
     if (!selectedAutomation) {
@@ -135,14 +154,20 @@
     )
   }
 
-  function filterAutomations(automations: Automation[], filter: Filter) {
-    if (filter === Filter.All) {
-      return automations
-    }
+  $: automations = $automationStore.automations
+    .map(a => ({
+      ...a,
+      status:
+        $workspaceDeploymentStore.automations[a._id!]?.state ||
+        PublishResourceState.UNPUBLISHED,
+    }))
+    .filter(a => {
+      if (!filter) {
+        return true
+      }
 
-    return automations.filter(a => a.live === (filter === Filter.Published))
-  }
-  $: automations = filterAutomations($automationStore.automations, filter)
+      return a.status === filter
+    })
 </script>
 
 <div class="automations-index">
@@ -170,11 +195,12 @@
     </Button>
   </TopBar>
   <div class="filter">
-    {#each Object.values(Filter) as option}
+    {#each filters as option}
       <ActionButton
         quiet
-        selected={option === filter}
-        on:click={() => (filter = option)}>{option}</ActionButton
+        selected={option.filterValue === filter}
+        on:click={() => (filter = option.filterValue)}
+        >{option.label}</ActionButton
       >
     {/each}
   </div>
@@ -185,7 +211,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each automations as automation, idx}
+  {#each automations as automation}
     <a
       class="app"
       href={$url(`./${automation._id}`)}
@@ -194,7 +220,7 @@
     >
       <div>{automation.name}</div>
       <div>
-        <PublishStatusBadge status={idx % 2 === 0 ? "published" : "draft"} />
+        <PublishStatusBadge status={automation.status} />
       </div>
       <span> {capitalise(durationFromNow(automation.updatedAt || ""))}</span>
       <div class="actions">
