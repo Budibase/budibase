@@ -19,6 +19,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { sdk } from "@budibase/shared-core"
   import TopBar from "@/components/common/TopBar.svelte"
+  import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
 
   /* eslint-disable no-unused-vars */
@@ -145,19 +146,19 @@
 </script>
 
 <div class="automations-index">
-  <div class="hero-wrapper">
-    <HeroBanner
-      title="Transform workflows at scale with Budibase Automations and AI"
-      linkTitle="Automations explained"
-      linkHref="https://docs.budibase.com/docs/automation-steps"
-      image={AppsHero}
-      color="#1C3F62"
-    >
-      Automate more processes for your employees and customers with our visual
-      automation builder. Use automations to transform workflows with AI,
-      automate manual tasks, and add logic to apps.
-    </HeroBanner>
-  </div>
+  <HeroBanner
+    key={BannerType.AUTOMATIONS}
+    title="Transform workflows at scale with Budibase Automations and AI"
+    linkTitle="Automations explained"
+    linkHref="https://docs.budibase.com/docs/automation-steps"
+    image={AppsHero}
+    color="#1C3F62"
+  >
+    Automate more processes for your employees and customers with our visual
+    automation builder. Use automations to transform workflows with AI, automate
+    manual tasks, and add logic to apps.
+  </HeroBanner>
+
   <TopBar
     icon="lightning-a"
     breadcrumbs={[{ text: "Automations" }]}
@@ -239,13 +240,6 @@
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
     overflow: auto;
-  }
-  .hero-wrapper {
-    margin: 12px 12px 0 12px;
-    border-radius: 22px;
-    border: 1px dashed var(--spectrum-global-color-gray-300);
-    padding: 4px;
-    background-color: var(--spectrum-global-color-gray-200);
   }
   .filter {
     padding: 10px 12px;
