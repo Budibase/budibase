@@ -21,11 +21,13 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { capitalise, durationFromNow } from "@/helpers"
 
+  /* eslint-disable no-unused-vars */
   enum Filter {
     All = "All automations",
     Published = "Published",
     Drafts = "Drafts",
   }
+  /* eslint-enable no-unused-vars */
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -131,6 +133,15 @@
       }
     )
   }
+
+  function filterAutomations(automations: Automation[], filter: Filter) {
+    if (filter === Filter.All) {
+      return automations
+    }
+
+    return automations.filter(a => a.live === (filter === Filter.Published))
+  }
+  $: automations = filterAutomations($automationStore.automations, filter)
 </script>
 
 <div class="automations-index">
@@ -173,7 +184,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each $automationStore.automations as automation, idx}
+  {#each automations as automation, idx}
     <a
       class="app"
       href={$url(`./${automation._id}`)}
