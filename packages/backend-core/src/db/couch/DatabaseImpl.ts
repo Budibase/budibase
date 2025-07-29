@@ -335,7 +335,13 @@ export class DatabaseImpl implements Database {
           }
         }
       }
-      return () => db.insert(document)
+      return async () => {
+        const response = await db.insert(document)
+        if (!opts?.returnDoc) {
+          return response
+        }
+        return { ...response, doc: { ...document, _rev: response.rev } }
+      }
     })
   }
 

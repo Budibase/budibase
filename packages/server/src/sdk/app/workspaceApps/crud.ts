@@ -35,15 +35,14 @@ export async function create(
 
   await guardName(workspaceApp.name)
 
-  const response = await db.put({
-    _id: docIds.generateWorkspaceAppID(),
-    ...workspaceApp,
-  })
-  return {
-    ...workspaceApp,
-    _id: response.id!,
-    _rev: response.rev!,
-  }
+  const response = await db.put(
+    {
+      _id: docIds.generateWorkspaceAppID(),
+      ...workspaceApp,
+    },
+    { returnDoc: true }
+  )
+  return response.doc
 }
 
 export async function update(
@@ -61,6 +60,7 @@ export async function update(
     name: workspaceApp.name,
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
+    disabled: workspaceApp.disabled,
 
     // Immutable properties
     createdAt: persisted.createdAt,
@@ -69,11 +69,7 @@ export async function update(
     _deleted: undefined,
   }
   const response = await db.put(docToUpdate)
-  return {
-    ...docToUpdate,
-    _id: response.id!,
-    _rev: response.rev!,
-  }
+  return response.doc
 }
 
 export async function remove(
