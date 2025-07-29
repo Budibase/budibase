@@ -1,0 +1,185 @@
+import tk from "timekeeper"
+import * as setup from "../../../api/routes/tests/utilities"
+import { processMigrations } from "../../migrationsProcessor"
+import migration from "../20250729134531_workspace_cleanups"
+import { AppMigration, updateAppMigrationMetadata } from "../.."
+import sdk from "../../../sdk"
+import { structures } from "@budibase/backend-core/tests"
+import { generateScreenID } from "../../../db/utils"
+import { context } from "@budibase/backend-core"
+import { basicScreen } from "../../../tests/utilities/structures"
+import { Screen } from "@budibase/types"
+
+const MIGRATIONS: AppMigration[] = [
+  {
+    id: "20250729134531_workspace_cleanups",
+    func: jest.fn().mockImplementation(migration),
+    disabled: false,
+  },
+]
+
+const config = setup.getConfig()
+
+async function createWorkspaceApp(isDefault = false) {
+  const workspaceApp = await sdk.workspaceApps.create(
+    structures.workspaceApps.workspaceApp({ isDefault })
+  )
+
+  return workspaceApp
+}
+
+describe.each([
+  ["dev", () => config.getAppId()],
+  ["prod", () => config.getProdAppId()],
+])("Workspace cleanups migration (%s)", (_, getAppId) => {
+  beforeAll(async () => {
+    await config.init()
+  })
+
+  beforeEach(async () => {
+    await config.newTenant()
+    for (const appId of [config.getAppId(), config.getProdAppId()]) {
+      await config.doInContext(appId, async () => {
+        await updateAppMigrationMetadata({
+          appId,
+          version: "",
+        })
+      })
+
+      const workspaceApps = await config.doInContext(
+        getAppId(),
+        sdk.workspaceApps.fetch
+      )
+      expect(workspaceApps).toHaveLength(1)
+    }
+
+    tk.freeze(structures.generator.date())
+    jest.clearAllMocks()
+  })
+
+  afterEach(() => {
+    expect(MIGRATIONS[0].func).toHaveBeenCalledTimes(2)
+  })
+
+  it("does nothing when only one default workspace app exists", async () => {
+    await config.doInContext(getAppId(), () =>
+      processMigrations(config.getAppId(), MIGRATIONS)
+    )
+
+    const workspaceApps = await config.doInContext(
+      getAppId(),
+      sdk.workspaceApps.fetch
+    )
+    expect(workspaceApps).toHaveLength(1)
+    expect(workspaceApps[0].isDefault).toBe(true)
+  })
+
+  it("does nothing when multiple non-default workspace apps exist", async () => {
+    await config.doInContext(getAppId(), async () => {
+      await createWorkspaceApp(false)
+      await createWorkspaceApp(false)
+    })
+
+    await config.doInContext(getAppId(), () =>
+      processMigrations(config.getAppId(), MIGRATIONS)
+    )
+
+    const workspaceApps = await config.doInContext(
+      getAppId(),
+      sdk.workspaceApps.fetch
+    )
+    expect(workspaceApps).toHaveLength(3)
+  })
+
+  it("removes duplicate default workspace apps and keeps only one", async () => {
+    await config.doInContext(getAppId(), async () => {
+      await createWorkspaceApp(true)
+      await createWorkspaceApp(true)
+      await createWorkspaceApp(true)
+    })
+
+    await config.doInContext(getAppId(), () =>
+      processMigrations(config.getAppId(), MIGRATIONS)
+    )
+
+    const workspaceApps = await config.doInContext(
+      getAppId(),
+      sdk.workspaceApps.fetch
+    )
+
+    expect(workspaceApps).toHaveLength(1)
+    expect(workspaceApps[0].isDefault).toBe(true)
+  })
+
+  it("updates screens to reference the kept workspace app when removing duplicates", async () => {
+    let keptWorkspaceAppId: string = undefined!
+
+    await config.doInContext(getAppId(), async () => {
+      await createWorkspaceApp(true)
+      await createWorkspaceApp(true)
+
+      const workspaceAppIds = (await sdk.workspaceApps.fetch()).map(a => a._id!)
+      const [defaultWorkspaceApp, toDelete1, toDelete2] = workspaceAppIds
+      keptWorkspaceAppId = defaultWorkspaceApp
+
+      // Create screens that reference both workspace apps
+      await sdk.screens.create({
+        ...basicScreen(),
+        workspaceAppId: toDelete1,
+      })
+      await sdk.screens.create({
+        ...basicScreen(),
+        workspaceAppId: toDelete2,
+      })
+      await sdk.screens.create({
+        ...basicScreen(),
+        workspaceAppId: toDelete1,
+      })
+    })
+
+    await config.doInContext(getAppId(), () =>
+      processMigrations(config.getAppId(), MIGRATIONS)
+    )
+
+    const workspaceApps = await config.doInContext(
+      getAppId(),
+      sdk.workspaceApps.fetch
+    )
+    const screens = await config.doInContext(getAppId(), sdk.screens.fetch)
+
+    expect(workspaceApps).toHaveLength(1)
+    expect(workspaceApps[0]._id).toBe(keptWorkspaceAppId)
+
+    // All screens should now reference the kept workspace app
+    const screensWithWorkspaceAppId = screens.filter(s => s.workspaceAppId)
+    expect(screensWithWorkspaceAppId).toHaveLength(4)
+    screensWithWorkspaceAppId.forEach(screen => {
+      expect(screen.workspaceAppId).toBe(keptWorkspaceAppId)
+    })
+  })
+
+  it("handles mixed default and non-default workspace apps correctly", async () => {
+    await config.doInContext(getAppId(), async () => {
+      await createWorkspaceApp(true)
+      await createWorkspaceApp(true)
+      await createWorkspaceApp(false)
+    })
+
+    await config.doInContext(getAppId(), () =>
+      processMigrations(config.getAppId(), MIGRATIONS)
+    )
+
+    const workspaceApps = await config.doInContext(
+      getAppId(),
+      sdk.workspaceApps.fetch
+    )
+
+    expect(workspaceApps).toHaveLength(2)
+
+    const defaultApps = workspaceApps.filter(app => app.isDefault)
+    const nonDefaultApps = workspaceApps.filter(app => !app.isDefault)
+
+    expect(defaultApps).toHaveLength(1)
+    expect(nonDefaultApps).toHaveLength(1)
+  })
+})
