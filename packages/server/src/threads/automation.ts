@@ -422,15 +422,21 @@ class Orchestrator {
           case AutomationActionStepId.LOOP_V2:
           case AutomationActionStepId.LOOP: {
             if (step.stepId === AutomationActionStepId.LOOP) {
+              const stepToLoop = steps[stepIndex + 1]
               let parsedStep = this.parseOldStepToNewStep(step, steps)
               addToContext(
-                step,
+                stepToLoop,
                 await this.executeLoopV2Step(ctx, parsedStep, true)
               )
+              // We increment by 2 here because the way loops work is that the
+              // step immediately following the loop step is what gets looped.
+              // So when we're done looping, to advance correctly we need to
+              // skip the step that was looped.
+              stepIndex += 2
             } else {
               addToContext(step, await this.executeLoopV2Step(ctx, step, false))
+              stepIndex++
             }
-            stepIndex++
             break
           }
           default: {
@@ -509,10 +515,16 @@ class Orchestrator {
             status: AutomationStepStatus.MAX_ITERATIONS,
             iterations,
           })
-          return stepFailure(step, {
-            status: AutomationStepStatus.MAX_ITERATIONS,
-            success: false,
-          })
+          if (isLegacyLoopStep) {
+            const childStep = children[0]
+            const flatItems = this.flattenItems(allResults)
+            return stepFailure(childStep, {
+              status: AutomationStepStatus.MAX_ITERATIONS,
+              success: false,
+              items: flatItems,
+              iterations,
+            })
+          }
         }
 
         if (matchesLoopFailureCondition(step, currentItem)) {
@@ -546,8 +558,24 @@ class Orchestrator {
 
       const status =
         iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
+
+      if (isLegacyLoopStep) {
+        const childStep = children[0]
+        const flatItems = this.flattenItems(allResults)
+        return stepSuccess(childStep, { status, items: flatItems, iterations })
+      }
+
       return stepSuccess(step, { status, items: allResults })
     })
+  }
+
+  private flattenItems(allResults: Record<string, AutomationStepResult[]>) {
+    const flatItems: Record<string, Automation>[] = []
+    const firstChildId = Object.keys(allResults)[0]
+    if (firstChildId && allResults[firstChildId]) {
+      flatItems.push(...allResults[firstChildId].map(result => result.outputs))
+    }
+    return flatItems
   }
 
   private async executeBranchStep(

@@ -33,7 +33,7 @@ describe("Attempt to run a basic loop automation", () => {
     config.end()
   })
 
-  it.only("attempt to run a basic loop", async () => {
+  it("attempt to run a basic loop", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
       .queryRows({
@@ -224,7 +224,7 @@ describe("Attempt to run a basic loop automation", () => {
     expect(results.steps[1].outputs.message).toContain("- 2")
   })
 
-  it("should run an automation where a loop is successfully run twice", async () => {
+  it.only("should run an automation where a loop is successfully run twice", async () => {
     const results = await createAutomationBuilder(config)
       .onRowSaved({ tableId: table._id! })
       .loop({
