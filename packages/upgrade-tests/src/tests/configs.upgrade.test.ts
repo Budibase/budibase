@@ -10,8 +10,8 @@ describe("configs", () => {
   })
 
   let configTypes: ConfigType[] = Object.values(ConfigType)
-  // recaptcha wasn't added until after commit deb3556 - therefore wasn't supported
-  if (upgradeSpansCommit("deb3556")) {
+  // recaptcha wasn't added until after commit 1518d10 - therefore wasn't supported
+  if (upgradeSpansCommit("1518d10")) {
     configTypes = configTypes.filter(type => type !== ConfigType.RECAPTCHA)
   }
 
