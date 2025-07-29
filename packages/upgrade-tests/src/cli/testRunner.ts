@@ -16,8 +16,8 @@ export interface TestRunnerOptions {
   adminEmail: string
   adminPassword: string
   containerName: string
-  oldVersion?: string
-  currentVersion?: string
+  fromVersion?: string
+  toVersion?: string
 }
 
 export async function runTests(options: TestRunnerOptions): Promise<boolean> {
@@ -49,12 +49,12 @@ export async function runTests(options: TestRunnerOptions): Promise<boolean> {
     env.TEST_APP = options.testApp
   }
 
-  if (options.oldVersion) {
-    env.OLD_VERSION = options.oldVersion
+  if (options.fromVersion) {
+    env.FROM_VERSION = options.fromVersion
   }
 
-  if (options.currentVersion) {
-    env.CURRENT_VERSION = options.currentVersion
+  if (options.toVersion) {
+    env.TO_VERSION = options.toVersion
   }
 
   console.log(bold(`\n${blue("►")} Running ${options.phase} tests...\n`))

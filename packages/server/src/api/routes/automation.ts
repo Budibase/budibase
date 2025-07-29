@@ -1,5 +1,5 @@
 import * as controller from "../controllers/automation"
-import authorized from "../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { bodyResource, paramResource } from "../../middleware/resourceId"
 import {

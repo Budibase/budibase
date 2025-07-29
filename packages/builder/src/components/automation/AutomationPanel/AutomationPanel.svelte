@@ -169,6 +169,7 @@
     flex: 1 1 auto;
     overflow: auto;
     overflow-x: hidden;
+    max-height: calc(100vh - 118px);
   }
 
   .no-results {

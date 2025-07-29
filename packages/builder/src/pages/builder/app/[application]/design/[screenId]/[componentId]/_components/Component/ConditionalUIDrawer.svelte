@@ -23,6 +23,7 @@
   export let actionOptions = null
 
   const flipDurationMs = 150
+  const zoneType = generate()
   const defaultActionOptions = [
     {
       label: "Hide component",
@@ -175,6 +176,8 @@
             flipDurationMs,
             dropTargetStyle: { outline: "none" },
             dragDisabled,
+            type: zoneType,
+            dropFromOthersDisabled: true,
           }}
           on:finalize={handleFinalize}
           on:consider={updateConditions}

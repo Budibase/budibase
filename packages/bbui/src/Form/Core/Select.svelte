@@ -26,6 +26,9 @@
   export let useOptionIconImage = false
   export let isOptionEnabled = (option: O, _index?: number) =>
     option as unknown as boolean
+  export let tooltipMessage:
+    | ((_option: O, _index?: number) => string)
+    | undefined = undefined
   export let readonly: boolean = false
   export let quiet: boolean = false
   export let autoWidth: boolean = false
@@ -111,6 +114,7 @@
   {getOptionSubtitle}
   {useOptionIconImage}
   {isOptionEnabled}
+  {tooltipMessage}
   {autocomplete}
   {sort}
   {onOptionMouseenter}

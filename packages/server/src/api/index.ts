@@ -5,13 +5,13 @@ import {
   env as envCore,
   env as coreEnv,
 } from "@budibase/backend-core"
-import currentApp from "../middleware/currentapp"
-import cleanup from "../middleware/cleanup"
+import { currentAppMiddleware as currentApp } from "../middleware/currentapp"
+import { cleanupMiddleware as cleanup } from "../middleware/cleanup"
 import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes, assetRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
 import { apiEnabled, automationsEnabled } from "../features"
-import migrations from "../middleware/appMigrations"
+import { appMigrations as migrations } from "../middleware/appMigrations"
 import { automationQueue } from "../automations"
 import { getState } from "../startup"
 
