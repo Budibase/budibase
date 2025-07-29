@@ -60,6 +60,7 @@ export async function update(
     name: workspaceApp.name,
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
+    disabled: workspaceApp.disabled,
 
     // Immutable properties
     createdAt: persisted.createdAt,
