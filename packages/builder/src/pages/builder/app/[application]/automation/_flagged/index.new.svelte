@@ -1,6 +1,10 @@
 <script lang="ts">
-  import { contextMenuStore, automationStore } from "@/stores/builder"
-  import { type Automation } from "@budibase/types"
+  import {
+    contextMenuStore,
+    automationStore,
+    workspaceDeploymentStore,
+  } from "@/stores/builder"
+  import { type Automation, type PublishStatusResource } from "@budibase/types"
   import {
     ActionButton,
     Button,
@@ -131,6 +135,13 @@
       }
     )
   }
+
+  const findDeployment = (
+    deployments: Record<string, PublishStatusResource>,
+    automation: Automation
+  ): PublishStatusResource => {
+    return deployments[automation._id!]
+  }
 </script>
 
 <div class="automations-index">
@@ -173,7 +184,7 @@
     <span>Last published</span>
     <span></span>
   </div>
-  {#each $automationStore.automations as automation, idx}
+  {#each $automationStore.automations as automation}
     <a
       class="app"
       href={$url(`./${automation._id}`)}
@@ -182,7 +193,12 @@
     >
       <div>{automation.name}</div>
       <div>
-        <PublishStatusBadge status={idx % 2 === 0 ? "published" : "draft"} />
+        <PublishStatusBadge
+          status={findDeployment(
+            $workspaceDeploymentStore.automations,
+            automation
+          ).state}
+        />
       </div>
       <span>This week</span>
       <div class="actions">
