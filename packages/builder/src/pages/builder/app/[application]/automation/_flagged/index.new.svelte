@@ -122,6 +122,10 @@
             !automation.definition.trigger ||
             automation.definition.trigger?.name === "Webhook",
           callback: duplicateAutomation,
+          tooltip:
+            automation.definition.trigger?.name === "Webhook"
+              ? "Webhooks automations cannot be duplicated"
+              : undefined,
         },
         {
           icon: "pause-circle",
