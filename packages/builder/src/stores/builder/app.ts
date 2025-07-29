@@ -11,7 +11,7 @@ import {
   UpdateAppRequest,
 } from "@budibase/types"
 import { get } from "svelte/store"
-import { initialise, navigationStore, workspaceAppStore } from "."
+import { initialise, navigationStore } from "."
 
 interface ClientFeatures {
   spectrumThemes: boolean
@@ -206,15 +206,9 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
   }
 
   async refreshAppNav() {
-    const { selectedWorkspaceApp } = get(workspaceAppStore)
-    if (!selectedWorkspaceApp) {
-      return
-    }
-
-    const { navigation } = await API.workspaceApp.find(
-      selectedWorkspaceApp._id!
-    )
-    navigationStore.syncAppNavigation(navigation)
+    const { appId } = get(this.store)
+    const { application } = await API.fetchAppPackage(appId)
+    navigationStore.syncAppNavigation(application?.navigation)
   }
 }
 
