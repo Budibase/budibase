@@ -26,6 +26,7 @@ import {
   docIds,
   env as envCore,
   events,
+  features,
   objectStore,
   roles,
   tenancy,
@@ -68,6 +69,7 @@ import {
   AddAppSampleDataResponse,
   UnpublishAppResponse,
   ErrorCode,
+  FeatureFlag,
   FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
@@ -202,6 +204,29 @@ async function addSampleDataScreen() {
 
   const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
+
+  {
+    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
+    const db = context.getAppDB()
+    let app = await sdk.applications.metadata.get()
+    if (!app.navigation) {
+      return
+    }
+    if (!app.navigation.links) {
+      app.navigation.links = []
+    }
+    app.navigation.links.push({
+      text: "Inventory",
+      url: "/inventory",
+      type: "link",
+      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    })
+
+    await db.put(app)
+
+    // remove any cached metadata, so that it will be updated
+    await cache.app.invalidateAppMetadata(app.appId)
+  }
 }
 
 export const addSampleData = async (
@@ -230,6 +255,10 @@ export async function fetchClientApps(
       sdk.workspaceApps.fetch(db)
     )
     for (const workspaceApp of workspaceApps) {
+      // don't return disabled workspace apps
+      if (workspaceApp.disabled) {
+        continue
+      }
       result.push({
         // This is used as idempotency key for rendering in the frontend
         appId: `${app.appId}_${workspaceApp._id}`,
@@ -291,14 +320,18 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  if (!isBuilder) {
+  if (
+    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    !isBuilder
+  ) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : ""
 
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
-    if (!matchedWorkspaceApp) {
+    // disabled workspace apps should appear to not exist
+    if (!matchedWorkspaceApp || matchedWorkspaceApp.disabled) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)

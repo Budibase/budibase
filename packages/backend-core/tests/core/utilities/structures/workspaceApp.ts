@@ -20,7 +20,7 @@ export function workspaceApp(props?: Partial<WorkspaceApp>): WorkspaceApp {
       navigation: "Top",
     },
     isDefault: false,
-
+    disabled: false,
     ...props,
   }
   return result
@@ -34,6 +34,7 @@ export function createRequest(
   const result: RequiredKeys<InsertWorkspaceAppRequest> = {
     name: workspace.name,
     url: workspace.url,
+    disabled: workspace.disabled,
   }
   return result
 }
