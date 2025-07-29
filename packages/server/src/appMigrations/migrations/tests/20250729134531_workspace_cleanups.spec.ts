@@ -5,10 +5,8 @@ import migration from "../20250729134531_workspace_cleanups"
 import { AppMigration, updateAppMigrationMetadata } from "../.."
 import sdk from "../../../sdk"
 import { structures } from "@budibase/backend-core/tests"
-import { generateScreenID } from "../../../db/utils"
-import { context } from "@budibase/backend-core"
+import { db } from "@budibase/backend-core"
 import { basicScreen } from "../../../tests/utilities/structures"
-import { Screen } from "@budibase/types"
 
 const MIGRATIONS: AppMigration[] = [
   {
@@ -181,5 +179,38 @@ describe.each([
 
     expect(defaultApps).toHaveLength(1)
     expect(nonDefaultApps).toHaveLength(1)
+  })
+
+  it("handles different workspace apps between dev and prod", async () => {
+    const prodAppId = db.getProdAppID(getAppId())
+    const devAppId = db.getDevAppID(getAppId())
+    await config.doInContext(prodAppId, async () => {
+      await createWorkspaceApp(true)
+    })
+
+    await config.doInContext(devAppId, async () => {
+      await createWorkspaceApp(true)
+    })
+
+    expect(
+      await config.doInContext(prodAppId, async () =>
+        (await sdk.workspaceApps.fetch()).map(a => a._id)
+      )
+    ).not.toEqual(
+      await config.doInContext(devAppId, async () =>
+        (await sdk.workspaceApps.fetch()).map(a => a._id)
+      )
+    )
+
+    await config.doInContext(getAppId(), () =>
+      processMigrations(config.getAppId(), MIGRATIONS)
+    )
+
+    const workspaceApps = await config.doInContext(
+      getAppId(),
+      sdk.workspaceApps.fetch
+    )
+
+    expect(workspaceApps).toHaveLength(1)
   })
 })
