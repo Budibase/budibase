@@ -90,6 +90,12 @@ export class ForbiddenError extends HTTPError {
   }
 }
 
+export class NotImplementedError extends HTTPError {
+  constructor(message: string) {
+    super(message, 501)
+  }
+}
+
 // LICENSING
 
 export class UsageLimitError extends HTTPError {

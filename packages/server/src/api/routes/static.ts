@@ -1,7 +1,7 @@
 import Router from "@koa/router"
 import * as controller from "../controllers/static"
-import authorized from "../../middleware/authorized"
 import recaptcha from "../../middleware/recaptcha"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { addFileManagement } from "../utils"
 import { paramResource } from "../../middleware/resourceId"

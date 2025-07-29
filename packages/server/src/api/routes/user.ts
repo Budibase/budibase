@@ -1,5 +1,5 @@
 import * as controller from "../controllers/user"
-import authorized from "../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import recaptcha from "../../middleware/recaptcha"
 import { endpointGroupList } from "./endpointGroups"

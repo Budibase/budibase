@@ -1,5 +1,5 @@
 import * as queryController from "../controllers/query"
-import authorized from "../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import {
   bodyResource,
