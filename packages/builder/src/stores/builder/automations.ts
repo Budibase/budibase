@@ -76,6 +76,7 @@ import {
   type StepInputs,
 } from "@/types/automations"
 import { TableNames } from "@/constants"
+import { getSequentialName } from "@/helpers/duplicate"
 
 const initialAutomationState: AutomationState = {
   automations: [],
@@ -1541,9 +1542,13 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   duplicate: async (automation: Automation) => {
+    const { automations } = get(store)
     const response = await store.actions.save({
       ...automation,
-      name: `${automation.name} - copy`,
+      name: getSequentialName(
+        automations.map(x => x.name),
+        automation.name
+      ),
       _id: undefined,
       _rev: undefined,
     })
