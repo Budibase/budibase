@@ -19,6 +19,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { sdk } from "@budibase/shared-core"
   import TopBar from "@/components/common/TopBar.svelte"
+  import { capitalise, durationFromNow } from "@/helpers"
 
   enum Filter {
     All = "All automations",
@@ -169,7 +170,7 @@
   <div class="table-header">
     <span>Name</span>
     <span>Status</span>
-    <span>Last published</span>
+    <span>Last updated</span>
     <span></span>
   </div>
   {#each $automationStore.automations as automation, idx}
@@ -183,7 +184,7 @@
       <div>
         <PublishStatusBadge status={idx % 2 === 0 ? "published" : "draft"} />
       </div>
-      <span>This week</span>
+      <span> {capitalise(durationFromNow(automation.updatedAt || ""))}</span>
       <div class="actions">
         <Icon
           name="More"
