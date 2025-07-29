@@ -60,11 +60,9 @@
                   )}
                 value={!selectedWorkspaceApp?.disabled}
               />
-              <Label
-                >{selectedWorkspaceApp?.disabled
-                  ? "Disabled"
-                  : "Enabled"}</Label
-              >
+              <Label>
+                {selectedWorkspaceApp?.disabled ? "Disabled" : "Enabled"}
+              </Label>
             </div>
             <div class="divider-container">
               <Divider size="S" vertical />
