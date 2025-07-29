@@ -6,12 +6,12 @@ interface BannerState {
   closedBanners: Set<BannerType>
 }
 
-const STORAGE_KEY_PREFIX = "closed-banners"
+export class BannerStore extends BudiStore<BannerState> {
+  static STORAGE_KEY_PREFIX = "closed-banners"
 
-class BannerStore extends BudiStore<BannerState> {
   constructor() {
     let closedBanners = new Set<BannerType>()
-    const storageItem = localStorage.getItem(STORAGE_KEY_PREFIX)
+    const storageItem = localStorage.getItem(BannerStore.STORAGE_KEY_PREFIX)
     if (storageItem) {
       closedBanners = new Set<BannerType>(JSON.parse(storageItem))
     }
@@ -22,7 +22,7 @@ class BannerStore extends BudiStore<BannerState> {
 
     this.store.subscribe($store => {
       localStorage.setItem(
-        STORAGE_KEY_PREFIX,
+        BannerStore.STORAGE_KEY_PREFIX,
         JSON.stringify([...$store.closedBanners])
       )
     })
