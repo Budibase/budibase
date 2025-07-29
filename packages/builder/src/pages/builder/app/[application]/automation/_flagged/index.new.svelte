@@ -127,13 +127,6 @@
               ? "Webhooks automations cannot be duplicated"
               : undefined,
         },
-        {
-          icon: "pause-circle",
-          name: "Unpublish",
-          visible: true,
-          disabled: false,
-          callback: () => console.log("Unpublish"),
-        },
         pause,
         del,
       ]
