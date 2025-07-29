@@ -9,6 +9,8 @@
   import { capitalise, confirm, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
   import { slide } from "svelte/transition"
+  import { bannerStore } from "@/stores/portal"
+  import { BannerType } from "@/constants/banners"
 
   enum Filter {
     All = "All apps",
@@ -20,8 +22,6 @@
   let filter = Filter.All
   let selectedWorkspaceApp: WorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
-
-  let showBanner = true
 
   const onDelete = async (workspaceApp: WorkspaceApp) => {
     contextMenuStore.close()
@@ -102,12 +102,14 @@
   }
 
   const closeBanner = () => {
-    showBanner = false
+    bannerStore.closeBanner(BannerType.APPS)
   }
+
+  $: displayBanner = bannerStore.shouldDisplayBanner(BannerType.APPS)
 </script>
 
 <div class="apps-index">
-  {#if showBanner}
+  {#if $displayBanner}
     <div class="hero-wrapper" transition:slide={{ duration: 300 }}>
       <HeroBanner
         title="Build modern apps and forms to power your workflows"
