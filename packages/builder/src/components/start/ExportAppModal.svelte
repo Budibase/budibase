@@ -34,9 +34,9 @@
         ? `Export published ${appOrWorkspace}`
         : `Export latest ${appOrWorkspace}`,
       confirmText: encrypt ? "Continue" : exportButtonText,
-      onConfirm: () => {
+      onConfirm: async () => {
         if (!encrypt) {
-          exportApp()
+          await exportApp()
         } else {
           currentStep = Step.SET_PASSWORD
           return keepOpen
