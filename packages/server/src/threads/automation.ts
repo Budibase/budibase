@@ -419,8 +419,17 @@ class Orchestrator {
             stepIndex++
             break
           }
-          case AutomationActionStepId.LOOP_V2: {
-            addToContext(step, await this.executeLoopV2Step(ctx, step))
+          case AutomationActionStepId.LOOP_V2:
+          case AutomationActionStepId.LOOP: {
+            if (step.stepId === AutomationActionStepId.LOOP) {
+              let parsedStep = this.parseOldStepToNewStep(step, steps)
+              addToContext(
+                step,
+                await this.executeLoopV2Step(ctx, parsedStep, true)
+              )
+            } else {
+              addToContext(step, await this.executeLoopV2Step(ctx, step, false))
+            }
             stepIndex++
             break
           }
@@ -443,9 +452,26 @@ class Orchestrator {
     })
   }
 
+  private parseOldStepToNewStep(
+    loopStep: LoopStep,
+    steps: AutomationStep[]
+  ): LoopV2Step {
+    const stepToLoopIdx = steps.findIndex(s => loopStep.id === s.id) + 1
+    const newLoopV2Step: LoopV2Step = {
+      ...loopStep,
+      stepId: AutomationActionStepId.LOOP_V2,
+      inputs: {
+        ...loopStep.inputs,
+        children: [steps[stepToLoopIdx]],
+      },
+    }
+    return newLoopV2Step
+  }
+
   private async executeLoopV2Step(
     ctx: AutomationContext,
-    step: LoopV2Step
+    step: LoopV2Step,
+    isLegacyLoopStep = false
   ): Promise<AutomationStepResult> {
     return await tracer.trace("executeLoopV2Step", async span => {
       // Clone the children to avoid processObject modifying them

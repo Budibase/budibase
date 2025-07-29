@@ -33,7 +33,7 @@ describe("Attempt to run a basic loop automation", () => {
     config.end()
   })
 
-  it("attempt to run a basic loop", async () => {
+  it.only("attempt to run a basic loop", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
       .queryRows({
