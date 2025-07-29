@@ -7,10 +7,8 @@
 <div
   class="status"
   class:published={status === PublishResourceState.PUBLISHED}
-  class:draft={[
-    PublishResourceState.UNPUBLISHED,
-    PublishResourceState.DISABLED,
-  ].includes(status)}
+  class:unpublished={status === PublishResourceState.UNPUBLISHED}
+  class:disabled={status === PublishResourceState.DISABLED}
 >
   {status}
 </div>
@@ -30,9 +28,14 @@
       border: 1px solid #005d39;
     }
 
-    &.draft {
+    &.unpublished {
       --color: var(--spectrum-global-color-gray-300);
       border: 1px solid var(--spectrum-global-color-gray-400);
+    }
+
+    &.disabled {
+      --color: var(--spectrum-global-color-red-400);
+      border: 1px solid var(--spectrum-global-color-red-600);
     }
 
     &::after {

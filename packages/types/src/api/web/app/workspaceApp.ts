@@ -7,9 +7,9 @@ export interface WorkspaceAppResponse {
   url: string
   navigation: AppNavigation
   isDefault: boolean
-  disabled?: boolean
   createdAt: string
   updatedAt: string
+  disabled?: boolean
 }
 
 export interface InsertWorkspaceAppRequest {
