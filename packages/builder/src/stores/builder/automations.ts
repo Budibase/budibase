@@ -49,7 +49,6 @@ import {
   AutomationStepInputs,
   AutomationIOProps,
   AutomationTriggerInputs,
-  AppActionTrigger,
   RowActionTriggerInputs,
   RowActionTrigger,
   EnrichedBinding,
