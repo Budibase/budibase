@@ -1,13 +1,6 @@
 <script lang="ts">
-  import {
-    contextMenuStore,
-    workspaceAppStore,
-    workspaceDeploymentStore,
-  } from "@/stores/builder"
-  import {
-    type PublishStatusResource,
-    type WorkspaceApp,
-  } from "@budibase/types"
+  import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
+  import { type WorkspaceApp } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -112,13 +105,6 @@
     selectedWorkspaceApp = undefined
     workspaceAppModal.show()
   }
-
-  const findDeployment = (
-    deployments: Record<string, PublishStatusResource>,
-    app: WorkspaceApp
-  ): PublishStatusResource => {
-    return deployments[app._id!]
-  }
 </script>
 
 <div class="apps-index">
@@ -164,10 +150,7 @@
     >
       <div>{app.name}</div>
       <div>
-        <PublishStatusBadge
-          status={findDeployment($workspaceDeploymentStore.workspaceApps, app)
-            .state}
-        />
+        <PublishStatusBadge status={app.publishStatus.state} />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
         <span>
