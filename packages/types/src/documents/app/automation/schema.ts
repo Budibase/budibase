@@ -74,6 +74,8 @@ import {
   APIRequestStepInputs,
   APIRequestStepOutputs,
   BranchSearchFilters,
+  LoopV2StepInputs,
+  LoopV2StepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -275,7 +277,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                             ? GenerateTextStepInputs
                                                             : T extends AutomationActionStepId.EXTRACT_FILE_DATA
                                                               ? ExtractFileDataStepInputs
-                                                              : never
+                                                              : T extends AutomationActionStepId.LOOP_V2
+                                                                ? LoopV2StepInputs
+                                                                : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -334,7 +338,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                         ? GenerateTextStepOutputs
                                                         : T extends AutomationActionStepId.EXTRACT_FILE_DATA
                                                           ? ExtractFileDataStepOutputs
-                                                          : never
+                                                          : T extends AutomationActionStepId.LOOP_V2
+                                                            ? LoopV2StepOutputs
+                                                            : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -421,6 +427,8 @@ export type GenerateTextStep =
 export type ExtractFileDataStep =
   AutomationStepSchema<AutomationActionStepId.EXTRACT_FILE_DATA>
 
+export type LoopV2Step = AutomationStepSchema<AutomationActionStepId.LOOP_V2>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH> & {
   conditionUI?: {
     groups: BranchSearchFilters[]
@@ -457,6 +465,7 @@ export type AutomationStep =
   | SummariseStep
   | GenerateTextStep
   | ExtractFileDataStep
+  | LoopV2Step
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger

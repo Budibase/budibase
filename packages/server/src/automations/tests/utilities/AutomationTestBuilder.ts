@@ -14,6 +14,8 @@ import {
   AutomationTriggerStepId,
   BranchStepInputs,
   isDidNotTriggerResponse,
+  LoopStepType,
+  LoopV2StepInputs,
   SearchFilters,
   TestAutomationRequest,
   TriggerAutomationRequest,
@@ -31,6 +33,14 @@ type BranchConfig = {
     steps: StepBuilderFunction
     condition: SearchFilters
   }
+}
+
+type LoopConfig = {
+  option: LoopStepType
+  binding: any
+  steps: StepBuilderFunction
+  iterations?: number
+  failure?: any
 }
 
 class TriggerBuilder {
@@ -100,6 +110,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
   loop = this.step(AutomationActionStepId.LOOP)
+  loopv2 = this.step(AutomationActionStepId.LOOP_V2)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)
   executeScript = this.step(AutomationActionStepId.EXECUTE_SCRIPT)
   executeScriptV2 = this.step(AutomationActionStepId.EXECUTE_SCRIPT_V2)
@@ -117,6 +128,27 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   discord = this.step(AutomationActionStepId.discord)
   delay = this.step(AutomationActionStepId.DELAY)
   extractFileData = this.step(AutomationActionStepId.EXTRACT_FILE_DATA)
+
+  protected addLoopStep(loopConfig: LoopConfig): void {
+    const inputs: LoopV2StepInputs = {
+      option: loopConfig.option,
+      binding: loopConfig.binding,
+      children: [],
+      iterations: loopConfig.iterations,
+      failure: loopConfig.failure,
+    }
+
+    const builder = new BranchStepBuilder<TStep>()
+    loopConfig.steps(builder)
+    inputs.children = builder.steps
+    let id = uuidv4()
+    this.steps.push({
+      ...automations.steps.loopV2.definition,
+      id,
+      stepId: AutomationActionStepId.LOOP_V2,
+      inputs,
+    })
+  }
 
   protected addBranchStep(branchConfig: BranchConfig): void {
     const inputs: BranchStepInputs = {
@@ -142,6 +174,11 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
 
   branch(branchConfig: BranchConfig): this {
     this.addBranchStep(branchConfig)
+    return this
+  }
+
+  loopV2(loopConfig: LoopConfig): this {
+    this.addLoopStep(loopConfig)
     return this
   }
 }
