@@ -53,6 +53,19 @@
   }
 
   const getContextMenuOptions = (workspaceApp: WorkspaceApp) => {
+    const pause = {
+      icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
+      name: workspaceApp.disabled ? "Activate" : "Pause",
+
+      visible: true,
+      callback: () => {
+        workspaceAppStore.toggleDisabled(
+          workspaceApp._id!,
+          !workspaceApp.disabled
+        )
+      },
+    }
+
     return [
       {
         icon: "pencil",
@@ -60,20 +73,7 @@
         visible: true,
         callback: () => workspaceAppModal.show(),
       },
-      {
-        icon: "copy",
-        name: "Duplicate",
-        visible: true,
-        disabled: false,
-        callback: () => console.log("Duplicate"),
-      },
-      {
-        icon: "pause-circle",
-        name: "Unpublish",
-        visible: true,
-        disabled: false,
-        callback: () => console.log("Unpublish"),
-      },
+      pause,
       {
         icon: "trash",
         name: "Delete",
