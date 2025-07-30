@@ -26,6 +26,7 @@
   import { onMount } from "svelte"
   import { API } from "@/api"
   import { organisation, admin, licensing } from "@/stores/portal"
+  import { PKCEMethod } from "@budibase/types"
   import Scim from "./scim.svelte"
   import Google from "./google.svelte"
 
@@ -36,6 +37,11 @@
   const HasSpacesRegex = /[\\"\s]/
 
   $: enforcedSSO = $organisation.isSSOEnforced
+
+  const pkceOptions = [
+    { label: "S256 (recommended)", value: PKCEMethod.S256 },
+    { label: "Plain", value: PKCEMethod.PLAIN },
+  ]
 
   $: OIDCConfigFields = {
     Oidc: [
@@ -361,6 +367,14 @@
         on:change={e => onFileSelected(e)}
         bind:this={fileinput}
       />
+      <div class="form-row">
+        <Label size="L">PKCE Method</Label>
+        <Select
+          placeholder="None"
+          bind:value={providers.oidc.config.configs[0].pkce}
+          options={pkceOptions}
+        />
+      </div>
       <div class="form-row">
         <Label size="L">Activated</Label>
         <Toggle
