@@ -1,6 +1,6 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
-import { cloneDeep } from "lodash"
+import cloneDeep from "lodash/cloneDeep"
 import {
   SearchFilterGroup,
   UISearchFilter,

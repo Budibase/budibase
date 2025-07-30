@@ -10,7 +10,6 @@ import {
   UserRoleInfo,
 } from "@budibase/types"
 import { getProdAppID } from "./applications"
-import * as _ from "lodash/fp"
 
 // checks if a user is specifically a builder, given an app ID
 export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
@@ -68,18 +67,11 @@ export function hasAppBuilderPermissions(user?: UserBuilderInfo): boolean {
   return !isGlobalBuilder && appLength != null && appLength > 0
 }
 
-export function hasAppCreatorPermissions(
-  user?: Partial<UserRoleInfo>
-): boolean {
+function hasAppCreatorPermissions(user?: Partial<UserRoleInfo>): boolean {
   if (!user) {
     return false
   }
-  return _.flow(
-    _.get("roles"),
-    _.values,
-    _.find(x => ["CREATOR"].includes(x)),
-    x => !!x
-  )(user)
+  return !!Object.values(user.roles ?? {}).find(x => x === "CREATOR")
 }
 
 // checks if a user is capable of building any app
