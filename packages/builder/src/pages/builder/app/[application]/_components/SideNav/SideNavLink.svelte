@@ -25,7 +25,12 @@
     {#if $$slots.icon}
       <slot name="icon" />
     {:else}
-      <Icon name={icon} size="L" weight="fill" />
+      <Icon
+        name={icon}
+        size="M"
+        weight="regular"
+        color="var(--spectrum-global-color-gray-800)"
+      />
     {/if}
   </div>
   <div class="link_text">{text}</div>
@@ -36,11 +41,11 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 30px;
-    gap: 7px;
+    height: 28px;
+    gap: 5px;
     padding: 0 calc(var(--nav-padding) / 2);
-    color: var(--spectrum-global-color-gray-800);
-    border-radius: 8px;
+    color: white;
+    border-radius: 9px;
     border: 1px solid transparent;
     transition:
       background 130ms ease-out,
@@ -49,13 +54,13 @@
   }
   .link.active,
   .link:hover {
-    color: var(--spectrum-global-color-gray-900);
+    color: white;
     background: var(--spectrum-global-color-gray-200);
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
   }
   .link:active {
-    background: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-200);
   }
 
   .link_icon {
@@ -64,8 +69,11 @@
     place-items: center;
   }
   .link_text {
-    font-size: 15px;
+    font-family: Inter;
+    letter-spacing: -0.02em;
     font-weight: 500;
+    line-height: 20px;
+    font-size: 14px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -79,22 +79,29 @@
     <div class="nav_body">
       <div class="links">
         <SideNavLink
-          icon="lightning-a"
+          icon="path"
           text="Automations"
           url={$url("./automation")}
           {collapsed}
           on:click={keepCollapsed}
         />
         <SideNavLink
-          icon="layout"
+          icon="textbox"
+          text="Forms"
+          url={$url("./design")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="browser"
           text="Apps"
           url={$url("./design")}
           {collapsed}
           on:click={keepCollapsed}
         />
         <SideNavLink
-          icon="hard-drives"
-          text="Data"
+          icon="plugs-connected"
+          text="Resources"
           url={$url("./data")}
           {collapsed}
           on:click={keepCollapsed}
