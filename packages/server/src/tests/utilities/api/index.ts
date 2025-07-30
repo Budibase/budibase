@@ -28,6 +28,7 @@ import { WorkspaceAppAPI } from "./workspaceApp"
 import { ResourceAPI } from "./resource"
 import { DeployAPI } from "./deploy"
 import { NavigationAPI } from "./navigation"
+import { RecaptchaAPI } from "./recaptcha"
 import { RoutingAPI } from "./routing"
 
 export default class API {
@@ -58,6 +59,7 @@ export default class API {
   workspaceApp: WorkspaceAppAPI
   resource: ResourceAPI
   navigation: NavigationAPI
+  recaptcha: RecaptchaAPI
   routing: RoutingAPI
 
   public: {
@@ -93,6 +95,7 @@ export default class API {
     this.workspaceApp = new WorkspaceAppAPI(config)
     this.resource = new ResourceAPI(config)
     this.navigation = new NavigationAPI(config)
+    this.recaptcha = new RecaptchaAPI(config)
     this.routing = new RoutingAPI(config)
     this.public = {
       user: new UserPublicAPI(config),

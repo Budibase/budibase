@@ -6,16 +6,20 @@ import {
   middleware as appInfoMiddleware,
   AppType,
 } from "../../middleware/appInfo"
+import recaptcha from "../../middleware/recaptcha"
 import { automationValidator } from "./utils/validators"
 import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
-const authorizedRoutes = endpointGroupList.group({
-  middleware: authorized(
-    permissions.PermissionType.AUTOMATION,
-    permissions.PermissionLevel.EXECUTE
-  ),
-  first: false,
-})
+const authorizedRoutes = endpointGroupList.group(
+  {
+    middleware: authorized(
+      permissions.PermissionType.AUTOMATION,
+      permissions.PermissionLevel.EXECUTE
+    ),
+    first: false,
+  },
+  recaptcha
+)
 
 builderRoutes
   .get("/api/automations/trigger/list", controller.getTriggerList)
