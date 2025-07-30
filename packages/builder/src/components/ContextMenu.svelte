@@ -49,7 +49,7 @@
         <AbsTooltip text={item.tooltip} position={TooltipPosition.Right}>
           <MenuItem
             icon={item.icon}
-            keyBind={item.keyBind}
+            keyBind={item.keyBind ?? undefined}
             on:click={() => handleItemClick(item.callback)}
             disabled={item.disabled}
           >

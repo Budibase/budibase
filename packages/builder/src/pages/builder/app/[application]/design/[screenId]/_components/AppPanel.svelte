@@ -7,7 +7,6 @@
     previewStore,
     selectedAppUrls,
     workspaceAppStore,
-    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
@@ -28,9 +27,7 @@
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
   $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
 
-  $: isWorkspacePublished =
-    selectedWorkspaceAppId &&
-    $workspaceDeploymentStore.workspaceApps?.[selectedWorkspaceAppId]?.published
+  $: isWorkspacePublished = !!selectedWorkspaceApp?.publishStatus.published
 
   $: liveUrl = $selectedAppUrls.liveUrl
 

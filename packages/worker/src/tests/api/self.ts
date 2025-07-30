@@ -17,11 +17,4 @@ export class SelfAPI extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(200)
   }
-
-  closeBanner = (user: User, bannerKey: string) => {
-    return this.request
-      .post(`/api/global/self/close_banner/${bannerKey}`)
-      .set(this.config.authHeaders(user))
-      .expect(204)
-  }
 }

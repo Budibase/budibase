@@ -135,6 +135,13 @@ export interface AIInnerConfig {
 
 export interface AIConfig extends Config<AIInnerConfig> {}
 
+export interface RecaptchaInnerConfig {
+  siteKey: string
+  secretKey: string
+}
+
+export interface RecaptchaConfig extends Config<RecaptchaInnerConfig> {}
+
 export const isConfig = (config: Object): config is Config =>
   "type" in config && "config" in config
 
@@ -156,6 +163,9 @@ export const isSCIMConfig = (config: Config): config is SCIMConfig =>
 export const isAIConfig = (config: Config): config is AIConfig =>
   config.type === ConfigType.AI
 
+export const isRecaptchaConfig = (config: Config): config is RecaptchaConfig =>
+  config.type === ConfigType.RECAPTCHA
+
 export enum ConfigType {
   SETTINGS = "settings",
   ACCOUNT = "account",
@@ -165,6 +175,7 @@ export enum ConfigType {
   OIDC_LOGOS = "logos_oidc",
   SCIM = "scim",
   AI = "ai",
+  RECAPTCHA = "recaptcha",
 }
 
 export type ConfigTypeToConfig<T extends ConfigType> =
