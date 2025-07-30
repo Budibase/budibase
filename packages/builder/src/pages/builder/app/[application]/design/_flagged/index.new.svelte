@@ -1,6 +1,6 @@
 <script lang="ts">
   import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
-  import { type WorkspaceApp } from "@budibase/types"
+  import { PublishResourceState, type WorkspaceApp } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -17,16 +17,32 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
 
-  enum Filter {
-    All = "All apps",
-    Published = "Published",
-    Drafts = "Drafts",
-  }
-
   let showHighlight = false
-  let filter = Filter.All
+  let filter: PublishResourceState | undefined
   let selectedWorkspaceApp: WorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
+
+  const filters: {
+    label: string
+    filterValue: PublishResourceState | undefined
+  }[] = [
+    {
+      label: "All apps",
+      filterValue: undefined,
+    },
+    {
+      label: "Published",
+      filterValue: PublishResourceState.PUBLISHED,
+    },
+    {
+      label: "Disabled",
+      filterValue: PublishResourceState.DISABLED,
+    },
+    {
+      label: "Drafts",
+      filterValue: PublishResourceState.UNPUBLISHED,
+    },
+  ]
 
   const onDelete = async (workspaceApp: WorkspaceApp) => {
     contextMenuStore.close()
@@ -55,7 +71,7 @@
   const getContextMenuOptions = (workspaceApp: WorkspaceApp) => {
     const pause = {
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
-      name: workspaceApp.disabled ? "Activate" : "Pause",
+      name: workspaceApp.disabled ? "Activate" : "Disable",
 
       visible: true,
       callback: () => {
@@ -105,6 +121,14 @@
     selectedWorkspaceApp = undefined
     workspaceAppModal.show()
   }
+
+  $: workspaceApps = $workspaceAppStore.workspaceApps.filter(a => {
+    if (!filter) {
+      return true
+    }
+
+    return a.publishStatus.state === filter
+  })
 </script>
 
 <div class="apps-index">
@@ -126,11 +150,12 @@
     <Button cta icon="layout" on:click={createApp}>New app</Button>
   </TopBar>
   <div class="filter">
-    {#each Object.values(Filter) as option}
+    {#each filters as option}
       <ActionButton
         quiet
-        selected={option === filter}
-        on:click={() => (filter = option)}>{option}</ActionButton
+        selected={option.filterValue === filter}
+        on:click={() => (filter = option.filterValue)}
+        >{option.label}</ActionButton
       >
     {/each}
   </div>
@@ -141,7 +166,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each $workspaceAppStore.workspaceApps as app}
+  {#each workspaceApps as app}
     <a
       class="app"
       href={`./design/${app.screens[0]?._id}`}
