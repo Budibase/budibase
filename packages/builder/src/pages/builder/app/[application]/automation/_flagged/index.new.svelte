@@ -7,8 +7,10 @@
   import { PublishResourceState } from "@budibase/types"
   import { type Automation } from "@budibase/types"
   import {
+    AbsTooltip,
     ActionButton,
     Button,
+    Helpers,
     Icon,
     Modal,
     type ModalAPI,
@@ -229,7 +231,11 @@
       <div>
         <PublishStatusBadge status={automation.status} />
       </div>
-      <span> {capitalise(durationFromNow(automation.updatedAt || ""))}</span>
+      <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
+        <span>
+          {capitalise(durationFromNow(automation.updatedAt || ""))}
+        </span>
+      </AbsTooltip>
       <div class="actions">
         <Icon
           name="More"
