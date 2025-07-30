@@ -239,13 +239,14 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     return
   }
 
-  const fullyMigrated = await isAppFullyMigrated(appId)
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
-
-  //Public Settings
-  const { config } = await configs.getSettingsConfigDoc()
-  const branding = await pro.branding.getBrandingConfig(config)
+  const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
+    isAppFullyMigrated(appId),
+    configs.getSettingsConfigDoc(),
+    configs.getRecaptchaConfig(),
+  ])
+  const branding = await pro.branding.getBrandingConfig(settingsConfig.config)
   // incase running direct from TS
   let appHbsPath = join(__dirname, "app.hbs")
   if (!fs.existsSync(appHbsPath)) {
@@ -295,6 +296,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         appMigrating: !fullyMigrated,
+        recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
       }
 
