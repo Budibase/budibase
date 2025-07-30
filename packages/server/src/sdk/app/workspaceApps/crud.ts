@@ -68,7 +68,7 @@ export async function update(
     isDefault: persisted.isDefault,
     _deleted: undefined,
   }
-  const response = await db.put(docToUpdate)
+  const response = await db.put(docToUpdate, { returnDoc: true })
   return response.doc
 }
 

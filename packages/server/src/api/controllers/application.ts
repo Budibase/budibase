@@ -26,11 +26,13 @@ import {
   docIds,
   env as envCore,
   events,
+  features,
   objectStore,
   roles,
   tenancy,
   users,
   utils,
+  configs,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -68,6 +70,7 @@ import {
   AddAppSampleDataResponse,
   UnpublishAppResponse,
   ErrorCode,
+  FeatureFlag,
   FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
@@ -202,6 +205,29 @@ async function addSampleDataScreen() {
 
   const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
+
+  {
+    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
+    const db = context.getAppDB()
+    let app = await sdk.applications.metadata.get()
+    if (!app.navigation) {
+      return
+    }
+    if (!app.navigation.links) {
+      app.navigation.links = []
+    }
+    app.navigation.links.push({
+      text: "Inventory",
+      url: "/inventory",
+      type: "link",
+      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    })
+
+    await db.put(app)
+
+    // remove any cached metadata, so that it will be updated
+    await cache.app.invalidateAppMetadata(app.appId)
+  }
 }
 
 export const addSampleData = async (
@@ -270,10 +296,14 @@ export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
   const appId = context.getAppId()
-  const application = await sdk.applications.metadata.get()
-  const layouts = await getLayouts()
-  let screens = await sdk.screens.fetch()
-  const license = await licensing.cache.getCachedLicense()
+  let [application, layouts, screens, license, recaptchaConfig] =
+    await Promise.all([
+      sdk.applications.metadata.get(),
+      getLayouts(),
+      sdk.screens.fetch(),
+      licensing.cache.getCachedLicense(),
+      configs.getRecaptchaConfig(),
+    ])
 
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
@@ -295,7 +325,10 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  if (!isBuilder) {
+  if (
+    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+    !isBuilder
+  ) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : ""
@@ -323,6 +356,7 @@ export async function fetchAppPackage(
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
+    recaptchaKey: recaptchaConfig?.config.siteKey,
   }
 }
 

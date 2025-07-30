@@ -6,6 +6,7 @@ import {
   bodySubResource,
   paramResource,
 } from "../../middleware/resourceId"
+import recaptcha from "../../middleware/recaptcha"
 import {
   generateQueryValidation,
   generateQueryPreviewValidation,
@@ -14,14 +15,20 @@ import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readRoutes = endpointGroupList.group({
-  middleware: authorized(PermissionType.QUERY, PermissionLevel.READ),
-  first: false,
-})
-const writeRoutes = endpointGroupList.group({
-  middleware: authorized(PermissionType.QUERY, PermissionLevel.WRITE),
-  first: false,
-})
+const readRoutes = endpointGroupList.group(
+  {
+    middleware: authorized(PermissionType.QUERY, PermissionLevel.READ),
+    first: false,
+  },
+  recaptcha
+)
+const writeRoutes = endpointGroupList.group(
+  {
+    middleware: authorized(PermissionType.QUERY, PermissionLevel.WRITE),
+    first: false,
+  },
+  recaptcha
+)
 
 builderRoutes
   .get("/api/queries", queryController.fetch)
