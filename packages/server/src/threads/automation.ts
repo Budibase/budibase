@@ -395,6 +395,7 @@ class Orchestrator {
 
         ctx._stepIndex ||= 0
         ctx.steps[ctx._stepIndex] = result.outputs
+        console.log(`addToContext: step ${step.stepId} added at index ${ctx._stepIndex}, iterations:`, result.outputs.iterations)
         ctx._stepIndex++
 
         if (result.outputs.success === false) {
@@ -425,7 +426,7 @@ class Orchestrator {
               const stepToLoop = steps[stepIndex + 1]
               let parsedStep = this.parseOldStepToNewStep(step, steps)
               addToContext(
-                stepToLoop,
+                step,
                 await this.executeLoopV2Step(ctx, parsedStep, true)
               )
               // We increment by 2 here because the way loops work is that the
@@ -518,7 +519,7 @@ class Orchestrator {
           if (isLegacyLoopStep) {
             const childStep = children[0]
             const flatItems = this.flattenItems(allResults)
-            return stepFailure(childStep, {
+            return stepFailure(step, {
               status: AutomationStepStatus.MAX_ITERATIONS,
               success: false,
               items: flatItems,
@@ -532,6 +533,16 @@ class Orchestrator {
             status: AutomationStepStatus.FAILURE_CONDITION,
             iterations,
           })
+          if (isLegacyLoopStep) {
+            const childStep = children[0]
+            const flatItems = this.flattenItems(allResults)
+            return stepFailure(childStep, {
+              status: AutomationStepStatus.FAILURE_CONDITION,
+              success: false,
+              items: flatItems,
+              iterations,
+            })
+          }
           return stepFailure(step, {
             status: AutomationStepStatus.FAILURE_CONDITION,
             success: false,
@@ -540,7 +551,12 @@ class Orchestrator {
 
         ctx.loop = { currentItem }
         try {
+          // For both legacy and new loops, we need to preserve the step index
+          // so child steps don't affect the main step numbering
+          const savedStepIndex = ctx._stepIndex
           const iterationResults = await this.executeSteps(ctx, children)
+          ctx._stepIndex = savedStepIndex
+
           for (const result of iterationResults) {
             allResults[result.id].push(result)
           }
@@ -565,7 +581,7 @@ class Orchestrator {
         return stepSuccess(childStep, { status, items: flatItems, iterations })
       }
 
-      return stepSuccess(step, { status, items: allResults })
+      return stepSuccess(step, { status, items: allResults, iterations })
     })
   }
 

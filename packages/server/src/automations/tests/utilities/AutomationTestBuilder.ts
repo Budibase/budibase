@@ -39,6 +39,8 @@ type LoopConfig = {
   option: LoopStepType
   binding: any
   steps: StepBuilderFunction
+  iterations?: number
+  failure?: any
 }
 
 class TriggerBuilder {
