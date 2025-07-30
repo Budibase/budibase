@@ -188,6 +188,7 @@
     background: var(--background);
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
+    overflow: auto;
   }
   .filter {
     padding: 10px 12px;
