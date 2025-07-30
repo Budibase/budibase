@@ -138,7 +138,7 @@ export interface Database {
   ): Promise<void>
   put<T extends AnyDocument>(
     document: T,
-    opts?: DatabasePutOpts & { returnDoc: true }
+    opts: DatabasePutOpts & { returnDoc: true }
   ): Promise<Nano.DocumentInsertResponse & { doc: T }>
   put<T extends AnyDocument>(
     document: T,

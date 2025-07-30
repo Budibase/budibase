@@ -214,15 +214,6 @@ export const adminUser = async (
   const { email, password, tenantId, ssoId, givenName, familyName } =
     ctx.request.body
 
-  if (await platform.tenants.exists(tenantId)) {
-    ctx.throw(403, "Organisation already exists.")
-  }
-
-  if (env.MULTI_TENANCY) {
-    // store the new tenant record in the platform db
-    await platform.tenants.addTenant(tenantId)
-  }
-
   await tenancy.doInTenant(tenantId, async () => {
     // account portal sends a pre-hashed password - honour param to prevent double hashing
     const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
