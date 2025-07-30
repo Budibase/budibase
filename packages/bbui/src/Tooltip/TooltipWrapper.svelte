@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from "../Icon/Icon.svelte"
   import AbsTooltip from "./AbsTooltip.svelte"
-  import { TooltipPosition } from "../constants"
+  import type { TooltipPosition } from "../constants"
 
   export let tooltip: string = ""
   export let size: "S" | "M" | "L" = "M"
