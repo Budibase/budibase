@@ -4,7 +4,12 @@ import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { licensing, organisation, environment } from "@/stores/portal"
-import { tables, appStore, permissions } from "@/stores/builder"
+import {
+  tables,
+  appStore,
+  permissions,
+  workspaceDeploymentStore,
+} from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 import {
   getEnvironmentBindings,
@@ -76,6 +81,7 @@ import {
   type StepInputs,
 } from "@/types/automations"
 import { TableNames } from "@/constants"
+import { getSequentialName } from "@/helpers/duplicate"
 
 const initialAutomationState: AutomationState = {
   automations: [],
@@ -1541,9 +1547,13 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   duplicate: async (automation: Automation) => {
+    const { automations } = get(store)
     const response = await store.actions.save({
       ...automation,
-      name: `${automation.name} - copy`,
+      name: getSequentialName(
+        automations.map(x => x.name),
+        automation.name
+      ),
       _id: undefined,
       _rev: undefined,
     })
@@ -1564,6 +1574,8 @@ const automationActions = (store: AutomationStore) => ({
           automation.disabled ? "disabled" : "enabled"
         } successfully`
       )
+
+      await workspaceDeploymentStore.fetch()
     } catch (error) {
       notifications.error(
         `Error ${automation?.disabled ? "disabling" : "enabling"} automation`

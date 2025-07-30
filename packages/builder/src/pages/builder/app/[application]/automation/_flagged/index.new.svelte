@@ -4,10 +4,13 @@
     automationStore,
     workspaceDeploymentStore,
   } from "@/stores/builder"
-  import { type Automation, type PublishStatusResource } from "@budibase/types"
+  import { PublishResourceState } from "@budibase/types"
+  import { type Automation } from "@budibase/types"
   import {
+    AbsTooltip,
     ActionButton,
     Button,
+    Helpers,
     Icon,
     Modal,
     type ModalAPI,
@@ -24,20 +27,37 @@
   import { sdk } from "@budibase/shared-core"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
-
-  enum Filter {
-    All = "All automations",
-    Published = "Published",
-    Drafts = "Drafts",
-  }
+  import { capitalise, durationFromNow } from "@/helpers"
 
   let showHighlight = true
   let createModal: ModalAPI
   let updateModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
   let webhookModal: ModalAPI
-  let filter = Filter.All
+  let filter: PublishResourceState | undefined
   let selectedAutomation: Automation | undefined = undefined
+
+  const filters: {
+    label: string
+    filterValue: PublishResourceState | undefined
+  }[] = [
+    {
+      label: "All automations",
+      filterValue: undefined,
+    },
+    {
+      label: "Published",
+      filterValue: PublishResourceState.PUBLISHED,
+    },
+    {
+      label: "Disabled",
+      filterValue: PublishResourceState.DISABLED,
+    },
+    {
+      label: "Unpublished",
+      filterValue: PublishResourceState.UNPUBLISHED,
+    },
+  ]
 
   async function deleteAutomation() {
     if (!selectedAutomation) {
@@ -104,13 +124,10 @@
             !automation.definition.trigger ||
             automation.definition.trigger?.name === "Webhook",
           callback: duplicateAutomation,
-        },
-        {
-          icon: "pause-circle",
-          name: "Unpublish",
-          visible: true,
-          disabled: false,
-          callback: () => console.log("Unpublish"),
+          tooltip:
+            automation.definition.trigger?.name === "Webhook"
+              ? "Webhooks automations cannot be duplicated"
+              : undefined,
         },
         pause,
         del,
@@ -136,11 +153,27 @@
     )
   }
 
-  const findDeployment = (
-    deployments: Record<string, PublishStatusResource>,
-    automation: Automation
-  ): PublishStatusResource => {
-    return deployments[automation._id!]
+  $: automations = $automationStore.automations
+    .map(a => ({
+      ...a,
+      status:
+        $workspaceDeploymentStore.automations[a._id!]?.state ||
+        PublishResourceState.UNPUBLISHED,
+    }))
+    .filter(a => {
+      if (!filter) {
+        return true
+      }
+
+      return a.status === filter
+    })
+
+  function getTriggerFriendlyName(automation: Automation) {
+    const definition =
+      $automationStore.blockDefinitions.CREATABLE_TRIGGER[
+        automation.definition.trigger.stepId
+      ]
+    return definition?.name
   }
 </script>
 
@@ -169,22 +202,24 @@
     </Button>
   </TopBar>
   <div class="filter">
-    {#each Object.values(Filter) as option}
+    {#each filters as option}
       <ActionButton
         quiet
-        selected={option === filter}
-        on:click={() => (filter = option)}>{option}</ActionButton
+        selected={option.filterValue === filter}
+        on:click={() => (filter = option.filterValue)}
+        >{option.label}</ActionButton
       >
     {/each}
   </div>
 
   <div class="table-header">
     <span>Name</span>
+    <span>Trigger</span>
     <span>Status</span>
-    <span>Last published</span>
+    <span>Last updated</span>
     <span></span>
   </div>
-  {#each $automationStore.automations as automation}
+  {#each automations as automation}
     <a
       class="app"
       href={$url(`./${automation._id}`)}
@@ -192,15 +227,15 @@
       class:active={showHighlight && selectedAutomation === automation}
     >
       <div>{automation.name}</div>
+      <div>{getTriggerFriendlyName(automation)}</div>
       <div>
-        <PublishStatusBadge
-          status={findDeployment(
-            $workspaceDeploymentStore.automations,
-            automation
-          ).state}
-        />
+        <PublishStatusBadge status={automation.status} />
       </div>
-      <span>This week</span>
+      <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
+        <span>
+          {capitalise(durationFromNow(automation.updatedAt || ""))}
+        </span>
+      </AbsTooltip>
       <div class="actions">
         <Icon
           name="More"
@@ -243,6 +278,7 @@
     background: var(--background);
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
+    overflow: auto;
   }
   .filter {
     padding: 10px 12px;

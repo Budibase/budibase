@@ -138,12 +138,8 @@ export interface Automation extends Document {
     // stepNames is used to lookup step names from their correspnding step ID.
     stepNames?: Record<string, string>
   }
-  screenId?: string
-  uiTree?: any
   appId: string
-  live?: boolean
   name: string
-  internal?: boolean
   type?: string
   disabled?: boolean
   testData?: AutomationTriggerResultOutputs
