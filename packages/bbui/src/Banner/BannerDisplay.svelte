@@ -5,6 +5,7 @@
   import Banner from "./Banner.svelte"
   import { fly } from "svelte/transition"
   import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
+  import { TooltipPosition } from "../constants"
 </script>
 
 <Portal target=".banner-container">
@@ -24,7 +25,11 @@
             ? message.showCloseButton
             : true}
         >
-          <TooltipWrapper tooltip={message.tooltip} disabled={false}>
+          <TooltipWrapper
+            tooltip={message.tooltip}
+            disabled={false}
+            position={TooltipPosition.Bottom}
+          >
             {message.message}
           </TooltipWrapper>
         </Banner>
