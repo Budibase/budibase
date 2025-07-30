@@ -21,6 +21,7 @@ import { v4 as uuid } from "uuid"
 import tarStream from "tar-stream"
 import zlib from "zlib"
 import { pipeline } from "stream/promises"
+import { PassThrough, Readable } from "stream"
 import { tracer } from "dd-trace"
 
 const MemoryStream = require("memorystream")
@@ -235,7 +236,91 @@ export async function exportApp(appId: string, config?: ExportOpts) {
 }
 
 /**
- * Streams a backup of the database state for an app
+ * Streams a backup of the database state for an app directly without temp files
+ * @param appId The ID of the app which is to be backed up.
+ * @param excludeRows Flag to state whether the export should include data.
+ * @param encryptPassword password for encrypting the export.
+ * @returns a readable stream of the backup which is written in real time
+ */
+export async function streamExportAppDirect({
+  appId,
+  excludeRows,
+  encryptPassword,
+}: {
+  appId: string
+  excludeRows: boolean
+  encryptPassword?: string
+}): Promise<Readable> {
+  return await tracer.trace("streamExportAppDirect", async span => {
+    span.addTags({
+      excludeRows: excludeRows,
+      encryptPassword: !!encryptPassword,
+    })
+
+    const pack = tarStream.pack()
+    const gzip = zlib.createGzip({
+      level: zlib.constants.Z_DEFAULT_COMPRESSION,
+      chunkSize: 16 * 1024, // 16KB chunks for better memory usage
+    })
+    const passThrough = new PassThrough()
+
+    // Set up pipeline with error handling
+    pipeline(pack, gzip, passThrough).catch(err => {
+      console.log("Archive pipeline error:", err)
+      passThrough.destroy(err)
+    })
+
+    // Process app export asynchronously after returning the stream
+    setImmediate(async () => {
+      try {
+        // Create temp directory with files (existing logic, but don't tar it)
+        const tmpPath = await exportApp(appId, {
+          excludeRows,
+          encryptPassword,
+          tar: false, // Don't create tar file, we'll stream directly
+        })
+        const files = await fsp.readdir(tmpPath)
+
+        span.addTags({ numFiles: files.length, tmpPath })
+
+        // Add files to tar stream
+        for (const file of files) {
+          const filePath = join(tmpPath, file)
+          const stat = await fsp.stat(filePath)
+
+          if (stat.isDirectory()) {
+            await addDirectoryToTar(pack, filePath, file, tmpPath)
+          } else {
+            const stream = fs.createReadStream(filePath)
+            const entry = pack.entry({ name: file, size: stat.size })
+            stream.pipe(entry)
+          }
+        }
+
+        pack.finalize()
+
+        // Cleanup temp directory after streaming starts (with delay to ensure streaming has begun)
+        setTimeout(() => {
+          fsp
+            .rm(tmpPath, { recursive: true, force: true })
+            .catch(err => console.log("Temp cleanup error:", err))
+        }, 1000)
+      } catch (err) {
+        console.log("Export processing error:", err)
+        if (!passThrough.destroyed) {
+          passThrough.destroy(
+            err instanceof Error ? err : new Error(String(err))
+          )
+        }
+      }
+    })
+
+    return passThrough
+  })
+}
+
+/**
+ * Streams a backup of the database state for an app (legacy - uses temp files)
  * @param appId The ID of the app which is to be backed up.
  * @param excludeRows Flag to state whether the export should include data.
  * @param encryptPassword password for encrypting the export.

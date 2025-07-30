@@ -26,7 +26,7 @@ export async function exportAppDump(
   const extension = encryptPassword ? "enc.tar.gz" : "tar.gz"
   const backupIdentifier = `${appName}-export-${new Date().getTime()}.${extension}`
   ctx.attachment(backupIdentifier)
-  ctx.body = await sdk.backups.streamExportApp({
+  ctx.body = await sdk.backups.streamExportAppDirect({
     appId,
     excludeRows,
     encryptPassword,
