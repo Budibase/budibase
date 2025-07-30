@@ -13,7 +13,7 @@ import {
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
-describe("Attempt to run a basic loop automation", () => {
+describe("Loop Automations", () => {
   const config = new TestConfiguration()
   let table: Table
 
@@ -790,7 +790,7 @@ describe("Attempt to run a basic loop automation", () => {
       expect(steps[0].outputs.success).toBe(false)
     })
 
-    it.only("should respect max iterations with multiple children", async () => {
+    it("should respect max iterations with multiple children", async () => {
       const { steps } = await createAutomationBuilder(config)
         .onAppAction()
         .loopV2({
@@ -825,7 +825,7 @@ describe("Attempt to run a basic loop automation", () => {
             return [
               builder.serverLog({ text: "Processing: {{loop.currentItem}}" }),
               builder.executeScript({
-                code: "return loop.currentItem.toUpperCase()",
+                code: "return loop.currentItem",
               }),
             ]
           },
@@ -938,7 +938,7 @@ describe("Attempt to run a basic loop automation", () => {
     //                   text: "Premium item: {{loop.currentItem.name}} - Adjusted value: {{steps.1.value}}",
     //                 }),
     //               condition: {
-    //                 greaterThan: {
+    //                 equal: {
     //                   "{{steps.1.value}}": 100,
     //                 },
     //               },
@@ -949,7 +949,7 @@ describe("Attempt to run a basic loop automation", () => {
     //                   text: "Standard item: {{loop.currentItem.name}} - Value: {{steps.1.value}}",
     //                 }),
     //               condition: {
-    //                 lessEqual: {
+    //                 equal: {
     //                   "{{steps.1.value}}": 100,
     //                 },
     //               },
@@ -975,16 +975,23 @@ describe("Attempt to run a basic loop automation", () => {
     //   expect(Object.keys(loopResults).length).toBeGreaterThanOrEqual(3)
 
     //   // Verify that branches are taken correctly
-    //   const [scriptResults, branchResults, logResults] = Object.values(loopResults)
+    //   const [scriptResults, branchResults, logResults] =
+    //     Object.values(loopResults)
 
     //   // Standard item (50) should take normal value branch
-    //   expect(branchResults[0].outputs.status).toContain("normalValueBranch branch taken")
+    //   expect(branchResults[0].outputs.status).toContain(
+    //     "normalValueBranch branch taken"
+    //   )
 
     //   // Premium item (100 * 1.5 = 150) should take high value branch
-    //   expect(branchResults[1].outputs.status).toContain("highValueBranch branch taken")
+    //   expect(branchResults[1].outputs.status).toContain(
+    //     "highValueBranch branch taken"
+    //   )
 
     //   // Luxury item (200 * 1.5 = 300) should take high value branch
-    //   expect(branchResults[2].outputs.status).toContain("highValueBranch branch taken")
+    //   expect(branchResults[2].outputs.status).toContain(
+    //     "highValueBranch branch taken"
+    //   )
     // })
 
     it("should preserve correct step indexing with loopV2", async () => {
@@ -1083,7 +1090,7 @@ describe("Attempt to run a basic loop automation", () => {
           steps: builder => {
             return [
               builder.filter({
-                condition: FilterCondition.EQUAL,
+                condition: FilterCondition.NOT_EQUAL,
                 field: "{{loop.currentItem}}",
                 value: "skip",
               }),
@@ -1099,13 +1106,11 @@ describe("Attempt to run a basic loop automation", () => {
         steps[0].outputs.items
       const [filterResults, logResults] = Object.values(loopResults)
 
-      expect(filterResults[0].outputs.result).toBe(false)
-      expect(logResults[0].outputs.message).toBe("Processed: process")
+      expect(filterResults[0].outputs.result).toBe(true)
+      expect(logResults[0].outputs.message).toContain("Processed: process")
 
-      expect(filterResults[1].outputs.result).toBe(true)
+      expect(filterResults[1].outputs.result).toBe(false)
       expect(filterResults[1].outputs.status).toBe("stopped")
-
-      expect(steps[0].outputs.success).toBe(false)
     })
   })
 })

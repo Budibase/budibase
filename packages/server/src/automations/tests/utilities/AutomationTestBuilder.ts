@@ -110,6 +110,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
   loop = this.step(AutomationActionStepId.LOOP)
+  loopv2 = this.step(AutomationActionStepId.LOOP_V2)
   serverLog = this.step(AutomationActionStepId.SERVER_LOG)
   executeScript = this.step(AutomationActionStepId.EXECUTE_SCRIPT)
   executeScriptV2 = this.step(AutomationActionStepId.EXECUTE_SCRIPT_V2)
@@ -133,6 +134,8 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
       option: loopConfig.option,
       binding: loopConfig.binding,
       children: [],
+      iterations: loopConfig.iterations,
+      failure: loopConfig.failure,
     }
 
     const builder = new BranchStepBuilder<TStep>()

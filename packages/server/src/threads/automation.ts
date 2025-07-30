@@ -395,7 +395,6 @@ class Orchestrator {
 
         ctx._stepIndex ||= 0
         ctx.steps[ctx._stepIndex] = result.outputs
-        console.log(`addToContext: step ${step.stepId} added at index ${ctx._stepIndex}, iterations:`, result.outputs.iterations)
         ctx._stepIndex++
 
         if (result.outputs.success === false) {
@@ -423,11 +422,10 @@ class Orchestrator {
           case AutomationActionStepId.LOOP_V2:
           case AutomationActionStepId.LOOP: {
             if (step.stepId === AutomationActionStepId.LOOP) {
-              const stepToLoop = steps[stepIndex + 1]
               let parsedStep = this.parseOldStepToNewStep(step, steps)
               addToContext(
                 step,
-                await this.executeLoopV2Step(ctx, parsedStep, true)
+                await this.executeLoopStep(ctx, parsedStep, true)
               )
               // We increment by 2 here because the way loops work is that the
               // step immediately following the loop step is what gets looped.
@@ -435,7 +433,7 @@ class Orchestrator {
               // skip the step that was looped.
               stepIndex += 2
             } else {
-              addToContext(step, await this.executeLoopV2Step(ctx, step, false))
+              addToContext(step, await this.executeLoopStep(ctx, step, false))
               stepIndex++
             }
             break
@@ -475,12 +473,12 @@ class Orchestrator {
     return newLoopV2Step
   }
 
-  private async executeLoopV2Step(
+  private async executeLoopStep(
     ctx: AutomationContext,
     step: LoopV2Step,
     isLegacyLoopStep = false
   ): Promise<AutomationStepResult> {
-    return await tracer.trace("executeLoopV2Step", async span => {
+    return await tracer.trace("executeLoopStep", async span => {
       // Clone the children to avoid processObject modifying them
       let children = cloneDeep(step.inputs.children) || []
 
@@ -517,13 +515,18 @@ class Orchestrator {
             iterations,
           })
           if (isLegacyLoopStep) {
-            const childStep = children[0]
             const flatItems = this.flattenItems(allResults)
             return stepFailure(step, {
               status: AutomationStepStatus.MAX_ITERATIONS,
               success: false,
               items: flatItems,
               iterations,
+            })
+          } else {
+            return stepFailure(step, {
+              status: AutomationStepStatus.MAX_ITERATIONS,
+              iterations,
+              items: allResults,
             })
           }
         }
@@ -546,6 +549,7 @@ class Orchestrator {
           return stepFailure(step, {
             status: AutomationStepStatus.FAILURE_CONDITION,
             success: false,
+            items: allResults,
           })
         }
 
