@@ -2,7 +2,9 @@ import fs, { PathLike } from "fs"
 import { budibaseTempDir } from "../budibaseDir"
 import { join } from "path"
 import env from "../../environment"
-import tar from "tar"
+import tarStream from "tar-stream"
+import zlib from "zlib"
+import { pipeline } from "stream/promises"
 
 import { v4 as uuid } from "uuid"
 
@@ -131,10 +133,46 @@ export const createTempFolder = (item: any) => {
 }
 
 export const extractTarball = async (fromFilePath: string, toPath: string) => {
-  await tar.extract({
-    file: fromFilePath,
-    C: toPath,
+  const extract = tarStream.extract()
+
+  extract.on("entry", async (header, stream, next) => {
+    const targetPath = join(toPath, header.name)
+
+    if (header.type === "directory") {
+      try {
+        await fs.promises.mkdir(targetPath, { recursive: true })
+      } catch (err: any) {
+        if (err.code !== "EEXIST") throw err
+      }
+      stream.resume()
+      next()
+    } else if (header.type === "file") {
+      // Ensure directory exists
+      const dir = join(targetPath, "..")
+      try {
+        await fs.promises.mkdir(dir, { recursive: true })
+      } catch (err: any) {
+        if (err.code !== "EEXIST") throw err
+      }
+
+      const writeStream = fs.createWriteStream(targetPath)
+      stream.pipe(writeStream)
+      stream.on("end", next)
+    } else {
+      stream.resume()
+      next()
+    }
   })
+
+  const readStream = fs.createReadStream(fromFilePath)
+  const isGzipped =
+    fromFilePath.endsWith(".gz") || fromFilePath.endsWith(".tgz")
+
+  if (isGzipped) {
+    await pipeline(readStream, zlib.createGunzip(), extract)
+  } else {
+    await pipeline(readStream, extract)
+  }
 }
 
 /**

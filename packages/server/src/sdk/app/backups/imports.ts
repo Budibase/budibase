@@ -22,7 +22,7 @@ import fs from "fs"
 import fsp from "fs/promises"
 import sdk from "../../"
 import { v4 as uuid } from "uuid"
-import tar from "tar"
+import { extractTarball } from "../../../utilities/fileSystem"
 
 type TemplateType = {
   file?: {
@@ -136,10 +136,7 @@ export async function untarFile(file: { path: string }) {
   const tmpPath = join(budibaseTempDir(), uuid())
   await fsp.mkdir(tmpPath)
   // extract the tarball
-  await tar.extract({
-    cwd: tmpPath,
-    file: file.path,
-  })
+  await extractTarball(file.path, tmpPath)
   return tmpPath
 }
 

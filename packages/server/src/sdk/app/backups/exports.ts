@@ -18,7 +18,9 @@ import fsp from "fs/promises"
 import { join } from "path"
 import env from "../../../environment"
 import { v4 as uuid } from "uuid"
-import tar from "tar"
+import tarStream from "tar-stream"
+import zlib from "zlib"
+import { pipeline } from "stream/promises"
 import { tracer } from "dd-trace"
 
 const MemoryStream = require("memorystream")
@@ -37,16 +39,58 @@ export interface ExportOpts extends DBDumpOpts {
 async function tarFilesToTmp(tmpDir: string, files: string[]) {
   const fileName = `${uuid()}.tar.gz`
   const exportFile = join(budibaseTempDir(), fileName)
-  await tar.create(
-    {
-      gzip: true,
-      file: exportFile,
-      noDirRecurse: false,
-      cwd: tmpDir,
-    },
-    files
-  )
+
+  const pack = tarStream.pack()
+  const gzip = zlib.createGzip()
+  const outputStream = fs.createWriteStream(exportFile)
+
+  // Start the pipeline
+  const pipelinePromise = pipeline(pack, gzip, outputStream)
+
+  // Add files to the tar stream
+  for (const file of files) {
+    const filePath = join(tmpDir, file)
+    const stat = await fsp.stat(filePath)
+
+    if (stat.isDirectory()) {
+      // Recursively add directory contents
+      await addDirectoryToTar(pack, filePath, file, tmpDir)
+    } else {
+      // Add individual file
+      const stream = fs.createReadStream(filePath)
+      const entry = pack.entry({ name: file, size: stat.size })
+      stream.pipe(entry)
+    }
+  }
+
+  // Finalize the tar and wait for completion
+  pack.finalize()
+  await pipelinePromise
+
   return exportFile
+}
+
+async function addDirectoryToTar(
+  pack: tarStream.Pack,
+  dirPath: string,
+  relativePath: string,
+  basePath: string
+) {
+  const entries = await fsp.readdir(dirPath, { withFileTypes: true })
+
+  for (const entry of entries) {
+    const fullPath = join(dirPath, entry.name)
+    const entryRelativePath = join(relativePath, entry.name)
+
+    if (entry.isDirectory()) {
+      await addDirectoryToTar(pack, fullPath, entryRelativePath, basePath)
+    } else {
+      const stat = await fsp.stat(fullPath)
+      const stream = fs.createReadStream(fullPath)
+      const entry = pack.entry({ name: entryRelativePath, size: stat.size })
+      stream.pipe(entry)
+    }
+  }
 }
 
 /**
