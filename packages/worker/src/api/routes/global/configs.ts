@@ -79,6 +79,13 @@ function aiValidation() {
   )
 }
 
+function recaptchaValidation() {
+  return Joi.object({
+    siteKey: Joi.string().required(),
+    secretKey: Joi.string().required(),
+  }).required()
+}
+
 function buildConfigSaveValidation() {
   // prettier-ignore
   return auth.joiValidator.body(Joi.object({
@@ -97,7 +104,8 @@ function buildConfigSaveValidation() {
           { is: ConfigType.GOOGLE, then: googleValidation() },
           { is: ConfigType.OIDC, then: oidcValidation() },
           { is: ConfigType.SCIM, then: scimValidation() },
-          { is: ConfigType.AI, then: aiValidation() }
+          { is: ConfigType.AI, then: aiValidation() },
+          { is: ConfigType.RECAPTCHA, then: recaptchaValidation() },
         ],
       }),
   }).required().unknown(true),
