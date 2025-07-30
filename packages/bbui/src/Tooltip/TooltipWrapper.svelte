@@ -6,7 +6,7 @@
   export let tooltip: string = ""
   export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = true
-  export let position: TooltipPosition | undefined
+  export let position: TooltipPosition | undefined = undefined
 </script>
 
 <div class:container={!!tooltip}>
