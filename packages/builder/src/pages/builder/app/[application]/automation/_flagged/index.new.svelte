@@ -54,7 +54,7 @@
       filterValue: PublishResourceState.DISABLED,
     },
     {
-      label: "Drafts",
+      label: "Unpublished",
       filterValue: PublishResourceState.UNPUBLISHED,
     },
   ]
