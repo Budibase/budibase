@@ -2,7 +2,8 @@ import Joi from "joi"
 import { middleware } from "@budibase/backend-core"
 import * as rowActionController from "../controllers/rowAction"
 import { triggerRowActionAuthorised } from "../../middleware/triggerRowActionAuthorised"
-import { builderRoutes, publicRoutes } from "./endpointGroups"
+import recaptcha from "../../middleware/recaptcha"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
 function rowActionValidator() {
   return middleware.joiValidator.body(
@@ -21,6 +22,8 @@ function rowTriggerValidator() {
     { allowUnknown: false }
   )
 }
+
+const routes = endpointGroupList.group(recaptcha)
 
 // CRUD endpoints
 builderRoutes
@@ -49,7 +52,7 @@ builderRoutes
   )
 
 // Other endpoints
-publicRoutes.post(
+routes.post(
   "/api/tables/:sourceId/actions/:actionId/trigger",
   rowTriggerValidator(),
   triggerRowActionAuthorised("sourceId", "actionId"),

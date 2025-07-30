@@ -1,5 +1,5 @@
 import { UserCtx } from "@budibase/types"
-import ensureTenantAppOwnership from "../ensureTenantAppOwnership"
+import { ensureTenantAppOwnershipMiddleware } from "../ensureTenantAppOwnership"
 import { context, Header, HTTPError } from "@budibase/backend-core"
 
 function ctx(opts?: { appId: string }) {
@@ -25,7 +25,7 @@ describe("Ensure Tenant Ownership Middleware", () => {
   it("calls next() when appId matches tenant ID", async () => {
     await context.doInTenant(tenantId, async () => {
       let called = false
-      await ensureTenantAppOwnership(ctx({ appId }), () => {
+      await ensureTenantAppOwnershipMiddleware(ctx({ appId }), () => {
         called = true
       })
       expect(called).toBe(true)
@@ -36,7 +36,7 @@ describe("Ensure Tenant Ownership Middleware", () => {
     let called = false
     await expect(async () => {
       await context.doInTenant("tenant_2", async () => {
-        await ensureTenantAppOwnership(ctx({ appId }), () => {
+        await ensureTenantAppOwnershipMiddleware(ctx({ appId }), () => {
           called = true
         })
       })
@@ -45,8 +45,8 @@ describe("Ensure Tenant Ownership Middleware", () => {
   })
 
   it("throws 400 when appId is missing", async () => {
-    await expect(ensureTenantAppOwnership(ctx(), () => {})).rejects.toThrow(
-      "appId must be provided"
-    )
+    await expect(
+      ensureTenantAppOwnershipMiddleware(ctx(), () => {})
+    ).rejects.toThrow("appId must be provided")
   })
 })

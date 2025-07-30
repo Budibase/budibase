@@ -15,7 +15,7 @@ import { UserCtx, ContextUser } from "@budibase/types"
 import tracer from "dd-trace"
 import type { Middleware, Next } from "koa"
 
-const middleware = (async (ctx: UserCtx, next: Next) => {
+export const currentAppMiddleware = (async (ctx: UserCtx, next: Next) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
   if (!requestAppId) {
@@ -118,5 +118,3 @@ const middleware = (async (ctx: UserCtx, next: Next) => {
     return next()
   })
 }) as Middleware
-
-export default middleware
