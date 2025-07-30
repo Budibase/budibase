@@ -1,14 +1,14 @@
 <script lang="ts">
+  import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
+  import { PublishResourceState, type WorkspaceApp } from "@budibase/types"
   import {
-    contextMenuStore,
-    workspaceAppStore,
-    workspaceDeploymentStore,
-  } from "@/stores/builder"
-  import {
-    type PublishStatusResource,
-    type WorkspaceApp,
-  } from "@budibase/types"
-  import { ActionButton, Button, Icon, notifications } from "@budibase/bbui"
+    AbsTooltip,
+    ActionButton,
+    Button,
+    Helpers,
+    Icon,
+    notifications,
+  } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
@@ -17,16 +17,32 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
 
-  enum Filter {
-    All = "All apps",
-    Published = "Published",
-    Drafts = "Drafts",
-  }
-
   let showHighlight = false
-  let filter = Filter.All
+  let filter: PublishResourceState | undefined
   let selectedWorkspaceApp: WorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
+
+  const filters: {
+    label: string
+    filterValue: PublishResourceState | undefined
+  }[] = [
+    {
+      label: "All apps",
+      filterValue: undefined,
+    },
+    {
+      label: "Published",
+      filterValue: PublishResourceState.PUBLISHED,
+    },
+    {
+      label: "Disabled",
+      filterValue: PublishResourceState.DISABLED,
+    },
+    {
+      label: "Drafts",
+      filterValue: PublishResourceState.UNPUBLISHED,
+    },
+  ]
 
   const onDelete = async (workspaceApp: WorkspaceApp) => {
     contextMenuStore.close()
@@ -53,6 +69,19 @@
   }
 
   const getContextMenuOptions = (workspaceApp: WorkspaceApp) => {
+    const pause = {
+      icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
+      name: workspaceApp.disabled ? "Activate" : "Disable",
+
+      visible: true,
+      callback: () => {
+        workspaceAppStore.toggleDisabled(
+          workspaceApp._id!,
+          !workspaceApp.disabled
+        )
+      },
+    }
+
     return [
       {
         icon: "pencil",
@@ -60,20 +89,7 @@
         visible: true,
         callback: () => workspaceAppModal.show(),
       },
-      {
-        icon: "copy",
-        name: "Duplicate",
-        visible: true,
-        disabled: false,
-        callback: () => console.log("Duplicate"),
-      },
-      {
-        icon: "pause-circle",
-        name: "Unpublish",
-        visible: true,
-        disabled: false,
-        callback: () => console.log("Unpublish"),
-      },
+      pause,
       {
         icon: "trash",
         name: "Delete",
@@ -106,12 +122,13 @@
     workspaceAppModal.show()
   }
 
-  const findDeployment = (
-    deployments: Record<string, PublishStatusResource>,
-    app: WorkspaceApp
-  ): PublishStatusResource => {
-    return deployments[app._id!]
-  }
+  $: workspaceApps = $workspaceAppStore.workspaceApps.filter(a => {
+    if (!filter) {
+      return true
+    }
+
+    return a.publishStatus.state === filter
+  })
 </script>
 
 <div class="apps-index">
@@ -133,11 +150,12 @@
     <Button cta icon="layout" on:click={createApp}>New app</Button>
   </TopBar>
   <div class="filter">
-    {#each Object.values(Filter) as option}
+    {#each filters as option}
       <ActionButton
         quiet
-        selected={option === filter}
-        on:click={() => (filter = option)}>{option}</ActionButton
+        selected={option.filterValue === filter}
+        on:click={() => (filter = option.filterValue)}
+        >{option.label}</ActionButton
       >
     {/each}
   </div>
@@ -148,7 +166,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each $workspaceAppStore.workspaceApps as app}
+  {#each workspaceApps as app}
     <a
       class="app"
       href={`./design/${app.screens[0]?._id}`}
@@ -157,14 +175,13 @@
     >
       <div>{app.name}</div>
       <div>
-        <PublishStatusBadge
-          status={findDeployment($workspaceDeploymentStore.workspaceApps, app)
-            .state}
-        />
+        <PublishStatusBadge status={app.publishStatus.state} />
       </div>
-      <span>
-        {capitalise(durationFromNow(app.updatedAt || ""))}
-      </span>
+      <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
+        <span>
+          {capitalise(durationFromNow(app.updatedAt || ""))}
+        </span>
+      </AbsTooltip>
       <div class="actions">
         <Icon
           name="More"
@@ -188,6 +205,7 @@
     background: var(--background);
     flex: 1 1 auto;
     --border: 1px solid var(--spectrum-global-color-gray-200);
+    overflow: auto;
   }
   .filter {
     padding: 10px 12px;
