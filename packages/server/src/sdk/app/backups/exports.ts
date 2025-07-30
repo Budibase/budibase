@@ -21,10 +21,71 @@ import { v4 as uuid } from "uuid"
 import tarStream from "tar-stream"
 import zlib from "zlib"
 import { pipeline } from "stream/promises"
-import { PassThrough, Readable } from "stream"
+import { Readable, PassThrough, Transform } from "stream"
 import { tracer } from "dd-trace"
+import crypto from "crypto"
 
 const MemoryStream = require("memorystream")
+
+// Encryption constants (copied from backend-core/security/encryption.ts)
+const ALGO = "aes-256-ctr"
+const ITERATIONS = 10000
+const STRETCH_LENGTH = 32
+const SALT_LENGTH = 16
+const IV_LENGTH = 16
+
+/**
+ * Helper function to stretch a password using PBKDF2
+ */
+function stretchString(secret: string, salt: Buffer) {
+  return crypto.pbkdf2Sync(secret, salt, ITERATIONS, STRETCH_LENGTH, "sha512")
+}
+
+/**
+ * Creates a streaming encryption transform that encrypts data on-the-fly
+ * This replicates the encryption logic from backend-core but as a stream transform
+ */
+function createEncryptionTransform(password: string): Transform {
+  const salt = crypto.randomBytes(SALT_LENGTH)
+  const iv = crypto.randomBytes(IV_LENGTH)
+  const stretched = stretchString(password, salt)
+  const cipher = crypto.createCipheriv(ALGO, stretched, iv)
+
+  let headerWritten = false
+
+  return new Transform({
+    transform(chunk, encoding, callback) {
+      try {
+        // Write salt and IV as header on first chunk
+        if (!headerWritten) {
+          this.push(salt)
+          this.push(iv)
+          headerWritten = true
+        }
+
+        // Encrypt the chunk
+        const encrypted = cipher.update(chunk)
+        this.push(encrypted)
+        callback()
+      } catch (err) {
+        callback(err)
+      }
+    },
+
+    flush(callback) {
+      try {
+        // Finalize the cipher
+        const final = cipher.final()
+        if (final.length > 0) {
+          this.push(final)
+        }
+        callback()
+      } catch (err) {
+        callback(err)
+      }
+    },
+  })
+}
 
 export interface DBDumpOpts {
   filter?: any
@@ -236,6 +297,154 @@ export async function exportApp(appId: string, config?: ExportOpts) {
 }
 
 /**
+ * Streaming version of exportApp that directly streams files into a tar pack without temp files
+ * @param appId The app to back up
+ * @param pack The tar-stream pack to add files to
+ * @param config Config for the export
+ * @returns Promise that resolves when all files have been added to the pack
+ */
+async function streamExportAppToTar(
+  appId: string,
+  pack: tarStream.Pack,
+  config?: ExportOpts
+) {
+  return await tracer.trace("streamExportAppToTar", async span => {
+    span.addTags({
+      "config.excludeRows": config?.excludeRows,
+      "config.encryptPassword": !!config?.encryptPassword,
+      "config.filter": !!config?.filter,
+    })
+
+    // Note: Individual file encryption within tar is not implemented for streaming
+    // The entire tar stream can be encrypted instead via streamExportAppDirect
+
+    const prodAppId = dbCore.getProdAppID(appId)
+    const appPath = `${prodAppId}/`
+    span.addTags({ prodAppId })
+
+    // Stream database export directly
+    const dbStream = await streamDB(appId, {
+      filter: defineFilter(config?.excludeRows),
+    })
+    const dbEntry = pack.entry({ name: DB_EXPORT_FILE })
+    dbStream.pipe(dbEntry)
+
+    if (!env.isTest()) {
+      if (config?.excludeRows) {
+        // Stream only static files from object store
+        for (const path of STATIC_APP_FILES) {
+          try {
+            const contents = await objectStore.retrieve(
+              ObjectStoreBuckets.APPS,
+              join(appPath, path)
+            )
+
+            if (typeof contents === "string") {
+              const entry = pack.entry({
+                name: path,
+                size: Buffer.byteLength(contents),
+              })
+              entry.end(contents)
+            } else if (contents instanceof Readable) {
+              // For streams, we can't know the size ahead of time, so we'll stream directly
+              const entry = pack.entry({ name: path })
+              contents.pipe(entry)
+            }
+          } catch (err) {
+            // Skip missing static files
+            console.log(`Skipping missing static file: ${path}`)
+          }
+        }
+      } else {
+        // Stream all files from object store directory
+        await streamDirectoryFromObjectStore(
+          pack,
+          ObjectStoreBuckets.APPS,
+          appPath
+        )
+      }
+    }
+
+    span.addTags({ streamingComplete: true })
+  })
+}
+
+/**
+ * Stream database export directly as a readable stream
+ */
+async function streamDB(
+  dbName: string,
+  opts: { filter?: any } = {}
+): Promise<Readable> {
+  const exportOpts = {
+    filter: opts?.filter,
+    batch_size: 1000,
+    batch_limit: 5,
+    style: "main_only",
+  } as const
+
+  return dbCore.doWithDB(dbName, async db => {
+    const passThrough = new PassThrough()
+    // Start the dump in background
+    db.dump(passThrough, exportOpts).catch(err => {
+      passThrough.destroy(err)
+    })
+    return passThrough
+  })
+}
+
+/**
+ * Stream all files from an object store directory directly into tar pack
+ */
+async function streamDirectoryFromObjectStore(
+  pack: tarStream.Pack,
+  bucketName: string,
+  path: string
+) {
+  return await tracer.trace("streamDirectoryFromObjectStore", async span => {
+    span.addTags({ bucketName, path })
+
+    let numObjects = 0
+
+    // Use the listAllObjects generator to stream files
+    for await (const object of objectStore.listAllObjects(bucketName, path)) {
+      numObjects++
+      await tracer.trace(
+        "streamDirectoryFromObjectStore.object",
+        async span => {
+          const filename = object.Key!
+          span.addTags({ filename })
+
+          try {
+            const stream = await objectStore.getReadStream(bucketName, filename)
+            const relativePath = filename.replace(path, "")
+
+            if (relativePath && !relativePath.endsWith("/")) {
+              const entry = pack.entry({
+                name: relativePath,
+                size: object.Size || 0,
+              })
+              stream.pipe(entry)
+
+              // Wait for stream to complete
+              await new Promise((resolve, reject) => {
+                entry.on("finish", resolve)
+                entry.on("error", reject)
+                stream.on("error", reject)
+              })
+            }
+          } catch (err) {
+            console.log(`Error streaming object ${filename}:`, err)
+          }
+        }
+      )
+    }
+
+    span.addTags({ numObjects })
+  })
+}
+
+/**
  * Streams a backup of the database state for an app directly without temp files
  * @param appId The ID of the app which is to be backed up.
  * @param excludeRows Flag to state whether the export should include data.
@@ -262,60 +471,39 @@ export async function streamExportAppDirect({
       level: zlib.constants.Z_DEFAULT_COMPRESSION,
       chunkSize: 16 * 1024, // 16KB chunks for better memory usage
     })
-    const passThrough = new PassThrough()
+
+    // Create final output stream - either encrypted or plain gzipped
+    const finalStream: Readable = encryptPassword
+      ? gzip.pipe(createEncryptionTransform(encryptPassword))
+      : gzip
 
     // Set up pipeline with error handling
-    pipeline(pack, gzip, passThrough).catch(err => {
+    pipeline(pack, gzip).catch(err => {
       console.log("Archive pipeline error:", err)
-      passThrough.destroy(err)
+      finalStream.destroy(err)
     })
 
     // Process app export asynchronously after returning the stream
     setImmediate(async () => {
       try {
-        // Create temp directory with files (existing logic, but don't tar it)
-        const tmpPath = await exportApp(appId, {
+        // Stream files directly without using temp directories
+        await streamExportAppToTar(appId, pack, {
           excludeRows,
           encryptPassword,
-          tar: false, // Don't create tar file, we'll stream directly
         })
-        const files = await fsp.readdir(tmpPath)
-
-        span.addTags({ numFiles: files.length, tmpPath })
-
-        // Add files to tar stream
-        for (const file of files) {
-          const filePath = join(tmpPath, file)
-          const stat = await fsp.stat(filePath)
-
-          if (stat.isDirectory()) {
-            await addDirectoryToTar(pack, filePath, file, tmpPath)
-          } else {
-            const stream = fs.createReadStream(filePath)
-            const entry = pack.entry({ name: file, size: stat.size })
-            stream.pipe(entry)
-          }
-        }
 
         pack.finalize()
-
-        // Cleanup temp directory after streaming starts (with delay to ensure streaming has begun)
-        setTimeout(() => {
-          fsp
-            .rm(tmpPath, { recursive: true, force: true })
-            .catch(err => console.log("Temp cleanup error:", err))
-        }, 1000)
       } catch (err) {
         console.log("Export processing error:", err)
-        if (!passThrough.destroyed) {
-          passThrough.destroy(
+        if (!finalStream.destroyed) {
+          finalStream.destroy(
             err instanceof Error ? err : new Error(String(err))
           )
         }
       }
     })
 
-    return passThrough
+    return finalStream
   })
 }
 
