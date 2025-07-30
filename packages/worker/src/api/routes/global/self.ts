@@ -12,4 +12,3 @@ loggedInRoutes
     users.buildSelfSaveValidation(),
     controller.updateSelf
   )
-  .post("/api/global/self/close_banner/:bannerKey", controller.saveClosedBanner)

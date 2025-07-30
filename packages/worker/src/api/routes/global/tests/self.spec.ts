@@ -63,47 +63,4 @@ describe("/api/global/self", () => {
     expect(dbUser.freeTrialConfirmedAt).toBe("2024-03-17T14:10:54.869Z")
     expect(res.body._id).toBe(user._id)
   })
-
-  describe("close banner", () => {
-    it("should mark banner as closed for the user", async () => {
-      const user = await config.createUser()
-      await config.createSession(user)
-
-      await config.api.self.closeBanner(user, "test-banner")
-
-      const dbUser = (await config.getUser(user.email))!
-      expect(dbUser.closedBanners).toBeDefined()
-      expect(dbUser.closedBanners!["test-banner"]).toBeDefined()
-      expect(dbUser.closedBanners!["test-banner"].closedAt).toBeDefined()
-      expect(typeof dbUser.closedBanners!["test-banner"].closedAt).toBe(
-        "string"
-      )
-    })
-
-    it("should handle multiple banner closures", async () => {
-      const user = await config.createUser()
-      await config.createSession(user)
-
-      await config.api.self.closeBanner(user, "banner-1")
-      await config.api.self.closeBanner(user, "banner-2")
-
-      const dbUser = (await config.getUser(user.email))!
-      expect(dbUser.closedBanners).toBeDefined()
-      expect(dbUser.closedBanners!["banner-1"]).toBeDefined()
-      expect(dbUser.closedBanners!["banner-2"]).toBeDefined()
-      expect(Object.keys(dbUser.closedBanners!)).toHaveLength(2)
-    })
-
-    it("should return closed banners in getSelf response", async () => {
-      const user = await config.createUser()
-      await config.createSession(user)
-
-      await config.api.self.closeBanner(user, "banner-1")
-      await config.api.self.closeBanner(user, "banner-2")
-
-      const response = await config.api.self.getSelf(user)
-      expect(response.body.closedBanners).toBeDefined()
-      expect(response.body.closedBanners).toEqual(["banner-1", "banner-2"])
-    })
-  })
 })
