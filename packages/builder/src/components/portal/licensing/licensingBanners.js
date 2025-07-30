@@ -73,6 +73,7 @@ const buildUsageInfoBanner = (
     criteria: () => {
       return appLicensing?.usageMetrics[metricKey] >= percentageThreshold
     },
+    showCloseButton: false,
     tooltip: appLicensing?.quotaResetDate,
   }
 
