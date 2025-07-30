@@ -20,9 +20,20 @@
     {/if}
   </div>
   <div class="link_text">{text}</div>
+  {#if $$slots.actions}
+    <div class="actions">
+      <slot name="actions" />
+    </div>
+  {/if}
 </a>
 
 <style>
+  .actions {
+    display: none;
+  }
+  .link:hover .actions {
+    display: block;
+  }
   .link {
     display: flex;
     flex-direction: row;
@@ -60,6 +71,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
   }
   .link.collapsed .link_text {
     display: none;

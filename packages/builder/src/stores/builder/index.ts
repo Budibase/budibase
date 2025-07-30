@@ -1,5 +1,6 @@
 import { layoutStore } from "./layouts"
 import { workspaceAppStore } from "./workspaceApps"
+import { workspaceFavouriteStore } from "./workspaceFavourites"
 import { appStore } from "./app"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
@@ -85,6 +86,7 @@ export {
   workspaceAppStore,
   selectedAppUrls,
   workspaceDeploymentStore,
+  workspaceFavouriteStore,
 }
 
 export const reset = () => {
@@ -131,6 +133,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
+  workspaceFavouriteStore.init()
   resetBuilderHistory()
   await refreshBuilderData()
 }

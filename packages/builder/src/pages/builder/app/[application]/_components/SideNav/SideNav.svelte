@@ -1,13 +1,20 @@
 <script lang="ts">
-  import { Context, Icon, StatusLight } from "@budibase/bbui"
+  import { Body, Context, Icon, Link, StatusLight } from "@budibase/bbui"
   import { createLocalStorageStore } from "@budibase/frontend-core"
-  import { url } from "@roxi/routify"
+  import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
-  import { appStore, builderStore, isOnlyUser } from "@/stores/builder"
+  import {
+    appStore,
+    builderStore,
+    isOnlyUser,
+    automationStore,
+    workspaceFavouriteStore,
+  } from "@/stores/builder"
   import { featureFlags, admin } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
+  import { type WorkspaceFavourite, WorkspaceResource } from "@budibase/types"
 
   setContext(Context.PopoverRoot, ".nav > .popover-container")
 
@@ -17,12 +24,39 @@
   let focused = false
   let timeout: ReturnType<typeof setTimeout> | undefined
 
+  $: appId = $appStore.appId
   $: collapsed = !focused && !$pinned
   $: !$pinned && unPin()
   $: updateAvailable =
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
+  $: favourites = $workspaceFavouriteStore
+
+  type ResourceLinkFn = (id: string) => string
+
+  const resourceLink = (favourite: WorkspaceFavourite) => {
+    const appPrefix = `/builder/app/${appId}`
+    const link: Partial<Record<WorkspaceResource, ResourceLinkFn>> = {
+      [WorkspaceResource.AUTOMATION]: (id: string) =>
+        `${appPrefix}/automation/${id}`,
+      [WorkspaceResource.DATASOURCE]: (id: string) =>
+        `${appPrefix}/data/datasource/${id}`,
+      [WorkspaceResource.TABLE]: (id: string) =>
+        `${appPrefix}/data/table/${id}`,
+      // [WorkspaceResource.WORKSPACE_APP] =>
+      //   `${appPrefix}/design/${app.screens[0]?._id}`,
+    }
+    if (!link[favourite.resourceType]) return null
+    return link[favourite.resourceType]?.(favourite.resourceId)
+  }
+
+  const ResourceIcons: Partial<Record<WorkspaceResource, string>> = {
+    [WorkspaceResource.AUTOMATION]: "lightning-a",
+    [WorkspaceResource.DATASOURCE]: "globe",
+    [WorkspaceResource.TABLE]: "table",
+    [WorkspaceResource.WORKSPACE_APP]: "globe-four",
+  }
 
   const unPin = () => {
     // We need to ignore pointer events for a while since otherwise we would
@@ -108,6 +142,51 @@
           {collapsed}
           on:click={keepCollapsed}
         />
+        <div class="favourite-wrapper">
+          <div class="favourite-title">
+            <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+              FAVOURITES
+            </Body>
+          </div>
+          {#if !favourites?.length}
+            <div class="favourite-empty-state">
+              <div>
+                <Icon name="star" size="L" color="#6A9BCC" weight="fill" />
+              </div>
+              <Body
+                color="var(--spectrum-global-color-gray-700)"
+                size="XS"
+                textAlign="center"
+              >
+                You have no favorites yet! Favourite an automation, app, table
+                or API for quicker access.
+              </Body>
+              <Link
+                href="https://docs.budibase.com"
+                target="_blank"
+                secondary
+                quiet>Learn how</Link
+              >
+            </div>
+          {:else}
+            {#each favourites as favourite}
+              <div class="link">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <SideNavLink
+                  icon={ResourceIcons[favourite.resourceType] || "grid-four"}
+                  text={favourite.resourceId}
+                  {collapsed}
+                  on:click={e => {
+                    const targetLink = resourceLink(favourite)
+                    console.log({ targetLink })
+                    if (targetLink) $goto(targetLink)
+                    keepCollapsed()
+                  }}
+                />
+              </div>
+            {/each}
+          {/if}
+        </div>
       </div>
       <div class="links">
         {#if updateAvailable && $isOnlyUser && !$admin.isDev}
@@ -179,6 +258,7 @@
     transition: width 130ms ease-out;
     overflow: hidden;
     padding-bottom: var(--nav-padding);
+    container-type: inline-size;
   }
   .nav:not(.pinned).focused {
     width: var(--nav-width);
@@ -188,7 +268,6 @@
     flex: 0 0 var(--nav-width);
     width: var(--nav-width);
   }
-
   /* Header */
   .nav_header {
     display: flex;
@@ -211,7 +290,6 @@
   }
   .nav_header img {
     width: var(--nav-logo-width);
-    filter: grayscale(100%) brightness(1.5);
   }
   .nav_title {
     width: 0;
@@ -225,7 +303,7 @@
     color: var(--spectrum-global-color-gray-800);
   }
   .nav_title h1 {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -243,7 +321,7 @@
     justify-content: space-between;
     flex: 1 1 auto;
     padding: var(--nav-padding) 0;
-    gap: 2px;
+    gap: 3px;
   }
 
   /* Popover container */
@@ -257,6 +335,41 @@
     flex-direction: column;
     align-items: stretch;
     padding: 0 calc(var(--nav-padding) / 2);
-    gap: 2px;
+    gap: 4px;
+  }
+
+  /*  favourite section */
+  .favourite-wrapper {
+    display: flex;
+    flex-direction: column;
+    color: var(--spectrum-global-color-gray-800);
+    margin-top: 20px;
+  }
+  .favourite-title {
+    padding: 0 calc(var(--nav-padding) / 2);
+    margin-bottom: 8px;
+  }
+  .favourite-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px dashed var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
+    padding: 12px;
+    gap: 8px;
+    transition: all 130ms ease-out;
+  }
+
+  @container (max-width: 239px) {
+    .favourite-wrapper {
+      display: none;
+      transition: all 130ms ease-in-out;
+    }
+    .favourite-title {
+      display: all 130ms ease-in-out;
+    }
+    .favourite-empty-state {
+      display: all 130ms ease-in-out;
+    }
   }
 </style>

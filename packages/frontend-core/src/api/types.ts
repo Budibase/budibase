@@ -39,6 +39,7 @@ import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
 import { DeploymentEndpoints } from "./deploy"
+import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -148,5 +149,6 @@ export type APIClient = BaseAPIClient &
     oauth2: OAuth2Endpoints
     navigation: NavigationEndpoints
     workspaceApp: WorkspaceAppEndpoints
+    workspace: WorkspaceFavouriteEndpoints
     deployment: DeploymentEndpoints
   }
