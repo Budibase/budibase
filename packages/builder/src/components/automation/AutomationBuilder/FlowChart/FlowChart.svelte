@@ -16,7 +16,7 @@
     automationHistoryStore,
     selectedAutomation,
   } from "@/stores/builder"
-  import { environment } from "@/stores/portal"
+  import { environment, featureFlags } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
   import {
@@ -121,16 +121,22 @@
 </script>
 
 <div class="automation-heading">
-  <div class="actions-left">
-    <div class="automation-name">
-      <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)">
-        {automation.name}
-      </Body>
+  {#if !$featureFlags.WORKSPACE_APPS}
+    <div class="actions-left">
+      <div class="automation-name">
+        <Body
+          size="S"
+          weight="500"
+          color="var(--spectrum-global-color-gray-900)"
+        >
+          {automation.name}
+        </Body>
+      </div>
     </div>
-  </div>
+  {/if}
 
-  <div class="actions-right">
-    <div class="view-mode-toggle">
+  <div class="actions-right" class:grow={$featureFlags.WORKSPACE_APPS}>
+    <div class="view-mode-toggle" class:grow={$featureFlags.WORKSPACE_APPS}>
       <div class="group">
         <ActionButton
           icon="Edit"
@@ -186,7 +192,7 @@
     {#if !isRowAction}
       <div class="toggle-active setting-spacing">
         <Toggle
-          text={automation.disabled ? "Paused" : "Activated"}
+          text={automation.disabled ? "Disabled" : "Enabled"}
           on:change={automationStore.actions.toggleDisabled(
             automation._id,
             automation.disabled
@@ -298,7 +304,7 @@
     align-items: center;
     width: 100%;
     background: var(--background);
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-s);
+    padding: var(--spacing-m) var(--spacing-l);
     box-sizing: border-box;
     justify-content: space-between;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
@@ -444,7 +450,13 @@
     gap: var(--spacing-xl);
     align-items: center;
   }
+  .actions-right.grow {
+    flex: 1 1 auto;
+  }
 
+  .view-mode-toggle.grow {
+    flex: 1 1 auto;
+  }
   .view-mode-toggle .group :global(.spectrum-ActionButton) {
     background: transparent !important;
     border: none !important;

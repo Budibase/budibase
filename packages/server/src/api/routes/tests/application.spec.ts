@@ -755,7 +755,8 @@ describe("/applications", () => {
       expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
-    it("should publish app with filtered resources, filtering by automation", async () => {
+    // API to publish filtered resources currently disabled, skip test while not needed
+    it.skip("should publish app with filtered resources, filtering by automation", async () => {
       // create data resources
       const table = await config.createTable(basicTable())
       // all internal resources are published if any used
@@ -814,7 +815,8 @@ describe("/applications", () => {
       })
     })
 
-    it("should publish app with filtered resources, filtering by workspace app", async () => {
+    // API to publish filtered resources currently disabled, skip test while not needed
+    it.skip("should publish app with filtered resources, filtering by workspace app", async () => {
       // create two screens with different workspaceAppIds
       const { workspaceApp: workspaceApp1 } =
         await config.api.workspaceApp.create(

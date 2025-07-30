@@ -1,8 +1,8 @@
 export interface MenuItem {
   icon?: string
   name: string
-  keyBind: string | null
-  visible: boolean
+  keyBind?: string | null
+  visible?: boolean
   disabled?: boolean
   callback: () => void
   isNew?: boolean

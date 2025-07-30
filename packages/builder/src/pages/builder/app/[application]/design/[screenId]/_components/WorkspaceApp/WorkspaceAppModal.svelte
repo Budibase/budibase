@@ -3,6 +3,7 @@
   import {
     Input,
     keepOpen,
+    Body,
     Modal,
     ModalContent,
     notifications,
@@ -10,6 +11,7 @@
   import type { WorkspaceApp } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
+  import { goto } from "@roxi/routify"
 
   export let workspaceApp: WorkspaceApp | null = null
 
@@ -99,9 +101,9 @@
 
     try {
       if (isNew) {
-        await workspaceAppStore.add(workspaceAppData)
-
+        const newScreen = await workspaceAppStore.add(workspaceAppData)
         notifications.success("App created successfully")
+        $goto(`./${newScreen._id}`)
       } else {
         await workspaceAppStore.edit({
           ...workspaceAppData,
@@ -139,7 +141,12 @@
 </script>
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
-  <ModalContent {title} {onConfirm}>
+  <ModalContent {title} {onConfirm} size="M">
+    <Body>
+      Use underscores "_" to seperate words within your app name. Do not use
+      hyphens "-" or spaces.</Body
+    >
+
     <Input
       label="App Name"
       on:enterkey={onEnterKey}
@@ -150,6 +157,7 @@
       bind:value={data.name}
       error={validationState.errors.name}
     />
+
     <Input
       label="Base url"
       on:enterkey={onEnterKey}
@@ -159,6 +167,7 @@
       }}
       bind:value={data.url}
       error={validationState.errors.url}
+      disabled
     />
   </ModalContent>
 </Modal>

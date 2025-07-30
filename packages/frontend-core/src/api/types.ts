@@ -40,6 +40,7 @@ import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
 import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
+import { RecaptchaEndpoints } from "./recaptcha"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -151,4 +152,5 @@ export type APIClient = BaseAPIClient &
     workspaceApp: WorkspaceAppEndpoints
     workspace: WorkspaceFavouriteEndpoints
     deployment: DeploymentEndpoints
+    recaptcha: RecaptchaEndpoints
   }

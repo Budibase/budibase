@@ -2,12 +2,15 @@
   import AppPanel from "./_components/AppPanel.svelte"
   import * as routify from "@roxi/routify"
   import { syncURLToState } from "@/helpers/urlStateSync"
-  import { screenStore, selectedScreen } from "@/stores/builder"
+  import {
+    screenStore,
+    selectedScreen,
+    workspaceAppStore,
+  } from "@/stores/builder"
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
 
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
@@ -15,7 +18,13 @@
     stateKey: "selectedScreenId",
     validate: (id: string) =>
       $screenStore.screens.some(screen => screen._id === id),
-    fallbackUrl: "../../design",
+    fallbackUrl: () => {
+      // Fall back to the first screen if one exists
+      if ($screenStore.screens.length) {
+        return `../${$screenStore.screens[0]._id}`
+      }
+      return "../../design"
+    },
     routify,
     update: screenStore.select,
     store: screenStore,
@@ -28,8 +37,14 @@
 
 {#if $selectedScreen}
   <div class="design">
-    {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
-      <TopBar breadcrumbs={[{ text: "Design" }]} icon="layout"></TopBar>
+    {#if $featureFlags.WORKSPACE_APPS}
+      <TopBar
+        breadcrumbs={[
+          { text: "Design", url: "../" },
+          { text: $workspaceAppStore.selectedWorkspaceApp?.name },
+        ]}
+        icon="layout"
+      ></TopBar>
     {/if}
     <div class="content">
       <LeftPanel />

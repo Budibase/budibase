@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Context, Icon, Link, StatusLight } from "@budibase/bbui"
+  import { Context, Icon, StatusLight, Body, Link } from "@budibase/bbui"
   import { createLocalStorageStore } from "@budibase/frontend-core"
   import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
@@ -112,6 +112,34 @@
 
     <div class="nav_body">
       <div class="links">
+        <SideNavLink
+          icon="path"
+          text="Automations"
+          url={$url("./automation")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="textbox"
+          text="Forms"
+          url={$url("./design")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="browser"
+          text="Apps"
+          url={$url("./design")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="plugs-connected"
+          text="Resources"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
         {#if $featureFlags.AI_AGENTS}
           <SideNavLink
             icon="cpu"
@@ -122,23 +150,9 @@
           />
         {/if}
         <SideNavLink
-          icon="plugs-connected"
-          text="Data"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
-          icon="layout"
-          text="Design"
-          url={$url("./design")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
-          icon="lightning-a"
-          text="Automations"
-          url={$url("./automation")}
+          icon="gear"
+          text="Settings"
+          url={$url("./settings")}
           {collapsed}
           on:click={keepCollapsed}
         />
@@ -200,8 +214,8 @@
           </SideNavLink>
         {/if}
         <SideNavLink
-          icon="users"
-          text="Users"
+          icon="user-plus"
+          text="Invite member"
           on:click={() => {
             builderStore.showBuilderSidePanel()
             keepCollapsed()
@@ -209,16 +223,19 @@
           {collapsed}
         />
         <SideNavLink
-          icon="gear"
-          text="Settings"
-          url={$url("./settings")}
+          icon="book"
+          text="Documentation"
+          url="https://docs.budibase.com"
+          target="_blank"
+          on:click={() => {
+            keepCollapsed()
+          }}
           {collapsed}
-          on:click={keepCollapsed}
         />
         <SideNavUserSettings {collapsed} />
       </div>
+      <div class="popover-container"></div>
     </div>
-    <div class="popover-container"></div>
   </div>
 </div>
 

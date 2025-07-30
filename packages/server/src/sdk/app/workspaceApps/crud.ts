@@ -60,6 +60,7 @@ export async function update(
     name: workspaceApp.name,
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
+    disabled: workspaceApp.disabled,
 
     // Immutable properties
     createdAt: persisted.createdAt,
@@ -67,7 +68,7 @@ export async function update(
     isDefault: persisted.isDefault,
     _deleted: undefined,
   }
-  const response = await db.put(docToUpdate)
+  const response = await db.put(docToUpdate, { returnDoc: true })
   return response.doc
 }
 

@@ -23,6 +23,9 @@ function toWorkspaceAppResponse(
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
     isDefault: workspaceApp.isDefault,
+    createdAt: workspaceApp.createdAt as string,
+    updatedAt: workspaceApp.updatedAt!,
+    disabled: workspaceApp.disabled,
   }
 }
 
@@ -52,6 +55,7 @@ export async function create(
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
+    disabled: body.disabled,
     navigation: defaultAppNavigator(body.name),
     isDefault: false,
   }
@@ -78,6 +82,7 @@ export async function edit(
     name: body.name,
     url: body.url,
     navigation: body.navigation,
+    disabled: body.disabled,
   }
 
   const workspaceApp = await sdk.workspaceApps.update(toUpdate)

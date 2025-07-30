@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   interface Breadcrumb {
-    text: string
+    text?: string
     url?: string
   }
 </script>
@@ -9,79 +9,56 @@
   import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
   import {
     deploymentStore,
-    workspaceAppStore,
     automationStore,
+    workspaceAppStore,
   } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
   import { featureFlags } from "@/stores/portal"
-  import PublishModal from "@/components/deploy/PublishModal.svelte"
-  import { page } from "@roxi/routify"
+  import { url } from "@roxi/routify"
 
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
-
-  type ShowUI = { show: () => void }
+  export let showPublish = true
 
   let publishButton: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
-  let publishModal: ShowUI
-  let publishedAutomations: string[] = []
-  let publishedApps: string[] = []
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
-  $: inAutomations = $page.path.includes("/automation/")
-  $: inDesign = $page.path.includes("/design/")
-  $: selectedWorkspaceAppId =
-    $workspaceAppStore.selectedWorkspaceApp?._id || undefined
-  $: selectedAutomationId = $automationStore.selectedAutomationId || undefined
 
   const publish = async () => {
-    if (workspaceAppsEnabled) {
-      publishModal.show()
-    } else {
-      await deploymentStore.publishApp()
-      publishSuccessPopover?.show()
-    }
+    await deploymentStore.publishApp()
+    publishSuccessPopover?.show()
   }
 </script>
 
 <div class="top-bar">
   {#if icon}
-    <Icon name={icon} size="L" weight="fill" />
+    <div class="icon-container">
+      <Icon name={icon} size="L" weight="fill" />
+    </div>
   {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
-      <h1>{breadcrumb.text}</h1>
-      {#if idx < breadcrumbs.length - 1}
-        <h1 class="divider">/</h1>
+      {#if breadcrumb.text}
+        <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+        {#if idx < breadcrumbs.length - 1}
+          <div class="divider">/</div>
+        {/if}
       {/if}
     {/each}
   </div>
-  <Button
-    cta
-    on:click={publish}
-    disabled={$deploymentStore.isPublishing}
-    bind:ref={publishButton}
-  >
-    Publish
-  </Button>
+  <slot></slot>
+  {#if showPublish}
+    <Button
+      cta
+      on:click={publish}
+      disabled={$deploymentStore.isPublishing}
+      bind:ref={publishButton}
+    >
+      Publish
+    </Button>
+  {/if}
 </div>
-
-{#if workspaceAppsEnabled}
-  <PublishModal
-    targetId={inDesign
-      ? selectedWorkspaceAppId
-      : inAutomations
-        ? selectedAutomationId
-        : undefined}
-    bind:this={publishModal}
-    on:success={evt => {
-      publishedAutomations = evt.detail.publishedAutomations
-      publishedApps = evt.detail.publishedApps
-      publishSuccessPopover?.show()
-    }}
-  />
-{/if}
 
 <Popover
   anchor={publishButton}
@@ -105,12 +82,12 @@
           View app
         </div>
       {:else}
-        {#if publishedAutomations.length}
-          Automations published: {publishedAutomations.length}
+        {#if $automationStore.automations.length}
+          Automations published: {$automationStore.automations.length}
           <br />
         {/if}
-        {#if publishedApps.length}
-          Apps published: {publishedApps.length}
+        {#if $workspaceAppStore.workspaceApps.length}
+          Apps published: {$workspaceAppStore.workspaceApps.length}
         {/if}
       {/if}
     </Body>
@@ -136,16 +113,11 @@
     align-items: center;
     gap: 6px;
   }
-  .breadcrumbs h1 {
+  .breadcrumbs a,
+  .breadcrumbs .divider {
     font-size: 18px;
     font-weight: 500;
-    color: var(--spectrum-global-color-gray-700);
-  }
-  .breadcrumbs h1:last-child {
     color: var(--spectrum-global-color-gray-900);
-  }
-  .breadcrumbs h1.divider {
-    color: var(--spectrum-global-color-gray-400);
   }
   .popover-content {
     display: flex;
@@ -159,5 +131,11 @@
   .link:hover {
     cursor: pointer;
     filter: brightness(110%);
+  }
+  .icon-container {
+    padding: 3px;
+    border-radius: 6px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-200);
   }
 </style>

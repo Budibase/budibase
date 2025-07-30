@@ -6,17 +6,31 @@
   export let icon: string | undefined = undefined
   export let url: string | undefined = undefined
   export let collapsed = false
+  export let target: string | undefined = undefined
   export let forceActive: boolean | undefined = undefined
 
   $: active = forceActive ?? (url ? $isActive(url) : false)
 </script>
 
-<a class="link" class:active href={url} on:click class:collapsed tabindex="0">
+<a
+  class="link"
+  class:active
+  href={url}
+  {target}
+  on:click
+  class:collapsed
+  tabindex="0"
+>
   <div class="link_icon">
     {#if $$slots.icon}
       <slot name="icon" />
     {:else}
-      <Icon name={icon} size="M" weight="fill" />
+      <Icon
+        name={icon}
+        size="M"
+        weight="regular"
+        color="var(--spectrum-global-color-gray-800)"
+      />
     {/if}
   </div>
   <div class="link_text">{text}</div>
@@ -38,11 +52,11 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 30px;
-    gap: 7px;
+    height: 28px;
+    gap: 5px;
     padding: 0 calc(var(--nav-padding) / 2);
-    color: var(--spectrum-global-color-gray-800);
-    border-radius: 8px;
+    color: white;
+    border-radius: 9px;
     border: 1px solid transparent;
     transition:
       background 130ms ease-out,
@@ -51,13 +65,13 @@
   }
   .link.active,
   .link:hover {
-    color: var(--spectrum-global-color-gray-900);
+    color: white;
     background: var(--spectrum-global-color-gray-200);
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
   }
   .link:active {
-    background: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-200);
   }
 
   .link_icon {
@@ -66,8 +80,11 @@
     place-items: center;
   }
   .link_text {
+    font-family: Inter;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+    line-height: 20px;
     font-size: 14px;
-    font-weight: 475;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

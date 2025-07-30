@@ -40,6 +40,7 @@ import "./workspaceApp"
 import "./workspaceFavourites"
 import "./navigation"
 import "./resource"
+import "./recaptcha"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
