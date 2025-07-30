@@ -8,7 +8,14 @@
     type PublishStatusResource,
     type WorkspaceApp,
   } from "@budibase/types"
-  import { ActionButton, Button, Icon, notifications } from "@budibase/bbui"
+  import {
+    AbsTooltip,
+    ActionButton,
+    Button,
+    Helpers,
+    Icon,
+    notifications,
+  } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
@@ -162,9 +169,11 @@
             .state}
         />
       </div>
-      <span>
-        {capitalise(durationFromNow(app.updatedAt || ""))}
-      </span>
+      <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
+        <span>
+          {capitalise(durationFromNow(app.updatedAt || ""))}
+        </span>
+      </AbsTooltip>
       <div class="actions">
         <Icon
           name="More"
