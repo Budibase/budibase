@@ -153,6 +153,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       ...workspaceApp,
       disabled: state,
     })
+
+    await workspaceDeploymentStore.fetch()
   }
 }
 
