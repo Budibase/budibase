@@ -32,7 +32,7 @@
     class:spectrum-Button--cta={cta}
     class:spectrum-Button--primary={primary}
     class:spectrum-Button--secondary={secondary}
-    class:spectrum-Button--warning={warning && !disabled}
+    class:spectrum-Button--warning={warning}
     class:spectrum-Button--overBackground={overBackground}
     class:spectrum-Button--quiet={quiet}
     class:new-styles={newStyles}
@@ -110,7 +110,15 @@
     border-color: transparent;
     color: var(--spectrum-global-color-gray-900);
   }
-  .spectrum-Button--warning.new-styles:hover {
+  .spectrum-Button--warning.new-styles:not(.is-disabled):hover {
     background: var(--spectrum-global-color-red-500);
+  }
+  .spectrum-Button--primary.new-styles.is-disabled {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-500);
+  }
+  .spectrum-Button--warning.new-styles.is-disabled {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-500);
   }
 </style>
