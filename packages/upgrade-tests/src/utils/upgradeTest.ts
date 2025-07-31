@@ -291,8 +291,5 @@ export function upgradeSpansCommit(sha: string): boolean {
     to = commitForTag(getToVersion())
   }
 
-  return (
-    commandSucceeds(`git merge-base --is-ancestor ${from} ${sha}`) &&
-    commandSucceeds(`git merge-base --is-ancestor ${sha} ${to}`)
-  )
+  return commandSucceeds(`git rev-list ${from}..${to} | grep -q ${sha}`)
 }

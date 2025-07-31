@@ -5,9 +5,13 @@ import {
   updateToolSourceValidator,
 } from "./utils/validators/agent"
 import { middleware } from "@budibase/pro"
+import recaptcha from "../../middleware/recaptcha"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
-export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
+export const licensedRoutes = endpointGroupList.group(
+  middleware.licenseAuth,
+  recaptcha
+)
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
@@ -33,7 +37,6 @@ builderAdminRoutes
     ai.deleteToolSource
   )
   .get("/api/agent/toolsource", ai.fetchToolSources)
-
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 
