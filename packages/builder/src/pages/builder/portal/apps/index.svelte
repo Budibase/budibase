@@ -155,18 +155,29 @@
         return
       }
 
+      const toTitleCase = str => {
+        return str.replace(
+          /\w\S*/g,
+          txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        )
+      }
+
       // Auto name app if has same name
       const templateKey = template.key.split("/")[1]
 
       let appName = templateKey.replace(/-/g, " ")
+      appName = toTitleCase(appName)
       const appsWithSameName = $appsStore.apps.filter(app =>
         app.name?.startsWith(appName)
       )
       appName = `${appName} ${appsWithSameName.length + 1}`
 
+      const appUrl = appName.toLowerCase().replace(/\s+/g, "-")
+
       // Create form data to create app
       let data = new FormData()
       data.append("name", appName)
+      data.append("url", appUrl)
       data.append("useTemplate", "true")
       data.append("templateKey", template.key)
       data.append("isOnboarding", "false")
