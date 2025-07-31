@@ -293,26 +293,28 @@
       <Button secondary on:click={refresh}>Refresh</Button>
     </div>
 
-    <Divider />
-    <Layout gap="XS" noPadding>
-      <Heading size="XS">
-        <div class="split-heading">
-          <span> Installation </span>
-          <span>{installInfo?.version ? `v${installInfo.version}` : ""}</span>
-        </div>
-      </Heading>
-    </Layout>
-    <Layout noPadding gap="S">
-      <Body size="S">Useful information to share with the support team.</Body>
-      <Layout paddingX="none">
-        <div class="fields">
-          <div class="field">
-            <Label size="L">Install ID</Label>
-            <CopyInput value={installInfo?.installId} />
+    {#if !$admin.offlineMode}
+      <Divider />
+      <Layout gap="XS" noPadding>
+        <Heading size="XS">
+          <div class="split-heading">
+            <span> Installation </span>
+            <span>{installInfo?.version ? `v${installInfo.version}` : ""}</span>
           </div>
-        </div>
+        </Heading>
       </Layout>
-    </Layout>
+      <Layout noPadding gap="S">
+        <Body size="S">Useful information to share with the support team.</Body>
+        <Layout paddingX="none">
+          <div class="fields">
+            <div class="field">
+              <Label size="L">Install ID</Label>
+              <CopyInput value={installInfo?.installId} />
+            </div>
+          </div>
+        </Layout>
+      </Layout>
+    {/if}
   </Layout>
 {/if}
 
