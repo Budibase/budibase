@@ -894,6 +894,49 @@ class InternalBuilder {
         }
       )
     }
+
+    if (filters.notIn) {
+      iterate(
+        filters.notIn,
+        ArrayOperator.NOT_IN,
+        (q, key: string, array) => {
+          const schema = this.getFieldSchema(key)
+          const values = Array.isArray(array) ? array : [array]
+          if (shouldOr) {
+            q = q.or
+          }
+          if (this.client === SqlClient.ORACLE) {
+            // @ts-ignore
+            key = this.convertClobs(key)
+          } else if (
+            this.client === SqlClient.SQL_LITE &&
+            schema?.type === FieldType.DATETIME &&
+            schema.dateOnly
+          ) {
+            for (const value of values) {
+              if (value != null) {
+                q = q.and.not.whereLike(key, `${value.toISOString().slice(0, 10)}%`)
+              } else {
+                q = q.and.whereNotNull(key)
+              }
+            }
+            return q
+          }
+          return q.whereNotIn(key, values)
+        },
+        (q, key: string[], array) => {
+          if (shouldOr) {
+            q = q.or
+          }
+          if (this.client === SqlClient.ORACLE) {
+            // @ts-ignore
+            key = key.map(k => this.convertClobs(k))
+          }
+          return q.whereNotIn(key, Array.isArray(array) ? array : [array])
+        }
+      )
+    }
+
     if (filters.string) {
       iterate(filters.string, BasicOperator.STRING, (q, key, value) => {
         if (shouldOr) {

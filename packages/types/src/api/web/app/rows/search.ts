@@ -50,6 +50,7 @@ const queryFilterValidation: Record<SearchFilterKey, z.ZodTypeAny> = {
   [BasicOperator.EMPTY]: basicFilter.optional(),
   [BasicOperator.NOT_EMPTY]: basicFilter.optional(),
   [ArrayOperator.ONE_OF]: arrayFilter.optional(),
+  [ArrayOperator.NOT_IN]: arrayFilter.optional(),
   [ArrayOperator.CONTAINS]: arrayFilter.optional(),
   [ArrayOperator.NOT_CONTAINS]: arrayFilter.optional(),
   [ArrayOperator.CONTAINS_ANY]: arrayFilter.optional(),
