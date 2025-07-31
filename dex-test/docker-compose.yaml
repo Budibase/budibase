@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  dex:
+    image: ghcr.io/dexidp/dex:v2.37.0
+    container_name: dex
+    ports:
+      - "5556:5556"
+    volumes:
+      - ./dex-config.yaml:/etc/dex/config.yaml
+    command: ["dex", "serve", "/etc/dex/config.yaml"]

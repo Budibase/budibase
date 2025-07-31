@@ -1,0 +1,22 @@
+issuer: http://localhost:5556
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+staticClients:
+  - id: test-app
+    secret: test-secret
+    name: 'Test Application'
+    redirectURIs:
+      - 'http://localhost:3000/callback'
+
+enablePasswordDB: true
+
+staticPasswords:
+  - email: "test@example.com"
+    hash: "$2y$12$6q53Pz1Xey3TZUhupeK1vO2zUk8uQsFnM1nJtrrwAHPIvMNnfwOB6" # "password"
+    username: "test-user"
+    userID: "1234"
