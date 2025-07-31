@@ -2705,7 +2705,7 @@ if (descriptions.length) {
                 it("successfully finds excluded row", async () => {
                   const result = await expectSearch({
                     query: { notIn: { user: [user1._id] } },
-                  }).performSearch()
+                  }).toMatch({})
 
                   // Should find rows that don't have user1._id (empty rows or other users)
                   expect(result.rows.length).toBeGreaterThanOrEqual(1)
@@ -2720,7 +2720,7 @@ if (descriptions.length) {
                 it("excludes multiple values", async () => {
                   const result = await expectSearch({
                     query: { notIn: { user: [user1._id, "us_none"] } },
-                  }).performSearch()
+                  }).toMatch({})
 
                   // Should find rows that don't have user1._id or us_none (empty rows or other users)
                   expect(result.rows.length).toBeGreaterThanOrEqual(1)
@@ -2736,7 +2736,7 @@ if (descriptions.length) {
                 it("finds all when excluding nonexistent value", async () => {
                   const result = await expectSearch({
                     query: { notIn: { user: ["us_none"] } },
-                  }).performSearch()
+                  }).toMatch({})
 
                   // Should find all rows since we're excluding a non-existent user
                   expect(result.rows.length).toBeGreaterThanOrEqual(1)
