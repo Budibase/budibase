@@ -2,7 +2,6 @@
   import {
     contextMenuStore,
     automationStore,
-    workspaceDeploymentStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { PublishResourceState } from "@budibase/types"
@@ -161,9 +160,6 @@
   $: automations = $automationStore.automations
     .map(a => ({
       ...a,
-      status:
-        $workspaceDeploymentStore.automations[a._id!]?.state ||
-        PublishResourceState.UNPUBLISHED,
       favourite: $favourites?.[a._id!] ?? {
         resourceType: WorkspaceResource.AUTOMATION,
         resourceId: a._id!,
@@ -174,7 +170,7 @@
         return true
       }
 
-      return a.status === filter
+      return a.publishStatus.state === filter
     })
 
   function getTriggerFriendlyName(automation: Automation) {
@@ -239,7 +235,7 @@
       <div>{automation.name}</div>
       <div>{getTriggerFriendlyName(automation)}</div>
       <div>
-        <PublishStatusBadge status={automation.status} />
+        <PublishStatusBadge status={automation.publishStatus.state} />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
         <span>
