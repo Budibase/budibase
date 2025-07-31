@@ -7,6 +7,7 @@ import zlib from "zlib"
 import { pipeline } from "stream/promises"
 
 import { v4 as uuid } from "uuid"
+import { Readable } from "stream"
 
 export const TOP_LEVEL_PATH = env.TOP_LEVEL_PATH
 export const DEV_ASSET_PATH = join(TOP_LEVEL_PATH, "packages", "server")
@@ -87,6 +88,13 @@ export const storeTempFile = (
 ) => {
   const path = join(budibaseTempDir(), uuid())
   fs.writeFileSync(path, fileContents)
+  return path
+}
+
+export const storeTempFileStream = async (stream: Readable) => {
+  const path = join(budibaseTempDir(), uuid())
+  const writeStream = fs.createWriteStream(path)
+  await pipeline(stream, writeStream)
   return path
 }
 

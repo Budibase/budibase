@@ -10,6 +10,7 @@ import {
   deleteAppFiles,
   revertClientLibrary,
   updateClientLibrary,
+  storeTempFileStream,
 } from "../../utilities/fileSystem"
 import {
   AppStatus,
@@ -901,10 +902,8 @@ export async function duplicateApp(
   const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
   checkAppUrl(ctx, apps, url)
 
-  const tmpPath = await sdk.backups.exportApp(sourceAppId, {
-    excludeRows: false,
-    tar: false,
-  })
+  const stream = await sdk.backups.exportApp(sourceAppId)
+  const tmpPath = await storeTempFileStream(stream)
 
   const createRequestBody: CreateAppRequest = {
     name: appName,

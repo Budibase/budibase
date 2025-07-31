@@ -19,13 +19,8 @@ import { Readable, PassThrough } from "stream"
 import { tracer } from "dd-trace"
 import { Document } from "@budibase/types"
 
-export interface DBDumpOpts {
-  filter?: any
-  exportPath?: string
-}
-
-export interface ExportOpts extends DBDumpOpts {
-  tar?: boolean
+export interface ExportOpts {
+  gzip?: boolean
   excludeRows?: boolean
   encryptPassword?: string
 }
@@ -35,10 +30,10 @@ export async function exportApp(
   config?: ExportOpts
 ): Promise<Readable> {
   return await tracer.trace("streamExportApp", async span => {
-    const { excludeRows, encryptPassword, filter } = config || {}
+    const { excludeRows = false, encryptPassword, gzip = true } = config || {}
     const pack = tarStream.pack()
 
-    span.addTags({ excludeRows, encryptPassword, filter })
+    span.addTags({ excludeRows, gzip })
 
     const prodAppId = dbCore.getProdAppID(appId)
     const appPath = `${prodAppId}/`
@@ -46,7 +41,7 @@ export async function exportApp(
 
     const dbStream = await streamDB(appId, doc => {
       const id = doc._id || ""
-      return (
+      return !(
         id.startsWith(USER_METDATA_PREFIX) ||
         id.startsWith(LINK_USER_METADATA_PREFIX) ||
         id.startsWith(AUTOMATION_LOG_PREFIX) ||
@@ -66,7 +61,11 @@ export async function exportApp(
       // In tests, we don't stream static files, just the DB export
       span.addTags({ streamingComplete: true })
       pack.finalize()
-      return pack.pipe(zlib.createGzip())
+      if (gzip) {
+        return pack.pipe(zlib.createGzip())
+      } else {
+        return pack
+      }
     }
 
     if (excludeRows) {
@@ -117,7 +116,11 @@ export async function exportApp(
     }
 
     pack.finalize()
-    return pack.pipe(zlib.createGzip())
+    if (gzip) {
+      return pack.pipe(zlib.createGzip())
+    } else {
+      return pack
+    }
   })
 }
 
