@@ -141,6 +141,7 @@ const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
   [ArrayOperator.ONE_OF]: false,
   [LogicalOperator.AND]: false,
   [LogicalOperator.OR]: false,
+  [ArrayOperator.NOT_IN]: false,
 }
 
 class InternalBuilder {
