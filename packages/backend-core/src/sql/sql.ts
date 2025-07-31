@@ -915,7 +915,10 @@ class InternalBuilder {
           ) {
             for (const value of values) {
               if (value != null) {
-                q = q.and.not.whereLike(key, `${value.toISOString().slice(0, 10)}%`)
+                q = q.and.not.whereLike(
+                  key,
+                  `${value.toISOString().slice(0, 10)}%`
+                )
               } else {
                 q = q.and.whereNotNull(key)
               }
