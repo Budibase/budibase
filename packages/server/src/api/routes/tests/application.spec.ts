@@ -160,12 +160,25 @@ describe("/applications", () => {
       expect(tables.length).toEqual(expectedCount)
     }
 
-    it("creates empty app with sample data", async () => {
+    it("creates empty app without sample data", async () => {
       const app = await config.api.application.create({ name: utils.newid() })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
-      // Ensure we created sample resources
+      // Ensure we created a blank app without sample data
+      await checkScreenCount(0)
+      await checkTableCount(1) // users table
+    })
+
+    it("creates app with sample data when onboarding", async () => {
+      const app = await config.api.application.create({
+        name: utils.newid(),
+        isOnboarding: "true",
+      })
+      expect(app._id).toBeDefined()
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+
+      // Ensure we created sample resources when onboarding
       await checkScreenCount(1)
       await checkTableCount(5)
     })
