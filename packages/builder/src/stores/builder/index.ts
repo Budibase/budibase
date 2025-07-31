@@ -8,6 +8,7 @@ import { screenStore, selectedScreen, sortedScreens } from "./screens"
 import { builderStore } from "./builder"
 import { hoverStore } from "./hover"
 import { previewStore } from "./preview"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
 import {
   automationStore,
   selectedAutomation,
@@ -15,7 +16,6 @@ import {
   evaluationContext,
 } from "./automations"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users"
-import { workspaceDeploymentStore } from "./workspaceDeployment"
 import { deploymentStore } from "./deployment"
 import { contextMenuStore } from "./contextMenu"
 import { snippets } from "./snippets"

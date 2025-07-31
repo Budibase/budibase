@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    contextMenuStore,
-    automationStore,
-    workspaceDeploymentStore,
-  } from "@/stores/builder"
+  import { contextMenuStore, automationStore } from "@/stores/builder"
   import { PublishResourceState } from "@budibase/types"
   import { type Automation } from "@budibase/types"
   import {
@@ -153,20 +149,13 @@
     )
   }
 
-  $: automations = $automationStore.automations
-    .map(a => ({
-      ...a,
-      status:
-        $workspaceDeploymentStore.automations[a._id!]?.state ||
-        PublishResourceState.UNPUBLISHED,
-    }))
-    .filter(a => {
-      if (!filter) {
-        return true
-      }
+  $: automations = $automationStore.automations.filter(a => {
+    if (!filter) {
+      return true
+    }
 
-      return a.status === filter
-    })
+    return a.publishStatus.state === filter
+  })
 
   function getTriggerFriendlyName(automation: Automation) {
     const definition =
@@ -229,7 +218,7 @@
       <div>{automation.name}</div>
       <div>{getTriggerFriendlyName(automation)}</div>
       <div>
-        <PublishStatusBadge status={automation.status} />
+        <PublishStatusBadge status={automation.publishStatus.state} />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
         <span>
