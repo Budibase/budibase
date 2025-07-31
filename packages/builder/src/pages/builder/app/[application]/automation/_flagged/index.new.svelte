@@ -3,9 +3,10 @@
     contextMenuStore,
     automationStore,
     workspaceDeploymentStore,
+    workspaceFavouriteStore,
   } from "@/stores/builder"
   import { PublishResourceState } from "@budibase/types"
-  import { type Automation } from "@budibase/types"
+  import { type Automation, WorkspaceResource } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -15,6 +16,7 @@
     Modal,
     type ModalAPI,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/automation-hero-x1.png"
@@ -28,6 +30,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -58,6 +61,8 @@
       filterValue: PublishResourceState.UNPUBLISHED,
     },
   ]
+
+  $: favourites = workspaceFavouriteStore.lookup
 
   async function deleteAutomation() {
     if (!selectedAutomation) {
@@ -159,6 +164,10 @@
       status:
         $workspaceDeploymentStore.automations[a._id!]?.state ||
         PublishResourceState.UNPUBLISHED,
+      favourite: $favourites?.[a._id!] ?? {
+        resourceType: WorkspaceResource.AUTOMATION,
+        resourceId: a._id!,
+      },
     }))
     .filter(a => {
       if (!filter) {
@@ -222,6 +231,7 @@
   {#each automations as automation}
     <a
       class="app"
+      class:favourite={automation.favourite?._id}
       href={$url(`./${automation._id}`)}
       on:contextmenu={e => openContextMenu(e, automation)}
       class:active={showHighlight && selectedAutomation === automation}
@@ -237,12 +247,22 @@
         </span>
       </AbsTooltip>
       <div class="actions">
-        <Icon
-          name="More"
-          size="M"
-          hoverable
-          on:click={e => openContextMenu(e, automation)}
-        />
+        <div class="ctx-btn">
+          <Icon
+            name="More"
+            size="M"
+            hoverable
+            on:click={e => openContextMenu(e, automation)}
+          />
+        </div>
+
+        <span class="favourite-btn">
+          <FavouriteResourceButton
+            favourite={automation.favourite}
+            position={TooltipPosition.Left}
+            noWrap
+          />
+        </span>
       </div>
     </a>
   {/each}
@@ -320,17 +340,31 @@
     &.active {
       background: var(--spectrum-global-color-gray-200);
 
-      & .actions {
+      & .actions > * {
         opacity: 1;
         pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
       }
     }
   }
   .actions {
     justify-content: flex-end;
     display: flex;
-    opacity: 0;
+    align-items: center;
     pointer-events: none;
+    gap: var(--spacing-xs);
+  }
+
+  .actions > * {
+    opacity: 0;
     transition: opacity 130ms ease-out;
+  }
+
+  .actions .favourite-btn {
+    pointer-events: all;
   }
 </style>
