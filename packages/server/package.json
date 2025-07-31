@@ -155,6 +155,7 @@
     "@types/supertest": "2.0.14",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/tar": "6.1.5",
+    "@types/tar-stream": "3.1.4",
     "@types/tmp": "0.2.6",
     "@types/uuid": "8.3.4",
     "chance": "^1.1.12",

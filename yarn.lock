@@ -6318,6 +6318,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/tar-stream@3.1.4":
+  version "3.1.4"
+  resolved "https://registry.yarnpkg.com/@types/tar-stream/-/tar-stream-3.1.4.tgz#7eca21004291f8d4803437fe20cc01b0744782a8"
+  integrity sha512-921gW0+g29mCJX0fRvqeHzBlE/XclDaAG0Ousy1LCghsOhvaKacDeRGEVzQP9IPfKn8Vysy7FEXAIxycpc/CMg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/tar@6.1.5":
   version "6.1.5"
   resolved "https://registry.yarnpkg.com/@types/tar/-/tar-6.1.5.tgz#90ccb3b6a35430e7427410d50eed564e85feaaff"

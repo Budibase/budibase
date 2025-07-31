@@ -27,6 +27,7 @@ import {
   env as envCore,
   events,
   features,
+  HTTPError,
   objectStore,
   roles,
   tenancy,
@@ -161,7 +162,11 @@ async function createInstance(appId: string, template: AppTemplate) {
       importObjStoreContents: true,
       updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
     }
-    await sdk.backups.importApp(appId, db, template, opts)
+    const path = template.file?.path
+    if (!path) {
+      throw new HTTPError("App export must have path", 400)
+    }
+    await sdk.backups.importApp(appId, db, path, opts)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -847,23 +852,25 @@ export async function importToApp(
   ctx: UserCtx<ImportToUpdateAppRequest, ImportToUpdateAppResponse>
 ) {
   const { appId } = ctx.params
+
   const appExport = ctx.request.files?.appExport
-  const password = ctx.request.body.encryptionPassword
   if (!appExport) {
     ctx.throw(400, "Must supply app export to import")
   }
   if (Array.isArray(appExport)) {
     ctx.throw(400, "Must only supply one app export")
   }
-  const fileAttributes = { type: appExport.type!, path: appExport.path! }
-  try {
-    await sdk.applications.updateWithExport(appId, fileAttributes, password)
-  } catch (err: any) {
-    ctx.throw(
-      500,
-      `Unable to perform update, please retry - ${err?.message || err}`
-    )
+
+  if (!appExport.path) {
+    ctx.throw(400, "App export must have path")
   }
+
+  await sdk.applications.updateWithExport(
+    appId,
+    appExport.path,
+    ctx.request.body.encryptionPassword
+  )
+
   ctx.body = { message: "app updated" }
 }
 

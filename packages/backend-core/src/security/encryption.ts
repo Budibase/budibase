@@ -3,6 +3,7 @@ import fs from "fs"
 import zlib from "zlib"
 import env from "../environment"
 import { join } from "path"
+import { PassThrough, Readable } from "stream"
 
 const ALGO = "aes-256-ctr"
 const SEPARATOR = "-"
@@ -79,24 +80,51 @@ export async function encryptFile(
   const inputFile = fs.createReadStream(filePath)
   const outputFile = fs.createWriteStream(join(dir, outputFileName))
 
+  encryptStream(inputFile, secret).pipe(outputFile)
+
+  return new Promise<{ filename: string; dir: string }>((resolve, reject) => {
+    outputFile.on("finish", () => {
+      resolve({
+        filename: outputFileName,
+        dir,
+      })
+    })
+    const cleanupReject = (error: Error) => {
+      inputFile.close()
+      outputFile.close()
+      reject(error)
+    }
+    outputFile.on("error", cleanupReject)
+    inputFile.on("error", cleanupReject)
+  })
+}
+
+export function encryptStream(inputStream: Readable, secret: string): Readable {
   const salt = crypto.randomBytes(SALT_LENGTH)
   const iv = crypto.randomBytes(IV_LENGTH)
   const stretched = stretchString(secret, salt)
   const cipher = crypto.createCipheriv(ALGO, stretched, iv)
 
-  outputFile.write(salt)
-  outputFile.write(iv)
+  const outputStream = new PassThrough()
+  outputStream.write(salt)
+  outputStream.write(iv)
 
-  inputFile.pipe(zlib.createGzip()).pipe(cipher).pipe(outputFile)
+  inputStream.pipe(zlib.createGzip()).pipe(cipher).pipe(outputStream)
 
-  return new Promise<{ filename: string; dir: string }>(r => {
-    outputFile.on("finish", () => {
-      r({
-        filename: outputFileName,
-        dir,
-      })
-    })
-  })
+  return outputStream
+}
+
+export function decryptStream(inputStream: Readable, secret: string): Readable {
+  const outputStream = new PassThrough()
+
+  const salt = inputStream.read(SALT_LENGTH) as Buffer
+  const iv = inputStream.read(IV_LENGTH) as Buffer
+
+  const stretched = stretchString(secret, salt)
+  const decipher = crypto.createDecipheriv(ALGO, stretched, iv)
+  inputStream.pipe(decipher).pipe(zlib.createGunzip()).pipe(outputStream)
+
+  return outputStream
 }
 
 async function getSaltAndIV(path: string) {
