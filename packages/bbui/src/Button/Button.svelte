@@ -32,7 +32,7 @@
     class:spectrum-Button--cta={cta}
     class:spectrum-Button--primary={primary}
     class:spectrum-Button--secondary={secondary}
-    class:spectrum-Button--warning={warning}
+    class:spectrum-Button--warning={warning && !disabled}
     class:spectrum-Button--overBackground={overBackground}
     class:spectrum-Button--quiet={quiet}
     class:new-styles={newStyles}
