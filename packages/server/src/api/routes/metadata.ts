@@ -1,38 +1,19 @@
-import Router from "@koa/router"
 import * as controller from "../controllers/metadata"
 import {
   middleware as appInfoMiddleware,
   AppType,
 } from "../../middleware/appInfo"
-import authorized from "../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
+import { endpointGroupList } from "./endpointGroups"
 
-const router: Router = new Router()
+const routes = endpointGroupList.group(
+  authorized(permissions.BUILDER),
+  appInfoMiddleware({ appType: AppType.DEV })
+)
 
-router
-  .post(
-    "/api/metadata/:type/:entityId",
-    authorized(permissions.BUILDER),
-    appInfoMiddleware({ appType: AppType.DEV }),
-    controller.saveMetadata
-  )
-  .delete(
-    "/api/metadata/:type/:entityId",
-    authorized(permissions.BUILDER),
-    appInfoMiddleware({ appType: AppType.DEV }),
-    controller.deleteMetadata
-  )
-  .get(
-    "/api/metadata/type",
-    authorized(permissions.BUILDER),
-    appInfoMiddleware({ appType: AppType.DEV }),
-    controller.getTypes
-  )
-  .get(
-    "/api/metadata/:type/:entityId",
-    authorized(permissions.BUILDER),
-    appInfoMiddleware({ appType: AppType.DEV }),
-    controller.getMetadata
-  )
-
-export default router
+routes
+  .post("/api/metadata/:type/:entityId", controller.saveMetadata)
+  .delete("/api/metadata/:type/:entityId", controller.deleteMetadata)
+  .get("/api/metadata/type", controller.getTypes)
+  .get("/api/metadata/:type/:entityId", controller.getMetadata)

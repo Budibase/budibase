@@ -1,11 +1,9 @@
-import Router from "@koa/router"
 import Joi from "joi"
-import { middleware, permissions } from "@budibase/backend-core"
+import { middleware } from "@budibase/backend-core"
 import * as rowActionController from "../controllers/rowAction"
-import authorized from "../../middleware/authorized"
 import { triggerRowActionAuthorised } from "../../middleware/triggerRowActionAuthorised"
-
-const { BUILDER } = permissions
+import recaptcha from "../../middleware/recaptcha"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
 function rowActionValidator() {
   return middleware.joiValidator.body(
@@ -25,53 +23,38 @@ function rowTriggerValidator() {
   )
 }
 
-const router: Router = new Router()
+const routes = endpointGroupList.group(recaptcha)
 
 // CRUD endpoints
-router
-  .get(
-    "/api/tables/:tableId/actions",
-    authorized(BUILDER),
-    rowActionController.find
-  )
+builderRoutes
+  .get("/api/tables/:tableId/actions", rowActionController.find)
   .post(
     "/api/tables/:tableId/actions",
-    authorized(BUILDER),
     rowActionValidator(),
     rowActionController.create
   )
-  .delete(
-    "/api/tables/:tableId/actions/:actionId",
-    authorized(BUILDER),
-    rowActionController.remove
-  )
+  .delete("/api/tables/:tableId/actions/:actionId", rowActionController.remove)
   .post(
     "/api/tables/:tableId/actions/:actionId/permissions",
-    authorized(BUILDER),
     rowActionController.setTablePermission
   )
   .delete(
     "/api/tables/:tableId/actions/:actionId/permissions",
-    authorized(BUILDER),
     rowActionController.unsetTablePermission
   )
   .post(
     "/api/tables/:tableId/actions/:actionId/permissions/:viewId",
-    authorized(BUILDER),
     rowActionController.setViewPermission
   )
   .delete(
     "/api/tables/:tableId/actions/:actionId/permissions/:viewId",
-    authorized(BUILDER),
     rowActionController.unsetViewPermission
   )
 
-  // Other endpoints
-  .post(
-    "/api/tables/:sourceId/actions/:actionId/trigger",
-    rowTriggerValidator(),
-    triggerRowActionAuthorised("sourceId", "actionId"),
-    rowActionController.run
-  )
-
-export default router
+// Other endpoints
+routes.post(
+  "/api/tables/:sourceId/actions/:actionId/trigger",
+  rowTriggerValidator(),
+  triggerRowActionAuthorised("sourceId", "actionId"),
+  rowActionController.run
+)

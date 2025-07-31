@@ -1,7 +1,5 @@
-import Router from "@koa/router"
-import { PermissionType } from "@budibase/types"
 import { middleware } from "@budibase/backend-core"
-import authorized from "../../middleware/authorized"
+import { builderRoutes } from "./endpointGroups"
 
 import * as controller from "../controllers/workspaceApp"
 import Joi from "joi"
@@ -11,8 +9,7 @@ const baseSchema = {
   url: Joi.string()
     .required()
     .regex(/^\/\w*$/),
-  icon: Joi.string().required(),
-  iconColor: Joi.string().optional(),
+  disabled: Joi.boolean().optional(),
 }
 
 const insertSchema = Joi.object({
@@ -32,29 +29,17 @@ function workspaceAppValidator(
   return middleware.joiValidator.body(schema, { allowUnknown: false })
 }
 
-const router: Router = new Router()
-
-router.get(
-  "/api/workspaceApp",
-  authorized(PermissionType.BUILDER),
-  controller.fetch
-)
-router.post(
-  "/api/workspaceApp",
-  authorized(PermissionType.BUILDER),
-  workspaceAppValidator(insertSchema),
-  controller.create
-)
-router.put(
-  "/api/workspaceApp/:id",
-  authorized(PermissionType.BUILDER),
-  workspaceAppValidator(updateSchema),
-  controller.edit
-)
-router.delete(
-  "/api/workspaceApp/:id/:rev",
-  authorized(PermissionType.BUILDER),
-  controller.remove
-)
-
-export default router
+builderRoutes
+  .get("/api/workspaceApp", controller.fetch)
+  .get("/api/workspaceApp/:id", controller.find)
+  .post(
+    "/api/workspaceApp",
+    workspaceAppValidator(insertSchema),
+    controller.create
+  )
+  .put(
+    "/api/workspaceApp/:id",
+    workspaceAppValidator(updateSchema),
+    controller.edit
+  )
+  .delete("/api/workspaceApp/:id/:rev", controller.remove)

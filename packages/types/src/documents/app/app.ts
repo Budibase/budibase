@@ -22,6 +22,7 @@ export interface App extends Document {
   // @deprecated  use workspace app navigation instead
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
+  backupErrors?: AppMetadataErrors
   icon?: AppIcon
   features?: AppFeatures
   automations?: AutomationSettings
@@ -35,6 +36,7 @@ export interface App extends Document {
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
+  recaptchaEnabled?: boolean
 }
 
 export interface AppInstance {
@@ -62,6 +64,7 @@ export interface AppNavigationLink {
   roleId?: string
   type: "link" | "sublinks"
   subLinks?: AppNavigationLink[]
+  icon?: string
 }
 
 export interface AppCustomTheme {

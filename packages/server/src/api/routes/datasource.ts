@@ -1,63 +1,36 @@
-import Router from "@koa/router"
 import * as datasourceController from "../controllers/datasource"
-import authorized from "../../middleware/authorized"
+import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { datasourceValidator } from "./utils/validators"
+import recaptcha from "../../middleware/recaptcha"
+import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
-const router: Router = new Router()
-
-router
-  .get(
-    "/api/datasources",
-    authorized(permissions.BUILDER),
-    datasourceController.fetch
-  )
-  .post(
-    "/api/datasources/verify",
-    authorized(permissions.BUILDER),
-    datasourceController.verify
-  )
-  .post(
-    "/api/datasources/info",
-    authorized(permissions.BUILDER),
-    datasourceController.information
-  )
-  .get(
-    "/api/datasources/:datasourceId",
-    authorized(
+const authorizedRoutes = endpointGroupList.group(
+  {
+    middleware: authorized(
       permissions.PermissionType.TABLE,
       permissions.PermissionLevel.READ
     ),
-    datasourceController.find
-  )
-  .put(
-    "/api/datasources/:datasourceId",
-    authorized(
-      permissions.PermissionType.TABLE,
-      permissions.PermissionLevel.READ
-    ),
-    datasourceController.update
-  )
+    first: false,
+  },
+  recaptcha
+)
+
+builderRoutes
+  .get("/api/datasources", datasourceController.fetch)
+  .post("/api/datasources/verify", datasourceController.verify)
+  .post("/api/datasources/info", datasourceController.information)
   .post(
     "/api/datasources/:datasourceId/schema",
-    authorized(permissions.BUILDER),
     datasourceController.buildSchemaFromSource
   )
-  .post(
-    "/api/datasources",
-    authorized(permissions.BUILDER),
-    datasourceValidator(),
-    datasourceController.save
-  )
-  .delete(
-    "/api/datasources/:datasourceId/:revId",
-    authorized(permissions.BUILDER),
-    datasourceController.destroy
-  )
+  .post("/api/datasources", datasourceValidator(), datasourceController.save)
+  .delete("/api/datasources/:datasourceId/:revId", datasourceController.destroy)
   .get(
     "/api/datasources/:datasourceId/schema/external",
-    authorized(permissions.BUILDER),
     datasourceController.getExternalSchema
   )
 
-export default router
+authorizedRoutes
+  .get("/api/datasources/:datasourceId", datasourceController.find)
+  .put("/api/datasources/:datasourceId", datasourceController.update)

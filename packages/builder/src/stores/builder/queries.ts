@@ -71,7 +71,7 @@ export class QueryStore extends DerivedBudiStore<
     // Check if readable attribute is found
     if (dataSource.length !== 0) {
       const integration = _integrations[dataSource[0].source]
-      const readable = integration.query[query.queryVerb].readable
+      const readable = integration?.query[query.queryVerb].readable
       if (readable) {
         query.readable = readable
       }
