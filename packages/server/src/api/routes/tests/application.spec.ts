@@ -188,16 +188,16 @@ describe("/applications", () => {
 
     it("creates app from template", async () => {
       nock("https://prod-budi-templates.s3-eu-west-1.amazonaws.com")
-        .get(`/templates/app/agency-client-portal.tar.gz`)
+        .get(`/templates/app/expense-approval.tar.gz`)
         .replyWithFile(
           200,
-          path.resolve(__dirname, "data", "agency-client-portal.tar.gz")
+          path.resolve(__dirname, "data", "expense-approval.tar.gz")
         )
 
       const newApp = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateKey: "app/agency-client-portal",
+        templateKey: "app/expense-approval",
       })
       expect(newApp._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
@@ -209,7 +209,7 @@ describe("/applications", () => {
         expect(res.screens.length).toEqual(6)
 
         const tables = await config.api.table.fetch()
-        expect(tables.length).toEqual(2)
+        expect(tables.length).toEqual(4)
       })
     })
 
