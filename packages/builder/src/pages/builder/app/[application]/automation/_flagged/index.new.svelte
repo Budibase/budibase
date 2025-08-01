@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { contextMenuStore, automationStore } from "@/stores/builder"
+  import {
+    contextMenuStore,
+    automationStore,
+    deploymentStore,
+  } from "@/stores/builder"
+  import type { UIAutomation } from "@budibase/types"
   import { PublishResourceState } from "@budibase/types"
   import { type Automation } from "@budibase/types"
   import {
@@ -24,7 +29,7 @@
   import { sdk } from "@budibase/shared-core"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
-  import { capitalise, durationFromNow } from "@/helpers"
+  import { capitalise, confirm, durationFromNow } from "@/helpers"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -81,7 +86,7 @@
     }
   }
 
-  const getContextMenuItems = (automation: Automation) => {
+  const getContextMenuItems = (automation: UIAutomation) => {
     const edit = {
       icon: "pencil",
       name: "Edit",
@@ -94,11 +99,21 @@
       name: automation.disabled ? "Activate" : "Pause",
       keyBind: null,
       visible: true,
-      disabled: !automation.definition.trigger,
+      disabled:
+        !automation.definition.trigger ||
+        automation.publishStatus.state === PublishResourceState.UNPUBLISHED,
       callback: () => {
-        if (automation._id) {
-          automationStore.actions.toggleDisabled(automation._id)
-        }
+        confirm({
+          title: "Publish workspace",
+          body: `To ${
+            automation.disabled ? "activate" : "pause"
+          } this automation you need to publish all the workspace. Do you want to continue?`,
+          okText: "Publish workspace",
+          onConfirm: async () => {
+            await automationStore.actions.toggleDisabled(automation._id!)
+            await deploymentStore.publishApp()
+          },
+        })
       },
     }
     const del = {
