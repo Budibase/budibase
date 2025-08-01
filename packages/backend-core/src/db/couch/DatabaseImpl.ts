@@ -20,12 +20,13 @@ import {
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
-import { ReadStream, WriteStream } from "fs"
+import { WriteStream } from "fs"
 import { newid } from "../../docIds/newid"
 import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
 import { sqlLog } from "../../sql/utils"
+import { Readable } from "stream"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -507,7 +508,7 @@ export class DatabaseImpl implements Database {
     return pouch.dump(stream, opts)
   }
 
-  async load(stream: ReadStream) {
+  async load(stream: Readable) {
     const pouch = getPouchDB(this.name)
     // @ts-ignore
     return pouch.load(stream)

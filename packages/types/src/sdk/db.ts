@@ -7,8 +7,7 @@ import {
   SqlQueryBinding,
   ViewTemplateOpts,
 } from "../"
-import { Writable } from "stream"
-import { ReadStream } from "fs"
+import { Readable, Writable } from "stream"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -166,7 +165,7 @@ export interface Database {
   // these are all PouchDB related functions that are rarely used - in future
   // should be replaced by better typed/non-pouch implemented methods
   dump(stream: Writable, opts?: DatabaseDumpOpts): Promise<any>
-  load(stream: ReadStream): Promise<any>
+  load(stream: Readable): Promise<any>
   createIndex(opts: DatabaseCreateIndexOpts): Promise<any>
   deleteIndex(opts: DatabaseDeleteIndexOpts): Promise<any>
   getIndexes(): Promise<any>
