@@ -1,7 +1,9 @@
 import {
   GetAutomationActionDefinitionsResponse,
   GetAutomationTriggerDefinitionsResponse,
+  PublishStatusResource,
 } from "../../api"
+import { Automation } from "../../documents"
 
 export interface BlockPath {
   stepIdx: number
@@ -27,4 +29,8 @@ export interface BlockDefinitions {
   [BlockDefinitionTypes.TRIGGER]: Partial<GetAutomationTriggerDefinitionsResponse>
   [BlockDefinitionTypes.CREATABLE_TRIGGER]: Partial<GetAutomationTriggerDefinitionsResponse>
   [BlockDefinitionTypes.ACTION]: Partial<GetAutomationActionDefinitionsResponse>
+}
+
+export interface UIAutomation extends Automation {
+  publishStatus: PublishStatusResource
 }

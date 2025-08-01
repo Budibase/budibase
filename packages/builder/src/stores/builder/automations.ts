@@ -4,7 +4,12 @@ import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { licensing, organisation, environment } from "@/stores/portal"
-import { tables, appStore, permissions } from "@/stores/builder"
+import {
+  tables,
+  appStore,
+  permissions,
+  workspaceDeploymentStore,
+} from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 import {
   getEnvironmentBindings,
@@ -40,24 +45,22 @@ import {
   AppSelfResponse,
   TestAutomationResponse,
   isAutomationResults,
-  RowActionTriggerOutputs,
-  WebhookTriggerOutputs,
   AutomationCustomIOType,
   AutomationStepInputs,
   AutomationIOProps,
   AutomationTriggerInputs,
-  AppActionTrigger,
   RowActionTriggerInputs,
   RowActionTrigger,
   EnrichedBinding,
   BlockDefinitionTypes,
   AutomationTriggerResultOutputs,
-  AutomationTriggerResult,
   AutomationStepType,
   PermissionLevel,
   isDidNotTriggerResponse,
   AutomationResults,
   isActionStep,
+  PublishResourceState,
+  UIAutomation,
 } from "@budibase/types"
 import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
 import { FIELDS as COLUMNS } from "@/constants/backend"
@@ -65,19 +68,21 @@ import { sdk } from "@budibase/shared-core"
 import { rowActions } from "./rowActions"
 import { getNewStepName } from "@/helpers/automations/nameHelpers"
 import { QueryUtils, Utils } from "@budibase/frontend-core"
-import { BudiStore, DerivedBudiStore } from "@/stores/BudiStore"
+import { DerivedBudiStore } from "@/stores/BudiStore"
 import {
+  AutomationStoreState,
   DataMode,
+  DerivedAutomationStoreState,
   FilterableRowTriggers,
   RowTriggers,
-  type AutomationState,
-  type DerivedAutomationState,
+  SelectedAutomationState,
   type FormUpdate,
   type StepInputs,
 } from "@/types/automations"
 import { TableNames } from "@/constants"
+import { getSequentialName } from "@/helpers/duplicate"
 
-const initialAutomationState: AutomationState = {
+const initialAutomationState: AutomationStoreState = {
   automations: [],
   showTestModal: false,
   blockDefinitions: {
@@ -127,7 +132,7 @@ const automationActions = (store: AutomationStore) => ({
       .getPathSteps(blockRef.pathTo, auto)
       .at(-1)
 
-    return target as AutomationStep | AutomationTrigger | undefined
+    return target
   },
 
   /**
@@ -209,12 +214,12 @@ const automationActions = (store: AutomationStore) => ({
     >
 
     // Reduce the fields to include the same elements as seen in the bindings
-    const serverUser = keys.reduce((acc, key) => {
+    const serverUser = keys.reduce<Partial<AppSelfResponse>>((acc, key) => {
       if (key in appSelfResponse) {
         acc[key] = appSelfResponse[key]
       }
       return acc
-    }, {} as Partial<AppSelfResponse>)
+    }, {})
 
     store.update(state => ({
       ...state,
@@ -780,7 +785,7 @@ const automationActions = (store: AutomationStore) => ({
 
       if (blockIdx === 0 && isTrigger(pathBlock)) {
         if (isRowUpdateTrigger(pathBlock) || isRowSaveTrigger(pathBlock)) {
-          const rowTrigger = pathBlock as AutomationTrigger
+          const rowTrigger = pathBlock
 
           const inputs = rowTrigger.inputs as Exclude<
             AutomationTriggerInputs<typeof pathBlock.stepId>,
@@ -798,7 +803,7 @@ const automationActions = (store: AutomationStore) => ({
           }
           delete schema.row
         } else if (isAppTrigger(pathBlock)) {
-          const appActionTrigger = pathBlock as AppActionTrigger
+          const appActionTrigger = pathBlock
           const inputs = appActionTrigger.inputs as Exclude<
             AutomationTriggerInputs<typeof pathBlock.stepId>,
             void
@@ -1541,9 +1546,13 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   duplicate: async (automation: Automation) => {
+    const { automations } = get(store)
     const response = await store.actions.save({
       ...automation,
-      name: `${automation.name} - copy`,
+      name: getSequentialName(
+        automations.map(x => x.name),
+        automation.name
+      ),
       _id: undefined,
       _rev: undefined,
     })
@@ -1564,6 +1573,8 @@ const automationActions = (store: AutomationStore) => ({
           automation.disabled ? "disabled" : "enabled"
         } successfully`
       )
+
+      await workspaceDeploymentStore.fetch()
     } catch (error) {
       notifications.error(
         `Error ${automation?.disabled ? "disabling" : "enabling"} automation`
@@ -2081,13 +2092,13 @@ export interface AutomationContext {
   settings: Record<string, any>
 }
 
-export class SelectedAutomationStore extends DerivedBudiStore<
-  AutomationState,
-  DerivedAutomationState
+class SelectedAutomationStore extends DerivedBudiStore<
+  AutomationStoreState,
+  SelectedAutomationState
 > {
   constructor(automationStore: AutomationStore) {
     const makeDerivedStore = () => {
-      return derived(automationStore, $store => {
+      return derived(automationStore, ($store): SelectedAutomationState => {
         if (!$store.selectedAutomationId) {
           return {
             blockRefs: {},
@@ -2140,13 +2151,34 @@ export class SelectedAutomationStore extends DerivedBudiStore<
   }
 }
 
-class AutomationStore extends BudiStore<AutomationState> {
+class AutomationStore extends DerivedBudiStore<
+  AutomationStoreState,
+  DerivedAutomationStoreState
+> {
   history: HistoryStore<Automation>
   actions: ReturnType<typeof automationActions>
   selected: SelectedAutomationStore
 
   constructor() {
-    super(initialAutomationState)
+    const makeDerivedStore = (store: Readable<AutomationStoreState>) => {
+      return derived(
+        [store, workspaceDeploymentStore],
+        ([$store, $workspaceDeploymentStore]): DerivedAutomationStoreState => {
+          return {
+            ...$store,
+            automations: $store.automations.map<UIAutomation>(a => ({
+              ...a,
+              publishStatus: $workspaceDeploymentStore.automations[a._id!] || {
+                state: PublishResourceState.UNPUBLISHED,
+                unpublishedChanges: true,
+              },
+            })),
+          }
+        }
+      )
+    }
+
+    super(initialAutomationState, makeDerivedStore)
     this.actions = automationActions(this)
     this.history = createHistoryStore({
       getDoc: this.actions.getDefinition.bind(this),
@@ -2186,20 +2218,25 @@ const generateContext = () => {
     return readable(emptyContext)
   }
   return derived(
-    [organisation, automationStore.selected, environment, tables],
+    [
+      organisation,
+      automationStore,
+      automationStore.selected,
+      environment,
+      tables,
+    ],
     ([
       $organisation,
+      $automationStore,
       $selectedAutomation,
       $env,
       $tables,
     ]): AutomationContext => {
       const { platformUrl: url, company, logoUrl: logo } = $organisation
 
-      const results: TestAutomationResponse | undefined =
-        $selectedAutomation?.testResults
+      const results = $automationStore.testResults
 
-      const testData: AutomationTriggerResultOutputs | undefined =
-        $selectedAutomation.data?.testData
+      const testData = $selectedAutomation.data?.testData
 
       const triggerDef = $selectedAutomation.data?.definition?.trigger
 
@@ -2207,32 +2244,25 @@ const generateContext = () => {
       const isRowAction =
         triggerDef?.stepId === AutomationTriggerStepId.ROW_ACTION
 
-      const triggerInputs = triggerDef
-        ? (triggerDef.inputs as AutomationTriggerInputs<
-            typeof triggerDef.stepId
-          >)
-        : undefined
+      const triggerInputs = triggerDef ? triggerDef.inputs : undefined
 
       let triggerData: AutomationTriggerResultOutputs | undefined
 
       if (results && isAutomationResults(results)) {
-        const automationTrigger: AutomationTriggerResult | undefined =
-          results?.trigger
+        const automationTrigger = results.trigger
 
-        const outputs: AutomationTriggerResultOutputs | undefined =
-          automationTrigger?.outputs
+        const outputs = automationTrigger.outputs
         triggerData = outputs ? outputs : undefined
 
         if (triggerData) {
           if (isRowAction) {
-            const rowActionInputs: RowActionTriggerInputs =
-              triggerInputs as RowActionTriggerInputs
+            const rowActionInputs = triggerInputs as RowActionTriggerInputs
             const rowActionTableId = rowActionInputs.tableId
             const rowActionTable = $tables.list.find(
               table => table._id === rowActionTableId
             )
 
-            const rowTriggerOutputs = triggerData as RowActionTriggerOutputs
+            const rowTriggerOutputs = triggerData
 
             if (rowActionTable) {
               // Row action table must always be retrieved as it is never
@@ -2240,7 +2270,7 @@ const generateContext = () => {
               rowTriggerOutputs.table = rowActionTable
             }
           } else if (isWebhook) {
-            const webhookTrigger = triggerData as WebhookTriggerOutputs
+            const webhookTrigger = triggerData
             // Ensure it displays in the event that the configuration was been skipped
             webhookTrigger.body = webhookTrigger.body ?? {}
           }
@@ -2255,7 +2285,7 @@ const generateContext = () => {
       }
 
       // AppSelf context required to mirror server user context
-      const userContext = $selectedAutomation.appSelf || {}
+      const userContext = $automationStore.appSelf || {}
 
       // Extract step results from a valid response
       const stepResults =

@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   interface Breadcrumb {
-    text: string
+    text?: string
     url?: string
   }
 </script>
@@ -14,9 +14,11 @@
   } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
   import { featureFlags } from "@/stores/portal"
+  import { url } from "@roxi/routify"
 
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
+  export let showPublish = true
 
   let publishButton: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
@@ -31,24 +33,31 @@
 
 <div class="top-bar">
   {#if icon}
-    <Icon name={icon} size="L" weight="fill" />
+    <div class="icon-container">
+      <Icon name={icon} size="L" weight="fill" />
+    </div>
   {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
-      <h1>{breadcrumb.text}</h1>
-      {#if idx < breadcrumbs.length - 1}
-        <h1 class="divider">/</h1>
+      {#if breadcrumb.text}
+        <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+        {#if idx < breadcrumbs.length - 1}
+          <div class="divider">/</div>
+        {/if}
       {/if}
     {/each}
   </div>
-  <Button
-    cta
-    on:click={publish}
-    disabled={$deploymentStore.isPublishing}
-    bind:ref={publishButton}
-  >
-    Publish
-  </Button>
+  <slot></slot>
+  {#if showPublish}
+    <Button
+      cta
+      on:click={publish}
+      disabled={$deploymentStore.isPublishing}
+      bind:ref={publishButton}
+    >
+      Publish
+    </Button>
+  {/if}
 </div>
 
 <Popover
@@ -104,16 +113,11 @@
     align-items: center;
     gap: 6px;
   }
-  .breadcrumbs h1 {
+  .breadcrumbs a,
+  .breadcrumbs .divider {
     font-size: 18px;
     font-weight: 500;
-    color: var(--spectrum-global-color-gray-700);
-  }
-  .breadcrumbs h1:last-child {
     color: var(--spectrum-global-color-gray-900);
-  }
-  .breadcrumbs h1.divider {
-    color: var(--spectrum-global-color-gray-400);
   }
   .popover-content {
     display: flex;
@@ -127,5 +131,11 @@
   .link:hover {
     cursor: pointer;
     filter: brightness(110%);
+  }
+  .icon-container {
+    padding: 3px;
+    border-radius: 6px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-200);
   }
 </style>

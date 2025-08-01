@@ -2,7 +2,7 @@
   import CreationPage from "@/components/common/CreationPage.svelte"
   import { AutoScreenTypes } from "@/constants"
   import { screenStore, workspaceAppStore } from "@/stores/builder"
-  import { featureFlags, licensing } from "@/stores/portal"
+  import { licensing } from "@/stores/portal"
   import {
     Body,
     keepOpen,
@@ -10,7 +10,6 @@
     ModalCancelFrom,
     ModalContent,
     notifications,
-    Select,
     Tag,
     Tags,
   } from "@budibase/bbui"
@@ -20,54 +19,27 @@
   import pdf from "./images/pdf.svg"
   import table from "./images/tableInline.svg"
 
-  const enum CreationStep {
-    // eslint-disable-next-line no-unused-vars
-    APP_PICKER = "app_picker",
-    // eslint-disable-next-line no-unused-vars
-    SCREEN_TYPE_PICKER = "screen_type_picker",
-  }
-
   export let onClose: (() => void) | null = null
   export let inline: boolean = false
   export let submitOnClick: boolean = false
 
-  let modalSteps: CreationStep[] = []
-  let currentStepIndex: number
-
-  let workspaceAppId: string
-  let rootModal: Modal
-
-  export const open = (addToWorkspaceId?: string) => {
-    if (
-      $featureFlags.WORKSPACE_APPS &&
-      !addToWorkspaceId &&
-      $workspaceAppStore.workspaceApps.length > 1
-    ) {
-      modalSteps = [CreationStep.APP_PICKER, CreationStep.SCREEN_TYPE_PICKER]
-    } else {
-      modalSteps = [CreationStep.SCREEN_TYPE_PICKER]
-      workspaceAppId =
-        addToWorkspaceId || $workspaceAppStore.workspaceApps[0]._id!
-    }
-
-    currentStepIndex = 0
-    selectedType = undefined
-
-    rootModal.show()
-  }
-
-  $: hasScreens = $screenStore.screens?.length
   let title: string
-  $: {
-    if (!workspaceAppId) {
-      title = "Create new screen"
-    } else {
-      title = hasScreens ? "Create new screen" : "Create your first screen"
-    }
-  }
-
+  let rootModal: Modal
   let createScreenModal: CreateScreenModal
   let selectedType: AutoScreenTypes | undefined
+  let currentStepIndex: number
+
+  $: hasScreens = $screenStore.screens?.length
+  $: workspaceAppId =
+    $workspaceAppStore.selectedWorkspaceApp?._id ||
+    $workspaceAppStore.workspaceApps[0]._id!
+  $: title = hasScreens ? "Create new screen" : "Create your first screen"
+
+  export const open = () => {
+    currentStepIndex = 0
+    selectedType = undefined
+    rootModal.show()
+  }
 
   function onSelect(screenType: AutoScreenTypes) {
     if (submitOnClick) {
@@ -102,145 +74,117 @@
 </script>
 
 <Modal bind:this={rootModal} {inline}>
-  {#if modalSteps[currentStepIndex] === CreationStep.APP_PICKER}
-    <ModalContent
-      title="Create new screen"
-      size="L"
-      confirmText="Continue"
-      disabled={!workspaceAppId}
-      onConfirm={() => {
-        currentStepIndex++
+  <ModalContent
+    title={inline ? "" : title}
+    size="L"
+    {onConfirm}
+    onCancel={() => {
+      if (currentStepIndex > 0) {
+        currentStepIndex--
         return keepOpen
-      }}
-    >
-      <div class:inline>
-        Select which app you would like to add your screen to
+      }
+    }}
+    disabled={!selectedType}
+    confirmText="Next"
+    cancelText={currentStepIndex === 0 ? "Cancel" : "Back"}
+    showDivider={!inline}
+    showCloseIcon={!inline}
+    showCancelButton={!inline}
+    showConfirmButton={!submitOnClick}
+  >
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <CreationPage showClose={!!onClose} {onClose} heading={inline ? title : ""}>
+      <div class="subHeading" class:inline>
+        <Body size="M">
+          Start from scratch or create screens from your data
+        </Body>
       </div>
-      <Select
-        bind:value={workspaceAppId}
-        options={$workspaceAppStore.workspaceApps}
-        getOptionLabel={a => a.name}
-        getOptionValue={a => a._id}
-        getOptionIcon={() => undefined}
-      />
-    </ModalContent>
-  {:else}
-    <ModalContent
-      title={inline ? "" : title}
-      size="L"
-      {onConfirm}
-      onCancel={() => {
-        if (currentStepIndex > 0) {
-          currentStepIndex--
-          return keepOpen
-        }
-      }}
-      disabled={!selectedType}
-      confirmText="Next"
-      cancelText={currentStepIndex === 0 ? "Cancel" : "Back"}
-      showDivider={!inline}
-      showCloseIcon={!inline}
-      showCancelButton={!inline}
-      showConfirmButton={!submitOnClick}
-    >
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <CreationPage
-        showClose={!!onClose}
-        {onClose}
-        heading={inline ? title : ""}
-      >
-        <div class="subHeading" class:inline>
-          <Body size="M">
-            Start from scratch or create screens from your data.
-          </Body>
-        </div>
-        <div class="cards">
-          <div
-            class="card"
-            on:click={() => onSelect(AutoScreenTypes.BLANK)}
-            class:selected={selectedType === AutoScreenTypes.BLANK}
-          >
-            <div class="image">
-              <img alt="A blank screen" src={blank} />
-            </div>
-            <div class="text">
-              <Body
-                size="M"
-                weight="500"
-                color="var(--spectrum-global-color-gray-900)">Blank</Body
-              >
-              <Body size="S">Add an empty blank screen</Body>
-            </div>
+      <div class="cards">
+        <div
+          class="card"
+          on:click={() => onSelect(AutoScreenTypes.BLANK)}
+          class:selected={selectedType === AutoScreenTypes.BLANK}
+        >
+          <div class="image">
+            <img alt="A blank screen" src={blank} />
           </div>
-
-          <div
-            class="card"
-            on:click={() => onSelect(AutoScreenTypes.TABLE)}
-            class:selected={selectedType === AutoScreenTypes.TABLE}
-          >
-            <div class="image">
-              <img alt="A table of data" src={table} />
-            </div>
-            <div class="text">
-              <Body
-                size="M"
-                weight="500"
-                color="var(--spectrum-global-color-gray-900)">Table</Body
-              >
-              <Body size="S">List rows in a table</Body>
-            </div>
-          </div>
-
-          <div
-            class="card"
-            on:click={() => onSelect(AutoScreenTypes.FORM)}
-            class:selected={selectedType === AutoScreenTypes.FORM}
-          >
-            <div class="image">
-              <img alt="A form containing data" src={form} />
-            </div>
-            <div class="text">
-              <Body
-                size="M"
-                weight="500"
-                color="var(--spectrum-global-color-gray-900)">Form</Body
-              >
-              <Body size="S">Capture data from your users</Body>
-            </div>
-          </div>
-
-          <div
-            class="card"
-            class:disabled={!$licensing.pdfEnabled}
-            on:click={$licensing.pdfEnabled
-              ? () => onSelect(AutoScreenTypes.PDF)
-              : null}
-            class:selected={selectedType === AutoScreenTypes.PDF}
-          >
-            <div class="image">
-              <img alt="A PDF document" src={pdf} width="185" />
-            </div>
-            <div class="text">
-              <Body
-                size="M"
-                weight="500"
-                color="var(--spectrum-global-color-gray-900)"
-              >
-                PDF
-                {#if !$licensing.pdfEnabled}
-                  <Tags>
-                    <Tag icon="lock" emphasized>Premium</Tag>
-                  </Tags>
-                {/if}
-              </Body>
-              <Body size="S">Create, edit and export your PDF</Body>
-            </div>
+          <div class="text">
+            <Body
+              size="M"
+              weight="500"
+              color="var(--spectrum-global-color-gray-900)">Blank</Body
+            >
+            <Body size="S">Add an empty blank screen</Body>
           </div>
         </div>
-      </CreationPage>
-    </ModalContent>
-  {/if}
+
+        <div
+          class="card"
+          on:click={() => onSelect(AutoScreenTypes.TABLE)}
+          class:selected={selectedType === AutoScreenTypes.TABLE}
+        >
+          <div class="image">
+            <img alt="A table of data" src={table} />
+          </div>
+          <div class="text">
+            <Body
+              size="M"
+              weight="500"
+              color="var(--spectrum-global-color-gray-900)">Table</Body
+            >
+            <Body size="S">List rows in a table</Body>
+          </div>
+        </div>
+
+        <div
+          class="card"
+          on:click={() => onSelect(AutoScreenTypes.FORM)}
+          class:selected={selectedType === AutoScreenTypes.FORM}
+        >
+          <div class="image">
+            <img alt="A form containing data" src={form} />
+          </div>
+          <div class="text">
+            <Body
+              size="M"
+              weight="500"
+              color="var(--spectrum-global-color-gray-900)">Form</Body
+            >
+            <Body size="S">Capture data from your users</Body>
+          </div>
+        </div>
+
+        <div
+          class="card"
+          class:disabled={!$licensing.pdfEnabled}
+          on:click={$licensing.pdfEnabled
+            ? () => onSelect(AutoScreenTypes.PDF)
+            : null}
+          class:selected={selectedType === AutoScreenTypes.PDF}
+        >
+          <div class="image">
+            <img alt="A PDF document" src={pdf} width="185" />
+          </div>
+          <div class="text">
+            <Body
+              size="M"
+              weight="500"
+              color="var(--spectrum-global-color-gray-900)"
+            >
+              PDF
+              {#if !$licensing.pdfEnabled}
+                <Tags>
+                  <Tag icon="lock" emphasized>Premium</Tag>
+                </Tags>
+              {/if}
+            </Body>
+            <Body size="S">Create, edit and export your PDF</Body>
+          </div>
+        </div>
+      </div>
+    </CreationPage>
+  </ModalContent>
 </Modal>
 
 <CreateScreenModal {workspaceAppId} bind:this={createScreenModal} />
