@@ -66,7 +66,12 @@
     }
     try {
       await automationStore.actions.delete(selectedAutomation)
-      await deploymentStore.publishApp()
+      if (
+        selectedAutomation.publishStatus.state !==
+        PublishResourceState.UNPUBLISHED
+      ) {
+        await deploymentStore.publishApp()
+      }
       notifications.success("Automation deleted successfully")
     } catch (error) {
       console.error(error)
@@ -281,8 +286,10 @@
     Are you sure you wish to delete the automation
     <b>{selectedAutomation.name}?</b>
     This action cannot be undone.
-    <br />
-    <br /> To continue you need to publish all the workspace. Do you want to continue?
+    {#if selectedAutomation.publishStatus.state !== PublishResourceState.UNPUBLISHED}
+      <br />
+      <br /> To continue you need to publish all the workspace. Do you want to continue?
+    {/if}
   </ConfirmDialog>
 {/if}
 
