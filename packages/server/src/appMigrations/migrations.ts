@@ -1,9 +1,10 @@
 // This file should never be manually modified, use `yarn add-app-migration` in order to add a new one
 
-import type { AppMigration } from "."
+import { AppMigration } from "."
 
 import m20240604153647_initial_sqs from "./migrations/20240604153647_initial_sqs"
 import m20250618162639_workspace_apps from "./migrations/20250618162639_workspace_apps"
+import m20250729134531_workspace_cleanups from "./migrations/20250729134531_workspace_cleanups"
 
 export const MIGRATIONS: AppMigration[] = [
   // Migrations will be executed sorted by id
@@ -14,5 +15,9 @@ export const MIGRATIONS: AppMigration[] = [
   {
     id: "20250618162639_workspace_apps",
     func: m20250618162639_workspace_apps,
+  },
+  {
+    id: "20250729134531_workspace_cleanups",
+    func: m20250729134531_workspace_cleanups,
   },
 ]

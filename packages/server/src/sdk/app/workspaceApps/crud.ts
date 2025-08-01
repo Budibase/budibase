@@ -37,8 +37,8 @@ export async function create(
 
   const response = await db.put(
     {
-      _id: docIds.generateWorkspaceAppID(),
       ...workspaceApp,
+      _id: docIds.generateWorkspaceAppID(),
     },
     { returnDoc: true }
   )
