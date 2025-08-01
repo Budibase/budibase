@@ -18,7 +18,7 @@
   import AppsHero from "assets/apps-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
-  import { capitalise, durationFromNow } from "@/helpers"
+  import { capitalise, confirm, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -84,13 +84,24 @@
     const pause = {
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
-
       visible: true,
+      disabled:
+        workspaceApp.publishStatus.state === PublishResourceState.UNPUBLISHED,
       callback: () => {
-        workspaceAppStore.toggleDisabled(
-          workspaceApp._id!,
-          !workspaceApp.disabled
-        )
+        confirm({
+          title: "Publish workspace",
+          body: `To ${
+            workspaceApp.disabled ? "activate" : "pause"
+          } this app you need to publish all the workspace. Do you want to continue?`,
+          okText: `Publish workspace`,
+          onConfirm: async () => {
+            await workspaceAppStore.toggleDisabled(
+              workspaceApp._id!,
+              !workspaceApp.disabled
+            )
+            await deploymentStore.publishApp()
+          },
+        })
       },
     }
 
