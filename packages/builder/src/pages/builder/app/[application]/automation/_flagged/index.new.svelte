@@ -150,13 +150,15 @@
     )
   }
 
-  $: automations = $automationStore.automations.filter(a => {
-    if (!filter) {
-      return true
-    }
+  $: automations = $automationStore.automations
+    .filter(a => {
+      if (!filter) {
+        return true
+      }
 
-    return a.publishStatus.state === filter
-  })
+      return a.publishStatus.state === filter
+    })
+    .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
 
   function getTriggerFriendlyName(automation: Automation) {
     const definition =
