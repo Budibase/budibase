@@ -93,6 +93,7 @@
     "rimraf": "3.0.2",
     "superagent": "^10.1.1",
     "supertest": "6.3.3",
+    "testcontainers": "10.16.0",
     "timekeeper": "2.2.0",
     "typescript": "5.7.2"
   },

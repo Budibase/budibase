@@ -152,7 +152,7 @@
       </span>
     {:else}
       <span class="option-extra icon field-icon">
-        <img src={fieldIcon} alt="icon" width="15" height="15" />
+        <img src={fieldIcon} alt="icon" style="height: 15px; width: auto;" />
       </span>
     {/if}
   {/if}
@@ -237,8 +237,7 @@
                   <img
                     src={getOptionIcon(option, idx)}
                     alt="icon"
-                    width="15"
-                    height="15"
+                    style="height: 15px; width: auto;"
                   />
                 {:else}
                   <Icon
