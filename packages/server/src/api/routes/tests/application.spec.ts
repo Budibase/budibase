@@ -217,7 +217,7 @@ describe("/applications", () => {
       const newApp = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        fileToImport: "src/api/routes/tests/data/export.txt",
+        fileToImport: "src/api/routes/tests/data/old-app.txt", // export.tx was empty
       })
       expect(newApp._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
@@ -229,7 +229,7 @@ describe("/applications", () => {
         expect(res.screens.length).toEqual(1)
 
         const tables = await config.api.table.fetch()
-        expect(tables.length).toEqual(5)
+        expect(tables.length).toEqual(1)
       })
     })
 
