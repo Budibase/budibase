@@ -11,12 +11,7 @@
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import {
-    ActionButton,
-    Divider,
-    Link,
-    Icon,
-  } from "@budibase/bbui"
+  import { ActionButton, Divider, Link, Icon } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
@@ -124,7 +119,6 @@
     align-items: center;
     gap: 6px;
   }
-
 
   .workspace-info {
     display: flex;
