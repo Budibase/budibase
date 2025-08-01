@@ -46,25 +46,6 @@
     <div class="header-left">
       {#if $featureFlags.WORKSPACE_APPS}
         <div class="workspace-info">
-          {#if selectedWorkspaceAppId}
-            <div class="workspace-info-toggle">
-              <Toggle
-                noPadding
-                on:change={() =>
-                  workspaceAppStore.toggleDisabled(
-                    selectedWorkspaceAppId,
-                    !selectedWorkspaceApp?.disabled
-                  )}
-                value={!selectedWorkspaceApp?.disabled}
-              />
-              <Label>
-                {selectedWorkspaceApp?.disabled ? "Disabled" : "Enabled"}
-              </Label>
-            </div>
-            <div class="divider-container">
-              <Divider size="S" vertical />
-            </div>
-          {/if}
           {#if isWorkspacePublished}
             <div class="workspace-url">
               <Icon

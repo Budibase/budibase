@@ -189,7 +189,7 @@
       Run test
     </ActionButton>
 
-    {#if !isRowAction}
+    {#if !isRowAction && !$featureFlags.WORKSPACE_APPS}
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Disabled" : "Enabled"}
