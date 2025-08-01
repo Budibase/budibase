@@ -86,13 +86,6 @@
           on:click={keepCollapsed}
         />
         <SideNavLink
-          icon="textbox"
-          text="Forms"
-          url={$url("./design")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
           icon="browser"
           text="Apps"
           url={$url("./design")}
