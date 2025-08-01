@@ -101,7 +101,7 @@
     }
     const pause = {
       icon: automation.disabled ? "play-circle" : "pause-circle",
-      name: automation.disabled ? "Activate" : "Pause",
+      name: automation.disabled ? "Switch on" : "Switch off",
       keyBind: null,
       visible: true,
       disabled:
