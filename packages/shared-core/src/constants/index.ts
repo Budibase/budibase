@@ -50,6 +50,10 @@ export const OperatorOptions = {
     value: "oneOf",
     label: "Is in",
   },
+  NotIn: {
+    value: "notIn",
+    label: "Is not in",
+  },
   ContainsAny: {
     value: "containsAny",
     label: "Has any",
