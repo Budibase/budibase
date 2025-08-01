@@ -72,7 +72,7 @@
   const getContextMenuOptions = (workspaceApp: WorkspaceApp) => {
     const pause = {
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
-      name: workspaceApp.disabled ? "Activate" : "Disable",
+      name: workspaceApp.disabled ? "Switch on" : "Switch off",
 
       visible: true,
       callback: () => {
