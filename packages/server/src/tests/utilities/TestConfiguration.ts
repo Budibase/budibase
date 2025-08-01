@@ -642,7 +642,35 @@ export default class TestConfiguration {
 
     const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
       .workspaceApps
-    this.defaultWorkspaceAppId = defaultWorkspaceApp._id
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+
+    return await context.doInAppContext(this.app.appId!, async () => {
+      // create production app
+      this.prodApp = await this.publish()
+
+      this.allApps.push(this.prodApp)
+      this.allApps.push(this.app!)
+
+      return this.app!
+    })
+  }
+
+  async createAppWithOnboarding(appName: string, url?: string): Promise<App> {
+    this.appId = undefined
+    this.app = await context.doInTenant(
+      this.tenantId!,
+      async () =>
+        (await this._req(appController.create, {
+          name: appName,
+          url,
+          isOnboarding: "true",
+        })) as App
+    )
+    this.appId = this.app.appId
+
+    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
+      .workspaceApps
+    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app

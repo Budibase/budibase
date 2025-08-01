@@ -141,6 +141,8 @@ describe("getRoutingInfo", () => {
   })
 
   it("should create routing view and retry when view is missing", async () => {
+    await createScreens(defaultWorkspaceApp._id!, 1)
+
     const appDb = db.getDB(config.getAppId())
     const designDoc = await appDb.get<DesignDocument>("_design/database")
     delete designDoc.views?.[ViewName.ROUTING]
