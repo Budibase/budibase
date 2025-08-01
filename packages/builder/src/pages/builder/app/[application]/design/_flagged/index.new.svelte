@@ -32,15 +32,15 @@
       filterValue: undefined,
     },
     {
-      label: "Published",
+      label: "On",
       filterValue: PublishResourceState.PUBLISHED,
     },
     {
-      label: "Disabled",
+      label: "Off",
       filterValue: PublishResourceState.DISABLED,
     },
     {
-      label: "Drafts",
+      label: "Pending",
       filterValue: PublishResourceState.UNPUBLISHED,
     },
   ]
