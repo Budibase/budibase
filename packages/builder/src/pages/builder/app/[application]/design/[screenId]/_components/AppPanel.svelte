@@ -11,21 +11,13 @@
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import {
-    ActionButton,
-    Divider,
-    Link,
-    Toggle,
-    Label,
-    Icon,
-  } from "@budibase/bbui"
+  import { ActionButton, Divider, Link, Icon } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
-  $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
 
   $: isWorkspacePublished = !!selectedWorkspaceApp?.publishStatus.published
 
@@ -46,25 +38,6 @@
     <div class="header-left">
       {#if $featureFlags.WORKSPACE_APPS}
         <div class="workspace-info">
-          {#if selectedWorkspaceAppId}
-            <div class="workspace-info-toggle">
-              <Toggle
-                noPadding
-                on:change={() =>
-                  workspaceAppStore.toggleDisabled(
-                    selectedWorkspaceAppId,
-                    !selectedWorkspaceApp?.disabled
-                  )}
-                value={!selectedWorkspaceApp?.disabled}
-              />
-              <Label>
-                {selectedWorkspaceApp?.disabled ? "Disabled" : "Enabled"}
-              </Label>
-            </div>
-            <div class="divider-container">
-              <Divider size="S" vertical />
-            </div>
-          {/if}
           {#if isWorkspacePublished}
             <div class="workspace-url">
               <Icon
@@ -145,12 +118,6 @@
     padding-left: var(--spacing-s);
     align-items: center;
     gap: 6px;
-  }
-
-  .workspace-info-toggle {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
   }
 
   .workspace-info {

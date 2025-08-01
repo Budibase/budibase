@@ -2,6 +2,12 @@
   import { PublishResourceState } from "@budibase/types"
 
   export let status: PublishResourceState
+
+  const statusDisplayName: Record<PublishResourceState, string> = {
+    [PublishResourceState.PUBLISHED]: "On",
+    [PublishResourceState.UNPUBLISHED]: "Pending",
+    [PublishResourceState.DISABLED]: "Off",
+  }
 </script>
 
 <div
@@ -10,7 +16,7 @@
   class:unpublished={status === PublishResourceState.UNPUBLISHED}
   class:disabled={status === PublishResourceState.DISABLED}
 >
-  {status}
+  {statusDisplayName[status]}
 </div>
 
 <style>
@@ -29,13 +35,13 @@
     }
 
     &.unpublished {
-      --color: var(--spectrum-global-color-gray-300);
+      --color: var(--spectrum-global-color-orange-100);
       border: 1px solid var(--spectrum-global-color-gray-400);
     }
 
     &.disabled {
-      --color: var(--spectrum-global-color-red-400);
-      border: 1px solid var(--spectrum-global-color-red-600);
+      --color: var(--spectrum-global-color-gray-300);
+      border: 1px solid var(--spectrum-global-color-gray-400);
     }
 
     &::after {

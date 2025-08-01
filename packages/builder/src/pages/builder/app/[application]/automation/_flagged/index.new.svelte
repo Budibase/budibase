@@ -1,7 +1,11 @@
 <script lang="ts">
-  import { contextMenuStore, automationStore } from "@/stores/builder"
+  import {
+    contextMenuStore,
+    automationStore,
+    deploymentStore,
+  } from "@/stores/builder"
+  import type { UIAutomation } from "@budibase/types"
   import { PublishResourceState } from "@budibase/types"
-  import { type Automation } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -23,7 +27,7 @@
   import { sdk } from "@budibase/shared-core"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
-  import { capitalise, durationFromNow } from "@/helpers"
+  import { capitalise, confirm, durationFromNow } from "@/helpers"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -31,7 +35,7 @@
   let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
   let webhookModal: ModalAPI
   let filter: PublishResourceState | undefined
-  let selectedAutomation: Automation | undefined = undefined
+  let selectedAutomation: UIAutomation | undefined = undefined
 
   const filters: {
     label: string
@@ -42,15 +46,15 @@
       filterValue: undefined,
     },
     {
-      label: "Published",
+      label: "On",
       filterValue: PublishResourceState.PUBLISHED,
     },
     {
-      label: "Disabled",
+      label: "Off",
       filterValue: PublishResourceState.DISABLED,
     },
     {
-      label: "Unpublished",
+      label: "Pending",
       filterValue: PublishResourceState.UNPUBLISHED,
     },
   ]
@@ -61,6 +65,12 @@
     }
     try {
       await automationStore.actions.delete(selectedAutomation)
+      if (
+        selectedAutomation.publishStatus.state !==
+        PublishResourceState.UNPUBLISHED
+      ) {
+        await deploymentStore.publishApp()
+      }
       notifications.success("Automation deleted successfully")
     } catch (error) {
       console.error(error)
@@ -80,7 +90,7 @@
     }
   }
 
-  const getContextMenuItems = (automation: Automation) => {
+  const getContextMenuItems = (automation: UIAutomation) => {
     const edit = {
       icon: "pencil",
       name: "Edit",
@@ -90,14 +100,24 @@
     }
     const pause = {
       icon: automation.disabled ? "play-circle" : "pause-circle",
-      name: automation.disabled ? "Activate" : "Pause",
+      name: automation.disabled ? "Switch on" : "Switch off",
       keyBind: null,
       visible: true,
-      disabled: !automation.definition.trigger,
+      disabled:
+        !automation.definition.trigger ||
+        automation.publishStatus.state === PublishResourceState.UNPUBLISHED,
       callback: () => {
-        if (automation._id) {
-          automationStore.actions.toggleDisabled(automation._id)
-        }
+        confirm({
+          title: "Publish workspace",
+          body: `To ${
+            automation.disabled ? "activate" : "pause"
+          } this automation you need to publish all the workspace. Do you want to continue?`,
+          okText: `Publish workspace`,
+          onConfirm: async () => {
+            await automationStore.actions.toggleDisabled(automation._id!)
+            await deploymentStore.publishApp()
+          },
+        })
       },
     }
     const del = {
@@ -131,7 +151,7 @@
     }
   }
 
-  const openContextMenu = (e: MouseEvent, automation: Automation) => {
+  const openContextMenu = (e: MouseEvent, automation: UIAutomation) => {
     e.preventDefault()
     e.stopPropagation()
     selectedAutomation = automation
@@ -149,15 +169,17 @@
     )
   }
 
-  $: automations = $automationStore.automations.filter(a => {
-    if (!filter) {
-      return true
-    }
+  $: automations = $automationStore.automations
+    .filter(a => {
+      if (!filter) {
+        return true
+      }
 
-    return a.publishStatus.state === filter
-  })
+      return a.publishStatus.state === filter
+    })
+    .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
 
-  function getTriggerFriendlyName(automation: Automation) {
+  function getTriggerFriendlyName(automation: UIAutomation) {
     const definition =
       $automationStore.blockDefinitions.CREATABLE_TRIGGER[
         automation.definition.trigger.stepId
@@ -257,8 +279,12 @@
     title="Confirm Deletion"
   >
     Are you sure you wish to delete the automation
-    <i>{selectedAutomation.name}?</i>
+    <b>{selectedAutomation.name}?</b>
     This action cannot be undone.
+    {#if selectedAutomation.publishStatus.state !== PublishResourceState.UNPUBLISHED}
+      <br />
+      <br /> To continue you need to publish all the workspace. Do you want to continue?
+    {/if}
   </ConfirmDialog>
 {/if}
 
