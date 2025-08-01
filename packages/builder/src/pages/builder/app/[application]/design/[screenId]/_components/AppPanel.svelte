@@ -15,8 +15,6 @@
     ActionButton,
     Divider,
     Link,
-    Toggle,
-    Label,
     Icon,
   } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
@@ -25,7 +23,6 @@
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
-  $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
 
   $: isWorkspacePublished = !!selectedWorkspaceApp?.publishStatus.published
 
@@ -128,11 +125,6 @@
     gap: 6px;
   }
 
-  .workspace-info-toggle {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-  }
 
   .workspace-info {
     display: flex;
