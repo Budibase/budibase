@@ -1,6 +1,10 @@
 <script lang="ts">
-  import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
-  import { PublishResourceState, type WorkspaceApp } from "@budibase/types"
+  import {
+    contextMenuStore,
+    deploymentStore,
+    workspaceAppStore,
+  } from "@/stores/builder"
+  import { PublishResourceState, type UIWorkspaceApp } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -14,14 +18,16 @@
   import AppsHero from "assets/apps-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
-  import { capitalise, confirm, durationFromNow } from "@/helpers"
+  import { capitalise, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
-  let selectedWorkspaceApp: WorkspaceApp | undefined = undefined
+  let selectedWorkspaceApp: UIWorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
+  let confirmDeleteDialog: ConfirmDialog
 
   const filters: {
     label: string
@@ -45,31 +51,36 @@
     },
   ]
 
-  const onDelete = async (workspaceApp: WorkspaceApp) => {
-    contextMenuStore.close()
-    await confirm({
-      title: "Confirm Deletion",
-      body: `Deleting "${workspaceApp.name}" cannot be undone. Are you sure?`,
-      okText: "Delete app",
-      warning: true,
-      onConfirm: async () => {
-        try {
-          await workspaceAppStore.delete(workspaceApp._id!, workspaceApp._rev!)
-          notifications.success(
-            `App '${workspaceApp.name}' deleted successfully`
-          )
-        } catch (e: any) {
-          let message = "Error deleting app"
-          if (e.message) {
-            message += ` - ${e.message}`
-          }
-          notifications.error(message)
-        }
-      },
-    })
+  const deleteWorkspaceApp = async () => {
+    if (!selectedWorkspaceApp) {
+      return
+    }
+
+    try {
+      await workspaceAppStore.delete(
+        selectedWorkspaceApp._id!,
+        selectedWorkspaceApp._rev!
+      )
+
+      if (
+        selectedWorkspaceApp.publishStatus.state !==
+        PublishResourceState.UNPUBLISHED
+      ) {
+        await deploymentStore.publishApp()
+      }
+      notifications.success(
+        `App '${selectedWorkspaceApp.name}' deleted successfully`
+      )
+    } catch (e: any) {
+      let message = "Error deleting app"
+      if (e.message) {
+        message += ` - ${e.message}`
+      }
+      notifications.error(message)
+    }
   }
 
-  const getContextMenuOptions = (workspaceApp: WorkspaceApp) => {
+  const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
     const pause = {
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
@@ -95,12 +106,12 @@
         icon: "trash",
         name: "Delete",
         visible: true,
-        callback: () => onDelete(workspaceApp),
+        callback: () => confirmDeleteDialog.show(),
       },
     ]
   }
 
-  const openContextMenu = (e: MouseEvent, workspaceApp: WorkspaceApp) => {
+  const openContextMenu = (e: MouseEvent, workspaceApp: UIWorkspaceApp) => {
     e.preventDefault()
     e.stopPropagation()
     selectedWorkspaceApp = workspaceApp
@@ -209,6 +220,22 @@
   workspaceApp={selectedWorkspaceApp}
   on:hide={() => (selectedWorkspaceApp = undefined)}
 />
+
+{#if selectedWorkspaceApp}
+  <ConfirmDialog
+    bind:this={confirmDeleteDialog}
+    okText="Delete App"
+    onOk={deleteWorkspaceApp}
+    title="Confirm Deletion"
+  >
+    Deleting <b>{selectedWorkspaceApp.name}</b> cannot be undone. Are you sure?
+    {#if selectedWorkspaceApp.publishStatus.state !== PublishResourceState.UNPUBLISHED}
+      <br />
+      <br />
+      To continue you need to publish all the workspace. Do you want to continue?
+    {/if}
+  </ConfirmDialog>
+{/if}
 
 <style>
   .apps-index {
