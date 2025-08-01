@@ -205,28 +205,3 @@ export async function exchangeCodeForTokens(
 
   return response.json()
 }
-
-export async function simulateOIDCLogin(
-  dexPort: number,
-  username: string = "testuser",
-  password: string = "password"
-): Promise<string> {
-  // Simulate login to Dex and return authorization code
-  // This is a simplified simulation - in real scenarios you'd need to handle the full login flow
-  const loginUrl = `http://localhost:${dexPort}/auth/local`
-
-  const response = await fetch(loginUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      login: username,
-      password: password,
-    }).toString(),
-  })
-
-  // Extract authorization code from response or redirect
-  // This is simplified - actual implementation would need proper parsing
-  return "mock-auth-code"
-}
