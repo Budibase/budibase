@@ -6,7 +6,6 @@
   } from "@/stores/builder"
   import type { UIAutomation } from "@budibase/types"
   import { PublishResourceState } from "@budibase/types"
-  import { type Automation } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -37,7 +36,7 @@
   let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
   let webhookModal: ModalAPI
   let filter: PublishResourceState | undefined
-  let selectedAutomation: Automation | undefined = undefined
+  let selectedAutomation: UIAutomation | undefined = undefined
 
   const filters: {
     label: string
@@ -67,6 +66,7 @@
     }
     try {
       await automationStore.actions.delete(selectedAutomation)
+      await deploymentStore.publishApp()
       notifications.success("Automation deleted successfully")
     } catch (error) {
       console.error(error)
@@ -108,7 +108,7 @@
           body: `To ${
             automation.disabled ? "activate" : "pause"
           } this automation you need to publish all the workspace. Do you want to continue?`,
-          okText: "Publish workspace",
+          okText: `Publish workspace`,
           onConfirm: async () => {
             await automationStore.actions.toggleDisabled(automation._id!)
             await deploymentStore.publishApp()
@@ -147,7 +147,7 @@
     }
   }
 
-  const openContextMenu = (e: MouseEvent, automation: Automation) => {
+  const openContextMenu = (e: MouseEvent, automation: UIAutomation) => {
     e.preventDefault()
     e.stopPropagation()
     selectedAutomation = automation
@@ -175,7 +175,7 @@
     })
     .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
 
-  function getTriggerFriendlyName(automation: Automation) {
+  function getTriggerFriendlyName(automation: UIAutomation) {
     const definition =
       $automationStore.blockDefinitions.CREATABLE_TRIGGER[
         automation.definition.trigger.stepId
@@ -279,8 +279,10 @@
     title="Confirm Deletion"
   >
     Are you sure you wish to delete the automation
-    <i>{selectedAutomation.name}?</i>
+    <b>{selectedAutomation.name}?</b>
     This action cannot be undone.
+    <br />
+    <br /> To continue you need to publish all the workspace. Do you want to continue?
   </ConfirmDialog>
 {/if}
 
