@@ -52,6 +52,7 @@ import { buildNavigationEndpoints } from "./navigation"
 import { buildWorkspaceAppEndpoints } from "./workspaceApps"
 import { buildResourceEndpoints } from "./resource"
 import { buildDeploymentEndpoints } from "./deploy"
+import { buildRecaptchaEndpoints } from "./recaptcha"
 
 export type { APIClient } from "./types"
 
@@ -304,5 +305,6 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     navigation: buildNavigationEndpoints(API),
     workspaceApp: buildWorkspaceAppEndpoints(API),
     resource: buildResourceEndpoints(API),
+    recaptcha: buildRecaptchaEndpoints(API),
   }
 }

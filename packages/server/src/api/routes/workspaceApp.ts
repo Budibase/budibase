@@ -9,6 +9,7 @@ const baseSchema = {
   url: Joi.string()
     .required()
     .regex(/^\/\w*$/),
+  disabled: Joi.boolean().optional(),
 }
 
 const insertSchema = Joi.object({

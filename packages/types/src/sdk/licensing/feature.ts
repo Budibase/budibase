@@ -21,6 +21,7 @@ export enum Feature {
   BUDIBASE_AI = "budibaseAI",
   AI_CUSTOM_CONFIGS = "aiCustomConfigs",
   PWA = "pwa",
+  RECAPTCHA = "recaptcha",
 }
 
 export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }
