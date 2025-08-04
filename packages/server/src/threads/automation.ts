@@ -553,6 +553,8 @@ class Orchestrator {
           })
         }
 
+        // Save the current loop context to support nested loops
+        const savedLoopContext = ctx.loop
         ctx.loop = { currentItem }
         try {
           // For both legacy and new loops, we need to preserve the step index
@@ -572,7 +574,8 @@ class Orchestrator {
             return stepFailure(step, { success: false })
           }
         } finally {
-          ctx.loop = undefined
+          // Restore the previous loop context (for nested loops)
+          ctx.loop = savedLoopContext
         }
       }
 

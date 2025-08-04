@@ -1083,6 +1083,63 @@ describe("Loop Automations", () => {
       expect(logResults[2].outputs.message).toContain("Prefix-C")
     })
 
+    it.only("should support nested loops", async () => {
+      const results = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: outerBuilder => {
+            return [
+              outerBuilder.serverLog({
+                text: "Outer loop: {{loop.currentItem.name}}",
+              }),
+              outerBuilder.loopV2({
+                steps: innerBuilder => {
+                  return [
+                    innerBuilder.serverLog({
+                      text: "Inner loop: {{loop.currentItem}}",
+                    }),
+                  ]
+                },
+                option: LoopStepType.ARRAY,
+                binding: "{{loop.currentItem.values}}",
+              }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [
+            { name: "Group A", values: ["A1", "A2", "A3"] },
+            { name: "Group B", values: ["B1", "B2"] },
+          ],
+        })
+        .test({ fields: {} })
+
+      // Basic checks
+      expect(results.steps[0].outputs.success).toBe(true)
+      expect(results.steps[0].outputs.iterations).toBe(2)
+
+      // Nested loops are now supported!
+      const outerLoopResults: Record<string, AutomationStepResult[]> =
+        results.steps[0].outputs.items
+
+      const outerStepIds = Object.keys(outerLoopResults)
+
+      // Check outer loop logs
+      const outerLogResults = outerLoopResults[outerStepIds[0]]
+      expect(outerLogResults[0].outputs.message).toContain(
+        "Outer loop: Group A"
+      )
+      expect(outerLogResults[1].outputs.message).toContain(
+        "Outer loop: Group B"
+      )
+
+      // Check inner loop results
+      const innerLoopResults = outerLoopResults[outerStepIds[1]]
+
+      // The inner loops should execute properly with context preservation
+      expect(innerLoopResults[0].outputs.success).toBe(true)
+      expect(innerLoopResults[1].outputs.success).toBe(true)
+    })
+
     it("should handle filter steps that stop execution within a loop iteration", async () => {
       const { steps } = await createAutomationBuilder(config)
         .onAppAction()
