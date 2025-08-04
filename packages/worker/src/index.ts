@@ -29,7 +29,7 @@ import http from "http"
 import api from "./api"
 import gracefulShutdown from "http-graceful-shutdown"
 
-import koaSession from "koa-session"
+const koaSession = require("koa-session")
 
 import { userAgent } from "koa-useragent"
 
@@ -54,12 +54,12 @@ app.proxy = true
 app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
-// @ts-expect-error - RedisStore is not typed correctly
-let store: RedisStore | undefined
+let store: any
 
 const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
   if (!store) {
     const redisClient = await redis.clients.getSessionClient()
+    // @ts-expect-error - koa-redis types are weird
     store = RedisStore({ client: redisClient.client })
   }
 
@@ -69,7 +69,6 @@ const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
       key: "koa:sess",
       maxAge: 86400000, // one day
     },
-    // @ts-expect-error - koa-session expects a Koa context, but we are using a custom context
     app
   )(ctx, next)
 }

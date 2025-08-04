@@ -5808,27 +5808,11 @@
   dependencies:
     "@types/koa" "*"
 
-"@types/koa-redis@4.0.5":
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/@types/koa-redis/-/koa-redis-4.0.5.tgz#c535e38ad681782080b53f006104f7968ba1121f"
-  integrity sha512-xoEdyWDejkLkFVVf+N12euYakItlMicF/SHEDOOvndbteJvQ3AFGUHDDbQIrE2DGjH93LGweOZxXLAs8XfpY2Q==
-  dependencies:
-    "@types/koa-session" "*"
-    "@types/redis" "^2.8.0"
-
 "@types/koa-send@^4.1.6":
   version "4.1.6"
   resolved "https://registry.yarnpkg.com/@types/koa-send/-/koa-send-4.1.6.tgz#15d90e95e3ccce669a15b6a3c56c3a650a167cea"
   integrity sha512-vgnNGoOJkx7FrF0Jl6rbK1f8bBecqAchKpXtKuXzqIEdXTDO6dsSTjr+eZ5m7ltSjH4K/E7auNJEQCAd0McUPA==
   dependencies:
-    "@types/koa" "*"
-
-"@types/koa-session@*":
-  version "6.4.5"
-  resolved "https://registry.yarnpkg.com/@types/koa-session/-/koa-session-6.4.5.tgz#ac10bac507f4bb722fa6c55c33607b5c8769f779"
-  integrity sha512-Vc6+fslnPuMH2v9y80WYeo39UMo8mweuNNthKCwYU2ZE6l5vnRrzRU3BRvexKwsoI5sxsRl5CxDsBlLI8kY/XA==
-  dependencies:
-    "@types/cookies" "*"
     "@types/koa" "*"
 
 "@types/koa@*":
