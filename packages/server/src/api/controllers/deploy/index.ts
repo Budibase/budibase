@@ -191,6 +191,8 @@ export const publishApp = async function (
       const devAppId = dbCore.getDevelopmentAppID(appId)
       const productionAppId = dbCore.getProdAppID(appId)
 
+      const isPublished = await sdk.applications.isAppPublished(productionAppId)
+
       // don't try this if feature isn't allowed, will error
       if (await backups.isEnabled()) {
         // trigger backup initially
@@ -209,7 +211,9 @@ export const publishApp = async function (
       replication = new dbCore.Replication(config)
       const devDb = context.getDevAppDB()
       await devDb.compact()
-      await replication.replicate(replication.appReplicateOpts({}))
+      await replication.replicate(
+        replication.appReplicateOpts({ isCreation: !isPublished })
+      )
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
       const db = context.getProdAppDB()
