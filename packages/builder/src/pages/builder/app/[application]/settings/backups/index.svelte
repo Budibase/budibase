@@ -26,12 +26,15 @@
   import { BackupTrigger, BackupType } from "@/constants/backend/backups"
   import { onMount } from "svelte"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   let loading = true
   let backupData = null
   let pageInfo = createPaginationStore()
   let filterOpt = null
   let dateRange = []
+  let selectedRows = []
+  let bulkDeleteDialog
   let filters = [
     {
       label: "Manual backup",
@@ -99,6 +102,35 @@
     })
   }
 
+  function selectNone() {
+    selectedRows = []
+  }
+
+  async function bulkDeleteBackups() {
+    if (selectedRows.length === 0) return
+
+    try {
+      loading = true
+      const backupIds = selectedRows.map(row => row._id)
+      const response = await backups.deleteBackups($appStore.appId, backupIds)
+
+      if (response.failureCount > 0) {
+        notifications.warning(response.message)
+      } else {
+        notifications.success(response.message)
+      }
+
+      selectNone()
+      await fetchBackups(filterOpt, page)
+    } catch (err) {
+      notifications.error("Unable to delete selected backups")
+    } finally {
+      loading = false
+    }
+  }
+
+  $: hasSelection = selectedRows.length > 0
+
   async function fetchBackups(filters, page, dateRange = []) {
     const opts = {
       ...filters,
@@ -116,6 +148,9 @@
 
     // flatten so we have an easier structure to use for the table schema
     backupData = flattenBackups(response.data)
+
+    // Clear selections when fetching new data
+    selectNone()
   }
 
   async function createManualBackup() {
@@ -226,9 +261,20 @@
             on:change={e => (dateRange = e.detail)}
           />
         </div>
-        <div>
+        <div class="actions">
+          {#if hasSelection}
+            <div class="selection-controls">
+              <Button
+                warning
+                on:click={bulkDeleteDialog.show}
+                disabled={!hasSelection}
+              >
+                Delete selected ({selectedRows.length})
+              </Button>
+            </div>
+          {/if}
           <Button cta disabled={loading} on:click={createManualBackup}>
-            Create new backup
+            Create backup
           </Button>
         </div>
       </div>
@@ -236,13 +282,14 @@
         <Table
           {schema}
           disableSorting
-          allowSelectRows={false}
+          allowSelectRows={true}
           allowEditColumns={false}
           allowEditRows={false}
           data={backupData}
           {customRenderers}
           placeholderText="No backups found"
           border={false}
+          bind:selectedRows
           on:buttonclick={handleButtonClick}
         />
         <div class="pagination">
@@ -258,6 +305,18 @@
     </Layout>
   {/if}
 </Layout>
+
+<ConfirmDialog
+  bind:this={bulkDeleteDialog}
+  okText="Delete backups"
+  onOk={bulkDeleteBackups}
+  title="Confirm backup deletion"
+>
+  Are you sure you wish to delete {selectedRows.length} backup{selectedRows.length ===
+  1
+    ? ""
+    : "s"}? This action cannot be undone.
+</ConfirmDialog>
 
 <style>
   .title {
@@ -275,6 +334,19 @@
     align-items: flex-end;
     gap: var(--spacing-xl);
     flex-wrap: wrap;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-m);
+    align-items: flex-end;
+  }
+
+  .selection-controls {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
   }
 
   .search {
