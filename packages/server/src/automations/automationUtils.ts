@@ -337,9 +337,8 @@ export function determineStorageStrategy(
 ): StorageStrategy {
   const options = step.inputs.resultOptions
 
-  // Base thresholds that adjust by depth
-  const baseThreshold = 50
-  const depthMultiplier = Math.pow(0.5, loopDepth - 1) // Halve threshold each level
+  const baseThreshold = env.AUTOMATION_LOOPS_RESULTS_THRESHOLD
+  const depthMultiplier = 0.5 ** (loopDepth - 1)
   const adjustedThreshold = baseThreshold * depthMultiplier
 
   if (options?.summarizeOnly) return StorageStrategy.SUMMARY
@@ -377,10 +376,10 @@ export function initializeLoopStorage(
 
   // Initialize result arrays for each child step
   for (const { id } of children) {
-    if (strategy === "full") {
+    if (strategy === StorageStrategy.FULL) {
       storage.allResults[id] = []
     }
-    if (strategy === "hybrid") {
+    if (strategy === StorageStrategy.HYBRID) {
       storage.recentResults[id] = []
     }
     storage.nestedSummaries[id] = []
@@ -444,10 +443,11 @@ export function buildLoopOutput(
   storage: LoopStorage,
   status?: AutomationStepStatus,
   iterations?: number,
-  forceFailure?: boolean
+  forceFailure: boolean = false
 ): Record<string, any> {
   // Determine success based on status or failure count
-  let success = storage.summary.failureCount === 0
+  let { summary, strategy } = storage
+  let success = summary.failureCount === 0
   if (
     forceFailure ||
     status === AutomationStepStatus.MAX_ITERATIONS ||
@@ -458,30 +458,28 @@ export function buildLoopOutput(
 
   const output: Record<string, any> = {
     success,
-    iterations: iterations || storage.summary.totalProcessed,
-    summary: storage.summary,
+    iterations: iterations || summary.totalProcessed,
+    summary,
   }
 
   if (status) {
     output.status = status
   }
 
-  // Include appropriate result sets based on strategy
   if (
-    storage.strategy === "full" &&
+    strategy === StorageStrategy.FULL &&
     Object.keys(storage.allResults).length > 0
   ) {
     output.items = storage.allResults
   }
 
   if (
-    storage.strategy === "hybrid" &&
+    strategy === StorageStrategy.HYBRID &&
     Object.keys(storage.recentResults).length > 0
   ) {
     output.recentItems = storage.recentResults
   }
 
-  // Include nested summaries if present
   if (Object.values(storage.nestedSummaries).some(arr => arr.length > 0)) {
     output.nestedSummaries = storage.nestedSummaries
   }

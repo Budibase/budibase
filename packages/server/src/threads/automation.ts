@@ -522,7 +522,6 @@ class Orchestrator {
             return stepFailure(
               step,
               automationUtils.buildLoopOutput(
-                step,
                 storage,
                 AutomationStepStatus.FAILURE_CONDITION,
                 iterations
@@ -568,7 +567,6 @@ class Orchestrator {
               return stepFailure(
                 step,
                 automationUtils.buildLoopOutput(
-                  step,
                   storage,
                   undefined,
                   undefined,
@@ -597,7 +595,7 @@ class Orchestrator {
 
         return stepSuccess(
           step,
-          automationUtils.buildLoopOutput(step, storage, status, iterations)
+          automationUtils.buildLoopOutput(storage, status, iterations)
         )
       } finally {
         ctx._loopDepth = loopDepth - 1
