@@ -60,7 +60,6 @@ let store: RedisStore | undefined
 const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
   if (!store) {
     const redisClient = await redis.clients.getSessionClient()
-    // @ts-expect-error - RedisStore is not typed correctly
     store = RedisStore({ client: redisClient.client })
   }
 
