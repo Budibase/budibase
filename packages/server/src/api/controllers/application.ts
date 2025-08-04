@@ -83,6 +83,7 @@ import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { processMigrations } from "../../appMigrations/migrationsProcessor"
+import { ImportOpts } from "../../sdk/app/backups/imports"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -160,9 +161,10 @@ async function createInstance(appId: string, template: AppTemplate) {
   await createAllSearchIndex()
 
   if (template && template.useTemplate) {
-    const opts = {
+    const opts: ImportOpts = {
       importObjStoreContents: true,
       updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
+      password: template.file?.password,
     }
     const path = template.file?.path
     if (!path) {

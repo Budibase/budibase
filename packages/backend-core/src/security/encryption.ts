@@ -111,19 +111,19 @@ export function encryptStream(inputStream: Readable, secret: string): Readable {
   outputStream.write(iv)
 
   // Set up error propagation
-  inputStream.on('error', err => {
+  inputStream.on("error", err => {
     gzip.destroy(err)
     if (!outputStream.destroyed) {
       outputStream.destroy(err)
     }
   })
-  gzip.on('error', err => {
+  gzip.on("error", err => {
     cipher.destroy(err)
     if (!outputStream.destroyed) {
       outputStream.destroy(err)
     }
   })
-  cipher.on('error', err => {
+  cipher.on("error", err => {
     if (!outputStream.destroyed) {
       outputStream.destroy(err)
     }
@@ -148,36 +148,39 @@ export function decryptStream(inputStream: Readable, secret: string): Readable {
     const stretched = stretchString(secret, salt)
     decipher = crypto.createDecipheriv(ALGO, stretched, iv)
     gunzip = zlib.createGunzip()
-    
+
     // Set up error propagation
-    decipher.on('error', err => {
+    decipher.on("error", err => {
       if (!outputStream.destroyed) {
         outputStream.destroy(err)
       }
     })
-    gunzip.on('error', err => {
+    gunzip.on("error", err => {
       if (!outputStream.destroyed) {
         outputStream.destroy(err)
       }
     })
-    
+
     decipher.pipe(gunzip).pipe(outputStream)
     processingStarted = true
   }
 
-  inputStream.on('readable', () => {
+  inputStream.on("readable", () => {
     let chunk
-    
+
     // Read header bytes first
-    while (headerBytesRead < SALT_LENGTH + IV_LENGTH && (chunk = inputStream.read(1)) !== null) {
+    while (
+      headerBytesRead < SALT_LENGTH + IV_LENGTH &&
+      (chunk = inputStream.read(1)) !== null
+    ) {
       headerBuffer[headerBytesRead++] = chunk[0]
     }
-    
+
     // Once we have the full header, set up decryption
     if (headerBytesRead === SALT_LENGTH + IV_LENGTH && !processingStarted) {
       processHeader()
     }
-    
+
     // Process remaining data
     if (processingStarted && decipher) {
       while ((chunk = inputStream.read()) !== null) {
@@ -186,15 +189,17 @@ export function decryptStream(inputStream: Readable, secret: string): Readable {
     }
   })
 
-  inputStream.on('end', () => {
+  inputStream.on("end", () => {
     if (!processingStarted) {
-      outputStream.destroy(new Error('Insufficient data in stream for decryption'))
+      outputStream.destroy(
+        new Error("Insufficient data in stream for decryption")
+      )
     } else if (decipher) {
       decipher.end()
     }
   })
 
-  inputStream.on('error', err => {
+  inputStream.on("error", err => {
     if (!outputStream.destroyed) {
       outputStream.destroy(err)
     }

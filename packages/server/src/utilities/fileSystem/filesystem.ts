@@ -1,4 +1,5 @@
 import fs, { PathLike } from "fs"
+import fsp from "fs/promises"
 import { budibaseTempDir } from "../budibaseDir"
 import { join } from "path"
 import env from "../../environment"
@@ -97,13 +98,13 @@ export const storeTempFileStream = async (stream: Readable) => {
 
   try {
     await pipeline(stream, writeStream)
-    writeStream.close()
     return path
   } catch (err) {
     // Clean up the potentially corrupted temp file
     try {
-      if (fs.existsSync(path)) {
-        fs.unlinkSync(path)
+      const stat = await fsp.stat(path)
+      if (stat.isFile()) {
+        await fsp.unlink(path)
       }
     } catch (cleanupErr) {
       // Ignore cleanup errors, focus on original error
