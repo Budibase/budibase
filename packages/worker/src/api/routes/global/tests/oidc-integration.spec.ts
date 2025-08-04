@@ -10,7 +10,9 @@ import {
 import { ConfigType, OIDCInnerConfig, PKCEMethod } from "@budibase/types"
 import { middleware } from "@budibase/backend-core"
 import fetch from "node-fetch"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
+
+mocks.licenses.usePkceOidc()
 
 // Set longer timeout for container startup
 jest.setTimeout(120000)

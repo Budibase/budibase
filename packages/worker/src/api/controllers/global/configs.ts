@@ -45,6 +45,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
+import { isPkceOidcEnabled } from "@budibase/pro/src/sdk/features"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
@@ -235,6 +236,11 @@ async function processGoogleConfig(
 
 async function processOIDCConfig(config: OIDCConfigs, existing?: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
+
+  const anyPkceSettings = config.configs.find(cfg => cfg.pkce)
+  if (anyPkceSettings && !(await pro.features.isPkceOidcEnabled())) {
+    throw new Error("License does not allow OIDC PKCE method support")
+  }
 
   if (existing) {
     for (const c of config.configs) {

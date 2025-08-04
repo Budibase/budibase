@@ -368,12 +368,23 @@
         bind:this={fileinput}
       />
       <div class="form-row">
-        <Label size="L">PKCE Method</Label>
-        <Select
-          placeholder="None"
-          bind:value={providers.oidc.config.configs[0].pkce}
-          options={pkceOptions}
-        />
+        <div class="lock">
+          <Label size="L">PKCE Method</Label>
+          {#if !$licensing.pkceOidcEnabled}
+            <Icon name="lock" size="S" />
+          {/if}
+        </div>
+        {#if $licensing.pkceOidcEnabled}
+          <Select
+            placeholder="None"
+            bind:value={providers.oidc.config.configs[0].pkce}
+            options={pkceOptions}
+          />
+        {:else}
+          <Body size="XS">
+            PKCE support is only available on enterprise licenses.
+          </Body>
+        {/if}
       </div>
       <div class="form-row">
         <Label size="L">Activated</Label>
@@ -533,5 +544,9 @@
     display: flex;
     align-items: center;
     margin-left: 10px;
+  }
+  .lock {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>
