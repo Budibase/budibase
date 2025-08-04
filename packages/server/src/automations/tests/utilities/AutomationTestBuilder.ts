@@ -41,6 +41,10 @@ type LoopConfig = {
   steps: StepBuilderFunction
   iterations?: number
   failure?: any
+  resultOptions?: {
+    storeFullResults?: boolean
+    summarizeOnly?: boolean
+  }
 }
 
 class TriggerBuilder {
@@ -136,7 +140,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
       children: [],
       iterations: loopConfig.iterations,
       failure: loopConfig.failure,
-      resultOptions: {
+      resultOptions: loopConfig.resultOptions || {
         storeFullResults: true,
         summarizeOnly: false,
       },

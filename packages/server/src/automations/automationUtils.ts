@@ -402,6 +402,7 @@ export function processStandardResult(
       storage.summary.firstFailure = {
         iteration,
         error:
+          result.outputs.response ||
           result.outputs.error ||
           result.outputs.response?.message ||
           "Unknown error",
@@ -443,7 +444,7 @@ export function buildLoopOutput(
   storage: LoopStorage,
   status?: AutomationStepStatus,
   iterations?: number,
-  forceFailure: boolean = false
+  forceFailure = false
 ): Record<string, any> {
   // Determine success based on status or failure count
   let { summary, strategy } = storage
