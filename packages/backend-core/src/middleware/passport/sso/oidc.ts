@@ -112,7 +112,7 @@ export async function fetchStrategyConfig(
   callbackUrl?: string
 ): Promise<OIDCStrategyConfiguration> {
   try {
-    const { clientID, clientSecret, configUrl } = oidcConfig
+    const { clientID, clientSecret, configUrl, pkce } = oidcConfig
 
     if (!clientID || !clientSecret || !callbackUrl || !configUrl) {
       // check for remote config and all required elements
@@ -139,6 +139,7 @@ export async function fetchStrategyConfig(
       clientID: clientID,
       clientSecret: clientSecret,
       callbackURL: callbackUrl,
+      pkce: pkce,
     }
   } catch (err) {
     throw new Error(
