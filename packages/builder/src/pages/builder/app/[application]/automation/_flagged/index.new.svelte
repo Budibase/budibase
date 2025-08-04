@@ -29,6 +29,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
   import { capitalise, confirm, durationFromNow } from "@/helpers"
+  import { getTriggerFriendlyName } from "@/helpers/automations"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -179,14 +180,6 @@
       return a.publishStatus.state === filter
     })
     .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
-
-  function getTriggerFriendlyName(automation: UIAutomation) {
-    const definition =
-      $automationStore.blockDefinitions.CREATABLE_TRIGGER[
-        automation.definition.trigger.stepId
-      ]
-    return definition?.name
-  }
 </script>
 
 <div class="automations-index">
