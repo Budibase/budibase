@@ -21,6 +21,15 @@ export interface BackupEndpoints {
     appId: string,
     backupId: string
   ) => Promise<{ message: string }>
+  deleteBackups: (
+    appId: string,
+    backupIds: string[]
+  ) => Promise<{
+    message: string
+    results: any[]
+    successCount: number
+    failureCount: number
+  }>
   clearBackupErrors: (
     appId: string,
     backupId?: string
@@ -42,6 +51,12 @@ export const buildBackupEndpoints = (API: BaseAPIClient): BackupEndpoints => ({
   deleteBackup: async (appId, backupId) => {
     return await API.delete({
       url: `/api/apps/${appId}/backups/${backupId}`,
+    })
+  },
+  deleteBackups: async (appId, backupIds) => {
+    return await API.delete({
+      url: `/api/apps/${appId}/backups`,
+      body: { backupIds },
     })
   },
   restoreBackup: async (appId, backupId, name) => {
