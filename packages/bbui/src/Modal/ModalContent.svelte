@@ -223,9 +223,6 @@
     padding-top: 20px;
   }
 
-  .spectrum-dialog-confirm-buttongroup-padding-top {
-    padding-top: 16px;
-  }
   .close-icon {
     position: absolute;
     top: 15px;
