@@ -45,7 +45,6 @@ import {
   UserCtx,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
-import { isPkceOidcEnabled } from "@budibase/pro/src/sdk/features"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
