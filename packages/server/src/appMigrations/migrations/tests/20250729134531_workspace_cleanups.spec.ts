@@ -117,7 +117,7 @@ describe.each([
       await createWorkspaceApp(true)
 
       const workspaceAppIds = (await sdk.workspaceApps.fetch()).map(a => a._id!)
-      const [defaultWorkspaceApp, toDelete1, toDelete2] = workspaceAppIds
+      const [toDelete1, toDelete2, defaultWorkspaceApp] = workspaceAppIds
       keptWorkspaceAppId = defaultWorkspaceApp
 
       // Create screens that reference both workspace apps

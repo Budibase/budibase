@@ -7,7 +7,7 @@ const migration = async () => {
   const defaultWorkspaceApps = allWorkspaceApps.filter(a => a.isDefault)
   if (defaultWorkspaceApps.length > 1) {
     const [workspaceAppToUse, ...toDelete] = defaultWorkspaceApps.sort((a, b) =>
-      a._id!.localeCompare(b._id!)
+      a.updatedAt!.localeCompare(b.updatedAt!)
     )
 
     const db = context.getAppDB()
