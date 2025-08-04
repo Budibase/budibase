@@ -29,4 +29,10 @@ export interface AutomationRowEvent {
   oldRow: Row
 }
 
+export enum StorageStrategy {
+  FULL = "full",
+  HYBRID = "hybrid",
+  SUMMARY = "summary",
+}
+
 export type AutomationJob = Job<AutomationData>

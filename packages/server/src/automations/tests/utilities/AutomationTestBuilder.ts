@@ -136,6 +136,10 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
       children: [],
       iterations: loopConfig.iterations,
       failure: loopConfig.failure,
+      resultOptions: {
+        storeFullResults: true,
+        summarizeOnly: false,
+      },
     }
 
     const builder = new BranchStepBuilder<TStep>()

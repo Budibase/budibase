@@ -6,14 +6,22 @@ import {
 import sdk from "../sdk"
 import {
   AutomationAttachment,
+  AutomationStep,
+  AutomationStepResult,
+  AutomationStepStatus,
   BaseIOStructure,
   FieldSchema,
   FieldType,
+  LoopSummary,
+  LoopV2Step,
   Row,
+  StorageStrategy,
 } from "@budibase/types"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
 import path from "path"
+import { isPlainObject } from "lodash"
+import env from "../environment"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -270,4 +278,213 @@ export function stringSplit(value: string | string[]) {
     return splitOnNewLine
   }
   return value.split(",")
+}
+
+export function matchesLoopFailureCondition(
+  step: LoopV2Step,
+  currentItem: any
+) {
+  const { failure } = step.inputs
+  if (!failure) {
+    return false
+  }
+
+  if (isPlainObject(currentItem)) {
+    return Object.values(currentItem).some(e => e === failure)
+  }
+
+  return currentItem === failure
+}
+
+// Returns an array of the things to loop over for a given LoopStep.  This
+// function handles the various ways that a LoopStep can be configured, parsing
+// the input and returning an array of items to loop over.
+export function getLoopIterable(step: LoopV2Step): any[] {
+  let input = step.inputs.binding
+
+  if (Array.isArray(input)) {
+    return input
+  } else if (typeof input === "string") {
+    if (input === "") {
+      input = []
+    } else {
+      try {
+        input = JSON.parse(input)
+      } catch (e) {
+        input = stringSplit(input)
+      }
+    }
+  }
+
+  return Array.isArray(input) ? input : [input]
+}
+
+export function getLoopMaxIterations(loopStep: LoopV2Step): number {
+  const loopMaxIterations =
+    typeof loopStep.inputs.iterations === "string"
+      ? parseInt(loopStep.inputs.iterations)
+      : loopStep.inputs.iterations
+  return Math.min(
+    loopMaxIterations || env.AUTOMATION_MAX_ITERATIONS,
+    env.AUTOMATION_MAX_ITERATIONS
+  )
+}
+
+export function determineStorageStrategy(
+  step: LoopV2Step,
+  loopDepth: number,
+  expectedIterations: number
+): StorageStrategy {
+  const options = step.inputs.resultOptions
+
+  // Base thresholds that adjust by depth
+  const baseThreshold = 50
+  const depthMultiplier = Math.pow(0.5, loopDepth - 1) // Halve threshold each level
+  const adjustedThreshold = baseThreshold * depthMultiplier
+
+  if (options?.summarizeOnly) return StorageStrategy.SUMMARY
+  if (loopDepth > 2) return StorageStrategy.SUMMARY // More than two nested loops we return a summary regardless
+  if (expectedIterations > adjustedThreshold) return StorageStrategy.HYBRID
+  return StorageStrategy.FULL
+}
+
+export interface LoopStorage {
+  allResults: Record<string, AutomationStepResult[]>
+  recentResults: Record<string, AutomationStepResult[]>
+  summary: LoopSummary
+  nestedSummaries: Record<string, LoopSummary[]>
+  strategy: StorageStrategy
+  maxStoredIterations: number
+}
+
+export function initializeLoopStorage(
+  strategy: StorageStrategy,
+  children: AutomationStep[],
+  maxStoredIterations: number
+): LoopStorage {
+  const storage: LoopStorage = {
+    allResults: {},
+    recentResults: {},
+    summary: {
+      totalProcessed: 0,
+      successCount: 0,
+      failureCount: 0,
+    },
+    nestedSummaries: {},
+    strategy,
+    maxStoredIterations,
+  }
+
+  // Initialize result arrays for each child step
+  for (const { id } of children) {
+    if (strategy === "full") {
+      storage.allResults[id] = []
+    }
+    if (strategy === "hybrid") {
+      storage.recentResults[id] = []
+    }
+    storage.nestedSummaries[id] = []
+  }
+
+  return storage
+}
+
+export function processStandardResult(
+  storage: LoopStorage,
+  result: AutomationStepResult,
+  iteration: number
+): void {
+  storage.summary.totalProcessed++
+  if (result.outputs.success) {
+    storage.summary.successCount++
+  } else {
+    storage.summary.failureCount++
+    if (!storage.summary.firstFailure) {
+      storage.summary.firstFailure = {
+        iteration,
+        error:
+          result.outputs.error ||
+          result.outputs.response?.message ||
+          "Unknown error",
+      }
+    }
+  }
+
+  // Store based on strategy
+  if (
+    storage.strategy === StorageStrategy.FULL &&
+    storage.allResults[result.id]
+  ) {
+    storage.allResults[result.id].push(result)
+  }
+
+  if (
+    storage.strategy === StorageStrategy.HYBRID &&
+    storage.recentResults[result.id]
+  ) {
+    storage.recentResults[result.id].push(result)
+    if (storage.recentResults[result.id].length > storage.maxStoredIterations) {
+      storage.recentResults[result.id].shift()
+    }
+  }
+}
+
+export function processNestedLoopResult(
+  storage: LoopStorage,
+  result: AutomationStepResult
+): void {
+  // Process the nested loop's summary
+  if (result.outputs.summary) {
+    storage.nestedSummaries[result.id].push(result.outputs.summary)
+  }
+  processStandardResult(storage, result, storage.summary.totalProcessed)
+}
+
+export function buildLoopOutput(
+  storage: LoopStorage,
+  status?: AutomationStepStatus,
+  iterations?: number,
+  forceFailure?: boolean
+): Record<string, any> {
+  // Determine success based on status or failure count
+  let success = storage.summary.failureCount === 0
+  if (
+    forceFailure ||
+    status === AutomationStepStatus.MAX_ITERATIONS ||
+    status === AutomationStepStatus.FAILURE_CONDITION
+  ) {
+    success = false
+  }
+
+  const output: Record<string, any> = {
+    success,
+    iterations: iterations || storage.summary.totalProcessed,
+    summary: storage.summary,
+  }
+
+  if (status) {
+    output.status = status
+  }
+
+  // Include appropriate result sets based on strategy
+  if (
+    storage.strategy === "full" &&
+    Object.keys(storage.allResults).length > 0
+  ) {
+    output.items = storage.allResults
+  }
+
+  if (
+    storage.strategy === "hybrid" &&
+    Object.keys(storage.recentResults).length > 0
+  ) {
+    output.recentItems = storage.recentResults
+  }
+
+  // Include nested summaries if present
+  if (Object.values(storage.nestedSummaries).some(arr => arr.length > 0)) {
+    output.nestedSummaries = storage.nestedSummaries
+  }
+
+  return output
 }

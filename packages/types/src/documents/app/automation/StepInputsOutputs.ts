@@ -138,6 +138,7 @@ export type LoopStepOutputs = {
   items: AutomationStepResult[]
   success: boolean
   iterations: number
+  status?: string
 }
 
 export type BranchStepInputs = {
@@ -257,11 +258,28 @@ export type LoopV2StepInputs = {
   iterations?: number
   failure?: string
   children?: AutomationStep[]
+  resultOptions?: {
+    maxStoredIterations?: number
+    storeFullResults?: boolean
+    summarizeOnly?: boolean
+  }
+}
+
+export interface LoopSummary {
+  totalProcessed: number
+  successCount: number
+  failureCount: number
+  firstFailure?: { iteration: number; error: string }
 }
 
 export type LoopV2StepOutputs = {
   success: boolean
-  items?: AutomationStepResult[]
+  iterations: number
+  status?: string
+  summary: LoopSummary
+  items?: Record<string, AutomationStepResult[]>
+  recentItems?: Record<string, AutomationStepResult[]>
+  nestedSummaries?: Record<string, LoopSummary[]>
 }
 
 export enum Model {

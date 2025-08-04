@@ -30,6 +30,7 @@ import {
   isLogicalFilter,
   Branch,
   LoopV2Step,
+  StorageStrategy,
 } from "@budibase/types"
 import { AutomationContext } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -43,59 +44,11 @@ import { cloneDeep } from "lodash/fp"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 import tracer from "dd-trace"
-import { isPlainObject } from "lodash"
 import { quotas } from "@budibase/pro"
 
 threadUtils.threadSetup()
 const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
-
-function matchesLoopFailureCondition(step: LoopV2Step, currentItem: any) {
-  const { failure } = step.inputs
-  if (!failure) {
-    return false
-  }
-
-  if (isPlainObject(currentItem)) {
-    return Object.values(currentItem).some(e => e === failure)
-  }
-
-  return currentItem === failure
-}
-
-// Returns an array of the things to loop over for a given LoopStep.  This
-// function handles the various ways that a LoopStep can be configured, parsing
-// the input and returning an array of items to loop over.
-function getLoopIterable(step: LoopV2Step): any[] {
-  let input = step.inputs.binding
-
-  if (Array.isArray(input)) {
-    return input
-  } else if (typeof input === "string") {
-    if (input === "") {
-      input = []
-    } else {
-      try {
-        input = JSON.parse(input)
-      } catch (e) {
-        input = automationUtils.stringSplit(input)
-      }
-    }
-  }
-
-  return Array.isArray(input) ? input : [input]
-}
-
-function getLoopMaxIterations(loopStep: LoopV2Step): number {
-  const loopMaxIterations =
-    typeof loopStep.inputs.iterations === "string"
-      ? parseInt(loopStep.inputs.iterations)
-      : loopStep.inputs.iterations
-  return Math.min(
-    loopMaxIterations || env.AUTOMATION_MAX_ITERATIONS,
-    env.AUTOMATION_MAX_ITERATIONS
-  )
-}
 
 function stepSuccess(
   step: Readonly<AutomationStep>,
@@ -485,110 +438,170 @@ class Orchestrator {
       const inputs = step.inputs as LoopV2StepInputs
       await processObject(inputs, ctx)
 
-      const maxIterations = getLoopMaxIterations(step)
+      const maxIterations = automationUtils.getLoopMaxIterations(step)
 
-      let iterations = 0
-      let iterable: any[] = []
+      // Track loop depth for nested loops
+      const loopDepth = (ctx._loopDepth || 0) + 1
+      ctx._loopDepth = loopDepth
+
       try {
-        iterable = getLoopIterable(step)
-      } catch (err) {
-        span.addTags({
-          status: AutomationStepStatus.INCORRECT_TYPE,
-          iterations,
-        })
-        return stepFailure(step, {
-          status: AutomationStepStatus.INCORRECT_TYPE,
-        })
-      }
-
-      const allResults: Record<string, AutomationStepResult[]> = {}
-      for (const { id } of children) {
-        allResults[id] = []
-      }
-
-      for (; iterations < iterable.length; iterations++) {
-        const currentItem = iterable[iterations]
-
-        if (iterations === maxIterations) {
-          span.addTags({
-            status: AutomationStepStatus.MAX_ITERATIONS,
-            iterations,
-          })
-          if (isLegacyLoopStep) {
-            const flatItems = this.flattenItems(allResults)
-            return stepFailure(step, {
-              status: AutomationStepStatus.MAX_ITERATIONS,
-              success: false,
-              items: flatItems,
-              iterations,
-            })
-          } else {
-            return stepFailure(step, {
-              status: AutomationStepStatus.MAX_ITERATIONS,
-              iterations,
-              items: allResults,
-            })
-          }
-        }
-
-        if (matchesLoopFailureCondition(step, currentItem)) {
-          span.addTags({
-            status: AutomationStepStatus.FAILURE_CONDITION,
-            iterations,
-          })
-          if (isLegacyLoopStep) {
-            const childStep = children[0]
-            const flatItems = this.flattenItems(allResults)
-            return stepFailure(childStep, {
-              status: AutomationStepStatus.FAILURE_CONDITION,
-              success: false,
-              items: flatItems,
-              iterations,
-            })
-          }
-          return stepFailure(step, {
-            status: AutomationStepStatus.FAILURE_CONDITION,
-            success: false,
-            items: allResults,
-          })
-        }
-
-        // Save the current loop context to support nested loops
-        const savedLoopContext = ctx.loop
-        ctx.loop = { currentItem }
+        let iterations = 0
+        let iterable: any[] = []
         try {
-          // For both legacy and new loops, we need to preserve the step index
-          // so child steps don't affect the main step numbering
-          const savedStepIndex = ctx._stepIndex
-          const iterationResults = await this.executeSteps(ctx, children)
-          ctx._stepIndex = savedStepIndex
-
-          for (const result of iterationResults) {
-            allResults[result.id].push(result)
-          }
-
-          const hasFailures = iterationResults.some(
-            result => result.outputs.success === false
-          )
-          if (hasFailures) {
-            return stepFailure(step, { success: false })
-          }
-        } finally {
-          // Restore the previous loop context (for nested loops)
-          ctx.loop = savedLoopContext
+          iterable = automationUtils.getLoopIterable(step)
+        } catch (err) {
+          span.addTags({
+            status: AutomationStepStatus.INCORRECT_TYPE,
+            iterations,
+          })
+          return stepFailure(step, {
+            status: AutomationStepStatus.INCORRECT_TYPE,
+          })
         }
+
+        // Determine storage strategy based on context
+        const strategy = isLegacyLoopStep
+          ? StorageStrategy.FULL
+          : automationUtils.determineStorageStrategy(
+              step,
+              loopDepth,
+              iterable.length
+            )
+
+        const maxStoredIterations =
+          step.inputs.resultOptions?.maxStoredIterations ?? 10
+        const storage = automationUtils.initializeLoopStorage(
+          strategy,
+          children,
+          maxStoredIterations
+        )
+
+        for (; iterations < iterable.length; iterations++) {
+          const currentItem = iterable[iterations]
+
+          if (iterations === maxIterations) {
+            span.addTags({
+              status: AutomationStepStatus.MAX_ITERATIONS,
+              iterations,
+            })
+            if (isLegacyLoopStep) {
+              const flatItems = this.flattenItems(storage.allResults)
+              return stepFailure(step, {
+                status: AutomationStepStatus.MAX_ITERATIONS,
+                success: false,
+                items: flatItems,
+                iterations,
+              })
+            } else {
+              return stepFailure(
+                step,
+                automationUtils.buildLoopOutput(
+                  storage,
+                  AutomationStepStatus.MAX_ITERATIONS,
+                  iterations
+                )
+              )
+            }
+          }
+
+          if (automationUtils.matchesLoopFailureCondition(step, currentItem)) {
+            span.addTags({
+              status: AutomationStepStatus.FAILURE_CONDITION,
+              iterations,
+            })
+            if (isLegacyLoopStep) {
+              const childStep = children[0]
+              const flatItems = this.flattenItems(storage.allResults)
+              return stepFailure(childStep, {
+                status: AutomationStepStatus.FAILURE_CONDITION,
+                success: false,
+                items: flatItems,
+                iterations,
+              })
+            }
+            return stepFailure(
+              step,
+              automationUtils.buildLoopOutput(
+                step,
+                storage,
+                AutomationStepStatus.FAILURE_CONDITION,
+                iterations
+              )
+            )
+          }
+
+          // Save the current loop context to support nested loops
+          const savedLoopContext = ctx.loop
+          ctx.loop = { currentItem }
+          try {
+            // For both legacy and new loops, we need to preserve the step index
+            // so child steps don't affect the main step numbering
+            const savedStepIndex = ctx._stepIndex
+            const iterationResults = await this.executeSteps(ctx, children)
+            ctx._stepIndex = savedStepIndex
+
+            // Process results based on their type
+            for (const result of iterationResults) {
+              if (result.stepId === AutomationActionStepId.LOOP_V2) {
+                automationUtils.processNestedLoopResult(storage, result)
+              } else {
+                automationUtils.processStandardResult(
+                  storage,
+                  result,
+                  iterations
+                )
+              }
+            }
+
+            const hasFailures = iterationResults.some(
+              result => result.outputs.success === false
+            )
+            if (hasFailures) {
+              if (isLegacyLoopStep) {
+                const flatItems = this.flattenItems(storage.allResults)
+                return stepFailure(step, {
+                  success: false,
+                  items: flatItems,
+                  iterations: iterations + 1,
+                })
+              }
+              return stepFailure(
+                step,
+                automationUtils.buildLoopOutput(
+                  step,
+                  storage,
+                  undefined,
+                  undefined,
+                  true
+                )
+              )
+            }
+          } finally {
+            // Restore the previous loop context (for nested loops)
+            ctx.loop = savedLoopContext
+          }
+        }
+
+        const status =
+          iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
+
+        if (isLegacyLoopStep) {
+          const childStep = children[0]
+          const flatItems = this.flattenItems(storage.allResults)
+          return stepSuccess(childStep, {
+            status,
+            items: flatItems,
+            iterations,
+          })
+        }
+
+        return stepSuccess(
+          step,
+          automationUtils.buildLoopOutput(step, storage, status, iterations)
+        )
+      } finally {
+        ctx._loopDepth = loopDepth - 1
       }
-
-      const status =
-        iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
-
-      if (isLegacyLoopStep) {
-        const childStep = children[0]
-        const flatItems = this.flattenItems(allResults)
-        return stepSuccess(childStep, { status, items: flatItems, iterations })
-      }
-
-      return stepSuccess(step, { status, items: allResults, iterations })
     })
   }
 
