@@ -51,7 +51,7 @@ class Replication {
   }
 
   appReplicateOpts(
-    opts: PouchDB.Replication.ReplicateOptions = {}
+    opts: PouchDB.Replication.ReplicateOptions & { isCreation?: boolean } = {}
   ): PouchDB.Replication.ReplicateOptions {
     if (typeof opts.filter === "string") {
       return opts
@@ -62,10 +62,13 @@ class Replication {
     const toDev = direction === ReplicationDirection.TO_DEV
     delete opts.filter
 
+    const isCreation = opts.isCreation
+    delete opts.isCreation
+
     return {
       ...opts,
       filter: (doc: Document, params: any) => {
-        if (doc._id === DesignDocuments.MIGRATIONS) {
+        if (!isCreation && doc._id === DesignDocuments.MIGRATIONS) {
           return false
         }
         // don't sync design documents
