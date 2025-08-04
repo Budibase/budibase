@@ -1,6 +1,7 @@
 import PouchDB from "pouchdb"
 import { getPouchDB, closePouchDB } from "./couch"
 import { DocumentType, Document } from "@budibase/types"
+import { DesignDocuments } from "../constants"
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
@@ -64,6 +65,9 @@ class Replication {
     return {
       ...opts,
       filter: (doc: Document, params: any) => {
+        if (doc._id === DesignDocuments.MIGRATIONS) {
+          return false
+        }
         // don't sync design documents
         if (toDev && doc._id?.startsWith("_design")) {
           return false
