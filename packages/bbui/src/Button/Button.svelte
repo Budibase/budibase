@@ -63,8 +63,7 @@
   button {
     position: relative;
     display: flex;
-    gap: var(--spacing-xs);
-    font-weight: 500 !important;
+    gap: var(--spacing-s);
   }
   button.is-disabled {
     cursor: default;
@@ -76,19 +75,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     line-height: 20px;
     letter-spacing: -0.02em;
   }
   .spectrum-Button--sizeM {
     font-size: 14px;
-    min-height: 30px;
-    font-weight: 500;
-    padding: 0 8px;
-  }
-  .spectrum-Button--sizeL {
-    font-size: 16px;
-    font-weight: 500 !important;
   }
   .active {
     color: var(--spectrum-global-color-blue-600) !important;
