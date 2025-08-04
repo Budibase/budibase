@@ -134,75 +134,46 @@ export function encryptStream(inputStream: Readable, secret: string): Readable {
   return outputStream
 }
 
-export function decryptStream(inputStream: Readable, secret: string): Readable {
+export async function decryptStream(
+  inputStream: Readable,
+  secret: string
+): Promise<Readable> {
   const outputStream = new PassThrough()
-  let headerBuffer = Buffer.alloc(SALT_LENGTH + IV_LENGTH)
-  let headerBytesRead = 0
+
   let decipher: crypto.Decipher | null = null
   let gunzip: zlib.Gunzip | null = null
-  let processingStarted = false
+  let firstChunk = true
 
-  const processHeader = () => {
-    const salt = headerBuffer.subarray(0, SALT_LENGTH)
-    const iv = headerBuffer.subarray(SALT_LENGTH)
-    const stretched = stretchString(secret, salt)
-    decipher = crypto.createDecipheriv(ALGO, stretched, iv)
-    gunzip = zlib.createGunzip()
+  inputStream.on("data", chunk => {
+    if (firstChunk) {
+      firstChunk = false
+      const salt = chunk.slice(0, SALT_LENGTH)
+      const iv = chunk.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH)
+      chunk = chunk.slice(SALT_LENGTH + IV_LENGTH)
 
-    // Set up error propagation
-    decipher.on("error", err => {
-      if (!outputStream.destroyed) {
+      const stretched = stretchString(secret, salt)
+      decipher = crypto.createDecipheriv(ALGO, stretched, iv)
+      gunzip = zlib.createGunzip()
+
+      inputStream.on("error", err => {
+        decipher!.destroy(err)
+      })
+      decipher.on("error", err => {
+        gunzip!.destroy(err)
+      })
+      gunzip.on("error", err => {
         outputStream.destroy(err)
-      }
-    })
-    gunzip.on("error", err => {
-      if (!outputStream.destroyed) {
-        outputStream.destroy(err)
-      }
-    })
+      })
 
-    decipher.pipe(gunzip).pipe(outputStream)
-    processingStarted = true
-  }
-
-  inputStream.on("readable", () => {
-    let chunk
-
-    // Read header bytes first
-    while (
-      headerBytesRead < SALT_LENGTH + IV_LENGTH &&
-      (chunk = inputStream.read(1)) !== null
-    ) {
-      headerBuffer[headerBytesRead++] = chunk[0]
+      decipher.pipe(gunzip).pipe(outputStream)
     }
 
-    // Once we have the full header, set up decryption
-    if (headerBytesRead === SALT_LENGTH + IV_LENGTH && !processingStarted) {
-      processHeader()
-    }
-
-    // Process remaining data
-    if (processingStarted && decipher) {
-      while ((chunk = inputStream.read()) !== null) {
-        decipher.write(chunk)
-      }
-    }
+    decipher!.write(chunk)
   })
 
   inputStream.on("end", () => {
-    if (!processingStarted) {
-      outputStream.destroy(
-        new Error("Insufficient data in stream for decryption")
-      )
-    } else if (decipher) {
-      decipher.end()
-    }
-  })
-
-  inputStream.on("error", err => {
-    if (!outputStream.destroyed) {
-      outputStream.destroy(err)
-    }
+    decipher?.end()
+    gunzip?.end()
   })
 
   return outputStream

@@ -196,7 +196,7 @@ export async function importApp(
 
   if (!(await isTar(input))) {
     if (opts.password) {
-      const decryptStream = encryption.decryptStream(input, opts.password)
+      const decryptStream = await encryption.decryptStream(input, opts.password)
       input.on("error", err => {
         if (!decryptStream.destroyed) {
           decryptStream.destroy(err)
@@ -222,7 +222,10 @@ export async function importApp(
   try {
     for await (const entry of extract) {
       // Skip directories etc.
-      if (entry.header.type !== "file") {
+      if (
+        entry.header.type !== "file" &&
+        entry.header.type !== "contiguous-file"
+      ) {
         entry.resume()
         continue
       }
@@ -246,7 +249,7 @@ export async function importApp(
         if (!opts.password) {
           throw new Error("Files are encrypted but no password provided")
         }
-        const decryptedStream = encryption.decryptStream(
+        const decryptedStream = await encryption.decryptStream(
           readable,
           opts.password
         )
