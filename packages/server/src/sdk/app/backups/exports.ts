@@ -18,7 +18,7 @@ import zlib from "zlib"
 import { Readable, PassThrough } from "stream"
 import { tracer } from "dd-trace"
 import { Document } from "@budibase/types"
-import { storeTempFileStream } from "packages/server/src/utilities/fileSystem"
+import { storeTempFileStream } from "../../../utilities/fileSystem"
 import fsp from "fs/promises"
 import fs from "fs"
 

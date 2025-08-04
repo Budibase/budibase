@@ -9,15 +9,11 @@ import {
   WebhookTriggerInputs,
 } from "@budibase/types"
 import { getAutomationParams } from "../../../db/utils"
-import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
-import fsp from "fs/promises"
 import sdk from "../../"
-import { v4 as uuid } from "uuid"
-import { extractTarball } from "../../../utilities/fileSystem"
 import tar from "tar-stream"
 import zlib from "zlib"
 import { Readable } from "stream"
@@ -99,22 +95,6 @@ async function updateAutomations(prodAppId: string, db: Database) {
     toSave.push(automation)
   }
   await db.bulkDocs(toSave)
-}
-
-export async function untarFile(file: { path: string }) {
-  const tmpPath = join(budibaseTempDir(), uuid())
-  await fsp.mkdir(tmpPath)
-  // extract the tarball
-  await extractTarball(file.path, tmpPath)
-  return tmpPath
-}
-
-export function getGlobalDBFile(tmpPath: string) {
-  return fs.readFileSync(join(tmpPath, GLOBAL_DB_EXPORT_FILE), "utf8")
-}
-
-export function getListOfAppsInMulti(tmpPath: string) {
-  return fs.readdirSync(tmpPath).filter(dir => dir !== GLOBAL_DB_EXPORT_FILE)
 }
 
 export interface ImportOpts {
