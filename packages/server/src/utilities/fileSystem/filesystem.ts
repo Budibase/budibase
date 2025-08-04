@@ -94,8 +94,22 @@ export const storeTempFile = (
 export const storeTempFileStream = async (stream: Readable) => {
   const path = join(budibaseTempDir(), uuid())
   const writeStream = fs.createWriteStream(path)
-  await pipeline(stream, writeStream)
-  return path
+
+  try {
+    await pipeline(stream, writeStream)
+    writeStream.close()
+    return path
+  } catch (err) {
+    // Clean up the potentially corrupted temp file
+    try {
+      if (fs.existsSync(path)) {
+        fs.unlinkSync(path)
+      }
+    } catch (cleanupErr) {
+      // Ignore cleanup errors, focus on original error
+    }
+    throw err
+  }
 }
 
 /**

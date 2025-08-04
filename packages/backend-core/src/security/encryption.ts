@@ -104,25 +104,101 @@ export function encryptStream(inputStream: Readable, secret: string): Readable {
   const iv = crypto.randomBytes(IV_LENGTH)
   const stretched = stretchString(secret, salt)
   const cipher = crypto.createCipheriv(ALGO, stretched, iv)
+  const gzip = zlib.createGzip()
 
   const outputStream = new PassThrough()
   outputStream.write(salt)
   outputStream.write(iv)
 
-  inputStream.pipe(zlib.createGzip()).pipe(cipher).pipe(outputStream)
+  // Set up error propagation
+  inputStream.on('error', err => {
+    gzip.destroy(err)
+    if (!outputStream.destroyed) {
+      outputStream.destroy(err)
+    }
+  })
+  gzip.on('error', err => {
+    cipher.destroy(err)
+    if (!outputStream.destroyed) {
+      outputStream.destroy(err)
+    }
+  })
+  cipher.on('error', err => {
+    if (!outputStream.destroyed) {
+      outputStream.destroy(err)
+    }
+  })
+
+  inputStream.pipe(gzip).pipe(cipher).pipe(outputStream)
 
   return outputStream
 }
 
 export function decryptStream(inputStream: Readable, secret: string): Readable {
   const outputStream = new PassThrough()
+  let headerBuffer = Buffer.alloc(SALT_LENGTH + IV_LENGTH)
+  let headerBytesRead = 0
+  let decipher: crypto.Decipher | null = null
+  let gunzip: zlib.Gunzip | null = null
+  let processingStarted = false
 
-  const salt = inputStream.read(SALT_LENGTH) as Buffer
-  const iv = inputStream.read(IV_LENGTH) as Buffer
+  const processHeader = () => {
+    const salt = headerBuffer.subarray(0, SALT_LENGTH)
+    const iv = headerBuffer.subarray(SALT_LENGTH)
+    const stretched = stretchString(secret, salt)
+    decipher = crypto.createDecipheriv(ALGO, stretched, iv)
+    gunzip = zlib.createGunzip()
+    
+    // Set up error propagation
+    decipher.on('error', err => {
+      if (!outputStream.destroyed) {
+        outputStream.destroy(err)
+      }
+    })
+    gunzip.on('error', err => {
+      if (!outputStream.destroyed) {
+        outputStream.destroy(err)
+      }
+    })
+    
+    decipher.pipe(gunzip).pipe(outputStream)
+    processingStarted = true
+  }
 
-  const stretched = stretchString(secret, salt)
-  const decipher = crypto.createDecipheriv(ALGO, stretched, iv)
-  inputStream.pipe(decipher).pipe(zlib.createGunzip()).pipe(outputStream)
+  inputStream.on('readable', () => {
+    let chunk
+    
+    // Read header bytes first
+    while (headerBytesRead < SALT_LENGTH + IV_LENGTH && (chunk = inputStream.read(1)) !== null) {
+      headerBuffer[headerBytesRead++] = chunk[0]
+    }
+    
+    // Once we have the full header, set up decryption
+    if (headerBytesRead === SALT_LENGTH + IV_LENGTH && !processingStarted) {
+      processHeader()
+    }
+    
+    // Process remaining data
+    if (processingStarted && decipher) {
+      while ((chunk = inputStream.read()) !== null) {
+        decipher.write(chunk)
+      }
+    }
+  })
+
+  inputStream.on('end', () => {
+    if (!processingStarted) {
+      outputStream.destroy(new Error('Insufficient data in stream for decryption'))
+    } else if (decipher) {
+      decipher.end()
+    }
+  })
+
+  inputStream.on('error', err => {
+    if (!outputStream.destroyed) {
+      outputStream.destroy(err)
+    }
+  })
 
   return outputStream
 }

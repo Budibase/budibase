@@ -123,20 +123,33 @@ export interface ImportOpts {
   password?: string
 }
 
-function peek(input: Readable, length: number): Buffer {
+async function peek(input: Readable, length: number): Promise<Buffer> {
   const buffer = input.read(length)
-  if (!buffer) {
-    throw new Error("Unable to read from stream")
+  if (buffer) {
+    input.unshift(buffer)
+    return buffer
   }
-  input.unshift(buffer)
-  return buffer
+
+  return new Promise((resolve, reject) => {
+    input.once("readable", () => {
+      const buffer = input.read(length)
+      if (!buffer) {
+        reject(new Error("Unable to read from stream"))
+      } else {
+        input.unshift(buffer)
+        resolve(buffer)
+      }
+    })
+  })
 }
 
-function isGzip(input: Readable) {
-  return peek(input, 2).toString("hex") === "1f8b" // Gzip magic number
+async function isGzip(input: Readable) {
+  return (await peek(input, 2)).toString("hex") === "1f8b" // Gzip magic number
 }
-function isTar(input: Readable) {
-  return peek(input, 4).toString("hex") === "75737461" // "usta" in hex
+async function isTar(input: Readable) {
+  const chunk = await peek(input, 262)
+  const magic = chunk.toString("utf8", 257, 262)
+  return magic === "ustar"
 }
 
 export async function importApp(
@@ -168,13 +181,29 @@ export async function importApp(
     dbImported = true
   }
 
-  if (isGzip(input)) {
-    input = input.pipe(zlib.createGunzip())
+  if (await isGzip(input)) {
+    const gunzip = zlib.createGunzip()
+    input.pipe(gunzip)
+    // Propagate errors from input stream to gunzip
+    input.on("error", err => {
+      if (!gunzip.destroyed) {
+        gunzip.destroy(err)
+      }
+    })
+    // Gunzip errors will be caught when we try to use the stream
+    input = gunzip
   }
 
-  if (!isTar(input)) {
+  if (!(await isTar(input))) {
     if (opts.password) {
-      input = encryption.decryptStream(input, opts.password)
+      const decryptStream = encryption.decryptStream(input, opts.password)
+      input.on("error", err => {
+        if (!decryptStream.destroyed) {
+          decryptStream.destroy(err)
+        }
+      })
+      // Decrypt errors will be caught when we try to use the stream
+      input = decryptStream
     }
     await importDB(input)
     return
@@ -182,45 +211,75 @@ export async function importApp(
 
   const extract = tar.extract()
   input.pipe(extract)
-  for await (const entry of extract) {
-    // Skip directories etc.
-    if (entry.header.type !== "file") {
-      entry.resume()
-      continue
+  // Propagate errors from input stream to extract
+  input.on("error", err => {
+    if (!extract.destroyed) {
+      extract.destroy(err)
     }
+  })
+  // Extract errors will be caught in the try-catch below
 
-    let filename = entry.header.name
-    let readable: Readable = entry
-
-    const isEncrypted = filename.endsWith(".enc")
-    filename = isEncrypted ? filename.replace(/\.enc$/, "") : filename
-
-    if (
-      filename.startsWith(".") ||
-      filename === GLOBAL_DB_EXPORT_FILE ||
-      !opts.importObjStoreContents
-    ) {
-      readable.resume()
-      continue
-    }
-
-    if (isEncrypted) {
-      if (!opts.password) {
-        throw new Error("Files are encrypted but no password provided")
+  try {
+    for await (const entry of extract) {
+      // Skip directories etc.
+      if (entry.header.type !== "file") {
+        entry.resume()
+        continue
       }
-      readable = encryption.decryptStream(readable, opts.password)
-    }
 
-    if (filename === DB_EXPORT_FILE) {
-      await importDB(readable)
-      continue
-    }
+      let filename = entry.header.name
+      let readable: Readable = entry
 
-    await objectStore.streamUpload({
-      bucket: ObjectStoreBuckets.APPS,
-      stream: readable,
-      filename: join(prodAppId, filename),
-    })
+      const isEncrypted = filename.endsWith(".enc")
+      filename = isEncrypted ? filename.replace(/\.enc$/, "") : filename
+
+      if (
+        filename.startsWith(".") ||
+        filename === GLOBAL_DB_EXPORT_FILE ||
+        !opts.importObjStoreContents
+      ) {
+        readable.resume()
+        continue
+      }
+
+      if (isEncrypted) {
+        if (!opts.password) {
+          throw new Error("Files are encrypted but no password provided")
+        }
+        const decryptedStream = encryption.decryptStream(
+          readable,
+          opts.password
+        )
+        // Propagate errors from source stream
+        readable.on("error", err => {
+          if (!decryptedStream.destroyed) {
+            decryptedStream.destroy(err)
+          }
+        })
+        readable = decryptedStream
+      }
+
+      if (filename === DB_EXPORT_FILE) {
+        await importDB(readable)
+        continue
+      }
+
+      try {
+        await objectStore.streamUpload({
+          bucket: ObjectStoreBuckets.APPS,
+          stream: readable,
+          filename: join(prodAppId, filename),
+        })
+      } catch (uploadErr) {
+        // Make sure to consume the stream to prevent backpressure
+        readable.resume()
+        throw uploadErr
+      }
+    }
+  } catch (err) {
+    // Ensure streams are properly cleaned up on error
+    extract.destroy()
+    throw err
   }
 
   if (!dbImported) {
