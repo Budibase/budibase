@@ -919,81 +919,6 @@ describe("Loop Automations", () => {
       expect(steps[1].outputs.rows).toHaveLength(3)
     })
 
-    // it("should handle conditional logic within loop children", async () => {
-    //   const { steps } = await createAutomationBuilder(config)
-    //     .onAppAction()
-    //     .loopV2({
-    //       steps: builder => {
-    //         return [
-    //           builder.executeScript({
-    //             code: `
-    //               const category = loop.currentItem.category
-    //               return category === "premium" ? loop.currentItem.value * 1.5 : loop.currentItem.value
-    //             `,
-    //           }),
-    //           builder.branch({
-    //             highValueBranch: {
-    //               steps: innerBuilder =>
-    //                 innerBuilder.serverLog({
-    //                   text: "Premium item: {{loop.currentItem.name}} - Adjusted value: {{steps.1.value}}",
-    //                 }),
-    //               condition: {
-    //                 equal: {
-    //                   "{{steps.1.value}}": 100,
-    //                 },
-    //               },
-    //             },
-    //             normalValueBranch: {
-    //               steps: innerBuilder =>
-    //                 innerBuilder.serverLog({
-    //                   text: "Standard item: {{loop.currentItem.name}} - Value: {{steps.1.value}}",
-    //                 }),
-    //               condition: {
-    //                 equal: {
-    //                   "{{steps.1.value}}": 100,
-    //                 },
-    //               },
-    //             },
-    //           }),
-    //           builder.serverLog({
-    //             text: "Processed: {{loop.currentItem.name}}",
-    //           }),
-    //         ]
-    //       },
-    //       option: LoopStepType.ARRAY,
-    //       binding: [
-    //         { name: "Standard Item", category: "standard", value: 50 },
-    //         { name: "Premium Item", category: "premium", value: 100 },
-    //         { name: "Luxury Item", category: "premium", value: 200 },
-    //       ],
-    //     })
-    //     .test({ fields: {} })
-
-    //   const loopResults: Record<string, AutomationStepResult[]> =
-    //     steps[0].outputs.items
-
-    //   expect(Object.keys(loopResults).length).toBeGreaterThanOrEqual(3)
-
-    //   // Verify that branches are taken correctly
-    //   const [scriptResults, branchResults, logResults] =
-    //     Object.values(loopResults)
-
-    //   // Standard item (50) should take normal value branch
-    //   expect(branchResults[0].outputs.status).toContain(
-    //     "normalValueBranch branch taken"
-    //   )
-
-    //   // Premium item (100 * 1.5 = 150) should take high value branch
-    //   expect(branchResults[1].outputs.status).toContain(
-    //     "highValueBranch branch taken"
-    //   )
-
-    //   // Luxury item (200 * 1.5 = 300) should take high value branch
-    //   expect(branchResults[2].outputs.status).toContain(
-    //     "highValueBranch branch taken"
-    //   )
-    // })
-
     it("should preserve correct step indexing with loopV2", async () => {
       const { steps } = await createAutomationBuilder(config)
         .onAppAction()
@@ -1062,6 +987,7 @@ describe("Loop Automations", () => {
           steps: builder => {
             return [
               builder.executeScript({
+                // eslint-disable-next-line no-template-curly-in-string
                 code: "return `Prefix-${loop.currentItem}`",
               }),
               builder.serverLog({
@@ -1083,7 +1009,7 @@ describe("Loop Automations", () => {
       expect(logResults[2].outputs.message).toContain("Prefix-C")
     })
 
-    it.only("should support nested loops", async () => {
+    it("should support nested loops", async () => {
       const results = await createAutomationBuilder(config)
         .onAppAction()
         .loopV2({
