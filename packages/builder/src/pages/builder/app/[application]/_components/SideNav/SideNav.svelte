@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { Context, Icon, StatusLight, Body, Link } from "@budibase/bbui"
+  import {
+    Context,
+    Icon,
+    StatusLight,
+    Body,
+    Link,
+    Divider,
+  } from "@budibase/bbui"
   import { createLocalStorageStore } from "@budibase/frontend-core"
   import { url } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
@@ -99,13 +106,35 @@
           {collapsed}
           on:click={keepCollapsed}
         />
+        <!--  <Divider size="S" /> -->
         <SideNavLink
-          icon="plugs-connected"
+          icon="database"
           text="Data"
           url={$url("./data")}
           {collapsed}
           on:click={keepCollapsed}
         />
+        <!--  <SideNavLink
+          icon="webhooks-logo"
+          text="APIs"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="sparkle"
+          text="AI"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="paper-plane-tilt"
+          text="Email"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        /> -->
         {#if $featureFlags.AI_AGENTS}
           <SideNavLink
             icon="cpu"
@@ -122,6 +151,7 @@
           {collapsed}
           on:click={keepCollapsed}
         />
+        <Divider size="S" />
         <div class="favourite-wrapper">
           <div class="favourite-title">
             <Body color="var(--spectrum-global-color-gray-700)" size="XS"

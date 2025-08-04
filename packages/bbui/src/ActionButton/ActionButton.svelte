@@ -127,7 +127,7 @@
     color: var(--spectrum-global-color-gray-500);
   }
   .spectrum-ActionButton-label {
-    font-weight: 600;
+    font-weight: 500;
   }
   .tooltip {
     position: absolute;

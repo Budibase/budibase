@@ -22,7 +22,7 @@
   export let onConfirm: (() => Promise<any> | any) | undefined = undefined
   export let onCancel: (() => Promise<any> | any) | undefined = undefined
   export let disabled: boolean = false
-  export let showDivider: boolean = true
+  export let showDivider: boolean = false
 
   export let showSecondaryButton: boolean = false
   export let secondaryButtonText: string | undefined = undefined
@@ -105,6 +105,7 @@
           <div class="secondary-action">
             <Button
               secondary
+              size="M"
               warning={secondaryButtonWarning}
               on:click={secondary}>{secondaryButtonText}</Button
             >
@@ -112,13 +113,14 @@
         {/if}
 
         {#if showCancelButton}
-          <Button secondary on:click={close}>
+          <Button secondary size="M" on:click={close}>
             {cancelText}
           </Button>
         {/if}
         {#if showConfirmButton}
           <span class="confirm-wrap">
             <Button
+              size="M"
               cta
               {...$$restProps}
               disabled={confirmDisabled}
@@ -148,6 +150,27 @@
 </div>
 
 <style>
+  .spectrum-Dialog-grid {
+    display: grid;
+    -ms-grid-columns: 20px auto 1fr auto minmax(0, auto) 20px;
+    grid-template-columns:
+      20px
+      auto 1fr auto minmax(0, auto) 20px;
+    -ms-grid-rows: auto var(--spectrum-dialog-confirm-padding) auto auto 1fr
+      auto 20px;
+    grid-template-rows:
+      auto var(--spectrum-dialog-confirm-padding)
+      auto auto 1fr auto 20px;
+    grid-template-areas:
+      "hero hero hero hero hero hero"
+      ". . . . . ."
+      ". heading header header typeIcon ."
+      ". divider divider divider divider ."
+      ". content content content content ."
+      ". footer footer buttonGroup buttonGroup ."
+      ". . . . . .";
+    width: 100%;
+  }
   .spectrum-Dialog--extraLarge {
     width: 1000px;
   }
@@ -171,7 +194,7 @@
   }
 
   .spectrum-Dialog-heading {
-    font-size: 24px;
+    font-size: 18px;
   }
 
   .no-grid .spectrum-Dialog-heading {
@@ -197,8 +220,12 @@
 
   .spectrum-Dialog-buttonGroup {
     gap: var(--spectrum-global-dimension-static-size-200);
+    padding-top: 20px;
   }
 
+  .spectrum-dialog-confirm-buttongroup-padding-top {
+    padding-top: 16px;
+  }
   .close-icon {
     position: absolute;
     top: 15px;

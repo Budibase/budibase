@@ -271,9 +271,6 @@
   {/if}
   {#if !hasViews && tableEditable}
     <CreateViewButton firstView {table} />
-    <span>
-      To create subsets of data, control access and more, create a view.
-    </span>
   {/if}
   {#if overflowedViews.length}
     <ActionMenu align="right" bind:this={overflowMenu}>

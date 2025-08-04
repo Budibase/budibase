@@ -5,6 +5,7 @@
     AbsTooltip,
     ActionButton,
     Button,
+    Body,
     Helpers,
     Icon,
     notifications,
@@ -145,19 +146,24 @@
     pre-built components in minutes.
   </HeroBanner>
 
-  <TopBar icon="layout" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
-    <Button icon="lightbulb" secondary>Learn</Button>
-    <Button cta icon="layout" on:click={createApp}>New app</Button>
-  </TopBar>
-  <div class="filter">
-    {#each filters as option}
-      <ActionButton
-        quiet
-        selected={option.filterValue === filter}
-        on:click={() => (filter = option.filterValue)}
-        >{option.label}</ActionButton
-      >
-    {/each}
+  <TopBar icon="layout" breadcrumbs={[{ text: "Apps" }]} showPublish={false}
+  ></TopBar>
+  <div class="secondary-bar">
+    <div class="filter">
+      {#each filters as option}
+        <ActionButton
+          quiet
+          selected={option.filterValue === filter}
+          on:click={() => (filter = option.filterValue)}
+          >{option.label}</ActionButton
+        >
+      {/each}
+    </div>
+
+    <div class="action-buttons">
+      <Button icon="lightbulb" secondary>Learn</Button>
+      <Button cta icon="plus" on:click={createApp}>New app</Button>
+    </div>
   </div>
 
   <div class="table-header">
@@ -173,7 +179,9 @@
       on:contextmenu={e => openContextMenu(e, app)}
       class:active={showHighlight && selectedWorkspaceApp === app}
     >
-      <div>{app.name}</div>
+      <Body size="S" color="var(--spectrum-global-color-gray-900)"
+        >{app.name}</Body
+      >
       <div>
         <PublishStatusBadge status={app.publishStatus.state} />
       </div>
@@ -207,9 +215,14 @@
     --border: 1px solid var(--spectrum-global-color-gray-200);
     overflow: auto;
   }
-  .filter {
+  .secondary-bar {
     padding: 10px 12px;
     border-bottom: var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+  }
+  .filter {
     display: flex;
     gap: 10px;
   }
@@ -226,6 +239,10 @@
       background: var(--spectrum-global-color-gray-200);
       border-color: var(--spectrum-global-color-gray-300);
     }
+  }
+  .action-buttons {
+    display: flex;
+    gap: 8px;
   }
   .app,
   .table-header {
