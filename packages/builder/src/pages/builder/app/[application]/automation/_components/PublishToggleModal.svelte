@@ -19,7 +19,7 @@
   let action = automation.disabled ? "activate" : "pause"
 </script>
 
-<Modal bind:this={modal}>
+<Modal bind:this={modal} on:show on:cancel on:hide>
   <ModalContent
     title="Publish workspace"
     size="M"

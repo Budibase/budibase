@@ -18,6 +18,7 @@
   import PublishToggleModal from "../../_components/PublishToggleModal.svelte"
 
   let publishToggleModal: PublishToggleModal
+  let pendingToggleValue: boolean | null = null
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
@@ -25,12 +26,22 @@
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
+  $: displayToggleValue =
+    pendingToggleValue !== null
+      ? pendingToggleValue
+      : !selectedWorkspaceApp?.disabled
+
   const previewApp = () => {
     previewStore.showPreview(true)
   }
 
   const togglePreviewDevice = () => {
     previewStore.setDevice(mobile ? "desktop" : "mobile")
+  }
+
+  const handleToggleChange = (e: CustomEvent) => {
+    pendingToggleValue = e.detail
+    publishToggleModal.show()
   }
 </script>
 
@@ -90,8 +101,8 @@
           />
           <Toggle
             noPadding
-            on:change={() => publishToggleModal.show()}
-            value={!selectedWorkspaceApp?.disabled}
+            on:change={handleToggleChange}
+            value={displayToggleValue}
           />
         </div>
       {/if}
@@ -104,7 +115,11 @@
   </div>
 </div>
 
-<PublishToggleModal bind:this={publishToggleModal} app={selectedWorkspaceApp} />
+<PublishToggleModal
+  bind:this={publishToggleModal}
+  app={selectedWorkspaceApp}
+  on:hide={() => (pendingToggleValue = null)}
+/>
 
 <style>
   .app-panel {

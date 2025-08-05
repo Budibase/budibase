@@ -45,9 +45,13 @@
   let prodErrors
   let viewMode = ViewMode.EDITOR
 
+  let pendingToggleValue = null
   let publishToggleModal
 
   $: $automationStore.showTestModal === true && testDataModal.show()
+
+  $: displayToggleValue =
+    pendingToggleValue !== null ? pendingToggleValue : !automation?.disabled
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -121,6 +125,11 @@
         ) ?? $automationStore.selectedLog
       automationStore.actions.openLogPanel(enrichedLog, stepData)
     }
+  }
+
+  const handleToggleChange = e => {
+    pendingToggleValue = e.detail
+    publishToggleModal.show()
   }
 </script>
 
@@ -197,9 +206,9 @@
       <PublishStatusBadge status={automation.publishStatus.state} />
       <div class="toggle-active setting-spacing">
         <Toggle
-          on:change={() => publishToggleModal.show()}
+          on:change={handleToggleChange}
           disabled={!automation?.definition?.trigger}
-          value={!automation.disabled}
+          value={displayToggleValue}
         />
       </div>
     {:else if !isRowAction}
@@ -298,7 +307,11 @@
   <TestDataModal />
 </Modal>
 
-<PublishToggleModal bind:this={publishToggleModal} {automation} />
+<PublishToggleModal
+  bind:this={publishToggleModal}
+  {automation}
+  on:hide={() => (pendingToggleValue = null)}
+/>
 
 <style>
   .main-flow {
