@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ModalContent, Layout, ProgressCircle } from "@budibase/bbui"
+  import { ModalContent, Layout } from "@budibase/bbui"
   import TemplateCard from "@/components/common/TemplateCard.svelte"
   import { templates } from "@/stores/portal"
   import type { TemplateMetadata } from "@budibase/types"
