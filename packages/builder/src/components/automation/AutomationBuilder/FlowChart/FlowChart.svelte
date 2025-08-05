@@ -8,6 +8,7 @@
     Body,
     Button,
     ActionButton,
+    Switcher,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
@@ -130,8 +131,8 @@
   </div>
 
   <div class="actions-right">
-    <div class="view-mode-toggle">
-      <div class="group">
+    <Switcher>
+      <div slot="left">
         <ActionButton
           icon="Edit"
           quiet
@@ -143,6 +144,8 @@
         >
           Editor
         </ActionButton>
+      </div>
+      <div slot="right">
         <Count
           count={prodErrors}
           tooltip={"There are errors in production"}
@@ -170,7 +173,7 @@
           </ActionButton>
         </Count>
       </div>
-    </div>
+    </Switcher>
 
     <ActionButton
       icon="play"
@@ -332,12 +335,6 @@
     gap: var(--spacing-l);
   }
 
-  .view-mode-toggle {
-    display: flex;
-    gap: var(--spacing-l);
-    flex-shrink: 0;
-  }
-
   .canvas-heading-left :global(div) {
     border-right: none;
   }
@@ -382,24 +379,6 @@
 
   .toggle-active :global(.spectrum-Switch-label) {
     margin-right: 0px;
-  }
-
-  .view-mode-toggle .group {
-    border-radius: 6px;
-    display: flex;
-    flex-direction: row;
-    background: var(--spectrum-global-color-gray-100);
-    padding: 2px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-  }
-  .view-mode-toggle .group :global(> *:not(:first-child)) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-left: none;
-  }
-  .view-mode-toggle .group :global(> *:not(:last-child)) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
   }
 
   .zoom .group {

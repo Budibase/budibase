@@ -88,6 +88,7 @@ export { default as List } from "./List/List.svelte"
 export { default as ListItem } from "./List/ListItem.svelte"
 export { default as Accordion } from "./Accordion/Accordion.svelte"
 export { default as AbsTooltip } from "./Tooltip/AbsTooltip.svelte"
+export { default as Switcher } from "./Switcher/Switcher.svelte"
 
 // Renderers
 export { default as BoldRenderer } from "./Table/BoldRenderer.svelte"
