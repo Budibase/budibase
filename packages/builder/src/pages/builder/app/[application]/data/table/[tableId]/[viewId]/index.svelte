@@ -14,6 +14,7 @@
   import GridScreensButton from "@/components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
   import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import GridViewCalculationButton from "@/components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
+  import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import { ViewV2Type } from "@budibase/types"
 
   let generateButton
@@ -73,6 +74,9 @@
       <GridScreensButton on:generate={() => generateButton?.show()} />
     {/if}
     <GridGenerateButton bind:this={generateButton} />
+  </svelte:fragment>
+  <svelte:fragment slot="controls-right">
+    <GridDevProdSwitcher />
   </svelte:fragment>
   <GridCreateEditRowModal />
 </Grid>
