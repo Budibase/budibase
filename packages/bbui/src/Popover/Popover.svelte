@@ -164,7 +164,6 @@
     filter: none;
     -webkit-filter: none;
     box-shadow: 0 1px 4px var(--drop-shadow);
-    border-radius: 12px;
   }
   .blockPointerEvents {
     pointer-events: none;

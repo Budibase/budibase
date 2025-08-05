@@ -77,7 +77,7 @@
       <ActionButton quiet icon="play" on:click={previewApp}>
         Preview
       </ActionButton>
-      {#if selectedWorkspaceAppId}
+      {#if selectedWorkspaceAppId && $featureFlags.WORKSPACE_APPS}
         <div class="divider-container">
           <Divider size="S" vertical />
         </div>
