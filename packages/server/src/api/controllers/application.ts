@@ -474,16 +474,6 @@ async function performAppCreate(
       if (navigation) {
         newApplication.navigation = navigation
       }
-
-      const workspaceApps = await sdk.workspaceApps.fetch()
-      for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
-        await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
-      }
-
-      const automations = await sdk.automations.fetch()
-      for (const automation of automations.filter(a => !a.disabled)) {
-        await sdk.automations.update({ ...automation, disabled: true })
-      }
     }
 
     const response = await db.put(newApplication, { force: true })
@@ -517,6 +507,18 @@ async function performAppCreate(
           version: latestMigrationId,
           skipHistory: true,
         })
+      }
+    }
+
+    if (useTemplate) {
+      const workspaceApps = await sdk.workspaceApps.fetch()
+      for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
+        await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+      }
+
+      const automations = await sdk.automations.fetch()
+      for (const automation of automations.filter(a => !a.disabled)) {
+        await sdk.automations.update({ ...automation, disabled: true })
       }
     }
 
