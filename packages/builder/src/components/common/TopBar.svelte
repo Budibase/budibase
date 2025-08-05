@@ -7,13 +7,8 @@
 
 <script lang="ts">
   import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
-  import {
-    deploymentStore,
-    automationStore,
-    workspaceAppStore,
-  } from "@/stores/builder"
+  import { deploymentStore } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
-  import { featureFlags } from "@/stores/portal"
   import { url } from "@roxi/routify"
 
   export let icon: string
@@ -22,8 +17,6 @@
 
   let publishButton: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
-
-  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
   const publish = async () => {
     await deploymentStore.publishApp()
@@ -109,17 +102,6 @@
     display: flex;
     gap: var(--spacing-s);
     padding: var(--spacing-m);
-  }
-  .popover-content > p {
-    font-weight: 500;
-  }
-  .link {
-    text-decoration: underline;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .link:hover {
-    cursor: pointer;
-    filter: brightness(110%);
   }
   .icon-container {
     padding: 3px;
