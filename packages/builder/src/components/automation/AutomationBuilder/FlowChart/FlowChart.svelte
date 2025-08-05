@@ -31,6 +31,7 @@
   import StepNode from "./StepNode.svelte"
   import PublishToggleModal from "@/pages/builder/app/[application]/automation/_components/PublishToggleModal.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import { PublishResourceState } from "@budibase/types"
 
   export let automation
 
@@ -51,7 +52,11 @@
   $: $automationStore.showTestModal === true && testDataModal.show()
 
   $: displayToggleValue =
-    pendingToggleValue !== null ? pendingToggleValue : !automation?.disabled
+    pendingToggleValue !== null
+      ? pendingToggleValue
+      : $featureFlags.WORKSPACE_APPS
+        ? automation.publishStatus.state === PublishResourceState.PUBLISHED
+        : !automation?.disabled
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)

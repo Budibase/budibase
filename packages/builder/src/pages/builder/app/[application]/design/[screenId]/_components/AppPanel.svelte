@@ -29,7 +29,8 @@
   $: displayToggleValue =
     pendingToggleValue !== null
       ? pendingToggleValue
-      : !selectedWorkspaceApp?.disabled
+      : selectedWorkspaceApp.publishStatus.state ===
+        PublishResourceState.PUBLISHED
 
   const previewApp = () => {
     previewStore.showPreview(true)
