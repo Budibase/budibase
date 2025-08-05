@@ -15,6 +15,8 @@
     await automationStore.actions.toggleDisabled(automation._id!)
     await deploymentStore.publishApp()
   }
+
+  let action = automation.disabled ? "activate" : "pause"
 </script>
 
 <Modal bind:this={modal}>
@@ -28,7 +30,7 @@
     confirmText="Publish workspace"
     cancelText="Cancel"
   >
-    To {automation.disabled ? "activate" : "pause"} this automation you need to publish
-    all the workspace. <br />Do you want to continue?
+    To {action} this automation you need to publish all the workspace. <br />Do
+    you want to continue?
   </ModalContent>
 </Modal>

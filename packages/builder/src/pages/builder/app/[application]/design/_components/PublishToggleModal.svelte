@@ -15,6 +15,8 @@
     await workspaceAppStore.toggleDisabled(app._id!, !app.disabled)
     await deploymentStore.publishApp()
   }
+
+  let action = app.disabled ? "activate" : "pause"
 </script>
 
 <Modal bind:this={modal}>
@@ -28,7 +30,6 @@
     confirmText="Publish workspace"
     cancelText="Cancel"
   >
-    To {app.disabled ? "activate" : "pause"} this app you need to publish all the
-    workspace. Do you want to continue?
+    To {action} this app you need to publish all the workspace. Do you want to continue?
   </ModalContent>
 </Modal>
