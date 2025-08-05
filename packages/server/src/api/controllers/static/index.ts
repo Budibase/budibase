@@ -36,7 +36,6 @@ import {
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
-  ToggleBetaFeatureResponse,
   UserCtx,
 } from "@budibase/types"
 import { isAppFullyMigrated } from "../../../appMigrations"
