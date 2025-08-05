@@ -11,8 +11,8 @@
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Link, Toggle, Icon } from "@budibase/bbui"
-  import { ScreenVariant } from "@budibase/types"
+  import { ActionButton, Divider, Toggle, AbsTooltip } from "@budibase/bbui"
+  import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
 
@@ -20,8 +20,6 @@
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
   $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
-
-  $: isWorkspacePublished = !!selectedWorkspaceApp?.publishStatus.published
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
@@ -40,15 +38,17 @@
     <div class="header-left">
       {#if $featureFlags.WORKSPACE_APPS}
         <div class="workspace-info">
-          {#if isWorkspacePublished}
+          {#if $workspaceAppStore.selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED}
             <div class="workspace-url">
-              <Icon
-                name="globe-simple"
-                size="M"
-                weight="regular"
-                color="var(--spectrum-global-color-gray-600)"
-              ></Icon>
-              <Link quiet href={liveUrl} target="_blank">{liveUrl}</Link>
+              <AbsTooltip text="Open live app">
+                <ActionButton
+                  icon="globe-simple"
+                  quiet
+                  on:click={() => {
+                    window.open(liveUrl, "_blank")
+                  }}
+                />
+              </AbsTooltip>
             </div>
           {/if}
         </div>
