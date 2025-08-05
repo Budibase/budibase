@@ -12,13 +12,13 @@
   export let weight: "regular" | "bold" | "fill" = "regular"
 
   const sizeMap = {
-    XS: "0.75rem",
-    S: "1rem",
-    M: "1.25rem",
-    L: "1.5rem",
-    XL: "2rem",
-    XXL: "2.5rem",
-    XXXL: "5rem",
+    XS: "round(0.75rem, 1px)",
+    S: "round(1rem, 1px)",
+    M: "round(1.25rem, 1px)",
+    L: "round(1.5rem, 1px)",
+    XL: "round(2rem, 1px)",
+    XXL: "round(2.5rem, 1px)",
+    XXXL: "round(5rem, 1px)",
   }
 
   $: phosphorIconName = getPhosphorIcon(name)
@@ -58,7 +58,6 @@
 
 <style>
   i {
-    padding-top: 2px;
     display: grid;
     place-items: center;
     color: var(--color);
