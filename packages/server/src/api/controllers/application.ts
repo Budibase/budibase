@@ -337,7 +337,7 @@ export async function fetchAppPackage(
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
     // disabled workspace apps should appear to not exist
-    if (!matchedWorkspaceApp || matchedWorkspaceApp.disabled) {
+    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && isBuilder)) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
