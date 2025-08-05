@@ -7,13 +7,8 @@
 
 <script lang="ts">
   import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
-  import {
-    deploymentStore,
-    automationStore,
-    workspaceAppStore,
-  } from "@/stores/builder"
+  import { deploymentStore } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
-  import { featureFlags } from "@/stores/portal"
   import { url } from "@roxi/routify"
 
   export let icon: string
@@ -22,8 +17,6 @@
 
   let publishButton: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
-
-  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
   const publish = async () => {
     await deploymentStore.publishApp()
@@ -34,7 +27,7 @@
 <div class="top-bar">
   {#if icon}
     <div class="icon-container">
-      <Icon name={icon} size="L" weight="fill" />
+      <Icon name={icon} size="M" weight="regular" />
     </div>
   {/if}
   <div class="breadcrumbs">
@@ -50,7 +43,8 @@
   <slot></slot>
   {#if showPublish}
     <Button
-      cta
+      icon="arrow-circle-up"
+      primary
       on:click={publish}
       disabled={$deploymentStore.isPublishing}
       bind:ref={publishButton}
@@ -69,28 +63,13 @@
   <div class="popover-content">
     <Icon
       name="CheckmarkCircle"
-      color="var(--spectrum-global-color-green-400)"
+      color="var(--spectrum-global-color-green-600)"
       size="L"
+      weight="fill"
     />
-    <Body size="S">
-      {#if !workspaceAppsEnabled}
-        App published successfully
-        <br />
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="link" on:click={deploymentStore.viewPublishedApp}>
-          View app
-        </div>
-      {:else}
-        {#if $automationStore.automations.length}
-          Automations published: {$automationStore.automations.length}
-          <br />
-        {/if}
-        {#if $workspaceAppStore.workspaceApps.length}
-          Apps published: {$workspaceAppStore.workspaceApps.length}
-        {/if}
-      {/if}
-    </Body>
+    <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)"
+      >All workspace updates published successfully</Body
+    >
   </div>
 </Popover>
 
@@ -115,22 +94,14 @@
   }
   .breadcrumbs a,
   .breadcrumbs .divider {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--spectrum-global-color-gray-900);
   }
   .popover-content {
     display: flex;
-    gap: var(--spacing-m);
-    padding: var(--spacing-xl);
-  }
-  .link {
-    text-decoration: underline;
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .link:hover {
-    cursor: pointer;
-    filter: brightness(110%);
+    gap: var(--spacing-s);
+    padding: var(--spacing-m);
   }
   .icon-container {
     padding: 3px;

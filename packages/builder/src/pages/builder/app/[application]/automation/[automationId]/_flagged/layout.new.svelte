@@ -36,7 +36,7 @@
       { text: "Automations", url: "../" },
       { text: $selectedAutomation.data.name },
     ]}
-    icon="lightning-a"
+    icon="path"
   />
   <div class="root">
     <div class="content drawer-container">

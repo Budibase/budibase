@@ -54,12 +54,18 @@ app.proxy = true
 app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
+let store: any
+
 const sessionMiddleware: Middleware = async (ctx: any, next: any) => {
-  const redisClient = await redis.clients.getSessionClient()
+  if (!store) {
+    const redisClient = await redis.clients.getSessionClient()
+    // @ts-expect-error - koa-redis types are weird
+    store = RedisStore({ client: redisClient.client })
+  }
+
   return koaSession(
     {
-      // @ts-ignore
-      store: new RedisStore({ client: redisClient.client }),
+      store,
       key: "koa:sess",
       maxAge: 86400000, // one day
     },

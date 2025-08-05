@@ -9,6 +9,7 @@ import { appStore } from "./app"
 import { processStringSync } from "@budibase/string-templates"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
+import { automationStore } from "./automations"
 
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
@@ -100,6 +101,7 @@ class DeploymentStore extends DerivedBudiStore<
   async completePublish() {
     try {
       await appsStore.load()
+      await automationStore.actions.fetch()
       await workspaceDeploymentStore.fetch()
       await this.load()
     } catch (err) {

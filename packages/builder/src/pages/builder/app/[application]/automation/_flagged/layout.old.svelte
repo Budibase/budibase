@@ -40,7 +40,7 @@
 
 <div class="wrapper">
   {#if $featureFlags.WORKSPACE_APPS}
-    <TopBar breadcrumbs={[{ text: "Automations" }]} icon="lightning-a"></TopBar>
+    <TopBar breadcrumbs={[{ text: "Automations" }]} icon="path"></TopBar>
   {/if}
   <div class="root">
     <AutomationPanel {modal} {webhookModal} />

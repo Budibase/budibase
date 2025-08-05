@@ -11,14 +11,7 @@
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import {
-    ActionButton,
-    Divider,
-    Link,
-    Toggle,
-    Label,
-    Icon,
-  } from "@budibase/bbui"
+  import { ActionButton, Divider, Link, Toggle, Icon } from "@budibase/bbui"
   import { ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
 
@@ -46,25 +39,6 @@
     <div class="header-left">
       {#if $featureFlags.WORKSPACE_APPS}
         <div class="workspace-info">
-          {#if selectedWorkspaceAppId}
-            <div class="workspace-info-toggle">
-              <Toggle
-                noPadding
-                on:change={() =>
-                  workspaceAppStore.toggleDisabled(
-                    selectedWorkspaceAppId,
-                    !selectedWorkspaceApp?.disabled
-                  )}
-                value={!selectedWorkspaceApp?.disabled}
-              />
-              <Label>
-                {selectedWorkspaceApp?.disabled ? "Disabled" : "Enabled"}
-              </Label>
-            </div>
-            <div class="divider-container">
-              <Divider size="S" vertical />
-            </div>
-          {/if}
           {#if isWorkspacePublished}
             <div class="workspace-url">
               <Icon
@@ -103,6 +77,34 @@
       <ActionButton quiet icon="play" on:click={previewApp}>
         Preview
       </ActionButton>
+      {#if selectedWorkspaceAppId && $featureFlags.WORKSPACE_APPS}
+        <div class="divider-container">
+          <Divider size="S" vertical />
+        </div>
+        <div class="workspace-info-toggle">
+          <div
+            class="status"
+            class:off={selectedWorkspaceApp?.disabled}
+            class:live={!selectedWorkspaceApp?.disabled}
+          >
+            <div
+              class="status-light"
+              class:off={selectedWorkspaceApp?.disabled}
+              class:live={!selectedWorkspaceApp?.disabled}
+            ></div>
+            {selectedWorkspaceApp?.disabled ? "Off" : "Live"}
+          </div>
+          <Toggle
+            noPadding
+            on:change={() =>
+              workspaceAppStore.toggleDisabled(
+                selectedWorkspaceAppId,
+                !selectedWorkspaceApp?.disabled
+              )}
+            value={!selectedWorkspaceApp?.disabled}
+          />
+        </div>
+      {/if}
     </div>
   </div>
   <div class="content">
@@ -150,7 +152,9 @@
   .workspace-info-toggle {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    justify-content: right;
+    gap: var(--spacing-m);
+    width: 100px;
   }
 
   .workspace-info {
@@ -185,6 +189,48 @@
     display: flex;
     flex-direction: row;
     gap: 2px;
+    align-items: center;
+  }
+  .status.off {
+    background-color: var(--spectrum-global-color-gray-200);
+    box-shadow: var(--spectrum-global-color-gray-300) 0px 0px 0px 1px inset;
+    color: var(--spectrum-global-color-gray-800);
+    border-radius: 6px;
+    padding: 2px 6px;
+    gap: 4px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+  }
+
+  .status.live {
+    background-color: rgb(29, 64, 52);
+    box-shadow: rgb(36, 74, 58) 0px 0px 0px 1px inset;
+    color: white;
+    border-radius: 6px;
+    padding: 2px 6px;
+    gap: 4px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+  }
+
+  .status-light {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .status-light.off {
+    background-color: var(--spectrum-global-color-gray-500);
+  }
+
+  .status-light.live {
+    background-color: #22c55e;
+  }
+
+  .status {
+    display: flex;
     align-items: center;
   }
 </style>

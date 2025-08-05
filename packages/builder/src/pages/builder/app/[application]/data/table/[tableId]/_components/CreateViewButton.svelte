@@ -1,6 +1,13 @@
 <script>
   import DetailPopover from "@/components/common/DetailPopover.svelte"
-  import { Input, notifications, Button, Icon, ListItem } from "@budibase/bbui"
+  import {
+    Input,
+    notifications,
+    Button,
+    ActionButton,
+    Icon,
+    ListItem,
+  } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { viewsV2 } from "@/stores/builder"
   import { ViewV2Type } from "@budibase/types"
@@ -59,7 +66,7 @@
 >
   <svelte:fragment slot="anchor" let:open>
     {#if firstView}
-      <Button cta>Create a view</Button>
+      <ActionButton icon="plus" emphasized quiet>Create new view</ActionButton>
     {:else}
       <div class="icon" class:open>
         <Icon
@@ -74,11 +81,11 @@
     <div>
       <ListItem
         title="Table"
-        subtitle="Create a subset of your data"
+        subtitle="Display view data in table"
         hoverable
         on:click={() => (calculation = false)}
         selected={!calculation}
-        icon="sidebar"
+        icon="table"
       />
     </div>
     <div>
@@ -115,7 +122,7 @@
   .icon {
     height: 32px;
     padding: 0 8px;
-    border-radius: 4px;
+    border-radius: 8px;
     display: grid;
     place-items: center;
     transition: background 130ms ease-out;
