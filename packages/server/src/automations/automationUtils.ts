@@ -5,11 +5,14 @@ import {
 } from "@budibase/string-templates"
 import sdk from "../sdk"
 import {
+  Automation,
+  AutomationActionStepId,
   AutomationAttachment,
   AutomationStep,
   AutomationStepResult,
   AutomationStepStatus,
   BaseIOStructure,
+  BranchStep,
   FieldSchema,
   FieldType,
   LoopSummary,
@@ -20,7 +23,7 @@ import {
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
 import path from "path"
-import { isPlainObject } from "lodash"
+import { isPlainObject, cloneDeep } from "lodash"
 import env from "../environment"
 
 /**
@@ -486,4 +489,81 @@ export function buildLoopOutput(
   }
 
   return output
+}
+
+/**
+ * Pre-processes an automation definition to transform legacy LOOP steps
+ * into the new LOOP_V2 format. This allows the execution engine to only
+ * handle LOOP_V2 steps, simplifying the runtime logic.
+ *
+ * @param automation The automation to preprocess
+ * @returns A new automation with legacy loops transformed
+ */
+export function preprocessAutomation(automation: Automation): Automation {
+  const processed = cloneDeep(automation)
+  processed.definition.steps = preprocessSteps(processed.definition.steps)
+  return processed
+}
+
+/**
+ * Recursively processes an array of automation steps to transform legacy LOOP steps
+ * into LOOP_V2 format. This handles both main step arrays and nested children in
+ * branch steps and existing loop steps.
+ *
+ * @param steps Array of automation steps to process
+ * @returns Transformed array of steps
+ */
+function preprocessSteps(steps: AutomationStep[]): AutomationStep[] {
+  const transformedSteps: AutomationStep[] = []
+
+  let i = 0
+  while (i < steps.length) {
+    const step = steps[i]
+
+    if (step.stepId === AutomationActionStepId.LOOP) {
+      const nextStep = steps[i + 1]
+
+      const processedChildStep = preprocessSteps([nextStep])[0]
+
+      const loopV2Step: LoopV2Step = {
+        ...step,
+        stepId: AutomationActionStepId.LOOP_V2,
+        inputs: {
+          ...step.inputs,
+          children: [processedChildStep],
+        },
+        isLegacyLoop: true,
+      }
+      transformedSteps.push(loopV2Step)
+
+      // Skip the next step since it's now a child of the loop
+      i += 2
+    } else if (step.stepId === AutomationActionStepId.BRANCH) {
+      const branchStep = step as BranchStep
+      const processedBranchStep = { ...branchStep }
+
+      if (branchStep.inputs?.children) {
+        const processedChildren: Record<string, AutomationStep[]> = {}
+        for (const [branchId, branchSteps] of Object.entries(
+          branchStep.inputs.children
+        )) {
+          processedChildren[branchId] = preprocessSteps(
+            branchSteps as AutomationStep[]
+          )
+        }
+        processedBranchStep.inputs = {
+          ...branchStep.inputs,
+          children: processedChildren,
+        }
+      }
+
+      transformedSteps.push(processedBranchStep)
+      i++
+    } else {
+      transformedSteps.push(step)
+      i++
+    }
+  }
+
+  return transformedSteps
 }

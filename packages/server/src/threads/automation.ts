@@ -21,7 +21,6 @@ import {
   AutomationStepStatus,
   BranchSearchFilters,
   BranchStep,
-  LoopStep,
   LoopV2StepInputs,
   ContextEmitter,
   AutomationTriggerResult,
@@ -164,6 +163,11 @@ class Orchestrator {
   constructor(job: Readonly<AutomationJob>) {
     this.job = job
     this.stopped = false
+
+    // Pre-process the automation to transform legacy loops
+    this.job.data.automation = automationUtils.preprocessAutomation(
+      job.data.automation
+    )
 
     // create an emitter which has the chain count for this automation run in
     // it, so it can block excessive chaining if required
@@ -372,23 +376,17 @@ class Orchestrator {
             stepIndex++
             break
           }
-          case AutomationActionStepId.LOOP_V2:
-          case AutomationActionStepId.LOOP: {
-            if (step.stepId === AutomationActionStepId.LOOP) {
-              let parsedStep = this.parseOldStepToNewStep(step, steps)
-              addToContext(
-                steps[stepIndex + 1],
-                await this.executeLoopStep(ctx, parsedStep, true)
-              )
-              // We increment by 2 here because the way loops work is that the
-              // step immediately following the loop step is what gets looped.
-              // So when we're done looping, to advance correctly we need to
-              // skip the step that was looped.
-              stepIndex += 2
+          case AutomationActionStepId.LOOP_V2: {
+            const result = await this.executeLoopStep(ctx, step)
+            if (step.isLegacyLoop) {
+              const childStep = step.inputs.children?.[0]
+              if (childStep) {
+                addToContext(childStep, result)
+              }
             } else {
-              addToContext(step, await this.executeLoopStep(ctx, step, false))
-              stepIndex++
+              addToContext(step, result)
             }
+            stepIndex++
             break
           }
           default: {
@@ -410,26 +408,9 @@ class Orchestrator {
     })
   }
 
-  private parseOldStepToNewStep(
-    loopStep: LoopStep,
-    steps: AutomationStep[]
-  ): LoopV2Step {
-    const stepToLoopIdx = steps.findIndex(s => loopStep.id === s.id) + 1
-    const newLoopV2Step: LoopV2Step = {
-      ...loopStep,
-      stepId: AutomationActionStepId.LOOP_V2,
-      inputs: {
-        ...loopStep.inputs,
-        children: [steps[stepToLoopIdx]],
-      },
-    }
-    return newLoopV2Step
-  }
-
   private async executeLoopStep(
     ctx: AutomationContext,
-    step: LoopV2Step,
-    isLegacyLoopStep = false
+    step: LoopV2Step
   ): Promise<AutomationStepResult> {
     return await tracer.trace("executeLoopStep", async span => {
       // Clone the children to avoid processObject modifying them
@@ -460,7 +441,9 @@ class Orchestrator {
         }
 
         // Determine storage strategy based on context
-        const strategy = isLegacyLoopStep
+        // For legacy loops, always use FULL strategy to maintain backward compatibility
+        const isLegacyLoop = step.isLegacyLoop
+        const strategy = isLegacyLoop
           ? StorageStrategy.FULL
           : automationUtils.determineStorageStrategy(
               step,
@@ -484,7 +467,7 @@ class Orchestrator {
               status: AutomationStepStatus.MAX_ITERATIONS,
               iterations,
             })
-            if (isLegacyLoopStep) {
+            if (isLegacyLoop) {
               const flatItems = this.flattenItems(storage.allResults)
               return stepFailure(step, {
                 status: AutomationStepStatus.MAX_ITERATIONS,
@@ -509,7 +492,7 @@ class Orchestrator {
               status: AutomationStepStatus.FAILURE_CONDITION,
               iterations,
             })
-            if (isLegacyLoopStep) {
+            if (isLegacyLoop) {
               const childStep = children[0]
               const flatItems = this.flattenItems(storage.allResults)
               return stepFailure(childStep, {
@@ -556,7 +539,7 @@ class Orchestrator {
               result => result.outputs.success === false
             )
             if (hasFailures) {
-              if (isLegacyLoopStep) {
+              if (isLegacyLoop) {
                 const flatItems = this.flattenItems(storage.allResults)
                 return stepFailure(step, {
                   success: false,
@@ -583,7 +566,8 @@ class Orchestrator {
         const status =
           iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
 
-        if (isLegacyLoopStep) {
+        if (isLegacyLoop) {
+          // For legacy loops, return the old format with flat items array
           const childStep = children[0]
           const flatItems = this.flattenItems(storage.allResults)
           return stepSuccess(childStep, {
@@ -604,7 +588,7 @@ class Orchestrator {
   }
 
   private flattenItems(allResults: Record<string, AutomationStepResult[]>) {
-    const flatItems: Record<string, Automation>[] = []
+    const flatItems: Record<string, any>[] = []
     const firstChildId = Object.keys(allResults)[0]
     if (firstChildId && allResults[firstChildId]) {
       flatItems.push(...allResults[firstChildId].map(result => result.outputs))
