@@ -15,11 +15,13 @@
   import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import PublishToggleModal from "../../_components/PublishToggleModal.svelte"
+
+  let publishToggleModal: PublishToggleModal
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
-  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
-  $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
+  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp!
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
@@ -38,7 +40,7 @@
     <div class="header-left">
       {#if $featureFlags.WORKSPACE_APPS}
         <div class="workspace-info">
-          {#if $workspaceAppStore.selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED}
+          {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
             <div class="workspace-url">
               <AbsTooltip text="Open live app">
                 <ActionButton
@@ -78,7 +80,7 @@
       <ActionButton quiet icon="play" on:click={previewApp}>
         Preview
       </ActionButton>
-      {#if selectedWorkspaceApp && selectedWorkspaceAppId && $featureFlags.WORKSPACE_APPS}
+      {#if $featureFlags.WORKSPACE_APPS}
         <div class="divider-container">
           <Divider size="S" vertical />
         </div>
@@ -88,11 +90,7 @@
           />
           <Toggle
             noPadding
-            on:change={() =>
-              workspaceAppStore.toggleDisabled(
-                selectedWorkspaceAppId,
-                !selectedWorkspaceApp?.disabled
-              )}
+            on:change={() => publishToggleModal.show()}
             value={!selectedWorkspaceApp?.disabled}
           />
         </div>
@@ -105,6 +103,8 @@
     {/key}
   </div>
 </div>
+
+<PublishToggleModal bind:this={publishToggleModal} app={selectedWorkspaceApp} />
 
 <style>
   .app-panel {
