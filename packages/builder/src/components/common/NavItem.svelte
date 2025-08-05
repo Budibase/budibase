@@ -308,6 +308,7 @@
     align-items: center;
     overflow: hidden;
     pointer-events: none;
+    gap: var(--spacing-s);
   }
   .nav-item-body span {
     white-space: nowrap;
