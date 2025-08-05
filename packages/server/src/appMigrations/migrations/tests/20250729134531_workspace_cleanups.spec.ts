@@ -7,6 +7,7 @@ import sdk from "../../../sdk"
 import { structures } from "@budibase/backend-core/tests"
 import { db } from "@budibase/backend-core"
 import { basicScreen } from "../../../tests/utilities/structures"
+import { WorkspaceApp } from "@budibase/types"
 
 const MIGRATIONS: AppMigration[] = [
   {
@@ -30,6 +31,8 @@ describe.each([
   ["dev", () => config.getAppId()],
   ["prod", () => config.getProdAppId()],
 ])("Workspace cleanups migration (%s)", (_, getAppId) => {
+  let defaultWorkspaceApp: WorkspaceApp
+
   beforeAll(async () => {
     await config.init()
   })
@@ -49,6 +52,7 @@ describe.each([
         sdk.workspaceApps.fetch
       )
       expect(workspaceApps).toHaveLength(1)
+      defaultWorkspaceApp = workspaceApps[0]
     }
 
     tk.freeze(structures.generator.date())
@@ -114,16 +118,14 @@ describe.each([
 
     await config.doInContext(getAppId(), async () => {
       const workspaceApp1 = await createWorkspaceApp(true)
-      await createWorkspaceApp(true)
+      const workspaceApp2 = await createWorkspaceApp(true)
 
       tk.travel(Date.now() + 1000)
 
       await sdk.workspaceApps.update(workspaceApp1)
 
-      const workspaceAppIds = (await sdk.workspaceApps.fetch()).map(a => a._id!)
-      const [toDelete1, toDelete2] = workspaceAppIds.filter(
-        id => id !== workspaceApp1._id
-      )
+      const toDelete1 = defaultWorkspaceApp._id!
+      const toDelete2 = workspaceApp2._id!
       keptWorkspaceAppId = workspaceApp1._id!
 
       // Create screens that reference both workspace apps
