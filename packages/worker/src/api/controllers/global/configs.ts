@@ -236,6 +236,11 @@ async function processGoogleConfig(
 async function processOIDCConfig(config: OIDCConfigs, existing?: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 
+  const anyPkceSettings = config.configs.find(cfg => cfg.pkce)
+  if (anyPkceSettings && !(await pro.features.isPkceOidcEnabled())) {
+    throw new Error("License does not allow OIDC PKCE method support")
+  }
+
   if (existing) {
     for (const c of config.configs) {
       const existingConfig = existing.configs.find(e => e.uuid === c.uuid)
