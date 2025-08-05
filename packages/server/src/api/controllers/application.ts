@@ -200,6 +200,7 @@ async function addSampleDataScreen() {
         },
       ],
     },
+    disabled: true,
     isDefault: true,
   })
 
