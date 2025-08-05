@@ -29,6 +29,7 @@
   import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
+  import PublishToggleModal from "@/pages/builder/app/[application]/automation/_components/PublishToggleModal.svelte"
 
   export let automation
 
@@ -42,6 +43,8 @@
   let draggable
   let prodErrors
   let viewMode = ViewMode.EDITOR
+
+  let publishToggleModal
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -189,7 +192,16 @@
       Run test
     </ActionButton>
 
-    {#if !isRowAction}
+    {#if $featureFlags.WORKSPACE_APPS}
+      <div class="toggle-active setting-spacing">
+        <Toggle
+          text={automation.disabled ? "Disabled" : "Live"}
+          on:change={() => publishToggleModal.show()}
+          disabled={!automation?.definition?.trigger}
+          value={!automation.disabled}
+        />
+      </div>
+    {:else if !isRowAction}
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Disabled" : "Enabled"}
@@ -285,6 +297,8 @@
   <TestDataModal />
 </Modal>
 
+<PublishToggleModal bind:this={publishToggleModal} {automation} />
+
 <style>
   .main-flow {
     position: relative;
@@ -325,6 +339,7 @@
 
   .toggle-active :global(.spectrum-Switch) {
     margin: 0px;
+    min-width: 90px;
   }
 
   .root :global(.main-content) {

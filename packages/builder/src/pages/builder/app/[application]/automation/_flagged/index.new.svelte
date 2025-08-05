@@ -1,36 +1,36 @@
 <script lang="ts">
+  import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
+  import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
+  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import HeroBanner from "@/components/common/HeroBanner.svelte"
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import { BannerType } from "@/constants/banners"
+  import { capitalise, durationFromNow } from "@/helpers"
+  import { getTriggerFriendlyName } from "@/helpers/automations"
   import {
-    contextMenuStore,
     automationStore,
+    contextMenuStore,
     deploymentStore,
   } from "@/stores/builder"
-  import type { UIAutomation } from "@budibase/types"
-  import { PublishResourceState } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
-    Button,
     Body,
+    Button,
     Helpers,
     Icon,
     Modal,
     type ModalAPI,
     notifications,
   } from "@budibase/bbui"
-  import HeroBanner from "@/components/common/HeroBanner.svelte"
-  import AppsHero from "assets/automation-hero-x1.png"
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import { url } from "@roxi/routify"
-  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
-  import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { sdk } from "@budibase/shared-core"
-  import TopBar from "@/components/common/TopBar.svelte"
-  import { BannerType } from "@/constants/banners"
-  import { capitalise, durationFromNow } from "@/helpers"
-  import { getTriggerFriendlyName } from "@/helpers/automations"
-  import PublishModal from "@/components/common/PublishModal.svelte"
+  import type { UIAutomation } from "@budibase/types"
+  import { PublishResourceState } from "@budibase/types"
+  import { url } from "@roxi/routify"
+  import AppsHero from "assets/automation-hero-x1.png"
+  import PublishToggleModal from "../_components/PublishToggleModal.svelte"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -40,7 +40,7 @@
   let filter: PublishResourceState | undefined
   let selectedAutomation: UIAutomation | undefined = undefined
 
-  let disableToggleModal: PublishModal
+  let publishToggleModal: PublishToggleModal
 
   const filters: {
     label: string
@@ -95,10 +95,6 @@
     }
   }
 
-  async function toggleDisabled(automation: UIAutomation) {
-    automationStore.actions.toggleDisabled(automation._id!)
-  }
-
   const getContextMenuItems = (automation: UIAutomation) => {
     const edit = {
       icon: "pencil",
@@ -116,7 +112,7 @@
         !automation.definition.trigger ||
         automation.publishStatus.state === PublishResourceState.UNPUBLISHED,
       callback: () => {
-        disableToggleModal.show()
+        publishToggleModal.show()
       },
     }
     const del = {
@@ -282,14 +278,10 @@
     {/if}
   </ConfirmDialog>
 
-  {@const automation = selectedAutomation}
-  <PublishModal
-    bind:this={disableToggleModal}
-    onConfirm={() => toggleDisabled(automation)}
-  >
-    To {automation.disabled ? "activate" : "pause"} this automation you need to publish
-    all the workspace. <br />Do you want to continue?
-  </PublishModal>
+  <PublishToggleModal
+    bind:this={publishToggleModal}
+    automation={selectedAutomation}
+  />
 {/if}
 
 <style>

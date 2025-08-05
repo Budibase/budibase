@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { deploymentStore } from "@/stores/builder"
+  import { automationStore, deploymentStore } from "@/stores/builder"
   import { Modal, ModalContent } from "@budibase/bbui"
+  import type { Automation } from "@budibase/types"
 
-  export let onConfirm: () => Promise<any> | any
+  export let automation: Automation
 
   let modal: Modal
 
@@ -11,7 +12,7 @@
   }
 
   async function confirm() {
-    await onConfirm()
+    await automationStore.actions.toggleDisabled(automation._id!)
     await deploymentStore.publishApp()
   }
 </script>
@@ -27,6 +28,7 @@
     confirmText="Publish workspace"
     cancelText="Cancel"
   >
-    <slot />
+    To {automation.disabled ? "activate" : "pause"} this automation you need to publish
+    all the workspace. <br />Do you want to continue?
   </ModalContent>
 </Modal>
