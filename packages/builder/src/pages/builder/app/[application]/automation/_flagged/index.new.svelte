@@ -58,10 +58,6 @@
       label: "Off",
       filterValue: PublishResourceState.DISABLED,
     },
-    {
-      label: "Pending",
-      filterValue: PublishResourceState.UNPUBLISHED,
-    },
   ]
 
   async function deleteAutomation() {

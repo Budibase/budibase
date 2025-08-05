@@ -48,10 +48,6 @@
       label: "Off",
       filterValue: PublishResourceState.DISABLED,
     },
-    {
-      label: "Pending",
-      filterValue: PublishResourceState.UNPUBLISHED,
-    },
   ]
 
   const deleteWorkspaceApp = async () => {
