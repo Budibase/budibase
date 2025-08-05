@@ -28,8 +28,9 @@
   import { sdk } from "@budibase/shared-core"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
-  import { capitalise, confirm, durationFromNow } from "@/helpers"
+  import { capitalise, durationFromNow } from "@/helpers"
   import { getTriggerFriendlyName } from "@/helpers/automations"
+  import PublishModal from "@/components/common/PublishModal.svelte"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -38,6 +39,8 @@
   let webhookModal: ModalAPI
   let filter: PublishResourceState | undefined
   let selectedAutomation: UIAutomation | undefined = undefined
+
+  let disableToggleModal: PublishModal
 
   const filters: {
     label: string
@@ -92,6 +95,10 @@
     }
   }
 
+  async function toggleDisabled(automation: UIAutomation) {
+    automationStore.actions.toggleDisabled(automation._id!)
+  }
+
   const getContextMenuItems = (automation: UIAutomation) => {
     const edit = {
       icon: "pencil",
@@ -109,17 +116,7 @@
         !automation.definition.trigger ||
         automation.publishStatus.state === PublishResourceState.UNPUBLISHED,
       callback: () => {
-        confirm({
-          title: "Publish workspace",
-          body: `To ${
-            automation.disabled ? "activate" : "pause"
-          } this automation you need to publish all the workspace. Do you want to continue?`,
-          okText: `Publish workspace`,
-          onConfirm: async () => {
-            await automationStore.actions.toggleDisabled(automation._id!)
-            await deploymentStore.publishApp()
-          },
-        })
+        disableToggleModal.show()
       },
     }
     const del = {
@@ -284,6 +281,15 @@
       <br /> To continue you need to publish all the workspace. Do you want to continue?
     {/if}
   </ConfirmDialog>
+
+  {@const automation = selectedAutomation}
+  <PublishModal
+    bind:this={disableToggleModal}
+    onConfirm={() => toggleDisabled(automation)}
+  >
+    To {automation.disabled ? "activate" : "pause"} this automation you need to publish
+    all the workspace. <br />Do you want to continue?
+  </PublishModal>
 {/if}
 
 <style>
