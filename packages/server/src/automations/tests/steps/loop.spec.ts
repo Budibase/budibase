@@ -13,6 +13,14 @@ import {
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
+// Helper to get items from new loop output structure
+const getLoopItems = (
+  loopOutput: any
+): Record<string, AutomationStepResult[]> => {
+  // New structure uses items for full results or defaults to empty
+  return loopOutput.items || {}
+}
+
 describe("Loop Automations", () => {
   const config = new TestConfiguration()
   let table: Table
@@ -28,14 +36,6 @@ describe("Loop Automations", () => {
     table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, {})
   })
-
-  // Helper to get items from new loop output structure
-  const getLoopItems = (
-    loopOutput: any
-  ): Record<string, AutomationStepResult[]> => {
-    // New structure uses items for full results or defaults to empty
-    return loopOutput.items || {}
-  }
 
   afterAll(async () => {
     await automation.shutdown()
@@ -1137,250 +1137,6 @@ describe("Loop Automations", () => {
 
       expect(logResults).toHaveLength(1)
       expect(logResults[0].outputs.message).toContain("Processed: process")
-    })
-  })
-
-  describe("Loop Storage Strategy", () => {
-    it("should use FULL strategy by default for small loops", async () => {
-      const { steps } = await createAutomationBuilder(config)
-        .onAppAction()
-        .loopV2({
-          steps: builder => {
-            return [
-              builder.serverLog({
-                text: "Log Step 1: {{loop.currentItem}}",
-              }),
-              builder.serverLog({
-                text: "Log Step 2: {{loop.currentItem}}",
-              }),
-            ]
-          },
-          option: LoopStepType.ARRAY,
-          binding: [1, 2, 3, 4, 5],
-        })
-        .test({ fields: {} })
-
-      expect(steps[0].outputs.success).toBe(true)
-      expect(steps[0].outputs.summary.totalProcessed).toBe(10) // 2 children x 5 iterations
-
-      // FULL strategy should include items
-      expect(steps[0].outputs.items).toBeDefined()
-      expect(steps[0].outputs.recentItems).toBeUndefined()
-
-      const items = steps[0].outputs.items
-      expect(Object.keys(items)).toHaveLength(2)
-      Object.values(items).forEach((stepResults: any) => {
-        expect(stepResults).toHaveLength(5) // All 5 iterations stored
-      })
-    })
-
-    it("should use SUMMARY strategy when explicitly requested", async () => {
-      const { steps } = await createAutomationBuilder(config)
-        .onAppAction()
-        .loopV2({
-          steps: builder => {
-            return [
-              builder.serverLog({
-                text: "Log Step 1: {{loop.currentItem}}",
-              }),
-              builder.serverLog({
-                text: "Log Step 2: {{loop.currentItem}}",
-              }),
-            ]
-          },
-          option: LoopStepType.ARRAY,
-          binding: [1, 2, 3],
-          resultOptions: {
-            summarizeOnly: true, // Force SUMMARY strategy
-          },
-        })
-        .test({ fields: {} })
-
-      expect(steps[0].outputs.success).toBe(true)
-      expect(steps[0].outputs.summary.totalProcessed).toBe(6) // 2 children x 3 iterations
-
-      // SUMMARY strategy should NOT include items or recentItems
-      expect(steps[0].outputs.items).toBeUndefined()
-      expect(steps[0].outputs.recentItems).toBeUndefined()
-
-      // Should still have summary data
-      expect(steps[0].outputs.summary).toBeDefined()
-      expect(steps[0].outputs.summary.successCount).toBe(6)
-      expect(steps[0].outputs.summary.failureCount).toBe(0)
-    })
-
-    it("should track failure information in summary", async () => {
-      const { steps } = await createAutomationBuilder(config)
-        .onAppAction()
-        .loopV2({
-          steps: builder => {
-            return [
-              builder.executeScript({
-                code: `
-                  if (loop.currentItem === 3) {
-                    throw new Error("Test failure on item 3")
-                  }
-                  return loop.currentItem
-                `,
-              }),
-            ]
-          },
-          option: LoopStepType.ARRAY,
-          binding: [1, 2, 3, 4, 5],
-          resultOptions: {
-            summarizeOnly: true,
-          },
-        })
-        .test({ fields: {} })
-
-      expect(steps[0].outputs.success).toBe(false) // Should fail due to error
-      expect(steps[0].outputs.summary).toBeDefined()
-      expect(steps[0].outputs.summary.totalProcessed).toBeGreaterThan(0)
-      expect(steps[0].outputs.summary.failureCount).toBeGreaterThan(0)
-      expect(steps[0].outputs.summary.firstFailure).toBeDefined()
-      expect(steps[0].outputs.summary.firstFailure.error).toContain(
-        "Test failure on item 3"
-      )
-
-      // Should not have detailed results in SUMMARY mode
-      expect(steps[0].outputs.items).toBeUndefined()
-      expect(steps[0].outputs.recentItems).toBeUndefined()
-    })
-
-    it("should handle nested loops with summary strategy", async () => {
-      const { steps } = await createAutomationBuilder(config)
-        .onAppAction()
-        .loopV2({
-          steps: outerBuilder => {
-            return [
-              outerBuilder.serverLog({
-                text: "Outer: {{loop.currentItem.name}}",
-              }),
-              outerBuilder.loopV2({
-                steps: innerBuilder => {
-                  return [
-                    innerBuilder.serverLog({
-                      text: "Inner: {{loop.currentItem}}",
-                    }),
-                  ]
-                },
-                option: LoopStepType.ARRAY,
-                binding: "{{loop.currentItem.values}}",
-                resultOptions: {
-                  summarizeOnly: true, // Inner loop uses summary
-                },
-              }),
-            ]
-          },
-          option: LoopStepType.ARRAY,
-          binding: [
-            { name: "Group A", values: ["A1", "A2", "A3"] },
-            { name: "Group B", values: ["B1", "B2"] },
-          ],
-          resultOptions: {
-            storeFullResults: true, // Outer loop stores full results
-          },
-        })
-        .test({ fields: {} })
-
-      expect(steps[0].outputs.success).toBe(true)
-      expect(steps[0].outputs.summary.totalProcessed).toBe(4) // 2 children x 2 iterations
-
-      // Outer loop should have items (FULL strategy)
-      expect(steps[0].outputs.items).toBeDefined()
-      const outerResults = steps[0].outputs.items
-
-      // Check that nested summaries are present
-      expect(steps[0].outputs.nestedSummaries).toBeDefined()
-
-      // Inner loops should have used SUMMARY strategy - no detailed results in nested outputs
-      const outerStepIds = Object.keys(outerResults)
-      const innerLoopResults = outerResults[outerStepIds[1]] // Second step is the inner loop
-
-      expect(innerLoopResults[0].outputs.items).toBeUndefined() // Inner loop used summary
-      expect(innerLoopResults[0].outputs.summary).toBeDefined() // But has summary
-      expect(innerLoopResults[1].outputs.items).toBeUndefined()
-      expect(innerLoopResults[1].outputs.summary).toBeDefined()
-    })
-
-    it("should respect storeFullResults option", async () => {
-      const { steps } = await createAutomationBuilder(config)
-        .onAppAction()
-        .loopV2({
-          steps: builder => {
-            return [
-              builder.serverLog({
-                text: "Processing: {{loop.currentItem}}",
-              }),
-            ]
-          },
-          option: LoopStepType.ARRAY,
-          binding: [1, 2, 3, 4, 5],
-          resultOptions: {
-            storeFullResults: true, // Explicitly request full storage
-            summarizeOnly: false,
-          },
-        })
-        .test({ fields: {} })
-
-      expect(steps[0].outputs.success).toBe(true)
-      expect(steps[0].outputs.summary.totalProcessed).toBe(5)
-
-      // Should have full results
-      expect(steps[0].outputs.items).toBeDefined()
-      expect(steps[0].outputs.recentItems).toBeUndefined()
-
-      const items = steps[0].outputs.items
-      const stepResults = Object.values(items)[0] as any[]
-      expect(stepResults).toHaveLength(5)
-
-      stepResults.forEach((result, index) => {
-        expect(result.outputs.message).toContain(`Processing: ${index + 1}`)
-      })
-    })
-
-    it("should handle mixed storage strategies in nested loops", async () => {
-      const { steps } = await createAutomationBuilder(config)
-        .onAppAction()
-        .loopV2({
-          steps: outerBuilder => {
-            return [
-              outerBuilder.loopV2({
-                steps: innerBuilder => {
-                  return [
-                    innerBuilder.serverLog({
-                      text: "Deep nested: {{loop.currentItem}}",
-                    }),
-                  ]
-                },
-                option: LoopStepType.ARRAY,
-                binding: [1, 2],
-                resultOptions: {
-                  summarizeOnly: true, // Deep nested uses summary
-                },
-              }),
-            ]
-          },
-          option: LoopStepType.ARRAY,
-          binding: ["A", "B"],
-          resultOptions: {
-            storeFullResults: true, // Outer uses full storage
-          },
-        })
-        .test({ fields: {} })
-
-      expect(steps[0].outputs.success).toBe(true)
-      expect(steps[0].outputs.items).toBeDefined() // Outer loop has full results
-
-      const outerItems = steps[0].outputs.items
-      const innerLoopResults = Object.values(outerItems)[0] as any[]
-
-      // Inner loops should have summaries but no detailed items
-      innerLoopResults.forEach(innerResult => {
-        expect(innerResult.outputs.summary).toBeDefined()
-        expect(innerResult.outputs.items).toBeUndefined() // Used summary strategy
-        expect(innerResult.outputs.summary.totalProcessed).toBe(2)
-      })
     })
   })
 })

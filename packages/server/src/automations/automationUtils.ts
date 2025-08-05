@@ -18,7 +18,7 @@ import {
   LoopSummary,
   LoopV2Step,
   Row,
-  StorageStrategy,
+  DEFAULT_MAX_STORED_RESULTS,
 } from "@budibase/types"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
@@ -333,58 +333,47 @@ export function getLoopMaxIterations(loopStep: LoopV2Step): number {
   )
 }
 
-export function determineStorageStrategy(
-  step: LoopV2Step,
-  loopDepth: number,
-  expectedIterations: number
-): StorageStrategy {
+// Simplified: Just use maxStoredResults from options or default
+export function getMaxStoredResults(step: LoopV2Step): number {
   const options = step.inputs.resultOptions
 
-  const baseThreshold = env.AUTOMATION_LOOPS_RESULTS_THRESHOLD
-  const depthMultiplier = 0.5 ** (loopDepth - 1)
-  const adjustedThreshold = baseThreshold * depthMultiplier
+  // If summarizeOnly is true, don't store any results
+  if (options?.summarizeOnly) {
+    return 0
+  }
 
-  if (options?.summarizeOnly) return StorageStrategy.SUMMARY
-  if (loopDepth > 2) return StorageStrategy.SUMMARY // More than two nested loops we return a summary regardless
-  if (expectedIterations > adjustedThreshold) return StorageStrategy.HYBRID
-  return StorageStrategy.FULL
+  const userMax = options?.maxStoredIterations
+  if (userMax !== undefined && userMax > 0) {
+    return Math.min(userMax, DEFAULT_MAX_STORED_RESULTS)
+  }
+  return DEFAULT_MAX_STORED_RESULTS
 }
 
 export interface LoopStorage {
-  allResults: Record<string, AutomationStepResult[]>
-  recentResults: Record<string, AutomationStepResult[]>
+  results: Record<string, AutomationStepResult[]>
   summary: LoopSummary
   nestedSummaries: Record<string, LoopSummary[]>
-  strategy: StorageStrategy
-  maxStoredIterations: number
+  maxStoredResults: number
 }
 
 export function initializeLoopStorage(
-  strategy: StorageStrategy,
   children: AutomationStep[],
-  maxStoredIterations: number
+  maxStoredResults: number
 ): LoopStorage {
   const storage: LoopStorage = {
-    allResults: {},
-    recentResults: {},
+    results: {},
     summary: {
       totalProcessed: 0,
       successCount: 0,
       failureCount: 0,
     },
     nestedSummaries: {},
-    strategy,
-    maxStoredIterations,
+    maxStoredResults,
   }
 
   // Initialize result arrays for each child step
   for (const { id } of children) {
-    if (strategy === StorageStrategy.FULL) {
-      storage.allResults[id] = []
-    }
-    if (strategy === StorageStrategy.HYBRID) {
-      storage.recentResults[id] = []
-    }
+    storage.results[id] = []
     storage.nestedSummaries[id] = []
   }
 
@@ -413,21 +402,12 @@ export function processStandardResult(
     }
   }
 
-  // Store based on strategy
-  if (
-    storage.strategy === StorageStrategy.FULL &&
-    storage.allResults[result.id]
-  ) {
-    storage.allResults[result.id].push(result)
-  }
-
-  if (
-    storage.strategy === StorageStrategy.HYBRID &&
-    storage.recentResults[result.id]
-  ) {
-    storage.recentResults[result.id].push(result)
-    if (storage.recentResults[result.id].length > storage.maxStoredIterations) {
-      storage.recentResults[result.id].shift()
+  // Simple storage: keep up to N results
+  if (storage.results[result.id]) {
+    storage.results[result.id].push(result)
+    // If we exceed max, remove the oldest
+    if (storage.results[result.id].length > storage.maxStoredResults) {
+      storage.results[result.id].shift()
     }
   }
 }
@@ -450,7 +430,7 @@ export function buildLoopOutput(
   forceFailure = false
 ): Record<string, any> {
   // Determine success based on status or failure count
-  let { summary, strategy } = storage
+  let { summary } = storage
   let success = summary.failureCount === 0
   if (
     forceFailure ||
@@ -470,18 +450,9 @@ export function buildLoopOutput(
     output.status = status
   }
 
-  if (
-    strategy === StorageStrategy.FULL &&
-    Object.keys(storage.allResults).length > 0
-  ) {
-    output.items = storage.allResults
-  }
-
-  if (
-    strategy === StorageStrategy.HYBRID &&
-    Object.keys(storage.recentResults).length > 0
-  ) {
-    output.recentItems = storage.recentResults
+  // Only include items if we have stored results (not when summarizeOnly)
+  if (Object.keys(storage.results).length > 0 && storage.maxStoredResults > 0) {
+    output.items = storage.results
   }
 
   if (Object.values(storage.nestedSummaries).some(arr => arr.length > 0)) {

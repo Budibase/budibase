@@ -17,6 +17,7 @@ export async function run({
   try {
     const llm = await ai.getLLM()
     const response = await llm?.prompt(inputs.prompt)
+    console.log(response)
     return {
       response: response?.message,
       success: true,

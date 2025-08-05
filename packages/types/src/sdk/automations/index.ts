@@ -29,10 +29,7 @@ export interface AutomationRowEvent {
   oldRow: Row
 }
 
-export enum StorageStrategy {
-  FULL = "full",
-  HYBRID = "hybrid",
-  SUMMARY = "summary",
-}
+// Simplified storage - just store up to N results
+export const DEFAULT_MAX_STORED_RESULTS = 100
 
 export type AutomationJob = Job<AutomationData>

@@ -29,7 +29,6 @@ import {
   isLogicalFilter,
   Branch,
   LoopV2Step,
-  StorageStrategy,
 } from "@budibase/types"
 import { AutomationContext } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -439,24 +438,16 @@ class Orchestrator {
             status: AutomationStepStatus.INCORRECT_TYPE,
           })
         }
-
-        // Determine storage strategy based on context
-        // For legacy loops, always use FULL strategy to maintain backward compatibility
         const isLegacyLoop = step.isLegacyLoop
-        const strategy = isLegacyLoop
-          ? StorageStrategy.FULL
-          : automationUtils.determineStorageStrategy(
-              step,
-              loopDepth,
-              iterable.length
-            )
 
-        const maxStoredIterations =
-          step.inputs.resultOptions?.maxStoredIterations ?? 10
+        // Simplified storage: just store up to N results
+        const maxStoredResults = isLegacyLoop
+          ? Number.MAX_SAFE_INTEGER
+          : automationUtils.getMaxStoredResults(step)
+
         const storage = automationUtils.initializeLoopStorage(
-          strategy,
           children,
-          maxStoredIterations
+          maxStoredResults
         )
 
         for (; iterations < iterable.length; iterations++) {
@@ -468,7 +459,7 @@ class Orchestrator {
               iterations,
             })
             if (isLegacyLoop) {
-              const flatItems = this.flattenItems(storage.allResults)
+              const flatItems = this.flattenItems(storage.results)
               return stepFailure(step, {
                 status: AutomationStepStatus.MAX_ITERATIONS,
                 success: false,
@@ -494,7 +485,7 @@ class Orchestrator {
             })
             if (isLegacyLoop) {
               const childStep = children[0]
-              const flatItems = this.flattenItems(storage.allResults)
+              const flatItems = this.flattenItems(storage.results)
               return stepFailure(childStep, {
                 status: AutomationStepStatus.FAILURE_CONDITION,
                 success: false,
@@ -540,7 +531,7 @@ class Orchestrator {
             )
             if (hasFailures) {
               if (isLegacyLoop) {
-                const flatItems = this.flattenItems(storage.allResults)
+                const flatItems = this.flattenItems(storage.results)
                 return stepFailure(step, {
                   success: false,
                   items: flatItems,
@@ -569,7 +560,7 @@ class Orchestrator {
         if (isLegacyLoop) {
           // For legacy loops, return the old format with flat items array
           const childStep = children[0]
-          const flatItems = this.flattenItems(storage.allResults)
+          const flatItems = this.flattenItems(storage.results)
           return stepSuccess(childStep, {
             status,
             items: flatItems,
