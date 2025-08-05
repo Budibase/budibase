@@ -505,6 +505,51 @@ describe("/applications", () => {
         ])
       )
     })
+
+    it("should not return disabled apps", async () => {
+      const { workspaceApp: app1Workspace1 } =
+        await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "App One",
+            url: "/appone",
+            disabled: false,
+          })
+        )
+
+      await config.api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Another app",
+          url: "/other",
+          disabled: true,
+        })
+      )
+
+      app = await config.publish()
+
+      const response = await config.api.application.fetchClientApps()
+
+      expect(response.apps).toHaveLength(2)
+      expect(response.apps).toEqual(
+        expect.arrayContaining([
+          {
+            appId: expect.stringMatching(
+              new RegExp(`^${app.appId}_workspace_app_.+`)
+            ),
+            name: app.name,
+            prodId: app.appId,
+            updatedAt: app.updatedAt,
+            url: app.url,
+          },
+          {
+            appId: `${app.appId}_${app1Workspace1._id}`,
+            name: "App One",
+            prodId: config.getProdAppId(),
+            updatedAt: app.updatedAt,
+            url: `${app.url}/appone`,
+          },
+        ])
+      )
+    })
   })
 
   describe("fetchAppDefinition", () => {
