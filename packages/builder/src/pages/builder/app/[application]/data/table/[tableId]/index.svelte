@@ -1,5 +1,5 @@
 <script>
-  import { Banner, notifications } from "@budibase/bbui"
+  import { Banner, Switcher, notifications } from "@budibase/bbui"
   import {
     datasources,
     tables,
@@ -25,6 +25,7 @@
   import GridScreensButton from "@/components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
   import GridAutomationsButton from "@/components/backend/DataTable/buttons/grid/GridAutomationsButton.svelte"
   import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
+  import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   let generateButton
@@ -154,6 +155,9 @@
         <GridAutomationsButton on:generate={() => generateButton?.show()} />
         <GridGenerateButton bind:this={generateButton} />
       {/if}
+    </svelte:fragment>
+    <svelte:fragment slot="controls-right">
+      <GridDevProdSwitcher />
     </svelte:fragment>
 
     <!-- Content for editing columns -->
