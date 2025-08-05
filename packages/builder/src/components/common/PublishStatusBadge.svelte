@@ -5,7 +5,7 @@
 
   const statusDisplayName: Record<PublishResourceState, string> = {
     [PublishResourceState.PUBLISHED]: "Live",
-    [PublishResourceState.UNPUBLISHED]: "Pending",
+    [PublishResourceState.UNPUBLISHED]: "Off",
     [PublishResourceState.DISABLED]: "Off",
   }
 </script>
@@ -13,8 +13,9 @@
 <div
   class="status"
   class:published={status === PublishResourceState.PUBLISHED}
-  class:unpublished={status === PublishResourceState.UNPUBLISHED}
-  class:disabled={status === PublishResourceState.DISABLED}
+  class:unpublished={false}
+  class:disabled={status === PublishResourceState.DISABLED ||
+    status === PublishResourceState.UNPUBLISHED}
 >
   {statusDisplayName[status]}
 </div>
