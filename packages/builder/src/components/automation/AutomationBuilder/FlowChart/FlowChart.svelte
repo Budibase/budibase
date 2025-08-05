@@ -30,6 +30,7 @@
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
   import PublishToggleModal from "@/pages/builder/app/[application]/automation/_components/PublishToggleModal.svelte"
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
 
   export let automation
 
@@ -193,9 +194,9 @@
     </ActionButton>
 
     {#if $featureFlags.WORKSPACE_APPS}
+      <PublishStatusBadge status={automation.publishStatus.state} />
       <div class="toggle-active setting-spacing">
         <Toggle
-          text={automation.disabled ? "Disabled" : "Live"}
           on:change={() => publishToggleModal.show()}
           disabled={!automation?.definition?.trigger}
           value={!automation.disabled}
@@ -339,7 +340,6 @@
 
   .toggle-active :global(.spectrum-Switch) {
     margin: 0px;
-    min-width: 90px;
   }
 
   .root :global(.main-content) {
