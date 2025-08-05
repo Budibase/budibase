@@ -61,6 +61,7 @@ import {
   isActionStep,
   PublishResourceState,
   UIAutomation,
+  FeatureFlag,
 } from "@budibase/types"
 import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
 import { FIELDS as COLUMNS } from "@/constants/backend"
@@ -81,6 +82,7 @@ import {
 } from "@/types/automations"
 import { TableNames } from "@/constants"
 import { getSequentialName } from "@/helpers/duplicate"
+import { featureFlag } from "@/helpers"
 
 const initialAutomationState: AutomationStoreState = {
   automations: [],
@@ -1539,7 +1541,7 @@ const automationActions = (store: AutomationStore) => ({
         steps: [],
         trigger,
       },
-      disabled: false,
+      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS),
     }
     const response = await store.actions.save(automation)
     return response
@@ -1555,6 +1557,7 @@ const automationActions = (store: AutomationStore) => ({
       ),
       _id: undefined,
       _rev: undefined,
+      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS),
     })
     return response
   },
