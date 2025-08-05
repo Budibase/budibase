@@ -58,6 +58,7 @@
 
 <style>
   i {
+    padding-top: 2px;
     display: grid;
     place-items: center;
     color: var(--color);

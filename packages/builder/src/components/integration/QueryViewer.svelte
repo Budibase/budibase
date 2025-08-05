@@ -11,6 +11,7 @@
     Body,
     Divider,
     Button,
+    ActionButton,
   } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
@@ -172,10 +173,14 @@
       </div>
       <div class="controls">
         <ConnectedQueryScreens sourceId={query._id} />
-        <Button disabled={loading} on:click={runQuery} overBackground>
-          <Icon size="S" name="play" />
-          Run query</Button
+        <ActionButton
+          icon="play"
+          disabled={loading}
+          on:click={runQuery}
+          overBackground
         >
+          Run query
+        </ActionButton>
         <div class="tooltip" title="Run your query to enable saving">
           <Button
             on:click={async () => {
