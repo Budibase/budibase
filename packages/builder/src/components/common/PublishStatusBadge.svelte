@@ -4,7 +4,7 @@
   export let status: PublishResourceState
 
   const statusDisplayName: Record<PublishResourceState, string> = {
-    [PublishResourceState.PUBLISHED]: "On",
+    [PublishResourceState.PUBLISHED]: "Live",
     [PublishResourceState.UNPUBLISHED]: "Pending",
     [PublishResourceState.DISABLED]: "Off",
   }

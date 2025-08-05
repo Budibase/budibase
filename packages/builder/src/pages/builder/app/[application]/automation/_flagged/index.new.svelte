@@ -48,7 +48,7 @@
       filterValue: undefined,
     },
     {
-      label: "On",
+      label: "Live",
       filterValue: PublishResourceState.PUBLISHED,
     },
     {
