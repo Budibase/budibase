@@ -104,9 +104,7 @@
       name: automation.disabled ? "Switch on" : "Switch off",
       keyBind: null,
       visible: true,
-      disabled:
-        !automation.definition.trigger ||
-        automation.publishStatus.state === PublishResourceState.UNPUBLISHED,
+      disabled: !automation.definition.trigger,
       callback: () => {
         publishToggleModal.show()
       },

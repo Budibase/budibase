@@ -84,8 +84,6 @@
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
       visible: true,
-      disabled:
-        workspaceApp.publishStatus.state === PublishResourceState.UNPUBLISHED,
       callback: () => {
         publishToggleModal.show()
       },
