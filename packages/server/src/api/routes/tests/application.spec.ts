@@ -32,6 +32,7 @@ import {
   basicQuery,
 } from "../../../tests/utilities/structures"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import sdk from "../../../sdk"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -49,6 +50,20 @@ describe("/applications", () => {
   async function createNewApp() {
     app = await config.newTenant()
     await config.publish()
+  }
+
+  async function enableDefaultWorkspaceApp(app: App) {
+    await config.withApp(app, async () => {
+      const workspaceApps = await sdk.workspaceApps.fetch()
+
+      const defaultWorkspaceApp = workspaceApps.find(a => a.name === app.name)
+      expect(defaultWorkspaceApp).toBeDefined()
+
+      await sdk.workspaceApps.update({
+        ...defaultWorkspaceApp!,
+        disabled: false,
+      })
+    })
   }
 
   beforeEach(async () => {
@@ -263,6 +278,11 @@ describe("/applications", () => {
   })
 
   describe("fetchClientApps", () => {
+    beforeEach(async () => {
+      await enableDefaultWorkspaceApp(config.app!)
+      await config.publish()
+    })
+
     it("should return apps with default workspace app when published", async () => {
       const response = await config.api.application.fetchClientApps()
       expect(response.apps).toHaveLength(1)
@@ -362,11 +382,13 @@ describe("/applications", () => {
         let secondApp = await config.api.application.create({
           name: "Second App",
         })
+        await enableDefaultWorkspaceApp(secondApp)
 
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
             name: "App Two",
             url: "/apptwo",
+            disabled: false,
           })
         )
         await config.api.application.publish(secondApp.appId)
@@ -416,6 +438,7 @@ describe("/applications", () => {
           structures.workspaceApps.createRequest({
             name: "App One",
             url: "/appone",
+            disabled: false,
           })
         )
       app = await config.publish()
@@ -425,6 +448,7 @@ describe("/applications", () => {
         structures.workspaceApps.createRequest({
           name: "Another app",
           url: "/other",
+          disabled: false,
         })
       )
 
@@ -433,14 +457,17 @@ describe("/applications", () => {
         const secondApp = await config.api.application.create({
           name: "Second App",
         })
+
+        await enableDefaultWorkspaceApp(secondApp)
         await config.api.application.publish(secondApp.appId)
         return secondApp
       })
 
       // Unpublished app
-      await config.api.application.create({
+      const thirdApp = await config.api.application.create({
         name: "Third App",
       })
+      await enableDefaultWorkspaceApp(thirdApp)
 
       const response = await config.api.application.fetchClientApps()
 
