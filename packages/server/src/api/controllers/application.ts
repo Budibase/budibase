@@ -11,6 +11,7 @@ import {
   revertClientLibrary,
   updateClientLibrary,
   storeTempFileStream,
+  downloadTemplate,
 } from "../../utilities/fileSystem"
 import {
   AppStatus,
@@ -84,6 +85,7 @@ import { createSampleDataTableScreen } from "../../constants/screens"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { processMigrations } from "../../appMigrations/migrationsProcessor"
 import { ImportOpts } from "../../sdk/app/backups/imports"
+import { join } from "path"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -166,10 +168,17 @@ async function createInstance(appId: string, template: AppTemplate) {
       updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
       password: template.file?.password,
     }
-    const path = template.file?.path
+
+    let path = template.file?.path
+    if (!path && template.key) {
+      const [type, name] = template.key.split("/")
+      const tmpPath = await downloadTemplate(type, name)
+      path = join(tmpPath, name, "db", "dump.txt")
+    }
     if (!path) {
       throw new HTTPError("App export must have path", 400)
     }
+
     await sdk.backups.importApp(appId, db, path, opts)
   } else {
     // create the users table
