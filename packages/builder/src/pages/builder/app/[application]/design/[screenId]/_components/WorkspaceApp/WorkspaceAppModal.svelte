@@ -101,7 +101,10 @@
 
     try {
       if (isNew) {
-        const newScreen = await workspaceAppStore.add(workspaceAppData)
+        const newScreen = await workspaceAppStore.add({
+          ...workspaceAppData,
+          disabled: true,
+        })
         notifications.success("App created successfully")
         $goto(`./${newScreen._id}`)
       } else {
