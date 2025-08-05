@@ -172,6 +172,12 @@
 
       return a.publishStatus.state === filter
     })
+    .sort((a, b) => {
+      if (a.favourite._id && b.favourite._id) {
+        return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
+      }
+      return a.favourite._id ? -1 : 1
+    })
 
   function getTriggerFriendlyName(automation: Automation) {
     const definition =

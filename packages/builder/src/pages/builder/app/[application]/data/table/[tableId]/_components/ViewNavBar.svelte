@@ -5,9 +5,16 @@
     userSelectedResourceMap,
     contextMenuStore,
     appStore,
+    workspaceFavouriteStore,
   } from "@/stores/builder"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import { Icon, ActionButton, ActionMenu, MenuItem } from "@budibase/bbui"
+  import {
+    Icon,
+    ActionButton,
+    ActionMenu,
+    MenuItem,
+    notifications,
+  } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
   import EditTableModal from "@/components/backend/TableNavigator/TableNavItem/EditModal.svelte"
@@ -19,6 +26,10 @@
   import { tick, onDestroy } from "svelte"
   import { derived } from "svelte/store"
   import CreateViewButton from "./CreateViewButton.svelte"
+  import { WorkspaceResource } from "@budibase/types"
+  import { API } from "@/api"
+
+  const favourites = workspaceFavouriteStore.lookup
 
   // View overflow
   let observer
@@ -105,9 +116,39 @@
     e.stopPropagation()
     editableView = view
     await tick()
+    const fav = $favourites[view?.id]
     contextMenuStore.open(
       view.id,
       [
+        {
+          icon: "star",
+          iconWeight: fav ? "fill" : "regular",
+          iconColour: fav
+            ? "var(--spectrum-global-color-yellow-1000)"
+            : undefined,
+          name: fav ? "Remove from favourites" : "Add to favourites",
+          keyBind: null,
+          visible: true,
+          disabled: false,
+          callback: async () => {
+            try {
+              if (fav?._id && fav?._rev) {
+                await API.workspace.delete(fav._id, fav._rev)
+                notifications.success("View removed to favourites")
+              } else {
+                await API.workspace.create({
+                  resourceId: view?.id,
+                  resourceType: WorkspaceResource.VIEW,
+                })
+                notifications.success("View added to favourites")
+              }
+              await workspaceFavouriteStore.init()
+            } catch (e) {
+              notifications.error("Failed to update favourite")
+              console.error("Failed to update favourite", e)
+            }
+          },
+        },
         {
           icon: "pencil",
           name: "Edit",

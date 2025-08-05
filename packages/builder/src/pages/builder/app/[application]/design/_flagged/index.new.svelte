@@ -1,6 +1,14 @@
 <script lang="ts">
-  import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
-  import { PublishResourceState, type WorkspaceApp } from "@budibase/types"
+  import {
+    contextMenuStore,
+    workspaceAppStore,
+    workspaceFavouriteStore,
+  } from "@/stores/builder"
+  import {
+    PublishResourceState,
+    WorkspaceResource,
+    type WorkspaceApp,
+  } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -8,6 +16,7 @@
     Helpers,
     Icon,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero-x1.png"
@@ -16,11 +25,14 @@
   import { capitalise, confirm, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
   let selectedWorkspaceApp: WorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
+
+  $: favourites = workspaceFavouriteStore.lookup
 
   const filters: {
     label: string
@@ -122,13 +134,29 @@
     workspaceAppModal.show()
   }
 
-  $: workspaceApps = $workspaceAppStore.workspaceApps.filter(a => {
-    if (!filter) {
-      return true
-    }
+  $: workspaceApps = $workspaceAppStore.workspaceApps
+    .filter(a => {
+      if (!filter) {
+        return true
+      }
 
-    return a.publishStatus.state === filter
-  })
+      return a.publishStatus.state === filter
+    })
+    .map(app => {
+      return {
+        ...app,
+        favourite: $favourites?.[app._id!] ?? {
+          resourceType: WorkspaceResource.WORKSPACE_APP,
+          resourceId: app._id!,
+        },
+      }
+    })
+    .sort((a, b) => {
+      if (a.favourite._id && b.favourite._id) {
+        return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
+      }
+      return a.favourite._id ? -1 : 1
+    })
 </script>
 
 <div class="apps-index">
@@ -169,6 +197,7 @@
   {#each workspaceApps as app}
     <a
       class="app"
+      class:favourite={app.favourite?._id}
       href={`./design/${app.screens[0]?._id}`}
       on:contextmenu={e => openContextMenu(e, app)}
       class:active={showHighlight && selectedWorkspaceApp === app}
@@ -183,12 +212,22 @@
         </span>
       </AbsTooltip>
       <div class="actions">
-        <Icon
-          name="More"
-          size="M"
-          hoverable
-          on:click={e => openContextMenu(e, app)}
-        />
+        <div class="ctx-btn">
+          <Icon
+            name="More"
+            size="M"
+            hoverable
+            on:click={e => openContextMenu(e, app)}
+          />
+        </div>
+
+        <span class="favourite-btn">
+          <FavouriteResourceButton
+            favourite={app.favourite}
+            position={TooltipPosition.Left}
+            noWrap
+          />
+        </span>
       </div>
     </a>
   {/each}
@@ -230,7 +269,7 @@
   .app,
   .table-header {
     display: grid;
-    grid-template-columns: 1fr 200px 200px 200px 50px;
+    grid-template-columns: 1fr 200px 200px 50px;
     border-bottom: var(--border);
     align-items: center;
   }
@@ -247,17 +286,31 @@
     &.active {
       background: var(--spectrum-global-color-gray-200);
 
-      & .actions {
+      & .actions > * {
         opacity: 1;
         pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
       }
     }
   }
   .actions {
     justify-content: flex-end;
     display: flex;
-    opacity: 0;
+    align-items: center;
     pointer-events: none;
+    gap: var(--spacing-xs);
+  }
+
+  .actions > * {
+    opacity: 0;
     transition: opacity 130ms ease-out;
+  }
+
+  .actions .favourite-btn {
+    pointer-events: all;
   }
 </style>

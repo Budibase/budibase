@@ -1,28 +1,60 @@
 <script lang="ts">
   import { Context, Icon, StatusLight, Body, Link } from "@budibase/bbui"
-  import { createLocalStorageStore } from "@budibase/frontend-core"
+  import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
   import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/bb-emblem.svg"
   import {
     appStore,
     builderStore,
     isOnlyUser,
-    automationStore,
     workspaceFavouriteStore,
+    workspaceAppStore,
+    automationStore,
+    datasources,
+    tables,
+    queries,
+    viewsV2,
   } from "@/stores/builder"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import { featureFlags, admin } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
-  import { type WorkspaceFavourite, WorkspaceResource } from "@budibase/types"
+  import {
+    type Automation,
+    type Datasource,
+    type Query,
+    type Table,
+    type UIInternalDatasource,
+    type UIWorkspaceApp,
+    type ViewV2,
+    type WorkspaceApp,
+    type WorkspaceFavourite,
+    WorkspaceResource,
+  } from "@budibase/types"
+  import { derived } from "svelte/store"
+
+  type ResourceLinkFn = (id: string) => string
+  type WorkspaceResourceDoc =
+    | Table
+    | Automation
+    | WorkspaceApp
+    | Datasource
+    | UIInternalDatasource
+    | Query
+    | ViewV2
 
   setContext(Context.PopoverRoot, ".nav > .popover-container")
 
+  const datasourceLookup = datasources.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
 
   let ignoreFocus = false
   let focused = false
   let timeout: ReturnType<typeof setTimeout> | undefined
+
+  // Maybe
+  $: dsLookup = $datasourceLookup
 
   $: appId = $appStore.appId
   $: collapsed = !focused && !$pinned
@@ -31,31 +63,85 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-  $: favourites = $workspaceFavouriteStore
 
-  type ResourceLinkFn = (id: string) => string
+  // Ignore resources without names
+  $: favourites = $workspaceFavouriteStore
+    .filter(f => $resourceNameLookup[f.resourceId])
+    .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
+
+  const allResourceStores = derived(
+    [automationStore, workspaceAppStore, datasources, tables, queries, viewsV2],
+    ([$automations, $apps, $datasources, $tables, $queries, $views]) => ({
+      automations: $automations.automations,
+      apps: $apps.workspaceApps,
+      datasources: $datasources.list,
+      tables: $tables.list,
+      queries: $queries.list,
+      views: $views.list,
+    })
+  )
+
+  // Mitigates any unnecessary renders
+  const resourceNameLookup = derivedMemo(allResourceStores, stores => {
+    const lookup: Record<string, string> = {}
+
+    const addToLookup = (items: WorkspaceResourceDoc[]) => {
+      //id for views, _id for everything else you donkey
+      items?.forEach(item => {
+        const id = (item as any)._id ?? (item as any).id
+        if (id && item.name) {
+          lookup[id] = item.name
+        }
+      })
+    }
+
+    addToLookup(stores.automations)
+    addToLookup(stores.apps)
+    addToLookup(stores.datasources)
+    addToLookup(stores.tables)
+    addToLookup(stores.queries)
+    addToLookup(stores.views)
+
+    return lookup
+  })
 
   const resourceLink = (favourite: WorkspaceFavourite) => {
     const appPrefix = `/builder/app/${appId}`
-    const link: Partial<Record<WorkspaceResource, ResourceLinkFn>> = {
+    const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
         `${appPrefix}/automation/${id}`,
       [WorkspaceResource.DATASOURCE]: (id: string) =>
         `${appPrefix}/data/datasource/${id}`,
       [WorkspaceResource.TABLE]: (id: string) =>
         `${appPrefix}/data/table/${id}`,
-      // [WorkspaceResource.WORKSPACE_APP] =>
-      //   `${appPrefix}/design/${app.screens[0]?._id}`,
+      [WorkspaceResource.WORKSPACE_APP]: (id: string) => {
+        const wsa = $workspaceAppStore.workspaceApps.find(
+          (app: UIWorkspaceApp) => app._id === favourite.resourceId
+        )
+        if (!wsa) {
+          console.error("Could not resolve the workspace app URL")
+          return ""
+        }
+        return `${appPrefix}/design/${wsa.screens[0]?._id}`
+      },
+      [WorkspaceResource.QUERY]: (id: string) =>
+        `${appPrefix}/data/query/${id}`,
+      [WorkspaceResource.VIEW]: (id: string) => {
+        const view = $viewsV2.list.find(v => v.id === id)
+        return `${appPrefix}/data/table/${view?.tableId}/${id}`
+      },
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
   }
 
-  const ResourceIcons: Partial<Record<WorkspaceResource, string>> = {
-    [WorkspaceResource.AUTOMATION]: "lightning-a",
-    [WorkspaceResource.DATASOURCE]: "globe",
+  const ResourceIcons: Record<WorkspaceResource, string> = {
+    [WorkspaceResource.AUTOMATION]: "path",
+    [WorkspaceResource.DATASOURCE]: "plugs-connected",
     [WorkspaceResource.TABLE]: "table",
-    [WorkspaceResource.WORKSPACE_APP]: "globe-four",
+    [WorkspaceResource.WORKSPACE_APP]: "layout",
+    [WorkspaceResource.QUERY]: "database", // globe-four
+    [WorkspaceResource.VIEW]: "binoculars",
   }
 
   const unPin = () => {
@@ -120,13 +206,6 @@
           on:click={keepCollapsed}
         />
         <SideNavLink
-          icon="textbox"
-          text="Forms"
-          url={$url("./design")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
           icon="browser"
           text="Apps"
           url={$url("./design")}
@@ -187,16 +266,20 @@
               <div class="link">
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <SideNavLink
-                  icon={ResourceIcons[favourite.resourceType] || "grid-four"}
-                  text={favourite.resourceId}
+                  icon={ResourceIcons[favourite.resourceType]}
+                  text={$resourceNameLookup[favourite.resourceId] ||
+                    favourite.resourceId}
                   {collapsed}
                   on:click={e => {
                     const targetLink = resourceLink(favourite)
-                    console.log({ targetLink })
                     if (targetLink) $goto(targetLink)
                     keepCollapsed()
                   }}
-                />
+                >
+                  <div slot="actions">
+                    <FavouriteResourceButton {favourite} />
+                  </div>
+                </SideNavLink>
               </div>
             {/each}
           {/if}
