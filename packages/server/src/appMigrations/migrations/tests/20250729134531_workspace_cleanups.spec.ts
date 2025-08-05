@@ -113,12 +113,18 @@ describe.each([
     let keptWorkspaceAppId: string = undefined!
 
     await config.doInContext(getAppId(), async () => {
-      await createWorkspaceApp(true)
+      const workspaceApp1 = await createWorkspaceApp(true)
       await createWorkspaceApp(true)
 
+      tk.travel(Date.now() + 1000)
+
+      await sdk.workspaceApps.update(workspaceApp1)
+
       const workspaceAppIds = (await sdk.workspaceApps.fetch()).map(a => a._id!)
-      const [toDelete1, toDelete2, defaultWorkspaceApp] = workspaceAppIds
-      keptWorkspaceAppId = defaultWorkspaceApp
+      const [toDelete1, toDelete2] = workspaceAppIds.filter(
+        id => id !== workspaceApp1._id
+      )
+      keptWorkspaceAppId = workspaceApp1._id!
 
       // Create screens that reference both workspace apps
       await sdk.screens.create({
