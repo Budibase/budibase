@@ -377,7 +377,7 @@ class Orchestrator {
             if (step.stepId === AutomationActionStepId.LOOP) {
               let parsedStep = this.parseOldStepToNewStep(step, steps)
               addToContext(
-                step,
+                steps[stepIndex + 1],
                 await this.executeLoopStep(ctx, parsedStep, true)
               )
               // We increment by 2 here because the way loops work is that the

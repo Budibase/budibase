@@ -326,10 +326,10 @@ describe("Loop Automations", () => {
       )
       .serverLog(
         { text: "Message {{loop.currentItem}}" },
-        { stepName: "FirstLoopLog" }
+        { stepName: "SomeStepName" }
       )
       .serverLog(
-        { text: "{{steps.FirstLoopStep.iterations}}" },
+        { text: "{{steps.SomeStepName.iterations}}" },
         { stepName: "FirstLoopIterationLog" }
       )
       .test({ fields: {} })
