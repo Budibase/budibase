@@ -349,6 +349,15 @@ export function getMaxStoredResults(step: LoopV2Step): number {
   return DEFAULT_MAX_STORED_RESULTS
 }
 
+export function convertLegacyLoopOutputs(items: Record<string, any>) {
+  const itemKey = Object.keys(items)[0]
+  items = items[itemKey].map(({ outputs }: AutomationStepResult) => {
+    return outputs
+  })
+
+  return items
+}
+
 export interface LoopStorage {
   results: Record<string, AutomationStepResult[]>
   summary: LoopSummary

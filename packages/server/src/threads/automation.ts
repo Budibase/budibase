@@ -50,9 +50,12 @@ const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function stepSuccess(
   step: Readonly<AutomationStep>,
-  outputs: Readonly<Record<string, any>>,
-  inputs?: Readonly<Record<string, any>>
+  outputs: Record<string, any>,
+  inputs?: Record<string, any>
 ): AutomationStepResult {
+  if (step.isLegacyLoop) {
+    outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
+  }
   return {
     id: step.id,
     stepId: step.stepId,
@@ -66,9 +69,12 @@ function stepSuccess(
 
 function stepFailure(
   step: Readonly<AutomationStep>,
-  outputs: Readonly<Record<string, any>>,
-  inputs?: Readonly<Record<string, any>>
+  outputs: Record<string, any>,
+  inputs?: Record<string, any>
 ): AutomationStepResult {
+  if (step.isLegacyLoop) {
+    outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
+  }
   return {
     id: step.id,
     stepId: step.stepId,
@@ -458,24 +464,14 @@ class Orchestrator {
               status: AutomationStepStatus.MAX_ITERATIONS,
               iterations,
             })
-            if (isLegacyLoop) {
-              const flatItems = this.flattenItems(storage.results)
-              return stepFailure(step, {
-                status: AutomationStepStatus.MAX_ITERATIONS,
-                success: false,
-                items: flatItems,
-                iterations,
-              })
-            } else {
-              return stepFailure(
-                step,
-                automationUtils.buildLoopOutput(
-                  storage,
-                  AutomationStepStatus.MAX_ITERATIONS,
-                  iterations
-                )
+            return stepFailure(
+              step,
+              automationUtils.buildLoopOutput(
+                storage,
+                AutomationStepStatus.MAX_ITERATIONS,
+                iterations
               )
-            }
+            )
           }
 
           if (automationUtils.matchesLoopFailureCondition(step, currentItem)) {
@@ -483,16 +479,6 @@ class Orchestrator {
               status: AutomationStepStatus.FAILURE_CONDITION,
               iterations,
             })
-            if (isLegacyLoop) {
-              const childStep = children[0]
-              const flatItems = this.flattenItems(storage.results)
-              return stepFailure(childStep, {
-                status: AutomationStepStatus.FAILURE_CONDITION,
-                success: false,
-                items: flatItems,
-                iterations,
-              })
-            }
             return stepFailure(
               step,
               automationUtils.buildLoopOutput(
@@ -530,14 +516,6 @@ class Orchestrator {
               result => result.outputs.success === false
             )
             if (hasFailures) {
-              if (isLegacyLoop) {
-                const flatItems = this.flattenItems(storage.results)
-                return stepFailure(step, {
-                  success: false,
-                  items: flatItems,
-                  iterations: iterations + 1,
-                })
-              }
               return stepFailure(
                 step,
                 automationUtils.buildLoopOutput(
@@ -557,17 +535,6 @@ class Orchestrator {
         const status =
           iterations === 0 ? AutomationStepStatus.NO_ITERATIONS : undefined
 
-        if (isLegacyLoop) {
-          // For legacy loops, return the old format with flat items array
-          const childStep = children[0]
-          const flatItems = this.flattenItems(storage.results)
-          return stepSuccess(childStep, {
-            status,
-            items: flatItems,
-            iterations,
-          })
-        }
-
         return stepSuccess(
           step,
           automationUtils.buildLoopOutput(storage, status, iterations)
@@ -576,15 +543,6 @@ class Orchestrator {
         ctx._loopDepth = loopDepth - 1
       }
     })
-  }
-
-  private flattenItems(allResults: Record<string, AutomationStepResult[]>) {
-    const flatItems: Record<string, any>[] = []
-    const firstChildId = Object.keys(allResults)[0]
-    if (firstChildId && allResults[firstChildId]) {
-      flatItems.push(...allResults[firstChildId].map(result => result.outputs))
-    }
-    return flatItems
   }
 
   private async executeBranchStep(
