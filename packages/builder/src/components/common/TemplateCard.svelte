@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Icon } from "@budibase/bbui"
+  import { Icon, ProgressCircle } from "@budibase/bbui"
 
   export let backgroundColour: string
   export let imageSrc: string
@@ -7,6 +7,8 @@
   export let icon: string
   export let description = ""
   export let overlayEnabled: boolean = true
+  export let isLoading: boolean = false
+  export let isSelected: boolean = false
 
   let imageError = false
 
@@ -15,7 +17,12 @@
   }
 </script>
 
-<div class="template-card" style="background-color:{backgroundColour};">
+<div
+  class="template-card"
+  class:loading={isLoading}
+  class:disabled={isLoading && !isSelected}
+  style="background-color:{backgroundColour};"
+>
   <div class="template-thumbnail card-body">
     <img
       alt={name}
@@ -29,6 +36,11 @@
     <div class={overlayEnabled ? "template-thumbnail-action-overlay" : ""}>
       <slot />
     </div>
+    {#if isLoading && isSelected}
+      <div class="loading-overlay">
+        <ProgressCircle size="M" overBackground />
+      </div>
+    {/if}
   </div>
   <div class="template-thumbnail-text">
     <div class="template-name">{name}</div>
@@ -126,8 +138,25 @@
     display: none;
   }
 
-  .template-card:hover {
+  .template-card:hover:not(.loading) {
     background: var(--spectrum-alias-background-color-tertiary);
+  }
+
+  .template-card.disabled {
+    opacity: 0.5;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 10;
   }
 
   .card-body {
