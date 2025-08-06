@@ -7,6 +7,7 @@
     appStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import {
     Icon,
@@ -120,35 +121,39 @@
     contextMenuStore.open(
       view.id,
       [
-        {
-          icon: "star",
-          iconWeight: fav ? "fill" : "regular",
-          iconColour: fav
-            ? "var(--spectrum-global-color-yellow-1000)"
-            : undefined,
-          name: fav ? "Remove from favourites" : "Add to favourites",
-          keyBind: null,
-          visible: true,
-          disabled: false,
-          callback: async () => {
-            try {
-              if (fav?._id && fav?._rev) {
-                await API.workspace.delete(fav._id, fav._rev)
-                notifications.success("View removed to favourites")
-              } else {
-                await API.workspace.create({
-                  resourceId: view?.id,
-                  resourceType: WorkspaceResource.VIEW,
-                })
-                notifications.success("View added to favourites")
-              }
-              await workspaceFavouriteStore.init()
-            } catch (e) {
-              notifications.error("Failed to update favourite")
-              console.error("Failed to update favourite", e)
-            }
-          },
-        },
+        ...($featureFlags.WORKSPACE_APPS
+          ? [
+              {
+                icon: "star",
+                iconWeight: fav ? "fill" : "regular",
+                iconColour: fav
+                  ? "var(--spectrum-global-color-yellow-1000)"
+                  : undefined,
+                name: fav ? "Remove from favourites" : "Add to favourites",
+                keyBind: null,
+                visible: true,
+                disabled: false,
+                callback: async () => {
+                  try {
+                    if (fav?._id && fav?._rev) {
+                      await API.workspace.delete(fav._id, fav._rev)
+                      notifications.success("View removed to favourites")
+                    } else {
+                      await API.workspace.create({
+                        resourceId: view?.id,
+                        resourceType: WorkspaceResource.VIEW,
+                      })
+                      notifications.success("View added to favourites")
+                    }
+                    await workspaceFavouriteStore.init()
+                  } catch (e) {
+                    notifications.error("Failed to update favourite")
+                    console.error("Failed to update favourite", e)
+                  }
+                },
+              },
+            ]
+          : []),
         {
           icon: "pencil",
           name: "Edit",
