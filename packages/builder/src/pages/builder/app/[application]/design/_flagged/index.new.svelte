@@ -5,9 +5,9 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import {
-    PublishResourceState,
     WorkspaceResource,
-    type WorkspaceApp,
+    PublishResourceState,
+    type UIWorkspaceApp,
   } from "@budibase/types"
   import {
     AbsTooltip,
@@ -23,15 +23,18 @@
   import AppsHero from "assets/apps-hero-x1.png"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import WorkspaceAppModal from "@/pages/builder/app/[application]/design/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
-  import { capitalise, confirm, durationFromNow } from "@/helpers"
+  import { capitalise, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
-  let selectedWorkspaceApp: WorkspaceApp | undefined = undefined
+  let selectedWorkspaceApp: UIWorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
+  let confirmDeleteDialog: ConfirmDialog
+  let appChangingStatus: string | undefined = undefined
 
   $: favourites = workspaceFavouriteStore.lookup
 
@@ -44,54 +47,53 @@
       filterValue: undefined,
     },
     {
-      label: "Published",
+      label: "Live",
       filterValue: PublishResourceState.PUBLISHED,
     },
     {
-      label: "Disabled",
+      label: "Off",
       filterValue: PublishResourceState.DISABLED,
-    },
-    {
-      label: "Drafts",
-      filterValue: PublishResourceState.UNPUBLISHED,
     },
   ]
 
-  const onDelete = async (workspaceApp: WorkspaceApp) => {
-    contextMenuStore.close()
-    await confirm({
-      title: "Confirm Deletion",
-      body: `Deleting "${workspaceApp.name}" cannot be undone. Are you sure?`,
-      okText: "Delete app",
-      warning: true,
-      onConfirm: async () => {
-        try {
-          await workspaceAppStore.delete(workspaceApp._id!, workspaceApp._rev!)
-          notifications.success(
-            `App '${workspaceApp.name}' deleted successfully`
-          )
-        } catch (e: any) {
-          let message = "Error deleting app"
-          if (e.message) {
-            message += ` - ${e.message}`
-          }
-          notifications.error(message)
-        }
-      },
-    })
+  const deleteWorkspaceApp = async () => {
+    if (!selectedWorkspaceApp) {
+      return
+    }
+
+    try {
+      await workspaceAppStore.delete(
+        selectedWorkspaceApp._id!,
+        selectedWorkspaceApp._rev!
+      )
+
+      notifications.success(
+        `App '${selectedWorkspaceApp.name}' deleted successfully`
+      )
+    } catch (e: any) {
+      let message = "Error deleting app"
+      if (e.message) {
+        message += ` - ${e.message}`
+      }
+      notifications.error(message)
+    }
   }
 
-  const getContextMenuOptions = (workspaceApp: WorkspaceApp) => {
+  const getContextMenuOptions = (workspaceApp: UIWorkspaceApp) => {
     const pause = {
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
-      name: workspaceApp.disabled ? "Activate" : "Disable",
-
+      name: workspaceApp.disabled ? "Switch on" : "Switch off",
       visible: true,
-      callback: () => {
-        workspaceAppStore.toggleDisabled(
-          workspaceApp._id!,
-          !workspaceApp.disabled
-        )
+      callback: async () => {
+        try {
+          appChangingStatus = workspaceApp._id
+          await workspaceAppStore.toggleDisabled(
+            workspaceApp._id!,
+            !workspaceApp.disabled
+          )
+        } finally {
+          appChangingStatus = undefined
+        }
       },
     }
 
@@ -107,12 +109,12 @@
         icon: "trash",
         name: "Delete",
         visible: true,
-        callback: () => onDelete(workspaceApp),
+        callback: () => confirmDeleteDialog.show(),
       },
     ]
   }
 
-  const openContextMenu = (e: MouseEvent, workspaceApp: WorkspaceApp) => {
+  const openContextMenu = (e: MouseEvent, workspaceApp: UIWorkspaceApp) => {
     e.preventDefault()
     e.stopPropagation()
     selectedWorkspaceApp = workspaceApp
@@ -153,10 +155,16 @@
       }
     })
     .sort((a, b) => {
-      if (a.favourite._id && b.favourite._id) {
-        return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
+      const aIsFav = !!a.favourite._id
+      const bIsFav = !!b.favourite._id
+
+      // Group by favourite status
+      if (aIsFav !== bIsFav) {
+        return bIsFav ? 1 : -1
       }
-      return a.favourite._id ? -1 : 1
+
+      // Within same group, sort by updatedAt
+      return b.updatedAt!.localeCompare(a.updatedAt!)
     })
 </script>
 
@@ -212,7 +220,10 @@
         >{app.name}</Body
       >
       <div>
-        <PublishStatusBadge status={app.publishStatus.state} />
+        <PublishStatusBadge
+          status={app.publishStatus.state}
+          loading={appChangingStatus === app._id}
+        />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
         <span>
@@ -246,6 +257,17 @@
   workspaceApp={selectedWorkspaceApp}
   on:hide={() => (selectedWorkspaceApp = undefined)}
 />
+
+{#if selectedWorkspaceApp}
+  <ConfirmDialog
+    bind:this={confirmDeleteDialog}
+    okText="Delete App"
+    onOk={deleteWorkspaceApp}
+    title="Confirm Deletion"
+  >
+    Deleting <b>{selectedWorkspaceApp.name}</b> cannot be undone. Are you sure?
+  </ConfirmDialog>
+{/if}
 
 <style>
   .apps-index {

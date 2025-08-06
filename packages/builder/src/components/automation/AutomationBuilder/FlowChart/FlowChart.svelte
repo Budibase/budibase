@@ -30,6 +30,9 @@
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
 
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import { PublishResourceState } from "@budibase/types"
+
   export let automation
 
   const memoAutomation = memo(automation)
@@ -43,7 +46,13 @@
   let prodErrors
   let viewMode = ViewMode.EDITOR
 
+  let changingStatus = false
+
   $: $automationStore.showTestModal === true && testDataModal.show()
+
+  $: displayToggleValue = $featureFlags.WORKSPACE_APPS
+    ? automation.publishStatus.state === PublishResourceState.PUBLISHED
+    : !automation?.disabled
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -118,6 +127,15 @@
       automationStore.actions.openLogPanel(enrichedLog, stepData)
     }
   }
+
+  async function handleToggleChange() {
+    try {
+      changingStatus = true
+      await automationStore.actions.toggleDisabled(automation._id)
+    } finally {
+      changingStatus = false
+    }
+  }
 </script>
 
 <div class="automation-heading">
@@ -189,7 +207,19 @@
       Run test
     </ActionButton>
 
-    {#if !isRowAction}
+    {#if $featureFlags.WORKSPACE_APPS}
+      <PublishStatusBadge
+        status={automation.publishStatus.state}
+        loading={changingStatus}
+      />
+      <div class="toggle-active setting-spacing">
+        <Toggle
+          on:change={() => handleToggleChange()}
+          disabled={!automation?.definition?.trigger || changingStatus}
+          value={displayToggleValue}
+        />
+      </div>
+    {:else if !isRowAction}
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Disabled" : "Enabled"}

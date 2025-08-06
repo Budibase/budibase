@@ -2,22 +2,31 @@
   import { PublishResourceState } from "@budibase/types"
 
   export let status: PublishResourceState
+  export let loading: boolean = false
+
+  const statusDisplayName: Record<PublishResourceState, string> = {
+    [PublishResourceState.PUBLISHED]: "Live",
+    [PublishResourceState.UNPUBLISHED]: "Off",
+    [PublishResourceState.DISABLED]: "Off",
+  }
 </script>
 
 <div
   class="status"
   class:published={status === PublishResourceState.PUBLISHED}
-  class:unpublished={status === PublishResourceState.UNPUBLISHED}
-  class:disabled={status === PublishResourceState.DISABLED}
+  class:unpublished={false}
+  class:disabled={status === PublishResourceState.DISABLED ||
+    status === PublishResourceState.UNPUBLISHED}
+  class:loading
 >
-  {status}
+  {statusDisplayName[status]}
 </div>
 
 <style>
   .status {
     padding: 2px 6px 2px 18px;
     border-radius: 8px;
-    width: max-content;
+    width: 28px;
     color: white;
     position: relative;
     text-transform: capitalize;
@@ -29,13 +38,13 @@
     }
 
     &.unpublished {
-      --color: var(--spectrum-global-color-gray-300);
+      --color: var(--spectrum-global-color-orange-100);
       border: 1px solid var(--spectrum-global-color-gray-400);
     }
 
     &.disabled {
-      --color: var(--spectrum-global-color-red-400);
-      border: 1px solid var(--spectrum-global-color-red-600);
+      --color: var(--spectrum-global-color-gray-300);
+      border: 1px solid var(--spectrum-global-color-gray-400);
     }
 
     &::after {
@@ -51,5 +60,9 @@
       top: 50%;
       transform: translateY(-50%);
     }
+  }
+  .loading {
+    opacity: 0.5;
+    pointer-events: none;
   }
 </style>

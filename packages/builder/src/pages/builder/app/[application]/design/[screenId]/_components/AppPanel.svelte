@@ -11,18 +11,21 @@
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Link, Toggle, Icon } from "@budibase/bbui"
-  import { ScreenVariant } from "@budibase/types"
+  import { ActionButton, Divider, Toggle, AbsTooltip } from "@budibase/bbui"
+  import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+
+  let changingStatus = false
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
-  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
-  $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
-
-  $: isWorkspacePublished = !!selectedWorkspaceApp?.publishStatus.published
+  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp!
 
   $: liveUrl = $selectedAppUrls.liveUrl
+
+  $: displayToggleValue =
+    selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED
 
   const previewApp = () => {
     previewStore.showPreview(true)
@@ -30,6 +33,19 @@
 
   const togglePreviewDevice = () => {
     previewStore.setDevice(mobile ? "desktop" : "mobile")
+  }
+
+  const handleToggleChange = async () => {
+    try {
+      changingStatus = true
+
+      await workspaceAppStore.toggleDisabled(
+        selectedWorkspaceApp._id!,
+        !selectedWorkspaceApp.disabled
+      )
+    } finally {
+      changingStatus = false
+    }
   }
 </script>
 
@@ -39,15 +55,17 @@
     <div class="header-left">
       {#if $featureFlags.WORKSPACE_APPS}
         <div class="workspace-info">
-          {#if isWorkspacePublished}
+          {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
             <div class="workspace-url">
-              <Icon
-                name="globe-simple"
-                size="M"
-                weight="regular"
-                color="var(--spectrum-global-color-gray-600)"
-              ></Icon>
-              <Link quiet href={liveUrl} target="_blank">{liveUrl}</Link>
+              <AbsTooltip text="Open live app">
+                <ActionButton
+                  icon="globe-simple"
+                  quiet
+                  on:click={() => {
+                    window.open(liveUrl, "_blank")
+                  }}
+                />
+              </AbsTooltip>
             </div>
           {/if}
         </div>
@@ -77,31 +95,20 @@
       <ActionButton quiet icon="play" on:click={previewApp}>
         Preview
       </ActionButton>
-      {#if selectedWorkspaceAppId && $featureFlags.WORKSPACE_APPS}
+      {#if $featureFlags.WORKSPACE_APPS}
         <div class="divider-container">
           <Divider size="S" vertical />
         </div>
         <div class="workspace-info-toggle">
-          <div
-            class="status"
-            class:off={selectedWorkspaceApp?.disabled}
-            class:live={!selectedWorkspaceApp?.disabled}
-          >
-            <div
-              class="status-light"
-              class:off={selectedWorkspaceApp?.disabled}
-              class:live={!selectedWorkspaceApp?.disabled}
-            ></div>
-            {selectedWorkspaceApp?.disabled ? "Off" : "Live"}
-          </div>
+          <PublishStatusBadge
+            status={selectedWorkspaceApp.publishStatus.state}
+            loading={changingStatus}
+          />
           <Toggle
             noPadding
-            on:change={() =>
-              workspaceAppStore.toggleDisabled(
-                selectedWorkspaceAppId,
-                !selectedWorkspaceApp?.disabled
-              )}
-            value={!selectedWorkspaceApp?.disabled}
+            on:change={handleToggleChange}
+            value={displayToggleValue}
+            disabled={changingStatus}
           />
         </div>
       {/if}
@@ -189,48 +196,6 @@
     display: flex;
     flex-direction: row;
     gap: 2px;
-    align-items: center;
-  }
-  .status.off {
-    background-color: var(--spectrum-global-color-gray-200);
-    box-shadow: var(--spectrum-global-color-gray-300) 0px 0px 0px 1px inset;
-    color: var(--spectrum-global-color-gray-800);
-    border-radius: 6px;
-    padding: 2px 6px;
-    gap: 4px;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-  }
-
-  .status.live {
-    background-color: rgb(29, 64, 52);
-    box-shadow: rgb(36, 74, 58) 0px 0px 0px 1px inset;
-    color: white;
-    border-radius: 6px;
-    padding: 2px 6px;
-    gap: 4px;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-  }
-
-  .status-light {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  .status-light.off {
-    background-color: var(--spectrum-global-color-gray-500);
-  }
-
-  .status-light.live {
-    background-color: #22c55e;
-  }
-
-  .status {
-    display: flex;
     align-items: center;
   }
 </style>
