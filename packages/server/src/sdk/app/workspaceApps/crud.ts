@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError, events } from "@budibase/backend-core"
 import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 
@@ -78,7 +78,16 @@ export async function remove(
 ): Promise<void> {
   const db = context.getAppDB()
   try {
+    const existing = await db.tryGet<WorkspaceApp>(workspaceAppId)
+    if (!existing)
+      throw new Error(
+        `Delete failed. Workspace app not found: ${workspaceAppId}`
+      )
+
     await db.remove(workspaceAppId, _rev)
+
+    // Clear out any favourites related to this
+    events.workspace.deleted(existing, context.getAppId()!)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(

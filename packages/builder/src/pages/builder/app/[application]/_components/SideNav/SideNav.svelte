@@ -28,40 +28,122 @@
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
   import {
-    type Automation,
     type Datasource,
     type Query,
     type Table,
+    type UIAutomation,
     type UIInternalDatasource,
     type UIWorkspaceApp,
     type ViewV2,
-    type WorkspaceApp,
     type WorkspaceFavourite,
     WorkspaceResource,
   } from "@budibase/types"
-  import { derived } from "svelte/store"
+  import { derived, type Readable } from "svelte/store"
+  import { IntegrationTypes } from "@/constants/backend"
 
   type ResourceLinkFn = (id: string) => string
-  type WorkspaceResourceDoc =
-    | Table
-    | Automation
-    | WorkspaceApp
-    | Datasource
-    | UIInternalDatasource
-    | Query
-    | ViewV2
+
+  interface UIFavouriteResource {
+    name: string
+    icon: string
+  }
+  interface AllResourceStores {
+    automations: UIAutomation[]
+    apps: UIWorkspaceApp[]
+    datasources: (Datasource | UIInternalDatasource)[]
+    tables: Table[]
+    queries: Query[]
+    views: ViewV2[]
+  }
 
   setContext(Context.PopoverRoot, ".nav > .popover-container")
 
   const datasourceLookup = datasources.lookup
+  const favouriteLookup = workspaceFavouriteStore.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
+
+  let allResourceStores: Readable<AllResourceStores> | null = null
+  let resourceLookup: Readable<Record<string, UIFavouriteResource>> | null =
+    null
+
+  // Default icon mapping
+  const ResourceIcons: Record<WorkspaceResource, string> = {
+    [WorkspaceResource.AUTOMATION]: "path",
+    [WorkspaceResource.DATASOURCE]: "plugs-connected",
+    [WorkspaceResource.TABLE]: "table",
+    [WorkspaceResource.WORKSPACE_APP]: "layout",
+    [WorkspaceResource.QUERY]: "database", // regular db queries
+    [WorkspaceResource.VIEW]: "binoculars",
+  }
+
+  const initResourceStores = (): Readable<AllResourceStores> =>
+    derived(
+      [
+        automationStore,
+        workspaceAppStore,
+        datasources,
+        tables,
+        queries,
+        viewsV2,
+        workspaceFavouriteStore,
+      ],
+      ([$automations, $apps, $datasources, $tables, $queries, $views]) => ({
+        automations: $automations.automations,
+        apps: $apps.workspaceApps,
+        datasources: $datasources.list,
+        tables: $tables.list,
+        queries: $queries.list,
+        views: $views.list,
+      })
+    )
+
+  const generateResourceLookup = () => {
+    if (!allResourceStores) {
+      return null
+    }
+    return derivedMemo(allResourceStores, stores => {
+      const lookup: Record<string, UIFavouriteResource> = {}
+
+      Object.values(stores)
+        .flat()
+        .forEach(item => {
+          const id = (item as any)._id ?? (item as any).id
+          const favourite = $favouriteLookup[id]
+
+          // The only exception for the icons is the REST query icon
+          let isRestQuery = false
+          if (
+            "datasourceId" in item &&
+            favourite?.resourceType === WorkspaceResource.QUERY
+          ) {
+            const dataSource = $datasourceLookup[item.datasourceId]
+            isRestQuery =
+              dataSource && dataSource.source === IntegrationTypes.REST
+          }
+
+          if (id && item.name) {
+            lookup[id] = {
+              name: item.name,
+              icon: isRestQuery
+                ? "globe"
+                : ResourceIcons[favourite?.resourceType],
+            }
+          }
+        })
+
+      return lookup
+    })
+  }
+
+  // None of this needs to be done if the side bar is closed
+  const initFavourites = () => {
+    allResourceStores = initResourceStores()
+    resourceLookup = generateResourceLookup()
+  }
 
   let ignoreFocus = false
   let focused = false
   let timeout: ReturnType<typeof setTimeout> | undefined
-
-  // Maybe
-  $: dsLookup = $datasourceLookup
 
   $: appId = $appStore.appId
   $: collapsed = !focused && !$pinned
@@ -73,44 +155,8 @@
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
-    .filter(f => $resourceNameLookup[f.resourceId])
+    .filter(f => $resourceLookup?.[f.resourceId])
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
-
-  const allResourceStores = derived(
-    [automationStore, workspaceAppStore, datasources, tables, queries, viewsV2],
-    ([$automations, $apps, $datasources, $tables, $queries, $views]) => ({
-      automations: $automations.automations,
-      apps: $apps.workspaceApps,
-      datasources: $datasources.list,
-      tables: $tables.list,
-      queries: $queries.list,
-      views: $views.list,
-    })
-  )
-
-  // Mitigates any unnecessary renders
-  const resourceNameLookup = derivedMemo(allResourceStores, stores => {
-    const lookup: Record<string, string> = {}
-
-    const addToLookup = (items: WorkspaceResourceDoc[]) => {
-      //id for views, _id for everything else you donkey
-      items?.forEach(item => {
-        const id = (item as any)._id ?? (item as any).id
-        if (id && item.name) {
-          lookup[id] = item.name
-        }
-      })
-    }
-
-    addToLookup(stores.automations)
-    addToLookup(stores.apps)
-    addToLookup(stores.datasources)
-    addToLookup(stores.tables)
-    addToLookup(stores.queries)
-    addToLookup(stores.views)
-
-    return lookup
-  })
 
   const resourceLink = (favourite: WorkspaceFavourite) => {
     const appPrefix = `/builder/app/${appId}`
@@ -123,7 +169,7 @@
         `${appPrefix}/data/table/${id}`,
       [WorkspaceResource.WORKSPACE_APP]: (id: string) => {
         const wsa = $workspaceAppStore.workspaceApps.find(
-          (app: UIWorkspaceApp) => app._id === favourite.resourceId
+          (app: UIWorkspaceApp) => app._id === id
         )
         if (!wsa) {
           console.error("Could not resolve the workspace app URL")
@@ -142,15 +188,6 @@
     return link[favourite.resourceType]?.(favourite.resourceId)
   }
 
-  const ResourceIcons: Record<WorkspaceResource, string> = {
-    [WorkspaceResource.AUTOMATION]: "path",
-    [WorkspaceResource.DATASOURCE]: "plugs-connected",
-    [WorkspaceResource.TABLE]: "table",
-    [WorkspaceResource.WORKSPACE_APP]: "layout",
-    [WorkspaceResource.QUERY]: "database", // globe-four
-    [WorkspaceResource.VIEW]: "binoculars",
-  }
-
   const unPin = () => {
     // We need to ignore pointer events for a while since otherwise we would
     // instantly trigger a mouseenter and show it again
@@ -164,6 +201,9 @@
   const setFocused = (nextFocused: boolean) => {
     if (ignoreFocus) {
       return
+    }
+    if (!focused && !resourceLookup) {
+      initFavourites()
     }
     focused = nextFocused
   }
@@ -219,7 +259,6 @@
           {collapsed}
           on:click={keepCollapsed}
         />
-        <!--  <Divider size="S" /> -->
         <SideNavLink
           icon="database"
           text="Data"
@@ -227,27 +266,6 @@
           {collapsed}
           on:click={keepCollapsed}
         />
-        <!--  <SideNavLink
-          icon="webhooks-logo"
-          text="APIs"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
-          icon="sparkle"
-          text="AI"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
-          icon="paper-plane-tilt"
-          text="Email"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        /> -->
         {#if $featureFlags.AI_AGENTS}
           <SideNavLink
             icon="cpu"
@@ -271,7 +289,7 @@
               FAVOURITES
             </Body>
           </div>
-          {#if !favourites?.length}
+          {#if !favourites?.length || !resourceLookup}
             <div class="favourite-empty-state">
               <div>
                 <Icon name="star" size="L" color="#6A9BCC" weight="fill" />
@@ -293,14 +311,17 @@
             </div>
           {:else}
             {#each favourites as favourite}
+              {@const lookup = $resourceLookup?.[favourite.resourceId] ?? {
+                name: favourite.resourceId,
+                icon: undefined,
+              }}
               <div class="link">
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <SideNavLink
-                  icon={ResourceIcons[favourite.resourceType]}
-                  text={$resourceNameLookup[favourite.resourceId] ||
-                    favourite.resourceId}
+                  icon={lookup?.icon}
+                  text={lookup?.name}
                   {collapsed}
-                  on:click={e => {
+                  on:click={() => {
                     const targetLink = resourceLink(favourite)
                     if (targetLink) $goto(targetLink)
                     keepCollapsed()

@@ -82,7 +82,7 @@
     align-items: center;
     gap: 10px;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    padding: 0 10px 0 20px;
+    padding: 0 10px 0 12px;
     background: var(--background);
   }
   .breadcrumbs {
