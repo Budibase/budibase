@@ -30,7 +30,6 @@
   import { PublishResourceState } from "@budibase/types"
   import { url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
-  import PublishToggleModal from "../_components/PublishToggleModal.svelte"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -39,8 +38,6 @@
   let webhookModal: ModalAPI
   let filter: PublishResourceState | undefined
   let selectedAutomation: UIAutomation | undefined = undefined
-
-  let publishToggleModal: PublishToggleModal
 
   const filters: {
     label: string
@@ -105,8 +102,8 @@
       keyBind: null,
       visible: true,
       disabled: !automation.definition.trigger,
-      callback: () => {
-        publishToggleModal.show()
+      callback: async () => {
+        await automationStore.actions.toggleDisabled(automation._id!)
       },
     }
     const del = {
@@ -271,11 +268,6 @@
       <br /> To continue you need to publish all the workspace. Do you want to continue?
     {/if}
   </ConfirmDialog>
-
-  <PublishToggleModal
-    bind:this={publishToggleModal}
-    automation={selectedAutomation}
-  />
 {/if}
 
 <style>

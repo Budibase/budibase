@@ -2,6 +2,7 @@
   import { PublishResourceState } from "@budibase/types"
 
   export let status: PublishResourceState
+  export let loading: boolean = false
 
   const statusDisplayName: Record<PublishResourceState, string> = {
     [PublishResourceState.PUBLISHED]: "Live",
@@ -17,14 +18,18 @@
   class:disabled={status === PublishResourceState.DISABLED ||
     status === PublishResourceState.UNPUBLISHED}
 >
-  {statusDisplayName[status]}
+  {#if loading}
+    ...
+  {:else}
+    {statusDisplayName[status]}
+  {/if}
 </div>
 
 <style>
   .status {
     padding: 2px 6px 2px 18px;
     border-radius: 8px;
-    width: max-content;
+    width: 28px;
     color: white;
     position: relative;
     text-transform: capitalize;

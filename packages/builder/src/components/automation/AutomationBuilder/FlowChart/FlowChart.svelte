@@ -29,7 +29,7 @@
   import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
-  import PublishToggleModal from "@/pages/builder/app/[application]/automation/_components/PublishToggleModal.svelte"
+
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import { PublishResourceState } from "@budibase/types"
 
@@ -47,7 +47,6 @@
   let viewMode = ViewMode.EDITOR
 
   let pendingToggleValue = null
-  let publishToggleModal
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -131,11 +130,6 @@
       automationStore.actions.openLogPanel(enrichedLog, stepData)
     }
   }
-
-  const handleToggleChange = e => {
-    pendingToggleValue = e.detail
-    publishToggleModal.show()
-  }
 </script>
 
 <div class="automation-heading">
@@ -211,8 +205,15 @@
       <PublishStatusBadge status={automation.publishStatus.state} />
       <div class="toggle-active setting-spacing">
         <Toggle
-          on:change={handleToggleChange}
-          disabled={!automation?.definition?.trigger}
+          on:change={async () => {
+            try {
+              pendingToggleValue = !automation.disabled
+              await automationStore.actions.toggleDisabled(automation._id)
+            } finally {
+              pendingToggleValue = null
+            }
+          }}
+          disabled={!automation?.definition?.trigger || pendingToggleValue}
           value={displayToggleValue}
         />
       </div>
@@ -311,12 +312,6 @@
 >
   <TestDataModal />
 </Modal>
-
-<PublishToggleModal
-  bind:this={publishToggleModal}
-  {automation}
-  on:hide={() => (pendingToggleValue = null)}
-/>
 
 <style>
   .main-flow {

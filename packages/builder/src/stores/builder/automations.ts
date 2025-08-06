@@ -9,6 +9,7 @@ import {
   appStore,
   permissions,
   workspaceDeploymentStore,
+  deploymentStore,
 } from "@/stores/builder"
 import { notifications } from "@budibase/bbui"
 import {
@@ -1571,6 +1572,7 @@ const automationActions = (store: AutomationStore) => ({
       }
       automation.disabled = !automation.disabled
       await store.actions.save(automation)
+      await deploymentStore.publishApp()
       notifications.success(
         `Automation ${
           automation.disabled ? "disabled" : "enabled"
