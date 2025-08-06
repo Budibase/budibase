@@ -49,6 +49,7 @@ describe("/applications", () => {
   async function createNewApp() {
     app = await config.newTenant()
     await config.publish()
+    await config.enableDefaultWorkspaceApp()
   }
 
   beforeEach(async () => {
