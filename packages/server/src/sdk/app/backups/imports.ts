@@ -189,9 +189,10 @@ export async function importApp(
       filename = isEncrypted ? filename.replace(/\.enc$/, "") : filename
 
       if (
-        filename.startsWith(".") ||
-        filename === GLOBAL_DB_EXPORT_FILE ||
-        !opts.importObjStoreContents
+        filename !== DB_EXPORT_FILE &&
+        (filename.startsWith(".") ||
+          filename === GLOBAL_DB_EXPORT_FILE ||
+          !opts.importObjStoreContents)
       ) {
         readable.resume()
         continue
