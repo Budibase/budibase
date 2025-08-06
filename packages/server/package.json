@@ -123,7 +123,7 @@
     "socket.io": "4.8.1",
     "svelte": "4.2.19",
     "tar": "6.2.1",
-    "tmp": "0.2.3",
+    "tmp": "0.2.4",
     "to-json-schema": "0.2.5",
     "uuid": "^8.3.2",
     "validate.js": "0.13.1",
