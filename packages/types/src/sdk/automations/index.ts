@@ -31,11 +31,4 @@ export interface AutomationRowEvent {
   oldRow: Row
 }
 
-export interface LoopStorage {
-  results: Record<string, AutomationStepResult[]>
-  summary: LoopSummary
-  nestedSummaries: Record<string, LoopSummary[]>
-  maxStoredResults: number
-}
-
 export type AutomationJob = Job<AutomationData>
