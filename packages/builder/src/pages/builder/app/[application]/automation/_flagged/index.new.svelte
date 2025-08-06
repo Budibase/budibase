@@ -9,11 +9,7 @@
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
   import { getTriggerFriendlyName } from "@/helpers/automations"
-  import {
-    automationStore,
-    contextMenuStore,
-    deploymentStore,
-  } from "@/stores/builder"
+  import { automationStore, contextMenuStore } from "@/stores/builder"
   import {
     AbsTooltip,
     ActionButton,
@@ -30,7 +26,6 @@
   import { PublishResourceState } from "@budibase/types"
   import { url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
-  import PublishToggleModal from "../_components/PublishToggleModal.svelte"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -40,7 +35,7 @@
   let filter: PublishResourceState | undefined
   let selectedAutomation: UIAutomation | undefined = undefined
 
-  let publishToggleModal: PublishToggleModal
+  let automationChangingStatus: string | undefined = undefined
 
   const filters: {
     label: string
@@ -66,12 +61,6 @@
     }
     try {
       await automationStore.actions.delete(selectedAutomation)
-      if (
-        selectedAutomation.publishStatus.state !==
-        PublishResourceState.UNPUBLISHED
-      ) {
-        await deploymentStore.publishApp()
-      }
       notifications.success("Automation deleted successfully")
     } catch (error) {
       console.error(error)
@@ -105,8 +94,13 @@
       keyBind: null,
       visible: true,
       disabled: !automation.definition.trigger,
-      callback: () => {
-        publishToggleModal.show()
+      callback: async () => {
+        try {
+          automationChangingStatus = automation._id
+          await automationStore.actions.toggleDisabled(automation._id!)
+        } finally {
+          automationChangingStatus = undefined
+        }
       },
     }
     const del = {
@@ -225,7 +219,10 @@
       >
       <div>{getTriggerFriendlyName(automation)}</div>
       <div>
-        <PublishStatusBadge status={automation.publishStatus.state} />
+        <PublishStatusBadge
+          status={automation.publishStatus.state}
+          loading={automationChangingStatus === automation._id}
+        />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
         <span>
@@ -266,16 +263,7 @@
     Are you sure you wish to delete the automation
     <b>{selectedAutomation.name}?</b>
     This action cannot be undone.
-    {#if selectedAutomation.publishStatus.state !== PublishResourceState.UNPUBLISHED}
-      <br />
-      <br /> To continue you need to publish all the workspace. Do you want to continue?
-    {/if}
   </ConfirmDialog>
-
-  <PublishToggleModal
-    bind:this={publishToggleModal}
-    automation={selectedAutomation}
-  />
 {/if}
 
 <style>

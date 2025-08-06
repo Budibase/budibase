@@ -8,7 +8,6 @@ import {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
   shouldServeLocally,
-  TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
 import {
@@ -37,7 +36,6 @@ import {
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
-  ToggleBetaFeatureResponse,
   UserCtx,
 } from "@budibase/types"
 import { isAppFullyMigrated } from "../../../appMigrations"
@@ -47,36 +45,6 @@ import { getThemeVariables } from "../../../constants/themes"
 import path from "path"
 import extract from "extract-zip"
 import { tmpdir } from "os"
-
-export const toggleBetaUiFeature = async function (
-  ctx: Ctx<void, ToggleBetaFeatureResponse>
-) {
-  const cookieName = `beta:${ctx.params.feature}`
-
-  if (ctx.cookies.get(cookieName)) {
-    utils.clearCookie(ctx, cookieName)
-    ctx.body = {
-      message: `${ctx.params.feature} disabled`,
-    }
-    return
-  }
-
-  let builderPath = join(TOP_LEVEL_PATH, "new_design_ui")
-
-  // // download it from S3
-  if (!fs.existsSync(builderPath)) {
-    fs.mkdirSync(builderPath)
-  }
-  await objectStore.downloadTarballDirect(
-    "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
-    builderPath
-  )
-  utils.setCookie(ctx, {}, cookieName)
-
-  ctx.body = {
-    message: `${ctx.params.feature} enabled`,
-  }
-}
 
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>

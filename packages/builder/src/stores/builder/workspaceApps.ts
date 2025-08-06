@@ -138,6 +138,9 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       }
     })
 
+    const { deploymentStore } = await import("./deployment")
+
+    await deploymentStore.publishApp()
     appStore.refresh()
   }
 
@@ -154,6 +157,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       disabled: state,
     })
 
+    const { deploymentStore } = await import("./deployment")
+    await deploymentStore.publishApp()
     await workspaceDeploymentStore.fetch()
   }
 }

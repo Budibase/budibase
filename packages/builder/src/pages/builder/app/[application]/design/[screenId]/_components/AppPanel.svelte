@@ -15,10 +15,8 @@
   import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import PublishToggleModal from "../../_components/PublishToggleModal.svelte"
 
-  let publishToggleModal: PublishToggleModal
-  let pendingToggleValue: boolean | null = null
+  let changingStatus = false
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
@@ -27,10 +25,7 @@
   $: liveUrl = $selectedAppUrls.liveUrl
 
   $: displayToggleValue =
-    pendingToggleValue !== null
-      ? pendingToggleValue
-      : selectedWorkspaceApp.publishStatus.state ===
-        PublishResourceState.PUBLISHED
+    selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED
 
   const previewApp = () => {
     previewStore.showPreview(true)
@@ -40,9 +35,17 @@
     previewStore.setDevice(mobile ? "desktop" : "mobile")
   }
 
-  const handleToggleChange = (e: CustomEvent) => {
-    pendingToggleValue = e.detail
-    publishToggleModal.show()
+  const handleToggleChange = async () => {
+    try {
+      changingStatus = true
+
+      await workspaceAppStore.toggleDisabled(
+        selectedWorkspaceApp._id!,
+        !selectedWorkspaceApp.disabled
+      )
+    } finally {
+      changingStatus = false
+    }
   }
 </script>
 
@@ -99,11 +102,13 @@
         <div class="workspace-info-toggle">
           <PublishStatusBadge
             status={selectedWorkspaceApp.publishStatus.state}
+            loading={changingStatus}
           />
           <Toggle
             noPadding
             on:change={handleToggleChange}
             value={displayToggleValue}
+            disabled={changingStatus}
           />
         </div>
       {/if}
@@ -115,12 +120,6 @@
     {/key}
   </div>
 </div>
-
-<PublishToggleModal
-  bind:this={publishToggleModal}
-  app={selectedWorkspaceApp}
-  on:hide={() => (pendingToggleValue = null)}
-/>
 
 <style>
   .app-panel {

@@ -29,7 +29,7 @@
   import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
-  import PublishToggleModal from "@/pages/builder/app/[application]/automation/_components/PublishToggleModal.svelte"
+
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import { PublishResourceState } from "@budibase/types"
 
@@ -46,17 +46,13 @@
   let prodErrors
   let viewMode = ViewMode.EDITOR
 
-  let pendingToggleValue = null
-  let publishToggleModal
+  let changingStatus = false
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
-  $: displayToggleValue =
-    pendingToggleValue !== null
-      ? pendingToggleValue
-      : $featureFlags.WORKSPACE_APPS
-        ? automation.publishStatus.state === PublishResourceState.PUBLISHED
-        : !automation?.disabled
+  $: displayToggleValue = $featureFlags.WORKSPACE_APPS
+    ? automation.publishStatus.state === PublishResourceState.PUBLISHED
+    : !automation?.disabled
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -132,9 +128,13 @@
     }
   }
 
-  const handleToggleChange = e => {
-    pendingToggleValue = e.detail
-    publishToggleModal.show()
+  async function handleToggleChange() {
+    try {
+      changingStatus = true
+      await automationStore.actions.toggleDisabled(automation._id)
+    } finally {
+      changingStatus = false
+    }
   }
 </script>
 
@@ -208,11 +208,14 @@
     </ActionButton>
 
     {#if $featureFlags.WORKSPACE_APPS}
-      <PublishStatusBadge status={automation.publishStatus.state} />
+      <PublishStatusBadge
+        status={automation.publishStatus.state}
+        loading={changingStatus}
+      />
       <div class="toggle-active setting-spacing">
         <Toggle
-          on:change={handleToggleChange}
-          disabled={!automation?.definition?.trigger}
+          on:change={() => handleToggleChange()}
+          disabled={!automation?.definition?.trigger || changingStatus}
           value={displayToggleValue}
         />
       </div>
@@ -311,12 +314,6 @@
 >
   <TestDataModal />
 </Modal>
-
-<PublishToggleModal
-  bind:this={publishToggleModal}
-  {automation}
-  on:hide={() => (pendingToggleValue = null)}
-/>
 
 <style>
   .main-flow {
