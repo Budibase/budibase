@@ -1,5 +1,5 @@
 <script>
-  import { Banner, Switcher, notifications } from "@budibase/bbui"
+  import { Banner, notifications } from "@budibase/bbui"
   import {
     datasources,
     tables,
@@ -7,11 +7,12 @@
     appStore,
     rowActions,
     roles,
+    dataEnvironmentStore,
   } from "@/stores/builder"
   import { themeStore, admin, licensing } from "@/stores/portal"
   import { TableNames } from "@/constants"
   import { Grid } from "@budibase/frontend-core"
-  import { API } from "@/api"
+  import { API, productionAPI } from "@/api"
   import GridAddColumnModal from "@/components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "@/components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -67,6 +68,7 @@
   $: darkMode = !currentTheme.includes("light")
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
+  $: gridAPI = $dataEnvironmentStore.mode === "prod" ? productionAPI : API
 
   const makeRowActionButtons = actions => {
     return (actions || [])
@@ -121,7 +123,7 @@
     </div>
   {/if}
   <Grid
-    {API}
+    API={gridAPI}
     {darkMode}
     datasource={gridDatasource}
     canAddRows={!isUsersTable}

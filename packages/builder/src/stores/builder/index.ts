@@ -40,6 +40,7 @@ import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
+import { dataEnvironmentStore } from "./dataEnvironment"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
@@ -87,6 +88,7 @@ export {
   selectedAppUrls,
   workspaceDeploymentStore,
   recaptchaStore,
+  dataEnvironmentStore,
 }
 
 export const reset = () => {
@@ -98,6 +100,7 @@ export const reset = () => {
   navigationStore.reset()
   rowActions.reset()
   workspaceDeploymentStore.reset()
+  dataEnvironmentStore.reset()
 }
 
 const refreshBuilderData = async () => {

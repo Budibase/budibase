@@ -21,7 +21,7 @@
   import { API } from "@/api"
   import { isActive, url, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "@/helpers"
-  import { onMount, onDestroy } from "svelte"
+  import { onDestroy } from "svelte"
   import BuilderSidePanel from "../_components/BuilderSidePanel.svelte"
   import { UserAvatars } from "@budibase/frontend-core"
   import PreviewOverlay from "../_components/PreviewOverlay.svelte"
@@ -31,7 +31,6 @@
   export let application
 
   let promise = getPackage()
-  let hasSynced = false
   let loaded = false
 
   $: selected = capitalise(
@@ -70,17 +69,6 @@
     }
     $goto($builderStore.previousTopNavPath[path] || path)
   }
-
-  onMount(async () => {
-    if (!hasSynced && application) {
-      try {
-        await API.syncApp(application)
-      } catch (error) {
-        notifications.error("Failed to sync with production database")
-      }
-      hasSynced = true
-    }
-  })
 
   onDestroy(() => {
     // Run async on a slight delay to let other cleanup logic run without

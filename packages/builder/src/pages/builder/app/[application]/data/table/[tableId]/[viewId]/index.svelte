@@ -1,8 +1,8 @@
 <script>
-  import { viewsV2, rowActions } from "@/stores/builder"
+  import { viewsV2, rowActions, dataEnvironmentStore } from "@/stores/builder"
   import { admin, themeStore, licensing } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
-  import { API } from "@/api"
+  import { API, productionAPI } from "@/api"
   import { notifications } from "@budibase/bbui"
   import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridFilterButton from "@/components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
@@ -31,6 +31,7 @@
   $: rowActions.refreshRowActions(id)
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
+  $: gridAPI = $dataEnvironmentStore.mode === "prod" ? productionAPI : API
 
   const makeRowActionButtons = actions => {
     return (actions || []).map(action => ({
@@ -48,7 +49,7 @@
 </script>
 
 <Grid
-  {API}
+  API={gridAPI}
   {darkMode}
   {datasource}
   {buttons}
