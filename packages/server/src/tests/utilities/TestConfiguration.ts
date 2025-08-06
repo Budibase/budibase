@@ -678,10 +678,12 @@ export default class TestConfiguration {
   }
 
   async enableDefaultWorkspaceApp(app: App = this.getApp()) {
-    await context.doInAppContext(app.appId, async () => {
-      const { workspaceApps } = await this.api.workspaceApp.fetch()
+    context.doInAppContext(app.appId, async () => {
+      const workspaceApps = await sdk.workspaceApps.fetch()
 
-      const defaultWorkspaceApp = workspaceApps.find(a => a.name === app.name)
+      const { isDefault, ...defaultWorkspaceApp } = workspaceApps.find(
+        a => a.name === app.name
+      )!
       expect(defaultWorkspaceApp).toBeDefined()
 
       await sdk.workspaceApps.update({
