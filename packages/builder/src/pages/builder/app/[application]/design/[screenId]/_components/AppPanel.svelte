@@ -16,7 +16,7 @@
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
 
-  let pendingToggleValue: boolean | null = null
+  let changingStatus = false
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
@@ -25,10 +25,7 @@
   $: liveUrl = $selectedAppUrls.liveUrl
 
   $: displayToggleValue =
-    pendingToggleValue !== null
-      ? pendingToggleValue
-      : selectedWorkspaceApp.publishStatus.state ===
-        PublishResourceState.PUBLISHED
+    selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED
 
   const previewApp = () => {
     previewStore.showPreview(true)
@@ -38,16 +35,16 @@
     previewStore.setDevice(mobile ? "desktop" : "mobile")
   }
 
-  const handleToggleChange = async (e: CustomEvent) => {
+  const handleToggleChange = async () => {
     try {
-      pendingToggleValue = e.detail
+      changingStatus = true
 
       await workspaceAppStore.toggleDisabled(
         selectedWorkspaceApp._id!,
         !selectedWorkspaceApp.disabled
       )
     } finally {
-      pendingToggleValue = null
+      changingStatus = false
     }
   }
 </script>
@@ -105,13 +102,13 @@
         <div class="workspace-info-toggle">
           <PublishStatusBadge
             status={selectedWorkspaceApp.publishStatus.state}
-            loading={pendingToggleValue !== null}
+            loading={changingStatus}
           />
           <Toggle
             noPadding
             on:change={handleToggleChange}
             value={displayToggleValue}
-            disabled={!!pendingToggleValue}
+            disabled={changingStatus}
           />
         </div>
       {/if}

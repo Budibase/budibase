@@ -46,16 +46,13 @@
   let prodErrors
   let viewMode = ViewMode.EDITOR
 
-  let pendingToggleValue = null
+  let changingStatus = false
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
-  $: displayToggleValue =
-    pendingToggleValue !== null
-      ? pendingToggleValue
-      : $featureFlags.WORKSPACE_APPS
-        ? automation.publishStatus.state === PublishResourceState.PUBLISHED
-        : !automation?.disabled
+  $: displayToggleValue = $featureFlags.WORKSPACE_APPS
+    ? automation.publishStatus.state === PublishResourceState.PUBLISHED
+    : !automation?.disabled
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -133,10 +130,10 @@
 
   async function handleToggleChange() {
     try {
-      pendingToggleValue = !automation.disabled
+      changingStatus = true
       await automationStore.actions.toggleDisabled(automation._id)
     } finally {
-      pendingToggleValue = null
+      changingStatus = false
     }
   }
 </script>
@@ -213,12 +210,12 @@
     {#if $featureFlags.WORKSPACE_APPS}
       <PublishStatusBadge
         status={automation.publishStatus.state}
-        loading={pendingToggleValue !== null}
+        loading={changingStatus}
       />
       <div class="toggle-active setting-spacing">
         <Toggle
           on:change={() => handleToggleChange()}
-          disabled={!automation?.definition?.trigger || pendingToggleValue}
+          disabled={!automation?.definition?.trigger || changingStatus}
           value={displayToggleValue}
         />
       </div>
