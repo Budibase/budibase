@@ -34,7 +34,6 @@ import {
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
-  SSOUser,
   StrippedUser,
   UnsavedUser,
   UpdateInviteRequest,
