@@ -35,6 +35,8 @@
   let filter: PublishResourceState | undefined
   let selectedAutomation: UIAutomation | undefined = undefined
 
+  let automationChangingStatus: string | undefined = undefined
+
   const filters: {
     label: string
     filterValue: PublishResourceState | undefined
@@ -93,7 +95,12 @@
       visible: true,
       disabled: !automation.definition.trigger,
       callback: async () => {
-        await automationStore.actions.toggleDisabled(automation._id!)
+        try {
+          automationChangingStatus = automation._id
+          await automationStore.actions.toggleDisabled(automation._id!)
+        } finally {
+          automationChangingStatus = undefined
+        }
       },
     }
     const del = {
@@ -212,7 +219,10 @@
       >
       <div>{getTriggerFriendlyName(automation)}</div>
       <div>
-        <PublishStatusBadge status={automation.publishStatus.state} />
+        <PublishStatusBadge
+          status={automation.publishStatus.state}
+          loading={automationChangingStatus === automation._id}
+        />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
         <span>

@@ -24,6 +24,7 @@
   let selectedWorkspaceApp: UIWorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
   let confirmDeleteDialog: ConfirmDialog
+  let appChangingStatus: string | undefined = undefined
 
   const filters: {
     label: string
@@ -72,10 +73,15 @@
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
       visible: true,
       callback: async () => {
-        await workspaceAppStore.toggleDisabled(
-          workspaceApp._id!,
-          !workspaceApp.disabled
-        )
+        try {
+          appChangingStatus = workspaceApp._id
+          await workspaceAppStore.toggleDisabled(
+            workspaceApp._id!,
+            !workspaceApp.disabled
+          )
+        } finally {
+          appChangingStatus = undefined
+        }
       },
     }
 
@@ -181,7 +187,10 @@
         >{app.name}</Body
       >
       <div>
-        <PublishStatusBadge status={app.publishStatus.state} />
+        <PublishStatusBadge
+          status={app.publishStatus.state}
+          loading={appChangingStatus === app._id}
+        />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
         <span>
