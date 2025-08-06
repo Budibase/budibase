@@ -174,7 +174,7 @@
     pre-built components in minutes.
   </HeroBanner>
 
-  <TopBar icon="layout" breadcrumbs={[{ text: "Apps" }]} showPublish={false}
+  <TopBar icon="browser" breadcrumbs={[{ text: "Apps" }]} showPublish={false}
   ></TopBar>
   <div class="secondary-bar">
     <div class="filter">

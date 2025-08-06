@@ -71,9 +71,9 @@
     [WorkspaceResource.AUTOMATION]: "path",
     [WorkspaceResource.DATASOURCE]: "plugs-connected",
     [WorkspaceResource.TABLE]: "table",
-    [WorkspaceResource.WORKSPACE_APP]: "layout",
+    [WorkspaceResource.WORKSPACE_APP]: "browser",
     [WorkspaceResource.QUERY]: "database", // regular db queries
-    [WorkspaceResource.VIEW]: "binoculars",
+    [WorkspaceResource.VIEW]: "table",
   }
 
   const initResourceStores = (): Readable<AllResourceStores> =>
@@ -310,28 +310,30 @@
               >
             </div>
           {:else}
-            {#each favourites as favourite}
-              {@const lookup = $resourceLookup?.[favourite.resourceId] ?? {
-                name: favourite.resourceId,
-                icon: undefined,
-              }}
-              <div class="link">
-                <SideNavLink
-                  icon={lookup?.icon}
-                  text={lookup?.name}
-                  {collapsed}
-                  on:click={() => {
-                    const targetLink = resourceLink(favourite)
-                    if (targetLink) $goto(targetLink)
-                    keepCollapsed()
-                  }}
-                >
-                  <div slot="actions">
-                    <FavouriteResourceButton {favourite} />
-                  </div>
-                </SideNavLink>
-              </div>
-            {/each}
+            <div class="favourite-links">
+              {#each favourites as favourite}
+                {@const lookup = $resourceLookup?.[favourite.resourceId] ?? {
+                  name: favourite.resourceId,
+                  icon: undefined,
+                }}
+                <div class="link">
+                  <SideNavLink
+                    icon={lookup?.icon}
+                    text={lookup?.name}
+                    {collapsed}
+                    on:click={() => {
+                      const targetLink = resourceLink(favourite)
+                      if (targetLink) $goto(targetLink)
+                      keepCollapsed()
+                    }}
+                  >
+                    <div slot="actions">
+                      <FavouriteResourceButton {favourite} />
+                    </div>
+                  </SideNavLink>
+                </div>
+              {/each}
+            </div>
           {/if}
         </div>
       </div>

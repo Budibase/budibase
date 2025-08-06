@@ -43,7 +43,7 @@
           { text: "Design", url: "../" },
           { text: $workspaceAppStore.selectedWorkspaceApp?.name },
         ]}
-        icon="layout"
+        icon="browser"
       ></TopBar>
     {/if}
     <div class="content">
