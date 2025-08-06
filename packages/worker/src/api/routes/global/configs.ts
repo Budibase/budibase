@@ -1,7 +1,7 @@
 import * as controller from "../../controllers/global/configs"
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
-import { ConfigType } from "@budibase/types"
+import { ConfigType, PKCEMethod } from "@budibase/types"
 import { adminRoutes, loggedInRoutes } from "../endpointGroups"
 
 function smtpValidation() {
@@ -50,7 +50,8 @@ function oidcValidation() {
         name: Joi.string().allow("", null),
         uuid: Joi.string().required(),
         activated: Joi.boolean().required(),
-        scopes: Joi.array().optional()
+        scopes: Joi.array().optional(),
+        pkce: Joi.string().valid(...Object.values(PKCEMethod)).optional()
       })
     ).required()
   }).unknown(true)
