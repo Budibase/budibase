@@ -1,30 +1,31 @@
 <script lang="ts">
-  import { contextMenuStore, automationStore } from "@/stores/builder"
-  import { PublishResourceState } from "@budibase/types"
-  import { type Automation } from "@budibase/types"
+  import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
+  import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
+  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import HeroBanner from "@/components/common/HeroBanner.svelte"
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import { BannerType } from "@/constants/banners"
+  import { capitalise, durationFromNow } from "@/helpers"
+  import { getTriggerFriendlyName } from "@/helpers/automations"
+  import { automationStore, contextMenuStore } from "@/stores/builder"
   import {
     AbsTooltip,
     ActionButton,
-    Button,
     Body,
+    Button,
     Helpers,
     Icon,
     Modal,
     type ModalAPI,
     notifications,
   } from "@budibase/bbui"
-  import HeroBanner from "@/components/common/HeroBanner.svelte"
-  import AppsHero from "assets/automation-hero-x1.png"
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import { url } from "@roxi/routify"
-  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
-  import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { sdk } from "@budibase/shared-core"
-  import TopBar from "@/components/common/TopBar.svelte"
-  import { BannerType } from "@/constants/banners"
-  import { capitalise, durationFromNow } from "@/helpers"
+  import type { UIAutomation } from "@budibase/types"
+  import { PublishResourceState } from "@budibase/types"
+  import { url } from "@roxi/routify"
+  import AppsHero from "assets/automation-hero-x1.png"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -32,7 +33,9 @@
   let confirmDeleteDialog: Pick<ModalAPI, "show" | "hide">
   let webhookModal: ModalAPI
   let filter: PublishResourceState | undefined
-  let selectedAutomation: Automation | undefined = undefined
+  let selectedAutomation: UIAutomation | undefined = undefined
+
+  let automationChangingStatus: string | undefined = undefined
 
   const filters: {
     label: string
@@ -43,16 +46,12 @@
       filterValue: undefined,
     },
     {
-      label: "Published",
+      label: "Live",
       filterValue: PublishResourceState.PUBLISHED,
     },
     {
-      label: "Disabled",
+      label: "Off",
       filterValue: PublishResourceState.DISABLED,
-    },
-    {
-      label: "Unpublished",
-      filterValue: PublishResourceState.UNPUBLISHED,
     },
   ]
 
@@ -81,7 +80,7 @@
     }
   }
 
-  const getContextMenuItems = (automation: Automation) => {
+  const getContextMenuItems = (automation: UIAutomation) => {
     const edit = {
       icon: "pencil",
       name: "Edit",
@@ -91,13 +90,16 @@
     }
     const pause = {
       icon: automation.disabled ? "play-circle" : "pause-circle",
-      name: automation.disabled ? "Activate" : "Pause",
+      name: automation.disabled ? "Switch on" : "Switch off",
       keyBind: null,
       visible: true,
       disabled: !automation.definition.trigger,
-      callback: () => {
-        if (automation._id) {
-          automationStore.actions.toggleDisabled(automation._id)
+      callback: async () => {
+        try {
+          automationChangingStatus = automation._id
+          await automationStore.actions.toggleDisabled(automation._id!)
+        } finally {
+          automationChangingStatus = undefined
         }
       },
     }
@@ -132,7 +134,7 @@
     }
   }
 
-  const openContextMenu = (e: MouseEvent, automation: Automation) => {
+  const openContextMenu = (e: MouseEvent, automation: UIAutomation) => {
     e.preventDefault()
     e.stopPropagation()
     selectedAutomation = automation
@@ -150,21 +152,15 @@
     )
   }
 
-  $: automations = $automationStore.automations.filter(a => {
-    if (!filter) {
-      return true
-    }
+  $: automations = $automationStore.automations
+    .filter(a => {
+      if (!filter) {
+        return true
+      }
 
-    return a.publishStatus.state === filter
-  })
-
-  function getTriggerFriendlyName(automation: Automation) {
-    const definition =
-      $automationStore.blockDefinitions.CREATABLE_TRIGGER[
-        automation.definition.trigger.stepId
-      ]
-    return definition?.name
-  }
+      return a.publishStatus.state === filter
+    })
+    .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
 </script>
 
 <div class="automations-index">
@@ -223,7 +219,10 @@
       >
       <div>{getTriggerFriendlyName(automation)}</div>
       <div>
-        <PublishStatusBadge status={automation.publishStatus.state} />
+        <PublishStatusBadge
+          status={automation.publishStatus.state}
+          loading={automationChangingStatus === automation._id}
+        />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
         <span>
@@ -262,7 +261,7 @@
     title="Confirm Deletion"
   >
     Are you sure you wish to delete the automation
-    <i>{selectedAutomation.name}?</i>
+    <b>{selectedAutomation.name}?</b>
     This action cannot be undone.
   </ConfirmDialog>
 {/if}
