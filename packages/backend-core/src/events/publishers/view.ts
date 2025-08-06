@@ -36,11 +36,10 @@ async function updated(view: ViewV2) {
   await publishEvent(Event.VIEW_UPDATED, properties)
 }
 
-async function deleted(view: ViewV2, appId: string) {
+async function deleted(view: ViewV2 | View, appId?: string) {
+  const v2 = "id" in view
   const properties: ViewDeletedEvent = {
-    tableId: view.tableId,
-    id: view.id,
-    appId,
+    ...(v2 ? { id: view.id, tableId: view.tableId, appId } : {}),
   }
   await publishEvent(Event.VIEW_DELETED, properties)
 }
