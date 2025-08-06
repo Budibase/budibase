@@ -9,11 +9,7 @@
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
   import { getTriggerFriendlyName } from "@/helpers/automations"
-  import {
-    automationStore,
-    contextMenuStore,
-    deploymentStore,
-  } from "@/stores/builder"
+  import { automationStore, contextMenuStore } from "@/stores/builder"
   import {
     AbsTooltip,
     ActionButton,
@@ -63,12 +59,6 @@
     }
     try {
       await automationStore.actions.delete(selectedAutomation)
-      if (
-        selectedAutomation.publishStatus.state !==
-        PublishResourceState.UNPUBLISHED
-      ) {
-        await deploymentStore.publishApp()
-      }
       notifications.success("Automation deleted successfully")
     } catch (error) {
       console.error(error)
@@ -263,10 +253,6 @@
     Are you sure you wish to delete the automation
     <b>{selectedAutomation.name}?</b>
     This action cannot be undone.
-    {#if selectedAutomation.publishStatus.state !== PublishResourceState.UNPUBLISHED}
-      <br />
-      <br /> To continue you need to publish all the workspace. Do you want to continue?
-    {/if}
   </ConfirmDialog>
 {/if}
 

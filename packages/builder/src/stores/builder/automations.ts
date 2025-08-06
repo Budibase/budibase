@@ -1894,6 +1894,7 @@ const automationActions = (store: AutomationStore) => ({
     } else {
       await API.deleteAutomation(automation._id!, automation._rev!)
     }
+    await deploymentStore.publishApp()
 
     store.update(state => {
       state.automations = state.automations.filter(
