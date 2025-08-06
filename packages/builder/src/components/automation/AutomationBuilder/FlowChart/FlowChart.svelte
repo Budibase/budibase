@@ -130,6 +130,15 @@
       automationStore.actions.openLogPanel(enrichedLog, stepData)
     }
   }
+
+  async function handleToggleChange() {
+    try {
+      pendingToggleValue = !automation.disabled
+      await automationStore.actions.toggleDisabled(automation._id)
+    } finally {
+      pendingToggleValue = null
+    }
+  }
 </script>
 
 <div class="automation-heading">
@@ -205,14 +214,7 @@
       <PublishStatusBadge status={automation.publishStatus.state} />
       <div class="toggle-active setting-spacing">
         <Toggle
-          on:change={async () => {
-            try {
-              pendingToggleValue = !automation.disabled
-              await automationStore.actions.toggleDisabled(automation._id)
-            } finally {
-              pendingToggleValue = null
-            }
-          }}
+          on:change={() => handleToggleChange()}
           disabled={!automation?.definition?.trigger || pendingToggleValue}
           value={displayToggleValue}
         />

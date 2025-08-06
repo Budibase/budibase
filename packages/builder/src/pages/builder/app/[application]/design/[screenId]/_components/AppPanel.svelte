@@ -15,9 +15,7 @@
   import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import PublishToggleModal from "../../_components/PublishToggleModal.svelte"
 
-  let publishToggleModal: PublishToggleModal
   let pendingToggleValue: boolean | null = null
 
   $: mobile = $previewStore.previewDevice === "mobile"
@@ -40,9 +38,17 @@
     previewStore.setDevice(mobile ? "desktop" : "mobile")
   }
 
-  const handleToggleChange = (e: CustomEvent) => {
-    pendingToggleValue = e.detail
-    publishToggleModal.show()
+  const handleToggleChange = async (e: CustomEvent) => {
+    try {
+      pendingToggleValue = e.detail
+
+      await workspaceAppStore.toggleDisabled(
+        selectedWorkspaceApp._id!,
+        !selectedWorkspaceApp.disabled
+      )
+    } finally {
+      pendingToggleValue = null
+    }
   }
 </script>
 
@@ -104,6 +110,7 @@
             noPadding
             on:change={handleToggleChange}
             value={displayToggleValue}
+            disabled={!!pendingToggleValue}
           />
         </div>
       {/if}
@@ -115,12 +122,6 @@
     {/key}
   </div>
 </div>
-
-<PublishToggleModal
-  bind:this={publishToggleModal}
-  app={selectedWorkspaceApp}
-  on:hide={() => (pendingToggleValue = null)}
-/>
 
 <style>
   .app-panel {

@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    contextMenuStore,
-    deploymentStore,
-    workspaceAppStore,
-  } from "@/stores/builder"
+  import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
   import { PublishResourceState, type UIWorkspaceApp } from "@budibase/types"
   import {
     AbsTooltip,
@@ -22,15 +18,12 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import PublishToggleModal from "../../design/_components/PublishToggleModal.svelte"
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
   let selectedWorkspaceApp: UIWorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
   let confirmDeleteDialog: ConfirmDialog
-
-  let publishToggleModal: PublishToggleModal
 
   const filters: {
     label: string
@@ -61,12 +54,6 @@
         selectedWorkspaceApp._rev!
       )
 
-      if (
-        selectedWorkspaceApp.publishStatus.state !==
-        PublishResourceState.UNPUBLISHED
-      ) {
-        await deploymentStore.publishApp()
-      }
       notifications.success(
         `App '${selectedWorkspaceApp.name}' deleted successfully`
       )
@@ -84,8 +71,11 @@
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
       visible: true,
-      callback: () => {
-        publishToggleModal.show()
+      callback: async () => {
+        await workspaceAppStore.toggleDisabled(
+          workspaceApp._id!,
+          !workspaceApp.disabled
+        )
       },
     }
 
@@ -224,17 +214,7 @@
     title="Confirm Deletion"
   >
     Deleting <b>{selectedWorkspaceApp.name}</b> cannot be undone. Are you sure?
-    {#if selectedWorkspaceApp.publishStatus.state !== PublishResourceState.UNPUBLISHED}
-      <br />
-      <br />
-      To continue you need to publish all the workspace. Do you want to continue?
-    {/if}
   </ConfirmDialog>
-
-  <PublishToggleModal
-    bind:this={publishToggleModal}
-    app={selectedWorkspaceApp}
-  />
 {/if}
 
 <style>
