@@ -864,9 +864,12 @@ describe("/api/global/users", () => {
         return await userSdk.db.getUser(user1._id!)
       })
 
-      const updatedUser2 = await config.doInSpecificTenant(tenant2, async () => {
-        return await userSdk.db.getUser(user2._id!)
-      })
+      const updatedUser2 = await config.doInSpecificTenant(
+        tenant2,
+        async () => {
+          return await userSdk.db.getUser(user2._id!)
+        }
+      )
 
       expect(updatedUser1).toBeDefined()
       expect(updatedUser1!.email).toBe(newEmail)
@@ -926,9 +929,9 @@ describe("/api/global/users", () => {
         tenantId,
       ])
 
-      const updatedUser = await config.doInTenant(async () => {
+      const updatedUser = (await config.doInTenant(async () => {
         return await userSdk.db.getUserByEmail(newEmail)
-      }) as OIDCUser
+      })) as OIDCUser
 
       expect(updatedUser).toBeDefined()
       expect(updatedUser!.email).toBe(newEmail)

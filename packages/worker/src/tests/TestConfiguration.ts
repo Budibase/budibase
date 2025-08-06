@@ -175,7 +175,10 @@ class TestConfiguration {
     return structures.tenant.id()
   }
 
-  async doInSpecificTenant<T>(tenantId: string, task: () => Promise<T>): Promise<T> {
+  async doInSpecificTenant<T>(
+    tenantId: string,
+    task: () => Promise<T>
+  ): Promise<T> {
     return await context.doInTenant(tenantId, async () => {
       return await task()
     })
