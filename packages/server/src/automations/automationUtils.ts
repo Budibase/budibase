@@ -15,10 +15,9 @@ import {
   BranchStep,
   FieldSchema,
   FieldType,
-  LoopSummary,
   LoopV2Step,
   Row,
-  DEFAULT_MAX_STORED_RESULTS,
+  LoopStorage,
 } from "@budibase/types"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
@@ -333,8 +332,9 @@ export function getLoopMaxIterations(loopStep: LoopV2Step): number {
   )
 }
 
-// Simplified: Just use maxStoredResults from options or default
 export function getMaxStoredResults(step: LoopV2Step): number {
+  const DEFAULT_MAX_STORED_RESULTS = env.AUTOMATION_MAX_STORED_LOOP_RESULTS
+
   const options = step.inputs.resultOptions
 
   // If summarizeOnly is true, don't store any results
@@ -356,13 +356,6 @@ export function convertLegacyLoopOutputs(items: Record<string, any>) {
   })
 
   return items
-}
-
-export interface LoopStorage {
-  results: Record<string, AutomationStepResult[]>
-  summary: LoopSummary
-  nestedSummaries: Record<string, LoopSummary[]>
-  maxStoredResults: number
 }
 
 export function initializeLoopStorage(
@@ -438,7 +431,6 @@ export function buildLoopOutput(
   iterations?: number,
   forceFailure = false
 ): Record<string, any> {
-  // Determine success based on status or failure count
   let { summary } = storage
   let success = summary.failureCount === 0
   if (

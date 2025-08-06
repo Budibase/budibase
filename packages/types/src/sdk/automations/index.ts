@@ -1,6 +1,8 @@
 import {
   Automation,
   AutomationMetadata,
+  AutomationStepResult,
+  LoopSummary,
   Row,
   UserBindings,
 } from "../../documents"
@@ -29,7 +31,11 @@ export interface AutomationRowEvent {
   oldRow: Row
 }
 
-// Simplified storage - just store up to N results
-export const DEFAULT_MAX_STORED_RESULTS = 100
+export interface LoopStorage {
+  results: Record<string, AutomationStepResult[]>
+  summary: LoopSummary
+  nestedSummaries: Record<string, LoopSummary[]>
+  maxStoredResults: number
+}
 
 export type AutomationJob = Job<AutomationData>
