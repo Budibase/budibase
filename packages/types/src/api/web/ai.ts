@@ -1,6 +1,6 @@
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
-import { z } from "zod"
+import type { z } from "zod"
 
 export type UserContent = string | openai.ChatCompletionContentPart[]
 
@@ -40,31 +40,6 @@ export interface ToolArgs<T extends z.ZodType> {
   parameters?: T
   handler: (args: z.infer<T>) => Promise<string>
   strict?: boolean
-}
-
-export function newTool<T extends z.ZodType>(tool: ToolArgs<T>): Tool<T> {
-  // Create error-aware handler that logs failures to server logs
-  const errorAwareHandler = async (args: z.infer<T>): Promise<string> => {
-    console.debug(`[TOOL DEBUG] Executing tool: ${tool.name}`)
-    try {
-      const result = await tool.handler(args)
-      console.debug(`[TOOL DEBUG] Tool ${tool.name} succeeded`)
-      return result
-    } catch (error: any) {
-      console.error(`[TOOL ERROR] Tool '${tool.name}' failed:`, error)
-
-      // Still return the error message for the Agent
-      return `Error executing ${tool.name}: ${error.message}`
-    }
-  }
-
-  return {
-    strict: tool.strict ?? true,
-    parameters: tool.parameters ?? (z.object({}) as unknown as T),
-    description: tool.description,
-    handler: errorAwareHandler,
-    name: tool.name,
-  }
 }
 
 export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema

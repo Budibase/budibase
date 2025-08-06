@@ -1,6 +1,6 @@
-import { newTool } from "@budibase/types"
 import { Octokit } from "@octokit/rest"
 import { z } from "zod"
+import { newTool } from ".."
 
 export class GitHubClient {
   private octokit: Octokit
