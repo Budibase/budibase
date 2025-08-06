@@ -41,7 +41,7 @@
   import { derived, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
 
-  type ResourceLinkFn = (id: string) => string
+  type ResourceLinkFn = (_id: string) => string
 
   interface UIFavouriteResource {
     name: string
@@ -316,7 +316,6 @@
                 icon: undefined,
               }}
               <div class="link">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <SideNavLink
                   icon={lookup?.icon}
                   text={lookup?.name}

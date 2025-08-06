@@ -15,7 +15,7 @@ import {
   WorkspaceResource,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { getGlobalIDFromUserMetadataID } from "@budibase/backend-core/src/docIds"
+import { db } from "@budibase/backend-core"
 
 type WorkspaceResourceDoc =
   | Table
@@ -33,7 +33,7 @@ export async function fetch(ctx: UserCtx<void, WorkspaceFavouriteResponse>) {
   const createdBy = ctx.user?._id!
 
   const favourites = await sdk.workspace.fetch(
-    getGlobalIDFromUserMetadataID(createdBy)
+    db.getGlobalIDFromUserMetadataID(createdBy)
   )
   ctx.body = {
     favourites,
@@ -45,7 +45,7 @@ export async function create(
 ) {
   const { body } = ctx.request
   const createdBy = ctx.user?._id!
-  const globalId = getGlobalIDFromUserMetadataID(createdBy)
+  const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
   const newFavourite: WithoutDocMetadata<WorkspaceFavourite> = {
     resourceType: body.resourceType,

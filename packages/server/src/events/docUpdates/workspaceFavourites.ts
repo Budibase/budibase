@@ -1,8 +1,7 @@
-import { constants, logging } from "@budibase/backend-core"
+import { constants, logging, context } from "@budibase/backend-core"
 import { DocUpdateEvent, WorkspaceResourceEvents } from "@budibase/types"
 import { UpdateCallback } from "./processors"
 import sdk from "../../sdk"
-import { doInAppContext } from "@budibase/backend-core/src/context"
 
 const { AUTOMATION, DATASOURCE, TABLE, WORKSPACE_APP, QUERY, MEM_VIEW } =
   constants.DocumentType
@@ -23,7 +22,7 @@ export default function process(updateCb?: UpdateCallback) {
       ].find(type => docId.startsWith(type))
 
       if (isWSResource!! && appId) {
-        doInAppContext(appId, async () => {
+        context.doInAppContext(appId, async () => {
           const result = await sdk.workspace.findByResourceId(docId)
           const [fav] = result
           if (fav) {

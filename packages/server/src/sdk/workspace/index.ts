@@ -1,5 +1,4 @@
-import { context } from "@budibase/backend-core"
-import { generateWorkspaceFavouriteID } from "@budibase/backend-core/src/docIds"
+import { context, db as dbCore } from "@budibase/backend-core"
 import {
   SEPARATOR,
   WithoutDocMetadata,
@@ -28,7 +27,7 @@ export async function create(
   const db = context.getAppDB()
 
   const response = await db.put({
-    _id: generateWorkspaceFavouriteID(),
+    _id: dbCore.generateWorkspaceFavouriteID(),
     ...workspaceFavourite,
   })
   return {
