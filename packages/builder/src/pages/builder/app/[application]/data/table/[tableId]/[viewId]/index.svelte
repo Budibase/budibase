@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { viewsV2, rowActions, dataEnvironmentStore } from "@/stores/builder"
   import { admin, themeStore, licensing } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
@@ -15,13 +15,13 @@
   import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import GridViewCalculationButton from "@/components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
-  import { ViewV2Type, DataEnvironmentMode } from "@budibase/types"
+  import { ViewV2Type, DataEnvironmentMode, type Row } from "@budibase/types"
 
-  let generateButton
+  let generateButton: any
 
   $: view = $viewsV2.selected
   $: calculation = view?.type === ViewV2Type.CALCULATION
-  $: id = view?.id
+  $: id = view?.id!
   $: datasource = {
     type: "viewV2",
     id,
@@ -38,17 +38,17 @@
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
 
-  const makeRowActionButtons = actions => {
+  const makeRowActionButtons = (actions: any[]) => {
     return (actions || []).map(action => ({
       text: action.name,
-      onClick: async row => {
-        await rowActions.trigger(id, action.id, row._id)
+      onClick: async (row: Row) => {
+        await rowActions.trigger(id, action.id, row._id!)
         notifications.success("Row action triggered successfully")
       },
     }))
   }
 
-  const handleGridViewUpdate = async e => {
+  const handleGridViewUpdate = async (e: any) => {
     viewsV2.replaceView(id, e.detail)
   }
 </script>
@@ -62,7 +62,7 @@
     allowAddRows
     allowDeleteRows
     aiEnabled={$licensing.customAIConfigsEnabled ||
-      $licensing.budibaseAiEnabled}
+      $licensing.budibaseAIEnabled}
     showAvatars={false}
     on:updatedatasource={handleGridViewUpdate}
     isCloud={$admin.cloud}
