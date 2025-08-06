@@ -211,7 +211,10 @@
     </ActionButton>
 
     {#if $featureFlags.WORKSPACE_APPS}
-      <PublishStatusBadge status={automation.publishStatus.state} />
+      <PublishStatusBadge
+        status={automation.publishStatus.state}
+        loading={pendingToggleValue !== null}
+      />
       <div class="toggle-active setting-spacing">
         <Toggle
           on:change={() => handleToggleChange()}

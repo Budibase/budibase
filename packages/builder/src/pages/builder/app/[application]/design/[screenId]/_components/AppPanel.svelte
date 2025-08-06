@@ -105,6 +105,7 @@
         <div class="workspace-info-toggle">
           <PublishStatusBadge
             status={selectedWorkspaceApp.publishStatus.state}
+            loading={pendingToggleValue !== null}
           />
           <Toggle
             noPadding

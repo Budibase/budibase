@@ -17,12 +17,9 @@
   class:unpublished={false}
   class:disabled={status === PublishResourceState.DISABLED ||
     status === PublishResourceState.UNPUBLISHED}
+  class:loading
 >
-  {#if loading}
-    ...
-  {:else}
-    {statusDisplayName[status]}
-  {/if}
+  {statusDisplayName[status]}
 </div>
 
 <style>
@@ -63,5 +60,9 @@
       top: 50%;
       transform: translateY(-50%);
     }
+  }
+  .loading {
+    opacity: 0.5;
+    pointer-events: none;
   }
 </style>
