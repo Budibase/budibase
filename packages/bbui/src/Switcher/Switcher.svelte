@@ -81,7 +81,7 @@
     flex-shrink: 0;
   }
   .view-mode-toggle .group {
-    border-radius: 6px;
+    border-radius: 12px;
     display: flex;
     flex-direction: row;
     background: var(--spectrum-global-color-gray-100);
@@ -89,12 +89,10 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
   }
   .right :global(*) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+    border-radius: 0 10px 10px 0;
   }
   .left :global(*) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 10px 0 0 10px;
   }
   .wrapper {
     position: relative;
