@@ -50,7 +50,7 @@
   {#if icon}
     <Icon
       name={icon}
-      size="M"
+      {size}
       color={`var(--spectrum-global-color-gray-${$$slots.default ? 600 : 700})`}
     />
   {/if}

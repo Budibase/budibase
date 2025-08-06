@@ -81,4 +81,17 @@ export class GroupsAPI extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(expect)
   }
+
+  bulkAddUsers = (
+    id: string,
+    csvContent: string,
+    { expect } = { expect: 200 }
+  ) => {
+    return this.request
+      .post(`/api/global/groups/${id}/users/bulk`)
+      .send({ csvContent })
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expect)
+  }
 }

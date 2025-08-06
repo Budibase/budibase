@@ -1,23 +1,33 @@
 import * as rowController from "../controllers/row"
-import authorized, { authorizedResource } from "../../middleware/authorized"
+import {
+  authorizedMiddleware as authorized,
+  authorizedResource,
+} from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
-import trimViewRowInfo from "../../middleware/trimViewRowInfo"
+import recaptcha from "../../middleware/recaptcha"
+import { trimViewRowInfoMiddleware } from "../../middleware/trimViewRowInfo"
 import { validateBody } from "../../middleware/zod-validator"
 import { searchRowRequestValidator } from "@budibase/types"
-import { customEndpointGroups, publicRoutes } from "./endpointGroups"
+import { endpointGroupList, publicRoutes } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
 
-const readRoutes = customEndpointGroups.group({
-  middleware: authorized(PermissionType.TABLE, PermissionLevel.READ),
-  first: false,
-})
-const writeRoutes = customEndpointGroups.group({
-  middleware: authorized(PermissionType.TABLE, PermissionLevel.WRITE),
-  first: false,
-})
+const readRoutes = endpointGroupList.group(
+  {
+    middleware: authorized(PermissionType.TABLE, PermissionLevel.READ),
+    first: false,
+  },
+  recaptcha
+)
+const writeRoutes = endpointGroupList.group(
+  {
+    middleware: authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+    first: false,
+  },
+  recaptcha
+)
 
 readRoutes
   .get(
@@ -55,13 +65,13 @@ writeRoutes
   .post(
     "/api/:sourceId/rows",
     paramResource("sourceId"),
-    trimViewRowInfo,
+    trimViewRowInfoMiddleware,
     rowController.save
   )
   .patch(
     "/api/:sourceId/rows",
     paramResource("sourceId"),
-    trimViewRowInfo,
+    trimViewRowInfoMiddleware,
     rowController.patch
   )
   .post(
@@ -72,7 +82,7 @@ writeRoutes
   .delete(
     "/api/:sourceId/rows",
     paramResource("sourceId"),
-    trimViewRowInfo,
+    trimViewRowInfoMiddleware,
     rowController.destroy
   )
   .post(

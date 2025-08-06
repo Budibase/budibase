@@ -65,6 +65,7 @@ export type DatabaseOpts = {
 
 export type DatabasePutOpts = {
   force?: boolean
+  returnDoc?: boolean
 }
 
 export type DatabaseCreateIndexOpts = {
@@ -135,9 +136,13 @@ export interface Database {
     documents: Document[],
     opts?: { silenceErrors?: boolean }
   ): Promise<void>
-  put(
-    document: AnyDocument,
-    opts?: DatabasePutOpts
+  put<T extends AnyDocument>(
+    document: T,
+    opts: DatabasePutOpts & { returnDoc: true }
+  ): Promise<Nano.DocumentInsertResponse & { doc: T }>
+  put<T extends AnyDocument>(
+    document: T,
+    opts?: DatabasePutOpts & { returnDoc?: false }
   ): Promise<Nano.DocumentInsertResponse>
   bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
   sql<T extends Document>(

@@ -98,17 +98,26 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  put(
-    document: AnyDocument,
-    opts?: DatabasePutOpts | undefined
-  ): Promise<DocumentInsertResponse> {
+  put<T extends AnyDocument>(
+    document: T,
+    opts?: DatabasePutOpts & { returnDoc: true }
+  ): Promise<DocumentInsertResponse & { doc: T }>
+  put<T extends AnyDocument>(
+    document: T,
+    opts?: DatabasePutOpts & { returnDoc?: false }
+  ): Promise<DocumentInsertResponse>
+  put<T extends AnyDocument>(
+    document: T,
+    opts?: DatabasePutOpts
+  ): Promise<DocumentInsertResponse | (DocumentInsertResponse & { doc: T })> {
     return tracer.trace("db.put", async span => {
       span.addTags({
         db_name: this.name,
         doc_id: document._id,
         force: opts?.force,
+        return_doc: opts?.returnDoc,
       })
-      const resp = await this.db.put(document, opts)
+      const resp = await this.db.put(document, opts as any)
       span.addTags({ ok: resp.ok })
       return resp
     })

@@ -32,6 +32,7 @@ import {
   tenancy,
   users,
   utils,
+  configs,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -188,7 +189,6 @@ async function addSampleDataScreen() {
   const workspaceApp = await sdk.workspaceApps.create({
     name: appMetadata.name,
     url: "/",
-    icon: "Monitoring",
     navigation: {
       ...defaultAppNavigator(appMetadata.name),
       links: [
@@ -256,6 +256,10 @@ export async function fetchClientApps(
       sdk.workspaceApps.fetch(db)
     )
     for (const workspaceApp of workspaceApps) {
+      // don't return disabled workspace apps
+      if (workspaceApp.disabled) {
+        continue
+      }
       result.push({
         // This is used as idempotency key for rendering in the frontend
         appId: `${app.appId}_${workspaceApp._id}`,
@@ -292,10 +296,14 @@ export async function fetchAppPackage(
   ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
   const appId = context.getAppId()
-  const application = await sdk.applications.metadata.get()
-  const layouts = await getLayouts()
-  let screens = await sdk.screens.fetch()
-  const license = await licensing.cache.getCachedLicense()
+  let [application, layouts, screens, license, recaptchaConfig] =
+    await Promise.all([
+      sdk.applications.metadata.get(),
+      getLayouts(),
+      sdk.screens.fetch(),
+      licensing.cache.getCachedLicense(),
+      configs.getRecaptchaConfig(),
+    ])
 
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
@@ -327,7 +335,8 @@ export async function fetchAppPackage(
 
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
-    if (!matchedWorkspaceApp) {
+    // disabled workspace apps should appear to not exist
+    if (!matchedWorkspaceApp || matchedWorkspaceApp.disabled) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
@@ -347,6 +356,7 @@ export async function fetchAppPackage(
     layouts,
     clientLibPath,
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
+    recaptchaKey: recaptchaConfig?.config.siteKey,
   }
 }
 
@@ -821,9 +831,11 @@ export async function unpublish(ctx: UserCtx<void, UnpublishAppResponse>) {
     return ctx.throw(400, "App has not been published.")
   }
 
-  await preDestroyApp(ctx)
-  await unpublishApp(ctx)
-  await postDestroyApp(ctx)
+  await appMigrations.doInMigrationLock(prodAppId, async () => {
+    await preDestroyApp(ctx)
+    await unpublishApp(ctx)
+    await postDestroyApp(ctx)
+  })
   builderSocket?.emitAppUnpublish(ctx)
   ctx.body = { message: "App unpublished." }
 }

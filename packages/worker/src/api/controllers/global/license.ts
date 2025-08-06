@@ -4,6 +4,7 @@ import {
   ActivateLicenseKeyResponse,
   ActivateOfflineLicenseTokenRequest,
   ActivateOfflineLicenseTokenResponse,
+  GetInstallInfo,
   GetLicenseKeyResponse,
   GetOfflineIdentifierResponse,
   GetOfflineLicenseTokenResponse,
@@ -11,6 +12,7 @@ import {
   RefreshOfflineLicenseResponse,
   UserCtx,
 } from "@budibase/types"
+import { installation } from "@budibase/backend-core"
 
 // LICENSE KEY
 
@@ -93,4 +95,12 @@ export const getQuotaUsage = async (
   ctx: UserCtx<void, GetQuotaUsageResponse>
 ) => {
   ctx.body = await quotas.getQuotaUsage()
+}
+
+export const getInstallInfo = async (ctx: UserCtx<void, GetInstallInfo>) => {
+  const install = await installation.getInstall()
+  ctx.body = {
+    installId: install.installId,
+    version: install.version,
+  }
 }

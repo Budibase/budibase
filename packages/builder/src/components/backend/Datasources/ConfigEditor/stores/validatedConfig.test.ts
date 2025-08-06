@@ -1,11 +1,11 @@
 import { it, expect, describe } from "vitest"
 import { createValidatedConfigStore } from "./validatedConfig"
-import { DatasourceFieldType } from "@budibase/types"
+import { DatasourceFieldType, SourceName } from "@budibase/types"
 import { get } from "svelte/store"
 
 describe("validatedConfig store", () => {
   const mockIntegration = {
-    name: "SQL Server",
+    name: SourceName.SQL_SERVER,
     docs: "https://example.com/docs",
     description: "SQL Server integration",
     friendlyName: "SQL Server",
