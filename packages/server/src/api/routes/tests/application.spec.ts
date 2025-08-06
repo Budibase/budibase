@@ -32,7 +32,6 @@ import {
   basicQuery,
 } from "../../../tests/utilities/structures"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import sdk from "../../../sdk"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -50,20 +49,6 @@ describe("/applications", () => {
   async function createNewApp() {
     app = await config.newTenant()
     await config.publish()
-  }
-
-  async function enableDefaultWorkspaceApp(app: App) {
-    await config.withApp(app, async () => {
-      const workspaceApps = await sdk.workspaceApps.fetch()
-
-      const defaultWorkspaceApp = workspaceApps.find(a => a.name === app.name)
-      expect(defaultWorkspaceApp).toBeDefined()
-
-      await sdk.workspaceApps.update({
-        ...defaultWorkspaceApp!,
-        disabled: false,
-      })
-    })
   }
 
   beforeEach(async () => {
@@ -279,7 +264,7 @@ describe("/applications", () => {
 
   describe("fetchClientApps", () => {
     beforeEach(async () => {
-      await enableDefaultWorkspaceApp(config.app!)
+      await config.enableDefaultWorkspaceApp()
       await config.publish()
     })
 
@@ -382,7 +367,7 @@ describe("/applications", () => {
         let secondApp = await config.api.application.create({
           name: "Second App",
         })
-        await enableDefaultWorkspaceApp(secondApp)
+        await config.enableDefaultWorkspaceApp(secondApp)
 
         await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
@@ -458,7 +443,7 @@ describe("/applications", () => {
           name: "Second App",
         })
 
-        await enableDefaultWorkspaceApp(secondApp)
+        await config.enableDefaultWorkspaceApp(secondApp)
         await config.api.application.publish(secondApp.appId)
         return secondApp
       })
@@ -467,7 +452,7 @@ describe("/applications", () => {
       const thirdApp = await config.api.application.create({
         name: "Third App",
       })
-      await enableDefaultWorkspaceApp(thirdApp)
+      await config.enableDefaultWorkspaceApp(thirdApp)
 
       const response = await config.api.application.fetchClientApps()
 

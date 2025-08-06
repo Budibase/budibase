@@ -72,6 +72,7 @@ import {
 import API from "./api"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
+import sdk from "../../sdk"
 
 const newid = utils.newid
 
@@ -674,6 +675,20 @@ export default class TestConfiguration {
     this.prodAppId = undefined
     this.prodApp = undefined
     return response
+  }
+
+  async enableDefaultWorkspaceApp(app: App = this.getApp()) {
+    await context.doInAppContext(app.appId, async () => {
+      const { workspaceApps } = await this.api.workspaceApp.fetch()
+
+      const defaultWorkspaceApp = workspaceApps.find(a => a.name === app.name)
+      expect(defaultWorkspaceApp).toBeDefined()
+
+      await sdk.workspaceApps.update({
+        ...defaultWorkspaceApp!,
+        disabled: false,
+      })
+    })
   }
 
   // TABLE
