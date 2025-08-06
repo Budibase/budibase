@@ -833,7 +833,7 @@ describe("/api/global/users", () => {
       const originalEmail = `original-${structures.uuid()}@example.com`
       const newEmail = `new-${structures.uuid()}@example.com`
       const tenant1 = config.getTenantId()
-      const tenant2 = config.createTenantId()
+      const tenant2 = structures.tenant.id()
 
       const user1 = await config.doInTenant(async () => {
         return await userSdk.db.save(

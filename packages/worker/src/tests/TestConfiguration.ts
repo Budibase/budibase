@@ -171,10 +171,6 @@ class TestConfiguration {
     }
   }
 
-  createTenantId() {
-    return structures.tenant.id()
-  }
-
   async doInSpecificTenant<T>(
     tenantId: string,
     task: () => Promise<T>
