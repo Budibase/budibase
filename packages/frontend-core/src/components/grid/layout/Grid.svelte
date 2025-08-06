@@ -4,7 +4,7 @@
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import { createEventManagers } from "../lib/events"
-  import { createAPIClient } from "../../../api"
+  import { type APIClient, createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
   import BulkDuplicationHandler from "../controls/BulkDuplicationHandler.svelte"
@@ -23,9 +23,20 @@
   import { createGridWebsocket } from "../lib/websocket"
   import * as Constants from "../lib/constants"
 
-  export let API = null
-  export let datasource = null
-  export let schemaOverrides = null
+  type SchemaOverride = {
+    displayName?: string
+    type?: string
+    disabled?: boolean
+    roles?: any
+  }
+
+  export let API: APIClient | null | undefined = null
+  // TODO: work out best type to suit datasource
+  export let datasource: any = null
+  export let schemaOverrides:
+    | Record<string, SchemaOverride>
+    | null
+    | undefined = null
   export let canAddRows = true
   export let canExpandRows = true
   export let canEditRows = true
@@ -42,11 +53,11 @@
   export let fixedRowHeight = null
   export let notifySuccess = null
   export let notifyError = null
-  export let buttons = null
+  export let buttons: { text: string; onClick: any }[] | null | undefined = null
   export let buttonsCollapsed = false
   export let buttonsCollapsedText = null
   export let darkMode = false
-  export let isCloud = null
+  export let isCloud: boolean | null | undefined = null
   export let aiEnabled = false
   export let canHideColumns = true
 

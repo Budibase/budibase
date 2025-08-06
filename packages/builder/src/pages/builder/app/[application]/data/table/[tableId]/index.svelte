@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Banner, notifications } from "@budibase/bbui"
   import {
     datasources,
@@ -28,8 +28,16 @@
   import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import {
+    DataEnvironmentMode,
+    type Table,
+    type Row,
+    type Datasource,
+    type UIDatasource,
+    type UIInternalDatasource,
+  } from "@budibase/types"
 
-  let generateButton
+  let generateButton: any
 
   $: userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -50,10 +58,10 @@
     }
     return acc
   }, [])
-  $: invalidColumnText = duplicates.map(entry => {
+  $: invalidColumnText = duplicates.map((entry: any) => {
     return `${entry.name} (${entry.subtype})`
   })
-  $: id = $tables.selected?._id
+  $: id = $tables.selected?._id!
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
   $: gridDatasource = {
@@ -68,26 +76,36 @@
   $: darkMode = !currentTheme.includes("light")
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
-  $: gridAPI = $dataEnvironmentStore.mode === "prod" ? productionAPI : API
+  $: gridAPI =
+    $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+      ? productionAPI
+      : API
+  $: isProductionMode =
+    $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
 
-  const makeRowActionButtons = actions => {
+  const makeRowActionButtons = (actions: any[]) => {
     return (actions || [])
       .filter(action => action.allowedSources?.includes(id))
       .map(action => ({
         text: action.name,
-        onClick: async row => {
-          await rowActions.trigger(id, action.id, row._id)
+        onClick: async (row: Row) => {
+          await rowActions.trigger(id, action.id, row._id!)
           notifications.success("Row action triggered successfully")
         },
       }))
   }
 
-  const relationshipSupport = datasource => {
+  const relationshipSupport = (
+    datasource?: Datasource | UIDatasource | UIInternalDatasource
+  ) => {
+    if (!datasource || !("source" in datasource)) {
+      return false
+    }
     const integration = $integrations[datasource?.source]
     return !isInternal && integration?.relationships !== false
   }
 
-  const handleGridTableUpdate = async e => {
+  const handleGridTableUpdate = async (e: any) => {
     tables.replaceTable(id, e.detail)
 
     // We need to refresh datasources when an external table changes.
@@ -96,19 +114,23 @@
     }
   }
 
-  const verifyAutocolumns = table => {
+  const verifyAutocolumns = (table?: Table) => {
     // Check for duplicates
-    return Object.values(table?.schema || {}).reduce((acc, fieldSchema) => {
-      if (!fieldSchema.autocolumn || !fieldSchema.subtype) {
+    return Object.values(table?.schema || {}).reduce(
+      (acc, fieldSchema) => {
+        if (!fieldSchema.autocolumn || !fieldSchema.subtype) {
+          return acc
+        }
+        let fieldKey: string =
+          "tableId" in fieldSchema
+            ? `${fieldSchema.tableId}-${fieldSchema.subtype}`
+            : (fieldSchema.subtype as string)
+        acc[fieldKey] = acc[fieldKey] || []
+        acc[fieldKey].push(fieldSchema)
         return acc
-      }
-      let fieldKey = fieldSchema.tableId
-        ? `${fieldSchema.tableId}-${fieldSchema.subtype}`
-        : fieldSchema.subtype
-      acc[fieldKey] = acc[fieldKey] || []
-      acc[fieldKey].push(fieldSchema)
-      return acc
-    }, {})
+      },
+      {} as Record<string, any>
+    )
   }
 </script>
 
@@ -122,61 +144,68 @@
       </Banner>
     </div>
   {/if}
-  <Grid
-    API={gridAPI}
-    {darkMode}
-    datasource={gridDatasource}
-    canAddRows={!isUsersTable}
-    canDeleteRows={!isUsersTable}
-    canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
-    canEditColumns={!isUsersTable || !$appStore.features.disableUserMetadata}
-    schemaOverrides={isUsersTable ? userSchemaOverrides : null}
-    showAvatars={false}
-    isCloud={$admin.cloud}
-    aiEnabled={$licensing.customAIConfigsEnabled ||
-      $licensing.budibaseAIEnabled}
-    {buttons}
-    buttonsCollapsed
-    canHideColumns={false}
-    on:updatedatasource={handleGridTableUpdate}
-  >
-    <!-- Controls -->
-    <svelte:fragment slot="controls">
-      {#if isUsersTable && $appStore.features.disableUserMetadata}
-        <GridUsersTableButton />
-      {/if}
-      <GridManageAccessButton />
-      {#if relationshipsEnabled}
-        <GridRelationshipButton />
-      {/if}
-      {#if !isUsersTable}
-        <GridImportButton />
-        <GridExportButton />
-        <GridRowActionsButton />
-        <GridScreensButton on:generate={() => generateButton?.show()} />
-        <GridAutomationsButton on:generate={() => generateButton?.show()} />
-        <GridGenerateButton bind:this={generateButton} />
-      {/if}
-    </svelte:fragment>
-    <svelte:fragment slot="controls-right">
-      <GridDevProdSwitcher />
-    </svelte:fragment>
+  <!-- re-render the grid if the data environment changes -->
+  {#key $dataEnvironmentStore.mode}
+    <Grid
+      API={gridAPI}
+      {darkMode}
+      datasource={gridDatasource}
+      canAddRows={!isUsersTable}
+      canDeleteRows={!isUsersTable}
+      canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
+      canEditColumns={!isProductionMode &&
+        (!isUsersTable || !$appStore.features.disableUserMetadata)}
+      canSaveSchema={!isProductionMode}
+      schemaOverrides={isUsersTable ? userSchemaOverrides : null}
+      showAvatars={false}
+      isCloud={$admin.cloud}
+      aiEnabled={$licensing.customAIConfigsEnabled ||
+        $licensing.budibaseAIEnabled}
+      {buttons}
+      buttonsCollapsed
+      canHideColumns={false}
+      on:updatedatasource={handleGridTableUpdate}
+    >
+      <!-- Controls -->
+      <svelte:fragment slot="controls">
+        {#if !isProductionMode}
+          {#if isUsersTable && $appStore.features.disableUserMetadata}
+            <GridUsersTableButton />
+          {/if}
+          <GridManageAccessButton />
+          {#if relationshipsEnabled}
+            <GridRelationshipButton />
+          {/if}
+          {#if !isUsersTable}
+            <GridImportButton />
+            <GridExportButton />
+            <GridRowActionsButton />
+            <GridScreensButton on:generate={() => generateButton?.show()} />
+            <GridAutomationsButton on:generate={() => generateButton?.show()} />
+            <GridGenerateButton bind:this={generateButton} />
+          {/if}
+        {/if}
+      </svelte:fragment>
+      <svelte:fragment slot="controls-right">
+        <GridDevProdSwitcher />
+      </svelte:fragment>
 
-    <!-- Content for editing columns -->
-    <svelte:fragment slot="edit-column">
-      <GridEditColumnModal />
-    </svelte:fragment>
-    <svelte:fragment slot="add-column">
-      <GridAddColumnModal />
-    </svelte:fragment>
+      <!-- Content for editing columns -->
+      <svelte:fragment slot="edit-column">
+        <GridEditColumnModal />
+      </svelte:fragment>
+      <svelte:fragment slot="add-column">
+        <GridAddColumnModal />
+      </svelte:fragment>
 
-    <!-- Listening to events for editing rows in modals -->
-    {#if isUsersTable}
-      <GridEditUserModal />
-    {:else}
-      <GridCreateEditRowModal />
-    {/if}
-  </Grid>
+      <!-- Listening to events for editing rows in modals -->
+      {#if isUsersTable}
+        <GridEditUserModal />
+      {:else}
+        <GridCreateEditRowModal />
+      {/if}
+    </Grid>
+  {/key}
 {:else}
   <i>Create your first table to start building</i>
 {/if}

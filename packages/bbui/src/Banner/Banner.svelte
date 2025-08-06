@@ -7,10 +7,10 @@
   export let type = "info"
   export let icon = "info"
   export let size = "S"
-  export let extraButtonText
-  export let extraButtonAction
-  export let extraLinkText
-  export let extraLinkAction
+  export let extraButtonText = undefined
+  export let extraButtonAction = undefined
+  export let extraLinkText = undefined
+  export let extraLinkAction = undefined
   export let showCloseButton = true
 
   let show = true

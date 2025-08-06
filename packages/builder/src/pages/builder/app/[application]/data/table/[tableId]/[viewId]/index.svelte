@@ -15,7 +15,7 @@
   import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import GridViewCalculationButton from "@/components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
-  import { ViewV2Type } from "@budibase/types"
+  import { ViewV2Type, DataEnvironmentMode } from "@budibase/types"
 
   let generateButton
 
@@ -31,7 +31,12 @@
   $: rowActions.refreshRowActions(id)
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
-  $: gridAPI = $dataEnvironmentStore.mode === "prod" ? productionAPI : API
+  $: gridAPI =
+    $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+      ? productionAPI
+      : API
+  $: isProductionMode =
+    $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
 
   const makeRowActionButtons = actions => {
     return (actions || []).map(action => ({
@@ -48,36 +53,41 @@
   }
 </script>
 
-<Grid
-  API={gridAPI}
-  {darkMode}
-  {datasource}
-  {buttons}
-  allowAddRows
-  allowDeleteRows
-  aiEnabled={$licensing.customAIConfigsEnabled || $licensing.budibaseAiEnabled}
-  showAvatars={false}
-  on:updatedatasource={handleGridViewUpdate}
-  isCloud={$admin.cloud}
-  buttonsCollapsed
->
-  <svelte:fragment slot="controls">
-    <GridManageAccessButton />
-    {#if calculation}
-      <GridViewCalculationButton />
-    {/if}
-    <GridFilterButton />
-    <GridSortButton />
-    <GridSizeButton />
-    {#if !calculation}
-      <GridColumnsSettingButton />
-      <GridRowActionsButton />
-      <GridScreensButton on:generate={() => generateButton?.show()} />
-    {/if}
-    <GridGenerateButton bind:this={generateButton} />
-  </svelte:fragment>
-  <svelte:fragment slot="controls-right">
-    <GridDevProdSwitcher />
-  </svelte:fragment>
-  <GridCreateEditRowModal />
-</Grid>
+{#key $dataEnvironmentStore.mode}
+  <Grid
+    API={gridAPI}
+    {darkMode}
+    {datasource}
+    {buttons}
+    allowAddRows
+    allowDeleteRows
+    aiEnabled={$licensing.customAIConfigsEnabled ||
+      $licensing.budibaseAiEnabled}
+    showAvatars={false}
+    on:updatedatasource={handleGridViewUpdate}
+    isCloud={$admin.cloud}
+    buttonsCollapsed
+  >
+    <svelte:fragment slot="controls">
+      {#if !isProductionMode}
+        <GridManageAccessButton />
+        {#if calculation}
+          <GridViewCalculationButton />
+        {/if}
+        <GridFilterButton />
+        <GridSortButton />
+        <GridSizeButton />
+        {#if !calculation}
+          <GridColumnsSettingButton />
+          <GridRowActionsButton />
+          <GridScreensButton on:generate={() => generateButton?.show()} />
+        {/if}
+        <GridGenerateButton bind:this={generateButton} />
+      {/if}
+    </svelte:fragment>
+    <svelte:fragment slot="controls-right">
+      <GridDevProdSwitcher />
+    </svelte:fragment>
+    <GridCreateEditRowModal />
+  </Grid>
+{/key}
