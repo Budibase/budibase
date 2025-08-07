@@ -10,6 +10,8 @@ import {
   deleteAppFiles,
   revertClientLibrary,
   updateClientLibrary,
+  storeTempFileStream,
+  downloadTemplate,
 } from "../../utilities/fileSystem"
 import {
   AppStatus,
@@ -27,6 +29,7 @@ import {
   env as envCore,
   events,
   features,
+  HTTPError,
   objectStore,
   roles,
   tenancy,
@@ -81,6 +84,8 @@ import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { processMigrations } from "../../appMigrations/migrationsProcessor"
+import { ImportOpts } from "../../sdk/app/backups/imports"
+import { join } from "path"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -158,11 +163,23 @@ async function createInstance(appId: string, template: AppTemplate) {
   await createAllSearchIndex()
 
   if (template && template.useTemplate) {
-    const opts = {
+    const opts: ImportOpts = {
       importObjStoreContents: true,
       updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
+      password: template.file?.password,
     }
-    await sdk.backups.importApp(appId, db, template, opts)
+
+    let path = template.file?.path
+    if (!path && template.key) {
+      const [type, name] = template.key.split("/")
+      const tmpPath = await downloadTemplate(type, name)
+      path = join(tmpPath, name, "db", "dump.txt")
+    }
+    if (!path) {
+      throw new HTTPError("App export must have path", 400)
+    }
+
+    await sdk.backups.importApp(appId, db, path, opts)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -853,23 +870,25 @@ export async function importToApp(
   ctx: UserCtx<ImportToUpdateAppRequest, ImportToUpdateAppResponse>
 ) {
   const { appId } = ctx.params
+
   const appExport = ctx.request.files?.appExport
-  const password = ctx.request.body.encryptionPassword
   if (!appExport) {
     ctx.throw(400, "Must supply app export to import")
   }
   if (Array.isArray(appExport)) {
     ctx.throw(400, "Must only supply one app export")
   }
-  const fileAttributes = { type: appExport.type!, path: appExport.path! }
-  try {
-    await sdk.applications.updateWithExport(appId, fileAttributes, password)
-  } catch (err: any) {
-    ctx.throw(
-      500,
-      `Unable to perform update, please retry - ${err?.message || err}`
-    )
+
+  if (!appExport.path) {
+    ctx.throw(400, "App export must have path")
   }
+
+  await sdk.applications.updateWithExport(
+    appId,
+    appExport.path,
+    ctx.request.body.encryptionPassword
+  )
+
   ctx.body = { message: "app updated" }
 }
 
@@ -894,10 +913,8 @@ export async function duplicateApp(
   const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
   checkAppUrl(ctx, apps, url)
 
-  const tmpPath = await sdk.backups.exportApp(sourceAppId, {
-    excludeRows: false,
-    tar: false,
-  })
+  const stream = await sdk.backups.exportApp(sourceAppId)
+  const tmpPath = await storeTempFileStream(stream)
 
   const createRequestBody: CreateAppRequest = {
     name: appName,
