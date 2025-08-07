@@ -9,8 +9,7 @@
   } from "@budibase/bbui"
   import { groups, licensing, admin } from "@/stores/portal"
   import { emailValidator, Constants } from "@budibase/frontend-core"
-  import { capitalise } from "@/helpers"
-  import { parseUserEmailsFromCSV } from "@/helpers/csvUtils"
+  import { capitalise, parseUserEmailsFromCSV } from "@/helpers"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
