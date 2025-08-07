@@ -6,7 +6,12 @@ export async function downloadUnzipTarball(
   name: string,
   headers = {}
 ) {
-  const path = createTempFolder(name)
-  await objectStore.downloadTarballDirect(url, path, headers)
-  return path
+  try {
+    const path = createTempFolder(name)
+    await objectStore.downloadTarballDirect(url, path, headers)
+
+    return path
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
 }

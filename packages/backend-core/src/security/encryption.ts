@@ -3,7 +3,6 @@ import fs from "fs"
 import zlib from "zlib"
 import env from "../environment"
 import { join } from "path"
-import { PassThrough, Readable } from "stream"
 
 const ALGO = "aes-256-ctr"
 const SEPARATOR = "-"
@@ -80,103 +79,24 @@ export async function encryptFile(
   const inputFile = fs.createReadStream(filePath)
   const outputFile = fs.createWriteStream(join(dir, outputFileName))
 
-  encryptStream(inputFile, secret).pipe(outputFile)
-
-  return new Promise<{ filename: string; dir: string }>((resolve, reject) => {
-    outputFile.on("finish", () => {
-      resolve({
-        filename: outputFileName,
-        dir,
-      })
-    })
-    const cleanupReject = (error: Error) => {
-      inputFile.close()
-      outputFile.close()
-      reject(error)
-    }
-    outputFile.on("error", cleanupReject)
-    inputFile.on("error", cleanupReject)
-  })
-}
-
-export function encryptStream(inputStream: Readable, secret: string): Readable {
   const salt = crypto.randomBytes(SALT_LENGTH)
   const iv = crypto.randomBytes(IV_LENGTH)
   const stretched = stretchString(secret, salt)
   const cipher = crypto.createCipheriv(ALGO, stretched, iv)
-  const gzip = zlib.createGzip()
 
-  const outputStream = new PassThrough()
-  outputStream.write(salt)
-  outputStream.write(iv)
+  outputFile.write(salt)
+  outputFile.write(iv)
 
-  // Set up error propagation
-  inputStream.on("error", err => {
-    gzip.destroy(err)
-    if (!outputStream.destroyed) {
-      outputStream.destroy(err)
-    }
-  })
-  gzip.on("error", err => {
-    cipher.destroy(err)
-    if (!outputStream.destroyed) {
-      outputStream.destroy(err)
-    }
-  })
-  cipher.on("error", err => {
-    if (!outputStream.destroyed) {
-      outputStream.destroy(err)
-    }
-  })
+  inputFile.pipe(zlib.createGzip()).pipe(cipher).pipe(outputFile)
 
-  inputStream.pipe(gzip).pipe(cipher).pipe(outputStream)
-
-  return outputStream
-}
-
-export async function decryptStream(
-  inputStream: Readable,
-  secret: string
-): Promise<Readable> {
-  const outputStream = new PassThrough()
-
-  let decipher: crypto.Decipher | null = null
-  let gunzip: zlib.Gunzip | null = null
-  let firstChunk = true
-
-  inputStream.on("data", chunk => {
-    if (firstChunk) {
-      firstChunk = false
-      const salt = chunk.slice(0, SALT_LENGTH)
-      const iv = chunk.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH)
-      chunk = chunk.slice(SALT_LENGTH + IV_LENGTH)
-
-      const stretched = stretchString(secret, salt)
-      decipher = crypto.createDecipheriv(ALGO, stretched, iv)
-      gunzip = zlib.createGunzip()
-
-      inputStream.on("error", err => {
-        decipher!.destroy(err)
+  return new Promise<{ filename: string; dir: string }>(r => {
+    outputFile.on("finish", () => {
+      r({
+        filename: outputFileName,
+        dir,
       })
-      decipher.on("error", err => {
-        gunzip!.destroy(err)
-      })
-      gunzip.on("error", err => {
-        outputStream.destroy(err)
-      })
-
-      decipher.pipe(gunzip).pipe(outputStream)
-    }
-
-    decipher!.write(chunk)
+    })
   })
-
-  inputStream.on("end", () => {
-    decipher?.end()
-    gunzip?.end()
-  })
-
-  return outputStream
 }
 
 async function getSaltAndIV(path: string) {
