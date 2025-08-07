@@ -1,5 +1,6 @@
 import {
   AutomationActionStepId,
+  AutomationFeature,
   AutomationIOType,
   AutomationStepDefinition,
   AutomationStepType,
@@ -15,19 +16,22 @@ export const definition: AutomationStepDefinition = {
   new: false,
   stepId: AutomationActionStepId.EXTRACT_STATE,
   inputs: {},
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   schema: {
     inputs: {
       properties: {
-        name: {
+        key: {
           type: AutomationIOType.STRING,
-          title: "Name",
+          title: "Key",
         },
-        code: {
+        value: {
           type: AutomationIOType.LONGFORM,
-          title: "Code",
+          title: "Value",
         },
       },
-      required: ["code", "name"],
+      required: ["value", "key"],
     },
     outputs: {
       properties: {

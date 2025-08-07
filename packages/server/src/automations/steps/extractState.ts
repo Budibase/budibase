@@ -12,9 +12,9 @@ export async function run({
   inputs: ExtractStateStepInputs
   context: Record<string, any>
 }): Promise<ExtractStateStepOutputs> {
-  let { code } = inputs
+  let { value } = inputs
 
-  if (code == null) {
+  if (value == null) {
     return {
       success: false,
       response: {
@@ -23,12 +23,12 @@ export async function run({
     }
   }
 
-  code = code.trim()
+  value = value.trim()
 
   try {
     return {
       success: true,
-      value: processStringSync(inputs.code, context, { noThrow: false }),
+      value: processStringSync(inputs.value, context, { noThrow: false }),
     }
   } catch (err) {
     return {

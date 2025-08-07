@@ -389,12 +389,13 @@ class Orchestrator {
 
       function addToContext(
         step: AutomationStep,
-        result: AutomationStepResult
+        result: AutomationStepResult,
+        looped = false
       ) {
         // Put State block data into the state
-        if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
+        if (step.stepId === AutomationActionStepId.EXTRACT_STATE && !looped) {
           ctx.state ??= {}
-          ctx.state[result.inputs.name] = result.outputs.value
+          ctx.state[result.inputs.key] = result.outputs.value
         }
 
         ctx.steps[step.id] = result.outputs
@@ -433,7 +434,8 @@ class Orchestrator {
             const stepToLoop = steps[stepIndex + 1]
             addToContext(
               stepToLoop,
-              await this.executeLoopStep(ctx, step, stepToLoop)
+              await this.executeLoopStep(ctx, step, stepToLoop),
+              true
             )
             // We increment by 2 here because the way loops work is that the
             // step immediately following the loop step is what gets looped.
@@ -515,6 +517,11 @@ class Orchestrator {
         ctx.loop = { currentItem }
         try {
           const result = await this.executeStep(ctx, stepToLoop)
+          // state is global and should be modified during the loop, not after
+          if (stepToLoop.stepId === AutomationActionStepId.EXTRACT_STATE) {
+            ctx.state ??= {}
+            ctx.state[result.inputs.key] = result.outputs.value
+          }
           items.push(result.outputs)
           if (result.outputs.success === false) {
             return stepFailure(stepToLoop, { iterations, items })

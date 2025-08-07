@@ -611,21 +611,21 @@ const automationActions = (store: AutomationStore) => ({
       .filter(([id, entry]: [string, any]) => {
         const valid =
           entry.stepId === AutomationActionStepId.EXTRACT_STATE &&
-          entry?.inputs?.name &&
-          id !== selectedNodeId &&
-          !cache.has(entry.inputs.name)
+          entry?.inputs?.key &&
+          (id !== selectedNodeId || entry.looped) &&
+          !cache.has(entry.inputs.key)
 
         // Multiple blocks can reference the same state fields.
         // Check the cached ids before adding to avoid dupe bindings
-        if (valid) cache.add(entry.inputs.name)
+        if (valid) cache.add(entry.inputs.key)
         return valid
       })
       .map(([_, entry]: [string, any]) => {
         return {
-          runtimeBinding: `state.${makePropSafe(entry.inputs.name)}`,
-          readableBinding: `State.${entry.inputs.name}`,
+          runtimeBinding: `state.${makePropSafe(entry.inputs.key)}`,
+          readableBinding: `State.${entry.inputs.key}`,
           display: {
-            name: `State.${entry.inputs.name}`,
+            name: `State.${entry.inputs.key}`,
           },
           category: "State",
           icon: "brackets-curly",
@@ -2317,7 +2317,7 @@ const extractStateContext = (
       return (
         entry.stepId === AutomationActionStepId.EXTRACT_STATE &&
         id !== selectedNodeId &&
-        entry?.inputs?.name
+        entry?.inputs?.key
       )
     }
   )
@@ -2328,8 +2328,8 @@ const extractStateContext = (
 
   const stubs = stateSteps.reduce(
     (acc: Record<string, any>, [id, entry]: [string, any]) => {
-      if (!acc[entry.inputs.name]) {
-        acc[entry.inputs.name] = {
+      if (!acc[entry.inputs.key]) {
+        acc[entry.inputs.key] = {
           steps: [],
           description:
             "An updateable state variable. This will be replaced with a real value on test or at runtime",
@@ -2337,7 +2337,7 @@ const extractStateContext = (
       }
       const displayName = stepNames?.[id] || entry.name
       // Show which state steps are modifying the variable
-      acc[entry.inputs.name].steps.push(displayName)
+      acc[entry.inputs.key].steps.push(displayName)
       return acc
     },
     {}

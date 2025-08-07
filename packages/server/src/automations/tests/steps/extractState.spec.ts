@@ -53,8 +53,8 @@ describe("Extract state Automations", () => {
     const results = await builder
       .onAppAction()
       .extractState({
-        name: "sample",
-        code: encodeJSBinding("return 2 + 2"),
+        key: "sample",
+        value: encodeJSBinding("return 2 + 2"),
       })
       .test({ fields: {} })
 
@@ -71,12 +71,12 @@ describe("Extract state Automations", () => {
     const results = await builder
       .onAppAction()
       .extractState({
-        name: "invalid",
-        code: encodeJSBinding("return 2 +"),
+        key: "invalid",
+        value: encodeJSBinding("return 2 +"),
       })
       .extractState({
-        name: "valid",
-        code: encodeJSBinding("return 2 + 3"),
+        key: "valid",
+        value: encodeJSBinding("return 2 + 3"),
       })
       .test({ fields: {} })
 
@@ -102,16 +102,16 @@ describe("Extract state Automations", () => {
       .onAppAction()
       .extractState(
         {
-          name: "first",
-          code: encodeJSBinding("return 2 + 5"),
+          key: "first",
+          value: encodeJSBinding("return 2 + 5"),
         },
         {
           stepId: firstStepId,
         }
       )
       .extractState({
-        name: "first",
-        code: encodeJSBinding(`return $('state.[first]') + 3`),
+        key: "first",
+        value: encodeJSBinding(`return $('state.[first]') + 3`),
       })
       .test({ fields: {} })
 
@@ -126,8 +126,8 @@ describe("Extract state Automations", () => {
       .onAppAction()
       .extractState(
         {
-          name: "first",
-          code: encodeJSBinding("return ['hello']"),
+          key: "first",
+          value: encodeJSBinding("return ['hello']"),
         },
         {
           stepId: firstStepId,
@@ -135,12 +135,12 @@ describe("Extract state Automations", () => {
       )
       // take the initial array and add more values.
       .extractState({
-        name: "first",
-        code: encodeJSBinding(`return [...$('state.[first]'),'there']`),
+        key: "first",
+        value: encodeJSBinding(`return [...$('state.[first]'),'there']`),
       })
       .extractState({
-        name: "second",
-        code: encodeJSBinding(
+        key: "second",
+        value: encodeJSBinding(
           `return {firstCount: $('state.[first]').length, test: { complete: true }}`
         ),
       })
@@ -167,8 +167,8 @@ describe("Extract state Automations", () => {
     const results = await builder
       .onAppAction()
       .extractState({
-        name: "sample",
-        code: "some handlebars text {{ [user].[email] }}",
+        key: "sample",
+        value: "some handlebars text {{ [user].[email] }}",
       })
       .test({ fields: {} })
 
@@ -184,12 +184,12 @@ describe("Extract state Automations", () => {
     const results = await builder
       .onAppAction()
       .extractState({
-        name: "samplehb",
-        code: "{{ env.env-1 }}",
+        key: "samplehb",
+        value: "{{ env.env-1 }}",
       })
       .extractState({
-        name: "samplejs",
-        code: encodeJSBinding("return $('env.env-1')"),
+        key: "samplejs",
+        value: encodeJSBinding("return $('env.env-1')"),
       })
       .test({ fields: {} })
 
@@ -206,8 +206,8 @@ describe("Extract state Automations", () => {
     const results = await builder
       .onAppAction()
       .extractState({
-        name: "sampleSnippets",
-        code: encodeJSBinding("return snippets.tester('sampleSnippets')"),
+        key: "sampleSnippets",
+        value: encodeJSBinding("return snippets.tester('sampleSnippets')"),
       })
       .test({ fields: {} })
 
@@ -222,20 +222,20 @@ describe("Extract state Automations", () => {
     const results = await builder
       .onAppAction()
       .extractState({
-        name: "testValue",
-        code: encodeJSBinding("return 5"),
+        key: "testValue",
+        value: encodeJSBinding("return 5"),
       })
       .branch({
         activeBranch: {
           steps: stepBuilder =>
             stepBuilder
               .extractState({
-                name: "testValue", // alter and replace in the branch
-                code: encodeJSBinding("return $('state.testValue') + 10"),
+                key: "testValue", // alter and replace in the branch
+                value: encodeJSBinding("return $('state.testValue') + 10"),
               })
               .extractState({
-                name: "someOtherValue",
-                code: "hi",
+                key: "someOtherValue",
+                value: "hi",
               }),
           condition: {
             equal: { [encodeJSBinding("return $('state.testValue')")]: 5 },
@@ -245,12 +245,12 @@ describe("Extract state Automations", () => {
           steps: stepBuilder =>
             stepBuilder
               .extractState({
-                name: "testValue",
-                code: encodeJSBinding("return $('state.testValue') + 20"),
+                key: "testValue",
+                value: encodeJSBinding("return $('state.testValue') + 20"),
               })
               .extractState({
-                name: "someOtherValue",
-                code: "bye",
+                key: "someOtherValue",
+                value: "bye",
               }),
           condition: {
             equal: { [encodeJSBinding("return $('state.testValue')")]: 6 },

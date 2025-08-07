@@ -116,8 +116,8 @@ export type ExecuteScriptStepOutputs = BaseAutomationOutputs & {
 }
 
 export type ExtractStateStepInputs = {
-  name: string
-  code: string
+  key: string
+  value: string
 }
 
 export type ExtractStateStepOutputs = BaseAutomationOutputs & {
