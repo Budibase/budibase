@@ -139,6 +139,7 @@
   }
 
   $: workspaceApps = $workspaceAppStore.workspaceApps
+  $: filteredWorkspaceApps = workspaceApps
     .filter(a => {
       if (!filter) {
         return true
@@ -209,7 +210,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each workspaceApps as app}
+  {#each filteredWorkspaceApps as app}
     <a
       class="app"
       class:favourite={app.favourite?._id}
@@ -250,7 +251,8 @@
         </span>
       </div>
     </a>
-  {:else}
+  {/each}
+  {#if !workspaceApps.length}
     <NoResults
       ctaText="Create your first app"
       onCtaClick={createApp}
@@ -258,7 +260,7 @@
     >
       No apps yet! Build your first app to get started.
     </NoResults>
-  {/each}
+  {/if}
 </div>
 
 <WorkspaceAppModal

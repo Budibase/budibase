@@ -162,6 +162,7 @@
   }
 
   $: automations = $automationStore.automations
+  $: filteredAutomations = automations
     .map(a => ({
       ...a,
       favourite: $favourites?.[a._id!] ?? {
@@ -235,7 +236,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each automations as automation}
+  {#each filteredAutomations as automation}
     <a
       class="app"
       class:favourite={automation.favourite?._id}
@@ -277,7 +278,8 @@
         </span>
       </div>
     </a>
-  {:else}
+  {/each}
+  {#if !automations.length}
     <NoResults
       ctaText="Create your first automation"
       onCtaClick={() => createModal.show()}
@@ -285,7 +287,7 @@
     >
       No automations yet! Build your first automation to get started.
     </NoResults>
-  {/each}
+  {/if}
 </div>
 
 <Modal bind:this={createModal}>
