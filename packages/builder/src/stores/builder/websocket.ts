@@ -10,6 +10,7 @@ import {
   datasources,
   tables,
   roles,
+  workspaceAppStore,
 } from "@/stores/builder"
 import { get } from "svelte/store"
 import { auth, appsStore } from "@/stores/portal"
@@ -23,6 +24,7 @@ import {
   Table,
   UIUser,
   Screen,
+  WorkspaceApp,
 } from "@budibase/types"
 
 export const createBuilderWebsocket = (appId: string) => {
@@ -98,6 +100,13 @@ export const createBuilderWebsocket = (appId: string) => {
   )
 
   // App events
+  socket.on(
+    BuilderSocketEvent.WorkspaceAppChange,
+    ({ id, workspaceApp }: { id: string; workspaceApp: WorkspaceApp }) => {
+      workspaceAppStore.replaceDatasource(id, workspaceApp)
+    }
+  )
+
   socket.onOther(
     BuilderSocketEvent.AppMetadataChange,
     ({ metadata }: { metadata: any }) => {
