@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte"
+  import { writable, get } from "svelte/store"
   import dayjs from "dayjs"
   import {
     notifications,
@@ -24,24 +25,49 @@
     enrichLog,
   } from "./AutomationStepHelpers"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
-  import DraggableCanvas from "../DraggableCanvas.svelte"
   import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
-  import StepNode from "./StepNode.svelte"
+  import NodeWrapper from "./NodeWrapper.svelte"
+  import EdgeWrapper from "./EdgeWrapper.svelte"
+  import {
+    SvelteFlow,
+    Controls,
+    Background,
+    BackgroundVariant,
+    MiniMap,
+    type Node as FlowNode,
+    type Edge as FlowEdge,
+    type NodeTypes,
+    type EdgeTypes,
+  } from "@xyflow/svelte"
+  import "@xyflow/svelte/dist/style.css"
+  import { AutomationStatus, type AutomationStep } from "@budibase/types"
 
   export let automation
 
   const memoAutomation = memo(automation)
 
-  let testDataModal
+  const nodeTypes: NodeTypes = {
+    "step-node": NodeWrapper as any,
+  }
+  const edgeTypes: EdgeTypes = {
+    "add-item": EdgeWrapper as any,
+  }
+
+  let testDataModal: Modal
   let confirmDeleteDialog
   let scrolling = false
-  let blockRefs = {}
+  let blockRefs: Record<string, any> = {}
   let treeEle
   let draggable
-  let prodErrors
+  let prodErrors: number
   let viewMode = ViewMode.EDITOR
+
+  let nodes = writable<FlowNode[]>([])
+  let edges = writable<FlowEdge[]>([])
+
+  $: updateNodes(blocks as any)
+  $: updateEdges($nodes)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -49,12 +75,157 @@
   $: memoAutomation.set(automation)
 
   // Parse the automation tree state
-  $: refresh($memoAutomation)
+  $: $memoAutomation && refresh()
 
   $: blocks = getBlocksHelper($memoAutomation, viewMode).filter(
     x => x.stepId !== ActionStepID.LOOP
   )
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
+
+  const handleNodeDrag = (event: CustomEvent) => {
+    const { targetNode } = event.detail
+    if (targetNode) {
+      nodes.update(n => {
+        return n.map(node => {
+          if (node.id === targetNode.id) {
+            return {
+              ...node,
+              position: targetNode.position,
+            }
+          }
+          return node
+        })
+      })
+    }
+  }
+
+  const handleNodeDragStop = (event: CustomEvent) => {
+    const { targetNode } = event.detail
+    if (!targetNode) return
+
+    const currentNodes = get(nodes)
+    const draggedNodeIndex = currentNodes.findIndex(n => n.id === targetNode.id)
+
+    // Calculate which position the node was dropped into based on Y position
+    let newIndex = currentNodes.findIndex(node => {
+      if (node.id === targetNode.id) return false
+      // Check if the dragged node's Y position is before this node
+      return targetNode.position.y < node.position.y
+    })
+
+    // If no node found after it, it means it's at the end
+    if (newIndex === -1) {
+      newIndex = currentNodes.length - 1
+    } else if (newIndex > draggedNodeIndex) {
+      // Adjust index if moving down
+      newIndex -= 1
+    }
+
+    // Only reorder if the position actually changed
+    if (newIndex !== draggedNodeIndex && newIndex >= 0) {
+      // Reorder blocks array
+      const reorderedBlocks = [...blocks]
+      const [movedBlock] = reorderedBlocks.splice(draggedNodeIndex, 1)
+      reorderedBlocks.splice(newIndex, 0, movedBlock)
+
+      // Get the source and destination paths for the moveBlock function
+      const sourceBlock = blockRefs[targetNode.id]
+      if (sourceBlock) {
+        const sourcePath = sourceBlock.pathTo
+
+        // Determine destination path based on the new position
+        let destPath
+        if (newIndex === 0) {
+          // Moving to the beginning
+          const firstBlock = blockRefs[reorderedBlocks[1]?.id]
+          if (firstBlock) {
+            destPath = [...firstBlock.pathTo]
+            destPath[destPath.length - 1] = {
+              ...destPath[destPath.length - 1],
+              stepIdx: 0,
+            }
+          }
+        } else {
+          // Moving after another block
+          const prevBlock = blockRefs[reorderedBlocks[newIndex - 1]?.id]
+          if (prevBlock) {
+            destPath = [...prevBlock.pathTo]
+          }
+        }
+
+        if (destPath) {
+          // Use the automation store's moveBlock function
+          automationStore.actions.moveBlock(
+            sourcePath,
+            destPath,
+            $memoAutomation
+          )
+        }
+      }
+    } else {
+      // Just update the position without reordering
+      nodes.update(n => {
+        return n.map(node => {
+          if (node.id === targetNode.id) {
+            return {
+              ...node,
+              position: targetNode.position,
+            }
+          }
+          return node
+        })
+      })
+    }
+  }
+
+  const updateNodes = (blocks: AutomationStep[]) => {
+    const currentNodes = get(nodes)
+    let newNodes: FlowNode[] = []
+    if (blocks.length > 0) {
+      blocks.forEach((block, idx) => {
+        const existingBlock = currentNodes.find(x => x.id === block.id)
+        let position = existingBlock?.position
+        if (!position) {
+          const prevNode = currentNodes[idx - 1]
+          const nextNode = currentNodes[idx]
+          if (nextNode) {
+            position = {
+              x: (prevNode.position.x + nextNode.position.x) / 2,
+              y: (prevNode.position.y + nextNode.position.y) / 2,
+            }
+          } else if (prevNode) {
+            position = {
+              x: prevNode.position.x,
+              y: prevNode.position.y + 400,
+            }
+          } else {
+            position = { x: 0, y: idx * 400 }
+          }
+        }
+        newNodes.push({
+          id: block.id,
+          type: "step-node",
+          data: { testDataModal, block },
+          position,
+        })
+      })
+    }
+    nodes.set(newNodes)
+  }
+
+  const updateEdges = (nodes: FlowNode[]) => {
+    let newEdges: FlowEdge[] = []
+    for (let i = 0; i < nodes.length - 1; i++) {
+      newEdges.push({
+        id: `${i}-${i + 1}`,
+        type: "add-item",
+        source: nodes[i].id,
+        target: nodes[i + 1].id,
+        data: nodes[i].data,
+      })
+    }
+    edges.set(newEdges)
+  }
 
   const refresh = () => {
     // Get all processed block references
@@ -75,12 +246,12 @@
       await environment.loadVariables()
       const response = await automationStore.actions.getLogs({
         automationId: automation._id,
-        status: "error",
+        status: AutomationStatus.ERROR,
         startDate: dayjs().subtract(1, "day").toISOString(),
       })
       prodErrors = response?.data?.length || 0
     } catch (error) {
-      console.error(error)
+      console.log(error)
     }
   })
 
@@ -93,7 +264,7 @@
       automationStore.actions.closeLogPanel()
       viewMode = ViewMode.LOGS
       // Clear editor selection when switching to logs mode
-      automationStore.actions.selectNode(null)
+      automationStore.actions.selectNode(undefined)
     }
   }
 
@@ -103,7 +274,7 @@
     viewMode = ViewMode.EDITOR
   }
 
-  function handleStepSelect(stepData) {
+  function handleStepSelect(stepData: any) {
     // Show step details when a step is selected in logs mode
     if (
       stepData &&
@@ -157,7 +328,7 @@
             on:click={() => {
               viewMode = ViewMode.LOGS
               // Clear editor selection when switching to logs mode
-              automationStore.actions.selectNode(null)
+              automationStore.actions.selectNode(undefined)
               if (
                 !$automationStore.showLogsPanel &&
                 !$automationStore.showLogDetailsPanel
@@ -187,10 +358,12 @@
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Disabled" : "Enabled"}
-          on:change={automationStore.actions.toggleDisabled(
-            automation._id,
-            automation.disabled
-          )}
+          on:change={() => {
+            automationStore.actions.toggleDisabled(
+              automation._id,
+              automation.disabled
+            )
+          }}
           disabled={!automation?.definition?.trigger}
           value={!automation.disabled}
         />
@@ -200,61 +373,23 @@
 </div>
 
 <div class="main-flow">
-  <div class="canvas-heading" class:scrolling>
-    <div class="canvas-controls">
-      <div class="canvas-heading-left">
-        <UndoRedoControl store={automationHistoryStore} showButtonGroup />
-
-        <div class="zoom">
-          <div class="group">
-            <ActionButton icon="plus" quiet on:click={draggable.zoomIn} />
-            <ActionButton icon="minus" quiet on:click={draggable.zoomOut} />
-          </div>
-        </div>
-
-        <Button
-          secondary
-          on:click={() => {
-            draggable.zoomToFit()
-          }}
-        >
-          Zoom to fit
-        </Button>
-      </div>
-    </div>
-  </div>
-
   <div class="root" bind:this={treeEle}>
-    <DraggableCanvas
-      bind:this={draggable}
-      draggableClasses={[
-        "main-content",
-        "content",
-        "block",
-        "branched",
-        "branch",
-        "flow-item",
-        "branch-wrap",
-      ]}
-    >
-      <span class="main-content" slot="content">
-        {#if Object.keys(blockRefs).length}
-          {#each blocks as block, idx (block.id)}
-            <StepNode
-              step={blocks[idx]}
-              stepIdx={idx}
-              isLast={blocks?.length - 1 === idx}
-              automation={$memoAutomation}
-              blocks={blockRefs}
-              logData={$automationStore.selectedLog}
-              {viewMode}
-              selectedLogStepId={$automationStore.selectedLogStepData?.id}
-              onStepSelect={handleStepSelect}
-            />
-          {/each}
-        {/if}
-      </span>
-    </DraggableCanvas>
+    <div class="wrapper">
+      <SvelteFlow
+        {nodes}
+        {nodeTypes}
+        {edges}
+        {edgeTypes}
+        fitView
+        colorMode="dark"
+        on:nodedrag={handleNodeDrag}
+        on:nodedragstop={handleNodeDragStop}
+      >
+        <Controls />
+        <Background variant={BackgroundVariant.Dots} gap={25} />
+        <MiniMap />
+      </SvelteFlow>
+    </div>
   </div>
 </div>
 
@@ -280,6 +415,27 @@
 </Modal>
 
 <style>
+  .wrapper {
+    position: relative;
+    height: 100%;
+    --xy-background-color: var(--spectrum-global-color-gray-50);
+    --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
+    --xy-node-background-color: var(--background);
+    --xy-node-border: 1px var(--grey-3) solid;
+    --xy-node-boxshadow-selected: 0 0 0 1px
+      var(--spectrum-global-color-blue-400);
+    --xy-minimap-mask-background-color-props: var(
+      --spectrum-global-color-gray-200
+    );
+    --xy-minimap-node-background-color-props: var(
+      --spectrum-global-color-gray-400
+    );
+    --xy-controls-button-background-color: var(
+      --spectrum-global-color-gray-200
+    );
+    --xy-edge-stroke: var(--spectrum-global-color-gray-400);
+  }
+
   .main-flow {
     position: relative;
     width: 100%;

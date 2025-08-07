@@ -71,19 +71,6 @@
     $contentPos?.scrollY
   )
 
-  const updateBlockDims = () => {
-    if (!blockEle) {
-      return
-    }
-    const { width, height, top, left } = blockEle.getBoundingClientRect()
-    blockDims = {
-      width: width / $view.scale,
-      height: height / $view.scale,
-      top,
-      left,
-    }
-  }
-
   const loadSteps = blockRef => {
     return blockRef
       ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
@@ -149,17 +136,14 @@
     class:unexecuted
   >
     <div class="wrap">
-      {#if $view.dragging && dragging}
+      {#if $view?.dragging && dragging}
         <div class="drag-placeholder" style={placeholderDims} />
       {/if}
       <div
         bind:this={blockEle}
         class="block-content"
-        class:dragging={$view.dragging && dragging}
+        class:dragging={$view?.dragging && dragging}
         style={positionStyles}
-        on:mousedown={e => {
-          e.stopPropagation()
-        }}
       >
         <div class="block-float">
           <FlowItemStatus
@@ -213,26 +197,9 @@
     </div>
   </div>
 
-  {#if !lastStep || viewMode !== ViewMode.LOGS}
-    <div class="separator" />
-  {/if}
-
   {#if !collectBlockExists}
-    {#if $view.dragging}
+    {#if $view?.dragging}
       <DragZone path={blockRef?.pathTo} />
-    {:else if viewMode === ViewMode.EDITOR}
-      <FlowItemActions
-        {block}
-        on:branch={() => {
-          automationStore.actions.branchAutomation(
-            $selectedAutomation.blockRefs[block.id]?.pathTo,
-            automation
-          )
-        }}
-      />
-    {/if}
-    {#if !lastStep}
-      <div class="separator" />
     {/if}
   {/if}
 {/if}

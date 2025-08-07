@@ -1550,7 +1550,7 @@ const automationActions = (store: AutomationStore) => ({
     return response
   },
 
-  toggleDisabled: async (automationId: string) => {
+  toggleDisabled: async (automationId: string, disabled: any) => {
     let automation: Automation | undefined
     try {
       automation = store.actions.getDefinition(automationId)
