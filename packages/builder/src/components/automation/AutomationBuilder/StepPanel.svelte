@@ -283,6 +283,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0; /* allow nested viewer to scroll */
     overflow: auto;
     overflow-x: hidden;
   }

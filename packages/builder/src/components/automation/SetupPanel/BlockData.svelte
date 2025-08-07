@@ -342,7 +342,7 @@
   }
   .viewer {
     overflow: auto;
-    flex: 1 1 auto;
+    flex: 1 1 0px; /* allow to shrink within parent */
     min-height: 0; /* critical for nested flex scrolling */
     padding-right: 0px;
   }

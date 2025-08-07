@@ -188,7 +188,8 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    overflow: hidden;
+    overflow: hidden; /* container remains clipped; parents manage scroll */
+    min-height: 0; /* avoid blocking scroll within parent flex */
   }
 
   /* Expand arrow */
