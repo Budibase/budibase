@@ -28,6 +28,7 @@
   import { BannerType } from "@/constants/banners"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import NoResults from "../../_components/NoResults.svelte"
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
@@ -249,6 +250,10 @@
         </span>
       </div>
     </a>
+  {:else}
+    <NoResults ctaText="Create your first app" onCtaClick={createApp}>
+      No apps yet! Build your first app to get started.
+    </NoResults>
   {/each}
 </div>
 
