@@ -166,8 +166,9 @@
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
     height: 100vh;
-    width: 100vw;
+    width: auto; /* avoid 100vw causing horizontal overflow when a vertical scrollbar is present */
     opacity: 0.65;
     pointer-events: none;
   }
@@ -180,6 +181,8 @@
     justify-content: center;
     align-items: flex-start;
     max-height: 100%;
+    width: 100%;
+    overflow-x: hidden;
   }
   .modal-inner-wrapper {
     padding: 40px;
@@ -191,6 +194,8 @@
     align-items: flex-start;
     width: 0;
     position: relative;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .spectrum-Modal {
@@ -203,6 +208,7 @@
       --spectrum-global-dimension-size-100
     );
     max-width: 100%;
+    box-sizing: border-box;
   }
   :global(.spectrum--lightest .spectrum-Modal.inline) {
     border: var(--border-light);

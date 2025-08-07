@@ -163,6 +163,7 @@
 
   .spectrum-Dialog-content {
     overflow: visible;
+    max-width: 100%;
   }
 
   .no-grid .spectrum-Dialog-content {
@@ -220,6 +221,7 @@
 
   .spectrum-Dialog-buttonGroup {
     padding-left: 0;
+    overflow-x: hidden;
   }
 
   .confirm-wrap :global(.spectrum-Button-label) {
