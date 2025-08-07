@@ -38,7 +38,7 @@
         } else {
           await API.workspace.create(favourite)
         }
-        await workspaceFavouriteStore.init()
+        await workspaceFavouriteStore.sync()
       } catch (e) {
         console.error("Workspace favourite update failed", e)
       }

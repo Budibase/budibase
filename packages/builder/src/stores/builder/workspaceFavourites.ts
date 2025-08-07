@@ -27,7 +27,7 @@ export class WorkspaceFavouriteStore extends BudiStore<WorkspaceFavourite[]> {
     })
   }
 
-  async init() {
+  async sync() {
     try {
       const resp: WorkspaceFavouriteResponse = await API.workspace.fetch()
       this.set(resp.favourites)

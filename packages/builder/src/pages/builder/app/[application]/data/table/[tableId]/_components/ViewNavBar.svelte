@@ -145,7 +145,7 @@
                       })
                       notifications.success("View added to favourites")
                     }
-                    await workspaceFavouriteStore.init()
+                    await workspaceFavouriteStore.sync()
                   } catch (e) {
                     notifications.error("Failed to update favourite")
                     console.error("Failed to update favourite", e)

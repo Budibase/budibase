@@ -97,10 +97,9 @@
       })
     )
 
-  const generateResourceLookup = () => {
-    if (!allResourceStores) {
-      return null
-    }
+  const generateResourceLookup = (
+    allResourceStores: Readable<AllResourceStores>
+  ) => {
     return derivedMemo(allResourceStores, stores => {
       const lookup: Record<string, UIFavouriteResource> = {}
 
@@ -138,7 +137,7 @@
   // None of this needs to be done if the side bar is closed
   const initFavourites = () => {
     allResourceStores = initResourceStores()
-    resourceLookup = generateResourceLookup()
+    resourceLookup = generateResourceLookup(allResourceStores)
   }
 
   let ignoreFocus = false
@@ -259,6 +258,7 @@
           {collapsed}
           on:click={keepCollapsed}
         />
+        <!-- <Divider size="S" /> -->
         <SideNavLink
           icon="database"
           text="Data"
@@ -266,6 +266,27 @@
           {collapsed}
           on:click={keepCollapsed}
         />
+        <!-- <SideNavLink
+          icon="webhooks-logo"
+          text="APIs"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="sparkle"
+          text="AI"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        />
+        <SideNavLink
+          icon="paper-plane-tilt"
+          text="Email"
+          url={$url("./data")}
+          {collapsed}
+          on:click={keepCollapsed}
+        /> -->
         {#if $featureFlags.AI_AGENTS}
           <SideNavLink
             icon="cpu"
