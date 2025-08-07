@@ -32,6 +32,7 @@
   import { url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import NoResults from "../../_components/NoResults.svelte"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -161,6 +162,7 @@
   }
 
   $: automations = $automationStore.automations
+  $: filteredAutomations = automations
     .map(a => ({
       ...a,
       favourite: $favourites?.[a._id!] ?? {
@@ -221,8 +223,9 @@
     </div>
     <div class="action-buttons">
       <Button icon="lightbulb" secondary>Learn</Button>
-      <Button cta icon="plus" on:click={createModal.show}>New automation</Button
-      >
+      <Button cta icon="plus" on:click={createModal.show}>
+        New automation
+      </Button>
     </div>
   </div>
 
@@ -233,7 +236,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each automations as automation}
+  {#each filteredAutomations as automation}
     <a
       class="app"
       class:favourite={automation.favourite?._id}
@@ -276,6 +279,15 @@
       </div>
     </a>
   {/each}
+  {#if !automations.length}
+    <NoResults
+      ctaText="Create your first automation"
+      onCtaClick={() => createModal.show()}
+      resourceType="automation"
+    >
+      No automations yet! Build your first automation to get started.
+    </NoResults>
+  {/if}
 </div>
 
 <Modal bind:this={createModal}>
