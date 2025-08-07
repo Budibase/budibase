@@ -14,6 +14,8 @@
   export let height = 220
   export let saveIcon = false
   export let darkMode
+  export let responsive = false
+  export let maxWidth = 400
 
   export function toDataUrl() {
     // PNG to preserve transparency
@@ -79,6 +81,19 @@
     dispatch("update")
   }
 
+  function computeDimensions() {
+    const targetWidth = responsive
+      ? Math.min(
+          maxWidth,
+          canvasWrap?.parentElement?.getBoundingClientRect()?.width || width
+        )
+      : width
+    const aspect = height / width
+    const targetHeight = Math.round(targetWidth * aspect)
+
+    return { targetWidth, targetHeight }
+  }
+
   onMount(() => {
     if (!editable) {
       return
@@ -107,17 +122,19 @@
 
     document.addEventListener("pointerup", checkUp)
 
+    const { targetWidth, targetHeight } = computeDimensions()
+
     signature = new Atrament(canvasRef, {
-      width,
-      height,
+      width: targetWidth,
+      height: targetHeight,
       color: "white",
     })
 
     signature.weight = 4
     signature.smoothing = 2
 
-    canvasWrap.style.width = `${width}px`
-    canvasWrap.style.height = `${height}px`
+    canvasWrap.style.width = responsive ? "100%" : `${targetWidth}px`
+    canvasWrap.style.height = `${targetHeight}px`
 
     const { width: wrapWidth, height: wrapHeight } =
       canvasWrap.getBoundingClientRect()

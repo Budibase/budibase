@@ -217,10 +217,14 @@
   @media (max-width: 640px) {
     .modal-inner-wrapper {
       padding: 16px;
+      width: auto;
     }
     .spectrum-Modal {
       width: 100%;
       max-height: calc(100vh - 32px);
+    }
+    .spectrum-Underlay {
+      overflow-x: hidden;
     }
   }
 </style>

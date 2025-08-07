@@ -36,6 +36,8 @@
         {darkMode}
         {value}
         saveIcon={false}
+        responsive
+        maxWidth={360}
         bind:this={canvas}
         on:update={() => {
           edited = true
@@ -65,8 +67,9 @@
 
   @media (max-width: 640px) {
     .signature-wrap.modal {
-      max-height: calc(100vh - 160px);
+      max-height: calc(100vh - 200px);
       overflow: auto;
+      overscroll-behavior: contain;
     }
   }
 </style>
