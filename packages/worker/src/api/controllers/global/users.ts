@@ -30,6 +30,7 @@ import {
   LockType,
   LookupAccountHolderResponse,
   LookupTenantUserResponse,
+  OIDCUser,
   SaveUserResponse,
   SearchUsersRequest,
   SearchUsersResponse,
@@ -114,11 +115,20 @@ export const changeTenantOwnerEmail = async (
   try {
     for (const tenantId of tenantIds) {
       await tenancy.doInTenant(tenantId, async () => {
-        const tenantUser = await userSdk.db.getUserByEmail(originalEmail)
+        const tenantUser = (await userSdk.db.getUserByEmail(
+          originalEmail
+        )) as OIDCUser
         if (!tenantUser) {
           return
         }
         tenantUser.email = newAccountEmail
+
+        tenantUser.provider = undefined
+        tenantUser.providerType = undefined
+        tenantUser.thirdPartyProfile = undefined
+        tenantUser.profile = undefined
+        tenantUser.oauth2 = undefined
+
         await userSdk.db.save(tenantUser, {
           currentUserId: tenantUser._id,
           isAccountHolder: true,
