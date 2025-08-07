@@ -9,7 +9,11 @@
   import { BannerType } from "@/constants/banners"
   import { capitalise, durationFromNow } from "@/helpers"
   import { getTriggerFriendlyName } from "@/helpers/automations"
-  import { automationStore, contextMenuStore } from "@/stores/builder"
+  import {
+    automationStore,
+    contextMenuStore,
+    workspaceFavouriteStore,
+  } from "@/stores/builder"
   import {
     AbsTooltip,
     ActionButton,
@@ -20,12 +24,14 @@
     Modal,
     type ModalAPI,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import type { UIAutomation } from "@budibase/types"
-  import { PublishResourceState } from "@budibase/types"
+  import { PublishResourceState, WorkspaceResource } from "@budibase/types"
   import { url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -54,6 +60,8 @@
       filterValue: PublishResourceState.DISABLED,
     },
   ]
+
+  $: favourites = workspaceFavouriteStore.lookup
 
   async function deleteAutomation() {
     if (!selectedAutomation) {
@@ -153,6 +161,13 @@
   }
 
   $: automations = $automationStore.automations
+    .map(a => ({
+      ...a,
+      favourite: $favourites?.[a._id!] ?? {
+        resourceType: WorkspaceResource.AUTOMATION,
+        resourceId: a._id!,
+      },
+    }))
     .filter(a => {
       if (!filter) {
         return true
@@ -160,7 +175,18 @@
 
       return a.publishStatus.state === filter
     })
-    .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
+    .sort((a, b) => {
+      const aIsFav = !!a.favourite._id
+      const bIsFav = !!b.favourite._id
+
+      // Group by favourite status
+      if (aIsFav !== bIsFav) {
+        return bIsFav ? 1 : -1
+      }
+
+      // Within same group, sort by updatedAt
+      return b.updatedAt!.localeCompare(a.updatedAt!)
+    })
 </script>
 
 <div class="automations-index">
@@ -210,6 +236,7 @@
   {#each automations as automation}
     <a
       class="app"
+      class:favourite={automation.favourite?._id}
       href={$url(`./${automation._id}`)}
       on:contextmenu={e => openContextMenu(e, automation)}
       class:active={showHighlight && selectedAutomation === automation}
@@ -230,12 +257,22 @@
         </span>
       </AbsTooltip>
       <div class="actions">
-        <Icon
-          name="More"
-          size="M"
-          hoverable
-          on:click={e => openContextMenu(e, automation)}
-        />
+        <div class="ctx-btn">
+          <Icon
+            name="More"
+            size="M"
+            hoverable
+            on:click={e => openContextMenu(e, automation)}
+          />
+        </div>
+
+        <span class="favourite-btn">
+          <FavouriteResourceButton
+            favourite={automation.favourite}
+            position={TooltipPosition.Left}
+            noWrap
+          />
+        </span>
       </div>
     </a>
   {/each}
@@ -322,17 +359,31 @@
     &.active {
       background: var(--spectrum-global-color-gray-200);
 
-      & .actions {
+      & .actions > * {
         opacity: 1;
         pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
       }
     }
   }
   .actions {
     justify-content: flex-end;
     display: flex;
-    opacity: 0;
+    align-items: center;
     pointer-events: none;
+    gap: var(--spacing-xs);
+  }
+
+  .actions > * {
+    opacity: 0;
     transition: opacity 130ms ease-out;
+  }
+
+  .actions .favourite-btn {
+    pointer-events: all;
   }
 </style>
