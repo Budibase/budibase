@@ -73,7 +73,7 @@ describe("check export/import", () => {
     expect(res.headers["content-disposition"]).toMatch(
       /attachment; filename=".*-export-.*\.tar.gz"/g
     )
-    expect(res.body).toBeInstanceOf(Buffer)
+    expect(res.body instanceof Buffer).toBe(true)
     expect(res.status).toBe(200)
   })
 
