@@ -195,8 +195,9 @@
 
   .spectrum-Modal {
     border: 2px solid var(--spectrum-global-color-gray-200);
-    overflow: visible;
-    max-height: none;
+    /* Ensure the modal never exceeds the viewport height on mobile */
+    overflow: auto;
+    max-height: calc(100vh - 64px);
     transform: none;
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100
@@ -210,5 +211,16 @@
   .portal,
   .portal :global(> div) {
     display: contents;
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 640px) {
+    .modal-inner-wrapper {
+      padding: 16px;
+    }
+    .spectrum-Modal {
+      width: 100%;
+      max-height: calc(100vh - 32px);
+    }
   }
 </style>

@@ -56,4 +56,17 @@
     box-sizing: border-box;
     position: relative;
   }
+
+  /* Ensure the signature canvas scales on small screens */
+  .signature-wrap.modal :global(#signature-canvas) {
+    width: 100%;
+    height: auto;
+  }
+
+  @media (max-width: 640px) {
+    .signature-wrap.modal {
+      max-height: calc(100vh - 160px);
+      overflow: auto;
+    }
+  }
 </style>

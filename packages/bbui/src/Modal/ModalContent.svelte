@@ -225,4 +225,20 @@
   .confirm-wrap :global(.spectrum-Button-label) {
     display: contents;
   }
+
+  /* Keep actions visible in mobile portrait and allow content to scroll */
+  @media (max-width: 640px) {
+    .spectrum-Dialog-content.content-grid {
+      padding-bottom: 80px; /* ensure content isn't hidden behind sticky footer */
+    }
+    .spectrum-Dialog-buttonGroup {
+      position: sticky;
+      bottom: 0;
+      background: var(--spectrum-global-color-gray-50);
+      padding-top: 12px;
+      padding-bottom: 12px;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+      z-index: 1;
+    }
+  }
 </style>
