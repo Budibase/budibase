@@ -2,25 +2,30 @@
   import { Button, Icon, Layout } from "@budibase/bbui"
 
   /* eslint-disable no-unused-vars */
-  enum IconColor {
-    Blue = "blue",
-    Orange = "orange",
+  enum ResourceType {
+    App = "app",
+    Automation = "automation",
   }
   /* eslint-enable no-unused-vars */
 
   export let onCtaClick: () => void
   export let ctaText: string
-  export let iconColor: `${IconColor}`
+  export let resourceType: `${ResourceType}`
+
+  const iconByType = {
+    [ResourceType.App]: "path",
+    [ResourceType.Automation]: "browser",
+  }
 </script>
 
 <Layout alignContent="center" justifyItems="center">
   <div
     class="icon-container"
-    class:blue={iconColor === IconColor.Blue}
-    class:orange={iconColor === IconColor.Orange}
+    class:automation={resourceType === ResourceType.Automation}
+    class:app={resourceType === ResourceType.App}
   >
     <Icon
-      name="path"
+      name={iconByType[resourceType]}
       size="M"
       color="var(--spectrum-global-color-static-gray-50)"
     />
@@ -36,11 +41,11 @@
     padding: 4px;
     border-radius: 8px;
   }
-  .icon-container.blue {
+  .icon-container.automation {
     background-color: #215f9e;
     border: 0.5px solid #467db4;
   }
-  .icon-container.orange {
+  .icon-container.app {
     border: 0.5px solid #c96442;
     background: #aa4321;
   }

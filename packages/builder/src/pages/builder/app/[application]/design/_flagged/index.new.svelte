@@ -256,7 +256,7 @@
     <NoResults
       ctaText="Create your first app"
       onCtaClick={createApp}
-      iconColor="orange"
+      resourceType="app"
     >
       No apps yet! Build your first app to get started.
     </NoResults>

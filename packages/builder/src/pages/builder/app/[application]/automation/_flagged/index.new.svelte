@@ -283,7 +283,7 @@
     <NoResults
       ctaText="Create your first automation"
       onCtaClick={() => createModal.show()}
-      iconColor="blue"
+      resourceType="automation"
     >
       No automations yet! Build your first automation to get started.
     </NoResults>
