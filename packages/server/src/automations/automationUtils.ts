@@ -415,14 +415,6 @@ export function processStandardResult(
   }
 }
 
-export function processNestedLoopResult(
-  storage: LoopStorage,
-  result: AutomationStepResult
-): void {
-  // Process the nested loop's summary
-  processStandardResult(storage, result, storage.summary.totalProcessed)
-}
-
 export function buildLoopOutput(
   storage: LoopStorage,
   status?: AutomationStepStatus,
