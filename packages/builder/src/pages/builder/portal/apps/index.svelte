@@ -165,14 +165,25 @@
       // Auto name app if has same name
       const templateKey = template.key.split("/")[1]
 
-      let appName = templateKey.replace(/-/g, " ")
-      appName = toTitleCase(appName)
-      const appsWithSameName = $appsStore.apps.filter(app =>
-        app.name?.startsWith(appName)
-      )
-      appName = `${appName} ${appsWithSameName.length + 1}`
+      let baseName = templateKey.replace(/-/g, " ")
+      baseName = toTitleCase(baseName)
 
-      const appUrl = appName.toLowerCase().replace(/\s+/g, "-")
+      // generate a unique app name and url
+      const baseUrl = baseName.toLowerCase().replace(/\s+/g, "-")
+
+      const isNameTaken = name => $appsStore.apps.some(app => app.name === name)
+      const isUrlTaken = url =>
+        $appsStore.apps.some(app => app.url?.replace(/^\//, "") === url)
+
+      let counter = 1
+      let appName = baseName
+      let appUrl = baseUrl
+
+      while (isNameTaken(appName) || isUrlTaken(appUrl)) {
+        counter++
+        appName = `${baseName} ${counter}`
+        appUrl = `${baseUrl}-${counter}`
+      }
 
       // Create form data to create app
       let data = new FormData()
