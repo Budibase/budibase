@@ -67,8 +67,17 @@
     }
   }
 
-  const isRated = (value: number | null, index: number): boolean => {
-    return typeof value === "number" && value >= index + 1
+  const toNumber = (value: unknown): number | null => {
+    if (value == null || value === "") {
+      return null
+    }
+    const num = Number(value)
+    return isNaN(num) ? null : num
+  }
+
+  const isRated = (value: unknown, index: number): boolean => {
+    const numeric = toNumber(value)
+    return numeric != null && numeric >= index + 1
   }
 </script>
 

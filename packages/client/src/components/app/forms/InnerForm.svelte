@@ -355,10 +355,14 @@
       // Update field state
       const error = validator?.(value)
       fieldInfo.update(state => {
-        state.fieldState.value = value
-        state.fieldState.error = error
-        state.fieldState.lastUpdate = Date.now()
-        return state
+        state.fieldState = {
+          ...state.fieldState,
+          value,
+          error,
+          lastUpdate: Date.now(),
+        }
+        // Replace top-level state object to ensure reactivity cascades
+        return { ...state }
       })
 
       return true
@@ -372,10 +376,13 @@
 
       // Update field state
       fieldInfo.update(state => {
-        state.fieldState.value = newValue
-        state.fieldState.error = null
-        state.fieldState.lastUpdate = Date.now()
-        return state
+        state.fieldState = {
+          ...state.fieldState,
+          value: newValue,
+          error: null,
+          lastUpdate: Date.now(),
+        }
+        return { ...state }
       })
     }
 
@@ -384,9 +391,12 @@
     const deregister = () => {
       const fieldInfo = getField(field)
       fieldInfo.update(state => {
-        state.fieldState.validator = null
-        state.fieldState.error = null
-        return state
+        state.fieldState = {
+          ...state.fieldState,
+          validator: null,
+          error: null,
+        }
+        return { ...state }
       })
     }
 
@@ -399,8 +409,11 @@
 
       // Update disabled state
       fieldInfo.update(state => {
-        state.fieldState.disabled = disabled || fieldDisabled || isAutoColumn
-        return state
+        state.fieldState = {
+          ...state.fieldState,
+          disabled: disabled || fieldDisabled || isAutoColumn,
+        }
+        return { ...state }
       })
     }
 
