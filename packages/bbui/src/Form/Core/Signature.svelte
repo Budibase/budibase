@@ -100,11 +100,17 @@
     }
 
     const getPos = e => {
-      let rect = canvasRef.getBoundingClientRect()
-      const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
-      const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
+      const rect = canvasRef.getBoundingClientRect()
+      const clientX = e.clientX ?? e.targetTouches?.[0]?.clientX
+      const clientY = e.clientY ?? e.targetTouches?.[0]?.clientY
 
-      return { x: canvasX, y: canvasY }
+      // Fallback to pageX/pageY if client coords aren’t available
+      const fallbackX = e.pageX ?? e.targetTouches?.[0]?.pageX
+      const fallbackY = e.pageY ?? e.targetTouches?.[0]?.pageY
+
+      const x = (clientX ?? fallbackX) - rect.left
+      const y = (clientY ?? fallbackY) - rect.top
+      return { x, y }
     }
 
     const checkUp = e => {
@@ -133,8 +139,13 @@
     signature.weight = 4
     signature.smoothing = 2
 
-    canvasWrap.style.width = responsive ? "100%" : `${targetWidth}px`
+    canvasWrap.style.width = `${targetWidth}px`
     canvasWrap.style.height = `${targetHeight}px`
+    // Ensure the canvas drawing buffer and CSS size match exactly to avoid pointer offset
+    canvasRef.width = targetWidth
+    canvasRef.height = targetHeight
+    canvasRef.style.width = `${targetWidth}px`
+    canvasRef.style.height = `${targetHeight}px`
 
     const { width: wrapWidth, height: wrapHeight } =
       canvasWrap.getBoundingClientRect()
@@ -254,7 +265,7 @@
   }
   #signature-canvas {
     display: block;
-    width: 100%;
+    width: auto;
     height: auto;
     max-width: 100%;
   }
