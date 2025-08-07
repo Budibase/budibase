@@ -200,7 +200,7 @@ async function addSampleDataScreen() {
         },
       ],
     },
-    disabled: true,
+    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS),
     isDefault: true,
   })
 
@@ -510,7 +510,10 @@ async function performAppCreate(
       }
     }
 
-    if (useTemplate) {
+    if (
+      useTemplate &&
+      (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS))
+    ) {
       const workspaceApps = await sdk.workspaceApps.fetch()
       for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
         await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
