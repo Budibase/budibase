@@ -154,6 +154,7 @@
   .spectrum-Dialog--medium {
     width: 540px;
   }
+  /* keep default small width from Spectrum; do not override here */
 
   .content-grid {
     display: grid;
@@ -161,9 +162,29 @@
     gap: var(--spacing-xl);
   }
 
+  /* For custom (no-grid) dialogs, stretch content and center children */
+  .no-grid .spectrum-Dialog-content.content-grid {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: stretch;
+    box-sizing: border-box;
+  }
+
+  /* Ensure inner container stretches to modal width */
+  .modal-core {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    box-sizing: border-box;
+  }
+
   .spectrum-Dialog-content {
     overflow: visible;
     max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .no-grid .spectrum-Dialog-content {
@@ -175,6 +196,12 @@
     font-size: 24px;
   }
 
+  .spectrum-Dialog-heading,
+  .spectrum-Dialog-buttonGroup {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
   .no-grid .spectrum-Dialog-heading {
     margin-top: 12px;
     margin-left: 12px;
@@ -182,6 +209,8 @@
 
   .spectrum-Dialog.no-grid {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .spectrum-Dialog.no-grid .spectrum-Dialog-buttonGroup {
@@ -222,6 +251,8 @@
   .spectrum-Dialog-buttonGroup {
     padding-left: 0;
     overflow-x: hidden;
+    box-sizing: border-box;
+    width: 100%;
   }
 
   .confirm-wrap :global(.spectrum-Button-label) {
@@ -244,4 +275,6 @@
       z-index: 1;
     }
   }
+
+  /* no extra scaling breakpoints; rely on modal container width */
 </style>

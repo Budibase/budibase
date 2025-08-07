@@ -166,8 +166,9 @@
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
     height: 100vh;
-    width: 100vw;
+    width: auto; /* avoid 100vw causing horizontal overflow when a vertical scrollbar is present */
     opacity: 0.65;
     pointer-events: none;
   }
@@ -199,14 +200,15 @@
 
   .spectrum-Modal {
     border: 2px solid var(--spectrum-global-color-gray-200);
-    /* Ensure the modal never exceeds the viewport height on mobile */
-    overflow: auto;
+    /* Prevent horizontal overflow; allow vertical scroll for tall content */
+    overflow-y: auto;
+    overflow-x: hidden;
     max-height: calc(100vh - 64px);
     transform: none;
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100
     );
-    max-width: 100%;
+    max-width: calc(100vw - 32px);
     box-sizing: border-box;
   }
   :global(.spectrum--lightest .spectrum-Modal.inline) {
@@ -226,6 +228,7 @@
     }
     .spectrum-Modal {
       width: 100%;
+      max-width: calc(100vw - 24px);
       max-height: calc(100vh - 32px);
     }
   }
