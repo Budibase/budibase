@@ -14,33 +14,9 @@ import {
 } from "./utils"
 import { exportObjects, importObjects } from "./objectStore"
 
-import tarStream from "tar-stream"
-import zlib from "zlib"
-import { pipeline } from "stream/promises"
+const tar = require("tar")
 
 type BackupOpts = { env?: string; import?: string; export?: string }
-
-async function addDirectoryToTar(
-  pack: tarStream.Pack,
-  dirPath: string,
-  relativePath: string
-) {
-  const entries = fs.readdirSync(dirPath, { withFileTypes: true })
-
-  for (const entry of entries) {
-    const fullPath = join(dirPath, entry.name)
-    const entryRelativePath = join(relativePath, entry.name)
-
-    if (entry.isDirectory()) {
-      await addDirectoryToTar(pack, fullPath, entryRelativePath)
-    } else {
-      const stat = fs.statSync(fullPath)
-      const stream = fs.createReadStream(fullPath)
-      const entry = pack.entry({ name: entryRelativePath, size: stat.size })
-      stream.pipe(entry)
-    }
-  }
-}
 
 async function exportBackup(opts: BackupOpts) {
   const envFile = opts.env || undefined
@@ -71,26 +47,15 @@ async function exportBackup(opts: BackupOpts) {
   bar.stop()
   console.log("S3 Export")
   await exportObjects()
-  // Create tar archive with streaming
-  const pack = tarStream.pack()
-  const gzip = zlib.createGzip()
-  const outputStream = fs.createWriteStream(filename)
-
-  // Start the pipeline
-  const pipelinePromise = pipeline(pack, gzip, outputStream)
-
-  // Add directories to tar
-  const directories = [COUCH_DIR, MINIO_DIR]
-  for (const dir of directories) {
-    const dirPath = join(TEMP_DIR, dir)
-    if (fs.existsSync(dirPath)) {
-      await addDirectoryToTar(pack, dirPath, dir)
-    }
-  }
-
-  // Finalize and wait for completion
-  pack.finalize()
-  await pipelinePromise
+  tar.create(
+    {
+      sync: true,
+      gzip: true,
+      file: filename,
+      cwd: join(TEMP_DIR),
+    },
+    [COUCH_DIR, MINIO_DIR]
+  )
   fs.rmSync(TEMP_DIR, { recursive: true })
   console.log(`Generated export file - ${filename}`)
 }
@@ -107,38 +72,11 @@ async function importBackup(opts: BackupOpts) {
     fs.rmSync(TEMP_DIR, { recursive: true })
   }
   fs.mkdirSync(TEMP_DIR)
-  // Extract tar archive with streaming
-  const extract = tarStream.extract()
-
-  extract.on("entry", (header, stream, next) => {
-    const targetPath = join(TEMP_DIR, header.name)
-
-    if (header.type === "directory") {
-      fs.mkdirSync(targetPath, { recursive: true })
-      stream.resume()
-      next()
-    } else if (header.type === "file") {
-      // Ensure directory exists
-      const dir = join(targetPath, "..")
-      fs.mkdirSync(dir, { recursive: true })
-
-      const writeStream = fs.createWriteStream(targetPath)
-      stream.pipe(writeStream)
-      stream.on("end", next)
-    } else {
-      stream.resume()
-      next()
-    }
+  tar.extract({
+    sync: true,
+    cwd: join(TEMP_DIR),
+    file: filename,
   })
-
-  const readStream = fs.createReadStream(filename)
-  const isGzipped = filename.endsWith(".gz") || filename.endsWith(".tgz")
-
-  if (isGzipped) {
-    await pipeline(readStream, zlib.createGunzip(), extract)
-  } else {
-    await pipeline(readStream, extract)
-  }
   const { Remote, Local } = getPouches(config)
   const dbList = fs.readdirSync(join(TEMP_DIR, COUCH_DIR))
   console.log("CouchDB Import")
