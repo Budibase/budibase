@@ -16,7 +16,7 @@ import fs from "fs"
 import sdk from "../../"
 import tar from "tar-stream"
 import zlib from "zlib"
-import { Readable } from "stream"
+import { Readable, PassThrough } from "stream"
 import { isGzip, isTar } from "../../../utilities/fileSystem"
 
 function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
@@ -104,6 +104,154 @@ export interface ImportOpts {
   password?: string
 }
 
+class Importer {
+  private appId: string
+  private prodAppId: string
+  private db: Database
+  private opts: ImportOpts
+  private dbImported: boolean
+
+  constructor(
+    appId: string,
+    db: Database,
+    opts: ImportOpts = {
+      importObjStoreContents: true,
+      updateAttachmentColumns: true,
+    }
+  ) {
+    this.appId = appId
+    this.prodAppId = dbCore.getProdAppID(appId)
+    this.db = db
+    this.opts = opts || {}
+    this.dbImported = false
+  }
+
+  async importDB(input: Readable) {
+    const { ok } = await this.db.load(input)
+    if (!ok) {
+      throw new Error("Error loading database dump from template.")
+    }
+    if (this.opts.updateAttachmentColumns) {
+      await updateAttachmentColumns(this.prodAppId, this.db)
+    }
+    await updateAutomations(this.prodAppId, this.db)
+    this.dbImported = true
+  }
+
+  async decryptStream(stream: Readable) {
+    if (!this.opts.password) {
+      throw new Error("Files are encrypted but no password provided")
+    }
+    const decryptedStream = await encryption.decryptStream(
+      stream,
+      this.opts.password
+    )
+
+    // Propagate errors from source stream
+    stream.on("error", err => {
+      if (!decryptedStream.destroyed) {
+        decryptedStream.destroy(err)
+      }
+    })
+    return decryptedStream
+  }
+
+  async run(input: Readable) {
+    if (await isGzip(input)) {
+      const gunzip = zlib.createGunzip()
+      input.pipe(gunzip)
+      // Propagate errors from input stream to gunzip
+      input.on("error", err => {
+        if (!gunzip.destroyed) {
+          gunzip.destroy(err)
+        }
+      })
+      // Gunzip errors will be caught when we try to use the stream
+      input = gunzip
+    }
+
+    if (!(await isTar(input))) {
+      return await this.importDB(
+        this.opts.password ? await this.decryptStream(input) : input
+      )
+    }
+
+    const extract = tar.extract()
+    input.pipe(extract)
+    // Propagate errors from input stream to extract
+    input.on("error", err => {
+      if (!extract.destroyed) {
+        extract.destroy(err)
+      }
+    })
+    // Extract errors will be caught in the try-catch below
+
+    try {
+      for await (const entry of extract) {
+        // Skip directories etc.
+        if (
+          entry.header.type !== "file" &&
+          entry.header.type !== "contiguous-file"
+        ) {
+          entry.resume()
+          continue
+        }
+
+        let filename = entry.header.name
+        let readable: Readable = entry
+
+        const isEncrypted = filename.endsWith(".enc")
+        filename = isEncrypted ? filename.replace(/\.enc$/, "") : filename
+
+        if (
+          filename !== DB_EXPORT_FILE &&
+          (filename.startsWith(".") ||
+            filename === GLOBAL_DB_EXPORT_FILE ||
+            !this.opts.importObjStoreContents)
+        ) {
+          readable.resume()
+          continue
+        }
+
+        if (isEncrypted) {
+          readable = await this.decryptStream(readable)
+        } else {
+          // Convert to a proper PassThrough stream for AWS SDK compatibility
+          const passthroughStream = new PassThrough()
+          readable.pipe(passthroughStream)
+          readable = passthroughStream
+        }
+
+        try {
+          if (filename === DB_EXPORT_FILE) {
+            await this.importDB(readable)
+          } else {
+            await objectStore.streamUpload({
+              bucket: ObjectStoreBuckets.APPS,
+              stream: readable,
+              filename: join(this.prodAppId, filename),
+            })
+          }
+        } catch (uploadErr) {
+          // Make sure to consume the stream to prevent backpressure
+          readable.resume()
+          throw uploadErr
+        }
+      }
+    } catch (err) {
+      // Ensure streams are properly cleaned up on error
+      extract.destroy()
+      throw err
+    }
+
+    if (!this.dbImported) {
+      throw new Error(
+        "App export does not appear to be valid - no DB file found."
+      )
+    }
+  }
+}
+
 export async function importApp(
   appId: string,
   db: Database,
@@ -113,134 +261,10 @@ export async function importApp(
     updateAttachmentColumns: true,
   }
 ): Promise<void> {
-  const prodAppId = dbCore.getProdAppID(appId)
-  let dbImported = false
-
   if (typeof input === "string") {
     // if input is a string, assume it's a file path
     input = fs.createReadStream(input)
   }
-
-  async function importDB(input: Readable) {
-    const { ok } = await db.load(input)
-    if (!ok) {
-      throw new Error("Error loading database dump from template.")
-    }
-    if (opts.updateAttachmentColumns) {
-      await updateAttachmentColumns(prodAppId, db)
-    }
-    await updateAutomations(prodAppId, db)
-    dbImported = true
-  }
-
-  if (await isGzip(input)) {
-    const gunzip = zlib.createGunzip()
-    input.pipe(gunzip)
-    // Propagate errors from input stream to gunzip
-    input.on("error", err => {
-      if (!gunzip.destroyed) {
-        gunzip.destroy(err)
-      }
-    })
-    // Gunzip errors will be caught when we try to use the stream
-    input = gunzip
-  }
-
-  if (!(await isTar(input))) {
-    if (opts.password) {
-      const decryptStream = await encryption.decryptStream(input, opts.password)
-      input.on("error", err => {
-        if (!decryptStream.destroyed) {
-          decryptStream.destroy(err)
-        }
-      })
-      // Decrypt errors will be caught when we try to use the stream
-      input = decryptStream
-    }
-    await importDB(input)
-    return
-  }
-
-  const extract = tar.extract()
-  input.pipe(extract)
-  // Propagate errors from input stream to extract
-  input.on("error", err => {
-    if (!extract.destroyed) {
-      extract.destroy(err)
-    }
-  })
-  // Extract errors will be caught in the try-catch below
-
-  try {
-    for await (const entry of extract) {
-      // Skip directories etc.
-      if (
-        entry.header.type !== "file" &&
-        entry.header.type !== "contiguous-file"
-      ) {
-        entry.resume()
-        continue
-      }
-
-      let filename = entry.header.name
-      let readable: Readable = entry
-
-      const isEncrypted = filename.endsWith(".enc")
-      filename = isEncrypted ? filename.replace(/\.enc$/, "") : filename
-
-      if (
-        filename !== DB_EXPORT_FILE &&
-        (filename.startsWith(".") ||
-          filename === GLOBAL_DB_EXPORT_FILE ||
-          !opts.importObjStoreContents)
-      ) {
-        readable.resume()
-        continue
-      }
-
-      if (isEncrypted) {
-        if (!opts.password) {
-          throw new Error("Files are encrypted but no password provided")
-        }
-        const decryptedStream = await encryption.decryptStream(
-          readable,
-          opts.password
-        )
-        // Propagate errors from source stream
-        readable.on("error", err => {
-          if (!decryptedStream.destroyed) {
-            decryptedStream.destroy(err)
-          }
-        })
-        readable = decryptedStream
-      }
-
-      if (filename === DB_EXPORT_FILE) {
-        await importDB(readable)
-        continue
-      }
-
-      try {
-        await objectStore.streamUpload({
-          bucket: ObjectStoreBuckets.APPS,
-          stream: readable,
-          filename: join(prodAppId, filename),
-        })
-      } catch (uploadErr) {
-        // Make sure to consume the stream to prevent backpressure
-        readable.resume()
-        throw uploadErr
-      }
-    }
-  } catch (err) {
-    // Ensure streams are properly cleaned up on error
-    extract.destroy()
-    throw err
-  }
-
-  if (!dbImported) {
-    throw new Error(
-      "App export does not appear to be valid - no DB file found."
-    )
-  }
+  const importer = new Importer(appId, db, opts)
+  await importer.run(input)
 }

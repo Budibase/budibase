@@ -140,40 +140,66 @@ export async function decryptStream(
 ): Promise<Readable> {
   const outputStream = new PassThrough()
 
+  let headerBuffer = Buffer.alloc(0)
+  let headerExtracted = false
   let decipher: crypto.Decipher | null = null
   let gunzip: zlib.Gunzip | null = null
-  let firstChunk = true
+
+  const setupDecryption = (salt: Buffer, iv: Buffer) => {
+    const stretched = stretchString(secret, salt)
+    decipher = crypto.createDecipheriv(ALGO, stretched, iv)
+    gunzip = zlib.createGunzip()
+
+    // Set up error propagation
+    inputStream.on("error", err => {
+      decipher!.destroy(err)
+      if (!outputStream.destroyed) {
+        outputStream.destroy(err)
+      }
+    })
+    decipher.on("error", err => {
+      gunzip!.destroy(err)
+      if (!outputStream.destroyed) {
+        outputStream.destroy(err)
+      }
+    })
+    gunzip.on("error", err => {
+      if (!outputStream.destroyed) {
+        outputStream.destroy(err)
+      }
+    })
+
+    // Pipe decipher -> gunzip -> output
+    decipher.pipe(gunzip).pipe(outputStream)
+  }
 
   inputStream.on("data", chunk => {
-    if (firstChunk) {
-      firstChunk = false
-      const salt = chunk.slice(0, SALT_LENGTH)
-      const iv = chunk.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH)
-      chunk = chunk.slice(SALT_LENGTH + IV_LENGTH)
-
-      const stretched = stretchString(secret, salt)
-      decipher = crypto.createDecipheriv(ALGO, stretched, iv)
-      gunzip = zlib.createGunzip()
-
-      inputStream.on("error", err => {
-        decipher!.destroy(err)
-      })
-      decipher.on("error", err => {
-        gunzip!.destroy(err)
-      })
-      gunzip.on("error", err => {
-        outputStream.destroy(err)
-      })
-
-      decipher.pipe(gunzip).pipe(outputStream)
+    if (!headerExtracted) {
+      headerBuffer = Buffer.concat([headerBuffer, chunk])
+      
+      if (headerBuffer.length >= SALT_LENGTH + IV_LENGTH) {
+        const salt = headerBuffer.slice(0, SALT_LENGTH)
+        const iv = headerBuffer.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH)
+        const remainingData = headerBuffer.slice(SALT_LENGTH + IV_LENGTH)
+        
+        setupDecryption(salt, iv)
+        headerExtracted = true
+        
+        if (remainingData.length > 0) {
+          decipher!.write(remainingData)
+        }
+      }
+    } else {
+      decipher!.write(chunk)
     }
-
-    decipher!.write(chunk)
   })
 
   inputStream.on("end", () => {
-    decipher?.end()
-    gunzip?.end()
+    if (decipher) {
+      decipher.end()
+    } else {
+      outputStream.destroy(new Error("Stream ended before header could be extracted"))
+    }
   })
 
   return outputStream
