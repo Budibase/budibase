@@ -2701,16 +2701,61 @@ if (descriptions.length) {
                 })
               })
 
+              // describe("notIn", () => {
+              //   it("successfully finds excluded row", async () => {
+              //     const result = await expectSearch({
+              //       query: { notIn: { user: [user1._id] } },
+              //     }).toMatch({})
+
+              //     // Should find rows that don't have user1._id (empty rows or other users)
+              //     expect(result.rows.length).toBeGreaterThanOrEqual(1)
+
+              //     // None of the results should have user1._id
+              //     const userIds = result.rows
+              //       .filter(row => row.user)
+              //       .map(row => row.user._id)
+              //     expect(userIds).not.toContain(user1._id)
+              //   })
+
+              //   it("excludes multiple values", async () => {
+              //     const result = await expectSearch({
+              //       query: { notIn: { user: [user1._id, "us_none"] } },
+              //     }).toMatch({})
+
+              //     // Should find rows that don't have user1._id or us_none (empty rows or other users)
+              //     expect(result.rows.length).toBeGreaterThanOrEqual(1)
+
+              //     // None of the results should have user1._id or us_none
+              //     const userIds = result.rows
+              //       .filter(row => row.user)
+              //       .map(row => row.user._id)
+              //     expect(userIds).not.toContain(user1._id)
+              //     expect(userIds).not.toContain("us_none")
+              //   })
+
+              //   it("finds all when excluding nonexistent value", async () => {
+              //     const result = await expectSearch({
+              //       query: { notIn: { user: ["us_none"] } },
+              //     }).toMatch({})
+
+              //     // Should find all rows since we're excluding a non-existent user
+              //     expect(result.rows.length).toBeGreaterThanOrEqual(1)
+
+              //     // Should include the user we set up (user1._id should be in one of the results)
+              //     const userIds = result.rows
+              //       .filter(row => row.user)
+              //       .map(row => row.user._id)
+              //     expect(userIds).toContain(user1._id)
+              //   })
+              // })
               describe("notIn", () => {
                 it("successfully finds excluded row", async () => {
                   const result = await expectSearch({
                     query: { notIn: { user: [user1._id] } },
                   }).toMatch({})
 
-                  // Should find rows that don't have user1._id (empty rows or other users)
                   expect(result.rows.length).toBeGreaterThanOrEqual(1)
 
-                  // None of the results should have user1._id
                   const userIds = result.rows
                     .filter(row => row.user)
                     .map(row => row.user._id)
@@ -2719,29 +2764,25 @@ if (descriptions.length) {
 
                 it("excludes multiple values", async () => {
                   const result = await expectSearch({
-                    query: { notIn: { user: [user1._id, "us_none"] } },
+                    query: { notIn: { user: [user1._id, user2._id] } },
                   }).toMatch({})
 
-                  // Should find rows that don't have user1._id or us_none (empty rows or other users)
                   expect(result.rows.length).toBeGreaterThanOrEqual(1)
 
-                  // None of the results should have user1._id or us_none
                   const userIds = result.rows
                     .filter(row => row.user)
                     .map(row => row.user._id)
                   expect(userIds).not.toContain(user1._id)
-                  expect(userIds).not.toContain("us_none")
+                  expect(userIds).not.toContain(user2._id)
                 })
 
                 it("finds all when excluding nonexistent value", async () => {
                   const result = await expectSearch({
-                    query: { notIn: { user: ["us_none"] } },
+                    query: { notIn: { user: ["us_nonexistent"] } },
                   }).toMatch({})
 
-                  // Should find all rows since we're excluding a non-existent user
                   expect(result.rows.length).toBeGreaterThanOrEqual(1)
 
-                  // Should include the user we set up (user1._id should be in one of the results)
                   const userIds = result.rows
                     .filter(row => row.user)
                     .map(row => row.user._id)
