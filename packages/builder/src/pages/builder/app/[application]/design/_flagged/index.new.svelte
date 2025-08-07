@@ -251,7 +251,11 @@
       </div>
     </a>
   {:else}
-    <NoResults ctaText="Create your first app" onCtaClick={createApp}>
+    <NoResults
+      ctaText="Create your first app"
+      onCtaClick={createApp}
+      iconColor="orange"
+    >
       No apps yet! Build your first app to get started.
     </NoResults>
   {/each}
