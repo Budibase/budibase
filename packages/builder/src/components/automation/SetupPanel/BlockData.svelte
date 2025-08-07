@@ -252,76 +252,76 @@
 
 <div class="block-data">
   <div class="tabs">
-  {#each Object.values(DataMode) as mode}
-    <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
-      <ActionButton
-        selected={mode === dataMode}
-        quiet
-        on:click={() => {
-          dataMode = mode
-        }}
-      >
-        {DataModeTabs[mode]}
-      </ActionButton>
-    </Count>
-  {/each}
+    {#each Object.values(DataMode) as mode}
+      <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
+        <ActionButton
+          selected={mode === dataMode}
+          quiet
+          on:click={() => {
+            dataMode = mode
+          }}
+        >
+          {DataModeTabs[mode]}
+        </ActionButton>
+      </Count>
+    {/each}
   </div>
   <Divider noMargin />
   <div class="viewer">
-  {#if dataMode === DataMode.INPUT}
-    <JSONViewer
-      value={parsedContext}
-      showCopyIcon
-      on:click-copy={copyContext}
-    />
-  {:else if dataMode === DataMode.OUTPUT}
-    {#if blockResults}
+    {#if dataMode === DataMode.INPUT}
       <JSONViewer
-        value={blockResults.outputs}
+        value={parsedContext}
         showCopyIcon
         on:click-copy={copyContext}
       />
-    {:else if testResults && !blockResults}
-      <div class="content">
-        <span class="info">
-          This step was not executed as part of the test run
-        </span>
-      </div>
+    {:else if dataMode === DataMode.OUTPUT}
+      {#if blockResults}
+        <JSONViewer
+          value={blockResults.outputs}
+          showCopyIcon
+          on:click-copy={copyContext}
+        />
+      {:else if testResults && !blockResults}
+        <div class="content">
+          <span class="info">
+            This step was not executed as part of the test run
+          </span>
+        </div>
+      {:else}
+        <div class="content">
+          <span class="info">
+            Run the automation to show the output of this step
+          </span>
+          <Button
+            size={"S"}
+            icon={"Play"}
+            secondary
+            on:click={() => {
+              dispatch("run")
+            }}
+          >
+            Run
+          </Button>
+        </div>
+      {/if}
     {:else}
-      <div class="content">
-        <span class="info">
-          Run the automation to show the output of this step
-        </span>
-        <Button
-          size={"S"}
-          icon={"Play"}
-          secondary
-          on:click={() => {
-            dispatch("run")
-          }}
-        >
-          Run
-        </Button>
+      <div class="issues" class:empty={!issues.length}>
+        {#if issues.length === 0}
+          <span>There are no current issues</span>
+        {:else}
+          {#each issues as issue}
+            <div class={`issue ${issue.type}`}>
+              <div class="icon"><Icon name="warning" /></div>
+              <!-- For custom automations, the error message needs a default -->
+              <div class="message">
+                {issue.message || "There was an error"}
+              </div>
+            </div>
+            <Divider noMargin />
+          {/each}
+        {/if}
       </div>
     {/if}
-  {:else}
-    <div class="issues" class:empty={!issues.length}>
-      {#if issues.length === 0}
-        <span>There are no current issues</span>
-      {:else}
-        {#each issues as issue}
-          <div class={`issue ${issue.type}`}>
-            <div class="icon"><Icon name="warning" /></div>
-            <!-- For custom automations, the error message needs a default -->
-            <div class="message">
-              {issue.message || "There was an error"}
-            </div>
-          </div>
-          <Divider noMargin />
-        {/each}
-      {/if}
-    </div>
-  {/if}
   </div>
 </div>
 
@@ -334,7 +334,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    min-height: 0; /* allow children to shrink and enable scrolling */
+    min-height: 0;
   }
   .tabs,
   .viewer {
@@ -342,8 +342,8 @@
   }
   .viewer {
     overflow: auto;
-    flex: 1 1 0px; /* allow to shrink within parent */
-    min-height: 0; /* critical for nested flex scrolling */
+    flex: 1 1 0px;
+    min-height: 0;
     padding-right: 0px;
   }
   .viewer .content {
