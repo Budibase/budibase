@@ -1,6 +1,14 @@
 <script lang="ts">
-  import { contextMenuStore, workspaceAppStore } from "@/stores/builder"
-  import { PublishResourceState, type UIWorkspaceApp } from "@budibase/types"
+  import {
+    contextMenuStore,
+    workspaceAppStore,
+    workspaceFavouriteStore,
+  } from "@/stores/builder"
+  import {
+    WorkspaceResource,
+    PublishResourceState,
+    type UIWorkspaceApp,
+  } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -9,6 +17,7 @@
     Helpers,
     Icon,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero-x1.png"
@@ -17,6 +26,7 @@
   import { capitalise, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
   let showHighlight = false
@@ -25,6 +35,8 @@
   let workspaceAppModal: WorkspaceAppModal
   let confirmDeleteDialog: ConfirmDialog
   let appChangingStatus: string | undefined = undefined
+
+  $: favourites = workspaceFavouriteStore.lookup
 
   const filters: {
     label: string
@@ -133,7 +145,27 @@
 
       return a.publishStatus.state === filter
     })
-    .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
+    .map(app => {
+      return {
+        ...app,
+        favourite: $favourites?.[app._id!] ?? {
+          resourceType: WorkspaceResource.WORKSPACE_APP,
+          resourceId: app._id!,
+        },
+      }
+    })
+    .sort((a, b) => {
+      const aIsFav = !!a.favourite._id
+      const bIsFav = !!b.favourite._id
+
+      // Group by favourite status
+      if (aIsFav !== bIsFav) {
+        return bIsFav ? 1 : -1
+      }
+
+      // Within same group, sort by updatedAt
+      return b.updatedAt!.localeCompare(a.updatedAt!)
+    })
 </script>
 
 <div class="apps-index">
@@ -150,7 +182,7 @@
     pre-built components in minutes.
   </HeroBanner>
 
-  <TopBar icon="layout" breadcrumbs={[{ text: "Apps" }]} showPublish={false}
+  <TopBar icon="browser" breadcrumbs={[{ text: "Apps" }]} showPublish={false}
   ></TopBar>
   <div class="secondary-bar">
     <div class="filter">
@@ -179,6 +211,7 @@
   {#each workspaceApps as app}
     <a
       class="app"
+      class:favourite={app.favourite?._id}
       href={`./design/${app.screens[0]?._id}`}
       on:contextmenu={e => openContextMenu(e, app)}
       class:active={showHighlight && selectedWorkspaceApp === app}
@@ -198,12 +231,22 @@
         </span>
       </AbsTooltip>
       <div class="actions">
-        <Icon
-          name="More"
-          size="M"
-          hoverable
-          on:click={e => openContextMenu(e, app)}
-        />
+        <div class="ctx-btn">
+          <Icon
+            name="More"
+            size="M"
+            hoverable
+            on:click={e => openContextMenu(e, app)}
+          />
+        </div>
+
+        <span class="favourite-btn">
+          <FavouriteResourceButton
+            favourite={app.favourite}
+            position={TooltipPosition.Left}
+            noWrap
+          />
+        </span>
       </div>
     </a>
   {/each}
@@ -265,7 +308,7 @@
   .app,
   .table-header {
     display: grid;
-    grid-template-columns: 1fr 200px 200px 200px 50px;
+    grid-template-columns: 1fr 200px 200px 50px;
     border-bottom: var(--border);
     align-items: center;
   }
@@ -282,17 +325,31 @@
     &.active {
       background: var(--spectrum-global-color-gray-200);
 
-      & .actions {
+      & .actions > * {
         opacity: 1;
         pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
       }
     }
   }
   .actions {
     justify-content: flex-end;
     display: flex;
-    opacity: 0;
+    align-items: center;
     pointer-events: none;
+    gap: var(--spacing-xs);
+  }
+
+  .actions > * {
+    opacity: 0;
     transition: opacity 130ms ease-out;
+  }
+
+  .actions .favourite-btn {
+    pointer-events: all;
   }
 </style>

@@ -51,12 +51,13 @@ async function updated(oldTable: Table, newTable: Table) {
   }
 }
 
-async function deleted(table: Table) {
+async function deleted(table: Table, appId: string) {
   const properties: TableDeletedEvent = {
     tableId: table._id as string,
     audited: {
       name: table.name,
     },
+    appId,
   }
   await publishEvent(Event.TABLE_DELETED, properties)
 }

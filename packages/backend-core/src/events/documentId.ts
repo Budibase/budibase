@@ -11,6 +11,12 @@ import {
   GroupUsersAddedEvent,
   GroupUsersDeletedEvent,
   GroupPermissionsEditedEvent,
+  AutomationDeletedEvent,
+  DatasourceDeletedEvent,
+  TableDeletedEvent,
+  QueryDeletedEvent,
+  WorkspaceAppDeletedEvent,
+  ViewDeletedEvent,
 } from "@budibase/types"
 
 const getEventProperties: Record<
@@ -45,6 +51,16 @@ const getEventProperties: Record<
   [Event.USER_GROUP_PERMISSIONS_EDITED]: (
     properties: GroupPermissionsEditedEvent
   ) => properties.groupId,
+
+  [Event.AUTOMATION_DELETED]: (properties: AutomationDeletedEvent) =>
+    properties.automationId,
+  [Event.DATASOURCE_DELETED]: (properties: DatasourceDeletedEvent) =>
+    properties.datasourceId,
+  [Event.TABLE_DELETED]: (properties: TableDeletedEvent) => properties.tableId,
+  [Event.QUERY_DELETED]: (properties: QueryDeletedEvent) => properties.queryId,
+  [Event.WORKSPACE_APP_DELETED]: (properties: WorkspaceAppDeletedEvent) =>
+    properties.workspaceAppId,
+  [Event.VIEW_DELETED]: (properties: ViewDeletedEvent) => properties.id,
 }
 
 export function getDocumentId(event: Event, properties: any) {

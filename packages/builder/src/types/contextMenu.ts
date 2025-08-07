@@ -1,4 +1,6 @@
 export interface MenuItem {
+  iconColour?: string
+  iconWeight?: "regular" | "bold" | "fill"
   icon?: string
   name: string
   keyBind?: string | null

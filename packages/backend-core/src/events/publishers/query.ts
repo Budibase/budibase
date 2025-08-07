@@ -36,12 +36,13 @@ const updated = async (datasource: Datasource, query: Query) => {
   await publishEvent(Event.QUERY_UPDATED, properties)
 }
 
-const deleted = async (datasource: Datasource, query: Query) => {
+const deleted = async (datasource: Datasource, query: Query, appId: string) => {
   const properties: QueryDeletedEvent = {
     queryId: query._id as string,
     datasourceId: datasource._id as string,
     source: datasource.source,
     queryVerb: query.queryVerb,
+    appId,
   }
   await publishEvent(Event.QUERY_DELETED, properties)
 }

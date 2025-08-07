@@ -1,3 +1,4 @@
+import { helpers } from "@budibase/shared-core"
 import { publishEvent } from "../events"
 import {
   CalculationType,
@@ -36,9 +37,11 @@ async function updated(view: ViewV2) {
   await publishEvent(Event.VIEW_UPDATED, properties)
 }
 
-async function deleted(view: View) {
+async function deleted(view: ViewV2 | View, appId?: string) {
   const properties: ViewDeletedEvent = {
-    tableId: view.tableId,
+    ...(helpers.views.isV2(view)
+      ? { id: view.id, tableId: view.tableId, appId }
+      : {}),
   }
   await publishEvent(Event.VIEW_DELETED, properties)
 }
