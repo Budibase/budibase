@@ -37,8 +37,8 @@ export async function create(
 
   const response = await db.put(
     {
-      _id: docIds.generateWorkspaceAppID(),
       ...workspaceApp,
+      _id: docIds.generateWorkspaceAppID(),
     },
     { returnDoc: true }
   )
@@ -68,7 +68,7 @@ export async function update(
     isDefault: persisted.isDefault,
     _deleted: undefined,
   }
-  const response = await db.put(docToUpdate)
+  const response = await db.put(docToUpdate, { returnDoc: true })
   return response.doc
 }
 

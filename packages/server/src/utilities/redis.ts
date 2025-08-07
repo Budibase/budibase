@@ -1,13 +1,18 @@
-import { redis, RedisClient } from "@budibase/backend-core"
+import { redis, RedisClient, utils } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import { ContextUser } from "@budibase/types"
 import env from "../environment"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
+const RECAPTCHA_SESSION_SECONDS =
+  typeof env.RECAPTCHA_SESSION_SECONDS === "string"
+    ? parseInt(env.RECAPTCHA_SESSION_SECONDS)
+    : env.RECAPTCHA_SESSION_SECONDS
 let devAppClient: RedisClient,
   debounceClient: RedisClient,
-  flagClient: RedisClient
+  flagClient: RedisClient,
+  recaptchaClient: RedisClient
 
 // We need to maintain a duplicate client for socket.io pub/sub
 let socketClient: RedisClient
@@ -16,14 +21,14 @@ let socketSubClient: any
 // We init this as we want to keep the connection open all the time
 // reduces the performance hit
 export async function init() {
-  ;[devAppClient, debounceClient, flagClient, socketClient] = await Promise.all(
-    [
+  ;[devAppClient, debounceClient, flagClient, recaptchaClient, socketClient] =
+    await Promise.all([
       redis.Client.init(redis.utils.Databases.DEV_LOCKS),
       redis.Client.init(redis.utils.Databases.DEBOUNCE),
       redis.Client.init(redis.utils.Databases.FLAGS),
+      redis.Client.init(redis.utils.Databases.RECAPTCHA_SESSION),
       redis.clients.getSocketClient(),
-    ]
-  )
+    ])
 
   // Duplicate the socket client for pub/sub
   if (!env.isTest()) {
@@ -36,6 +41,7 @@ export async function shutdown() {
   if (devAppClient) await devAppClient.finish()
   if (debounceClient) await debounceClient.finish()
   if (flagClient) await flagClient.finish()
+  if (recaptchaClient) await recaptchaClient.finish()
   if (socketSubClient) socketSubClient.disconnect()
   // shutdown core clients
   await redis.clients.shutdown()
@@ -113,4 +119,15 @@ export function getSocketPubSubClients() {
     pub: socketClient.client,
     sub: socketSubClient,
   }
+}
+
+export async function setRecaptchaVerified() {
+  const id = utils.newid()
+  await recaptchaClient.store(id, { verified: true }, RECAPTCHA_SESSION_SECONDS)
+  return id
+}
+
+export async function isRecaptchaVerified(sessionId: string) {
+  const session = await recaptchaClient.get(sessionId)
+  return !!(session && session.verified)
 }
