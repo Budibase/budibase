@@ -250,7 +250,8 @@
   $: parsedContext = parseContext(context, blockRef)
 </script>
 
-<div class="tabs">
+<div class="block-data">
+  <div class="tabs">
   {#each Object.values(DataMode) as mode}
     <Count count={mode === DataMode.ERRORS ? issues.length : 0}>
       <ActionButton
@@ -264,9 +265,9 @@
       </ActionButton>
     </Count>
   {/each}
-</div>
-<Divider noMargin />
-<div class="viewer">
+  </div>
+  <Divider noMargin />
+  <div class="viewer">
   {#if dataMode === DataMode.INPUT}
     <JSONViewer
       value={parsedContext}
@@ -321,6 +322,7 @@
       {/if}
     </div>
   {/if}
+  </div>
 </div>
 
 <style>
@@ -328,13 +330,20 @@
     text-align: center;
     max-width: 70%;
   }
+  .block-data {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0; /* allow children to shrink and enable scrolling */
+  }
   .tabs,
   .viewer {
     padding: var(--spacing-l);
   }
   .viewer {
-    overflow-y: scroll;
-    flex: 1;
+    overflow: auto;
+    flex: 1 1 auto;
+    min-height: 0; /* critical for nested flex scrolling */
     padding-right: 0px;
   }
   .viewer .content {
