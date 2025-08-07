@@ -446,7 +446,6 @@ class Orchestrator {
         }
         const isLegacyLoop = step.isLegacyLoop
 
-        // Simplified storage: just store up to N results
         const maxStoredResults = isLegacyLoop
           ? Number.MAX_SAFE_INTEGER
           : automationUtils.getMaxStoredResults(step)
@@ -501,15 +500,7 @@ class Orchestrator {
 
             // Process results based on their type
             for (const result of iterationResults) {
-              if (result.stepId === AutomationActionStepId.LOOP_V2) {
-                automationUtils.processNestedLoopResult(storage, result)
-              } else {
-                automationUtils.processStandardResult(
-                  storage,
-                  result,
-                  iterations
-                )
-              }
+              automationUtils.processStandardResult(storage, result, iterations)
             }
 
             const hasFailures = iterationResults.some(

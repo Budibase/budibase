@@ -404,13 +404,14 @@ export function processStandardResult(
     }
   }
 
-  // Simple storage: keep up to N results
-  if (storage.results[result.id]) {
-    storage.results[result.id].push(result)
-    // If we exceed max, remove the oldest
-    if (storage.results[result.id].length > storage.maxStoredResults) {
-      storage.results[result.id].shift()
-    }
+  if (result.outputs.summary) {
+    storage.nestedSummaries[result.id].push(result.outputs.summary)
+  }
+
+  storage.results[result.id].push(result)
+  // If we exceed max, remove the oldest
+  if (storage.results[result.id].length > storage.maxStoredResults) {
+    storage.results[result.id].shift()
   }
 }
 
@@ -419,9 +420,6 @@ export function processNestedLoopResult(
   result: AutomationStepResult
 ): void {
   // Process the nested loop's summary
-  if (result.outputs.summary) {
-    storage.nestedSummaries[result.id].push(result.outputs.summary)
-  }
   processStandardResult(storage, result, storage.summary.totalProcessed)
 }
 
