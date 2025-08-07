@@ -166,9 +166,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
     height: 100vh;
-    width: auto; /* avoid 100vw causing horizontal overflow when a vertical scrollbar is present */
+    width: 100vw;
     opacity: 0.65;
     pointer-events: none;
   }
@@ -228,9 +227,6 @@
     .spectrum-Modal {
       width: 100%;
       max-height: calc(100vh - 32px);
-    }
-    .spectrum-Underlay {
-      overflow-x: hidden;
     }
   }
 </style>

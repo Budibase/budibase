@@ -36,8 +36,6 @@
         {darkMode}
         {value}
         saveIcon={false}
-        responsive
-        maxWidth={360}
         bind:this={canvas}
         on:update={() => {
           edited = true

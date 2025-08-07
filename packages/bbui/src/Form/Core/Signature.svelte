@@ -14,8 +14,6 @@
   export let height = 220
   export let saveIcon = false
   export let darkMode
-  export let responsive = false
-  export let maxWidth = 400
 
   export function toDataUrl() {
     // PNG to preserve transparency
@@ -81,36 +79,17 @@
     dispatch("update")
   }
 
-  function computeDimensions() {
-    const targetWidth = responsive
-      ? Math.min(
-          maxWidth,
-          canvasWrap?.parentElement?.getBoundingClientRect()?.width || width
-        )
-      : width
-    const aspect = height / width
-    const targetHeight = Math.round(targetWidth * aspect)
-
-    return { targetWidth, targetHeight }
-  }
-
   onMount(() => {
     if (!editable) {
       return
     }
 
     const getPos = e => {
-      const rect = canvasRef.getBoundingClientRect()
-      const clientX = e.clientX ?? e.targetTouches?.[0]?.clientX
-      const clientY = e.clientY ?? e.targetTouches?.[0]?.clientY
+      let rect = canvasRef.getBoundingClientRect()
+      const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
+      const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
 
-      // Fallback to pageX/pageY if client coords aren’t available
-      const fallbackX = e.pageX ?? e.targetTouches?.[0]?.pageX
-      const fallbackY = e.pageY ?? e.targetTouches?.[0]?.pageY
-
-      const x = (clientX ?? fallbackX) - rect.left
-      const y = (clientY ?? fallbackY) - rect.top
-      return { x, y }
+      return { x: canvasX, y: canvasY }
     }
 
     const checkUp = e => {
@@ -128,24 +107,17 @@
 
     document.addEventListener("pointerup", checkUp)
 
-    const { targetWidth, targetHeight } = computeDimensions()
-
     signature = new Atrament(canvasRef, {
-      width: targetWidth,
-      height: targetHeight,
+      width,
+      height,
       color: "white",
     })
 
     signature.weight = 4
     signature.smoothing = 2
 
-    canvasWrap.style.width = `${targetWidth}px`
-    canvasWrap.style.height = `${targetHeight}px`
-    // Ensure the canvas drawing buffer and CSS size match exactly to avoid pointer offset
-    canvasRef.width = targetWidth
-    canvasRef.height = targetHeight
-    canvasRef.style.width = `${targetWidth}px`
-    canvasRef.style.height = `${targetHeight}px`
+    canvasWrap.style.width = `${width}px`
+    canvasWrap.style.height = `${height}px`
 
     const { width: wrapWidth, height: wrapHeight } =
       canvasWrap.getBoundingClientRect()
