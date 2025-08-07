@@ -35,13 +35,13 @@
     previewStore.setDevice(mobile ? "desktop" : "mobile")
   }
 
-  const handleToggleChange = async () => {
+  const handleToggleChange = async (e: CustomEvent<boolean>) => {
     try {
       changingStatus = true
 
       await workspaceAppStore.toggleDisabled(
         selectedWorkspaceApp._id!,
-        !selectedWorkspaceApp.disabled
+        !e.detail
       )
     } finally {
       changingStatus = false
