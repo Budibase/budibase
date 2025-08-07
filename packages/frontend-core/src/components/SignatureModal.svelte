@@ -63,6 +63,8 @@
   .signature-wrap.modal :global(#signature-canvas) {
     width: 100%;
     height: auto;
+    max-width: 100%;
+    display: block;
   }
 
   @media (max-width: 640px) {

@@ -230,6 +230,7 @@
   @media (max-width: 640px) {
     .spectrum-Dialog-content.content-grid {
       padding-bottom: 80px; /* ensure content isn't hidden behind sticky footer */
+      overflow-x: hidden; /* prevent accidental horizontal scroll */
     }
     .spectrum-Dialog-buttonGroup {
       position: sticky;

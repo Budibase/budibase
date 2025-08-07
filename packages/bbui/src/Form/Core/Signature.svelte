@@ -244,14 +244,19 @@
   }
   .canvas-wrap {
     position: relative;
-    margin: auto;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
   }
   .signature img {
     max-width: 100%;
   }
   #signature-canvas {
-    max-width: var(--max-sig-width);
-    max-height: var(--max-sig-height);
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
   }
   .signature.light img,
   .signature.light #signature-canvas {
