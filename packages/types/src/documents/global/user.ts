@@ -33,6 +33,22 @@ export interface UserSSO {
 
 export type SSOUser = User & UserSSO
 
+export type OIDCUser = User & {
+  provider: string | undefined
+  providerType: SSOProviderType | undefined
+  oauth2?: OAuth2 | undefined
+  profile?:
+    | {
+        displayName?: string
+        name?: {
+          givenName?: string
+          familyName?: string
+        }
+      }
+    | undefined
+  thirdPartyProfile?: object | undefined
+}
+
 export function isSSOUser(user: User | ContextUser): user is SSOUser {
   return !!(user as SSOUser).providerType
 }
