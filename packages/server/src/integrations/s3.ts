@@ -171,8 +171,8 @@ class S3Integration implements IntegrationBase {
       endpoint: config.endpoint,
     }
     if (config.endpoint) {
-      this.config.requestChecksumCalculation = 'WHEN_REQUIRED';
-      this.config.responseChecksumValidation = 'WHEN_REQUIRED';
+      this.config.requestChecksumCalculation = "WHEN_REQUIRED"
+      this.config.responseChecksumValidation = "WHEN_REQUIRED"
 
       this.config.forcePathStyle = true
     } else {
