@@ -7,7 +7,7 @@
 
   export let icon: string | undefined = undefined
   export let iconWeight: "regular" | "bold" | "fill" = "regular"
-  export let iconColour: string | undefined
+  export let iconColour: string | undefined = undefined
   export let disabled: boolean | undefined = undefined
   export let noClose: boolean = false
   export let keyBind: string | undefined = undefined
