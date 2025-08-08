@@ -26,9 +26,6 @@
       if (workspaceAppScreens.length) {
         return `../${workspaceAppScreens[0]._id}`
       }
-      if ($featureFlags.WORKSPACE_APPS) {
-        return `../../design/new/${$workspaceAppStore.selectedWorkspaceApp?._id}`
-      }
       return "../../design"
     },
     routify,
