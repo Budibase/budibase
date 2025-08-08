@@ -1,5 +1,6 @@
 import type { PlanType } from "../../../sdk"
 import type { Layout, App, Screen } from "../../../documents"
+import { ReadStream } from "fs"
 
 export interface SyncAppResponse {
   message: string
@@ -14,6 +15,7 @@ export interface CreateAppRequest {
   fileToImport?: string
   encryptionPassword?: string
   file?: { path: string }
+  isOnboarding?: string
 }
 
 export interface CreateAppResponse extends App {}
@@ -87,4 +89,4 @@ export interface ExportAppDumpRequest {
   encryptPassword?: string
 }
 
-export type ExportAppDumpResponse = NodeJS.ReadableStream
+export type ExportAppDumpResponse = ReadStream

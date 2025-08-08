@@ -10,8 +10,6 @@ import {
   deleteAppFiles,
   revertClientLibrary,
   updateClientLibrary,
-  storeTempFileStream,
-  downloadTemplate,
 } from "../../utilities/fileSystem"
 import {
   AppStatus,
@@ -29,7 +27,6 @@ import {
   env as envCore,
   events,
   features,
-  HTTPError,
   objectStore,
   roles,
   tenancy,
@@ -84,8 +81,6 @@ import * as appMigrations from "../../appMigrations"
 import { createSampleDataTableScreen } from "../../constants/screens"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { processMigrations } from "../../appMigrations/migrationsProcessor"
-import { ImportOpts } from "../../sdk/app/backups/imports"
-import { join } from "path"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -163,23 +158,11 @@ async function createInstance(appId: string, template: AppTemplate) {
   await createAllSearchIndex()
 
   if (template && template.useTemplate) {
-    const opts: ImportOpts = {
+    const opts = {
       importObjStoreContents: true,
       updateAttachmentColumns: !template.key, // preserve attachments when using Budibase templates
-      password: template.file?.password,
     }
-
-    let path = template.file?.path
-    if (!path && template.key) {
-      const [type, name] = template.key.split("/")
-      const tmpPath = await downloadTemplate(type, name)
-      path = join(tmpPath, name, "db", "dump.txt")
-    }
-    if (!path) {
-      throw new HTTPError("App export must have path", 400)
-    }
-
-    await sdk.backups.importApp(appId, db, path, opts)
+    await sdk.backups.importApp(appId, db, template, opts)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -201,24 +184,38 @@ async function addSampleDataDocs() {
   }
 }
 
-async function addSampleDataScreen() {
+async function createDefaultWorkspaceApp(): Promise<string> {
   const appMetadata = await sdk.applications.metadata.get()
   const workspaceApp = await sdk.workspaceApps.create({
     name: appMetadata.name,
     url: "/",
     navigation: {
       ...defaultAppNavigator(appMetadata.name),
-      links: [
-        {
-          text: "Inventory",
-          url: "/inventory",
-          type: "link",
-          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-        },
-      ],
+      links: [],
     },
     isDefault: true,
   })
+
+  return workspaceApp._id!
+}
+
+async function addSampleDataScreen() {
+  const workspaceApps = await sdk.workspaceApps.fetch(context.getAppDB())
+  const workspaceApp = workspaceApps.find(wa => wa.isDefault)
+
+  if (!workspaceApp) {
+    throw new Error("Default workspace app not found")
+  }
+
+  workspaceApp.navigation.links = workspaceApp.navigation.links || []
+  workspaceApp.navigation.links.push({
+    text: "Inventory",
+    url: "/inventory",
+    type: "link",
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+  })
+
+  await sdk.workspaceApps.update(workspaceApp)
 
   const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
@@ -384,6 +381,13 @@ async function performAppCreate(
   const { body } = ctx.request
   const { name, url, encryptionPassword, templateKey } = body
 
+  let isOnboarding = false
+  if (typeof body.isOnboarding === "string") {
+    isOnboarding = body.isOnboarding === "true"
+  } else if (typeof body.isOnboarding === "boolean") {
+    isOnboarding = body.isOnboarding
+  }
+
   let useTemplate = false
   if (typeof body.useTemplate === "string") {
     useTemplate = body.useTemplate === "true"
@@ -417,7 +421,7 @@ async function performAppCreate(
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
     const isImport = !!instanceConfig.file
-    const addSampleData = !isImport && !useTemplate
+    const addSampleData = isOnboarding && !isImport && !useTemplate
 
     if (instanceConfig.useTemplate && !instanceConfig.file) {
       await updateUserColumns(appId, db, ctx.user._id!)
@@ -498,6 +502,8 @@ async function performAppCreate(
     if (!env.USE_LOCAL_COMPONENT_LIBS) {
       await uploadAppFiles(appId)
     }
+
+    await createDefaultWorkspaceApp()
 
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
@@ -870,25 +876,23 @@ export async function importToApp(
   ctx: UserCtx<ImportToUpdateAppRequest, ImportToUpdateAppResponse>
 ) {
   const { appId } = ctx.params
-
   const appExport = ctx.request.files?.appExport
+  const password = ctx.request.body.encryptionPassword
   if (!appExport) {
     ctx.throw(400, "Must supply app export to import")
   }
   if (Array.isArray(appExport)) {
     ctx.throw(400, "Must only supply one app export")
   }
-
-  if (!appExport.path) {
-    ctx.throw(400, "App export must have path")
+  const fileAttributes = { type: appExport.type!, path: appExport.path! }
+  try {
+    await sdk.applications.updateWithExport(appId, fileAttributes, password)
+  } catch (err: any) {
+    ctx.throw(
+      500,
+      `Unable to perform update, please retry - ${err?.message || err}`
+    )
   }
-
-  await sdk.applications.updateWithExport(
-    appId,
-    appExport.path,
-    ctx.request.body.encryptionPassword
-  )
-
   ctx.body = { message: "app updated" }
 }
 
@@ -913,8 +917,10 @@ export async function duplicateApp(
   const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
   checkAppUrl(ctx, apps, url)
 
-  const stream = await sdk.backups.exportApp(sourceAppId)
-  const tmpPath = await storeTempFileStream(stream)
+  const tmpPath = await sdk.backups.exportApp(sourceAppId, {
+    excludeRows: false,
+    tar: false,
+  })
 
   const createRequestBody: CreateAppRequest = {
     name: appName,

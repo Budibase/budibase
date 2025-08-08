@@ -22,5 +22,6 @@ export { navigation } from "./navigation"
 export { featureFlags } from "./featureFlags"
 export { agentsStore } from "./agents"
 export { clientAppsStore } from "./clientApps"
+export { appCreationStore } from "./appCreation"
 
 export const sideBarCollapsed = writable(false)

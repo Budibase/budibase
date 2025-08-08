@@ -138,7 +138,7 @@ async function getImportableDocuments(db: Database) {
 
 export async function updateWithExport(
   appId: string,
-  path: string,
+  file: FileAttributes,
   password?: string
 ) {
   const devId = dbCore.getDevAppID(appId)
@@ -146,12 +146,18 @@ export async function updateWithExport(
   const tempDb = dbCore.getDB(tempAppName)
   const appDb = dbCore.getDB(devId)
   try {
+    const template = {
+      file: {
+        type: file.type!,
+        path: file.path!,
+        password,
+      },
+    }
     // get a temporary version of the import
     // don't need obj store, the existing app already has everything we need
-    await backups.importApp(devId, tempDb, path, {
+    await backups.importApp(devId, tempDb, template, {
       importObjStoreContents: false,
       updateAttachmentColumns: true,
-      password,
     })
     const newMetadata = await getNewAppMetadata(tempDb, appDb)
     // get the documents to copy
