@@ -134,7 +134,7 @@
     popoverAnchor = target
     hoverTarget = {
       type: "binding",
-      code: binding.valueHTML,
+      code: binding.valueHTML || "",
     }
     popover.show()
   }
