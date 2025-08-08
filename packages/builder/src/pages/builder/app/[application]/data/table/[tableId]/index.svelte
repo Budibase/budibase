@@ -82,6 +82,11 @@
       : API
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+  $: showDevProdSwitcher = !(
+    !isInternal &&
+    tableDatasource &&
+    !tableDatasource.usesEnvironmentVariables
+  )
 
   const makeRowActionButtons = (actions: any[]) => {
     return (actions || [])
@@ -187,7 +192,7 @@
         {/if}
       </svelte:fragment>
       <svelte:fragment slot="controls-right">
-        <GridDevProdSwitcher />
+        <GridDevProdSwitcher visible={showDevProdSwitcher} />
       </svelte:fragment>
 
       <!-- Content for editing columns -->

@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { viewsV2, rowActions, dataEnvironmentStore } from "@/stores/builder"
+  import {
+    viewsV2,
+    rowActions,
+    dataEnvironmentStore,
+    tables,
+    datasources,
+  } from "@/stores/builder"
   import { admin, themeStore, licensing } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { API, productionAPI } from "@/api"
@@ -16,6 +22,7 @@
   import GridViewCalculationButton from "@/components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import { ViewV2Type, DataEnvironmentMode, type Row } from "@budibase/types"
+  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   let generateButton: any
 
@@ -37,6 +44,20 @@
       : API
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+  $: underlyingTable = view?.tableId
+    ? $tables.list.find(t => t._id === view.tableId)
+    : null
+  $: isInternal = underlyingTable?.sourceType !== DB_TYPE_EXTERNAL
+  $: tableDatasource = underlyingTable
+    ? $datasources.list.find(datasource => {
+        return datasource._id === underlyingTable.sourceId
+      })
+    : null
+  $: showDevProdSwitcher = !(
+    !isInternal &&
+    tableDatasource &&
+    !tableDatasource.usesEnvironmentVariables
+  )
 
   const makeRowActionButtons = (actions: any[]) => {
     return (actions || []).map(action => ({
@@ -86,7 +107,7 @@
       {/if}
     </svelte:fragment>
     <svelte:fragment slot="controls-right">
-      <GridDevProdSwitcher />
+      <GridDevProdSwitcher visible={showDevProdSwitcher} />
     </svelte:fragment>
     <GridCreateEditRowModal />
   </Grid>
