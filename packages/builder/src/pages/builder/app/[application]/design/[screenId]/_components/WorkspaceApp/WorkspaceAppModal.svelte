@@ -3,7 +3,6 @@
   import {
     Input,
     keepOpen,
-    Body,
     Modal,
     ModalContent,
     notifications,
@@ -145,14 +144,12 @@
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
   <ModalContent {title} {onConfirm} size="M">
-    <Body>
-      Use underscores "_" to seperate words within your app name. Do not use
-      hyphens "-" or spaces.</Body
-    >
-
     <Input
       label="App Name"
       on:enterkey={onEnterKey}
+      on:change={() => {
+        data.url = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
+      }}
       on:focus={() => {
         validationState.touched.name = true
         delete validationState.errors.name
@@ -170,7 +167,6 @@
       }}
       bind:value={data.url}
       error={validationState.errors.url}
-      disabled
     />
   </ModalContent>
 </Modal>
