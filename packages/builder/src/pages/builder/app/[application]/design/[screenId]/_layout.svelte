@@ -19,9 +19,15 @@
     validate: (id: string) =>
       $screenStore.screens.some(screen => screen._id === id),
     fallbackUrl: () => {
+      const workspaceAppScreens = $screenStore.screens.filter(
+        s => s.workspaceAppId === $workspaceAppStore.selectedWorkspaceApp?._id
+      )
       // Fall back to the first screen if one exists
-      if ($screenStore.screens.length) {
-        return `../${$screenStore.screens[0]._id}`
+      if (workspaceAppScreens.length) {
+        return `../${workspaceAppScreens[0]._id}`
+      }
+      if ($featureFlags.WORKSPACE_APPS) {
+        return `../../design/new/${$workspaceAppStore.selectedWorkspaceApp?._id}`
       }
       return "../../design"
     },
