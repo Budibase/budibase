@@ -189,6 +189,7 @@
     flex-direction: column;
     gap: 8px;
     overflow: hidden;
+    min-height: 0;
   }
 
   /* Expand arrow */
