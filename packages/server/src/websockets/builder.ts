@@ -12,6 +12,7 @@ import {
   App,
   Automation,
   Role,
+  WorkspaceApp,
 } from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
@@ -113,6 +114,24 @@ export default class BuilderSocket extends BaseSocket {
       id: role._id,
       role: null,
     })
+  }
+
+  emitWorkspaceAppUpdate(
+    ctx: any,
+    workspaceApp: WorkspaceApp,
+    options?: EmitOptions
+  ) {
+    this.emitToRoom(
+      ctx,
+      ctx.appId,
+      BuilderSocketEvent.WorkspaceAppChange,
+      {
+        id: workspaceApp._id,
+        workspaceApp,
+      },
+      options
+    )
+    gridSocket?.emitWorkspaceAppUpdate(ctx, workspaceApp)
   }
 
   emitTableUpdate(ctx: any, table: Table, options?: EmitOptions) {

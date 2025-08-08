@@ -111,6 +111,11 @@ export async function save(
       roleId: screen.routing.roleId,
       workspaceAppId: screen.workspaceAppId,
     })
+
+    const workspaceApp = await sdk.workspaceApps.get(screen.workspaceAppId)
+    if (workspaceApp) {
+      builderSocket?.emitWorkspaceAppUpdate(ctx, workspaceApp)
+    }
   }
 
   ctx.message = `Screen ${screen.name} saved.`
@@ -145,6 +150,11 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
     message: "Screen deleted successfully",
   }
   builderSocket?.emitScreenDeletion(ctx, id)
+
+  const workspaceApp = await sdk.workspaceApps.get(screen.workspaceAppId)
+  if (workspaceApp) {
+    builderSocket?.emitWorkspaceAppUpdate(ctx, workspaceApp)
+  }
 }
 
 function findPlugins(component: ScreenProps, foundPlugins: string[]) {
