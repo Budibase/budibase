@@ -3,7 +3,6 @@
   import {
     Input,
     keepOpen,
-    Body,
     Modal,
     ModalContent,
     notifications,
