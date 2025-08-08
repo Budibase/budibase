@@ -60,6 +60,7 @@ export enum SourceName {
   ORACLE = "ORACLE",
   POSTGRES = "POSTGRES",
   REDIS = "REDIS",
+  REDSHIFT = "REDSHIFT",
   REST = "REST",
   S3 = "S3",
   SNOWFLAKE = "SNOWFLAKE",

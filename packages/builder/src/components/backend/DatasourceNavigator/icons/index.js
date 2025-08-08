@@ -36,6 +36,7 @@ const ICONS = {
   GOOGLE_SHEETS: GoogleSheets,
   FIRESTORE: Firebase,
   REDIS: Redis,
+  REDSHIFT: Postgres,
   SNOWFLAKE: Snowflake,
   CUSTOM: Custom,
 }
