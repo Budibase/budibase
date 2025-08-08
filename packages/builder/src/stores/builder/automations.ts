@@ -2175,7 +2175,7 @@ class AutomationStore extends DerivedBudiStore<
             automations: $store.automations.map<UIAutomation>(a => ({
               ...a,
               publishStatus: $workspaceDeploymentStore.automations[a._id!] || {
-                state: PublishResourceState.UNPUBLISHED,
+                state: PublishResourceState.DISABLED,
                 unpublishedChanges: true,
               },
             })),

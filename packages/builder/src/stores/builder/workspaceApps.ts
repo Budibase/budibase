@@ -48,7 +48,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
                 publishStatus: $workspaceDeploymentStore.workspaceApps[
                   workspaceApp._id!
                 ] || {
-                  state: PublishResourceState.UNPUBLISHED,
+                  state: PublishResourceState.DISABLED,
                   unpublishedChanges: true,
                 },
               }
