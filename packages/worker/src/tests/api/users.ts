@@ -214,4 +214,17 @@ export class UserAPI extends TestAPI {
 
     return resp.body as InviteUsersResponse
   }
+
+  changeTenantOwnerEmail = (
+    newAccountEmail: string,
+    originalEmail: string,
+    tenantIds: string[],
+    status = 200
+  ) => {
+    return this.request
+      .put(`/api/global/users/tenant/owner`)
+      .send({ newAccountEmail, originalEmail, tenantIds })
+      .set(this.config.internalAPIHeaders())
+      .expect(status)
+  }
 }

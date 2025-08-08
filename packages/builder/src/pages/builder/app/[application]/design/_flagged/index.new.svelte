@@ -28,6 +28,7 @@
   import { BannerType } from "@/constants/banners"
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import NoResults from "../../_components/NoResults.svelte"
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
@@ -138,6 +139,7 @@
   }
 
   $: workspaceApps = $workspaceAppStore.workspaceApps
+  $: filteredWorkspaceApps = workspaceApps
     .filter(a => {
       if (!filter) {
         return true
@@ -208,7 +210,7 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each workspaceApps as app}
+  {#each filteredWorkspaceApps as app}
     <a
       class="app"
       class:favourite={app.favourite?._id}
@@ -250,6 +252,15 @@
       </div>
     </a>
   {/each}
+  {#if !workspaceApps.length}
+    <NoResults
+      ctaText="Create your first app"
+      onCtaClick={createApp}
+      resourceType="app"
+    >
+      No apps yet! Build your first app to get started.
+    </NoResults>
+  {/if}
 </div>
 
 <WorkspaceAppModal

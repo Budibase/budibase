@@ -138,9 +138,9 @@ class TestConfiguration {
 
   // TENANCY
 
-  doInTenant(task: any) {
-    return context.doInTenant(this.tenantId, () => {
-      return task()
+  async doInTenant<T>(task: () => Promise<T>): Promise<T> {
+    return await context.doInTenant(this.tenantId, async () => {
+      return await task()
     })
   }
 
@@ -169,6 +169,15 @@ class TestConfiguration {
     } catch (e) {
       return this.tenantId!
     }
+  }
+
+  async doInSpecificTenant<T>(
+    tenantId: string,
+    task: () => Promise<T>
+  ): Promise<T> {
+    return await context.doInTenant(tenantId, async () => {
+      return await task()
+    })
   }
 
   // AUTH
