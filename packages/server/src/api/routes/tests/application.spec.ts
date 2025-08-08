@@ -149,9 +149,7 @@ describe("/applications", () => {
 
   describe("create", () => {
     const checkScreenCount = async (expectedCount: number) => {
-      const res = await config.api.application.getDefinition(
-        config.getProdAppId()
-      )
+      const res = await config.api.application.getDefinition(config.getAppId())
       expect(res.screens.length).toEqual(expectedCount)
     }
 
@@ -160,53 +158,79 @@ describe("/applications", () => {
       expect(tables.length).toEqual(expectedCount)
     }
 
-    it("creates empty app with sample data", async () => {
+    it("creates empty app without sample data", async () => {
       const app = await config.api.application.create({ name: utils.newid() })
       expect(app._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
-      // Ensure we created sample resources
-      await checkScreenCount(1)
-      await checkTableCount(5)
+      // Ensure we created a blank app without sample data
+      await checkScreenCount(0)
+      await checkTableCount(1) // users table
+    })
+
+    it("creates app with sample data when onboarding", async () => {
+      const newApp = await config.api.application.create({
+        name: utils.newid(),
+        isOnboarding: "true",
+      })
+      expect(newApp._id).toBeDefined()
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+
+      // Check sample resources in the newly created app context
+      await config.withApp(newApp, async () => {
+        const res = await config.api.application.getDefinition(newApp.appId)
+        expect(res.screens.length).toEqual(1)
+
+        const tables = await config.api.table.fetch()
+        expect(tables.length).toEqual(5)
+      })
     })
 
     it("creates app from template", async () => {
       nock("https://prod-budi-templates.s3-eu-west-1.amazonaws.com")
-        .get(`/templates/app/agency-client-portal.tar.gz`)
+        .get(`/templates/app/expense-approval.tar.gz`)
         .replyWithFile(
           200,
-          path.resolve(__dirname, "data", "agency-client-portal.tar.gz")
+          path.resolve(__dirname, "data", "expense-approval.tar.gz")
         )
 
-      const app = await config.api.application.create({
+      const newApp = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        templateKey: "app/agency-client-portal",
+        templateKey: "app/expense-approval",
       })
-      expect(app._id).toBeDefined()
+      expect(newApp._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.templateImported).toHaveBeenCalledTimes(1)
 
-      // Ensure we did not create sample data. This template includes exactly
-      // this many of each resource.
-      await checkScreenCount(1)
-      await checkTableCount(5)
+      // Check resources from template in the newly created app context
+      await config.withApp(newApp, async () => {
+        const res = await config.api.application.getDefinition(newApp.appId)
+        expect(res.screens.length).toEqual(6)
+
+        const tables = await config.api.table.fetch()
+        expect(tables.length).toEqual(4)
+      })
     })
 
     it("creates app from file", async () => {
-      const app = await config.api.application.create({
+      const newApp = await config.api.application.create({
         name: utils.newid(),
         useTemplate: "true",
-        fileToImport: "src/api/routes/tests/data/export.txt",
+        fileToImport: "src/api/routes/tests/data/old-app.txt", // export.tx was empty
       })
-      expect(app._id).toBeDefined()
+      expect(newApp._id).toBeDefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.fileImported).toHaveBeenCalledTimes(1)
 
-      // Ensure we did not create sample data. This file includes exactly
-      // this many of each resource.
-      await checkScreenCount(1)
-      await checkTableCount(5)
+      // Check resources from import file in the newly created app context
+      await config.withApp(newApp, async () => {
+        const res = await config.api.application.getDefinition(newApp.appId)
+        expect(res.screens.length).toEqual(1)
+
+        const tables = await config.api.table.fetch()
+        expect(tables.length).toEqual(1)
+      })
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -501,7 +525,7 @@ describe("/applications", () => {
 
       const res = await config.api.application.getAppPackage(app.appId)
 
-      expect(res.screens).toHaveLength(4) // Default one + 3 created
+      expect(res.screens).toHaveLength(3) // 3 created screens
     })
 
     it("should retrieve all the screens for public calls", async () => {
@@ -544,7 +568,7 @@ describe("/applications", () => {
 
           const res = await config.api.application.getAppPackage(app.appId)
 
-          expect(res.screens).toHaveLength(1)
+          expect(res.screens).toHaveLength(0)
         })
 
         describe("should retrieve only the screens for a given workspace app", () => {
@@ -620,7 +644,7 @@ describe("/applications", () => {
                     }
                   )
 
-                  expect(res.screens).toHaveLength(2)
+                  expect(res.screens).toHaveLength(1)
                   expect(res.screens).toEqual(
                     expect.arrayContaining(
                       workspaceAppInfo[0].screens.map(s =>
@@ -709,7 +733,7 @@ describe("/applications", () => {
                     }
                   )
 
-                  expect(res.screens).toHaveLength(2)
+                  expect(res.screens).toHaveLength(1)
                   expect(res.screens).toEqual(
                     expect.arrayContaining(
                       workspaceAppInfo[0].screens.map(s =>
@@ -728,7 +752,7 @@ describe("/applications", () => {
         it("should retrieve all the screens", async () => {
           const res = await config.api.application.getAppPackage(app.appId)
 
-          expect(res.screens).toHaveLength(1)
+          expect(res.screens).toHaveLength(0)
         })
       })
     })
