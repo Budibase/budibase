@@ -1,6 +1,5 @@
 import type { PlanType } from "../../../sdk"
 import type { Layout, App, Screen } from "../../../documents"
-import { ReadStream } from "fs"
 
 export interface SyncAppResponse {
   message: string
@@ -89,4 +88,4 @@ export interface ExportAppDumpRequest {
   encryptPassword?: string
 }
 
-export type ExportAppDumpResponse = ReadStream
+export type ExportAppDumpResponse = NodeJS.ReadableStream

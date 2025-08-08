@@ -1,6 +1,4 @@
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
-import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import { streamFile, createTempFolder } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
 import {
   AUTOMATION_LOG_PREFIX,
@@ -13,203 +11,169 @@ import {
   STATIC_APP_FILES,
   ATTACHMENT_DIRECTORY,
 } from "./constants"
-import fs from "fs"
-import fsp from "fs/promises"
 import { join } from "path"
 import env from "../../../environment"
-import { v4 as uuid } from "uuid"
-import tar from "tar"
+import tarStream from "tar-stream"
+import zlib from "zlib"
+import { Readable, PassThrough } from "stream"
 import { tracer } from "dd-trace"
+import { Document } from "@budibase/types"
+import { storeTempFileStream } from "../../../utilities/fileSystem"
+import fsp from "fs/promises"
+import fs from "fs"
 
-const MemoryStream = require("memorystream")
-
-export interface DBDumpOpts {
-  filter?: any
-  exportPath?: string
-}
-
-export interface ExportOpts extends DBDumpOpts {
-  tar?: boolean
+export interface ExportOpts {
+  gzip?: boolean
   excludeRows?: boolean
   encryptPassword?: string
 }
 
-async function tarFilesToTmp(tmpDir: string, files: string[]) {
-  const fileName = `${uuid()}.tar.gz`
-  const exportFile = join(budibaseTempDir(), fileName)
-  await tar.create(
-    {
-      gzip: true,
-      file: exportFile,
-      noDirRecurse: false,
-      cwd: tmpDir,
-    },
-    files
-  )
-  return exportFile
-}
-
-/**
- * Exports a DB to either file or a variable (memory).
- * @param dbName the DB which is to be exported.
- * @param opts various options for the export, e.g. whether to stream,
- * a filter function or the name of the export.
- * @return either a readable stream or a string
- */
-export async function exportDB(
-  dbName: string,
-  opts: DBDumpOpts = {}
-): Promise<string> {
-  const exportOpts = {
-    filter: opts?.filter,
-    batch_size: 1000,
-    batch_limit: 5,
-    style: "main_only",
-  } as const
-  return dbCore.doWithDB(dbName, async db => {
-    // Write the dump to file if required
-    if (opts?.exportPath) {
-      const path = opts?.exportPath
-      const writeStream = fs.createWriteStream(path)
-      await db.dump(writeStream, exportOpts)
-      return path
-    } else {
-      // Stringify the dump in memory if required
-      const memStream = new MemoryStream()
-      let appString = ""
-      memStream.on("data", (chunk: any) => {
-        appString += chunk.toString()
-      })
-      await db.dump(memStream, exportOpts)
-      return appString
-    }
-  })
-}
-
-function defineFilter(excludeRows?: boolean) {
-  const ids = [
-    USER_METDATA_PREFIX,
-    LINK_USER_METADATA_PREFIX,
-    AUTOMATION_LOG_PREFIX,
-  ]
-  if (excludeRows) {
-    ids.push(TABLE_ROW_PREFIX)
-  }
-  return (doc: any) =>
-    !ids.map(key => doc._id.includes(key)).reduce((prev, curr) => prev || curr)
-}
-
-/**
- * Local utility to back up the database state for an app, excluding global user
- * data or user relationships.
- * @param appId The app to back up
- * @param config Config to send to export DB/attachment export
- * @returns either a string or a stream of the backup
- */
-export async function exportApp(appId: string, config?: ExportOpts) {
+export async function exportApp(
+  appId: string,
+  config?: ExportOpts
+): Promise<Readable> {
   return await tracer.trace("exportApp", async span => {
-    span.addTags({
-      "config.excludeRows": config?.excludeRows,
-      "config.tar": config?.tar,
-      "config.encryptPassword": !!config?.encryptPassword,
-      "config.exportPath": config?.exportPath,
-      "config.filter": !!config?.filter,
-    })
+    const { excludeRows = false, encryptPassword, gzip = true } = config || {}
+    const pack = tarStream.pack()
+
+    span.addTags({ excludeRows, gzip })
 
     const prodAppId = dbCore.getProdAppID(appId)
     const appPath = `${prodAppId}/`
-    let tmpPath = createTempFolder(uuid())
-    span.addTags({ prodAppId, tmpPath })
+    span.addTags({ prodAppId })
 
-    if (!env.isTest()) {
-      // write just the static files
-      if (config?.excludeRows) {
-        for (const path of STATIC_APP_FILES) {
-          const contents = await objectStore.retrieve(
-            ObjectStoreBuckets.APPS,
-            join(appPath, path)
-          )
-          await fsp.writeFile(join(tmpPath, path), contents)
+    try {
+      await addDatabaseExport(appId, pack, encryptPassword, excludeRows)
+      if (!env.isTest()) {
+        if (excludeRows) {
+          await addStaticFiles(pack, appPath, encryptPassword)
+        } else {
+          await addAllAppFiles(pack, appPath, encryptPassword)
         }
       }
-      // get all the files
-      else {
-        tmpPath = await objectStore.retrieveDirectory(
-          ObjectStoreBuckets.APPS,
-          appPath
-        )
-      }
+
+      pack.finalize()
+    } catch (err) {
+      pack.destroy(err as Error)
     }
 
-    const downloadedPath = join(tmpPath, appPath)
-    if (fs.existsSync(downloadedPath)) {
-      const allFiles = await fsp.readdir(downloadedPath)
-      for (let file of allFiles) {
-        const path = join(downloadedPath, file)
-        // move out of app directory, simplify structure
-        await fsp.rename(path, join(downloadedPath, "..", file))
-      }
-      // remove the old app directory created by object export
-      await fsp.rmdir(downloadedPath)
+    if (gzip) {
+      return pack.pipe(zlib.createGzip())
     }
-    // enforce an export of app DB to the tmp path
-    const dbPath = join(tmpPath, DB_EXPORT_FILE)
-    await exportDB(appId, {
-      filter: defineFilter(config?.excludeRows),
-      exportPath: dbPath,
-    })
-
-    if (config?.encryptPassword) {
-      for (let file of await fsp.readdir(tmpPath)) {
-        const path = join(tmpPath, file)
-
-        // skip the attachments - too big to encrypt
-        if (file !== ATTACHMENT_DIRECTORY) {
-          await encryption.encryptFile(
-            { dir: tmpPath, filename: file },
-            config.encryptPassword
-          )
-          await fsp.rm(path)
-        }
-      }
-    }
-
-    // if tar requested, return where the tarball is
-    if (config?.tar) {
-      // now the tmpPath contains both the DB export and attachments, tar this
-      const tarPath = await tarFilesToTmp(tmpPath, await fsp.readdir(tmpPath))
-      // cleanup the tmp export files as tarball returned
-      await fsp.rm(tmpPath, { recursive: true, force: true })
-
-      return tarPath
-    }
-    // tar not requested, turn the directory where export is
-    else {
-      return tmpPath
-    }
+    return pack
   })
 }
 
-/**
- * Streams a backup of the database state for an app
- * @param appId The ID of the app which is to be backed up.
- * @param excludeRows Flag to state whether the export should include data.
- * @param encryptPassword password for encrypting the export.
- * @returns a readable stream of the backup which is written in real time
- */
-export async function streamExportApp({
-  appId,
-  excludeRows,
-  encryptPassword,
-}: {
-  appId: string
-  excludeRows: boolean
-  encryptPassword?: string
-}) {
-  const tmpPath = await exportApp(appId, {
-    excludeRows,
-    tar: true,
-    encryptPassword,
+async function addDatabaseExport(
+  appId: string,
+  pack: tarStream.Pack,
+  encryptPassword?: string,
+  excludeRows = false
+) {
+  let dbStream = await streamDB(appId, doc => {
+    const id = doc._id || ""
+    return !(
+      id.startsWith(USER_METDATA_PREFIX) ||
+      id.startsWith(LINK_USER_METADATA_PREFIX) ||
+      id.startsWith(AUTOMATION_LOG_PREFIX) ||
+      !!(excludeRows && id.startsWith(TABLE_ROW_PREFIX))
+    )
   })
-  return streamFile(tmpPath)
+  await addStreamToTar(pack, DB_EXPORT_FILE, dbStream, encryptPassword)
+}
+
+async function addStaticFiles(
+  pack: tarStream.Pack,
+  appPath: string,
+  encryptPassword?: string
+) {
+  for (const path of STATIC_APP_FILES) {
+    try {
+      const contents = await objectStore.getReadStream(
+        ObjectStoreBuckets.APPS,
+        join(appPath, path)
+      )
+      await addStreamToTar(pack, path, contents, encryptPassword)
+    } catch (err) {
+      console.log(`Skipping missing static file: ${path}`)
+    }
+  }
+}
+
+async function addAllAppFiles(
+  pack: tarStream.Pack,
+  appPath: string,
+  encryptPassword?: string
+) {
+  for await (const object of objectStore.listAllObjects(
+    ObjectStoreBuckets.APPS,
+    appPath
+  )) {
+    const filename = object.Key!
+    const path = filename.replace(appPath, "")
+
+    if (path && !path.endsWith("/")) {
+      const stream = await objectStore.getReadStream(
+        ObjectStoreBuckets.APPS,
+        filename
+      )
+
+      // Skip encrypting attachments directory (too big to encrypt)
+      const shouldEncrypt =
+        !!encryptPassword && !path.startsWith(ATTACHMENT_DIRECTORY)
+
+      await addStreamToTar(
+        pack,
+        path,
+        stream,
+        shouldEncrypt ? encryptPassword : undefined
+      )
+    }
+  }
+}
+
+async function addStreamToTar(
+  pack: tarStream.Pack,
+  path: string,
+  stream: Readable,
+  encryptPassword?: string
+): Promise<void> {
+  if (encryptPassword) {
+    stream = encryption.encryptStream(stream, encryptPassword)
+  }
+
+  // We need to write out the stream to a tmp file in order for tar-stream to be
+  // able to get the size of it. If we pass the stream directly to tar-stream,
+  // it always throws a "size mistmatch" error
+  const name = encryptPassword ? `${path}.enc` : path
+  const tmpPath = await storeTempFileStream(stream)
+  const size = (await fsp.stat(tmpPath)).size
+
+  const entry = pack.entry({ name, size })
+  for await (const chunk of fs.createReadStream(tmpPath)) {
+    entry.write(chunk)
+  }
+  entry.end()
+}
+
+type Filter = (doc: Document) => boolean
+async function streamDB(dbName: string, filter?: Filter): Promise<Readable> {
+  return dbCore.doWithDB(dbName, async db => {
+    const passThrough = new PassThrough()
+
+    const dumpPromise = db.dump(passThrough, {
+      filter,
+      batch_size: 1000,
+      batch_limit: 5,
+      style: "main_only",
+    })
+
+    dumpPromise.catch(err => {
+      if (!passThrough.destroyed) {
+        passThrough.destroy(err)
+      }
+    })
+
+    return passThrough
+  })
 }

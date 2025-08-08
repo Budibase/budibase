@@ -1,10 +1,14 @@
 import fs, { PathLike } from "fs"
+import fsp from "fs/promises"
 import { budibaseTempDir } from "../budibaseDir"
 import { join } from "path"
 import env from "../../environment"
-import tar from "tar"
+import tar from "tar-stream"
+import zlib from "zlib"
+import { pipeline } from "stream/promises"
 
 import { v4 as uuid } from "uuid"
+import { Readable } from "stream"
 
 export const TOP_LEVEL_PATH = env.TOP_LEVEL_PATH
 export const DEV_ASSET_PATH = join(TOP_LEVEL_PATH, "packages", "server")
@@ -88,6 +92,27 @@ export const storeTempFile = (
   return path
 }
 
+export const storeTempFileStream = async (stream: Readable) => {
+  const path = join(budibaseTempDir(), uuid())
+  const writeStream = fs.createWriteStream(path)
+
+  try {
+    await pipeline(stream, writeStream)
+    return path
+  } catch (err) {
+    // Clean up the potentially corrupted temp file
+    try {
+      const stat = await fsp.stat(path)
+      if (stat.isFile()) {
+        await fsp.unlink(path)
+      }
+    } catch (cleanupErr) {
+      // Ignore cleanup errors, focus on original error
+    }
+    throw err
+  }
+}
+
 /**
  * Utility function for getting a file read stream - a simple in memory buffered read
  * stream doesn't work for pouchdb.
@@ -130,11 +155,30 @@ export const createTempFolder = (item: any) => {
   return path
 }
 
-export const extractTarball = async (fromFilePath: string, toPath: string) => {
-  await tar.extract({
-    file: fromFilePath,
-    C: toPath,
-  })
+export const extractTarball = async (from: string, to: string) => {
+  const extract = tar.extract()
+
+  let read: Readable = fs.createReadStream(from)
+  if (await isGzip(read)) {
+    read = read.pipe(zlib.createGunzip())
+  }
+  read.pipe(extract)
+
+  for await (const entry of extract) {
+    const {
+      header: { name, type },
+    } = entry
+    const path = join(to, name)
+
+    if (type === "directory") {
+      await fs.promises.mkdir(path, { recursive: true })
+    } else if (type === "file" || type === "contiguous-file") {
+      await fs.promises.mkdir(join(path, ".."), { recursive: true })
+      await fsp.writeFile(path, entry, "binary")
+    }
+
+    entry.resume()
+  }
 }
 
 /**
@@ -168,4 +212,92 @@ export const deleteFolderFileSystem = (path: PathLike) => {
   }
 
   fs.rmSync(path, { recursive: true, force: true })
+}
+
+/**
+ * Peek at the next chunk of data in the stream without consuming it.
+ * @param input The input stream to read from.
+ * @param length The number of bytes to peek.
+ * @returns A promise that resolves to the peeked data.
+ */
+export async function peek(input: Readable, length: number): Promise<Buffer> {
+  // Try synchronous read first
+  const immediateBuffer = input.read(length)
+  if (immediateBuffer) {
+    input.unshift(immediateBuffer)
+    return immediateBuffer
+  }
+
+  // If not available immediately, we need to collect chunks
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = []
+    let totalLength = 0
+
+    const cleanup = () => {
+      input.removeListener("readable", onReadable)
+      input.removeListener("end", onEnd)
+      input.removeListener("error", onError)
+    }
+
+    const onReadable = () => {
+      let chunk: Buffer
+
+      while ((chunk = input.read()) !== null) {
+        chunks.push(new Uint8Array(chunk))
+        totalLength += chunk.length
+
+        // If we have enough data, stop reading
+        if (totalLength >= length) {
+          cleanup()
+
+          // Put all chunks back in reverse order
+          for (let i = chunks.length - 1; i >= 0; i--) {
+            input.unshift(Buffer.from(chunks[i]))
+          }
+
+          const combined = Buffer.concat(chunks)
+          resolve(combined.subarray(0, length))
+          return
+        }
+      }
+
+      // If we get here, we don't have enough data yet
+      // The readable event will fire again when more data is available
+    }
+
+    const onEnd = () => {
+      cleanup()
+
+      if (chunks.length === 0) {
+        reject(new Error("Stream ended with no data"))
+        return
+      }
+
+      // Stream ended, can't put data back, just return what we could read
+      const combined = Buffer.concat(chunks)
+      resolve(combined)
+    }
+
+    const onError = (err: Error) => {
+      cleanup()
+      reject(err)
+    }
+
+    input.on("readable", onReadable)
+    input.on("end", onEnd)
+    input.on("error", onError)
+
+    // Try reading immediately in case data is already buffered
+    onReadable()
+  })
+}
+
+export async function isGzip(input: Readable) {
+  return (await peek(input, 2)).toString("hex") === "1f8b" // Gzip magic number
+}
+
+export async function isTar(input: Readable) {
+  const chunk = await peek(input, 262)
+  const magic = chunk.toString("utf8", 257, 262)
+  return magic === "ustar"
 }

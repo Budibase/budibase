@@ -3,6 +3,7 @@ import fs from "fs"
 import zlib from "zlib"
 import env from "../environment"
 import { join } from "path"
+import { PassThrough, Readable } from "stream"
 
 const ALGO = "aes-256-ctr"
 const SEPARATOR = "-"
@@ -79,24 +80,129 @@ export async function encryptFile(
   const inputFile = fs.createReadStream(filePath)
   const outputFile = fs.createWriteStream(join(dir, outputFileName))
 
-  const salt = crypto.randomBytes(SALT_LENGTH)
-  const iv = crypto.randomBytes(IV_LENGTH)
-  const stretched = stretchString(secret, salt)
-  const cipher = crypto.createCipheriv(ALGO, stretched, iv)
+  encryptStream(inputFile, secret).pipe(outputFile)
 
-  outputFile.write(salt)
-  outputFile.write(iv)
-
-  inputFile.pipe(zlib.createGzip()).pipe(cipher).pipe(outputFile)
-
-  return new Promise<{ filename: string; dir: string }>(r => {
+  return new Promise<{ filename: string; dir: string }>((resolve, reject) => {
     outputFile.on("finish", () => {
-      r({
+      resolve({
         filename: outputFileName,
         dir,
       })
     })
+    const cleanupReject = (error: Error) => {
+      inputFile.close()
+      outputFile.close()
+      reject(error)
+    }
+    outputFile.on("error", cleanupReject)
+    inputFile.on("error", cleanupReject)
   })
+}
+
+export function encryptStream(inputStream: Readable, secret: string): Readable {
+  const salt = crypto.randomBytes(SALT_LENGTH)
+  const iv = crypto.randomBytes(IV_LENGTH)
+  const stretched = stretchString(secret, salt)
+  const cipher = crypto.createCipheriv(ALGO, stretched, iv)
+  const gzip = zlib.createGzip()
+
+  const outputStream = new PassThrough()
+  outputStream.write(salt)
+  outputStream.write(iv)
+
+  // Set up error propagation
+  inputStream.on("error", err => {
+    gzip.destroy(err)
+    if (!outputStream.destroyed) {
+      outputStream.destroy(err)
+    }
+  })
+  gzip.on("error", err => {
+    cipher.destroy(err)
+    if (!outputStream.destroyed) {
+      outputStream.destroy(err)
+    }
+  })
+  cipher.on("error", err => {
+    if (!outputStream.destroyed) {
+      outputStream.destroy(err)
+    }
+  })
+
+  inputStream.pipe(gzip).pipe(cipher).pipe(outputStream)
+
+  return outputStream
+}
+
+export async function decryptStream(
+  inputStream: Readable,
+  secret: string
+): Promise<Readable> {
+  const outputStream = new PassThrough()
+
+  let headerBuffer = Buffer.alloc(0)
+  let headerExtracted = false
+  let decipher: crypto.Decipher | null = null
+  let gunzip: zlib.Gunzip | null = null
+
+  const setupDecryption = (salt: Buffer, iv: Buffer) => {
+    const stretched = stretchString(secret, salt)
+    decipher = crypto.createDecipheriv(ALGO, stretched, iv)
+    gunzip = zlib.createGunzip()
+
+    // Set up error propagation
+    inputStream.on("error", err => {
+      decipher!.destroy(err)
+      if (!outputStream.destroyed) {
+        outputStream.destroy(err)
+      }
+    })
+    decipher.on("error", err => {
+      gunzip!.destroy(err)
+      if (!outputStream.destroyed) {
+        outputStream.destroy(err)
+      }
+    })
+    gunzip.on("error", err => {
+      if (!outputStream.destroyed) {
+        outputStream.destroy(err)
+      }
+    })
+
+    // Pipe decipher -> gunzip -> output
+    decipher.pipe(gunzip).pipe(outputStream)
+  }
+
+  inputStream.on("data", chunk => {
+    if (!headerExtracted) {
+      headerBuffer = Buffer.concat([headerBuffer, chunk])
+      
+      if (headerBuffer.length >= SALT_LENGTH + IV_LENGTH) {
+        const salt = headerBuffer.slice(0, SALT_LENGTH)
+        const iv = headerBuffer.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH)
+        const remainingData = headerBuffer.slice(SALT_LENGTH + IV_LENGTH)
+        
+        setupDecryption(salt, iv)
+        headerExtracted = true
+        
+        if (remainingData.length > 0) {
+          decipher!.write(remainingData)
+        }
+      }
+    } else {
+      decipher!.write(chunk)
+    }
+  })
+
+  inputStream.on("end", () => {
+    if (decipher) {
+      decipher.end()
+    } else {
+      outputStream.destroy(new Error("Stream ended before header could be extracted"))
+    }
+  })
+
+  return outputStream
 }
 
 async function getSaltAndIV(path: string) {

@@ -9,29 +9,15 @@ import {
   WebhookTriggerInputs,
 } from "@budibase/types"
 import { getAutomationParams } from "../../../db/utils"
-import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import {
-  DB_EXPORT_FILE,
-  GLOBAL_DB_EXPORT_FILE,
-  ATTACHMENT_DIRECTORY,
-} from "./constants"
-import { downloadTemplate } from "../../../utilities/fileSystem"
+import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
-import fsp from "fs/promises"
 import sdk from "../../"
-import { v4 as uuid } from "uuid"
-import tar from "tar"
-
-type TemplateType = {
-  file?: {
-    type?: string
-    path: string
-    password?: string
-  }
-  key?: string
-}
+import tar from "tar-stream"
+import zlib from "zlib"
+import { Readable, PassThrough } from "stream"
+import { isGzip, isTar } from "../../../utilities/fileSystem"
 
 function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
   // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
@@ -112,140 +98,173 @@ async function updateAutomations(prodAppId: string, db: Database) {
   await db.bulkDocs(toSave)
 }
 
-/**
- * This function manages temporary template files which are stored by Koa.
- * @param template The template object retrieved from the Koa context object.
- * @returns Returns a fs read stream which can be loaded into the database.
- */
-async function getTemplateStream(template: TemplateType) {
-  if (template.file && template.file.type !== "text/plain") {
-    throw new Error("Cannot import a non-text based file.")
-  }
-  if (template.file) {
-    return fs.createReadStream(template.file.path)
-  } else if (template.key) {
-    const [type, name] = template.key.split("/")
-    const tmpPath = await downloadTemplate(type, name)
-    return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
-  } else {
-    throw new Error("Either file or key is required.")
-  }
+export interface ImportOpts {
+  importObjStoreContents?: boolean
+  updateAttachmentColumns?: boolean
+  password?: string
 }
 
-export async function untarFile(file: { path: string }) {
-  const tmpPath = join(budibaseTempDir(), uuid())
-  await fsp.mkdir(tmpPath)
-  // extract the tarball
-  await tar.extract({
-    cwd: tmpPath,
-    file: file.path,
-  })
-  return tmpPath
-}
+class Importer {
+  private appId: string
+  private prodAppId: string
+  private db: Database
+  private opts: ImportOpts
+  private dbImported: boolean
 
-async function decryptFiles(path: string, password: string) {
-  try {
-    for (let file of await fsp.readdir(path)) {
-      const inputPath = join(path, file)
-      if (!inputPath.endsWith(ATTACHMENT_DIRECTORY)) {
-        const outputPath = inputPath.replace(/\.enc$/, "")
-        await encryption.decryptFile(inputPath, outputPath, password)
-        await fsp.rm(inputPath)
+  constructor(
+    appId: string,
+    db: Database,
+    opts: ImportOpts = {
+      importObjStoreContents: true,
+      updateAttachmentColumns: true,
+    }
+  ) {
+    this.appId = appId
+    this.prodAppId = dbCore.getProdAppID(appId)
+    this.db = db
+    this.opts = opts || {}
+    this.dbImported = false
+  }
+
+  async importDB(input: Readable) {
+    const { ok } = await this.db.load(input)
+    if (!ok) {
+      throw new Error("Error loading database dump from template.")
+    }
+    if (this.opts.updateAttachmentColumns) {
+      await updateAttachmentColumns(this.prodAppId, this.db)
+    }
+    await updateAutomations(this.prodAppId, this.db)
+    this.dbImported = true
+  }
+
+  async decryptStream(stream: Readable) {
+    if (!this.opts.password) {
+      throw new Error("Files are encrypted but no password provided")
+    }
+    const decryptedStream = await encryption.decryptStream(
+      stream,
+      this.opts.password
+    )
+
+    // Propagate errors from source stream
+    stream.on("error", err => {
+      if (!decryptedStream.destroyed) {
+        decryptedStream.destroy(err)
       }
-    }
-  } catch (err: any) {
-    if (err.message === "incorrect header check") {
-      throw new Error("File cannot be imported")
-    }
-    throw err
+    })
+    return decryptedStream
   }
-}
 
-export function getGlobalDBFile(tmpPath: string) {
-  return fs.readFileSync(join(tmpPath, GLOBAL_DB_EXPORT_FILE), "utf8")
-}
+  async run(input: Readable) {
+    if (await isGzip(input)) {
+      const gunzip = zlib.createGunzip()
+      input.pipe(gunzip)
+      // Propagate errors from input stream to gunzip
+      input.on("error", err => {
+        if (!gunzip.destroyed) {
+          gunzip.destroy(err)
+        }
+      })
+      // Gunzip errors will be caught when we try to use the stream
+      input = gunzip
+    }
 
-export function getListOfAppsInMulti(tmpPath: string) {
-  return fs.readdirSync(tmpPath).filter(dir => dir !== GLOBAL_DB_EXPORT_FILE)
+    if (!(await isTar(input))) {
+      return await this.importDB(
+        this.opts.password ? await this.decryptStream(input) : input
+      )
+    }
+
+    const extract = tar.extract()
+    input.pipe(extract)
+    // Propagate errors from input stream to extract
+    input.on("error", err => {
+      if (!extract.destroyed) {
+        extract.destroy(err)
+      }
+    })
+    // Extract errors will be caught in the try-catch below
+
+    try {
+      for await (const entry of extract) {
+        // Skip directories etc.
+        if (
+          entry.header.type !== "file" &&
+          entry.header.type !== "contiguous-file"
+        ) {
+          entry.resume()
+          continue
+        }
+
+        let filename = entry.header.name
+        let readable: Readable = entry
+
+        const isEncrypted = filename.endsWith(".enc")
+        filename = isEncrypted ? filename.replace(/\.enc$/, "") : filename
+
+        if (
+          filename !== DB_EXPORT_FILE &&
+          (filename.startsWith(".") ||
+            filename === GLOBAL_DB_EXPORT_FILE ||
+            !this.opts.importObjStoreContents)
+        ) {
+          readable.resume()
+          continue
+        }
+
+        if (isEncrypted) {
+          readable = await this.decryptStream(readable)
+        } else {
+          // Convert to a proper PassThrough stream for AWS SDK compatibility
+          const passthroughStream = new PassThrough()
+          readable.pipe(passthroughStream)
+          readable = passthroughStream
+        }
+
+        try {
+          if (filename === DB_EXPORT_FILE) {
+            await this.importDB(readable)
+          } else {
+            await objectStore.streamUpload({
+              bucket: ObjectStoreBuckets.APPS,
+              stream: readable,
+              filename: join(this.prodAppId, filename),
+            })
+          }
+        } catch (uploadErr) {
+          // Make sure to consume the stream to prevent backpressure
+          readable.resume()
+          throw uploadErr
+        }
+      }
+    } catch (err) {
+      // Ensure streams are properly cleaned up on error
+      extract.destroy()
+      throw err
+    }
+
+    if (!this.dbImported) {
+      throw new Error(
+        "App export does not appear to be valid - no DB file found."
+      )
+    }
+  }
 }
 
 export async function importApp(
   appId: string,
   db: Database,
-  template: TemplateType,
-  opts: {
-    importObjStoreContents: boolean
-    updateAttachmentColumns: boolean
-  } = { importObjStoreContents: true, updateAttachmentColumns: true }
-) {
-  let prodAppId = dbCore.getProdAppID(appId)
-  let dbStream: fs.ReadStream
-  const isTar = template.file && template?.file?.type?.endsWith("gzip")
-  const isDirectory =
-    template.file && (await fsp.lstat(template.file.path)).isDirectory()
-  let tmpPath: string | undefined = undefined
-  if (template.file && (isTar || isDirectory)) {
-    tmpPath = isTar ? await untarFile(template.file) : template.file.path
-    if (isTar && template.file.password) {
-      await decryptFiles(tmpPath, template.file.password)
-    }
-    const contents = await fsp.readdir(tmpPath)
-    const stillEncrypted = !!contents.find(name => name.endsWith(".enc"))
-    if (stillEncrypted) {
-      throw new Error("Files are encrypted but no password has been supplied.")
-    }
-    const isPlugin = !!contents.find(name => name === "plugin.min.js")
-    if (isPlugin) {
-      throw new Error("Supplied file is a plugin - cannot import as app.")
-    }
-    const isInvalid = !contents.find(name => name === DB_EXPORT_FILE)
-    if (isInvalid) {
-      throw new Error(
-        "App export does not appear to be valid - no DB file found."
-      )
-    }
-    // have to handle object import
-    if (contents.length && opts.importObjStoreContents) {
-      let promises = []
-      let excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
-      for (let filename of contents) {
-        const path = join(tmpPath, filename)
-        if (excludedFiles.includes(filename)) {
-          continue
-        }
-        filename = join(prodAppId, filename)
-        if ((await fsp.lstat(path)).isDirectory()) {
-          promises.push(
-            objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
-          )
-        } else {
-          promises.push(
-            objectStore.upload({
-              bucket: ObjectStoreBuckets.APPS,
-              path,
-              filename,
-            })
-          )
-        }
-      }
-      await Promise.all(promises)
-    }
-    dbStream = fs.createReadStream(join(tmpPath, DB_EXPORT_FILE))
-  } else {
-    dbStream = await getTemplateStream(template)
+  input: Readable | string,
+  opts: ImportOpts = {
+    importObjStoreContents: true,
+    updateAttachmentColumns: true,
   }
-  // @ts-ignore
-  const { ok } = await db.load(dbStream)
-  if (!ok) {
-    throw "Error loading database dump from template."
+): Promise<void> {
+  if (typeof input === "string") {
+    // if input is a string, assume it's a file path
+    input = fs.createReadStream(input)
   }
-  if (opts.updateAttachmentColumns) {
-    await updateAttachmentColumns(prodAppId, db)
-  }
-  await updateAutomations(prodAppId, db)
-  // clear up afterward
-  if (tmpPath) {
-    await fsp.rm(tmpPath, { recursive: true, force: true })
-  }
-  return ok
+  const importer = new Importer(appId, db, opts)
+  await importer.run(input)
 }
