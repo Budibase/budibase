@@ -3,17 +3,17 @@
   import RadioGroup from "./Core/RadioGroup.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value = null
-  export let label = null
+  export let value = undefined
+  export let label = undefined
   export let disabled = false
   export let labelPosition = "above"
-  export let error = null
+  export let error = undefined
   export let options = []
   export let direction = "vertical"
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
   export let getOptionTitle = option => extractProperty(option, "label")
-  export let helpText = null
+  export let helpText = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
