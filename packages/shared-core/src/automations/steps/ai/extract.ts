@@ -1,6 +1,7 @@
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
+  AutomationFeature,
   AutomationIOType,
   AutomationStepDefinition,
   AutomationStepType,
@@ -17,6 +18,9 @@ export const definition: AutomationStepDefinition = {
   stepId: AutomationActionStepId.EXTRACT_FILE_DATA,
   internal: true,
   inputs: {},
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   schema: {
     inputs: {
       properties: {
