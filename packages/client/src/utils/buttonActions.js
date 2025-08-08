@@ -527,6 +527,57 @@ const rowActionHandler = async action => {
   })
 }
 
+const delayHandler = async action => {
+  return new Promise(resolve => setTimeout(resolve, action.parameters.duration))
+}
+
+export const scrollToFieldHandler = action => {
+  const labelText =
+    typeof action === "string"
+      ? action
+      : typeof action?.parameters?.field === "string"
+        ? action.parameters.field
+        : null
+
+  const fieldId =
+    typeof action?.field === "object" ? action.field.fieldState?.fieldId : null
+
+  let targetId = fieldId
+  let label = null
+
+  if (!targetId && labelText) {
+    label = Array.from(document.querySelectorAll("label")).find(
+      el => el.textContent.trim() === labelText
+    )
+
+    if (label) {
+      const forAttr = label.getAttribute("for")
+      if (forAttr) {
+        targetId = forAttr
+      } else {
+        const nestedInput = label.querySelector("input, textarea, select")
+        targetId = nestedInput?.id || null
+      }
+    }
+  }
+
+  if (!targetId) return
+
+  const input = document.getElementById(targetId)
+  if (input) {
+    input.focus({ preventScroll: true })
+  }
+
+  if (!label) {
+    label = document.querySelector(`label[for="${targetId}"]`)
+  }
+
+  if (label) {
+    label.style.scrollMargin = "100px"
+    label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }
+}
+
 const handlerMap = {
   ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
@@ -550,6 +601,8 @@ const handlerMap = {
   ["Download File"]: downloadFileHandler,
   ["Row Action"]: rowActionHandler,
   ["Copy To Clipboard"]: copyToClipboardHandler,
+  ["Delay"]: delayHandler,
+  ["Scroll To Field"]: scrollToFieldHandler,
 }
 
 const confirmTextMap = {
