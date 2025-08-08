@@ -257,7 +257,7 @@
 
   <div class="separator" />
 
-  {#if $view.dragging}
+  {#if $view?.dragging}
     <DragZone path={branchBlockRef.pathTo} />
   {:else if viewMode === ViewMode.EDITOR}
     <FlowItemActions block={branchBlockRef} />

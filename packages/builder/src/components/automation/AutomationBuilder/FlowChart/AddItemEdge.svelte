@@ -34,7 +34,7 @@
     class="add-item-label"
     style="transform:translate(-50%, -50%) translate({path[1]}px,{path[2]}px);"
   >
-    {#if !collectBlockExists && block && $$props.viewMode === ViewMode.EDITOR}
+    {#if !collectBlockExists && block}
       <FlowItemActions
         {block}
         on:branch={() => {

@@ -29,6 +29,8 @@
   import TestDataModal from "./TestDataModal.svelte"
   import NodeWrapper from "./NodeWrapper.svelte"
   import EdgeWrapper from "./EdgeWrapper.svelte"
+  import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
+  import AnchorNode from "./AnchorNode.svelte"
   import {
     SvelteFlow,
     Controls,
@@ -41,7 +43,12 @@
     type EdgeTypes,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
-  import { AutomationStatus, type AutomationStep } from "@budibase/types"
+  import {
+    AutomationStatus,
+    type AutomationStep,
+    AutomationActionStepId,
+    type Branch,
+  } from "@budibase/types"
 
   export let automation
 
@@ -49,6 +56,8 @@
 
   const nodeTypes: NodeTypes = {
     "step-node": NodeWrapper as any,
+    "branch-node": BranchNodeWrapper as any,
+    "anchor-node": AnchorNode as any,
   }
   const edgeTypes: EdgeTypes = {
     "add-item": EdgeWrapper as any,
@@ -58,16 +67,13 @@
   let confirmDeleteDialog
   let scrolling = false
   let blockRefs: Record<string, any> = {}
-  let treeEle
-  let draggable
   let prodErrors: number
   let viewMode = ViewMode.EDITOR
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
 
-  $: updateNodes(blocks as any)
-  $: updateEdges($nodes)
+  $: updateGraph(blocks as any)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -77,9 +83,9 @@
   // Parse the automation tree state
   $: $memoAutomation && refresh()
 
-  $: blocks = getBlocksHelper($memoAutomation, viewMode).filter(
-    x => x.stepId !== ActionStepID.LOOP
-  )
+  $: blocks = getBlocksHelper($memoAutomation, viewMode)
+    .filter(x => x.stepId !== ActionStepID.LOOP)
+    .map((block, idx) => ({ ...block, __top: idx }))
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const handleNodeDrag = (event: CustomEvent) => {
@@ -104,10 +110,27 @@
     if (!targetNode) return
 
     const currentNodes = get(nodes)
-    const draggedNodeIndex = currentNodes.findIndex(n => n.id === targetNode.id)
+    const topLevelNodes = currentNodes.filter(
+      n => n.type === "step-node" && (n as any).data?.isTopLevel
+    )
+    const draggedNodeIndex = topLevelNodes.findIndex(
+      n => n.id === targetNode.id
+    )
+
+    // If not a top-level step, just persist its position visually
+    if (draggedNodeIndex === -1) {
+      nodes.update(n =>
+        n.map(node =>
+          node.id === targetNode.id
+            ? { ...node, position: targetNode.position }
+            : node
+        )
+      )
+      return
+    }
 
     // Calculate which position the node was dropped into based on Y position
-    let newIndex = currentNodes.findIndex(node => {
+    let newIndex = topLevelNodes.findIndex(node => {
       if (node.id === targetNode.id) return false
       // Check if the dragged node's Y position is before this node
       return targetNode.position.y < node.position.y
@@ -115,7 +138,7 @@
 
     // If no node found after it, it means it's at the end
     if (newIndex === -1) {
-      newIndex = currentNodes.length - 1
+      newIndex = topLevelNodes.length - 1
     } else if (newIndex > draggedNodeIndex) {
       // Adjust index if moving down
       newIndex -= 1
@@ -178,52 +201,146 @@
     }
   }
 
-  const updateNodes = (blocks: AutomationStep[]) => {
-    const currentNodes = get(nodes)
-    let newNodes: FlowNode[] = []
-    if (blocks.length > 0) {
-      blocks.forEach((block, idx) => {
-        const existingBlock = currentNodes.find(x => x.id === block.id)
-        let position = existingBlock?.position
-        if (!position) {
-          const prevNode = currentNodes[idx - 1]
-          const nextNode = currentNodes[idx]
-          if (nextNode) {
-            position = {
-              x: (prevNode.position.x + nextNode.position.x) / 2,
-              y: (prevNode.position.y + nextNode.position.y) / 2,
-            }
-          } else if (prevNode) {
-            position = {
-              x: prevNode.position.x,
-              y: prevNode.position.y + 400,
-            }
-          } else {
-            position = { x: 0, y: idx * 400 }
-          }
-        }
-        newNodes.push({
-          id: block.id,
-          type: "step-node",
-          data: { testDataModal, block },
-          position,
-        })
-      })
-    }
-    nodes.set(newNodes)
-  }
+  function updateGraph(blocks: AutomationStep[]) {
+    const prevNodes = get(nodes)
+    const byId = new Map(prevNodes.map(n => [n.id, n]))
 
-  const updateEdges = (nodes: FlowNode[]) => {
-    let newEdges: FlowEdge[] = []
-    for (let i = 0; i < nodes.length - 1; i++) {
-      newEdges.push({
-        id: `${i}-${i + 1}`,
-        type: "add-item",
-        source: nodes[i].id,
-        target: nodes[i + 1].id,
-        data: nodes[i].data,
-      })
+    const xSpacing = 400
+    const ySpacing = 300
+
+    const newNodes: FlowNode[] = []
+    const newEdges: FlowEdge[] = []
+
+    // helper to get or create position
+    const ensurePosition = (id: string, fallback: { x: number; y: number }) => {
+      const existing = byId.get(id)
+      return existing?.position ?? fallback
     }
+
+    // Build linear chain of top-level steps first
+    let currentY = 0
+    blocks.forEach((block, idx) => {
+      const baseId = block.id
+      const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
+
+      const isBranchStep =
+        (block as any)?.stepId === AutomationActionStepId.BRANCH
+
+      if (!isBranchStep) {
+        newNodes.push({
+          id: baseId,
+          type: "step-node",
+          data: { testDataModal, block, isTopLevel: true },
+          position: pos,
+        })
+      }
+
+      if (idx > 0 && !isBranchStep) {
+        const prevId = blocks[idx - 1].id
+        newEdges.push({
+          id: `edge-${prevId}-${baseId}`,
+          type: "add-item",
+          source: prevId,
+          target: baseId,
+          data: { block: blocks[idx - 1] },
+        })
+      }
+
+      // Branch fan-out
+      if (isBranchStep) {
+        const branches: Branch[] = ((block as any)?.inputs?.branches ||
+          []) as Branch[]
+        const children: Record<string, AutomationStep[]> =
+          (block as any)?.inputs?.children || {}
+
+        const branchRowY = pos.y + ySpacing
+        const sourceForBranches = idx > 0 ? blocks[idx - 1].id : baseId
+        const sourceBlock = idx > 0 ? blocks[idx - 1] : block
+        branches.forEach((branch: Branch, bIdx: number) => {
+          const branchNodeId = `branch-${baseId}-${branch.id}`
+          const branchX = pos.x + (bIdx - (branches.length - 1) / 2) * xSpacing
+          const branchPos = ensurePosition(branchNodeId, {
+            x: branchX,
+            y: branchRowY,
+          })
+
+          newNodes.push({
+            id: branchNodeId,
+            type: "branch-node",
+            data: { block, branch, branchIdx: bIdx },
+            position: branchPos,
+          })
+
+          newEdges.push({
+            id: `edge-${sourceForBranches}-${branchNodeId}`,
+            type: "add-item",
+            source: sourceForBranches,
+            target: branchNodeId,
+            data: { block: sourceBlock },
+          })
+
+          // Children inside branch
+          const childSteps: AutomationStep[] = children?.[branch.id] || []
+          let lastNodeId = branchNodeId
+          let lastNodeBlock: any = {
+            branchNode: true,
+            pathTo: (blockRefs[baseId]?.pathTo || []).concat({
+              branchIdx: bIdx,
+              branchStepId: baseId,
+            }),
+          }
+
+          childSteps.forEach((child, cIdx) => {
+            const childId = child.id
+            const childPos = ensurePosition(childId, {
+              x: branchX,
+              y: branchRowY + (cIdx + 1) * ySpacing,
+            })
+            newNodes.push({
+              id: childId,
+              type: "step-node",
+              data: { testDataModal, block: child },
+              position: childPos,
+            })
+
+            newEdges.push({
+              id: `edge-${lastNodeId}-${childId}`,
+              type: "add-item",
+              source: lastNodeId,
+              target: childId,
+              data: { block: lastNodeBlock },
+            })
+
+            lastNodeId = childId
+            lastNodeBlock = child
+          })
+
+          // Terminate branch visually: add anchor node so we can show the add-item affordance after last child
+          const anchorId = `anchor-${branchNodeId}`
+          const anchorPos = ensurePosition(anchorId, {
+            x: branchX,
+            y: branchRowY + (childSteps.length + 1) * ySpacing,
+          })
+          newNodes.push({
+            id: anchorId,
+            type: "anchor-node",
+            data: {},
+            position: anchorPos,
+          })
+
+          newEdges.push({
+            id: `edge-${lastNodeId}-${anchorId}`,
+            type: "add-item",
+            source: lastNodeId,
+            target: anchorId,
+            data: { block: lastNodeBlock },
+          })
+        })
+        currentY = Math.max(currentY, branchRowY + ySpacing)
+      }
+    })
+
+    nodes.set(newNodes)
     edges.set(newEdges)
   }
 
@@ -373,7 +490,7 @@
 </div>
 
 <div class="main-flow">
-  <div class="root" bind:this={treeEle}>
+  <div class="root">
     <div class="wrapper">
       <SvelteFlow
         {nodes}
