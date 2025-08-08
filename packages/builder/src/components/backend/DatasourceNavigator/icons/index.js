@@ -15,6 +15,7 @@ import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
+import Redshift from "./Redshift.svelte"
 import Custom from "./Custom.svelte"
 import { integrations } from "@/stores/builder"
 import { get } from "svelte/store"
@@ -36,7 +37,7 @@ const ICONS = {
   GOOGLE_SHEETS: GoogleSheets,
   FIRESTORE: Firebase,
   REDIS: Redis,
-  REDSHIFT: Postgres,
+  REDSHIFT: Redshift,
   SNOWFLAKE: Snowflake,
   CUSTOM: Custom,
 }
