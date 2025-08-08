@@ -22,7 +22,7 @@ const SCHEMA: Integration = {
   docs: "https://docs.aws.amazon.com/redshift/",
   description:
     "Amazon Redshift is a fully managed, petabyte-scale data warehouse service in the cloud that makes it simple and cost-effective to analyze your data.",
-  friendlyName: "Amazon Redshift",
+  friendlyName: "Redshift",
   type: "Relational",
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
