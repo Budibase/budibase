@@ -138,6 +138,7 @@ export type LoopStepOutputs = {
   items: AutomationStepResult[]
   success: boolean
   iterations: number
+  status?: string
 }
 
 export type BranchStepInputs = {
@@ -245,17 +246,42 @@ export type ExtractFileDataStepInputs = {
   schema: Record<string, any>
 }
 
-export type ExtractFileDataStepOutputs =
-  | {
-      success: true
-      data: Record<string, any>
-      response?: string
-    }
-  | {
-      success: false
-      data?: Record<string, any>
-      response?: string
-    }
+export type ExtractFileDataStepOutputs = {
+  success: boolean
+  data: Record<string, any>
+  response?: string
+}
+
+export type LoopV2StepInputs = {
+  option: LoopStepType
+  binding: any
+  iterations?: number
+  failure?: string
+  children?: AutomationStep[]
+  resultOptions?: {
+    maxStoredIterations?: number
+    storeFullResults?: boolean
+    summarizeOnly?: boolean
+  }
+}
+
+export interface LoopSummary {
+  totalProcessed: number
+  successCount: number
+  failureCount: number
+  firstFailure?: { iteration: number; error: string }
+}
+
+export type LoopV2StepOutputs = {
+  success: boolean
+  iterations: number
+  status?: string
+  summary: LoopSummary
+  items?: Record<string, AutomationStepResult[]>
+  recentItems?: Record<string, AutomationStepResult[]>
+  nestedSummaries?: Record<string, LoopSummary[]>
+}
+
 export enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
   // will only work with api keys that have access to the GPT4 API
