@@ -161,6 +161,17 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     await deploymentStore.publishApp()
     await workspaceDeploymentStore.fetch()
   }
+
+  replaceDatasource(_id: string, workspaceApp: WorkspaceApp) {
+    const index = get(this.store).workspaceApps.findIndex(
+      x => x._id === workspaceApp._id
+    )
+
+    this.store.update(state => {
+      state.workspaceApps[index] = workspaceApp
+      return state
+    })
+  }
 }
 
 export const workspaceAppStore = new WorkspaceAppStore()
