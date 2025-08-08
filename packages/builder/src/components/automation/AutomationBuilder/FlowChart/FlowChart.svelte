@@ -214,7 +214,7 @@
       />
       <div class="toggle-active setting-spacing">
         <Toggle
-          on:change={() => handleToggleChange()}
+          on:change={handleToggleChange}
           disabled={!automation?.definition?.trigger || changingStatus}
           value={displayToggleValue}
         />

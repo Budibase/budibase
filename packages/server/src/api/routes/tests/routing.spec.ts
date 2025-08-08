@@ -19,6 +19,7 @@ describe("/routing", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.enableDefaultWorkspaceApp()
     basic = await config.createScreen(basicScreen(route))
     power = await config.createScreen(powerScreen(route))
     await config.publish()
