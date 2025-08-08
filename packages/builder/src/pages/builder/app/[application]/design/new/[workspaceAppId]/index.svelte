@@ -2,6 +2,7 @@
   import { onMount } from "svelte"
   import NewScreen from "../../_components/NewScreen/index.svelte"
   import { params } from "@roxi/routify"
+  import { workspaceAppStore } from "@/stores/builder"
 
   let newScreenModal: NewScreen
 
@@ -15,7 +16,8 @@
     bind:this={newScreenModal}
     inline
     submitOnClick
-    workspaceAppId={$params.workspaceAppId}
+    workspaceAppId={$params.workspaceAppId ||
+      $workspaceAppStore.workspaceApps[0]._id}
   />
 </div>
 

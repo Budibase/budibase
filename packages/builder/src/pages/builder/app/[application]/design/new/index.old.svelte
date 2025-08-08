@@ -4,7 +4,7 @@
   import { workspaceAppStore } from "@/stores/builder"
 
   let newScreenModal: NewScreen
-  let workspaceAppId =
+  $: workspaceAppId =
     $workspaceAppStore.selectedWorkspaceApp?._id ||
     $workspaceAppStore.workspaceApps[0]._id!
 
