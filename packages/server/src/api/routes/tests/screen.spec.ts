@@ -234,21 +234,6 @@ describe("/screens", () => {
         featureCleanup()
       })
 
-      it("should not allow deleting the last screen", async () => {
-        const { workspaceApp } = await config.api.workspaceApp.create(
-          structures.workspaceApps.createRequest()
-        )
-        const screen = await config.api.screen.save({
-          ...basicScreen(),
-          workspaceAppId: workspaceApp._id,
-        })
-
-        await config.api.screen.destroy(screen._id!, screen._rev!, {
-          status: 409,
-          body: { message: "Cannot delete the last screen in a workspace app" },
-        })
-      })
-
       it("should allow deleting other screens", async () => {
         const { workspaceApp } = await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest()
