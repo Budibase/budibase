@@ -13,6 +13,7 @@ export interface Datasource extends Document {
   config?: Record<string, any>
   plus?: boolean
   isSQL?: boolean
+  usesEnvironmentVariables?: boolean
   entities?: Record<string, Table>
 }
 
