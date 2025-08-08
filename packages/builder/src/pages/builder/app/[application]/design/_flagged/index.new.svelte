@@ -214,7 +214,9 @@
     <a
       class="app"
       class:favourite={app.favourite?._id}
-      href={`./design/${app.screens[0]?._id}`}
+      href={app.screens.length
+        ? `./design/${app.screens[0]._id}`
+        : `./design/new/${app._id}`}
       on:contextmenu={e => openContextMenu(e, app)}
       class:active={showHighlight && selectedWorkspaceApp === app}
     >

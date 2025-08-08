@@ -22,6 +22,8 @@
     : $sortedScreens
   $: filteredScreens = getFilteredScreens(allScreens, searchValue)
 
+  $: workspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id || ""
+
   const handleOpenSearch = async () => {
     screensContainer.scroll({ top: 0, behavior: "smooth" })
   }
@@ -75,7 +77,7 @@
   />
 </div>
 
-<NewScreenModal bind:this={newScreenModal} />
+<NewScreenModal bind:this={newScreenModal} {workspaceAppId} />
 
 <style>
   .screens {
