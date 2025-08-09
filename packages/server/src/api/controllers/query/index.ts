@@ -474,5 +474,5 @@ export async function destroy(ctx: UserCtx<void, DeleteQueryResponse>) {
   const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.body = { message: `Query deleted.` }
-  await events.query.deleted(datasource, query)
+  await events.query.deleted(datasource, query, context.getAppId()!)
 }

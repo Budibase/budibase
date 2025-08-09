@@ -149,7 +149,11 @@
 
   <Body size="S">
     The OAuth 2 authentication below uses the Client Credentials (machine to
-    machine) grant type.
+    machine) grant type. <Link
+      href="https://docs.budibase.com/docs/rest-oauth2"
+      target="_blank"
+      size="M">Learn more</Link
+    >
   </Body>
   <Divider noGrid noMargin />
   <Input
@@ -222,13 +226,6 @@
     bind:value={data.scope}
     error={errors.scope}
   />
-  <Body size="S"
-    >To learn how to configure OAuth2, our documentation <Link
-      href="https://docs.budibase.com/docs/rest-oauth2"
-      target="_blank"
-      size="M">our documentation.</Link
-    ></Body
-  >
 </ModalContent>
 
 <style>

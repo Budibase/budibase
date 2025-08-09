@@ -201,6 +201,16 @@ export enum Event {
   ACTION_AUTOMATION_STEP_EXECUTED = "action:automation_step:executed",
   ACTION_CRUD_EXECUTED = "action:crud:executed",
   ACTION_AI_AGENT_EXECUTED = "action:ai_agent:executed",
+
+  // WORKSPACE
+  WORKSPACE_CREATED = "workspace:created",
+  WORKSPACE_UPDATED = "workspace:updated",
+  WORKSPACE_DELETED = "workspace:deleted",
+
+  // WORKSPACE APP
+  WORKSPACE_APP_CREATED = "workspace_app:created",
+  WORKSPACE_APP_UPDATED = "workspace_app:updated",
+  WORKSPACE_APP_DELETED = "workspace_app:deleted",
 }
 
 export const UserGroupSyncEvents: Event[] = [
@@ -219,7 +229,20 @@ export const UserGroupSyncEvents: Event[] = [
   Event.USER_GROUP_PERMISSIONS_EDITED,
 ]
 
-export const AsyncEvents: Event[] = [...UserGroupSyncEvents]
+// Favourites
+export const WorkspaceResourceEvents: Event[] = [
+  Event.AUTOMATION_DELETED,
+  Event.WORKSPACE_APP_DELETED,
+  Event.DATASOURCE_DELETED,
+  Event.TABLE_DELETED,
+  Event.QUERY_DELETED,
+  Event.VIEW_DELETED,
+]
+
+export const AsyncEvents: Event[] = [
+  ...UserGroupSyncEvents,
+  ...WorkspaceResourceEvents,
+]
 
 // all events that are not audited have been added to this record as undefined, this means
 // that Typescript can protect us against new events being added and auditing of those
@@ -413,6 +436,16 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
 
   // ROW ACTIONS - NOT AUDITED
   [Event.ROW_ACTION_CREATED]: undefined,
+
+  // WORKSPACE
+  [Event.WORKSPACE_CREATED]: undefined,
+  [Event.WORKSPACE_DELETED]: undefined,
+  [Event.WORKSPACE_UPDATED]: undefined,
+
+  // WORKSPACE APP
+  [Event.WORKSPACE_APP_CREATED]: undefined,
+  [Event.WORKSPACE_APP_DELETED]: undefined,
+  [Event.WORKSPACE_APP_UPDATED]: undefined,
 }
 
 // properties added at the final stage of the event pipeline

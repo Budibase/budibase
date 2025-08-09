@@ -23,6 +23,8 @@ function toWorkspaceAppResponse(
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
     isDefault: workspaceApp.isDefault,
+    createdAt: workspaceApp.createdAt as string,
+    updatedAt: workspaceApp.updatedAt!,
     disabled: workspaceApp.disabled,
   }
 }

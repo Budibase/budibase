@@ -39,6 +39,7 @@ import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
 import { DeploymentEndpoints } from "./deploy"
+import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { RecaptchaEndpoints } from "./recaptcha"
 
 export enum HTTPMethod {
@@ -149,6 +150,7 @@ export type APIClient = BaseAPIClient &
     oauth2: OAuth2Endpoints
     navigation: NavigationEndpoints
     workspaceApp: WorkspaceAppEndpoints
+    workspace: WorkspaceFavouriteEndpoints
     deployment: DeploymentEndpoints
     recaptcha: RecaptchaEndpoints
   }

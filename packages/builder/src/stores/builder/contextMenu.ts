@@ -1,5 +1,5 @@
 import { MenuItem } from "@/types"
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 
 interface Position {
   x: number
@@ -11,6 +11,7 @@ interface ContextMenuState {
   items: MenuItem[]
   position: Position
   visible: boolean
+  onClose?: () => void
 }
 
 export const INITIAL_CONTEXT_MENU_STATE: ContextMenuState = {
@@ -23,11 +24,18 @@ export const INITIAL_CONTEXT_MENU_STATE: ContextMenuState = {
 export function createViewsStore() {
   const store = writable<ContextMenuState>({ ...INITIAL_CONTEXT_MENU_STATE })
 
-  const open = (id: string, items: MenuItem[], position: Position): void => {
-    store.set({ id, items, position, visible: true })
+  const open = (
+    id: string,
+    items: MenuItem[],
+    position: Position,
+    onClose?: () => void
+  ): void => {
+    store.set({ id, items, position, visible: true, onClose })
   }
 
   const close = (): void => {
+    const onClose = get(store).onClose
+    onClose?.()
     store.set({ ...INITIAL_CONTEXT_MENU_STATE })
   }
 

@@ -183,3 +183,17 @@ export const getWorkspaceAppParams = (
 ) => {
   return getDocParams(DocumentType.WORKSPACE_APP, workspaceAppId, otherProps)
 }
+
+/**
+ * Gets parameters for retrieving workspace favourites, this is a utility function for the getDocParams function.
+ */
+export const getWorkspaceFavouriteParams = (
+  workspaceFavouriteId?: string | null,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) => {
+  return getDocParams(
+    DocumentType.WORKSPACE_FAVOURITE,
+    workspaceFavouriteId,
+    otherProps
+  )
+}

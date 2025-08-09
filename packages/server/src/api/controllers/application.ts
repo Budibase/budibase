@@ -193,6 +193,7 @@ async function createDefaultWorkspaceApp(): Promise<string> {
       ...defaultAppNavigator(appMetadata.name),
       links: [],
     },
+    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS),
     isDefault: true,
   })
 
@@ -350,7 +351,7 @@ export async function fetchAppPackage(
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
     // disabled workspace apps should appear to not exist
-    if (!matchedWorkspaceApp || matchedWorkspaceApp.disabled) {
+    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isBuilder)) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
@@ -529,6 +530,21 @@ async function performAppCreate(
           version: latestMigrationId,
           skipHistory: true,
         })
+      }
+    }
+
+    if (
+      useTemplate &&
+      (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS))
+    ) {
+      const workspaceApps = await sdk.workspaceApps.fetch()
+      for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
+        await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+      }
+
+      const automations = await sdk.automations.fetch()
+      for (const automation of automations.filter(a => !a.disabled)) {
+        await sdk.automations.update({ ...automation, disabled: true })
       }
     }
 

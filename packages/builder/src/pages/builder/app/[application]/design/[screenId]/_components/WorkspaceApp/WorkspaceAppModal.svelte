@@ -10,6 +10,7 @@
   import type { WorkspaceApp } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
+  import { goto } from "@roxi/routify"
 
   export let workspaceApp: WorkspaceApp | null = null
 
@@ -99,9 +100,12 @@
 
     try {
       if (isNew) {
-        await workspaceAppStore.add(workspaceAppData)
-
+        const newScreen = await workspaceAppStore.add({
+          ...workspaceAppData,
+          disabled: true,
+        })
         notifications.success("App created successfully")
+        $goto(`./${newScreen._id}`)
       } else {
         await workspaceAppStore.edit({
           ...workspaceAppData,
@@ -139,10 +143,13 @@
 </script>
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
-  <ModalContent {title} {onConfirm}>
+  <ModalContent {title} {onConfirm} size="M">
     <Input
       label="App Name"
       on:enterkey={onEnterKey}
+      on:change={() => {
+        data.url = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
+      }}
       on:focus={() => {
         validationState.touched.name = true
         delete validationState.errors.name
@@ -150,6 +157,7 @@
       bind:value={data.name}
       error={validationState.errors.name}
     />
+
     <Input
       label="Base url"
       on:enterkey={onEnterKey}
