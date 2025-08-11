@@ -109,7 +109,7 @@ const allProviders: TestSetup[] = [
   },
   {
     name: "OpenAI API key with custom config",
-    setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-4o-mini" }),
+    setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
     mockLLMResponse: mockChatGPTResponse,
   },
   {
