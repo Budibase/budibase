@@ -172,7 +172,7 @@
     />
 
     <Input
-      label="Base url"
+      label="Url"
       on:enterkey={onEnterKey}
       on:input={() => {
         validationState.touched.url = true
