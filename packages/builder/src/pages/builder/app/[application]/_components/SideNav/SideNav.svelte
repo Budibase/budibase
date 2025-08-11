@@ -337,7 +337,7 @@
                   name: favourite.resourceId,
                   icon: undefined,
                 }}
-                <div class="link">
+                <div class="link" title={lookup?.name}>
                   <SideNavLink
                     icon={lookup?.icon}
                     text={lookup?.name}
