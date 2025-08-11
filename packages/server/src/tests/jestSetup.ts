@@ -12,11 +12,10 @@ if (!process.env.CI) {
   jest.setTimeout(30 * 1000)
 }
 
-// Disable real network connections and allow localhost only
-// In nock v14, we need to ensure clean state before disabling net connect
-nock.cleanAll()
-nock.restore()
-nock.activate()
+// In nock v14, we should not globally activate nock as it intercepts ALL connections
+// including database connections, causing EPIPE errors
+// See: https://github.com/nock/nock/issues/2839
+// Instead, we only configure which connections to block when nock IS activated
 nock.disableNetConnect()
 nock.enableNetConnect(host => {
   return (
@@ -30,12 +29,16 @@ testContainerUtils.setupEnv(env, coreEnv)
 
 // Ensure nock is properly cleaned after each test
 afterEach(() => {
-  if (!nock.isDone()) {
+  // Only clean if nock is active (has interceptors)
+  if (nock.isActive()) {
     nock.cleanAll()
   }
 })
 
 afterAll(async () => {
   timers.cleanup()
-  nock.restore()
+  // Restore nock to clean state
+  if (nock.isActive()) {
+    nock.restore()
+  }
 })
