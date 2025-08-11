@@ -1,18 +1,25 @@
 <script lang="ts">
-  import { workspaceAppStore } from "@/stores/builder"
+  import { appStore, workspaceAppStore } from "@/stores/builder"
   import {
+    Body,
+    Icon,
     Input,
     keepOpen,
     Modal,
     ModalContent,
     notifications,
   } from "@budibase/bbui"
-  import type { WorkspaceApp } from "@budibase/types"
+  import {
+    PublishResourceState,
+    type UIWorkspaceApp,
+    type WorkspaceApp,
+  } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
   import { goto } from "@roxi/routify"
+  import { buildLiveUrl } from "@/helpers/urls"
 
-  export let workspaceApp: WorkspaceApp | null = null
+  export let workspaceApp: UIWorkspaceApp | null = null
 
   let modal: Modal
   export const show = () => modal.show()
@@ -138,35 +145,69 @@
   }
 
   $: if (isNew && data?.name && !validationState.touched.url) {
-    data.url = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
+    data.url = `/${data.name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-zA-Z0-9- ]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")}`
   }
+
+  $: editingPublishedApp =
+    workspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
 </script>
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
-  <ModalContent {title} {onConfirm} size="M">
+  <ModalContent {title} {onConfirm} size="M" disabled={editingPublishedApp}>
     <Input
       label="App Name"
       on:enterkey={onEnterKey}
-      on:change={() => {
-        data.url = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
-      }}
-      on:focus={() => {
+      on:input={() => {
         validationState.touched.name = true
         delete validationState.errors.name
       }}
       bind:value={data.name}
       error={validationState.errors.name}
+      disabled={editingPublishedApp}
     />
 
     <Input
-      label="Base url"
+      label="Url"
       on:enterkey={onEnterKey}
-      on:focus={() => {
+      on:input={() => {
         validationState.touched.url = true
         delete validationState.errors.url
       }}
       bind:value={data.url}
       error={validationState.errors.url}
+      disabled={editingPublishedApp}
     />
+    <div class="live-url-display">
+      {buildLiveUrl($appStore, data.url, false)}
+    </div>
+
+    {#if editingPublishedApp}
+      <div class="edit-info">
+        <Icon size="M" name="info" />
+        <Body size="S">Unpublish your app to edit its name and URL</Body>
+      </div>
+    {/if}
   </ModalContent>
 </Modal>
+
+<style>
+  .live-url-display {
+    margin-top: calc(var(--spacing-l) * -1);
+    color: var(--spectrum-global-color-gray-600);
+    padding-top: 0;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .edit-info {
+    display: flex;
+    gap: var(--spacing-m);
+  }
+</style>
