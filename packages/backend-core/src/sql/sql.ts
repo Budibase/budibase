@@ -109,8 +109,8 @@ function wrap(value: string, quoteChar = '"'): string {
   return `${quoteChar}${escapeQuotes(value, quoteChar)}${quoteChar}`
 }
 
-function stringifyArray(value: any[], quoteStyle = '"'): string {
-  for (let i in value) {
+function stringifyArray(value: unknown[], quoteStyle = '"'): string {
+  for (const i in value) {
     if (typeof value[i] === "string") {
       value[i] = wrap(value[i], quoteStyle)
     }
@@ -407,6 +407,13 @@ class InternalBuilder {
       typeof input === "object"
     ) {
       return JSON.stringify(input)
+    }
+
+    if (
+      this.client === SqlClient.POSTGRES &&
+      schema.externalType?.toLowerCase() === "array"
+    ) {
+      return `{${input}}`
     }
 
     if (
