@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { workspaceAppStore } from "@/stores/builder"
+  import { appStore, workspaceAppStore } from "@/stores/builder"
   import {
     Input,
     keepOpen,
@@ -11,6 +11,7 @@
   import type { ZodType } from "zod"
   import { z } from "zod"
   import { goto } from "@roxi/routify"
+  import { buildLiveUrl } from "@/helpers/urls"
 
   export let workspaceApp: WorkspaceApp | null = null
 
@@ -168,5 +169,19 @@
       bind:value={data.url}
       error={validationState.errors.url}
     />
+    <div class="live-url-display">
+      {buildLiveUrl($appStore, data.url)}
+    </div>
   </ModalContent>
 </Modal>
+
+<style>
+  .live-url-display {
+    color: var(--spectrum-global-color-gray-600);
+
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
