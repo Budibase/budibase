@@ -148,7 +148,7 @@
     <Input
       label="App Name"
       on:enterkey={onEnterKey}
-      on:focus={() => {
+      on:input={() => {
         validationState.touched.name = true
         delete validationState.errors.name
       }}
@@ -159,7 +159,7 @@
     <Input
       label="Base url"
       on:enterkey={onEnterKey}
-      on:focus={() => {
+      on:input={() => {
         validationState.touched.url = true
         delete validationState.errors.url
       }}
