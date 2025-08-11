@@ -30,6 +30,8 @@ describe("/screens", () => {
 
   beforeAll(async () => {
     await config.init()
+    // Replace the regular app with an onboarding app to get sample data
+    await config.createAppWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 

@@ -1,10 +1,6 @@
 import { App } from "../../../documents"
 import stream from "node:stream"
 
-export interface ToggleBetaFeatureResponse {
-  message: string
-}
-
 export type ServeAppResponse = string
 
 interface BuilderPreview extends App {
