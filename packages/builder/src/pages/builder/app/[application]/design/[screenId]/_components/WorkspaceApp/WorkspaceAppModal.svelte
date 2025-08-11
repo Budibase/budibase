@@ -149,7 +149,7 @@
       label="App Name"
       on:enterkey={onEnterKey}
       on:change={() => {
-        data.url = `/${data.name.toLowerCase().replace(/\s+/g, "-")}`
+        data.url = `/${data.name.toLowerCase().replace(/^\/\//, "/").replace(/\s+/g, "-")}`
       }}
       on:focus={() => {
         validationState.touched.name = true
