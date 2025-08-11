@@ -191,9 +191,13 @@
     overflow: hidden;
   }
 
+  .binding-text :global(i) {
+    font-size: 1em;
+  }
+
   /* Expand arrow */
   .binding-arrow {
-    margin: 3px 6px 0 4px;
+    margin: 2px 6px 0 6px;
     flex: 0 0 10px;
     transition: transform 130ms ease-out;
   }
