@@ -12,6 +12,7 @@
   export let onChange
   export let span
   export let helpText = null
+  export let buttonText = "Add signature"
 
   let fieldState
   let fieldApi
@@ -99,7 +100,7 @@
           }
         }}
       >
-        Add signature
+        {buttonText ? buttonText : "Add signature"}
       </ActionButton>
     {:else}
       <div class="signature-field">
