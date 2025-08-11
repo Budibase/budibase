@@ -12,7 +12,10 @@
   export let rightText: string
   export let selected: "left" | "right" = "left"
 
-  const dispatch = createEventDispatcher<{}>()
+  const dispatch = createEventDispatcher<{
+    left: void
+    right: void
+  }>()
 </script>
 
 <div class="view-mode-toggle">
