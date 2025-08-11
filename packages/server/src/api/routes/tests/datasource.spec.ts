@@ -193,6 +193,7 @@ if (descriptions.length) {
           expect(ds).toEqual({
             config: expect.any(Object),
             plus: datasource.plus,
+            usesEnvironmentVariables: false,
             source: datasource.source,
             isSQL: true,
             type: "datasource_plus",
