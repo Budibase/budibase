@@ -15,7 +15,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="editable-icon">
+<div class="editable-icon" class:disabled>
   {#if !disabled}
     <div class="hover" on:click={modal.show}>
       <Icon
@@ -54,5 +54,8 @@
   }
   .editable-icon:hover .hover {
     display: block;
+  }
+  .disabled {
+    opacity: 0.5;
   }
 </style>
