@@ -1,19 +1,25 @@
 <script lang="ts">
   import { appStore, workspaceAppStore } from "@/stores/builder"
   import {
+    Body,
+    Icon,
     Input,
     keepOpen,
     Modal,
     ModalContent,
     notifications,
   } from "@budibase/bbui"
-  import type { WorkspaceApp } from "@budibase/types"
+  import {
+    PublishResourceState,
+    type UIWorkspaceApp,
+    type WorkspaceApp,
+  } from "@budibase/types"
   import type { ZodType } from "zod"
   import { z } from "zod"
   import { goto } from "@roxi/routify"
   import { buildLiveUrl } from "@/helpers/urls"
 
-  export let workspaceApp: WorkspaceApp | null = null
+  export let workspaceApp: UIWorkspaceApp | null = null
 
   let modal: Modal
   export const show = () => modal.show()
@@ -146,10 +152,13 @@
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")}`
   }
+
+  $: editingPublishedApp =
+    workspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
 </script>
 
 <Modal bind:this={modal} on:show={onShow} on:hide>
-  <ModalContent {title} {onConfirm} size="M">
+  <ModalContent {title} {onConfirm} size="M" disabled={editingPublishedApp}>
     <Input
       label="App Name"
       on:enterkey={onEnterKey}
@@ -159,6 +168,7 @@
       }}
       bind:value={data.name}
       error={validationState.errors.name}
+      disabled={editingPublishedApp}
     />
 
     <Input
@@ -170,10 +180,18 @@
       }}
       bind:value={data.url}
       error={validationState.errors.url}
+      disabled={editingPublishedApp}
     />
     <div class="live-url-display">
       {buildLiveUrl($appStore, data.url, false)}
     </div>
+
+    {#if editingPublishedApp}
+      <div class="edit-info">
+        <Icon size="M" name="info" />
+        <Body size="S">Unpublish your app to edit name and URL</Body>
+      </div>
+    {/if}
   </ModalContent>
 </Modal>
 
@@ -185,5 +203,10 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .edit-info {
+    display: flex;
+    gap: var(--spacing-m);
   }
 </style>
