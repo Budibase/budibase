@@ -97,6 +97,7 @@ export interface LLMConfigOptions {
   model: string
   apiKey?: string
   maxTokens?: number
+  max_completion_tokens?: number
   // Primarily here for Azure OpenAI, because each customer has their own endpoint
   baseUrl?: string
 }
