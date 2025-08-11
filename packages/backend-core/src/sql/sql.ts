@@ -890,6 +890,11 @@ class InternalBuilder {
               }
             }
             return q
+          } else if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
+            return q.whereRaw(
+              `?? && '{${values.map(value => value.substring(1, value.length - 1))}}'`,
+              [this.rawQuotedIdentifier(schema!.name)]
+            )
           }
           return q.whereIn(key, values)
         },
