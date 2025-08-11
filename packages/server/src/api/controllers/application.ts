@@ -531,6 +531,15 @@ async function performAppCreate(
       }
     }
 
+    if (
+      !(await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+      !addSampleData
+    ) {
+      if (!(await sdk.workspaceApps.fetch()).length) {
+        await createDefaultWorkspaceApp()
+      }
+    }
+
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
   })
