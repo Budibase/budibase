@@ -158,14 +158,15 @@ export async function deploymentProgress(
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
   if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
-    return (ctx.body = { automations: {}, workspaceApps: {} })
+    return (ctx.body = { automations: {}, workspaceApps: {}, tables: {} })
   }
 
-  const { automations, workspaceApps } = await sdk.deployment.status()
+  const { automations, workspaceApps, tables } = await sdk.deployment.status()
 
   ctx.body = {
     automations,
     workspaceApps,
+    tables,
   }
 }
 
@@ -238,13 +239,19 @@ export const publishApp = async function (
       deployment.appUrl = appDoc.url
       appDoc.appId = productionAppId
       appDoc.instance._id = productionAppId
-      const [automations, workspaceApps] = await Promise.all([
+      const [automations, workspaceApps, tables] = await Promise.all([
         sdk.automations.fetch(),
         sdk.workspaceApps.fetch(),
+        sdk.tables.getAllInternalTables(),
       ])
       const automationIds = automations.map(auto => auto._id!)
       const workspaceAppIds = workspaceApps.map(app => app._id!)
-      const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
+      const tableIds = tables.map(table => table._id!)
+      const fullMap = [
+        ...(automationIds ?? []),
+        ...(workspaceAppIds ?? []),
+        ...(tableIds ?? []),
+      ]
       // if resource publishing, need to restrict this list
       appDoc.resourcesPublishedAt = {
         ...prodAppDoc?.resourcesPublishedAt,

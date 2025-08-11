@@ -88,6 +88,8 @@
     contentLines,
     gridFocused,
     error,
+    definitionMissing,
+    dispatch,
   } = context
 
   // Keep config store up to date with props
@@ -118,6 +120,13 @@
     aiEnabled,
     canHideColumns,
   })
+
+  // missing definition, propagate this
+  $: if ($definitionMissing) {
+    dispatch("definitionMissing", {
+      datasource,
+    })
+  }
 
   // Derive min height and make available in context
   const minHeight = derived(rowHeight, $height => {

@@ -3,6 +3,7 @@
     viewsV2,
     rowActions,
     dataEnvironmentStore,
+    workspaceDeploymentStore,
     tables,
     datasources,
     dataAPI,
@@ -26,6 +27,8 @@
 
   let generateButton: any
 
+  $: tableId = $tables.selected?._id!
+  $: isDeployed = $workspaceDeploymentStore.tables[tableId]?.published
   $: view = $viewsV2.selected
   $: calculation = view?.type === ViewV2Type.CALCULATION
   $: id = view?.id!
@@ -82,6 +85,8 @@
       $licensing.budibaseAIEnabled}
     showAvatars={false}
     on:updatedatasource={handleGridViewUpdate}
+    on:definitionMissing={() =>
+      dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)}
     isCloud={$admin.cloud}
     buttonsCollapsed
   >
@@ -103,7 +108,9 @@
       {/if}
     </svelte:fragment>
     <svelte:fragment slot="controls-right">
-      <GridDevProdSwitcher visible={showDevProdSwitcher} />
+      {#if isDeployed}
+        <GridDevProdSwitcher visible={showDevProdSwitcher} />
+      {/if}
     </svelte:fragment>
     <GridCreateEditRowModal />
   </Grid>

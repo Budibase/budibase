@@ -8,6 +8,7 @@
     rowActions,
     roles,
     dataEnvironmentStore,
+    workspaceDeploymentStore,
     dataAPI,
   } from "@/stores/builder"
   import { themeStore, admin, licensing } from "@/stores/portal"
@@ -62,6 +63,7 @@
     return `${entry.name} (${entry.subtype})`
   })
   $: id = $tables.selected?._id!
+  $: isDeployed = $workspaceDeploymentStore.tables[id]?.published
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
   $: gridDatasource = {
@@ -166,6 +168,8 @@
       buttonsCollapsed
       canHideColumns={false}
       on:updatedatasource={handleGridTableUpdate}
+      on:definitionMissing={() =>
+        dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)}
     >
       <!-- Controls -->
       <svelte:fragment slot="controls">
@@ -191,7 +195,9 @@
         {/if}
       </svelte:fragment>
       <svelte:fragment slot="controls-right">
-        <GridDevProdSwitcher visible={showDevProdSwitcher} />
+        {#if isDeployed}
+          <GridDevProdSwitcher visible={showDevProdSwitcher} />
+        {/if}
       </svelte:fragment>
 
       <!-- Content for editing columns -->
