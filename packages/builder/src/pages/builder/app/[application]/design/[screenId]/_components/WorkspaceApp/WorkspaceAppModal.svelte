@@ -139,7 +139,12 @@
   }
 
   $: if (isNew && data?.name && !validationState.touched.url) {
-    data.url = `/${data.name.toLowerCase().replace(/^\/\//, "/").replace(/\s+/g, "-")}`
+    data.url = `/${data.name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-zA-Z0-9 ]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")}`
   }
 </script>
 
