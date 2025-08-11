@@ -475,11 +475,10 @@ async function performAppCreate(
       await uploadAppFiles(appId)
     }
 
-    await createDefaultWorkspaceApp()
-
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
       try {
+        await createDefaultWorkspaceApp()
         await addSampleDataDocs()
         await addSampleDataScreen()
 
@@ -502,6 +501,10 @@ async function performAppCreate(
           skipHistory: true,
         })
       }
+    }
+
+    if (!addSampleData && !(await sdk.workspaceApps.fetch()).length) {
+      await createDefaultWorkspaceApp()
     }
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
