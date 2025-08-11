@@ -256,10 +256,12 @@
               bind:value={filterOpt}
             />
           </div>
-          <DateRangePicker
-            value={dateRange}
-            on:change={e => (dateRange = e.detail)}
-          />
+          <div class="date-range-compact">
+            <DateRangePicker
+              value={dateRange}
+              on:change={e => (dateRange = e.detail)}
+            />
+          </div>
         </div>
         <div class="actions">
           {#if hasSelection}
@@ -354,6 +356,17 @@
     display: flex;
     gap: var(--spacing-xl);
     align-items: flex-end;
+  }
+  .date-range-compact :global(.date-range-picker) {
+    max-width: 280px;
+    flex: 0 0 280px;
+  }
+  .date-range-compact :global(.date-range-picker > *) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .date-range-compact :global(.date-range-picker .spectrum-InputGroup) {
+    width: 100%;
   }
   .search :global(.spectrum-InputGroup) {
     min-width: 100px;
