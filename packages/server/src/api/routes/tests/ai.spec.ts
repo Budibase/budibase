@@ -73,7 +73,7 @@ function customAIConfig(providerConfig: Partial<ProviderConfig>): SetupFn {
         provider: "OpenAI",
         name: "OpenAI",
         apiKey: "test-key",
-        defaultModel: "gpt-4o-mini",
+        defaultModel: "gpt-5-mini",
         active: true,
         isDefault: true,
         ...providerConfig,
