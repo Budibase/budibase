@@ -24,6 +24,13 @@ function addDebugInformation(messages: Message[]) {
       let toolDebugInfo = "\n\n**Tool Calls:**\n"
 
       for (const toolCall of message.tool_calls) {
+        if (toolCall.type !== "function" || !toolCall.function) {
+          console.warn(
+            `[OPENAI TOOL WARN] Unsupported tool call type: ${toolCall.type}`
+          )
+          continue
+        }
+
         let toolParams = "{}"
         try {
           // Try to parse and prettify the JSON arguments
