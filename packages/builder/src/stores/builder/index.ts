@@ -40,7 +40,7 @@ import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
-import { dataEnvironmentStore } from "./dataEnvironment"
+import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
@@ -89,6 +89,7 @@ export {
   workspaceDeploymentStore,
   recaptchaStore,
   dataEnvironmentStore,
+  dataAPI,
 }
 
 export const reset = () => {

@@ -6,12 +6,10 @@
     Body,
     Button,
   } from "@budibase/bbui"
-  import { dataEnvironmentStore } from "@/stores/builder"
+  import { dataAPI } from "@/stores/builder"
   import download from "downloadjs"
-  import { API, productionAPI } from "@/api"
   import { ROW_EXPORT_FORMATS } from "@/constants/backend"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
-  import { DataEnvironmentMode } from "@budibase/types"
 
   export let view
   export let sorting
@@ -19,10 +17,7 @@
   export let selectedRows
   export let formats
 
-  $: api =
-    $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
-      ? API
-      : productionAPI
+  $: api = $dataAPI
 
   const FORMATS = [
     {

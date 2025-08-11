@@ -2,19 +2,14 @@
   import { ActionButton, Button, Body, notifications } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import ExistingTableDataImport from "@/components/backend/TableNavigator/ExistingTableDataImport.svelte"
-  import { dataEnvironmentStore } from "@/stores/builder"
-  import { DataEnvironmentMode } from "@budibase/types"
+  import { dataAPI } from "@/stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { API, productionAPI } from "@/api"
 
   export let tableId
   export let tableType
   export let disabled
 
-  $: api =
-    $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
-      ? API
-      : productionAPI
+  $: api = $dataAPI
 
   const dispatch = createEventDispatcher()
 

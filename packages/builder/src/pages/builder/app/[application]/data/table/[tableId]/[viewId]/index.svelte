@@ -5,10 +5,10 @@
     dataEnvironmentStore,
     tables,
     datasources,
+    dataAPI,
   } from "@/stores/builder"
   import { admin, themeStore, licensing } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
-  import { API, productionAPI } from "@/api"
   import { notifications } from "@budibase/bbui"
   import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridFilterButton from "@/components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
@@ -38,10 +38,6 @@
   $: rowActions.refreshRowActions(id)
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
-  $: gridAPI =
-    $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
-      ? productionAPI
-      : API
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: underlyingTable = view?.tableId
@@ -76,7 +72,7 @@
 
 {#key $dataEnvironmentStore.mode}
   <Grid
-    API={gridAPI}
+    API={$dataAPI}
     {darkMode}
     {datasource}
     {buttons}

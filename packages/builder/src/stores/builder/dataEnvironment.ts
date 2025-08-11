@@ -1,5 +1,7 @@
 import { DataEnvironmentMode } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
+import { BudiStore, DerivedBudiStore } from "../BudiStore"
+import { derived, type Readable, type Writable } from "svelte/store"
+import { API, productionAPI } from "@/api"
 
 interface DataEnvironmentState {
   mode: DataEnvironmentMode
@@ -40,3 +42,25 @@ export class DataEnvironmentStore extends BudiStore<DataEnvironmentState> {
 }
 
 export const dataEnvironmentStore = new DataEnvironmentStore()
+
+class DataAPIStore extends DerivedBudiStore<
+  DataEnvironmentState,
+  typeof API
+> {
+  constructor() {
+    const makeDerivedStore = (
+      store: Writable<DataEnvironmentState>
+    ): Readable<typeof API> => {
+      return derived(
+        store,
+        $store => 
+          $store.mode === DataEnvironmentMode.PRODUCTION
+            ? productionAPI
+            : API
+      )
+    }
+    super(initialState, makeDerivedStore)
+  }
+}
+
+export const dataAPI = new DataAPIStore()

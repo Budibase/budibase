@@ -8,11 +8,11 @@
     rowActions,
     roles,
     dataEnvironmentStore,
+    dataAPI,
   } from "@/stores/builder"
   import { themeStore, admin, licensing } from "@/stores/portal"
   import { TableNames } from "@/constants"
   import { Grid } from "@budibase/frontend-core"
-  import { API, productionAPI } from "@/api"
   import GridAddColumnModal from "@/components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "@/components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -76,10 +76,6 @@
   $: darkMode = !currentTheme.includes("light")
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
-  $: gridAPI =
-    $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
-      ? productionAPI
-      : API
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: showDevProdSwitcher = !(
@@ -152,7 +148,7 @@
   <!-- re-render the grid if the data environment changes -->
   {#key $dataEnvironmentStore.mode}
     <Grid
-      API={gridAPI}
+      API={$dataAPI}
       {darkMode}
       datasource={gridDatasource}
       canAddRows={!isUsersTable}
