@@ -14,9 +14,9 @@ export const selectedAppUrls = derived(
         ? selectedWorkspaceApp.url
         : ""
 
-    const previewUrl = buildPreviewUrl($appStore, workspacePrefix, route)
+    const previewUrl = buildPreviewUrl($appStore, workspacePrefix, route, true)
 
-    const liveUrl = buildLiveUrl($appStore, workspacePrefix)
+    const liveUrl = buildLiveUrl($appStore, workspacePrefix, true)
     return { previewUrl, liveUrl }
   }
 )

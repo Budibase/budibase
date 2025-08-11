@@ -1,4 +1,12 @@
-function buildUrl({ paths, route }: { paths: string[]; route: string }) {
+function buildUrl({
+  paths,
+  route,
+  fullUrl,
+}: {
+  paths: string[]
+  route: string
+  fullUrl: boolean
+}) {
   const { host, protocol } = window.location
 
   const trimSlashes = (value: string) =>
@@ -7,7 +15,13 @@ function buildUrl({ paths, route }: { paths: string[]; route: string }) {
     .map(trimSlashes)
     .filter(x => x)
     .join("/")
-  let url = `${protocol}//${host}/${parsedPaths}`
+
+  let url = ""
+  if (fullUrl) {
+    url += `${protocol}//${host}`
+  }
+
+  url += `/${parsedPaths}`
 
   route = trimSlashes(route)
   if (route) {
@@ -19,11 +33,13 @@ function buildUrl({ paths, route }: { paths: string[]; route: string }) {
 export function buildPreviewUrl(
   { appId }: { appId: string },
   workspaceAppUrl: string,
-  route: string
+  route: string,
+  fullUrl: boolean
 ) {
   const previewUrl = buildUrl({
     paths: [appId, workspaceAppUrl],
     route,
+    fullUrl,
   })
 
   return previewUrl
@@ -31,11 +47,13 @@ export function buildPreviewUrl(
 
 export function buildLiveUrl(
   { url }: { url: string },
-  workspaceAppUrl: string
+  workspaceAppUrl: string,
+  fullUrl: boolean
 ) {
   const liveUrl = buildUrl({
     paths: [`/app${url}`, workspaceAppUrl],
     route: "", // Ignore the route for live urls
+    fullUrl,
   })
 
   return liveUrl

@@ -172,7 +172,7 @@
       error={validationState.errors.url}
     />
     <div class="live-url-display">
-      {buildLiveUrl($appStore, data.url)}
+      {buildLiveUrl($appStore, data.url, false)}
     </div>
   </ModalContent>
 </Modal>
