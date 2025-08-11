@@ -463,6 +463,9 @@
     display: none;
     width: 18px;
   }
+  .clear-icon {
+    z-index: 99;
+  }
   .header-cell.searchable:not(.open):hover .search-icon,
   .header-cell.searchable.searching .search-icon {
     display: block;
