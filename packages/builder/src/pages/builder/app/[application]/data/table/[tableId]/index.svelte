@@ -189,6 +189,9 @@
             <GridAutomationsButton on:generate={() => generateButton?.show()} />
             <GridGenerateButton bind:this={generateButton} />
           {/if}
+        {:else if !isUsersTable}
+          <GridImportButton />
+          <GridExportButton />
         {/if}
       </svelte:fragment>
       <svelte:fragment slot="controls-right">

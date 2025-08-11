@@ -2,12 +2,19 @@
   import { ActionButton, Button, Body, notifications } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import ExistingTableDataImport from "@/components/backend/TableNavigator/ExistingTableDataImport.svelte"
+  import { dataEnvironmentStore } from "@/stores/builder"
+  import { DataEnvironmentMode } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
-  import { API } from "@/api"
+  import { API, productionAPI } from "@/api"
 
   export let tableId
   export let tableType
   export let disabled
+
+  $: api =
+    $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
+      ? API
+      : productionAPI
 
   const dispatch = createEventDispatcher()
 
@@ -30,7 +37,7 @@
   const importData = async () => {
     try {
       loading = true
-      await API.importTableData(tableId, rows, identifierFields)
+      await api.importTableData(tableId, rows, identifierFields)
       notifications.success("Rows successfully imported")
       popover.hide()
     } catch (error) {

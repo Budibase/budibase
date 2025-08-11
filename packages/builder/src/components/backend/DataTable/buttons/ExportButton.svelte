@@ -6,16 +6,23 @@
     Body,
     Button,
   } from "@budibase/bbui"
+  import { dataEnvironmentStore } from "@/stores/builder"
   import download from "downloadjs"
-  import { API } from "@/api"
+  import { API, productionAPI } from "@/api"
   import { ROW_EXPORT_FORMATS } from "@/constants/backend"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { DataEnvironmentMode } from "@budibase/types"
 
   export let view
   export let sorting
   export let disabled = false
   export let selectedRows
   export let formats
+
+  $: api =
+    $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
+      ? API
+      : productionAPI
 
   const FORMATS = [
     {
@@ -56,7 +63,7 @@
   }
 
   const exportAllData = async () => {
-    return await API.exportView(view, exportFormat)
+    return await api.exportView(view, exportFormat)
   }
 
   const exportFilteredData = async () => {
@@ -68,7 +75,7 @@
       payload.sort = sorting.sortColumn
       payload.sortOrder = sorting.sortOrder
     }
-    return await API.exportRows(view, exportFormat, payload)
+    return await api.exportRows(view, exportFormat, payload)
   }
 
   const exportData = async () => {
