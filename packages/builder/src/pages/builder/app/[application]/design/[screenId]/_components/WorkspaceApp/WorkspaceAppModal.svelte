@@ -189,7 +189,7 @@
     {#if editingPublishedApp}
       <div class="edit-info">
         <Icon size="M" name="info" />
-        <Body size="S">Unpublish your app to edit name and URL</Body>
+        <Body size="S">Unpublish your app to edit its name and URL</Body>
       </div>
     {/if}
   </ModalContent>
@@ -197,8 +197,9 @@
 
 <style>
   .live-url-display {
+    margin-top: calc(var(--spacing-l) * -1);
     color: var(--spectrum-global-color-gray-600);
-
+    padding-top: 0;
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
