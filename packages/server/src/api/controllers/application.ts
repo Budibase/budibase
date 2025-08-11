@@ -503,11 +503,10 @@ async function performAppCreate(
       await uploadAppFiles(appId)
     }
 
-    await createDefaultWorkspaceApp()
-
     // Add sample datasource and example screen for non-templates/non-imports
     if (addSampleData) {
       try {
+        await createDefaultWorkspaceApp()
         await addSampleDataDocs()
         await addSampleDataScreen()
 
