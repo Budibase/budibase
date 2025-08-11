@@ -6,8 +6,11 @@
   export let size: "M" | "L" | "XL" = "M"
   export let color: string
   export let disabled: boolean = false
+  export let defaultValue = "squares-four"
 
   let modal: Modal
+
+  $: icon = name || defaultValue
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -22,10 +25,10 @@
       />
     </div>
     <div class="normal">
-      <Icon name={name || "squares-four"} {size} {color} />
+      <Icon name={icon} {size} {color} />
     </div>
   {:else}
-    <Icon {name} {size} {color} />
+    <Icon name={icon} {size} {color} />
   {/if}
 </div>
 
