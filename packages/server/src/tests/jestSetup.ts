@@ -23,11 +23,19 @@ testContainerUtils.setupEnv(env, coreEnv)
 // See: https://github.com/nock/nock/issues/2839
 // Instead, we only configure which connections to block when nock IS activated
 nock.disableNetConnect()
+// Allow localhost and Docker Engine (unix socket) traffic used by testcontainers
 nock.enableNetConnect(host => {
+  // In some environments (unix socket requests) Nock passes a string like
+  // "unix:///var/run/docker.sock". Permit these so testcontainers can talk
+  // to the local Docker daemon.
+  if (!host) return true
+  const h = host.toLowerCase()
   return (
-    host.includes("localhost") ||
-    host.includes("127.0.0.1") ||
-    host.includes("::1")
+    h.includes("localhost") ||
+    h.includes("127.0.0.1") ||
+    h.includes("::1") ||
+    h.startsWith("unix://") ||
+    h.includes("/var/run/docker.sock")
   )
 })
 
