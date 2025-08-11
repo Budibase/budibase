@@ -24,6 +24,9 @@
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
+  $: toggleValue =
+    selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
+
   const previewApp = () => {
     previewStore.showPreview(true)
   }
@@ -109,8 +112,7 @@
             <Toggle
               noPadding
               on:change={handleToggleChange}
-              value={selectedWorkspaceApp.publishStatus.state ===
-                PublishResourceState.PUBLISHED}
+              value={toggleValue}
               disabled={changingStatus}
             />
           </div>
