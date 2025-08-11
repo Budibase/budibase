@@ -12,6 +12,10 @@ if (!process.env.CI) {
   jest.setTimeout(30 * 1000)
 }
 
+// In nock v14, we should not globally activate nock as it intercepts ALL connections
+// including database connections, causing EPIPE errors
+// See: https://github.com/nock/nock/issues/2839
+// Instead, we only configure which connections to block when nock IS activated
 nock.disableNetConnect()
 nock.enableNetConnect(host => {
   return (
@@ -23,6 +27,18 @@ nock.enableNetConnect(host => {
 
 testContainerUtils.setupEnv(env, coreEnv)
 
+// Ensure nock is properly cleaned after each test
+afterEach(() => {
+  // Only clean if nock is active (has interceptors)
+  if (nock.isActive()) {
+    nock.cleanAll()
+  }
+})
+
 afterAll(async () => {
   timers.cleanup()
+  // Restore nock to clean state
+  if (nock.isActive()) {
+    nock.restore()
+  }
 })
