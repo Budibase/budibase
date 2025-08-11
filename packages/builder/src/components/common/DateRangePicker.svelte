@@ -67,10 +67,6 @@
     align-items: flex-end;
   }
 
-  .date-range-picker :global(.spectrum-InputGroup) {
-    max-width: 140px;
-  }
-
   /* Overlap date pickers to remove double border, but put the focused one on top */
   .date-range-picker :global(.spectrum-InputGroup.is-focused) {
     z-index: 1;
