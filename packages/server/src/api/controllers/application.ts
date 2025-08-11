@@ -532,7 +532,11 @@ async function performAppCreate(
       }
     }
 
-    if (!addSampleData && !(await sdk.workspaceApps.fetch()).length) {
+    if (
+      !addSampleData &&
+      !(await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+      !(await sdk.workspaceApps.fetch()).length
+    ) {
       await createDefaultWorkspaceApp()
     }
 
