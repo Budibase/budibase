@@ -13,11 +13,3 @@ process.env.MOCK_REDIS = "1"
 process.env.BUDIBASE_VERSION = "0.0.0+jest"
 process.env.COUCH_DB_PASSWORD = "budibase"
 process.env.COUCH_DB_USER = "budibase"
-
-// Ensure outbound HTTP(S) calls in tests are not routed via proxies (which can break nock)
-process.env.HTTP_PROXY = ""
-process.env.http_proxy = ""
-process.env.HTTPS_PROXY = ""
-process.env.https_proxy = ""
-process.env.NO_PROXY = "*"
-process.env.no_proxy = "*"
