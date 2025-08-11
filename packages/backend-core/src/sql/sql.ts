@@ -175,6 +175,12 @@ class InternalBuilder {
         field?.type === FieldType.OPTIONS
       )
     },
+    POSTGRES_ARRAY: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.POSTGRES &&
+        field?.externalType?.toLowerCase() === "array"
+      )
+    },
     MSSQL_DATES: (field: FieldSchema | undefined) => {
       return (
         this.client === SqlClient.MS_SQL &&
@@ -231,11 +237,6 @@ class InternalBuilder {
       key = this.splitIdentifier(key)
     }
     return key.map(part => this.quote(part)).join(".")
-  }
-
-  private quotedValue(value: string): string {
-    const formatter = this.knexClient.formatter(this.knexClient.queryBuilder())
-    return formatter.wrap(value, false)
   }
 
   private castIntToString(identifier: string | Knex.Raw): Knex.Raw {
@@ -409,10 +410,7 @@ class InternalBuilder {
       return JSON.stringify(input)
     }
 
-    if (
-      this.client === SqlClient.POSTGRES &&
-      schema.externalType?.toLowerCase() === "array"
-    ) {
+    if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
       return `{${input}}`
     }
 
@@ -752,6 +750,12 @@ class InternalBuilder {
           `%${value.toLowerCase()}%`,
         ])
       }
+      const schema = this.getFieldSchema(key)
+      if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
+        return q.whereRaw(`?? && '${value}'`, [
+          this.rawQuotedIdentifier(schema!.name),
+        ])
+      }
       return q.whereILike(
         // @ts-expect-error knex types are wrong, raw is fine here
         this.rawQuotedIdentifier(key),
@@ -919,6 +923,10 @@ class InternalBuilder {
           if (this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema)) {
             return q.whereRaw(`??::text ilike '${value}%'`, [
               this.knex.raw(this.quote(schema!.name)),
+            ])
+          } else if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
+            return q.whereRaw(`?? @> '${value}'`, [
+              this.rawQuotedIdentifier(schema!.name),
             ])
           } else {
             return q.whereILike(key, `${value}%`)
