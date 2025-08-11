@@ -3,6 +3,11 @@ import * as matchers from "jest-extended"
 import { env as coreEnv, timers } from "@budibase/backend-core"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import nock from "nock"
+import nodeFetch, {
+  Headers as NFHeaders,
+  Request as NFRequest,
+  Response as NFResponse,
+} from "node-fetch"
 
 expect.extend(matchers)
 if (!process.env.CI) {
@@ -11,6 +16,19 @@ if (!process.env.CI) {
 } else {
   jest.setTimeout(30 * 1000)
 }
+testContainerUtils.setupEnv(env, coreEnv)
+
+// Force a consistent fetch implementation for tests.
+// This avoids CI differences (Node's undici fetch) and ensures Nock interception works.
+// Also helps avoid conflicts like https://github.com/nock/nock/issues/2839
+// @ts-ignore
+global.fetch = nodeFetch as any
+// @ts-ignore
+global.Headers = NFHeaders as any
+// @ts-ignore
+global.Request = NFRequest as any
+// @ts-ignore
+global.Response = NFResponse as any
 
 // In nock v14, we should not globally activate nock as it intercepts ALL connections
 // including database connections, causing EPIPE errors
@@ -24,8 +42,6 @@ nock.enableNetConnect(host => {
     host.includes("::1")
   )
 })
-
-testContainerUtils.setupEnv(env, coreEnv)
 
 // Ensure nock is properly cleaned after each test
 afterEach(() => {
