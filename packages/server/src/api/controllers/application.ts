@@ -32,6 +32,7 @@ import {
   users,
   utils,
   configs,
+  features,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -70,6 +71,7 @@ import {
   UnpublishAppResponse,
   ErrorCode,
   FetchPublishedAppsResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
