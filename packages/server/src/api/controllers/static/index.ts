@@ -221,15 +221,14 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     appHbsPath = join(__dirname, "templates", "app.hbs")
   }
 
-  let db
   try {
-    db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get<any>(DocumentType.APP_METADATA)
+    context.getAppDB({ skip_setup: true })
+    const appInfo = await sdk.applications.metadata.get()
     const hideDevTools = !!ctx.params.appUrl
-    const sideNav = appInfo.navigation.navigation === "Left"
+    const sideNav = appInfo.navigation?.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo?.theme)
+    const themeVariables = getThemeVariables(appInfo.theme)
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
     const manifestUrl = hasPWA ? `/api/apps/${appId}/manifest.json` : ""
     const addAppScripts =
@@ -279,7 +278,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
       let extraHead = ""
       const pwaEnabled = await pro.features.isPWAEnabled()
-      if (hasPWA && pwaEnabled) {
+      if (hasPWA && appInfo.pwa && pwaEnabled) {
         extraHead = `<link rel="manifest" href="${manifestUrl}">`
         extraHead += `<meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content=${
