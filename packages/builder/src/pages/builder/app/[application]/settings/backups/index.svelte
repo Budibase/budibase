@@ -102,7 +102,7 @@
     })
   }
 
-  function selectNone() {
+  function deselectAll() {
     selectedRows = []
   }
 
@@ -120,7 +120,7 @@
         notifications.success(response.message)
       }
 
-      selectNone()
+      deselectAll()
       await fetchBackups(filterOpt, page)
     } catch (err) {
       notifications.error("Unable to delete selected backups")
@@ -150,7 +150,7 @@
     backupData = flattenBackups(response.data)
 
     // Clear selections when fetching new data
-    selectNone()
+    deselectAll()
   }
 
   async function createManualBackup() {
@@ -266,11 +266,7 @@
         <div class="actions">
           {#if hasSelection}
             <div class="selection-controls">
-              <Button
-                warning
-                on:click={bulkDeleteDialog.show}
-                disabled={!hasSelection}
-              >
+              <Button warning on:click={bulkDeleteDialog.show}>
                 Delete selected ({selectedRows.length})
               </Button>
             </div>
