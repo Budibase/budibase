@@ -21,9 +21,9 @@ export interface paths {
     /** This endpoint is only available on a business or enterprise license. */
     post: operations["workspaceImport"];
   };
-  "/applications/{appId}/export": {
+  "/workspaces/{workspaceId}/export": {
     /** This endpoint is only available on a business or enterprise license. */
-    post: operations["appExport"];
+    post: operations["workspaceExport"];
   };
   "/applications/{appId}": {
     get: operations["appGetById"];
@@ -118,11 +118,42 @@ export interface paths {
 
 export interface components {
   schemas: {
+    app: {
+      /** @description The name of the app. */
+      name: string;
+      /** @description The URL by which the app is accessed, this must be URL encoded. */
+      url?: string;
+    };
     workspace: {
       /** @description The name of the app. */
       name: string;
       /** @description The URL by which the app is accessed, this must be URL encoded. */
       url?: string;
+    };
+    appOutput: {
+      data: {
+        /** @description The name of the app. */
+        name: string;
+        /** @description The URL by which the app is accessed, this must be URL encoded. */
+        url: string;
+        /** @description The ID of the app. */
+        _id: string;
+        /**
+         * @description The status of the app, stating it if is the development or published version.
+         * @enum {string}
+         */
+        status: "development" | "published";
+        /** @description States when the app was created, will be constant. Stored in ISO format. */
+        createdAt: string;
+        /** @description States the last time the app was updated - stored in ISO format. */
+        updatedAt: string;
+        /** @description States the version of the Budibase client this app is currently based on. */
+        version: string;
+        /** @description In a multi-tenant environment this will state the tenant this app is within. */
+        tenantId?: string;
+        /** @description The user this app is currently being built by. */
+        lockedBy?: { [key: string]: unknown };
+      };
     };
     workspaceOutput: {
       data: {
@@ -148,6 +179,31 @@ export interface components {
         /** @description The user this app is currently being built by. */
         lockedBy?: { [key: string]: unknown };
       };
+    };
+    appSearch: {
+      data: {
+        /** @description The name of the app. */
+        name: string;
+        /** @description The URL by which the app is accessed, this must be URL encoded. */
+        url: string;
+        /** @description The ID of the app. */
+        _id: string;
+        /**
+         * @description The status of the app, stating it if is the development or published version.
+         * @enum {string}
+         */
+        status: "development" | "published";
+        /** @description States when the app was created, will be constant. Stored in ISO format. */
+        createdAt: string;
+        /** @description States the last time the app was updated - stored in ISO format. */
+        updatedAt: string;
+        /** @description States the version of the Budibase client this app is currently based on. */
+        version: string;
+        /** @description In a multi-tenant environment this will state the tenant this app is within. */
+        tenantId?: string;
+        /** @description The user this app is currently being built by. */
+        lockedBy?: { [key: string]: unknown };
+      }[];
     };
     workspaceSearch: {
       data: {
@@ -188,6 +244,12 @@ export interface components {
       };
     };
     appExport: {
+      /** @description An optional password used to encrypt the export. */
+      encryptPassword: string;
+      /** @description Set whether the internal table rows should be excluded from the export. */
+      excludeRows: boolean;
+    };
+    workspaceExport: {
       /** @description An optional password used to encrypt the export. */
       encryptPassword: string;
       /** @description Set whether the internal table rows should be excluded from the export. */
@@ -1456,15 +1518,15 @@ export interface operations {
     };
   };
   /** This endpoint is only available on a business or enterprise license. */
-  appExport: {
+  workspaceExport: {
     parameters: {
       path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
       };
     };
     responses: {
-      /** A gzip tarball containing the app export, encrypted if password provided. */
+      /** A gzip tarball containing the workspace export, encrypted if password provided. */
       200: {
         content: {
           "application/gzip": string;
@@ -1473,7 +1535,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["appExport"];
+        "application/json": components["schemas"]["workspaceExport"];
       };
     };
   };

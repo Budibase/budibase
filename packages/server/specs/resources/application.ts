@@ -102,6 +102,28 @@ const deploymentOutputSchema = object({
   },
 })
 
+const appOutput = object({
+  data: applicationOutputSchema,
+})
+const appSearch = object({
+  data: {
+    type: "array",
+    items: applicationOutputSchema,
+  },
+})
+
+const appExport = object({
+  encryptPassword: {
+    description: "An optional password used to encrypt the export.",
+    type: "string",
+  },
+  excludeRows: {
+    description:
+      "Set whether the internal table rows should be excluded from the export.",
+    type: "boolean",
+  },
+})
+
 export default new Resource()
   .setExamples({
     application: {
@@ -121,28 +143,17 @@ export default new Resource()
     },
   })
   .setSchemas({
+    app: applicationSchema,
     workspace: applicationSchema,
-    workspaceOutput: object({
-      data: applicationOutputSchema,
-    }),
-    workspaceSearch: object({
-      data: {
-        type: "array",
-        items: applicationOutputSchema,
-      },
-    }),
+    appOutput,
+    workspaceOutput: appOutput,
+    appSearch,
+    workspaceSearch: appSearch,
+
     deploymentOutput: object({
       data: deploymentOutputSchema,
     }),
-    appExport: object({
-      encryptPassword: {
-        description: "An optional password used to encrypt the export.",
-        type: "string",
-      },
-      excludeRows: {
-        description:
-          "Set whether the internal table rows should be excluded from the export.",
-        type: "boolean",
-      },
-    }),
+
+    appExport,
+    workspaceExport: appExport,
   })

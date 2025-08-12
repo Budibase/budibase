@@ -173,23 +173,23 @@ write.push(
 
 /**
  * @openapi
- * /applications/{appId}/export:
+ * /workspaces/{workspaceId}/export:
  *   post:
- *     operationId: appExport
- *     summary: Export an app 🔒
+ *     operationId: workspaceExport
+ *     summary: Export a workspace 🔒
  *     description: This endpoint is only available on a business or enterprise license.
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/appExport'
+ *             $ref: '#/components/schemas/workspaceExport'
  *     responses:
  *       200:
- *         description: A gzip tarball containing the app export, encrypted if password provided.
+ *         description: A gzip tarball containing the workspace export, encrypted if password provided.
  *         content:
  *           application/gzip:
  *             schema:

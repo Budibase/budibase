@@ -533,6 +533,17 @@ components:
       description: Your individual API key, this will provide access based on the
         configured RBAC settings of your user.
   schemas:
+    app:
+      type: object
+      properties:
+        name:
+          description: The name of the app.
+          type: string
+        url:
+          description: The URL by which the app is accessed, this must be URL encoded.
+          type: string
+      required:
+        - name
     workspace:
       type: object
       properties:
@@ -544,6 +555,56 @@ components:
           type: string
       required:
         - name
+    appOutput:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            name:
+              description: The name of the app.
+              type: string
+            url:
+              description: The URL by which the app is accessed, this must be URL encoded.
+              type: string
+            _id:
+              description: The ID of the app.
+              type: string
+            status:
+              description: The status of the app, stating it if is the development or
+                published version.
+              type: string
+              enum:
+                - development
+                - published
+            createdAt:
+              description: States when the app was created, will be constant. Stored in ISO
+                format.
+              type: string
+            updatedAt:
+              description: States the last time the app was updated - stored in ISO format.
+              type: string
+            version:
+              description: States the version of the Budibase client this app is currently
+                based on.
+              type: string
+            tenantId:
+              description: In a multi-tenant environment this will state the tenant this app
+                is within.
+              type: string
+            lockedBy:
+              description: The user this app is currently being built by.
+              type: object
+          required:
+            - _id
+            - name
+            - url
+            - status
+            - createdAt
+            - updatedAt
+            - version
+      required:
+        - data
     workspaceOutput:
       type: object
       properties:
@@ -592,6 +653,58 @@ components:
             - createdAt
             - updatedAt
             - version
+      required:
+        - data
+    appSearch:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                description: The name of the app.
+                type: string
+              url:
+                description: The URL by which the app is accessed, this must be URL encoded.
+                type: string
+              _id:
+                description: The ID of the app.
+                type: string
+              status:
+                description: The status of the app, stating it if is the development or
+                  published version.
+                type: string
+                enum:
+                  - development
+                  - published
+              createdAt:
+                description: States when the app was created, will be constant. Stored in ISO
+                  format.
+                type: string
+              updatedAt:
+                description: States the last time the app was updated - stored in ISO format.
+                type: string
+              version:
+                description: States the version of the Budibase client this app is currently
+                  based on.
+                type: string
+              tenantId:
+                description: In a multi-tenant environment this will state the tenant this app
+                  is within.
+                type: string
+              lockedBy:
+                description: The user this app is currently being built by.
+                type: object
+            required:
+              - _id
+              - name
+              - url
+              - status
+              - createdAt
+              - updatedAt
+              - version
       required:
         - data
     workspaceSearch:
@@ -671,6 +784,19 @@ components:
       required:
         - data
     appExport:
+      type: object
+      properties:
+        encryptPassword:
+          description: An optional password used to encrypt the export.
+          type: string
+        excludeRows:
+          description: Set whether the internal table rows should be excluded from the
+            export.
+          type: boolean
+      required:
+        - encryptPassword
+        - excludeRows
+    workspaceExport:
       type: object
       properties:
         encryptPassword:
@@ -2609,24 +2735,24 @@ paths:
       responses:
         "204":
           description: Workspace has been updated.
-  "/applications/{appId}/export":
+  "/workspaces/{workspaceId}/export":
     post:
-      operationId: appExport
-      summary: Export an app 🔒
+      operationId: workspaceExport
+      summary: Export a workspace 🔒
       description: This endpoint is only available on a business or enterprise license.
       tags:
-        - applications
+        - workspaces
       parameters:
-        - $ref: "#/components/parameters/appIdUrl"
+        - $ref: "#/components/parameters/workspaceId"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/appExport"
+              $ref: "#/components/schemas/workspaceExport"
       responses:
         "200":
-          description: A gzip tarball containing the app export, encrypted if password
-            provided.
+          description: A gzip tarball containing the workspace export, encrypted if
+            password provided.
           content:
             application/gzip:
               schema:
