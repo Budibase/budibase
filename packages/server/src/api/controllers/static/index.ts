@@ -236,6 +236,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       false
 
     if (!env.isJest()) {
+      const [workspaceApp] = await sdk.workspaceApps.getMatchedWorkspaceApp(
+        ctx.url
+      )
+
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
       /*
        * Server rendering in svelte sadly does not support type checking, the .render function
@@ -245,7 +249,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        */
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {
-        title: branding?.platformTitle || `${appInfo.name}`,
+        title:
+          branding?.platformTitle || workspaceApp?.name || `${appInfo.name}`,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
         sideNav,
