@@ -12,7 +12,14 @@ if (!process.env.CI) {
   jest.setTimeout(30 * 1000)
 }
 
-nock.enableNetConnect()
+nock.disableNetConnect()
+nock.enableNetConnect(host => {
+  return (
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.includes("::1")
+  )
+})
 
 testContainerUtils.setupEnv(env, coreEnv)
 

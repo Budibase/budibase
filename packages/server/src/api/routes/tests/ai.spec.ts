@@ -514,6 +514,9 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
+      // Ensure MockAgent is installed for OpenAI interceptors
+      const { installHttpMocking } = require("../../../tests/jestEnv")
+      installHttpMocking()
     })
 
     const mockAIGenerationStructure = (
@@ -688,7 +691,11 @@ describe("BudibaseAI", () => {
       }
       mockAIColumnGeneration(generationStructure, aiColumnGeneration)
 
-      nock("https://photourl.com").get("/any.png").reply(200).persist()
+      // Use nock for image downloads since it intercepts before undici
+      nock("https://photourl.com")
+        .get("/any.png")
+        .times(5) // 5 employee photos
+        .reply(200, Buffer.from("fake image data"))
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Tickets: [
@@ -845,7 +852,13 @@ describe("BudibaseAI", () => {
       }
       mockDataGeneration(dataGeneration)
 
-      mockProcessAIColumn("Mock LLM Response")
+      // Set up interceptors for AI column processing
+      // Tickets: 4 rows × 2 AI columns = 8 calls
+      // Employees: 5 rows × 1 AI column = 5 calls
+      // Total: 13 interceptors needed
+      for (let i = 0; i < 13; i++) {
+        mockProcessAIColumn("Mock LLM Response")
+      }
 
       const { createdTables } = await config.api.ai.generateTables({ prompt })
       expect(createdTables).toEqual([
