@@ -2,6 +2,7 @@ import {
   BBReferenceFieldSubType,
   FieldConstraints,
   FieldSchema,
+  FieldSubType,
   FieldType,
 } from "@budibase/types"
 
@@ -9,7 +10,7 @@ export function isDeprecatedSingleUserColumn(
   schema: Pick<FieldSchema, "type" | "subtype" | "constraints">
 ): schema is {
   type: FieldType.BB_REFERENCE
-  subtype: BBReferenceFieldSubType.USER
+  subtype: FieldSubType
 } {
   const result =
     schema.type === FieldType.BB_REFERENCE &&

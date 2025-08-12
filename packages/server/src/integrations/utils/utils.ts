@@ -4,6 +4,7 @@ import {
   Datasource,
   FieldType,
   FieldSchema,
+  StringFieldSubType,
 } from "@budibase/types"
 import { context, objectStore, sql } from "@budibase/backend-core"
 import { v4 } from "uuid"
@@ -197,6 +198,12 @@ export function generateColumnDefinition(config: {
     schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lowerCaseType)
     schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lowerCaseType)
   }
+
+  // Set subtype for Postgres array types
+  if (schema.type === FieldType.STRING && lowerCaseType === "array") {
+    schema.subtype = StringFieldSubType.ARRAY
+  }
+
   return schema
 }
 
