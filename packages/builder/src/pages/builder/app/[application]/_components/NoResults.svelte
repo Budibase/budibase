@@ -13,8 +13,8 @@
   export let resourceType: `${ResourceType}`
 
   const iconByType = {
-    [ResourceType.App]: "path",
-    [ResourceType.Automation]: "browser",
+    [ResourceType.App]: "browser",
+    [ResourceType.Automation]: "path",
   }
 </script>
 

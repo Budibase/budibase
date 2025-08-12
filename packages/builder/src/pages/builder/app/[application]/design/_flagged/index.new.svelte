@@ -3,7 +3,10 @@
     contextMenuStore,
     workspaceAppStore,
     workspaceFavouriteStore,
+    appStore,
+    isOnlyUser,
   } from "@/stores/builder"
+  import { admin } from "@/stores/portal"
   import {
     WorkspaceResource,
     PublishResourceState,
@@ -18,6 +21,7 @@
     Icon,
     notifications,
     TooltipPosition,
+    StatusLight,
   } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero-x1.png"
@@ -29,6 +33,9 @@
   import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import NoResults from "../../_components/NoResults.svelte"
+  import VersionModal from "@/components/deploy/VersionModal.svelte"
+
+  type ShowUI = { show: () => void }
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
@@ -36,8 +43,13 @@
   let workspaceAppModal: WorkspaceAppModal
   let confirmDeleteDialog: ConfirmDialog
   let appChangingStatus: string | undefined = undefined
+  let versionModal: ShowUI
 
   $: favourites = workspaceFavouriteStore.lookup
+  $: updateAvailable =
+    $appStore.upgradableVersion &&
+    $appStore.version &&
+    $appStore.upgradableVersion !== $appStore.version
 
   const filters: {
     label: string
@@ -184,8 +196,18 @@
     pre-built components in minutes.
   </HeroBanner>
 
-  <TopBar icon="browser" breadcrumbs={[{ text: "Apps" }]} showPublish={false}
-  ></TopBar>
+  <TopBar icon="browser" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
+    {#if updateAvailable && $isOnlyUser && !$admin.isDev}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div class="update-version" on:click={versionModal.show}>
+        <ActionButton quiet>
+          <StatusLight notice />
+          Update
+        </ActionButton>
+      </div>
+    {/if}
+  </TopBar>
   <div class="secondary-bar">
     <div class="filter">
       {#each filters as option}
@@ -282,6 +304,8 @@
   </ConfirmDialog>
 {/if}
 
+<VersionModal hideIcon bind:this={versionModal} />
+
 <style>
   .apps-index {
     background: var(--background);
@@ -364,5 +388,10 @@
 
   .actions .favourite-btn {
     pointer-events: all;
+  }
+
+  .update-version :global(.spectrum-ActionButton-label) {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>

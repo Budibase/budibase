@@ -43,7 +43,7 @@
     {#if $featureFlags.WORKSPACE_APPS}
       <TopBar
         breadcrumbs={[
-          { text: "Design", url: "../" },
+          { text: "App", url: "../" },
           { text: $workspaceAppStore.selectedWorkspaceApp?.name },
         ]}
         icon="browser"

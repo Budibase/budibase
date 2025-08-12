@@ -516,7 +516,6 @@
     display: flex;
     flex-direction: column;
     color: var(--spectrum-global-color-gray-800);
-    margin-top: 20px;
   }
   .favourite-title {
     padding: 0 calc(var(--nav-padding) / 2);
