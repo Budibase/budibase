@@ -3,12 +3,12 @@
   import { AbsTooltip, ActionButton } from "@budibase/bbui"
 
   export let leftIcon: string
-  export let leftTooltip: string | undefined = undefined
-  export let leftTooltipValue: string | undefined = undefined
+  export let leftNotificationTooltip: string | undefined = undefined
+  export let leftNotificationCount: number | undefined = undefined
   export let leftText: string
   export let rightIcon: string
-  export let rightTooltip: string | undefined = undefined
-  export let rightTooltipValue: string | undefined = undefined
+  export let rightNotificationTooltip: string | undefined = undefined
+  export let rightNotificationCount: number | undefined = undefined
   export let rightText: string
   export let selected: "left" | "right" = "left"
 
@@ -21,15 +21,15 @@
 <div class="view-mode-toggle">
   <div class="group">
     <div class="wrapper">
-      {#if leftTooltip && leftTooltipValue}
-        <AbsTooltip text={leftTooltip}>
+      {#if leftNotificationTooltip && leftNotificationCount}
+        <AbsTooltip text={leftNotificationTooltip}>
           <span
             class="notification"
             role="button"
             tabindex="-1"
-            aria-label={`Notifications ${leftTooltipValue}`}
+            aria-label={`Notifications ${leftNotificationCount}`}
           >
-            {leftTooltipValue}
+            {leftNotificationCount}
           </span>
         </AbsTooltip>
       {/if}
@@ -48,15 +48,15 @@
       </div>
     </div>
     <div class="wrapper">
-      {#if rightTooltip && rightTooltipValue}
-        <AbsTooltip text={rightTooltip}>
+      {#if rightNotificationTooltip && rightNotificationCount}
+        <AbsTooltip text={rightNotificationTooltip}>
           <span
             class="notification"
             role="button"
             tabindex="-1"
-            aria-label={`Notifications ${rightTooltipValue}`}
+            aria-label={`Notifications ${rightNotificationCount}`}
           >
-            {rightTooltipValue}
+            {rightNotificationCount}
           </span>
         </AbsTooltip>
       {/if}

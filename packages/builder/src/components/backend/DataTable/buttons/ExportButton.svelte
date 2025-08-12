@@ -17,8 +17,6 @@
   export let selectedRows
   export let formats
 
-  $: api = $dataAPI
-
   const FORMATS = [
     {
       name: "CSV",
@@ -58,7 +56,7 @@
   }
 
   const exportAllData = async () => {
-    return await api.exportView(view, exportFormat)
+    return await $dataAPI.exportView(view, exportFormat)
   }
 
   const exportFilteredData = async () => {
@@ -70,7 +68,7 @@
       payload.sort = sorting.sortColumn
       payload.sortOrder = sorting.sortOrder
     }
-    return await api.exportRows(view, exportFormat, payload)
+    return await $dataAPI.exportRows(view, exportFormat, payload)
   }
 
   const exportData = async () => {

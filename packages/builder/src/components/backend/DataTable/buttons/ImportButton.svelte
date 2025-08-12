@@ -9,8 +9,6 @@
   export let tableType
   export let disabled
 
-  $: api = $dataAPI
-
   const dispatch = createEventDispatcher()
 
   let popover
@@ -32,7 +30,7 @@
   const importData = async () => {
     try {
       loading = true
-      await api.importTableData(tableId, rows, identifierFields)
+      await $dataAPI.importTableData(tableId, rows, identifierFields)
       notifications.success("Rows successfully imported")
       popover.hide()
     } catch (error) {

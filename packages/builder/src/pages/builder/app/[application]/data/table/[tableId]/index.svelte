@@ -38,7 +38,7 @@
     type UIInternalDatasource,
   } from "@budibase/types"
 
-  let generateButton: any
+  let generateButton: GridGenerateButton
 
   $: userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },

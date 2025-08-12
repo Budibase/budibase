@@ -150,8 +150,8 @@
       leftText="Editor"
       rightIcon="list-checks"
       rightText="Logs"
-      rightTooltip="There are errors in production"
-      rightTooltipValue={prodErrors}
+      rightNotificationTooltip="There are errors in production"
+      rightNotificationCount={prodErrors}
       selected={$automationStore.showLogsPanel ||
       $automationStore.showLogDetailsPanel
         ? "right"
