@@ -244,29 +244,30 @@
 
     <div class="nav_body">
       <div class="links core">
-        <SideNavLink
-          icon="browser"
-          text="Apps"
-          url={$url("./design")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <SideNavLink
-          icon="path"
-          text="Automations"
-          url={$url("./automation")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <!-- <Divider size="S" /> -->
-        <SideNavLink
-          icon="database"
-          text="Data"
-          url={$url("./data")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
-        <!-- <SideNavLink
+        <div>
+          <SideNavLink
+            icon="browser"
+            text="Apps"
+            url={$url("./design")}
+            {collapsed}
+            on:click={keepCollapsed}
+          />
+          <SideNavLink
+            icon="path"
+            text="Automations"
+            url={$url("./automation")}
+            {collapsed}
+            on:click={keepCollapsed}
+          />
+          <!-- <Divider size="S" /> -->
+          <SideNavLink
+            icon="database"
+            text="Data"
+            url={$url("./data")}
+            {collapsed}
+            on:click={keepCollapsed}
+          />
+          <!-- <SideNavLink
           icon="webhooks-logo"
           text="APIs"
           url={$url("./data")}
@@ -287,22 +288,23 @@
           {collapsed}
           on:click={keepCollapsed}
         /> -->
-        {#if $featureFlags.AI_AGENTS}
+          {#if $featureFlags.AI_AGENTS}
+            <SideNavLink
+              icon="cpu"
+              text="Agent"
+              url={$url("./agent")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
+          {/if}
           <SideNavLink
-            icon="cpu"
-            text="Agent"
-            url={$url("./agent")}
+            icon="gear"
+            text="Settings"
+            url={$url("./settings")}
             {collapsed}
             on:click={keepCollapsed}
           />
-        {/if}
-        <SideNavLink
-          icon="gear"
-          text="Settings"
-          url={$url("./settings")}
-          {collapsed}
-          on:click={keepCollapsed}
-        />
+        </div>
         <Divider size="S" />
         <div class="favourite-wrapper">
           <div class="favourite-title">
