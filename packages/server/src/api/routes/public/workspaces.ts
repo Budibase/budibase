@@ -66,7 +66,7 @@ write.push(
  *                 $ref: '#/components/examples/workspace'
  */
 write.push(
-  new Endpoint("put", "/applications/:appId", controller.update).addMiddleware(
+  new Endpoint("put", "/workspaces/:appId", controller.update).addMiddleware(
     applicationValidator()
   )
 )
@@ -92,7 +92,7 @@ write.push(
  *               workspace:
  *                 $ref: '#/components/examples/workspace'
  */
-write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
+write.push(new Endpoint("delete", "/workspaces/:appId", controller.destroy))
 
 /**
  * @openapi
@@ -116,7 +116,7 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
  *                 $ref: '#/components/examples/deploymentOutput'
  */
 write.push(
-  new Endpoint("post", "/applications/:appId/publish", controller.publish)
+  new Endpoint("post", "/workspaces/:appId/publish", controller.publish)
 )
 
 /**
@@ -134,7 +134,7 @@ write.push(
  *         description: The workspace was published successfully.
  */
 write.push(
-  new Endpoint("post", "/applications/:appId/unpublish", controller.unpublish)
+  new Endpoint("post", "/workspaces/:appId/unpublish", controller.unpublish)
 )
 
 /**
@@ -168,7 +168,7 @@ write.push(
  *         description: Workspace has been updated.
  */
 write.push(
-  new Endpoint("post", "/applications/:appId/import", controller.importToApp)
+  new Endpoint("post", "/workspaces/:appId/import", controller.importToApp)
 )
 
 /**
@@ -198,7 +198,7 @@ write.push(
  *               example: Tarball containing database and object store contents...
  */
 read.push(
-  new Endpoint("post", "/applications/:appId/export", controller.exportApp)
+  new Endpoint("post", "/workspaces/:appId/export", controller.exportApp)
 )
 
 /**
@@ -222,7 +222,7 @@ read.push(
  *               workspace:
  *                 $ref: '#/components/examples/workspace'
  */
-read.push(new Endpoint("get", "/applications/:appId", controller.read))
+read.push(new Endpoint("get", "/workspaces/:appId", controller.read))
 
 /**
  * @openapi
@@ -251,7 +251,7 @@ read.push(new Endpoint("get", "/applications/:appId", controller.read))
  *                 $ref: '#/components/examples/workspaces'
  */
 read.push(
-  new Endpoint("post", "/applications/search", controller.search).addMiddleware(
+  new Endpoint("post", "/workspaces/search", controller.search).addMiddleware(
     nameValidator()
   )
 )
