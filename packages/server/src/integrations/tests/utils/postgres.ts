@@ -18,7 +18,7 @@ async function datasourceWithImage(image: string): Promise<Datasource> {
           // Increase startup timeout to reduce flakiness
           Wait.forSuccessfulCommand(
             "pg_isready -h localhost -p 5432"
-          ).withStartupTimeout(60000)
+          ).withStartupTimeout(20000)
         )
     )
   }

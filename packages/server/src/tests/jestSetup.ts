@@ -11,22 +11,11 @@ if (!process.env.CI) {
 } else {
   jest.setTimeout(30 * 1000)
 }
-testContainerUtils.setupEnv(env, coreEnv)
 
 nock.enableNetConnect()
 
-// Ensure nock is properly cleaned after each test
-afterEach(() => {
-  // Only clean if nock is active (has interceptors)
-  if (nock.isActive()) {
-    nock.cleanAll()
-  }
-})
+testContainerUtils.setupEnv(env, coreEnv)
 
 afterAll(async () => {
   timers.cleanup()
-  // Restore nock to clean state
-  if (nock.isActive()) {
-    nock.restore()
-  }
 })
