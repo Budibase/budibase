@@ -121,11 +121,11 @@ export default new Resource()
     },
   })
   .setSchemas({
-    application: applicationSchema,
-    applicationOutput: object({
+    workspace: applicationSchema,
+    workspaceOutput: object({
       data: applicationOutputSchema,
     }),
-    applicationSearch: object({
+    workspaceSearch: object({
       data: {
         type: "array",
         items: applicationOutputSchema,
