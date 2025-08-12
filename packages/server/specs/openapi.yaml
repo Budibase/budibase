@@ -2616,6 +2616,7 @@ security:
 paths:
   /applications:
     post:
+      deprecated: true
       operationId: appCreate
       summary: Create an application
       tags:
@@ -2640,6 +2641,7 @@ paths:
                   $ref: "#/components/examples/application"
   "/applications/{appId}":
     put:
+      deprecated: true
       operationId: appUpdate
       summary: Update an application
       tags:
@@ -2663,6 +2665,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     delete:
+      deprecated: true
       operationId: appDestroy
       summary: Delete an application
       tags:
@@ -2680,6 +2683,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     get:
+      deprecated: true
       operationId: appGetById
       summary: Retrieve an application
       tags:
@@ -2698,6 +2702,7 @@ paths:
                   $ref: "#/components/examples/application"
   "/applications/{appId}/unpublish":
     post:
+      deprecated: true
       operationId: appUnpublish
       summary: Unpublish an application
       tags:
@@ -2709,6 +2714,7 @@ paths:
           description: The app was published successfully.
   "/applications/{appId}/publish":
     post:
+      deprecated: true
       operationId: appPublish
       summary: Publish an application
       tags:
@@ -2727,6 +2733,7 @@ paths:
                   $ref: "#/components/examples/deploymentOutput"
   "/applications/{appId}/import":
     post:
+      deprecated: true
       operationId: appImport
       summary: Import an app to an existing app 🔒
       description: This endpoint is only available on a business or enterprise license.
@@ -2754,6 +2761,7 @@ paths:
           description: Application has been updated.
   "/applications/{appId}/export":
     post:
+      deprecated: true
       operationId: appExport
       summary: Export an app 🔒
       description: This endpoint is only available on a business or enterprise license.
@@ -2778,6 +2786,7 @@ paths:
                 example: Tarball containing database and object store contents...
   /applications/search:
     post:
+      deprecated: true
       operationId: appSearch
       summary: Search for applications
       description: Based on application properties (currently only name) search for
