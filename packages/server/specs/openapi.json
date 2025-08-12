@@ -547,7 +547,7 @@
       }
     },
     "schemas": {
-      "application": {
+      "workspace": {
         "type": "object",
         "properties": {
           "name": {
@@ -563,7 +563,7 @@
           "name"
         ]
       },
-      "applicationOutput": {
+      "workspaceOutput": {
         "type": "object",
         "properties": {
           "data": {
@@ -625,7 +625,7 @@
           "data"
         ]
       },
-      "applicationSearch": {
+      "workspaceSearch": {
         "type": "object",
         "properties": {
           "data": {
@@ -3144,16 +3144,16 @@
     }
   ],
   "paths": {
-    "/applications": {
+    "/workspaces": {
       "post": {
-        "operationId": "appCreate",
-        "summary": "Create an application",
+        "operationId": "workspaceCreate",
+        "summary": "Create a workspace",
         "tags": [
-          "applications"
+          "workspaces"
         ],
         "parameters": [
           {
-            "$ref": "#/components/parameters/appId"
+            "$ref": "#/components/parameters/id"
           }
         ],
         "requestBody": {
@@ -3161,22 +3161,22 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/application"
+                "$ref": "#/components/schemas/workspace"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Returns the created application.",
+            "description": "Returns the created workspace.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/applicationOutput"
+                  "$ref": "#/components/schemas/workspaceOutput"
                 },
                 "examples": {
-                  "application": {
-                    "$ref": "#/components/examples/application"
+                  "workspace": {
+                    "$ref": "#/components/examples/workspace"
                   }
                 }
               }
@@ -3824,7 +3824,7 @@
           }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {

@@ -525,7 +525,7 @@ components:
       description: Your individual API key, this will provide access based on the
         configured RBAC settings of your user.
   schemas:
-    application:
+    workspace:
       type: object
       properties:
         name:
@@ -536,7 +536,7 @@ components:
           type: string
       required:
         - name
-    applicationOutput:
+    workspaceOutput:
       type: object
       properties:
         data:
@@ -586,7 +586,7 @@ components:
             - version
       required:
         - data
-    applicationSearch:
+    workspaceSearch:
       type: object
       properties:
         data:
@@ -2480,30 +2480,30 @@ components:
 security:
   - ApiKeyAuth: []
 paths:
-  /applications:
+  /workspaces:
     post:
-      operationId: appCreate
-      summary: Create an application
+      operationId: workspaceCreate
+      summary: Create a workspace
       tags:
-        - applications
+        - workspaces
       parameters:
-        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/id"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/application"
+              $ref: "#/components/schemas/workspace"
       responses:
         "200":
-          description: Returns the created application.
+          description: Returns the created workspace.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/applicationOutput"
+                $ref: "#/components/schemas/workspaceOutput"
               examples:
-                application:
-                  $ref: "#/components/examples/application"
+                workspace:
+                  $ref: "#/components/examples/workspace"
   "/applications/{appId}":
     put:
       operationId: appUpdate
@@ -2893,7 +2893,7 @@ paths:
         - $ref: "#/components/parameters/tableId"
         - $ref: "#/components/parameters/appId"
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
