@@ -781,12 +781,17 @@ class InternalBuilder {
             value = `{${values}}`
           }
           if (any) {
-            return q.whereRaw(`COALESCE(??${cast} && '??', FALSE)`, [
-              this.rawQuotedIdentifier(key),
+            return q.whereRaw(
               cast
-                ? this.knex.raw(stringifyArray(value))
-                : this.knex.raw(value),
-            ])
+                ? `COALESCE(??::jsonb \\?| array??`
+                : `COALESCE(?? && '??', FALSE)`,
+              [
+                this.rawQuotedIdentifier(key),
+                cast
+                  ? this.knex.raw(stringifyArray(value))
+                  : this.knex.raw(value),
+              ]
+            )
           } else {
             return q.whereRaw(`COALESCE(??${cast} @> '??', FALSE)`, [
               this.rawQuotedIdentifier(key),
