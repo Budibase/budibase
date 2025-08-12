@@ -213,7 +213,7 @@ export const publishApp = async function (
       const devDb = context.getDevAppDB()
       await devDb.compact()
       await replication.replicate(
-        replication.appReplicateOpts({ isCreation: !isPublished })
+        replication.appReplicateOpts({ isCreation: !isPublished, noData: true })
       )
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually

@@ -51,7 +51,10 @@ class Replication {
   }
 
   appReplicateOpts(
-    opts: PouchDB.Replication.ReplicateOptions & { isCreation?: boolean } = {}
+    opts: PouchDB.Replication.ReplicateOptions & {
+      isCreation?: boolean
+      noData?: boolean
+    } = {}
   ): PouchDB.Replication.ReplicateOptions {
     if (typeof opts.filter === "string") {
       return opts
@@ -62,8 +65,23 @@ class Replication {
     const toDev = direction === ReplicationDirection.TO_DEV
     delete opts.filter
 
-    const isCreation = opts.isCreation
+    const isCreation = opts.isCreation,
+      noData = opts.noData
     delete opts.isCreation
+    delete opts.noData
+
+    const isRealData = (_id?: string) => {
+      // sample data should be published even if noData specified
+      if (
+        _id?.startsWith(DocumentType.SAMPLE_ROW) ||
+        _id?.startsWith(DocumentType.SAMPLE_LINK)
+      ) {
+        return false
+      }
+      return (
+        _id?.startsWith(DocumentType.ROW) || _id?.startsWith(DocumentType.LINK)
+      )
+    }
 
     return {
       ...opts,
@@ -78,6 +96,9 @@ class Replication {
         // always replicate deleted documents
         if (doc._deleted) {
           return true
+        }
+        if (noData && isRealData(doc._id)) {
+          return false
         }
         if (doc._id?.startsWith(DocumentType.AUTOMATION_LOG)) {
           return false
