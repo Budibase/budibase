@@ -7,12 +7,12 @@ export interface paths {
   "/workspaces": {
     post: operations["workspaceCreate"];
   };
-  "/workspaces/{id}": {
+  "/workspaces/{workspaceId}": {
     put: operations["workspaceUpdate"];
     delete: operations["workspaceDestroy"];
   };
-  "/applications/{appId}/unpublish": {
-    post: operations["appUnpublish"];
+  "/workspaces/{workspaceId}/unpublish": {
+    post: operations["workspaceUnpublish"];
   };
   "/applications/{appId}/publish": {
     post: operations["appPublish"];
@@ -1333,6 +1333,8 @@ export interface components {
     appId: string;
     /** @description The ID of the app which this request is targeting. */
     appIdUrl: string;
+    /** @description The ID of the workspace which this request is targeting. */
+    workspaceId: string;
     /** @description The ID of the query which this request is targeting. */
     queryId: string;
     /** @description The ID of the user which this request is targeting. */
@@ -1342,7 +1344,12 @@ export interface components {
 
 export interface operations {
   workspaceCreate: {
-    parameters: {};
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
     responses: {
       /** Returns the created workspace. */
       200: {
@@ -1358,7 +1365,12 @@ export interface operations {
     };
   };
   workspaceUpdate: {
-    parameters: {};
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
     responses: {
       /** Returns the updated workspace. */
       200: {
@@ -1374,7 +1386,12 @@ export interface operations {
     };
   };
   workspaceDestroy: {
-    parameters: {};
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
     responses: {
       /** Returns the deleted workspace. */
       200: {
@@ -1384,15 +1401,15 @@ export interface operations {
       };
     };
   };
-  appUnpublish: {
+  workspaceUnpublish: {
     parameters: {
       path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
       };
     };
     responses: {
-      /** The app was published successfully. */
+      /** The workspace was published successfully. */
       204: never;
     };
   };

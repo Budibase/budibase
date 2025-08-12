@@ -70,6 +70,16 @@
           "type": "string"
         }
       },
+      "workspaceId": {
+        "in": "path",
+        "name": "workspaceId",
+        "required": true,
+        "description": "The ID of the workspace which this request is targeting.",
+        "schema": {
+          "default": "{{id}}",
+          "type": "string"
+        }
+      },
       "queryId": {
         "in": "path",
         "name": "queryId",
@@ -3153,7 +3163,7 @@
         ],
         "parameters": [
           {
-            "$ref": "#/components/parameters/id"
+            "$ref": "#/components/parameters/workspaceId"
           }
         ],
         "requestBody": {
@@ -3185,7 +3195,7 @@
         }
       }
     },
-    "/workspaces/{id}": {
+    "/workspaces/{workspaceId}": {
       "put": {
         "operationId": "workspaceUpdate",
         "summary": "Update a workspace",
@@ -3233,7 +3243,7 @@
         ],
         "parameters": [
           {
-            "$ref": "#/components/parameters/id"
+            "$ref": "#/components/parameters/workspaceId"
           }
         ],
         "responses": {
@@ -3255,21 +3265,21 @@
         }
       }
     },
-    "/applications/{appId}/unpublish": {
+    "/workspaces/{workspaceId}/unpublish": {
       "post": {
-        "operationId": "appUnpublish",
-        "summary": "Unpublish an application",
+        "operationId": "workspaceUnpublish",
+        "summary": "Unpublish a workspace",
         "tags": [
-          "applications"
+          "workspaces"
         ],
         "parameters": [
           {
-            "$ref": "#/components/parameters/appIdUrl"
+            "$ref": "#/components/parameters/workspaceId"
           }
         ],
         "responses": {
           "204": {
-            "description": "The app was published successfully."
+            "description": "The workspace was published successfully."
           }
         }
       }

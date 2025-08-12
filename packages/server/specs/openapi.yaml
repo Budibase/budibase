@@ -53,6 +53,14 @@ components:
       schema:
         default: "{{appId}}"
         type: string
+    workspaceId:
+      in: path
+      name: workspaceId
+      required: true
+      description: The ID of the workspace which this request is targeting.
+      schema:
+        default: "{{id}}"
+        type: string
     queryId:
       in: path
       name: queryId
@@ -2487,7 +2495,7 @@ paths:
       tags:
         - workspaces
       parameters:
-        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/workspaceId"
       requestBody:
         required: true
         content:
@@ -2504,7 +2512,7 @@ paths:
               examples:
                 workspace:
                   $ref: "#/components/examples/workspace"
-  "/workspaces/{id}":
+  "/workspaces/{workspaceId}":
     put:
       operationId: workspaceUpdate
       summary: Update a workspace
@@ -2534,7 +2542,7 @@ paths:
       tags:
         - workspaces
       parameters:
-        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/workspaceId"
       responses:
         "200":
           description: Returns the deleted workspace.
@@ -2545,17 +2553,17 @@ paths:
               examples:
                 workspace:
                   $ref: "#/components/examples/workspace"
-  "/applications/{appId}/unpublish":
+  "/workspaces/{workspaceId}/unpublish":
     post:
-      operationId: appUnpublish
-      summary: Unpublish an application
+      operationId: workspaceUnpublish
+      summary: Unpublish a workspace
       tags:
-        - applications
+        - workspaces
       parameters:
-        - $ref: "#/components/parameters/appIdUrl"
+        - $ref: "#/components/parameters/workspaceId"
       responses:
         "204":
-          description: The app was published successfully.
+          description: The workspace was published successfully.
   "/applications/{appId}/publish":
     post:
       operationId: appPublish

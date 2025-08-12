@@ -14,7 +14,7 @@ const read = [],
  *     tags:
  *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/id'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       required: true
  *       content:
@@ -40,7 +40,7 @@ write.push(
 
 /**
  * @openapi
- * /workspaces/{id}:
+ * /workspaces/{workspaceId}:
  *   put:
  *     operationId: workspaceUpdate
  *     summary: Update a workspace
@@ -73,14 +73,14 @@ write.push(
 
 /**
  * @openapi
- * /workspaces/{id}:
+ * /workspaces/{workspaceId}:
  *   delete:
  *     operationId: workspaceDestroy
  *     summary: Delete a workspace
  *     tags:
  *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/id'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     responses:
  *       200:
  *         description: Returns the deleted workspace.
@@ -96,17 +96,17 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
 /**
  * @openapi
- * /applications/{appId}/unpublish:
+ * /workspaces/{workspaceId}/unpublish:
  *   post:
- *     operationId: appUnpublish
- *     summary: Unpublish an application
+ *     operationId: workspaceUnpublish
+ *     summary: Unpublish a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     responses:
  *       204:
- *         description: The app was published successfully.
+ *         description: The workspace was published successfully.
  */
 write.push(
   new Endpoint("post", "/applications/:appId/unpublish", controller.unpublish)
