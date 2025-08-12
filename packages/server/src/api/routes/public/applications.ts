@@ -96,6 +96,31 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
 /**
  * @openapi
+ * /applications/{workspaceId}/publish:
+ *   post:
+ *     operationId: workspacePublish
+ *     summary: Publish a workspace
+ *     tags:
+ *       - workspaces
+ *     parameters:
+ *       - $ref: '#/components/parameters/workspaceId'
+ *     responses:
+ *       200:
+ *         description: Returns the deployment object.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/deploymentOutput'
+ *             examples:
+ *               deployment:
+ *                 $ref: '#/components/examples/deploymentOutput'
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/publish", controller.publish)
+)
+
+/**
+ * @openapi
  * /workspaces/{workspaceId}/unpublish:
  *   post:
  *     operationId: workspaceUnpublish
@@ -110,31 +135,6 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
  */
 write.push(
   new Endpoint("post", "/applications/:appId/unpublish", controller.unpublish)
-)
-
-/**
- * @openapi
- * /applications/{appId}/publish:
- *   post:
- *     operationId: appPublish
- *     summary: Publish an application
- *     tags:
- *       - applications
- *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
- *     responses:
- *       200:
- *         description: Returns the deployment object.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/deploymentOutput'
- *             examples:
- *               deployment:
- *                 $ref: '#/components/examples/deploymentOutput'
- */
-write.push(
-  new Endpoint("post", "/applications/:appId/publish", controller.publish)
 )
 
 /**

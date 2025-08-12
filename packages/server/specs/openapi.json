@@ -3265,35 +3265,16 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/unpublish": {
+    "/applications/{workspaceId}/publish": {
       "post": {
-        "operationId": "workspaceUnpublish",
-        "summary": "Unpublish a workspace",
+        "operationId": "workspacePublish",
+        "summary": "Publish a workspace",
         "tags": [
           "workspaces"
         ],
         "parameters": [
           {
             "$ref": "#/components/parameters/workspaceId"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The workspace was published successfully."
-          }
-        }
-      }
-    },
-    "/applications/{appId}/publish": {
-      "post": {
-        "operationId": "appPublish",
-        "summary": "Publish an application",
-        "tags": [
-          "applications"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/appIdUrl"
           }
         ],
         "responses": {
@@ -3311,6 +3292,25 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/unpublish": {
+      "post": {
+        "operationId": "workspaceUnpublish",
+        "summary": "Unpublish a workspace",
+        "tags": [
+          "workspaces"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The workspace was published successfully."
           }
         }
       }

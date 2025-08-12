@@ -2553,6 +2553,24 @@ paths:
               examples:
                 workspace:
                   $ref: "#/components/examples/workspace"
+  "/applications/{workspaceId}/publish":
+    post:
+      operationId: workspacePublish
+      summary: Publish a workspace
+      tags:
+        - workspaces
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: Returns the deployment object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/deploymentOutput"
+              examples:
+                deployment:
+                  $ref: "#/components/examples/deploymentOutput"
   "/workspaces/{workspaceId}/unpublish":
     post:
       operationId: workspaceUnpublish
@@ -2564,24 +2582,6 @@ paths:
       responses:
         "204":
           description: The workspace was published successfully.
-  "/applications/{appId}/publish":
-    post:
-      operationId: appPublish
-      summary: Publish an application
-      tags:
-        - applications
-      parameters:
-        - $ref: "#/components/parameters/appIdUrl"
-      responses:
-        "200":
-          description: Returns the deployment object.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/deploymentOutput"
-              examples:
-                deployment:
-                  $ref: "#/components/examples/deploymentOutput"
   "/applications/{appId}/import":
     post:
       operationId: appImport

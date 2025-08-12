@@ -11,11 +11,11 @@ export interface paths {
     put: operations["workspaceUpdate"];
     delete: operations["workspaceDestroy"];
   };
+  "/applications/{workspaceId}/publish": {
+    post: operations["workspacePublish"];
+  };
   "/workspaces/{workspaceId}/unpublish": {
     post: operations["workspaceUnpublish"];
-  };
-  "/applications/{appId}/publish": {
-    post: operations["appPublish"];
   };
   "/applications/{appId}/import": {
     /** This endpoint is only available on a business or enterprise license. */
@@ -1401,6 +1401,22 @@ export interface operations {
       };
     };
   };
+  workspacePublish: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the deployment object. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["deploymentOutput"];
+        };
+      };
+    };
+  };
   workspaceUnpublish: {
     parameters: {
       path: {
@@ -1411,22 +1427,6 @@ export interface operations {
     responses: {
       /** The workspace was published successfully. */
       204: never;
-    };
-  };
-  appPublish: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** Returns the deployment object. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["deploymentOutput"];
-        };
-      };
     };
   };
   /** This endpoint is only available on a business or enterprise license. */
