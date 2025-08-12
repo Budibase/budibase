@@ -788,7 +788,7 @@ class InternalBuilder {
               [
                 this.rawQuotedIdentifier(key),
                 cast
-                  ? this.knex.raw(stringifyArray(value))
+                  ? this.knex.raw(stringifyArray(value, "'"))
                   : this.knex.raw(value),
               ]
             )
