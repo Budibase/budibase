@@ -243,7 +243,7 @@
     </div>
 
     <div class="nav_body">
-      <div class="links">
+      <div class="links core">
         <SideNavLink
           icon="browser"
           text="Apps"
@@ -495,6 +495,7 @@
     flex: 1 1 auto;
     padding: var(--nav-padding) 0;
     gap: 3px;
+    min-height: 0;
   }
 
   /* Popover container */
@@ -511,12 +512,29 @@
     gap: 4px;
   }
 
+  .links.core {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    flex: 1 1 auto;
+  }
+
+  .favourite-links {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+  }
+
   /*  favourite section */
   .favourite-wrapper {
     display: flex;
     flex-direction: column;
     color: var(--spectrum-global-color-gray-800);
+    flex: 1;
+    overflow: hidden;
+    flex: 1 1 auto;
   }
+
   .favourite-title {
     padding: 0 calc(var(--nav-padding) / 2);
     margin-bottom: 8px;
