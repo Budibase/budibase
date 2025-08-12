@@ -34,3 +34,20 @@ export interface ClearBackupErrorRequest {
 export interface ClearBackupErrorResponse {
   message: string
 }
+
+export interface DeleteAppBackupResult {
+  backupId: string
+  success: boolean
+  error?: string
+}
+
+export interface DeleteAppBackupsRequest {
+  backupIds: string[]
+}
+
+export interface DeleteAppBackupsResponse {
+  message: string
+  results: DeleteAppBackupResult[]
+  successCount: number
+  failureCount: number
+}
