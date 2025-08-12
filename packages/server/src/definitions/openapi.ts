@@ -11,15 +11,15 @@ export interface paths {
     put: operations["workspaceUpdate"];
     delete: operations["workspaceDestroy"];
   };
-  "/applications/{workspaceId}/publish": {
+  "/workspaces/{workspaceId}/publish": {
     post: operations["workspacePublish"];
   };
   "/workspaces/{workspaceId}/unpublish": {
     post: operations["workspaceUnpublish"];
   };
-  "/applications/{appId}/import": {
+  "/workspaces/{workspaceId}/import": {
     /** This endpoint is only available on a business or enterprise license. */
-    post: operations["appImport"];
+    post: operations["workspaceImport"];
   };
   "/applications/{appId}/export": {
     /** This endpoint is only available on a business or enterprise license. */
@@ -1430,27 +1430,27 @@ export interface operations {
     };
   };
   /** This endpoint is only available on a business or enterprise license. */
-  appImport: {
+  workspaceImport: {
     parameters: {
       path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
       };
     };
     responses: {
-      /** Application has been updated. */
+      /** Workspace has been updated. */
       204: never;
     };
     requestBody: {
       content: {
         "multipart/form-data": {
-          /** @description Password for the export if it is encrypted. */
+          /** @description Password for the file if it is encrypted. */
           encryptedPassword?: string;
           /**
            * Format: binary
-           * @description The app export to import.
+           * @description The export to import.
            */
-          appExport: string;
+          file: string;
         };
       };
     };

@@ -56,7 +56,7 @@ export const workspaceId = {
   required: true,
   description: "The ID of the workspace which this request is targeting.",
   schema: {
-    default: "{{id}}",
+    default: "{{workspaceId}}",
     type: "string",
   },
 }

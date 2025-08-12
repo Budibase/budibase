@@ -96,7 +96,7 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
 /**
  * @openapi
- * /applications/{workspaceId}/publish:
+ * /workspaces/{workspaceId}/publish:
  *   post:
  *     operationId: workspacePublish
  *     summary: Publish a workspace
@@ -139,15 +139,15 @@ write.push(
 
 /**
  * @openapi
- * /applications/{appId}/import:
+ * /workspaces/{workspaceId}/import:
  *   post:
- *     operationId: appImport
- *     summary: Import an app to an existing app 🔒
+ *     operationId: workspaceImport
+ *     summary: Import a workspace to an existing workspace 🔒
  *     description: This endpoint is only available on a business or enterprise license.
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       content:
  *         multipart/form-data:
@@ -155,17 +155,17 @@ write.push(
  *             type: object
  *             properties:
  *               encryptedPassword:
- *                 description: Password for the export if it is encrypted.
+ *                 description: Password for the file if it is encrypted.
  *                 type: string
- *               appExport:
- *                 description: The app export to import.
+ *               file:
+ *                 description: The export to import.
  *                 type: string
  *                 format: binary
  *             required:
- *               - appExport
+ *               - file
  *     responses:
  *       204:
- *         description: Application has been updated.
+ *         description: Workspace has been updated.
  */
 write.push(
   new Endpoint("post", "/applications/:appId/import", controller.importToApp)
