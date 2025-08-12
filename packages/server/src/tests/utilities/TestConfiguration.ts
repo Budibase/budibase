@@ -72,7 +72,6 @@ import {
 import API from "./api"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
-import sdk from "../../sdk"
 
 const newid = utils.newid
 
@@ -470,13 +469,13 @@ export default class TestConfiguration {
     })
   }
 
-  async withHeaders(
+  async withHeaders<T>(
     headers: Record<string, string | string[]>,
-    cb: () => Promise<unknown>
+    cb: () => Promise<T>
   ) {
     this.temporaryHeaders = headers
     try {
-      await cb()
+      return await cb()
     } finally {
       this.temporaryHeaders = undefined
     }
@@ -703,22 +702,6 @@ export default class TestConfiguration {
     this.prodAppId = undefined
     this.prodApp = undefined
     return response
-  }
-
-  async enableDefaultWorkspaceApp(app: App = this.getApp()) {
-    context.doInAppContext(app.appId, async () => {
-      const workspaceApps = await sdk.workspaceApps.fetch()
-
-      const { isDefault, ...defaultWorkspaceApp } = workspaceApps.find(
-        a => a.name === app.name
-      )!
-      expect(defaultWorkspaceApp).toBeDefined()
-
-      await sdk.workspaceApps.update({
-        ...defaultWorkspaceApp!,
-        disabled: false,
-      })
-    })
   }
 
   // TABLE
