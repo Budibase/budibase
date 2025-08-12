@@ -41,6 +41,10 @@ export interface DeleteAppBackupResult {
   error?: string
 }
 
+export interface DeleteAppBackupsRequest {
+  backupIds: string[]
+}
+
 export interface DeleteAppBackupsResponse {
   message: string
   results: DeleteAppBackupResult[]
