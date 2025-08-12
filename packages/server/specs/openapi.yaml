@@ -3485,6 +3485,23 @@ paths:
               examples:
                 workspace:
                   $ref: "#/components/examples/workspace"
+    get:
+      operationId: workspaceGetById
+      summary: Retrieve a workspace
+      tags:
+        - workspaces
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: Returns the retrieved workspace.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workspaceOutput"
+              examples:
+                workspace:
+                  $ref: "#/components/examples/workspace"
   "/workspaces/{workspaceId}/publish":
     post:
       operationId: workspacePublish
@@ -3565,4 +3582,29 @@ paths:
                 type: string
                 format: binary
                 example: Tarball containing database and object store contents...
+  /workspaces/search:
+    post:
+      operationId: workspaceSearch
+      summary: Search for workspaces
+      description: Based on workspace properties (currently only name) search for
+        workspaces.
+      tags:
+        - workspaces
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/nameSearch"
+      responses:
+        "200":
+          description: Returns the workspaces that were found based on the search
+            parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workspaceSearch"
+              examples:
+                workspaces:
+                  $ref: "#/components/examples/workspaces"
 tags: []

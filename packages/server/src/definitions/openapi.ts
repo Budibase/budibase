@@ -116,6 +116,7 @@ export interface paths {
     post: operations["workspaceCreate"];
   };
   "/workspaces/{workspaceId}": {
+    get: operations["workspaceGetById"];
     put: operations["workspaceUpdate"];
     delete: operations["workspaceDestroy"];
   };
@@ -132,6 +133,10 @@ export interface paths {
   "/workspaces/{workspaceId}/export": {
     /** This endpoint is only available on a business or enterprise license. */
     post: operations["workspaceExport"];
+  };
+  "/workspaces/search": {
+    /** Based on workspace properties (currently only name) search for workspaces. */
+    post: operations["workspaceSearch"];
   };
 }
 
@@ -2160,6 +2165,22 @@ export interface operations {
       };
     };
   };
+  workspaceGetById: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the retrieved workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+  };
   workspaceUpdate: {
     parameters: {
       path: {
@@ -2270,6 +2291,22 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["workspaceExport"];
+      };
+    };
+  };
+  /** Based on workspace properties (currently only name) search for workspaces. */
+  workspaceSearch: {
+    responses: {
+      /** Returns the workspaces that were found based on the search parameters. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceSearch"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["nameSearch"];
       };
     };
   };

@@ -203,36 +203,36 @@ read.push(
 
 /**
  * @openapi
- * /applications/{appId}:
+ * /workspaces/{workspaceId}:
  *   get:
- *     operationId: appGetById
- *     summary: Retrieve an application
+ *     operationId: workspaceGetById
+ *     summary: Retrieve a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     responses:
  *       200:
- *         description: Returns the retrieved application.
+ *         description: Returns the retrieved workspace.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/applicationOutput'
+ *               $ref: '#/components/schemas/workspaceOutput'
  *             examples:
- *               application:
- *                 $ref: '#/components/examples/application'
+ *               workspace:
+ *                 $ref: '#/components/examples/workspace'
  */
 read.push(new Endpoint("get", "/applications/:appId", controller.read))
 
 /**
  * @openapi
- * /applications/search:
+ * /workspaces/search:
  *   post:
- *     operationId: appSearch
- *     summary: Search for applications
- *     description: Based on application properties (currently only name) search for applications.
+ *     operationId: workspaceSearch
+ *     summary: Search for workspaces
+ *     description: Based on workspace properties (currently only name) search for workspaces.
  *     tags:
- *       - applications
+ *       - workspaces
  *     requestBody:
  *       required: true
  *       content:
@@ -241,14 +241,14 @@ read.push(new Endpoint("get", "/applications/:appId", controller.read))
  *             $ref: '#/components/schemas/nameSearch'
  *     responses:
  *       200:
- *         description: Returns the applications that were found based on the search parameters.
+ *         description: Returns the workspaces that were found based on the search parameters.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/applicationSearch'
+ *               $ref: '#/components/schemas/workspaceSearch'
  *             examples:
- *               applications:
- *                 $ref: '#/components/examples/applications'
+ *               workspaces:
+ *                 $ref: '#/components/examples/workspaces'
  */
 read.push(
   new Endpoint("post", "/applications/search", controller.search).addMiddleware(
