@@ -32,8 +32,6 @@ import { generator } from "@budibase/backend-core/tests"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
-import nock from "nock"
-nock.restore()
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
