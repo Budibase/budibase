@@ -162,6 +162,12 @@ class InternalBuilder {
 
   // states the various situations in which we need a full mapped select statement
   private readonly SPECIAL_SELECT_CASES = {
+    POSTGRES_ARRAY: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.POSTGRES &&
+        field?.externalType?.toLowerCase() === "array"
+      )
+    },
     POSTGRES_MONEY: (field: FieldSchema | undefined) => {
       return (
         this.client === SqlClient.POSTGRES &&
@@ -231,11 +237,6 @@ class InternalBuilder {
       key = this.splitIdentifier(key)
     }
     return key.map(part => this.quote(part)).join(".")
-  }
-
-  private quotedValue(value: string): string {
-    const formatter = this.knexClient.formatter(this.knexClient.queryBuilder())
-    return formatter.wrap(value, false)
   }
 
   private castIntToString(identifier: string | Knex.Raw): Knex.Raw {
@@ -409,10 +410,7 @@ class InternalBuilder {
       return JSON.stringify(input)
     }
 
-    if (
-      this.client === SqlClient.POSTGRES &&
-      schema.externalType?.toLowerCase() === "array"
-    ) {
+    if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
       return `{${input}}`
     }
 
@@ -773,15 +771,28 @@ class InternalBuilder {
       if (this.client === SqlClient.POSTGRES) {
         iterate(mode, ArrayOperator.CONTAINS, (q, key, value) => {
           q = addModifiers(q)
+          const schema = this.getFieldSchema(key)
+          let cast = "::jsonb"
+          if (this.SPECIAL_SELECT_CASES.POSTGRES_ARRAY(schema)) {
+            cast = ""
+            const values = (value as string[]).map(value =>
+              value.substring(1, value.length - 1)
+            )
+            value = `{${values}}`
+          }
           if (any) {
-            return q.whereRaw(`COALESCE(??::jsonb \\?| array??, FALSE)`, [
+            return q.whereRaw(`COALESCE(??${cast} && '??', FALSE)`, [
               this.rawQuotedIdentifier(key),
-              this.knex.raw(stringifyArray(value, "'")),
+              cast
+                ? this.knex.raw(stringifyArray(value))
+                : this.knex.raw(value),
             ])
           } else {
-            return q.whereRaw(`COALESCE(??::jsonb @> '??', FALSE)`, [
+            return q.whereRaw(`COALESCE(??${cast} @> '??', FALSE)`, [
               this.rawQuotedIdentifier(key),
-              this.knex.raw(stringifyArray(value)),
+              cast
+                ? this.knex.raw(stringifyArray(value))
+                : this.knex.raw(value),
             ])
           }
         })
