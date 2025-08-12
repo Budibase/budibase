@@ -7,7 +7,7 @@ const application = {
   appId: "app_dev_957b12f943d348faa61db7e18e088d0f",
   version: "1.0.58-alpha.0",
   name: "App name",
-  url: "/app-url",
+  url: "/url",
   tenantId: "default",
   updatedAt: "2022-02-22T13:00:54.035Z",
   createdAt: "2022-02-11T18:02:26.961Z",
