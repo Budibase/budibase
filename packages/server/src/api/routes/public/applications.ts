@@ -40,30 +40,30 @@ write.push(
 
 /**
  * @openapi
- * /applications/{appId}:
+ * /workspaces/{id}:
  *   put:
- *     operationId: appUpdate
- *     summary: Update an application
+ *     operationId: workspaceUpdate
+ *     summary: Update a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/application'
+ *             $ref: '#/components/schemas/workspace'
  *     responses:
  *       200:
- *         description: Returns the updated application.
+ *         description: Returns the updated workspace.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/applicationOutput'
+ *               $ref: '#/components/schemas/workspaceOutput'
  *             examples:
- *               application:
- *                 $ref: '#/components/examples/application'
+ *               workspace:
+ *                 $ref: '#/components/examples/workspace'
  */
 write.push(
   new Endpoint("put", "/applications/:appId", controller.update).addMiddleware(

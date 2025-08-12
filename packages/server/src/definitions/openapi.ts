@@ -7,9 +7,11 @@ export interface paths {
   "/workspaces": {
     post: operations["workspaceCreate"];
   };
+  "/workspaces/{id}": {
+    put: operations["workspaceUpdate"];
+  };
   "/applications/{appId}": {
     get: operations["appGetById"];
-    put: operations["appUpdate"];
     delete: operations["appDestroy"];
   };
   "/applications/{appId}/unpublish": {
@@ -1355,6 +1357,22 @@ export interface operations {
       };
     };
   };
+  workspaceUpdate: {
+    parameters: {};
+    responses: {
+      /** Returns the updated workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["workspace"];
+      };
+    };
+  };
   appGetById: {
     parameters: {
       path: {
@@ -1368,27 +1386,6 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["applicationOutput"];
         };
-      };
-    };
-  };
-  appUpdate: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** Returns the updated application. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["applicationOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["application"];
       };
     };
   };
