@@ -12,6 +12,8 @@ if (!process.env.CI) {
   jest.setTimeout(30 * 1000)
 }
 
+nock.enableNetConnect()
+
 testContainerUtils.setupEnv(env, coreEnv)
 
 afterAll(async () => {

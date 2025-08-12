@@ -1,6 +1,3 @@
-import nock from "nock"
-if (nock.isActive()) nock.restore()
-
 import { context, docIds, events } from "@budibase/backend-core"
 import {
   PROTECTED_EXTERNAL_COLUMNS,

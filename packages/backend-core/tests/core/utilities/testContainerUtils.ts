@@ -90,11 +90,7 @@ function getCurrentDockerContext(): DockerContext {
 }
 
 export function setupEnv(...envs: any[]) {
-  if (process.env.CI) {
-    delete process.env.TESTCONTAINERS_RYUK_DISABLED
-  } else {
-    process.env.TESTCONTAINERS_RYUK_DISABLED = "true"
-  }
+  process.env.TESTCONTAINERS_RYUK_DISABLED = "true"
 
   // For whatever reason, testcontainers doesn't always use the correct current
   // docker context. This bit of code forces the issue by finding the current
