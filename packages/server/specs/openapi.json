@@ -3314,16 +3314,16 @@
     }
   ],
   "paths": {
-    "/workspaces": {
+    "/applications": {
       "post": {
-        "operationId": "workspaceCreate",
-        "summary": "Create a workspace",
+        "operationId": "appCreate",
+        "summary": "Create an application",
         "tags": [
-          "workspaces"
+          "applications"
         ],
         "parameters": [
           {
-            "$ref": "#/components/parameters/workspaceId"
+            "$ref": "#/components/parameters/appId"
           }
         ],
         "requestBody": {
@@ -3331,224 +3331,23 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/workspace"
+                "$ref": "#/components/schemas/application"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Returns the created workspace.",
+            "description": "Returns the created application.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/workspaceOutput"
+                  "$ref": "#/components/schemas/applicationOutput"
                 },
                 "examples": {
-                  "workspace": {
-                    "$ref": "#/components/examples/workspace"
+                  "application": {
+                    "$ref": "#/components/examples/application"
                   }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/workspaces/{workspaceId}": {
-      "put": {
-        "operationId": "workspaceUpdate",
-        "summary": "Update a workspace",
-        "tags": [
-          "workspaces"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/workspaceId"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/workspace"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Returns the updated workspace.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/workspaceOutput"
-                },
-                "examples": {
-                  "workspace": {
-                    "$ref": "#/components/examples/workspace"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "workspaceDestroy",
-        "summary": "Delete a workspace",
-        "tags": [
-          "workspaces"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/workspaceId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the deleted workspace.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/workspaceOutput"
-                },
-                "examples": {
-                  "workspace": {
-                    "$ref": "#/components/examples/workspace"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/workspaces/{workspaceId}/publish": {
-      "post": {
-        "operationId": "workspacePublish",
-        "summary": "Publish a workspace",
-        "tags": [
-          "workspaces"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/workspaceId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the deployment object.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/deploymentOutput"
-                },
-                "examples": {
-                  "deployment": {
-                    "$ref": "#/components/examples/deploymentOutput"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/workspaces/{workspaceId}/unpublish": {
-      "post": {
-        "operationId": "workspaceUnpublish",
-        "summary": "Unpublish a workspace",
-        "tags": [
-          "workspaces"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/workspaceId"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The workspace was published successfully."
-          }
-        }
-      }
-    },
-    "/workspaces/{workspaceId}/import": {
-      "post": {
-        "operationId": "workspaceImport",
-        "summary": "Import a workspace to an existing workspace 🔒",
-        "description": "This endpoint is only available on a business or enterprise license.",
-        "tags": [
-          "workspaces"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/workspaceId"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "encryptedPassword": {
-                    "description": "Password for the file if it is encrypted.",
-                    "type": "string"
-                  },
-                  "file": {
-                    "description": "The export to import.",
-                    "type": "string",
-                    "format": "binary"
-                  }
-                },
-                "required": [
-                  "file"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Workspace has been updated."
-          }
-        }
-      }
-    },
-    "/workspaces/{workspaceId}/export": {
-      "post": {
-        "operationId": "workspaceExport",
-        "summary": "Export a workspace 🔒",
-        "description": "This endpoint is only available on a business or enterprise license.",
-        "tags": [
-          "workspaces"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/workspaceId"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/workspaceExport"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "A gzip tarball containing the workspace export, encrypted if password provided.",
-            "content": {
-              "application/gzip": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary",
-                  "example": "Tarball containing database and object store contents..."
                 }
               }
             }
@@ -3557,6 +3356,74 @@
       }
     },
     "/applications/{appId}": {
+      "put": {
+        "operationId": "appUpdate",
+        "summary": "Update an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/application"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the updated application.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/applicationOutput"
+                },
+                "examples": {
+                  "application": {
+                    "$ref": "#/components/examples/application"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "appDestroy",
+        "summary": "Delete an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted application.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/applicationOutput"
+                },
+                "examples": {
+                  "application": {
+                    "$ref": "#/components/examples/application"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "operationId": "appGetById",
         "summary": "Retrieve an application",
@@ -3580,6 +3447,137 @@
                   "application": {
                     "$ref": "#/components/examples/application"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{appId}/unpublish": {
+      "post": {
+        "operationId": "appUnpublish",
+        "summary": "Unpublish an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The app was published successfully."
+          }
+        }
+      }
+    },
+    "/applications/{appId}/publish": {
+      "post": {
+        "operationId": "appPublish",
+        "summary": "Publish an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deployment object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/deploymentOutput"
+                },
+                "examples": {
+                  "deployment": {
+                    "$ref": "#/components/examples/deploymentOutput"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{appId}/import": {
+      "post": {
+        "operationId": "appImport",
+        "summary": "Import an app to an existing app 🔒",
+        "description": "This endpoint is only available on a business or enterprise license.",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "encryptedPassword": {
+                    "description": "Password for the export if it is encrypted.",
+                    "type": "string"
+                  },
+                  "appExport": {
+                    "description": "The app export to import.",
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "appExport"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Application has been updated."
+          }
+        }
+      }
+    },
+    "/applications/{appId}/export": {
+      "post": {
+        "operationId": "appExport",
+        "summary": "Export an app 🔒",
+        "description": "This endpoint is only available on a business or enterprise license.",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/appExport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A gzip tarball containing the app export, encrypted if password provided.",
+            "content": {
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "example": "Tarball containing database and object store contents..."
                 }
               }
             }
@@ -4639,6 +4637,248 @@
                   "views": {
                     "$ref": "#/components/examples/views"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces": {
+      "post": {
+        "operationId": "workspaceCreate",
+        "summary": "Create a workspace",
+        "tags": [
+          "workspaces"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/workspace"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the created workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/workspaceOutput"
+                },
+                "examples": {
+                  "workspace": {
+                    "$ref": "#/components/examples/workspace"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}": {
+      "put": {
+        "operationId": "workspaceUpdate",
+        "summary": "Update a workspace",
+        "tags": [
+          "workspaces"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/workspace"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the updated workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/workspaceOutput"
+                },
+                "examples": {
+                  "workspace": {
+                    "$ref": "#/components/examples/workspace"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "workspaceDestroy",
+        "summary": "Delete a workspace",
+        "tags": [
+          "workspaces"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/workspaceOutput"
+                },
+                "examples": {
+                  "workspace": {
+                    "$ref": "#/components/examples/workspace"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/publish": {
+      "post": {
+        "operationId": "workspacePublish",
+        "summary": "Publish a workspace",
+        "tags": [
+          "workspaces"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deployment object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/deploymentOutput"
+                },
+                "examples": {
+                  "deployment": {
+                    "$ref": "#/components/examples/deploymentOutput"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/unpublish": {
+      "post": {
+        "operationId": "workspaceUnpublish",
+        "summary": "Unpublish a workspace",
+        "tags": [
+          "workspaces"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The workspace was published successfully."
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/import": {
+      "post": {
+        "operationId": "workspaceImport",
+        "summary": "Import a workspace to an existing workspace 🔒",
+        "description": "This endpoint is only available on a business or enterprise license.",
+        "tags": [
+          "workspaces"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "encryptedPassword": {
+                    "description": "Password for the file if it is encrypted.",
+                    "type": "string"
+                  },
+                  "file": {
+                    "description": "The export to import.",
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Workspace has been updated."
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/export": {
+      "post": {
+        "operationId": "workspaceExport",
+        "summary": "Export a workspace 🔒",
+        "description": "This endpoint is only available on a business or enterprise license.",
+        "tags": [
+          "workspaces"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/workspaceExport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A gzip tarball containing the workspace export, encrypted if password provided.",
+            "content": {
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "example": "Tarball containing database and object store contents..."
                 }
               }
             }

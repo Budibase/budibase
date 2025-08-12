@@ -4,29 +4,27 @@
  */
 
 export interface paths {
-  "/workspaces": {
-    post: operations["workspaceCreate"];
-  };
-  "/workspaces/{workspaceId}": {
-    put: operations["workspaceUpdate"];
-    delete: operations["workspaceDestroy"];
-  };
-  "/workspaces/{workspaceId}/publish": {
-    post: operations["workspacePublish"];
-  };
-  "/workspaces/{workspaceId}/unpublish": {
-    post: operations["workspaceUnpublish"];
-  };
-  "/workspaces/{workspaceId}/import": {
-    /** This endpoint is only available on a business or enterprise license. */
-    post: operations["workspaceImport"];
-  };
-  "/workspaces/{workspaceId}/export": {
-    /** This endpoint is only available on a business or enterprise license. */
-    post: operations["workspaceExport"];
+  "/applications": {
+    post: operations["appCreate"];
   };
   "/applications/{appId}": {
     get: operations["appGetById"];
+    put: operations["appUpdate"];
+    delete: operations["appDestroy"];
+  };
+  "/applications/{appId}/unpublish": {
+    post: operations["appUnpublish"];
+  };
+  "/applications/{appId}/publish": {
+    post: operations["appPublish"];
+  };
+  "/applications/{appId}/import": {
+    /** This endpoint is only available on a business or enterprise license. */
+    post: operations["appImport"];
+  };
+  "/applications/{appId}/export": {
+    /** This endpoint is only available on a business or enterprise license. */
+    post: operations["appExport"];
   };
   "/applications/search": {
     /** Based on application properties (currently only name) search for applications. */
@@ -113,6 +111,27 @@ export interface paths {
   "/views/search": {
     /** Based on view properties (currently only name) search for views. */
     post: operations["viewSearch"];
+  };
+  "/workspaces": {
+    post: operations["workspaceCreate"];
+  };
+  "/workspaces/{workspaceId}": {
+    put: operations["workspaceUpdate"];
+    delete: operations["workspaceDestroy"];
+  };
+  "/workspaces/{workspaceId}/publish": {
+    post: operations["workspacePublish"];
+  };
+  "/workspaces/{workspaceId}/unpublish": {
+    post: operations["workspaceUnpublish"];
+  };
+  "/workspaces/{workspaceId}/import": {
+    /** This endpoint is only available on a business or enterprise license. */
+    post: operations["workspaceImport"];
+  };
+  "/workspaces/{workspaceId}/export": {
+    /** This endpoint is only available on a business or enterprise license. */
+    post: operations["workspaceExport"];
   };
 }
 
@@ -1405,137 +1424,24 @@ export interface components {
 }
 
 export interface operations {
-  workspaceCreate: {
+  appCreate: {
     parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
+      header: {
+        /** The ID of the app which this request is targeting. */
+        "x-budibase-app-id": components["parameters"]["appId"];
       };
     };
     responses: {
-      /** Returns the created workspace. */
+      /** Returns the created application. */
       200: {
         content: {
-          "application/json": components["schemas"]["workspaceOutput"];
+          "application/json": components["schemas"]["applicationOutput"];
         };
       };
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["workspace"];
-      };
-    };
-  };
-  workspaceUpdate: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Returns the updated workspace. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["workspaceOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["workspace"];
-      };
-    };
-  };
-  workspaceDestroy: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted workspace. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["workspaceOutput"];
-        };
-      };
-    };
-  };
-  workspacePublish: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Returns the deployment object. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["deploymentOutput"];
-        };
-      };
-    };
-  };
-  workspaceUnpublish: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** The workspace was published successfully. */
-      204: never;
-    };
-  };
-  /** This endpoint is only available on a business or enterprise license. */
-  workspaceImport: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Workspace has been updated. */
-      204: never;
-    };
-    requestBody: {
-      content: {
-        "multipart/form-data": {
-          /** @description Password for the file if it is encrypted. */
-          encryptedPassword?: string;
-          /**
-           * Format: binary
-           * @description The export to import.
-           */
-          file: string;
-        };
-      };
-    };
-  };
-  /** This endpoint is only available on a business or enterprise license. */
-  workspaceExport: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** A gzip tarball containing the workspace export, encrypted if password provided. */
-      200: {
-        content: {
-          "application/gzip": string;
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["workspaceExport"];
+        "application/json": components["schemas"]["application"];
       };
     };
   };
@@ -1552,6 +1458,119 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["applicationOutput"];
         };
+      };
+    };
+  };
+  appUpdate: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** Returns the updated application. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["applicationOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["application"];
+      };
+    };
+  };
+  appDestroy: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** Returns the deleted application. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["applicationOutput"];
+        };
+      };
+    };
+  };
+  appUnpublish: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** The app was published successfully. */
+      204: never;
+    };
+  };
+  appPublish: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** Returns the deployment object. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["deploymentOutput"];
+        };
+      };
+    };
+  };
+  /** This endpoint is only available on a business or enterprise license. */
+  appImport: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** Application has been updated. */
+      204: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /** @description Password for the export if it is encrypted. */
+          encryptedPassword?: string;
+          /**
+           * Format: binary
+           * @description The app export to import.
+           */
+          appExport: string;
+        };
+      };
+    };
+  };
+  /** This endpoint is only available on a business or enterprise license. */
+  appExport: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** A gzip tarball containing the app export, encrypted if password provided. */
+      200: {
+        content: {
+          "application/gzip": string;
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["appExport"];
       };
     };
   };
@@ -2117,6 +2136,140 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["nameSearch"];
+      };
+    };
+  };
+  workspaceCreate: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the created workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["workspace"];
+      };
+    };
+  };
+  workspaceUpdate: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the updated workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["workspace"];
+      };
+    };
+  };
+  workspaceDestroy: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the deleted workspace. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["workspaceOutput"];
+        };
+      };
+    };
+  };
+  workspacePublish: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Returns the deployment object. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["deploymentOutput"];
+        };
+      };
+    };
+  };
+  workspaceUnpublish: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** The workspace was published successfully. */
+      204: never;
+    };
+  };
+  /** This endpoint is only available on a business or enterprise license. */
+  workspaceImport: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** Workspace has been updated. */
+      204: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /** @description Password for the file if it is encrypted. */
+          encryptedPassword?: string;
+          /**
+           * Format: binary
+           * @description The export to import.
+           */
+          file: string;
+        };
+      };
+    };
+  };
+  /** This endpoint is only available on a business or enterprise license. */
+  workspaceExport: {
+    parameters: {
+      path: {
+        /** The ID of the workspace which this request is targeting. */
+        workspaceId: components["parameters"]["workspaceId"];
+      };
+    };
+    responses: {
+      /** A gzip tarball containing the workspace export, encrypted if password provided. */
+      200: {
+        content: {
+          "application/gzip": string;
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["workspaceExport"];
       };
     };
   };

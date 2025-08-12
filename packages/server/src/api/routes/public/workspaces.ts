@@ -7,63 +7,63 @@ const read = [],
 
 /**
  * @openapi
- * /applications:
+ * /workspaces:
  *   post:
- *     operationId: appCreate
- *     summary: Create an application
+ *     operationId: workspaceCreate
+ *     summary: Create a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appId'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/application'
+ *             $ref: '#/components/schemas/workspace'
  *     responses:
  *       200:
- *         description: Returns the created application.
+ *         description: Returns the created workspace.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/applicationOutput'
+ *               $ref: '#/components/schemas/workspaceOutput'
  *             examples:
- *               application:
- *                 $ref: '#/components/examples/application'
+ *               workspace:
+ *                 $ref: '#/components/examples/workspace'
  */
 write.push(
-  new Endpoint("post", "/applications", controller.create).addMiddleware(
+  new Endpoint("post", "/workspaces", controller.create).addMiddleware(
     applicationValidator()
   )
 )
 
 /**
  * @openapi
- * /applications/{appId}:
+ * /workspaces/{workspaceId}:
  *   put:
- *     operationId: appUpdate
- *     summary: Update an application
+ *     operationId: workspaceUpdate
+ *     summary: Update a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/application'
+ *             $ref: '#/components/schemas/workspace'
  *     responses:
  *       200:
- *         description: Returns the updated application.
+ *         description: Returns the updated workspace.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/applicationOutput'
+ *               $ref: '#/components/schemas/workspaceOutput'
  *             examples:
- *               application:
- *                 $ref: '#/components/examples/application'
+ *               workspace:
+ *                 $ref: '#/components/examples/workspace'
  */
 write.push(
   new Endpoint("put", "/applications/:appId", controller.update).addMiddleware(
@@ -73,55 +73,37 @@ write.push(
 
 /**
  * @openapi
- * /applications/{appId}:
+ * /workspaces/{workspaceId}:
  *   delete:
- *     operationId: appDestroy
- *     summary: Delete an application
+ *     operationId: workspaceDestroy
+ *     summary: Delete a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     responses:
  *       200:
- *         description: Returns the deleted application.
+ *         description: Returns the deleted workspace.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/applicationOutput'
+ *               $ref: '#/components/schemas/workspaceOutput'
  *             examples:
- *               application:
- *                 $ref: '#/components/examples/application'
+ *               workspace:
+ *                 $ref: '#/components/examples/workspace'
  */
 write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
 /**
  * @openapi
- * /applications/{appId}/unpublish:
+ * /workspaces/{workspaceId}/publish:
  *   post:
- *     operationId: appUnpublish
- *     summary: Unpublish an application
+ *     operationId: workspacePublish
+ *     summary: Publish a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
- *     responses:
- *       204:
- *         description: The app was published successfully.
- */
-write.push(
-  new Endpoint("post", "/applications/:appId/unpublish", controller.unpublish)
-)
-
-/**
- * @openapi
- * /applications/{appId}/publish:
- *   post:
- *     operationId: appPublish
- *     summary: Publish an application
- *     tags:
- *       - applications
- *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     responses:
  *       200:
  *         description: Returns the deployment object.
@@ -139,15 +121,33 @@ write.push(
 
 /**
  * @openapi
- * /applications/{appId}/import:
+ * /workspaces/{workspaceId}/unpublish:
  *   post:
- *     operationId: appImport
- *     summary: Import an app to an existing app 🔒
+ *     operationId: workspaceUnpublish
+ *     summary: Unpublish a workspace
+ *     tags:
+ *       - workspaces
+ *     parameters:
+ *       - $ref: '#/components/parameters/workspaceId'
+ *     responses:
+ *       204:
+ *         description: The workspace was published successfully.
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/unpublish", controller.unpublish)
+)
+
+/**
+ * @openapi
+ * /workspaces/{workspaceId}/import:
+ *   post:
+ *     operationId: workspaceImport
+ *     summary: Import a workspace to an existing workspace 🔒
  *     description: This endpoint is only available on a business or enterprise license.
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       content:
  *         multipart/form-data:
@@ -155,17 +155,17 @@ write.push(
  *             type: object
  *             properties:
  *               encryptedPassword:
- *                 description: Password for the export if it is encrypted.
+ *                 description: Password for the file if it is encrypted.
  *                 type: string
- *               appExport:
- *                 description: The app export to import.
+ *               file:
+ *                 description: The export to import.
  *                 type: string
  *                 format: binary
  *             required:
- *               - appExport
+ *               - file
  *     responses:
  *       204:
- *         description: Application has been updated.
+ *         description: Workspace has been updated.
  */
 write.push(
   new Endpoint("post", "/applications/:appId/import", controller.importToApp)
@@ -173,23 +173,23 @@ write.push(
 
 /**
  * @openapi
- * /applications/{appId}/export:
+ * /workspaces/{workspaceId}/export:
  *   post:
- *     operationId: appExport
- *     summary: Export an app 🔒
+ *     operationId: workspaceExport
+ *     summary: Export a workspace 🔒
  *     description: This endpoint is only available on a business or enterprise license.
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/workspaceId'
  *     requestBody:
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/appExport'
+ *             $ref: '#/components/schemas/workspaceExport'
  *     responses:
  *       200:
- *         description: A gzip tarball containing the app export, encrypted if password provided.
+ *         description: A gzip tarball containing the workspace export, encrypted if password provided.
  *         content:
  *           application/gzip:
  *             schema:
