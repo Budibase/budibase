@@ -12,20 +12,19 @@ function layout(props: any) {
           </div>
           <div className="navbar-start">
             <Link href="/">
-              <a className="navbar-item">
-                List
-              </a>
+              <a className="navbar-item">List</a>
             </Link>
             <Link href="/save">
-              <a className="navbar-item">
-                New sale
-              </a>
+              <a className="navbar-item">New sale</a>
             </Link>
           </div>
           <div className="navbar-end">
             <div className="navbar-item">
               <div className="buttons">
-                <a className="button is-primary" href="https://budibase.readme.io/reference">
+                <a
+                  className="button is-primary"
+                  href="https://budibase.readme.io/reference"
+                >
                   <strong>API Documentation</strong>
                 </a>
               </div>
