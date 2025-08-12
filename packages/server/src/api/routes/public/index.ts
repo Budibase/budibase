@@ -155,7 +155,7 @@ function applyRoutes(
 
 applyAdminRoutes(metricEndpoints)
 applyAdminRoutes(roleEndpoints)
-applyRoutes(workspaceEndpoints, PermissionType.APP, "appId")
+applyRoutes(workspaceEndpoints, PermissionType.APP, "workspaceId")
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(viewEndpoints, PermissionType.VIEW, "viewId")
