@@ -783,7 +783,7 @@ class InternalBuilder {
           if (any) {
             return q.whereRaw(
               cast
-                ? `COALESCE(??::jsonb \\?| array??`
+                ? `COALESCE(??::jsonb \\?| array??, FALSE)`
                 : `COALESCE(?? && '??', FALSE)`,
               [
                 this.rawQuotedIdentifier(key),
