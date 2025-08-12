@@ -25,16 +25,24 @@
   let publishSuccessPopover: ShowUI | undefined
   let publishedAutomations: string[] = [],
     publishedApps: string[] = []
+  let publishCount = 0
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
   $: updateAvailable =
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
+  $: hasBeenPublished($deploymentStore.publishCount)
+
+  const hasBeenPublished = (count: number) => {
+    if (publishCount < count) {
+      publishCount = count
+      publishSuccessPopover?.show()
+    }
+  }
 
   const publish = async () => {
     await deploymentStore.publishApp()
-    publishSuccessPopover?.show()
   }
 </script>
 

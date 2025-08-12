@@ -13,11 +13,13 @@ import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
   isPublishing: boolean
+  publishCount: number
 }
 
 interface DerivedDeploymentState extends DeploymentState {
   isPublished: boolean
   lastPublished?: string
+  publishCount: number
 }
 
 class DeploymentStore extends DerivedBudiStore<
@@ -63,6 +65,7 @@ class DeploymentStore extends DerivedBudiStore<
       {
         deployments: [],
         isPublishing: false,
+        publishCount: 0,
       },
       makeDerivedStore
     )
@@ -94,7 +97,13 @@ class DeploymentStore extends DerivedBudiStore<
       const message = error?.message ? ` - ${error.message}` : ""
       notifications.error(`Error publishing app${message}`)
     }
-    this.update(state => ({ ...state, isPublishing: false }))
+    this.update(state => {
+      return {
+        ...state,
+        isPublishing: false,
+        publishCount: state.publishCount + 1,
+      }
+    })
   }
 
   async completePublish() {

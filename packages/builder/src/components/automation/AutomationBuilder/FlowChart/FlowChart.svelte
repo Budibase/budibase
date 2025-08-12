@@ -8,6 +8,7 @@
     Body,
     Button,
     ActionButton,
+    Icon,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
@@ -15,6 +16,8 @@
     automationStore,
     automationHistoryStore,
     selectedAutomation,
+    workspaceDeploymentStore,
+    deploymentStore,
   } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
@@ -56,6 +59,11 @@
   )
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
+  // Check if automation has unpublished changes
+  $: hasUnpublishedChanges =
+    $workspaceDeploymentStore.automations[automation._id]
+      ?.unpublishedChanges === true
+
   const refresh = () => {
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
@@ -66,6 +74,14 @@
       await automationStore.actions.delete(automation)
     } catch (error) {
       notifications.error("Error deleting automation")
+    }
+  }
+
+  const publishChanges = async () => {
+    try {
+      await deploymentStore.publishApp()
+    } catch (error) {
+      notifications.error("Error publishing changes")
     }
   }
 
@@ -202,25 +218,15 @@
 <div class="main-flow">
   <div class="canvas-heading" class:scrolling>
     <div class="canvas-controls">
-      <div class="canvas-heading-left">
-        <UndoRedoControl store={automationHistoryStore} showButtonGroup />
-
-        <div class="zoom">
-          <div class="group">
-            <ActionButton icon="plus" quiet on:click={draggable.zoomIn} />
-            <ActionButton icon="minus" quiet on:click={draggable.zoomOut} />
+      {#if hasUnpublishedChanges}
+        <div class="unpublished-alert">
+          <div class="unpublished-info">
+            <Icon name="info" />
+            <span>This workflow has unpublished changes</span>
           </div>
+          <Button cta on:click={publishChanges}>Publish changes</Button>
         </div>
-
-        <Button
-          secondary
-          on:click={() => {
-            draggable.zoomToFit()
-          }}
-        >
-          Zoom to fit
-        </Button>
-      </div>
+      {/if}
     </div>
   </div>
 
@@ -255,6 +261,25 @@
         {/if}
       </span>
     </DraggableCanvas>
+    <div class="canvas-footer-left">
+      <UndoRedoControl store={automationHistoryStore} showButtonGroup />
+
+      <div class="zoom">
+        <div class="group">
+          <ActionButton icon="plus" quiet on:click={draggable.zoomIn} />
+          <ActionButton icon="minus" quiet on:click={draggable.zoomOut} />
+        </div>
+      </div>
+
+      <Button
+        secondary
+        on:click={() => {
+          draggable.zoomToFit()
+        }}
+      >
+        Zoom to fit
+      </Button>
+    </div>
   </div>
 </div>
 
@@ -284,6 +309,23 @@
     position: relative;
     width: 100%;
     height: 100%;
+  }
+
+  .unpublished-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--spacing-s);
+    background-color: #1d2e55;
+    border-radius: var(--spacing-l);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+
+  .unpublished-info {
+    display: flex;
+    gap: var(--spacing-s);
   }
 
   .canvas-heading {
@@ -327,7 +369,10 @@
     align-items: center;
   }
 
-  .canvas-heading-left {
+  .canvas-footer-left {
+    position: absolute;
+    left: var(--spacing-xl);
+    bottom: var(--spacing-l);
     display: flex;
     gap: var(--spacing-l);
   }
@@ -338,7 +383,7 @@
     flex-shrink: 0;
   }
 
-  .canvas-heading-left :global(div) {
+  .canvas-footer-left :global(div) {
     border-right: none;
   }
 
@@ -408,9 +453,9 @@
     flex-direction: row;
   }
 
-  .canvas-heading-left .group :global(.spectrum-Button),
-  .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .canvas-heading-left .group :global(i) {
+  .canvas-footer-left .group :global(.spectrum-Button),
+  .canvas-footer-left .group :global(.spectrum-ActionButton),
+  .canvas-footer-left .group :global(i) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .zoom .group :global(> *:not(:first-child)) {
