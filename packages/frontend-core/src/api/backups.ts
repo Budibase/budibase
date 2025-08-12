@@ -4,6 +4,7 @@ import {
   SearchAppBackupsRequest,
   ClearBackupErrorRequest,
   ClearBackupErrorResponse,
+  DeleteAppBackupsResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -24,12 +25,7 @@ export interface BackupEndpoints {
   deleteBackups: (
     appId: string,
     backupIds: string[]
-  ) => Promise<{
-    message: string
-    results: any[]
-    successCount: number
-    failureCount: number
-  }>
+  ) => Promise<DeleteAppBackupsResponse>
   clearBackupErrors: (
     appId: string,
     backupId?: string
