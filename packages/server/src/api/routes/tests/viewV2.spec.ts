@@ -961,7 +961,7 @@ if (descriptions.length) {
                   }
                   return "unknown"
                 }
-                
+
                 // Each row save will trigger AI processing
                 mockChatGPTResponse(responseFunction)
                 mockChatGPTResponse(responseFunction)

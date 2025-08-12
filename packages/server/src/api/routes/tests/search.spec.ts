@@ -1926,11 +1926,13 @@ if (descriptions.length) {
                   mocks.licenses.useAICustomConfigs()
 
                   envCleanup = setEnv({ OPENAI_API_KEY: "mock" })
-                  
+
                   // Ensure MockAgent is installed for OpenAI interceptors
-                  const { installHttpMocking } = require("../../../tests/jestEnv")
+                  const {
+                    installHttpMocking,
+                  } = require("../../../tests/jestEnv")
                   installHttpMocking()
-                  
+
                   // Set up 2 interceptors for the 2 rows that will be processed
                   mockChatGPTResponse("Mock LLM Response")
                   mockChatGPTResponse("Mock LLM Response")
