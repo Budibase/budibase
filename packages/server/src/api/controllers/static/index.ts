@@ -223,9 +223,14 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
   try {
     context.getAppDB({ skip_setup: true })
+
+    const [workspaceApp] = await sdk.workspaceApps.getMatchedWorkspaceApp(
+      ctx.url
+    )
+
     const appInfo = await sdk.applications.metadata.get()
     const hideDevTools = !!ctx.params.appUrl
-    const sideNav = appInfo.navigation?.navigation === "Left"
+    const sideNav = workspaceApp.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
     const themeVariables = getThemeVariables(appInfo.theme)
@@ -236,10 +241,6 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       false
 
     if (!env.isJest()) {
-      const [workspaceApp] = await sdk.workspaceApps.getMatchedWorkspaceApp(
-        ctx.url
-      )
-
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
       /*
        * Server rendering in svelte sadly does not support type checking, the .render function
@@ -247,10 +248,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
+      const appName = workspaceApp?.name || `${appInfo.name}`
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {
-        title:
-          branding?.platformTitle || workspaceApp?.name || `${appInfo.name}`,
+        title: branding?.platformTitle || appName,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
         sideNav,
@@ -259,8 +260,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
-        metaTitle:
-          branding?.metaTitle || `${appInfo.name} - built with Budibase`,
+        metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
         usedPlugins: plugins,
         favicon:
