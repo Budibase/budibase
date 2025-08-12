@@ -557,7 +557,7 @@
       }
     },
     "schemas": {
-      "app": {
+      "application": {
         "type": "object",
         "properties": {
           "name": {
@@ -589,7 +589,7 @@
           "name"
         ]
       },
-      "appOutput": {
+      "applicationOutput": {
         "type": "object",
         "properties": {
           "data": {
@@ -713,7 +713,7 @@
           "data"
         ]
       },
-      "appSearch": {
+      "applicationSearch": {
         "type": "object",
         "properties": {
           "data": {

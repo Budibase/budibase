@@ -533,7 +533,7 @@ components:
       description: Your individual API key, this will provide access based on the
         configured RBAC settings of your user.
   schemas:
-    app:
+    application:
       type: object
       properties:
         name:
@@ -555,7 +555,7 @@ components:
           type: string
       required:
         - name
-    appOutput:
+    applicationOutput:
       type: object
       properties:
         data:
@@ -655,7 +655,7 @@ components:
             - version
       required:
         - data
-    appSearch:
+    applicationSearch:
       type: object
       properties:
         data:

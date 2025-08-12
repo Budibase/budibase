@@ -102,10 +102,10 @@ const deploymentOutputSchema = object({
   },
 })
 
-const appOutput = object({
+const applicationOutput = object({
   data: applicationOutputSchema,
 })
-const appSearch = object({
+const applicationSearch = object({
   data: {
     type: "array",
     items: applicationOutputSchema,
@@ -143,12 +143,12 @@ export default new Resource()
     },
   })
   .setSchemas({
-    app: applicationSchema,
+    application: applicationSchema,
     workspace: applicationSchema,
-    appOutput,
-    workspaceOutput: appOutput,
-    appSearch,
-    workspaceSearch: appSearch,
+    applicationOutput,
+    workspaceOutput: applicationOutput,
+    applicationSearch,
+    workspaceSearch: applicationSearch,
 
     deploymentOutput: object({
       data: deploymentOutputSchema,

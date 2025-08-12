@@ -142,7 +142,7 @@ export interface paths {
 
 export interface components {
   schemas: {
-    app: {
+    application: {
       /** @description The name of the app. */
       name: string;
       /** @description The URL by which the app is accessed, this must be URL encoded. */
@@ -154,7 +154,7 @@ export interface components {
       /** @description The URL by which the app is accessed, this must be URL encoded. */
       url?: string;
     };
-    appOutput: {
+    applicationOutput: {
       data: {
         /** @description The name of the app. */
         name: string;
@@ -204,7 +204,7 @@ export interface components {
         lockedBy?: { [key: string]: unknown };
       };
     };
-    appSearch: {
+    applicationSearch: {
       data: {
         /** @description The name of the app. */
         name: string;
