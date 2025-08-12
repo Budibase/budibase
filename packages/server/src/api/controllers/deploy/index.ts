@@ -213,6 +213,10 @@ export const publishApp = async function (
       replication = new dbCore.Replication(config)
       const devDb = context.getDevAppDB()
       await devDb.compact()
+      // TODO: a lot of tests depend on old behaviour of data being published
+      // we could do with going through the tests and updating them all to write
+      // data to production instead of development - but doesn't improve test
+      // quality - so keep publishing data in dev for now
       await replication.replicate(
         replication.appReplicateOpts({
           isCreation: !isPublished,
