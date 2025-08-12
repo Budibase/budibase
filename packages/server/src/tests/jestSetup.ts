@@ -18,27 +18,6 @@ if (!process.env.CI) {
 }
 testContainerUtils.setupEnv(env, coreEnv)
 
-// In nock v14, we should not globally activate nock as it intercepts ALL connections
-// including database connections, causing EPIPE errors
-// See: https://github.com/nock/nock/issues/2839
-// Instead, we only configure which connections to block when nock IS activated
-nock.disableNetConnect()
-// Allow localhost and Docker Engine (unix socket) traffic used by testcontainers
-nock.enableNetConnect(host => {
-  // In some environments (unix socket requests) Nock passes a string like
-  // "unix:///var/run/docker.sock". Permit these so testcontainers can talk
-  // to the local Docker daemon.
-  if (!host) return true
-  const h = host.toLowerCase()
-  return (
-    h.includes("localhost") ||
-    h.includes("127.0.0.1") ||
-    h.includes("::1") ||
-    h.startsWith("unix://") ||
-    h.includes("/var/run/docker.sock")
-  )
-})
-
 // Ensure nock is properly cleaned after each test
 afterEach(() => {
   // Only clean if nock is active (has interceptors)
