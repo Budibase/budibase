@@ -4,8 +4,8 @@
  */
 
 export interface paths {
-  "/applications": {
-    post: operations["appCreate"];
+  "/workspaces": {
+    post: operations["workspaceCreate"];
   };
   "/applications/{appId}": {
     get: operations["appGetById"];
@@ -116,13 +116,13 @@ export interface paths {
 
 export interface components {
   schemas: {
-    application: {
+    workspace: {
       /** @description The name of the app. */
       name: string;
       /** @description The URL by which the app is accessed, this must be URL encoded. */
       url?: string;
     };
-    applicationOutput: {
+    workspaceOutput: {
       data: {
         /** @description The name of the app. */
         name: string;
@@ -147,7 +147,7 @@ export interface components {
         lockedBy?: { [key: string]: unknown };
       };
     };
-    applicationSearch: {
+    workspaceSearch: {
       data: {
         /** @description The name of the app. */
         name: string;
@@ -294,7 +294,7 @@ export interface components {
             }
           | {
               /**
-               * @description Defines the type of the column
+               * @description Defines the type of the column, most explain themselves, a link column is a relationship.
                * @enum {string}
                */
               type?:
@@ -425,7 +425,7 @@ export interface components {
               }
             | {
                 /**
-                 * @description Defines the type of the column
+                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
                  * @enum {string}
                  */
                 type?:
@@ -558,7 +558,7 @@ export interface components {
               }
             | {
                 /**
-                 * @description Defines the type of the column
+                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
                  * @enum {string}
                  */
                 type?:
@@ -1339,24 +1339,19 @@ export interface components {
 }
 
 export interface operations {
-  appCreate: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
+  workspaceCreate: {
+    parameters: {};
     responses: {
-      /** Returns the created application. */
+      /** Returns the created workspace. */
       200: {
         content: {
-          "application/json": components["schemas"]["applicationOutput"];
+          "application/json": components["schemas"]["workspaceOutput"];
         };
       };
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["application"];
+        "application/json": components["schemas"]["workspace"];
       };
     };
   };

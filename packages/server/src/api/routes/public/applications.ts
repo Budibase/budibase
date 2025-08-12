@@ -7,33 +7,33 @@ const read = [],
 
 /**
  * @openapi
- * /applications:
+ * /workspaces:
  *   post:
- *     operationId: appCreate
- *     summary: Create an application
+ *     operationId: workspaceCreate
+ *     summary: Create a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appId'
+ *       - $ref: '#/components/parameters/id'
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/application'
+ *             $ref: '#/components/schemas/workspace'
  *     responses:
  *       200:
- *         description: Returns the created application.
+ *         description: Returns the created workspace.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/applicationOutput'
+ *               $ref: '#/components/schemas/workspaceOutput'
  *             examples:
- *               application:
- *                 $ref: '#/components/examples/application'
+ *               workspace:
+ *                 $ref: '#/components/examples/workspace'
  */
 write.push(
-  new Endpoint("post", "/applications", controller.create).addMiddleware(
+  new Endpoint("post", "/workspaces", controller.create).addMiddleware(
     applicationValidator()
   )
 )
