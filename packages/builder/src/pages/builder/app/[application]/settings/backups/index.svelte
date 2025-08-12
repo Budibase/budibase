@@ -123,7 +123,7 @@
       deselectAll()
       await fetchBackups(filterOpt, page)
     } catch (err) {
-      notifications.error("Unable to delete selected backups")
+      notifications.error("Error while deleting the selected backups")
     } finally {
       loading = false
     }
