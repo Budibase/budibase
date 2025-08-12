@@ -20,6 +20,7 @@
   import GridViewCalculationButton from "@/components/backend/DataTable/buttons/grid/GridViewCalculationButton.svelte"
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import { ViewV2Type, DataEnvironmentMode, type Row } from "@budibase/types"
+  import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
 
   let generateButton: any
 
@@ -91,5 +92,8 @@
       <GridDevProdSwitcher />
     </svelte:fragment>
     <GridCreateEditRowModal />
+    {#if !isProductionMode}
+      <GridDevWarning />
+    {/if}
   </Grid>
 {/key}

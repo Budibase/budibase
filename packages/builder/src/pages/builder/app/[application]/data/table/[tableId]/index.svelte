@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Banner, notifications } from "@budibase/bbui"
+  import { Banner, notifications, Icon } from "@budibase/bbui"
   import {
     datasources,
     tables,
@@ -27,6 +27,7 @@
   import GridAutomationsButton from "@/components/backend/DataTable/buttons/grid/GridAutomationsButton.svelte"
   import GridRowActionsButton from "@/components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
+  import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import {
     DataEnvironmentMode,
@@ -204,6 +205,9 @@
         <GridEditUserModal />
       {:else}
         <GridCreateEditRowModal />
+      {/if}
+      {#if !isProductionMode}
+        <GridDevWarning />
       {/if}
     </Grid>
   {/key}

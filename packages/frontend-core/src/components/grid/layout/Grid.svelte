@@ -229,7 +229,9 @@
   <BulkDeleteHandler />
   <ClipboardHandler />
   <KeyboardManager />
-  <slot />
+  {#if $loaded}
+    <slot />
+  {/if}
 </div>
 
 <style>

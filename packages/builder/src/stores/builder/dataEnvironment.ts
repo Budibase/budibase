@@ -5,10 +5,12 @@ import { API, productionAPI } from "@/api"
 
 interface DataEnvironmentState {
   mode: DataEnvironmentMode
+  bannerHidden: boolean
 }
 
 export const initialState: DataEnvironmentState = {
   mode: DataEnvironmentMode.DEVELOPMENT,
+  bannerHidden: false,
 }
 
 export class DataEnvironmentStore extends BudiStore<DataEnvironmentState> {
@@ -33,6 +35,13 @@ export class DataEnvironmentStore extends BudiStore<DataEnvironmentState> {
         state.mode === DataEnvironmentMode.DEVELOPMENT
           ? DataEnvironmentMode.PRODUCTION
           : DataEnvironmentMode.DEVELOPMENT,
+    }))
+  }
+
+  hideBanner() {
+    this.update(state => ({
+      ...state,
+      bannerHidden: true,
     }))
   }
 
