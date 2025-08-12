@@ -136,6 +136,16 @@ export default new Resource()
         data: [application],
       },
     },
+    workspace: {
+      value: {
+        data: application,
+      },
+    },
+    workspaces: {
+      value: {
+        data: [application],
+      },
+    },
     deploymentOutput: {
       value: {
         data: deployment,
