@@ -3224,60 +3224,29 @@
             }
           }
         }
-      }
-    },
-    "/applications/{appId}": {
-      "delete": {
-        "operationId": "appDestroy",
-        "summary": "Delete an application",
-        "tags": [
-          "applications"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/appIdUrl"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the deleted application.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/applicationOutput"
-                },
-                "examples": {
-                  "application": {
-                    "$ref": "#/components/examples/application"
-                  }
-                }
-              }
-            }
-          }
-        }
       },
-      "get": {
-        "operationId": "appGetById",
-        "summary": "Retrieve an application",
+      "delete": {
+        "operationId": "workspaceDestroy",
+        "summary": "Delete a workspace",
         "tags": [
-          "applications"
+          "workspaces"
         ],
         "parameters": [
           {
-            "$ref": "#/components/parameters/appIdUrl"
+            "$ref": "#/components/parameters/id"
           }
         ],
         "responses": {
           "200": {
-            "description": "Returns the retrieved application.",
+            "description": "Returns the deleted workspace.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/applicationOutput"
+                  "$ref": "#/components/schemas/workspaceOutput"
                 },
                 "examples": {
-                  "application": {
-                    "$ref": "#/components/examples/application"
+                  "workspace": {
+                    "$ref": "#/components/examples/workspace"
                   }
                 }
               }
@@ -3410,6 +3379,37 @@
                   "type": "string",
                   "format": "binary",
                   "example": "Tarball containing database and object store contents..."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{appId}": {
+      "get": {
+        "operationId": "appGetById",
+        "summary": "Retrieve an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the retrieved application.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/applicationOutput"
+                },
+                "examples": {
+                  "application": {
+                    "$ref": "#/components/examples/application"
+                  }
                 }
               }
             }

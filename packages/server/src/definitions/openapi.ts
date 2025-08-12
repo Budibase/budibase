@@ -9,10 +9,7 @@ export interface paths {
   };
   "/workspaces/{id}": {
     put: operations["workspaceUpdate"];
-  };
-  "/applications/{appId}": {
-    get: operations["appGetById"];
-    delete: operations["appDestroy"];
+    delete: operations["workspaceDestroy"];
   };
   "/applications/{appId}/unpublish": {
     post: operations["appUnpublish"];
@@ -27,6 +24,9 @@ export interface paths {
   "/applications/{appId}/export": {
     /** This endpoint is only available on a business or enterprise license. */
     post: operations["appExport"];
+  };
+  "/applications/{appId}": {
+    get: operations["appGetById"];
   };
   "/applications/search": {
     /** Based on application properties (currently only name) search for applications. */
@@ -1373,34 +1373,13 @@ export interface operations {
       };
     };
   };
-  appGetById: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
+  workspaceDestroy: {
+    parameters: {};
     responses: {
-      /** Returns the retrieved application. */
+      /** Returns the deleted workspace. */
       200: {
         content: {
-          "application/json": components["schemas"]["applicationOutput"];
-        };
-      };
-    };
-  };
-  appDestroy: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** Returns the deleted application. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["applicationOutput"];
+          "application/json": components["schemas"]["workspaceOutput"];
         };
       };
     };
@@ -1478,6 +1457,22 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["appExport"];
+      };
+    };
+  };
+  appGetById: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** Returns the retrieved application. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["applicationOutput"];
+        };
       };
     };
   };

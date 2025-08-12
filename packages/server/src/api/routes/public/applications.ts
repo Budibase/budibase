@@ -73,24 +73,24 @@ write.push(
 
 /**
  * @openapi
- * /applications/{appId}:
+ * /workspaces/{id}:
  *   delete:
- *     operationId: appDestroy
- *     summary: Delete an application
+ *     operationId: workspaceDestroy
+ *     summary: Delete a workspace
  *     tags:
- *       - applications
+ *       - workspaces
  *     parameters:
- *       - $ref: '#/components/parameters/appIdUrl'
+ *       - $ref: '#/components/parameters/id'
  *     responses:
  *       200:
- *         description: Returns the deleted application.
+ *         description: Returns the deleted workspace.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/applicationOutput'
+ *               $ref: '#/components/schemas/workspaceOutput'
  *             examples:
- *               application:
- *                 $ref: '#/components/examples/application'
+ *               workspace:
+ *                 $ref: '#/components/examples/workspace'
  */
 write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
