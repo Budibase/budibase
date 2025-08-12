@@ -30,6 +30,7 @@ import {
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../appMigrations"
+import env from "../../../environment"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -213,7 +214,10 @@ export const publishApp = async function (
       const devDb = context.getDevAppDB()
       await devDb.compact()
       await replication.replicate(
-        replication.appReplicateOpts({ isCreation: !isPublished, noData: true })
+        replication.appReplicateOpts({
+          isCreation: !isPublished,
+          noData: !env.isTest(),
+        })
       )
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
