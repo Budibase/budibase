@@ -11,6 +11,7 @@
   export let rightNotificationCount: number | undefined = undefined
   export let rightText: string
   export let selected: "left" | "right" = "left"
+  export let disabled = false
 
   const dispatch = createEventDispatcher<{
     left: void
@@ -18,7 +19,7 @@
   }>()
 </script>
 
-<div class="view-mode-toggle">
+<div class="view-mode-toggle" class:disabled>
   <div class="group">
     <div class="wrapper">
       {#if leftNotificationTooltip && leftNotificationCount}
@@ -37,6 +38,7 @@
         <ActionButton
           icon={leftIcon}
           quiet
+          {disabled}
           selected={selected === "left"}
           on:click={() => {
             selected = "left"
@@ -64,6 +66,7 @@
         <ActionButton
           icon={rightIcon}
           quiet
+          {disabled}
           selected={selected === "right"}
           on:click={() => {
             selected = "right"
@@ -111,5 +114,8 @@
     z-index: 2;
     font-size: 0.8em;
     cursor: pointer;
+  }
+  .disabled {
+    opacity: 0.8;
   }
 </style>

@@ -8,7 +8,6 @@
     rowActions,
     roles,
     dataEnvironmentStore,
-    workspaceDeploymentStore,
     dataAPI,
   } from "@/stores/builder"
   import { themeStore, admin, licensing } from "@/stores/portal"
@@ -63,7 +62,6 @@
     return `${entry.name} (${entry.subtype})`
   })
   $: id = $tables.selected?._id!
-  $: isDeployed = $workspaceDeploymentStore.tables[id]?.published
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
   $: gridDatasource = {
@@ -80,11 +78,6 @@
   $: rowActions.refreshRowActions(id)
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
-  $: showDevProdSwitcher = !(
-    !isInternal &&
-    tableDatasource &&
-    !tableDatasource.usesEnvironmentVariables
-  )
 
   const makeRowActionButtons = (actions: any[]) => {
     return (actions || [])
@@ -195,9 +188,7 @@
         {/if}
       </svelte:fragment>
       <svelte:fragment slot="controls-right">
-        {#if isDeployed}
-          <GridDevProdSwitcher visible={showDevProdSwitcher} />
-        {/if}
+        <GridDevProdSwitcher />
       </svelte:fragment>
 
       <!-- Content for editing columns -->

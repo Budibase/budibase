@@ -255,9 +255,10 @@ export const createActions = (context: StoreContext): RowActionStore => {
         if ($fetch.error.status === 403) {
           message = "You don't have access to this data"
         } else if (
-          $fetch.error.status === 404 &&
-          $fetch.error.url &&
-          $fetch.error.url.includes("/api/tables/")
+          ($fetch.error.status === 404 &&
+            $fetch.error.url &&
+            $fetch.error.url.includes("/api/tables/")) ||
+          $fetch.error.url.includes("/api/v2/views/")
         ) {
           definitionMissing.set(true)
           message = $fetch.error.message
