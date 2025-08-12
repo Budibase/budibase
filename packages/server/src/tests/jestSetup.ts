@@ -3,11 +3,6 @@ import * as matchers from "jest-extended"
 import { env as coreEnv, timers } from "@budibase/backend-core"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import nock from "nock"
-import nodeFetch, {
-  Headers as NFHeaders,
-  Request as NFRequest,
-  Response as NFResponse,
-} from "node-fetch"
 
 expect.extend(matchers)
 if (!process.env.CI) {
@@ -17,6 +12,8 @@ if (!process.env.CI) {
   jest.setTimeout(30 * 1000)
 }
 testContainerUtils.setupEnv(env, coreEnv)
+
+nock.enableNetConnect()
 
 // Ensure nock is properly cleaned after each test
 afterEach(() => {
