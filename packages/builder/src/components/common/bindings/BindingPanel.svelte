@@ -97,11 +97,11 @@
 
   $: bindingOptions =
     allowHBS || allowHTML
-      ? bindingsToCompletions(enrichedBindings, EditorModes.Handlebars)
+      ? bindingsToCompletions(enrichedBindings, editorMode)
       : []
   $: helperOptions =
     allowHelpers && (allowHBS || allowHTML)
-      ? getHelperCompletions(EditorModes.Handlebars)
+      ? getHelperCompletions(editorMode)
       : []
   $: snippetsOptions =
     usingJS && allowSnippets && !$licensing.isFreePlan && snippets?.length
