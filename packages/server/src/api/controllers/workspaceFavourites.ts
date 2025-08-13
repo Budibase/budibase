@@ -15,7 +15,7 @@ import {
   WorkspaceResource,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { db } from "@budibase/backend-core"
+import { db, HTTPError } from "@budibase/backend-core"
 
 type WorkspaceResourceDoc =
   | Table
@@ -89,7 +89,7 @@ export async function create(
     const doc = await verifyResource(body.resourceId)
     // tryGet doesnt throw so in the event that a resource doesn't throw, ensure it.
     if (!doc) {
-      throw new Error(`Resource not found: ${body.resourceId}`)
+      throw new HTTPError(`Resource not found: ${body.resourceId}`, 404)
     }
   } catch (e: any) {
     ctx.throw(
