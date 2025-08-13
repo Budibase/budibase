@@ -21,7 +21,7 @@
     urlParam: "automationId",
     stateKey: "selectedAutomationId",
     validate: id => $automationStore.automations.some(x => x._id === id),
-    fallbackUrl: "./index",
+    fallbackUrl: "../index",
     store: automationStore,
     update: automationStore.actions.select,
     routify,
@@ -34,7 +34,7 @@
   <TopBar
     breadcrumbs={[
       { text: "Automations", url: "../" },
-      { text: $selectedAutomation.data.name },
+      { text: $selectedAutomation?.data?.name },
     ]}
     icon="path"
   />
