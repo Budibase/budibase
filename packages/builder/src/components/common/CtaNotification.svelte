@@ -21,7 +21,7 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: var(--spacing-s);
+    padding: var(--spacing-s) var(--spacing-l);
     background-color: #1d2e55;
     border-radius: var(--spacing-l);
     border: 1px solid rgba(255, 255, 255, 0.1);
