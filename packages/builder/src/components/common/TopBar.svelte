@@ -6,7 +6,14 @@
 </script>
 
 <script lang="ts">
-  import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
+  import {
+    Body,
+    Icon,
+    Popover,
+    ActionMenu,
+    PopoverAlignment,
+    MenuItem,
+  } from "@budibase/bbui"
   import {
     deploymentStore,
     automationStore,
@@ -18,8 +25,9 @@
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
 
-  let publishButton: HTMLElement | undefined
+  let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
+  let seedProductionTables = false
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
@@ -41,18 +49,42 @@
       {/if}
     {/each}
   </div>
-  <Button
-    cta
-    on:click={publish}
-    disabled={$deploymentStore.isPublishing}
-    bind:ref={publishButton}
-  >
-    Publish
-  </Button>
+
+  <ActionMenu disabled={$deploymentStore.isPublishing}>
+    <svelte:fragment slot="control">
+      <div class="publish-menu">
+        <span
+          role="button"
+          tabindex="0"
+          on:click={publish}
+          on:keydown={e => e.key === "Enter" && publish()}
+        >
+          Publish
+        </span>
+        <div class="separator" />
+        <div bind:this={publishPopoverAnchor} class="publish-dropdown">
+          <Icon size="M" name="caret-down" />
+        </div>
+      </div>
+    </svelte:fragment>
+
+    <MenuItem
+      icon="check"
+      iconHidden={seedProductionTables}
+      on:click={() => (seedProductionTables = false)}
+      >Don't seed production tables</MenuItem
+    >
+    <MenuItem
+      icon="check"
+      iconHidden={!seedProductionTables}
+      on:click={() => (seedProductionTables = true)}
+      >Seed production tables</MenuItem
+    >
+  </ActionMenu>
 </div>
 
 <Popover
-  anchor={publishButton}
+  anchor={publishPopoverAnchor}
   bind:this={publishSuccessPopover}
   align={PopoverAlignment.Right}
   offset={6}
@@ -114,6 +146,30 @@
   }
   .breadcrumbs h1.divider {
     color: var(--spectrum-global-color-gray-400);
+  }
+  .publish-menu {
+    font-size: var(--font-size-l);
+    display: flex;
+    align-items: center;
+    background: var(--spectrum-semantic-cta-color-background-default);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 130ms ease-in-out;
+  }
+  .publish-menu span {
+    padding: var(--spacing-s) var(--spacing-l);
+  }
+  .publish-menu:hover {
+    background: var(--spectrum-semantic-cta-color-background-hover);
+  }
+  .publish-dropdown {
+    padding: var(--spacing-s) var(--spacing-m);
+  }
+  .separator {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.3);
+    align-self: stretch;
   }
   .popover-content {
     display: flex;

@@ -6,6 +6,7 @@
   const actionMenu = getContext("actionMenu")
 
   export let icon: string | undefined = undefined
+  export let iconHidden: boolean = false
   export let disabled: boolean | undefined = undefined
   export let noClose: boolean = false
   export let keyBind: string | undefined = undefined
@@ -42,7 +43,7 @@
   tabindex="0"
 >
   {#if icon}
-    <div class="icon">
+    <div class="icon" class:iconHidden>
       <Icon
         name={icon}
         size="S"
@@ -71,6 +72,9 @@
   .icon {
     align-self: center;
     margin-right: var(--spacing-s);
+  }
+  .iconHidden {
+    opacity: 0;
   }
   .keys {
     margin-left: 30px;
