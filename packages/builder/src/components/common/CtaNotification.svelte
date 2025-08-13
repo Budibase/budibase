@@ -14,7 +14,7 @@
   {#if button && "message" in button}
     <Button cta on:click>{button.message}</Button>
   {:else if button && "icon" in button}
-    <ActionButton quiet icon={button.icon} />
+    <ActionButton on:click quiet icon={button.icon} noPadding />
   {/if}
 </div>
 
