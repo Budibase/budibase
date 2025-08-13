@@ -68,6 +68,7 @@ export async function create(
         name: ctx.request.body.name,
       }
     )
+    automation.definition.trigger.inputs.rowActionId = rowAction.id
 
     createdAutomation = await sdk.automations.get(rowAction.automationId)
     createdAutomation = await sdk.automations.create({
