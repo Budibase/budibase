@@ -8,7 +8,6 @@
     Body,
     Button,
     ActionButton,
-    Icon,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
@@ -225,7 +224,7 @@
           on:click={publishChanges}
           icon="info"
         >
-          <span>This workflow has unpublished changes</span>
+          <span>This automation has unpublished changes</span>
         </CtaNotification>
       {/if}
     </div>
