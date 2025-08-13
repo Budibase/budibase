@@ -7,7 +7,7 @@
   <div class="location">
     <CtaNotification
       icon="info"
-      buttonText="X"
+      button={{ icon: "x" }}
       on:click={() => dataEnvironmentStore.hideBanner()}
     >
       <span>
