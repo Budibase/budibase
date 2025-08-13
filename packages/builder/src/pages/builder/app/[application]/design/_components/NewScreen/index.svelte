@@ -1,7 +1,7 @@
 <script lang="ts">
   import CreationPage from "@/components/common/CreationPage.svelte"
   import { AutoScreenTypes } from "@/constants"
-  import { screenStore, workspaceAppStore } from "@/stores/builder"
+  import { screenStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import {
     Body,
@@ -22,6 +22,7 @@
   export let onClose: (() => void) | null = null
   export let inline: boolean = false
   export let submitOnClick: boolean = false
+  export let workspaceAppId: string
 
   let title: string
   let rootModal: Modal
@@ -30,9 +31,6 @@
   let currentStepIndex: number
 
   $: hasScreens = $screenStore.screens?.length
-  $: workspaceAppId =
-    $workspaceAppStore.selectedWorkspaceApp?._id ||
-    $workspaceAppStore.workspaceApps[0]._id!
   $: title = hasScreens ? "Create new screen" : "Create your first screen"
 
   export const open = () => {
@@ -255,7 +253,7 @@
   }
 
   .selected {
-    border-radius: 4px;
+    border-radius: 8px;
     outline: 1px solid var(--blue);
   }
 </style>

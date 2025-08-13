@@ -8,7 +8,7 @@ const baseSchema = {
   name: Joi.string().required(),
   url: Joi.string()
     .required()
-    .regex(/^\/\w*$/),
+    .regex(/^\/[\w-]*$/),
   disabled: Joi.boolean().optional(),
 }
 

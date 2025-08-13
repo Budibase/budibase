@@ -12,7 +12,7 @@
   import {
     automationStore,
     contextMenuStore,
-    deploymentStore,
+    workspaceFavouriteStore,
   } from "@/stores/builder"
   import {
     AbsTooltip,
@@ -24,12 +24,14 @@
     Modal,
     type ModalAPI,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import type { UIAutomation } from "@budibase/types"
-  import { PublishResourceState } from "@budibase/types"
+  import { PublishResourceState, WorkspaceResource } from "@budibase/types"
   import { url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
-  import PublishToggleModal from "../_components/PublishToggleModal.svelte"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import NoResults from "../../_components/NoResults.svelte"
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -39,7 +41,7 @@
   let filter: PublishResourceState | undefined
   let selectedAutomation: UIAutomation | undefined = undefined
 
-  let publishToggleModal: PublishToggleModal
+  let automationChangingStatus: string | undefined = undefined
 
   const filters: {
     label: string
@@ -59,18 +61,14 @@
     },
   ]
 
+  $: favourites = workspaceFavouriteStore.lookup
+
   async function deleteAutomation() {
     if (!selectedAutomation) {
       return
     }
     try {
       await automationStore.actions.delete(selectedAutomation)
-      if (
-        selectedAutomation.publishStatus.state !==
-        PublishResourceState.UNPUBLISHED
-      ) {
-        await deploymentStore.publishApp()
-      }
       notifications.success("Automation deleted successfully")
     } catch (error) {
       console.error(error)
@@ -103,11 +101,14 @@
       name: automation.disabled ? "Switch on" : "Switch off",
       keyBind: null,
       visible: true,
-      disabled:
-        !automation.definition.trigger ||
-        automation.publishStatus.state === PublishResourceState.UNPUBLISHED,
-      callback: () => {
-        publishToggleModal.show()
+      disabled: !automation.definition.trigger,
+      callback: async () => {
+        try {
+          automationChangingStatus = automation._id
+          await automationStore.actions.toggleDisabled(automation._id!)
+        } finally {
+          automationChangingStatus = undefined
+        }
       },
     }
     const del = {
@@ -156,6 +157,14 @@
   }
 
   $: automations = $automationStore.automations
+  $: filteredAutomations = automations
+    .map(a => ({
+      ...a,
+      favourite: $favourites?.[a._id!] ?? {
+        resourceType: WorkspaceResource.AUTOMATION,
+        resourceId: a._id!,
+      },
+    }))
     .filter(a => {
       if (!filter) {
         return true
@@ -163,7 +172,18 @@
 
       return a.publishStatus.state === filter
     })
-    .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
+    .sort((a, b) => {
+      const aIsFav = !!a.favourite._id
+      const bIsFav = !!b.favourite._id
+
+      // Group by favourite status
+      if (aIsFav !== bIsFav) {
+        return bIsFav ? 1 : -1
+      }
+
+      // Within same group, sort by updatedAt
+      return b.updatedAt!.localeCompare(a.updatedAt!)
+    })
 </script>
 
 <div class="automations-index">
@@ -198,8 +218,9 @@
     </div>
     <div class="action-buttons">
       <Button icon="lightbulb" secondary>Learn</Button>
-      <Button cta icon="plus" on:click={createModal.show}>New automation</Button
-      >
+      <Button cta icon="plus" on:click={createModal.show}>
+        New automation
+      </Button>
     </div>
   </div>
 
@@ -210,9 +231,10 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each automations as automation}
+  {#each filteredAutomations as automation}
     <a
       class="app"
+      class:favourite={automation.favourite?._id}
       href={$url(`./${automation._id}`)}
       on:contextmenu={e => openContextMenu(e, automation)}
       class:active={showHighlight && selectedAutomation === automation}
@@ -222,7 +244,10 @@
       >
       <div>{getTriggerFriendlyName(automation)}</div>
       <div>
-        <PublishStatusBadge status={automation.publishStatus.state} />
+        <PublishStatusBadge
+          status={automation.publishStatus.state}
+          loading={automationChangingStatus === automation._id}
+        />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(automation.updatedAt)}>
         <span>
@@ -230,15 +255,34 @@
         </span>
       </AbsTooltip>
       <div class="actions">
-        <Icon
-          name="More"
-          size="M"
-          hoverable
-          on:click={e => openContextMenu(e, automation)}
-        />
+        <div class="ctx-btn">
+          <Icon
+            name="More"
+            size="M"
+            hoverable
+            on:click={e => openContextMenu(e, automation)}
+          />
+        </div>
+
+        <span class="favourite-btn">
+          <FavouriteResourceButton
+            favourite={automation.favourite}
+            position={TooltipPosition.Left}
+            noWrap
+          />
+        </span>
       </div>
     </a>
   {/each}
+  {#if !automations.length}
+    <NoResults
+      ctaText="Create your first automation"
+      onCtaClick={() => createModal.show()}
+      resourceType="automation"
+    >
+      No automations yet! Build your first automation to get started.
+    </NoResults>
+  {/if}
 </div>
 
 <Modal bind:this={createModal}>
@@ -263,16 +307,7 @@
     Are you sure you wish to delete the automation
     <b>{selectedAutomation.name}?</b>
     This action cannot be undone.
-    {#if selectedAutomation.publishStatus.state !== PublishResourceState.UNPUBLISHED}
-      <br />
-      <br /> To continue you need to publish all the workspace. Do you want to continue?
-    {/if}
   </ConfirmDialog>
-
-  <PublishToggleModal
-    bind:this={publishToggleModal}
-    automation={selectedAutomation}
-  />
 {/if}
 
 <style>
@@ -331,17 +366,31 @@
     &.active {
       background: var(--spectrum-global-color-gray-200);
 
-      & .actions {
+      & .actions > * {
         opacity: 1;
         pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
       }
     }
   }
   .actions {
     justify-content: flex-end;
     display: flex;
-    opacity: 0;
+    align-items: center;
     pointer-events: none;
+    gap: var(--spacing-xs);
+  }
+
+  .actions > * {
+    opacity: 0;
     transition: opacity 130ms ease-out;
+  }
+
+  .actions .favourite-btn {
+    pointer-events: all;
   }
 </style>

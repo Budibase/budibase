@@ -15,15 +15,17 @@
   import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import PublishToggleModal from "../../_components/PublishToggleModal.svelte"
 
-  let publishToggleModal: PublishToggleModal
+  let changingStatus = false
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
-  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp!
+  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
 
   $: liveUrl = $selectedAppUrls.liveUrl
+
+  $: toggleValue =
+    selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
 
   const previewApp = () => {
     previewStore.showPreview(true)
@@ -32,79 +34,98 @@
   const togglePreviewDevice = () => {
     previewStore.setDevice(mobile ? "desktop" : "mobile")
   }
+
+  const handleToggleChange = async (e: CustomEvent<boolean>) => {
+    if (!selectedWorkspaceApp) {
+      return
+    }
+
+    try {
+      changingStatus = true
+
+      await workspaceAppStore.toggleDisabled(
+        selectedWorkspaceApp._id!,
+        !e.detail
+      )
+    } finally {
+      changingStatus = false
+    }
+  }
 </script>
 
-<div class="app-panel">
-  <div class="drawer-container" />
-  <div class="header">
-    <div class="header-left">
-      {#if $featureFlags.WORKSPACE_APPS}
-        <div class="workspace-info">
-          {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
-            <div class="workspace-url">
-              <AbsTooltip text="Open live app">
-                <ActionButton
-                  icon="globe-simple"
-                  quiet
-                  on:click={() => {
-                    window.open(liveUrl, "_blank")
-                  }}
-                />
-              </AbsTooltip>
-            </div>
-          {/if}
-        </div>
-      {/if}
-    </div>
-    <div class="header-right">
-      <UndoRedoControl store={screenStore.history} />
-      <div class="divider-container">
-        <Divider size="S" vertical />
-      </div>
-      <div class="actions">
-        {#if !isPDF}
-          {#if $appStore.clientFeatures.devicePreview}
-            <ActionButton
-              quiet
-              icon={mobile ? "device-mobile-camera" : "monitor"}
-              on:click={togglePreviewDevice}
-            />
-          {/if}
-          <ThemeSettings />
+{#if selectedWorkspaceApp}
+  <div class="app-panel">
+    <div class="drawer-container" />
+    <div class="header">
+      <div class="header-left">
+        {#if $featureFlags.WORKSPACE_APPS}
+          <div class="workspace-info">
+            {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
+              <div class="workspace-url">
+                <AbsTooltip text="Open live app">
+                  <ActionButton
+                    icon="globe-simple"
+                    quiet
+                    on:click={() => {
+                      window.open(liveUrl, "_blank")
+                    }}
+                  />
+                </AbsTooltip>
+              </div>
+            {/if}
+          </div>
         {/if}
-        <ScreenErrorsButton />
       </div>
-      <div class="divider-container">
-        <Divider size="S" vertical />
-      </div>
-      <ActionButton quiet icon="play" on:click={previewApp}>
-        Preview
-      </ActionButton>
-      {#if $featureFlags.WORKSPACE_APPS}
+      <div class="header-right">
+        <UndoRedoControl store={screenStore.history} />
         <div class="divider-container">
           <Divider size="S" vertical />
         </div>
-        <div class="workspace-info-toggle">
-          <PublishStatusBadge
-            status={selectedWorkspaceApp.publishStatus.state}
-          />
-          <Toggle
-            noPadding
-            on:change={() => publishToggleModal.show()}
-            value={!selectedWorkspaceApp?.disabled}
-          />
+        <div class="actions">
+          {#if !isPDF}
+            {#if $appStore.clientFeatures.devicePreview}
+              <ActionButton
+                quiet
+                icon={mobile ? "device-mobile-camera" : "monitor"}
+                on:click={togglePreviewDevice}
+              />
+            {/if}
+            <ThemeSettings />
+          {/if}
+          <ScreenErrorsButton />
         </div>
-      {/if}
+        <div class="divider-container">
+          <Divider size="S" vertical />
+        </div>
+        <ActionButton quiet icon="play" on:click={previewApp}>
+          Preview
+        </ActionButton>
+        {#if $featureFlags.WORKSPACE_APPS}
+          <div class="divider-container">
+            <Divider size="S" vertical />
+          </div>
+          <div class="workspace-info-toggle">
+            <PublishStatusBadge
+              status={selectedWorkspaceApp.publishStatus.state}
+              loading={changingStatus}
+            />
+            <Toggle
+              noPadding
+              on:change={handleToggleChange}
+              value={toggleValue}
+              disabled={changingStatus}
+            />
+          </div>
+        {/if}
+      </div>
+    </div>
+    <div class="content">
+      {#key $appStore.version}
+        <AppPreview />
+      {/key}
     </div>
   </div>
-  <div class="content">
-    {#key $appStore.version}
-      <AppPreview />
-    {/key}
-  </div>
-</div>
-
-<PublishToggleModal bind:this={publishToggleModal} app={selectedWorkspaceApp} />
+{/if}
 
 <style>
   .app-panel {

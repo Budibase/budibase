@@ -126,7 +126,7 @@
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
             on:click={() => (expanded = !expanded)}
-            size="XS"
+            size="XXS"
             weight="fill"
           />
         {/if}
@@ -154,7 +154,7 @@
         <div class="copy-value-icon">
           <Icon
             name="copy"
-            size="S"
+            size="XS"
             hoverable
             color="var(--spectrum-global-color-gray-600)"
             hoverColor="var(--spectrum-global-color-gray-900)"
@@ -189,18 +189,24 @@
     flex-direction: column;
     gap: 8px;
     overflow: hidden;
+    min-height: 0;
   }
 
   /* Expand arrow */
   .binding-arrow {
-    margin: 3px 6px 0 4px;
+    margin: 0 6px 0 4px;
     flex: 0 0 10px;
-    transition: transform 130ms ease-out;
+    display: flex;
+    align-items: center;
+    line-height: 0;
   }
   .binding-arrow :global(i) {
-    width: 10px;
+    display: inline-block;
+    transform-origin: 50% 50%;
+    transition: transform 130ms ease-out;
   }
-  .binding-arrow.expanded {
+
+  .binding-arrow.expanded :global(i) {
     transform: rotate(90deg);
   }
 
@@ -210,7 +216,7 @@
     flex-direction: row;
     font-family: monospace;
     font-size: 12px;
-    align-items: flex-start;
+    align-items: center;
     width: 100%;
   }
 

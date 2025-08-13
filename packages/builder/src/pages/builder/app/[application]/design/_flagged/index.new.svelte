@@ -1,10 +1,17 @@
 <script lang="ts">
   import {
     contextMenuStore,
-    deploymentStore,
     workspaceAppStore,
+    workspaceFavouriteStore,
+    appStore,
+    isOnlyUser,
   } from "@/stores/builder"
-  import { PublishResourceState, type UIWorkspaceApp } from "@budibase/types"
+  import { admin } from "@/stores/portal"
+  import {
+    WorkspaceResource,
+    PublishResourceState,
+    type UIWorkspaceApp,
+  } from "@budibase/types"
   import {
     AbsTooltip,
     ActionButton,
@@ -13,6 +20,8 @@
     Helpers,
     Icon,
     notifications,
+    TooltipPosition,
+    StatusLight,
   } from "@budibase/bbui"
   import HeroBanner from "@/components/common/HeroBanner.svelte"
   import AppsHero from "assets/apps-hero-x1.png"
@@ -21,16 +30,26 @@
   import { capitalise, durationFromNow } from "@/helpers"
   import TopBar from "@/components/common/TopBar.svelte"
   import { BannerType } from "@/constants/banners"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import PublishToggleModal from "../../design/_components/PublishToggleModal.svelte"
+  import NoResults from "../../_components/NoResults.svelte"
+  import VersionModal from "@/components/deploy/VersionModal.svelte"
+
+  type ShowUI = { show: () => void }
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
   let selectedWorkspaceApp: UIWorkspaceApp | undefined = undefined
   let workspaceAppModal: WorkspaceAppModal
   let confirmDeleteDialog: ConfirmDialog
+  let appChangingStatus: string | undefined = undefined
+  let versionModal: ShowUI
 
-  let publishToggleModal: PublishToggleModal
+  $: favourites = workspaceFavouriteStore.lookup
+  $: updateAvailable =
+    $appStore.upgradableVersion &&
+    $appStore.version &&
+    $appStore.upgradableVersion !== $appStore.version
 
   const filters: {
     label: string
@@ -61,12 +80,6 @@
         selectedWorkspaceApp._rev!
       )
 
-      if (
-        selectedWorkspaceApp.publishStatus.state !==
-        PublishResourceState.UNPUBLISHED
-      ) {
-        await deploymentStore.publishApp()
-      }
       notifications.success(
         `App '${selectedWorkspaceApp.name}' deleted successfully`
       )
@@ -84,10 +97,16 @@
       icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
       name: workspaceApp.disabled ? "Switch on" : "Switch off",
       visible: true,
-      disabled:
-        workspaceApp.publishStatus.state === PublishResourceState.UNPUBLISHED,
-      callback: () => {
-        publishToggleModal.show()
+      callback: async () => {
+        try {
+          appChangingStatus = workspaceApp._id
+          await workspaceAppStore.toggleDisabled(
+            workspaceApp._id!,
+            !workspaceApp.disabled
+          )
+        } finally {
+          appChangingStatus = undefined
+        }
       },
     }
 
@@ -132,6 +151,7 @@
   }
 
   $: workspaceApps = $workspaceAppStore.workspaceApps
+  $: filteredWorkspaceApps = workspaceApps
     .filter(a => {
       if (!filter) {
         return true
@@ -139,7 +159,27 @@
 
       return a.publishStatus.state === filter
     })
-    .sort((a, b) => b.updatedAt!.localeCompare(a.updatedAt!))
+    .map(app => {
+      return {
+        ...app,
+        favourite: $favourites?.[app._id!] ?? {
+          resourceType: WorkspaceResource.WORKSPACE_APP,
+          resourceId: app._id!,
+        },
+      }
+    })
+    .sort((a, b) => {
+      const aIsFav = !!a.favourite._id
+      const bIsFav = !!b.favourite._id
+
+      // Group by favourite status
+      if (aIsFav !== bIsFav) {
+        return bIsFav ? 1 : -1
+      }
+
+      // Within same group, sort by updatedAt
+      return b.updatedAt!.localeCompare(a.updatedAt!)
+    })
 </script>
 
 <div class="apps-index">
@@ -156,8 +196,18 @@
     pre-built components in minutes.
   </HeroBanner>
 
-  <TopBar icon="layout" breadcrumbs={[{ text: "Apps" }]} showPublish={false}
-  ></TopBar>
+  <TopBar icon="browser" breadcrumbs={[{ text: "Apps" }]} showPublish={false}>
+    {#if updateAvailable && $isOnlyUser && !$admin.isDev}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div class="update-version" on:click={versionModal.show}>
+        <ActionButton quiet>
+          <StatusLight notice />
+          Update
+        </ActionButton>
+      </div>
+    {/if}
+  </TopBar>
   <div class="secondary-bar">
     <div class="filter">
       {#each filters as option}
@@ -182,10 +232,13 @@
     <span>Last updated</span>
     <span></span>
   </div>
-  {#each workspaceApps as app}
+  {#each filteredWorkspaceApps as app}
     <a
       class="app"
-      href={`./design/${app.screens[0]?._id}`}
+      class:favourite={app.favourite?._id}
+      href={app.screens.length
+        ? `./design/${app.screens[0]._id}`
+        : `./design/new/${app._id}`}
       on:contextmenu={e => openContextMenu(e, app)}
       class:active={showHighlight && selectedWorkspaceApp === app}
     >
@@ -193,7 +246,10 @@
         >{app.name}</Body
       >
       <div>
-        <PublishStatusBadge status={app.publishStatus.state} />
+        <PublishStatusBadge
+          status={app.publishStatus.state}
+          loading={appChangingStatus === app._id}
+        />
       </div>
       <AbsTooltip text={Helpers.getDateDisplayValue(app.updatedAt)}>
         <span>
@@ -201,15 +257,34 @@
         </span>
       </AbsTooltip>
       <div class="actions">
-        <Icon
-          name="More"
-          size="M"
-          hoverable
-          on:click={e => openContextMenu(e, app)}
-        />
+        <div class="ctx-btn">
+          <Icon
+            name="More"
+            size="M"
+            hoverable
+            on:click={e => openContextMenu(e, app)}
+          />
+        </div>
+
+        <span class="favourite-btn">
+          <FavouriteResourceButton
+            favourite={app.favourite}
+            position={TooltipPosition.Left}
+            noWrap
+          />
+        </span>
       </div>
     </a>
   {/each}
+  {#if !workspaceApps.length}
+    <NoResults
+      ctaText="Create your first app"
+      onCtaClick={createApp}
+      resourceType="app"
+    >
+      No apps yet! Build your first app to get started.
+    </NoResults>
+  {/if}
 </div>
 
 <WorkspaceAppModal
@@ -226,18 +301,10 @@
     title="Confirm Deletion"
   >
     Deleting <b>{selectedWorkspaceApp.name}</b> cannot be undone. Are you sure?
-    {#if selectedWorkspaceApp.publishStatus.state !== PublishResourceState.UNPUBLISHED}
-      <br />
-      <br />
-      To continue you need to publish all the workspace. Do you want to continue?
-    {/if}
   </ConfirmDialog>
-
-  <PublishToggleModal
-    bind:this={publishToggleModal}
-    app={selectedWorkspaceApp}
-  />
 {/if}
+
+<VersionModal hideIcon bind:this={versionModal} />
 
 <style>
   .apps-index {
@@ -278,7 +345,7 @@
   .app,
   .table-header {
     display: grid;
-    grid-template-columns: 1fr 200px 200px 200px 50px;
+    grid-template-columns: 1fr 200px 200px 50px;
     border-bottom: var(--border);
     align-items: center;
   }
@@ -295,17 +362,36 @@
     &.active {
       background: var(--spectrum-global-color-gray-200);
 
-      & .actions {
+      & .actions > * {
         opacity: 1;
         pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
       }
     }
   }
   .actions {
     justify-content: flex-end;
     display: flex;
-    opacity: 0;
+    align-items: center;
     pointer-events: none;
+    gap: var(--spacing-xs);
+  }
+
+  .actions > * {
+    opacity: 0;
     transition: opacity 130ms ease-out;
+  }
+
+  .actions .favourite-btn {
+    pointer-events: all;
+  }
+
+  .update-version :global(.spectrum-ActionButton-label) {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>

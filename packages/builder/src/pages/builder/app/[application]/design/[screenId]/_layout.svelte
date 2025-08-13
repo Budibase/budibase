@@ -19,9 +19,12 @@
     validate: (id: string) =>
       $screenStore.screens.some(screen => screen._id === id),
     fallbackUrl: () => {
+      const workspaceAppScreens = $screenStore.screens.filter(
+        s => s.workspaceAppId === $workspaceAppStore.selectedWorkspaceApp?._id
+      )
       // Fall back to the first screen if one exists
-      if ($screenStore.screens.length) {
-        return `../${$screenStore.screens[0]._id}`
+      if (workspaceAppScreens.length) {
+        return `../${workspaceAppScreens[0]._id}`
       }
       return "../../design"
     },
@@ -40,10 +43,10 @@
     {#if $featureFlags.WORKSPACE_APPS}
       <TopBar
         breadcrumbs={[
-          { text: "Design", url: "../" },
+          { text: "Apps", url: "../" },
           { text: $workspaceAppStore.selectedWorkspaceApp?.name },
         ]}
-        icon="layout"
+        icon="browser"
       ></TopBar>
     {/if}
     <div class="content">

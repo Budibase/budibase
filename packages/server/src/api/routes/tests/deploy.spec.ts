@@ -37,7 +37,7 @@ describe("/api/deploy", () => {
       }
     })
 
-    it("returns unpublished state for development-only resources", async () => {
+    it("returns disabled state for development-only resources", async () => {
       const table = await config.api.table.save(basicTable())
 
       // Create automation
@@ -60,13 +60,13 @@ describe("/api/deploy", () => {
         published: false,
         name: automation.name,
         unpublishedChanges: true,
-        state: "unpublished",
+        state: "disabled",
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
         published: false,
         name: workspaceApp.name,
         unpublishedChanges: true,
-        state: "unpublished",
+        state: "disabled",
       })
     })
 
@@ -161,13 +161,13 @@ describe("/api/deploy", () => {
         published: false,
         name: unpublishedAutomation.name,
         unpublishedChanges: true,
-        state: "unpublished",
+        state: "disabled",
       })
       expect(res.workspaceApps[unpublishedWorkspaceApp._id!]).toEqual({
         published: false,
         name: unpublishedWorkspaceApp.name,
         unpublishedChanges: true,
-        state: "unpublished",
+        state: "disabled",
       })
     })
 

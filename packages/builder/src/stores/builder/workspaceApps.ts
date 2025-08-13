@@ -48,7 +48,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
                 publishStatus: $workspaceDeploymentStore.workspaceApps[
                   workspaceApp._id!
                 ] || {
-                  state: PublishResourceState.UNPUBLISHED,
+                  state: PublishResourceState.DISABLED,
                   unpublishedChanges: true,
                 },
               }
@@ -138,6 +138,9 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       }
     })
 
+    const { deploymentStore } = await import("./deployment")
+
+    await deploymentStore.publishApp()
     appStore.refresh()
   }
 
@@ -154,7 +157,20 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       disabled: state,
     })
 
+    const { deploymentStore } = await import("./deployment")
+    await deploymentStore.publishApp()
     await workspaceDeploymentStore.fetch()
+  }
+
+  replaceDatasource(_id: string, workspaceApp: WorkspaceApp) {
+    const index = get(this.store).workspaceApps.findIndex(
+      x => x._id === workspaceApp._id
+    )
+
+    this.store.update(state => {
+      state.workspaceApps[index] = workspaceApp
+      return state
+    })
   }
 }
 

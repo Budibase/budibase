@@ -1,6 +1,6 @@
 const fs = require("fs")
 const { join } = require("path")
-const { spawnSync } =require("child_process")
+const { spawnSync } = require("child_process")
 
 const DONT_RUN_PKG = ["bbui"]
 const PACKAGES_PATH = join(__dirname, "..", "packages")
@@ -50,5 +50,8 @@ for (let pkg of packages) {
   executeInPackage(pkg)
 }
 
-spawnSync("yarn", ["bootstrap"], { cwd: join(__dirname, ".."), stdio: "inherit", shell: true })
-
+spawnSync("yarn", ["bootstrap"], {
+  cwd: join(__dirname, ".."),
+  stdio: "inherit",
+  shell: true,
+})
