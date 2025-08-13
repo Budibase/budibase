@@ -179,9 +179,20 @@ export const publishApp = async function (
       "Publishing resources by ID not currently supported"
     )
   }
+  const seedProductionTables = ctx.request.body?.seedProductionTables
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)
+  let tablesToSync: "all" | string[] | undefined
+  if (env.isTest()) {
+    tablesToSync = "all"
+  } else if (seedProductionTables) {
+    try {
+      tablesToSync = await sdk.tables.listEmptyProductionTables()
+    } catch (e) {
+      tablesToSync = []
+    }
+  }
 
   const appId = context.getAppId()!
 
@@ -220,7 +231,7 @@ export const publishApp = async function (
       await replication.replicate(
         replication.appReplicateOpts({
           isCreation: !isPublished,
-          noData: !env.isTest(),
+          tablesToSync,
         })
       )
       // app metadata is excluded as it is likely to be in conflict

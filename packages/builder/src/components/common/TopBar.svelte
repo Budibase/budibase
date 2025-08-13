@@ -32,7 +32,7 @@
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
 
   const publish = async () => {
-    await deploymentStore.publishApp()
+    await deploymentStore.publishApp({ seedProductionTables })
     publishSuccessPopover?.show()
   }
 </script>

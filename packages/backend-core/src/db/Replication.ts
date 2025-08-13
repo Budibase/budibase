@@ -53,7 +53,7 @@ class Replication {
   appReplicateOpts(
     opts: PouchDB.Replication.ReplicateOptions & {
       isCreation?: boolean
-      noData?: boolean
+      tablesToSync?: string[] | "all"
     } = {}
   ): PouchDB.Replication.ReplicateOptions {
     if (typeof opts.filter === "string") {
@@ -65,23 +65,21 @@ class Replication {
     const toDev = direction === ReplicationDirection.TO_DEV
     delete opts.filter
 
-    const isCreation = opts.isCreation,
-      noData = opts.noData
+    const isCreation = opts.isCreation
+    let tablesToSync = opts.tablesToSync
     delete opts.isCreation
-    delete opts.noData
+    delete opts.tablesToSync
 
-    const isRealData = (_id?: string) => {
-      // sample data should be published even if noData specified
-      if (
-        _id?.startsWith(DocumentType.SAMPLE_ROW) ||
-        _id?.startsWith(DocumentType.SAMPLE_LINK)
-      ) {
-        return false
-      }
-      return (
-        _id?.startsWith(DocumentType.ROW) || _id?.startsWith(DocumentType.LINK)
-      )
+    let syncAllTables = false,
+      tableSyncList: string[] | undefined
+    if (typeof tablesToSync === "string" && tablesToSync === "all") {
+      syncAllTables = true
+    } else if (tablesToSync) {
+      tableSyncList = tablesToSync
     }
+
+    const isData = (_id?: string) =>
+      _id?.startsWith(DocumentType.ROW) || _id?.startsWith(DocumentType.LINK)
 
     return {
       ...opts,
@@ -97,7 +95,13 @@ class Replication {
         if (doc._deleted) {
           return true
         }
-        if (noData && isRealData(doc._id)) {
+        if (
+          isData(doc._id) &&
+          (tableSyncList?.find(id => doc._id?.includes(id)) || syncAllTables)
+        ) {
+          return true
+        }
+        if (isData(doc._id)) {
           return false
         }
         if (doc._id?.startsWith(DocumentType.AUTOMATION_LOG)) {

@@ -3,6 +3,7 @@ import { DeploymentDoc, DeploymentStatus } from "../../../documents"
 export interface PublishAppRequest {
   automationIds?: string[]
   workspaceAppIds?: string[]
+  seedProductionTables?: boolean
 }
 
 export interface PublishAppResponse extends DeploymentDoc {}
