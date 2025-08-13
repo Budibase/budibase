@@ -38,4 +38,5 @@ export interface AutomationContext {
   _stepIndex: number
   _error: boolean
   _stepResults: AutomationStepResult[]
+  _loopDepth?: number
 }
