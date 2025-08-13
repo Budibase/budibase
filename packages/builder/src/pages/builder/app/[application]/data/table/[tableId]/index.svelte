@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Banner, notifications, Icon } from "@budibase/bbui"
+  import { Banner, notifications } from "@budibase/bbui"
   import {
     datasources,
     tables,
