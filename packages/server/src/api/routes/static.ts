@@ -14,6 +14,9 @@ const router: Router = new Router()
 addFileManagement(router)
 
 router
+  .get("/apple-touch-icon.png", async ctx => {
+    ctx.redirect("/builder/bblogo.png")
+  })
   .get("/api/assets/client", controller.serveClientLibrary)
   .get("/api/apps/:appId/manifest.json", controller.servePwaManifest)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
