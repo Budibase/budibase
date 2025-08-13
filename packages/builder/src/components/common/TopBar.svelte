@@ -51,7 +51,7 @@
     {/each}
   </div>
 
-  <ActionMenu disabled={$deploymentStore.isPublishing}>
+  <ActionMenu disabled={$deploymentStore.isPublishing} roundedPopover>
     <svelte:fragment slot="control">
       <div class="publish-menu">
         <span
