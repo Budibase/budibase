@@ -18,7 +18,9 @@
   "provisioners": [
     {
       "type": "shell",
-      "inline": ["cloud-init status --wait"]
+      "inline": [
+        "cloud-init status --wait"
+      ]
     },
     {
       "type": "file",
@@ -54,7 +56,10 @@
         "LANG=en_US.UTF-8",
         "LC_CTYPE=en_US.UTF-8"
       ],
-      "scripts": ["scripts/90-cleanup.sh", "scripts/99-img_check.sh"]
+      "scripts": [
+        "scripts/90-cleanup.sh",
+        "scripts/99-img_check.sh"
+      ]
     }
   ]
 }
