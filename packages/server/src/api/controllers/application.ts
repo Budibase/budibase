@@ -666,6 +666,10 @@ export async function create(
   ctx.body = newApplication
 }
 
+export async function find(ctx: UserCtx) {
+  ctx.body = await sdk.applications.metadata.get()
+}
+
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
 export async function update(
