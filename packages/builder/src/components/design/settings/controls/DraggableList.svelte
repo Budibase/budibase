@@ -53,13 +53,7 @@
           type: zoneType,
         }
       })
-      .filter(item => {
-        if (item.id && !seenIds.has(item.id)) {
-          seenIds.add(item.id)
-          return true
-        }
-        return false
-      })
+      .filter(({ id }) => id && seenIds.has(id) && seenIds.add(id))
   }
 
   $: if (items) {
