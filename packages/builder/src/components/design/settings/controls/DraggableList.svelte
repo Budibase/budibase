@@ -86,7 +86,6 @@
   const onItemChanged = e => {
     dispatch("itemChange", e.detail)
   }
-  $: console.log(draggableItems)
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
