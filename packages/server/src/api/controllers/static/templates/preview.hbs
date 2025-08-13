@@ -1,70 +1,95 @@
 <html lang="en">
-  <head>
-    <title>Budibase Builder Preview</title>
-    <link
-      href="/builder/fonts/source-sans-3/source-sans-3.css"
-      rel="stylesheet"
-    />
-    <link href="/builder/fonts/inter/inter.css" rel="stylesheet" />
-    <link
-      href="/builder/fonts/phosphor-icons/phosphor-icons.css"
-      rel="stylesheet"
-    />
-    <link href="/builder/fonts/remixicon.css" rel="stylesheet" />
-    <style>
-      html,
-      body {
-        padding: 0;
-        margin: 0;
-      }
-      html {
-        height: 100%;
-        width: 100%;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: stretch;
-      }
-      body {
-        flex: 1 1 auto;
-        overflow: hidden;
+<head>
+  <title>Budibase Builder Preview</title>
+  <link href="/builder/fonts/source-sans-3/source-sans-3.css" rel="stylesheet" />
+  <link href="/builder/fonts/inter/inter.css" rel="stylesheet" />
+  <link href="/builder/fonts/phosphor-icons/phosphor-icons.css" rel="stylesheet" />
+  <link href="/builder/fonts/remixicon.css" rel="stylesheet" />
+  <style>
+    html, body {
+      padding: 0;
+      margin: 0;
+    }
+    html {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+    body {
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: border-box;
+    }
+
+    /* Inject latest font CSS from bbui.css, as the real file is versioned with the client lib */
+    .spectrum {
+      --font-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI,
+      "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+      --font-accent: "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI,
+      "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+      --spectrum-alias-body-text-font-family: var(--font-sans) !important;
+      --spectrum-global-font-family-base: var(--font-sans) !important;
+      --spectrum-global-font-line-height-small: 1.4 !important;
+    }
+  </style>
+  <script src='{{ clientLibPath }}'></script>
+  <script nonce="{{ nonce }}">
+    function receiveMessage(event) {
+      if (!event.data) {
+        return
       }
 
-      *,
-      *:before,
-      *:after {
-        box-sizing: border-box;
+      // Parse received message
+      // If parsing fails, just ignore and wait for the next message
+      let parsed
+      try {
+        parsed = JSON.parse(event.data)
+      } catch (error) {
+        console.error("Client received invalid JSON")
+        // Ignore
+      }
+      if (!parsed || !parsed.isBudibaseEvent) {
+        return
       }
 
-      /* Inject latest font CSS from bbui.css, as the real file is versioned with the client lib */
-      .spectrum {
-        --font-sans:
-          "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
-          "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
-        --font-accent:
-          "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
-          "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
-        --spectrum-alias-body-text-font-family: var(--font-sans) !important;
-        --spectrum-global-font-family-base: var(--font-sans) !important;
-        --spectrum-global-font-line-height-small: 1.4 !important;
+      // If this is a custom event, try and handle it
+      if (parsed.runtimeEvent) {
+        const { name, payload } = parsed
+        if (window.handleBuilderRuntimeEvent) {
+          window.handleBuilderRuntimeEvent(name, payload)
+        }
+        return
       }
-    </style>
-    <script src="{{clientLibPath}}"></script>
-    <script nonce="{{nonce}}">
-      function receiveMessage(event) { if (!event.data) { return } // Parse
-      received message // If parsing fails, just ignore and wait for the next
-      message let parsed try { parsed = JSON.parse(event.data) } catch (error) {
-      console.error("Client received invalid JSON") // Ignore } if (!parsed ||
-      !parsed.isBudibaseEvent) { return } // If this is a custom event, try and
-      handle it if (parsed.runtimeEvent) { const { name, payload } = parsed if
-      (window.handleBuilderRuntimeEvent) {
-      window.handleBuilderRuntimeEvent(name, payload) } return } // Otherwise
-      this is a full reload message // Extract data from message const {
-      selectedComponentId, layout, screen, appId, theme, customTheme,
-      previewDevice, navigation, hiddenComponentIds, usedPlugins, location,
-      snippets, componentErrors } = parsed // Set some flags so the app knows
-      we're in the builder window["##BUDIBASE_IN_BUILDER##"] = true
+
+      // Otherwise this is a full reload message
+      // Extract data from message
+      const {
+        selectedComponentId,
+        layout,
+        screen,
+        appId,
+        theme,
+        customTheme,
+        previewDevice,
+        navigation,
+        hiddenComponentIds,
+        usedPlugins,
+        location,
+        snippets,
+        componentErrors
+      } = parsed
+
+      // Set some flags so the app knows we're in the builder
+      window["##BUDIBASE_IN_BUILDER##"] = true
       window["##BUDIBASE_APP_ID##"] = appId
       window["##BUDIBASE_PREVIEW_SCREEN##"] = screen
       window["##BUDIBASE_SELECTED_COMPONENT_ID##"] = selectedComponentId
@@ -76,17 +101,27 @@
       window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"] = hiddenComponentIds
       window["##BUDIBASE_USED_PLUGINS##"] = usedPlugins
       window["##BUDIBASE_SNIPPETS##"] = snippets
-      window['##BUDIBASE_COMPONENT_ERRORS##'] = componentErrors // Initialise
-      app try { if (window.loadBudibase) { window.loadBudibase()
-      document.documentElement.classList.add("loaded") } else { throw "The
-      client library couldn't be loaded" } } catch (error) {
-      window.parent.postMessage({ type: "error", error }) } }
-      window.addEventListener("message", receiveMessage)
-      window.parent.postMessage({ type: "ready" })
-    </script>
-    {{headAppScripts}}
-  </head>
-  <body>
-    {{bodyAppScripts}}
-  </body>
+      window['##BUDIBASE_COMPONENT_ERRORS##'] = componentErrors
+
+      // Initialise app
+      try {
+        if (window.loadBudibase) {
+          window.loadBudibase()
+          document.documentElement.classList.add("loaded")
+        } else {
+          throw "The client library couldn't be loaded"
+        }
+      } catch (error) {
+        window.parent.postMessage({ type: "error", error })
+      }
+    }
+
+    window.addEventListener("message", receiveMessage)
+    window.parent.postMessage({ type: "ready" })
+  </script>
+  {{ headAppScripts }}
+</head>
+<body>
+  {{ bodyAppScripts }}
+</body>
 </html>
