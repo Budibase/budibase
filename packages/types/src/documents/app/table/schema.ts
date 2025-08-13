@@ -9,6 +9,7 @@ import {
   FormulaType,
   JsonFieldSubType,
   RelationshipType,
+  StringFieldSubType,
 } from "./constants"
 import { AIOperationEnum } from "../../../sdk/ai"
 
@@ -107,8 +108,9 @@ export interface LongFormFieldMetadata extends BaseFieldSchema {
   default?: string
 }
 
-export interface StringFieldMetadata extends BaseFieldSchema {
+export interface StringFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.STRING
+  subtype?: StringFieldSubType.ARRAY
   default?: string
 }
 
