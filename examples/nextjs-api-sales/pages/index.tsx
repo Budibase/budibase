@@ -36,11 +36,13 @@ const Home: NextPage = () => {
   }, [currentPage, getSales])
 
   useEffect(() => {
-    getSales().then(() => {
-      setLoaded(true)
-    }).catch(() => {
-      setSales([])
-    })
+    getSales()
+      .then(() => {
+        setLoaded(true)
+      })
+      .catch(() => {
+        setSales([])
+      })
   }, [])
 
   if (!loaded) {
@@ -61,18 +63,28 @@ const Home: NextPage = () => {
               </tr>
             </thead>
             <tbody>
-              {sales.map((sale: any) =>
+              {sales.map((sale: any) => (
                 <tr key={sale.sale_id}>
                   <th>{sale.sale_id}</th>
                   <th>{sale.sale_name}</th>
-                  <th>{sale.sales_person?.map((person: any) => person.primaryDisplay)[0]}</th>
+                  <th>
+                    {
+                      sale.sales_person?.map(
+                        (person: any) => person.primaryDisplay
+                      )[0]
+                    }
+                  </th>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
           <div className={styles.buttons}>
-            <button className="button" onClick={goToPrevPage}>Prev Page</button>
-            <button className="button" onClick={goToNextPage}>Next Page</button>
+            <button className="button" onClick={goToPrevPage}>
+              Prev Page
+            </button>
+            <button className="button" onClick={goToNextPage}>
+              Next Page
+            </button>
           </div>
         </div>
       </div>

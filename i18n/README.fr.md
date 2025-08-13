@@ -52,17 +52,21 @@
 </h3>
 
 <br /><br />
+
 ## ✨ Fontionnalités
 
-### Construire et déployer un vrai logiciel 
+### Construire et déployer un vrai logiciel
+
 Contrairement à d'autres plateformes, avec Budibase vous construisez et déployez des applications one-page. Les applications Budibase sont très perfomantes et peuvent être designées de manière responsive, offrant ainsi à vos utilisateurs une expérience exceptionnelle.
 <br /><br />
 
 ### Source libre et extensible
+
 Budibase est un logiciel libre - sous licence GPL v3. Cela devrait vous rassurer sur le fait que Budibase sera toujours là. Vous pouvez également coder dans Budibase ou le forker et apporter des modifications à votre guise, ce qui en fera une expérience conviviale pour les développeurs.
 <br /><br />
 
 ### Importer les données ou partir de zéro
+
 Budibase peut tirer ses données de plusieurs sources, dont MongoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB ou une API REST. Et contrairement à d'autres plateformes, avec Budibase, vous pouvez partir de zéro et créer des applications métier sans aucune source de données. [Demander une nouvelle source de données](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
@@ -80,6 +84,7 @@ Budibase est livré avec des composants joliment conçus et puissants que vous p
 <br /><br />
 
 ### Automatiser les processus, intégrer d'autres outils et se connecter à des webhooks
+
 Gagnez du temps en automatisant les processus manuels et les flux de travail. Qu'il s'agisse de se connecter à des webhooks ou d'automatiser des e-mails, il suffit de dire à Budibase ce qu'il doit faire et de le laisser travailler pour vous. Vous pouvez aisément [créer une nouvelle automatisation pour Budibase ici](https://github.com/Budibase/automations) ou [Demander une nouvelle automatisation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
@@ -88,6 +93,7 @@ Gagnez du temps en automatisant les processus manuels et les flux de travail. Qu
 <br /><br />
 
 ### Intégration avec vos outils préférés
+
 Budibase s'intègre à un certain nombre d'outils populaires, ce qui vous permet de créer des applications qui s'adaptent parfaitement à votre pile technologique.
 
 <p align="center">
@@ -96,6 +102,7 @@ Budibase s'intègre à un certain nombre d'outils populaires, ce qui vous permet
 <br /><br />
 
 ### Paradis des admins
+
 Budibase est conçu pour évoluer. Avec Budibase, vous pouvez vous auto-héberger sur votre propre infrastructure et gérer globalement les utilisateurs, l'accueil, le SMTP, les applications, les groupes, l'apparence et plus encore. Vous pouvez également fournir aux utilisateurs/groupes un portail d'applications et confier la gestion des utilisateurs au responsable du groupe.
 
 - Regardez la vidéo de promotion: https://youtu.be/xoljVpty_Kw
@@ -111,14 +118,12 @@ Ou utilisez Budibase Cloud si vous n'avez pas besoin de vous auto-héberger, et 
 
 ### [Commencer avec Budibase](https://budibase.com)
 
-
 <br /><br />
 
 ## 🎓 Apprendre Budibase
 
 La documentation Budibase [est ic](https://docs.budibase.com).
 <br />
-
 
 <br /><br />
 
@@ -128,24 +133,23 @@ Si vous avez une question ou si vous souhaitez discuter avec d'autres utilisateu
 
 <br /><br /><br />
 
-
 ## ❗ Code de conduite
 
 Budibase s'engage à offrir à chacun une expérience accueillante, diversifiée et exempte de harcèlement. Nous attendons de tous les membres de la communauté Budibase qu'ils se conforment aux principes de notre [**Code de conduite**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Merci de le lire.
 <br />
 
-
 <br /><br />
-
 
 ## 🙌 Contribuer à Budibase
 
 Qu'il s'agisse d'ouvrir un rapport de bug ou de créer une Pull request, toute contribution est appréciée et bienvenue. Si vous envisagez de mettre en œuvre une nouvelle fonctionnalité ou de modifier l'API, veuillez d'abord créer un Issue. Nous pourrons ainsi nous assurer que votre travail n'est pas vain.
 
 ### Vous ne savez pas par où commencer ?
+
 Un bon endroit pour commencer à contribuer, c'est ici : [Projets en cours](https://github.com/Budibase/budibase/projects/22).
 
 ### Comment le repo est-il organisé ?
+
 Budibase est une monorepo gérée par lerna. Lerna gère la construction et la publication des paquets de Budibase. Voici, à un haut niveau, les paquets qui composent Budibase.
 
 - [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - contient le code pour l'application svelte côté client du budibase builder.
@@ -157,7 +161,6 @@ Budibase est une monorepo gérée par lerna. Lerna gère la construction et la p
 Pour plus d'informations, voir [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
 
 <br /><br />
-
 
 ## 📝 Licence
 

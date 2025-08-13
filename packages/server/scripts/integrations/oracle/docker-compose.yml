@@ -16,4 +16,4 @@ services:
       - oracle_data:/opt/oracle/oradata
 
 volumes:
- oracle_data:
+  oracle_data:
