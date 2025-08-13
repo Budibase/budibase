@@ -191,6 +191,26 @@ export const publishApp = async function (
       const devAppId = dbCore.getDevelopmentAppID(appId)
       const productionAppId = dbCore.getProdAppID(appId)
 
+      if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+        const allWorkspaceApps = await sdk.workspaceApps.fetch()
+        for (const workspaceApp of allWorkspaceApps) {
+          if (workspaceApp.disabled !== undefined) {
+            continue
+          }
+
+          await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+        }
+
+        const allAutomations = await sdk.automations.fetch()
+        for (const automation of allAutomations) {
+          if (automation.disabled !== undefined) {
+            continue
+          }
+
+          await sdk.automations.update({ ...automation, disabled: true })
+        }
+      }
+
       const isPublished = await sdk.applications.isAppPublished(productionAppId)
 
       // don't try this if feature isn't allowed, will error
