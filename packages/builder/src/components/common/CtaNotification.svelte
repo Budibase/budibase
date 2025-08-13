@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { Icon, Button } from "@budibase/bbui"
+  import { Icon, Button, ActionButton } from "@budibase/bbui"
 
   export let icon: string
-  export let buttonText: string | undefined = undefined
+  export let button: { message: string } | { icon: string } | undefined =
+    undefined
 </script>
 
 <div class="notification">
@@ -10,8 +11,10 @@
     <Icon name={icon} />
     <slot />
   </div>
-  {#if buttonText}
-    <Button cta on:click>{buttonText}</Button>
+  {#if button && "message" in button}
+    <Button cta on:click>{button.message}</Button>
+  {:else if button && "icon" in button}
+    <ActionButton quiet icon={button.icon} />
   {/if}
 </div>
 
@@ -23,7 +26,7 @@
     width: 100%;
     padding: var(--spacing-s) var(--spacing-l);
     background-color: #1d2e55;
-    border-radius: var(--spacing-l);
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
   }
