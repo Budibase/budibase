@@ -300,6 +300,20 @@ describe("/automations", () => {
       }
       throw "Failed to find the rows"
     })
+
+    it("should be able to test a disabled automation", async () => {
+      const { automation } = await config.api.automation.post(
+        collectAutomation({ disabled: true })
+      )
+
+      await config.api.automation.test(automation._id!, {
+        fields: {},
+      })
+
+      expect(sdk.automations.utils.checkForCollectStep(automation)).toEqual(
+        true
+      )
+    })
   })
 
   describe("trigger", () => {

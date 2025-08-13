@@ -251,7 +251,7 @@ export async function test(
     const input = prepareTestInput(body)
     const user = sdk.users.getUserContextBindings(ctx.user)
     return await triggers.externalTrigger(
-      automation,
+      { ...automation, disabled: false },
       { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
       { getResponses: true }
     )
