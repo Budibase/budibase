@@ -43,15 +43,23 @@
   let inactive = true
 
   const buildDraggable = items => {
+    const seenIds = new Set()
     return items
       .map(item => {
+        let id = listItemKey ? item[listItemKey] : generate()
         return {
-          id: listItemKey ? item[listItemKey] : generate(),
+          id,
           item,
           type: zoneType,
         }
       })
-      .filter(item => item.id)
+      .filter(item => {
+        if (item.id && !seenIds.has(item.id)) {
+          seenIds.add(item.id)
+          return true
+        }
+        return false
+      })
   }
 
   $: if (items) {
@@ -78,6 +86,7 @@
   const onItemChanged = e => {
     dispatch("itemChange", e.detail)
   }
+  $: console.log(draggableItems)
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
