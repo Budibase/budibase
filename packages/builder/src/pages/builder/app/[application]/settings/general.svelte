@@ -99,13 +99,24 @@
       </Body>
     </div>
     <div class="row">
-      <Button
-        cta
-        disabled={$deploymentStore.isPublishing}
-        on:click={deploymentStore.publishApp}
-      >
-        Publish
-      </Button>
+      {#if !$featureFlags.WORKSPACE_APPS}
+        <Button
+          cta
+          disabled={$deploymentStore.isPublishing}
+          on:click={deploymentStore.publishApp}
+        >
+          Publish
+        </Button>
+      {:else}
+        <Button
+          icon="arrow-circle-up"
+          primary
+          disabled={$deploymentStore.isPublishing}
+          on:click={deploymentStore.publishApp}
+        >
+          Publish
+        </Button>
+      {/if}
     </div>
   {/if}
   <Divider id="version" />
