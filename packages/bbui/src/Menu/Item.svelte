@@ -7,6 +7,7 @@
 
   export let icon: string | undefined = undefined
   export let iconHidden: boolean = false
+  export let iconAlign: "center" | "start" = "center"
   export let disabled: boolean | undefined = undefined
   export let noClose: boolean = false
   export let keyBind: string | undefined = undefined
@@ -43,7 +44,7 @@
   tabindex="0"
 >
   {#if icon}
-    <div class="icon" class:iconHidden>
+    <div class="icon" class:iconHidden style="align-self: {iconAlign}">
       <Icon
         name={icon}
         size="S"
@@ -70,7 +71,6 @@
 
 <style>
   .icon {
-    align-self: center;
     margin-right: var(--spacing-s);
   }
   .iconHidden {

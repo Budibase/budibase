@@ -30,6 +30,7 @@
   let seedProductionTables = false
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
+  $: workspaceOrApp = workspaceAppsEnabled ? "workspace" : "app"
 
   const publish = async () => {
     await deploymentStore.publishApp({ seedProductionTables })
@@ -71,15 +72,29 @@
     <MenuItem
       icon="check"
       iconHidden={seedProductionTables}
+      iconAlign="start"
       on:click={() => (seedProductionTables = false)}
-      >Don't seed production tables</MenuItem
     >
+      <div>
+        <div class="menu-item-header">Publish {workspaceOrApp}</div>
+        <div class="menu-item-text">
+          Publish changes to the {workspaceOrApp}
+        </div>
+      </div>
+    </MenuItem>
     <MenuItem
       icon="check"
+      iconAlign="start"
       iconHidden={!seedProductionTables}
       on:click={() => (seedProductionTables = true)}
-      >Seed production tables</MenuItem
     >
+      <div>
+        <div class="menu-item-header">Seed and publish</div>
+        <div class="menu-item-text">
+          Seed prod tables with dev data and publish {workspaceOrApp}
+        </div>
+      </div>
+    </MenuItem>
   </ActionMenu>
 </div>
 
@@ -183,5 +198,15 @@
   .link:hover {
     cursor: pointer;
     filter: brightness(110%);
+  }
+  .menu-item-header {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .menu-item-text {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
+    margin-top: 2px;
   }
 </style>
