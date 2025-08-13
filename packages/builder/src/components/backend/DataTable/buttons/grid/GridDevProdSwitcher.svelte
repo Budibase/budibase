@@ -28,7 +28,7 @@
     leftText: "Dev",
     rightIcon: "pulse",
     rightText: "Prod",
-    selected: isDevMode ? "left" : "right",
+    selected: (isDevMode ? "left" : "right") as "left" | "right",
     disabled,
   }
 
