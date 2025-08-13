@@ -30,6 +30,7 @@ import { DeployAPI } from "./deploy"
 import { NavigationAPI } from "./navigation"
 import { RecaptchaAPI } from "./recaptcha"
 import { RoutingAPI } from "./routing"
+import { WorkspaceFavouriteAPI } from "./workspaceFavourite"
 
 export default class API {
   ai: AIAPI
@@ -61,6 +62,7 @@ export default class API {
   navigation: NavigationAPI
   recaptcha: RecaptchaAPI
   routing: RoutingAPI
+  workspaceFavourites: WorkspaceFavouriteAPI
 
   public: {
     user: UserPublicAPI
@@ -97,6 +99,7 @@ export default class API {
     this.navigation = new NavigationAPI(config)
     this.recaptcha = new RecaptchaAPI(config)
     this.routing = new RoutingAPI(config)
+    this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),

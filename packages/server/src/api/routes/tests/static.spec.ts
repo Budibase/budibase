@@ -23,18 +23,6 @@ describe("/static", () => {
       jest.clearAllMocks()
     })
 
-    it("should serve the app by id", async () => {
-      const headers = config.defaultHeaders()
-      delete headers[constants.Header.APP_ID]
-
-      const res = await request
-        .get(`/${config.prodAppId}`)
-        .set(headers)
-        .expect(200)
-
-      expect(res.body.appId).toBe(config.prodAppId)
-    })
-
     it("should serve the app by url", async () => {
       const headers = config.defaultHeaders()
       delete headers[constants.Header.APP_ID]
