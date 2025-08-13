@@ -17,7 +17,7 @@
     recaptchaStore,
   } from "@/stores/builder"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import { appsStore, admin, licensing } from "@/stores/portal"
+  import { appsStore, admin, licensing, featureFlags } from "@/stores/portal"
   import ExportAppModal from "@/components/start/ExportAppModal.svelte"
   import ImportAppModal from "@/components/start/ImportAppModal.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -37,6 +37,8 @@
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
+
+  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
@@ -240,10 +242,16 @@
 <ConfirmDialog
   bind:this={unpublishModal}
   title="Confirm unpublish"
-  okText="Unpublish app"
+  okText="Unpublish"
   onOk={deploymentStore.unpublishApp}
 >
-  Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
+  Are you sure you want to unpublish the {appOrWorkspace}
+  <b>{selectedApp?.name}</b>?
+  {#if $featureFlags.WORKSPACE_APPS}
+    <br />
+    <br />
+    This will disable all apps and automations
+  {/if}
 </ConfirmDialog>
 
 <RevertModal bind:this={revertModal} />
