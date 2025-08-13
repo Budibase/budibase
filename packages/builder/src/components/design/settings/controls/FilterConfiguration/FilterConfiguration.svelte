@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { enrichSchemaWithRelColumns, search } from "@budibase/frontend-core"
+  import { search } from "@budibase/frontend-core"
   import { Toggle } from "@budibase/bbui"
   import {
     getSchemaForDatasource,
