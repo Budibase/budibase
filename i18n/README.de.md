@@ -51,6 +51,7 @@
 </h3>
 
 <br /><br />
+
 ## ✨ Features
 
 - **Entwickle echte Webanwendungen.** Anders als ähnliche Plattformen entwickelst du mit Budibase echte Single-Page Webapplikationen (SPAs). Deine Budibase-Apps sind standardmäßig hochperformant und haben ein Responsive-Design für eine großartige Benutzererfahrung.
@@ -72,10 +73,12 @@
 <br />
 
 ## 🏁 Los geht's
+
 Momentan existieren zwei Optionen mit Budibase loszulegen: Digital Ocean und Docker.
 <br /><br />
 
 ### Los geht's mit Digital Ocean
+
 Der einfachste und schnellste Weg loszulegen ist Digital Ocean:
 <a href="https://marketplace.digitalocean.com/apps/budibase">1-Click Deploy auf Digital Ocean</a>
 
@@ -85,29 +88,30 @@ Der einfachste und schnellste Weg loszulegen ist Digital Ocean:
 <br /><br />
 
 ### Los geht's mit Docker
+
 Um loszulegen musst du bereits `docker` und `docker compose` auf deinem Computer installiert haben.
 Sobald du Docker installiert hast brauchst du ca. 5 Minuten für diese 4 Schritte:
 
 1. Installiere das Budibase CLI Tool.
-```
-$ npm i -g @budibase/cli 
-```
 
+```
+$ npm i -g @budibase/cli
+```
 
 2. Installiere Budibase (wähle den Speicherort und den Port auf dem Budibase laufen soll.)
-```
-$ budi hosting --init 
-```
 
+```
+$ budi hosting --init
+```
 
 3. Führe Budibase aus.
-```
-$ budi hosting --start 
-```
 
+```
+$ budi hosting --start
+```
 
 4. Lege einen Admin-Benutzer an.
-Gib die E-Mail und das Passwort für den neuen Admin-Benutzer ein.
+   Gib die E-Mail und das Passwort für den neuen Admin-Benutzer ein.
 
 Schon geschafft! Jetzt kann es losgehen mit der minutenschnellen Entwicklung deiner Tools. Für weitere Informationen und Tipps schau doch mal in unsere [Dokumentation](https://docs.budibase.com/docs/quickstart-tutorials).
 
@@ -153,9 +157,11 @@ Budibase steht für eine einladende und vielfältige Community frei von Belästi
 Von einem gemeldeten Bug bis zum Erstellen einer Pull-Request: wir schätzen jeden Beitrag. Wenn du ein neues Feature implementieren willst oder eine Änderung an der API vornehmen willst, erstelle bitte zuerst ein Issue. So können wir sicherstellen, dass deine Arbeit nicht umsonst ist.
 
 ### Unsicher wo du anfangen sollst?
+
 Gute Ideen für erste Beiträge zum Projekt [findest du hier](https://github.com/Budibase/budibase/projects/22).
 
 ### Wie die Repository strukturiert ist.
+
 Budibase ist eine Monorepo, die von Lerna verwaltet wird. Lerna verwaltet das Erstellen und Veröffentlichen von Budibase-Paketen.
 Grob besteht Budibase aus folgenden Modulen:
 
@@ -178,7 +184,6 @@ Budibase ist quelloffen, lizenziert unter der [GPL v3](https://www.gnu.org/licen
 <br /><br />
 
 ---
-
 
 <br />
 

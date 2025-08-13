@@ -1,4 +1,9 @@
-import { Datasource, FieldType, Table } from "@budibase/types"
+import {
+  Datasource,
+  FieldType,
+  Table,
+  StringFieldSubType,
+} from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import {
   DatabaseName,
@@ -277,6 +282,31 @@ if (mainDescriptions.length) {
           expect(table).toBeDefined()
           expect(table?.schema.email.type).toBe(FieldType.STRING)
           expect(table?.schema.email.externalType).toBe("USER-DEFINED")
+        })
+      })
+
+      describe("text[] array field", () => {
+        const tableName = "textarraytable"
+        let table: Table
+
+        beforeAll(async () => {
+          await client.raw(`
+        CREATE TABLE ${tableName} (
+          id serial PRIMARY KEY,
+          tags text[]
+        )   
+      `)
+          const response = await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+          table = response.datasource.entities![tableName]
+        })
+
+        it("should map text[] column to internal type string with array subtype", async () => {
+          expect(table).toBeDefined()
+          expect(table?.schema.tags.type).toBe(FieldType.STRING)
+          expect(table?.schema.tags.subtype).toBe(StringFieldSubType.ARRAY)
+          expect(table?.schema.tags.externalType).toBe("ARRAY")
         })
       })
     }
