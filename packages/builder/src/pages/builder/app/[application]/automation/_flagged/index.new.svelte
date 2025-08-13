@@ -124,9 +124,6 @@
         icon: "copy",
         name: "Duplicate",
         visible: true,
-        disabled:
-          !automation.definition.trigger ||
-          automation.definition.trigger?.name === "Webhook",
         callback: duplicateAutomation,
         tooltip:
           automation.definition.trigger?.name === "Webhook"
