@@ -32,6 +32,7 @@
   import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
+  import CtaNotification from "@/components/common/CtaNotification.svelte"
 
   export let automation
 
@@ -219,13 +220,13 @@
   <div class="canvas-heading" class:scrolling>
     <div class="canvas-controls">
       {#if hasUnpublishedChanges}
-        <div class="unpublished-alert">
-          <div class="unpublished-info">
-            <Icon name="info" />
-            <span>This workflow has unpublished changes</span>
-          </div>
-          <Button cta on:click={publishChanges}>Publish changes</Button>
-        </div>
+        <CtaNotification
+          buttonText="Publish changes"
+          on:click={publishChanges}
+          icon="info"
+        >
+          <span>This workflow has unpublished changes</span>
+        </CtaNotification>
       {/if}
     </div>
   </div>
@@ -309,23 +310,6 @@
     position: relative;
     width: 100%;
     height: 100%;
-  }
-
-  .unpublished-alert {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: var(--spacing-s);
-    background-color: #1d2e55;
-    border-radius: var(--spacing-l);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-  }
-
-  .unpublished-info {
-    display: flex;
-    gap: var(--spacing-s);
   }
 
   .canvas-heading {
