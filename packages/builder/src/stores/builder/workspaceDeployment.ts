@@ -10,7 +10,8 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
 
     this.fetch = this.fetch.bind(this)
     this.reset = this.reset.bind(this)
-    this.setAutomationUnpublishedChanges = this.setAutomationUnpublishedChanges.bind(this)
+    this.setAutomationUnpublishedChanges =
+      this.setAutomationUnpublishedChanges.bind(this)
   }
 
   async fetch() {
