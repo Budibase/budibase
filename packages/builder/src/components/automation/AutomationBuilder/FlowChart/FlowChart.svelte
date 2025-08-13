@@ -220,7 +220,7 @@
     <div class="canvas-controls">
       {#if hasUnpublishedChanges}
         <CtaNotification
-          buttonText="Publish changes"
+          button={{ message: "Publish changes" }}
           on:click={publishChanges}
           icon="info"
         >
