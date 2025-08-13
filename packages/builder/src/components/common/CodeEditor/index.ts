@@ -20,6 +20,9 @@ export const EditorModes: EditorModesMap = {
   Text: {
     name: "text/html",
   },
+  HTML: {
+    name: "html",
+  },
 }
 
 const buildHelperInfoNode = (helper: Helper) => {
@@ -72,7 +75,7 @@ const buildSectionHeader = (
 
 const helpersToCompletion = (
   helpers: Record<string, Helper>,
-  mode: { name: "javascript" | "handlebars" }
+  mode: { name: "javascript" | "handlebars" | "html" }
 ): BindingCompletionOption[] => {
   const helperSection = buildSectionHeader("helper", "Helpers", "Code", 99)
 
@@ -99,7 +102,7 @@ const helpersToCompletion = (
 }
 
 export const getHelperCompletions = (mode: {
-  name: "javascript" | "handlebars"
+  name: "javascript" | "handlebars" | "html"
 }): BindingCompletionOption[] => {
   // TODO: manifest needs to be properly typed
   const manifest: any = getManifest()
@@ -309,7 +312,7 @@ const insertBinding = (
   from: number,
   to: number,
   text: string,
-  mode: { name: "javascript" | "handlebars" },
+  mode: { name: "javascript" | "handlebars" | "html" },
   type: AutocompleteType
 ) => {
   let parsedInsert
@@ -319,7 +322,7 @@ const insertBinding = (
       helper: type === AutocompleteType.HELPER,
       disableWrapping: type === AutocompleteType.TEXT,
     })
-  } else if (mode.name == "handlebars") {
+  } else if (mode.name == "handlebars" || mode.name === "html") {
     parsedInsert = hbInsert(view.state.doc?.toString(), from, to, text)
   } else {
     console.warn("Unsupported")
@@ -351,7 +354,7 @@ const insertBinding = (
 // TODO: typing in this function isn't great
 export const bindingsToCompletions = (
   bindings: any,
-  mode: { name: "javascript" | "handlebars" }
+  mode: { name: "javascript" | "handlebars" | "html" }
 ): BindingCompletionOption[] => {
   const bindingByCategory = groupBy(bindings, "category")
   const categoryMeta = bindings?.reduce((acc: any, ele: any) => {
