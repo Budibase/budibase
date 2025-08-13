@@ -191,7 +191,10 @@ export const publishApp = async function (
       const devAppId = dbCore.getDevelopmentAppID(appId)
       const productionAppId = dbCore.getProdAppID(appId)
 
-      if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+      if (
+        (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+        !(await sdk.applications.isAppPublished(productionAppId))
+      ) {
         const allWorkspaceApps = await sdk.workspaceApps.fetch()
         for (const workspaceApp of allWorkspaceApps) {
           if (workspaceApp.disabled !== undefined) {
