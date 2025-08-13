@@ -6,6 +6,7 @@ import { builderRoutes, creatorRoutes, publicRoutes } from "./endpointGroups"
 
 builderRoutes
   .post("/api/applications/:appId/sync", controller.sync)
+  .get("/api/applications/:appId", controller.find)
   .put(
     "/api/applications/:appId",
     applicationValidator({ isCreate: false }),
