@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Switcher, Icon, TooltipPosition } from "@budibase/bbui"
+  import { Switcher, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import {
     dataEnvironmentStore,
     workspaceDeploymentStore,
@@ -18,29 +18,37 @@
     return datasource._id === $tables.selected?.sourceId
   })
   $: disabled = !isDeployed && !tableDatasource?.usesEnvironmentVariables
+  $: tooltip =
+    isInternal && !isDeployed
+      ? "Please publish to view production"
+      : "No production environment variables"
+
+  $: switcherProps = {
+    leftIcon: "wrench",
+    leftText: "Dev",
+    rightIcon: "pulse",
+    rightText: "Prod",
+    selected: isDevMode ? "left" : "right",
+    disabled,
+  }
+
+  const handleLeft = () =>
+    dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)
+  const handleRight = () =>
+    dataEnvironmentStore.setMode(DataEnvironmentMode.PRODUCTION)
 </script>
 
 <div class="wrapper">
-  <Switcher
-    leftIcon="wrench"
-    leftText="Dev"
-    rightIcon="rocket"
-    rightText="Prod"
-    selected={isDevMode ? "left" : "right"}
-    {disabled}
-    on:left={() =>
-      dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)}
-    on:right={() =>
-      dataEnvironmentStore.setMode(DataEnvironmentMode.PRODUCTION)}
-  />
   {#if disabled}
-    <Icon
-      name="info"
-      tooltipPosition={TooltipPosition.Left}
-      tooltip={isInternal && !isDeployed
-        ? "Please publish to view production"
-        : "No production environment variables"}
-    />
+    <AbsTooltip text={tooltip} position={TooltipPosition.Left}>
+      <Switcher
+        {...switcherProps}
+        on:left={handleLeft}
+        on:right={handleRight}
+      />
+    </AbsTooltip>
+  {:else}
+    <Switcher {...switcherProps} on:left={handleLeft} on:right={handleRight} />
   {/if}
 </div>
 
