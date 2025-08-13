@@ -96,7 +96,7 @@
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
   $: bindingOptions =
-    (allowHBS || allowHTML)
+    allowHBS || allowHTML
       ? bindingsToCompletions(enrichedBindings, EditorModes.Handlebars)
       : []
   $: helperOptions =

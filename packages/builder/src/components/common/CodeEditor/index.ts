@@ -273,6 +273,35 @@ export const hbInsert = (
   return parsedInsert
 }
 
+export const htmlInsert = (
+  value: string,
+  from: number,
+  to: number,
+  text: string
+) => {
+  const left = from ? value.substring(0, from) : ""
+  const right = to ? value.substring(to) : ""
+
+  // For HTML mode, we need to handle the case where user types {{ to trigger autocompletion
+  // Check if the selection includes the opening {{ that was typed
+  const selectedText = value.substring(from, to)
+  const leftContext = left.slice(-2) // Last 2 characters before selection
+  const rightContext = right.slice(0, 2) // First 2 characters after selection
+
+  // If we have {{ in the selection or just before it, we're replacing a partial binding
+  if (selectedText.includes("{{") || leftContext.includes("{{")) {
+    return `{{ ${text} }}`
+  }
+  // If we already have proper binding context, just insert the binding name
+  else if (leftContext.endsWith("{{") && rightContext.startsWith("}}")) {
+    return ` ${text} `
+  }
+  // Default case: wrap in full binding syntax
+  else {
+    return `{{ ${text} }}`
+  }
+}
+
 export function jsInsert(
   value: string,
   from: number,
@@ -322,8 +351,10 @@ const insertBinding = (
       helper: type === AutocompleteType.HELPER,
       disableWrapping: type === AutocompleteType.TEXT,
     })
-  } else if (mode.name == "handlebars" || mode.name === "html") {
+  } else if (mode.name == "handlebars") {
     parsedInsert = hbInsert(view.state.doc?.toString(), from, to, text)
+  } else if (mode.name === "html") {
+    parsedInsert = htmlInsert(view.state.doc?.toString(), from, to, text)
   } else {
     console.warn("Unsupported")
     return
