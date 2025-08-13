@@ -15,7 +15,7 @@ import {
   WorkspaceResource,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { db } from "@budibase/backend-core"
+import { db, HTTPError } from "@budibase/backend-core"
 
 type WorkspaceResourceDoc =
   | Table
@@ -78,7 +78,7 @@ export async function create(
 
   const verifyResource: ResourceGetter = check[body.resourceType]
 
-  // Bork if it can be verified
+  // Abort if it can't be verified
   if (!verifyResource)
     ctx.throw(
       `Workspace favourite failure. Could not verify resource ${body.resourceId}, ${body.resourceType}`
@@ -89,18 +89,13 @@ export async function create(
     const doc = await verifyResource(body.resourceId)
     // tryGet doesnt throw so in the event that a resource doesn't throw, ensure it.
     if (!doc) {
-      const notFoundError = new Error(`Resource not found: ${body.resourceId}`)
-      ;(notFoundError as any).status = 404
-      throw notFoundError
+      throw new HTTPError(`Resource not found: ${body.resourceId}`, 404)
     }
   } catch (e: any) {
-    if (e.status === 404) {
-      ctx.throw(
-        e.status,
-        `Workspace favourite failure. Could not find target resource: ${body.resourceId}`
-      )
-    }
-    throw new Error(e.message)
+    ctx.throw(
+      404,
+      `Workspace favourite failure. Could not verify resource: ${body.resourceId}. ${e.message}`
+    )
   }
 
   const workspaceFavourite = await sdk.workspace.create(newFavourite)
