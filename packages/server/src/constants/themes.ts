@@ -1,7 +1,7 @@
 import { ensureValidTheme } from "@budibase/shared-core"
 import { Theme } from "@budibase/types"
 
-export const getThemeVariables = (theme: Theme) => {
+export const getThemeVariables = (theme: Theme | undefined) => {
   theme = ensureValidTheme(theme, Theme.LIGHT)
   if (theme === Theme.LIGHTEST) {
     return `

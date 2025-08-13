@@ -1,7 +1,7 @@
 import { App } from "../../../documents"
 import stream from "node:stream"
 
-export type ServeAppResponse = string
+export type ServeAppResponse = string | App
 
 interface BuilderPreview extends App {
   builderPreview: boolean
