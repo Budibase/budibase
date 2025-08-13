@@ -514,24 +514,25 @@ async function performAppCreate(
       await createDefaultWorkspaceApp()
     }
 
-    if (
-      useTemplate &&
-      (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS))
-    ) {
-      const workspaceApps = await sdk.workspaceApps.fetch()
-      for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
-        await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
-      }
-
-      const automations = await sdk.automations.fetch()
-      for (const automation of automations.filter(a => !a.disabled)) {
-        await sdk.automations.update({ ...automation, disabled: true })
-      }
+    if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+      await disableAllAppsAndAutomations()
     }
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
   })
+}
+
+async function disableAllAppsAndAutomations() {
+  const workspaceApps = await sdk.workspaceApps.fetch()
+  for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
+    await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+  }
+
+  const automations = await sdk.automations.fetch()
+  for (const automation of automations.filter(a => !a.disabled)) {
+    await sdk.automations.update({ ...automation, disabled: true })
+  }
 }
 
 async function updateUserColumns(
@@ -784,6 +785,10 @@ async function unpublishApp(ctx: UserCtx) {
 
   // automations only in production
   await cleanupAutomations(appId)
+
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    await disableAllAppsAndAutomations()
+  }
 
   await cache.app.invalidateAppMetadata(appId)
   return result
