@@ -39,6 +39,8 @@
   $: appRecaptchaEnabled = $recaptchaStore.enabled
   $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
 
+  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
     exportModal.show()
@@ -105,13 +107,24 @@
       </Body>
     </div>
     <div class="row">
-      <Button
-        cta
-        disabled={$deploymentStore.isPublishing}
-        on:click={deploymentStore.publishApp}
-      >
-        Publish
-      </Button>
+      {#if !$featureFlags.WORKSPACE_APPS}
+        <Button
+          cta
+          disabled={$deploymentStore.isPublishing}
+          on:click={deploymentStore.publishApp}
+        >
+          Publish
+        </Button>
+      {:else}
+        <Button
+          icon="arrow-circle-up"
+          primary
+          disabled={$deploymentStore.isPublishing}
+          on:click={deploymentStore.publishApp}
+        >
+          Publish
+        </Button>
+      {/if}
     </div>
   {/if}
   <Divider id="version" />
@@ -258,7 +271,7 @@
 <ConfirmDialog
   bind:this={unpublishModal}
   title="Confirm unpublish"
-  okText="Unpublish app"
+  okText="Unpublish"
   onOk={deploymentStore.unpublishApp}
 >
   Are you sure you want to unpublish the {appOrWorkspace}

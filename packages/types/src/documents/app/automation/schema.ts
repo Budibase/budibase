@@ -570,7 +570,7 @@ export interface AutomationTriggerSchema<
   event?: AutomationEventType
   cronJobId?: string
   stepId: TTrigger
-  inputs: AutomationTriggerInputs<AutomationTriggerStepId>
+  inputs: AutomationTriggerInputs<TTrigger>
 }
 
 export type AutomationTrigger =

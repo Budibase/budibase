@@ -26,7 +26,6 @@
     notifications,
     TooltipPosition,
   } from "@budibase/bbui"
-  import { sdk } from "@budibase/shared-core"
   import type { UIAutomation } from "@budibase/types"
   import { PublishResourceState, WorkspaceResource } from "@budibase/types"
   import { url } from "@roxi/routify"
@@ -119,28 +118,21 @@
       disabled: false,
       callback: () => confirmDeleteDialog.show(),
     }
-    if (sdk.automations.isRowAction(automation)) {
-      return [edit, del]
-    } else {
-      return [
-        edit,
-        {
-          icon: "copy",
-          name: "Duplicate",
-          visible: true,
-          disabled:
-            !automation.definition.trigger ||
-            automation.definition.trigger?.name === "Webhook",
-          callback: duplicateAutomation,
-          tooltip:
-            automation.definition.trigger?.name === "Webhook"
-              ? "Webhooks automations cannot be duplicated"
-              : undefined,
-        },
-        pause,
-        del,
-      ]
-    }
+    return [
+      edit,
+      {
+        icon: "copy",
+        name: "Duplicate",
+        visible: true,
+        callback: duplicateAutomation,
+        tooltip:
+          automation.definition.trigger?.name === "Webhook"
+            ? "Webhooks automations cannot be duplicated"
+            : undefined,
+      },
+      pause,
+      del,
+    ]
   }
 
   const openContextMenu = (e: MouseEvent, automation: UIAutomation) => {
