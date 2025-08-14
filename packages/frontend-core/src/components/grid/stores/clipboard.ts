@@ -3,10 +3,7 @@ import { Helpers } from "@budibase/bbui"
 import { parseCellID, getCellID } from "../lib/utils"
 import { NewRowID } from "../lib/constants"
 import { Store as StoreContext } from "."
-import {
-  ExternalClipboardData,
-  GridClipboardState,
-} from "../../../stores/gridClipboard"
+import { ExternalClipboardData } from "../../../stores/gridClipboard"
 
 type ClipboardStoreData =
   | {
@@ -42,13 +39,26 @@ export const createStores = (context?: {
   externalClipboard: ExternalClipboardData
 }): ClipboardStore => {
   // Initialize with external clipboard state if provided
-  let externalState: GridClipboardState | undefined = undefined
+  let initialState: ClipboardStoreData
+
   if (context?.externalClipboard?.clipboard) {
-    externalState = get(context.externalClipboard.clipboard)
-  }
-  const initialState = externalState || {
-    value: null,
-    multiCellCopy: false,
+    const externalState = get(context.externalClipboard.clipboard)
+    if (externalState.multiCellCopy) {
+      initialState = {
+        value: externalState.value,
+        multiCellCopy: true,
+      }
+    } else {
+      initialState = {
+        value: externalState.value,
+        multiCellCopy: false,
+      }
+    }
+  } else {
+    initialState = {
+      value: undefined,
+      multiCellCopy: false,
+    }
   }
 
   const clipboard = writable<ClipboardStoreData>(initialState)
@@ -58,8 +68,14 @@ export const createStores = (context?: {
 }
 
 export const deriveStores = (context: StoreContext): ClipboardDerivedStore => {
-  const { clipboard, focusedCellAPI, selectedCellCount, config, focusedRowId } =
-    context
+  const {
+    clipboard,
+    focusedCellAPI,
+    selectedCellCount,
+    config,
+    focusedRowId,
+    props,
+  } = context
 
   // Derive whether or not we're able to copy
   const copyAllowed = derived(focusedCellAPI, $focusedCellAPI => {
@@ -68,16 +84,24 @@ export const deriveStores = (context: StoreContext): ClipboardDerivedStore => {
 
   // Derive whether or not we're able to paste
   const pasteAllowed = derived(
-    [clipboard, focusedCellAPI, selectedCellCount, config, focusedRowId],
+    [clipboard, focusedCellAPI, selectedCellCount, config, focusedRowId, props],
     ([
       $clipboard,
       $focusedCellAPI,
       $selectedCellCount,
       $config,
       $focusedRowId,
+      $props,
     ]) => {
+      // Check if we have clipboard data (internal or external)
+      let hasClipboardData = $clipboard.value != null
+      if (!hasClipboardData && $props.externalClipboard?.clipboard) {
+        const externalState = get($props.externalClipboard.clipboard)
+        hasClipboardData = externalState.value != null
+      }
+
       if (
-        $clipboard.value == null ||
+        !hasClipboardData ||
         !$config.canEditRows ||
         !$focusedCellAPI ||
         $focusedRowId === NewRowID
@@ -201,7 +225,30 @@ export const createActions = (context: StoreContext): ClipboardActions => {
     if (!get(pasteAllowed)) {
       return
     }
-    const { value, multiCellCopy } = get(clipboard)
+
+    // Check for external clipboard data first
+    const { externalClipboard } = get(props)
+    let clipboardData = get(clipboard)
+
+    if (externalClipboard?.clipboard) {
+      const externalState = get(externalClipboard.clipboard)
+      // Use external clipboard data if it has a value
+      if (externalState.value !== undefined) {
+        if (externalState.multiCellCopy) {
+          clipboardData = {
+            value: externalState.value as any[][],
+            multiCellCopy: true,
+          }
+        } else {
+          clipboardData = {
+            value: externalState.value,
+            multiCellCopy: false,
+          }
+        }
+      }
+    }
+
+    const { value, multiCellCopy } = clipboardData
     const multiCellPaste = get(selectedCellCount) > 1
 
     // Choose paste strategy

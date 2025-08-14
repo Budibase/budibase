@@ -40,7 +40,7 @@
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: externalClipboardData = {
-    clipboard: $gridClipboard,
+    clipboard: gridClipboard,
     tableId: view?.tableId,
     viewId: id,
     onCopy: (data: any) => {

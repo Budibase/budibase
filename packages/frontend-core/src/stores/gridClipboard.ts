@@ -1,12 +1,5 @@
 import { writable, get, type Writable } from "svelte/store"
 
-export interface ExternalClipboardData {
-  clipboard: GridClipboardStore
-  tableId?: string
-  viewId?: string
-  onCopy: (_: any) => unknown
-}
-
 export interface GridClipboardState {
   value: any
   multiCellCopy: boolean
@@ -18,11 +11,23 @@ export interface GridClipboardStore extends Writable<GridClipboardState> {
   copy: (
     value: any,
     multiCellCopy: boolean,
-    tableId: string,
-    viewId: string
+    tableId?: string,
+    viewId?: string
   ) => void
   clear: () => void
   get: () => GridClipboardState
+}
+
+export interface ExternalClipboardData {
+  clipboard: GridClipboardStore
+  tableId?: string
+  viewId?: string
+  onCopy: (data: {
+    value: any
+    multiCellCopy: boolean
+    tableId?: string
+    viewId?: string
+  }) => void
 }
 
 export type Store = GridClipboardStore
