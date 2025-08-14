@@ -1924,6 +1924,14 @@ const automationActions = (store: AutomationStore) => ({
 
   save: async (automation: Automation) => {
     const response = await API.updateAutomation(automation)
+
+    // Mark automation as having unpublished changes
+    if (response.automation._id) {
+      workspaceDeploymentStore.setAutomationUnpublishedChanges(
+        response.automation._id
+      )
+    }
+
     await store.actions.fetch()
     store.actions.select(response.automation._id!)
     return response.automation
