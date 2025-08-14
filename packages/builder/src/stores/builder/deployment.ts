@@ -11,6 +11,7 @@ import { processStringSync } from "@budibase/string-templates"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import { automationStore } from "./automations"
+import { workspaceAppStore } from "./workspaceApps"
 
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
@@ -101,9 +102,12 @@ class DeploymentStore extends DerivedBudiStore<
 
   async completePublish() {
     try {
-      await appsStore.load()
-      await automationStore.actions.fetch()
-      await workspaceDeploymentStore.fetch()
+      await Promise.all([
+        workspaceDeploymentStore.fetch(),
+        workspaceAppStore.refresh(),
+        appsStore.load(),
+        automationStore.actions.fetch(),
+      ])
       await this.load()
     } catch (err) {
       notifications.error("Error refreshing app")
@@ -118,6 +122,7 @@ class DeploymentStore extends DerivedBudiStore<
       await API.unpublishApp(get(appStore).appId)
       await Promise.all([
         workspaceDeploymentStore.fetch(),
+        workspaceAppStore.refresh(),
         appsStore.load(),
         automationStore.actions.fetch(),
       ])
