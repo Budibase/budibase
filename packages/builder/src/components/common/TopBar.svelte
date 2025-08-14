@@ -69,14 +69,16 @@
     <ActionMenu disabled={$deploymentStore.isPublishing} roundedPopover>
       <svelte:fragment slot="control">
         <div class="publish-menu">
-          <span
+          <div
             role="button"
             tabindex="0"
             on:click={publish}
             on:keydown={e => e.key === "Enter" && publish()}
+            class="publish-menu-text"
           >
-            Publish
-          </span>
+            <Icon size="M" name="arrow-circle-up" />
+            <span>Publish</span>
+          </div>
           <div class="separator" />
           <div bind:this={publishPopoverAnchor} class="publish-dropdown">
             <Icon size="M" name="caret-down" />
@@ -168,8 +170,11 @@
     cursor: pointer;
     transition: background-color 130ms ease-in-out;
   }
-  .publish-menu span {
+  .publish-menu-text {
     padding: var(--spacing-s) var(--spacing-l);
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
   }
   .publish-menu:hover {
     background: var(--spectrum-global-color-gray-900);
