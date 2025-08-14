@@ -123,7 +123,8 @@
     "**/nan": "2.22.0",
     "globals": "15.13.0",
     "esm": "npm:esm-wallaby@3.2.35",
-    "node-gyp": "11.2.0"
+    "node-gyp": "11.2.0",
+    "@types/koa": "2.13.4"
   },
   "engines": {
     "node": ">=22.0.0 <23.0.0"
