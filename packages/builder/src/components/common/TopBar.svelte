@@ -68,7 +68,10 @@
   {#if showPublish}
     <ActionMenu disabled={$deploymentStore.isPublishing} roundedPopover>
       <svelte:fragment slot="control">
-        <div class="publish-menu">
+        <div
+          class="publish-menu"
+          class:disabled={$deploymentStore.isPublishing}
+        >
           <div
             role="button"
             tabindex="0"
@@ -174,7 +177,7 @@
     padding: var(--spacing-s) var(--spacing-l);
     display: flex;
     gap: var(--spacing-s);
-    align-items: center;
+    font-size: var(--font-size-m);
   }
   .publish-menu:hover {
     background: var(--spectrum-global-color-gray-900);
@@ -202,6 +205,10 @@
   }
   .publish-dropdown {
     padding: var(--spacing-s) var(--spacing-m);
+  }
+  .publish-dropdown:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0 8px 8px 0;
   }
   .separator {
     width: 1px;
