@@ -115,8 +115,11 @@ class DeploymentStore extends DerivedBudiStore<
     }
     try {
       await API.unpublishApp(get(appStore).appId)
-      await workspaceDeploymentStore.fetch()
-      await appsStore.load()
+      await Promise.all([
+        workspaceDeploymentStore.fetch(),
+        appsStore.load(),
+        automationStore.actions.fetch(),
+      ])
       notifications.send("App unpublished", {
         type: "success",
         icon: "globe",
