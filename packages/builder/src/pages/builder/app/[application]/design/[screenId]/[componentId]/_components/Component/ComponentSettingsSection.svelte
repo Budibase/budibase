@@ -166,9 +166,7 @@
 
                 // Field select settings
                 explanation: setting.explanation,
-
-                // HTML editor support for Embed component
-                allowHTML: setting.key === "embed",
+                allowHTML: setting.allowHTML,
               }}
               {bindings}
               {componentBindings}
