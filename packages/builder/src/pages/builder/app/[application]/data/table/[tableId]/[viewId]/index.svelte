@@ -23,7 +23,7 @@
   import { ViewV2Type, DataEnvironmentMode, type Row } from "@budibase/types"
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
 
-  let generateButton: any
+  let generateButton: GridGenerateButton
 
   $: view = $viewsV2.selected
   $: calculation = view?.type === ViewV2Type.CALCULATION
