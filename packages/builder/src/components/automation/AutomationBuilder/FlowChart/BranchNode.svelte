@@ -33,7 +33,7 @@
   export let branchIdx
   export let step
   export let isLast
-  export let bindings
+  export let bindings = []
   export let automation
   export let executed = false
   export let unexecuted = false
@@ -53,7 +53,7 @@
   $: editableConditionUI = branch.conditionUI || {}
 
   // Parse all the bindings into fields for the condition builder
-  $: schemaFields = bindings.map(binding => {
+  $: schemaFields = bindings?.map(binding => {
     return {
       name: `{{${binding.runtimeBinding}}}`,
       displayName: `${binding.category} - ${binding.display.name}`,
