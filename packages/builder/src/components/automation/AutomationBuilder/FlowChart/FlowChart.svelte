@@ -8,6 +8,7 @@
     Body,
     Button,
     ActionButton,
+    Switcher,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
@@ -28,7 +29,6 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import DraggableCanvas from "../DraggableCanvas.svelte"
-  import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
   import CtaNotification from "@/components/common/CtaNotification.svelte"
@@ -169,48 +169,34 @@
     </div>
   {/if}
 
-  <div class="actions-right" class:grow={$featureFlags.WORKSPACE_APPS}>
-    <div class="view-mode-toggle" class:grow={$featureFlags.WORKSPACE_APPS}>
-      <div class="group">
-        <ActionButton
-          icon="Edit"
-          quiet
-          selected={viewMode === ViewMode.EDITOR}
-          on:click={() => {
-            viewMode = ViewMode.EDITOR
-            closeAllPanels()
-          }}
-        >
-          Editor
-        </ActionButton>
-        <Count
-          count={prodErrors}
-          tooltip={"There are errors in production"}
-          hoverable={false}
-        >
-          <ActionButton
-            icon="list-checks"
-            quiet
-            selected={viewMode === ViewMode.LOGS ||
-              $automationStore.showLogsPanel ||
-              $automationStore.showLogDetailsPanel}
-            on:click={() => {
-              viewMode = ViewMode.LOGS
-              // Clear editor selection when switching to logs mode
-              automationStore.actions.selectNode(null)
-              if (
-                !$automationStore.showLogsPanel &&
-                !$automationStore.showLogDetailsPanel
-              ) {
-                toggleLogsPanel()
-              }
-            }}
-          >
-            Logs
-          </ActionButton>
-        </Count>
-      </div>
-    </div>
+  <div class="actions-right">
+    <Switcher
+      on:left={() => {
+        viewMode = ViewMode.EDITOR
+        closeAllPanels()
+      }}
+      on:right={() => {
+        viewMode = ViewMode.LOGS
+        // Clear editor selection when switching to logs mode
+        automationStore.actions.selectNode(null)
+        if (
+          !$automationStore.showLogsPanel &&
+          !$automationStore.showLogDetailsPanel
+        ) {
+          toggleLogsPanel()
+        }
+      }}
+      leftIcon="Edit"
+      leftText="Editor"
+      rightIcon="list-checks"
+      rightText="Logs"
+      rightNotificationTooltip="There are errors in production"
+      rightNotificationCount={prodErrors}
+      selected={$automationStore.showLogsPanel ||
+      $automationStore.showLogDetailsPanel
+        ? "right"
+        : "left"}
+    />
 
     <ActionButton
       icon="play"
@@ -396,12 +382,6 @@
     gap: var(--spacing-l);
   }
 
-  .view-mode-toggle {
-    display: flex;
-    gap: var(--spacing-l);
-    flex-shrink: 0;
-  }
-
   .canvas-footer-left :global(div) {
     border-right: none;
   }
@@ -448,24 +428,6 @@
     margin-right: 0px;
   }
 
-  .view-mode-toggle .group {
-    border-radius: 6px;
-    display: flex;
-    flex-direction: row;
-    background: var(--spectrum-global-color-gray-100);
-    padding: 2px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-  }
-  .view-mode-toggle .group :global(> *:not(:first-child)) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-left: none;
-  }
-  .view-mode-toggle .group :global(> *:not(:last-child)) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
   .zoom .group {
     border-radius: 4px;
     display: flex;
@@ -507,38 +469,5 @@
     display: flex;
     gap: var(--spacing-xl);
     align-items: center;
-  }
-  .actions-right.grow {
-    flex: 1 1 auto;
-  }
-
-  .view-mode-toggle.grow {
-    flex: 1 1 auto;
-  }
-  .view-mode-toggle .group :global(.spectrum-ActionButton) {
-    background: transparent !important;
-    border: none !important;
-    border-radius: 4px !important;
-    color: var(--spectrum-global-color-gray-700) !important;
-    font-weight: 500;
-    padding: 6px 12px !important;
-    margin: 0 !important;
-    transition: all 0.15s ease;
-  }
-
-  .view-mode-toggle .group :global(.spectrum-ActionButton:hover) {
-    background: var(--spectrum-global-color-gray-200) !important;
-    color: var(--spectrum-global-color-gray-900) !important;
-  }
-
-  .view-mode-toggle .group :global(.spectrum-ActionButton.is-selected) {
-    background: var(--spectrum-global-color-gray-50) !important;
-    color: var(--spectrum-global-color-gray-900) !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    font-weight: 600;
-  }
-
-  .view-mode-toggle .group :global(.spectrum-Icon) {
-    color: inherit !important;
   }
 </style>

@@ -6,7 +6,15 @@
 </script>
 
 <script lang="ts">
-  import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
+  import {
+    Body,
+    Icon,
+    Popover,
+    ActionMenu,
+    PopoverAlignment,
+    MenuItem,
+  } from "@budibase/bbui"
+  import { featureFlags } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
   import { url } from "@roxi/routify"
@@ -15,11 +23,16 @@
   export let breadcrumbs: Breadcrumb[]
   export let showPublish = true
 
-  let publishButton: HTMLElement | undefined
+  let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
-  let publishCount = 0
 
+  let seedProductionTables = false
+
+  $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
+  $: workspaceOrApp = workspaceAppsEnabled ? "workspace" : "app"
   $: hasBeenPublished($deploymentStore.publishCount)
+
+  let publishCount = 0
 
   const hasBeenPublished = (count: number) => {
     if (publishCount < count) {
@@ -29,7 +42,7 @@
   }
 
   const publish = async () => {
-    await deploymentStore.publishApp()
+    await deploymentStore.publishApp({ seedProductionTables })
     publishSuccessPopover?.show()
   }
 </script>
@@ -50,22 +63,59 @@
       {/if}
     {/each}
   </div>
-  <slot></slot>
+
+  <slot />
   {#if showPublish}
-    <Button
-      icon="arrow-circle-up"
-      primary
-      on:click={publish}
-      disabled={$deploymentStore.isPublishing}
-      bind:ref={publishButton}
-    >
-      Publish
-    </Button>
+    <ActionMenu disabled={$deploymentStore.isPublishing} roundedPopover>
+      <svelte:fragment slot="control">
+        <div class="publish-menu">
+          <span
+            role="button"
+            tabindex="0"
+            on:click={publish}
+            on:keydown={e => e.key === "Enter" && publish()}
+          >
+            Publish
+          </span>
+          <div class="separator" />
+          <div bind:this={publishPopoverAnchor} class="publish-dropdown">
+            <Icon size="M" name="caret-down" />
+          </div>
+        </div>
+      </svelte:fragment>
+
+      <MenuItem
+        icon="check"
+        iconHidden={seedProductionTables}
+        iconAlign="start"
+        on:click={() => (seedProductionTables = false)}
+      >
+        <div>
+          <div class="menu-item-header">Publish {workspaceOrApp}</div>
+          <div class="menu-item-text">
+            Publish changes to the {workspaceOrApp}
+          </div>
+        </div>
+      </MenuItem>
+      <MenuItem
+        icon="check"
+        iconAlign="start"
+        iconHidden={!seedProductionTables}
+        on:click={() => (seedProductionTables = true)}
+      >
+        <div>
+          <div class="menu-item-header">Seed and publish</div>
+          <div class="menu-item-text">
+            Seed prod tables with dev data and publish {workspaceOrApp}
+          </div>
+        </div>
+      </MenuItem>
+    </ActionMenu>
   {/if}
 </div>
 
 <Popover
-  anchor={publishButton}
+  anchor={publishPopoverAnchor}
   bind:this={publishSuccessPopover}
   align={PopoverAlignment.Right}
   offset={6}
@@ -108,6 +158,31 @@
     font-weight: 500;
     color: var(--spectrum-global-color-gray-900);
   }
+  .publish-menu {
+    font-size: var(--font-size-l);
+    display: flex;
+    align-items: center;
+    background: var(--spectrum-semantic-cta-color-background-default);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 130ms ease-in-out;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .publish-menu span {
+    padding: var(--spacing-s) var(--spacing-l);
+  }
+  .publish-menu:hover {
+    background: var(--spectrum-semantic-cta-color-background-hover);
+  }
+  .publish-dropdown {
+    padding: var(--spacing-s) var(--spacing-m);
+  }
+  .separator {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.3);
+    align-self: stretch;
+  }
   .popover-content {
     display: flex;
     gap: var(--spacing-s);
@@ -118,5 +193,15 @@
     border-radius: 6px;
     border: 1px solid var(--spectrum-global-color-gray-300);
     background-color: var(--spectrum-global-color-gray-200);
+  }
+  .menu-item-header {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .menu-item-text {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
+    margin-top: 2px;
   }
 </style>
