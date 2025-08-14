@@ -3,6 +3,10 @@ import { Helpers } from "@budibase/bbui"
 import { parseCellID, getCellID } from "../lib/utils"
 import { NewRowID } from "../lib/constants"
 import { Store as StoreContext } from "."
+import {
+  ExternalClipboardData,
+  GridClipboardState,
+} from "../../../stores/gridClipboard"
 
 type ClipboardStoreData =
   | {
@@ -34,11 +38,20 @@ interface ClipboardActions {
 
 export type Store = ClipboardStore & ClipboardDerivedStore & ClipboardActions
 
-export const createStores = (): ClipboardStore => {
-  const clipboard = writable<ClipboardStoreData>({
+export const createStores = (context?: {
+  externalClipboard: ExternalClipboardData
+}): ClipboardStore => {
+  // Initialize with external clipboard state if provided
+  let externalState: GridClipboardState | undefined = undefined
+  if (context?.externalClipboard?.clipboard) {
+    externalState = get(context.externalClipboard.clipboard)
+  }
+  const initialState = externalState || {
     value: null,
     multiCellCopy: false,
-  })
+  }
+
+  const clipboard = writable<ClipboardStoreData>(initialState)
   return {
     clipboard,
   }
@@ -105,6 +118,7 @@ export const createActions = (context: StoreContext): ClipboardActions => {
     focusedCellId,
     columnLookupMap,
     visibleColumns,
+    props,
   } = context
 
   // Copies the currently selected value (or values)
@@ -137,11 +151,22 @@ export const createActions = (context: StoreContext): ClipboardActions => {
         value.push(rowValues)
       }
 
-      // Update state
+      // Update internal state
       clipboard.set({
         value,
         multiCellCopy: true,
       })
+
+      const { externalClipboard } = get(props)
+      // Sync with external clipboard if provided
+      if (externalClipboard?.onCopy) {
+        externalClipboard.onCopy({
+          value,
+          multiCellCopy: true,
+          tableId: externalClipboard.tableId,
+          viewId: externalClipboard.viewId,
+        })
+      }
     } else {
       // Single value to copy
       const value = $focusedCellAPI?.getValue()
@@ -149,6 +174,17 @@ export const createActions = (context: StoreContext): ClipboardActions => {
         value,
         multiCellCopy,
       })
+
+      const { externalClipboard } = get(props)
+      // Sync with external clipboard if provided
+      if (externalClipboard?.onCopy) {
+        externalClipboard.onCopy({
+          value,
+          multiCellCopy: false,
+          tableId: externalClipboard.tableId,
+          viewId: externalClipboard.viewId,
+        })
+      }
 
       // Also copy a stringified version to the clipboard
       let stringified = ""

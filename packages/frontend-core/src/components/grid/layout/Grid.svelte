@@ -9,6 +9,7 @@
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
   import BulkDuplicationHandler from "../controls/BulkDuplicationHandler.svelte"
   import ClipboardHandler from "../controls/ClipboardHandler.svelte"
+  import { type ExternalClipboardData } from "../../../stores/gridClipboard"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
@@ -60,6 +61,7 @@
   export let isCloud: boolean | null | undefined = null
   export let aiEnabled = false
   export let canHideColumns = true
+  export let externalClipboard: ExternalClipboardData | undefined = undefined
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -119,6 +121,7 @@
     isCloud,
     aiEnabled,
     canHideColumns,
+    externalClipboard,
   })
 
   // missing definition, propagate this

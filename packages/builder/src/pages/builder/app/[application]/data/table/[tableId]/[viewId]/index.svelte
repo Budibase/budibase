@@ -5,6 +5,7 @@
     dataEnvironmentStore,
     dataAPI,
   } from "@/stores/builder"
+  import { gridClipboard } from "@budibase/frontend-core"
   import { admin, themeStore, licensing } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { notifications } from "@budibase/bbui"
@@ -38,6 +39,19 @@
   $: darkMode = !currentTheme.includes("light")
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+  $: externalClipboardData = {
+    clipboard: $gridClipboard,
+    tableId: view?.tableId,
+    viewId: id,
+    onCopy: (data: any) => {
+      gridClipboard.copy(
+        data.value,
+        data.multiCellCopy,
+        data.tableId,
+        data.viewId
+      )
+    },
+  }
 
   const makeRowActionButtons = (actions: any[]) => {
     return (actions || []).map(action => ({
@@ -65,6 +79,7 @@
     aiEnabled={$licensing.customAIConfigsEnabled ||
       $licensing.budibaseAIEnabled}
     showAvatars={false}
+    externalClipboard={externalClipboardData}
     on:updatedatasource={handleGridViewUpdate}
     on:definitionMissing={() =>
       dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)}

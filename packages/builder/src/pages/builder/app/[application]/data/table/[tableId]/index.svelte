@@ -12,7 +12,7 @@
   } from "@/stores/builder"
   import { themeStore, admin, licensing } from "@/stores/portal"
   import { TableNames } from "@/constants"
-  import { Grid } from "@budibase/frontend-core"
+  import { Grid, gridClipboard } from "@budibase/frontend-core"
   import GridAddColumnModal from "@/components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "@/components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -79,6 +79,18 @@
   $: rowActions.refreshRowActions(id)
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
+  $: externalClipboardData = {
+    clipboard: $gridClipboard,
+    tableId: id,
+    onCopy: (data: any) => {
+      gridClipboard.copy(
+        data.value,
+        data.multiCellCopy,
+        data.tableId,
+        data.viewId
+      )
+    },
+  }
 
   const makeRowActionButtons = (actions: any[]) => {
     return (actions || [])
@@ -161,6 +173,7 @@
       {buttons}
       buttonsCollapsed
       canHideColumns={false}
+      externalClipboard={externalClipboardData}
       on:updatedatasource={handleGridTableUpdate}
       on:definitionMissing={() =>
         dataEnvironmentStore.setMode(DataEnvironmentMode.DEVELOPMENT)}
