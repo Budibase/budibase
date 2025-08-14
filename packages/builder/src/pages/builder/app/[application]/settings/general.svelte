@@ -39,8 +39,6 @@
   $: appRecaptchaEnabled = $recaptchaStore.enabled
   $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
 
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
-
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
     exportModal.show()
