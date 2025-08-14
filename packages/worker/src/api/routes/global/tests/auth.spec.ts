@@ -20,7 +20,9 @@ function getAuthCookie(response: Response) {
   const cookies = response.headers["set-cookie"]
   if (!cookies) throw new Error("No cookies found")
   const cookieArray = Array.isArray(cookies) ? cookies : [cookies]
-  const authCookie = cookieArray.find((s: string) => s.startsWith(`${constants.Cookie.Auth}=`))
+  const authCookie = cookieArray.find((s: string) =>
+    s.startsWith(`${constants.Cookie.Auth}=`)
+  )
   if (!authCookie) throw new Error("No auth cookie found")
   return authCookie.split("=")[1].split(";")[0]
 }
