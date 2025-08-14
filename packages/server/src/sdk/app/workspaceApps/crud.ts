@@ -50,7 +50,13 @@ export async function update(
 ): Promise<WorkspaceApp> {
   const db = context.getAppDB()
 
-  const persisted = (await get(workspaceApp._id!))!
+  const persisted = await get(workspaceApp._id!)
+  if (!persisted) {
+    throw new HTTPError(
+      `Project app with id '${workspaceApp._id}' not found.`,
+      404
+    )
+  }
   if (workspaceApp.name !== persisted.name) {
     await guardName(workspaceApp.name, workspaceApp._id)
   }
@@ -80,8 +86,9 @@ export async function remove(
   try {
     const existing = await db.tryGet<WorkspaceApp>(workspaceAppId)
     if (!existing)
-      throw new Error(
-        `Delete failed. Workspace app not found: ${workspaceAppId}`
+      throw new HTTPError(
+        `Project app with id '${workspaceAppId}' not found.`,
+        404
       )
 
     await db.remove(workspaceAppId, _rev)
