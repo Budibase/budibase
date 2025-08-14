@@ -69,25 +69,23 @@
 >
   <slot name="control" {open} />
 </div>
-<div class:rounded={roundedPopover}>
-  <Popover
-    bind:this={dropdown}
-    {anchor}
-    {align}
-    {portalTarget}
-    {animate}
-    {offset}
-    {useAnchorWidth}
-    resizable={false}
-    borderRadius={roundedPopover ? "12px" : undefined}
-    on:open
-    on:close
-    on:mouseenter={openOnHover ? cancelHide : null}
-    on:mouseleave={openOnHover ? queueHide : null}
-    bind:open
-  >
-    <Menu>
-      <slot />
-    </Menu>
-  </Popover>
-</div>
+<Popover
+  bind:this={dropdown}
+  {anchor}
+  {align}
+  {portalTarget}
+  {animate}
+  {offset}
+  {useAnchorWidth}
+  resizable={false}
+  borderRadius={roundedPopover ? "12px" : undefined}
+  on:open
+  on:close
+  on:mouseenter={openOnHover ? cancelHide : null}
+  on:mouseleave={openOnHover ? queueHide : null}
+  bind:open
+>
+  <Menu>
+    <slot />
+  </Menu>
+</Popover>

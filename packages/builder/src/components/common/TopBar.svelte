@@ -67,7 +67,10 @@
   {#if showPublish}
     <ActionMenu disabled={$deploymentStore.isPublishing} roundedPopover>
       <svelte:fragment slot="control">
-        <div class="publish-menu">
+        <div
+          class="publish-menu"
+          class:disabled={$deploymentStore.isPublishing}
+        >
           <div
             role="button"
             tabindex="0"
@@ -158,7 +161,7 @@
     align-items: center;
     gap: 10px;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    padding: 0 10px 0 20px;
+    padding: 0 10px 0 12px;
     background: var(--background);
   }
   .breadcrumbs {
@@ -168,16 +171,10 @@
     align-items: center;
     gap: 6px;
   }
-  .breadcrumbs h1 {
-    font-size: 18px;
+  .breadcrumbs .divider {
+    font-size: 14px;
     font-weight: 500;
-    color: var(--spectrum-global-color-gray-700);
-  }
-  .breadcrumbs h1:last-child {
     color: var(--spectrum-global-color-gray-900);
-  }
-  .breadcrumbs h1.divider {
-    color: var(--spectrum-global-color-gray-400);
   }
   .publish-menu {
     font-size: var(--font-size-l);
@@ -193,7 +190,7 @@
     padding: var(--spacing-s) var(--spacing-l);
     display: flex;
     gap: var(--spacing-s);
-    align-items: center;
+    font-size: var(--font-size-m);
   }
   .publish-menu:hover {
     background: var(--spectrum-global-color-gray-900);
@@ -206,18 +203,45 @@
     background: rgba(0, 0, 0, 0.4);
     align-self: stretch;
   }
+  .publish-menu {
+    font-size: var(--font-size-l);
+    display: flex;
+    align-items: center;
+    background: var(--spectrum-global-color-gray-800);
+    border-radius: 8px;
+    color: var(--spectrum-global-color-gray-50);
+    cursor: pointer;
+    transition: background-color 130ms ease-in-out;
+  }
+  .publish-menu:hover {
+    background: var(--spectrum-global-color-gray-900);
+  }
+  .publish-dropdown {
+    padding: var(--spacing-s) var(--spacing-m);
+  }
+  .publish-dropdown:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0 8px 8px 0;
+  }
+  .separator {
+    width: 1px;
+    background: rgba(0, 0, 0, 0.4);
+    align-self: stretch;
+  }
   .popover-content {
     display: flex;
-    gap: var(--spacing-m);
-    padding: var(--spacing-xl);
+    gap: var(--spacing-s);
+    padding: var(--spacing-m);
   }
-  .link {
-    text-decoration: underline;
+  .menu-item-header {
+    font-weight: 500;
+    font-size: 14px;
     color: var(--spectrum-global-color-gray-900);
   }
-  .link:hover {
-    cursor: pointer;
-    filter: brightness(110%);
+  .menu-item-text {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
+    margin-top: 2px;
   }
   .menu-item-header {
     font-weight: 500;
