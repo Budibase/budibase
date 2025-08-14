@@ -183,12 +183,11 @@
     font-size: var(--font-size-l);
     display: flex;
     align-items: center;
-    background: var(--spectrum-semantic-cta-color-background-default);
+    background: var(--spectrum-global-color-gray-800);
     border-radius: 8px;
-    color: white;
+    color: var(--spectrum-global-color-gray-50);
     cursor: pointer;
     transition: background-color 130ms ease-in-out;
-    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   .publish-menu-text {
     padding: var(--spacing-s) var(--spacing-l);
@@ -197,14 +196,14 @@
     align-items: center;
   }
   .publish-menu:hover {
-    background: var(--spectrum-semantic-cta-color-background-hover);
+    background: var(--spectrum-global-color-gray-900);
   }
   .publish-dropdown {
     padding: var(--spacing-s) var(--spacing-m);
   }
   .separator {
     width: 1px;
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     align-self: stretch;
   }
   .popover-content {
