@@ -196,10 +196,6 @@ const getAppScriptHTML = (
 }
 
 export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
-  if (ctx.url.includes("apple-touch-icon.png")) {
-    ctx.redirect("/builder/bblogo.png")
-    return
-  }
   // No app ID found, cannot serve - return message instead
   const appId = context.getAppId()
   if (!appId) {

@@ -50,21 +50,17 @@
 </h3>
 
 <br /><br />
-
 ## ✨ 특징
 
 ### "실제" 소프트웨어를 구축할 수 있습니다.
-
 Budibase를 사용하면 고성능 단일 페이지 애플리케이션을 구축할 수 있습니다. 또한 반응형 디자인으로 제작하여 사용자에게 멋진 경험을 제공할 수 있습니다.
 <br /><br />
 
 ### 오픈 소스 및 확장성
-
 Budibase는 오픈소스이며, GPL v3 라이선스에 따라 공개되어 있습니다. 이는 Budibase가 항상 당신 곁에 있다는 안도감을 줄 것입니다. 그리고 우리는 개발자 친화적인 환경을 제공하고 있기 때문에, 당신은 원하는 만큼 소스 코드를 포크하여 수정하거나 Budibase에 직접 기여할 수 있습니다.
 <br /><br />
 
 ### 기존 데이터 또는 처음부터 시작
-
 Budibase를 사용하면 다음과 같은 여러 소스에서 데이터를 가져올 수 있습니다: MondoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB 또는 REST API.
 
 또는 원하는 경우 외부 도구 없이도 Budibase를 사용하여 처음부터 시작하여 자체 애플리케이션을 구축할 수 있습니다.[데이터 소스 제안](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
@@ -77,7 +73,7 @@ Budibase를 사용하면 다음과 같은 여러 소스에서 데이터를 가�
 ### 강력한 내장 구성 요소로 애플리케이션을 설계하고 구축할 수 있습니다.
 
 Budibase에는 아름답게 디자인된 강력한 컴포넌트들이 제공되며, 이를 사용하여 UI를 쉽게 구축할 수 있습니다. 또한, CSS를 통한 스타일링 옵션도 풍부하게 제공되어 보다 창의적인 표현도 가능하다.
-[Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+ [Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
   <img alt="Budibase design" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970243/Out%20of%20beta%20launch/design-like-a-pro_qhlfeu.gif">
@@ -85,7 +81,6 @@ Budibase에는 아름답게 디자인된 강력한 컴포넌트들이 제공되�
 <br /><br />
 
 ### 프로세스를 자동화하고, 다른 도구와 연동하고, 웹훅으로 연결하세요!
-
 워크플로우와 수동 프로세스를 자동화하여 시간을 절약하세요. 웹훅 이벤트 연결부터 이메일 자동화까지, Budibase에 수행할 작업을 지시하기만 하면 자동으로 처리됩니다. [새로운 자동화 만들기](https://github.com/Budibase/automations)또는[새로운 자동화를 요청할 수 있습니다](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
@@ -94,7 +89,6 @@ Budibase에는 아름답게 디자인된 강력한 컴포넌트들이 제공되�
 <br /><br />
 
 ### 선호하는 도구
-
 Budibase는 사용자의 선호도에 따라 애플리케이션을 구축할 수 있는 다양한 도구를 통합하고 있습니다.
 
 <p align="center">
@@ -103,9 +97,7 @@ Budibase는 사용자의 선호도에 따라 애플리케이션을 구축할 수
 <br /><br />
 
 ### 관리자의 천국
-
 Budibase는 어떤 규모의 프로젝트에도 유연하게 대응할 수 있으며, Budibase를 사용하면 개인 또는 조직의 서버에서 자체 호스팅하고 사용자, 온보딩, SMTP, 앱, 그룹, 테마 등을 한꺼번에 관리할 수 있습니다. 또한, 사용자나 그룹에 앱 포털을 제공하고 그룹 관리자에게 사용자 관리를 맡길 수도 있다.
-
 - 프로모션 비디오： https://youtu.be/xoljVpty_Kw
 
 <br /><br /><br />
@@ -122,14 +114,16 @@ Docker, Kubernetes 또는 Digital Ocean을 사용하여 자체 인프라에서 B
 - [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
 - [Portainer](https://docs.budibase.com/docs/portainer)
 
+
 ### [클라우드에서 Budibase 시작하기](https://budibase.com)
 
 <br /><br />
 
 ## 🎓 Budibase 알아보기
-
+ 
 문서 [documentacion de Budibase](https://docs.budibase.com/docs).
 <br />
+
 
 <br /><br />
 
@@ -139,6 +133,7 @@ Docker, Kubernetes 또는 Digital Ocean을 사용하여 자체 인프라에서 B
 [깃허브 토론](https://github.com/Budibase/budibase/discussions)
 <br /><br /><br />
 
+
 ## ❗ 행동강령
 
 Budibase 는 모든 계층의 사람들을 환영하고 상호 존중하는 환경을 제공하는 데 특별한 주의를 기울이고 있습니다. 저희는 커뮤니티에도 같은 기대를 가지고 있습니다.
@@ -146,6 +141,7 @@ Budibase 는 모든 계층의 사람들을 환영하고 상호 존중하는 환�
 <br />
 
 <br /><br />
+
 
 ## 🙌 Contribuir en Budibase
 
@@ -155,7 +151,6 @@ Budibase 는 모든 계층의 사람들을 환영하고 상호 존중하는 환�
 여기에는 다음을 위해 Budibase 환경을 설정하는 방법에 대한 지침이 나와 있습니다. [여기를 클릭하세요](https://github.com/Budibase/budibase/tree/HEAD/docs/CONTRIBUTING.md).
 
 ### 어디서부터 시작해야 할지 혼란스러우신가요?
-
 이곳은 기여를 시작하기에 최적의 장소입니다! [First time issues project](https://github.com/Budibase/budibase/projects/22).
 
 ### 리포지토리 구성
@@ -172,6 +167,7 @@ Budibase는 Lerna에서 관리하는 단일 리포지토리입니다. Lerna는 �
 
 <br /><br />
 
+
 ## 📝 라이선스
 
 Budibase는 오픈 소스이며, 라이선스는 다음과 같습니다 [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). 클라이언트 및 컴포넌트 라이브러리는 다음과 같이 라이선스가 부여됩니다. [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - 이렇게 하면 빌드한 애플리케이션에 원하는 대로 라이선스를 부여할 수 있습니다.
@@ -186,7 +182,7 @@ Budibase는 오픈 소스이며, 라이선스는 다음과 같습니다 [GPL v3]
 
 <br /><br />
 
-## Contributors ✨
+## Contributors  ✨
 
 훌륭한 여러분께 감사할 따름입니다. ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
@@ -221,5 +217,5 @@ Budibase는 오픈 소스이며, 라이선스는 다음과 같습니다 [GPL v3]
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-이 프로젝트는 다음 사양을 따릅니다. [all-contributors](https://github.com/all-contributors/all-contributors).
+이 프로젝트는 다음 사양을 따릅니다. [all-contributors](https://github.com/all-contributors/all-contributors). 
 모든 종류의 기여를 환영합니다!

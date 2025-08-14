@@ -1,10 +1,12 @@
 <html>
-  <script nonce="{{nonce}}">
-    document.fonts.ready.then(() => { // Safari requires that the origin be
-    configured window.parent.postMessage({ type: "docLoaded" }, "*"); })
+  <script nonce="{{ nonce }}">
+    document.fonts.ready.then(() => {
+      // Safari requires that the origin be configured
+      window.parent.postMessage({ type: "docLoaded" }, "*"); 
+    })
   </script>
   <head>
-    <script nonce="{{nonce}}">
+    <script nonce="{{ nonce }}">
       window["##BUDIBASE_APP_ID##"] = "{{appId}}"
       window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
     </script>

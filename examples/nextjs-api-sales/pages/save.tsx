@@ -38,13 +38,11 @@ const Save: NextPage = () => {
   }, [])
 
   useEffect(() => {
-    getSalespeople()
-      .then(() => {
-        setLoaded(true)
-      })
-      .catch(() => {
-        setSalespeople([])
-      })
+    getSalespeople().then(() => {
+      setLoaded(true)
+    }).catch(() => {
+      setSalespeople([])
+    })
   }, [])
 
   if (!loaded) {
@@ -58,12 +56,7 @@ const Save: NextPage = () => {
           <div className="field">
             <label className="label">Name</label>
             <div className="control">
-              <input
-                id="name"
-                className="input"
-                type="text"
-                placeholder="Text input"
-              />
+              <input id="name" className="input" type="text" placeholder="Text input" />
             </div>
           </div>
           <div className="field">
@@ -71,11 +64,7 @@ const Save: NextPage = () => {
             <div className="control">
               <div className="select">
                 <select id="soldBy">
-                  {salespeople.map((person: any) => (
-                    <option key={person._id} value={person._id}>
-                      {person.name}
-                    </option>
-                  ))}
+                  {salespeople.map((person: any) => <option key={person._id} value={person._id}>{person.name}</option>)}
                 </select>
               </div>
             </div>

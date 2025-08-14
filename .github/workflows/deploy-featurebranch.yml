@@ -2,7 +2,7 @@ name: deploy-featurebranch
 
 on:
   pull_request:
-    types:
+    types: 
       - labeled
       - opened
       - synchronize

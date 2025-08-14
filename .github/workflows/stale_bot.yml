@@ -8,15 +8,15 @@ jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v8
-        with:
-          # Issues
-          days-before-stale: 180
-          stale-issue-label: stale
-          days-before-close: 30
-          stale-issue-message: "This issue has been automatically marked as stale as there has been no activity for 6 months."
-          # Pull requests
-          days-before-pr-stale: 7
-          days-before-pr-close: 14
-          exempt-pr-labels: pinned,security,roadmap
-          operations-per-run: 100
+    - uses: actions/stale@v8
+      with:
+        # Issues
+        days-before-stale: 180
+        stale-issue-label: stale
+        days-before-close: 30
+        stale-issue-message: "This issue has been automatically marked as stale as there has been no activity for 6 months."
+        # Pull requests
+        days-before-pr-stale: 7
+        days-before-pr-close: 14
+        exempt-pr-labels: pinned,security,roadmap
+        operations-per-run: 100

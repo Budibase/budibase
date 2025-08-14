@@ -13,9 +13,11 @@
   Budibase是一个开放源代码的低代码平台，可帮助开发人员和IT专业人员在几分钟内在自己的设施上构建、自动化和交付部署定制业务应用。
 </p>
 
+
 <h3 align="center">
  🤖 🎨 🚀
 </h3>
+
 
 <p align="center">
   <img src="https://i.imgur.com/tPQHruf.png">
@@ -53,8 +55,9 @@
   <a href="https://discord.gg/rCYayfe">Discord</a>
 </h3>
 
-## ✨ 功能
 
+
+## ✨ 功能
 当其他平台选择闭源路线时，我们决定采用开放源代码。当其他平台选择云服务时，我们决定提供本地构建器提供更好的开发体验。我们喜欢在Budibase上做不同的事情。
 
 - **构建和发布真实的软件** 与其他平台不同，使用Budibase可以构建和交付单页应用程序。Budibase应用程序具有增强的性能，并且可以进行响应式设计，从而为您的用户提供出色的体验。
@@ -68,8 +71,8 @@
   <img alt="Budibase design ui" src="https://imgur.com/v8m6v3q.png">
 </p>
 
-## ⌛ 状态
 
+## ⌛ 状态
 - [x] Alpha：我们正在将Budibase演示给用户并收到反馈
 - [x] 内部测试：我们正在与一组封闭的客户一起测试Budibase
 - [x] 公开测试：任何人都可以[注册并使用Budibase](https://portal.budi.live/signup)
@@ -87,6 +90,7 @@
 
 如果您在两个版本之间遇到问题，请使用[此处](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting)的指南清理您的环境。
 
+
 ## 🏁 Budibase入门
 
 Budibase构建器在Mac，PC和Linux上的Electron中运行。请按照以下步骤开始：
@@ -99,6 +103,7 @@ Budibase构建器在Mac，PC和Linux上的Electron中运行。请按照以下步
 
 如果您需要其他帮助，请[参阅以下指导教程](https://docs.budibase.com/tutorial/tutorial-signing-up)。
 
+
 ## 🤖 自托管
 
 Budibase希望确保任何人都可以使用我们开发的工具，并且我们知道很多人需要能够在自己的系统上托管他们制作的应用程序——这就是为什么我们决定尝试使自托管服务变得如此简单的原因！
@@ -107,15 +112,17 @@ Budibase希望确保任何人都可以使用我们开发的工具，并且我们
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/droplets/new?onboarding_origin=marketplace&i=09038e&fleetUuid=bb04f9c8-1de8-4687-b2ae-1d5177a0535b&appId=77729671&type=applications&size=s-4vcpu-8gb&region=nyc1&refcode=0caaa6085a82&image=budibase-20-04)
 
+
 ## 🎓 学习Budibase
 
 Budibase[文档](https://docs.budibase.com/)位于[此处](https://docs.budibase.com/)。
 
 您还可以按照有关[如何使用Budibase构建CRM](https://docs.budibase.com/tutorial/tutorial-introduction)的快速教程进行[操作](https://docs.budibase.com/tutorial/tutorial-introduction)
 
-## 路线图
 
+## 路线图
 查看我们的[公共路线图](https://github.com/Budibase/budibase/projects/10)。如果您想讨论路线图上的某些项目，请与[Discord](https://discord.gg/rCYayfe)或通过Github进行[讨论](https://github.com/Budibase/budibase/discussions)
+
 
 ## ❗ 行为守则
 
@@ -150,6 +157,7 @@ Budibase是开源的。该构建器的许可证为[AGPL v3](https://www.gnu.org/
 [Discord 聊天室](https://discord.gg/rCYayfe)
 
 ![Discord Shield](https://discordapp.com/api/guilds/733030666647765003/widget.png?style=shield)
+
 
 ## 贡献者 ✨
 
