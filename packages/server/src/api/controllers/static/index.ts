@@ -226,7 +226,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
     const appInfo = await sdk.applications.metadata.get()
     const hideDevTools = !!ctx.params.appUrl
-    const sideNav = workspaceApp.navigation.navigation === "Left"
+    const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
     const themeVariables = getThemeVariables(appInfo.theme)
