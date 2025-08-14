@@ -26,17 +26,20 @@
     licensing,
     enrichedApps,
     sortBy,
+    templates,
     featureFlags,
+    appCreationStore,
     backups,
   } from "@/stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
+  import TemplatesModal from "@/components/start/TemplatesModal.svelte"
 
-  let template
   let creationModal
   let appLimitModal
   let accountLockedModal
+  let templatesModal
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
@@ -47,6 +50,17 @@
   $: automationErrors = getAutomationErrors(filteredApps || [])
   $: backupErrors = getBackupErrors(filteredApps || [])
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
+
+  $: if (
+    ($appCreationStore.showCreateModal || $appCreationStore.showImportModal) &&
+    creationModal
+  ) {
+    creationModal.show()
+  }
+
+  $: if ($appCreationStore.showTemplatesModal && templatesModal) {
+    templatesModal.show()
+  }
 
   const filterApps = (apps, searchTerm) => {
     return apps?.filter(app => {
@@ -120,35 +134,64 @@
   const initiateAppCreation = async () => {
     if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
-    } else if ($appsStore.apps?.length) {
-      $goto("/builder/portal/apps/create")
     } else {
-      template = null
-      creationModal.show()
+      appCreationStore.showCreateModal()
     }
   }
 
   const initiateAppImport = () => {
-    template = { fromFile: true }
-    creationModal.show()
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+    } else {
+      appCreationStore.showImportModal()
+    }
   }
 
   const autoCreateApp = async () => {
     try {
+      const template = $appCreationStore.template
+      if (!template?.key) {
+        notifications.error("No template selected")
+        return
+      }
+
+      const toTitleCase = str => {
+        return str.replace(
+          /\w\S*/g,
+          txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        )
+      }
+
       // Auto name app if has same name
       const templateKey = template.key.split("/")[1]
 
-      let appName = templateKey.replace(/-/g, " ")
-      const appsWithSameName = $appsStore.apps.filter(app =>
-        app.name?.startsWith(appName)
-      )
-      appName = `${appName} ${appsWithSameName.length + 1}`
+      let baseName = templateKey.replace(/-/g, " ")
+      baseName = toTitleCase(baseName)
 
-      const data = {
-        name: appName,
-        useTemplate: true,
-        templateKey: template.key,
+      // generate a unique app name and url
+      const baseUrl = baseName.toLowerCase().replace(/\s+/g, "-")
+
+      const isNameTaken = name => $appsStore.apps.some(app => app.name === name)
+      const isUrlTaken = url =>
+        $appsStore.apps.some(app => app.url?.replace(/^\//, "") === url)
+
+      let counter = 1
+      let appName = baseName
+      let appUrl = baseUrl
+
+      while (isNameTaken(appName) || isUrlTaken(appUrl)) {
+        counter++
+        appName = `${baseName} ${counter}`
+        appUrl = `${baseUrl}-${counter}`
       }
+
+      // Create form data to create app
+      let data = new FormData()
+      data.append("name", appName)
+      data.append("url", appUrl)
+      data.append("useTemplate", "true")
+      data.append("templateKey", template.key)
+      data.append("isOnboarding", "false")
 
       // Create App
       const createdApp = await API.createApp(data)
@@ -172,20 +215,35 @@
   }
 
   const stopAppCreation = () => {
-    template = null
+    appCreationStore.hideCreateModal()
+    appCreationStore.hideImportModal()
+    appCreationStore.hideTemplatesModal()
+    appCreationStore.clearTemplate()
   }
 
   function createAppFromTemplateUrl(templateKey) {
     // validate the template key just to make sure
     const templateParts = templateKey.split("/")
     if (templateParts.length === 2 && templateParts[0] === "app") {
-      template = {
-        key: templateKey,
+      if ($licensing?.usageMetrics?.apps >= 100) {
+        appLimitModal.show()
+        return
       }
+      appCreationStore.setTemplate({ key: templateKey })
       autoCreateApp()
     } else {
       notifications.error("Your Template URL is invalid. Please try another.")
     }
+  }
+
+  const handleTemplateSelect = selectedTemplate => {
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+      return
+    }
+    appCreationStore.setTemplate(selectedTemplate)
+    appCreationStore.hideTemplatesModal()
+    autoCreateApp()
   }
 
   onMount(async () => {
@@ -199,6 +257,7 @@
       if (usersLimitLockAction) {
         usersLimitLockAction()
       }
+      await templates.load()
     } catch (error) {
       notifications.error("Error getting init info")
     }
@@ -281,20 +340,19 @@
                   Create new app
                 {/if}
               </Button>
-              {#if $appsStore.apps?.length > 0 && !$admin.offlineMode}
+
+              {#if $appsStore.apps?.length > 0}
+                {#if !$admin.offlineMode}
+                  <Button
+                    size="M"
+                    secondary
+                    on:click={usersLimitLockAction || templatesModal.show}
+                  >
+                    View templates
+                  </Button>
+                {/if}
                 <Button
                   size="M"
-                  secondary
-                  on:click={usersLimitLockAction ||
-                    $goto("/builder/portal/apps/templates")}
-                >
-                  View templates
-                </Button>
-              {/if}
-              {#if !$appsStore.apps?.length}
-                <Button
-                  size="L"
-                  quiet
                   secondary
                   on:click={usersLimitLockAction || initiateAppImport}
                 >
@@ -362,7 +420,17 @@
   width="600px"
   on:hide={stopAppCreation}
 >
-  <CreateAppModal {template} />
+  <CreateAppModal
+    key={$appCreationStore.showImportModal
+      ? "import"
+      : $appCreationStore.showCreateModal
+        ? "create"
+        : "none"}
+  />
+</Modal>
+
+<Modal bind:this={templatesModal}>
+  <TemplatesModal onSelectTemplate={handleTemplateSelect} />
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />

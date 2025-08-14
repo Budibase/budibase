@@ -562,6 +562,12 @@
     border-left: 1px solid transparent;
     padding-left: var(--cell-padding);
   }
+
+  .spectrum-Table-head > .spectrum-Table-headCell--edit:first-child {
+    padding-left: calc(var(--cell-padding) / 1.33);
+    /* adding 1px to compensate for lack of right border in header */
+    padding-right: calc(var(--cell-padding) / 1.33 + 1px);
+  }
   .spectrum-Table-head > :last-child {
     border-right: 1px solid transparent;
     padding-right: var(--cell-padding);
@@ -611,6 +617,9 @@
     position: sticky;
     left: 0;
     z-index: 3;
+    justify-content: center;
+    padding-left: calc(var(--cell-padding) / 1.33);
+    padding-right: calc(var(--cell-padding) / 1.33);
   }
   .spectrum-Table-headCell .title {
     overflow: visible;
@@ -644,6 +653,9 @@
     border-left: var(--table-border);
     padding-left: var(--cell-padding);
   }
+  .spectrum-Table-row > .spectrum-Table-cell--edit:first-child {
+    padding-left: calc(var(--cell-padding) / 1.33);
+  }
   .spectrum-Table-row > :last-child {
     border-right: var(--table-border);
     padding-right: var(--cell-padding);
@@ -673,6 +685,9 @@
     position: sticky;
     left: 0;
     z-index: 2;
+    justify-content: center;
+    padding-left: calc(var(--cell-padding) / 1.33);
+    padding-right: calc(var(--cell-padding) / 1.33);
   }
 
   /* Placeholder  */

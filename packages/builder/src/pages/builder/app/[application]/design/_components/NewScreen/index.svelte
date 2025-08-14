@@ -311,7 +311,7 @@
   }
 
   .selected {
-    border-radius: 4px;
+    border-radius: 8px;
     outline: 1px solid var(--blue);
   }
 </style>

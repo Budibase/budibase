@@ -11,7 +11,6 @@
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
-  import PortalSideBar from "./_components/PortalSideBar.svelte"
 
   // Don't block loading if we've already hydrated state
   let loaded = !!$appsStore.apps?.length
@@ -49,9 +48,6 @@
 
 {#if loaded}
   <div class="page">
-    {#if $appsStore.apps.length > 0}
-      <PortalSideBar />
-    {/if}
     <slot />
   </div>
 {/if}

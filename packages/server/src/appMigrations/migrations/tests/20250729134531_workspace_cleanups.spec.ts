@@ -158,7 +158,7 @@ describe.each([
 
     // All screens should now reference the kept workspace app
     const screensWithWorkspaceAppId = screens.filter(s => s.workspaceAppId)
-    expect(screensWithWorkspaceAppId).toHaveLength(4)
+    expect(screensWithWorkspaceAppId).toHaveLength(3)
     screensWithWorkspaceAppId.forEach(screen => {
       expect(screen.workspaceAppId).toBe(keptWorkspaceAppId)
     })

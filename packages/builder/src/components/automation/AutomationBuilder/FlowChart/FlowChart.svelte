@@ -15,6 +15,8 @@
     automationStore,
     automationHistoryStore,
     selectedAutomation,
+    workspaceDeploymentStore,
+    deploymentStore,
   } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
@@ -29,6 +31,7 @@
   import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
+  import CtaNotification from "@/components/common/CtaNotification.svelte"
 
   export let automation
 
@@ -56,6 +59,11 @@
   )
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
+  // Check if automation has unpublished changes
+  $: hasUnpublishedChanges =
+    $workspaceDeploymentStore.automations[automation._id]
+      ?.unpublishedChanges === true
+
   const refresh = () => {
     // Get all processed block references
     blockRefs = $selectedAutomation.blockRefs
@@ -66,6 +74,14 @@
       await automationStore.actions.delete(automation)
     } catch (error) {
       notifications.error("Error deleting automation")
+    }
+  }
+
+  const publishChanges = async () => {
+    try {
+      await deploymentStore.publishApp()
+    } catch (error) {
+      notifications.error("Error publishing changes")
     }
   }
 
@@ -202,25 +218,15 @@
 <div class="main-flow">
   <div class="canvas-heading" class:scrolling>
     <div class="canvas-controls">
-      <div class="canvas-heading-left">
-        <UndoRedoControl store={automationHistoryStore} showButtonGroup />
-
-        <div class="zoom">
-          <div class="group">
-            <ActionButton icon="plus" quiet on:click={draggable.zoomIn} />
-            <ActionButton icon="minus" quiet on:click={draggable.zoomOut} />
-          </div>
-        </div>
-
-        <Button
-          secondary
-          on:click={() => {
-            draggable.zoomToFit()
-          }}
+      {#if hasUnpublishedChanges}
+        <CtaNotification
+          button={{ message: "Publish changes" }}
+          on:click={publishChanges}
+          icon="info"
         >
-          Zoom to fit
-        </Button>
-      </div>
+          <span>This automation has unpublished changes</span>
+        </CtaNotification>
+      {/if}
     </div>
   </div>
 
@@ -255,6 +261,25 @@
         {/if}
       </span>
     </DraggableCanvas>
+    <div class="canvas-footer-left">
+      <UndoRedoControl store={automationHistoryStore} showButtonGroup />
+
+      <div class="zoom">
+        <div class="group">
+          <ActionButton icon="plus" quiet on:click={draggable.zoomIn} />
+          <ActionButton icon="minus" quiet on:click={draggable.zoomOut} />
+        </div>
+      </div>
+
+      <Button
+        secondary
+        on:click={() => {
+          draggable.zoomToFit()
+        }}
+      >
+        Zoom to fit
+      </Button>
+    </div>
   </div>
 </div>
 
@@ -327,7 +352,10 @@
     align-items: center;
   }
 
-  .canvas-heading-left {
+  .canvas-footer-left {
+    position: absolute;
+    left: var(--spacing-xl);
+    bottom: var(--spacing-l);
     display: flex;
     gap: var(--spacing-l);
   }
@@ -338,7 +366,7 @@
     flex-shrink: 0;
   }
 
-  .canvas-heading-left :global(div) {
+  .canvas-footer-left :global(div) {
     border-right: none;
   }
 
@@ -408,9 +436,9 @@
     flex-direction: row;
   }
 
-  .canvas-heading-left .group :global(.spectrum-Button),
-  .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .canvas-heading-left .group :global(i) {
+  .canvas-footer-left .group :global(.spectrum-Button),
+  .canvas-footer-left .group :global(.spectrum-ActionButton),
+  .canvas-footer-left .group :global(i) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .zoom .group :global(> *:not(:first-child)) {

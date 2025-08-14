@@ -5,6 +5,7 @@ import { generate } from "shortid"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { licensing, organisation, environment } from "@/stores/portal"
 import { tables, appStore, permissions } from "@/stores/builder"
+import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import { notifications } from "@budibase/bbui"
 import {
   getEnvironmentBindings,
@@ -58,6 +59,8 @@ import {
   isDidNotTriggerResponse,
   AutomationResults,
   isActionStep,
+  isRowActionTrigger,
+  isWebhookTrigger,
 } from "@budibase/types"
 import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
 import { FIELDS as COLUMNS } from "@/constants/backend"
@@ -76,6 +79,8 @@ import {
   type StepInputs,
 } from "@/types/automations"
 import { TableNames } from "@/constants"
+import { EnvVar } from "../portal/environment"
+import { makePropSafe } from "@budibase/string-templates"
 
 const initialAutomationState: AutomationState = {
   automations: [],
@@ -400,10 +405,16 @@ const automationActions = (store: AutomationStore) => ({
     terminating: boolean
   ) => {
     blocks[block.id] = {
+      stepId: block.stepId,
+      name: block.name,
       ...(blocks[block.id] || {}),
       pathTo,
       terminating: terminating || false,
       ...(block.blockToLoop ? { blockToLoop: block.blockToLoop } : {}),
+    }
+
+    if (block.stepId === AutomationActionStepId.EXTRACT_STATE) {
+      blocks[block.id].inputs = { ...block.inputs }
     }
 
     // If this is a loop block, add a reference to the block being looped
@@ -558,9 +569,9 @@ const automationActions = (store: AutomationStore) => ({
   /**
    * Get settings bindings
    *
-   * @returns {Array<Object>} all available settings bindings
+   * @returns { Array<EnrichedBinding>} all available settings bindings
    */
-  buildSettingBindings: () => {
+  buildSettingBindings: (): Array<EnrichedBinding> => {
     return getSettingBindings().map(binding => {
       return {
         ...binding,
@@ -579,7 +590,10 @@ const automationActions = (store: AutomationStore) => ({
    * @param {Automation} automation the automation to be searched
    * @returns {Array<EnrichedBinding>} all bindings on the path to this step
    */
-  getPathBindings: (id?: string, automation?: Automation) => {
+  getPathBindings: (
+    id?: string,
+    automation?: Automation
+  ): Array<EnrichedBinding> => {
     if (!automation || !id) {
       console.error("getPathBindings: requires a valid step id and automation")
       return []
@@ -587,6 +601,37 @@ const automationActions = (store: AutomationStore) => ({
     const block = get(selectedAutomation)?.blockRefs[id]
 
     return store.actions.getAvailableBindings(block, automation)
+  },
+
+  buildStateBindings: (): Array<EnrichedBinding> => {
+    const blockRefs = get(selectedAutomation)?.blockRefs || {}
+    const selectedNodeId = get(automationStore).selectedNodeId
+
+    const cache = new Set<string>()
+    return Object.entries(blockRefs)
+      .filter(([id, entry]: [string, any]) => {
+        const valid =
+          entry.stepId === AutomationActionStepId.EXTRACT_STATE &&
+          entry?.inputs?.key &&
+          (id !== selectedNodeId || entry.looped) &&
+          !cache.has(entry.inputs.key)
+
+        // Multiple blocks can reference the same state fields.
+        // Check the cached ids before adding to avoid dupe bindings
+        if (valid) cache.add(entry.inputs.key)
+        return valid
+      })
+      .map(([_, entry]: [string, any]) => {
+        return {
+          runtimeBinding: `state.${makePropSafe(entry.inputs.key)}`,
+          readableBinding: `State.${entry.inputs.key}`,
+          display: {
+            name: `State.${entry.inputs.key}`,
+          },
+          category: "State",
+          icon: "brackets-curly",
+        } as EnrichedBinding
+      })
   },
 
   /**
@@ -1861,6 +1906,14 @@ const automationActions = (store: AutomationStore) => ({
 
   save: async (automation: Automation) => {
     const response = await API.updateAutomation(automation)
+
+    // Mark automation as having unpublished changes
+    if (response.automation._id) {
+      workspaceDeploymentStore.setAutomationUnpublishedChanges(
+        response.automation._id
+      )
+    }
+
     await store.actions.fetch()
     store.actions.select(response.automation._id!)
     return response.automation
@@ -2074,6 +2127,7 @@ const automationActions = (store: AutomationStore) => ({
 })
 
 export interface AutomationContext {
+  state?: Record<string, any>
   user: AppSelfResponse | null
   trigger?: AutomationTriggerResultOutputs
   steps: Record<string, AutomationStep>
@@ -2181,6 +2235,148 @@ const emptyContext: AutomationContext = {
   },
 }
 
+/**
+ * Extract and build automation trigger evaluation context
+ *
+ * @param automation
+ * @param tables
+ * @param results
+ * @returns
+ */
+const extractTriggerContext = (
+  automation: Automation,
+  tables: Table[],
+  results?: TestAutomationResponse
+) => {
+  const testData: AutomationTriggerResultOutputs | undefined =
+    automation?.testData
+
+  const triggerDef = automation?.definition?.trigger
+
+  const triggerInputs = triggerDef
+    ? (triggerDef.inputs as AutomationTriggerInputs<typeof triggerDef.stepId>)
+    : undefined
+
+  let triggerData: AutomationTriggerResultOutputs | undefined
+
+  if (results && isAutomationResults(results)) {
+    const automationTrigger: AutomationTriggerResult | undefined =
+      results?.trigger
+
+    const outputs: AutomationTriggerResultOutputs | undefined =
+      automationTrigger?.outputs
+    triggerData = outputs ? outputs : undefined
+
+    if (triggerData && triggerDef) {
+      if (isRowActionTrigger(triggerDef)) {
+        const rowActionInputs: RowActionTriggerInputs =
+          triggerInputs as RowActionTriggerInputs
+        const rowActionTableId = rowActionInputs.tableId
+        const rowActionTable = tables.find(
+          table => table._id === rowActionTableId
+        )
+
+        const rowTriggerOutputs = triggerData as RowActionTriggerOutputs
+
+        if (rowActionTable) {
+          // Row action table must always be retrieved as it is never
+          // returned in the test results
+          rowTriggerOutputs.table = rowActionTable
+        }
+      } else if (isWebhookTrigger(triggerDef)) {
+        const webhookTrigger = triggerData as WebhookTriggerOutputs
+        // Ensure it displays in the event that the configuration was been skipped
+        webhookTrigger.body = webhookTrigger.body ?? {}
+      }
+    }
+
+    // Clean up unnecessary data from the context
+    // Meta contains UI/UX config data. Non-bindable
+    delete triggerData?.meta
+  } else {
+    // Substitute test data in place of the trigger data if the test hasn't been run
+    triggerData = testData
+  }
+
+  return triggerData
+}
+
+/**
+ * Build state context containing either stubs detailing where the
+ * state context is set or it will reflected real test data
+ *
+ * @param results
+ * @param blockRefs
+ * @returns
+ */
+const extractStateContext = (
+  results: TestAutomationResponse | undefined,
+  blockRefs: Record<string, BlockRef>
+) => {
+  if (results && isAutomationResults(results) && results.state) {
+    return results.state
+  }
+  const selectedNodeId = get(automationStore).selectedNodeId
+  const auto = get(selectedAutomation).data
+  const { stepNames } = auto?.definition || {}
+
+  // Determine if any state vars set.
+  const stateSteps = Object.entries(blockRefs).filter(
+    ([id, entry]: [string, any]) => {
+      return (
+        entry.stepId === AutomationActionStepId.EXTRACT_STATE &&
+        id !== selectedNodeId &&
+        entry?.inputs?.key
+      )
+    }
+  )
+
+  if (!stateSteps.length) {
+    return
+  }
+
+  const stubs = stateSteps.reduce(
+    (acc: Record<string, any>, [id, entry]: [string, any]) => {
+      if (!acc[entry.inputs.key]) {
+        acc[entry.inputs.key] = {
+          steps: [],
+          description:
+            "An updateable state variable. This will be replaced with a real value on test or at runtime",
+        }
+      }
+      const displayName = stepNames?.[id] || entry.name
+      // Show which state steps are modifying the variable
+      acc[entry.inputs.key].steps.push(displayName)
+      return acc
+    },
+    {}
+  )
+
+  return stubs
+}
+
+/**
+ * Env vars require a license. In the event they are empty or unavailablethe
+ * UI wont display an empty section in the context
+ * @param variables
+ * @returns
+ */
+const buildEnvironmentContext = (variables: EnvVar[]) => {
+  return variables.length
+    ? variables.reduce(
+        (acc: Record<string, any>, variable: Record<string, any>) => {
+          acc[variable.name] = ""
+          return acc
+        },
+        {}
+      )
+    : undefined
+}
+
+/**
+ * Build an automation evaluation context with a mixture of either
+ * stub data or real automation test response data.
+ */
 const generateContext = () => {
   if (!organisation || !automationStore?.selected || !environment || !tables) {
     return readable(emptyContext)
@@ -2198,61 +2394,8 @@ const generateContext = () => {
       const results: TestAutomationResponse | undefined =
         $selectedAutomation?.testResults
 
-      const testData: AutomationTriggerResultOutputs | undefined =
-        $selectedAutomation.data?.testData
-
-      const triggerDef = $selectedAutomation.data?.definition?.trigger
-
-      const isWebhook = triggerDef?.stepId === AutomationTriggerStepId.WEBHOOK
-      const isRowAction =
-        triggerDef?.stepId === AutomationTriggerStepId.ROW_ACTION
-
-      const triggerInputs = triggerDef
-        ? (triggerDef.inputs as AutomationTriggerInputs<
-            typeof triggerDef.stepId
-          >)
-        : undefined
-
-      let triggerData: AutomationTriggerResultOutputs | undefined
-
-      if (results && isAutomationResults(results)) {
-        const automationTrigger: AutomationTriggerResult | undefined =
-          results?.trigger
-
-        const outputs: AutomationTriggerResultOutputs | undefined =
-          automationTrigger?.outputs
-        triggerData = outputs ? outputs : undefined
-
-        if (triggerData) {
-          if (isRowAction) {
-            const rowActionInputs: RowActionTriggerInputs =
-              triggerInputs as RowActionTriggerInputs
-            const rowActionTableId = rowActionInputs.tableId
-            const rowActionTable = $tables.list.find(
-              table => table._id === rowActionTableId
-            )
-
-            const rowTriggerOutputs = triggerData as RowActionTriggerOutputs
-
-            if (rowActionTable) {
-              // Row action table must always be retrieved as it is never
-              // returned in the test results
-              rowTriggerOutputs.table = rowActionTable
-            }
-          } else if (isWebhook) {
-            const webhookTrigger = triggerData as WebhookTriggerOutputs
-            // Ensure it displays in the event that the configuration was been skipped
-            webhookTrigger.body = webhookTrigger.body ?? {}
-          }
-        }
-
-        // Clean up unnecessary data from the context
-        // Meta contains UI/UX config data. Non-bindable
-        delete triggerData?.meta
-      } else {
-        // Substitute test data in place of the trigger data if the test hasn't been run
-        triggerData = testData
-      }
+      let triggerData: AutomationTriggerResultOutputs | undefined =
+        extractTriggerContext($selectedAutomation.data!, $tables.list)
 
       // AppSelf context required to mirror server user context
       const userContext = $selectedAutomation.appSelf || {}
@@ -2260,18 +2403,6 @@ const generateContext = () => {
       // Extract step results from a valid response
       const stepResults =
         results && isAutomationResults(results) ? results?.steps : []
-
-      // Env vars require a license. In the event they are empty or unavailable
-      // the UI wont display an empty section in the context
-      const envVars = $env?.variables.length
-        ? $env?.variables.reduce(
-            (acc: Record<string, any>, variable: Record<string, any>) => {
-              acc[variable.name] = ""
-              return acc
-            },
-            {}
-          )
-        : undefined
 
       // Result data from a completed test run
       // Initially contain info around
@@ -2283,12 +2414,18 @@ const generateContext = () => {
         {}
       )
 
+      const envVars = buildEnvironmentContext($env.variables)
+      const stateContext = extractStateContext(
+        results,
+        $selectedAutomation.blockRefs
+      )
+
       return {
-        user: userContext,
-        // Merge in the trigger data.
         ...(triggerData ? { trigger: { ...triggerData } } : {}),
-        steps: stepContext,
+        ...(stateContext ? { state: stateContext } : {}),
         ...(envVars ? { env: envVars } : {}),
+        user: userContext,
+        steps: stepContext,
         settings: { url, company, logo },
       }
     },

@@ -6,7 +6,6 @@
   import { SplitPage } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { auth, admin } from "@/stores/portal"
-  import type { CreateAppRequest } from "@budibase/types"
 
   let name: string = "My first app"
   let url: string = "my-first-app"
@@ -17,11 +16,13 @@
   const createApp = async () => {
     loading = true
 
-    const data: CreateAppRequest = {
-      name: name.trim(),
-      url: url.trim(),
-      useTemplate: false,
-    }
+    // Create form data to create app
+    // This is form based and not JSON
+    let data = new FormData()
+    data.append("name", name.trim())
+    data.append("url", url.trim())
+    data.append("useTemplate", "false")
+    data.append("isOnboarding", "true")
 
     const createdApp = await API.createApp(data)
 
@@ -56,7 +57,7 @@
   <SplitPage>
     <NamePanel bind:name bind:url disabled={loading} onNext={handleCreateApp} />
     <div slot="right">
-      <ExampleApp {name} />
+      <ExampleApp />
     </div>
   </SplitPage>
 </div>

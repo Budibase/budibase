@@ -37,9 +37,9 @@ import { env, sql } from "@budibase/backend-core"
 // This lets us reference the original stored timezone.
 // types is undefined when running in a test env for some reason.
 if (types) {
-  types.setTypeParser(1114, (val: any) => val) // timestamp
-  types.setTypeParser(1082, (val: any) => val) // date
-  types.setTypeParser(1184, (val: any) => val) // timestampz
+  types.setTypeParser(1114, (val: unknown) => val) // timestamp
+  types.setTypeParser(1082, (val: unknown) => val) // date
+  types.setTypeParser(1184, (val: unknown) => val) // timestampz
 }
 
 const JSON_REGEX = /'{\s*.*?\s*}'::json/gs

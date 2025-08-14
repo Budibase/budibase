@@ -1,4 +1,4 @@
-import { InviteUsersResponse, User } from "@budibase/types"
+import { InviteUsersResponse, User, OIDCUser } from "@budibase/types"
 
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
@@ -798,6 +798,164 @@ describe("/api/global/users", () => {
       ])
       expect(response.successful.length).toBe(0)
       expect(response.unsuccessful.length).toBe(1)
+    })
+  })
+
+  describe("PUT /api/global/users/tenant/owner", () => {
+    it("should successfully change tenant owner email for existing user", async () => {
+      const originalEmail = `original-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+      const tenantId = config.getTenantId()
+
+      const user = await config.doInTenant(async () => {
+        return await userSdk.db.save(
+          {
+            email: originalEmail,
+            tenantId,
+          } as any,
+          { requirePassword: false, isAccountHolder: true }
+        )
+      })
+
+      await config.api.users.changeTenantOwnerEmail(newEmail, originalEmail, [
+        tenantId,
+      ])
+
+      const updatedUser = await config.doInTenant(async () => {
+        return await userSdk.db.getUser(user._id!)
+      })
+
+      expect(updatedUser).toBeDefined()
+      expect(updatedUser!.email).toBe(newEmail)
+    })
+
+    it("should handle multiple tenants", async () => {
+      const originalEmail = `original-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+      const tenant1 = config.getTenantId()
+      const tenant2 = structures.tenant.id()
+
+      const user1 = await config.doInTenant(async () => {
+        return await userSdk.db.save(
+          {
+            email: originalEmail,
+            tenantId: tenant1,
+          } as any,
+          { requirePassword: false, isAccountHolder: true }
+        )
+      })
+
+      const user2 = await config.doInSpecificTenant(tenant2, async () => {
+        return await userSdk.db.save(
+          {
+            email: originalEmail,
+            tenantId: tenant2,
+          } as any,
+          { requirePassword: false, isAccountHolder: true }
+        )
+      })
+
+      await config.api.users.changeTenantOwnerEmail(newEmail, originalEmail, [
+        tenant1,
+        tenant2,
+      ])
+
+      const updatedUser1 = await config.doInTenant(async () => {
+        return await userSdk.db.getUser(user1._id!)
+      })
+
+      const updatedUser2 = await config.doInSpecificTenant(
+        tenant2,
+        async () => {
+          return await userSdk.db.getUser(user2._id!)
+        }
+      )
+
+      expect(updatedUser1).toBeDefined()
+      expect(updatedUser1!.email).toBe(newEmail)
+      expect(updatedUser2).toBeDefined()
+      expect(updatedUser2!.email).toBe(newEmail)
+    })
+
+    it("should not fail if user doesn't exist in tenant", async () => {
+      const originalEmail = `nonexistent-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+      const tenantId = config.getTenantId()
+
+      await config.api.users.changeTenantOwnerEmail(newEmail, originalEmail, [
+        tenantId,
+      ])
+
+      const user = await config.doInTenant(async () => {
+        return await userSdk.db.getUserByEmail(newEmail)
+      })
+
+      expect(user).toBeUndefined()
+    })
+
+    it("should handle empty tenant list", async () => {
+      const originalEmail = `original-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+
+      await config.api.users.changeTenantOwnerEmail(newEmail, originalEmail, [])
+    })
+
+    it("should clear all OIDC-related fields", async () => {
+      const originalEmail = `original-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+      const tenantId = config.getTenantId()
+      const profile = {}
+      const provider = "oidc"
+      const providerType = "oidc"
+      const thirdPartyProfile = {}
+      const oauth2 = {}
+
+      await config.doInTenant(async () => {
+        await userSdk.db.save(
+          {
+            email: originalEmail,
+            tenantId,
+            profile,
+            provider,
+            providerType,
+            thirdPartyProfile,
+            oauth2,
+          } as any,
+          { requirePassword: false, isAccountHolder: true }
+        )
+      })
+
+      await config.api.users.changeTenantOwnerEmail(newEmail, originalEmail, [
+        tenantId,
+      ])
+
+      const updatedUser = (await config.doInTenant(async () => {
+        return await userSdk.db.getUserByEmail(newEmail)
+      })) as OIDCUser
+
+      expect(updatedUser).toBeDefined()
+      expect(updatedUser!.email).toBe(newEmail)
+      expect(updatedUser.profile).toBe(undefined)
+      expect(updatedUser.provider).toBe(undefined)
+      expect(updatedUser.providerType).toBe(undefined)
+      expect(updatedUser.thirdPartyProfile).toBe(undefined)
+      expect(updatedUser.oauth2).toBe(undefined)
+    })
+
+    it("should require internal API headers", async () => {
+      const originalEmail = `original-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+      const tenantId = config.getTenantId()
+
+      await config.request
+        .put(`/api/global/users/tenant/owner`)
+        .send({
+          newAccountEmail: newEmail,
+          originalEmail,
+          tenantIds: [tenantId],
+        })
+        .set(config.defaultHeaders())
+        .expect(403)
     })
   })
 })

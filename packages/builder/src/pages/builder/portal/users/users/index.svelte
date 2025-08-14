@@ -253,8 +253,13 @@
 
     const users: UserInfo[] = []
     for (const email of userEmails) {
+      // Skip empty or whitespace-only emails
+      if (!email || !email.trim()) {
+        continue
+      }
+
       const newUser = {
-        email: email,
+        email: email.trim(),
         role: usersRole,
         password: generatePassword(12),
         forceResetPassword: true,
