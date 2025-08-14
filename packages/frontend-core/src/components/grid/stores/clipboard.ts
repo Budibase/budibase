@@ -42,7 +42,7 @@ export const createStores = (context?: {
   let initialState: ClipboardStoreData
 
   if (context?.externalClipboard?.clipboard) {
-    const externalState = get(context.externalClipboard.clipboard)
+    const externalState = context.externalClipboard.clipboard.get()
     if (externalState.multiCellCopy) {
       initialState = {
         value: externalState.value,
@@ -96,7 +96,7 @@ export const deriveStores = (context: StoreContext): ClipboardDerivedStore => {
       // Check if we have clipboard data (internal or external)
       let hasClipboardData = $clipboard.value != null
       if (!hasClipboardData && $props.externalClipboard?.clipboard) {
-        const externalState = get($props.externalClipboard.clipboard)
+        const externalState = $props.externalClipboard.clipboard.get()
         hasClipboardData = externalState.value != null
       }
 
@@ -231,7 +231,7 @@ export const createActions = (context: StoreContext): ClipboardActions => {
     let clipboardData = get(clipboard)
 
     if (externalClipboard?.clipboard) {
-      const externalState = get(externalClipboard.clipboard)
+      const externalState = externalClipboard.clipboard.get()
       // Use external clipboard data if it has a value
       if (externalState.value !== undefined) {
         if (externalState.multiCellCopy) {
