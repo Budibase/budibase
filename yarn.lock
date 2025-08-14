@@ -14656,11 +14656,6 @@ isobject@^3.0.1:
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-3.0.1.tgz#4e431e92b11a9731636aa1f9c8d1ccbcfdab78df"
   integrity sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==
 
-isobject@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/isobject/-/isobject-4.0.0.tgz#3f1c9155e73b192022a80819bacd0343711697b0"
-  integrity sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA==
-
 isolated-vm@^5.0.1:
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/isolated-vm/-/isolated-vm-5.0.4.tgz#65b4029ebbb03b4a0984ed9830b386e0b942cd37"
@@ -22602,14 +22597,6 @@ unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/unpipe/-/unpipe-1.0.0.tgz#b2bf4ee8514aae6165b4817829d21b2ef49904ec"
   integrity sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==
-
-unset-value@2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/unset-value/-/unset-value-2.0.1.tgz#57bed0c22d26f28d69acde5df9a11b77c74d2df3"
-  integrity sha512-2hvrBfjUE00PkqN+q0XP6yRAOGrR06uSiUoIQGZkc7GxvQ9H7v8quUPNtZjMg4uux69i8HWpIjLPUKwCuRGyNg==
-  dependencies:
-    has-value "^2.0.2"
-    isobject "^4.0.0"
 
 untildify@^4.0.0:
   version "4.0.0"
