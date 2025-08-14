@@ -24,6 +24,7 @@
 
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
+  export let showPublish = true
 
   let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
@@ -62,51 +63,56 @@
     {/each}
   </div>
 
-  <ActionMenu disabled={$deploymentStore.isPublishing} roundedPopover>
-    <svelte:fragment slot="control">
-      <div class="publish-menu">
-        <span
-          role="button"
-          tabindex="0"
-          on:click={publish}
-          on:keydown={e => e.key === "Enter" && publish()}
-        >
-          Publish
-        </span>
-        <div class="separator" />
-        <div bind:this={publishPopoverAnchor} class="publish-dropdown">
-          <Icon size="M" name="caret-down" />
+  <slot />
+  {#if showPublish}
+    <ActionMenu disabled={$deploymentStore.isPublishing} roundedPopover>
+      <svelte:fragment slot="control">
+        <div class="publish-menu">
+          <div
+            role="button"
+            tabindex="0"
+            on:click={publish}
+            on:keydown={e => e.key === "Enter" && publish()}
+            class="publish-menu-text"
+          >
+            <Icon size="M" name="arrow-circle-up" />
+            <span>Publish</span>
+          </div>
+          <div class="separator" />
+          <div bind:this={publishPopoverAnchor} class="publish-dropdown">
+            <Icon size="M" name="caret-down" />
+          </div>
         </div>
-      </div>
-    </svelte:fragment>
+      </svelte:fragment>
 
-    <MenuItem
-      icon="check"
-      iconHidden={seedProductionTables}
-      iconAlign="start"
-      on:click={() => (seedProductionTables = false)}
-    >
-      <div>
-        <div class="menu-item-header">Publish {workspaceOrApp}</div>
-        <div class="menu-item-text">
-          Publish changes to the {workspaceOrApp}
+      <MenuItem
+        icon="check"
+        iconHidden={seedProductionTables}
+        iconAlign="start"
+        on:click={() => (seedProductionTables = false)}
+      >
+        <div>
+          <div class="menu-item-header">Publish {workspaceOrApp}</div>
+          <div class="menu-item-text">
+            Publish changes to the {workspaceOrApp}
+          </div>
         </div>
-      </div>
-    </MenuItem>
-    <MenuItem
-      icon="check"
-      iconAlign="start"
-      iconHidden={!seedProductionTables}
-      on:click={() => (seedProductionTables = true)}
-    >
-      <div>
-        <div class="menu-item-header">Seed and publish</div>
-        <div class="menu-item-text">
-          Seed prod tables with dev data and publish {workspaceOrApp}
+      </MenuItem>
+      <MenuItem
+        icon="check"
+        iconAlign="start"
+        iconHidden={!seedProductionTables}
+        on:click={() => (seedProductionTables = true)}
+      >
+        <div>
+          <div class="menu-item-header">Seed and publish</div>
+          <div class="menu-item-text">
+            Seed prod tables with dev data and publish {workspaceOrApp}
+          </div>
         </div>
-      </div>
-    </MenuItem>
-  </ActionMenu>
+      </MenuItem>
+    </ActionMenu>
+  {/if}
 </div>
 
 <Popover
@@ -184,8 +190,11 @@
     transition: background-color 130ms ease-in-out;
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
-  .publish-menu span {
+  .publish-menu-text {
     padding: var(--spacing-s) var(--spacing-l);
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
   }
   .publish-menu:hover {
     background: var(--spectrum-semantic-cta-color-background-hover);
