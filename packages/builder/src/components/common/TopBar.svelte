@@ -27,10 +27,21 @@
 
   let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
+
   let seedProductionTables = false
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
   $: workspaceOrApp = workspaceAppsEnabled ? "workspace" : "app"
+  $: hasBeenPublished($deploymentStore.publishCount)
+
+  let publishCount = 0
+
+  const hasBeenPublished = (count: number) => {
+    if (publishCount < count) {
+      publishCount = count
+      publishSuccessPopover?.show()
+    }
+  }
 
   const publish = async () => {
     await deploymentStore.publishApp({ seedProductionTables })

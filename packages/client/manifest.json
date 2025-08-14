@@ -4823,6 +4823,13 @@
         "key": "helpText"
       },
       {
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Add signature",
+        "placeholder": "Add signature"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",

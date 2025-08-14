@@ -1,5 +1,5 @@
 import { BudiStore } from "@/stores/BudiStore"
-import { PublishStatusResponse } from "@budibase/types"
+import { PublishStatusResponse, PublishResourceState } from "@budibase/types"
 import { API } from "@/api"
 
 interface WorkspaceDeploymentStoreState extends PublishStatusResponse {}
@@ -10,6 +10,8 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
 
     this.fetch = this.fetch.bind(this)
     this.reset = this.reset.bind(this)
+    this.setAutomationUnpublishedChanges =
+      this.setAutomationUnpublishedChanges.bind(this)
   }
 
   async fetch() {
@@ -25,6 +27,20 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
 
   reset() {
     this.store.set({ automations: {}, workspaceApps: {}, tables: {} })
+  }
+
+  setAutomationUnpublishedChanges(automationId: string) {
+    this.store.update(state => {
+      if (!state.automations[automationId]) {
+        state.automations[automationId] = {
+          published: false,
+          name: "Automation",
+          state: PublishResourceState.UNPUBLISHED,
+        }
+      }
+      state.automations[automationId].unpublishedChanges = true
+      return state
+    })
   }
 }
 
