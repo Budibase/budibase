@@ -24,7 +24,7 @@
   .status {
     padding: 2px 6px 2px 18px;
     border-radius: 8px;
-    width: 28px;
+    display: inline;
     color: white;
     position: relative;
     text-transform: capitalize;
