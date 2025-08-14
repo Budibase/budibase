@@ -37,7 +37,6 @@
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
-
   $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
 
   const exportApp = opts => {
@@ -59,10 +58,13 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading>General settings</Heading>
-    <Body>Control app version, deployment and settings</Body>
+    <Body>Control client version, {appOrWorkspace} deployment and settings</Body
+    >
   </Layout>
   <Divider />
-  <Heading size="S">App info</Heading>
+  <Heading size="S">
+    {$featureFlags.WORKSPACE_APPS ? "Workspace info" : "App info"}
+  </Heading>
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
     <Divider />
@@ -78,9 +80,11 @@
         <br />
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="link" on:click={deploymentStore.viewPublishedApp}>
-          View app
-        </div>
+        {#if !$featureFlags.WORKSPACE_APPS}
+          <div class="link" on:click={deploymentStore.viewPublishedApp}>
+            View app
+          </div>
+        {/if}
       </Body>
     </div>
     <div class="row">
@@ -95,7 +99,9 @@
         size="M"
       />
       <Body size="S">
-        Your app hasn't been published yet and isn't available to users
+        {$featureFlags.WORKSPACE_APPS
+          ? "You haven't published yet, so your apps and automations are not available to users"
+          : "Your app hasn't been published yet and isn't available to users"}
       </Body>
     </div>
     <div class="row">
@@ -121,7 +127,7 @@
   {/if}
   <Divider id="version" />
   <Layout gap="XS" noPadding>
-    <Heading size="S">App version</Heading>
+    <Heading size="S">Client version</Heading>
     {#if $admin.isDev}
       <Body size="S">
         You're running the latest client version from your file system, as
@@ -129,7 +135,8 @@
       </Body>
     {:else if updateAvailable}
       <Body size="S">
-        The app is currently using version <strong>{$appStore.version}</strong>
+        The {appOrWorkspace} is currently using version
+        <strong>{$appStore.version}</strong>
         but version <strong>{$appStore.upgradableVersion}</strong> is available.
         <br />
         Updates can contain new features, performance improvements and bug fixes.
@@ -148,7 +155,8 @@
       </div>
     {:else}
       <Body size="S">
-        The app is currently using version <strong>{$appStore.version}</strong>.
+        The {appOrWorkspace} is currently using version
+        <strong>{$appStore.version}</strong>.
         <br />
         You're running the latest!
       </Body>
@@ -172,28 +180,36 @@
   <Layout noPadding gap="XS">
     <Heading size="S">Export</Heading>
     <Body size="S">
-      Export your app for backup or to share it with someone else
+      Export your {appOrWorkspace} for backup or to share it with someone else
     </Body>
   </Layout>
   <div class="row">
     <Button secondary on:click={() => exportApp({ published: false })}>
-      Export latest edited app
+      Export latest edited {appOrWorkspace}
     </Button>
     <Button
       secondary
       disabled={!$deploymentStore.isPublished}
       on:click={() => exportApp({ published: true })}
     >
-      Export latest published app
+      Export latest published {$featureFlags.WORKSPACE_APPS
+        ? "workspace"
+        : "app"}
     </Button>
   </div>
   <Divider />
   <Layout noPadding gap="XS">
     <Heading size="S">Import</Heading>
-    <Body size="S">Import an app export bundle to update this app</Body>
+    <Body size="S"
+      >Import an export bundle to update this {$featureFlags.WORKSPACE_APPS
+        ? "workspace"
+        : "app"}
+    </Body>
   </Layout>
   <div class="row">
-    <Button secondary on:click={importModal?.show}>Import app</Button>
+    <Button secondary on:click={importModal?.show}>
+      Import {appOrWorkspace}
+    </Button>
   </div>
   <Divider />
   <Layout noPadding gap="XS">
@@ -235,7 +251,7 @@
         ? undefined
         : "Unavailable - another user is editing this app"}
     >
-      Delete app
+      Delete {appOrWorkspace}
     </Button>
   </div>
 </Layout>
@@ -259,9 +275,7 @@
   Are you sure you want to unpublish the {appOrWorkspace}
   <b>{selectedApp?.name}</b>?
   {#if $featureFlags.WORKSPACE_APPS}
-    <br />
-    <br />
-    This will disable all apps and automations
+    <p>This will make all apps and automations in this workspace unavailable</p>
   {/if}
 </ConfirmDialog>
 
