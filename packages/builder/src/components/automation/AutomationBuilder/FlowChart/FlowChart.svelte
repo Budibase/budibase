@@ -169,34 +169,36 @@
     </div>
   {/if}
 
-  <div class="actions-right">
-    <Switcher
-      on:left={() => {
-        viewMode = ViewMode.EDITOR
-        closeAllPanels()
-      }}
-      on:right={() => {
-        viewMode = ViewMode.LOGS
-        // Clear editor selection when switching to logs mode
-        automationStore.actions.selectNode(null)
-        if (
-          !$automationStore.showLogsPanel &&
-          !$automationStore.showLogDetailsPanel
-        ) {
-          toggleLogsPanel()
-        }
-      }}
-      leftIcon="Edit"
-      leftText="Editor"
-      rightIcon="list-checks"
-      rightText="Logs"
-      rightNotificationTooltip="There are errors in production"
-      rightNotificationCount={prodErrors}
-      selected={$automationStore.showLogsPanel ||
-      $automationStore.showLogDetailsPanel
-        ? "right"
-        : "left"}
-    />
+  <div class="actions-right" class:grow={$featureFlags.WORKSPACE_APPS}>
+    <div class:grow={$featureFlags.WORKSPACE_APPS}>
+      <Switcher
+        on:left={() => {
+          viewMode = ViewMode.EDITOR
+          closeAllPanels()
+        }}
+        on:right={() => {
+          viewMode = ViewMode.LOGS
+          // Clear editor selection when switching to logs mode
+          automationStore.actions.selectNode(null)
+          if (
+            !$automationStore.showLogsPanel &&
+            !$automationStore.showLogDetailsPanel
+          ) {
+            toggleLogsPanel()
+          }
+        }}
+        leftIcon="Edit"
+        leftText="Editor"
+        rightIcon="list-checks"
+        rightText="Logs"
+        rightNotificationTooltip="There are errors in production"
+        rightNotificationCount={prodErrors}
+        selected={$automationStore.showLogsPanel ||
+        $automationStore.showLogDetailsPanel
+          ? "right"
+          : "left"}
+      />
+    </div>
 
     <ActionButton
       icon="play"
@@ -464,7 +466,9 @@
     flex: 1;
     min-width: 0;
   }
-
+  .grow {
+    flex: 1 1 auto;
+  }
   .actions-right {
     display: flex;
     gap: var(--spacing-xl);
