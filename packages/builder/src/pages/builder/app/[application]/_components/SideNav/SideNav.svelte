@@ -326,7 +326,7 @@
                 or API for quicker access.
               </Body>
               <Link
-                href="https://docs.budibase.com"
+                href="https://docs.budibase.com/docs/favouriting-in-a-workspace"
                 target="_blank"
                 secondary
                 quiet>Learn how</Link
