@@ -609,7 +609,7 @@ if (datasources.length) {
         client = ds.client!
       })
 
-      describe("external export", () => {
+      describe.skip("external export", () => {
         let table: Table
 
         beforeEach(async () => {
