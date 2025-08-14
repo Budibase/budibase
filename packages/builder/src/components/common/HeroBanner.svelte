@@ -84,7 +84,7 @@
   p {
     margin: 0;
     font-size: 16px;
-    color: var(--spectrum-global-color-gray-800);
+    color: white;
     line-height: 1.35;
     font-family: Inter;
   }

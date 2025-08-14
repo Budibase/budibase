@@ -55,7 +55,7 @@
     height: 28px;
     gap: 5px;
     padding: 0 calc(var(--nav-padding) / 2);
-    color: white;
+    color: var(--spectrum-global-color-gray-900);
     border-radius: 9px;
     border: 1px solid transparent;
     transition:
@@ -65,7 +65,7 @@
   }
   .link.active,
   .link:hover {
-    color: white;
+    color: var(--spectrum-global-color-gray-900);
     background: var(--spectrum-global-color-gray-200);
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
