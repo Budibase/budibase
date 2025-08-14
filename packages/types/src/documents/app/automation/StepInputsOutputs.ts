@@ -115,6 +115,15 @@ export type ExecuteScriptStepOutputs = BaseAutomationOutputs & {
   value?: string
 }
 
+export type ExtractStateStepInputs = {
+  key: string
+  value: string
+}
+
+export type ExtractStateStepOutputs = BaseAutomationOutputs & {
+  value?: string
+}
+
 export type FilterStepInputs = {
   field: any
   condition: FilterCondition
