@@ -99,10 +99,7 @@
     allowHBS || allowHTML
       ? bindingsToCompletions(enrichedBindings, editorMode)
       : []
-  $: helperOptions =
-    allowHelpers && (allowHBS || allowHTML)
-      ? getHelperCompletions(editorMode)
-      : []
+  $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
   $: snippetsOptions =
     usingJS && allowSnippets && !$licensing.isFreePlan && snippets?.length
       ? snippets
