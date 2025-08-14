@@ -337,8 +337,9 @@
     padding: var(--spacing-l);
   }
   .viewer {
-    overflow-y: scroll;
-    flex: 1;
+    overflow: auto;
+    flex: 1 1 0px;
+    min-height: 0;
     padding-right: 0px;
   }
   .viewer .content {

@@ -26,7 +26,6 @@ import {
   docIds,
   env as envCore,
   events,
-  features,
   objectStore,
   roles,
   tenancy,
@@ -70,7 +69,6 @@ import {
   AddAppSampleDataResponse,
   UnpublishAppResponse,
   ErrorCode,
-  FeatureFlag,
   FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
@@ -219,29 +217,6 @@ async function addSampleDataScreen() {
 
   const screen = createSampleDataTableScreen(workspaceApp._id!)
   await sdk.screens.create(screen)
-
-  {
-    // TODO: remove when cleaning the flag FeatureFlag.WORKSPACE_APPS
-    const db = context.getAppDB()
-    let app = await sdk.applications.metadata.get()
-    if (!app.navigation) {
-      return
-    }
-    if (!app.navigation.links) {
-      app.navigation.links = []
-    }
-    app.navigation.links.push({
-      text: "Inventory",
-      url: "/inventory",
-      type: "link",
-      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-    })
-
-    await db.put(app)
-
-    // remove any cached metadata, so that it will be updated
-    await cache.app.invalidateAppMetadata(app.appId)
-  }
 }
 
 export const addSampleData = async (
@@ -339,10 +314,7 @@ export async function fetchAppPackage(
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
-  if (
-    (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
-    !isBuilder
-  ) {
+  if (!isBuilder) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : ""
@@ -670,6 +642,10 @@ export async function create(
   await appPostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
+}
+
+export async function find(ctx: UserCtx) {
+  ctx.body = await sdk.applications.metadata.get()
 }
 
 // This endpoint currently operates as a PATCH rather than a PUT
