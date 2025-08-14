@@ -9,6 +9,7 @@ import {
   FilterCondition,
   AutomationStepStatus,
   AutomationStepResult,
+  AutomationActionStepId,
 } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -82,6 +83,29 @@ describe("Loop Automations", () => {
       .test({ fields: {} })
 
     expect(result.steps[0].outputs.iterations).toBe(1)
+  })
+
+  it("ensure that we maintain step identity", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .serverLog(
+        {
+          text: "hello",
+        },
+        {
+          stepName: "someStepName",
+        }
+      )
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: [1, 2, 3],
+      })
+      .serverLog({ text: "log statement {{loop.currentItem}}" })
+      .test({ fields: {} })
+
+    // Legacy loop should present child step identity and correct iterations
+    expect(result.steps[1].stepId).toBe(AutomationActionStepId.SERVER_LOG)
+    expect(result.steps[1].outputs.iterations).toBe(3)
   })
 
   it("should run an automation with a trigger, loop, and create row step", async () => {

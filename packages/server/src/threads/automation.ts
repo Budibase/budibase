@@ -55,6 +55,21 @@ function stepSuccess(
 ): AutomationStepResult {
   if (step.isLegacyLoop) {
     outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
+
+    const legacyChild: any = (step as LoopV2Step)?.inputs?.children?.[0]
+    const legacyId = legacyChild?.id || step.id
+    const legacyStepId = legacyChild?.stepId || step.stepId
+    const legacyInputs = inputs || legacyChild?.inputs || step.inputs
+
+    return {
+      id: legacyId,
+      stepId: legacyStepId,
+      inputs: legacyInputs,
+      outputs: {
+        success: true,
+        ...outputs,
+      },
+    }
   }
   return {
     id: step.id,
@@ -73,7 +88,23 @@ function stepFailure(
   inputs?: Record<string, any>
 ): AutomationStepResult {
   if (step.isLegacyLoop) {
+    // Convert items structure and surface the child step identity for legacy loops
     outputs.items = automationUtils.convertLegacyLoopOutputs(outputs.items)
+
+    const legacyChild: any = (step as any)?.inputs?.children?.[0]
+    const legacyId = legacyChild?.id || step.id
+    const legacyStepId = legacyChild?.stepId || step.stepId
+    const legacyInputs = inputs || legacyChild?.inputs || step.inputs
+
+    return {
+      id: legacyId,
+      stepId: legacyStepId,
+      inputs: legacyInputs,
+      outputs: {
+        success: false,
+        ...outputs,
+      },
+    }
   }
   return {
     id: step.id,
