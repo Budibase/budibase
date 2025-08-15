@@ -28,7 +28,7 @@ export default class EndpointGroupList {
     // maintain original order within each group (static vs parameterized)
     const staticEndpoints = []
     const parameterizedEndpoints = []
-    
+
     for (const endpoint of endpoints) {
       if (endpoint.url.includes(":")) {
         parameterizedEndpoints.push(endpoint)
@@ -36,7 +36,7 @@ export default class EndpointGroupList {
         staticEndpoints.push(endpoint)
       }
     }
-    
+
     return [...staticEndpoints, ...parameterizedEndpoints]
   }
 }
