@@ -27,7 +27,7 @@ import * as translate from "./steps/ai/translate"
 import * as summarise from "./steps/ai/summarise"
 import * as generate from "./steps/ai/generate"
 import * as extract from "./steps/ai/extract"
-
+import * as extractState from "./steps/extractState"
 import env from "../environment"
 import {
   PluginType,
@@ -69,6 +69,7 @@ const ACTION_IMPLS: ActionImplType = {
   SUMMARISE: summarise.run,
   GENERATE_TEXT: generate.run,
   EXTRACT_FILE_DATA: extract.run,
+  EXTRACT_STATE: extractState.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -105,6 +106,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<
   GENERATE_TEXT: automations.steps.generate.definition,
   EXTRACT_FILE_DATA: automations.steps.extract.definition,
   LOOP_V2: automations.steps.loopV2.definition,
+  EXTRACT_STATE: automations.steps.extractState.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: automations.steps.discord.definition,
   slack: automations.steps.slack.definition,

@@ -68,6 +68,9 @@
 
   $: userBindings = automationStore.actions.buildUserBindings()
   $: settingBindings = automationStore.actions.buildSettingBindings()
+  $: stateBindings =
+    ($automationStore.selectedNodeId,
+    automationStore.actions.buildStateBindings())
 
   // Combine all bindings for the step
   $: bindings = [
@@ -75,6 +78,7 @@
     ...environmentBindings,
     ...userBindings,
     ...settingBindings,
+    ...stateBindings,
   ]
 
   onMount(() => {

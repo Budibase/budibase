@@ -319,6 +319,7 @@ class Orchestrator {
         stepsByName: {},
         stepsById: {},
         user: trigger.outputs.user,
+        state: {},
         _error: false,
         _stepIndex: 1,
         _stepResults: [],
@@ -364,6 +365,11 @@ class Orchestrator {
         await this.logResult(result)
       }
 
+      // Return any content pushed to state.
+      if (Object.keys(ctx?.state || {}).length > 0) {
+        result.state = ctx.state
+      }
+
       return result
     })
   }
@@ -378,8 +384,15 @@ class Orchestrator {
 
       function addToContext(
         step: AutomationStep,
-        result: AutomationStepResult
+        result: AutomationStepResult,
+        looped = false
       ) {
+        // Put State block data into the state
+        if (step.stepId === AutomationActionStepId.EXTRACT_STATE && !looped) {
+          ctx.state ??= {}
+          ctx.state[result.inputs.key] = result.outputs.value
+        }
+
         ctx.steps[step.id] = result.outputs
         ctx.steps[step.name || step.id] = result.outputs
 
@@ -417,10 +430,10 @@ class Orchestrator {
             if (step.isLegacyLoop) {
               const childStep = step.inputs.children?.[0]
               if (childStep) {
-                addToContext(childStep, result)
+                addToContext(childStep, result, true)
               }
             } else {
-              addToContext(step, result)
+              addToContext(step, result, true)
             }
             stepIndex++
             break
@@ -430,6 +443,12 @@ class Orchestrator {
               step,
               await quotas.addAction(async () => {
                 const response = await this.executeStep(ctx, step)
+                // state is global and should be modified during the loop, not after
+                if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
+                  ctx.state ??= {}
+                  ctx.state[response.inputs.key] = response.outputs.value
+                }
+
                 events.action.automationStepExecuted({ stepId: step.stepId })
                 return response
               })
@@ -527,6 +546,7 @@ class Orchestrator {
             // so child steps don't affect the main step numbering
             const savedStepIndex = ctx._stepIndex
             const iterationResults = await this.executeSteps(ctx, children)
+
             ctx._stepIndex = savedStepIndex
 
             // Process results based on their type
@@ -622,7 +642,10 @@ class Orchestrator {
       }
 
       let inputs = cloneDeep(step.inputs)
-      if (step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2) {
+      if (
+        step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
+        step.stepId !== AutomationActionStepId.EXTRACT_STATE
+      ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the
         // function that runs it. So we skip this next bit for that step.

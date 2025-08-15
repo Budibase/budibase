@@ -76,6 +76,8 @@ import {
   BranchSearchFilters,
   LoopV2StepInputs,
   LoopV2StepOutputs,
+  ExtractStateStepInputs,
+  ExtractStateStepOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -187,6 +189,10 @@ export type ActionImplementations<T extends Hosting> = {
     ExtractFileDataStepInputs,
     ExtractFileDataStepOutputs
   >
+  [AutomationActionStepId.EXTRACT_STATE]: ActionImplementation<
+    ExtractStateStepInputs,
+    ExtractStateStepOutputs
+  >
 } & (T extends "self"
   ? {
       [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
@@ -280,7 +286,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                               ? ExtractFileDataStepInputs
                                                               : T extends AutomationActionStepId.LOOP_V2
                                                                 ? LoopV2StepInputs
-                                                                : never
+                                                                : T extends AutomationActionStepId.EXTRACT_STATE
+                                                                  ? ExtractStateStepInputs
+                                                                  : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -341,7 +349,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                           ? ExtractFileDataStepOutputs
                                                           : T extends AutomationActionStepId.LOOP_V2
                                                             ? LoopV2StepOutputs
-                                                            : never
+                                                            : T extends AutomationActionStepId.EXTRACT_STATE
+                                                              ? ExtractStateStepOutputs
+                                                              : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
   extends AutomationStepSchemaBase {
@@ -430,6 +440,9 @@ export type ExtractFileDataStep =
 
 export type LoopV2Step = AutomationStepSchema<AutomationActionStepId.LOOP_V2>
 
+export type ExtractStateStep =
+  AutomationStepSchema<AutomationActionStepId.EXTRACT_STATE>
+
 export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH> & {
   conditionUI?: {
     groups: BranchSearchFilters[]
@@ -467,6 +480,7 @@ export type AutomationStep =
   | GenerateTextStep
   | ExtractFileDataStep
   | LoopV2Step
+  | ExtractStateStep
 
 export function isBranchStep(
   step: AutomationStep | AutomationTrigger
@@ -496,6 +510,18 @@ export function isAppTrigger(
   step: AutomationStep | AutomationTrigger
 ): step is AppActionTrigger {
   return step.stepId === AutomationTriggerStepId.APP
+}
+
+export function isWebhookTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is AppActionTrigger {
+  return step.stepId === AutomationTriggerStepId.WEBHOOK
+}
+
+export function isRowActionTrigger(
+  step: AutomationStep | AutomationTrigger
+): step is AppActionTrigger {
+  return step.stepId === AutomationTriggerStepId.ROW_ACTION
 }
 
 export function isFilterStep(

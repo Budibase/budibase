@@ -86,6 +86,7 @@ export enum AutomationActionStepId {
   GENERATE_TEXT = "GENERATE_TEXT",
   EXTRACT_FILE_DATA = "EXTRACT_FILE_DATA",
   LOOP_V2 = "LOOP_V2",
+  EXTRACT_STATE = "EXTRACT_STATE",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -234,6 +235,7 @@ export interface AutomationResults {
   status: AutomationStatus
   trigger: AutomationTriggerResult
   steps: [AutomationTriggerResult, ...AutomationStepResult[]]
+  state?: Record<string, any>
 }
 
 export interface DidNotTriggerResponse {
