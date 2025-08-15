@@ -320,8 +320,20 @@ describe("getColumns", () => {
   describe("displayName for viewV2 datasources", () => {
     beforeEach(ctx => {
       ctx.schemaWithDisplayNames = {
-        one: { name: "one", displayName: "First Column", visible: true, order: 0, type: "foo" },
-        two: { name: "two", displayName: "Second Column", visible: true, order: 1, type: "foo" },
+        one: {
+          name: "one",
+          displayName: "First Column",
+          visible: true,
+          order: 0,
+          type: "foo",
+        },
+        two: {
+          name: "two",
+          displayName: "Second Column",
+          visible: true,
+          order: 1,
+          type: "foo",
+        },
         three: { name: "three", visible: true, order: 2, type: "foo" }, // No displayName
       }
     })
