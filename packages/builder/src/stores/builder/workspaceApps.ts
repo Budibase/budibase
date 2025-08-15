@@ -16,6 +16,7 @@ import { workspaceDeploymentStore } from "./workspaceDeployment"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
+  workspaceAppId?: string
   loading: boolean
 }
 
@@ -55,9 +56,14 @@ export class WorkspaceAppStore extends DerivedBudiStore<
             })
             .sort((a, b) => a.name.localeCompare(b.name))
 
-          const selectedWorkspaceApp = $selectedScreen
-            ? workspaceApps.find(a => a._id === $selectedScreen.workspaceAppId)
-            : undefined
+          const selectedWorkspaceApp =
+            $store.workspaceAppId || $selectedScreen
+              ? workspaceApps.find(
+                  a =>
+                    a._id ===
+                    ($store.workspaceAppId || $selectedScreen?.workspaceAppId)
+                )
+              : undefined
 
           return { workspaceApps, selectedWorkspaceApp }
         }
@@ -170,6 +176,21 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     this.store.update(state => {
       state.workspaceApps[index] = workspaceApp
       return state
+    })
+  }
+
+  /**
+   * Explicitly set this id and set the selcted app accordingly
+   * If not specified, current workspace app is derived from the selected screen
+   * @param id
+   */
+  setWorkspaceAppId(id?: string) {
+    this.store.update(state => {
+      if (!id) {
+        delete state.workspaceAppId
+        return state
+      }
+      return { ...state, workspaceAppId: id }
     })
   }
 }

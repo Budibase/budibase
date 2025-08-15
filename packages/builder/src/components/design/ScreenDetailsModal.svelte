@@ -2,7 +2,9 @@
   import { ModalContent, Input, keepOpen } from "@budibase/bbui"
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import { get } from "svelte/store"
-  import { screenStore } from "@/stores/builder"
+  import { screenStore, workspaceAppStore, appStore } from "@/stores/builder"
+  import { buildLiveUrl } from "@/helpers/urls"
+  import { featureFlags } from "@/stores/portal"
 
   export let onConfirm: (_data: { route: string }) => Promise<void>
   export let onCancel: (() => Promise<void>) | undefined = undefined
@@ -10,14 +12,20 @@
   export let role: string | undefined = undefined
   export let confirmText = "Continue"
 
-  const appPrefix = "/app"
   let touched = false
   let error: string | undefined
   let modal: ModalContent
 
-  $: appUrl = route
-    ? `${window.location.origin}${appPrefix}${route}`
-    : `${window.location.origin}${appPrefix}`
+  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
+
+  $: workspacePrefix =
+    $featureFlags.WORKSPACE_APPS && selectedWorkspaceApp
+      ? selectedWorkspaceApp.url
+      : ""
+
+  $: liveUrl = buildLiveUrl($appStore, workspacePrefix, false)
+
+  $: appUrl = route ? `${liveUrl}${route}` : `${liveUrl}`
 
   const routeChanged = (event: { detail: string }) => {
     if (!event.detail.startsWith("/")) {
@@ -81,7 +89,7 @@
 <style>
   .app-server {
     color: var(--spectrum-global-color-gray-600);
-    width: 320px;
+    max-width: 400px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
