@@ -73,12 +73,12 @@
   let scrolling = false
   let blockRefs: Record<string, any> = {}
   let prodErrors: number
-  let viewMode = ViewMode.EDITOR
+  $: viewMode = ViewMode.EDITOR
 
   let nodes = writable<FlowNode[]>([])
   let edges = writable<FlowEdge[]>([])
 
-  $: updateGraph(blocks as any)
+  $: updateGraph(blocks as any, viewMode)
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
@@ -110,7 +110,7 @@
     }
   }
 
-  function updateGraph(blocks: AutomationStep[]) {
+  function updateGraph(blocks: AutomationStep[], currentViewMode: ViewMode) {
     const prevNodes = get(nodes)
     const byId = new Map(prevNodes.map(n => [n.id, n]))
 
@@ -139,7 +139,12 @@
         newNodes.push({
           id: baseId,
           type: "step-node",
-          data: { testDataModal, block, isTopLevel: true },
+          data: {
+            testDataModal,
+            block,
+            isTopLevel: true,
+            viewMode: currentViewMode,
+          },
           position: pos,
         })
       }
@@ -176,7 +181,7 @@
           newNodes.push({
             id: branchNodeId,
             type: "branch-node",
-            data: { block, branch, branchIdx: bIdx },
+            data: { block, branch, branchIdx: bIdx, viewMode: currentViewMode },
             position: branchPos,
           })
 
@@ -208,7 +213,7 @@
             newNodes.push({
               id: childId,
               type: "step-node",
-              data: { testDataModal, block: child },
+              data: { testDataModal, block: child, viewMode: currentViewMode },
               position: childPos,
             })
 
@@ -252,6 +257,7 @@
     nodes.set(newNodes)
     edges.set(newEdges)
   }
+
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
     $workspaceDeploymentStore.automations[automation._id]
@@ -310,22 +316,6 @@
     automationStore.actions.closeLogsPanel()
     automationStore.actions.closeLogPanel()
     viewMode = ViewMode.EDITOR
-  }
-
-  function handleStepSelect(stepData: any) {
-    // Show step details when a step is selected in logs mode
-    if (
-      stepData &&
-      viewMode === ViewMode.LOGS &&
-      $automationStore.selectedLog
-    ) {
-      const enrichedLog =
-        enrichLog(
-          $automationStore.blockDefinitions,
-          $automationStore.selectedLog
-        ) ?? $automationStore.selectedLog
-      automationStore.actions.openLogPanel(enrichedLog, stepData)
-    }
   }
 </script>
 

@@ -19,6 +19,7 @@
   $: branch = data.branch
   $: branchIdx = data.branchIdx
   $: isLast = data.isLast
+  $: viewMode = data?.viewMode
 
   // All bindings available to this point
   $: availableBindings = automationStore.actions.getPathBindings(
@@ -53,7 +54,7 @@
       {isLast}
       executed={false}
       unexecuted={false}
-      viewMode={null}
+      {viewMode}
       logStepData={null}
       onStepSelect={() => {}}
       on:change={async e => {
@@ -69,14 +70,17 @@
 
         // Ensure valid base configuration for all branches
         // Reinitialise empty branch conditions on update
-        branchStepUpdate.inputs.branches.forEach((branch, i, branchArray) => {
-          if (!Object.keys(branch.condition).length) {
-            branchArray[i] = {
-              ...branch,
+        const branchesArray = branchStepUpdate.inputs.branches || []
+        for (let i = 0; i < branchesArray.length; i++) {
+          const br = branchesArray[i]
+          if (!Object.keys(br.condition).length) {
+            branchesArray[i] = {
+              ...br,
               ...automationStore.actions.generateDefaultConditions(),
             }
           }
-        })
+        }
+        branchStepUpdate.inputs.branches = branchesArray
 
         const updated = automation
           ? automationStore.actions.updateStep(

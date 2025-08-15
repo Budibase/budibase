@@ -122,6 +122,7 @@
       },
     }))
   }
+  $: console.log(viewMode)
 </script>
 
 {#if block.stepId !== "LOOP"}
@@ -166,9 +167,14 @@
         <div
           class="block-core"
           on:click={async () => {
+            console.log(viewMode)
+            console.log("logStepData: " + JSON.stringify(logStepData))
+
             if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
             } else if (viewMode === ViewMode.LOGS && logStepData) {
+              console.log("hi")
+
               onStepSelect(logStepData)
             }
           }}

@@ -16,7 +16,6 @@
   export let viewMode = ViewMode.EDITOR
   export let selectedLogStepId = null
   export let onStepSelect = () => {}
-
   const memoEnvVariables = memo($environment.variables)
   const view = getContext("draggableView")
 
