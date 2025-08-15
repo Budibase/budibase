@@ -32,11 +32,7 @@
         <p><slot /></p>
         {#if linkTitle}
           <a href={linkHref} class="button" target="_blank">
-            <Icon
-              name="book-open-text"
-              size="L"
-              weight="bold"
-              color="var(--spectrum-global-color-gray-900)"
+            <Icon name="book-open-text" size="L" weight="bold" color="white"
             ></Icon>
             {linkTitle}
           </a>
@@ -84,7 +80,7 @@
   p {
     margin: 0;
     font-size: 16px;
-    color: var(--spectrum-global-color-gray-800);
+    color: white;
     line-height: 1.35;
     font-family: Inter;
   }

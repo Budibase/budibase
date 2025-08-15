@@ -187,7 +187,7 @@
     key={BannerType.APPS}
     title="Build modern apps and forms to power your workflows"
     linkTitle="App building 101"
-    linkHref="https://docs.budibase.com/docs/quickstart"
+    linkHref="https://docs.budibase.com/docs/app-building-101"
     image={AppsHero}
     color="#732B00"
   >
