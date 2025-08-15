@@ -6,8 +6,8 @@
     Body,
     Button,
   } from "@budibase/bbui"
+  import { dataAPI } from "@/stores/builder"
   import download from "downloadjs"
-  import { API } from "@/api"
   import { ROW_EXPORT_FORMATS } from "@/constants/backend"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
 
@@ -56,7 +56,7 @@
   }
 
   const exportAllData = async () => {
-    return await API.exportView(view, exportFormat)
+    return await $dataAPI.exportView(view, exportFormat)
   }
 
   const exportFilteredData = async () => {
@@ -68,7 +68,7 @@
       payload.sort = sorting.sortColumn
       payload.sortOrder = sorting.sortOrder
     }
-    return await API.exportRows(view, exportFormat, payload)
+    return await $dataAPI.exportRows(view, exportFormat, payload)
   }
 
   const exportData = async () => {

@@ -129,7 +129,10 @@ export async function fetch(tableId: string): Promise<Row[]> {
   return await outputProcessing(table, rows)
 }
 
-export async function fetchRaw(tableId: string): Promise<Row[]> {
+export async function fetchRaw(
+  tableId: string,
+  limit?: number
+): Promise<Row[]> {
   const db = context.getAppDB()
   let rows
   if (tableId === InternalTables.USER_METADATA) {
@@ -138,6 +141,7 @@ export async function fetchRaw(tableId: string): Promise<Row[]> {
     const response = await db.allDocs(
       getRowParams(tableId, null, {
         include_docs: true,
+        limit,
       })
     )
     rows = response.rows.map(row => row.doc)

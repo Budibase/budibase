@@ -20,7 +20,6 @@ import {
   PublishAppResponse,
   RevertAppClientResponse,
   RevertAppResponse,
-  SyncAppResponse,
   UnpublishAppResponse,
   UpdateAppClientResponse,
   UpdateAppRequest,
@@ -54,7 +53,6 @@ export interface AppEndpoints {
     body: ImportToUpdateAppRequest
   ) => Promise<ImportToUpdateAppResponse>
   fetchSystemDebugInfo: () => Promise<GetDiagnosticsResponse>
-  syncApp: (appId: string) => Promise<SyncAppResponse>
   getApps: () => Promise<FetchAppsResponse>
   fetchComponentLibDefinitions: (
     appId: string
@@ -232,16 +230,6 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   fetchSystemDebugInfo: async () => {
     return await API.get({
       url: `/api/debug/diagnostics`,
-    })
-  },
-
-  /**
-   * Syncs an app with the production database.
-   * @param appId the ID of the app to sync
-   */
-  syncApp: async appId => {
-    return await API.post({
-      url: `/api/applications/${appId}/sync`,
     })
   },
 

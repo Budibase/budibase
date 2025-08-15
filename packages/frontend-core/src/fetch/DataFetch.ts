@@ -30,6 +30,7 @@ interface DataFetchStore<TDefinition, TQuery> {
   error: {
     message: string
     status: number
+    url: string
   } | null
   definition?: TDefinition | null
 }

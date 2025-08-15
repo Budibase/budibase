@@ -3,7 +3,7 @@ import {
   DatasourceFieldType,
   UIIntegration,
 } from "@budibase/types"
-import { string, number, object, type AnySchema } from "yup"
+import { type AnySchema, number, object, string } from "yup"
 
 const propertyValidator = (type: string) => {
   if (type === "number") {
@@ -37,6 +37,10 @@ export const getValidatorFields = (integration: UIIntegration) => {
           result[`${key}.${fieldKey}`] = fieldValidator
         }
         return
+      }
+      // treat numbers as strings to allow environment variables
+      else if (properties.type === DatasourceFieldType.NUMBER) {
+        properties.type = DatasourceFieldType.STRING
       }
 
       if (properties.required) {

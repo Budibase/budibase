@@ -1,5 +1,5 @@
 import { context } from "@budibase/backend-core"
-import { getTableParams } from "../../../db/utils"
+import { getTableParams, InternalTables } from "../../../db/utils"
 import {
   breakExternalTableId,
   isExternalTableID,
@@ -93,6 +93,23 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
     )
     span.addTags({ numTables: internalTables.rows.length })
     return await processTables(internalTables.rows.map(row => row.doc!))
+  })
+}
+
+export async function listEmptyProductionTables(): Promise<string[]> {
+  const internalTables = await getAllInternalTables()
+  const emptyTableIds: string[] = []
+  return context.doInAppContext(context.getProdAppId(), async () => {
+    for (let table of internalTables) {
+      if (table._id === InternalTables.USER_METADATA || !table._id) {
+        continue
+      }
+      const aRow = await sdk.rows.fetchRaw(table._id, 1)
+      if (aRow.length === 0) {
+        emptyTableIds.push(table._id)
+      }
+    }
+    return emptyTableIds
   })
 }
 

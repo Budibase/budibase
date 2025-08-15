@@ -103,6 +103,13 @@ describe("/api/deploy", () => {
         unpublishedChanges: false,
         state: "published",
       })
+      expect(res.tables[table._id!]).toEqual({
+        publishedAt: expect.any(String),
+        published: true,
+        name: table.name,
+        unpublishedChanges: false,
+        state: "published",
+      })
     })
 
     it("returns mixed state after filtered publish", async () => {

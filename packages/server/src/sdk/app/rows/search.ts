@@ -160,8 +160,11 @@ export async function fetch(tableId: string): Promise<Row[]> {
   return pickApi(tableId).fetch(tableId)
 }
 
-export async function fetchRaw(tableId: string): Promise<Row[]> {
-  return pickApi(tableId).fetchRaw(tableId)
+export async function fetchRaw(
+  tableId: string,
+  limit?: number
+): Promise<Row[]> {
+  return pickApi(tableId).fetchRaw(tableId, limit)
 }
 
 export async function fetchLegacyView(

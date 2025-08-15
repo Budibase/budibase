@@ -11,6 +11,7 @@
   export let animate: boolean | undefined = true
   export let offset: number | undefined = undefined
   export let useAnchorWidth = false
+  export let roundedPopover: boolean = false
 
   const actionMenuContext = getContext("actionMenu")
 
@@ -77,6 +78,7 @@
   {offset}
   {useAnchorWidth}
   resizable={false}
+  borderRadius={roundedPopover ? "12px" : undefined}
   on:open
   on:close
   on:mouseenter={openOnHover ? cancelHide : null}

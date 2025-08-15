@@ -25,6 +25,7 @@
   export let minWidth: number | undefined = undefined
   export let maxWidth: number | undefined = undefined
   export let maxHeight: number | undefined = undefined
+  export let borderRadius: string | undefined = undefined
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
@@ -142,7 +143,9 @@
       class:hidden={!showPopover}
       class:blockPointerEvents
       role="presentation"
-      style="height: {customHeight}; --customZIndex: {customZIndex};"
+      style="height: {customHeight}; --customZIndex: {customZIndex}; {borderRadius
+        ? `border-radius: ${borderRadius}`
+        : ``}"
       transition:fly|local={{
         y: -20,
         duration: animate ? animationDuration : 0,
