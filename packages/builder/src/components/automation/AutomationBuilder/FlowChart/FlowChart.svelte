@@ -16,6 +16,8 @@
     automationStore,
     automationHistoryStore,
     selectedAutomation,
+    workspaceDeploymentStore,
+    deploymentStore,
   } from "@/stores/builder"
   import { environment } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
@@ -24,9 +26,13 @@
     getBlocks as getBlocksHelper,
     enrichLog,
   } from "./AutomationStepHelpers"
+  import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
+
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
+  import StepNode from "./StepNode.svelte"
+  import CtaNotification from "@/components/common/CtaNotification.svelte"
   import NodeWrapper from "./NodeWrapper.svelte"
   import EdgeWrapper from "./EdgeWrapper.svelte"
   import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
@@ -49,7 +55,6 @@
     AutomationActionStepId,
     type Branch,
   } from "@budibase/types"
-
   export let automation
 
   const memoAutomation = memo(automation)
@@ -91,102 +96,6 @@
   const handleNodeDrag = (event: CustomEvent) => {
     const { targetNode } = event.detail
     if (targetNode) {
-      nodes.update(n => {
-        return n.map(node => {
-          if (node.id === targetNode.id) {
-            return {
-              ...node,
-              position: targetNode.position,
-            }
-          }
-          return node
-        })
-      })
-    }
-  }
-
-  const handleNodeDragStop = (event: CustomEvent) => {
-    const { targetNode } = event.detail
-    if (!targetNode) return
-
-    const currentNodes = get(nodes)
-    const topLevelNodes = currentNodes.filter(
-      n => n.type === "step-node" && (n as any).data?.isTopLevel
-    )
-    const draggedNodeIndex = topLevelNodes.findIndex(
-      n => n.id === targetNode.id
-    )
-
-    // If not a top-level step, just persist its position visually
-    if (draggedNodeIndex === -1) {
-      nodes.update(n =>
-        n.map(node =>
-          node.id === targetNode.id
-            ? { ...node, position: targetNode.position }
-            : node
-        )
-      )
-      return
-    }
-
-    // Calculate which position the node was dropped into based on Y position
-    let newIndex = topLevelNodes.findIndex(node => {
-      if (node.id === targetNode.id) return false
-      // Check if the dragged node's Y position is before this node
-      return targetNode.position.y < node.position.y
-    })
-
-    // If no node found after it, it means it's at the end
-    if (newIndex === -1) {
-      newIndex = topLevelNodes.length - 1
-    } else if (newIndex > draggedNodeIndex) {
-      // Adjust index if moving down
-      newIndex -= 1
-    }
-
-    // Only reorder if the position actually changed
-    if (newIndex !== draggedNodeIndex && newIndex >= 0) {
-      // Reorder blocks array
-      const reorderedBlocks = [...blocks]
-      const [movedBlock] = reorderedBlocks.splice(draggedNodeIndex, 1)
-      reorderedBlocks.splice(newIndex, 0, movedBlock)
-
-      // Get the source and destination paths for the moveBlock function
-      const sourceBlock = blockRefs[targetNode.id]
-      if (sourceBlock) {
-        const sourcePath = sourceBlock.pathTo
-
-        // Determine destination path based on the new position
-        let destPath
-        if (newIndex === 0) {
-          // Moving to the beginning
-          const firstBlock = blockRefs[reorderedBlocks[1]?.id]
-          if (firstBlock) {
-            destPath = [...firstBlock.pathTo]
-            destPath[destPath.length - 1] = {
-              ...destPath[destPath.length - 1],
-              stepIdx: 0,
-            }
-          }
-        } else {
-          // Moving after another block
-          const prevBlock = blockRefs[reorderedBlocks[newIndex - 1]?.id]
-          if (prevBlock) {
-            destPath = [...prevBlock.pathTo]
-          }
-        }
-
-        if (destPath) {
-          // Use the automation store's moveBlock function
-          automationStore.actions.moveBlock(
-            sourcePath,
-            destPath,
-            $memoAutomation
-          )
-        }
-      }
-    } else {
-      // Just update the position without reordering
       nodes.update(n => {
         return n.map(node => {
           if (node.id === targetNode.id) {
@@ -343,6 +252,10 @@
     nodes.set(newNodes)
     edges.set(newEdges)
   }
+  // Check if automation has unpublished changes
+  $: hasUnpublishedChanges =
+    $workspaceDeploymentStore.automations[automation._id]
+      ?.unpublishedChanges === true
 
   const refresh = () => {
     // Get all processed block references
@@ -354,6 +267,14 @@
       await automationStore.actions.delete(automation)
     } catch (error) {
       notifications.error("Error deleting automation")
+    }
+  }
+
+  const publishChanges = async () => {
+    try {
+      await deploymentStore.publishApp()
+    } catch (error) {
+      notifications.error("Error publishing changes")
     }
   }
 
@@ -490,6 +411,20 @@
 </div>
 
 <div class="main-flow">
+  <div class="canvas-heading" class:scrolling>
+    <div class="canvas-controls">
+      {#if hasUnpublishedChanges}
+        <CtaNotification
+          button={{ message: "Publish changes" }}
+          on:click={publishChanges}
+          icon="info"
+        >
+          <span>This automation has unpublished changes</span>
+        </CtaNotification>
+      {/if}
+    </div>
+  </div>
+
   <div class="root">
     <div class="wrapper">
       <SvelteFlow
@@ -500,12 +435,14 @@
         fitView
         colorMode="dark"
         on:nodedrag={handleNodeDrag}
-        on:nodedragstop={handleNodeDragStop}
       >
         <Controls />
         <Background variant={BackgroundVariant.Dots} gap={25} />
         <MiniMap />
       </SvelteFlow>
+    </div>
+    <div class="canvas-footer-left">
+      <UndoRedoControl store={automationHistoryStore} showButtonGroup />
     </div>
   </div>
 </div>
@@ -600,7 +537,10 @@
     align-items: center;
   }
 
-  .canvas-heading-left {
+  .canvas-footer-left {
+    position: absolute;
+    left: var(--spacing-xl);
+    bottom: var(--spacing-l);
     display: flex;
     gap: var(--spacing-l);
   }
@@ -611,7 +551,7 @@
     flex-shrink: 0;
   }
 
-  .canvas-heading-left :global(div) {
+  .canvas-footer-left :global(div) {
     border-right: none;
   }
 
@@ -681,9 +621,9 @@
     flex-direction: row;
   }
 
-  .canvas-heading-left .group :global(.spectrum-Button),
-  .canvas-heading-left .group :global(.spectrum-ActionButton),
-  .canvas-heading-left .group :global(i) {
+  .canvas-footer-left .group :global(.spectrum-Button),
+  .canvas-footer-left .group :global(.spectrum-ActionButton),
+  .canvas-footer-left .group :global(i) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
   .zoom .group :global(> *:not(:first-child)) {

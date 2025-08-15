@@ -20,8 +20,17 @@
 
   let publishButton: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
+  let publishCount = 0
 
   $: workspaceAppsEnabled = $featureFlags.WORKSPACE_APPS
+  $: hasBeenPublished($deploymentStore.publishCount)
+
+  const hasBeenPublished = (count: number) => {
+    if (publishCount < count) {
+      publishCount = count
+      publishSuccessPopover?.show()
+    }
+  }
 
   const publish = async () => {
     await deploymentStore.publishApp()

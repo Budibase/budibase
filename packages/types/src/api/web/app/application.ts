@@ -15,6 +15,7 @@ export interface CreateAppRequest {
   fileToImport?: string
   encryptionPassword?: string
   file?: { path: string }
+  isOnboarding?: string
 }
 
 export interface CreateAppResponse extends App {}

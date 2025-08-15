@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
   import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
-  import { selectedScreen, screenStore } from "@/stores/builder"
+  import { selectedScreen, screenStore, appStore } from "@/stores/builder"
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import ButtonActionEditor from "@/components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "@/dataBinding"
@@ -83,6 +83,7 @@
         props: {
           text: "Set as home screen",
         },
+        onChange: () => appStore.refresh(),
       },
       {
         key: "routing.route",
@@ -184,6 +185,8 @@
       console.error(error)
       notifications.error("Error saving screen settings")
     }
+
+    await setting.onChange?.()
   }
 
   const removeCustomLayout = async () => {
