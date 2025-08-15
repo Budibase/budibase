@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getPhosphorIcon } from "../helpers"
 
-  export let size: "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" = "M"
+  export let size: "XXS" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" = "M"
   export let name: string = "plus"
   export let hidden: boolean = false
   export let hoverable: boolean = false
@@ -12,6 +12,7 @@
   export let weight: "regular" | "bold" | "fill" = "regular"
 
   const sizeMap = {
+    XXS: "12px",
     XS: "14px",
     S: "16px",
     M: "18px",
