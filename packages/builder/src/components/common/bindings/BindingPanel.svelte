@@ -82,12 +82,17 @@
   $: sidePanelOptions = getSidePanelOptions(bindings, context)
   $: enrichedBindings = enrichBindings(bindings, context, snippets)
   $: usingJS = mode === BindingMode.JavaScript
-  $: editorMode =
-    mode === BindingMode.JavaScript
-      ? EditorModes.JS
-      : allowHTML
-        ? EditorModes.HTML
-        : EditorModes.Handlebars
+  $: editorMode = getEditorMode(mode, allowHTML)
+
+  const getEditorMode = (mode: BindingMode, allowHTML: boolean) => {
+    if (mode === BindingMode.JavaScript) {
+      return EditorModes.JS
+    }
+    if (allowHTML) {
+      return EditorModes.HTML
+    }
+    return EditorModes.Handlebars
+  }
   $: editorValue = (editorMode === EditorModes.JS ? jsValue : hbsValue) as
     | string
     | null
