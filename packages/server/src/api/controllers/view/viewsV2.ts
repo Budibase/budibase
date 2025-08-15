@@ -34,6 +34,7 @@ function stripUnknownFields(
             visible: field.visible,
             readonly: field.readonly,
             icon: field.icon,
+            displayName: field.displayName,
             distinct: field.distinct,
             calculationType: field.calculationType,
             field: field.field,
@@ -47,6 +48,7 @@ function stripUnknownFields(
           visible: field.visible,
           readonly: field.readonly,
           icon: field.icon,
+          displayName: field.displayName,
           calculationType: field.calculationType,
           field: field.field,
           columns: field.columns,
@@ -60,6 +62,7 @@ function stripUnknownFields(
       visible: field.visible,
       readonly: field.readonly,
       icon: field.icon,
+      displayName: field.displayName,
       calculationType: field.calculationType,
       field: field.field,
       columns: field.columns,
@@ -72,6 +75,7 @@ function stripUnknownFields(
       visible: field.visible,
       readonly: field.readonly,
       icon: field.icon,
+      displayName: field.displayName,
       columns: field.columns,
     }
     return strippedField
@@ -108,6 +112,7 @@ async function parseSchema(view: CreateViewRequest) {
               order: fieldSchema.order,
               width: fieldSchema.width,
               icon: fieldSchema.icon,
+              displayName: fieldSchema.displayName,
             }
             return acc
           }, {})

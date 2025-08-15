@@ -123,13 +123,16 @@
     }
     instance._component = `@budibase/standard-components/${type}`
 
+    const fieldSchema = schema[instance.field]
+    const fieldLabel = fieldSchema?.displayName || instance.field
+
     const pseudoComponentInstance = componentStore.createInstance(
       instance._component,
       {
         _instanceName: instance.field,
         field: instance.field,
-        label: instance.field,
-        placeholder: instance.field,
+        label: fieldLabel,
+        placeholder: fieldLabel,
       },
       {}
     )

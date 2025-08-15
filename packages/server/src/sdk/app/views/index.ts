@@ -407,6 +407,7 @@ export async function enrichSchema(
         readonly: isReadonly,
         order: viewFieldSchema?.order,
         width: viewFieldSchema?.width,
+        displayName: viewFieldSchema?.displayName,
 
         icon: relTableField.icon,
         type: relTableField.type,
