@@ -51,6 +51,7 @@
   export let value: string = ""
   export let allowHBS: boolean | undefined = true
   export let allowJS: boolean | undefined = false
+  export let allowHTML: boolean | undefined = false
   export let allowHelpers = true
   export let allowSnippets = true
   export let context: Record<any, any> | undefined = undefined
@@ -77,12 +78,21 @@
     Evaluation: "play",
   }
 
-  $: editorModeOptions = getModeOptions(allowHBS, allowJS)
+  $: editorModeOptions = getModeOptions(allowHBS, allowJS, allowHTML)
   $: sidePanelOptions = getSidePanelOptions(bindings, context)
   $: enrichedBindings = enrichBindings(bindings, context, snippets)
   $: usingJS = mode === BindingMode.JavaScript
-  $: editorMode =
-    mode === BindingMode.JavaScript ? EditorModes.JS : EditorModes.Handlebars
+  $: editorMode = getEditorMode(mode, allowHTML)
+
+  const getEditorMode = (mode: BindingMode, allowHTML: boolean) => {
+    if (mode === BindingMode.JavaScript) {
+      return EditorModes.JS
+    }
+    if (allowHTML) {
+      return EditorModes.HTML
+    }
+    return EditorModes.Handlebars
+  }
   $: editorValue = (editorMode === EditorModes.JS ? jsValue : hbsValue) as
     | string
     | null
@@ -90,7 +100,10 @@
   $: requestEval(runtimeExpression, context, snippets)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
-  $: bindingOptions = bindingsToCompletions(enrichedBindings, editorMode)
+  $: bindingOptions =
+    allowHBS || allowHTML
+      ? bindingsToCompletions(enrichedBindings, editorMode)
+      : []
   $: helperOptions = allowHelpers ? getHelperCompletions(editorMode) : []
   $: snippetsOptions =
     usingJS && allowSnippets && !$licensing.isFreePlan && snippets?.length
@@ -128,9 +141,13 @@
     }
   }
 
-  const getModeOptions = (allowHBS = true, allowJS = false) => {
+  const getModeOptions = (
+    allowHBS = true,
+    allowJS = false,
+    allowHTML = false
+  ) => {
     let options = []
-    if (allowHBS) {
+    if (allowHBS || allowHTML) {
       options.push(BindingMode.Text)
     }
     if (allowJS) {
@@ -360,6 +377,7 @@
             {completions}
             {bindings}
             {validations}
+            mode={editorMode}
             autofocus={autofocusEditor}
             placeholder={placeholder ||
               "Add bindings by typing {{ or use the menu on the right"}

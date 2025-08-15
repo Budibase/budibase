@@ -1810,7 +1810,8 @@
         "type": "text",
         "label": "Embed",
         "key": "embed",
-        "required": true
+        "required": true,
+        "allowHTML": true
       }
     ]
   },
