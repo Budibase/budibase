@@ -8,6 +8,8 @@
   export let parameters = {}
   export let bindings = []
 
+  let rootEle
+
   const AUTOMATION_STATUS = {
     NEW: "new",
     EXISTING: "existing",
@@ -24,24 +26,27 @@
     )?.synchronous
     parameters
   }
-  $: automations = $automationStore.automations
-    .filter(
-      a => a.definition.trigger?.stepId === TriggerStepID.APP && !a.disabled
-    )
-    .map(automation => {
-      const schema = Object.entries(
-        automation.definition.trigger.inputs.fields || {}
-      ).map(([name, type]) => ({ name, type }))
+  $: automations = rootEle
+    ? $automationStore.automations
+        .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
+        .map(automation => {
+          const schema = Object.entries(
+            automation.definition.trigger.inputs.fields || {}
+          ).map(([name, type]) => ({ name, type }))
 
-      let hasCollectBlock = coreSdk.automations.checkForCollectStep(automation)
+          let hasCollectBlock =
+            coreSdk.automations.checkForCollectStep(automation)
 
-      return {
-        name: automation.name,
-        _id: automation._id,
-        schema,
-        synchronous: hasCollectBlock,
-      }
-    })
+          return {
+            name: automation.name,
+            _id: automation._id,
+            schema,
+            synchronous: hasCollectBlock,
+            disabled: automation.disabled,
+            icon: getStatusIcon(!automation.disabled),
+          }
+        })
+    : []
 
   $: selectedAutomation = automations?.find(
     a => a._id === parameters?.automationId
@@ -60,11 +65,33 @@
     )?.synchronous
     parameters.automationId = automationId
   }
+
+  const getStatusIcon = (enabled = true) => {
+    if (!rootEle) {
+      return ""
+    }
+    const disabledColor =
+      getComputedStyle(rootEle)
+        .getPropertyValue("--spectrum-alias-text-color-disabled")
+        .trim() || "#FEFEFE"
+
+    const svg = `
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="10" cy="10" r="4" fill="${enabled ? "#53a761" : disabledColor}" />
+      </svg>`
+
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+  }
 </script>
 
-<div class="root">
+<div class="root" bind:this={rootEle}>
   <div class="fields">
-    <div class:title-padding={parameters.synchronous}>
+    <div class="field-name">
       <Label small>Automation</Label>
     </div>
     <div style="width: 100%">
@@ -75,7 +102,16 @@
         options={automations}
         getOptionLabel={x => x.name}
         getOptionValue={x => x._id}
+        useOptionIconImage
       />
+      {#if selectedAutomation?.disabled}
+        <div class="disabled-info">
+          <Body size="XS"
+            >This automation is currently disabled and will not execute until
+            enabled and published.
+          </Body>
+        </div>
+      {/if}
       {#if parameters.synchronous}
         <div class="synchronous-info">
           <Icon size="XS" name="info" />
@@ -141,11 +177,13 @@
     margin-top: var(--spacing-l);
   }
 
-  .title-padding {
-    padding-bottom: 20px;
+  .field-name {
+    align-self: baseline;
+    margin-top: var(--spacing-s);
   }
 
-  .synchronous-info {
+  .synchronous-info,
+  .disabled-info {
     display: flex;
     gap: var(--spacing-s);
     margin-top: var(--spacing-s);
@@ -158,5 +196,8 @@
     row-gap: var(--spacing-s);
     grid-template-columns: 15% auto auto;
     align-items: center;
+  }
+  .fields:first-child {
+    grid-template-columns: 15% auto;
   }
 </style>

@@ -50,9 +50,7 @@
     $selectedScreen,
     $componentStore.selectedComponentId
   )
-  $: screenRouteOptions = $screenStore.screens
-    .map(screen => screen.routing?.route)
-    .filter(x => x != null)
+  $: screenRouteOptions = screenStore.routes
 
   const updateShowNavigation = async show => {
     await screenStore.updateSetting(get(selectedScreen), "showNavigation", show)
@@ -225,7 +223,7 @@
             {bindings}
             props={{
               appendBindingsAsOptions: false,
-              options: screenRouteOptions,
+              options: $screenRouteOptions,
             }}
           />
           <PropertyControl

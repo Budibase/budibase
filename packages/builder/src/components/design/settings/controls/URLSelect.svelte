@@ -6,9 +6,7 @@
   export let bindings
   export let placeholder
 
-  $: urlOptions = $screenStore.screens
-    .map(screen => screen.routing?.route)
-    .filter(x => x != null)
+  $: urlOptions = screenStore.routes
 </script>
 
 <DrawerBindableCombobox
@@ -16,6 +14,6 @@
   {bindings}
   {placeholder}
   on:change
-  options={urlOptions}
+  options={$urlOptions}
   appendBindingsAsOptions={false}
 />
