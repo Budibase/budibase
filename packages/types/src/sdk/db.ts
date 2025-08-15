@@ -42,6 +42,10 @@ export type DBView = {
   version?: number
 }
 
+export type DatabaseOpts = {
+  skip_setup?: boolean
+}
+
 export interface DesignDocument extends Document {
   // we use this static reference for all design documents
   _id: "_design/database"
@@ -57,10 +61,6 @@ export interface DesignDocument extends Document {
       analyzer?: string | IndexAnalyzer
     }
   }
-}
-
-export type DatabaseOpts = {
-  skip_setup?: boolean
 }
 
 export type DatabasePutOpts = {

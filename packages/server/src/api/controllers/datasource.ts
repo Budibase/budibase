@@ -173,7 +173,9 @@ export async function update(
 
   ctx.message = "Datasource saved successfully."
   ctx.body = {
-    datasource: await sdk.datasources.removeSecretSingle(datasource),
+    datasource: await sdk.datasources.removeSecretSingle(
+      sdk.datasources.addDatasourceFlags(datasource)
+    ),
   }
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
   // send table updates if they have occurred
@@ -202,7 +204,9 @@ export async function save(
   })
 
   ctx.body = {
-    datasource: await sdk.datasources.removeSecretSingle(datasource),
+    datasource: await sdk.datasources.removeSecretSingle(
+      sdk.datasources.addDatasourceFlags(datasource)
+    ),
     errors,
   }
   builderSocket?.emitDatasourceUpdate(ctx, datasource)

@@ -35,8 +35,10 @@ import { helpers } from "@budibase/shared-core"
 
 const ENV_VAR_PREFIX = "env."
 
-function addDatasourceFlags(datasource: Datasource) {
+export function addDatasourceFlags(datasource: Datasource) {
   datasource.isSQL = helpers.isSQL(datasource)
+  datasource.usesEnvironmentVariables =
+    datasourceUsesEnvironmentVariables(datasource)
   return datasource
 }
 
@@ -195,6 +197,24 @@ function useEnvVars(str: any) {
   }
   const blocks = findHBSBlocks(str)
   return blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
+}
+
+function datasourceUsesEnvironmentVariables(datasource: Datasource): boolean {
+  if (!datasource.config) {
+    return false
+  }
+
+  const checkValue = (value: any): boolean => {
+    if (typeof value === "string") {
+      return useEnvVars(value)
+    }
+    if (typeof value === "object" && value !== null) {
+      return Object.values(value).some(checkValue)
+    }
+    return false
+  }
+
+  return Object.values(datasource.config).some(checkValue)
 }
 
 export async function removeSecrets(datasources: Datasource[]) {

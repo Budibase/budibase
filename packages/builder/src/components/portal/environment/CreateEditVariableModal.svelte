@@ -63,7 +63,6 @@
   <div>
     <Heading size="XS">Production</Heading>
     <Input
-      type="password"
       label="Value"
       on:change={e => {
         productionValue = e.detail
@@ -78,7 +77,6 @@
   <div>
     <Heading size="XS">Development</Heading>
     <Input
-      type="password"
       on:change={e => {
         developmentValue = e.detail
       }}
