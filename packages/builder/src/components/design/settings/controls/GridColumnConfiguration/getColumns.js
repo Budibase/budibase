@@ -35,11 +35,14 @@ export const removeInvalidAddMissing = (columns = [], defaultColumns = []) => {
   return combinedColumns
 }
 
-export const getDefault = (schema = {}) => {
+export const getDefault = (schema = {}, datasource = null) => {
   const defaultValues = Object.values(schema)
     .filter(column => !column.nestedJSON)
     .map(column => ({
-      label: column.name,
+      label:
+        datasource?.type === "viewV2"
+          ? column.displayName || column.name
+          : column.name,
       field: column.name,
       active: column.visible ?? true,
       order: column.visible ? (column.order ?? -1) : Number.MAX_SAFE_INTEGER,
@@ -87,10 +90,11 @@ export const getColumns = ({
   primaryDisplayColumnName,
   onChange,
   createComponent,
+  datasource,
 }) => {
   const validatedColumns = removeInvalidAddMissing(
     modernize(columns),
-    getDefault(schema),
+    getDefault(schema, datasource),
     primaryDisplayColumnName
   )
   const draggableList = toDraggableListFormat(
