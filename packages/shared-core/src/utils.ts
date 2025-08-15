@@ -11,7 +11,7 @@ import {
 } from "@budibase/types"
 import * as Constants from "./constants"
 import { removeKeyNumbering, splitFiltersArray } from "./filters"
-import _ from "lodash"
+import pick from "lodash/pick"
 
 const FILTER_ALLOWED_KEYS: (keyof SearchFilter)[] = [
   "field",
@@ -158,7 +158,7 @@ export function processSearchFilters(
       {
         logicalOperator: allOr ? UILogicalOperator.ANY : UILogicalOperator.ALL,
         filters: filters.map(filter => {
-          const trimmedFilter = _.pick(
+          const trimmedFilter = pick(
             filter,
             FILTER_ALLOWED_KEYS
           ) as SearchFilter
