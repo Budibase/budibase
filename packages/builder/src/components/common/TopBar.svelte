@@ -12,7 +12,6 @@
   export let icon: string
   export let breadcrumbs: Breadcrumb[]
   export let showPublish = true
-
 </script>
 
 <div class="top-bar">
@@ -33,7 +32,6 @@
     <PublishMenu />
   {/if}
 </div>
-
 
 <style>
   .top-bar {
