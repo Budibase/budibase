@@ -34,7 +34,7 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
         state.automations[automationId] = {
           published: false,
           name: "Automation",
-          state: PublishResourceState.UNPUBLISHED,
+          state: PublishResourceState.DISABLED,
         }
       }
       state.automations[automationId].unpublishedChanges = true

@@ -20,7 +20,6 @@
     CreateToolSourceRequest,
     UserMessage,
   } from "@budibase/types"
-  import { FeatureFlag } from "@budibase/types"
   import { onDestroy, onMount } from "svelte"
   import { type ComponentType } from "svelte"
   import Panel from "@/components/design/Panel.svelte"
@@ -448,7 +447,7 @@
 </script>
 
 <div class="wrapper">
-  {#if $featureFlags[FeatureFlag.WORKSPACE_APPS]}
+  {#if $featureFlags.WORKSPACE_APPS}
     <TopBar breadcrumbs={[{ text: "Agent" }]} icon="cpu"></TopBar>
   {/if}
   <div class="page">

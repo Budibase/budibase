@@ -170,7 +170,7 @@ export async function destroy(ctx: UserCtx<void, DeleteTableResponse>) {
   const tableId = ctx.params.tableId
   await sdk.rowActions.deleteAll(tableId)
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
-  await events.table.deleted(deletedTable)
+  await events.table.deleted(deletedTable, appId)
 
   ctx.eventEmitter?.emitTable(EventType.TABLE_DELETE, appId, deletedTable)
   ctx.table = deletedTable

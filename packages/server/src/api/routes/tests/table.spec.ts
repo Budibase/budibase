@@ -991,7 +991,8 @@ if (descriptions.length) {
             expect.objectContaining({
               ...testTable,
               tableId: testTable._id,
-            })
+            }),
+            config.appId
           )
         })
 

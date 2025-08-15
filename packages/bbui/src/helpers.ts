@@ -211,7 +211,7 @@ const localeDateFormat = new Intl.DateTimeFormat()
 
 // Formats a dayjs date according to schema flags
 export const getDateDisplayValue = (
-  value: dayjs.Dayjs | string | null,
+  value: dayjs.Dayjs | string | null | undefined,
   { enableTime = true, timeOnly = false } = {}
 ): string => {
   if (typeof value === "string") {

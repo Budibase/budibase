@@ -7,25 +7,25 @@
     previewStore,
     selectedAppUrls,
     workspaceAppStore,
-    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Link, Toggle, Label } from "@budibase/bbui"
-  import { ScreenVariant } from "@budibase/types"
+  import { ActionButton, Divider, Toggle, AbsTooltip } from "@budibase/bbui"
+  import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+
+  let changingStatus = false
 
   $: mobile = $previewStore.previewDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
-  $: selectedWorkspaceAppId = selectedWorkspaceApp?._id
-
-  $: isWorkspacePublished =
-    selectedWorkspaceAppId &&
-    $workspaceDeploymentStore.workspaceApps?.[selectedWorkspaceAppId]?.published
 
   $: liveUrl = $selectedAppUrls.liveUrl
+
+  $: toggleValue =
+    selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
 
   const previewApp = () => {
     previewStore.showPreview(true)
@@ -34,71 +34,98 @@
   const togglePreviewDevice = () => {
     previewStore.setDevice(mobile ? "desktop" : "mobile")
   }
+
+  const handleToggleChange = async (e: CustomEvent<boolean>) => {
+    if (!selectedWorkspaceApp) {
+      return
+    }
+
+    try {
+      changingStatus = true
+
+      await workspaceAppStore.toggleDisabled(
+        selectedWorkspaceApp._id!,
+        !e.detail
+      )
+    } finally {
+      changingStatus = false
+    }
+  }
 </script>
 
-<div class="app-panel">
-  <div class="drawer-container" />
-  <div class="header">
-    <div class="header-left">
-      {#if $featureFlags.WORKSPACE_APPS}
-        <div class="workspace-info">
-          {#if selectedWorkspaceAppId}
-            <div class="workspace-info-toggle">
-              <Toggle
-                noPadding
-                on:change={() =>
-                  workspaceAppStore.toggleDisabled(
-                    selectedWorkspaceAppId,
-                    !selectedWorkspaceApp?.disabled
-                  )}
-                value={!selectedWorkspaceApp?.disabled}
-              />
-              <Label>
-                {selectedWorkspaceApp?.disabled ? "Disabled" : "Enabled"}
-              </Label>
-            </div>
-            <div class="divider-container">
-              <Divider size="S" vertical />
-            </div>
-          {/if}
-          {#if isWorkspacePublished}
-            <Link href={liveUrl} target="_blank">{liveUrl}</Link>
-          {/if}
-        </div>
-      {/if}
-    </div>
-    <div class="header-right">
-      <UndoRedoControl store={screenStore.history} />
-      <div class="divider-container">
-        <Divider size="S" vertical />
-      </div>
-      <div class="actions">
-        {#if !isPDF}
-          {#if $appStore.clientFeatures.devicePreview}
-            <ActionButton
-              quiet
-              icon={mobile ? "device-mobile-camera" : "monitor"}
-              on:click={togglePreviewDevice}
-            />
-          {/if}
-          <ThemeSettings />
+{#if selectedWorkspaceApp}
+  <div class="app-panel">
+    <div class="drawer-container" />
+    <div class="header">
+      <div class="header-left">
+        {#if $featureFlags.WORKSPACE_APPS}
+          <div class="workspace-info">
+            {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
+              <div class="workspace-url">
+                <AbsTooltip text="Open live app">
+                  <ActionButton
+                    icon="globe-simple"
+                    quiet
+                    on:click={() => {
+                      window.open(liveUrl, "_blank")
+                    }}
+                  />
+                </AbsTooltip>
+              </div>
+            {/if}
+          </div>
         {/if}
-        <ScreenErrorsButton />
       </div>
-      <div class="divider-container">
-        <Divider size="S" vertical />
+      <div class="header-right">
+        <UndoRedoControl store={screenStore.history} />
+        <div class="divider-container">
+          <Divider size="S" vertical />
+        </div>
+        <div class="actions">
+          {#if !isPDF}
+            {#if $appStore.clientFeatures.devicePreview}
+              <ActionButton
+                quiet
+                icon={mobile ? "device-mobile-camera" : "monitor"}
+                on:click={togglePreviewDevice}
+              />
+            {/if}
+            <ThemeSettings />
+          {/if}
+          <ScreenErrorsButton />
+        </div>
+        <div class="divider-container">
+          <Divider size="S" vertical />
+        </div>
+        <ActionButton quiet icon="play" on:click={previewApp}>
+          Preview
+        </ActionButton>
+        {#if $featureFlags.WORKSPACE_APPS}
+          <div class="divider-container">
+            <Divider size="S" vertical />
+          </div>
+          <div class="workspace-info-toggle">
+            <PublishStatusBadge
+              status={selectedWorkspaceApp.publishStatus.state}
+              loading={changingStatus}
+            />
+            <Toggle
+              noPadding
+              on:change={handleToggleChange}
+              value={toggleValue}
+              disabled={changingStatus}
+            />
+          </div>
+        {/if}
       </div>
-      <ActionButton quiet icon="play" on:click={previewApp}>
-        Preview
-      </ActionButton>
+    </div>
+    <div class="content">
+      {#key $appStore.version}
+        <AppPreview />
+      {/key}
     </div>
   </div>
-  <div class="content">
-    {#key $appStore.version}
-      <AppPreview />
-    {/key}
-  </div>
-</div>
+{/if}
 
 <style>
   .app-panel {
@@ -132,19 +159,27 @@
     display: flex;
     padding-left: var(--spacing-s);
     align-items: center;
+    gap: 6px;
   }
 
   .workspace-info-toggle {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
-    padding-top: 2px;
+    justify-content: right;
+    gap: var(--spacing-m);
+    width: 100px;
   }
 
   .workspace-info {
     display: flex;
     align-items: center;
     gap: var(--spacing-xl);
+  }
+
+  .workspace-url {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
   }
 
   .header-right {

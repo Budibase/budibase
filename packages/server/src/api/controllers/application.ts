@@ -32,6 +32,7 @@ import {
   users,
   utils,
   configs,
+  features,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -70,6 +71,7 @@ import {
   UnpublishAppResponse,
   ErrorCode,
   FetchPublishedAppsResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -191,6 +193,7 @@ async function createDefaultWorkspaceApp(): Promise<string> {
       ...defaultAppNavigator(appMetadata.name),
       links: [],
     },
+    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS),
     isDefault: true,
   })
 
@@ -322,7 +325,7 @@ export async function fetchAppPackage(
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
     // disabled workspace apps should appear to not exist
-    if (!matchedWorkspaceApp || matchedWorkspaceApp.disabled) {
+    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isBuilder)) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
@@ -503,13 +506,33 @@ async function performAppCreate(
       }
     }
 
-    if (!addSampleData && !(await sdk.workspaceApps.fetch()).length) {
+    if (
+      !addSampleData &&
+      !(await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+      !(await sdk.workspaceApps.fetch()).length
+    ) {
       await createDefaultWorkspaceApp()
+    }
+
+    if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+      await disableAllAppsAndAutomations()
     }
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
   })
+}
+
+async function disableAllAppsAndAutomations() {
+  const workspaceApps = await sdk.workspaceApps.fetch()
+  for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
+    await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+  }
+
+  const automations = await sdk.automations.fetch()
+  for (const automation of automations.filter(a => !a.disabled)) {
+    await sdk.automations.update({ ...automation, disabled: true })
+  }
 }
 
 async function updateUserColumns(
@@ -762,6 +785,10 @@ async function unpublishApp(ctx: UserCtx) {
 
   // automations only in production
   await cleanupAutomations(appId)
+
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    await disableAllAppsAndAutomations()
+  }
 
   await cache.app.invalidateAppMetadata(appId)
   return result

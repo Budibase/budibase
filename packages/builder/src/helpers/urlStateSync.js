@@ -76,8 +76,9 @@ export const syncURLToState = options => {
 
   // Redirect to a certain URL
   const redirectUrl = url => {
-    log("Redirecting to", url)
-    cachedRedirect(url)
+    const urlString = typeof url === "function" ? url() : url
+    log("Redirecting to", urlString)
+    cachedRedirect(urlString)
   }
 
   // Updates state with new URL params

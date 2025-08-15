@@ -11,6 +11,7 @@
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
   import { sdk } from "@budibase/shared-core"
+  import HeroBanner from "@/components/common/HeroBanner.svelte"
 
   // Don't block loading if we've already hydrated state
   let loaded = !!$appsStore.apps?.length
@@ -48,16 +49,23 @@
 
 {#if loaded}
   <div class="page">
+    <HeroBanner
+      title="Workspaces are live"
+      linkTitle="Learn about workspaces"
+      linkHref="https://budibase.com/blog/updates/workspaces/"
+      color="var(--spectrum-global-color-gray-100)"
+      image="https://res.cloudinary.com/daog6scxm/image/upload/w_1200,h_800/v1628152378/1.%20Illustrations/Scene_4_web_version_izudxc.avif"
+      >Previously, Budibase centered everything around building a single app.
+      With Workspaces, that changes. Now, you can group multiple apps,
+      automations, and data sources together within a single workspace. Existing
+      apps now have their own workspace.</HeroBanner
+    >
     <slot />
   </div>
 {/if}
 
 <style>
   .page {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: stretch;
+    margin: 20px 0;
   }
 </style>

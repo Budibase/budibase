@@ -3,6 +3,7 @@ import { DerivedBudiStore } from "@/stores/BudiStore"
 import * as screenTemplating from "@/templates/screenTemplating"
 import {
   InsertWorkspaceAppRequest,
+  PublishResourceState,
   RequiredKeys,
   UIWorkspaceApp,
   UpdateWorkspaceAppRequest,
@@ -11,6 +12,7 @@ import {
 import { derived, Readable, get } from "svelte/store"
 import { appStore } from "./app"
 import { screenStore, selectedScreen, sortedScreens } from "./screens"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
@@ -29,8 +31,13 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
       return derived(
-        [store, sortedScreens, selectedScreen],
-        ([$store, $sortedScreens, $selectedScreen]) => {
+        [store, sortedScreens, selectedScreen, workspaceDeploymentStore],
+        ([
+          $store,
+          $sortedScreens,
+          $selectedScreen,
+          $workspaceDeploymentStore,
+        ]) => {
           const workspaceApps = $store.workspaceApps
             .map<UIWorkspaceApp>(workspaceApp => {
               return {
@@ -38,6 +45,12 @@ export class WorkspaceAppStore extends DerivedBudiStore<
                 screens: $sortedScreens.filter(
                   s => s.workspaceAppId === workspaceApp._id
                 ),
+                publishStatus: $workspaceDeploymentStore.workspaceApps[
+                  workspaceApp._id!
+                ] || {
+                  state: PublishResourceState.DISABLED,
+                  unpublishedChanges: true,
+                },
               }
             })
             .sort((a, b) => a.name.localeCompare(b.name))
@@ -79,8 +92,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       ...state,
       workspaceApps: [...state.workspaceApps, createdWorkspaceApp],
     }))
-
-    await screenStore.save({
+    return await screenStore.save({
       ...screenTemplating.blank({
         route: "/",
         screens: [],
@@ -126,6 +138,9 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       }
     })
 
+    const { deploymentStore } = await import("./deployment")
+
+    await deploymentStore.publishApp()
     appStore.refresh()
   }
 
@@ -140,6 +155,21 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     await this.edit({
       ...workspaceApp,
       disabled: state,
+    })
+
+    const { deploymentStore } = await import("./deployment")
+    await deploymentStore.publishApp()
+    await workspaceDeploymentStore.fetch()
+  }
+
+  replaceDatasource(_id: string, workspaceApp: WorkspaceApp) {
+    const index = get(this.store).workspaceApps.findIndex(
+      x => x._id === workspaceApp._id
+    )
+
+    this.store.update(state => {
+      state.workspaceApps[index] = workspaceApp
+      return state
     })
   }
 }

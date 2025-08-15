@@ -62,6 +62,8 @@
     templatesModal.show()
   }
 
+  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+
   const filterApps = (apps, searchTerm) => {
     return apps?.filter(app => {
       const query = searchTerm?.trim()?.replace(/\s/g, "")
@@ -356,7 +358,7 @@
                   secondary
                   on:click={usersLimitLockAction || initiateAppImport}
                 >
-                  Import app
+                  Import {appOrWorkspace}
                 </Button>
               {/if}
             </div>

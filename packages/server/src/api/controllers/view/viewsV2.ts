@@ -262,4 +262,6 @@ export async function remove(ctx: Ctx<void, void>) {
   const table = await sdk.tables.getTable(view.tableId)
   builderSocket?.emitTableUpdate(ctx, table)
   gridSocket?.emitViewDeletion(ctx, view)
+
+  await events.view.deleted(view, ctx.appId)
 }

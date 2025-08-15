@@ -1,4 +1,4 @@
-import { derived, get, Writable } from "svelte/store"
+import { derived, get, Readable, Writable } from "svelte/store"
 import {
   DEFAULT_BB_DATASOURCE_ID,
   BUDIBASE_INTERNAL_DB_ID,
@@ -48,10 +48,14 @@ interface DerivedDatasourceStore extends BuilderDatasourceStore {
   hasData: boolean
 }
 
+export type DatasourceLookupState = Record<string, Datasource>
+
 export class DatasourceStore extends DerivedBudiStore<
   BuilderDatasourceStore,
   DerivedDatasourceStore
 > {
+  lookup: Readable<DatasourceLookupState>
+
   constructor() {
     const makeDerivedStore = (store: Writable<BuilderDatasourceStore>) => {
       return derived([store, tables], ([$store, $tables]) => {
@@ -111,6 +115,21 @@ export class DatasourceStore extends DerivedBudiStore<
     this.save = this.save.bind(this)
     this.replaceDatasource = this.replaceDatasource.bind(this)
     this.getTableNames = this.getTableNames.bind(this)
+    this.generateLookup = this.generateLookup.bind(this)
+
+    this.lookup = this.generateLookup()
+  }
+
+  generateLookup() {
+    return derived([this.store], ([$data]): DatasourceLookupState => {
+      return $data.rawList.reduce(
+        (acc: DatasourceLookupState, d: Datasource) => {
+          acc[d._id!] = d
+          return acc
+        },
+        {} as DatasourceLookupState
+      )
+    })
   }
 
   async fetch() {

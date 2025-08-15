@@ -4,9 +4,16 @@ import {
   AutomationActionStepId,
   AutomationStep,
   isBranchStep,
+  RowActionTrigger,
 } from "@budibase/types"
 
-export function isRowAction(automation: Automation) {
+export function isRowAction(
+  automation: Automation
+): automation is Automation & {
+  definition: Automation["definition"] & {
+    trigger: RowActionTrigger
+  }
+} {
   return (
     automation.definition.trigger?.stepId === AutomationTriggerStepId.ROW_ACTION
   )
