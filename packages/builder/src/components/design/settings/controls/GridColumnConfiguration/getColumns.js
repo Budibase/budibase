@@ -36,14 +36,6 @@ export const removeInvalidAddMissing = (
 
   const combinedColumns = [...validColumns, ...missingColumns]
 
-  // Ensure the primary display column is always visible
-  const primaryDisplayIndex = combinedColumns.findIndex(
-    column => column.field === primaryDisplayColumnName
-  )
-  if (primaryDisplayIndex > -1) {
-    combinedColumns[primaryDisplayIndex].active = true
-  }
-
   return combinedColumns
 }
 
