@@ -3,9 +3,7 @@
   import NewScreen from "../../_components/NewScreen/index.svelte"
   import { workspaceAppStore } from "@/stores/builder"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { beforeUrlChange } from "@roxi/routify"
-
-  export let workspaceAppId
+  import { beforeUrlChange, params } from "@roxi/routify"
 
   let newScreenModal: NewScreen
 
@@ -14,6 +12,7 @@
     return true
   })
 
+  $: workspaceAppId = $params.workspaceAppId
   $: workspaceApp = $workspaceAppStore.workspaceApps.find(
     a => a._id === workspaceAppId
   )
