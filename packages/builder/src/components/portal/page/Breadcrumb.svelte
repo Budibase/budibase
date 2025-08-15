@@ -2,7 +2,7 @@
   import { Icon } from "@budibase/bbui"
 
   export let url: string | undefined = undefined
-  export let text: string
+  export let text: string | undefined = undefined
 </script>
 
 <div>

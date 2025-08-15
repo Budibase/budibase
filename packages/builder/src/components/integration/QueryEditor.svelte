@@ -12,7 +12,7 @@
     LIGHT: "default",
   }
 
-  export let label
+  export let label = undefined
   export let value = ""
   export let readOnly = false
   export let lineNumbers = true
@@ -56,6 +56,13 @@
 
   export function focus() {
     editor.focus()
+  }
+
+  export function insertAtCursor(text) {
+    if (editor) {
+      editor.replaceSelection(text)
+      editor.focus()
+    }
   }
 
   const modes = {
