@@ -14,11 +14,7 @@ export const modernize = columns => {
   return columns
 }
 
-export const removeInvalidAddMissing = (
-  columns = [],
-  defaultColumns = [],
-  primaryDisplayColumnName
-) => {
+export const removeInvalidAddMissing = (columns = [], defaultColumns = []) => {
   const defaultColumnNames = defaultColumns.map(column => column.field)
   const columnNames = columns.map(column => column.field)
 
