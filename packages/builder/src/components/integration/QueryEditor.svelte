@@ -58,6 +58,13 @@
     editor.focus()
   }
 
+  export function insertAtCursor(text) {
+    if (editor) {
+      editor.replaceSelection(text)
+      editor.focus()
+    }
+  }
+
   const modes = {
     js: {
       name: "javascript",
