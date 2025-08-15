@@ -50,7 +50,6 @@
     primaryDisplayColumnName,
     onChange: handleChange,
     createComponent: componentStore.createInstance,
-    datasource,
   })
 </script>
 
