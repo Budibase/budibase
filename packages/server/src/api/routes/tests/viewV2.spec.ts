@@ -944,7 +944,12 @@ if (descriptions.length) {
                   OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
                 })
 
-                mockChatGPTResponse(prompt => {
+                // Ensure MockAgent is installed for OpenAI interceptors
+                const { installHttpMocking } = require("../../../tests/jestEnv")
+                installHttpMocking()
+
+                // Set up 3 interceptors for the 3 animals that will be processed
+                const responseFunction = (prompt: string) => {
                   if (prompt.includes("elephant")) {
                     return "big"
                   }
@@ -955,7 +960,12 @@ if (descriptions.length) {
                     return "big"
                   }
                   return "unknown"
-                })
+                }
+
+                // Each row save will trigger AI processing
+                mockChatGPTResponse(responseFunction)
+                mockChatGPTResponse(responseFunction)
+                mockChatGPTResponse(responseFunction)
               })
 
               afterAll(() => {
