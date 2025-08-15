@@ -1,4 +1,5 @@
 import appEndpoints from "./applications"
+import workspaceEndpoints from "./workspaces"
 import metricEndpoints from "./metrics"
 import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
@@ -154,6 +155,7 @@ function applyRoutes(
 
 applyAdminRoutes(metricEndpoints)
 applyAdminRoutes(roleEndpoints)
+applyRoutes(workspaceEndpoints, PermissionType.APP, "workspaceId")
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(viewEndpoints, PermissionType.VIEW, "viewId")

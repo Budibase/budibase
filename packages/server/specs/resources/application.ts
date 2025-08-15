@@ -7,7 +7,7 @@ const application = {
   appId: "app_dev_957b12f943d348faa61db7e18e088d0f",
   version: "1.0.58-alpha.0",
   name: "App name",
-  url: "/app-url",
+  url: "/url",
   tenantId: "default",
   updatedAt: "2022-02-22T13:00:54.035Z",
   createdAt: "2022-02-11T18:02:26.961Z",
@@ -102,6 +102,28 @@ const deploymentOutputSchema = object({
   },
 })
 
+const applicationOutput = object({
+  data: applicationOutputSchema,
+})
+const applicationSearch = object({
+  data: {
+    type: "array",
+    items: applicationOutputSchema,
+  },
+})
+
+const appExport = object({
+  encryptPassword: {
+    description: "An optional password used to encrypt the export.",
+    type: "string",
+  },
+  excludeRows: {
+    description:
+      "Set whether the internal table rows should be excluded from the export.",
+    type: "boolean",
+  },
+})
+
 export default new Resource()
   .setExamples({
     application: {
@@ -114,6 +136,16 @@ export default new Resource()
         data: [application],
       },
     },
+    workspace: {
+      value: {
+        data: application,
+      },
+    },
+    workspaces: {
+      value: {
+        data: [application],
+      },
+    },
     deploymentOutput: {
       value: {
         data: deployment,
@@ -122,27 +154,16 @@ export default new Resource()
   })
   .setSchemas({
     application: applicationSchema,
-    applicationOutput: object({
-      data: applicationOutputSchema,
-    }),
-    applicationSearch: object({
-      data: {
-        type: "array",
-        items: applicationOutputSchema,
-      },
-    }),
+    workspace: applicationSchema,
+    applicationOutput,
+    workspaceOutput: applicationOutput,
+    applicationSearch,
+    workspaceSearch: applicationSearch,
+
     deploymentOutput: object({
       data: deploymentOutputSchema,
     }),
-    appExport: object({
-      encryptPassword: {
-        description: "An optional password used to encrypt the export.",
-        type: "string",
-      },
-      excludeRows: {
-        description:
-          "Set whether the internal table rows should be excluded from the export.",
-        type: "boolean",
-      },
-    }),
+
+    appExport,
+    workspaceExport: appExport,
   })
