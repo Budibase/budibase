@@ -77,7 +77,7 @@ describe("/datasources", () => {
 
   describe("dynamic variables", () => {
     it("should invalidate changed or removed variables", async () => {
-      nock("http://www.example.com/")
+      nock("http://www.example.com")
         .get("/")
         .reply(200, [{ value: "test" }])
         .get("/?test=test")
