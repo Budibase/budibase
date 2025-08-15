@@ -12,7 +12,7 @@
     LIGHT: "default",
   }
 
-  export let label
+  export let label = undefined
   export let value = ""
   export let readOnly = false
   export let lineNumbers = true
