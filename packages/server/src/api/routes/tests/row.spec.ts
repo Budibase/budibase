@@ -3645,6 +3645,12 @@ if (descriptions.length) {
               OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
             })
 
+            // Ensure MockAgent is installed for OpenAI interceptors
+            const { installHttpMocking } = require("../../../tests/jestEnv")
+            installHttpMocking()
+
+            //We need to supply multiple interceptors.
+            mockChatGPTResponse("Mock LLM Response")
             mockChatGPTResponse("Mock LLM Response")
 
             table = await config.api.table.save(
