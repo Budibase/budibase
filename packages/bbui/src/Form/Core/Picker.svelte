@@ -26,6 +26,8 @@
   export let fieldColour: string = ""
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
+  export let searchText: string | undefined = undefined
+
   export let options: O[] = []
   export let isOptionSelected = (option: O) => option as unknown as boolean
   export let isOptionEnabled = (option: O, _index?: number) =>
@@ -194,7 +196,7 @@
         value={searchTerm}
         on:change={event => (searchTerm = event.detail)}
         {disabled}
-        placeholder="Search"
+        placeholder={searchText || "Search"}
       />
     {/if}
     <ul class="spectrum-Menu" role="listbox" bind:this={component}>
