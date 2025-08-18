@@ -23,7 +23,7 @@
     update: (_: string) => void
     resize: () => void
     focus: () => void
-    insertAtCursor: (text: string) => void
+    insertAtCursor: (_: string) => void
   }
 
   // Tab select event interface
