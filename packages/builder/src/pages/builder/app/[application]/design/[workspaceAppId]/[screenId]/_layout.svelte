@@ -26,7 +26,12 @@
       if (workspaceAppScreens.length) {
         return `../${workspaceAppScreens[0]._id}`
       }
-      return "../../design"
+
+      if ($featureFlags.WORKSPACE_APPS) {
+        return "../new"
+      }
+
+      return "../../../design"
     },
     routify,
     update: screenStore.select,
@@ -43,7 +48,7 @@
     {#if $featureFlags.WORKSPACE_APPS}
       <TopBar
         breadcrumbs={[
-          { text: "Apps", url: "../" },
+          { text: "Apps", url: "../../" },
           { text: $workspaceAppStore.selectedWorkspaceApp?.name },
         ]}
         icon="browser"

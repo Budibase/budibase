@@ -2,7 +2,9 @@
   import { ModalContent, Input, keepOpen } from "@budibase/bbui"
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import { get } from "svelte/store"
-  import { screenStore } from "@/stores/builder"
+  import { screenStore, workspaceAppStore, appStore } from "@/stores/builder"
+
+  import { featureFlags } from "@/stores/portal"
 
   export let onConfirm: (_data: { route: string }) => Promise<void>
   export let onCancel: (() => Promise<void>) | undefined = undefined
@@ -15,9 +17,11 @@
   let error: string | undefined
   let modal: ModalContent
 
-  $: appUrl = route
-    ? `${window.location.origin}${appPrefix}${route}`
-    : `${window.location.origin}${appPrefix}`
+  $: hashRoute = !route ? "" : `#${route}`
+
+  $: appUrl = $featureFlags.WORKSPACE_APPS
+    ? `${window.location.origin}${appPrefix}${$appStore.url}${$workspaceAppStore.selectedWorkspaceApp!.url}${hashRoute}`
+    : `${window.location.origin}${appPrefix}${$appStore.url}${hashRoute}`
 
   const routeChanged = (event: { detail: string }) => {
     if (!event.detail.startsWith("/")) {
