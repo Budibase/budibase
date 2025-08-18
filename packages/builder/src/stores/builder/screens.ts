@@ -1,4 +1,4 @@
-import { derived, get, Readable } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
@@ -11,7 +11,6 @@ import {
   selectedComponent,
   workspaceAppStore,
 } from "@/stores/builder"
-import { featureFlags } from "@/stores/portal"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
@@ -26,6 +25,7 @@ import {
   ScreenVariant,
   WithRequired,
 } from "@budibase/types"
+import { RoutesStore } from "./routes"
 
 interface ScreenState {
   screens: Screen[]
@@ -36,19 +36,21 @@ export const initialScreenState: ScreenState = {
   screens: [],
 }
 
-// Review the nulls
 export class ScreenStore extends BudiStore<ScreenState> {
-  private _routes: Readable<string[]> | null = null
+  private _routes: RoutesStore | null = null
   history: HistoryStore<Screen>
   delete: (screens: Screen) => Promise<void>
   save: (
     screen: WithRequired<SaveScreenRequest, "workspaceAppId">
   ) => Promise<Screen>
 
-  get routes(): Readable<string[]> {
+  /**
+    List all availables screen routes in the current app
+   */
+  get routes(): RoutesStore {
     // lazy load
     if (!this._routes) {
-      this._routes = this.buildRoutes()
+      this._routes = new RoutesStore()
     }
     return this._routes
   }
@@ -68,7 +70,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.updateSetting = this.updateSetting.bind(this)
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
     this.removeCustomLayout = this.removeCustomLayout.bind(this)
-    this.buildRoutes = this.buildRoutes.bind(this)
 
     this.history = createHistoryStore({
       getDoc: (id: string) =>
@@ -88,27 +89,6 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.delete = this.history.wrapDeleteDoc(this.deleteScreen)
     this.save = this.history.wrapSaveDoc(this.saveScreen)
   }
-  /**
-    List all availables screen routes in the current app
-   */
-  buildRoutes = () => {
-    return derived(
-      [this.store, workspaceAppStore, featureFlags],
-      ([$screenStore, $wsa, $featureFlags]) => {
-        const workspaceApp = $wsa.selectedWorkspaceApp
-        return $screenStore.screens
-          .filter((s: Screen) =>
-            $featureFlags.WORKSPACE_APPS
-              ? workspaceApp && workspaceApp._id === s.workspaceAppId
-              : true
-          )
-          .map(screen => screen.routing?.route)
-          .filter(url => url != null)
-          .sort()
-      }
-    )
-  }
-
   /**
    * Reset entire store back to base config
    */
