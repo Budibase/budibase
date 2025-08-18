@@ -27,12 +27,19 @@
   $: fetchPermissions(resourceId)
   $: loadDependantInfo(resourceId)
   $: roleMismatch = checkRoleMismatch(permissions)
-  $: selectedRole = roleMismatch ? null : permissions?.[0]?.value
-  $: readableRole = selectedRole
-    ? $roles.find(x => x._id === selectedRole)?.uiMetadata.displayName
-    : null
-  $: buttonLabel = readableRole ? `Access: ${readableRole}` : undefined
-  $: highlight = roleMismatch || selectedRole === Roles.PUBLIC
+  $: selectedRoleID = roleMismatch ? null : permissions?.[0]?.value
+  $: selectedRole = $roles.find(x => x._id === selectedRoleID)
+  $: selectedRoleColor = selectedRole?.uiMetadata?.color
+  $: selectedRoleHighlight = selectedRoleColor
+    ? window
+        .getComputedStyle(document.body)
+        .getPropertyValue(
+          selectedRoleColor.substring(4, selectedRoleColor.length - 1)
+        )
+    : "#ff0000"
+
+  $: readableRole = selectedRoleID ? selectedRole?.uiMetadata.displayName : null
+  $: buttonLabel = readableRole ? `Access: ${readableRole}` : "Access"
 
   $: builtInRoles = builtins
     .map(roleId => $roles.find(x => x._id === roleId))
@@ -102,7 +109,7 @@
   }
 
   const changePermission = async role => {
-    if (role === selectedRole) {
+    if (role === selectedRoleID) {
       return
     }
     try {
@@ -127,16 +134,14 @@
 
 <DetailPopover title="Select access role" {showPopover}>
   <svelte:fragment slot="anchor" let:open>
-    {#if highlight && buttonLabel}
-      <ActionButton
-        icon="lock"
-        selected={open || highlight}
-        quiet
-        accentColor={highlight ? "#ff0000" : null}
-      >
-        {buttonLabel}
-      </ActionButton>
-    {/if}
+    <ActionButton
+      icon="lock"
+      selected={open || selectedRoleHighlight}
+      quiet
+      accentColor={selectedRoleHighlight}
+    >
+      {buttonLabel}
+    </ActionButton>
   </svelte:fragment>
 
   {#if roleMismatch}
@@ -169,7 +174,7 @@
         title={role.uiMetadata.displayName}
         subtitle={role.uiMetadata.description}
         hoverable
-        selected={selectedRole === role._id}
+        selected={selectedRoleID === role._id}
         icon="StatusLight"
         iconColor={role.uiMetadata.color}
         on:click={() => changePermission(role._id)}
@@ -180,7 +185,7 @@
         title={role.uiMetadata.displayName}
         subtitle={role.uiMetadata.description}
         hoverable
-        selected={selectedRole === role._id}
+        selected={selectedRoleID === role._id}
         icon="StatusLight"
         iconColor={role.uiMetadata.color}
         on:click={() => changePermission(role._id)}

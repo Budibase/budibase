@@ -77,6 +77,8 @@
   $: darkMode = !currentTheme.includes("light")
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
+  $: canSwitchToProduction =
+    isInternal || tableDatasource?.usesEnvironmentVariables
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: externalClipboardData = {
@@ -219,7 +221,7 @@
       {:else}
         <GridCreateEditRowModal />
       {/if}
-      {#if !isProductionMode}
+      {#if !isProductionMode && canSwitchToProduction}
         <GridDevWarning />
       {/if}
     </Grid>

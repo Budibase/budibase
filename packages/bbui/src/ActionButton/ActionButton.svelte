@@ -24,9 +24,14 @@
     if (!color) {
       return ""
     }
+    if (!color.startsWith("rgba")) {
+      color = color.startsWith("rgb")
+        ? `${color.substring(0, color.length - 1)}, 0.2)`
+        : hexToRGBA(color, 0.2)
+    }
     let style = ""
-    style += `--accent-bg-color:${hexToRGBA(color, 0.2)};`
-    style += `--accent-border-color:${hexToRGBA(color, 0.2)};`
+    style += `--accent-bg-color:${color};`
+    style += `--accent-border-color:${color};`
     return style
   }
 </script>

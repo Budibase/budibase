@@ -1,5 +1,5 @@
 import { DataEnvironmentMode } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
+import { BudiStore, PersistenceType } from "../BudiStore"
 import { derived } from "svelte/store"
 import { API, productionAPI } from "@/api"
 
@@ -15,7 +15,12 @@ export const initialState: DataEnvironmentState = {
 
 export class DataEnvironmentStore extends BudiStore<DataEnvironmentState> {
   constructor() {
-    super(initialState)
+    super(initialState, {
+      persistence: {
+        type: PersistenceType.LOCAL,
+        key: "bb-data-environment",
+      },
+    })
 
     this.setMode = this.setMode.bind(this)
     this.toggleMode = this.toggleMode.bind(this)
@@ -43,10 +48,6 @@ export class DataEnvironmentStore extends BudiStore<DataEnvironmentState> {
       ...state,
       bannerHidden: true,
     }))
-  }
-
-  reset() {
-    this.set({ ...initialState })
   }
 }
 
