@@ -82,6 +82,27 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     return this.fetch()
   }
 
+  select(workspaceAppId: string) {
+    const state = get(this.store)
+    const workspaceApp = state.workspaceApps.find(
+      app => app._id === workspaceAppId
+    )
+    if (!workspaceApp) {
+      return
+    }
+
+    // Check screen isn't already selected
+    if (state.selectedWorkspaceAppId === workspaceApp._id) {
+      return
+    }
+
+    // Select new screen
+    this.update(state => {
+      state.selectedWorkspaceAppId = workspaceAppId
+      return state
+    })
+  }
+
   async add(workspaceApp: InsertWorkspaceAppRequest) {
     const { workspaceApp: createdWorkspaceApp } =
       await API.workspaceApp.create(workspaceApp)
