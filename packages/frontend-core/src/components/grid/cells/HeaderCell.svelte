@@ -359,23 +359,23 @@
       </div>
     {:else}
       <Menu>
-        <MenuItem icon="pencil" on:click={editColumn} disabled={!editable}>
-          Edit column
-        </MenuItem>
-        <MenuItem
-          icon="copy"
-          on:click={duplicateColumn}
-          disabled={!$config.canEditColumns}
-        >
-          Duplicate column
-        </MenuItem>
-        <MenuItem
-          icon="tag"
-          on:click={makeDisplayColumn}
-          disabled={column.primaryDisplay || !canBeDisplayColumn(column.schema)}
-        >
-          Use as display column
-        </MenuItem>
+        {#if $config.canEditColumns}
+          <MenuItem icon="pencil" on:click={editColumn} disabled={!editable}>
+            Edit column
+          </MenuItem>
+          <MenuItem icon="copy" on:click={duplicateColumn}>
+            Duplicate column
+          </MenuItem>
+          <MenuItem
+            icon="tag"
+            on:click={makeDisplayColumn}
+            disabled={!$config.canEditColumns ||
+              column.primaryDisplay ||
+              !canBeDisplayColumn(column.schema)}
+          >
+            Use as display column
+          </MenuItem>
+        {/if}
         <MenuItem
           icon="sort-ascending"
           on:click={sortAscending}
@@ -394,27 +394,35 @@
         >
           Sort {sortingLabels.descending}
         </MenuItem>
-        <MenuItem disabled={!canMoveLeft} icon="caret-left" on:click={moveLeft}>
-          Move left
-        </MenuItem>
-        <MenuItem
-          disabled={!canMoveRight}
-          icon="caret-right"
-          on:click={moveRight}
-        >
-          Move right
-        </MenuItem>
-        <MenuItem
-          disabled={column.primaryDisplay || !$config.canHideColumns}
-          icon="eye-slash"
-          on:click={hideColumn}
-        >
-          Hide column
-        </MenuItem>
-        {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS && !column.schema.autocolumn}
-          <MenuItem icon="user" on:click={openMigrationModal}>
-            Migrate to user column
+        {#if $config.canEditColumns}
+          <MenuItem
+            disabled={!canMoveLeft}
+            icon="caret-left"
+            on:click={moveLeft}
+          >
+            Move left
           </MenuItem>
+          <MenuItem
+            disabled={!canMoveRight}
+            icon="caret-right"
+            on:click={moveRight}
+          >
+            Move right
+          </MenuItem>
+          <MenuItem
+            disabled={!$config.canEditColumns ||
+              column.primaryDisplay ||
+              !$config.canHideColumns}
+            icon="eye-slash"
+            on:click={hideColumn}
+          >
+            Hide column
+          </MenuItem>
+          {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS && !column.schema.autocolumn}
+            <MenuItem icon="user" on:click={openMigrationModal}>
+              Migrate to user column
+            </MenuItem>
+          {/if}
         {/if}
       </Menu>
     {/if}
@@ -454,6 +462,9 @@
   .search-icon {
     display: none;
     width: 18px;
+  }
+  .clear-icon {
+    z-index: 99;
   }
   .header-cell.searchable:not(.open):hover .search-icon,
   .header-cell.searchable.searching .search-icon {
