@@ -20,7 +20,7 @@ interface WorkspaceAppStoreState {
   selectedWorkspaceAppId: string | undefined
 }
 
-interface DerivedWorkspaceAppStoreState {
+interface DerivedWorkspaceAppStoreState extends WorkspaceAppStoreState {
   workspaceApps: UIWorkspaceApp[]
   selectedWorkspaceApp: UIWorkspaceApp | undefined
 }
@@ -55,7 +55,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
             ? workspaceApps.find(a => a._id === $store.selectedWorkspaceAppId)
             : undefined
 
-          return { workspaceApps, selectedWorkspaceApp }
+          return { ...$store, workspaceApps, selectedWorkspaceApp }
         }
       )
     }
