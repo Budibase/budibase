@@ -158,10 +158,6 @@ export async function deploymentProgress(
 }
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
-  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
-    return (ctx.body = { automations: {}, workspaceApps: {}, tables: {} })
-  }
-
   const { automations, workspaceApps, tables } = await sdk.deployment.status()
 
   ctx.body = {
