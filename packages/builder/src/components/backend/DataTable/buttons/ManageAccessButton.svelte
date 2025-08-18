@@ -32,7 +32,7 @@
     ? $roles.find(x => x._id === selectedRole)?.uiMetadata.displayName
     : null
   $: buttonLabel = readableRole ? `Access: ${readableRole}` : "Access"
-  $: highlight = roleMismatch || selectedRole === Roles.PUBLIC
+  $: highlightWarning = roleMismatch || selectedRole === Roles.PUBLIC
 
   $: builtInRoles = builtins
     .map(roleId => $roles.find(x => x._id === roleId))
@@ -129,9 +129,9 @@
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="lock"
-      selected={open || highlight}
+      selected={open || highlightWarning}
       quiet
-      accentColor={highlight ? "#ff0000" : null}
+      accentColor={highlightWarning ? "#ff0000" : null}
     >
       {buttonLabel}
     </ActionButton>
