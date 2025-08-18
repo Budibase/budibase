@@ -4,6 +4,8 @@
     rowActions,
     dataEnvironmentStore,
     dataAPI,
+    tables,
+    datasources,
   } from "@/stores/builder"
   import { gridClipboard } from "@budibase/frontend-core"
   import { admin, themeStore, licensing } from "@/stores/portal"
@@ -22,6 +24,7 @@
   import GridDevProdSwitcher from "@/components/backend/DataTable/buttons/grid/GridDevProdSwitcher.svelte"
   import { ViewV2Type, DataEnvironmentMode, type Row } from "@budibase/types"
   import GridDevWarning from "@/components/backend/DataTable/alert/grid/GridDevWarning.svelte"
+  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
 
   let generateButton: GridGenerateButton
 
@@ -33,10 +36,16 @@
     id,
     tableId: view?.tableId,
   }
+  $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
+  $: tableDatasource = $datasources.list.find(datasource => {
+    return datasource._id === $tables.selected?.sourceId
+  })
   $: buttons = makeRowActionButtons($rowActions[id])
   $: rowActions.refreshRowActions(id)
   $: currentTheme = $themeStore?.theme
   $: darkMode = !currentTheme.includes("light")
+  $: canSwitchToProduction =
+    isInternal || tableDatasource?.usesEnvironmentVariables
   $: isProductionMode =
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: externalClipboardData = {
@@ -107,7 +116,7 @@
       <GridDevProdSwitcher />
     </svelte:fragment>
     <GridCreateEditRowModal />
-    {#if !isProductionMode}
+    {#if !isProductionMode && canSwitchToProduction}
       <GridDevWarning />
     {/if}
   </Grid>

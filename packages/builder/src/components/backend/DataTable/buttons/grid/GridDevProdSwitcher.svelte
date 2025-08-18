@@ -28,7 +28,11 @@
     leftText: "Dev",
     rightIcon: "pulse",
     rightText: "Prod",
-    selected: (isDevMode ? "left" : "right") as "left" | "right",
+    selected: (disabled && !isInternal
+      ? "right"
+      : isDevMode
+        ? "left"
+        : "right") as "left" | "right",
     disabled,
   }
 
