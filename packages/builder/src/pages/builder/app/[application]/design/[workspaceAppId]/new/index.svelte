@@ -1,20 +1,20 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import NewScreen from "../../_components/NewScreen/index.svelte"
-  import { params } from "@roxi/routify"
   import { workspaceAppStore } from "@/stores/builder"
   import TopBar from "@/components/common/TopBar.svelte"
+  import { params } from "@roxi/routify"
 
   let newScreenModal: NewScreen
+
+  $: workspaceAppId = $params.workspaceAppId
+  $: workspaceApp = $workspaceAppStore.workspaceApps.find(
+    a => a._id === workspaceAppId
+  )
 
   onMount(() => {
     newScreenModal.open()
   })
-  $: workspaceAppId =
-    $params.workspaceAppId || $workspaceAppStore.workspaceApps[0]._id
-  $: workspaceApp = $workspaceAppStore.workspaceApps.find(
-    a => a._id === workspaceAppId
-  )
 </script>
 
 <TopBar

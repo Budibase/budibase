@@ -3,7 +3,7 @@
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import { get } from "svelte/store"
   import { screenStore, workspaceAppStore, appStore } from "@/stores/builder"
-
+  import { buildLiveUrl } from "@/helpers/urls"
   import { featureFlags } from "@/stores/portal"
 
   export let onConfirm: (_data: { route: string }) => Promise<void>
@@ -12,16 +12,22 @@
   export let role: string | undefined = undefined
   export let confirmText = "Continue"
 
-  const appPrefix = "/app"
   let touched = false
   let error: string | undefined
   let modal: ModalContent
 
+  $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
+
+  $: workspacePrefix =
+    $featureFlags.WORKSPACE_APPS && selectedWorkspaceApp
+      ? selectedWorkspaceApp.url
+      : ""
+
+  $: liveUrl = buildLiveUrl($appStore, workspacePrefix, true)
+
   $: hashRoute = !route ? "" : `#${route}`
 
-  $: appUrl = $featureFlags.WORKSPACE_APPS
-    ? `${window.location.origin}${appPrefix}${$appStore.url}${$workspaceAppStore.selectedWorkspaceApp!.url}${hashRoute}`
-    : `${window.location.origin}${appPrefix}${$appStore.url}${hashRoute}`
+  $: appUrl = `${liveUrl}${hashRoute}`
 
   const routeChanged = (event: { detail: string }) => {
     if (!event.detail.startsWith("/")) {
@@ -85,7 +91,7 @@
 <style>
   .app-server {
     color: var(--spectrum-global-color-gray-600);
-    width: 320px;
+    max-width: 400px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
