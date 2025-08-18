@@ -6,7 +6,8 @@
 </script>
 
 <script lang="ts">
-  import { Body, Button, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
+  import { Body, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
+  import PublishMenu from "./PublishMenu.svelte"
   import { deploymentStore } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
   import { url } from "@roxi/routify"
@@ -15,22 +16,18 @@
   export let breadcrumbs: Breadcrumb[]
   export let showPublish = true
 
-  let publishButton: HTMLElement | undefined
+  let publishPopoverAnchor: HTMLElement | undefined
   let publishSuccessPopover: PopoverAPI | undefined
-  let publishCount = 0
 
   $: hasBeenPublished($deploymentStore.publishCount)
+
+  let publishCount = 0
 
   const hasBeenPublished = (count: number) => {
     if (publishCount < count) {
       publishCount = count
       publishSuccessPopover?.show()
     }
-  }
-
-  const publish = async () => {
-    await deploymentStore.publishApp()
-    publishSuccessPopover?.show()
   }
 </script>
 
@@ -50,22 +47,15 @@
       {/if}
     {/each}
   </div>
-  <slot></slot>
+
+  <slot />
   {#if showPublish}
-    <Button
-      icon="arrow-circle-up"
-      primary
-      on:click={publish}
-      disabled={$deploymentStore.isPublishing}
-      bind:ref={publishButton}
-    >
-      Publish
-    </Button>
+    <PublishMenu />
   {/if}
 </div>
 
 <Popover
-  anchor={publishButton}
+  anchor={publishPopoverAnchor}
   bind:this={publishSuccessPopover}
   align={PopoverAlignment.Right}
   offset={6}

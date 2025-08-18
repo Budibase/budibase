@@ -51,7 +51,10 @@ class Replication {
   }
 
   appReplicateOpts(
-    opts: PouchDB.Replication.ReplicateOptions & { isCreation?: boolean } = {}
+    opts: PouchDB.Replication.ReplicateOptions & {
+      isCreation?: boolean
+      tablesToSync?: string[] | "all"
+    } = {}
   ): PouchDB.Replication.ReplicateOptions {
     if (typeof opts.filter === "string") {
       return opts
@@ -63,7 +66,20 @@ class Replication {
     delete opts.filter
 
     const isCreation = opts.isCreation
+    let tablesToSync = opts.tablesToSync
     delete opts.isCreation
+    delete opts.tablesToSync
+
+    let syncAllTables = false,
+      tableSyncList: string[] | undefined
+    if (typeof tablesToSync === "string" && tablesToSync === "all") {
+      syncAllTables = true
+    } else if (tablesToSync) {
+      tableSyncList = tablesToSync
+    }
+
+    const isData = (_id?: string) =>
+      _id?.startsWith(DocumentType.ROW) || _id?.startsWith(DocumentType.LINK)
 
     return {
       ...opts,
@@ -78,6 +94,15 @@ class Replication {
         // always replicate deleted documents
         if (doc._deleted) {
           return true
+        }
+        if (
+          isData(doc._id) &&
+          (tableSyncList?.find(id => doc._id?.includes(id)) || syncAllTables)
+        ) {
+          return true
+        }
+        if (isData(doc._id)) {
+          return false
         }
         if (doc._id?.startsWith(DocumentType.AUTOMATION_LOG)) {
           return false
