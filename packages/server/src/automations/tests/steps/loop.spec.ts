@@ -8,11 +8,21 @@ import {
   FieldType,
   FilterCondition,
   AutomationStepStatus,
+  AutomationStepResult,
+  AutomationActionStepId,
 } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
-describe("Attempt to run a basic loop automation", () => {
+// Helper to get items from new loop output structure
+const getLoopItems = (
+  loopOutput: any
+): Record<string, AutomationStepResult[]> => {
+  // New structure uses items for full results or defaults to empty
+  return loopOutput.items || {}
+}
+
+describe("Loop Automations", () => {
   const config = new TestConfiguration()
   let table: Table
 
@@ -73,6 +83,29 @@ describe("Attempt to run a basic loop automation", () => {
       .test({ fields: {} })
 
     expect(result.steps[0].outputs.iterations).toBe(1)
+  })
+
+  it("ensure that we maintain step identity", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .serverLog(
+        {
+          text: "hello",
+        },
+        {
+          stepName: "someStepName",
+        }
+      )
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: [1, 2, 3],
+      })
+      .serverLog({ text: "log statement {{loop.currentItem}}" })
+      .test({ fields: {} })
+
+    // Legacy loop should present child step identity and correct iterations
+    expect(result.steps[1].stepId).toBe(AutomationActionStepId.SERVER_LOG)
+    expect(result.steps[1].outputs.iterations).toBe(3)
   })
 
   it("should run an automation with a trigger, loop, and create row step", async () => {
@@ -687,6 +720,447 @@ describe("Attempt to run a basic loop automation", () => {
       expect(results.steps[1].outputs.status).toBe(
         AutomationStepStatus.NO_ITERATIONS
       )
+    })
+  })
+
+  describe("Multiple children within a loop", () => {
+    it("should create a basic loop v2 step with multiple children", async () => {
+      const binding = [1, 2, 3]
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.serverLog({
+                text: "Log Step 1 processing item: {{loop.currentItem}}",
+              }),
+              builder.serverLog({
+                text: "Log Step 2 processing item: {{loop.currentItem}}",
+              }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding,
+        })
+        .serverLog({ text: "Hello" })
+        .test({ fields: {} })
+
+      // Check new output structure
+      expect(steps[0].outputs.success).toBe(true)
+      expect(steps[0].outputs.iterations).toBe(3)
+      expect(steps[0].outputs.summary).toBeDefined()
+      expect(steps[0].outputs.summary.totalProcessed).toBe(6) // 2 children x 3 iterations
+      expect(steps[0].outputs.summary.successCount).toBe(6)
+      expect(steps[0].outputs.summary.failureCount).toBe(0)
+
+      let results = getLoopItems(steps[0].outputs)
+
+      Object.values(results).forEach((results, stepIndex) => {
+        results.forEach((result, i) => {
+          expect(result.outputs.message).toContain(
+            `Log Step ${stepIndex + 1} processing item: ${i + 1}`
+          )
+        })
+      })
+    })
+
+    it("should handle empty children array", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: () => [],
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.success).toBe(true)
+      expect(steps[0].outputs.iterations).toBe(3)
+      expect(steps[0].outputs.summary.totalProcessed).toBe(0)
+      expect(getLoopItems(steps[0].outputs)).toEqual({})
+    })
+
+    it("should handle no iterations with multiple children", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.serverLog({ text: "Should not run" }),
+              builder.serverLog({ text: "Also should not run" }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [],
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.success).toBe(true)
+      expect(steps[0].outputs.status).toBe(AutomationStepStatus.NO_ITERATIONS)
+      expect(steps[0].outputs.iterations).toBe(0)
+      expect(steps[0].outputs.summary.totalProcessed).toBe(0)
+
+      const items = getLoopItems(steps[0].outputs)
+      expect(Object.values(items).every((item: any) => item.length === 0)).toBe(
+        true
+      )
+    })
+
+    it("should fail the loop if any child step fails", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.serverLog({ text: "Starting {{loop.currentItem}}" }),
+              builder.executeScript({
+                code: `
+                  if (loop.currentItem === 2) {
+                    throw new Error("Intentional error on item 2")
+                  }
+                  return loop.currentItem
+                `,
+              }),
+              builder.serverLog({ text: "Completed {{loop.currentItem}}" }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.success).toBe(false)
+      expect(steps[0].outputs.summary).toBeDefined()
+      expect(steps[0].outputs.summary.failureCount).toBeGreaterThan(0)
+    })
+
+    it("should respect max iterations with multiple children", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.serverLog({ text: "Step 1: {{loop.currentItem}}" }),
+              builder.serverLog({ text: "Step 2: {{loop.currentItem}}" }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3, 4, 5],
+          iterations: 3,
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.iterations).toBe(3)
+      expect(steps[0].outputs.status).toBe(AutomationStepStatus.MAX_ITERATIONS)
+      expect(steps[0].outputs.success).toBe(false)
+      expect(steps[0].outputs.summary.totalProcessed).toBe(6) // 2 children x 3 iterations
+
+      const loopResults = getLoopItems(steps[0].outputs)
+
+      Object.values(loopResults).forEach(childResults => {
+        expect(childResults).toHaveLength(3)
+      })
+    })
+
+    it("should stop on failure condition with multiple children", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.serverLog({ text: "Processing: {{loop.currentItem}}" }),
+              builder.executeScript({
+                code: "return loop.currentItem",
+              }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: ["continue", "continue", "stop", "should-not-process"],
+          failure: "stop",
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.success).toBe(false)
+      expect(steps[0].outputs.status).toBe(
+        AutomationStepStatus.FAILURE_CONDITION
+      )
+      expect(steps[0].outputs.summary.totalProcessed).toBe(4) // 2 children x 2 iterations before stop
+      expect(steps[0].outputs.summary.failureCount).toBe(0) // No actual failures, just stop condition
+
+      const loopResults = getLoopItems(steps[0].outputs)
+
+      Object.values(loopResults).forEach(childResults => {
+        expect(childResults).toHaveLength(2)
+      })
+    })
+
+    it("should handle loops with database operations on multiple children", async () => {
+      const testTable = await config.createTable({
+        name: "LoopTestTable",
+        type: "table",
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            constraints: { presence: true },
+          },
+          category: {
+            name: "category",
+            type: FieldType.STRING,
+          },
+          value: {
+            name: "value",
+            type: FieldType.NUMBER,
+          },
+        },
+      })
+
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.createRow({
+                row: {
+                  name: "Item {{loop.currentItem.name}}",
+                  category: "{{loop.currentItem.category}}",
+                  value: "{{loop.currentItem.value}}",
+                  tableId: testTable._id,
+                },
+              }),
+              builder.executeScript({
+                code: "return steps[1].row._id",
+              }),
+              builder.serverLog({
+                text: "Created row with ID: {{steps.2.value}}",
+              }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [
+            { name: "Product A", category: "Electronics", value: 100 },
+            { name: "Product B", category: "Books", value: 20 },
+            { name: "Product C", category: "Electronics", value: 150 },
+          ],
+        })
+        .queryRows({
+          tableId: testTable._id!,
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.success).toBe(true)
+      expect(steps[0].outputs.summary.totalProcessed).toBe(9) // 3 children x 3 iterations
+      expect(steps[0].outputs.summary.successCount).toBe(9)
+
+      const loopResults = getLoopItems(steps[0].outputs)
+      const [createResults, , logResults] = Object.values(loopResults)
+
+      expect(createResults).toHaveLength(3)
+      createResults.forEach(result => {
+        expect(result.outputs.success).toBe(true)
+        expect(result.outputs.row.name).toContain("Product")
+      })
+
+      logResults.forEach(result => {
+        expect(result.outputs.message).toMatch(/Created row with ID: ro_/)
+      })
+
+      expect(steps[1].outputs.rows).toHaveLength(3)
+    })
+
+    it("should preserve correct step indexing with loopV2", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "Before loop" })
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.serverLog({ text: "Inside loop: {{loop.currentItem}}" }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [1, 2],
+        })
+        .serverLog({
+          text: "After loop - previous step count: {{steps.2.iterations}}",
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.message).toContain("Before loop")
+      expect(steps[1].outputs.success).toBe(true)
+      expect(steps[1].outputs.iterations).toBe(2)
+      expect(steps[1].outputs.summary.totalProcessed).toBe(2)
+      expect(steps[2].outputs.message).toContain(
+        "After loop - previous step count: 2"
+      )
+    })
+
+    it("should handle mixing legacy and new loops", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: [1, 2],
+        })
+        .serverLog({ text: "Legacy loop: {{loop.currentItem}}" })
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.serverLog({ text: "New loop: {{loop.currentItem}}" }),
+              builder.serverLog({ text: "Second child: {{loop.currentItem}}" }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: ["A", "B"],
+        })
+        .test({ fields: {} })
+
+      // Legacy loop still returns flat array
+      expect(steps[0].outputs.iterations).toBe(2)
+      expect(steps[0].outputs.items).toHaveLength(2)
+      expect(steps[0].outputs.items[0].message).toContain("Legacy loop: 1")
+      expect(steps[0].outputs.items[1].message).toContain("Legacy loop: 2")
+
+      // New loop returns structured results
+      expect(steps[1].outputs.iterations).toBe(2)
+      expect(steps[1].outputs.summary.totalProcessed).toBe(4) // 2 children x 2 iterations
+      const newLoopResults = getLoopItems(steps[1].outputs)
+
+      expect(Object.keys(newLoopResults)).toHaveLength(2)
+      const [firstChild, secondChild] = Object.values(newLoopResults)
+
+      expect(firstChild[0].outputs.message).toContain("New loop: A")
+      expect(secondChild[0].outputs.message).toContain("Second child: A")
+    })
+
+    it("should maintain separate context for each iteration", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.executeScript({
+                // eslint-disable-next-line no-template-curly-in-string
+                code: "return `Prefix-${loop.currentItem}`",
+              }),
+              builder.serverLog({
+                text: "{{steps.1.value}}",
+              }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: ["A", "B", "C"],
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.success).toBe(true)
+      expect(steps[0].outputs.summary.totalProcessed).toBe(6) // 2 children x 3 iterations
+
+      const loopResults = getLoopItems(steps[0].outputs)
+      const [, logResults] = Object.values(loopResults)
+
+      expect(logResults[0].outputs.message).toContain("Prefix-A")
+      expect(logResults[1].outputs.message).toContain("Prefix-B")
+      expect(logResults[2].outputs.message).toContain("Prefix-C")
+    })
+
+    it("should support nested loops", async () => {
+      const results = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: outerBuilder => {
+            return [
+              outerBuilder.serverLog({
+                text: "Outer loop: {{loop.currentItem.name}}",
+              }),
+              outerBuilder.loopV2({
+                steps: innerBuilder => {
+                  return [
+                    innerBuilder.serverLog({
+                      text: "Inner loop: {{loop.currentItem}}",
+                    }),
+                  ]
+                },
+                option: LoopStepType.ARRAY,
+                binding: "{{loop.currentItem.values}}",
+              }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: [
+            { name: "Group A", values: ["A1", "A2", "A3"] },
+            { name: "Group B", values: ["B1", "B2"] },
+          ],
+        })
+        .test({ fields: {} })
+
+      // Basic checks
+      expect(results.steps[0].outputs.success).toBe(true)
+      expect(results.steps[0].outputs.iterations).toBe(2)
+      expect(results.steps[0].outputs.summary.totalProcessed).toBe(4) // 2 children x 2 iterations
+
+      // Check nested summaries
+      expect(results.steps[0].outputs.nestedSummaries).toBeDefined()
+
+      const outerLoopResults = getLoopItems(results.steps[0].outputs)
+
+      const outerStepIds = Object.keys(outerLoopResults)
+
+      // Check outer loop logs
+      const outerLogResults = outerLoopResults[outerStepIds[0]]
+      expect(outerLogResults[0].outputs.message).toContain(
+        "Outer loop: Group A"
+      )
+      expect(outerLogResults[1].outputs.message).toContain(
+        "Outer loop: Group B"
+      )
+
+      // Check inner loop results
+      const innerLoopResults = outerLoopResults[outerStepIds[1]]
+
+      // The inner loops should execute properly with context preservation
+      expect(innerLoopResults[0].outputs.success).toBe(true)
+      expect(innerLoopResults[1].outputs.success).toBe(true)
+
+      // Check inner loop summaries
+      expect(innerLoopResults[0].outputs.summary.totalProcessed).toBe(3)
+      expect(innerLoopResults[1].outputs.summary.totalProcessed).toBe(3)
+    })
+
+    it("should handle filter steps that stop execution within a loop iteration", async () => {
+      const { steps } = await createAutomationBuilder(config)
+        .onAppAction()
+        .loopV2({
+          steps: builder => {
+            return [
+              builder.filter({
+                condition: FilterCondition.NOT_EQUAL,
+                field: "{{loop.currentItem}}",
+                value: "skip",
+              }),
+              builder.serverLog({ text: "Processed: {{loop.currentItem}}" }),
+            ]
+          },
+          option: LoopStepType.ARRAY,
+          binding: ["process", "skip", "process"],
+        })
+        .test({ fields: {} })
+
+      expect(steps[0].outputs.success).toBe(true)
+      expect(steps[0].outputs.summary.totalProcessed).toBe(3)
+      expect(steps[0].outputs.summary.successCount).toBe(3)
+
+      const loopResults = getLoopItems(steps[0].outputs)
+      const [filterResults, logResults] = Object.values(loopResults)
+
+      expect(filterResults[0].outputs.result).toBe(true)
+      expect(logResults[0].outputs.message).toContain("Processed: process")
+
+      expect(filterResults[1].outputs.result).toBe(false)
+      expect(filterResults[1].outputs.status).toBe("stopped")
+
+      expect(logResults).toHaveLength(1)
+      expect(logResults[0].outputs.message).toContain("Processed: process")
     })
   })
 })
