@@ -4,7 +4,6 @@ import {
   db as dbCore,
   events,
   cache,
-  features,
   errors,
 } from "@budibase/backend-core"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
@@ -25,7 +24,6 @@ import {
   Automation,
   PublishAppRequest,
   PublishStatusResponse,
-  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -158,10 +156,6 @@ export async function deploymentProgress(
 }
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
-  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
-    return (ctx.body = { automations: {}, workspaceApps: {}, tables: {} })
-  }
-
   const { automations, workspaceApps, tables } = await sdk.deployment.status()
 
   ctx.body = {
