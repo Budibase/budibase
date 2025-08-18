@@ -35,6 +35,8 @@
   import AppRow from "@/components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
   import TemplatesModal from "@/components/start/TemplatesModal.svelte"
+  import HeroBanner from "@/components/common/HeroBanner.svelte"
+  import { BannerType } from "@/constants/banners"
 
   let creationModal
   let appLimitModal
@@ -266,6 +268,21 @@
   })
 </script>
 
+{#if $featureFlags.WORKSPACE_APPS}
+  <HeroBanner
+    title="Workspaces are live"
+    linkTitle="Learn about workspaces"
+    linkHref="https://budibase.com/blog/updates/workspaces/"
+    color="var(--spectrum-global-color-gray-100)"
+    image="https://res.cloudinary.com/daog6scxm/image/upload/w_1200,h_800/v1628152378/1.%20Illustrations/Scene_4_web_version_izudxc.avif"
+    key={BannerType.PORTAL}
+  >
+    Previously, Budibase centered everything around building a single app. With
+    Workspaces, that changes. Now, you can group multiple apps, automations, and
+    data sources together within a single workspace. Existing apps now have
+    their own workspace.
+  </HeroBanner>
+{/if}
 <Page>
   <Layout noPadding gap="L">
     {#each Object.keys(automationErrors || {}) as appId}
