@@ -87,10 +87,10 @@ class DeploymentStore extends DerivedBudiStore<
     }
   }
 
-  async publishApp() {
+  async publishApp(opts?: { seedProductionTables: boolean }) {
     try {
       this.update(state => ({ ...state, isPublishing: true }))
-      await API.publishAppChanges(get(appStore).appId)
+      await API.publishAppChanges(get(appStore).appId, opts)
       await this.completePublish()
     } catch (error: any) {
       analytics.captureException(error)

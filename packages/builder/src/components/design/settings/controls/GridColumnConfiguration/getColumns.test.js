@@ -102,7 +102,7 @@ describe("getColumns", () => {
       expect(ctx.columns.primary).toEqual({
         _id: "four",
         _instanceName: "four",
-        active: true,
+        active: false,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
@@ -164,7 +164,7 @@ describe("getColumns", () => {
       expect(ctx.columns.primary).toEqual({
         _id: "four",
         _instanceName: "four",
-        active: true,
+        active: false,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
@@ -234,7 +234,7 @@ describe("getColumns", () => {
       expect(ctx.columns.primary).toEqual({
         _id: "four",
         _instanceName: "four",
-        active: true,
+        active: false,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
@@ -301,7 +301,7 @@ describe("getColumns", () => {
       expect(ctx.columns.primary).toEqual({
         _id: "four",
         _instanceName: "four",
-        active: true,
+        active: false,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
@@ -356,7 +356,7 @@ describe("getColumns", () => {
           {
             field: "four",
             label: "four",
-            active: true,
+            active: false,
           },
         ])
       })
@@ -386,7 +386,7 @@ describe("getColumns", () => {
           {
             _id: "two",
             _instanceName: "two",
-            active: false,
+            active: true,
             columnType: "foo",
             componentName: "@budibase/standard-components/labelfield",
             field: "two",
@@ -411,12 +411,12 @@ describe("getColumns", () => {
           {
             field: "two",
             label: "two",
-            active: false,
+            active: true,
           },
           {
             field: "four",
             label: "four",
-            active: true,
+            active: false,
           },
         ])
       })

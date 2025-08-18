@@ -780,7 +780,9 @@ async function destroyApp(ctx: UserCtx) {
   // check if we need to unpublish first
   if (await dbCore.dbExists(appId)) {
     // app is deployed, run through unpublish flow
-    await sdk.applications.syncApp(devAppId)
+    await sdk.applications.syncApp(devAppId, {
+      automationOnly: true,
+    })
     await unpublishApp(ctx)
   }
 
