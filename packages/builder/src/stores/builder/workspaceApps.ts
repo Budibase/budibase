@@ -11,12 +11,13 @@ import {
 } from "@budibase/types"
 import { derived, Readable, get } from "svelte/store"
 import { appStore } from "./app"
-import { screenStore, selectedScreen, sortedScreens } from "./screens"
+import { screenStore, sortedScreens } from "./screens"
 import { workspaceDeploymentStore } from "./workspaceDeployment"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
   loading: boolean
+  selectedWorkspaceAppId: string | undefined
 }
 
 interface DerivedWorkspaceAppStoreState {
@@ -31,13 +32,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
       return derived(
-        [store, sortedScreens, selectedScreen, workspaceDeploymentStore],
-        ([
-          $store,
-          $sortedScreens,
-          $selectedScreen,
-          $workspaceDeploymentStore,
-        ]) => {
+        [store, sortedScreens, workspaceDeploymentStore],
+        ([$store, $sortedScreens, $workspaceDeploymentStore]) => {
           const workspaceApps = $store.workspaceApps
             .map<UIWorkspaceApp>(workspaceApp => {
               return {
@@ -55,8 +51,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
             })
             .sort((a, b) => a.name.localeCompare(b.name))
 
-          const selectedWorkspaceApp = $selectedScreen
-            ? workspaceApps.find(a => a._id === $selectedScreen.workspaceAppId)
+          const selectedWorkspaceApp = $store.selectedWorkspaceAppId
+            ? workspaceApps.find(a => a._id === $store.selectedWorkspaceAppId)
             : undefined
 
           return { workspaceApps, selectedWorkspaceApp }
@@ -68,6 +64,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       {
         workspaceApps: [],
         loading: true,
+        selectedWorkspaceAppId: undefined,
       },
       makeDerivedStore
     )
