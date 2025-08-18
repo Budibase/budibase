@@ -31,7 +31,7 @@
   $: readableRole = selectedRole
     ? $roles.find(x => x._id === selectedRole)?.uiMetadata.displayName
     : null
-  $: buttonLabel = readableRole ? `Access: ${readableRole}` : undefined
+  $: buttonLabel = readableRole ? `Access: ${readableRole}` : "Access"
   $: highlight = roleMismatch || selectedRole === Roles.PUBLIC
 
   $: builtInRoles = builtins
@@ -127,16 +127,14 @@
 
 <DetailPopover title="Select access role" {showPopover}>
   <svelte:fragment slot="anchor" let:open>
-    {#if highlight && buttonLabel}
-      <ActionButton
-        icon="lock"
-        selected={open || highlight}
-        quiet
-        accentColor={highlight ? "#ff0000" : null}
-      >
-        {buttonLabel}
-      </ActionButton>
-    {/if}
+    <ActionButton
+      icon="lock"
+      selected={open || highlight}
+      quiet
+      accentColor={highlight ? "#ff0000" : null}
+    >
+      {buttonLabel}
+    </ActionButton>
   </svelte:fragment>
 
   {#if roleMismatch}
