@@ -101,7 +101,6 @@ export const reset = () => {
   navigationStore.reset()
   rowActions.reset()
   workspaceDeploymentStore.reset()
-  dataEnvironmentStore.reset()
 }
 
 const refreshBuilderData = async () => {
