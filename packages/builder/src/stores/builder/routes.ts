@@ -1,4 +1,4 @@
-import { derived, Writable } from "svelte/store"
+import { derived } from "svelte/store"
 import { DerivedBudiStore } from "../BudiStore"
 import { screenStore, workspaceAppStore } from "@/stores/builder"
 import { featureFlags } from "@/stores/portal"
