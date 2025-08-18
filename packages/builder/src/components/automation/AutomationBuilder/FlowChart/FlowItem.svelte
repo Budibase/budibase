@@ -1,54 +1,69 @@
-<script>
+<script lang="ts">
   import { automationStore, selectedAutomation, tables } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
   import { Modal, Icon } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import { ActionStepID } from "@/constants/backend/automations"
-  import { AutomationStepType } from "@budibase/types"
-  import FlowItemActions from "./FlowItemActions.svelte"
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
   import DragZone from "./DragZone.svelte"
   import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
+  import {
+    AutomationActionStepId,
+    AutomationStepType,
+    type Automation,
+    type AutomationStep,
+    type AutomationTrigger,
+    type AutomationStepResult,
+    type AutomationTriggerResult,
+    type BlockRef,
+  } from "@budibase/types"
 
-  export let block
-  export let blockRef
-  export let automation
-  export let draggable = true
-  export let logStepData = null
-  export let viewMode = ViewMode.EDITOR
-  export let selectedLogStepId = null
-  export let unexecuted = false
-  export let onStepSelect = () => {}
-  const view = getContext("draggableView")
-  const pos = getContext("viewPos")
-  const contentPos = getContext("contentPos")
+  export let block: AutomationStep | AutomationTrigger
+  export let blockRef: BlockRef | undefined
+  export let automation: Automation | undefined
+  export let draggable: boolean = true
+  export let logStepData:
+    | AutomationStepResult
+    | AutomationTriggerResult
+    | null = null
+  export let viewMode: ViewMode = ViewMode.EDITOR
+  export let selectedLogStepId: string | null = null
+  export let unexecuted: boolean = false
+  export let onStepSelect: (
+    data: AutomationStepResult | AutomationTriggerResult
+  ) => void = () => {}
+  const view: any = getContext("draggableView")
+  const pos: any = getContext("viewPos")
+  const contentPos: any = getContext("contentPos")
 
-  let webhookModal
-  let blockEle
-  let positionStyles
-  let blockDims
+  let webhookModal: Modal | undefined
+  let blockEle: HTMLDivElement | null
+  let positionStyles: string | undefined
+  let blockDims: DOMRect | undefined
 
   $: pathSteps = loadSteps(blockRef)
 
   $: collectBlockExists = pathSteps.some(
-    step => step.stepId === ActionStepID.COLLECT
+    step => step.stepId === AutomationActionStepId.COLLECT
   )
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: lastStep = blockRef?.terminating
 
-  $: triggerInfo = sdk.automations.isRowAction($selectedAutomation?.data) && {
+  $: triggerInfo = sdk.automations.isRowAction(
+    $selectedAutomation?.data as any
+  ) && {
     title: "Automation trigger",
     tableName: $tables.list.find(
       x =>
-        x._id === $selectedAutomation.data?.definition?.trigger?.inputs?.tableId
+        x._id ===
+        ($selectedAutomation.data?.definition?.trigger?.inputs as any)?.tableId
     )?.name,
   }
 
-  $: selectedNodeId = $automationStore.selectedNodeId
+  $: selectedNodeId = $automationStore.selectedNodeId as string | undefined
   $: selected =
     viewMode === ViewMode.EDITOR
       ? block.id === selectedNodeId
@@ -71,13 +86,28 @@
     $contentPos?.scrollY
   )
 
-  const loadSteps = blockRef => {
+  function loadSteps(blockRef?: BlockRef) {
     return blockRef
-      ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
-      : []
+      ? (automationStore.actions.getPathSteps(
+          blockRef.pathTo,
+          (automation || $selectedAutomation?.data) as any
+        ) as Array<AutomationStep | AutomationTrigger>)
+      : ([] as Array<AutomationStep | AutomationTrigger>)
   }
 
-  const move = (block, dragPos, dragging, scrollX, scrollY) => {
+  function updateBlockDims() {
+    if (!blockEle) return
+    const rect = blockEle.getBoundingClientRect()
+    blockDims = rect
+  }
+
+  function move(
+    block: HTMLElement | null,
+    dragPos: { x: number; y: number } | undefined,
+    dragging: boolean,
+    scrollX: number,
+    scrollY: number
+  ) {
     if ((!block && !dragging) || !dragPos) {
       return
     }
@@ -87,7 +117,7 @@
     `
   }
 
-  const buildPlaceholderStyles = dims => {
+  function buildPlaceholderStyles(dims?: DOMRect) {
     if (!dims) {
       return ""
     }
@@ -96,7 +126,7 @@
             --psheight: ${Math.round(height)}px;`
   }
 
-  const onHandleMouseDown = e => {
+  function onHandleMouseDown(e: MouseEvent) {
     if (isTrigger) {
       e.preventDefault()
       return
@@ -107,22 +137,25 @@
     updateBlockDims()
 
     const { clientX, clientY } = e
-    view.update(state => ({
+    view.update((state: any) => ({
       ...state,
       moveStep: {
         id: block.id,
         offsetX: $pos.x,
         offsetY: $pos.y,
-        w: blockDims.width,
-        h: blockDims.height,
+        w: blockDims?.width,
+        h: blockDims?.height,
         mouse: {
-          x: Math.max(Math.round(clientX - blockDims.left), 0),
-          y: Math.max(Math.round(clientY - blockDims.top), 0),
+          x: Math.max(Math.round(clientX - (blockDims?.left || 0)), 0),
+          y: Math.max(Math.round(clientY - (blockDims?.top || 0)), 0),
         },
       },
     }))
   }
-  $: console.log(viewMode)
+
+  function handleHeaderUpdate(e: CustomEvent) {
+    automationStore.actions.updateBlockTitle(block, e.detail)
+  }
 </script>
 
 {#if block.stepId !== "LOOP"}
@@ -149,7 +182,7 @@
         <div class="block-float">
           <FlowItemStatus
             {block}
-            {automation}
+            branch={undefined}
             hideStatus={$view?.dragging}
             {logStepData}
             {viewMode}
@@ -167,14 +200,9 @@
         <div
           class="block-core"
           on:click={async () => {
-            console.log(viewMode)
-            console.log("logStepData: " + JSON.stringify(logStepData))
-
             if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
             } else if (viewMode === ViewMode.LOGS && logStepData) {
-              console.log("hi")
-
               onStepSelect(logStepData)
             }
           }}
@@ -184,8 +212,7 @@
               disabled
               {automation}
               {block}
-              on:update={e =>
-                automationStore.actions.updateBlockTitle(block, e.detail)}
+              on:update={handleHeaderUpdate}
             />
           </div>
 
@@ -210,7 +237,7 @@
   {/if}
 {/if}
 
-<Modal bind:this={webhookModal} width="30%">
+<Modal bind:this={webhookModal}>
   <CreateWebhookModal />
 </Modal>
 

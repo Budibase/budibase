@@ -83,12 +83,15 @@
   $: $automationStore.showTestModal === true && testDataModal.show()
 
   // Memo auto - selectedAutomation
-  $: memoAutomation.set(automation)
+  $: memoAutomation.set($selectedAutomation.data || automation)
 
   // Parse the automation tree state
-  $: $memoAutomation && refresh()
+  $: $selectedAutomation.blockRefs && refresh()
 
-  $: blocks = getBlocksHelper($memoAutomation, viewMode)
+  $: blocks = getBlocksHelper(
+    $selectedAutomation.data || $memoAutomation,
+    viewMode
+  )
     .filter(x => x.stepId !== ActionStepID.LOOP)
     .map((block, idx) => ({ ...block, __top: idx }))
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
@@ -132,8 +135,7 @@
       const baseId = block.id
       const pos = ensurePosition(baseId, { x: 0, y: idx * ySpacing })
 
-      const isBranchStep =
-        (block as any)?.stepId === AutomationActionStepId.BRANCH
+      const isBranchStep = block.stepId === AutomationActionStepId.BRANCH
 
       if (!isBranchStep) {
         newNodes.push({
@@ -156,7 +158,30 @@
           type: "add-item",
           source: prevId,
           target: baseId,
-          data: { block: blocks[idx - 1] },
+          data: { block: blocks[idx - 1], viewMode: currentViewMode },
+        })
+      }
+
+      // Add a terminal anchor so the add-item affordance appears when there is no next node
+      if (!isBranchStep && (blocks.length === 1 || idx === blocks.length - 1)) {
+        const terminalId = `anchor-${baseId}`
+        const terminalPos = ensurePosition(terminalId, {
+          x: pos.x,
+          y: pos.y + ySpacing,
+        })
+        newNodes.push({
+          id: terminalId,
+          type: "anchor-node",
+          data: { viewMode: currentViewMode },
+          position: terminalPos,
+        })
+
+        newEdges.push({
+          id: `edge-${baseId}-${terminalId}`,
+          type: "add-item",
+          source: baseId,
+          target: terminalId,
+          data: { block, viewMode: currentViewMode },
         })
       }
 
@@ -222,7 +247,7 @@
               type: "add-item",
               source: lastNodeId,
               target: childId,
-              data: { block: lastNodeBlock },
+              data: { block: lastNodeBlock, viewMode: currentViewMode },
             })
 
             lastNodeId = childId
@@ -247,7 +272,7 @@
             type: "add-item",
             source: lastNodeId,
             target: anchorId,
-            data: { block: lastNodeBlock },
+            data: { block: lastNodeBlock, viewMode: currentViewMode },
           })
         })
         currentY = Math.max(currentY, branchRowY + ySpacing)

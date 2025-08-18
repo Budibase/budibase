@@ -4,7 +4,10 @@
   import { ViewMode } from "@/types/automations"
   import { Handle, Position } from "@xyflow/svelte"
   import { enrichLog } from "./AutomationStepHelpers"
-
+  import {
+    type AutomationStepResult,
+    type AutomationTriggerResult,
+  } from "@budibase/types"
   export let id
   export let data
 
@@ -16,7 +19,9 @@
   $: automation = $selectedAutomation?.data
   $: isTrigger = block?.type === "TRIGGER"
 
-  function handleStepSelect(stepData: any) {
+  function handleStepSelect(
+    stepData: AutomationStepResult | AutomationTriggerResult
+  ) {
     // Show step details when a step is selected in logs mode
     if (
       stepData &&
@@ -40,11 +45,10 @@
   <StepNode
     step={block}
     {automation}
-    isLast={false}
     logData={$automationStore.selectedLog}
     {viewMode}
     selectedLogStepId={$automationStore.selectedLogStepData?.id}
-    onStepSelect={handleStepSelect}
+    onStepSelect={block => handleStepSelect(block)}
   />
   <Handle type="source" position={Position.Bottom} />
 </div>

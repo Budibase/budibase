@@ -61,6 +61,8 @@ import {
   isActionStep,
   isRowActionTrigger,
   isWebhookTrigger,
+  AutomationLog,
+  AutomationStepResult,
 } from "@budibase/types"
 import { ActionStepID, TriggerStepID } from "@/constants/backend/automations"
 import { FIELDS as COLUMNS } from "@/constants/backend"
@@ -1950,7 +1952,10 @@ const automationActions = (store: AutomationStore) => ({
    * @param block
    * @param newName
    */
-  updateBlockTitle: async (block: AutomationStep, newName: string) => {
+  updateBlockTitle: async (
+    block: AutomationStep | AutomationTrigger,
+    newName: string
+  ) => {
     if (newName.trim().length === 0) {
       await automationStore.actions.deleteAutomationName(block.id)
     } else {
@@ -2080,7 +2085,10 @@ const automationActions = (store: AutomationStore) => ({
     }))
   },
 
-  openLogPanel: (log: any, stepData: any) => {
+  openLogPanel: (
+    log: AutomationLog,
+    stepData: AutomationStepResult | AutomationTriggerResult
+  ) => {
     store.update(state => ({
       ...state,
       showLogDetailsPanel: true,

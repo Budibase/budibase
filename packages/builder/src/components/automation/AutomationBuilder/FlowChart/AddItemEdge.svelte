@@ -5,42 +5,58 @@
   import { ActionStepID } from "@/constants/backend/automations"
   import { ViewMode } from "@/types/automations"
 
-  let { viewMode = ViewMode.EDITOR }: any = $$props
+  export let target: string | undefined = undefined
 
+  $: viewMode = $$props.data.viewMode
   $: block = $$props.data?.block
   $: automation = $selectedAutomation?.data
 
-  $: path = getBezierPath($$props as any)
+  // full path to compute label position
+  $: basePath = getBezierPath($$props as any)
+  $: labelX = basePath[1]
+  $: labelY = basePath[2]
+
+  // Only crop when the edge targets an anchor node
+  $: edgeTarget = target ?? $$props.target
+  $: path = edgeTarget.startsWith("anchor-")
+    ? getBezierPath({
+        ...($$props as any),
+        targetX: labelX,
+        targetY: labelY,
+      })
+    : basePath
+
   $: steps = automation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block?.id)
   $: lastStep = !isTrigger && blockIdx + 1 === steps.length
   $: isTrigger = block?.type === "TRIGGER"
 
   // Get block reference from automation store
-  $: blockRef = $selectedAutomation?.blockRefs?.[block?.id]
+  $: blockRefs = $selectedAutomation?.blockRefs?.[block?.id]
   $: pathSteps =
-    blockRef && automation
-      ? automationStore.actions.getPathSteps(blockRef.pathTo, automation)
+    blockRefs && automation
+      ? automationStore.actions.getPathSteps(blockRefs.pathTo, automation)
       : []
 
   $: collectBlockExists = pathSteps.some(
     step => step.stepId === ActionStepID.COLLECT
   )
+  $: console.log(viewMode)
 </script>
 
 <BaseEdge path={path[0]} />
 <EdgeLabelRenderer>
   <div
     class="add-item-label"
-    style="transform:translate(-50%, -50%) translate({path[1]}px,{path[2]}px);"
+    style="transform:translate(-50%, -50%) translate({labelX}px,{labelY}px);"
   >
-    {#if !collectBlockExists && block}
+    {#if !collectBlockExists && block && viewMode === ViewMode.EDITOR}
       <FlowItemActions
         {block}
         on:branch={() => {
-          if (blockRef && automation) {
+          if (blockRefs && automation) {
             automationStore.actions.branchAutomation(
-              blockRef.pathTo,
+              blockRefs.pathTo,
               automation
             )
           }

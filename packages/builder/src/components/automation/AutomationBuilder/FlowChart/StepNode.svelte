@@ -1,21 +1,29 @@
-<script>
+<script lang="ts">
   import FlowItem from "./FlowItem.svelte"
   import { ViewMode } from "@/types/automations"
-  import { AutomationActionStepId } from "@budibase/types"
-  import { ActionButton, notifications } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "@/stores/builder"
+  import {
+    AutomationActionStepId,
+    type AutomationLog,
+    type Automation,
+    type AutomationStep,
+    type AutomationTrigger,
+    type BranchStepInputs,
+    type AutomationStepResult,
+    type AutomationTriggerResult,
+  } from "@budibase/types"
+  import { selectedAutomation } from "@/stores/builder"
   import { environment } from "@/stores/portal"
-  import { cloneDeep } from "lodash"
   import { memo } from "@budibase/frontend-core"
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
 
-  export let step = {}
-  export let automation
-  export let isLast = false
-  export let logData = null
-  export let viewMode = ViewMode.EDITOR
-  export let selectedLogStepId = null
-  export let onStepSelect = () => {}
+  export let step: AutomationStep | AutomationTrigger
+  export let automation: Automation | undefined
+  export let logData: AutomationLog | null = null
+  export let viewMode: ViewMode.EDITOR | ViewMode.LOGS = ViewMode.EDITOR
+  export let selectedLogStepId: string | null = null
+  export let onStepSelect: (
+    data: AutomationStepResult | AutomationTriggerResult
+  ) => void = () => {}
   const memoEnvVariables = memo($environment.variables)
   const view = getContext("draggableView")
 
@@ -25,7 +33,7 @@
   $: blockRef = $selectedAutomation?.blockRefs?.[step.id]
   $: pathToCurrentNode = blockRef?.pathTo
   $: isBranch = step.stepId === AutomationActionStepId.BRANCH
-  $: branches = step.inputs?.branches
+  $: branches = (step.inputs as BranchStepInputs)?.branches || []
 
   // Log execution state
   $: logStepData = getLogStepData(logData, step)
@@ -39,9 +47,11 @@
   $: isBranchUnexecuted =
     isBranch && viewMode === ViewMode.LOGS && !logStepData?.outputs?.branchId
 
-  function getLogStepData(logData, step) {
+  function getLogStepData(
+    logData: AutomationLog | null,
+    step: AutomationStep | AutomationTrigger
+  ) {
     if (!logData || viewMode !== ViewMode.LOGS) return null
-
     // For trigger step
     if (step.type === "TRIGGER") {
       return logData.trigger
@@ -51,31 +61,6 @@
     const logSteps = logData.steps || []
     return logSteps.find(logStep => logStep.id === step.id)
   }
-
-  // All bindings available to this point
-  $: availableBindings = automationStore.actions.getPathBindings(
-    step.id,
-    automation
-  )
-
-  // Fetch the env bindings
-  $: environmentBindings =
-    automationStore.actions.buildEnvironmentBindings($memoEnvVariables)
-
-  $: userBindings = automationStore.actions.buildUserBindings()
-  $: settingBindings = automationStore.actions.buildSettingBindings()
-  $: stateBindings =
-    ($automationStore.selectedNodeId,
-    automationStore.actions.buildStateBindings())
-
-  // Combine all bindings for the step
-  $: bindings = [
-    ...availableBindings,
-    ...environmentBindings,
-    ...userBindings,
-    ...settingBindings,
-    ...stateBindings,
-  ]
 </script>
 
 {#if !isBranch}
@@ -83,9 +68,7 @@
     <FlowItem
       block={step}
       {blockRef}
-      {isLast}
       {automation}
-      {bindings}
       draggable={step.type !== "TRIGGER"}
       {logStepData}
       {viewMode}
@@ -95,32 +78,3 @@
     />
   </div>
 {/if}
-
-<style>
-  .branch-wrap {
-    width: inherit;
-  }
-
-  .branch {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    position: relative;
-    width: inherit;
-  }
-
-  /* Branch execution states in logs mode */
-
-  .branch.unexecuted {
-    opacity: 0.7;
-  }
-
-  .branch.unexecuted::before,
-  .branch.unexecuted::after {
-    opacity: 0.7;
-  }
-
-  .unexecuted {
-    opacity: 0.7;
-  }
-</style>

@@ -102,12 +102,18 @@ const getStepDefinition = (
 export const enrichLog = (
   definitions: BlockDefinitions,
   log: AutomationLog
-) => {
+): AutomationLog => {
   if (!definitions || !log || !log.steps) {
     return log
   }
 
-  const enrichedLog = { ...log, steps: [...log.steps] }
+  const enrichedLog = {
+    ...log,
+    steps: [...log.steps] as [
+      AutomationTriggerResult,
+      ...AutomationStepResult[],
+    ], // Steps array also contains a trigger as well as steps (??? this is a bad code smell that exists all across automations frontend)
+  }
 
   for (let step of enrichedLog.steps) {
     const trigger =

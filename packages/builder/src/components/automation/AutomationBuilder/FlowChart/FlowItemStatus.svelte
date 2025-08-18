@@ -99,7 +99,6 @@
           : FlowStatusType.ERROR,
     }
   }
-  $: console.log(viewMode)
 </script>
 
 <div class="flow-item-status">

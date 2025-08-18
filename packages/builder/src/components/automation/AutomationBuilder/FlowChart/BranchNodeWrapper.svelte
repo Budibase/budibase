@@ -107,4 +107,31 @@
   .branch-container {
     padding: 20px;
   }
+
+  .branch-wrap {
+    width: inherit;
+  }
+
+  .branch {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    position: relative;
+    width: inherit;
+  }
+
+  /* Branch execution states in logs mode */
+
+  .branch.unexecuted {
+    opacity: 0.7;
+  }
+
+  .branch.unexecuted::before,
+  .branch.unexecuted::after {
+    opacity: 0.7;
+  }
+
+  .unexecuted {
+    opacity: 0.7;
+  }
 </style>

@@ -10,6 +10,8 @@
   export let targetY = undefined
   export let sourcePosition = undefined
   export let targetPosition = undefined
+  export let source = undefined
+  export let target = undefined
 </script>
 
 <AddItemEdge
@@ -21,4 +23,6 @@
   {targetY}
   {sourcePosition}
   {targetPosition}
+  {source}
+  {target}
 />
