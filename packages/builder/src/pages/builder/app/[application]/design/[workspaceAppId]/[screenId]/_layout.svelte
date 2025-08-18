@@ -26,7 +26,7 @@
       if (workspaceAppScreens.length) {
         return `../${workspaceAppScreens[0]._id}`
       }
-      return "../../design"
+      return "../../../design"
     },
     routify,
     update: screenStore.select,
