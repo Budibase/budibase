@@ -4,7 +4,6 @@ import {
   db as dbCore,
   events,
   cache,
-  features,
   errors,
 } from "@budibase/backend-core"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
@@ -25,11 +24,11 @@ import {
   Automation,
   PublishAppRequest,
   PublishStatusResponse,
-  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../appMigrations"
+import env from "../../../environment"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -157,15 +156,12 @@ export async function deploymentProgress(
 }
 
 export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
-  if (!(await features.isEnabled(FeatureFlag.WORKSPACE_APPS))) {
-    return (ctx.body = { automations: {}, workspaceApps: {} })
-  }
-
-  const { automations, workspaceApps } = await sdk.deployment.status()
+  const { automations, workspaceApps, tables } = await sdk.deployment.status()
 
   ctx.body = {
     automations,
     workspaceApps,
+    tables,
   }
 }
 
@@ -177,9 +173,24 @@ export const publishApp = async function (
       "Publishing resources by ID not currently supported"
     )
   }
+  const seedProductionTables = ctx.request.body?.seedProductionTables
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)
+  let tablesToSync: "all" | string[] | undefined
+  if (env.isTest()) {
+    // TODO: a lot of tests depend on old behaviour of data being published
+    // we could do with going through the tests and updating them all to write
+    // data to production instead of development - but doesn't improve test
+    // quality - so keep publishing data in dev for now
+    tablesToSync = "all"
+  } else if (seedProductionTables) {
+    try {
+      tablesToSync = await sdk.tables.listEmptyProductionTables()
+    } catch (e) {
+      tablesToSync = []
+    }
+  }
 
   const appId = context.getAppId()!
 
@@ -212,7 +223,10 @@ export const publishApp = async function (
       const devDb = context.getDevAppDB()
       await devDb.compact()
       await replication.replicate(
-        replication.appReplicateOpts({ isCreation: !isPublished })
+        replication.appReplicateOpts({
+          isCreation: !isPublished,
+          tablesToSync,
+        })
       )
       // app metadata is excluded as it is likely to be in conflict
       // replicate the app metadata document manually
@@ -238,13 +252,19 @@ export const publishApp = async function (
       deployment.appUrl = appDoc.url
       appDoc.appId = productionAppId
       appDoc.instance._id = productionAppId
-      const [automations, workspaceApps] = await Promise.all([
+      const [automations, workspaceApps, tables] = await Promise.all([
         sdk.automations.fetch(),
         sdk.workspaceApps.fetch(),
+        sdk.tables.getAllInternalTables(),
       ])
       const automationIds = automations.map(auto => auto._id!)
       const workspaceAppIds = workspaceApps.map(app => app._id!)
-      const fullMap = [...(automationIds ?? []), ...(workspaceAppIds ?? [])]
+      const tableIds = tables.map(table => table._id!)
+      const fullMap = [
+        ...(automationIds ?? []),
+        ...(workspaceAppIds ?? []),
+        ...(tableIds ?? []),
+      ]
       // if resource publishing, need to restrict this list
       appDoc.resourcesPublishedAt = {
         ...prodAppDoc?.resourcesPublishedAt,

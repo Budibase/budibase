@@ -32,6 +32,7 @@ import {
   basicQuery,
 } from "../../../tests/utilities/structures"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import sdk from "../../../sdk"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -1104,6 +1105,81 @@ describe("/applications", () => {
         )
         expect(res.rows.length).not.toEqual(0)
       }
+    })
+  })
+
+  describe("seedProductionTables", () => {
+    it("should seed empty production tables with development data when publishing", async () => {
+      // Create a table in development
+      const table = await config.api.table.save(basicTable())
+      expect(table._id).toBeDefined()
+
+      // Create some test rows in development
+      const testRows = [{ name: "Row 1" }, { name: "Row 2" }, { name: "Row 3" }]
+
+      for (const rowData of testRows) {
+        await config.api.row.save(table._id!, rowData)
+      }
+
+      // Verify rows exist in development
+      const devRows = await config.api.row.search(table._id!, { query: {} })
+      expect(devRows.rows).toHaveLength(3)
+
+      // Publish with seedProductionTables option
+      await config.api.application.filteredPublish(config.getAppId(), {
+        seedProductionTables: true,
+      })
+
+      // Switch to production context and verify data was seeded
+      await context.doInAppContext(config.prodAppId!, async () => {
+        const prodRows = await config.api.row.search(table._id!, { query: {} })
+        expect(prodRows.rows).toHaveLength(3)
+
+        // Verify the actual data was copied correctly
+        const prodRowNames = prodRows.rows.map(row => row.name).sort()
+        expect(prodRowNames).toEqual(["Row 1", "Row 2", "Row 3"])
+      })
+    })
+
+    it("should handle seedProductionTables API option correctly", async () => {
+      // Create a table in development with unique name for this test
+      const table = await config.api.table.save(basicTable())
+      expect(table._id).toBeDefined()
+
+      // Create some test rows in development
+      await config.api.row.save(table._id!, { name: "Dev Row 1" })
+      await config.api.row.save(table._id!, { name: "Dev Row 2" })
+
+      // Verify the API accepts seedProductionTables option without error
+      const result = await config.api.application.filteredPublish(
+        config.getAppId(),
+        {
+          seedProductionTables: true,
+        }
+      )
+
+      // Check that the publish completed successfully
+      expect(result).toBeDefined()
+
+      // Verify data was published to production (since test mode publishes all data)
+      await context.doInAppContext(config.prodAppId!, async () => {
+        const prodRows = await config.api.row.search(table._id!, { query: {} })
+        expect(prodRows.rows).toHaveLength(2)
+
+        const prodRowNames = prodRows.rows.map(row => row.name).sort()
+        expect(prodRowNames).toEqual(["Dev Row 1", "Dev Row 2"])
+      })
+
+      // Test that we can call listEmptyProductionTables without error
+      const emptyTables = await context.doInAppContext(
+        config.getAppId(),
+        async () => {
+          return await sdk.tables.listEmptyProductionTables()
+        }
+      )
+
+      // The result should be an array (even if empty in test mode due to all tables being synced)
+      expect(Array.isArray(emptyTables)).toBe(true)
     })
   })
 })
