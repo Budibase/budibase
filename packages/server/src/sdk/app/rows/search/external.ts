@@ -269,10 +269,18 @@ export async function fetch(tableId: string): Promise<Row[]> {
   })
 }
 
-export async function fetchRaw(tableId: string): Promise<Row[]> {
+export async function fetchRaw(
+  tableId: string,
+  limit?: number
+): Promise<Row[]> {
   const table = await sdk.tables.getTable(tableId)
+  let pagination: { limit: number } | undefined = undefined
+  if (limit) {
+    pagination = { limit }
+  }
   const response = await handleRequest(Operation.READ, table, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
+    paginate: pagination,
   })
   return response.rows
 }
