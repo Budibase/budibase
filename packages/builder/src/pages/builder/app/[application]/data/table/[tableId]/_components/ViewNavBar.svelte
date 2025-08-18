@@ -6,6 +6,7 @@
     contextMenuStore,
     appStore,
     workspaceFavouriteStore,
+    dataEnvironmentStore,
   } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
@@ -27,7 +28,7 @@
   import { tick, onDestroy } from "svelte"
   import { derived } from "svelte/store"
   import CreateViewButton from "./CreateViewButton.svelte"
-  import { WorkspaceResource } from "@budibase/types"
+  import { WorkspaceResource, DataEnvironmentMode } from "@budibase/types"
   import { API } from "@/api"
 
   const favourites = workspaceFavouriteStore.lookup
@@ -51,7 +52,8 @@
   $: table = $tables.list.find(table => table._id === tableId)
   $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
   $: tableSelectedBy = $userSelectedResourceMap[table?._id]
-  $: tableEditable = table?._id !== TableNames.USERS
+  $: isDevMode = $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
+  $: tableEditable = table?._id !== TableNames.USERS && isDevMode
   $: activeId = decodeURIComponent(
     $params.viewName ?? $params.viewId ?? $params.tableId
   )
@@ -275,15 +277,17 @@
           {#if selectedBy}
             <UserAvatars size="XS" users={selectedBy} />
           {/if}
-          <Icon
-            on:click={e => openViewContextMenu(e, view)}
-            hoverable
-            size="M"
-            weight="bold"
-            name="dots-three"
-            color="var(--spectrum-global-color-gray-600)"
-            hoverColor="var(--spectrum-global-color-gray-900)"
-          />
+          {#if isDevMode}
+            <Icon
+              on:click={e => openViewContextMenu(e, view)}
+              hoverable
+              size="M"
+              weight="bold"
+              name="dots-three"
+              color="var(--spectrum-global-color-gray-600)"
+              hoverColor="var(--spectrum-global-color-gray-900)"
+            />
+          {/if}
         </a>
       {/each}
       {#each views as view (view.id)}
@@ -302,15 +306,17 @@
           {#if selectedBy}
             <UserAvatars size="XS" users={selectedBy} />
           {/if}
-          <Icon
-            on:click={e => openViewContextMenu(e, view)}
-            hoverable
-            size="M"
-            weight="bold"
-            name="dots-three"
-            color="var(--spectrum-global-color-gray-600)"
-            hoverColor="var(--spectrum-global-color-gray-900)"
-          />
+          {#if isDevMode}
+            <Icon
+              on:click={e => openViewContextMenu(e, view)}
+              hoverable
+              size="M"
+              weight="bold"
+              name="dots-three"
+              color="var(--spectrum-global-color-gray-600)"
+              hoverColor="var(--spectrum-global-color-gray-900)"
+            />
+          {/if}
         </a>
       {/each}
     </div>
@@ -355,7 +361,7 @@
       {/each}
     </ActionMenu>
   {/if}
-  {#if hasViews}
+  {#if hasViews && isDevMode}
     <CreateViewButton firstView={false} {table} />
   {/if}
 </div>
