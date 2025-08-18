@@ -12,16 +12,13 @@
   $: isDevMode = $dataEnvironmentStore.mode === DataEnvironmentMode.DEVELOPMENT
   $: tableId = $tables.selected?._id!
   $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
+  // external tables are always considered deployed
   $: isDeployed =
-    isInternal && $workspaceDeploymentStore.tables[tableId]?.published
+    !isInternal || $workspaceDeploymentStore.tables[tableId]?.published
   $: tableDatasource = $datasources.list.find(datasource => {
     return datasource._id === $tables.selected?.sourceId
   })
-  $: disabled = !isDeployed && !tableDatasource?.usesEnvironmentVariables
-  $: tooltip =
-    isInternal && !isDeployed
-      ? "Please publish to view production"
-      : "No production environment variables"
+  $: hidden = !isInternal && !tableDatasource?.usesEnvironmentVariables
 
   $: switcherProps = {
     leftIcon: "wrench",
@@ -29,7 +26,7 @@
     rightIcon: "pulse",
     rightText: "Prod",
     selected: (isDevMode ? "left" : "right") as "left" | "right",
-    disabled,
+    disabled: !isDeployed,
   }
 
   const handleLeft = () =>
@@ -38,19 +35,28 @@
     dataEnvironmentStore.setMode(DataEnvironmentMode.PRODUCTION)
 </script>
 
-<div class="wrapper">
-  {#if disabled}
-    <AbsTooltip text={tooltip} position={TooltipPosition.Left}>
+{#if !hidden}
+  <div class="wrapper">
+    {#if !isDeployed}
+      <AbsTooltip
+        text={"Please publish to view production"}
+        position={TooltipPosition.Left}
+      >
+        <Switcher
+          {...switcherProps}
+          on:left={handleLeft}
+          on:right={handleRight}
+        />
+      </AbsTooltip>
+    {:else}
       <Switcher
         {...switcherProps}
         on:left={handleLeft}
         on:right={handleRight}
       />
-    </AbsTooltip>
-  {:else}
-    <Switcher {...switcherProps} on:left={handleLeft} on:right={handleRight} />
-  {/if}
-</div>
+    {/if}
+  </div>
+{/if}
 
 <style>
   .wrapper {
