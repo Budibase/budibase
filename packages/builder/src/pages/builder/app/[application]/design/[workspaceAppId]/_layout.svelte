@@ -10,7 +10,7 @@
     stateKey: "selectedWorkspaceAppId",
     validate: (id: string) =>
       $workspaceAppStore.workspaceApps.some(app => app._id === id),
-    fallbackUrl: "../../../design",
+    fallbackUrl: "../../..",
     routify,
     update: (id: string) => workspaceAppStore.select(id),
     store: workspaceAppStore,
