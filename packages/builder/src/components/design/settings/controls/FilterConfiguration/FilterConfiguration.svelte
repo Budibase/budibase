@@ -20,7 +20,7 @@
     type TableSchema,
     type Table,
   } from "@budibase/types"
-  import InfoDisplay from "@/pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/app/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { findComponent } from "@/helpers/components"
   import { tables } from "@/stores/builder"
 

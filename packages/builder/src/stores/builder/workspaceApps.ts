@@ -11,16 +11,16 @@ import {
 } from "@budibase/types"
 import { derived, Readable, get } from "svelte/store"
 import { appStore } from "./app"
-import { screenStore, selectedScreen, sortedScreens } from "./screens"
+import { screenStore, sortedScreens } from "./screens"
 import { workspaceDeploymentStore } from "./workspaceDeployment"
 
 interface WorkspaceAppStoreState {
   workspaceApps: WorkspaceApp[]
-  workspaceAppId?: string
   loading: boolean
+  selectedWorkspaceAppId: string | undefined
 }
 
-interface DerivedWorkspaceAppStoreState {
+interface DerivedWorkspaceAppStoreState extends WorkspaceAppStoreState {
   workspaceApps: UIWorkspaceApp[]
   selectedWorkspaceApp: UIWorkspaceApp | undefined
 }
@@ -32,13 +32,8 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   constructor() {
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
       return derived(
-        [store, sortedScreens, selectedScreen, workspaceDeploymentStore],
-        ([
-          $store,
-          $sortedScreens,
-          $selectedScreen,
-          $workspaceDeploymentStore,
-        ]) => {
+        [store, sortedScreens, workspaceDeploymentStore],
+        ([$store, $sortedScreens, $workspaceDeploymentStore]) => {
           const workspaceApps = $store.workspaceApps
             .map<UIWorkspaceApp>(workspaceApp => {
               return {
@@ -56,16 +51,11 @@ export class WorkspaceAppStore extends DerivedBudiStore<
             })
             .sort((a, b) => a.name.localeCompare(b.name))
 
-          const selectedWorkspaceApp =
-            $store.workspaceAppId || $selectedScreen
-              ? workspaceApps.find(
-                  a =>
-                    a._id ===
-                    ($store.workspaceAppId || $selectedScreen?.workspaceAppId)
-                )
-              : undefined
+          const selectedWorkspaceApp = $store.selectedWorkspaceAppId
+            ? workspaceApps.find(a => a._id === $store.selectedWorkspaceAppId)
+            : undefined
 
-          return { workspaceApps, selectedWorkspaceApp }
+          return { ...$store, workspaceApps, selectedWorkspaceApp }
         }
       )
     }
@@ -74,6 +64,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       {
         workspaceApps: [],
         loading: true,
+        selectedWorkspaceAppId: undefined,
       },
       makeDerivedStore
     )
@@ -89,6 +80,27 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   }
   async refresh() {
     return this.fetch()
+  }
+
+  select(workspaceAppId: string) {
+    const state = get(this.store)
+    const workspaceApp = state.workspaceApps.find(
+      app => app._id === workspaceAppId
+    )
+    if (!workspaceApp) {
+      return
+    }
+
+    // Check screen isn't already selected
+    if (state.selectedWorkspaceAppId === workspaceApp._id) {
+      return
+    }
+
+    // Select new screen
+    this.update(state => {
+      state.selectedWorkspaceAppId = workspaceAppId
+      return state
+    })
   }
 
   async add(workspaceApp: InsertWorkspaceAppRequest) {
@@ -176,21 +188,6 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     this.store.update(state => {
       state.workspaceApps[index] = workspaceApp
       return state
-    })
-  }
-
-  /**
-   * Explicitly set this id and set the selcted app accordingly
-   * If not specified, current workspace app is derived from the selected screen
-   * @param id
-   */
-  setWorkspaceAppId(id?: string) {
-    this.store.update(state => {
-      if (!id) {
-        delete state.workspaceAppId
-        return state
-      }
-      return { ...state, workspaceAppId: id }
     })
   }
 }

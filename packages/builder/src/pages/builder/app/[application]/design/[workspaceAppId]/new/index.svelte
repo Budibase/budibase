@@ -1,18 +1,29 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import NewScreen from "../_components/NewScreen/index.svelte"
+  import NewScreen from "../../_components/NewScreen/index.svelte"
   import { workspaceAppStore } from "@/stores/builder"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import { params } from "@roxi/routify"
 
   let newScreenModal: NewScreen
-  $: workspaceAppId =
-    $workspaceAppStore.selectedWorkspaceApp?._id ||
-    $workspaceAppStore.workspaceApps[0]._id!
+
+  $: workspaceAppId = $params.workspaceAppId
+  $: workspaceApp = $workspaceAppStore.workspaceApps.find(
+    a => a._id === workspaceAppId
+  )
 
   onMount(() => {
     newScreenModal.open()
   })
 </script>
 
+<TopBar
+  breadcrumbs={[
+    { text: "Apps", url: "../../.." },
+    { text: workspaceApp?.name },
+  ]}
+  icon="browser"
+></TopBar>
 <div class="new-screen-picker">
   <NewScreen bind:this={newScreenModal} inline submitOnClick {workspaceAppId} />
 </div>

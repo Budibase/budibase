@@ -23,9 +23,11 @@
       ? selectedWorkspaceApp.url
       : ""
 
-  $: liveUrl = buildLiveUrl($appStore, workspacePrefix, false)
+  $: liveUrl = buildLiveUrl($appStore, workspacePrefix, true)
 
-  $: appUrl = route ? `${liveUrl}${route}` : `${liveUrl}`
+  $: hashRoute = !route ? "" : `#${route}`
+
+  $: appUrl = `${liveUrl}${hashRoute}`
 
   const routeChanged = (event: { detail: string }) => {
     if (!event.detail.startsWith("/")) {

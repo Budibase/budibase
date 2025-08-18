@@ -1,9 +1,32 @@
 <script lang="ts">
-  import { featureFlags } from "@/stores/portal"
-  import OldIndex from "./new/index.old.svelte"
-  import NewIndex from "./new/[workspaceAppId]/index.svelte"
+  import { onMount } from "svelte"
+  import NewScreen from "./_components/NewScreen/index.svelte"
+  import { workspaceAppStore } from "@/stores/builder"
 
-  $: index = $featureFlags.WORKSPACE_APPS ? NewIndex : OldIndex
+  let newScreenModal: NewScreen
+  $: workspaceAppId =
+    $workspaceAppStore.selectedWorkspaceApp?._id ||
+    $workspaceAppStore.workspaceApps[0]._id!
+
+  onMount(() => {
+    newScreenModal.open()
+  })
 </script>
 
-<svelte:component this={index} />
+<div class="new-screen-picker">
+  <NewScreen bind:this={newScreenModal} inline submitOnClick {workspaceAppId} />
+</div>
+
+<style>
+  .new-screen-picker {
+    display: flex;
+    justify-content: center;
+    flex: 1 1 auto;
+    padding-top: 40px;
+  }
+
+  .new-screen-picker :global(.spectrum-Modal) {
+    border: none;
+    background: none;
+  }
+</style>
