@@ -25,6 +25,7 @@
     Table,
     ViewV2,
   } from "@budibase/types"
+  import { featureFlags } from "@/stores/portal"
 
   let mode: AutoScreenTypes
   let workspaceAppId: string | undefined
@@ -69,7 +70,7 @@
 
     modals = []
     stepIndex = 0
-    if (!workspaceAppId) {
+    if (!workspaceAppId && $featureFlags.WORKSPACE_APPS) {
       modals.push(appSelectionModal)
     }
 
@@ -100,17 +101,24 @@
     }
   }
 
+  const ensureWorkspaceApp = async () => {
+    if (!workspaceAppId) {
+      const workspaceApp = await workspaceAppStore.add({
+        name: $appStore.name,
+        url: "/",
+      })
+      workspaceAppId = workspaceApp._id
+    }
+    return workspaceAppId
+  }
+
   const createScreen = async (
     screenTemplate: SaveScreenRequest
   ): Promise<Screen> => {
-    if (!workspaceAppId) {
-      notifications.error("App id is required")
-      throw "App is is required"
-    }
     try {
       return await screenStore.save({
         ...screenTemplate,
-        workspaceAppId,
+        workspaceAppId: await ensureWorkspaceApp(),
       })
     } catch (error) {
       console.error(error)
@@ -137,10 +145,7 @@
   }
 
   const createBasicScreen = async ({ route }: { route: string }) => {
-    if (!workspaceAppId) {
-      notifications.error("App id is required")
-      throw "App is is required"
-    }
+    const workspaceAppId = await ensureWorkspaceApp()
 
     const screenTemplates =
       mode === AutoScreenTypes.BLANK
@@ -151,10 +156,7 @@
   }
 
   const createTableScreen = async (type: string) => {
-    if (!workspaceAppId) {
-      notifications.error("App id is required")
-      throw "App is is required"
-    }
+    const workspaceAppId = await ensureWorkspaceApp()
 
     const safeWorkspaceAppId = workspaceAppId
 
@@ -176,10 +178,7 @@
   }
 
   const createFormScreen = async (type: string | null) => {
-    if (!workspaceAppId) {
-      notifications.error("App id is required")
-      throw "App is is required"
-    }
+    const workspaceAppId = await ensureWorkspaceApp()
 
     const safeWorkspaceAppId = workspaceAppId
     const screenTemplates = (
