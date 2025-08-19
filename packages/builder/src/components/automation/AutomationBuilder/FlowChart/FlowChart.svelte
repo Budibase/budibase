@@ -7,7 +7,6 @@
     Modal,
     Toggle,
     Body,
-    Button,
     ActionButton,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
@@ -24,14 +23,14 @@
   import { ActionStepID } from "@/constants/backend/automations"
   import {
     getBlocks as getBlocksHelper,
-    enrichLog,
+    renderBranches,
+    type GraphBuildDeps,
   } from "./AutomationStepHelpers"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
 
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
-  import StepNode from "./StepNode.svelte"
   import CtaNotification from "@/components/common/CtaNotification.svelte"
   import NodeWrapper from "./NodeWrapper.svelte"
   import EdgeWrapper from "./EdgeWrapper.svelte"
@@ -53,7 +52,6 @@
     AutomationStatus,
     type AutomationStep,
     AutomationActionStepId,
-    type Branch,
   } from "@budibase/types"
   export let automation
 
@@ -94,6 +92,7 @@
   )
     .filter(x => x.stepId !== ActionStepID.LOOP)
     .map((block, idx) => ({ ...block, __top: idx }))
+
   $: isRowAction = sdk.automations.isRowAction($memoAutomation)
 
   const handleNodeDrag = (event: CustomEvent) => {
@@ -127,6 +126,17 @@
     const ensurePosition = (id: string, fallback: { x: number; y: number }) => {
       const existing = byId.get(id)
       return existing?.position ?? fallback
+    }
+
+    const deps: GraphBuildDeps = {
+      ensurePosition,
+      xSpacing,
+      ySpacing,
+      blockRefs,
+      viewMode: currentViewMode,
+      testDataModal,
+      newNodes,
+      newEdges,
     }
 
     // Build linear chain of top-level steps first
@@ -187,95 +197,17 @@
 
       // Branch fan-out
       if (isBranchStep) {
-        const branches: Branch[] = ((block as any)?.inputs?.branches ||
-          []) as Branch[]
-        const children: Record<string, AutomationStep[]> =
-          (block as any)?.inputs?.children || {}
-
-        const branchRowY = pos.y + ySpacing
         const sourceForBranches = idx > 0 ? blocks[idx - 1].id : baseId
         const sourceBlock = idx > 0 ? blocks[idx - 1] : block
-        branches.forEach((branch: Branch, bIdx: number) => {
-          const branchNodeId = `branch-${baseId}-${branch.id}`
-          const branchX = pos.x + (bIdx - (branches.length - 1) / 2) * xSpacing
-          const branchPos = ensurePosition(branchNodeId, {
-            x: branchX,
-            y: branchRowY,
-          })
-
-          newNodes.push({
-            id: branchNodeId,
-            type: "branch-node",
-            data: { block, branch, branchIdx: bIdx, viewMode: currentViewMode },
-            position: branchPos,
-          })
-
-          newEdges.push({
-            id: `edge-${sourceForBranches}-${branchNodeId}`,
-            type: "add-item",
-            source: sourceForBranches,
-            target: branchNodeId,
-            data: { block: sourceBlock },
-          })
-
-          // Children inside branch
-          const childSteps: AutomationStep[] = children?.[branch.id] || []
-          let lastNodeId = branchNodeId
-          let lastNodeBlock: any = {
-            branchNode: true,
-            pathTo: (blockRefs[baseId]?.pathTo || []).concat({
-              branchIdx: bIdx,
-              branchStepId: baseId,
-            }),
-          }
-
-          childSteps.forEach((child, cIdx) => {
-            const childId = child.id
-            const childPos = ensurePosition(childId, {
-              x: branchX,
-              y: branchRowY + (cIdx + 1) * ySpacing,
-            })
-            newNodes.push({
-              id: childId,
-              type: "step-node",
-              data: { testDataModal, block: child, viewMode: currentViewMode },
-              position: childPos,
-            })
-
-            newEdges.push({
-              id: `edge-${lastNodeId}-${childId}`,
-              type: "add-item",
-              source: lastNodeId,
-              target: childId,
-              data: { block: lastNodeBlock, viewMode: currentViewMode },
-            })
-
-            lastNodeId = childId
-            lastNodeBlock = child
-          })
-
-          // Terminate branch visually: add anchor node so we can show the add-item affordance after last child
-          const anchorId = `anchor-${branchNodeId}`
-          const anchorPos = ensurePosition(anchorId, {
-            x: branchX,
-            y: branchRowY + (childSteps.length + 1) * ySpacing,
-          })
-          newNodes.push({
-            id: anchorId,
-            type: "anchor-node",
-            data: {},
-            position: anchorPos,
-          })
-
-          newEdges.push({
-            id: `edge-${lastNodeId}-${anchorId}`,
-            type: "add-item",
-            source: lastNodeId,
-            target: anchorId,
-            data: { block: lastNodeBlock, viewMode: currentViewMode },
-          })
-        })
-        currentY = Math.max(currentY, branchRowY + ySpacing)
+        const bottom = renderBranches(
+          block,
+          sourceForBranches,
+          sourceBlock,
+          pos.x,
+          pos.y + ySpacing,
+          deps
+        )
+        currentY = Math.max(currentY, bottom)
       }
     })
 
@@ -320,7 +252,7 @@
       })
       prodErrors = response?.data?.length || 0
     } catch (error) {
-      console.log(error)
+      console.error(error)
     }
   })
 
@@ -412,10 +344,7 @@
         <Toggle
           text={automation.disabled ? "Disabled" : "Enabled"}
           on:change={() => {
-            automationStore.actions.toggleDisabled(
-              automation._id,
-              automation.disabled
-            )
+            automationStore.actions.toggleDisabled(automation._id)
           }}
           disabled={!automation?.definition?.trigger}
           value={!automation.disabled}
@@ -628,35 +557,6 @@
   .view-mode-toggle .group :global(> *:not(:last-child)) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
-  }
-
-  .zoom .group {
-    border-radius: 4px;
-    display: flex;
-    flex-direction: row;
-  }
-
-  .canvas-footer-left .group :global(.spectrum-Button),
-  .canvas-footer-left .group :global(.spectrum-ActionButton),
-  .canvas-footer-left .group :global(i) {
-    color: var(--spectrum-global-color-gray-900) !important;
-  }
-  .zoom .group :global(> *:not(:first-child)) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-left: 2px solid var(--spectrum-global-color-gray-300);
-  }
-  .zoom .group :global(> *:not(:last-child)) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  .zoom .group :global(.spectrum-Button),
-  .zoom .group :global(.spectrum-ActionButton) {
-    background: var(--spectrum-global-color-gray-200) !important;
-  }
-  .zoom .group :global(.spectrum-Button:hover),
-  .zoom .group :global(.spectrum-ActionButton:hover) {
-    background: var(--spectrum-global-color-gray-300) !important;
   }
 
   .actions-left {

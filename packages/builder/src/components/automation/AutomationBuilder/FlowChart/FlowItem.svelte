@@ -32,7 +32,7 @@
   export let selectedLogStepId: string | null = null
   export let unexecuted: boolean = false
   export let onStepSelect: (
-    data: AutomationStepResult | AutomationTriggerResult
+    _data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
   const view: any = getContext("draggableView")
   const pos: any = getContext("viewPos")
@@ -50,7 +50,6 @@
   )
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
-  $: lastStep = blockRef?.terminating
 
   $: triggerInfo = sdk.automations.isRowAction(
     $selectedAutomation?.data as any

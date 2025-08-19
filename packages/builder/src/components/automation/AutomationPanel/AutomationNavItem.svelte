@@ -46,10 +46,7 @@
       visible: true,
       disabled: !automation.definition.trigger,
       callback: () => {
-        automationStore.actions.toggleDisabled(
-          automation._id,
-          automation.disabled
-        )
+        automationStore.actions.toggleDisabled(automation._id)
       },
     }
     const del = {

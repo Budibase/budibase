@@ -2,44 +2,39 @@
   import BranchNode from "./BranchNode.svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import { ViewMode } from "@/types/automations"
-  import { getBlocks } from "./AutomationStepHelpers"
   import { Handle, Position } from "@xyflow/svelte"
-  import { environment } from "@/stores/portal"
-  import { memo } from "@budibase/frontend-core"
+  import { enrichLog } from "./AutomationStepHelpers"
+  import {
+    type AutomationStepResult,
+    type AutomationTriggerResult,
+  } from "@budibase/types"
 
   export let data
 
-  const memoEnvVariables = memo($environment.variables)
-
-  $: memoEnvVariables.set($environment.variables)
+  // unwrap data passed from SvelteFlow
   $: block = data.block
-  $: automation = $selectedAutomation?.data
-  $: blockRef = $selectedAutomation?.blockRefs?.[block?.id]
-  $: pathToCurrentNode = blockRef?.pathTo
-  $: branch = data.branch
+  // branch object is available as data.branch but not needed here
   $: branchIdx = data.branchIdx
-  $: isLast = data.isLast
-  $: viewMode = data?.viewMode
+  $: viewMode = data?.viewMode as ViewMode
+  $: automation = $selectedAutomation?.data
 
-  // All bindings available to this point
-  $: availableBindings = automationStore.actions.getPathBindings(
-    block.id,
-    automation
-  )
-
-  // Fetch the env bindings
-  $: environmentBindings = automationStore.actions.buildEnvironmentBindings()
-
-  $: userBindings = automationStore.actions.buildUserBindings()
-  $: settingBindings = automationStore.actions.buildSettingBindings()
-
-  // Combine all bindings for the step
-  $: bindings = [
-    ...availableBindings,
-    ...environmentBindings,
-    ...userBindings,
-    ...settingBindings,
-  ]
+  // Handle step selection in logs mode (open details panel)
+  function handleStepSelect(
+    stepData: AutomationStepResult | AutomationTriggerResult
+  ) {
+    if (
+      stepData &&
+      viewMode === ViewMode.LOGS &&
+      $automationStore.selectedLog
+    ) {
+      const enriched =
+        enrichLog(
+          $automationStore.blockDefinitions,
+          $automationStore.selectedLog
+        ) ?? $automationStore.selectedLog
+      automationStore.actions.openLogPanel(enriched, stepData)
+    }
+  }
 </script>
 
 <div style="position: relative;">
@@ -48,56 +43,9 @@
     <BranchNode
       {automation}
       step={block}
-      {bindings}
-      pathTo={pathToCurrentNode}
       {branchIdx}
-      {isLast}
-      executed={false}
-      unexecuted={false}
       {viewMode}
-      logStepData={null}
-      onStepSelect={() => {}}
-      on:change={async e => {
-        const updatedBranch = { ...branch, ...e.detail }
-
-        if (!block?.inputs?.branches?.[branchIdx]) {
-          console.error(`Cannot load target branch: ${branchIdx}`)
-          return
-        }
-
-        let branchStepUpdate = { ...block }
-        branchStepUpdate.inputs.branches[branchIdx] = updatedBranch
-
-        // Ensure valid base configuration for all branches
-        // Reinitialise empty branch conditions on update
-        const branchesArray = branchStepUpdate.inputs.branches || []
-        for (let i = 0; i < branchesArray.length; i++) {
-          const br = branchesArray[i]
-          if (!Object.keys(br.condition).length) {
-            branchesArray[i] = {
-              ...br,
-              ...automationStore.actions.generateDefaultConditions(),
-            }
-          }
-        }
-        branchStepUpdate.inputs.branches = branchesArray
-
-        const updated = automation
-          ? automationStore.actions.updateStep(
-              blockRef?.pathTo,
-              automation,
-              branchStepUpdate
-            )
-          : null
-
-        if (updated) {
-          try {
-            await automationStore.actions.save(updated)
-          } catch (e) {
-            console.error("Error saving branch update", e)
-          }
-        }
-      }}
+      onStepSelect={() => handleStepSelect(block)}
     />
   </div>
   <Handle type="source" position={Position.Bottom} />
@@ -106,32 +54,5 @@
 <style>
   .branch-container {
     padding: 20px;
-  }
-
-  .branch-wrap {
-    width: inherit;
-  }
-
-  .branch {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    position: relative;
-    width: inherit;
-  }
-
-  /* Branch execution states in logs mode */
-
-  .branch.unexecuted {
-    opacity: 0.7;
-  }
-
-  .branch.unexecuted::before,
-  .branch.unexecuted::after {
-    opacity: 0.7;
-  }
-
-  .unexecuted {
-    opacity: 0.7;
   }
 </style>

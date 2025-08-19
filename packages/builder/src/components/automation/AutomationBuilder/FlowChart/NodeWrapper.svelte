@@ -8,13 +8,13 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
   } from "@budibase/types"
-  export let id
+
   export let data
 
   // Extract block and other data
   $: block = data.block
   $: viewMode = data?.viewMode
-  $: console.log(viewMode)
+
   // Get automation data from store
   $: automation = $selectedAutomation?.data
   $: isTrigger = block?.type === "TRIGGER"
