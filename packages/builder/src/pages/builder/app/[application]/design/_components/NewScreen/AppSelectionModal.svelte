@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ModalContent, Body, Select } from "@budibase/bbui"
-  import { appStore, workspaceAppStore } from "@/stores/builder"
+  import { workspaceAppStore } from "@/stores/builder"
 
   import { featureFlags } from "@/stores/portal"
 
@@ -15,7 +15,7 @@
 
   async function createDefaultApp() {
     const workspaceApp = await workspaceAppStore.add({
-      name: $appStore.name,
+      name: "My first app",
       url: "/",
     })
     selectedAppId = workspaceApp._id
