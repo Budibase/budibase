@@ -55,7 +55,7 @@
       return
     }
     rootModal.hide()
-    createScreenModal.show(type)
+    createScreenModal.show(type, workspaceAppId)
 
     const selectedTypeSnapshot = selectedType
     createScreenModal.$on("cancel", e => {
@@ -185,7 +185,7 @@
   </ModalContent>
 </Modal>
 
-<CreateScreenModal {workspaceAppId} bind:this={createScreenModal} />
+<CreateScreenModal bind:this={createScreenModal} />
 
 <style>
   .subHeading {

@@ -49,14 +49,14 @@
 
   export const show = (
     newMode: string,
-    newWorkspaceAppId: string | undefined,
+    preselectedWorkspaceAppId: string | undefined,
     preselectedDatasource: Table | ViewV2 | null = null
   ) => {
     mode = newMode
     selectedTablesAndViews = []
     permissions = {}
     hasPreselectedDatasource = preselectedDatasource != null
-    workspaceAppId = newWorkspaceAppId
+    workspaceAppId = preselectedWorkspaceAppId
 
     if (mode === AutoScreenTypes.TABLE || mode === AutoScreenTypes.FORM) {
       if (preselectedDatasource) {
@@ -67,10 +67,12 @@
           : makeViewOption(preselectedDatasource)
         fetchPermission(tableOrView.id)
         selectedTablesAndViews.push(tableOrView)
+      }
+
+      if (!workspaceAppId) {
         appSelectionModal.show()
       } else {
-        // Start with app selection
-        appSelectionModal.show()
+        screenDetailsModal.show()
       }
     } else if (mode === AutoScreenTypes.BLANK || mode === AutoScreenTypes.PDF) {
       screenDetailsModal.show()
