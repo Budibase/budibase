@@ -18,6 +18,7 @@
       name: $appStore.name,
       url: "/",
     })
+    selectedAppId = workspaceApp._id
     await onConfirm(workspaceApp._id)
   }
 
