@@ -24,7 +24,6 @@
     Screen,
     Table,
     ViewV2,
-    WorkspaceApp,
   } from "@budibase/types"
 
   let mode: AutoScreenTypes
@@ -44,9 +43,16 @@
       write: string
     }
   > = {}
-  let hasPreselectedDatasource = false
+
+  let modals: Modal[] = []
+  let stepIndex: number
 
   $: screens = $screenStore.screens
+
+  $: {
+    modals.forEach(m => m.hide())
+    modals[stepIndex]?.show()
+  }
 
   export const show = (
     newMode: AutoScreenTypes,
@@ -56,10 +62,15 @@
     mode = newMode
     selectedTablesAndViews = []
     permissions = {}
-    hasPreselectedDatasource = preselectedDatasource != null
     workspaceAppId = preselectedWorkspaceAppId
     if (!workspaceAppId && $workspaceAppStore.workspaceApps.length === 1) {
       workspaceAppId = $workspaceAppStore.workspaceApps[0]._id
+    }
+
+    modals = []
+    stepIndex = 0
+    if (!workspaceAppId) {
+      modals.push(appSelectionModal)
     }
 
     if (mode === AutoScreenTypes.TABLE || mode === AutoScreenTypes.FORM) {
@@ -73,12 +84,14 @@
         selectedTablesAndViews.push(tableOrView)
       }
 
-      if (!workspaceAppId) {
-        appSelectionModal.show()
-      } else if (preselectedDatasource) {
-        onSelectDatasources()
-      } else {
-        datasourceModal.show()
+      if (!preselectedDatasource) {
+        modals.push(datasourceModal)
+      }
+
+      if (mode === AutoScreenTypes.FORM) {
+        modals.push(formTypeModal)
+      } else if (mode === AutoScreenTypes.TABLE) {
+        modals.push(tableTypeModal)
       }
     } else if (mode === AutoScreenTypes.BLANK || mode === AutoScreenTypes.PDF) {
       screenDetailsModal.show()
@@ -121,25 +134,6 @@
     }
 
     return newScreens
-  }
-
-  const onSelectApp = async (app: WorkspaceApp) => {
-    workspaceAppId = app._id
-    appSelectionModal.hide()
-
-    if (hasPreselectedDatasource) {
-      onSelectDatasources()
-    } else {
-      datasourceModal.show()
-    }
-  }
-
-  const onSelectDatasources = async () => {
-    if (mode === AutoScreenTypes.FORM) {
-      formTypeModal.show()
-    } else if (mode === AutoScreenTypes.TABLE) {
-      tableTypeModal.show()
-    }
   }
 
   const createBasicScreen = async ({ route }: { route: string }) => {
@@ -276,55 +270,42 @@
       )
     }
   }
-</script>
-
-<Modal bind:this={appSelectionModal} autoFocus={false} on:cancel>
-  <AppSelectionModal onConfirm={onSelectApp} />
-</Modal>
-
-<Modal
-  bind:this={datasourceModal}
-  autoFocus={false}
-  on:cancel={e => {
+  const onCancel = (e: CustomEvent<ModalCancelFrom>) => {
     if (
       [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
         e.detail
       )
     ) {
-      datasourceModal.hide()
-      appSelectionModal.show()
+      stepIndex--
     }
-  }}
->
+  }
+</script>
+
+<Modal bind:this={appSelectionModal} autoFocus={false} on:cancel>
+  <AppSelectionModal
+    bind:selectedAppId={workspaceAppId}
+    onConfirm={() => {
+      stepIndex++
+    }}
+  />
+</Modal>
+
+<Modal bind:this={datasourceModal} autoFocus={false} on:cancel={onCancel}>
   <DatasourceModal
     {selectedTablesAndViews}
-    onConfirm={onSelectDatasources}
+    onConfirm={() => {
+      stepIndex++
+    }}
     on:toggle={handleTableOrViewToggle}
   />
 </Modal>
 
-<Modal
-  bind:this={tableTypeModal}
-  on:cancel={e => {
-    if (
-      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
-        e.detail
-      )
-    ) {
-      tableTypeModal.hide()
-      if (hasPreselectedDatasource) {
-        appSelectionModal.show()
-      } else {
-        datasourceModal.show()
-      }
-    }
-  }}
->
+<Modal bind:this={tableTypeModal} on:cancel={onCancel}>
   <TypeModal
     title="Choose how you want to manage rows"
     types={tableTypes}
     onConfirm={createTableScreen}
-    showCancelButton={!hasPreselectedDatasource}
+    showCancelButton={stepIndex > 0}
   />
 </Modal>
 
@@ -332,27 +313,11 @@
   <ScreenDetailsModal onConfirm={createBasicScreen} />
 </Modal>
 
-<Modal
-  bind:this={formTypeModal}
-  on:cancel={e => {
-    if (
-      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
-        e.detail
-      )
-    ) {
-      formTypeModal.hide()
-      if (hasPreselectedDatasource) {
-        appSelectionModal.show()
-      } else {
-        datasourceModal.show()
-      }
-    }
-  }}
->
+<Modal bind:this={formTypeModal} on:cancel={onCancel}>
   <TypeModal
     title="Select form type"
     types={formTypes}
     onConfirm={createFormScreen}
-    showCancelButton={!hasPreselectedDatasource}
+    showCancelButton={stepIndex > 0}
   />
 </Modal>

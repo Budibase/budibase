@@ -1,17 +1,15 @@
 <script lang="ts">
   import { ModalContent, Body, Select } from "@budibase/bbui"
   import { appStore, workspaceAppStore } from "@/stores/builder"
-  import type { WorkspaceApp } from "@budibase/types"
+
   import { featureFlags } from "@/stores/portal"
 
-  export let onConfirm: (_selectedApp: WorkspaceApp) => Promise<void>
-  export let _selectedApp: WorkspaceApp | null = null
-
-  let selectedApp: WorkspaceApp | null = _selectedApp
+  export let onConfirm: (_selectedAppId: string) => Promise<void> | void
+  export let selectedAppId: string | undefined = undefined
 
   async function handleConfirm() {
-    if (selectedApp) {
-      await onConfirm(selectedApp)
+    if (selectedAppId) {
+      await onConfirm(selectedAppId)
     }
   }
 
@@ -20,7 +18,7 @@
       name: $appStore.name,
       url: "/",
     })
-    await onConfirm(workspaceApp)
+    await onConfirm(workspaceApp._id)
   }
 
   $: hasApps = !!$workspaceAppStore.workspaceApps.length
@@ -32,7 +30,7 @@
     confirmText="Next"
     cancelText="Cancel"
     onConfirm={handleConfirm}
-    disabled={!selectedApp}
+    disabled={!selectedAppId}
     size="M"
   >
     <Body size="S">Select which app you want to create the screen in</Body>
@@ -40,8 +38,8 @@
     <Select
       options={$workspaceAppStore.workspaceApps}
       getOptionLabel={a => a.name}
-      getOptionValue={a => a}
-      bind:value={selectedApp}
+      getOptionValue={a => a._id}
+      bind:value={selectedAppId}
     />
   </ModalContent>
 {:else if $featureFlags.WORKSPACE_APPS}

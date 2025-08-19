@@ -10,7 +10,7 @@
   import type { Datasource, Table, UIInternalDatasource } from "@budibase/types"
   import { helpers } from "@budibase/shared-core"
 
-  export let onConfirm: () => Promise<void>
+  export let onConfirm: () => Promise<void> | void
   export let selectedTablesAndViews: SourceOption[]
 
   const dispatch = createEventDispatcher()
