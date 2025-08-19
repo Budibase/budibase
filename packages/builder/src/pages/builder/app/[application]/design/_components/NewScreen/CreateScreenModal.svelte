@@ -27,7 +27,7 @@
   } from "@budibase/types"
 
   let mode: string
-  let workspaceAppId: string
+  let workspaceAppId: string | undefined
 
   let screenDetailsModal: Modal
   let appSelectionModal: Modal
@@ -49,7 +49,7 @@
 
   export const show = (
     newMode: string,
-    newWorkspaceAppId: string,
+    newWorkspaceAppId: string | undefined,
     preselectedDatasource: Table | ViewV2 | null = null
   ) => {
     mode = newMode
@@ -82,6 +82,10 @@
   const createScreen = async (
     screenTemplate: SaveScreenRequest
   ): Promise<Screen> => {
+    if (!workspaceAppId) {
+      notifications.error("App id is required")
+      throw "App is is required"
+    }
     try {
       return await screenStore.save({
         ...screenTemplate,
@@ -112,7 +116,7 @@
   }
 
   const onSelectApp = async (app: WorkspaceApp) => {
-    workspaceAppId = app._id!
+    workspaceAppId = app._id
     appSelectionModal.hide()
 
     if (hasPreselectedDatasource) {
@@ -133,6 +137,11 @@
   }
 
   const createBasicScreen = async ({ route }: { route: string }) => {
+    if (!workspaceAppId) {
+      notifications.error("App id is required")
+      throw "App is is required"
+    }
+
     const screenTemplates =
       mode === AutoScreenTypes.BLANK
         ? screenTemplating.blank({ route, screens, workspaceAppId })
@@ -142,6 +151,13 @@
   }
 
   const createTableScreen = async (type: string) => {
+    if (!workspaceAppId) {
+      notifications.error("App id is required")
+      throw "App is is required"
+    }
+
+    const safeWorkspaceAppId = workspaceAppId
+
     const screenTemplates = (
       await Promise.all(
         selectedTablesAndViews.map(tableOrView =>
@@ -150,7 +166,7 @@
             tableOrView,
             type,
             permissions: permissions[tableOrView.id],
-            workspaceAppId,
+            workspaceAppId: safeWorkspaceAppId,
           })
         )
       )
@@ -160,6 +176,12 @@
   }
 
   const createFormScreen = async (type: string | null) => {
+    if (!workspaceAppId) {
+      notifications.error("App id is required")
+      throw "App is is required"
+    }
+
+    const safeWorkspaceAppId = workspaceAppId
     const screenTemplates = (
       await Promise.all(
         selectedTablesAndViews.map(tableOrView =>
@@ -168,7 +190,7 @@
             tableOrView,
             type,
             permissions: permissions[tableOrView.id],
-            workspaceAppId,
+            workspaceAppId: safeWorkspaceAppId,
           })
         )
       )
