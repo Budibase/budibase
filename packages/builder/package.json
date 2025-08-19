@@ -55,6 +55,7 @@
     "@budibase/types": "*",
     "@codemirror/autocomplete": "6.9.0",
     "@codemirror/commands": "^6.2.4",
+    "@codemirror/lang-html": "^6.4.9",
     "@codemirror/lang-javascript": "^6.1.8",
     "@codemirror/language": "^6.6.0",
     "@codemirror/state": "^6.2.0",
@@ -82,9 +83,9 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
-    "@budibase/client": "*",
     "@babel/plugin-transform-runtime": "^7.13.10",
     "@babel/preset-env": "^7.13.12",
+    "@budibase/client": "*",
     "@rollup/plugin-replace": "^5.0.3",
     "@rollup/plugin-typescript": "8.3.0",
     "@roxi/routify": "2.18.18",

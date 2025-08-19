@@ -236,4 +236,4 @@ if (!env.DISABLE_PINO_LOGGER) {
   }
 }
 
-export const logger = pinoInstance
+export const logger = pinoInstance as pino.Logger<never> | undefined
