@@ -16,6 +16,7 @@ import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
+import RestTemplate from "./RestTemplate.svelte"
 import { integrations } from "@/stores/builder"
 import { get } from "svelte/store"
 
@@ -32,6 +33,7 @@ const ICONS = {
   MYSQL: MySQL,
   ARANGODB: ArangoDB,
   REST: Rest,
+  REST_TEMPLATE: RestTemplate,
   ORACLE: Oracle,
   GOOGLE_SHEETS: GoogleSheets,
   FIRESTORE: Firebase,

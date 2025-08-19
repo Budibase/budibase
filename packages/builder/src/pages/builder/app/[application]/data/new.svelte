@@ -3,6 +3,7 @@
   import {
     tables,
     datasources,
+    queries,
     sortedIntegrations as integrations,
   } from "@/stores/builder"
 
@@ -16,15 +17,21 @@
   import CreationPage from "@/components/common/CreationPage.svelte"
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
+  import RestTemplateModal from "./_components/RestTemplateModal.svelte"
   import { featureFlags } from "@/stores/portal"
+  import { IntegrationTypes } from "@/constants/backend"
+  import { configFromIntegration } from "@/stores/selectors"
 
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
+  let restTemplateModal: RestTemplateModal
 
   let sampleDataLoading = false
   let externalDatasourceLoading = false
+  let templateLoading = false
 
-  $: disabled = sampleDataLoading || externalDatasourceLoading
+  $: disabled =
+    sampleDataLoading || externalDatasourceLoading || templateLoading
   $: aiTableGenerationEnabled = $featureFlags.AI_TABLE_GENERATION
 
   const createSampleData = async () => {
@@ -40,6 +47,57 @@
       notifications.error("Error creating datasource")
     }
   }
+
+  const handleTemplateSelection = async (template: any) => {
+    templateLoading = true
+
+    try {
+      // Find the REST integration from available integrations
+      const restIntegration = $integrations.find(
+        integration => integration.name === IntegrationTypes.REST
+      )
+
+      if (!restIntegration) {
+        throw new Error("REST integration not found")
+      }
+
+      // Create REST datasource with the template URL as base config
+      const config = {
+        ...configFromIntegration(restIntegration),
+        url: template.url,
+      }
+
+      const datasource = await datasources.create({
+        integration: restIntegration,
+        config,
+      })
+
+      // Import queries from the OpenAPI specification
+      const importData = {
+        data: template.url, // URL to fetch the OpenAPI spec
+        datasourceId: datasource._id,
+        datasource,
+      }
+
+      await queries.importQueries(importData)
+
+      // Refresh data stores
+      await Promise.all([datasources.fetch(), queries.fetch()])
+
+      // Navigate to the newly created datasource
+      $goto(`./datasource/${datasource._id}`)
+
+      notifications.success(
+        `Created REST datasource from ${template.name} template`
+      )
+    } catch (error: any) {
+      notifications.error(
+        `Error creating datasource from template: ${error.message}`
+      )
+    } finally {
+      templateLoading = false
+    }
+  }
 </script>
 
 <CreateInternalTableModal bind:this={internalTableModal} />
@@ -47,6 +105,12 @@
 <CreateExternalDatasourceModal
   bind:loading={externalDatasourceLoading}
   bind:this={externalDatasourceModal}
+/>
+
+<RestTemplateModal
+  bind:this={restTemplateModal}
+  onSelect={handleTemplateSelection}
+  onCancel={() => {}}
 />
 
 <CreationPage
@@ -98,6 +162,14 @@
   </div>
 
   <div class="options">
+    <DatasourceOption
+      on:click={() => restTemplateModal.show()}
+      title="REST Template"
+      description="API"
+      {disabled}
+    >
+      <svelte:component this={ICONS.REST_TEMPLATE} height="20" width="20" />
+    </DatasourceOption>
     {#each $integrations as integration}
       <DatasourceOption
         on:click={() => externalDatasourceModal.show(integration)}
