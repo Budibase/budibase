@@ -221,7 +221,26 @@
     </div>
 
     <div class="action-buttons">
-      <Button icon="lightbulb" secondary>Learn</Button>
+      <Button
+        icon="squares-four"
+        secondary
+        on:click={() => {
+          window.open("/builder/apps", "_blank")
+        }}
+        >View apps portal
+      </Button>
+      <Button
+        icon="lightbulb"
+        secondary
+        on:click={() => {
+          window.open(
+            "https://docs.budibase.com/docs/app-building-101",
+            "_blank"
+          )
+        }}
+      >
+        Learn
+      </Button>
       <Button cta icon="plus" on:click={createApp}>New app</Button>
     </div>
   </div>
