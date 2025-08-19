@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
-  import { ModalContent, Body, Select, Button } from "@budibase/bbui"
-  import { workspaceAppStore } from "@/stores/builder"
+  import { ModalContent, Body, Select } from "@budibase/bbui"
+  import { appStore, workspaceAppStore } from "@/stores/builder"
   import type { WorkspaceApp } from "@budibase/types"
   import { featureFlags } from "@/stores/portal"
 
@@ -10,50 +9,51 @@
 
   let selectedApp: WorkspaceApp | null = _selectedApp
 
-  const handleConfirm = async () => {
+  async function handleConfirm() {
     if (selectedApp) {
       await onConfirm(selectedApp)
     }
   }
 
+  async function createDefaultApp() {
+    const workspaceApp = await workspaceAppStore.add({
+      name: $appStore.name,
+      url: "/",
+    })
+    await onConfirm(workspaceApp)
+  }
+
   $: hasApps = !!$workspaceAppStore.workspaceApps.length
 </script>
 
-<ModalContent
-  title="Select App"
-  confirmText="Next"
-  cancelText="Cancel"
-  onConfirm={handleConfirm}
-  disabled={!selectedApp}
-  size="M"
->
-  <Body size="S">Select which app you want to create the screen in</Body>
+{#if hasApps}
+  <ModalContent
+    title="Select App"
+    confirmText="Next"
+    cancelText="Cancel"
+    onConfirm={handleConfirm}
+    disabled={!selectedApp}
+    size="M"
+  >
+    <Body size="S">Select which app you want to create the screen in</Body>
 
-  <Select
-    placeholder={!$workspaceAppStore.workspaceApps.length
-      ? "No workspace apps"
-      : false}
-    options={$workspaceAppStore.workspaceApps}
-    getOptionLabel={a => a.name}
-    getOptionValue={a => a}
-    bind:value={selectedApp}
-    disabled={!hasApps}
-  />
-
-  {#if $featureFlags.WORKSPACE_APPS && !hasApps}
-    <div class="create-new-app">
-      <Body size="S">or create a new one</Body>
-      <Button secondary size="S" on:click={$goto("../../design")}
-        >Create app</Button
-      >
-    </div>
-  {/if}
-</ModalContent>
-
-<style>
-  .create-new-app {
-    padding-top: var(--spacing-l);
-    display: flex;
-    gap: var(--spacing-s);
-  }
-</style>
+    <Select
+      options={$workspaceAppStore.workspaceApps}
+      getOptionLabel={a => a.name}
+      getOptionValue={a => a}
+      bind:value={selectedApp}
+    />
+  </ModalContent>
+{:else if $featureFlags.WORKSPACE_APPS}
+  <ModalContent
+    title="Create App"
+    confirmText="Create app"
+    cancelText="Cancel"
+    onConfirm={createDefaultApp}
+    size="S"
+  >
+    <Body size="S"
+      >You must create an app before being able to generate screens</Body
+    >
+  </ModalContent>
+{/if}

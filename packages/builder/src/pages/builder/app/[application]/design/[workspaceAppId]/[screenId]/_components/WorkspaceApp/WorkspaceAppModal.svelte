@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { appStore, workspaceAppStore } from "@/stores/builder"
+  import { buildLiveUrl } from "@/helpers/urls"
+  import { appStore, screenStore, workspaceAppStore } from "@/stores/builder"
+  import * as screenTemplating from "@/templates/screenTemplating"
   import {
     Body,
     Icon,
@@ -14,10 +16,9 @@
     type UIWorkspaceApp,
     type WorkspaceApp,
   } from "@budibase/types"
+  import { goto } from "@roxi/routify"
   import type { ZodType } from "zod"
   import { z } from "zod"
-  import { goto } from "@roxi/routify"
-  import { buildLiveUrl } from "@/helpers/urls"
 
   export let workspaceApp: UIWorkspaceApp | null = null
 
@@ -107,9 +108,18 @@
 
     try {
       if (isNew) {
-        const newScreen = await workspaceAppStore.add({
+        const workspaceApp = await workspaceAppStore.add({
           ...workspaceAppData,
           disabled: true,
+        })
+
+        const newScreen = await screenStore.save({
+          ...screenTemplating.blank({
+            route: "/",
+            screens: [],
+            workspaceAppId: workspaceApp._id,
+          })[0].data,
+          workspaceAppId: workspaceApp._id,
         })
         notifications.success("App created successfully")
         $goto(`./${newScreen._id}`)
