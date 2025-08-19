@@ -17,6 +17,7 @@ import {
   generateAppID,
   generateDevAppID,
   getLayoutParams,
+  isDevAppID,
 } from "../../db/utils"
 import {
   cache,
@@ -311,21 +312,23 @@ export async function fetchAppPackage(
 
   // Only filter screens if the user is not a builder call
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
+
+  const isDev = isDevAppID(ctx.params.appId)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
-  }
 
-  if (!isBuilder) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : ""
 
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+
     // disabled workspace apps should appear to not exist
-    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isBuilder)) {
+    // if the dev app is being served, allow the request regardless
+    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
