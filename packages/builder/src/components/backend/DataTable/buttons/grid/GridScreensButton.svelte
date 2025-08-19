@@ -17,6 +17,7 @@
     (screen: Screen): ScreenUsage => ({
       url: screen.routing?.route,
       _id: screen._id!,
+      workspaceAppId: screen.workspaceAppId,
     })
   )
 
