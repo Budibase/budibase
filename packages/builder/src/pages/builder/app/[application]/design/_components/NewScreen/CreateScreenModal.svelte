@@ -26,7 +26,7 @@
     WorkspaceApp,
   } from "@budibase/types"
 
-  let mode: string
+  let mode: AutoScreenTypes
   let workspaceAppId: string | undefined
 
   let screenDetailsModal: Modal
@@ -48,7 +48,7 @@
   $: screens = $screenStore.screens
 
   export const show = (
-    newMode: string,
+    newMode: AutoScreenTypes,
     preselectedWorkspaceAppId: string | undefined,
     preselectedDatasource: Table | ViewV2 | null = null
   ) => {
@@ -60,7 +60,7 @@
 
     if (mode === AutoScreenTypes.TABLE || mode === AutoScreenTypes.FORM) {
       if (preselectedDatasource) {
-        // If preselecting a datasource, start with app selection
+        // If preselecting a datasource, skip a step
         const isTable = preselectedDatasource.type === "table"
         const tableOrView = isTable
           ? makeTableOption(preselectedDatasource, $datasources.list)
@@ -71,8 +71,10 @@
 
       if (!workspaceAppId) {
         appSelectionModal.show()
+      } else if (preselectedDatasource) {
+        onSelectDatasources()
       } else {
-        screenDetailsModal.show()
+        datasourceModal.show()
       }
     } else if (mode === AutoScreenTypes.BLANK || mode === AutoScreenTypes.PDF) {
       screenDetailsModal.show()
@@ -122,10 +124,8 @@
     appSelectionModal.hide()
 
     if (hasPreselectedDatasource) {
-      // Skip datasource selection if we already have one
       onSelectDatasources()
     } else {
-      // Show datasource modal
       datasourceModal.show()
     }
   }
