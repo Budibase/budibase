@@ -2,6 +2,7 @@
   import ScreenDetailsModal from "@/components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import TypeModal from "./TypeModal.svelte"
+  import AppSelectionModal from "./AppSelectionModal.svelte"
   import tableTypes from "./tableTypes"
   import formTypes from "./formTypes"
   import { Modal, ModalCancelFrom, notifications } from "@budibase/bbui"
@@ -22,13 +23,14 @@
     Screen,
     Table,
     ViewV2,
+    WorkspaceApp,
   } from "@budibase/types"
 
-  export let workspaceAppId: string
-
   let mode: string
+  let workspaceAppId: string
 
   let screenDetailsModal: Modal
+  let appSelectionModal: Modal
   let datasourceModal: Modal
   let formTypeModal: Modal
   let tableTypeModal: Modal
@@ -47,26 +49,28 @@
 
   export const show = (
     newMode: string,
+    newWorkspaceAppId: string,
     preselectedDatasource: Table | ViewV2 | null = null
   ) => {
     mode = newMode
     selectedTablesAndViews = []
     permissions = {}
     hasPreselectedDatasource = preselectedDatasource != null
+    workspaceAppId = newWorkspaceAppId
 
     if (mode === AutoScreenTypes.TABLE || mode === AutoScreenTypes.FORM) {
       if (preselectedDatasource) {
-        // If preselecting a datasource, skip a step
+        // If preselecting a datasource, start with app selection
         const isTable = preselectedDatasource.type === "table"
         const tableOrView = isTable
           ? makeTableOption(preselectedDatasource, $datasources.list)
           : makeViewOption(preselectedDatasource)
         fetchPermission(tableOrView.id)
         selectedTablesAndViews.push(tableOrView)
-        onSelectDatasources()
+        appSelectionModal.show()
       } else {
-        // Otherwise choose a datasource
-        datasourceModal.show()
+        // Start with app selection
+        appSelectionModal.show()
       }
     } else if (mode === AutoScreenTypes.BLANK || mode === AutoScreenTypes.PDF) {
       screenDetailsModal.show()
@@ -81,7 +85,7 @@
     try {
       return await screenStore.save({
         ...screenTemplate,
-        workspaceAppId: workspaceAppId!, // TODO
+        workspaceAppId,
       })
     } catch (error) {
       console.error(error)
@@ -105,6 +109,19 @@
     }
 
     return newScreens
+  }
+
+  const onSelectApp = async (app: WorkspaceApp) => {
+    workspaceAppId = app._id!
+    appSelectionModal.hide()
+
+    if (hasPreselectedDatasource) {
+      // Skip datasource selection if we already have one
+      onSelectDatasources()
+    } else {
+      // Show datasource modal
+      datasourceModal.show()
+    }
   }
 
   const onSelectDatasources = async () => {
@@ -233,7 +250,24 @@
   }
 </script>
 
-<Modal bind:this={datasourceModal} autoFocus={false} on:cancel>
+<Modal bind:this={appSelectionModal} autoFocus={false} on:cancel>
+  <AppSelectionModal onConfirm={onSelectApp} />
+</Modal>
+
+<Modal
+  bind:this={datasourceModal}
+  autoFocus={false}
+  on:cancel={e => {
+    if (
+      [ModalCancelFrom.CANCEL_BUTTON, ModalCancelFrom.ESCAPE_KEY].includes(
+        e.detail
+      )
+    ) {
+      datasourceModal.hide()
+      appSelectionModal.show()
+    }
+  }}
+>
   <DatasourceModal
     {selectedTablesAndViews}
     onConfirm={onSelectDatasources}
@@ -250,7 +284,11 @@
       )
     ) {
       tableTypeModal.hide()
-      datasourceModal.show()
+      if (hasPreselectedDatasource) {
+        appSelectionModal.show()
+      } else {
+        datasourceModal.show()
+      }
     }
   }}
 >
@@ -275,7 +313,11 @@
       )
     ) {
       formTypeModal.hide()
-      datasourceModal.show()
+      if (hasPreselectedDatasource) {
+        appSelectionModal.show()
+      } else {
+        datasourceModal.show()
+      }
     }
   }}
 >
