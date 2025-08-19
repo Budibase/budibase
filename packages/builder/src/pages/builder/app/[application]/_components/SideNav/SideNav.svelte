@@ -56,7 +56,7 @@
     views: ViewV2[]
   }
 
-  setContext(Context.PopoverRoot, ".nav > .popover-container")
+  setContext(Context.PopoverRoot, ".nav .popover-container")
 
   const datasourceLookup = datasources.lookup
   const favouriteLookup = workspaceFavouriteStore.lookup
