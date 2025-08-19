@@ -25,7 +25,7 @@
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
 
-  $: workspaceAppId = $workspaceAppStore.workspaceApps.find(
+  $: defaultWorkspaceAppId = $workspaceAppStore.workspaceApps.find(
     a => a.isDefault
   )?._id!
 
@@ -171,7 +171,7 @@
   {/if}
 </DetailPopover>
 
-<CreateScreenModal bind:this={createScreenModal} {workspaceAppId} />
+<CreateScreenModal bind:this={createScreenModal} workspaceAppId={defaultWorkspaceAppId} />
 
 <style>
   .center {
