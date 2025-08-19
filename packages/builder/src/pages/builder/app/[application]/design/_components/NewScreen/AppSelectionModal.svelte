@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { ModalContent, Body, Select } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
+  import { ModalContent, Body, Select, Button } from "@budibase/bbui"
   import { workspaceAppStore } from "@/stores/builder"
   import type { WorkspaceApp } from "@budibase/types"
+  import { featureFlags } from "@/stores/portal"
 
   export let onConfirm: (_selectedApp: WorkspaceApp) => Promise<void>
   export let _selectedApp: WorkspaceApp | null = null
@@ -13,6 +15,8 @@
       await onConfirm(selectedApp)
     }
   }
+
+  $: hasApps = !!$workspaceAppStore.workspaceApps.length
 </script>
 
 <ModalContent
@@ -33,5 +37,23 @@
     getOptionLabel={a => a.name}
     getOptionValue={a => a}
     bind:value={selectedApp}
+    disabled={!hasApps}
   />
+
+  {#if $featureFlags.WORKSPACE_APPS && !hasApps}
+    <div class="create-new-app">
+      <Body size="S">or create a new one</Body>
+      <Button secondary size="S" on:click={$goto("../../design")}
+        >Create app</Button
+      >
+    </div>
+  {/if}
 </ModalContent>
+
+<style>
+  .create-new-app {
+    padding-top: var(--spacing-l);
+    display: flex;
+    gap: var(--spacing-s);
+  }
+</style>
