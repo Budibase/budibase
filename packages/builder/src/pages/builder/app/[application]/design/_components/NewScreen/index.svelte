@@ -1,7 +1,7 @@
 <script lang="ts">
   import CreationPage from "@/components/common/CreationPage.svelte"
   import { AutoScreenTypes } from "@/constants"
-  import { screenStore } from "@/stores/builder"
+  import { appStore, screenStore, workspaceAppStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import {
     Body,
@@ -22,7 +22,7 @@
   export let onClose: (() => void) | null = null
   export let inline: boolean = false
   export let submitOnClick: boolean = false
-  export let workspaceAppId: string
+  export let workspaceAppId: string | undefined
 
   let title: string
   let rootModal: Modal
@@ -49,12 +49,19 @@
     }
   }
 
-  function onConfirm(type = selectedType) {
+  async function onConfirm(type = selectedType) {
     if (!type) {
       notifications.error("Select screen type")
       return
     }
     rootModal.hide()
+    if (!workspaceAppId) {
+      const workspaceApp = await workspaceAppStore.add({
+        name: $appStore.name,
+        url: "/",
+      })
+      workspaceAppId = workspaceApp._id
+    }
     createScreenModal.show(type, workspaceAppId)
 
     const selectedTypeSnapshot = selectedType
