@@ -11,6 +11,7 @@
     permissions as permissionsStore,
     datasources,
     appStore,
+    workspaceAppStore,
   } from "@/stores/builder"
   import { goto } from "@roxi/routify"
   import * as screenTemplating from "@/templates/screenTemplating"
@@ -57,6 +58,9 @@
     permissions = {}
     hasPreselectedDatasource = preselectedDatasource != null
     workspaceAppId = preselectedWorkspaceAppId
+    if (!workspaceAppId && $workspaceAppStore.workspaceApps.length === 1) {
+      workspaceAppId = $workspaceAppStore.workspaceApps[0]._id
+    }
 
     if (mode === AutoScreenTypes.TABLE || mode === AutoScreenTypes.FORM) {
       if (preselectedDatasource) {
