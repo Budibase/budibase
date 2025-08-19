@@ -15,7 +15,7 @@
   export let showCount = false
   export let align = PopoverAlignment.Left
 
-  let popover: any
+  let popover: DetailPopover
 
   export function show() {
     popover?.show()
