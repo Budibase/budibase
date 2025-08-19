@@ -214,7 +214,18 @@
       {/each}
     </div>
     <div class="action-buttons">
-      <Button icon="lightbulb" secondary>Learn</Button>
+      <Button
+        icon="lightbulb"
+        secondary
+        on:click={() => {
+          window.open(
+            "https://docs.budibase.com/docs/automation-steps",
+            "_blank"
+          )
+        }}
+      >
+        Learn
+      </Button>
       <Button cta icon="plus" on:click={createModal.show}>
         New automation
       </Button>
