@@ -13,7 +13,12 @@
       <span>
         You're currently in Dev, so you can test things out without affecting
         real users. Switch to Prod to view/edit live data.
-        <a href="https://docs.budibase.com/docs/dev-prod-switcher" class="link">
+        <a
+          href="https://docs.budibase.com/docs/dev-prod-switcher"
+          class="link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Visit the Docs ↗
         </a>
       </span>
