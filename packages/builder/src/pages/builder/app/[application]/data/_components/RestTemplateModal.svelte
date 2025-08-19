@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { Modal, ModalContent, Body, Icon, Heading } from "@budibase/bbui"
+  import { Modal, ModalContent, Body, Heading } from "@budibase/bbui"
   import { restTemplates } from "@/stores/builder"
   import RestTemplateOption from "./RestTemplateOption.svelte"
   import type { RestTemplate } from "@budibase/types"
+  import ICONS from "@/components/backend/DatasourceNavigator/icons"
 
   export let onSelect: (_template: RestTemplate) => void
   export let onCancel: () => void
@@ -33,7 +34,7 @@
   >
     <div class="modal-content">
       <div class="header">
-        <Icon name="Globe" size="L" />
+        <svelte:component this={ICONS.REST_TEMPLATE} height="20" width="20" />
         <Heading size="M">Choose REST Template</Heading>
       </div>
       <Body size="S" color="grey">
@@ -63,7 +64,7 @@
   .header {
     display: flex;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-m);
   }
 
   .templates-grid {
