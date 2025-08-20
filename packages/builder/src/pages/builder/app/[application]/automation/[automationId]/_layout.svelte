@@ -1,15 +1,11 @@
-<script>
-  import { automationStore } from "@/stores/builder"
-  import { params } from "@roxi/routify"
+<script lang="ts">
+  import { featureFlags } from "@/stores/portal"
+  import NewLayout from "./_flagged/layout.new.svelte"
+  import OldLayout from "./_flagged/layout.old.svelte"
 
-  if ($params.automation) {
-    const automation = $automationStore.automations.find(
-      m => m._id === $params.automation
-    )
-    if (automation) {
-      automationStore.actions.select(automation)
-    }
-  }
+  $: layout = $featureFlags.WORKSPACES ? NewLayout : OldLayout
 </script>
 
-<slot />
+<svelte:component this={layout}>
+  <slot />
+</svelte:component>

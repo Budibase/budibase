@@ -17,6 +17,7 @@ import {
   generateAppID,
   generateDevAppID,
   getLayoutParams,
+  isDevAppID,
 } from "../../db/utils"
 import {
   cache,
@@ -32,6 +33,7 @@ import {
   users,
   utils,
   configs,
+  features,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -70,6 +72,7 @@ import {
   UnpublishAppResponse,
   ErrorCode,
   FetchPublishedAppsResponse,
+  FeatureFlag,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -191,6 +194,7 @@ async function createDefaultWorkspaceApp(): Promise<string> {
       ...defaultAppNavigator(appMetadata.name),
       links: [],
     },
+    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACES),
     isDefault: true,
   })
 
@@ -308,21 +312,23 @@ export async function fetchAppPackage(
 
   // Only filter screens if the user is not a builder call
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
+
+  const isDev = isDevAppID(ctx.params.appId)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
-  }
 
-  if (!isBuilder) {
     const urlPath = ctx.headers.referer
       ? new URL(ctx.headers.referer).pathname
       : ""
 
     const [matchedWorkspaceApp] =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+
     // disabled workspace apps should appear to not exist
-    if (!matchedWorkspaceApp || matchedWorkspaceApp.disabled) {
+    // if the dev app is being served, allow the request regardless
+    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
@@ -503,13 +509,33 @@ async function performAppCreate(
       }
     }
 
-    if (!addSampleData && !(await sdk.workspaceApps.fetch()).length) {
+    if (
+      !addSampleData &&
+      !(await features.isEnabled(FeatureFlag.WORKSPACES)) &&
+      !(await sdk.workspaceApps.fetch()).length
+    ) {
       await createDefaultWorkspaceApp()
+    }
+
+    if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
+      await disableAllAppsAndAutomations()
     }
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
   })
+}
+
+async function disableAllAppsAndAutomations() {
+  const workspaceApps = await sdk.workspaceApps.fetch()
+  for (const workspaceApp of workspaceApps.filter(a => !a.disabled)) {
+    await sdk.workspaceApps.update({ ...workspaceApp, disabled: true })
+  }
+
+  const automations = await sdk.automations.fetch()
+  for (const automation of automations.filter(a => !a.disabled)) {
+    await sdk.automations.update({ ...automation, disabled: true })
+  }
 }
 
 async function updateUserColumns(
@@ -762,6 +788,10 @@ async function unpublishApp(ctx: UserCtx) {
 
   // automations only in production
   await cleanupAutomations(appId)
+
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
+    await disableAllAppsAndAutomations()
+  }
 
   await cache.app.invalidateAppMetadata(appId)
   return result

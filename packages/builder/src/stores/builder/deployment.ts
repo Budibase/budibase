@@ -4,11 +4,14 @@ import { notifications } from "@budibase/bbui"
 import { DeploymentProgressResponse, DeploymentStatus } from "@budibase/types"
 import analytics, { Events, EventSource } from "@/analytics"
 import { appsStore } from "@/stores/portal/apps"
+import { featureFlags } from "@/stores/portal"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import { appStore } from "./app"
 import { processStringSync } from "@budibase/string-templates"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
+import { automationStore } from "./automations"
+import { workspaceAppStore } from "./workspaceApps"
 
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
@@ -31,8 +34,8 @@ class DeploymentStore extends DerivedBudiStore<
       store: Writable<DeploymentState>
     ): Readable<DerivedDeploymentState> => {
       return derived(
-        [store, appStore, appsStore],
-        ([$store, $appStore, $appsStore]) => {
+        [store, appStore, appsStore, featureFlags],
+        ([$store, $appStore, $appsStore, $featureFlags]) => {
           // Determine whether the app is published
           const app = $appsStore.apps.find(app => app.devId === $appStore.appId)
           const deployments = $store.deployments.filter(
@@ -45,7 +48,7 @@ class DeploymentStore extends DerivedBudiStore<
           let lastPublished = undefined
           if (isPublished) {
             lastPublished = processStringSync(
-              "Your app was last published {{ duration time 'millisecond' }} ago",
+              `Your ${$featureFlags.WORKSPACES ? "apps and automations were" : "app was"} last published {{ duration time 'millisecond' }} ago`,
               {
                 time:
                   new Date().getTime() -
@@ -108,8 +111,12 @@ class DeploymentStore extends DerivedBudiStore<
 
   async completePublish() {
     try {
-      await appsStore.load()
-      await workspaceDeploymentStore.fetch()
+      await Promise.all([
+        workspaceDeploymentStore.fetch(),
+        workspaceAppStore.refresh(),
+        appsStore.load(),
+        automationStore.actions.fetch(),
+      ])
       await this.load()
     } catch (err) {
       notifications.error("Error refreshing app")
@@ -122,8 +129,12 @@ class DeploymentStore extends DerivedBudiStore<
     }
     try {
       await API.unpublishApp(get(appStore).appId)
-      await workspaceDeploymentStore.fetch()
-      await appsStore.load()
+      await Promise.all([
+        workspaceDeploymentStore.fetch(),
+        workspaceAppStore.refresh(),
+        appsStore.load(),
+        automationStore.actions.fetch(),
+      ])
       notifications.send("App unpublished", {
         type: "success",
         icon: "globe",

@@ -19,7 +19,7 @@
     workspaceDeploymentStore,
     deploymentStore,
   } from "@/stores/builder"
-  import { environment } from "@/stores/portal"
+  import { environment, featureFlags } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
   import {
@@ -32,6 +32,9 @@
   import TestDataModal from "./TestDataModal.svelte"
   import StepNode from "./StepNode.svelte"
   import CtaNotification from "@/components/common/CtaNotification.svelte"
+
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import { PublishResourceState } from "@budibase/types"
 
   export let automation
 
@@ -46,7 +49,13 @@
   let prodErrors
   let viewMode = ViewMode.EDITOR
 
+  let changingStatus = false
+
   $: $automationStore.showTestModal === true && testDataModal.show()
+
+  $: displayToggleValue = $featureFlags.WORKSPACES
+    ? automation.publishStatus.state === PublishResourceState.PUBLISHED
+    : !automation?.disabled
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set(automation)
@@ -134,45 +143,62 @@
       automationStore.actions.openLogPanel(enrichedLog, stepData)
     }
   }
+
+  async function handleToggleChange() {
+    try {
+      changingStatus = true
+      await automationStore.actions.toggleDisabled(automation._id)
+    } finally {
+      changingStatus = false
+    }
+  }
 </script>
 
 <div class="automation-heading">
-  <div class="actions-left">
-    <div class="automation-name">
-      <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)">
-        {automation.name}
-      </Body>
+  {#if !$featureFlags.WORKSPACES}
+    <div class="actions-left">
+      <div class="automation-name">
+        <Body
+          size="S"
+          weight="500"
+          color="var(--spectrum-global-color-gray-900)"
+        >
+          {automation.name}
+        </Body>
+      </div>
     </div>
-  </div>
+  {/if}
 
-  <div class="actions-right">
-    <Switcher
-      on:left={() => {
-        viewMode = ViewMode.EDITOR
-        closeAllPanels()
-      }}
-      on:right={() => {
-        viewMode = ViewMode.LOGS
-        // Clear editor selection when switching to logs mode
-        automationStore.actions.selectNode(null)
-        if (
-          !$automationStore.showLogsPanel &&
-          !$automationStore.showLogDetailsPanel
-        ) {
-          toggleLogsPanel()
-        }
-      }}
-      leftIcon="Edit"
-      leftText="Editor"
-      rightIcon="list-checks"
-      rightText="Logs"
-      rightNotificationTooltip="There are errors in production"
-      rightNotificationCount={prodErrors}
-      selected={$automationStore.showLogsPanel ||
-      $automationStore.showLogDetailsPanel
-        ? "right"
-        : "left"}
-    />
+  <div class="actions-right" class:grow={$featureFlags.WORKSPACES}>
+    <div class:grow={$featureFlags.WORKSPACES}>
+      <Switcher
+        on:left={() => {
+          viewMode = ViewMode.EDITOR
+          closeAllPanels()
+        }}
+        on:right={() => {
+          viewMode = ViewMode.LOGS
+          // Clear editor selection when switching to logs mode
+          automationStore.actions.selectNode(null)
+          if (
+            !$automationStore.showLogsPanel &&
+            !$automationStore.showLogDetailsPanel
+          ) {
+            toggleLogsPanel()
+          }
+        }}
+        leftIcon="Edit"
+        leftText="Editor"
+        rightIcon="list-checks"
+        rightText="Logs"
+        rightNotificationTooltip="There are errors in production"
+        rightNotificationCount={prodErrors}
+        selected={$automationStore.showLogsPanel ||
+        $automationStore.showLogDetailsPanel
+          ? "right"
+          : "left"}
+      />
+    </div>
 
     <ActionButton
       icon="play"
@@ -185,7 +211,19 @@
       Run test
     </ActionButton>
 
-    {#if !isRowAction}
+    {#if $featureFlags.WORKSPACES}
+      <PublishStatusBadge
+        status={automation.publishStatus.state}
+        loading={changingStatus}
+      />
+      <div class="toggle-active setting-spacing">
+        <Toggle
+          on:change={handleToggleChange}
+          disabled={!automation?.definition?.trigger || changingStatus}
+          value={displayToggleValue}
+        />
+      </div>
+    {:else if !isRowAction}
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Disabled" : "Enabled"}
@@ -309,7 +347,7 @@
     align-items: center;
     width: 100%;
     background: var(--background);
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-s);
+    padding: var(--spacing-m) var(--spacing-l);
     box-sizing: border-box;
     justify-content: space-between;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
@@ -428,7 +466,9 @@
     flex: 1;
     min-width: 0;
   }
-
+  .grow {
+    flex: 1 1 auto;
+  }
   .actions-right {
     display: flex;
     gap: var(--spacing-xl);

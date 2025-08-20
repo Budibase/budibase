@@ -3,14 +3,12 @@ import {
   context,
   db as dbCore,
   events,
-  features,
   roles,
   tenancy,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
 import {
   DeleteScreenResponse,
-  FeatureFlag,
   FetchScreenResponse,
   Plugin,
   SaveScreenRequest,
@@ -111,6 +109,11 @@ export async function save(
       roleId: screen.routing.roleId,
       workspaceAppId: screen.workspaceAppId,
     })
+
+    const workspaceApp = await sdk.workspaceApps.get(screen.workspaceAppId)
+    if (workspaceApp) {
+      builderSocket?.emitWorkspaceAppUpdate(ctx, workspaceApp)
+    }
   }
 
   ctx.message = `Screen ${screen.name} saved.`
@@ -126,16 +129,6 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
 
-  if (await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
-    const allScreens = await sdk.screens.fetch()
-    const appScreens = allScreens.filter(
-      s => s.workspaceAppId === screen.workspaceAppId
-    )
-    if (appScreens.filter(s => s._id !== id).length === 0) {
-      ctx.throw("Cannot delete the last screen in a workspace app", 409)
-    }
-  }
-
   await db.remove(id, ctx.params.screenRev)
 
   await sdk.navigation.deleteLink(screen.routing.route, screen.workspaceAppId)
@@ -145,6 +138,11 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
     message: "Screen deleted successfully",
   }
   builderSocket?.emitScreenDeletion(ctx, id)
+
+  const workspaceApp = await sdk.workspaceApps.get(screen.workspaceAppId)
+  if (workspaceApp) {
+    builderSocket?.emitWorkspaceAppUpdate(ctx, workspaceApp)
+  }
 }
 
 function findPlugins(component: ScreenProps, foundPlugins: string[]) {
@@ -173,6 +171,7 @@ export async function usage(ctx: UserCtx<void, UsageInScreensResponse>) {
       response.push({
         url: screen.routing.route,
         _id: screen._id!,
+        workspaceAppId: screen.workspaceAppId,
       })
     }
   }
