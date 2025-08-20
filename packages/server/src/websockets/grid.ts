@@ -5,7 +5,7 @@ import { auth, permissions, context } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { getSourceId } from "../api/controllers/row/utils"
-import { Row, Table, View, ViewV2 } from "@budibase/types"
+import { Row, Table, View, ViewV2, WorkspaceApp } from "@budibase/types"
 import { Socket } from "socket.io"
 import { GridSocketEvent } from "@budibase/shared-core"
 import { userAgent } from "koa-useragent"
@@ -133,6 +133,14 @@ export default class GridSocket extends BaseSocket {
     this.emitToRoom(ctx, room, GridSocketEvent.RowChange, {
       id: row._id,
       row: null,
+    })
+  }
+
+  emitWorkspaceAppUpdate(ctx: any, workspaceApp: WorkspaceApp) {
+    const room = `${ctx.appId}-${workspaceApp._id}`
+    this.emitToRoom(ctx, room, GridSocketEvent.WorkspaceAppChange, {
+      id: workspaceApp._id,
+      workspaceApp,
     })
   }
 
