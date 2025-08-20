@@ -4,11 +4,11 @@
   import { screenStore } from "@/stores/builder"
   import { getContext, createEventDispatcher } from "svelte"
   import type { Screen, ScreenUsage } from "@budibase/types"
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ generate: void }>()
 
-  const { datasource }: { datasource: any } = getContext("grid")
+  const { datasource } = getContext("grid")
 
-  let popover: any
+  let popover: ScreensPopover
 
   $: ds = $datasource
   $: resourceId = ds?.type === "table" ? ds.tableId : ds?.id
@@ -17,6 +17,7 @@
     (screen: Screen): ScreenUsage => ({
       url: screen.routing?.route,
       _id: screen._id!,
+      workspaceAppId: screen.workspaceAppId,
     })
   )
 

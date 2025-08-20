@@ -1807,11 +1807,19 @@ if (descriptions.length) {
             const getPersistedView = async () =>
               (await config.api.table.get(tableId)).views![view.name]
 
-            expect(await getPersistedView()).toBeDefined()
+            const first = (await getPersistedView()) as ViewV2
+            expect(first).toBeDefined()
 
             await config.api.viewV2.delete(view.id)
 
             expect(await getPersistedView()).toBeUndefined()
+
+            expect(events.view.deleted).toHaveBeenCalledTimes(1)
+
+            expect(events.view.deleted).toHaveBeenCalledWith(
+              expect.objectContaining({ name: first.name, id: first.id }),
+              config.appId
+            )
           })
         })
 

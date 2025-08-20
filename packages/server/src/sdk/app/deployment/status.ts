@@ -14,13 +14,11 @@ function getPublishedState(
   resource: { disabled?: boolean },
   lastPublishedAt?: string
 ): PublishResourceState {
-  if (resource.disabled) {
-    return PublishResourceState.DISABLED
-  } else if (lastPublishedAt) {
+  if (!resource.disabled && lastPublishedAt) {
     return PublishResourceState.PUBLISHED
-  } else {
-    return PublishResourceState.UNPUBLISHED
   }
+
+  return PublishResourceState.DISABLED
 }
 
 export async function status() {

@@ -80,7 +80,7 @@
   let selectedInvites: EnrichedUser[] = []
   let bulkSaveResponse: BulkUserCreated
 
-  $: appsOrWorkspaces = $featureFlags.WORKSPACE_APPS ? "workspaces" : "apps"
+  $: appsOrWorkspaces = $featureFlags.WORKSPACES ? "workspaces" : "apps"
   $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },

@@ -36,10 +36,7 @@
   let open = false
   let drawerCount = 0
 
-  $: urlOptions = $screenStore.screens
-    .map(screen => screen.routing?.route)
-    .filter(x => x != null)
-    .sort()
+  $: urlOptions = screenStore.routes
 
   // Auto hide the component when another item is selected
   $: if (open && $draggable.selected !== navItem.id) {
@@ -136,7 +133,7 @@
         onChange={update("url")}
         {bindings}
         props={{
-          options: urlOptions,
+          options: $urlOptions,
           appendBindingsAsOptions: false,
           placeholder: null,
         }}
