@@ -145,19 +145,31 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 
         const config = await configs.getSettingsConfigDoc()
         const personProperties: Record<string, string> = { tenantId }
+
+        const groupProperties: {
+          tenant: {
+            id: string
+            createdVersion?: string
+            createdAt?: string
+          }
+        } = {
+          tenant: {
+            id: tenantId,
+          },
+        }
+        if (config.config.createdVersion) {
+          groupProperties.tenant.createdVersion = config.config.createdVersion
+        }
+        if (config.createdAt) {
+          groupProperties.tenant.createdAt = `${config.createdAt}`
+        }
         const posthogFlags = await posthog.getAllFlags(userId, {
           personProperties,
           onlyEvaluateLocally: true,
           groups: {
             tenant: tenantId,
           },
-          groupProperties: {
-            tenant: {
-              id: tenantId,
-              createdVersion: config.config.createdVersion,
-              createdAt: `${config.createdAt ?? ""} `,
-            },
-          },
+          groupProperties,
         })
 
         for (const [name, value] of Object.entries(posthogFlags)) {
