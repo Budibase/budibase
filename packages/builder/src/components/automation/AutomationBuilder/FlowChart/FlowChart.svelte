@@ -53,7 +53,7 @@
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
-  $: displayToggleValue = $featureFlags.WORKSPACE_APPS
+  $: displayToggleValue = $featureFlags.WORKSPACES
     ? automation.publishStatus.state === PublishResourceState.PUBLISHED
     : !automation?.disabled
 
@@ -155,7 +155,7 @@
 </script>
 
 <div class="automation-heading">
-  {#if !$featureFlags.WORKSPACE_APPS}
+  {#if !$featureFlags.WORKSPACES}
     <div class="actions-left">
       <div class="automation-name">
         <Body
@@ -169,8 +169,8 @@
     </div>
   {/if}
 
-  <div class="actions-right" class:grow={$featureFlags.WORKSPACE_APPS}>
-    <div class:grow={$featureFlags.WORKSPACE_APPS}>
+  <div class="actions-right" class:grow={$featureFlags.WORKSPACES}>
+    <div class:grow={$featureFlags.WORKSPACES}>
       <Switcher
         on:left={() => {
           viewMode = ViewMode.EDITOR
@@ -211,7 +211,7 @@
       Run test
     </ActionButton>
 
-    {#if $featureFlags.WORKSPACE_APPS}
+    {#if $featureFlags.WORKSPACES}
       <PublishStatusBadge
         status={automation.publishStatus.state}
         loading={changingStatus}

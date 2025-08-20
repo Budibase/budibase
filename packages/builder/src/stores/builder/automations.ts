@@ -1589,7 +1589,7 @@ const automationActions = (store: AutomationStore) => ({
         steps: [],
         trigger,
       },
-      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS),
+      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACES),
     }
     const response = await store.actions.save(automation)
     return response
@@ -1605,7 +1605,7 @@ const automationActions = (store: AutomationStore) => ({
       ),
       _id: undefined,
       _rev: undefined,
-      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACE_APPS),
+      disabled: featureFlag.isEnabled(FeatureFlag.WORKSPACES),
     })
     return response
   },

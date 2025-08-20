@@ -58,7 +58,7 @@
     <div class="drawer-container" />
     <div class="header">
       <div class="header-left">
-        {#if $featureFlags.WORKSPACE_APPS}
+        {#if $featureFlags.WORKSPACES}
           <div class="workspace-info">
             {#if selectedWorkspaceApp.publishStatus.state === PublishResourceState.PUBLISHED}
               <div class="workspace-url">
@@ -100,7 +100,7 @@
         <ActionButton quiet icon="play" on:click={previewApp}>
           Preview
         </ActionButton>
-        {#if $featureFlags.WORKSPACE_APPS}
+        {#if $featureFlags.WORKSPACES}
           <div class="divider-container">
             <Divider size="S" vertical />
           </div>

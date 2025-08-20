@@ -37,7 +37,7 @@
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   const exportApp = opts => {
     exportPublishedVersion = !!opts?.published
@@ -63,7 +63,7 @@
   </Layout>
   <Divider />
   <Heading size="S">
-    {$featureFlags.WORKSPACE_APPS ? "Workspace info" : "App info"}
+    {$featureFlags.WORKSPACES ? "Workspace info" : "App info"}
   </Heading>
   <UpdateAppForm />
   {#if $deploymentStore.isPublished}
@@ -80,7 +80,7 @@
         <br />
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        {#if !$featureFlags.WORKSPACE_APPS}
+        {#if !$featureFlags.WORKSPACES}
           <div class="link" on:click={deploymentStore.viewPublishedApp}>
             View app
           </div>
@@ -99,13 +99,13 @@
         size="M"
       />
       <Body size="S">
-        {$featureFlags.WORKSPACE_APPS
+        {$featureFlags.WORKSPACES
           ? "You haven't published yet, so your apps and automations are not available to users"
           : "Your app hasn't been published yet and isn't available to users"}
       </Body>
     </div>
     <div class="row">
-      {#if !$featureFlags.WORKSPACE_APPS}
+      {#if !$featureFlags.WORKSPACES}
         <Button
           cta
           disabled={$deploymentStore.isPublishing}
@@ -192,16 +192,14 @@
       disabled={!$deploymentStore.isPublished}
       on:click={() => exportApp({ published: true })}
     >
-      Export latest published {$featureFlags.WORKSPACE_APPS
-        ? "workspace"
-        : "app"}
+      Export latest published {$featureFlags.WORKSPACES ? "workspace" : "app"}
     </Button>
   </div>
   <Divider />
   <Layout noPadding gap="XS">
     <Heading size="S">Import</Heading>
     <Body size="S"
-      >Import an export bundle to update this {$featureFlags.WORKSPACE_APPS
+      >Import an export bundle to update this {$featureFlags.WORKSPACES
         ? "workspace"
         : "app"}
     </Body>
@@ -274,7 +272,7 @@
 >
   Are you sure you want to unpublish the {appOrWorkspace}
   <b>{selectedApp?.name}</b>?
-  {#if $featureFlags.WORKSPACE_APPS}
+  {#if $featureFlags.WORKSPACES}
     <p>This will make all apps and automations in this workspace unavailable</p>
   {/if}
 </ConfirmDialog>

@@ -22,7 +22,7 @@
 
 <!-- routify:options index=1 -->
 <div class="wrapper">
-  {#if $featureFlags.WORKSPACE_APPS}
+  {#if $featureFlags.WORKSPACES}
     <TopBar breadcrumbs={[{ text: "Data" }]} icon="database"></TopBar>
   {/if}
   <div class="data">

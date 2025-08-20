@@ -181,7 +181,7 @@
   let currentStep = Step.CONFIG
 
   let appOrWorkspace: "workspace" | "app"
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
 
   $: stepConfig = {
     [Step.CONFIG]: {

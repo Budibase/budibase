@@ -81,7 +81,7 @@
   selectedBy={$userSelectedResourceMap[query._id]}
 >
   <div class="buttons">
-    {#if $featureFlags.WORKSPACE_APPS}
+    {#if $featureFlags.WORKSPACES}
       <FavouriteResourceButton
         favourite={favourite || {
           resourceType: WorkspaceResource.QUERY,

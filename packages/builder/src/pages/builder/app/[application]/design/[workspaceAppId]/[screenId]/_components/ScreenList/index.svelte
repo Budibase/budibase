@@ -17,7 +17,7 @@
   let scrolling = false
   let newScreenModal: NewScreenModal
 
-  $: allScreens = $featureFlags.WORKSPACE_APPS
+  $: allScreens = $featureFlags.WORKSPACES
     ? $workspaceAppStore.selectedWorkspaceApp?.screens || []
     : $sortedScreens
   $: filteredScreens = getFilteredScreens(allScreens, searchValue)

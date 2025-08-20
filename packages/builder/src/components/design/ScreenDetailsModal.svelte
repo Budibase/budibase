@@ -19,7 +19,7 @@
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
 
   $: workspacePrefix =
-    $featureFlags.WORKSPACE_APPS && selectedWorkspaceApp
+    $featureFlags.WORKSPACES && selectedWorkspaceApp
       ? selectedWorkspaceApp.url
       : ""
 

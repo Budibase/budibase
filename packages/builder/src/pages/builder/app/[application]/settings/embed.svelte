@@ -36,7 +36,7 @@
     <Body>Embed your app into your other tools of choice</Body>
   </Layout>
   <Divider />
-  {#if $featureFlags.WORKSPACE_APPS}
+  {#if $featureFlags.WORKSPACES}
     <div class="embed-app-select">
       <span>
         Select a workspace app below if you wish to target a specific app:

@@ -15,7 +15,7 @@
 
   export let app
 
-  $: appOrWorkspace = $featureFlags.WORKSPACE_APPS ? "workspace" : "app"
+  $: appOrWorkspace = $featureFlags.WORKSPACES ? "workspace" : "app"
   $: disabled = (encrypted && !password) || !file
   let encrypted = false,
     password
@@ -51,7 +51,7 @@
   bind:disabled
 >
   <Body size="S">
-    Updating {$featureFlags.WORKSPACE_APPS ? "a workspace" : "an app"} using an export
+    Updating {$featureFlags.WORKSPACES ? "a workspace" : "an app"} using an export
     bundle will replace all tables, datasources, queries, screens and automations.
     It is recommended to perform a backup before running this operation.
   </Body>

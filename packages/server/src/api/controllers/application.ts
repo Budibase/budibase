@@ -194,7 +194,7 @@ async function createDefaultWorkspaceApp(): Promise<string> {
       ...defaultAppNavigator(appMetadata.name),
       links: [],
     },
-    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS),
+    disabled: await features.flags.isEnabled(FeatureFlag.WORKSPACES),
     isDefault: true,
   })
 
@@ -511,13 +511,13 @@ async function performAppCreate(
 
     if (
       !addSampleData &&
-      !(await features.isEnabled(FeatureFlag.WORKSPACE_APPS)) &&
+      !(await features.isEnabled(FeatureFlag.WORKSPACES)) &&
       !(await sdk.workspaceApps.fetch()).length
     ) {
       await createDefaultWorkspaceApp()
     }
 
-    if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+    if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
       await disableAllAppsAndAutomations()
     }
 
@@ -789,7 +789,7 @@ async function unpublishApp(ctx: UserCtx) {
   // automations only in production
   await cleanupAutomations(appId)
 
-  if (await features.flags.isEnabled(FeatureFlag.WORKSPACE_APPS)) {
+  if (await features.flags.isEnabled(FeatureFlag.WORKSPACES)) {
     await disableAllAppsAndAutomations()
   }
 
