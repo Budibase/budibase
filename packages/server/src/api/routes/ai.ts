@@ -5,13 +5,9 @@ import {
   updateToolSourceValidator,
 } from "./utils/validators/agent"
 import { middleware } from "@budibase/pro"
-import recaptcha from "../../middleware/recaptcha"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
-export const licensedRoutes = endpointGroupList.group(
-  middleware.licenseAuth,
-  recaptcha
-)
+export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
@@ -40,6 +36,7 @@ builderAdminRoutes
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 
+// these are Budibase AI routes
 licensedRoutes
   .post("/api/ai/chat", ai.chatCompletion)
   .post("/api/ai/upload-file", ai.uploadFile)
