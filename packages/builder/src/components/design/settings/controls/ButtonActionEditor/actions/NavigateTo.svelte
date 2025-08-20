@@ -8,9 +8,7 @@
   export let parameters
   export let bindings = []
 
-  $: urlOptions = $screenStore.screens
-    .map(screen => screen.routing?.route)
-    .filter(x => x != null)
+  $: urlOptions = screenStore.routes
 
   const typeOptions = [
     {
@@ -47,7 +45,7 @@
         parameters.url = value.detail ? value.detail.trim() : value.detail
       }}
       {bindings}
-      options={urlOptions}
+      options={$urlOptions}
       appendBindingsAsOptions={false}
     />
     <div />

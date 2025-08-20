@@ -9,15 +9,23 @@
     queries,
     userSelectedResourceMap,
     contextMenuStore,
+    workspaceFavouriteStore,
   } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import NavItem from "@/components/common/NavItem.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import { notifications, Icon } from "@budibase/bbui"
+  import FavouriteResourceButton from "@/pages/builder/portal/_components/FavouriteResourceButton.svelte"
+  import { WorkspaceResource } from "@budibase/types"
 
   export let datasource
   export let query
 
+  const favourites = workspaceFavouriteStore.lookup
+
   let confirmDeleteModal
+
+  $: favourite = query?._id ? $favourites[query?._id] : undefined
 
   // goto won't work in the context menu callback if the store is called directly
   $: goto = $gotoStore
@@ -72,10 +80,24 @@
   on:click={() => goto(`./query/${query._id}`)}
   selectedBy={$userSelectedResourceMap[query._id]}
 >
-  <Icon size="M" hoverable name="dots-three" on:click={openContextMenu} />
+  <div class="buttons">
+    {#if $featureFlags.WORKSPACES}
+      <FavouriteResourceButton
+        favourite={favourite || {
+          resourceType: WorkspaceResource.QUERY,
+          resourceId: query._id,
+        }}
+      />
+    {/if}
+    <Icon size="M" hoverable name="dots-three" on:click={openContextMenu} />
+  </div>
 </NavItem>
 
 <DeleteDataConfirmModal source={query} bind:this={confirmDeleteModal} />
 
 <style>
+  .buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+  }
 </style>

@@ -8,6 +8,7 @@
     Toggle,
     Body,
     ActionButton,
+    Switcher,
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
@@ -18,7 +19,7 @@
     workspaceDeploymentStore,
     deploymentStore,
   } from "@/stores/builder"
-  import { environment } from "@/stores/portal"
+  import { environment, featureFlags } from "@/stores/portal"
   import { ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
   import {
@@ -28,11 +29,9 @@
     dagreLayoutAutomation,
   } from "./AutomationStepHelpers"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
-
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import Count from "../../SetupPanel/Count.svelte"
   import TestDataModal from "./TestDataModal.svelte"
   import CtaNotification from "@/components/common/CtaNotification.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import NodeWrapper from "./NodeWrapper.svelte"
   import EdgeWrapper from "./EdgeWrapper.svelte"
   import BranchNodeWrapper from "./BranchNodeWrapper.svelte"
@@ -53,8 +52,13 @@
     AutomationStatus,
     type AutomationStep,
     AutomationActionStepId,
+    Automation,
   } from "@budibase/types"
-  export let automation
+
+  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
+  import { PublishResourceState } from "@budibase/types"
+
+  export let automation: Automation
 
   const memoAutomation = memo(automation)
 
@@ -79,7 +83,13 @@
 
   $: updateGraph(blocks as any, viewMode)
 
+  let changingStatus = false
+
   $: $automationStore.showTestModal === true && testDataModal.show()
+
+  $: displayToggleValue = $featureFlags.WORKSPACES
+    ? automation.publishStatus.state === PublishResourceState.PUBLISHED
+    : !automation?.disabled
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set($selectedAutomation.data || automation)
@@ -200,7 +210,7 @@
 
   // Check if automation has unpublished changes
   $: hasUnpublishedChanges =
-    $workspaceDeploymentStore.automations[automation._id]
+    $workspaceDeploymentStore.automations[automation._id!]
       ?.unpublishedChanges === true
 
   const refresh = () => {
@@ -258,59 +268,60 @@
     viewMode = ViewMode.EDITOR
   }
 
-  $: console.log($edges)
+  async function handleToggleChange() {
+    try {
+      changingStatus = true
+      await automationStore.actions.toggleDisabled(automation._id!)
+    } finally {
+      changingStatus = false
+    }
+  }
 </script>
 
 <div class="automation-heading">
-  <div class="actions-left">
-    <div class="automation-name">
-      <Body size="S" weight="500" color="var(--spectrum-global-color-gray-900)">
-        {automation.name}
-      </Body>
-    </div>
-  </div>
-
-  <div class="actions-right">
-    <div class="view-mode-toggle">
-      <div class="group">
-        <ActionButton
-          icon="Edit"
-          quiet
-          selected={viewMode === ViewMode.EDITOR}
-          on:click={() => {
-            viewMode = ViewMode.EDITOR
-            closeAllPanels()
-          }}
+  {#if !$featureFlags.WORKSPACES}
+    <div class="actions-left">
+      <div class="automation-name">
+        <Body
+          size="S"
+          weight="500"
+          color="var(--spectrum-global-color-gray-900)"
         >
-          Editor
-        </ActionButton>
-        <Count
-          count={prodErrors}
-          tooltip={"There are errors in production"}
-          hoverable={false}
-        >
-          <ActionButton
-            icon="list-checks"
-            quiet
-            selected={viewMode === ViewMode.LOGS ||
-              $automationStore.showLogsPanel ||
-              $automationStore.showLogDetailsPanel}
-            on:click={() => {
-              viewMode = ViewMode.LOGS
-              // Clear editor selection when switching to logs mode
-              automationStore.actions.selectNode(undefined)
-              if (
-                !$automationStore.showLogsPanel &&
-                !$automationStore.showLogDetailsPanel
-              ) {
-                toggleLogsPanel()
-              }
-            }}
-          >
-            Logs
-          </ActionButton>
-        </Count>
+          {automation.name}
+        </Body>
       </div>
+    </div>
+  {/if}
+
+  <div class="actions-right" class:grow={$featureFlags.WORKSPACES}>
+    <div class:grow={$featureFlags.WORKSPACES}>
+      <Switcher
+        on:left={() => {
+          viewMode = ViewMode.EDITOR
+          closeAllPanels()
+        }}
+        on:right={() => {
+          viewMode = ViewMode.LOGS
+          // Clear editor selection when switching to logs mode
+          automationStore.actions.selectNode(undefined)
+          if (
+            !$automationStore.showLogsPanel &&
+            !$automationStore.showLogDetailsPanel
+          ) {
+            toggleLogsPanel()
+          }
+        }}
+        leftIcon="Edit"
+        leftText="Editor"
+        rightIcon="list-checks"
+        rightText="Logs"
+        rightNotificationTooltip="There are errors in production"
+        rightNotificationCount={prodErrors}
+        selected={$automationStore.showLogsPanel ||
+        $automationStore.showLogDetailsPanel
+          ? "right"
+          : "left"}
+      />
     </div>
 
     <ActionButton
@@ -324,12 +335,26 @@
       Run test
     </ActionButton>
 
-    {#if !isRowAction}
+    {#if $featureFlags.WORKSPACES}
+      <PublishStatusBadge
+        status={automation.publishStatus.state}
+        loading={changingStatus}
+      />
+      <div class="toggle-active setting-spacing">
+        <Toggle
+          on:change={handleToggleChange}
+          disabled={!automation?.definition?.trigger || changingStatus}
+          value={displayToggleValue}
+        />
+      </div>
+    {:else if !isRowAction}
       <div class="toggle-active setting-spacing">
         <Toggle
           text={automation.disabled ? "Disabled" : "Enabled"}
           on:change={() => {
-            automationStore.actions.toggleDisabled(automation._id)
+            if (automation._id) {
+              automationStore.actions.toggleDisabled(automation._id)
+            }
           }}
           disabled={!automation?.definition?.trigger}
           value={!automation.disabled}
@@ -437,7 +462,7 @@
     align-items: center;
     width: 100%;
     background: var(--background);
-    padding: var(--spacing-m) var(--spacing-l) var(--spacing-s);
+    padding: var(--spacing-m) var(--spacing-l);
     box-sizing: border-box;
     justify-content: space-between;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
@@ -472,12 +497,6 @@
     bottom: var(--spacing-l);
     display: flex;
     gap: var(--spacing-l);
-  }
-
-  .view-mode-toggle {
-    display: flex;
-    gap: var(--spacing-l);
-    flex-shrink: 0;
   }
 
   .canvas-footer-left :global(div) {
@@ -526,24 +545,6 @@
     margin-right: 0px;
   }
 
-  .view-mode-toggle .group {
-    border-radius: 6px;
-    display: flex;
-    flex-direction: row;
-    background: var(--spectrum-global-color-gray-100);
-    padding: 2px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-  }
-  .view-mode-toggle .group :global(> *:not(:first-child)) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-left: none;
-  }
-  .view-mode-toggle .group :global(> *:not(:last-child)) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
   .actions-left {
     display: flex;
     flex-direction: row;
@@ -551,37 +552,12 @@
     flex: 1;
     min-width: 0;
   }
-
+  .grow {
+    flex: 1 1 auto;
+  }
   .actions-right {
     display: flex;
     gap: var(--spacing-xl);
     align-items: center;
-  }
-
-  .view-mode-toggle .group :global(.spectrum-ActionButton) {
-    background: transparent !important;
-    border: none !important;
-    border-radius: 4px !important;
-    color: var(--spectrum-global-color-gray-700) !important;
-    font-weight: 500;
-    padding: 6px 12px !important;
-    margin: 0 !important;
-    transition: all 0.15s ease;
-  }
-
-  .view-mode-toggle .group :global(.spectrum-ActionButton:hover) {
-    background: var(--spectrum-global-color-gray-200) !important;
-    color: var(--spectrum-global-color-gray-900) !important;
-  }
-
-  .view-mode-toggle .group :global(.spectrum-ActionButton.is-selected) {
-    background: var(--spectrum-global-color-gray-50) !important;
-    color: var(--spectrum-global-color-gray-900) !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    font-weight: 600;
-  }
-
-  .view-mode-toggle .group :global(.spectrum-Icon) {
-    color: inherit !important;
   }
 </style>

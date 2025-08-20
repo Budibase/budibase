@@ -1,4 +1,4 @@
-import application from "./application"
+import workspace from "./workspace"
 import row from "./row"
 import table from "./table"
 import query from "./query"
@@ -9,7 +9,7 @@ import roles from "./roles"
 import view from "./view"
 
 export const examples = {
-  ...application.getExamples(),
+  ...workspace.getExamples(),
   ...row.getExamples(),
   ...table.getExamples(),
   ...query.getExamples(),
@@ -21,7 +21,7 @@ export const examples = {
 }
 
 export const schemas = {
-  ...application.getSchemas(),
+  ...workspace.getSchemas(),
   ...row.getSchemas(),
   ...table.getSchemas(),
   ...query.getSchemas(),
