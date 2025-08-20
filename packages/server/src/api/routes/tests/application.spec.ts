@@ -17,6 +17,7 @@ import env from "../../../environment"
 import {
   type App,
   BuiltinPermissionID,
+  PermissionLevel,
   Screen,
   WorkspaceApp,
 } from "@budibase/types"
@@ -1099,6 +1100,47 @@ describe.each([false, true])(
           expect(
             screens.find(screen => screen._id === unpublishedScreen._id)
           ).toBeUndefined()
+        })
+      })
+
+      it("should publish table permissions for custom roles correctly", async () => {
+        // Create a table for testing permissions
+        const table = await config.api.table.save(basicTable())
+        expect(table._id).toBeDefined()
+
+        // Create a custom role
+        const customRole = await config.api.roles.save({
+          name: "TestRole",
+          inherits: "PUBLIC",
+          permissionId: BuiltinPermissionID.READ_ONLY,
+          version: "name",
+        })
+        expect(customRole._id).toBeDefined()
+
+        // Add READ permission for the custom role on the table
+        await config.api.permission.add({
+          roleId: customRole._id!,
+          resourceId: table._id!,
+          level: PermissionLevel.READ,
+        })
+
+        // Verify permissions exist in development
+        const devPermissions = await config.api.permission.get(table._id!)
+        expect(devPermissions.permissions.read.role).toBe(customRole.name)
+
+        // Publish the application
+        await config.publish()
+
+        // Verify permissions are correctly published to production
+        await config.withProdApp(async () => {
+          const prodPermissions = await config.api.permission.get(table._id!)
+          expect(prodPermissions.permissions.read.role).toBe(customRole.name)
+
+          // Also verify the role itself exists in production
+          const roles = await config.api.roles.fetch()
+          const prodRole = roles.find(r => r.name === customRole.name)
+          expect(prodRole).toBeDefined()
+          expect(prodRole!.name).toBe("TestRole")
         })
       })
     })
