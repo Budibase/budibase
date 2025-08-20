@@ -50,6 +50,17 @@ export const appIdUrl = {
   },
 }
 
+export const workspaceId = {
+  in: "path",
+  name: "workspaceId",
+  required: true,
+  description: "The ID of the workspace which this request is targeting.",
+  schema: {
+    default: "{{workspaceId}}",
+    type: "string",
+  },
+}
+
 export const queryId = {
   in: "path",
   name: "queryId",
