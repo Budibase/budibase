@@ -7,7 +7,6 @@ import { Duration } from "../utils"
 import { cloneDeep } from "lodash"
 import { FeatureFlagDefaults } from "@budibase/types"
 import * as configs from "../configs"
-import { isSelfHostUsingCloud } from "../context"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {

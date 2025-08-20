@@ -5,7 +5,6 @@ import {
   updateToolSourceValidator,
 } from "./utils/validators/agent"
 import { middleware } from "@budibase/pro"
-import recaptcha from "../../middleware/recaptcha"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
