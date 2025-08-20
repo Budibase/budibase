@@ -197,10 +197,12 @@ export class DatasourceStore extends DerivedBudiStore<
     integration,
     config,
     name,
+    uiMetadata,
   }: {
     integration: UIIntegration
     config: Record<string, any>
     name?: string
+    uiMetadata?: any
   }) {
     const count = this.sourceCount(integration.name)
     const nameModifier = count === 0 ? "" : ` ${count + 1}`
@@ -212,6 +214,7 @@ export class DatasourceStore extends DerivedBudiStore<
       name: name || `${integration.friendlyName}${nameModifier}`,
       plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
+      ...(uiMetadata && { uiMetadata }),
     }
 
     const { valid, error } = await this.checkDatasourceValidity(

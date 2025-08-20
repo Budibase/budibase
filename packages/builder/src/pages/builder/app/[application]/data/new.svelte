@@ -71,6 +71,7 @@
         integration: restIntegration,
         config,
         name: template.name,
+        uiMetadata: { iconUrl: template.icon },
       })
 
       // Import queries from the OpenAPI specification
